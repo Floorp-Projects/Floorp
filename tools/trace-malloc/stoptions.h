@@ -76,6 +76,10 @@
 **  NOTE! that the multiplier should be applied to the default value if you
 **      are going to assign the default_value into anything.
 **
+**  Be very aware that adding things to a particular genre, or adding a genre,
+**      may completely screw up the caching algorithms of SpaceTrace.
+**  See contextLookup() or ask someone that knows if you are in doubt.
+**
 **  The actual definition of the WEB and CMD macros however is left to the
 **      end user.
 **  We cover those that you do not define herein.
@@ -149,7 +153,7 @@
 **  Order is somewhat relevant in that it will control 3 different things:
 **      1)  The order the members will be in the options structure.
 **      2)  The order the options are presented on the command line.
-**      3)  The order teh options are presented on the web options page.
+**      3)  The order the options are presented on the web options page.
 */
 
 ST_ALL_OPTION_STRING(CategoryName,

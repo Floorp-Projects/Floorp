@@ -48,6 +48,8 @@
 ** Required includes.
 */
 #include "nspr.h"
+#include "prlock.h"
+#include "prrwlock.h"
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
 #include "formdata.h"
@@ -74,6 +76,13 @@
         PR_fprintf(PR_STDERR, "error(%d):\t%s\n", code, msg)
 #define REPORT_INFO(msg) \
         PR_fprintf(PR_STDOUT, "%s: %s\n", globals.mProgramName, (msg))
+
+#if defined(DEBUG_blythe) && 1
+#define REPORT_blythe(code, msg) \
+        PR_fprintf(PR_STDOUT, "gab(%d):\t%s\n", code, msg)
+#else
+#define REPORT_blythe(code, msg)
+#endif /* DEBUG_blythe */
 
 /*
 ** CALLSITE_RUN
@@ -409,6 +418,9 @@ typedef struct __struct_STCategoryMapEntry {
 **  This helps to determine what functionality each option effects.
 **  In specific, this will help use determine when and when not to
 **      totally recaclulate the sorted run and categories.
+**  Be very aware that adding things to a particular genre, or adding a genre,
+**      may completely screw up the caching algorithms of SpaceTrace.
+**  See contextLookup() or ask someone that knows if you are in doubt.
 */
 typedef enum __enum_STOptionGenre
 {
@@ -447,6 +459,90 @@ typedef struct __struct_STOptions
 }
 STOptions;
 
+typedef struct __struct_STContext
+/*
+**  A per request, thread safe, manner of accessing the contained members.
+**  A reader/writer lock ensures that the data is properly initialized before
+**      readers of the data begin their work.
+**
+**  mRWLock         reader/writer lock.
+**                  writer lock is held to ensure initialization, though
+**                      others can be attempting to acquire read locks
+**                      at that time.
+**                  writer lock is also used in destruction to make sure
+**                      there are no more readers of data contained herein.
+**                  reader lock is to allow multiple clients to read the
+**                      data at the same time; implies is they must not
+**                      write anything.
+**  mIndex          Consider this much like thread private data or thread
+**                      local storage in a few places.
+**                  The index is specifically reserved for this context's
+**                      usage in other data structure array's provided
+**                      for the particular thread/client/context.
+**                  This should not be modified after initialization.
+*/
+{
+    PRRWLock* mRWLock;
+    PRUint32 mIndex;
+}
+STContext;
+
+
+typedef struct __struct_STContextCacheItem
+/*
+**  This basically pools the common items that the context cache will
+**      want to track on a per context basis.
+**
+**  mOptions        What options this item represents.
+**  mContext        State/data this cache item is wrapping.
+**  mReferenceCount A count of clients currently using this item.
+**                  Should this item be 0, then the cache might
+**                      decide to evict this context.
+**                  Should this item not be 0, once it reaches
+**                      zero a condition variable in the context cache
+**                      will be signaled to notify the availability.
+**  mLastAccessed   A timestamp of when this item was last accessed/released.
+**                  Ignore this unless the reference count is 0,
+**                  This is used to evict the oldest unused item from
+**                      the context cache.
+**  mInUse          Mainly PR_FALSE only at the beginning of the process,
+**                      but this indicates that the item has not yet been
+**                      used at all, and thus shouldn't be evaluated for
+**                      a cache hit.
+*/
+{
+    STOptions mOptions;
+    STContext mContext;
+    PRInt32 mReferenceCount;
+    PRIntervalTime mLastAccessed;
+    PRBool mInUse;
+}
+STContextCacheItem;
+
+
+typedef struct __struct_STContextCache
+/*
+**  A thread safe, possibly blocking, cache of context items.
+**
+**  mLock       Must hold the lock to read/access/write to this struct, as
+**                  well as any items it holds.
+**  mCacheMiss  All items are busy and there were no cache matches.
+**              This condition variable is used to wait until an item becomes
+**                  "available" to be evicted from the cache.
+**  mItems      Array of items.
+**  mItemCount  Number of items in array.
+**              This is generally the same as the global option's command line
+**                  mContexts....
+*/
+{
+    PRLock* mLock;
+    PRCondVar* mCacheMiss;
+    STContextCacheItem* mItems;
+    PRUint32 mItemCount;
+}
+STContextCache;
+
+
 /*
 ** STRequest
 **
@@ -473,16 +569,22 @@ typedef struct __struct_STRequest
         **  Options specific to this request.
         */
         STOptions mOptions;
+
+        /*
+        **  The context/data/state of the reqeust.
+        */
+        STContext* mContext;
 } STRequest;
 
+
 /*
-** STCache
+** STGlobalCache
 **
 ** Things we cache when the options get set.
 ** We can avoid some heavy duty processing should the options remain
 **  constant by caching them here.
 */
-typedef struct __struct_STCache
+typedef struct __struct_STGlobalCache
 {
     /*
     ** Pre sorted run.
@@ -490,7 +592,7 @@ typedef struct __struct_STCache
     STRun* mSortedRun;
     
     /*
-    ** Category the mSortedRun belongs to. NULL if not to any category.
+    ** Category the mSortedRun belongs to. NULL/empty if not to any category.
     */
     char mCategoryName[ST_OPTION_STRING_MAX];
     
@@ -517,7 +619,9 @@ typedef struct __struct_STCache
     */
     int mWeightCached;
     PRUint64 mWeightYData64[STGD_SPACE_X];
-} STCache;
+}
+STGlobalCache;
+
 
 /*
 ** STGlobals
@@ -532,14 +636,23 @@ typedef struct __struct_STGlobals
         const char* mProgramName;
 
         /*
-        ** Options derived from the command line.
+        **  Options derived from the command line.
+        **  These are used as defaults, and should remain static during
+        **      the run of the application.
         */
         STOptions mOptions;
 
         /*
+        **  Context cache.
+        **  As clients come in, based on their options, a different context
+        **      will be used to service them.
+        */
+        STContextCache mContextCache;
+
+        /*
         ** Cached data, generally reset by the options.
         */
-        STCache mCache;
+        STGlobalCache mGlobalCache;
 
         /*
         ** Various counters for different types of events.

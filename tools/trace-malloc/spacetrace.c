@@ -2891,9 +2891,9 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
         /*
         ** Corrent the stamp if need be.
         */
-        if(0 == aStamp && NULL != globals.mCache.mSortedRun)
+        if(0 == aStamp && NULL != globals.mGlobalCache.mSortedRun)
         {
-            aStamp = globals.mCache.mSortedRun->mStats.mStamp;
+            aStamp = globals.mGlobalCache.mSortedRun->mStats.mStamp;
         }
 
         /*
@@ -3302,9 +3302,9 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
         /*
         ** Fixup the stamp.
         */
-        if(0 == aStamp && NULL != globals.mCache.mSortedRun)
+        if(0 == aStamp && NULL != globals.mGlobalCache.mSortedRun)
         {
-            aStamp = globals.mCache.mSortedRun->mStats.mStamp;
+            aStamp = globals.mGlobalCache.mSortedRun->mStats.mStamp;
         }
 
         /*
@@ -3602,9 +3602,9 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
         /*
         ** Decide if this is custom or we should use the global cache.
         */
-        if(aRun == globals.mCache.mSortedRun)
+        if(aRun == globals.mGlobalCache.mSortedRun)
         {
-            YData = globals.mCache.mFootprintYData;
+            YData = globals.mGlobalCache.mFootprintYData;
         }
         else
         {
@@ -3614,7 +3614,7 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
         /*
         ** Only do the computations if we aren't cached already.
         */
-        if(YData != globals.mCache.mFootprintYData || 0 == globals.mCache.mFootprintCached)
+        if(YData != globals.mGlobalCache.mFootprintYData || 0 == globals.mGlobalCache.mFootprintCached)
         {
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
 
@@ -3645,9 +3645,9 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
             /*
             ** Did we cache this?
             */
-            if(YData == globals.mCache.mFootprintYData)
+            if(YData == globals.mGlobalCache.mFootprintYData)
             {
-                globals.mCache.mFootprintCached = __LINE__;
+                globals.mGlobalCache.mFootprintCached = __LINE__;
             }
         }
 
@@ -3796,9 +3796,9 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
         /*
         ** Decide if this is custom or we should use the global cache.
         */
-        if(aRun == globals.mCache.mSortedRun)
+        if(aRun == globals.mGlobalCache.mSortedRun)
         {
-            YData = globals.mCache.mTimevalYData;
+            YData = globals.mGlobalCache.mTimevalYData;
         }
         else
         {
@@ -3808,7 +3808,7 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
         /*
         ** Only do the computations if we aren't cached already.
         */
-        if(YData != globals.mCache.mTimevalYData || 0 == globals.mCache.mTimevalCached)
+        if(YData != globals.mGlobalCache.mTimevalYData || 0 == globals.mGlobalCache.mTimevalCached)
         {
             PRUint32 prevTimeval = 0;
 
@@ -3843,9 +3843,9 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
             /*
             ** Did we cache this?
             */
-            if(YData == globals.mCache.mTimevalYData)
+            if(YData == globals.mGlobalCache.mTimevalYData)
             {
-                globals.mCache.mTimevalCached = __LINE__;
+                globals.mGlobalCache.mTimevalCached = __LINE__;
             }
         }
 
@@ -3994,9 +3994,9 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
         /*
         ** Decide if this is custom or we should use the global cache.
         */
-        if(aRun == globals.mCache.mSortedRun)
+        if(aRun == globals.mGlobalCache.mSortedRun)
         {
-            YData = globals.mCache.mLifespanYData;
+            YData = globals.mGlobalCache.mLifespanYData;
         }
         else
         {
@@ -4006,7 +4006,7 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
         /*
         ** Only do the computations if we aren't cached already.
         */
-        if(YData != globals.mCache.mLifespanYData || 0 == globals.mCache.mLifespanCached)
+        if(YData != globals.mGlobalCache.mLifespanYData || 0 == globals.mGlobalCache.mLifespanCached)
         {
             PRUint32 prevTimeval = 0;
             PRUint32 lifespan = 0;
@@ -4044,9 +4044,9 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
             /*
             ** Did we cache this?
             */
-            if(YData == globals.mCache.mLifespanYData)
+            if(YData == globals.mGlobalCache.mLifespanYData)
             {
-                globals.mCache.mLifespanCached = __LINE__;
+                globals.mGlobalCache.mLifespanCached = __LINE__;
             }
         }
 
@@ -4195,9 +4195,9 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
         /*
         ** Decide if this is custom or we should use the global cache.
         */
-        if(aRun == globals.mCache.mSortedRun)
+        if(aRun == globals.mGlobalCache.mSortedRun)
         {
-            YData64 = globals.mCache.mWeightYData64;
+            YData64 = globals.mGlobalCache.mWeightYData64;
         }
         else
         {
@@ -4207,7 +4207,7 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
         /*
         ** Only do the computations if we aren't cached already.
         */
-        if(YData64 != globals.mCache.mWeightYData64 || 0 == globals.mCache.mWeightCached)
+        if(YData64 != globals.mGlobalCache.mWeightYData64 || 0 == globals.mGlobalCache.mWeightCached)
         {
             PRUint32 prevTimeval = 0;
 
@@ -4250,9 +4250,9 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
             /*
             ** Did we cache this?
             */
-            if(YData64 == globals.mCache.mWeightYData64)
+            if(YData64 == globals.mGlobalCache.mWeightYData64)
             {
-                globals.mCache.mWeightCached = __LINE__;
+                globals.mGlobalCache.mWeightCached = __LINE__;
             }
         }
 
@@ -4539,11 +4539,11 @@ int applySettings(STRequest* inRequest)
             {
                 /*
                 ** Resort the global based on new prefs if needed.
-                ** Dont free globals.mCache.mSortedRun anymore. It is held in the root category node.
+                ** Dont free globals.mGlobalCache.mSortedRun anymore. It is held in the root category node.
                 ** It will get freed automatically when categorization happens.
                 */
-                globals.mCache.mSortedRun = createRunFromGlobal();
-                if(NULL == globals.mCache.mSortedRun)
+                globals.mGlobalCache.mSortedRun = createRunFromGlobal();
+                if(NULL == globals.mGlobalCache.mSortedRun)
                 {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, createRunFromGlobal);
@@ -4565,7 +4565,7 @@ int applySettings(STRequest* inRequest)
                 {
                     /* Recalculate cost of run */
                     recalculateRunCost(node->run);
-                    globals.mCache.mSortedRun = node->run;
+                    globals.mGlobalCache.mSortedRun = node->run;
                 }
             }
             
@@ -4577,10 +4577,10 @@ int applySettings(STRequest* inRequest)
                 0 != changed[(STOptionGenre)CategoryGenre]
                 )
             {
-                globals.mCache.mFootprintCached = 0;
-                globals.mCache.mTimevalCached = 0;
-                globals.mCache.mLifespanCached = 0;
-                globals.mCache.mWeightCached = 0;
+                globals.mGlobalCache.mFootprintCached = 0;
+                globals.mGlobalCache.mTimevalCached = 0;
+                globals.mGlobalCache.mLifespanCached = 0;
+                globals.mGlobalCache.mWeightCached = 0;
             }
 #endif /* ST_WANT_GRAPHS */
         }
@@ -4748,6 +4748,378 @@ void initRequestOptions(STRequest* inRequest)
     }
 }
 
+STContext* contextLookup(STOptions* inOptions)
+/*
+**  Lookup a context that matches the options.
+**  The lookup may block, especially if the context needs to be created.
+**  Callers of this API must eventually call contextRelease with the
+**      return value;  failure to do so will cause this applications
+**      to eventually not work as advertised.
+**
+**  inOptions   The options determine which context is relevant.
+**  returns     The fully completed context on success.
+**              The context is read only in practice, so please do not
+**                  write to it or anything it points to.
+**              NULL on failure.
+*/
+{
+    STContext* retval = NULL;
+    STContextCache* inCache = &globals.mContextCache;
+
+    if(NULL != inOptions && NULL != inCache)
+    {
+        PRUint32 loop = 0;
+        STContext* categoryException = NULL;
+        PRBool newContext = PR_FALSE;
+        PRBool evictContext = PR_FALSE;
+        PRBool changeCategoryContext = PR_FALSE;
+
+        /*
+        **  Own the context cache while we are in here.
+        */
+        PR_Lock(inCache->mLock);
+
+        /*
+        **  Loop until successful.
+        **  Waiting on the condition variable makes sure we don't hog the
+        **      lock below.
+        */
+        while(1)
+        {
+            /*
+            **  Go over the cache items.
+            **  At this point we are looking for a cache hit, with multiple
+            **      readers.
+            */
+            for(loop = 0; loop < inCache->mItemCount; loop++)
+            {
+                /*
+                **  Must be in use.
+                */
+                if(PR_FALSE != inCache->mItems[loop].mInUse)
+                {
+                    int delta[(STOptionGenre)MaxGenres];
+                    
+                    /*
+                    **  Compare the relevant options, figure out if different
+                    **      in any genre that we care about.
+                    */
+                    memset(&delta, 0, sizeof(delta));
+                    
+#define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
+    if(inOptions->m##option_name != inCache->mItems[loop].mOptions.m##option_name) \
+    { \
+        delta[(STOptionGenre)option_genre]++; \
+    }
+#define ST_WEB_OPTION_STRING(option_name, option_genre, default_value, option_help) \
+    if(0 != strcmp(inOptions->m##option_name, inCache->mItems[loop].mOptions.m##option_name)) \
+    { \
+        delta[(STOptionGenre)option_genre]++; \
+    }
+#define ST_WEB_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) \
+    { \
+        PRUint32 macro_loop = 0; \
+        \
+        for(macro_loop = 0; macro_loop < array_size; macro_loop++) \
+        { \
+            if(0 != strcmp(inOptions->m##option_name[macro_loop], inCache->mItems[loop].mOptions.m##option_name[macro_loop])) \
+            { \
+                break; \
+            } \
+        } \
+        \
+        if(macro_loop != array_size) \
+        { \
+            delta[(STOptionGenre)option_genre]++; \
+        } \
+    }
+#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
+#define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
+    if(inOptions->m##option_name != inCache->mItems[loop].mOptions.m##option_name) \
+    { \
+        delta[(STOptionGenre)option_genre]++; \
+    }
+#define ST_WEB_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
+    if(LL_NE(inOptions->m##option_name##64, inCache->mItems[loop].mOptions.m##option_name##64)) \
+    { \
+        delta[(STOptionGenre)option_genre]++; \
+    }
+                    
+#include "stoptions.h"
+                    
+                    /*
+                    **  If there is no genre out of alignment, we accept this as the context.
+                    */
+                    if(
+                        0 == delta[CategoryGenre] &&
+                        0 == delta[DataSortGenre] &&
+                        0 == delta[DataSetGenre] &&
+                        0 == delta[DataSizeGenre]
+                        )
+                    {
+                        retval = &inCache->mItems[loop].mContext;
+                        break;
+                    }
+                    
+                    /*
+                    **  A special exception to the rule here.
+                    **  If all that is different is the category genre, and there
+                    **      is no one looking at the context (zero ref count),
+                    **      then there is some magic we can perform.
+                    */
+                    if(NULL == retval &&
+                        0 == inCache->mItems[loop].mReferenceCount &&
+                        0 != delta[CategoryGenre] &&
+                        0 == delta[DataSortGenre] &&
+                        0 == delta[DataSetGenre] &&
+                        0 == delta[DataSizeGenre]
+                        )
+                    {
+                        categoryException = &inCache->mItems[loop].mContext;
+                    }
+                }
+            }
+            
+            /*
+            **  Pick up our category exception if relevant.
+            */
+            if(NULL == retval && NULL != categoryException)
+            {
+                retval = categoryException;
+                categoryException = NULL;
+                changeCategoryContext = PR_TRUE;
+            }
+            
+            /*
+            **  If we don't have a cache hit, then we need to check for an empty
+            **      spot to take over.
+            */
+            if(NULL == retval)
+            {
+                for(loop = 0; loop < inCache->mItemCount; loop++)
+                {
+                    /*
+                    **  Must NOT be in use, then it will be the context.
+                    */
+                    if(PR_FALSE == inCache->mItems[loop].mInUse)
+                    {
+                        retval = &inCache->mItems[loop].mContext;
+                        newContext = PR_TRUE;
+                        break;
+                    }
+                }
+            }
+            
+            /*
+            **  If we still don't have a return value, then we need to see if
+            **      there are any old items with zero ref counts that we
+            **      can take over.
+            */
+            if(NULL == retval)
+            {
+                for(loop = 0; loop < inCache->mItemCount; loop++)
+                {
+                    /*
+                    **  Must be in use.
+                    */
+                    if(PR_FALSE != inCache->mItems[loop].mInUse)
+                    {
+                        /*
+                        **  Must have a ref count of zero.
+                        */
+                        if(0 == inCache->mItems[loop].mReferenceCount)
+                        {
+                        /*
+                        **  Must be older than any other we know of.
+                            */
+                            if(NULL != retval)
+                            {
+                                if(inCache->mItems[loop].mLastAccessed < inCache->mItems[retval->mIndex].mLastAccessed)
+                                {
+                                    retval = &inCache->mItems[loop].mContext;
+                                }
+                            }
+                            else
+                            {
+                                retval = &inCache->mItems[loop].mContext;
+                            }
+                        }
+                    }
+                }
+
+                if(NULL != retval)
+                {
+                    evictContext = PR_TRUE;
+                }
+            }
+
+            /*
+            **  If we still don't have a return value, then we can not avoid
+            **      waiting around until someone gives us the chance.
+            **  The chance, in specific, comes when a cache item reference
+            **      count returns to zero, upon which we can try to take
+            **      it over again.
+            */
+            if(NULL == retval)
+            {
+                /*
+                **  This has the side effect of release the context lock.
+                **  This is a good thing so that other clients can continue
+                **      to connect and hopefully have cache hits.
+                **  If they do not have cache hits, then we will end up
+                **      with a bunch of waiters here....
+                */
+                PR_WaitCondVar(inCache->mCacheMiss, PR_INTERVAL_NO_TIMEOUT);
+            }
+            
+            /*
+            **  If we have a return value, improve the reference count here.
+            */
+            if(NULL != retval)
+            {
+                /*
+                **  Decide if there are any changes to be made.
+                **  Do as little as possible, then fall through the context
+                **      cache lock to finish up.
+                **  This way, lengthy init operations will not block
+                **      other clients, only matches to this context.
+                */
+                if(
+                    PR_FALSE != newContext ||
+                    PR_FALSE != evictContext ||
+                    PR_FALSE != changeCategoryContext
+                    )
+                {
+                    /*
+                    **  Overwrite the prefs for this context.
+                    **  They are changing.
+                    */
+                    memcpy(&inCache->mItems[retval->mIndex].mOptions, inOptions, sizeof(inCache->mItems[retval->mIndex].mOptions));
+
+                    /*
+                    **  As we are going to be changing the context, we need to write lock it.
+                    **  This makes sure no readers are allowed while we are making our changes.
+                    */
+                    PR_RWLock_Wlock(retval->mRWLock);
+                }
+        
+                /*
+                **  NOTE, ref count gets incremented here, inside content
+                **      cache lock so it can not be flushed once lock
+                **      released.
+                */
+                inCache->mItems[retval->mIndex].mInUse = PR_TRUE;
+                inCache->mItems[retval->mIndex].mReferenceCount++;
+
+                /*
+                **  That's all folks.
+                */
+                break;
+            }
+            
+        } /* while(1), try again */
+
+        /*
+        **  Done with context cache.
+        */
+        PR_Unlock(inCache->mLock);
+
+        /*
+        **  Now that the context cached is free to continue accepting other
+        **      requests, we have a little more work to do.
+        */
+        if(NULL != retval)
+        {
+            PRBool unlock = PR_FALSE;
+
+            /*
+            **  If evicting, we need to free off the old stuff.
+            **  TODO:  GAB
+            */
+            if(PR_FALSE != evictContext)
+            {
+                unlock = PR_TRUE;
+            }
+
+            /*
+            **  If new or recently evicted, we need to fully init.
+            **  TODO:  GAB
+            */
+            if(PR_FALSE != newContext || PR_FALSE != evictContext)
+            {
+                unlock = PR_TRUE;
+            }
+
+            /*
+            **  If changing category, we need to do some sneaky stuff.
+            **  TODO:  GAB
+            */
+            if(PR_FALSE != changeCategoryContext)
+            {
+                unlock = PR_TRUE;
+            }
+
+            /*
+            **  Release the write lock if we took one to make changes.
+            */
+            if(PR_FALSE != unlock)
+            {
+                PR_RWLock_Unlock(retval->mRWLock);
+            }
+
+            /*
+            **  Last thing possible, take a read lock on our return value.
+            **  This will cause us to block if the context is not fully
+            **      initialized in another thread holding the write lock.
+            */
+            PR_RWLock_Rlock(retval->mRWLock);
+        }
+    }
+
+    return retval;
+}
+
+void contextRelease(STContext* inContext)
+/*
+**  After a successful call to contextLookup, one should call this API when
+**      done with the context.
+**  This effectively removes the usage of the client on a cached item.
+*/
+{
+    STContextCache* inCache = &globals.mContextCache;
+
+    if(NULL != inContext && NULL != inCache)
+    {
+        /*
+        **  Own the context cache while in here.
+        */
+        PR_Lock(inCache->mLock);
+
+        /*
+        **  Give up the read lock on the context.
+        */
+        PR_RWLock_Unlock(inContext->mRWLock);
+
+        /*
+        **  Decrement the reference count on the context.
+        **  If it was the last reference, notify that a new item is
+        **      available for eviction.
+        **  A waiting thread will wake up and eat it.
+        */
+        inCache->mItems[inContext->mIndex].mReferenceCount--;
+        if(0 == inCache->mItems[inContext->mIndex].mReferenceCount)
+        {
+            PR_NotifyCondVar(inCache->mCacheMiss);
+        }
+
+        /*
+        **  Done with context cache.
+        */
+        PR_Unlock(inCache->mLock);
+    }
+}
+
+
 /*
 ** handleRequest
 **
@@ -4780,133 +5152,326 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         initRequestOptions(&request);
 
         /*
-        **  Have the settings apply.
+        **  Get our cached context for this client.
+        **  Simply based on the options.
         */
-        applyRes = applySettings(&request);
-        if(0 == applyRes)
+        request.mContext = contextLookup(&request.mOptions);
+        if(NULL != request.mContext)
         {
             /*
-            ** Attempt to find the file of interest.
+            **  Have the settings apply.
             */
-            if(0 == strcmp("index.html", aFileName))
+            applyRes = applySettings(&request);
+            if(0 == applyRes)
             {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Index");
-                
-                displayRes = displayIndex(&request);
-                if(0 != displayRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayIndex);
-                }
-                
-                htmlFooter(&request);
-            }
-            else if(0 == strcmp("settings.html", aFileName) || 0 == strcmp("options.html", aFileName))
-            {
-                htmlHeader(&request, "SpaceTrace Options");
-                
-                displaySettings(&request);
-                
-                htmlFooter(&request);
-            }
-            else if(0 == strcmp("top_allocations.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Top Allocations Report");
-                
-                displayRes = displayTopAllocations(&request, globals.mCache.mSortedRun, 1);
-                if(0 != displayRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayTopAllocations);
-                }
-                
-                htmlFooter(&request);
-            }
-            else if(0 == strcmp("top_callsites.html", aFileName))
-            {
-                int displayRes = 0;
-                tmcallsite** array = NULL;
-                PRUint32 arrayCount = 0;
-                
                 /*
-                ** Display header after we figure out if we are going to focus
-                ** on a category.
+                ** Attempt to find the file of interest.
                 */
-                htmlHeader(&request, "SpaceTrace Top Callsites Report");
-                
-                if(NULL != globals.mCache.mSortedRun && 0 < globals.mCache.mSortedRun->mAllocationCount)
+                if(0 == strcmp("index.html", aFileName))
                 {
-                    arrayCount = callsiteArrayFromRun(&array, 0, globals.mCache.mSortedRun);
+                    int displayRes = 0;
                     
-                    if(0 != arrayCount && NULL != array)
+                    htmlHeader(&request, "SpaceTrace Index");
+                    
+                    displayRes = displayIndex(&request);
+                    if(0 != displayRes)
                     {
-                        displayRes = displayTopCallsites(&request, array, arrayCount, 0, 0);
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, displayIndex);
+                    }
+                    
+                    htmlFooter(&request);
+                }
+                else if(0 == strcmp("settings.html", aFileName) || 0 == strcmp("options.html", aFileName))
+                {
+                    htmlHeader(&request, "SpaceTrace Options");
+                    
+                    displaySettings(&request);
+                    
+                    htmlFooter(&request);
+                }
+                else if(0 == strcmp("top_allocations.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Top Allocations Report");
+                    
+                    displayRes = displayTopAllocations(&request, globals.mGlobalCache.mSortedRun, 1);
+                    if(0 != displayRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, displayTopAllocations);
+                    }
+                    
+                    htmlFooter(&request);
+                }
+                else if(0 == strcmp("top_callsites.html", aFileName))
+                {
+                    int displayRes = 0;
+                    tmcallsite** array = NULL;
+                    PRUint32 arrayCount = 0;
+                    
+                    /*
+                    ** Display header after we figure out if we are going to focus
+                    ** on a category.
+                    */
+                    htmlHeader(&request, "SpaceTrace Top Callsites Report");
+                    
+                    if(NULL != globals.mGlobalCache.mSortedRun && 0 < globals.mGlobalCache.mSortedRun->mAllocationCount)
+                    {
+                        arrayCount = callsiteArrayFromRun(&array, 0, globals.mGlobalCache.mSortedRun);
+                        
+                        if(0 != arrayCount && NULL != array)
+                        {
+                            displayRes = displayTopCallsites(&request, array, arrayCount, 0, 0);
+                            if(0 != displayRes)
+                            {
+                                retval = __LINE__;
+                                REPORT_ERROR(__LINE__, displayTopCallsites);
+                            }
+                            
+                            /*
+                            ** Done with the array.
+                            */
+                            free(array);
+                            array = NULL;
+                        }
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, handleRequest);
+                    }
+                    
+                    htmlFooter(&request);
+                }
+                else if(0 == strcmp("memory_leaks.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Memory Leaks Report");
+                    
+                    displayRes = displayMemoryLeaks(&request, globals.mGlobalCache.mSortedRun);
+                    if(0 != displayRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, displayMemoryLeaks);
+                    }
+                    
+                    htmlFooter(&request);
+                }
+                else if(0 == strncmp("allocation_", aFileName, 11))
+                {
+                    int scanRes = 0;
+                    PRUint32 allocationIndex = 0;
+                    
+                    /*
+                    ** Oh, what a hack....
+                    ** The index to the allocation structure in the global run
+                    **   is in the filename.  Better than the pointer value....
+                    */
+                    scanRes = PR_sscanf(aFileName + 11, "%u", &allocationIndex);
+                    
+                    if(1 == scanRes && globals.mRun.mAllocationCount > allocationIndex && NULL != globals.mRun.mAllocations[allocationIndex])
+                    {
+                        STAllocation* allocation = globals.mRun.mAllocations[allocationIndex];
+                        char buffer[128];
+                        int displayRes = 0;
+                        
+                        PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Allocation %u Details Report", allocationIndex);
+                        htmlHeader(&request, buffer);
+                        
+                        displayRes = displayAllocationDetails(&request, allocation);
                         if(0 != displayRes)
                         {
                             retval = __LINE__;
-                            REPORT_ERROR(__LINE__, displayTopCallsites);
+                            REPORT_ERROR(__LINE__, displayAllocationDetails);
                         }
                         
-                        /*
-                        ** Done with the array.
-                        */
-                        free(array);
-                        array = NULL;
+                        htmlFooter(&request);
+                    }
+                    else
+                    {
+                        htmlNotFound(&request);
                     }
                 }
-                else
+                else if(0 == strncmp("callsite_", aFileName, 9))
                 {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, handleRequest);
+                    int scanRes = 0;
+                    PRUint32 callsiteSerial = 0;
+                    tmcallsite* resolved = NULL;
+                    
+                    /*
+                    ** Oh, what a hack....
+                    ** The serial(key) to the callsite structure in the hash table
+                    **   is in the filename.  Better than the pointer value....
+                    */
+                    scanRes = PR_sscanf(aFileName + 9, "%u", &callsiteSerial);
+                    
+                    if(1 == scanRes && 0 != callsiteSerial && NULL != (resolved = tmreader_callsite(aTMR, callsiteSerial)))
+                    {
+                        char buffer[128];
+                        int displayRes = 0;
+                        
+                        PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Callsite %u Details Report", callsiteSerial);
+                        htmlHeader(&request, buffer);
+                        
+                        displayRes = displayCallsiteDetails(&request, resolved);
+                        if(0 != displayRes)
+                        {
+                            retval = __LINE__;
+                            REPORT_ERROR(__LINE__, displayAllocationDetails);
+                        }
+                        
+                        htmlFooter(&request);
+                    }
+                    else
+                    {
+                        htmlNotFound(&request);
+                    }
                 }
-                
-                htmlFooter(&request);
-            }
-            else if(0 == strcmp("memory_leaks.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Memory Leaks Report");
-                
-                displayRes = displayMemoryLeaks(&request, globals.mCache.mSortedRun);
-                if(0 != displayRes)
+                else if(0 == strcmp("root_callsites.html", aFileName))
                 {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayMemoryLeaks);
-                }
-                
-                htmlFooter(&request);
-            }
-            else if(0 == strncmp("allocation_", aFileName, 11))
-            {
-                int scanRes = 0;
-                PRUint32 allocationIndex = 0;
-                
-                /*
-                ** Oh, what a hack....
-                ** The index to the allocation structure in the global run
-                **   is in the filename.  Better than the pointer value....
-                */
-                scanRes = PR_sscanf(aFileName + 11, "%u", &allocationIndex);
-                
-                if(1 == scanRes && globals.mRun.mAllocationCount > allocationIndex && NULL != globals.mRun.mAllocations[allocationIndex])
-                {
-                    STAllocation* allocation = globals.mRun.mAllocations[allocationIndex];
-                    char buffer[128];
                     int displayRes = 0;
                     
-                    PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Allocation %u Details Report", allocationIndex);
-                    htmlHeader(&request, buffer);
+                    htmlHeader(&request, "SpaceTrace Root Callsites");
                     
-                    displayRes = displayAllocationDetails(&request, allocation);
+                    displayRes = displayCallsites(&request, aTMR->calltree_root.kids, ST_FOLLOW_SIBLINGS, 0, __LINE__);
                     if(0 != displayRes)
                     {
                         retval = __LINE__;
-                        REPORT_ERROR(__LINE__, displayAllocationDetails);
+                        REPORT_ERROR(__LINE__, displayCallsites);
+                    }
+                    
+                    htmlFooter(&request);
+                }
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("footprint_graph.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Memory Footprint Report");
+                    
+                    PR_fprintf(request.mFD, "<div align=center>\n");
+                    PR_fprintf(request.mFD, "<img src=\"./footprint.png");
+                    optionGetDataOut(request.mFD, &request.mOptions);
+                    PR_fprintf(request.mFD, "\">\n");
+                    PR_fprintf(request.mFD, "</div>\n");
+                    
+                    htmlFooter(&request);
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("times_graph.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Allocation Times Report");
+                    
+                    PR_fprintf(request.mFD, "<div align=center>\n");
+                    PR_fprintf(request.mFD, "<img src=\"./times.png");
+                    optionGetDataOut(request.mFD, &request.mOptions);
+                    PR_fprintf(request.mFD, "\">\n");
+                    PR_fprintf(request.mFD, "</div>\n");
+                    
+                    htmlFooter(&request);
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("lifespan_graph.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Allocation Lifespans Report");
+                    
+                    PR_fprintf(request.mFD, "<div align=center>\n");
+                    PR_fprintf(request.mFD, "<img src=\"./lifespan.png");
+                    optionGetDataOut(request.mFD, &request.mOptions);
+                    PR_fprintf(request.mFD, "\">\n");
+                    PR_fprintf(request.mFD, "</div>\n");
+                    
+                    htmlFooter(&request);
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("weight_graph.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "SpaceTrace Allocation Weights Report");
+                    
+                    PR_fprintf(request.mFD, "<div align=center>\n");
+                    PR_fprintf(request.mFD, "<img src=\"./weight.png");
+                    optionGetDataOut(request.mFD, &request.mOptions);
+                    PR_fprintf(request.mFD, "\">\n");
+                    PR_fprintf(request.mFD, "</div>\n");
+                    
+                    htmlFooter(&request);
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("footprint.png", aFileName))
+                {
+                    int graphRes = 0;
+                    
+                    graphRes = graphFootprint(&request, globals.mGlobalCache.mSortedRun);
+                    if(0 != graphRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, graphFootprint);
+                    }
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("times.png", aFileName))
+                {
+                    int graphRes = 0;
+                    
+                    graphRes = graphTimeval(&request, globals.mGlobalCache.mSortedRun);
+                    if(0 != graphRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, graphTimeval);
+                    }
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("lifespan.png", aFileName))
+                {
+                    int graphRes = 0;
+                    
+                    graphRes = graphLifespan(&request, globals.mGlobalCache.mSortedRun);
+                    if(0 != graphRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, graphLifespan);
+                    }
+                }
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
+                else if(0 == strcmp("weight.png", aFileName))
+                {
+                    int graphRes = 0;
+                    
+                    graphRes = graphWeight(&request, globals.mGlobalCache.mSortedRun);
+                    if(0 != graphRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, graphWeight);
+                    }
+                }
+#endif /* ST_WANT_GRAPHS */
+                else if(0 == strcmp("categories_summary.html", aFileName))
+                {
+                    int displayRes = 0;
+                    
+                    htmlHeader(&request, "Category Report");
+                    
+                    displayRes = displayCategoryReport(&request, &globals.mCategoryRoot, 1);
+                    if(0 != displayRes)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, displayMemoryLeaks);
                     }
                     
                     htmlFooter(&request);
@@ -4915,197 +5480,23 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 {
                     htmlNotFound(&request);
                 }
-            }
-            else if(0 == strncmp("callsite_", aFileName, 9))
-            {
-                int scanRes = 0;
-                PRUint32 callsiteSerial = 0;
-                tmcallsite* resolved = NULL;
-                
-                /*
-                ** Oh, what a hack....
-                ** The serial(key) to the callsite structure in the hash table
-                **   is in the filename.  Better than the pointer value....
-                */
-                scanRes = PR_sscanf(aFileName + 9, "%u", &callsiteSerial);
-                
-                if(1 == scanRes && 0 != callsiteSerial && NULL != (resolved = tmreader_callsite(aTMR, callsiteSerial)))
-                {
-                    char buffer[128];
-                    int displayRes = 0;
-                    
-                    PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Callsite %u Details Report", callsiteSerial);
-                    htmlHeader(&request, buffer);
-                    
-                    displayRes = displayCallsiteDetails(&request, resolved);
-                    if(0 != displayRes)
-                    {
-                        retval = __LINE__;
-                        REPORT_ERROR(__LINE__, displayAllocationDetails);
-                    }
-                    
-                    htmlFooter(&request);
-                }
-                else
-                {
-                    htmlNotFound(&request);
-                }
-            }
-            else if(0 == strcmp("root_callsites.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Root Callsites");
-                
-                displayRes = displayCallsites(&request, aTMR->calltree_root.kids, ST_FOLLOW_SIBLINGS, 0, __LINE__);
-                if(0 != displayRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayCallsites);
-                }
-                
-                htmlFooter(&request);
-            }
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("footprint_graph.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Memory Footprint Report");
-                
-                PR_fprintf(request.mFD, "<div align=center>\n");
-                PR_fprintf(request.mFD, "<img src=\"./footprint.png");
-                optionGetDataOut(request.mFD, &request.mOptions);
-                PR_fprintf(request.mFD, "\">\n");
-                PR_fprintf(request.mFD, "</div>\n");
-                
-                htmlFooter(&request);
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("times_graph.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Allocation Times Report");
-                
-                PR_fprintf(request.mFD, "<div align=center>\n");
-                PR_fprintf(request.mFD, "<img src=\"./times.png");
-                optionGetDataOut(request.mFD, &request.mOptions);
-                PR_fprintf(request.mFD, "\">\n");
-                PR_fprintf(request.mFD, "</div>\n");
-                
-                htmlFooter(&request);
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("lifespan_graph.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Allocation Lifespans Report");
-                
-                PR_fprintf(request.mFD, "<div align=center>\n");
-                PR_fprintf(request.mFD, "<img src=\"./lifespan.png");
-                optionGetDataOut(request.mFD, &request.mOptions);
-                PR_fprintf(request.mFD, "\">\n");
-                PR_fprintf(request.mFD, "</div>\n");
-                
-                htmlFooter(&request);
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("weight_graph.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Allocation Weights Report");
-                
-                PR_fprintf(request.mFD, "<div align=center>\n");
-                PR_fprintf(request.mFD, "<img src=\"./weight.png");
-                optionGetDataOut(request.mFD, &request.mOptions);
-                PR_fprintf(request.mFD, "\">\n");
-                PR_fprintf(request.mFD, "</div>\n");
-                
-                htmlFooter(&request);
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("footprint.png", aFileName))
-            {
-                int graphRes = 0;
-                
-                graphRes = graphFootprint(&request, globals.mCache.mSortedRun);
-                if(0 != graphRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, graphFootprint);
-                }
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("times.png", aFileName))
-            {
-                int graphRes = 0;
-                
-                graphRes = graphTimeval(&request, globals.mCache.mSortedRun);
-                if(0 != graphRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, graphTimeval);
-                }
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("lifespan.png", aFileName))
-            {
-                int graphRes = 0;
-                
-                graphRes = graphLifespan(&request, globals.mCache.mSortedRun);
-                if(0 != graphRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, graphLifespan);
-                }
-            }
-#endif /* ST_WANT_GRAPHS */
-#if ST_WANT_GRAPHS
-            else if(0 == strcmp("weight.png", aFileName))
-            {
-                int graphRes = 0;
-                
-                graphRes = graphWeight(&request, globals.mCache.mSortedRun);
-                if(0 != graphRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, graphWeight);
-                }
-            }
-#endif /* ST_WANT_GRAPHS */
-            else if(0 == strcmp("categories_summary.html", aFileName))
-            {
-                int displayRes = 0;
-                
-                htmlHeader(&request, "Category Report");
-                
-                displayRes = displayCategoryReport(&request, &globals.mCategoryRoot, 1);
-                if(0 != displayRes)
-                {
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayMemoryLeaks);
-                }
-                
-                htmlFooter(&request);
             }
             else
             {
-                htmlNotFound(&request);
+                retval = __LINE__;
+                REPORT_ERROR(__LINE__, applySettings);
             }
+        
+            /*
+            **  Release the context we obtained earlier.
+            */
+            contextRelease(request.mContext);
+            request.mContext = NULL;
         }
         else
         {
             retval = __LINE__;
-            REPORT_ERROR(__LINE__, applySettings);
+            REPORT_ERROR(__LINE__, contextObtain);
         }
     }
     else
@@ -5219,7 +5610,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.31 2002/05/11 01:24:51 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.32 2002/05/12 04:17:55 blythe%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -5562,8 +5953,8 @@ int doRun(void)
             /*
             ** Create the default sorted run.
             */
-            globals.mCache.mSortedRun = createRunFromGlobal();
-            if(NULL != globals.mCache.mSortedRun)
+            globals.mGlobalCache.mSortedRun = createRunFromGlobal();
+            if(NULL != globals.mGlobalCache.mSortedRun)
             {
                 /*
                 ** Decide if we're going into batch mode or server mode.
@@ -5600,7 +5991,7 @@ int doRun(void)
                 ** This is stored in the categories now, so allow them
                 **      to free it off.
                 */
-                globals.mCache.mSortedRun = NULL;
+                globals.mGlobalCache.mSortedRun = NULL;
 
                 /*
                 ** Clear our categorization tree
@@ -5623,6 +6014,137 @@ int doRun(void)
     return retval;
 }
 
+int initCaches(void)
+/*
+**  Initialize the global caches.
+**  More involved since we have to allocated/create some objects.
+**
+**  returns     Zero if all is well.
+**              Non-zero on error.
+*/
+{
+    int retval = 0;
+    STContextCache* inCache = &globals.mContextCache;
+
+    if(NULL != inCache && 0 != globals.mOptions.mContexts)
+    {
+        inCache->mLock = PR_NewLock();
+        if(NULL != inCache->mLock)
+        {
+            inCache->mCacheMiss = PR_NewCondVar(inCache->mLock);
+            if(NULL != inCache->mCacheMiss)
+            {
+                inCache->mItems = (STContextCacheItem*)calloc(globals.mOptions.mContexts, sizeof(STContextCacheItem));
+                if(NULL != inCache->mItems)
+                {
+                    PRUint32 loop = 0;
+                    char buffer[64];
+
+                    inCache->mItemCount = globals.mOptions.mContexts;
+
+                    /*
+                    **  Init each item as needed.
+                    */
+                    for(loop = 0; loop < inCache->mItemCount; loop++)
+                    {
+                        inCache->mItems[loop].mContext.mIndex = loop;
+
+                        PR_snprintf(buffer, sizeof(buffer), "Context Item %d RW Lock", loop);
+                        inCache->mItems[loop].mContext.mRWLock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, buffer);
+                        if(NULL == inCache->mItems[loop].mContext.mRWLock)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(loop != inCache->mItemCount)
+                    {
+                        retval = __LINE__;
+                        REPORT_ERROR(__LINE__, initCaches);
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    REPORT_ERROR(__LINE__, calloc);
+                }
+            }
+            else
+            {
+                retval = __LINE__;
+                REPORT_ERROR(__LINE__, PR_NewCondVar);
+            }
+        }
+        else
+        {
+            retval = __LINE__;
+            REPORT_ERROR(__LINE__, PR_NewLock);
+        }
+    }
+    else
+    {
+        retval = __LINE__;
+        REPORT_ERROR(__LINE__, initCaches);
+    }
+
+    return retval;
+}
+
+int destroyCaches(void)
+/*
+**  Clean up any global caches we have laying around.
+**
+**  returns     Zero if all is well.
+**              Non-zero on error.
+*/
+{
+    int retval = 0;
+    STContextCache* inCache = &globals.mContextCache;
+
+    if(NULL != inCache)
+    {
+        PRUint32 loop = 0;
+
+        /*
+        **  Uninit item data one by one.
+        */
+        for(loop = 0; loop < inCache->mItemCount; loop++)
+        {
+            if(NULL != inCache->mItems[loop].mContext.mRWLock)
+            {
+                PR_DestroyRWLock(inCache->mItems[loop].mContext.mRWLock);
+                inCache->mItems[loop].mContext.mRWLock = NULL;
+            }
+        }
+
+        inCache->mItemCount = 0;
+        if(NULL != inCache->mItems)
+        {
+            free(inCache->mItems);
+            inCache->mItems = NULL;
+        }
+
+        if(NULL != inCache->mCacheMiss)
+        {
+            PR_DestroyCondVar(inCache->mCacheMiss);
+            inCache->mCacheMiss = NULL;
+        }
+
+        if(NULL != inCache->mLock)
+        {
+            PR_DestroyLock(inCache->mLock);
+            inCache->mLock = NULL;
+        }
+    }
+    else
+    {
+        retval = __LINE__;
+        REPORT_ERROR(__LINE__, destroyCaches);
+    }
+
+    return retval;
+}
+
 /*
 ** main
 **
@@ -5635,6 +6157,7 @@ int main(int aArgCount, char** aArgArray)
     PRStatus prResult = PR_SUCCESS;
     int showedHelp = 0;
     int looper = 0;
+    int cacheResult = 0;
 
     /*
     ** NSPR init.
@@ -5670,6 +6193,12 @@ int main(int aArgCount, char** aArgArray)
     /*
     **  Initialize our caches.
     */
+    cacheResult = initCaches();
+    if(0 != cacheResult)
+    {
+        retval = __LINE__;
+        REPORT_ERROR(__LINE__, initCaches);
+    }
 
     /*
     ** Show help on usage if need be.
@@ -5705,9 +6234,22 @@ int main(int aArgCount, char** aArgArray)
         REPORT_ERROR(retval, PR_Cleanup);
         retval = __LINE__;
     }
+    /*
+    **  All threads are joined/done by this line.
+    */
 
     /*
-    **  Once threads are dead, we are safe to kill our tmreader data.
+    **  Blow away our caches.
+    */
+    cacheResult = destroyCaches();
+    if(0 != cacheResult)
+    {
+        retval = __LINE__;
+        REPORT_ERROR(__LINE__, initCaches);
+    }
+
+    /*
+    **  We are safe to kill our tmreader data.
     */
     if(NULL != globals.mTMR)
     {
