@@ -24,8 +24,17 @@
 #include "nsplugindefs.h"
 
 
+#define NS_INETPLUGININSTANCE_IID                       \
+{ /* ebe00f40-0199-11d2-815b-006008219d7a */         \
+    0xebe00f40,                                      \
+    0x0199,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x21, 0x9d, 0x7a} \
+}
+
 class nsINetPluginInstance : public nsISupports {
 public:
+    static const nsIID& GetIID() { static nsIID iid = NS_INETPLUGININSTANCE_IID; return iid; }
 
     NS_IMETHOD
     Initialize(nsINetOStream* out_stream, const char *stream_name) = 0;
@@ -43,14 +52,6 @@ public:
     Destroy(void) = 0;
 
 };
-
-#define NS_INETPLUGININSTANCE_IID                       \
-{ /* ebe00f40-0199-11d2-815b-006008219d7a */         \
-    0xebe00f40,                                      \
-    0x0199,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x21, 0x9d, 0x7a} \
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////

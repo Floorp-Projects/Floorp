@@ -45,6 +45,8 @@ class nsINameSpaceManager;
  */
 class nsINameSpace : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_INAMESPACE_IID; return iid; }
+
   NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) const = 0;
 
   // Get data of this name space
