@@ -301,27 +301,6 @@ public:
     *                     associated with the cell
     */
   NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
-
-  /** Get first selected element from first selection range.
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * @param aCell     Selected cell or null if ranges don't contain cell selections
-    * @param aRange    Optional: if not null, return the selection range 
-    *                     associated with the cell
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
-    */
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
-  
-  /** Get next selected cell element from first selection range.
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
-    * @param aCell     Selected cell or null if no more selected cells
-    *                     or ranges don't contain cell selections
-    * @param aRange    Optional: if not null, return the selection range 
-    *                     associated with the cell
-    */
-  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
 };
 
 #endif // nsITableEditor_h__
