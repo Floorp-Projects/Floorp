@@ -42,7 +42,7 @@ interface nsIDocumentLoader : nsISupports
   void removeObserver(in nsIDocumentLoaderObserver aObserver);
   attribute nsISupports container;
   
-  [noscript] void getContentViewerContainer(in unsigned long aDocumentID, out nsIContentViewerContainer aResult);
+  [noscript] void getContentViewerContainer(in nsISupports aDocumentID, out nsIContentViewerContainer aResult);
   nsILoadGroup getLoadGroup();
 
   void destroy();

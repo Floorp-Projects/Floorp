@@ -314,10 +314,10 @@ nsDocLoaderImpl::GetLoadGroup(nsILoadGroup** aResult)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
+nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
                                            nsIContentViewerContainer** aResult)
 {
-  nsISupports* base = (nsISupports*) aDocumentID;
+  nsISupports* base = aDocumentID;
   nsIDocument* doc;
   nsresult rv;
 
