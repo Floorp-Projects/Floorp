@@ -310,7 +310,6 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
     mFirstChild = new nsHTMLFrameInnerFrame(mContent, this);
     // XXX temporary! use style system to get correct style!
     mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
-    mChildCount = 1;
   }
  
   // nsContainerFrame::PaintBorder has some problems, kludge it here

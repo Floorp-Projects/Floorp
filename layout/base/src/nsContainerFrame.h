@@ -169,7 +169,6 @@ protected:
 #endif
 
   nsIFrame*   mFirstChild;
-  PRInt32     mChildCount;
   nsIFrame*   mOverflowList;
 };
 

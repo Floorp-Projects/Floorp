@@ -61,7 +61,6 @@ nsScrollBodyFrame::CreateFirstChild(nsIPresContext* aPresContext)
   if (aPresContext->IsPaginated()) {
     // Yes. Create the first page frame
     mFirstChild = new nsPageFrame(mContent, this);/* XXX mContent won't work here */
-    mChildCount = 1;
   } else {
     if (nsnull != mContent) {
 #if 0
@@ -81,7 +80,6 @@ nsScrollBodyFrame::CreateFirstChild(nsIPresContext* aPresContext)
       }
 #else
       nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
-      mChildCount = 1;
 #endif
     }
   }
@@ -205,7 +203,6 @@ nsScrollBodyFrame::Reflow(nsIPresContext&      aPresContext,
             NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
   #endif
             kidFrame->SetNextSibling(continuingPage);
-            mChildCount++;
           }
   
           // Get the next page
@@ -368,7 +365,6 @@ nsScrollInnerFrame::Reflow(nsIPresContext&      aPresContext,
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsScrollBodyFrame(mContent, this);
-    mChildCount = 1;
   }
 
   // Allow the child frame to be as wide as our max width (minus a
@@ -465,7 +461,6 @@ nsScrollOuterFrame::Reflow(nsIPresContext&      aPresContext,
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsScrollInnerFrame(mContent, this);
-    mChildCount = 1;
   }
 
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)

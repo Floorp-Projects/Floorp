@@ -113,6 +113,7 @@ protected:
 private:
   nsSpaceManager* mSpaceManager;
   nsVoidArray     mAbsoluteItems;
+  PRInt32         mChildCount;
 
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
                              const nsMargin& aBorderPadding,

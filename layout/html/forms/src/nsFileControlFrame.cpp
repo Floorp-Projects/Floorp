@@ -213,7 +213,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&      aPresContext,
     childFrame->SetStyleContext(&aPresContext, mStyleContext);
 
     mFirstChild->SetNextSibling(childFrame);
-    mChildCount = 2;
 
     NS_RELEASE(text);
     NS_RELEASE(browse);
