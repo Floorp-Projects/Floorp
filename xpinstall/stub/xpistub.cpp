@@ -38,6 +38,11 @@
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
 
+#include "plstr.h"
+
+#ifdef XP_PC
+#include <direct.h>
+#endif
 
 
 //------------------------------------------------------------------------
@@ -58,9 +63,39 @@ PR_PUBLIC_API(nsresult) XPI_Init(   pfnXPIStart    startCB,
                                     pfnXPIProgress progressCB,
                                     pfnXPIFinal    finalCB     )
 {
-    nsresult    rv;
+    nsresult              rv;
+    char                  szTemp[_MAX_PATH];
+    nsCOMPtr<nsIFileSpec> nsIfsDirectory;
+    nsFileSpec            nsfsDirectory;
 
+#ifdef XP_PC
+    //
+    // Passing 0 as the 2nd parameter to AutoRegister() will tell it to
+    // automatically determine the path to the components directory.
+    // Since XPI_Init() is being called by Setup.exe, not apprunner.exe,
+    // the wrong components directory is determined.
+    // As a requirement to loading xpistub.dll, it must be loaded from
+    // the same directory as xpcom.dll.
+    // This makes is easy to locate the correct components directory by
+    // using a form of GetCurrentDirectory().
+    //
+    // Since nsFileSpec() does not contain a GetCwd() function,
+    // a call to getcwd() is being used under Windows only.
+    //
+
+    getcwd(szTemp, _MAX_PATH);
+    PL_strcat(szTemp, "\\");
+    PL_strcat(szTemp, "components");
+    nsfsDirectory = szTemp;
+    rv = NS_NewFileSpecWithSpec(*(&nsfsDirectory), getter_AddRefs(nsIfsDirectory));
+    if(NS_FAILED(rv))
+      return rv;
+
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
+#else
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
+#endif
+
     if (NS_SUCCEEDED(rv))
     {
         rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
@@ -70,14 +105,16 @@ PR_PUBLIC_API(nsresult) XPI_Init(   pfnXPIStart    startCB,
 
         if (NS_SUCCEEDED(rv))
         {
-            gNotifier = new nsStubNotifier( startCB, progressCB, finalCB );
-            if (!gNotifier)
+            nsStubNotifier* stub = new nsStubNotifier( startCB, progressCB, finalCB );
+            if (!stub)
             {
                 gXPI->Release();
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
             else
-                gNotifier->AddRef();
+            {
+                rv = stub->QueryInterface(nsIXPINotifier::GetIID(), (void**)&gNotifier);
+            }
         }
     }
 

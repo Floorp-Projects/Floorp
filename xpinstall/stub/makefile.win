@@ -32,6 +32,7 @@ OBJS =  \
 	$(NULL)
 
 LLIBS =                        \
+    $(LIBNSPR)                 \
     $(DIST)\lib\xpcom.lib      \
     $(NULL)
 
