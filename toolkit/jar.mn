@@ -9,6 +9,7 @@ toolkit.jar:
          content/global/nsBrowserStatusHandler.js           (content/nsBrowserStatusHandler.js)
          content/global/nsBrowserContentListener.js         (content/nsBrowserContentListener.js)
          content/global/charset.js                          (content/charset.js)
++        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
 +        locale/en-US/global/finddialog.dtd                 (locale/findDialog.dtd)
