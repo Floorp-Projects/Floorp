@@ -534,22 +534,22 @@ NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 }
 
 
-//-------------------------------------------------------------------------
 //
-// Enable/disable this component
+// Enable
 //
-//-------------------------------------------------------------------------
+// Enable/disable this view
+//
 NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
-  // unimplemented.
+  // unimplemented;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 {
-  // unimplemented.
-  if (*aState)
+  // unimplemented
+  if (aState)
    *aState = PR_TRUE;
   return NS_OK;
 }
