@@ -85,21 +85,35 @@ namespace MetaData {
         }
     }
 
-    FunctionInstance *JS2Metadata::validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, bool isConstructor, size_t pos)
+    FunctionInstance *JS2Metadata::createFunctionInstance(Environment *env, bool prototype, bool unchecked, NativeCode *code, uint32 length, DynamicVariable **lengthProperty)
     {
-        js2val compileThis = JS2VAL_VOID; 
-        ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-        DEFINE_ROOTKEEPER(rk1, compileFrame);
-        
+        ParameterFrame *compileFrame = new ParameterFrame(JS2VAL_VOID, prototype);
+        DEFINE_ROOTKEEPER(rk1, compileFrame);        
         FunctionInstance *result = new FunctionInstance(this, functionClass->prototype, functionClass);
         DEFINE_ROOTKEEPER(rk2, result);
-        result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
+        if (code == NULL)
+            result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
+        else
+            result->fWrap = new FunctionWrapper(unchecked, compileFrame, code, env);
+        result->fWrap->length = length;
+        DynamicVariable *dv = createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
+        if (lengthProperty)
+            *lengthProperty = dv;
+        return result;
+    }
+
+
+    FunctionInstance *JS2Metadata::validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, bool isConstructor, size_t pos)
+    {
+        DynamicVariable *lengthVar = NULL;
+        FunctionInstance *result = createFunctionInstance(env, prototype, unchecked, NULL, 0, &lengthVar);
+        DEFINE_ROOTKEEPER(rk1, result);
         fnDef->fn = result;
 
         Frame *curTopFrame = env->getTopFrame();
         CompilationData *oldData = startCompilationUnit(result->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
         try {
-            env->addFrame(compileFrame);
+            env->addFrame(result->fWrap->compileFrame);
             VariableBinding *pb = fnDef->parameters;
             uint32 pCount = 0;
             if (pb) {
@@ -109,7 +123,7 @@ namespace MetaData {
                 }
                 pb = fnDef->parameters;
                 while (pb) {
-                    FrameVariable *v = new FrameVariable(compileFrame->allocateSlot(), FrameVariable::Parameter);
+                    FrameVariable *v = new FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
                     if (pb->type)
                         ValidateTypeExpression(cxt, env, pb->type);
                     pb->member = v;
@@ -119,11 +133,11 @@ namespace MetaData {
             }
             if (fnDef->resultType)
                 ValidateTypeExpression(cxt, env, fnDef->resultType);
-            createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
+            result->fWrap->length = pCount;
+            lengthVar->value = INT_TO_JS2VAL(pCount);
             if (cxt->E3compatibility)
                 createDynamicProperty(result, &world.identifiers["arguments"], JS2VAL_NULL, ReadAccess, true, false);
-            result->fWrap->length = pCount;
-            compileFrame->isConstructor = isConstructor;
+            result->fWrap->compileFrame->isConstructor = isConstructor;
             ValidateStmt(cxt, env, Plural, fnDef->body);
             env->removeTopFrame();
         }
@@ -3775,11 +3789,9 @@ static const uint8 urlCharType[256] =
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
-        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
-        fInst->fWrap->length = length;
+        FunctionInstance *fInst = createFunctionInstance(env, true, true, code, length, NULL);
+        DEFINE_ROOTKEEPER(rk1, fInst);
         createDynamicProperty(glob, &world.identifiers[name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
-        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
     }
 
     static js2val Object_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
@@ -3977,47 +3989,31 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 // Add __proto__ as a getter/setter instance member to Object & class
         Multiname proto_mn(&world.identifiers["__proto__"], publicNamespace);
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, class_underbarProtoGet, 0, NULL);
         InstanceGetter *g = new InstanceGetter(&proto_mn, fInst, objectClass, true, true);
         defineInstanceMember(classClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, g, 0);
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, class_underbarProtoGet, 0, NULL);
         InstanceSetter *s = new InstanceSetter(&proto_mn, fInst, objectClass, true, true);
         defineInstanceMember(classClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, s, 0);
 
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoGet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Object_underbarProtoGet, 0, NULL);
         g = new InstanceGetter(&proto_mn, fInst, objectClass, true, true);
         defineInstanceMember(objectClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, g, 0);
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoSet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Object_underbarProtoSet, 0, NULL);
         s = new InstanceSetter(&proto_mn, fInst, objectClass, true, true);
         defineInstanceMember(objectClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, s, 0);
 
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Object_toString, 0, NULL);
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
-        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
         // and 'valueOf'
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_valueOf, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Object_valueOf, 0, NULL);
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->valueOf_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
-        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
         // and 'constructor'
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Object_Constructor, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Object_Constructor, 0, NULL);
+        // XXX 'this' == JS2VAL_INACCESSIBLE for above???
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
-        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
 
 
 /*** ECMA 4  Integer Class ***/
@@ -4065,14 +4061,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
         Multiname length_mn(&world.identifiers["length"], publicNamespace);
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Array_lengthGet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Array_lengthGet, 0, NULL);
         g = new InstanceGetter(&length_mn, fInst, objectClass, true, true);
         defineInstanceMember(arrayClass, &cxt, length_mn.name, *length_mn.nsList, Attribute::NoOverride, false, g, 0);
-        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Array_lengthSet, env);
-        fInst->fWrap->length = 0;
+        fInst = createFunctionInstance(env, true, true, Array_lengthSet, 0, NULL);
         s = new InstanceSetter(&length_mn, fInst, objectClass, true, true);
         defineInstanceMember(arrayClass, &cxt, length_mn.name, *length_mn.nsList, Attribute::NoOverride, false, s, 0);
 
@@ -4493,21 +4485,21 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
 
-    void JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
         QualifiedName qName(publicNamespace, &world.identifiers[widenCString(name)]); 
-        createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
+        return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
     }
 
-    void JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
         DEFINE_ROOTKEEPER(rk, name);
         QualifiedName qName(publicNamespace, name); 
-        createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
+        return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
     }
 
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
-    void JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable)
+    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable)
     {
         DynamicVariable *dv = new DynamicVariable(initVal, sealed);
         LocalBinding *new_b = new LocalBinding(access, dv, enumerable);
@@ -4529,6 +4521,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         else
             lbe = *lbeP;
         lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(qName->nameSpace, new_b));
+        return dv;
     }
 
     // Use the slotIndex from the instanceVariable to access the slot
@@ -4640,10 +4633,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         env->removeTopFrame();
 
         // Add "constructor" as a dynamic property of the prototype
-        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), builtinClass->construct, env);
-        fInst->fWrap->length = 0;
+        FunctionInstance *fInst = createFunctionInstance(env, true, true, builtinClass->construct, 0, NULL);
         ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
         createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
     
@@ -4658,11 +4648,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
                 defineInstanceMember(builtinClass, &cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
 */
-                FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-                fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
-                fInst->fWrap->length = pf->length;
+                FunctionInstance *fInst = createFunctionInstance(env, true, true, pf->code, pf->length, NULL);
                 createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
-                createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                 pf++;
             }
         }
@@ -4684,12 +4671,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             pf = staticFunctions;
             if (pf) {
                 while (pf->name) {
-                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
-                    callInst->fWrap->length = pf->length;
+                    FunctionInstance *callInst = createFunctionInstance(env, true, true, pf->code, pf->length, NULL);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
-                    createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                     pf++;
                 }
             }

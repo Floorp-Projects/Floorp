@@ -126,14 +126,17 @@ doCall:
                 }
                 // XXX ok to not use getLength(meta, fObj) ?
                 uint32 length = fWrap->length;
-                if (fWrap->code) {  // native code
+                if (fWrap->code || fWrap->alien) {  // native code
                     uint16 argc = argCount;
                     while (argCount < length) {
                         push(JS2VAL_UNDEFINED);
                         argCount++;
                     }
                     jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
-                    a = fWrap->code(meta, a, base(argCount), argc);
+                    if (fWrap->alien)
+                        a = fWrap->alien(meta, fInst, a, base(argCount), argc);
+                    else
+                        a = fWrap->code(meta, a, base(argCount), argc);
                     rts();
                     push(a);
                 }

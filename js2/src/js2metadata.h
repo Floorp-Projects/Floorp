@@ -62,6 +62,7 @@ typedef void (Invokable)();
 typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
+typedef js2val (AlienCode)(JS2Metadata *meta, FunctionInstance *fn, const js2val thisValue, js2val argv[], uint32 argc);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -850,20 +851,6 @@ public:
     virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)                                       { return false; }
 };
 
-class JS2SpiderMonkeyClass : public JS2Class {
-public:
-    JS2SpiderMonkeyClass(const String *name)
-        : JS2Class(NULL, JS2VAL_VOID, NULL, false, true, name) { }
-
-    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
-    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
-    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-    virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
-    virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result);
-    virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result);
-
-};
-
 class Package : public NonWithFrame {
 public:
     typedef enum { InTransit, InHand } PackageStatus;
@@ -895,6 +882,7 @@ public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, Environment *env) 
         : bCon(new BytecodeContainer()), 
             code(NULL), 
+            alien(NULL), 
             unchecked(unchecked), 
             compileFrame(compileFrame), 
             env(new Environment(env)), 
@@ -905,6 +893,18 @@ public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
         : bCon(NULL), 
             code(code), 
+            alien(NULL), 
+            unchecked(unchecked), 
+            compileFrame(compileFrame), 
+            env(new Environment(env)), 
+            length(0),
+            resultType(NULL)
+        { }
+
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, AlienCode *code, Environment *env) 
+        : bCon(NULL), 
+            code(NULL),
+            alien(code), 
             unchecked(unchecked), 
             compileFrame(compileFrame), 
             env(new Environment(env)), 
@@ -916,6 +916,7 @@ public:
 
     BytecodeContainer   *bCon;
     NativeCode          *code;
+    AlienCode           *alien;
     bool                unchecked;          // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
     Environment         *env;
@@ -1002,7 +1003,8 @@ public:
     FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
     FunctionWrapper     *fWrap;
-    bool                isMethodClosure;
+
+    bool                isMethodClosure;        // if true, use the thisObject from below
     js2val              thisObject;
 
     virtual void markChildren();
@@ -1040,16 +1042,6 @@ public:
 
     JS2RegExp  *mRegExp;
     virtual ~RegExpInstance()             { }
-};
-
-class SpiderMonkeyInstance : public SimpleInstance {
-public:
-    SpiderMonkeyInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
-
-    void *jsObject;
-    void *pluginInstance;
-
-    virtual ~SpiderMonkeyInstance()    { }
 };
 
 // A helper class for 'for..in' statements
@@ -1491,10 +1483,11 @@ public:
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame);
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
-    void createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
-    void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
-    void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
+    DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
+    DynamicVariable *createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
+    DynamicVariable *createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
 
+    FunctionInstance *createFunctionInstance(Environment *env, bool prototype, bool unchecked, NativeCode *code, uint32 length, DynamicVariable **lengthProperty);
 
 
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval, Frame *container);
