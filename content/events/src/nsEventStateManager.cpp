@@ -113,6 +113,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
+#include "nsIPrefBranchInternal.h"
 
 #if defined (XP_MAC) || defined(XP_MACOSX)
 #include <Events.h>
@@ -209,6 +210,13 @@ nsEventStateManager::Init()
       mPrefBranch->GetIntPref("ui.key.generalAccessKey",
                               &nsEventStateManager::gGeneralAccesskeyModifier);
     }
+
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(mPrefBranch));
+    NS_ASSERTION(prefInternal, "No pref branch internal");
+    prefInternal->AddObserver("accessibility.tabfocus", this, PR_FALSE);
+    if (sTabFocusModel == eTabFocus_unset) {
+      ResetObservedPrefs();
+    }
   }
 
   if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
@@ -264,6 +272,11 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(mPrefBranch));
+  NS_ASSERTION(prefInternal, "No pref branch internal");
+
+  prefInternal->RemoveObserver("accessibility.tabfocus", this);
+
   mPrefBranch = nsnull;
 
   m_haveShutdown = PR_TRUE;
@@ -286,6 +299,37 @@ nsEventStateManager::getPrefBranch()
   return NS_OK;
 }
 
+void nsEventStateManager::ResetObservedPrefs()
+{
+  // Tab focus mode is constant across all windows.
+  // It would be nicer if we could make sure this was called only
+  // once, each time the pref changed, instead of once per esm
+
+  sTabFocusModel = eTabFocus_any;
+  nsresult rv = getPrefBranch();
+
+  // XXX todo: On the mac, only links tabbing should be configurable in Mozilla
+  //           Whether other form controls are tabbable is a system setting
+  //           that we should adhere to via look and feel.
+  // Something like this:
+  // sTabFocusModel &= eTabFocus_linksMask;
+  // nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
+  // PRInt32 tabToNonTextControls = 0;
+  // lookNFeel->GetMetric(nsILookAndFeel::eMetric_TabToNonTextControls,
+  //                      tabToNonTextControls);
+  // if (tabToNonTextControls)
+  //   sTabFocusModel |= eTabFocus_formElementsMask;
+  // else
+  //   sTabFocusModel = eTabFocus_textControlsMask;  // Only tab to text fields
+  // This assumes that when the setting says "only text controls"
+  // that links shouldn't be tabbable.
+  // Also, we currently ignore the pref for XUL dialogs
+  // but we should pay attention to the mac setting there
+
+  if (NS_SUCCEEDED(rv))
+    mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+}
+
 NS_IMETHODIMP
 nsEventStateManager::Observe(nsISupports *aSubject, 
                              const char *aTopic,
@@ -293,6 +337,8 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 {
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     Shutdown();
+  else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+    ResetObservedPrefs();
 
   return NS_OK;
 }
@@ -3392,19 +3438,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
-      // Tab focus mode is constant across all windows.
-      // It would be nicer if ESM had a prefs callback,
-      // so we could store this and change behavior when it changes.
-      // But until the pref is exposed, that doesn't matter.
-      if (sTabFocusModel == eTabFocus_unset) {
-        sTabFocusModel = (eTabFocus_textControlsMask
-                          | eTabFocus_formElementsMask
-                          | eTabFocus_linksMask);
-        nsresult rv = getPrefBranch();
-        if (NS_SUCCEEDED(rv))
-          mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
-      }
-
       child->GetTag(*getter_AddRefs(tag));
       if (child->IsContentOfType(nsIContent::eHTML)) {
         if (nsHTMLAtoms::input==tag) {
@@ -3419,8 +3452,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                 || type.EqualsIgnoreCase("autocomplete")
                 || type.EqualsIgnoreCase("password")) {
               // It's a text field or password field
-              disabled =
-                disabled || !(sTabFocusModel & eTabFocus_textControlsMask);
+              disabled = PR_FALSE;
             }
             else if (type.EqualsIgnoreCase("hidden")) {
               hidden = PR_TRUE;
@@ -3448,13 +3480,11 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         }
         else if (nsHTMLAtoms::textarea==tag) {
           // it's a textarea
-          disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
-          if (!disabled) {
-            nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
-            if (nextTextArea) {
-              nextTextArea->GetDisabled(&disabled);
-              nextTextArea->GetTabIndex(&tabIndex);
-            }
+          disabled = PR_FALSE;
+          nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
+          if (nextTextArea) {
+            nextTextArea->GetDisabled(&disabled);
+            nextTextArea->GetTabIndex(&tabIndex);
           }
         }
         else if (nsHTMLAtoms::a==tag) {
