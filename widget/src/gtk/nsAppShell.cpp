@@ -17,11 +17,13 @@
  */
 
 #include "prmon.h"
+#include "nsCOMPtr.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
+#include "nsIObserverService.h"
 #include <stdlib.h>
 
 #ifdef MOZ_GLE
@@ -39,6 +41,10 @@
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+// copied from nsEventQueue.cpp
+static char *gEQActivatedNotification = "nsIEventQueueActivated";
+static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
 // a linked, ordered list of event queues and their tokens
 class EventQueueToken {
@@ -59,7 +65,7 @@ class EventQueueTokenQueue {
 public:
   EventQueueTokenQueue();
   virtual ~EventQueueTokenQueue();
-  void PushToken(nsIEventQueue *aQueue, gint aToken);
+  nsresult PushToken(nsIEventQueue *aQueue, gint aToken);
   PRBool PopToken(nsIEventQueue *aQueue, gint *aToken);
 
 private:
@@ -75,13 +81,15 @@ EventQueueTokenQueue::~EventQueueTokenQueue() {
   // and leak. it's an error, anyway
 }
 
-void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
+nsresult EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
   EventQueueToken *newToken = new EventQueueToken(aQueue, aToken);
   NS_ASSERTION(newToken, "couldn't allocate token queue element");
-  if (newToken) {
-    newToken->next = mHead;
-    mHead = newToken;
-  }
+  if (!newToken)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  newToken->next = mHead;
+  mHead = newToken;
+  return NS_OK;
 }
 
 PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
@@ -118,11 +126,10 @@ nsAppShell::nsAppShell()
 {
   NS_INIT_REFCNT();
   mDispatchListener = 0;
-  mLock = PR_NewLock();
   mEventQueueTokens = new EventQueueTokenQueue();
   // throw on error would really be civilized here
-  NS_ASSERTION(mLock, "couldn't obtain lock in appshell");
   NS_ASSERTION(mEventQueueTokens, "couldn't allocate event queue token queue");
+  RegisterObserver(PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
@@ -132,8 +139,8 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  PR_DestroyLock(mLock);
   delete mEventQueueTokens;
+  RegisterObserver(PR_FALSE);
 }
 
 //-------------------------------------------------------------------------
@@ -142,7 +149,7 @@ nsAppShell::~nsAppShell()
 //
 //-------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
+NS_IMPL_ISUPPORTS2(nsAppShell, nsIAppShell, nsIObserver)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
@@ -268,64 +275,6 @@ NS_IMETHODIMP nsAppShell::Spinup()
 NS_IMETHODIMP nsAppShell::Spindown()
 {
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// PushThreadEventQueue
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsAppShell::PushThreadEventQueue()
-{
-  nsresult      rv;
-  gint          inputToken;
-  nsIEventQueue *eQueue;
-
-  // push a nested event queue for event processing from netlib
-  // onto our UI thread queue stack.
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    PR_Lock(mLock);
-    rv = eventQService->PushThreadEventQueue();
-    if (NS_SUCCEEDED(rv)) {
-      eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eQueue);
-      inputToken = gdk_input_add(eQueue->GetEventQueueSelectFD(),
-                                 GDK_INPUT_READ,
-                                 event_processor_callback,
-                                 eQueue);
-      mEventQueueTokens->PushToken(eQueue, inputToken);
-    }
-    PR_Unlock(mLock);
-  } else
-    NS_ERROR("Appshell unable to obtain eventqueue service.");
-  return rv;
-}
-
-//-------------------------------------------------------------------------
-//
-// PopThreadEventQueue
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsAppShell::PopThreadEventQueue()
-{
-  nsresult      rv;
-  nsIEventQueue *eQueue;
-
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    gint queueToken;
-    PR_Lock(mLock);
-    eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eQueue);
-    eventQService->PopThreadEventQueue();
-    if (mEventQueueTokens->PopToken(eQueue, &queueToken))
-      gdk_input_remove(queueToken);
-    PR_Unlock(mLock);
-    NS_IF_RELEASE(eQueue);
-  } else
-    NS_ERROR("Appshell unable to obtain eventqueue service.");
-  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -472,5 +421,77 @@ NS_IMETHODIMP nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
 
   gdk_event_free( (GdkEvent *) aEvent );
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// nsIObserver interface
+//-------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------
+//
+// Observe
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsAppShell::Observe(nsISupports *aSubject,
+                                  const PRUnichar *aTopic,
+                                  const PRUnichar *)
+{
+  // tell gdk to listen to the event queue or not. what happens
+  // if multiple appshells (horrors, but it happens) repeat the same
+  // instruction, one wonders.
+
+  gint         queueToken;
+  nsAutoString topic(aTopic);
+
+  if (topic.Equals(gEQActivatedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq) {
+      queueToken = gdk_input_add(eq->GetEventQueueSelectFD(),
+                                 GDK_INPUT_READ,
+                                 event_processor_callback,
+                                 eq);
+      mEventQueueTokens->PushToken(eq, queueToken);
+    }
+  } else if (topic.Equals(gEQDestroyedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq) {
+      if (mEventQueueTokens->PopToken(eq, &queueToken))
+        gdk_input_remove(queueToken);
+    }
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Observe
+//
+//-------------------------------------------------------------------------
+void nsAppShell::RegisterObserver(PRBool aRegister)
+{
+  nsresult rv;
+  nsAutoString topicA(gEQActivatedNotification);
+  nsAutoString topicB(gEQDestroyedNotification);
+
+  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+#if 0
+    nsCOMPtr<nsIObserver> us(do_QueryInterface(this));
+    if (us) {
+#else
+    nsIObserver *us;
+    if (NS_SUCCEEDED(QueryInterface(nsIObserver::GetIID(), (void **) &us)) && us) {
+#endif
+      if (aRegister) {
+        os->AddObserver(us, topicA.GetUnicode());
+        os->AddObserver(us, topicB.GetUnicode());
+      } else {
+        os->RemoveObserver(us, topicA.GetUnicode());
+        os->RemoveObserver(us, topicB.GetUnicode());
+      }
+      NS_RELEASE(us);
+    }
+  }
 }
 

@@ -20,17 +20,18 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "nsIObserver.h"
 #include <gtk/gtk.h>
 
 /**
  * Native GTK+ Application shell wrapper
  */
 
-class nsIEventQueueService;
+class nsIEventQueue;
 class EventQueueTokenQueue;
-struct PRLock;
 
-class nsAppShell : public nsIAppShell
+class nsAppShell : public nsIAppShell,
+                   public nsIObserver
 {
 public:
   nsAppShell();
@@ -38,23 +39,24 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_DECL_NSIOBSERVER
+
   // nsIAppShellInterface
-  NS_IMETHOD		Create(int* argc, char ** argv);
-  NS_IMETHOD		Run(); 
+  NS_IMETHOD    Create(int* argc, char ** argv);
+  NS_IMETHOD    Run(); 
   NS_IMETHOD    Spinup();
   NS_IMETHOD    Spindown();
-  NS_IMETHOD    PushThreadEventQueue();
-  NS_IMETHOD    PopThreadEventQueue();
   NS_IMETHOD    GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
   NS_IMETHOD    DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
   NS_IMETHOD    EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
                                       nsIWidget *aWidget, PRBool *aForWindow);
-  NS_IMETHOD		Exit();
-  NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
+  NS_IMETHOD    Exit();
+  NS_IMETHOD    SetDispatchListener(nsDispatchListener* aDispatchListener);
 
 private:
+  void          RegisterObserver(PRBool aRegister);
+
   nsDispatchListener   *mDispatchListener;
-  PRLock               *mLock;
   EventQueueTokenQueue *mEventQueueTokens;
 };
 
