@@ -88,6 +88,7 @@
 
 #include "nsirequest.h"
 #include "Tests.h"
+#include "prmem.h"
 
 CBrowserImpl::CBrowserImpl()
 {
@@ -469,10 +470,22 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				PRUint32 offset, PRUint32 count)
 {
 	nsCString stringMsg;
+	PRUint32 readLen;
 
 	QAOutput("##### inside nsIStreamListener::OnDataAvailable(). #####");
 
 	RequestName(request, stringMsg, 1);
+	readLen = count;
+		// from prmem.h: PR_Malloc()
+	char *buf = (char *)PR_Malloc(count);
+	if (!input)
+		QAOutput("We didn't get the nsIInputStream object.", 1);
+	else {
+		// consumer of input stream
+		rv = input->Read(buf, count, &readLen);
+		RvTestResult(rv, "nsIInputStream->Read() consumer", 1);
+	}
+
 	FormatAndPrintOutput("OnDataAvailable() offset = ", offset, 1);
 	FormatAndPrintOutput("OnDataAvailable() count = ", count, 1);
 
