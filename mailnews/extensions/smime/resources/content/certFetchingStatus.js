@@ -94,9 +94,11 @@ function search()
       null,
       getProxyOnUIThread(new boundListener(),
                             Components.interfaces.nsILDAPMessageListener),
-      null);
+      null, Components.interfaces.nsILDAPConnection.VERSION3);
 
   } catch (ex) {
+    dump(ex);
+    dump(" exception creating ldap connection\n");
     window.close();
   }
 }
@@ -127,9 +129,8 @@ function importCert(ber_value)
   }
 }
 
-function kickOffBind()
+function getLDAPOperation()
 {
-  try {
     gLdapOperation = Components.classes["@mozilla.org/network/ldap-operation;1"]
       .createInstance().QueryInterface(Components.interfaces.nsILDAPOperation);
 
@@ -137,7 +138,11 @@ function kickOffBind()
                         getProxyOnUIThread(new ldapMessageListener(),
                             Components.interfaces.nsILDAPMessageListener),
                         null);
-
+}
+function kickOffBind()
+{
+  try {
+    getLDAPOperation();
     gLdapOperation.simpleBind(null);
   }
   catch (e) {
@@ -191,6 +196,7 @@ function kickOffSearch()
     
     var maxEntriesWanted = gEmailAddresses.length * 2;
 
+    getLDAPOperation();
     gLdapOperation.searchExt(gLdapServerURL.dn, gLdapServerURL.scope,
                              filter, 1, wanted_attributes, 0, maxEntriesWanted);
   }
