@@ -1,0 +1,48 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ 
+ * The Original Code is mozilla.org code.
+ 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsISimpleEnumerator;
+
+[uuid(d535806e-afaf-47d1-8d89-783ad088c62a)]
+
+interface nsPIWindowWatcher : nsISupports
+{
+  /** A window has been created. Add it to our list.
+      @param aWindow the window to add
+  */
+  void addWindow(in nsIDOMWindow aWindow);
+
+  /** A window has been closed. Remove it from our list.
+      @param aWindow the window to remove
+  */
+  void removeWindow(in nsIDOMWindow aWindow);
+
+};
+
+%{C++
+// {d535806e-afaf-47d1-8d89-783ad088c62a}
+#define NS_PWINDOWWATCHER_IID \
+ {0xd535806e, 0xafaf, 0x47d1, {0x8d, 0x89, 0x78, 0x3a, 0xd0, 0x88, 0xc6, 0x2a}}
+%}
+
