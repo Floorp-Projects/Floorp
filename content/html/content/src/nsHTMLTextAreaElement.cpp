@@ -432,7 +432,9 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
   // force the frame to be created.
   nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
   nsIGfxTextControlFrame2* textControlFrame = nsnull;
-  CallQueryInterface(primaryFrame, &textControlFrame);
+  if (primaryFrame) {
+    CallQueryInterface(primaryFrame, &textControlFrame);
+  }
 
   // If the frame exists and owns the value, get it from the frame.  Otherwise
   // get it from content.
