@@ -50,6 +50,8 @@
 NS_IMPL_THREADSAFE_ISUPPORTS3(TimerThread, nsIRunnable, nsISupportsWeakReference, nsIObserver)
 
 TimerThread::TimerThread() :
+  mInitInProgress(0),
+  mInitialized(PR_FALSE),
   mLock(nsnull),
   mCondVar(nsnull),
   mShutdown(PR_FALSE),
@@ -84,11 +86,10 @@ TimerThread::~TimerThread()
 
 }
 
-nsresult TimerThread::Init()
+nsresult
+TimerThread::InitLocks()
 {
-  if (mThread)
-    return NS_OK;
-
+  NS_ASSERTION(!mLock, "InitLocks called twice?");
   mLock = PR_NewLock();
   if (!mLock)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -97,29 +98,62 @@ nsresult TimerThread::Init()
   if (!mCondVar)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-  mEventQueueService = do_GetService("@mozilla.org/event-queue-service;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  return NS_OK;
+}
 
-  // We hold on to mThread to keep the thread alive.
-  rv = NS_NewThread(getter_AddRefs(mThread),
-                    NS_STATIC_CAST(nsIRunnable*, this),
-                    0,
-                    PR_JOINABLE_THREAD,
-                    PR_PRIORITY_NORMAL,
-                    PR_GLOBAL_THREAD);
-  if (NS_FAILED(rv))
-    return rv;
+nsresult TimerThread::Init()
+{
+  if (mInitialized) {
+    if (!mThread)
+      return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  observerService->AddObserver(this, "sleep_notification", PR_TRUE);
-  observerService->AddObserver(this, "wake_notification", PR_TRUE);
-  
-  return rv;
+    return NS_OK;
+  }
+
+  if (PR_AtomicSet(&mInitInProgress, 1) == 0) {
+    nsresult rv;
+
+    mEventQueueService = do_GetService("@mozilla.org/event-queue-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIObserverService> observerService
+        (do_GetService("@mozilla.org/observer-service;1", &rv));
+
+      if (NS_SUCCEEDED(rv)) {
+        // We hold on to mThread to keep the thread alive.
+        rv = NS_NewThread(getter_AddRefs(mThread),
+                          NS_STATIC_CAST(nsIRunnable*, this),
+                          0,
+                          PR_JOINABLE_THREAD,
+                          PR_PRIORITY_NORMAL,
+                          PR_GLOBAL_THREAD);
+
+        if (NS_FAILED(rv)) {
+          mThread = nsnull;
+        }
+        else {
+          observerService->AddObserver(this, "sleep_notification", PR_TRUE);
+          observerService->AddObserver(this, "wake_notification", PR_TRUE);
+        }
+      }
+    }
+
+    PR_Lock(mLock);
+    mInitialized = PR_TRUE;
+    PR_NotifyAllCondVar(mCondVar);
+    PR_Unlock(mLock);
+  }
+  else {
+    PR_Lock(mLock);
+    while (!mInitialized) {
+      PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
+    }
+    PR_Unlock(mLock);
+  }
+
+  if (!mThread)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 nsresult TimerThread::Shutdown()

@@ -437,6 +437,7 @@ nsThread::Shutdown()
         nsrefcnt cnt;
         NS_RELEASE2(gMainThread, cnt);
         NS_WARN_IF_FALSE(cnt == 0, "Main thread being held past XPCOM shutdown.");
+        gMainThread = nsnull;
         
         kIThreadSelfIndex = 0;
     }
