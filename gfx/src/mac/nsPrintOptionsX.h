@@ -55,7 +55,7 @@ public:
               nsPrintOptionsX();
   virtual     ~nsPrintOptionsX();
 
-  NS_IMETHOD  ShowNativeDialog(void);
+  NS_IMETHOD  ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings);
   
   NS_IMETHOD  ReadPrefs(void);
   NS_IMETHOD  WritePrefs(void);

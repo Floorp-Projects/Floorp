@@ -91,9 +91,12 @@ nsPrintOptionsMac::~nsPrintOptionsMac()
  *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP
-nsPrintOptionsMac::ShowNativeDialog(void) 
+nsPrintOptionsMac::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
+
   if (!mPrintRecord) return NS_ERROR_NOT_INITIALIZED;
+
+  ReadPrefs();
 
   // open the printing manager
   ::PrOpen();
@@ -111,9 +114,11 @@ nsPrintOptionsMac::ShowNativeDialog(void)
   OSErr err = ::PrError();
   
   ::PrClose();
-  
+
+  WritePrefs();
   if (err != noErr)
     return NS_ERROR_FAILURE;
+
   return NS_OK;
 } 
 

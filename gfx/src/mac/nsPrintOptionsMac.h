@@ -38,7 +38,7 @@ public:
               nsPrintOptionsMac();
   virtual     ~nsPrintOptionsMac();
 
-  NS_IMETHOD  ShowNativeDialog(void);
+  NS_IMETHOD  ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings);
   NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
   NS_IMETHOD  ReadPrefs();
