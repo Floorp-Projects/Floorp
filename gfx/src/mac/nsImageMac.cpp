@@ -48,6 +48,7 @@ NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
 
 nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+PRInt32	bufferdepth;
 
 		switch(aDepth)
 			{
@@ -56,18 +57,22 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 				mThePixelmap.cmpCount = 1;
 				mThePixelmap.cmpSize = 8;
 				mThePixelmap.pmTable = GetCTable(8);
+				bufferdepth = 8;
 				break;
 			case 16:
 				mThePixelmap.pixelType = chunky;
 				mThePixelmap.cmpCount = 3;
 				mThePixelmap.cmpSize = 5;
 				mThePixelmap.pmTable = 0;
+				bufferdepth = 16;
 				break;
+			case 24:			// 24 and 32 bit are basically the same
 			case 32:
 				mThePixelmap.pixelType = chunky;
 				mThePixelmap.cmpCount = 3;
 				mThePixelmap.cmpSize = 8;
 				mThePixelmap.pmTable = 0;
+				bufferdepth = 32;
 				break;
 			default:
 				mThePixelmap.cmpCount = 0;
@@ -76,7 +81,7 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 	
 	if(mThePixelmap.cmpCount)
 		{
-		mRowBytes = CalcBytesSpan(aWidth,aDepth);
+		mRowBytes = CalcBytesSpan(aWidth,bufferdepth);
 		mSizeImage = mRowBytes*aHeight;
 		mImageBits = new unsigned char[mSizeImage];
 		}
@@ -90,7 +95,7 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 		mThePixelmap.bounds.left = 0;
 		mThePixelmap.bounds.bottom = aHeight;
 		mThePixelmap.bounds.right = aWidth;
-		mThePixelmap.pixelSize = aDepth;
+		mThePixelmap.pixelSize = bufferdepth;
 		mThePixelmap.packType = 0;
 		mThePixelmap.packSize = 0;
 		mThePixelmap.hRes = 72<<16;
@@ -103,6 +108,11 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 
   return NS_OK;
 }
+
+//------------------------------------------------------------
+
+
+
 
 //------------------------------------------------------------
 
@@ -154,6 +164,7 @@ PixMapPtr	destpix;
 RGBColor	rgbblack = {0x0000,0x0000,0x0000};
 RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
 Rect			srcrect,dstrect;
+PRUint32	*value,i,end;
 
   if (nsnull == mThePixelmap.baseAddr)
     return PR_FALSE;
@@ -164,7 +175,19 @@ Rect			srcrect,dstrect;
 	destpix = *((CGrafPtr)aSurface)->portPixMap;
 
 	::RGBForeColor(&rgbblack);
-	::RGBForeColor(&rgbwhite);
+	::RGBBackColor(&rgbwhite);
+
+/*	
+	end = (mRowBytes * mHeight)/8;
+	value = (PRUint32*)mImageBits; 
+	for(i=0;i<end;i++)
+		{
+		*value = 0xffff0000;
+		value++;
+		}
+*/	
+	
+	
 	::CopyBits((BitMap*)&mThePixelmap,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
 
   return PR_TRUE;
