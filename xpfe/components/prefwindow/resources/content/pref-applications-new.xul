@@ -66,13 +66,8 @@
       <row>
         <label value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
                control="appPath"/>
-        <textbox id="appPath" flex="1"/>
-        
-      </row>
-      <row>
-        <spacer/>
-        <hbox>
-          <spacer flex="1"/>
+        <hbox align="top">
+          <textbox id="appPath" flex="1"/>
           <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
         </hbox>
