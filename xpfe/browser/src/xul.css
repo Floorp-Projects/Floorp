@@ -11,6 +11,8 @@ window {
   overflow: hidden;
   font: 3mm tahoma,arial,helvetica,sans-serif;
   padding: 0px;
+  height: 100%;
+  width: 100%;
 }
 
 window.dialog { 
