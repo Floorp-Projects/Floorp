@@ -1278,7 +1278,7 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
     rv = gXULUtils->GetTextForNode(aValue, value);
     if (NS_FAILED(rv)) return rv;
 
-    rv = aElement->SetAttribute(nameSpaceID, tag, value, PR_TRUE);
+    rv = aElement->SetAttribute(nameSpaceID, tag, value, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -1404,16 +1404,14 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         }
     }
 
-    if (NS_FAILED(rv = builder->SetDataBase(db))) {
-        NS_ERROR("unable to set builder's database");
-        return rv;
-    }
-
     // add it to the set of builders in use by the document
-    if (NS_FAILED(rv = mDocument->AddContentModelBuilder(builder))) {
-        NS_ERROR("unable to add builder to the document");
-        return rv;
-    }
+    rv = mDocument->AddContentModelBuilder(builder);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add builder to the document");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = builder->SetDataBase(db);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set builder's database");
+    if (NS_FAILED(rv)) return rv;
 
     *aResult = builder;
     NS_ADDREF(*aResult);

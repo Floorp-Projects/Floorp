@@ -55,12 +55,15 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
 #include "nsITimer.h"
 #include "nsIURL.h"
 #include "nsIXMLContent.h"
+#include "nsIXPConnect.h"
 #include "nsIXULSortService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
@@ -69,6 +72,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "jsapi.h"
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -261,6 +265,9 @@ public:
 
     static void
     ForceTreeReflow(nsITimer* aTimer, void* aClosure);
+
+    nsresult
+    AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase);
 
 protected:
     nsIRDFDocument*            mDocument; // [WEAK]
@@ -628,19 +635,21 @@ RDFGenericBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
     mDB = dont_QueryInterface(aDataBase);
 
     if (mDB) {
+        nsresult rv;
         mDB->AddObserver(this);
 
         // Now set the database on the element, so that script writers can
         // access it.
         nsCOMPtr<nsIDOMXULElement> element( do_QueryInterface(mRoot) );
         if (element) {
-            nsresult rv;
             rv = element->SetDatabase(aDataBase);
             if (NS_FAILED(rv)) return rv;
         }
         else {
-            // Hmm. This must be an HTML element. Maybe try to set it
-            // as a JS property "by hand"?
+            // Hmm. This must be an HTML element. Try to set it as a
+            // JS property "by hand".
+            rv = AddDatabasePropertyToHTMLElement(mRoot, mDB);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -2840,3 +2849,71 @@ RDFGenericBuilderImpl::ForceTreeReflow(nsITimer* aTimer, void* aClosure)
 }
 
 
+nsresult
+RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase)
+{
+    // Use XPConnect and the JS APIs to whack aDatabase as the
+    // 'database' property onto aElement.
+    nsresult rv;
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    NS_ASSERTION(doc != nsnull, "no document");
+    if (! doc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIScriptContextOwner> contextowner = dont_QueryInterface(doc->GetScriptContextOwner());
+    NS_ASSERTION(contextowner != nsnull, "no script context owner");
+    if (! contextowner)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIScriptContext> context;
+    rv = contextowner->GetScriptContext(getter_AddRefs(context));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "no script context");
+    if (NS_FAILED(rv)) return rv;
+
+    if (! context)
+        return NS_ERROR_UNEXPECTED;
+
+    JSContext* jscontext = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+    NS_ASSERTION(context != nsnull, "no jscontext");
+    if (! jscontext)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aElement);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get script object owner");
+    if (NS_FAILED(rv)) return rv;
+
+    JSObject* jselement;
+    rv = owner->GetScriptObject(context, (void**) &jselement);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's script object");
+    if (NS_FAILED(rv)) return rv;
+
+    static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
+    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    rv = xpc->WrapNative(jscontext,                       
+                         aDataBase,
+                         NS_GET_IID(nsIRDFCompositeDataSource),
+                         getter_AddRefs(wrapper));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap database");
+    if (NS_FAILED(rv)) return rv;
+
+    JSObject* jsobj;
+    rv = wrapper->GetJSObject(&jsobj);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
+    if (NS_FAILED(rv)) return rv;
+
+    jsval jsdatabase = OBJECT_TO_JSVAL(jsobj);
+
+    PRBool ok;
+    ok = JS_SetProperty(jscontext, jselement, "database", &jsdatabase);
+    NS_ASSERTION(ok, "unable to set database property");
+    if (! ok)
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
