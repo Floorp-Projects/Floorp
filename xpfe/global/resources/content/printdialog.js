@@ -305,7 +305,7 @@ function loadDialog()
   doPrintRange(dialog.rangeRadio.selected);
   dialog.frompageInput.value  = 1;
   dialog.topageInput.value    = 1;
-  dialog.numCopiesInput.value = 1;
+  dialog.numCopiesInput.value = print_copies;
 
   dialog.fileInput.value   = print_file;
 
