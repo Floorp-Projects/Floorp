@@ -45,6 +45,7 @@ XPIDLSRCS	= \
 		nsIPlaintextEditor.idl \
 		nsITableEditor.idl \
 		nsIURIRefObject.idl \
+		nsIContentFilter.idl \
 		nsPIEditorTransaction.idl \
 		$(NULL)
 
