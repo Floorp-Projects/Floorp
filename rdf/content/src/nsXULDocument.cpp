@@ -3623,7 +3623,7 @@ nsXULDocument::StartLayout(void)
 
     PRInt32 count = GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
-      nsIPresShell* shell = GetShellAt(i);
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(i));
       if (nsnull == shell)
           continue;
 
@@ -3673,8 +3673,6 @@ nsXULDocument::StartLayout(void)
       // reflow. Otherwise, we'll get into an trouble trying to
       // create kids before the root frame is established.
       shell->BeginObservingDocument();
-
-      NS_RELEASE(shell);
     }
     return NS_OK;
 }
