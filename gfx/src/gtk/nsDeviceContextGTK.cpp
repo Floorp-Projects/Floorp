@@ -89,6 +89,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   // get the screen object and its width/height
   // XXXRight now this will only get the primary monitor.
+
   nsresult ignore;
   nsCOMPtr<nsIScreenManager> sm ( do_GetService("component://netscape/gfx/screenmanager", &ignore) );
   if ( sm ) {
@@ -97,6 +98,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     if ( screen ) {
       PRInt32 x, y, width, height, depth;
       screen->GetAvailRect ( &x, &y, &width, &height );
+      screen->GetPixelDepth ( &depth );
       mWidthFloat = float(width);
       mHeightFloat = float(height);
       mDepth = NS_STATIC_CAST ( PRUint32, depth );
