@@ -3326,8 +3326,12 @@ nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 when,
                 continue;
         }
         rv = mLoaderData[i].loader->AutoUnregisterComponent(when, component, &didUnRegister);
-        if (NS_SUCCEEDED(rv) && didUnRegister)
+        if (NS_SUCCEEDED(rv) && didUnRegister) {
+            // we need to remove this file from our list of known libraries.
+            RemoveFileInfo(component, nsnull);
+            mRegistryDirty = PR_TRUE;
             break;
+        }
     }
     return NS_FAILED(rv) ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
 }
