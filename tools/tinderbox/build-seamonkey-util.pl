@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.120 $ ';
+$::UtilsVersion = '$Revision: 1.121 $ ';
 
 package TinderUtils;
 
@@ -1435,7 +1435,7 @@ sub print_test_errors {
 # perl-URI-1.12-5.noarch.rpm
 # perl-libwww-perl-5.53-3.noarch.rpm
 #
-sub send_results_to_server () {
+sub send_results_to_server {
     my ($value, $data, $testname, $tbox) = @_;
 
     my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
@@ -1627,13 +1627,13 @@ sub BloatTest {
 
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
 
-	# Build up binary command, look for profile.
+    # Build up binary command, look for profile.
     my $cmd = "$binary_basename";
-	unless ($Settings::MozProfileName eq "") {
-	  $cmd .= " -P $Settings::MozProfileName";
-	}
-	$cmd .= " $args";
-
+    unless ($Settings::MozProfileName eq "") {
+      $cmd .= " -P $Settings::MozProfileName";
+    }
+    $cmd .= " $args";
+    
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
 						 $timeout_secs);
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
@@ -1649,13 +1649,60 @@ sub BloatTest {
       return 'testfailed';
     }
 
+    # Print out bloatdiff stats, also look for TOTAL line for leak/bloat #s.
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
+    my $found_total_line = 0;
+    my @total_line_array;
     open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log $bloatdiff_label|"
       or die "Unable to run bloatdiff.pl";
-    print_log $_ while <DIFF>;
+    while (<DIFF>) {
+      print_log $_;
+      
+      # Look for fist TOTAL line
+      unless ($found_total_line) {
+        if (/TOTAL/) {
+          @total_line_array = split(" ", $_);
+          $found_total_line = 1;
+        }
+      }
+    }
     close DIFF;
     print_log "######################## END BLOAT STATISTICS\n</a>\n";
     
+
+    # Scrape for leak/bloat totals from TOTAL line
+    # TOTAL 23 0% 876224 
+    my $leaks = $total_line_array[1];
+    my $bloat = $total_line_array[3];
+
+    print_log "leaks = $leaks\n";
+    print_log "bloat = $bloat\n";
+
+    # Figure out what the label prefix is.
+    my $label_prefix = "";
+    my $testname_prefix = "";
+    unless($bloatdiff_label eq "") {
+      $label_prefix = "$bloatdiff_label ";
+      $testname_prefix = "$bloatdiff_label" . "_";
+    }
+
+    if($Settings::TestsPhoneHome) {
+      # Generate and print tbox output strings for leak, bloat.
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"refcnt Leaks\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_leaks&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
+      print_log $leaks_string;
+      
+      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_bloat&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($bloat) . "B</a>\n\n";
+      print_log $bloat_string;
+      
+      # Report numbers to server.
+      send_results_to_server($leaks, "--", "refcnt_leaks", ::hostname() );
+      send_results_to_server($bloat, "--", "refcnt_bloat", ::hostname() );
+
+    } else {
+      print_log "TinderboxPrint:Lk:" . PrintSize($leaks) . "B\n\n";
+      print_log "TinderboxPrint:Bl:" . PrintSize($bloat) . "B\n\n";
+    }
+
     return 'success';
 }
 
