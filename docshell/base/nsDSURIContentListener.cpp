@@ -92,13 +92,19 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
    aOpenedChannel->GetLoadAttributes(&loadAttribs);
 
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+   {
       mDocShell->StopLoad();
-
-   mDocShell->OnLoadingSite(aOpenedChannel);
+      // ack...we don't want to reuse the previous documents load type,
+      // try to reset it to loadNormal...
+      nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
+      if (aCommand == nsIURILoader::viewUserClick)
+        loadType = nsIDocShellLoadInfo::loadLink;      
+      mDocShell->SetLoadType(loadType);
+   }
 
    nsresult rv = mDocShell->CreateContentViewer(aContentType, 
       aOpenedChannel, aContentHandler);
-   if (NS_FAILED(rv)) return NS_ERROR_FAILURE; // it's okay if we don't know how to handle the content
+   if (NS_FAILED(rv)) return NS_ERROR_FAILURE; // it's okay if we don't know how to handle the content   
 
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
       mDocShell->SetFocus();
