@@ -1805,6 +1805,33 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     mPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, aStatus);
+      if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
+        nsMouseEvent event2;
+        //fire double click
+        switch (aEvent->message) {
+        case NS_MOUSE_LEFT_BUTTON_UP:
+          event2.message = NS_MOUSE_LEFT_DOUBLECLICK;
+          break;
+        case NS_MOUSE_MIDDLE_BUTTON_UP:
+          event2.message = NS_MOUSE_MIDDLE_DOUBLECLICK;
+          break;
+        case NS_MOUSE_RIGHT_BUTTON_UP:
+          event2.message = NS_MOUSE_RIGHT_DOUBLECLICK;
+          break;
+        }
+        
+        event2.eventStructType = NS_MOUSE_EVENT;
+        event2.widget = aEvent->widget;
+        event2.point = aEvent->point;
+        event2.refPoint = aEvent->refPoint;
+        event2.clickCount = aEvent->clickCount;
+        event2.isShift = aEvent->isShift;
+        event2.isControl = aEvent->isControl;
+        event2.isAlt = aEvent->isAlt;
+        event2.isMeta = aEvent->isMeta;
+
+        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget, mouseContent, aStatus);
+      }
     }
   }
   return ret;
