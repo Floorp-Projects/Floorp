@@ -474,7 +474,7 @@ function FindThreadPaneColumnBySortResource(sortID)
 //If it's not true then use the direction passed in.
 function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction, changeCursor)
 {
-	dump("In SortThreadPane, toggleCurrentDirection = " + toggleCurrentDirection + "\n");
+	//dump("In SortThreadPane, toggleCurrentDirection = " + toggleCurrentDirection + "\n");
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
