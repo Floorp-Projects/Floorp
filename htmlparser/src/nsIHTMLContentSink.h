@@ -71,6 +71,9 @@
 
 class nsIHTMLContentSink : public nsIContentSink {
 public:
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTML_CONTENT_SINK_IID; return iid; }
+
   /**
    * This method gets called by the parser when it encounters
    * a title tag and wants to set the document title in the sink.
