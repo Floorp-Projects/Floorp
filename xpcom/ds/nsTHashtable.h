@@ -160,7 +160,7 @@ public:
    *            @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink ,
    *            @link PLDHashOperator::PL_DHASH_REMOVE PL_DHASH_REMOVE @endlink
    */
-  typedef PLDHashOperator (*Enumerator)(EntryType* aEntry, void* userArg);
+  typedef PLDHashOperator (*PR_CALLBACK Enumerator)(EntryType* aEntry, void* userArg);
 
   /**
    * Enumerate all the entries of the function.
