@@ -40,7 +40,7 @@ EmbedProgress::EmbedProgress(void)
 }
 
 EmbedProgress::~EmbedProgress()
-{
+{ 
     if (nsnull != mEventRegistration) {
 	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 	::util_DeleteGlobalRef(env, mEventRegistration);
@@ -93,91 +93,58 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
     jstring uriJstr = ::util_NewStringUTF(env, (const char *) uriString);
-    nsString tmpString;
-    tmpString.AssignWithConversion(uriString);
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnStateChange: URI: %s\n",
 	    (const char *) uriString));
     
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: interpreting flags\n"));
+    // 
+    // document states
+    //
+
+    // if we've got the start flag, emit the signal
+    if ((aStateFlags & STATE_IS_NETWORK) && 
+	(aStateFlags & STATE_START)) {
+	util_SendEventToJava(nsnull, 
+			     mEventRegistration, 
+			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			     DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
+			     uriJstr);
+    }
+
+    // and for stop, too
+    if ((aStateFlags & STATE_IS_NETWORK) && 
+	(aStateFlags & STATE_STOP)) {
+	util_SendEventToJava(nsnull, 
+			     mEventRegistration, 
+			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			     DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
+			     uriJstr);
+	
+    }
+
+    //
+    // request states
+    //
+    if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
+	util_SendEventToJava(nsnull, 
+			     mEventRegistration, 
+			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			     DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
+			     uriJstr);
+    }
+
+    if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_REQUEST)) {
+	util_SendEventToJava(nsnull, 
+			     mEventRegistration, 
+			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			     DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], 
+			     uriJstr);
+    }
+
+    ::util_DeleteStringUTF(env, uriJstr);
     
-    if (aStateFlags & STATE_IS_REQUEST) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_REQUEST\n"));
-    }
-    if (aStateFlags & STATE_IS_DOCUMENT) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_DOCUMENT\n"));
-    }
-    if (aStateFlags & STATE_IS_NETWORK) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_NETWORK\n"));
-    }
-    if (aStateFlags & STATE_IS_WINDOW) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_WINDOW\n"));
-    }
-    
-    if (aStateFlags & STATE_START) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_START\n"));
-    }
-    if (aStateFlags & STATE_REDIRECTING) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_REDIRECTING\n"));
-    }
-    if (aStateFlags & STATE_TRANSFERRING) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_TRANSFERRING\n"));
-    }
-    if (aStateFlags & STATE_NEGOTIATING) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_NEGOTIATING\n"));
-    }
-    if (aStateFlags & STATE_STOP) {
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_STOP\n"));
-    }
-
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: done interpreting flags\n"));
-
-  // give the widget a chance to attach any listeners
-    //  mOwner->ContentStateChange();
-  // if we've got the start flag, emit the signal
-  if ((aStateFlags & STATE_IS_NETWORK) && 
-      (aStateFlags & STATE_START))
-  {
-      util_SendEventToJava(nsnull, 
-			   mEventRegistration, 
-			   DOCUMENT_LOAD_LISTENER_CLASSNAME,
-			   DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
-			   uriJstr);
-      
-      //    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-      //		    moz_embed_signals[NET_START]);
-  }
-
-  /************
-  // is it the same as the current URI?
-  if (mOwner->mURI.Equals(tmpString))
-  {
-    // for people who know what they are doing
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[NET_STATE],
-		    aStateFlags, aStatus);
-  }
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[NET_STATE_ALL],
-		  (gpointer)(const char *)uriString,
-		  (gint)aStateFlags, (gint)aStatus);
-  *************/
-  // and for stop, too
-  if ((aStateFlags & STATE_IS_NETWORK) && 
-      (aStateFlags & STATE_STOP))
-  {
-      /************
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[NET_STOP]);
-    // let our owner know that the load finished
-    mOwner->ContentFinishedLoading();
-      *********/
-  }
-
-  ::util_DeleteStringUTF(env, uriJstr);
-
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -188,32 +155,48 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
 				PRInt32         aCurTotalProgress,
 				PRInt32         aMaxTotalProgress)
 {
+    
+    nsXPIDLCString uriString;
+    RequestToURIString(aRequest, getter_Copies(uriString));
+    PRInt32 percentComplete = 0;
+    nsCAutoString name;
+    nsAutoString autoName;
+    nsresult rv = NS_OK;
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	   ("EmbedProgress::OnProgressChange: URI: %s\n\taCurSelfProgress: %d\n\taMaxSelfProgress: %d\n\taCurTotalProgress: %d\n\taMaxTotalProgress: %d\n",
+	    (const char *) uriString, aCurSelfProgress, aMaxSelfProgress,
+	    aCurTotalProgress, aMaxTotalProgress));
 
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
+    // PENDING(edburns): Allow per fetch progress reporting.  Right now
+    // we only have coarse grained support.
+    if (0 < aMaxTotalProgress) {
+        percentComplete = aCurTotalProgress / aMaxTotalProgress;
+    }
+    
+    if (NS_FAILED(rv = aRequest->GetName(name))) {
+        return rv;
+    }
+    autoName.AssignWithConversion(name.get());
+    // build up the string to be sent
+    autoName.AppendWithConversion(" ");
+    autoName.AppendInt(percentComplete);
+    autoName.AppendWithConversion("%");
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    jstring msgJStr = ::util_NewString(env, autoName.get(), autoName.Length());
+    util_SendEventToJava(nsnull, 
+			 mEventRegistration, 
+			 DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			 DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
+			 msgJStr);
+    
+    if (msgJStr) {
+        ::util_DeleteString(env, msgJStr);
+    }
   
-  nsString tmpString;
-  tmpString.AssignWithConversion(uriString);
-
-  PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	 ("EmbedProgress::OnProgressChange: URI: %s\n\taCurSelfProgress: %d\n\taMaxSelfProgress: %d\n\taCurTotalProgress: %d\n\taMaxTotalProgress: %d\n",
-	  (const char *) uriString, aCurSelfProgress, aMaxSelfProgress,
-	  aCurTotalProgress, aMaxTotalProgress));
-  
-  // is it the same as the current uri?
-  /***********
-  if (mOwner->mURI.Equals(tmpString)) {
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[PROGRESS],
-		    aCurTotalProgress, aMaxTotalProgress);
-  }
-
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[PROGRESS_ALL],
-		  (const char *)uriString,
-		  aCurTotalProgress, aMaxTotalProgress);
-  *******************/
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -244,27 +227,28 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 			      nsresult         aStatus,
 			      const PRUnichar *aMessage)
 {
-  // need to make a copy so we can safely cast to a void *
-  PRUnichar *tmpString = nsCRT::strdup(aMessage);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    nsXPIDLCString uriString;
+    RequestToURIString(aRequest, getter_Copies(uriString));
+    jstring msgJstr = ::util_NewString(env, aMessage,
+				       nsCRT::strlen(aMessage));
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	   ("EmbedProgress::OnStatusChange: URI: %s\n",
+	    (const char *) uriString));
 
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
-
-  PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	 ("EmbedProgress::OnStatusChange: URI: %s\n",
-	  (const char *) uriString));
-
-  /**************
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[STATUS_CHANGE],
-		  NS_STATIC_CAST(void *, aRequest),
-		  NS_STATIC_CAST(int, aStatus),
-		  NS_STATIC_CAST(void *, tmpString));
-  ***********/
-
-  nsMemory::Free(tmpString);
-
-  return NS_OK;
+    util_SendEventToJava(nsnull, 
+			 mEventRegistration, 
+			 DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			 DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
+			 msgJstr);
+    
+    if (msgJstr) {
+	::util_DeleteString(env, msgJstr);
+    }
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP

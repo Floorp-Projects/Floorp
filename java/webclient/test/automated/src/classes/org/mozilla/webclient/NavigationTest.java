@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.10 2004/06/12 05:46:48 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.11 2004/06/14 01:44:33 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -49,6 +49,10 @@ public class NavigationTest extends WebclientTestCase {
 	return (new TestSuite(NavigationTest.class));
     }
 
+    static EventRegistration2 eventRegistration;
+
+    static boolean keepWaiting;
+
     //
     // Constants
     // 
@@ -65,7 +69,7 @@ public class NavigationTest extends WebclientTestCase {
 	assertNotNull(firstBrowserControl);
 	BrowserControlCanvas canvas = (BrowserControlCanvas)
 	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
-	final EventRegistration2 eventRegistration = (EventRegistration2)
+	eventRegistration = (EventRegistration2)
 	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
 
 	assertNotNull(canvas);
@@ -90,58 +94,96 @@ public class NavigationTest extends WebclientTestCase {
 	//
 	// try loading a file: url
 	//
+	
+	NavigationTest.keepWaiting = true;
+	
 	System.out.println("Loading url: " + testPage.toURL().toString());
-	eventRegistration.addDocumentLoadListener(new DocumentLoadListener() {
-		public void eventDispatched(WebclientEvent event) {
-		    if (event instanceof DocumentLoadEvent) {
-			switch ((int) event.getType()) {
-			case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
-			    System.out.println("Start Document Load Event:" + 
-					       event.getEventData());
-			    break;
-			}
-		    }
+	eventRegistration.addDocumentLoadListener(new EndDocumentSelectionVerifier() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
+		    System.out.println("Selection is: " + 
+				       selection.toString());
+		    NavigationTest.keepWaiting = false;
 		}
 	    });
 	nav.loadURL(testPage.toURL().toString());
-	Thread.currentThread().sleep(1000);
 
-	currentPage.selectAll();
-	selection = currentPage.getSelection();
-	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
-	System.out.println("Selection is: " + selection.toString());
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
 
+	/*******************
+
+	NavigationTest.keepWaiting = true;
 	//
 	// try loading from the dreaded RandomHTMLInputStream
 	//
 	RandomHTMLInputStream rhis = new RandomHTMLInputStream(10, false);
 	
-	nav.loadFromStreamBlocking(rhis, "http://randomstream.com/",
-				   "text/html", -1, null);
-	Thread.currentThread().sleep(15000);
+	eventRegistration.addDocumentLoadListener(new EndDocumentSelectionVerifier() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    assertTrue(-1 != selection.toString().indexOf("START Random Data"));
+		    assertTrue(-1 != selection.toString().indexOf("END Random Data"));
+		    System.out.println("Selection is: " + selection.toString());
+		    NavigationTest.keepWaiting = false; 
+		}
+	    });
+	nav.loadFromStream(rhis, "http://randomstream.com/",
+			   "text/html", -1, null);
 
-	currentPage.selectAll();
-	selection = currentPage.getSelection();
-	System.out.println("Selection is: " + selection.toString());
-	assertTrue(-1 != selection.toString().indexOf("START Random Data"));
-	assertTrue(-1 != selection.toString().indexOf("END Random Data"));
-
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	
 	//
 	// try loading from a FileInputStream
 	//
+	NavigationTest.keepWaiting = true;
+
 	FileInputStream fis = new FileInputStream(testPage);
+	eventRegistration.addDocumentLoadListener(new EndDocumentSelectionVerifier() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
+		    System.out.println("Selection is: " + 
+				       selection.toString());
+		    NavigationTest.keepWaiting = false;
+		}
+	    });
 	nav.loadFromStream(fis, "http://somefile.com/",
 			   "text/html", -1, null);
-	Thread.currentThread().sleep(1000);
-	
-	currentPage.selectAll();
-	selection = currentPage.getSelection();
-	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
-	System.out.println("Selection is: " + selection.toString());
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	*******************/
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();
+    }
+
+    public static abstract class EndDocumentSelectionVerifier implements DocumentLoadListener {
+
+	public void eventDispatched(WebclientEvent event) {
+	    if (event instanceof DocumentLoadEvent) {
+		switch ((int) event.getType()) {
+		case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
+		    NavigationTest.eventRegistration.removeDocumentLoadListener(this);
+		    doEndCheck();
+		    break;
+		}
+	    }
+	}	
+	
+	public abstract void doEndCheck();
     }
 
 }

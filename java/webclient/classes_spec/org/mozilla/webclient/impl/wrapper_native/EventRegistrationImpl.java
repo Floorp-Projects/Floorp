@@ -66,6 +66,10 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
     private List documentLoadListeners;
 
+    private BrowserToJavaEventPump eventPump = null;
+
+    private static int instanceCount = 0;
+
 //
 // Constructors and Initializers
 //
@@ -84,11 +88,14 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     }
     
     documentLoadListeners = new ArrayList();
+    eventPump = new BrowserToJavaEventPump(instanceCount++);
+    eventPump.start();
 }
 
 public void delete()
 {
     super.delete();
+    eventPump.stopRunning();
 }
 
 //
@@ -235,12 +242,9 @@ void nativeEventOccurred(String targetClassName, long eventType,
     ParameterCheck.nonNull(targetClassName);
 
     WebclientEvent event = null;
-    WebclientEventListener curListener = null;
-    List listeners = null;
 
     if (DocumentLoadListener.class.getName().equals(targetClassName)) {
         event = new DocumentLoadEvent(this, eventType, eventData);
-	listeners = documentLoadListeners;
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
         // We create a plain vanilla WebclientEvent, which the
@@ -257,14 +261,87 @@ void nativeEventOccurred(String targetClassName, long eventType,
     }
     // else...
 
-    if (null != event && null != listeners) {
-	Iterator iter = listeners.iterator();
-	while (iter.hasNext()) {
-	    curListener = (WebclientEventListener) iter.next();
-	    curListener.eventDispatched(event);
+    eventPump.queueEvent(event);
+    eventPump.V();
+}
+
+public class BrowserToJavaEventPump extends Thread {
+    private boolean keepRunning = false;
+    
+    private List eventsToJava = null;
+
+    private int count = 0;
+    
+    public BrowserToJavaEventPump(int instanceCount) {
+	super("BrowserToJavaEventPump-" + instanceCount);
+	eventsToJava = new ArrayList();
+	keepRunning = true;
+    }
+
+    //
+    // semaphore methods
+    // 
+
+    public synchronized void P() {
+	while (count <= 0) {
+	    try { wait(); } catch (InterruptedException ex) {}
+	}
+	--count;
+    }
+    
+    public synchronized void V() {
+	++count;
+	notifyAll();
+    }
+    
+    public void queueEvent(WebclientEvent toQueue) {
+	synchronized (eventsToJava) {
+	    eventsToJava.add(toQueue);
 	}
     }
 
-}
+    public void stopRunning() {
+	keepRunning = false;
+    }
+    
+    public void run() {
+	WebclientEvent curEvent = null;
+	WebclientEventListener curListener = null;
+	List listeners = null;
+
+	while (keepRunning) {
+	    P();
+
+	    synchronized(eventsToJava) {
+		if (!eventsToJava.isEmpty()) {
+		    curEvent = (WebclientEvent) eventsToJava.remove(0);
+		}
+	    }
+	    
+	    if (null == curEvent) {
+		continue;
+	    }
+	    
+	    if (curEvent instanceof DocumentLoadEvent) {
+		listeners = EventRegistrationImpl.this.documentLoadListeners;
+	    }
+	    // else...
+
+	    if (null != curEvent && null != listeners) {
+		synchronized (listeners) {
+		    Iterator iter = listeners.iterator();
+		    while (iter.hasNext()) {
+			curListener = (WebclientEventListener) iter.next();
+			curListener.eventDispatched(curEvent);
+		    }
+		}
+	    }
+	}
+
+	System.out.println(this.getName() + " exiting");
+    }
+
+} // end of class BrowserToJavaEventPump
+
 
 } // end of class EventRegistrationImpl

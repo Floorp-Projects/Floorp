@@ -111,7 +111,7 @@ public class NativeEventThread extends Thread {
 		wait();
 	    }
 	    catch (Exception e) {
-		System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e +
+		System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notifyAll() after destruction of initContext: " + e +
 				   " " + e.getMessage());
 	    }
 	}
@@ -142,10 +142,10 @@ public void run()
     ((Runnable)runnables.pop()).run();
     synchronized (wrapperFactory) {
 	try {
-	    wrapperFactory.notify();
+	    wrapperFactory.notifyAll();
 	}
 	catch (Exception e) {
-	    System.out.println("NativeEventThread.run: exception trying to send notify() to WrapperFactoryImpl on startup:" + e + " " + e.getMessage());
+	    System.out.println("NativeEventThread.run: exception trying to send notifyAll() to WrapperFactoryImpl on startup:" + e + " " + e.getMessage());
 	}
     }
 
@@ -165,10 +165,10 @@ public void run()
 	    // if we are have been told to delete ourselves
             if (null == this.wrapperFactory) {
                 try {
-                    notify();
+                    notifyAll();
                 }
                 catch (Exception e) {
-                    System.out.println("NativeEventThread.run: Exception: trying to send notify() to this during delete: " + e + " " + e.getMessage());
+                    System.out.println("NativeEventThread.run: Exception: trying to send notifyAll() to this during delete: " + e + " " + e.getMessage());
                 }
                 return;
             }
@@ -187,7 +187,7 @@ public void run()
 		}
 		// notify the pushBlockingWCRunnable() method.
 		try {
-		    notify();
+		    notifyAll();
 		}
 		catch (Exception e) {
 		    System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
@@ -238,10 +238,10 @@ public void run()
 		e = new RuntimeException(blockingException);
 	    }
 	    try {
-		notify();
+		notifyAll();
 	    }
 	    catch (Exception se) {
-		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: trying to send notify() to NativeEventThread: " + se + "  " + se.getMessage());
+		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: trying to send notifyAll() to NativeEventThread: " + se + "  " + se.getMessage());
 	    }
 	}
 	if (null != e) {
