@@ -64,7 +64,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -101,14 +101,6 @@ sub trim_db_history {
 sub apply_db_updates {
   my ($self, $tree, ) = @_;
   
-  # If the cell immediately after us is defined, then we can have
-  # a previousbuildtime.  New builds always start right after old
-  # builds finish.  The only time there is a pause, is when the
-  # old build broke right away.  Hence we can use the difference
-  # in start time as the time for the build.  If this is wrong the
-  # build broke early and we do not care about the runtime.  Throw
-  # away updates from newbuilds which start before mintime is up.
-
   my ($filename) = $self->update_file($tree);
   my ($dirname)= File::Basename::dirname($filename);
   my ($prefixname) = File::Basename::basename($filename);
@@ -141,7 +133,7 @@ sub apply_db_updates {
    }  
 
 
-    # add the record to the datastructure
+    # Add the record to the datastructure
 
     # Notice: We store the raw $status and do not use
     # BTData::STATUS_PROGRESS to convert it to $progress.  This is so
@@ -162,7 +154,7 @@ sub apply_db_updates {
     trim_db_history(@_);
   }
 
-  # be sure to save the updates to the database before we delete their
+  # Be sure to save the updates to the database before we delete their
   # files.
 
   $self->savetree_db($tree);
@@ -176,11 +168,7 @@ sub apply_db_updates {
 sub status_table_legend {
   my ($out)='';
 
-  # There are two bug tracking columns, tickets which are moving
-  # forward and tickets which are moving backwards.
-
-#  $out .= "\t<td align=right valign=top>Bug Tracking Progress</td>\n";
-#  $out .= "\t<td align=right valign=top>Bug Tracking Slipage</td>\n";
+  # I am not sure the best way to explain this
 
   return ($out);  
 }
@@ -258,7 +246,7 @@ sub status_table_row {
 
 	# display all the interesting fields
 	
-        $table .= "Ticket updated at: ".localtime($time);
+        $table .= "Ticket updated at: ".localtime($time)."<br>\n";
 	foreach $field (@BTData::DISPLAY_FIELDS) {
 
 	  # we display all fields even the empty ones, so that users

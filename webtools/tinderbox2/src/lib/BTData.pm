@@ -4,8 +4,8 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/22 15:14:12 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/10/18 20:26:04 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/BTData.pm,v $ 
 # $Name:  $ 
@@ -40,48 +40,28 @@ package BTData;
 $VERSION = '#tinder_version#';
 
 
-# Each tree is a map from a name to all the information necessary to
-# do a checkout of the sources (in this case cvs repository to
-# checkout, module, branch needed) and to create a URL to display the
-# page (if such a means exists).  Tree names are used as parts of
-# filenames so should not contain ' ' or '/' or unprintable
-# characters.  You may need to change this datastructure if you do not
-# use CVS.
-
-# Who uses tree data?
-
-# Only the VCDisplay and TinderDB::VC know what the internal structure
-# of the tree hash is.  All other modules only need to use the name of
-# a valid tree.
-
-# Also the client side build script needs to know how to checkout a
-# tree.
 
 
+# Ticket variable names match this pattern
 
-# %BUGZILLA_STATUS = (
-#		      'UNCONFIRMED',
-# 		      'NEW',
-# 		      'ASSIGNED',
-#		      'REOPENED',
-#		      'VERIFIED',
-#		      'CLOSED',
-#		    );
+# All variables seem to start with a capital letter.
 
-# %AIM_STATUS = (
-#	         'Pending',
-#	         'Assigned',
-#	         'Rejected',
-#	         'Closed',
-#	        );
+# Note: there are some standard bugzilla variables with unusual
+# characters in them:
 #
+#       Bug#: 1999
+#       OS/Version: 
 
+# Some AIM variable names have spaces in them, we will conert these
+# into '_' after the mail is parsed.
+
+$VAR_PATTERN = '[A-Z][a-zA-Z0-9._/ \#\-]*'; 
 
 
 
 # the name of the bug tracking field which shows bug_id
 
-#$BUGID_FIELD_NAME = 'ticket_#';
+#$BUGID_FIELD_NAME = 'Ticket_#';
 $BUGID_FIELD_NAME = 'Bug#';
 
 
@@ -114,9 +94,9 @@ $STATUS_FIELD_NAME = 'Status';
 
 
 # Uncomment only the fields you wish displayed in the popup window,
-# The fields will be displayed in the order they are listed here. 
-# Only uncomment fields which are interesting, emtpy fields will be
-# displayed.
+# The fields will be displayed in the order they are listed here.
+# Only uncomment fields which are interesting. Fields which are empty
+# will still be displayed.
 
 @DISPLAY_FIELDS = (
 
@@ -147,8 +127,11 @@ $STATUS_FIELD_NAME = 'Status';
 		   
 		   
 		   # AIM Fields 
-		   # (these names are configurable and come from the 
-		   #   appearance of mail messages)
+
+		   # (these names are configurable and come from the
+		   #  appearance of mail messages. We always convert
+		   #  spaces to '_'.)
+
 		   
 #		   'Ticket_#',
 #		   'Date_Open',
@@ -171,10 +154,16 @@ $STATUS_FIELD_NAME = 'Status';
 # Given a pointer to a bug update hash return the name of the tree to
 # which this bug report belongs.  Typically this will be the contents
 # of a field like 'Product', however some projects may be more
-# compicated like if all of the product is part of one project except
-# for a particular feature/platform which is being developed by a
-# separate project.  This function should return 'undef' if the bug
-# report should be ignored.
+# compicated.  One example of a complex function would be if each of
+# the product product types listed in the bug tracking data base
+# refers to one development project except for a particular
+# feature/platform of one particular project which is being developed
+# by a separate group of developers.  So the version control notion of
+# tress (a set of modules on a branch) may not have a direct map into
+# the bug tracking database at all times.
+
+# This function should return 'undef' if the bug report should be
+# ignored by the tinderbox server.
 
 
 sub update2tree {
@@ -185,15 +174,16 @@ sub update2tree {
 	  "");
 
   # It might be a good idea to call TreeData::tree_exists() and ensure
-  # that this tree is valid.
+  # that this tree is valid, but this would make it harder for testing
+  # using genbugs.
 
   return $out;
 }
 
 
-# Given a pointer to a bug update hash return a URL to the bug. If the
-# bug tracker does not allow such URL's return a 'mailto: ' to someone
-# who cares about the bug.
+# Given a pointer to a bug_update_hash return a URL ('href') to the
+# bug. If the bug tracker does not support URL's to a bug number,
+# return a 'mailto: ' to someone who cares about the bug.
 
 sub update2bug_url {
   my ($tinderbox_ref) = @_;
