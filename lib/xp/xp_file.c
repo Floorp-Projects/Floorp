@@ -21,12 +21,10 @@
 #include "plstr.h"
 #include "prmon.h"
 
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "prpriv.h"
 #else
 #include "private/prpriv.h"
-#endif
 #endif
 
 #ifdef XP_UNIX
@@ -1476,14 +1474,12 @@ XP_GetNewsRCFiles(void)
 			  continue;
 			strncpy (host, suffix + 1, port - suffix - 1);
 			host [port - suffix - 1] = 0;
-#ifndef NSPR20
-			ok = PR_gethostbyname (host, &hpbuf, dbbuf, sizeof(dbbuf), 0);
-#else
-                        if (PR_GetHostByName (host, dbbuf, sizeof(dbbuf), &hpbuf) == PR_SUCCESS)
+
+            if (PR_GetHostByName (host, dbbuf, sizeof(dbbuf), &hpbuf) == PR_SUCCESS)
 			    ok = &hpbuf;
 			else
 			    ok = NULL;
-#endif
+
 			if (!ok)
 			  continue;
 		  }
@@ -1628,11 +1624,7 @@ XP_Bool XP_FileIsFullPath(const char * name)
 #if !defined(XP_WIN) && !defined(XP_OS2)
 
 #ifdef NSPR
-#ifndef NSPR20
-extern PRMonitor* _pr_TempName_lock;
-#else
 PRMonitor* _pr_TempName_lock = NULL;
-#endif /* NSPR20 */
 #endif
 
 PUBLIC char *
@@ -1642,15 +1634,10 @@ WH_FileName (const char *name, XP_FileType type)
 	static char configBuf [1024];		/* protected by _pr_TempName_lock */
 	char* result;
 #ifdef NSPR
-#ifndef NSPR20
-	XP_ASSERT(_pr_TempName_lock);
-	PR_EnterMonitor(_pr_TempName_lock);
-#else
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif /* NSPR20 */
 #endif
 	/* reset
 	 */
@@ -1670,15 +1657,10 @@ WH_FilePlatformName(const char * name)
 	char* result;
 	static char path[300];	/* Names longer than 300 are not dealt with in our stdio */
 #ifdef NSPR
-#ifndef NSPR20
-	XP_ASSERT(_pr_TempName_lock);
-	PR_EnterMonitor(_pr_TempName_lock);
-#else
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif /* NSPR20 */
 #endif
 	result = xp_FilePlatformName(name, path);
 #ifdef NSPR
@@ -1699,15 +1681,10 @@ WH_TempName(XP_FileType type, const char * prefix)
 	static unsigned int count = 0;
 	char* result;
 #ifdef NSPR
-#ifndef NSPR20
-	XP_ASSERT(_pr_TempName_lock);
-	PR_EnterMonitor(_pr_TempName_lock);
-#else
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif /* NSPR20 */
 #endif
 	result = xp_TempName(type, prefix, buf, buf2, &count);
 	if (result)

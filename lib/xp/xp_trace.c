@@ -23,11 +23,6 @@
 #include "xp_trace.h"
 #include "xp_mcom.h"
 
-#ifndef NSPR20
-#if defined(__sun)
-#include "sunos4.h"
-#endif
-#endif /* NSPR20 */
 
 void XP_TraceV (const char* message, va_list args)
 {

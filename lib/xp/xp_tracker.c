@@ -32,10 +32,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifndef NSPR20
-#include "prglobal.h"
-#include "prfile.h"
-#endif
 #include "xp_tracker.h"
 
 
