@@ -44,8 +44,6 @@
 #include "plugin.h"
 #include "utils.h"
 
-static char szDefaultPluginFinderURL[] = DEFAULT_PLUGINFINDER_URL;
-
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
