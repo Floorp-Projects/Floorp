@@ -378,7 +378,7 @@ PRVCY_SiteInfo(MWContext *context) {
     char *buffer2 = 0;
     char *argument = 0;
     char *argument2 = 0;
-    int cookieBehavior;
+    int32 cookieBehavior;
     Bool warn;
     int g = 0;
 
