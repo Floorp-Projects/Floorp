@@ -402,7 +402,7 @@ sub kill_command {
   my ($pid) = @_;
   # Get the ps -aux table and pass it to _kill_command
   my %children_of;
-  open PS_AUX, "ps -eo 'pid,ppid,command'|";
+  open PS_AUX, $this->sysinfo()->{PS_COMMAND} . "|";
   while (<PS_AUX>) {
     print;
     if (/\s*(\d+)\s*(\d+)/) {
@@ -459,7 +459,9 @@ sub do_command {
     }
     $last_read_time = time;
 
-    $this->print_log($grep_sub ? &$grep_sub($buffer) : $buffer);
+    if ($buffer) {
+      $this->print_log($grep_sub ? &$grep_sub($buffer) : $buffer);
+    }
 
     {
       # Send status every so often (this also gives us back new commands)
@@ -726,7 +728,7 @@ sub get_sysinfo {
 }
 
 #
-# Sets up the system info object; for os's to override
+# Sets up the system info object
 #
 sub new {
 	my $class = shift;
@@ -739,6 +741,9 @@ sub new {
   $this->{OS_VERSION} = $os_ver;
   $this->{CPU} = $cpu;
 
+  #
+  # Set up compiler
+  #
   if ($os =~ /^WIN/) {
     $this->{COMPILER} = 'cl';
   } else {
@@ -751,6 +756,14 @@ sub new {
   }
   # XXX figure out version for Windows compiler
 
+  #
+  # Set up ps
+  #
+  if ($this->{OS} =~ /^WIN/) {
+    $this->{PS_COMMAND} = "ps aux";
+  } else {
+    $this->{PS_COMMAND} = "ps -eo 'pid,ppid,command'";
+  }
   return $this;
 }
 
@@ -941,10 +954,10 @@ EOM
       $ENV{MOZ_CO_DATE} = $config->{cvs_co_date};
     }
     my $parsing_code = sub {
-                         if ($_[0] =~ /^[UP] /) {
+                         if ($_[0] =~ /^[UP] /m) {
                            $build_vars->{SHOULD_BUILD} = 1;
                          }
-                         if ($config->{lowbandwidth} && $_[0] =~ /\? /) {
+                         if ($config->{lowbandwidth} && $_[0] =~ /^\? /m) {
                            return "";
                          }
                          return $_[0];
@@ -1057,7 +1070,7 @@ sub do_action {
     $err = $client->do_command("make -f client.mk build", 10,
                                $config->{lowbandwidth} ?
         sub {
-          if ($_[0] =~ s/^g?make.+Entering directory ['`"](.+)['`"]$/$1/) {
+          if ($_[0] =~ s/^g?make.+Entering directory ['`"](.+)['`"]$/$1/mg) {
             return $_[0];
           }
           if ($_[0] =~ /^\S+$/) {
