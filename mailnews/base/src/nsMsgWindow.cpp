@@ -146,6 +146,8 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
   if (mStatusFeedback)
     mStatusFeedback->CloseWindow(); 
 
+  StopUrls();
+
   nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
 
 	if(rootShell)
