@@ -1096,6 +1096,7 @@ while (@row = FetchSQLData()) {
             if (exists $::needquote{$c}) {
                 my $value = shift @row;
                 if (!defined $value) {
+                    pnl "<TD>";
                     next;
                 }
                 if ($c eq "owner") {
