@@ -380,6 +380,9 @@ void _MD_unix_map_rmdir_error(int err)
     PRErrorCode prError;
 
     switch (err) {
+        case ENOTEMPTY:
+            prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
+            break;
         case EEXIST:
             prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
             break;
