@@ -524,6 +524,7 @@ toolbox {
   border-top: 1px solid #CED6DD;
   border-right: 1px solid #95A0AD;
   border-bottom: 1px solid #95A0AD;
+  border-left: 1px solid #DAE3ED;
 }
 
 #PersonalToolbar > toolbargrippy:hover:active {
