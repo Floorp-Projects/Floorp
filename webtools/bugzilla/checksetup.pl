@@ -248,20 +248,16 @@ my $modules = [
 ];
 
 my %missing = ();
+
+# Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
+# so that later errors display 'normally'
 foreach my $module (@{$modules}) {
+    local $::SIG{__DIE__};
+    local $::SIG{__WARN__};
     unless (have_vers($module->{name}, $module->{version})) { 
         $missing{$module->{name}} = $module->{version};
     }
 }
-
-# If CGI::Carp was loaded successfully for version checking, it changes the
-# die and warn handlers, we don't want them changed, so we need to stash the
-# original ones and set them back afterwards -- justdave@syndicomm.com
-my $saved_die_handler = $::SIG{__DIE__};
-my $saved_warn_handler = $::SIG{__WARN__};
-unless (have_vers("CGI::Carp",0))    { $missing{'CGI::Carp'} = 0 }
-$::SIG{__DIE__} = $saved_die_handler;
-$::SIG{__WARN__} = $saved_warn_handler;
 
 print "\nThe following Perl modules are optional:\n" unless $silent;
 my $charts = 0;
