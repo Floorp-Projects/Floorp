@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd">
+<!DOCTYPE html PUBLIC
+  "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"
+  "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+[
+  <!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
+]>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:math="http://www.w3.org/1998/Math/MathML"
@@ -31,7 +36,11 @@
   <title>Mixing MathML with other markup</title>
 </head>
 
-<body style="font-size: 18pt; background-color: gold; background-image: url(resource:/res/samples/raptor.jpg); background-repeat: no-repeat; background-attachment: fixed;">
+<body style="font-size: 18pt; 
+      background-color: gold;
+      background-image: url(resource:/res/samples/raptor.jpg);
+      background-repeat: no-repeat;
+      background-attachment: fixed;">
 
 <h2 style="text-align: center; color: blue">
 Mixing MathML markups and other markups to get special effects</h2>
@@ -44,30 +53,44 @@ View the source...
 <math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
   <mfrac linethickness="3">
     <mi>a</mi>
-    <html:img src="resource:/chrome/skins/modern/global/skin/animthrob.gif" />
+    <html:img src="chrome://communicator/skin/brand/throbber-anim.gif" />
   </mfrac>
 </math>
 
+Fill the gaps in this matrix with input fields
+<math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+  <mo>[</mo>
+  <mtable>
+    <mtr>
+      <mtd><mi>a</mi></mtd>
+      <mtd><html:input value="?" size="1"/></mtd>
+    </mtr>
+    <mtr>
+      <mtd><html:input value="?" size="1"/></mtd>      
+      <mtd><mi>d</mi></mtd>
+    </mtr>
+  </mtable>
+  <mo>]</mo>
+</mrow>
+</math>
 <br />
 
 
-See the difference between &lt;mi&gt; an &lt;html:i&gt;
-(which doesn't understand the scriptlevel) :
+See the difference of rendering between <br />
 
-<math mode="display" xmlns="http://www.w3.org/1998/Math/MathML">
-  <mfrac>
-    <mi>a</mi>
-    <mi>a</mi>
-  </mfrac>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msup>
+  <mi fontstyle="italic">jif</mi>
+  <mi fontstyle="italic">jif</mi>
+</msup>
+</math> -- italic MathML &lt;msup&gt; and
 
-  &nbsp;
+<br />
 
-  <mfrac>
-    <html:i>a</html:i>
-    <html:i>a</html:i>
-  </mfrac>
-</math>
+<span><i>jif</i><sup><i>jif</i></sup></span> -- italic HTML &lt;sup&gt;
 
+<br />
 <br />
 
 And there could be more...
@@ -75,7 +98,7 @@ And there could be more...
 <div style="text-align: center">
   <button style="background-color:rgb(192,192,192)">
      <span style="color: brown;">
-       For example, a MathML continued fraction inside a HTML button<br />
+       For example, click this MathML continued fraction inside a HTML button<br />
      </span> 
      <math xmlns="&mathml;">
        <mrow>
