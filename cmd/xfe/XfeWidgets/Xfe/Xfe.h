@@ -112,7 +112,8 @@ enum
     XmCR_TOOL_BOX_SNAP,							/* Tool box snap		*/
     XmCR_TOOL_BOX_SWAP,							/* Tool box swap		*/
     XmCR_UNDOCK,								/* Task bar undock		*/ 
-    XmCR_UNGRAB									/* Ungrab				*/
+    XmCR_UNGRAB,								/* Ungrab				*/
+    XmCR_XFE_LAST_REASON						/* Last reason marker	*/
 };
 
 /*----------------------------------------------------------------------*/
