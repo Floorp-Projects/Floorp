@@ -54,12 +54,9 @@ public:
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings, PRBool aQuiet);
   PpPrintContext_t *GetPrintContext();
 
-  void SetPrintContext(PpPrintContext_t *pc);
-
 protected:
   virtual ~nsDeviceContextSpecPh();
   PpPrintContext_t *mPC;
-  nsIPrintSettings* mPrintSettings;
 };
 
 //-------------------------------------------------------------------------

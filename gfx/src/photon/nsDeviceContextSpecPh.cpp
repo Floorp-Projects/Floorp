@@ -62,72 +62,100 @@ static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
 	NS_INIT_ISUPPORTS();
-	mPC = nsnull;
+	mPC = PpCreatePC();
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
-	if (mPC)
-		PpPrintReleasePC(mPC);
+	PpPrintReleasePC(mPC);
 }
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecPh, nsIDeviceContextSpec)
 
 
+#define Pp_COLOR_CMYK			4
+#define Pp_COLOR_BW				1
+
 NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
-                                             nsIPrintSettings* aPrintSettings,
+                                             nsIPrintSettings* aPS,
                                              PRBool aQuiet)
 {
 	nsresult rv = NS_OK;
-	int 		action;
-	PtWidget_t 	*parent;
+	PRUnichar *printer        = nsnull;
 
-  	mPrintSettings = aPrintSettings;
-  	parent = (PtWidget_t *) aWidget->GetNativeData(NS_NATIVE_WINDOW);
+	aPS->GetPrinterName(&printer);
 
-	if( !mPC ) 
-		mPC = PpCreatePC();
-
-	if (aQuiet) 
-	{
-		PpLoadDefaultPrinter(mPC);
-	}
-	else
-	{
-		//PtSetParentWidget(parent);
-		//action = PtPrintSelection(parent, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
-		PtSetParentWidget(NULL);
-		action = PtPrintSelection(NULL, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
-		switch( action ) 
-		{
-			case Pt_PRINTSEL_PRINT:
-			case Pt_PRINTSEL_PREVIEW:
-				rv = NS_OK;
-				break;
-			case Pt_PRINTSEL_CANCEL:
-				rv = NS_ERROR_ABORT;
-				break;
-			default:
-				rv = NS_ERROR_ABORT;
-				break;
+	if( printer ) {
+		int res = 111;
+		const char *pname = NS_ConvertUCS2toUTF8(printer).get();
+		if( !strcmp( pname, "<Preview>" ) ) {
+			char preview = 1;
+			PpSetPC( mPC, Pp_PC_DO_PREVIEW, &preview, 0 );
+			}
+		else res = PpLoadPrinter( mPC, pname );
 		}
-  	}
+	else PpLoadDefaultPrinter( mPC );
 
-  	return rv;
+	if( !aQuiet) 
+	{
+		PRBool tofile = PR_FALSE;
+		PRUnichar *printfile = nsnull;
+		PRInt32 copies = 1;
+		PRBool color = PR_FALSE;
+		PRInt32 orientation = nsIPrintSettings::kPortraitOrientation;
+		PRBool reversed = PR_FALSE;
+
+		aPS->GetPrintToFile(&tofile);
+		if( tofile == PR_TRUE ) {
+			aPS->GetToFileName(&printfile);
+			if( printfile ) PpSetPC( mPC, Pp_PC_FILENAME, NS_ConvertUCS2toUTF8(printfile).get(), 0 );
+			}
+
+		aPS->GetNumCopies(&copies);
+		char pcopies = ( char ) copies;
+		PpSetPC( mPC, Pp_PC_COPIES, (void *) &pcopies, 0 );
+
+		aPS->GetPrintInColor(&color);
+		char ink = color == PR_TRUE ? Pp_COLOR_CMYK : Pp_COLOR_BW;
+		PpSetPC( mPC, Pp_PC_INKTYPE, &ink, 0 );
+
+		aPS->GetOrientation(&orientation);
+		char paper_orientation = orientation == nsIPrintSettings::kPortraitOrientation ? 0 : 1;
+		PpSetPC( mPC, Pp_PC_ORIENTATION, &paper_orientation, 0 );
+
+		aPS->GetPrintReversed(&reversed);
+		char rev = reversed == PR_TRUE ? 1 : 0;
+		PpSetPC( mPC, Pp_PC_REVERSED, &rev, 0 );
+
+
+		PRInt16 unit;
+		double width, height;
+		aPS->GetPaperSizeUnit(&unit);
+		aPS->GetPaperWidth(&width);
+		aPS->GetPaperHeight(&height);
+
+		PhDim_t *pdim, dim;
+		PpGetPC( mPC, Pp_PC_PAPER_SIZE, &pdim );
+		dim = *pdim;
+		if( unit == nsIPrintSettings::kPaperSizeInches ) {
+		  dim.w  = width * 1000;
+		  dim.h = height * 1000;
+			}
+		else if( unit == nsIPrintSettings::kPaperSizeMillimeters ) {
+			dim.w = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(width*1000))));
+			dim.h = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(height*1000))));
+			}
+
+		PpSetPC( mPC, Pp_PC_PAPER_SIZE, &dim, 0 );
+  }
+
+ 	return rv;
 }
 
 //NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
 PpPrintContext_t *nsDeviceContextSpecPh :: GetPrintContext()
 {
 	return (mPC);
-}
-
-void nsDeviceContextSpecPh :: SetPrintContext(PpPrintContext_t* pc)
-{
-	if (mPC)
-		PpPrintReleasePC(mPC);
-
-	mPC = pc; 
 }
 
 //***********************************************************
@@ -156,8 +184,19 @@ nsPrinterEnumeratorPh::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
 /* readonly attribute wstring defaultPrinterName; */
 NS_IMETHODIMP nsPrinterEnumeratorPh::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 {
+	char *printer;
+
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
-  *aDefaultPrinterName = nsnull;
+
+	PpPrintContext_t *pc = PpCreatePC();
+	if( pc ) {
+		PpLoadDefaultPrinter( pc );
+		PpGetPC( pc, Pp_PC_NAME, &printer );
+
+  	*aDefaultPrinterName = ToNewUnicode( NS_LITERAL_STRING( printer ) );
+		PpReleasePC( pc );
+		}
+	else *aDefaultPrinterName = nsnull;
   return NS_OK;
 }
 
@@ -195,18 +234,15 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
   	NS_ENSURE_ARG_POINTER(aResult);
 
 	char 	**plist = NULL;
-	int		pcount = 0, count = 0, preview = 0;
+	int		pcount = 0, count = 0;
 
 	if (!(plist = PpLoadPrinterList()))
 		return NS_ERROR_FAILURE;
 
 	for (pcount = 0; plist[pcount] != NULL; pcount++);
 
-	/* allow at least one printer to be present, otherwise the "Preview" cannot be done in the PtPrintSelection() */
-	if( !pcount ) {
-		pcount = 1;
-		preview = 1;
-		}
+	/* allow a fake <Preview> printer to do the photon native preview */
+	pcount++;
 
 	PRUnichar** array = (PRUnichar**) nsMemory::Alloc(pcount * sizeof(PRUnichar*));
 	if (!array)
@@ -219,9 +255,9 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
 	{
 		nsString newName;
 
-		if( !preview )
+		if( count < pcount-1 )
 			newName.AssignWithConversion(plist[count]);
-		else newName.AssignWithConversion( "Preview" );
+		else newName.AssignWithConversion( "<Preview>" );
 
 		PRUnichar *str = ToNewUnicode(newName);
 		if (!str) 
@@ -238,4 +274,3 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
 
 	return NS_OK;
 }
-

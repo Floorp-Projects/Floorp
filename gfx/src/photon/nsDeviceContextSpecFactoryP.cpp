@@ -75,7 +75,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 																	PRBool aQuiet)
 {
 	NS_ENSURE_ARG_POINTER(aWidget);
-	PpPrintContext_t *pc = NULL;
 
 	nsresult  rv = NS_ERROR_FAILURE;
 	nsIDeviceContextSpec  *devSpec = nsnull;
@@ -85,10 +84,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 	if (devSpec != nsnull)
 	{
 		nsDeviceContextSpecPh* specPh = NS_STATIC_CAST(nsDeviceContextSpecPh*, devSpec);
-		if (pc)
-		{
-			specPh->SetPrintContext(pc);
-		}
 		rv = specPh->Init(aWidget, aPrintSettings, aQuiet);
 		if (NS_SUCCEEDED(rv)) {
   			aNewSpec = devSpec;
