@@ -71,6 +71,15 @@ if(!(-e "$inDistPath"))
   mkdir ("$inDistPath",0775);
 }
 
+if(-e "$inDistPath\\xpi")
+{
+  unlink <$inDistPath\\xpi\\*>;
+}
+else
+{
+  mkdir ("$inDistPath\\xpi",0775);
+}
+
 # Make .js files
 MakeJsFile("xpcom");
 MakeJsFile("browser");
@@ -103,21 +112,21 @@ else
 }
 
 # Copy the uninstall files to the dist uninstall directory.
-system("xcopy /f uninstall.ini              $inDistPath\\");
-system("xcopy /f uninstall.ini              $inDistPath\\uninstall\\");
-system("xcopy /f $inDistPath\\uninstall.exe $inDistPath\\uninstall\\");
+system("copy uninstall.ini              $inDistPath");
+system("copy uninstall.ini              $inDistPath\\uninstall");
+system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall");
 
 # Copy the setup files to the dist setup directory.
-system("xcopy /f config.ini                 $inDistPath\\");
-system("xcopy /f config.ini                 $inDistPath\\setup\\");
-system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup\\");
-system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup\\");
+system("copy config.ini                 $inDistPath");
+system("copy config.ini                 $inDistPath\\setup");
+system("copy $inDistPath\\setup.exe     $inDistPath\\setup");
+system("copy $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 
 # build the self-extracting .exe (uninstaller) file.
 print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
 system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
 system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
-system("xcopy /f $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi\\");
+system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi");
 
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";

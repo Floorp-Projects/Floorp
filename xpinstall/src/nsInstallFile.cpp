@@ -31,6 +31,7 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsInstallResources.h"
+#include "nsInstallLogComment.h"
 
 /* Public Methods */
 
@@ -67,6 +68,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     MOZ_COUNT_CTOR(nsInstallFile);
 
     PRBool flagExists, flagIsFile;
+    mFolderCreateCount = 0;
 
     if ((folderSpec == nsnull) || (inInstall == NULL))
     {
@@ -164,14 +166,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         }
         // else this directory already exists, so do nothing
     }
-    else
-    {
-        /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
-         * to be an existing dir
-         */
-        int dirPermissions = 0755; // std default for UNIX, ignored otherwise
-        mFinalFile->Create(nsIFile::DIRECTORY_TYPE, dirPermissions);
-    }
 
     //Need to parse the inPartialPath to remove any separators
     PRBool finished = PR_FALSE;
@@ -217,17 +211,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     //}
     
     mFinalFile->Exists(&mReplaceFile);
-    if (mReplaceFile == PR_FALSE)
-    {
-       /* although it appears that we are creating the dir _again_ it is necessary
-        * when inPartialPath has arbitrary levels of nested dirs before the leaf
-        */
-        nsCOMPtr<nsIFile> parent;
-        mFinalFile->GetParent(getter_AddRefs(parent));
-        //nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
-        parent->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    }
-
     mVersionRegistryName  = new nsString(inComponentName);
     mJarLocation          = new nsString(inJarLocation);
     mVersionInfo	        = new nsString(inVInfo);
@@ -279,16 +262,98 @@ nsInstallFile::~nsInstallFile()
     MOZ_COUNT_DTOR(nsInstallFile);
 }
 
+
+
+
+void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath, PRInt32 *error)
+{
+    /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
+     * to be an existing dir
+     */
+
+    nsCOMPtr<nsIFile>   nsfsFolderPath;
+    nsString            nsStrFolder;
+    PRBool              flagExists;
+    int                 result = 0;
+    nsInstallLogComment *ilc   = nsnull;
+
+    inFolderPath->Exists(&flagExists);
+    if(!flagExists)
+    {
+        char *szPath = nsnull;
+
+        inFolderPath->GetParent(getter_AddRefs(nsfsFolderPath));
+        CreateAllFolders(inInstall, nsfsFolderPath, error);
+
+        inFolderPath->Create(nsIFile::DIRECTORY_TYPE, 0755); //nsIFileXXX: What kind of permissions are required here?
+        ++mFolderCreateCount;
+
+        inFolderPath->GetPath(&szPath);
+        nsStrFolder = szPath;
+        nsAllocator::Free(szPath);
+        ilc = new nsInstallLogComment(inInstall, "CreateFolder", nsStrFolder, error);
+        if(ilc == nsnull)
+            *error = nsInstall::OUT_OF_MEMORY;
+
+        if(*error == nsInstall::SUCCESS) 
+            *error = mInstall->ScheduleForInstall(ilc);
+    }
+}
+
+#ifdef XXX_SSU
+void nsInstallFile::RemoveAllFolders()
+{
+    /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
+     * to be an existing dir
+     */
+
+    PRUint32   i;
+    nsFileSpec nsfsFolder;
+    nsFileSpec nsfsParentFolder;
+    nsString   nsStrFolder;
+
+    if(mFinalFile != nsnull)
+    {
+      mFinalFile->GetParent(nsfsFolder);
+      for(i = 0; i < mFolderCreateCount; i++)
+      {
+          nsfsFolder.Delete(PR_FALSE);
+          nsfsFolder.GetParent(nsfsParentFolder);
+          nsfsFolder = nsfsParentFolder;
+      }
+    }
+}
+#endif
+
+
+
+
+
+
 /* Prepare
  * Extracts file out of the JAR archive
  */
 PRInt32 nsInstallFile::Prepare()
 {
+    PRInt32 error = nsInstall::SUCCESS;
+
     if (mSkipInstall)
         return nsInstall::SUCCESS;
 
     if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
         return nsInstall::INVALID_ARGUMENTS;
+
+    if (mReplaceFile == PR_FALSE)
+    {
+       /* although it appears that we are creating the dir _again_ it is necessary
+        * when inPartialPath has arbitrary levels of nested dirs before the leaf
+        */
+        nsCOMPtr<nsIFile> parent;
+        mFinalFile->GetParent(getter_AddRefs(parent));
+        CreateAllFolders(mInstall, parent, &error);
+        if(nsInstall::SUCCESS != error)
+            return error;
+    }
 
     return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, getter_AddRefs(mExtractedFile)); 
 }

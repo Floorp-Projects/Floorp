@@ -121,7 +121,7 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
   {
     lstrcpy(szBuf, szTo);
     AppendBackSlash(szBuf, sizeof(szBuf));
-    CreateDirectoriesAll(szBuf);
+    CreateDirectoriesAll(szBuf, FALSE);
   }
 
   GetCurrentDirectory(MAX_BUF, szBuf);
@@ -543,12 +543,33 @@ HRESULT ProcessCopyFileSequential(DWORD dwTiming)
   return(FO_SUCCESS);
 }
 
-HRESULT CreateDirectoriesAll(char* szPath)
+void UpdateInstallLog(LPSTR szDir)
+{
+  FILE *fInstallLog;
+  char szBuf[MAX_BUF];
+  char szFileInstallLog[MAX_BUF];
+
+  lstrcpy(szFileInstallLog, szSetupDir);
+  AppendBackSlash(szFileInstallLog, sizeof(szFileInstallLog));
+  lstrcat(szFileInstallLog, FILE_INSTALL_LOG);
+
+  if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
+  {
+    lstrcpy(szBuf, "    ** ");
+    lstrcat(szBuf, KEY_CREATE_FOLDER);
+    lstrcat(szBuf, szDir);
+    lstrcat(szBuf, "\n");
+    fwrite(szBuf, sizeof(char), lstrlen(szBuf), fInstallLog);
+    fclose(fInstallLog);
+  }
+}
+
+HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
 {
   int     i;
   int     iLen = lstrlen(szPath);
   char    szCreatePath[MAX_BUF];
-  HRESULT hrResult;
+  HRESULT hrResult = 0;
 
   ZeroMemory(szCreatePath, MAX_BUF);
   memcpy(szCreatePath, szPath, iLen);
@@ -559,7 +580,13 @@ HRESULT CreateDirectoriesAll(char* szPath)
       (!((szPath[0] == '\\') && (i == 1)) && !((szPath[1] == ':') && (i == 2))))
     {
       szCreatePath[i] = '\0';
-      hrResult        = CreateDirectory(szCreatePath, NULL);
+      if(FileExists(szCreatePath) == FALSE)
+      {
+        hrResult = CreateDirectory(szCreatePath, NULL);
+
+        if(bLogForUninstall)
+          UpdateInstallLog(szCreatePath);
+      }
       szCreatePath[i] = szPath[i];
     }
   }
@@ -585,7 +612,7 @@ HRESULT ProcessCreateDirectory(DWORD dwTiming)
     {
       DecryptString(szDestination, szBuf);
       AppendBackSlash(szDestination, sizeof(szDestination));
-      CreateDirectoriesAll(szDestination);
+      CreateDirectoriesAll(szDestination, FALSE);
     }
 
     ++dwIndex;

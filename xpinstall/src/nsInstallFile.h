@@ -92,12 +92,14 @@ class nsInstallFile : public nsInstallObject
         PRBool      mChildFile;      /* whether file is a child */
         PRBool      mUpgradeFile;    /* whether file is an upgrade */
         PRBool      mSkipInstall;    /* if true don't install this file */
+        PRUint32    mFolderCreateCount; /* int to keep count of the number of folders created for a given path */
         
         PRInt32    mMode;            /* an integer used like a bitfield to control *
                                       * how a file is installed or registered      */
 
         PRInt32     CompleteFileMove();
         PRInt32     RegisterInVersionRegistry();
+        void        CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath, PRInt32 *error);
     
 
 };
