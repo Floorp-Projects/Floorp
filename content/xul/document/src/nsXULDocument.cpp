@@ -4462,7 +4462,7 @@ nsXULDocument::ResumeWalk()
             if (NS_FAILED(rv)) return rv;
 
             if (indx >= proto->mNumChildren) {
-                if (element && ((mState == eState_Master) || (mContextStack.Depth() > 1))) {
+                if (element && ((mState == eState_Master) || (mContextStack.Depth() > 2))) {
                     // We've processed all of the prototype's children.
                     // Check the element for a 'datasources' attribute, in
                     // which case we'll need to create a template builder
