@@ -1230,6 +1230,12 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
                                         sizeof( MQINFO ) );
     if( !hmqCurrent )
     {
+        /* Set our app to be a PM app before attempting Win calls */
+        PPIB ppib;
+        PTIB ptib;
+        DosGetInfoBlocks(&ptib, &ppib);
+        ppib->pib_ultype = 3;
+
         hab = WinInitialize( 0 );
         hmqCurrent = WinCreateMsgQueue( hab, 0 );
     }

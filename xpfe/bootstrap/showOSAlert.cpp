@@ -49,6 +49,8 @@
 #elif defined (MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
 #elif defined (XP_OS2)
+#define INCL_DOS
+#define INCL_WIN
 #include <os2.h>
 #endif
 
@@ -199,6 +201,11 @@ printf("\n****Inside ShowOSAlert ***\n");
 #elif defined (MOZ_WIDGET_GTK)
     NS_gtk_alert(message_copy, NULL, "OK");
 #elif defined (XP_OS2)
+    /* Set our app to be a PM app before attempting Win calls */
+    PPIB ppib;
+    PTIB ptib;
+    DosGetInfoBlocks(&ptib, &ppib);
+    ppib->pib_ultype = 3;
     HAB hab = WinInitialize(0);
     HMQ hmq = WinCreateMsgQueue(hmq,0);
     WinMessageBox( HWND_DESKTOP, HWND_DESKTOP, message_copy, "", 0, MB_OK);
