@@ -39,25 +39,6 @@
 
 #define _MAX_LENGTH   256
 
-#define REGISTRY_YES_STRING  "yes"
-#define REGISTRY_NO_STRING   "no"
-
-// strings for items in the registry we'll be getting or setting
-#define REGISTRY_PROFILE_SUBTREE_STRING     "Profiles"
-#define REGISTRY_CURRENT_PROFILE_STRING     "CurrentProfile"
-#define REGISTRY_NC_SERVICE_DENIAL_STRING   "NCServiceDenial"
-#define REGISTRY_NC_PROFILE_NAME_STRING     "NCProfileName"
-#define REGISTRY_NC_USER_EMAIL_STRING       "NCEmailAddress"
-#define REGISTRY_NC_HAVE_PREG_INFO_STRING   "NCHavePregInfo"
-#define REGISTRY_HAVE_PREG_INFO_STRING      "HavePregInfo"
-#define REGISTRY_MIGRATED_STRING            "migrated"
-#define REGISTRY_DIRECTORY_STRING           "directory"
-#define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
-#define REGISTRY_MOZREG_DATA_MOVED_STRING   "OldRegDataMoved"
-
-#define REGISTRY_VERSION_STRING	  "Version"
-#define REGISTRY_VERSION_1_0      "1.0"		
-
 class nsProfile: public nsIProfileInternal,
                  public nsIDirectoryServiceProvider 
 {
@@ -104,6 +85,5 @@ public:
 
     nsresult CreateDefaultProfile(void);
     nsresult ShowProfileWizard(void);
-    nsresult PopulateIfEmptyDir(const PRUnichar *profileName, nsILocalFile *profieDir);
 };
 
