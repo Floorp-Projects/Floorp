@@ -44,6 +44,7 @@
 #include <gtk/gtkentry.h>
 #include <gtk/gtktextview.h>
 #include <gtk/gtkbindings.h>
+#include <gtk/gtkmain.h>
 #include <gdk/gdkkeysyms.h>
 
 static nsINativeKeyBindings::DoCommandCallback gCurrentCallback;
@@ -221,8 +222,15 @@ nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
     break;
   case eKeyBindings_TextArea:
     mNativeTarget = gtk_text_view_new();
-    g_signal_connect(G_OBJECT(mNativeTarget), "select_all",
-                     G_CALLBACK(select_all_cb), this);
+    if (gtk_major_version > 2 ||
+        (gtk_major_version == 2 && (gtk_minor_version > 2 ||
+                                    (gtk_minor_version == 2 &&
+                                     gtk_micro_version >= 2)))) {
+      // select_all only exists in gtk >= 2.2.2.  Prior to that,
+      // ctrl+a is bound to (move to beginning, select to end).
+      g_signal_connect(G_OBJECT(mNativeTarget), "select_all",
+                       G_CALLBACK(select_all_cb), this);
+    }
     break;
   }
 
