@@ -498,6 +498,15 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
     return NS_ERROR_FAILURE;
   }
 
+  // we have problem on Simplified Chinese system because the system report
+  // the default font size is 8. but if we use 8, the text display very
+  // Ugly. force it to be at least 9 on that system (cp936)
+
+  if ((-9 < ptrLogFont->lfHeight) && 
+      (ptrLogFont->lfHeight < 9) && 
+      (936 == ::GetACP())) 
+    ptrLogFont->lfHeight = (ptrLogFont->lfHeight > 0) ? 9 : -9;
+
   return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFont);
 }
 
