@@ -65,6 +65,7 @@ calDateTime::calDateTime()
     mWeekday = 0;
     mYearday = 0;
     mTimezoneOffset = 0;
+    mIsDate = PR_FALSE;
 }
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
