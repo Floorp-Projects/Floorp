@@ -574,8 +574,11 @@ nsresult nsContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode,
   {
     if (aIndexes)
     {
-      // pop node off the stack, go up one level and try again.
-      aIndexes->RemoveElementAt(aIndexes->Count()-1);
+      // pop node off the stack, go up one level and return parent or fail.
+      // Don't leave the index empty, especially if we're
+      // returning NULL.  This confuses other parts of the code.
+      if (aIndexes->Count() > 1)
+        aIndexes->RemoveElementAt(aIndexes->Count()-1);
     }
     return GetNextSibling(parent, aSibling, aIndexes);
   }
@@ -624,7 +627,8 @@ nsresult nsContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode,
   }
 
   // indx is now canonically correct
-  if (NS_SUCCEEDED(parent->ChildAt(--indx, *getter_AddRefs(sib))) && sib)
+  if (indx > 0 && 
+      NS_SUCCEEDED(parent->ChildAt(--indx, *getter_AddRefs(sib))) && sib)
   {
     *aSibling = sib;
     // update index cache
@@ -728,7 +732,10 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode, nsVoidArr
     if (aIndexes)
     {
       // pop an entry off the index stack
-      aIndexes->RemoveElementAt(aIndexes->Count()-1);
+      // Don't leave the index empty, especially if we're
+      // returning NULL.  This confuses other parts of the code.
+      if (aIndexes->Count() > 1)
+        aIndexes->RemoveElementAt(aIndexes->Count()-1);
     }
     else mCachedIndex = 0;   // this might be wrong, but we are better off guessing
     *ioNextNode = parent;
@@ -828,11 +835,7 @@ nsresult nsContentIterator::First()
 {
   if (!mFirst) 
     return NS_ERROR_FAILURE;
-  mIsDone = PR_FALSE;
-  if (mFirst == mCurNode) 
-    return NS_OK;
-  mCurNode = mFirst;
-  return NS_OK;
+  return PositionAt(mFirst);
 }
 
 
@@ -840,11 +843,7 @@ nsresult nsContentIterator::Last()
 {
   if (!mLast) 
     return NS_ERROR_FAILURE;
-  mIsDone = PR_FALSE;
-  if (mLast == mCurNode) 
-    return NS_OK;
-  mCurNode = mLast;
-  return NS_OK;
+  return PositionAt(mLast);
 }
 
 
@@ -1057,6 +1056,12 @@ public:
 
   NS_IMETHOD MakePost();
 
+  // Must override these because we don't do PositionAt
+  NS_IMETHOD First();
+
+  // Must override these because we don't do PositionAt
+  NS_IMETHOD Last();
+
 protected:
 
   nsresult GetTopAncestorInRange( nsCOMPtr<nsIContent> aNode,
@@ -1267,7 +1272,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   
   lastCandidate = GetDeepLastChild(lastCandidate, nsnull);
   
-  // confirm that this first possible contained node
+  // confirm that this last possible contained node
   // is indeed contained.  Else we have a range that
   // does not fully contain any node.
   
@@ -1294,6 +1299,31 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 /****************************************************************
  * nsContentSubtreeIterator overrides of ContentIterator routines
  ****************************************************************/
+
+// we can't call PositionAt in a subtree iterator...
+nsresult nsContentSubtreeIterator::First()
+{
+  if (!mFirst) 
+    return NS_ERROR_FAILURE;
+  mIsDone = PR_FALSE;
+  if (mFirst == mCurNode) 
+    return NS_OK;
+  mCurNode = mFirst;
+  return NS_OK;
+}
+
+// we can't call PositionAt in a subtree iterator...
+nsresult nsContentSubtreeIterator::Last()
+{
+  if (!mLast) 
+    return NS_ERROR_FAILURE;
+  mIsDone = PR_FALSE;
+  if (mLast == mCurNode) 
+    return NS_OK;
+  mCurNode = mLast;
+  return NS_OK;
+}
+
 
 nsresult nsContentSubtreeIterator::Next()
 {
