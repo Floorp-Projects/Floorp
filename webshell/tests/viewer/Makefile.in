@@ -148,6 +148,10 @@ ifdef NO_LD_ARCHIVE_FLAGS
 LOST_SYM_LIBS		= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
 endif
 
+# Force a build thru DIRS so that dependencies are updated properly
+install::
+	+$(LOOP_OVER_DIRS)
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
