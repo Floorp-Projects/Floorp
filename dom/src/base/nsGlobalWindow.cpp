@@ -1478,16 +1478,38 @@ GlobalWindowImpl::Open(JSContext *cx,
   
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
+  PRBool couldCreate = PR_TRUE;
   if (NS_OK == mWebShell->GetContainer(webShellContainer) && nsnull != webShellContainer) {
     // Check for existing window of same name.
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newWebShell);
     if (nsnull == newWebShell) {
-      // No window of that name so create a new one.
-      webShellContainer->NewWebShell(mChrome, PR_FALSE, newWebShell);
+      // The web shell container may wish to perform an asynchronous instantiation
+      // of the web shell and of the new container.  Supply the container with
+      // sufficient information to perform the web shell linkage on its own,
+      // without having to supply a new web shell now.
+      webShellContainer->CanCreateNewWebShell(couldCreate);
+      if (couldCreate)
+      {
+        // No window of that name, and we are allowed to create a new one now.
+        webShellContainer->NewWebShell(mChrome, PR_FALSE, newWebShell);
+      }
+      else
+      {
+        // Supply all the information required so that the new web shell
+        // container can perform the linkage on its own at a later date.
+        webShellContainer->SetNewWebShellInfo(name,
+                                              mAbsURL,
+                                              mWebShell,
+                                              mChrome,
+                                              &newWebShell);
+      }
     }
+
     if (nsnull != newWebShell) {
-      newWebShell->SetName(name.GetUnicode());
-      newWebShell->LoadURL(mAbsURL.GetUnicode());
+      if (couldCreate) {
+        newWebShell->SetName(name.GetUnicode());
+        newWebShell->LoadURL(mAbsURL.GetUnicode());
+      }
 
       if (NS_OK == newWebShell->GetContainer(newContainer) && nsnull != newContainer) {
         newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
@@ -1531,7 +1553,8 @@ GlobalWindowImpl::Open(JSContext *cx,
     }
 
     /* Set opener */
-    newGlobalObject->SetOpenerWindow(this);
+    if (couldCreate)
+      newGlobalObject->SetOpenerWindow(this);
   }
 
 
