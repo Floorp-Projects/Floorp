@@ -49,5 +49,8 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIXPCResults            results;
 
     /* 'lastResult' is accessable via JavaScript only */
+    /* 'returnCode' is accessable via JavaScript only */
+    /* 'Exception' is accessable via JavaScript only */
+    /* 'ID' is accessable via JavaScript only */
 
 };

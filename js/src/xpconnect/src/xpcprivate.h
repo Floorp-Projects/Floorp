@@ -200,6 +200,7 @@ public:
         IDX_CONSTRUCTOR     = 0 ,
         IDX_TO_STRING       ,
         IDX_LAST_RESULT     ,
+        IDX_RETURN_CODE     ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -228,6 +229,9 @@ public:
 
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
+
+    nsresult GetPendingResult() {return mPendingResult;}
+    void SetPendingResult(nsresult rc) {mPendingResult = rc;}
 
     nsIXPCSecurityManager* GetSecurityManager() const
         {return mSecurityManager;}
@@ -262,6 +266,7 @@ private:
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
     jsid mStrIDs[IDX_TOTAL_COUNT];
     nsresult mLastResult;
+    nsresult mPendingResult;
     nsIXPCSecurityManager* mSecurityManager;
     PRUint16 mSecurityManagerFlags;
     nsIXPCException* mException;
