@@ -49,6 +49,7 @@
 #include "nsISchema.h"
 #include "nsISchemaLoader.h"
 #include "nsSOAPUtils.h"
+#include "nsReadableUtils.h"
 
 //
 // callback for deleting the encodings from the nsObjectHashtable, mEncodings,
@@ -91,9 +92,8 @@ nsSOAPEncodingRegistry::GetAssociatedEncoding(const nsAString & aStyleURI,
   *aEncoding = (nsISOAPEncoding *) mEncodings.Get(&styleKey);
   if (!*aEncoding) {
     nsCOMPtr<nsISOAPEncoding> defaultEncoding;
-    nsCAutoString encodingContractid;
-    encodingContractid.Assign(NS_SOAPENCODING_CONTRACTID_PREFIX);
-    encodingContractid.Append(NS_ConvertUCS2toUTF8(aStyleURI));
+    nsCAutoString encodingContractid(NS_SOAPENCODING_CONTRACTID_PREFIX);
+    AppendUTF16toUTF8(aStyleURI, encodingContractid);
     defaultEncoding = do_GetService(encodingContractid.get());
     if (defaultEncoding || aCreateIf) {
       nsCOMPtr<nsISOAPEncoding> encoding = new nsSOAPEncoding(aStyleURI,this,defaultEncoding);

@@ -106,7 +106,7 @@ nsIAtom* nsSchemaAtoms::sGMonthDay_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sName_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sQName_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sNCName_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAnyUri_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sAnyURI_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sLanguage_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sID_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sIDREF_atom = nsnull;
@@ -187,7 +187,7 @@ nsSchemaAtoms::CreateSchemaAtoms()
   sName_atom = NS_NewAtom("name");
   sQName_atom = NS_NewAtom("QName");
   sNCName_atom = NS_NewAtom("NCName");
-  sAnyUri_atom = NS_NewAtom("anyUri");
+  sAnyURI_atom = NS_NewAtom("anyURI");
   sLanguage_atom = NS_NewAtom("language");
   sID_atom = NS_NewAtom("ID");
   sIDREF_atom = NS_NewAtom("IDREF");
@@ -270,7 +270,7 @@ nsSchemaAtoms::DestroySchemaAtoms()
     NS_RELEASE(sName_atom);
     NS_RELEASE(sQName_atom);
     NS_RELEASE(sNCName_atom);
-    NS_RELEASE(sAnyUri_atom);
+    NS_RELEASE(sAnyURI_atom);
     NS_RELEASE(sLanguage_atom);
     NS_RELEASE(sID_atom);
     NS_RELEASE(sIDREF_atom);
@@ -615,7 +615,7 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAString& aName,
     else if (typeName == nsSchemaAtoms::sNCName_atom) {
       typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
     }
-    else if (typeName == nsSchemaAtoms::sAnyUri_atom) {
+    else if (typeName == nsSchemaAtoms::sAnyURI_atom) {
       typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI;
     }
     else if (typeName == nsSchemaAtoms::sLanguage_atom) {

@@ -1408,15 +1408,15 @@ NS_IMETHODIMP
     nsSOAPUtils::MakeNamespacePrefix(aEncoding,*aReturnValue,arrayTypeSchemaURI,value);
     value.Append(gSOAPStrings->kQualifiedSeparator);
     value.Append(arrayTypeSchemaName);
-    value.Append(NS_LITERAL_STRING("["));
+    value.Append(PRUnichar('['));
     for (i = 0; i < dimensionCount; i++) {
       if (i > 0)
-        value.Append(NS_LITERAL_STRING(","));
+        value.Append(PRUnichar(','));
       char* ptr = PR_smprintf("%d", dimensionSizes[i]);
-      value.Append(NS_ConvertUTF8toUCS2(ptr));
+      AppendUTF8toUTF16(ptr, value);
       PR_smprintf_free(ptr);
     }
-    value.Append(NS_LITERAL_STRING("]"));
+    value.Append(PRUnichar(']'));
     nsAutoString encURI;
     rc = aEncoding->GetExternalSchemaURI(gSOAPStrings->kSOAPEncURI,encURI);
     if (NS_FAILED(rc))

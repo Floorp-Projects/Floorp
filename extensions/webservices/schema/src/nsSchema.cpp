@@ -76,352 +76,282 @@ nsSchema::~nsSchema()
 NS_IMPL_ISUPPORTS2_CI(nsSchema, nsISchema, nsISchemaComponent)
 
 /* readonly attribute wstring targetNamespace; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(mTargetNamespace);
   return NS_OK;
 }
 
-/* readonly attribute wstring schemaNamespace; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::GetSchemaNamespace(nsAString& aSchemaNamespace)
 {
   aSchemaNamespace.Assign(mSchemaNamespace);
   return NS_OK;
 }
 
-/* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::Resolve()
 {
   nsresult rv;
   PRUint32 i, count;
 
-  mTypes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaType> type;
-    
-    rv = mTypes.QueryElementAt(i, NS_GET_IID(nsISchemaType),
-                               getter_AddRefs(type));
-    if (NS_SUCCEEDED(rv)) {
-      rv = type->Resolve();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  count = mTypes.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mTypes.ObjectAt(i)->Resolve();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mAttributes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttribute> attribute;
-    
-    rv = mAttributes.QueryElementAt(i, NS_GET_IID(nsISchemaAttribute),
-                                    getter_AddRefs(attribute));
-    if (NS_SUCCEEDED(rv)) {
-      rv = attribute->Resolve();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  count = mAttributes.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mAttributes.ObjectAt(i)->Resolve();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mElements.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaElement> element;
-    
-    rv = mElements.QueryElementAt(i, NS_GET_IID(nsISchemaElement),
-                                  getter_AddRefs(element));
-    if (NS_SUCCEEDED(rv)) {
-      rv = element->Resolve();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-  
-  mAttributeGroups.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
-    
-    rv = mAttributeGroups.QueryElementAt(i, NS_GET_IID(nsISchemaAttributeGroup),
-                                         getter_AddRefs(attributeGroup));
-    if (NS_SUCCEEDED(rv)) {
-      rv = attributeGroup->Resolve();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  count = mElements.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mElements.ObjectAt(i)->Resolve();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mModelGroups.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaModelGroup> modelGroup;
-    
-    rv = mModelGroups.QueryElementAt(i, NS_GET_IID(nsISchemaModelGroup),
-                                     getter_AddRefs(modelGroup));
-    if (NS_SUCCEEDED(rv)) {
-      rv = modelGroup->Resolve();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  count = mAttributeGroups.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mAttributeGroups.ObjectAt(i)->Resolve();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  count = mModelGroups.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mModelGroups.ObjectAt(i)->Resolve();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
 }
 
-/* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::Clear()
 {
-  nsresult rv;
   PRUint32 i, count;
 
-  mTypes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaType> type;
-    
-    rv = mTypes.QueryElementAt(i, NS_GET_IID(nsISchemaType),
-                               getter_AddRefs(type));
-    if (NS_SUCCEEDED(rv)) {
-      type->Clear();
-    }
+  count = mTypes.Count();
+  for (i = 0; i < count; ++i) {
+    mTypes.ObjectAt(i)->Clear();
   }
   mTypes.Clear();
-  mTypesHash.Reset();
+  mTypesHash.Clear();
 
-  mAttributes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttribute> attribute;
-    
-    rv = mAttributes.QueryElementAt(i, NS_GET_IID(nsISchemaAttribute),
-                                    getter_AddRefs(attribute));
-    if (NS_SUCCEEDED(rv)) {
-      attribute->Clear();
-    }
+  count = mAttributes.Count();
+  for (i = 0; i < count; ++i) {
+    mAttributes.ObjectAt(i)->Clear();
   }
   mAttributes.Clear();
-  mAttributesHash.Reset();
+  mAttributesHash.Clear();
 
-  mElements.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaElement> element;
-    
-    rv = mElements.QueryElementAt(i, NS_GET_IID(nsISchemaElement),
-                                  getter_AddRefs(element));
-    if (NS_SUCCEEDED(rv)) {
-      element->Clear();
-    }
+  count = mElements.Count();
+  for (i = 0; i < count; ++i) {
+    mElements.ObjectAt(i)->Clear();
   }
   mElements.Clear();
-  mElementsHash.Reset();
-  
-  mAttributeGroups.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
-    
-    rv = mAttributeGroups.QueryElementAt(i, NS_GET_IID(nsISchemaAttributeGroup),
-                                         getter_AddRefs(attributeGroup));
-    if (NS_SUCCEEDED(rv)) {
-      attributeGroup->Clear();
-    }
+  mElementsHash.Clear();
+
+  count = mAttributeGroups.Count();
+  for (i = 0; i < count; ++i) {
+    mAttributeGroups.ObjectAt(i)->Clear();
   }
   mAttributeGroups.Clear();
-  mAttributeGroupsHash.Reset();
+  mAttributeGroupsHash.Clear();
 
-  mModelGroups.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaModelGroup> modelGroup;
-    
-    rv = mModelGroups.QueryElementAt(i, NS_GET_IID(nsISchemaModelGroup),
-                                     getter_AddRefs(modelGroup));
-    if (NS_SUCCEEDED(rv)) {
-      modelGroup->Clear();
-    }
+  count = mModelGroups.Count();
+  for (i = 0; i < count; ++i) {
+    mModelGroups.ObjectAt(i)->Clear();
   }
   mModelGroups.Clear();
-  mModelGroupsHash.Reset();
+  mModelGroupsHash.Clear();
 
   return NS_OK;
 }
 
-/* readonly attribute PRUint32 typeCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::GetTypeCount(PRUint32 *aTypeCount)
 {
   NS_ENSURE_ARG_POINTER(aTypeCount);
-  
-  return mTypes.Count(aTypeCount);
-}
 
-/* nsISchemaType getTypeByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchema::GetTypeByIndex(PRUint32 index, nsISchemaType **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return mTypes.QueryElementAt(index, NS_GET_IID(nsISchemaType),
-                               (void**)_retval);
-}
-
-/* nsISchemaType getTypeByName (in wstring name); */
-NS_IMETHODIMP 
-nsSchema::GetTypeByName(const nsAString& name, nsISchemaType **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mTypesHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  *aTypeCount = mTypes.Count();
 
   return NS_OK;
 }
 
-/* readonly attribute PRUint32 attributeCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsSchema::GetTypeByIndex(PRUint32 aIndex, nsISchemaType** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (aIndex >= (PRUint32)mTypes.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mTypes.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetTypeByName(const nsAString& aName, nsISchemaType** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  mTypesHash.Get(aName, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSchema::GetAttributeCount(PRUint32 *aAttributeCount)
 {
   NS_ENSURE_ARG_POINTER(aAttributeCount);
-  
-  return mAttributes.Count(aAttributeCount);
-}
 
-/* nsISchemaAttribute getAttributeByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchema::GetAttributeByIndex(PRUint32 index, nsISchemaAttribute **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return mAttributes.QueryElementAt(index, NS_GET_IID(nsISchemaAttribute),
-                                    (void**)_retval);
-}
-
-/* nsISchemaAttribute getAttributeByName (in wstring name); */
-NS_IMETHODIMP 
-nsSchema::GetAttributeByName(const nsAString& name, nsISchemaAttribute **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mAttributesHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  *aAttributeCount = mAttributes.Count();
 
   return NS_OK;
 }
 
-/* readonly attribute PRUint32 elementCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsSchema::GetAttributeByIndex(PRUint32 aIndex, nsISchemaAttribute** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (aIndex >= (PRUint32)mAttributes.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mAttributes.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetAttributeByName(const nsAString& aName,
+                             nsISchemaAttribute** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  mAttributesHash.Get(aName, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSchema::GetElementCount(PRUint32 *aElementCount)
 {
   NS_ENSURE_ARG_POINTER(aElementCount);
-  
-  return mElements.Count(aElementCount);
-}
 
-/* nsISchemaElement getElementByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchema::GetElementByIndex(PRUint32 index, nsISchemaElement **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return mElements.QueryElementAt(index, NS_GET_IID(nsISchemaElement),
-                                  (void**)_retval);
-}
-
-/* nsISchemaElement getElementByName (in wstring name); */
-NS_IMETHODIMP 
-nsSchema::GetElementByName(const nsAString& name, 
-                           nsISchemaElement **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mElementsHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  *aElementCount = mElements.Count();
 
   return NS_OK;
 }
 
-/* readonly attribute PRUint32 attributeGroupCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsSchema::GetElementByIndex(PRUint32 aIndex, nsISchemaElement** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (aIndex >= (PRUint32)mElements.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mElements.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetElementByName(const nsAString& aName, nsISchemaElement** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  mElementsHash.Get(aName, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSchema::GetAttributeGroupCount(PRUint32 *aAttributeGroupCount)
 {
   NS_ENSURE_ARG_POINTER(aAttributeGroupCount);
-  
-  return mAttributeGroups.Count(aAttributeGroupCount);
-}
 
-/* nsISchemaAttributeGroup getAttributeGroupByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchema::GetAttributeGroupByIndex(PRUint32 index, nsISchemaAttributeGroup **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return mAttributeGroups.QueryElementAt(index, 
-                                         NS_GET_IID(nsISchemaAttributeGroup),
-                                         (void**)_retval);
-}
-
-/* nsISchemaAttributeGroup getAttributeGroupByName (in wstring name); */
-NS_IMETHODIMP 
-nsSchema::GetAttributeGroupByName(const nsAString& name, nsISchemaAttributeGroup **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mAttributeGroupsHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  *aAttributeGroupCount = mAttributeGroups.Count();
 
   return NS_OK;
 }
 
-/* readonly attribute PRUint32 modelGroupCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsSchema::GetAttributeGroupByIndex(PRUint32 aIndex,
+                                   nsISchemaAttributeGroup** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (aIndex >= (PRUint32)mAttributeGroups.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mAttributeGroups.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetAttributeGroupByName(const nsAString& aName,
+                                  nsISchemaAttributeGroup** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  mAttributeGroupsHash.Get(aName, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSchema::GetModelGroupCount(PRUint32 *aModelGroupCount)
 {
   NS_ENSURE_ARG_POINTER(aModelGroupCount);
-  
-  return mModelGroups.Count(aModelGroupCount);
-}
 
-/* nsISchemaModelGroup getModelGroupByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchema::GetModelGroupByIndex(PRUint32 index, nsISchemaModelGroup **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return mModelGroups.QueryElementAt(index, 
-                                     NS_GET_IID(nsISchemaModelGroup),
-                                     (void**)_retval);
-}
-
-/* nsISchemaModelGroup getModelGroupByName (in wstring name); */
-NS_IMETHODIMP 
-nsSchema::GetModelGroupByName(const nsAString& name, nsISchemaModelGroup **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mModelGroupsHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  *aModelGroupCount = mModelGroups.Count();
 
   return NS_OK;
 }
 
-/* readonly attribute nsISchemaCollection collection; */
 NS_IMETHODIMP
-nsSchema::GetCollection(nsISchemaCollection** _retval)
+nsSchema::GetModelGroupByIndex(PRUint32 aIndex, nsISchemaModelGroup** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  *_retval = mCollection;
-  NS_IF_ADDREF(*_retval);
+  if (aIndex >= (PRUint32)mModelGroups.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mModelGroups.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetModelGroupByName(const nsAString& aName,
+                              nsISchemaModelGroup** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  mModelGroupsHash.Get(aName, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSchema::GetCollection(nsISchemaCollection** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  NS_IF_ADDREF(*aResult = mCollection);
 
   return NS_OK;
 }
@@ -434,14 +364,13 @@ nsSchema::AddType(nsISchemaType* aType)
   nsAutoString name;
   aType->GetName(name);
 
-  mTypes.AppendElement(aType);
-  nsStringKey key(name);
-  mTypesHash.Put(&key, aType);
+  mTypes.AppendObject(aType);
+  mTypesHash.Put(name, aType);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::AddAttribute(nsISchemaAttribute* aAttribute)
 {
   NS_ENSURE_ARG_POINTER(aAttribute);
@@ -449,14 +378,13 @@ nsSchema::AddAttribute(nsISchemaAttribute* aAttribute)
   nsAutoString name;
   aAttribute->GetName(name);
 
-  mAttributes.AppendElement(aAttribute);
-  nsStringKey key(name);
-  mAttributesHash.Put(&key, aAttribute);
+  mAttributes.AppendObject(aAttribute);
+  mAttributesHash.Put(name, aAttribute);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::AddElement(nsISchemaElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -464,14 +392,13 @@ nsSchema::AddElement(nsISchemaElement* aElement)
   nsAutoString name;
   aElement->GetName(name);
 
-  mElements.AppendElement(aElement);
-  nsStringKey key(name);
-  mElementsHash.Put(&key, aElement);
+  mElements.AppendObject(aElement);
+  mElementsHash.Put(name, aElement);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::AddAttributeGroup(nsISchemaAttributeGroup* aAttributeGroup)
 {
   NS_ENSURE_ARG_POINTER(aAttributeGroup);
@@ -479,14 +406,13 @@ nsSchema::AddAttributeGroup(nsISchemaAttributeGroup* aAttributeGroup)
   nsAutoString name;
   aAttributeGroup->GetName(name);
 
-  mAttributeGroups.AppendElement(aAttributeGroup);
-  nsStringKey key(name);
-  mAttributeGroupsHash.Put(&key, aAttributeGroup);
+  mAttributeGroups.AppendObject(aAttributeGroup);
+  mAttributeGroupsHash.Put(name, aAttributeGroup);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchema::AddModelGroup(nsISchemaModelGroup* aModelGroup)
 {
   NS_ENSURE_ARG_POINTER(aModelGroup);
@@ -494,9 +420,8 @@ nsSchema::AddModelGroup(nsISchemaModelGroup* aModelGroup)
   nsAutoString name;
   aModelGroup->GetName(name);
 
-  mModelGroups.AppendElement(aModelGroup);
-  nsStringKey key(name);
-  mModelGroupsHash.Put(&key, aModelGroup);
+  mModelGroups.AppendObject(aModelGroup);
+  mModelGroupsHash.Put(name, aModelGroup);
 
   return NS_OK;
 }
@@ -513,7 +438,6 @@ nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
 {
   PRUint16 schemaType;
 
-  *aType = nsnull;
   aPlaceholder->GetSchemaType(&schemaType);
   if (schemaType == nsISchemaType::SCHEMA_TYPE_PLACEHOLDER) {
     nsAutoString name;
@@ -521,14 +445,14 @@ nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
     
     nsresult rv = GetTypeByName(name, aType);
     if (NS_FAILED(rv) || !*aType) {
+      *aType = nsnull;
+
       return NS_ERROR_FAILURE;
     }
   }
   else {
-    *aType = aPlaceholder;
-    NS_ADDREF(*aType);
+    NS_ADDREF(*aType = aPlaceholder);
   }
 
   return NS_OK;
 }
-

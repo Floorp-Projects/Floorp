@@ -48,15 +48,12 @@ nsSchemaComplexType::nsSchemaComplexType(nsSchema* aSchema,
                                          PRBool aAbstract)
   : nsSchemaComponentBase(aSchema), mName(aName), mAbstract(aAbstract),
     mContentModel(CONTENT_MODEL_ELEMENT_ONLY), 
-    mDerivation(DERIVATION_SELF_CONTAINED), mArrayInfo(nsnull)
+    mDerivation(DERIVATION_SELF_CONTAINED)
 {
 }
 
 nsSchemaComplexType::~nsSchemaComplexType()
 {
-  if (mArrayInfo) {
-    delete mArrayInfo;
-  }
 }
 
 NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType, 
@@ -65,7 +62,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType,
                       nsISchemaComplexType)
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::Resolve()
 {
   if (mIsResolved) {
@@ -76,17 +73,11 @@ nsSchemaComplexType::Resolve()
   nsresult rv;
   PRUint32 i, count;
 
-  mAttributes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttributeComponent> attribute;
-    
-    rv = mAttributes.QueryElementAt(i, NS_GET_IID(nsISchemaAttributeComponent),
-                                    getter_AddRefs(attribute));
-    if (NS_SUCCEEDED(rv)) {
-      rv = attribute->Resolve();
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+  count = mAttributes.Count();
+  for (i = 0; i < count; ++i) {
+    rv = mAttributes.ObjectAt(i)->Resolve();
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
@@ -160,7 +151,7 @@ nsSchemaComplexType::Resolve()
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::Clear()
 {
   if (mIsCleared) {
@@ -181,26 +172,19 @@ nsSchemaComplexType::Clear()
     mModelGroup = nsnull;
   }
 
-  nsresult rv;
   PRUint32 i, count;
-  mAttributes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaAttributeComponent> attribute;
-    
-    rv = mAttributes.QueryElementAt(i, NS_GET_IID(nsISchemaAttributeComponent),
-                                    getter_AddRefs(attribute));
-    if (NS_SUCCEEDED(rv)) {
-      attribute->Clear();
-    }
+  count = mAttributes.Count();
+  for (i = 0; i < count; ++i) {
+    mAttributes.ObjectAt(i)->Clear();
   }
   mAttributes.Clear();
-  mAttributesHash.Reset();
+  mAttributesHash.Clear();
 
   return NS_OK;
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
@@ -209,7 +193,7 @@ nsSchemaComplexType::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -220,7 +204,7 @@ nsSchemaComplexType::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short contentModel; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetContentModel(PRUint16 *aContentModel)
 {
   NS_ENSURE_ARG_POINTER(aContentModel);
@@ -231,7 +215,7 @@ nsSchemaComplexType::GetContentModel(PRUint16 *aContentModel)
 }
 
 /* readonly attribute unsigned short derivation; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetDerivation(PRUint16 *aDerivation)
 {
   NS_ENSURE_ARG_POINTER(aDerivation);
@@ -242,81 +226,79 @@ nsSchemaComplexType::GetDerivation(PRUint16 *aDerivation)
 }
 
 /* readonly attribute nsISchemaType baseType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetBaseType(nsISchemaType * *aBaseType)
 {
   NS_ENSURE_ARG_POINTER(aBaseType);
 
-  *aBaseType = mBaseType;
-  NS_IF_ADDREF(*aBaseType);
+  NS_IF_ADDREF(*aBaseType = mBaseType);
 
   return NS_OK;
 }
 
 /* readonly attribute nsISchemaSimpleType simplBaseType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetSimpleBaseType(nsISchemaSimpleType * *aSimpleBaseType)
 {
   NS_ENSURE_ARG_POINTER(aSimpleBaseType);
 
-  *aSimpleBaseType = mSimpleBaseType;
-  NS_IF_ADDREF(*aSimpleBaseType);
+  NS_IF_ADDREF(*aSimpleBaseType = mSimpleBaseType);
 
   return NS_OK;
 }
 
 /* readonly attribute nsISchemaModelGroup modelGroup; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetModelGroup(nsISchemaModelGroup * *aModelGroup)
 {
   NS_ENSURE_ARG_POINTER(aModelGroup);
 
-  *aModelGroup = mModelGroup;
-  NS_IF_ADDREF(*aModelGroup);
+  NS_IF_ADDREF(*aModelGroup = mModelGroup);
 
   return NS_OK;
 }
 
 /* readonly attribute PRUint32 attributeCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetAttributeCount(PRUint32 *aAttributeCount)
 {
   NS_ENSURE_ARG_POINTER(aAttributeCount);
 
-  return mAttributes.Count(aAttributeCount);
+  *aAttributeCount = mAttributes.Count();
+
+  return NS_OK;
 }
 
 /* nsISchemaAttributeComponent getAttributeByIndex (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchemaComplexType::GetAttributeByIndex(PRUint32 index, 
-                                         nsISchemaAttributeComponent **_retval)
+NS_IMETHODIMP
+nsSchemaComplexType::GetAttributeByIndex(PRUint32 aIndex, 
+                                         nsISchemaAttributeComponent** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  return mAttributes.QueryElementAt(index, 
-                                    NS_GET_IID(nsISchemaAttributeComponent),
-                                    (void**)_retval);
+  if (aIndex >= (PRUint32)mAttributes.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mAttributes.ObjectAt(aIndex));
+
+  return NS_OK;
 }
 
 /* nsISchemaAttributeComponent getAttributeByName (in AString name); */
-NS_IMETHODIMP 
-nsSchemaComplexType::GetAttributeByName(const nsAString& name, 
-                                        nsISchemaAttributeComponent **_retval)
+NS_IMETHODIMP
+nsSchemaComplexType::GetAttributeByName(const nsAString& aName, 
+                                        nsISchemaAttributeComponent** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  nsStringKey key(name);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mAttributesHash.Get(&key));
-
-  if (sup) {
-    return CallQueryInterface(sup, _retval);
-  }
+  mAttributesHash.Get(aName, aResult);
 
   return NS_OK;
 }
 
 /* readonly attribute boolean abstract; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::GetAbstract(PRBool *aAbstract)
 {
   NS_ENSURE_ARG_POINTER(aAbstract);
@@ -390,7 +372,7 @@ nsSchemaComplexType::SetContentModel(PRUint16 aContentModel)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::SetDerivation(PRUint16 aDerivation, 
                                    nsISchemaType* aBaseType)
 {
@@ -400,7 +382,7 @@ nsSchemaComplexType::SetDerivation(PRUint16 aDerivation,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType)
 {
   mSimpleBaseType = aSimpleBaseType;
@@ -408,7 +390,7 @@ nsSchemaComplexType::SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::SetModelGroup(nsISchemaModelGroup* aModelGroup)
 {
   mModelGroup = aModelGroup;
@@ -416,7 +398,7 @@ nsSchemaComplexType::SetModelGroup(nsISchemaModelGroup* aModelGroup)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaComplexType::AddAttribute(nsISchemaAttributeComponent* aAttribute)
 {
   NS_ENSURE_ARG_POINTER(aAttribute);
@@ -424,9 +406,8 @@ nsSchemaComplexType::AddAttribute(nsISchemaAttributeComponent* aAttribute)
   nsAutoString name;
   aAttribute->GetName(name);
 
-  mAttributes.AppendElement(aAttribute);
-  nsStringKey key(name);
-  mAttributesHash.Put(&key, aAttribute);
+  mAttributes.AppendObject(aAttribute);
+  mAttributesHash.Put(name, aAttribute);
 
   return NS_OK;  
 }
@@ -434,14 +415,7 @@ nsSchemaComplexType::AddAttribute(nsISchemaAttributeComponent* aAttribute)
 NS_IMETHODIMP
 nsSchemaComplexType::SetArrayInfo(nsISchemaType* aType, PRUint32 aDimension)
 {
-  if (mArrayInfo) {
-    delete mArrayInfo;
-  }
-
   mArrayInfo = new nsComplexTypeArrayInfo(aType, aDimension);
-  if (!mArrayInfo) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  return NS_OK;
+  return mArrayInfo ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

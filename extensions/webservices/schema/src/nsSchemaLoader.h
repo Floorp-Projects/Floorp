@@ -99,7 +99,7 @@ public:
   static nsIAtom* sName_atom;
   static nsIAtom* sQName_atom;
   static nsIAtom* sNCName_atom;
-  static nsIAtom* sAnyUri_atom;
+  static nsIAtom* sAnyURI_atom;
   static nsIAtom* sLanguage_atom;
   static nsIAtom* sID_atom;
   static nsIAtom* sIDREF_atom;

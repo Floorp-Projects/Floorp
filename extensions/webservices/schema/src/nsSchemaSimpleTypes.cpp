@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaBuiltinType,
                       nsISchemaBuiltinType)
 
 /* readonly attribute wstring targetNamespace; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE));
@@ -68,21 +68,21 @@ nsSchemaBuiltinType::GetTargetNamespace(nsAString& aTargetNamespace)
 }
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::Resolve()
 {
   return NS_OK;
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::Clear()
 {
   return NS_OK;
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::GetName(nsAString& aName)
 {
   switch(mBuiltinType) {
@@ -230,7 +230,7 @@ nsSchemaBuiltinType::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -241,7 +241,7 @@ nsSchemaBuiltinType::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short simpleType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::GetSimpleType(PRUint16 *aSimpleType)
 {
   NS_ENSURE_ARG_POINTER(aSimpleType);
@@ -252,7 +252,7 @@ nsSchemaBuiltinType::GetSimpleType(PRUint16 *aSimpleType)
 }
 
 /* readonly attribute unsigned short builtinType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaBuiltinType::GetBuiltinType(PRUint16 *aBuiltinType)
 {
   NS_ENSURE_ARG_POINTER(aBuiltinType);
@@ -284,7 +284,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaListType,
                       nsISchemaListType)
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::Resolve()
 {
   if (mIsResolved) {
@@ -310,7 +310,7 @@ nsSchemaListType::Resolve()
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::Clear()
 {
   if (mIsCleared) {
@@ -327,7 +327,7 @@ nsSchemaListType::Clear()
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
@@ -336,7 +336,7 @@ nsSchemaListType::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -347,7 +347,7 @@ nsSchemaListType::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short simpleType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::GetSimpleType(PRUint16 *aSimpleType)
 {
   NS_ENSURE_ARG_POINTER(aSimpleType);
@@ -358,13 +358,12 @@ nsSchemaListType::GetSimpleType(PRUint16 *aSimpleType)
 }
 
 /* readonly attribute nsISchemaSimpleType listType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaListType::GetListType(nsISchemaSimpleType * *aListType)
 {
   NS_ENSURE_ARG_POINTER(aListType);
 
-  *aListType = mListType;
-  NS_IF_ADDREF(*aListType);
+  NS_IF_ADDREF(*aListType = mListType);
 
   return NS_OK;
 }
@@ -399,7 +398,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaUnionType,
                       nsISchemaUnionType)
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::Resolve()
 {
   if (mIsResolved) {
@@ -407,24 +406,18 @@ nsSchemaUnionType::Resolve()
   }
 
   mIsResolved = PR_TRUE;
-  nsresult rv;
-  PRUint32 i, count;
-  mUnionTypes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaType> type;
-    
-    rv = mUnionTypes.QueryElementAt(i, NS_GET_IID(nsISchemaType),
-                                    getter_AddRefs(type));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (mSchema) {
-      rv = mSchema->ResolveTypePlaceholder(type,
-                                           getter_AddRefs(type));
+  if (mSchema) {
+    PRUint32 i, count;
+    count = mUnionTypes.Count();
+    for (i = 0; i < count; ++i) {
+      nsCOMPtr<nsISchemaType> type;
+      nsresult rv = mSchema->ResolveTypePlaceholder(mUnionTypes.ObjectAt(i),
+                                                    getter_AddRefs(type));
       if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
       }
-      mUnionTypes.ReplaceElementAt(type, i);
+      nsCOMPtr<nsISchemaSimpleType> simpleType = do_QueryInterface(type);
+      mUnionTypes.ReplaceObjectAt(simpleType, i);
       rv = type->Resolve();
       if (NS_FAILED(rv)) {
         return rv;
@@ -436,7 +429,7 @@ nsSchemaUnionType::Resolve()
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::Clear()
 {
   if (mIsCleared) {
@@ -444,17 +437,10 @@ nsSchemaUnionType::Clear()
   }
 
   mIsCleared = PR_TRUE;
-  nsresult rv;
   PRUint32 i, count;
-  mUnionTypes.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaSimpleType> type;
-    
-    rv = mUnionTypes.QueryElementAt(i, NS_GET_IID(nsISchemaSimpleType),
-                                    getter_AddRefs(type));
-    if (NS_SUCCEEDED(rv)) {
-      type->Clear();
-    }
+  count = mUnionTypes.Count();
+  for (i = 0; i < count; ++i) {
+    mUnionTypes.ObjectAt(i)->Clear();
   }
   mUnionTypes.Clear();
 
@@ -462,7 +448,7 @@ nsSchemaUnionType::Clear()
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
@@ -471,7 +457,7 @@ nsSchemaUnionType::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -482,7 +468,7 @@ nsSchemaUnionType::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short simpleType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::GetSimpleType(PRUint16 *aSimpleType)
 {
   NS_ENSURE_ARG_POINTER(aSimpleType);
@@ -493,22 +479,29 @@ nsSchemaUnionType::GetSimpleType(PRUint16 *aSimpleType)
 }
 
 /* readonly attribute PRUint32 unionTypeCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaUnionType::GetUnionTypeCount(PRUint32 *aUnionTypeCount)
 {
   NS_ENSURE_ARG_POINTER(aUnionTypeCount);
 
-  return mUnionTypes.Count(aUnionTypeCount);
+  *aUnionTypeCount = mUnionTypes.Count();
+
+  return NS_OK;
 }
 
 /* nsISchemaSimpleType getUnionType (in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchemaUnionType::GetUnionType(PRUint32 index, nsISchemaSimpleType **_retval)
+NS_IMETHODIMP
+nsSchemaUnionType::GetUnionType(PRUint32 aIndex, nsISchemaSimpleType** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  return mUnionTypes.QueryElementAt(index, NS_GET_IID(nsISchemaSimpleType),
-                                    (void**)_retval);
+  if (aIndex >= (PRUint32)mUnionTypes.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mUnionTypes.ObjectAt(aIndex));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -516,7 +509,7 @@ nsSchemaUnionType::AddUnionType(nsISchemaSimpleType* aType)
 {
   NS_ENSURE_ARG(aType);
 
-  return mUnionTypes.AppendElement(aType);
+  return mUnionTypes.AppendObject(aType) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 ////////////////////////////////////////////////////////////
@@ -541,7 +534,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaRestrictionType,
                       nsISchemaRestrictionType)
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::Resolve()
 {
   if (mIsResolved) {
@@ -567,7 +560,7 @@ nsSchemaRestrictionType::Resolve()
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::Clear()
 {
   if (mIsCleared) {
@@ -580,17 +573,10 @@ nsSchemaRestrictionType::Clear()
     mBaseType = nsnull;
   }
 
-  nsresult rv;
   PRUint32 i, count;
-  mFacets.Count(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISchemaFacet> facet;
-    
-    rv = mFacets.QueryElementAt(i, NS_GET_IID(nsISchemaFacet),
-                                getter_AddRefs(facet));
-    if (NS_SUCCEEDED(rv)) {
-      facet->Clear();
-    }
+  count = mFacets.Count();
+  for (i = 0; i < count; ++i) {
+    mFacets.ObjectAt(i)->Clear();
   }
   mFacets.Clear();
 
@@ -598,7 +584,7 @@ nsSchemaRestrictionType::Clear()
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
@@ -607,7 +593,7 @@ nsSchemaRestrictionType::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -618,7 +604,7 @@ nsSchemaRestrictionType::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short simpleType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::GetSimpleType(PRUint16 *aSimpleType)
 {
   NS_ENSURE_ARG_POINTER(aSimpleType);
@@ -629,37 +615,43 @@ nsSchemaRestrictionType::GetSimpleType(PRUint16 *aSimpleType)
 }
 
 /* readonly attribute nsISchemaSimpleType baseType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::GetBaseType(nsISchemaSimpleType * *aBaseType)
 {
   NS_ENSURE_ARG_POINTER(aBaseType);
 
-  *aBaseType = mBaseType;
-  NS_IF_ADDREF(*aBaseType);
+  NS_IF_ADDREF(*aBaseType = mBaseType);
 
   return NS_OK;
 }
 
 /* readonly attribute PRUint32 facetCount; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::GetFacetCount(PRUint32 *aFacetCount)
 {
   NS_ENSURE_ARG_POINTER(aFacetCount);
 
-  return mFacets.Count(aFacetCount);
+  *aFacetCount = mFacets.Count();
+
+  return NS_OK;
 }
 
 /* nsISchemaFacet getFacet(in PRUint32 index); */
-NS_IMETHODIMP 
-nsSchemaRestrictionType::GetFacet(PRUint32 index, nsISchemaFacet **_retval)
+NS_IMETHODIMP
+nsSchemaRestrictionType::GetFacet(PRUint32 aIndex, nsISchemaFacet** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  return mFacets.QueryElementAt(index, NS_GET_IID(nsISchemaFacet),
-                                (void**)_retval);
+  if (aIndex >= (PRUint32)mFacets.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = mFacets.ObjectAt(aIndex));
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::SetBaseType(nsISchemaSimpleType* aBaseType)
 {
   NS_ENSURE_ARG(aBaseType);
@@ -669,12 +661,12 @@ nsSchemaRestrictionType::SetBaseType(nsISchemaSimpleType* aBaseType)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaRestrictionType::AddFacet(nsISchemaFacet* aFacet)
 {
   NS_ENSURE_ARG(aFacet);
 
-  return mFacets.AppendElement(aFacet);
+  return mFacets.AppendObject(aFacet) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 ////////////////////////////////////////////////////////////
@@ -699,21 +691,21 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaTypePlaceholder,
 
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaTypePlaceholder::Resolve()
 {
   return NS_OK;
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaTypePlaceholder::Clear()
 {
   return NS_OK;
 }
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaTypePlaceholder::GetName(nsAString& aName)
 {
   aName.Assign(mName);
@@ -722,7 +714,7 @@ nsSchemaTypePlaceholder::GetName(nsAString& aName)
 }
 
 /* readonly attribute unsigned short schemaType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaTypePlaceholder::GetSchemaType(PRUint16 *aSchemaType)
 {
   NS_ENSURE_ARG_POINTER(aSchemaType);
@@ -733,7 +725,7 @@ nsSchemaTypePlaceholder::GetSchemaType(PRUint16 *aSchemaType)
 }
 
 /* readonly attribute unsigned short simpleType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaTypePlaceholder::GetSimpleType(PRUint16 *aSimpleType)
 {
   return NS_ERROR_FAILURE;
@@ -759,14 +751,14 @@ NS_IMPL_ISUPPORTS2_CI(nsSchemaFacet,
                       nsISchemaFacet)
 
 /* void resolve (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::Resolve()
 {
   return NS_OK;
 }
 
 /* void clear (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::Clear()
 {
   return NS_OK;
@@ -789,7 +781,7 @@ nsSchemaFacet::SetIsFixed(PRBool aIsFixed)
 }
 
 /* readonly attribute unsigned short facetType; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetFacetType(PRUint16 *aFacetType)
 {
   NS_ENSURE_ARG_POINTER(aFacetType);
@@ -800,7 +792,7 @@ nsSchemaFacet::GetFacetType(PRUint16 *aFacetType)
 }
 
 /* readonly attribute AString value; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetValue(nsAString & aValue)
 {
   if ((mFacetType == FACET_TYPE_TOTALDIGITS) ||
@@ -818,7 +810,7 @@ nsSchemaFacet::GetValue(nsAString & aValue)
 }
 
 /* readonly attribute PRUint32 lengthValue; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetLengthValue(PRUint32 *aLengthValue)
 {
   NS_ENSURE_ARG_POINTER(aLengthValue);
@@ -835,7 +827,7 @@ nsSchemaFacet::GetLengthValue(PRUint32 *aLengthValue)
 }
 
 /* readonly attribute PRUint32 digitsValue; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetDigitsValue(PRUint32 *aDigitsValue)
 {
   NS_ENSURE_ARG_POINTER(aDigitsValue);
@@ -851,7 +843,7 @@ nsSchemaFacet::GetDigitsValue(PRUint32 *aDigitsValue)
 }
 
 /* readonly attribute unsigned short whitespaceValue; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetWhitespaceValue(PRUint16 *aWhitespaceValue)
 {
   NS_ENSURE_ARG_POINTER(aWhitespaceValue);
@@ -866,7 +858,7 @@ nsSchemaFacet::GetWhitespaceValue(PRUint16 *aWhitespaceValue)
 }
 
 /* readonly attribute boolean isfixed; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::GetIsfixed(PRBool *aIsFixed)
 {
   NS_ENSURE_ARG_POINTER(aIsFixed);
@@ -876,7 +868,7 @@ nsSchemaFacet::GetIsfixed(PRBool *aIsFixed)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSchemaFacet::SetValue(const nsAString& aStrValue)
 {
   mStrValue.Assign(aStrValue);

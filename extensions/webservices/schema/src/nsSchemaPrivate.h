@@ -42,9 +42,11 @@
 #include "nsISchema.h"
 
 // XPCOM Includes
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsSupportsArray.h"
-#include "nsHashtable.h"
+#include "nsCOMArray.h"
+#include "nsHashKeys.h"
+#include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 
@@ -78,16 +80,16 @@ public:
 protected:
   nsString mTargetNamespace;
   nsString mSchemaNamespace;
-  nsSupportsArray mTypes;
-  nsSupportsHashtable mTypesHash;
-  nsSupportsArray mAttributes;
-  nsSupportsHashtable mAttributesHash;
-  nsSupportsArray mElements;
-  nsSupportsHashtable mElementsHash;
-  nsSupportsArray mAttributeGroups;
-  nsSupportsHashtable mAttributeGroupsHash;
-  nsSupportsArray mModelGroups;
-  nsSupportsHashtable mModelGroupsHash;
+  nsCOMArray<nsISchemaType> mTypes;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaType> mTypesHash;
+  nsCOMArray<nsISchemaAttribute> mAttributes;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaAttribute> mAttributesHash;
+  nsCOMArray<nsISchemaElement> mElements;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaElement> mElementsHash;
+  nsCOMArray<nsISchemaAttributeGroup> mAttributeGroups;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaAttributeGroup> mAttributeGroupsHash;
+  nsCOMArray<nsISchemaModelGroup> mModelGroups;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaModelGroup> mModelGroupsHash;
   nsISchemaCollection* mCollection;  // [WEAK] it owns me
   PRPackedBool mElementFormQualified;
 };
@@ -166,7 +168,7 @@ public:
 
 protected:
   nsString mName;
-  nsSupportsArray mUnionTypes;
+  nsCOMArray<nsISchemaSimpleType> mUnionTypes;
 };
 
 class nsSchemaRestrictionType : public nsSchemaComponentBase,
@@ -188,7 +190,7 @@ public:
 protected:
   nsString mName;
   nsCOMPtr<nsISchemaSimpleType> mBaseType;
-  nsSupportsArray mFacets;
+  nsCOMArray<nsISchemaFacet> mFacets;
 };
 
 class nsComplexTypeArrayInfo {
@@ -233,9 +235,9 @@ protected:
   nsCOMPtr<nsISchemaType> mBaseType;
   nsCOMPtr<nsISchemaSimpleType> mSimpleBaseType;
   nsCOMPtr<nsISchemaModelGroup> mModelGroup;
-  nsSupportsArray mAttributes;
-  nsSupportsHashtable mAttributesHash;
-  nsComplexTypeArrayInfo* mArrayInfo;
+  nsCOMArray<nsISchemaAttributeComponent> mAttributes;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaAttributeComponent> mAttributesHash;
+  nsAutoPtr<nsComplexTypeArrayInfo> mArrayInfo;
 };
 
 class nsSchemaTypePlaceholder : public nsSchemaComponentBase,
@@ -306,7 +308,7 @@ public:
 protected:
   nsString mName;
   PRUint16 mCompositor;
-  nsSupportsArray mParticles;
+  nsCOMArray<nsISchemaParticle> mParticles;
 };
 
 class nsSchemaModelGroupRef : public nsSchemaParticleBase,
@@ -460,8 +462,8 @@ public:
 
 protected:
   nsString mName;
-  nsSupportsArray mAttributes;
-  nsSupportsHashtable mAttributesHash;
+  nsCOMArray<nsISchemaAttributeComponent> mAttributes;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaAttributeComponent> mAttributesHash;
 };
 
 class nsSchemaAttributeGroupRef : public nsSchemaComponentBase,
