@@ -42,6 +42,17 @@
 #include "nsIServiceManager.h"
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMDocumentStyle.h"
+#include "nsIDOM3Node.h"
+#include "nsIDOMStyleSheetList.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSRuleList.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSImportRule.h"
+#include "nsIDOMCSSMediaRule.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
@@ -103,15 +114,33 @@ NS_IMETHODIMP
 inCSSValueSearch::SearchSync()
 {
   InitSearch();
+
+  nsCOMPtr<nsIURI> baseURL;
+  nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(mDocument);
+  if (dom3Node) {
+    nsAutoString uri;
+    dom3Node->GetBaseURI(uri);
+    NS_NewURI(getter_AddRefs(baseURL), uri);
+  }
   
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMDocumentStyle> doc = do_QueryInterface(mDocument);
   if (doc) {
-    // we want all the sheets, including inline style and such
-    PRInt32 count = doc->GetNumberOfStyleSheets(PR_TRUE);
-    for (PRInt32 i = 0; i < count; i++) {
-      SearchStyleSheet(doc->GetStyleSheetAt(i, PR_TRUE));
+    nsCOMPtr<nsIDOMStyleSheetList> sheets;
+    nsresult rv = doc->GetStyleSheets(getter_AddRefs(sheets));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    PRUint32 length;
+    sheets->GetLength(&length);
+    for (PRUint32 i = 0; i < length; ++i) {
+      nsCOMPtr<nsIDOMStyleSheet> sheet;
+      sheets->Item(i, getter_AddRefs(sheet));
+      nsCOMPtr<nsIDOMCSSStyleSheet> cssSheet = do_QueryInterface(sheet);
+      if (cssSheet)
+        SearchStyleSheet(cssSheet, baseURL);
     }
   }
+
+  // XXX would be nice to search inline style as well.
 
   return NS_OK;
 }
@@ -278,67 +307,97 @@ inCSSValueSearch::KillSearch(PRInt16 aResult)
 }
 
 nsresult
-inCSSValueSearch::SearchStyleSheet(nsIStyleSheet* aStyleSheet)
+inCSSValueSearch::SearchStyleSheet(nsIDOMCSSStyleSheet* aStyleSheet, nsIURI* aBaseURL)
 {
-  NS_IF_ADDREF(aStyleSheet);
-  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(aStyleSheet);
-  if (cssSheet) {
-    // recurse downward through the stylesheet tree
-    PRInt32 count, i;
-    cssSheet->StyleSheetCount(count);
-    for (i = 0; i < count; i++) {
-      nsICSSStyleSheet* child;
-      cssSheet->GetStyleSheetAt(i, child);
-      SearchStyleSheet(child);
-    }
+  nsCOMPtr<nsIURI> baseURL;
+  nsAutoString href;
+  aStyleSheet->GetHref(href);
+  if (href.IsEmpty())
+    baseURL = aBaseURL;
+  else
+    NS_NewURI(getter_AddRefs(baseURL), href, nsnull, aBaseURL);
 
-    cssSheet->StyleRuleCount(count);
-    for (i = 0; i < count; i++) {
-      nsICSSRule* rule;
-      cssSheet->GetStyleRuleAt(i, rule);
-      SearchStyleRule(rule);
+  nsCOMPtr<nsIDOMCSSRuleList> rules;
+  nsresult rv = aStyleSheet->GetCssRules(getter_AddRefs(rules));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return SearchRuleList(rules, baseURL);
+}
+
+nsresult
+inCSSValueSearch::SearchRuleList(nsIDOMCSSRuleList* aRuleList, nsIURI* aBaseURL)
+{
+  PRUint32 length;
+  aRuleList->GetLength(&length);
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCOMPtr<nsIDOMCSSRule> rule;
+    aRuleList->Item(i, getter_AddRefs(rule));
+    PRUint16 type;
+    rule->GetType(&type);
+    switch (type) {
+      case nsIDOMCSSRule::STYLE_RULE: {
+        nsCOMPtr<nsIDOMCSSStyleRule> styleRule = do_QueryInterface(rule);
+        SearchStyleRule(styleRule, aBaseURL);
+      } break;
+      case nsIDOMCSSRule::IMPORT_RULE: {
+        nsCOMPtr<nsIDOMCSSImportRule> importRule = do_QueryInterface(rule);
+        nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
+        importRule->GetStyleSheet(getter_AddRefs(childSheet));
+        if (childSheet)
+          SearchStyleSheet(childSheet, aBaseURL);
+      } break;
+      case nsIDOMCSSRule::MEDIA_RULE: {
+        nsCOMPtr<nsIDOMCSSMediaRule> mediaRule = do_QueryInterface(rule);
+        nsCOMPtr<nsIDOMCSSRuleList> childRules;
+        mediaRule->GetCssRules(getter_AddRefs(childRules));
+        SearchRuleList(childRules, aBaseURL);
+      } break;
+      default:
+        // XXX handle nsIDOMCSSRule::PAGE_RULE if we ever support it
+        break;
     }
   }
-
-  NS_IF_RELEASE(aStyleSheet);
   return NS_OK;
 }
 
 nsresult
-inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
+inCSSValueSearch::SearchStyleRule(nsIDOMCSSStyleRule* aStyleRule, nsIURI* aBaseURL)
 {
-  NS_IF_ADDREF(aStyleRule);
-
-  nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(aStyleRule);
-  if (cssRule) {
-    for (PRUint32 i = 0; i < mPropertyCount; i++) {
-      nsCSSProperty prop = mProperties[i];
-      SearchStyleValue(cssRule, prop);
-    }
-  }
-
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
+  nsresult rv = aStyleRule->GetStyle(getter_AddRefs(decl));
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  NS_IF_RELEASE(aStyleRule);
+  PRUint32 length;
+  decl->GetLength(&length);
+  nsAutoString property, value;
+  for (PRUint32 i = 0; i < length; ++i) {
+    decl->Item(i, property);
+    // XXX This probably ought to use GetPropertyCSSValue if it were
+    // implemented.
+    decl->GetPropertyValue(property, value);
+    SearchStyleValue(value, aBaseURL);
+  }
   return NS_OK;
 }
 
 nsresult
-inCSSValueSearch::SearchStyleValue(nsICSSStyleRule* aRule, nsCSSProperty aProp)
+inCSSValueSearch::SearchStyleValue(const nsAFlatString& aValue, nsIURI* aBaseURL)
 {
-  nsCSSValue value;
-  aRule->GetValue(aProp, value);
-
-  if (value.GetUnit() == eCSSUnit_URL) {
+  if (StringBeginsWith(aValue, NS_LITERAL_STRING("url(")) &&
+      StringEndsWith(aValue, NS_LITERAL_STRING(")"))) {
+    const nsASingleFragmentString &url =
+      Substring(aValue, 4, aValue.Length() - 5);
+    // XXXldb Need to do more with |mReturnRelativeURLs|, perhaps?
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, aBaseURL);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString spec;
-    nsIURI* url = value.GetURLValue();
-    if (url) {
-      url->GetSpec(spec);
-      nsAutoString* result = new NS_ConvertUTF8toUTF16(spec);
-      if (mReturnRelativeURLs)
-        EqualizeURL(result);
-      mResults->AppendElement(result);
-      mResultCount++;
-    }
+    uri->GetSpec(spec);
+    nsAutoString *result = new NS_ConvertUTF8toUTF16(spec);
+    if (mReturnRelativeURLs)
+      EqualizeURL(result);
+    mResults->AppendElement(result);
+    ++mResultCount;
   }
 
   return NS_OK;
@@ -351,16 +410,16 @@ inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
     if (aURL->Find("chrome://", PR_FALSE, 0, 1) >= 0) {
       PRUint32 len = aURL->Length();
       char* result = new char[len-8];
-      char* buffer = ToNewCString(*aURL);
+      const PRUnichar* src = aURL->get();
       PRUint32 i = 9;
       PRUint32 milestone = 0;
       PRUint32 s = 0;
       while (i < len) {
-        if (buffer[i] == '/') {
+        if (src[i] == '/') {
           milestone += 1;
         } 
-        if (milestone == 0 || milestone > 1) {
-          result[i-9-s] = (buffer[i] == '/') ? '/' : buffer[i];
+        if (milestone != 1) {
+          result[i-9-s] = src[i];
         } else {
           s++;
         }
@@ -369,6 +428,7 @@ inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
       result[i-9-s] = 0;
 
       aURL->AssignWithConversion(result);
+      delete [] result;
     }
   } else {
   }
