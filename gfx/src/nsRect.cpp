@@ -195,15 +195,15 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   nsAutoString tmp;
 
   // Output the coordinates in fractional points so they're easier to read
-  tmp.Append("{");
-  tmp.Append(NSTwipsToFloatPoints(rect.x));
-  tmp.Append(", ");
-  tmp.Append(NSTwipsToFloatPoints(rect.y));
-  tmp.Append(", ");
-  tmp.Append(NSTwipsToFloatPoints(rect.width));
-  tmp.Append(", ");
-  tmp.Append(NSTwipsToFloatPoints(rect.height));
-  tmp.Append("}");
+  tmp.AppendWithConversion("{");
+  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.x));
+  tmp.AppendWithConversion(", ");
+  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.y));
+  tmp.AppendWithConversion(", ");
+  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.width));
+  tmp.AppendWithConversion(", ");
+  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.height));
+  tmp.AppendWithConversion("}");
   fputs(tmp, out);
   return out;
 }

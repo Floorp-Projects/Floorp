@@ -120,8 +120,8 @@ nsUnicodeFontMappingMac* nsFontMetricsMac :: GetUnicodeFontMapping()
 	// we should pass the documentCharset from the nsIDocument level and
 	// the lang attribute from the tag level to here.
 	// XXX hard code to some value till peterl pass them down.
-	nsAutoString lang("");
-	nsAutoString langGroup("ja");
+	nsAutoString lang;
+	nsAutoString langGroup; langGroup.AssignWithConversion("ja");
 	if(mLangGroup)
 		mLangGroup->ToString(langGroup);
 	if(! mFontMapping)
@@ -136,27 +136,27 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
 
   if (aGenericFamily.EqualsIgnoreCase("serif"))
   {
-    aFontFace = "Times";
+    aFontFace.AssignWithConversion("Times");
   }
   else if (aGenericFamily.EqualsIgnoreCase("sans-serif"))
   {
-    aFontFace="Helvetica";
+    aFontFace.AssignWithConversion("Helvetica");
   }
   else if (aGenericFamily.EqualsIgnoreCase("cursive"))
   {
-     aFontFace="Apple Chancery";
+     aFontFace.AssignWithConversion("Apple Chancery");
   }
   else if (aGenericFamily.EqualsIgnoreCase("fantasy"))
   {
-    aFontFace ="Gadget";
+    aFontFace.AssignWithConversion("Gadget");
   }
   else if (aGenericFamily.EqualsIgnoreCase("monospace"))
   {
-    aFontFace = "Courier";
+    aFontFace.AssignWithConversion("Courier");
   }
   else if (aGenericFamily.EqualsIgnoreCase("-moz-fixed"))
   {
-    aFontFace = "Courier";
+    aFontFace.AssignWithConversion("Courier");
   }
 }
 

@@ -489,8 +489,7 @@ class FontAliasKey: public nsHashKey
 {
 public:
   FontAliasKey(const nsString& aString)
-    : mString(aString)
-  {}
+  {mString.Assign(aString);}
 
   virtual PRUint32 HashValue(void) const;
   virtual PRBool Equals(const nsHashKey *aKey) const;
@@ -529,15 +528,15 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable) {
 
-      nsAutoString  times("Times");
-      nsAutoString  timesNewRoman("Times New Roman");
-      nsAutoString  timesRoman("Times Roman");
-      nsAutoString  arial("Arial");
-      nsAutoString  helvetica("Helvetica");
-      nsAutoString  courier("Courier");
-      nsAutoString  courierNew("Courier New");
-      nsAutoString  unicode("Unicode");
-      nsAutoString  bitstreamCyberbit("Bitstream Cyberbit");
+      nsAutoString  times;              times.AssignWithConversion("Times");
+      nsAutoString  timesNewRoman;      timesNewRoman.AssignWithConversion("Times New Roman");
+      nsAutoString  timesRoman;         timesRoman.AssignWithConversion("Times Roman");
+      nsAutoString  arial;              arial.AssignWithConversion("Arial");
+      nsAutoString  helvetica;          helvetica.AssignWithConversion("Helvetica");
+      nsAutoString  courier;            courier.AssignWithConversion("Courier");
+      nsAutoString  courierNew;         courierNew.AssignWithConversion("Courier New");
+      nsAutoString  unicode;            unicode.AssignWithConversion("Unicode");
+      nsAutoString  bitstreamCyberbit;  bitstreamCyberbit.AssignWithConversion("Bitstream Cyberbit");
       nsAutoString  nullStr;
 
       AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
