@@ -34,6 +34,7 @@
         if (!document.documentElement.cancelDialog())
           event.preventDefault();
       })</field>
+      <field name="enterDefaultAlways">false</field>
 
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
@@ -289,10 +290,12 @@
         <![CDATA[
           // if a button is focused, do nothing, so that activating the button 
           // doesn't cause the dialog to exit
-          var focused = document.commandDispatcher.focusedElement;
-          if (focused && focused.localName == "button")
-            return;
-            
+          if (!this.enterDefaultAlways) {
+            var focused = document.commandDispatcher.focusedElement;
+            if (focused && focused.localName == "button")
+              return;
+          }
+
           // only accept dialog if accept button is the default
           var btn = this.getButton("accept");
           if (btn && btn.hasAttribute("default"))
