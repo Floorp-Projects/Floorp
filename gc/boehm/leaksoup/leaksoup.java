@@ -37,39 +37,6 @@
 import java.io.*;
 import java.util.*;
 
-class Type {
-	String mName;
-	int mSize;
-
-	Type(String name, int size) {
-		mName = name;
-		mSize = size;
-	}
-
-	public int hashCode() {
-		return mName.hashCode() + mSize;
-	}
-
-	public boolean equals(Object obj) {
-		if (obj instanceof Type) {
-			Type t = (Type) obj;
-			return (t.mSize == mSize && t.mName.equals(mName));
-		}
-		return false;
-	}
-
-	public String toString() {
-		return "<A HREF=\"#" + mName + "_" + mSize + "\">&LT;" + mName + "&GT;</A> (" + mSize + ")";
-	}
-
-	static class Comparator implements QuickSort.Comparator {
-		public int compare(Object obj1, Object obj2) {
-			Type t1 = (Type) obj1, t2 = (Type) obj2;
-			return (t1.mSize - t2.mSize);
-		}
-	}
-}
-
 class Leak {
 	String mAddress;
 	Type mType;
@@ -173,19 +140,6 @@ final class LineReader {
     
     void close() throws IOException {
         reader.close();
-    }
-}
-
-class StringTable {
-    private Hashtable strings = new Hashtable();
-    
-    public String intern(String str) {
-        String result = (String) strings.get(str);
-        if (result == null) {
-            result = str;
-            strings.put(str, str);
-        }
-        return result;
     }
 }
 
@@ -353,6 +307,7 @@ public class leaksoup {
 			}
 			
 			// print the object histogram report.
+    		out.println("<H2>Leak Histogram:</H2>");
 			printHistogram(out, hist);
 			
 			// open original file again, as a RandomAccessFile, to read in stack crawl information.
@@ -388,17 +343,17 @@ public class leaksoup {
 	}
 
 	static void printHistogram(PrintWriter out, Histogram hist) throws IOException {
-		// sort the objects by histogram count.
-		Object[] objects = hist.objects();
+		// sort the types by histogram count.
+		Object[] types = hist.objects();
 		QuickSort sorter = new QuickSort(new HistComparator(hist));
-		sorter.sort(objects);
+		sorter.sort(types);
 		
-		out.println("<H2>Leak Histogram:</H2>");
 		out.println("<PRE>");
-		int count = objects.length;
-		while (count > 0) {
-			Object object = objects[--count];
-			out.println(object.toString() + " : " + hist.count(object));
+		int index = types.length;
+		while (index > 0) {
+			Type type = (Type) types[--index];
+			int count = hist.count(type);
+			out.println(type.toString() + " : " + count + " {" + (count * type.mSize) + "}");
 		}
 		out.println("</PRE>");
 	}
