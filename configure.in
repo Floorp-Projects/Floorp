@@ -1119,6 +1119,10 @@ intl/unicharutil/src/Makefile
 intl/unicharutil/public/Makefile
 intl/unicharutil/tests/Makefile
 intl/unicharutil/tools/Makefile
+intl/strres/Makefile
+intl/strres/public/Makefile
+intl/strres/src/Makefile
+intl/strres/tests/Makefile
 jpeg/Makefile
 js/Makefile
 js/jsd/Makefile
