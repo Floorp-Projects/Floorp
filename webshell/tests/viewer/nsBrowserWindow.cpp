@@ -1646,7 +1646,9 @@ nsBrowserWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+nsBrowserWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
+                              PRBool /*aWidthTransient*/,
+                              PRBool /*aHeightTransient*/)
 {
   return SizeContentTo(aWidth, aHeight);
 }
