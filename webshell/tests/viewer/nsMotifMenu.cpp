@@ -49,7 +49,7 @@ void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data)
 //-----------------------------------------------------
 Widget CreatePulldownMenu(Widget   aParent, 
                           char   * aMenuTitle,
-                          char   * aMenuMnemonic)
+                          char     aMenuMnemonic)
 {
 
   Widget pullDown;
@@ -162,10 +162,10 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
 
   menuBar = XmCreateMenuBar(aParent, "menubar", NULL, 0);
 
-  fileMenu   = CreatePulldownMenu(menuBar,  "File", "F");
+  fileMenu   = CreatePulldownMenu(menuBar,  "File", 'F');
   CreateMenuItem(fileMenu, "Open...", VIEWER_FILE_OPEN, aCallback);
 
-  menu = CreatePulldownMenu(fileMenu, "Samples", "S");
+  menu = CreatePulldownMenu(fileMenu, "Samples", 'S');
   CreateMenuItem(menu, "demo #0", VIEWER_DEMO0, aCallback);
   CreateMenuItem(menu, "demo #1", VIEWER_DEMO1, aCallback);
   CreateMenuItem(menu, "demo #2", VIEWER_DEMO2, aCallback);
@@ -176,20 +176,20 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
   CreateMenuItem(menu, "demo #7", VIEWER_DEMO7, aCallback);
   CreateMenuItem(menu, "demo #8", VIEWER_DEMO8, aCallback);
 
-  menu = CreatePulldownMenu(fileMenu, "Print Preview", "P");
+  menu = CreatePulldownMenu(fileMenu, "Print Preview", 'P');
   CreateMenuItem(menu, "One Column", VIEWER_ONE_COLUMN, aCallback);
   CreateMenuItem(menu, "Two Column", VIEWER_TWO_COLUMN, aCallback);
   CreateMenuItem(menu, "Three Column", VIEWER_THREE_COLUMN, aCallback);
 
   CreateMenuItem(fileMenu, "Exit", VIEWER_EXIT, aCallback);
 
-  menu = CreatePulldownMenu(menuBar,  "Edit", "E");
+  menu = CreatePulldownMenu(menuBar,  "Edit", 'E');
   AddMenuItems(menu, editBtns, aCallback);
 
-  debugMenu = CreatePulldownMenu(menuBar,  "Debug", "D");
+  debugMenu = CreatePulldownMenu(menuBar,  "Debug", 'D');
   AddMenuItems(debugMenu, debugBtns, aCallback);
 
-  menu = CreatePulldownMenu(menuBar,  "Tools", "T");
+  menu = CreatePulldownMenu(menuBar,  "Tools", 'T');
   CreateMenuItem(menu, "Java Script Console", JS_CONSOLE, aCallback);
 
   XtManageChild(menuBar);
