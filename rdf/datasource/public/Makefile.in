@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
+	nsIBookmarkDataSource.h		\
 	nsIHistoryDataSource.h		\
 	nsIRDFFileSystem.h		\
 	nsIRDFFind.h			\
