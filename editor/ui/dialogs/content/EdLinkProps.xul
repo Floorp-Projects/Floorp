@@ -7,13 +7,16 @@
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
 
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
   <script language="JavaScript" src="chrome://editordlgs/content/EdLinkProps.js">
   </script>
   <table>
     <tr>
       <td>
         <fieldset><legend align="left">Link source </legend>
-          <p class="smallmargin" id="linkMessage"> Enter text to display for a new link:</p>
+          <p class="smallmargin" id="linkMessage">Enter text to display for a new link:</p>
           <input type="text" size="25" length="25" maxlength="100" id="linkTextInput"></input>
         </fieldset>
       </td>

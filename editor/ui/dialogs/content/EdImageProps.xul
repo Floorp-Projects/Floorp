@@ -3,18 +3,22 @@
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
-<xul:window width="370" height="255" title="Image Properties"
+<xul:window width="380" height="205" title="Image Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
 
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
   <script language="JavaScript" src="chrome://editordlgs/content/EdImageProps.js">
   </script>
   <table>
     <tr>
       <td>
         <fieldset><legend align="left">Image Information </legend>
-          <input type="file" value=" Choose File... " size="50" length="50" maxlength="255" id="image.url" />
+          <p class="smallmargin">Enter a remote URL or local file: </p>
+          <input type="file" size="50" length="50" maxlength="255" id="image.Src" />
           <br/>
           <p class="smallmargin">Alternative Text</p>
           <input type="text" size="30" length="30" maxlength="255" id="image.AltText" />

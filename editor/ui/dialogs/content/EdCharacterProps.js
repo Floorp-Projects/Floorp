@@ -1,11 +1,14 @@
-  // dialog initialization code
+// OnOK(), Undo(), and Cancel() are in EdDialogCommon.js
+// applyChanges() must be implemented here
+
+// dialog initialization code
 var appCore;
 var toolkitCore;
 var insertNew = true;
 var selectionIsCollapsed = false;
 var undoCount = 0;
 
-function Statup()
+function Startup()
 {
     dump("Doing Character Props Startup...\n");
     toolkitCore = XPAppCoresManager.Find("ToolkitCore");
@@ -24,4 +27,8 @@ function Statup()
       dump("EditorAppCore not found!!!\n");
       toolkitCore.CloseWindow(window);
     }
+}
+
+function applyChanges()
+{
 }
