@@ -59,7 +59,7 @@ COtherDelegate::COtherDelegate() :
  *  @return  
  */
 COtherDelegate::COtherDelegate(COtherDelegate& aDelegate) : 
-  ITokenizerDelegate(), mTokenDeque() {
+  ITokenizerDelegate(), mTokenDeque(PR_TRUE,TokenFreeProc) {
 }
 
 
