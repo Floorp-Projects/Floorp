@@ -112,11 +112,7 @@ public:
   void  SetNoneValue(void);
   void  SetNormalValue(void);
 
-  static void ValueToString(nsString& aBuffer,
-                            const nsCSSValue& aValue,
-                            PRInt32 aPropID = -1);
-
-  // debugging methods
+  // debugging methods only
   void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
   void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
 
@@ -328,6 +324,9 @@ public:
 // XXX make nscolor a struct to avoid type conflicts
   virtual nsresult GetValue(const char* aProperty, nsCSSValue& aValue) = 0;
   virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
+
+  virtual nsresult GetValue(PRInt32 aProperty, nsString& aValue) = 0;
+  virtual nsresult GetValue(const nsString& aProperty, nsString& aValue) = 0;
 
   virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
   virtual nsresult GetValueIsImportant(const char *aProperty, PRBool& aIsImportant) = 0;
