@@ -123,7 +123,7 @@ nsEventStateManager::nsEventStateManager()
   ++mInstanceCount;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEventStateManager::Init()
 {
   nsresult rv;
