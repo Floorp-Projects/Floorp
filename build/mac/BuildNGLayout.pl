@@ -34,7 +34,6 @@ use Moz;
 #-----------------------------------------------
 $DEBUG					= 0;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
-$NECKO					= 1;
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
@@ -42,10 +41,10 @@ $pull{all} 				= 0;
 $pull{moz}				= 0;
 $pull{runtime} 			= 0;
 
-$build{all} 			= 1;			# turn off to do individual builds, or to do "most"
-$build{most} 			= 0;			# turn off to do individual builds
+$build{all} 			= 1;	# turn off to do individual builds, or to do "most"
+$build{most} 			= 0;	# turn off to do individual builds
 $build{dist} 			= 0;
-$build{dist_runtime}	= 0;			# implied by $build{dist}
+$build{dist_runtime}	= 0;	# implied by $build{dist}
 $build{idl}             = 0;
 $build{xpidl}			= 0;
 $build{resources} 		= 0;
@@ -153,6 +152,7 @@ else
 	OpenErrorLog("NGLayoutBuildLog");		# Release build requires that name
 	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
 }
+
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 

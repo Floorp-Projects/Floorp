@@ -22,7 +22,7 @@
 #
 
 #
-# nglayout build script (debug)
+# nglayout pull script 
 #
 use Mac::Processes;
 use NGLayoutBuildList;
@@ -30,7 +30,6 @@ use Cwd;
 use Moz;
 
 # configuration variables
-$DEBUG = 1;
 $pull{all} = 1;
 $pull{moz} = 0;
 $pull{runtime} = 0;
@@ -43,7 +42,6 @@ if ($pull{all})
 	}
 }
 
-# do the work
 # you should not have to edit anything bellow
 
 chdir("::::");
@@ -51,7 +49,6 @@ chdir("::::");
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
-#OpenErrorLog("::NGLayoutBuildLog");
-OpenErrorLog("NGLayoutPullLog");		# Tinderbox requires that name
+OpenErrorLog("NGLayoutPullLog");
 
 Checkout();
