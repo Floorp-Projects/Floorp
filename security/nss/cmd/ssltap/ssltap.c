@@ -60,7 +60,7 @@
 
 #include "plgetopt.h"
 
-#define VERSIONSTRING "$Revision: 1.3 $ ($Date: 2002/09/06 00:27:25 $) $Author: wtc%netscape.com $"
+#define VERSIONSTRING "$Revision: 1.4 $ ($Date: 2003/05/15 06:28:44 $) $Author: nelsonb%netscape.com $"
 
 
 struct _DataBufferList;
@@ -293,17 +293,17 @@ const char * V2CipherString(int cs_int) {
   case 0x00000A:    cs_str = "SSL3/RSA/3DES192EDE-CBC/SHA";    break;
 
   case 0x00000B:    cs_str = "SSL3/DH-DSS/DES40-CBC/SHA";      break;
-  case 0x00000C:    cs_str = "SSL3/DH_DSS/DES56-CBC/SHA";      break;
+  case 0x00000C:    cs_str = "SSL3/DH-DSS/DES56-CBC/SHA";      break;
   case 0x00000D:    cs_str = "SSL3/DH-DSS/DES192EDE3CBC/SHA"; break;
   case 0x00000E:    cs_str = "SSL3/DH-RSA/DES40-CBC/SHA";      break;
-  case 0x00000F:    cs_str = "SSL3/DH_RSA/DES56-CBC/SHA";      break;
+  case 0x00000F:    cs_str = "SSL3/DH-RSA/DES56-CBC/SHA";      break;
   case 0x000010:    cs_str = "SSL3/DH-RSA/3DES192EDE-CBC/SHA"; break;
 
   case 0x000011:    cs_str = "SSL3/DHE-DSS/DES40-CBC/SHA";      break;
-  case 0x000012:    cs_str = "SSL3/DHE_DSS/DES56-CBC/SHA";      break;
+  case 0x000012:    cs_str = "SSL3/DHE-DSS/DES56-CBC/SHA";      break;
   case 0x000013:    cs_str = "SSL3/DHE-DSS/DES192EDE3CBC/SHA"; break;
   case 0x000014:    cs_str = "SSL3/DHE-RSA/DES40-CBC/SHA";      break;
-  case 0x000015:    cs_str = "SSL3/DHE_RSA/DES56-CBC/SHA";      break;
+  case 0x000015:    cs_str = "SSL3/DHE-RSA/DES56-CBC/SHA";      break;
   case 0x000016:    cs_str = "SSL3/DHE-RSA/3DES192EDE-CBC/SHA"; break;
 
   case 0x000017:    cs_str = "SSL3/DH-anon/RC4-40/MD5";     break;
@@ -316,12 +316,45 @@ const char * V2CipherString(int cs_int) {
   case 0x00001D:    cs_str = "SSL3/FORTEZZA-DMS/FORTEZZA-CBC/SHA";  break;
   case 0x00001E:    cs_str = "SSL3/FORTEZZA-DMS/RC4-128/SHA";  break;
 
-  case 0x000062:    cs_str = "TLS/RSA_EXPORT1024/DES56_CBC/SHA";   break;
-  case 0x000064:    cs_str = "TLS/RSA_EXPORT1024/RC4-56/SHA";	   break;
+  case 0x00002F:    cs_str = "TLS/RSA/AES128-CBC/SHA";  	break;
+  case 0x000030:    cs_str = "TLS/DH-DSS/AES128-CBC/SHA";	break;
+  case 0x000031:    cs_str = "TLS/DH-RSA/AES128-CBC/SHA";	break;
+  case 0x000032:    cs_str = "TLS/DHE-DSS/AES128-CBC/SHA";	break;
+  case 0x000033:    cs_str = "TLS/DHE-RSA/AES128-CBC/SHA";	break;
+  case 0x000034:    cs_str = "TLS/DH-ANON/AES128-CBC/SHA";	break;
+
+  case 0x000035:    cs_str = "TLS/RSA/AES256-CBC/SHA";  	break;
+  case 0x000036:    cs_str = "TLS/DH-DSS/AES256-CBC/SHA";	break;
+  case 0x000037:    cs_str = "TLS/DH-RSA/AES256-CBC/SHA";	break;
+  case 0x000038:    cs_str = "TLS/DHE-DSS/AES256-CBC/SHA";	break;
+  case 0x000039:    cs_str = "TLS/DHE-RSA/AES256-CBC/SHA";	break;
+  case 0x00003A:    cs_str = "TLS/DH-ANON/AES256-CBC/SHA";	break;
+
+  case 0x000047:    cs_str = "TLS/ECDH-ECDSA/NULL/SHA"; 	break;
+  case 0x000048:    cs_str = "TLS/ECDH-ECDSA/RC4-128/SHA";	break;
+  case 0x000049:    cs_str = "TLS/ECDH-ECDSA/DES-CBC/SHA";	break;
+  case 0x00004A:    cs_str = "TLS/ECDH-ECDSA/3DESEDE-CBC/SHA";	break;
+  case 0x00004B:    cs_str = "TLS/ECDH-ECDSA/AES128-CBC/SHA";	break;
+  case 0x00004C:    cs_str = "TLS/ECDH-ECDSA/AES256-CBC/SHA";	break;
+
+  case 0x00004D:    cs_str = "TLS/ECDH-RSA/NULL/SHA";   	break;
+  case 0x00004E:    cs_str = "TLS/ECDH-RSA/RC4-128/SHA";	break;
+  case 0x00004F:    cs_str = "TLS/ECDH-RSA/DES-CBC/SHA";	break;
+  case 0x000050:    cs_str = "TLS/ECDH-RSA/3DESEDE-CBC/SHA";	break;
+  case 0x000051:    cs_str = "TLS/ECDH-RSA/AES128-CBC/SHA";	break;
+  case 0x000052:    cs_str = "TLS/ECDH-RSA/AES256-CBC/SHA";	break;
+
+  case 0x000062:    cs_str = "TLS/RSA-EXPORT1024/DES56-CBC/SHA";   break;
+  case 0x000064:    cs_str = "TLS/RSA-EXPORT1024/RC4-56/SHA";	   break;
   case 0x000063:    cs_str = "TLS/DHE-DSS_EXPORT1024/DES56-CBC/SHA"; break;
   case 0x000065:    cs_str = "TLS/DHE-DSS_EXPORT1024/RC4-56/SHA";  break;
   case 0x000066:    cs_str = "TLS/DHE-DSS/RC4-128/SHA";		   break;
 
+  case 0x000077:    cs_str = "TLS/ECDHE-ECDSA/AES128-CBC/SHA";	break;
+  case 0x000078:    cs_str = "TLS/ECDHE-RSA/AES128-CBC/SHA";	break;
+
+  case 0x00feff:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
+  case 0x00fefe:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;
   case 0x00ffe1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";         break;
   case 0x00ffe0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";    break;
 
