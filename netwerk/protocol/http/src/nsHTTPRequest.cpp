@@ -76,7 +76,7 @@ nsHTTPRequest::Build()
     if (m_Request)
         NS_ERROR("Request already built!");
     nsresult rv = NS_NewByteBufferInputStream(&m_Request);
-    if (m_Request)
+    if (NS_SUCCEEDED(rv))
     {
 
         char lineBuffer[1024]; // verify this length!
@@ -120,26 +120,26 @@ nsHTTPRequest::Build()
         // Write the request method and HTTP version
         
         // Add additional headers if any
-        if (m_pArray && (0< m_pArray->Count()))
+        NS_ASSERTION(m_pArray, "header array is null");
+
+        for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
         {
-            for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
-            {
-                nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-                //Copy header, put a ": " and then the value + LF
-                // sprintf would be easier... todo change
-                nsString lineBuffStr;
-                element->atom->ToString(lineBuffStr);
-                lineBuffStr.Append(": ");
-                lineBuffStr.Append((const nsString&)*element->value);
-                lineBuffStr.Append(CRLF);
-                NS_ASSERTION((lineBuffStr.Length() <= 1024), "Increase line buffer length!");
-                lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length());
-                lineBuffer[lineBuffStr.Length()] = '\0';
-                rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
-                if (NS_FAILED(rv)) return rv;
-                lineBuffer[0] = '\0';
-            }
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+            //Copy header, put a ": " and then the value + LF
+            // sprintf would be easier... todo change
+            nsString lineBuffStr;
+            element->atom->ToString(lineBuffStr);
+            lineBuffStr.Append(": ");
+            lineBuffStr.Append((const nsString&)*element->value);
+            lineBuffStr.Append(CRLF);
+            NS_ASSERTION((lineBuffStr.Length() <= 1024), "Increase line buffer length!");
+            lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length());
+            lineBuffer[lineBuffStr.Length()] = '\0';
+            rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
+            if (NS_FAILED(rv)) return rv;
+            lineBuffer[0] = '\0';
         }
+
         // Send the final \n
         lineBuffer[0] = CR;
         lineBuffer[1] = LF;
@@ -781,6 +781,7 @@ nsHTTPRequest::GetPriority()
 NS_METHOD
 nsHTTPRequest::SetHeader(const char* i_Header, const char* i_Value)
 {
+    NS_ASSERTION(m_pArray, "header array doesn't exist.");
     if (i_Value)
     {
         //The tempValue gets copied so we can do away with it...
@@ -794,26 +795,45 @@ nsHTTPRequest::SetHeader(const char* i_Header, const char* i_Value)
         else
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    else
+    else if (i_Header)
     {
-        // This should delete any existing headers! TODO
-        return NS_ERROR_NOT_IMPLEMENTED;
+        nsIAtom* header = NS_NewAtom(i_Header);
+        if (!atom)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PRInt32 cnt = m_pArray->Count();
+        for (PRInt32 i = 0; i < cnt; i++) {
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+            if (header == element->atom) {
+                m_pArray->RemoveElementAt(i);
+                cnt = m_pArray->Count();
+                i = -1; // reset the counter so we can start from the top again
+            }
+        }
+        return NS_OK;
     }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_METHOD
 nsHTTPRequest::GetHeader(const char* i_Header, const char* *o_Value) const
 {
-    if (m_pArray && (0< m_pArray->Count()))
+    NS_ASSERTION(m_pArray, "header array doesn't exist.");
+
+    if (!i_Header || !o_Value)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIAtom* header = NS_NewAtom(i_Header);
+    if (!header)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
     {
-        for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
+        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+        if ((header == element->atom))
         {
-            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-            if ((element->atom == NS_NewAtom(i_Header)) && o_Value)
-            {
-                *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
-                return NS_OK;
-            }
+            *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
+            return NS_OK;
         }
     }
 
@@ -879,14 +899,17 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
     // if we could write successfully... 
     if (NS_SUCCEEDED(iStatus)) 
     {
+        nsresult rv;
         //Prepare to receive the response!
         nsHTTPResponseListener* pListener = new nsHTTPResponseListener();
-        m_pTransport->AsyncRead(
-            i_pContext, 
-            m_pConnection->EventQueue(), 
-            pListener);
-        //TODO check this portion here...
-        return pListener ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        if (!pListener)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = m_pTransport->AsyncRead(
+                    i_pContext, 
+                    m_pConnection->EventQueue(), 
+                    pListener);
+        return rv;
     }
     else
     {

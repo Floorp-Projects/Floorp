@@ -442,7 +442,7 @@ nsHTTPResponse::SetHeader(const char* i_Header, const char* i_Value)
 NS_METHOD
 nsHTTPResponse::SetHeaderInternal(const char* i_Header, const char* i_Value)
 {
-    NS_ASSERTION(m_pArray, "Ooops! array vanished!");
+    NS_ASSERTION(m_pArray, "header array doesn't exist.");
     if (i_Value)
     {
         //The tempValue gets copied so we can do away with it...
@@ -457,30 +457,45 @@ nsHTTPResponse::SetHeaderInternal(const char* i_Header, const char* i_Value)
         else
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    else
+    else if (i_Header)
     {
-        // This should delete any existing headers! TODO
-        return NS_ERROR_NOT_IMPLEMENTED;
+        nsIAtom* header = NS_NewAtom(i_Header);
+        if (!atom)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PRInt32 cnt = m_pArray->Count();
+        for (PRInt32 i = 0; i < cnt; i++) {
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+            if (header == element->atom) {
+                m_pArray->RemoveElementAt(i);
+                cnt = m_pArray->Count();
+                i = -1; // reset the counter so we can start from the top again
+            }
+        }
+        return NS_OK;
     }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_METHOD
 nsHTTPResponse::GetHeader(const char* i_Header, const char* *o_Value) const
 {
-    // TODO 
-    // Common out the headerpair array functionality from 
-    // request and put it in a class
-    nsIAtom* iAtom = NS_NewAtom(i_Header);
-    if (m_pArray && (0< m_pArray->Count()))
+    NS_ASSERTION(m_pArray, "header array doesn't exist.");
+
+    if (!i_Header || !o_Value)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIAtom* header = NS_NewAtom(i_Header);
+    if (!header)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
     {
-        for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
+        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+        if ((header == element->atom))
         {
-            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-            if ((element->atom == iAtom) && o_Value)
-            {
-                *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
-                return NS_OK;
-            }
+            *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
+            return NS_OK;
         }
     }
 
