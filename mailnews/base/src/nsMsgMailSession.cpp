@@ -39,18 +39,6 @@ nsMsgMailSession::nsMsgMailSession():
 	NS_INIT_REFCNT();
 
     nsresult rv;
-    /* kick of the prefs now, we'll need them for the account manager */
-    
-    nsIPref* prefs;
-    rv = nsServiceManager::GetService(kPrefCID,
-                                      nsIPref::GetIID(),
-                                      (nsISupports**)&prefs);
-    if (NS_FAILED(rv)) return;
-    
-    if (prefs && NS_SUCCEEDED(rv))
-      rv = prefs->Startup("prefs50.js");
-    
-    (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
 
     rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
                                             NULL,
