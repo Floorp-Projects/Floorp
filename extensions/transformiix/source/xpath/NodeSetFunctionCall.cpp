@@ -189,28 +189,22 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
                 case NAME:
                 {
-                    switch (txXPathNodeUtils::getNodeType(node)) {
-                        case txXPathNodeType::ATTRIBUTE_NODE:
-                        case txXPathNodeType::ELEMENT_NODE:
-                        case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
-                        // XXX Namespace: namespaces have a name
-                        {
-                            StringResult* strRes = nsnull;
-                            rv = aContext->recycler()->getStringResult(&strRes);
-                            NS_ENSURE_SUCCESS(rv, rv);
+                    // XXX Namespace: namespaces have a name
+                    if (txXPathNodeUtils::isAttribute(node) ||
+                        txXPathNodeUtils::isElement(node) ||
+                        txXPathNodeUtils::isProcessingInstruction(node)) {
+                        StringResult* strRes = nsnull;
+                        rv = aContext->recycler()->getStringResult(&strRes);
+                        NS_ENSURE_SUCCESS(rv, rv);
 
-                            *aResult = strRes;
-                            txXPathNodeUtils::getNodeName(node, strRes->mValue);
-
-                            return NS_OK;
-                        }
-                        default:
-                        {
-                            aContext->recycler()->getEmptyStringResult(aResult);
-
-                            return NS_OK;
-                        }
+                        *aResult = strRes;
+                        txXPathNodeUtils::getNodeName(node, strRes->mValue);
                     }
+                    else {
+                        aContext->recycler()->getEmptyStringResult(aResult);
+                    }
+
+                    return NS_OK;
                 }
                 default:
                 {

@@ -205,12 +205,10 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
     }
 
     do {
-        if (!(filterWS &&
-              (walker.getNodeType() == txXPathNodeType::TEXT_NODE ||
-               walker.getNodeType() == txXPathNodeType::CDATA_SECTION_NODE) &&
-              txXPathNodeUtils::isWhitespace(walker.getCurrentPosition()))) {
-            rv = evalDescendants(aStep, walker.getCurrentPosition(), aContext,
-                                 resNodes);
+        const txXPathNode& node = walker.getCurrentPosition();
+        if (!(filterWS && txXPathNodeUtils::isText(node) &&
+              txXPathNodeUtils::isWhitespace(node))) {
+            rv = evalDescendants(aStep, node, aContext, resNodes);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     } while (walker.moveToNextSibling());
