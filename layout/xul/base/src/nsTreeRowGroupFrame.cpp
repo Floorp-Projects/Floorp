@@ -791,7 +791,8 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
   mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
 
   // Force a reflow.
-  OnContentAdded(aPresContext);
+  nsTreeFrame* treeFrame = (nsTreeFrame*) tableFrame;  
+  MarkTreeAsDirty(aPresContext, treeFrame);
 
   return NS_OK;
 }
@@ -1092,7 +1093,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
       // Dirty the tree for another reflow.
       nsTableFrame* tableFrame;
       nsTableFrame::GetTableFrame(this, tableFrame);
-  
+      
       MarkTreeAsDirty(aPresContext, (nsTreeFrame*)tableFrame);
     }
   } 
@@ -1411,6 +1412,10 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext)
 
   nsTreeFrame* treeFrame = (nsTreeFrame*) tableFrame;  
   MarkTreeAsDirty(aPresContext, treeFrame);
+  
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->ProcessReflowCommands(PR_FALSE);
 }
 
 void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex)
@@ -1550,7 +1555,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
 
   if (!mScrollbar)
     return;
-  
+                                     
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
@@ -1637,8 +1642,14 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
     maxpos = ch;
   }
 
-  // Make sure our position is accurate.
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_TRUE);
+  // Make sure our position is accurate
+  nsAutoString value;  
+  scrollbarContent->GetAttribute(kNameSpaceID_None,
+                                     nsXULAtoms::maxpos, value);
+                                     
+  if(value != maxpos){
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_TRUE);
+  }
 }
 
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
