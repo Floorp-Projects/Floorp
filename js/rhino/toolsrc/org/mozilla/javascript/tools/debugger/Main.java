@@ -1209,7 +1209,6 @@ class ContextWindow extends JPanel implements ActionListener {
     JTabbedPane tabs2;
     MyTreeTable thisTable;
     MyTreeTable localsTable;
-    VariableModel model;
     MyTableModel tableModel;
     Evaluator evaluator;
     EvalTextArea cmdLine;
@@ -1487,30 +1486,23 @@ class ContextWindow extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (!enabled) return;
         if (e.getActionCommand().equals("ContextSwitch")) {
-            ContextHelper helper = new ContextHelper();
-            Context cx = db.getCurrentContext();
-            ContextData contextData = ContextData.get(cx);
-            helper.attach(cx);
+            ContextData contextData = db.currentContextData();
+            if (contextData == null) { return; }
             int frameIndex = context.getSelectedIndex();
             context.setToolTipText(toolTips.elementAt(frameIndex).toString());
-            Scriptable obj;
-            int frameCount = contextData.getFrameCount();
-            if (frameIndex < frameCount) {
-                FrameHelper frame = contextData.getFrame(frameIndex);
-                obj = frame.getVariableObject();
-            } else {
-                helper.reset();
+            int frameCount = contextData.frameCount();
+            if (frameIndex >= frameCount) {
                 return;
             }
-            NativeCall call = null;
-            if (obj instanceof NativeCall) {
-                call = (NativeCall)obj;
-                obj = call.getThisObj();
-            }
-            JTree tree = thisTable.resetTree(model = new VariableModel(obj));
-
-            if (call == null) {
-                tree = localsTable.resetTree(new AbstractTreeTableModel(new DefaultMutableTreeNode()) {
+            FrameHelper frame = contextData.getFrame(frameIndex);
+            Scriptable scope = frame.scope();
+            Scriptable thisObj = frame.thisObj();
+            thisTable.resetTree(new VariableModel(thisObj));
+            AbstractTreeTableModel scopeModel;
+            if (scope != thisObj) {
+                scopeModel = new VariableModel(scope);
+            } else {
+                scopeModel = new AbstractTreeTableModel(new DefaultMutableTreeNode()) {
                         public Object getChild(Object parent, int index) {
                             return null;
                         }
@@ -1532,12 +1524,10 @@ class ContextWindow extends JPanel implements ActionListener {
                         public Object getValueAt(Object node, int column) {
                             return null;
                         }
-                    });
-            } else {
-                tree = localsTable.resetTree(model = new VariableModel(call));
+                    };
             }
-            helper.reset();
-            db.contextSwitch (frameIndex);
+            localsTable.resetTree(scopeModel);
+            db.contextSwitch (frame, frameIndex);
             tableModel.updateModel();
         }
     }
@@ -1706,9 +1696,9 @@ class UpdateFileText implements Runnable {
 class UpdateContext implements Runnable {
     Main db;
     ContextData contextData;
-    UpdateContext(Main db, Context cx) {
+    UpdateContext(Main db, ContextData contextData) {
         this.db = db;
-        this.contextData = ContextData.get(cx);
+        this.contextData = contextData;
     }
 
     public void run() {
@@ -1716,7 +1706,7 @@ class UpdateContext implements Runnable {
         JComboBox ctx = db.context.context;
         Vector toolTips = db.context.toolTips;
         db.context.disableUpdate();
-        int frameCount = contextData.getFrameCount();
+        int frameCount = contextData.frameCount();
         ctx.removeAllItems();
         // workaround for JDK 1.4 bug that caches selected value even after
         // removeAllItems() is called
@@ -1934,10 +1924,8 @@ class Menubar extends JMenuBar implements ActionListener {
 
 class EnterInterrupt implements Runnable {
     Main db;
-    Context cx;
-    EnterInterrupt(Main db, Context cx) {
+    EnterInterrupt(Main db) {
         this.db = db;
-        this.cx = cx;
     }
     public void run() {
         JMenu menu = db.getJMenuBar().getMenu(0);
@@ -2047,44 +2035,12 @@ class LoadFile implements Runnable {
     }
 }
 
-
-class ContextHelper {
-    Context old;
-    int enterCount;
-    Context New;
-    public void attach(Context cx) {
-        old = Context.getCurrentContext();
-        enterCount = 0;
-        if (old != null) {
-            old.exit();
-            while (Context.getCurrentContext() != null) {
-                enterCount++;
-                old.exit();
-            }
-        }
-        Context.enter(cx);
-        New = cx;
-    }
-    void reset() {
-        New.exit();
-        if (old != null) {
-            if (Context.enter(old) != old) {
-                throw new RuntimeException("debugger error: failed to reset context");
-            }
-            while (enterCount > 0) {
-                Context.enter();
-                enterCount--;
-            }
-        }
-    }
-}
-
 class ContextData {
     static ContextData get(Context cx) {
         return (ContextData)cx.getDebuggerContextData();
     }
 
-    int getFrameCount() {
+    int frameCount() {
         return frameStack.size();
     }
 
@@ -2102,6 +2058,8 @@ class ContextData {
 
     ObjArray frameStack = new ObjArray();
     boolean breakNextLine;
+    int stopAtFrameDepth = -1;
+    boolean eventThreadFlag;
 }
 
 class FrameHelper implements DebugFrame {
@@ -2119,22 +2077,32 @@ class FrameHelper implements DebugFrame {
         contextData.pushFrame(this);
     }
 
-    public void onEnter(Context cx, Scriptable activation,
+    public void onEnter(Context cx, Scriptable scope,
                         Scriptable thisObj, Object[] args)
     {
-        this.activation = activation;
+        this.scope = scope;
+        this.thisObj = thisObj;
         if (db.breakOnEnter) {
-            db.handleBreakpointHit(cx);
+            db.handleBreakpointHit(this, cx);
         }
     }
 
     public void onLineChange(Context cx, int lineno) {
         this.lineNumber = lineno;
-        if (contextData.breakNextLine
-            || (sourceInfo != null && sourceInfo.hasBreakpoint(lineno)))
-        {
-            db.handleBreakpointHit(cx);
+
+        if (sourceInfo == null || !sourceInfo.hasBreakpoint(lineno)) {
+            if (!contextData.breakNextLine) {
+                return;
+            }
+            if (contextData.stopAtFrameDepth > 0) {
+                if (contextData.frameCount() > contextData.stopAtFrameDepth) {
+                    return;
+                }
+                contextData.stopAtFrameDepth = -1;
+            }
+            contextData.breakNextLine = false;
         }
+        db.handleBreakpointHit(this, cx);
     }
 
     public void onExceptionThrown(Context cx, Throwable exception) {
@@ -2143,17 +2111,28 @@ class FrameHelper implements DebugFrame {
 
     public void onExit(Context cx, boolean byThrow, Object resultOrException) {
         if (db.breakOnReturn && !byThrow) {
-            db.handleBreakpointHit(cx);
+            db.handleBreakpointHit(this, cx);
         }
         contextData.popFrame();
     }
 
-    SourceInfo getSourceInfo() {
+    SourceInfo sourceInfo() {
         return sourceInfo;
     }
 
-    Scriptable getVariableObject() {
-        return activation;
+    ContextData contextData()
+    {
+        return contextData;
+    }
+
+    Scriptable scope()
+    {
+        return scope;
+    }
+
+    Scriptable thisObj()
+    {
+        return thisObj;
     }
 
     String getUrl() {
@@ -2173,7 +2152,8 @@ class FrameHelper implements DebugFrame {
 
     private Main db;
     private ContextData contextData;
-    private Scriptable activation;
+    private Scriptable scope;
+    private Scriptable thisObj;
     private DebuggableScript fnOrScript;
     private SourceInfo sourceInfo;
     private int lineNumber;
@@ -2436,12 +2416,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
     static final int RUN_TO_CURSOR = 5;
     static final int EXIT = 6;
 
-    class ThreadState {
-        private int stopAtFrameDepth = -1;
-    };
-
-    private Hashtable threadState = new Hashtable();
-    private Thread runToCursorThread;
     private int runToCursorLine;
     private String runToCursorFile;
     private Hashtable scriptItems = new Hashtable();
@@ -2624,9 +2598,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return item;
     }
 
-    void handleBreakpointHit(Context cx) {
+    void handleBreakpointHit(FrameHelper frame, Context cx) {
         breakFlag = false;
-        interrupted(cx);
+        interrupted(frame, cx);
     }
 
     private static String exceptionString(Throwable ex) {
@@ -2665,7 +2639,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             //if (w != null) {
             //swingInvoke(new SetFilePosition(this, w, -1));
             //}
-            interrupted(cx);
+            interrupted(frame, cx);
         }
     }
 
@@ -2856,79 +2830,50 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     int frameIndex = -1;
 
-    void contextSwitch (int frameIndex) {
-        Context cx = getCurrentContext();
-        ContextData contextData = ContextData.get(cx);
-        ContextHelper helper = new ContextHelper();
-        helper.attach(cx);
-        if (cx != null) {
-            int frameCount = contextData.getFrameCount();
-            if (frameIndex < 0 || frameIndex >= frameCount) {
-                helper.reset();
-                return;
-            }
-            this.frameIndex = frameIndex;
-            FrameHelper frame = contextData.getFrame(frameIndex);
-            String sourceName = frame.getUrl();
-            if (sourceName == null || sourceName.equals("<stdin>")) {
-                console.show();
-                helper.reset();
-                return;
-            }
+    void contextSwitch (FrameHelper frame, int frameIndex) {
+        this.frameIndex = frameIndex;
+        String sourceName = frame.getUrl();
+        if (sourceName == null || sourceName.equals("<stdin>")) {
+            console.show();
+        } else {
             int lineNumber = frame.getLineNumber();
-            this.frameIndex = frameIndex;
             FileWindow w = getFileWindow(sourceName);
             if (w != null) {
-                SetFilePosition action =
-                    new SetFilePosition(this, w, lineNumber);
-                action.run();
+                (new SetFilePosition(this, w, lineNumber)).run();
             } else {
-                SourceInfo si = frame.getSourceInfo();
+                SourceInfo si = frame.sourceInfo();
                 CreateFileWindow.action(this, si, lineNumber).run();
             }
-            helper.reset();
         }
     }
 
     boolean isInterrupted = false;
     boolean nonDispatcherWaiting = false;
     int dispatcherIsWaiting = 0;
-    Context currentContext = null;
+    volatile ContextData currentContextData = null;
 
-    Context getCurrentContext() {
-        return currentContext;
+    ContextData currentContextData() {
+        return currentContextData;
     }
 
-    void interrupted(Context cx) {
+    void interrupted(FrameHelper frame, Context cx)
+    {
+        boolean eventThreadFlag = SwingUtilities.isEventDispatchThread();
+        ContextData contextData = frame.contextData();
+        contextData.eventThreadFlag = eventThreadFlag;
+        int line = frame.getLineNumber();
+        String url = frame.getUrl();
+
         synchronized (swingMonitor) {
-            if (SwingUtilities.isEventDispatchThread()) {
+            if (eventThreadFlag) {
                 dispatcherIsWaiting++;
                 if (nonDispatcherWaiting) {
                     // Another thread is stopped in the debugger
                     // process events until it resumes and we
                     // can enter
-                    java.awt.EventQueue eventQ  =
-                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
                     while (nonDispatcherWaiting) {
                         try {
-                            AWTEvent event = eventQ.getNextEvent();
-                            if (event instanceof ActiveEvent) {
-                                ((ActiveEvent)event).dispatch();
-                            } else {
-                                Object source = event.getSource();
-                                if (source instanceof Component) {
-                                    Component comp = (Component)source;
-                                // Suppress Window/InputEvent's that aren't
-                                // directed to the Debugger
-                                    // if (!(event instanceof InputEvent ||
-                                    //event instanceof WindowEvent)||
-                                    //shouldDispatchTo(comp)) {
-                                    comp.dispatchEvent(event);
-                                //}
-                                } else if (source instanceof MenuComponent) {
-                                    ((MenuComponent)source).dispatchEvent(event);
-                                }
-                            }
+                            dispatchNextAwtEvent();
                             if (this.returnValue == EXIT) {
                                 return;
                             }
@@ -2949,74 +2894,28 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 nonDispatcherWaiting = true;
             }
             isInterrupted = true;
+            currentContextData = contextData;
         }
         do {
-            currentContext = cx;
-            ContextData contextData = ContextData.get(cx);
-            Thread thread = Thread.currentThread();
-            statusBar.setText("Thread: " + thread.toString());
-            ThreadState state = (ThreadState)threadState.get(thread);
-            int stopAtFrameDepth = -1;
-            if (state != null) {
-                stopAtFrameDepth = state.stopAtFrameDepth;
-            }
-            if (runToCursorFile != null && thread == runToCursorThread) {
-                int frameCount = contextData.getFrameCount();
-                if (frameCount > 0) {
-                    FrameHelper frame = contextData.getFrame(0);
-                    String url = frame.getUrl();
-                    if (url != null) {
-                        if (url.equals(runToCursorFile)) {
-                            int lineNumber = frame.getLineNumber();
-                            if (lineNumber == runToCursorLine) {
-                                stopAtFrameDepth = -1;
-                                runToCursorFile = null;
-                            } else {
-                                FileWindow w = getFileWindow(url);
-                                if (w == null ||
-                                   !w.isBreakPoint(lineNumber)) {
-                                    return;
-                                } else {
-                                    runToCursorFile = null;
-                                }
-                            }
+            statusBar.setText("Thread: " + Thread.currentThread().toString());
+            if (runToCursorFile != null) {
+                if (url != null && url.equals(runToCursorFile)) {
+                    if (line == runToCursorLine) {
+                        runToCursorFile = null;
+                    } else {
+                        SourceInfo si = frame.sourceInfo();
+                        if (si == null || !si.hasBreakpoint(line))
+                        {
+                            break;
+                        } else {
+                            runToCursorFile = null;
                         }
                     }
-                } else {
                 }
             }
-            if (stopAtFrameDepth > 0) {
-                if (contextData.getFrameCount() > stopAtFrameDepth) {
-                    break;
-                }
-            }
-            if (state != null) {
-                state.stopAtFrameDepth = -1;
-            }
-            threadState.remove(thread);
-            int frameCount = contextData.getFrameCount();
+            int frameCount = contextData.frameCount();
             this.frameIndex = frameCount -1;
-            int line = 0;
-            if (frameCount == 0) {
-                break;
-            }
-            FrameHelper frame = contextData.getFrame(0);
-            String url = frame.getUrl();
-            contextData.breakNextLine = false;
-            line = frame.getLineNumber();
-            int enterCount = 0;
-            boolean isDispatchThread =
-                SwingUtilities.isEventDispatchThread();
 
-            if (!isDispatchThread) {
-                // detach cx from its thread so the debugger (in the awt
-                // dispatcher thread) can enter it if necessary
-                cx.exit();
-                while (Context.getCurrentContext() != null) {
-                    Context.exit();
-                    enterCount++;
-                }
-            }
             if (url != null && !url.equals("<stdin>")) {
                 FileWindow w = (FileWindow)getFileWindow(url);
                 if (w != null) {
@@ -3024,7 +2923,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                         new SetFilePosition(this, w, line);
                     swingInvoke(action);
                 } else {
-                    SourceInfo si = frame.getSourceInfo();
+                    SourceInfo si = frame.sourceInfo();
                     swingInvoke(CreateFileWindow.action(this, si, line));
                 }
             } else {
@@ -3037,102 +2936,82 @@ public class Main extends JFrame implements Debugger, ContextListener {
                         });
                 }
             }
-            swingInvoke(new EnterInterrupt(this, cx));
-            swingInvoke(new UpdateContext(this, cx));
-            int returnValue;
-            if (!isDispatchThread) {
+            swingInvoke(new EnterInterrupt(this));
+            int returnValue = -1;
+            Runnable update = new UpdateContext(this, contextData);
+            if (!eventThreadFlag) {
                 synchronized (monitor) {
+                    if (insideInterruptLoop) Kit.codeBug();
+                    this.insideInterruptLoop = true;
+                    this.evalRequest = null;
                     this.returnValue = -1;
+                    swingInvokeLater(update);
                     try {
-                        while (this.returnValue == -1) {
-                            monitor.wait();
+                        for (;;) {
+                            try {
+                                monitor.wait();
+                            } catch (InterruptedException exc) {
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
+                            if (evalRequest != null) {
+                                this.evalResult = null;
+                                try {
+                                    evalResult = do_eval(cx, evalFrame, evalRequest);
+                                } finally {
+                                    evalRequest = null;
+                                    evalFrame = null;
+                                    monitor.notify();
+                                }
+                                continue;
+                            }
+                            if (this.returnValue != -1) {
+                                returnValue = this.returnValue;
+                                break;
+                            }
                         }
-                        returnValue = this.returnValue;
-                    } catch (InterruptedException exc) {
-                        break;
+                    } finally {
+                        insideInterruptLoop = false;
                     }
                 }
             } else {
-                java.awt.EventQueue eventQ  =
-                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
+                update.run();
                 this.returnValue = -1;
                 while (this.returnValue == -1) {
                     try {
-                        AWTEvent event = eventQ.getNextEvent();
-                        if (event instanceof ActiveEvent) {
-                            ((ActiveEvent)event).dispatch();
-                        } else {
-                            Object source = event.getSource();
-                            if (source instanceof Component) {
-                                Component comp = (Component)source;
-                                // Suppress Window/InputEvent's that aren't
-                                // directed to the Debugger
-                                // if (!(event instanceof InputEvent ||
-                                //event instanceof WindowEvent)||
-                                //       shouldDispatchTo(comp)) {
-                                //comp.dispatchEvent(event);
-                                //}
-                                comp.dispatchEvent(event);
-                            } else if (source instanceof MenuComponent) {
-                                ((MenuComponent)source).dispatchEvent(event);
-                            }
-                        }
+                        dispatchNextAwtEvent();
                     } catch (InterruptedException exc) {
                     }
                 }
                 returnValue = this.returnValue;
             }
             swingInvoke(new ExitInterrupt(this));
-            if (!isDispatchThread) {
-                // reattach cx to its thread
-                Context current;
-                if ((current = Context.enter(cx)) != cx) {
-                    System.out.println("debugger error: cx = " + cx + " current = " + current);
-
-                }
-                while (enterCount > 0) {
-                    Context.enter();
-                    enterCount--;
-                }
-            }
             switch (returnValue) {
             case STEP_OVER:
                 contextData.breakNextLine = true;
-                stopAtFrameDepth = contextData.getFrameCount();
-                if (state == null) {
-                    state = new ThreadState();
-                }
-                state.stopAtFrameDepth = stopAtFrameDepth;
-                threadState.put(thread, state);
+                contextData.stopAtFrameDepth = contextData.frameCount();
                 break;
             case STEP_INTO:
                 contextData.breakNextLine = true;
-                if (state != null) {
-                    state.stopAtFrameDepth = -1;
-                }
+                contextData.stopAtFrameDepth = -1;
                 break;
             case STEP_OUT:
-                stopAtFrameDepth = contextData.getFrameCount() -1;
-                if (stopAtFrameDepth > 0) {
+                if (contextData.frameCount() > 1) {
                     contextData.breakNextLine = true;
-                    if (state == null) {
-                        state = new ThreadState();
-                    }
-                    state.stopAtFrameDepth = stopAtFrameDepth;
-                    threadState.put(thread, state);
+                    contextData.stopAtFrameDepth = contextData.frameCount() -1;
                 }
                 break;
             case RUN_TO_CURSOR:
                 contextData.breakNextLine = true;
-                if (state != null) {
-                    state.stopAtFrameDepth = -1;
-                }
+                contextData.stopAtFrameDepth = -1;
                 break;
             }
         } while (false);
+
         synchronized (swingMonitor) {
+            currentContextData = null;
             isInterrupted = false;
-            if (SwingUtilities.isEventDispatchThread()) {
+            if (eventThreadFlag) {
                 dispatcherIsWaiting--;
             } else {
                 nonDispatcherWaiting = false;
@@ -3394,63 +3273,70 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return result;
     }
 
-    String eval(String expr) {
-        Context cx = getCurrentContext();
-        if (cx == null) return "undefined";
-        ContextData contextData = ContextData.get(cx);
-        ContextHelper helper = new ContextHelper();
-        helper.attach(cx);
-        if (frameIndex >= contextData.getFrameCount()) {
-            helper.reset();
-            return "undefined";
+    String eval(String expr)
+    {
+        String result = "undefined";
+        if (expr == null) {
+            return result;
         }
+        ContextData contextData = currentContextData();
+        if (contextData == null || frameIndex >= contextData.frameCount()) {
+            return result;
+        }
+        FrameHelper frame = contextData.getFrame(frameIndex);
+        if (contextData.eventThreadFlag) {
+            Context cx = Context.getCurrentContext();
+            result = do_eval(cx, frame, expr);
+        } else {
+            synchronized (monitor) {
+                if (insideInterruptLoop) {
+                    evalRequest = expr;
+                    evalFrame = frame;
+                    monitor.notify();
+                    do {
+                        try {
+                            monitor.wait();
+                        } catch (InterruptedException exc) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    } while (evalRequest != null);
+                    result = evalResult;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static String do_eval(Context cx, FrameHelper frame, String expr)
+    {
         String resultString;
+        Debugger saved_debugger = cx.getDebugger();
+        Object saved_data = cx.getDebuggerContextData();
+        int saved_level = cx.getOptimizationLevel();
+
         cx.setDebugger(null, null);
-        cx.setGeneratingDebug(false);
         cx.setOptimizationLevel(-1);
-        boolean savedBreakNextLine = contextData.breakNextLine;
-        contextData.breakNextLine = false;
+        cx.setGeneratingDebug(false);
         try {
-            Script script;
-            int savedLevel = cx.getOptimizationLevel();
-            try {
-                cx.setOptimizationLevel(-1);
-                script = cx.compileString(expr, "", 0, null);
-            } finally {
-                cx.setOptimizationLevel(savedLevel);
-            }
-            FrameHelper frame = contextData.getFrame(frameIndex);
-            Scriptable scope = frame.getVariableObject();
-            Object result;
-            if (scope instanceof NativeCall
-                && script instanceof Function)
-            {
-                NativeCall call = (NativeCall)scope;
-                Function f = (Function)script;
-                result = f.call(cx, scope, call.getThisObj(),
-                                ScriptRuntime.emptyArgs);
-            } else {
-                result = script.exec(cx, scope);
-            }
+            Callable script = (Callable)cx.compileString(expr, "", 0, null);
+            Object result = script.call(cx, frame.scope(), frame.thisObj(),
+                                        ScriptRuntime.emptyArgs);
             if (result == Undefined.instance) {
-                result = "";
-            }
-            try {
+                resultString = "";
+            } else {
                 resultString = ScriptRuntime.toString(result);
-            } catch (RuntimeException exc) {
-                resultString = result.toString();
             }
         } catch (Exception exc) {
             resultString = exc.getMessage();
+        } finally {
+            cx.setGeneratingDebug(true);
+            cx.setOptimizationLevel(saved_level);
+            cx.setDebugger(saved_debugger, saved_data);
         }
         if (resultString == null) {
             resultString = "null";
         }
-        cx.setDebugger(this, contextData);
-        cx.setGeneratingDebug(true);
-        cx.setOptimizationLevel(-1);
-        contextData.breakNextLine = savedBreakNextLine;
-        helper.reset();
         return resultString;
     }
 
@@ -3465,9 +3351,14 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     java.util.Hashtable fileWindows = new java.util.Hashtable();
     FileWindow currentWindow;
-    Object monitor = new Object();
-    Object swingMonitor = new Object();
-    int returnValue = -1;
+    private Object monitor = new Object();
+    private Object swingMonitor = new Object();
+    private int returnValue = -1;
+    private boolean insideInterruptLoop;
+    private String evalRequest;
+    private FrameHelper evalFrame;
+    private String evalResult;
+
     boolean breakOnExceptions;
     boolean breakOnEnter;
     boolean breakOnReturn;
@@ -3506,6 +3397,37 @@ public class Main extends JFrame implements Debugger, ContextListener {
     void addTopLevel(String key, JFrame frame) {
         if (frame != this) {
             toplevels.put(key, frame);
+        }
+    }
+
+    private static java.awt.EventQueue awtEventQueue = null;
+
+    private static void dispatchNextAwtEvent()
+        throws InterruptedException
+    {
+        java.awt.EventQueue queue = awtEventQueue;
+        if (queue == null) {
+            queue = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
+            awtEventQueue = queue;
+        }
+        AWTEvent event = queue.getNextEvent();
+        if (event instanceof ActiveEvent) {
+            ((ActiveEvent)event).dispatch();
+        } else {
+            Object source = event.getSource();
+            if (source instanceof Component) {
+                Component comp = (Component)source;
+                // Suppress Window/InputEvent's that aren't
+                // directed to the Debugger
+                // if (!(event instanceof InputEvent ||
+                //event instanceof WindowEvent)||
+                //       shouldDispatchTo(comp)) {
+                //comp.dispatchEvent(event);
+                //}
+                comp.dispatchEvent(event);
+            } else if (source instanceof MenuComponent) {
+                ((MenuComponent)source).dispatchEvent(event);
+            }
         }
     }
 
@@ -3556,9 +3478,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
     */
     public void go()
     {
-        returnValue = GO;
         synchronized (monitor) {
-            this.returnValue = returnValue;
+            this.returnValue = GO;
             monitor.notifyAll();
         }
     }
