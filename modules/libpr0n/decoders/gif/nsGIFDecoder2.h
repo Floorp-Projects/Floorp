@@ -65,9 +65,7 @@ public:
   
   gif_struct mGIFStruct;
   
-  PRUint8 *alphaLine;
-  PRUint8 *interlacebuf;
-  PRUint32 ibpr;
+  PRUint8 *mAlphaLine;
 };
 
 // static callbacks for the GIF decoder

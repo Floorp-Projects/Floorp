@@ -42,10 +42,14 @@ nsGIFDecoder2::nsGIFDecoder2()
   NS_INIT_ISUPPORTS();
   memset(&mGIFStruct, 0, sizeof(gif_struct));
   mImageFrame = nsnull;
+
+  mAlphaLine = nsnull;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2(void)
 {
+  if (mAlphaLine)
+    nsMemory::Free(mAlphaLine);
 }
 
 //******************************************************************************
@@ -344,8 +348,11 @@ int HaveDecodedRow(
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
 
-    if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1)
-      decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
+    if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
+      if (decoder->mAlphaLine)
+        nsMemory::Free(decoder->mAlphaLine);
+      decoder->mAlphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
+    }
   } else {
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
@@ -406,7 +413,7 @@ int HaveDecodedRow(
     case gfxIFormats::BGR_A1:
       {
         memset(aRGBrowBufPtr, 0, bpr);
-        memset(decoder->alphaLine, 0, abpr);
+        memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
           if (*rowBufIndex != decoder->mGIFStruct.tpixel) {
@@ -422,7 +429,7 @@ int HaveDecodedRow(
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
 #endif
-            decoder->alphaLine[x>>3] |= 1<<(7-x&0x7);
+            decoder->mAlphaLine[x>>3] |= 1<<(7-x&0x7);
           } else {
 #ifdef XP_MAC
             rgbRowIndex+=4;
@@ -434,7 +441,7 @@ int HaveDecodedRow(
           ++rowBufIndex;
         }
         decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
-        decoder->mImageFrame->SetAlphaData(decoder->alphaLine, abpr, aRowNumber*abpr);
+        decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine, abpr, aRowNumber*abpr);
       }
       break;
     default:
