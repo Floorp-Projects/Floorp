@@ -382,10 +382,13 @@ page).},
 "From: bugzilla-daemon
 To: %to%
 Subject: [Bug %bugid%] %neworchanged%%summary%
+X-Bugzilla-Reason: %reasonsheader%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
-%diffs%");
+%diffs%
+
+%reasonsbody%");
 
 
 

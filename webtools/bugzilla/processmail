@@ -23,7 +23,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Alan Raetz <al_raetz@yahoo.com>
 #                 Jacob Steenhagen <jake@actex.net>
-#
+#                 Matthew Tuck <matty@chariot.net.au>
 
 use diagnostics;
 use strict;
@@ -118,11 +118,11 @@ sub ProcessOneBug {
     $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
     $values{'cc'} = $ccSet->toString();
     
-    my @voterlist;
+    my @voterList;
     SendSQL("SELECT profiles.login_name FROM votes, profiles " .
             "WHERE votes.bug_id = $id AND profiles.userid = votes.who");
     while (MoreSQLData()) {
-        push(@voterlist, FetchOneColumn());
+        push(@voterList, FetchOneColumn());
     }
 
     $values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
@@ -247,11 +247,11 @@ sub ProcessOneBug {
     @ccList = filterEmailGroup('CClist', \@currentEmailAttributes,
                                $values{'cc'});
 
-    @voterlist = filterEmailGroup('Voter', \@currentEmailAttributes,
-                                  join(',',@voterlist));
+    @voterList = filterEmailGroup('Voter', \@currentEmailAttributes,
+                                  join(',',@voterList));
 
     my @emailList = (@assigned_toList, @reporterList, 
-                     @qa_contactList, @ccList, @voterlist);
+                     @qa_contactList, @ccList, @voterList);
 
     # only need one entry per person
     my @allEmail = ();
@@ -271,9 +271,19 @@ sub ProcessOneBug {
     # print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
 
     foreach my $person ( @allEmail ) {
+        my @reasons;
+
         $count++;
+
+        push(@reasons, 'AssignedTo') if lsearch(\@assigned_toList, $person) != -1;
+        push(@reasons, 'Reporter') if lsearch(\@reporterList, $person) != -1;
+        push(@reasons, 'QAContact') if lsearch(\@qa_contactList, $person) != -1;
+        push(@reasons, 'CC') if lsearch(\@ccList, $person) != -1;
+        push(@reasons, 'Voter') if lsearch(\@voterList, $person) != -1;
+
         if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
-                                          \%values, \%defmailhead, 
+                                          \@reasons, \%values,
+                                          \%defmailhead, 
                                           \%fielddescription, $difftext, 
                                           $newcomments, $start, $id))) {
 
@@ -613,12 +623,13 @@ sub filterEmailGroup ($$$) {
     return @filteredList;
 }
 
-sub NewProcessOnePerson ($$$$$$$$$$) {
-    my ($person, $count, $hlRef, $valueRef, $dmhRef, $fdRef, $difftext, 
+sub NewProcessOnePerson ($$$$$$$$$$$) {
+    my ($person, $count, $hlRef, $reasonsRef, $valueRef, $dmhRef, $fdRef, $difftext, 
         $newcomments, $start, $id) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
+    my @reasons = @$reasonsRef;
     my %defmailhead = %$dmhRef;
     my %fielddescription = %$fdRef;
 
@@ -676,6 +687,28 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
       return;
     }
     
+    my $reasonsbody = "You are receiving this mail because:\n";
+
+    if (scalar(@reasons) == 0) {
+        $reasonsbody .= "Whoops!  I have no idea!\n";
+    } else {
+        foreach my $reason (@reasons) {
+            if ($reason eq 'AssignedTo') {
+                $reasonsbody .= "You are the assignee for the bug, or are watching the assignee.\n";
+            } elsif ($reason eq 'Reporter') {
+                $reasonsbody .= "You reported the bug, or are watching the reporter.\n";
+            } elsif ($reason eq 'QAContact') {
+                $reasonsbody .= "You are the QA contact for the bug, or are watching the QA contact.\n";
+            } elsif ($reason eq 'CC') {
+                $reasonsbody .= "You are on the CC list for the bug, or are watching someone who is.\n";
+            } elsif ($reason eq 'Voter') {
+                $reasonsbody .= "You are a voter for the bug, or are watching someone who is.\n";
+            } else {
+                $reasonsbody .= "Whoops!  There is an unknown reason!\n";
+            }
+        }
+    }
+
     my $isnew = ($start !~ m/[1-9]/);
     
     my %substs;
@@ -696,6 +729,8 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
       $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
     }
     $substs{"summary"} = $values{'short_desc'};
+    $substs{"reasonsheader"} = join(" ", @reasons);
+    $substs{"reasonsbody"} = $reasonsbody;
     
     my $template = Param("newchangedmail");
     
