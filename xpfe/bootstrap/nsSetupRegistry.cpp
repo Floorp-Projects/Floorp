@@ -38,7 +38,7 @@
 #include "nsIEditor.h"
 
 #include "nsIAppShellService.h"
-#include "nsBrowserCIDs.h"
+/// #include "nsBrowserCIDs.h"
 
 #ifdef XP_PC
 
@@ -167,7 +167,7 @@ static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 
 
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
+/// static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -236,5 +236,5 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
+///   nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
