@@ -539,7 +539,7 @@ nsBindingManager::GetBinding(nsIContent* aContent, nsIXBLBinding** aResult)
 }
 
 NS_IMETHODIMP
-nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
+nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding)
 {
   if (!mBindingTable)
     mBindingTable = new nsSupportsHashtable;
@@ -556,8 +556,11 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
   else {
     mBindingTable->Remove(&key);
 
-    // The death of the bindings means the death of the JS wrapper.
+    // The death of the bindings means the death of the JS wrapper, and the flushing
+    // of our explicit and anonymous insertion point lists.
     SetWrappedJS(aContent, nsnull);
+    SetContentListFor(aContent, nsnull);
+    SetAnonymousNodesFor(aContent, nsnull);
   }
 
   return NS_OK;
@@ -1262,7 +1265,7 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
   nsCOMPtr<nsIContent> insertionElement;
   PRUint32 index;
   GetInsertionPoint(aParent, aChild, getter_AddRefs(insertionElement), &index);
-  if (insertionElement) {
+  if (insertionElement != aParent) {
     // See if we nest even further in.
     nsCOMPtr<nsIContent> nestedPoint;
     GetNestedInsertionPoint(insertionElement, aChild, getter_AddRefs(nestedPoint));
@@ -1358,7 +1361,7 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
           if (index != -1) {
             // We're real. Jam the kid in.
             // XXX Check the filters to find the correct points.
-            point->AddChild(aChild);
+            point->InsertChildAt(aIndexInContainer, aChild);
             SetInsertionParent(aChild, ins);
             break;
           }

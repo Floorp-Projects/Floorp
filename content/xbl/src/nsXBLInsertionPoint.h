@@ -40,8 +40,9 @@ public:
   NS_IMETHOD GetInsertionIndex(PRInt32* aIndex);
 
   NS_IMETHOD AddChild(nsIContent* aChildElement);
+  NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement);
   NS_IMETHOD RemoveChild(nsIContent* aChildElement);
-
+  
   NS_IMETHOD ChildCount(PRUint32* aResult);
 
   NS_IMETHOD ChildAt(PRUint32 aIndex, nsIContent** aResult);
