@@ -17,7 +17,6 @@
  */
 #define NS_IMPL_IDS 1
 
-
 #include <stdio.h>
 #include "nscore.h"
 
@@ -38,6 +37,7 @@
 
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
+#include "nsShellCIID.h"
 #include "nsParserCIID.h"
 
 #include "nsIPref.h"
@@ -45,30 +45,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCShellInstance, NS_SHELLINSTANCE_CID);
-
-class nsShellInstanceFactory : public nsIFactory {
-
-public:
-  nsShellInstanceFactory(const nsCID &aClass);
-  ~nsShellInstanceFactory();
-
-  // nsISupports methods   
-  NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                            void **aResult);   
-  NS_IMETHOD_(nsrefcnt) AddRef(void);   
-  NS_IMETHOD_(nsrefcnt) Release(void);   
-
-  NS_IMETHOD CreateInstance(nsISupports * aOuter,
-                            const nsIID &aIID,
-                            void ** aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-private:   
-  nsrefcnt  mRefCnt;   
-  nsCID     mClassID;
-
-};
 
 nsShellInstance::nsShellInstance()
 {
@@ -292,106 +268,4 @@ nsIWidget * nsShellInstance::GetApplicationWidget()
 {
   return (mApplicationWindow);
 }
-
-nsShellInstanceFactory::nsShellInstanceFactory(const nsCID &aClass)
-{    
-  mRefCnt = 0;
-  mClassID = aClass;
-}
-
-nsShellInstanceFactory::~nsShellInstanceFactory()
-{    
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-}
-
-nsresult nsShellInstanceFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-nsrefcnt nsShellInstanceFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsShellInstanceFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
-
-nsresult nsShellInstanceFactory::CreateInstance(nsISupports * aOuter,
-                                                   const nsIID &aIID,
-                                                   void ** aResult)
-{
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
-
-  *aResult = NULL;  
-  
-  nsISupports *inst = nsnull;
-
-  if (mClassID.Equals(kCShellInstance)) {
-    inst = (nsISupports *)new nsShellInstance();
-  }
-
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
-
-  nsresult res = inst->QueryInterface(aIID, aResult);
-
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
-
-  return res;  
-
-}
-
-nsresult nsShellInstanceFactory::LockFactory(PRBool aLock)
-{
-  return NS_OK;
-}
-
-// return the proper factory to the caller
-extern "C" NS_SHELL nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsShellInstanceFactory(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
-}
-
 

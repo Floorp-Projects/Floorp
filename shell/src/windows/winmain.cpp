@@ -24,6 +24,7 @@
 #include "nsRepository.h"
 #include "nsShellInstance.h"
 #include "nsApplicationManager.h"
+#include "nsShellCIID.h"
 
 #define SHELL_DLL "shell.dll"
 

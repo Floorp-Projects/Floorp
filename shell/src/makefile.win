@@ -28,6 +28,7 @@ CPPSRCS=				\
  nsShellInstance.cpp			\
  nsMenuBar.cpp			\
  nsMenuItem.cpp			\
+ nsShellFactory.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
@@ -35,6 +36,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsShellInstance.obj		\
  .\$(OBJDIR)\nsMenuBar.obj		\
  .\$(OBJDIR)\nsMenuItem.obj		\
+ .\$(OBJDIR)\nsShellFactory.obj		\
  $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \

@@ -26,6 +26,7 @@ EXPORTS =			\
     nsMenuItem.h \
     nsApplicationManager.h \
     nsShellInstance.h \
+    nsShellCIID.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
