@@ -91,13 +91,13 @@ sub quoteUrls {
         my $num = $2;
         $item = value_quote($item); # Not really necessary, since we know
                                 # there's no special chars in it.
-        $item = qq{<A HREF="${base}show_bug.cgi?id=$num">$item</A>};
+        $item = qq{<A HREF="show_bug.cgi?id=$num">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
         my $item = $&;
         my $num = $1;
-        $item =~ s@\d+@<A HREF="${base}show_bug.cgi?id=$num">$num</A>@;
+        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num">$num</A>@;
         $things[$count++] = $item;
     }
     while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
