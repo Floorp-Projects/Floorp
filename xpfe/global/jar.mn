@@ -73,6 +73,8 @@ toolkit.jar:
         content/global/bindings/tree.xml            (resources/content/bindings/tree.xml)
         content/global/bindings/wizard.xml          (resources/content/bindings/wizard.xml)
         content/global/buildconfig.html             (buildconfig.html)
+        content/global/fontpackage.xul              (resources/content/fontpackage.xul)
+        content/global/fontpackage.js               (resources/content/fontpackage.js)
 
 en-US.jar:
     locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
@@ -101,6 +103,8 @@ en-US.jar:
     locale/en-US/global/printdialog.dtd             (resources/locale/en-US/printdialog.dtd)
     locale/en-US/global/printProgress.dtd           (resources/locale/en-US/printProgress.dtd)
     locale/en-US/global/printPreviewProgress.dtd    (resources/locale/en-US/printPreviewProgress.dtd)
+    locale/en-US/global/fontpackage.dtd             (resources/locale/en-US/fontpackage.dtd)
+    locale/en-US/global/fontpackage.properties      (resources/locale/en-US/fontpackage.properties)
 
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
