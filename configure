@@ -134,7 +134,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-leaky          Enable leaky memory tool"
 ac_help="$ac_help
-  --enable-jprof          Enable leaky memory tool"
+  --enable-jprof          Enable jprof profiling tool (pull tools/jprof)"
 ac_help="$ac_help
   --enable-detect-webshell-leaks   Enable detection of webshell leaks"
 ac_help="$ac_help
