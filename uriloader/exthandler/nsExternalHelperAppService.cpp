@@ -723,7 +723,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
       {
         // extract everything after the filename= part and treat that as the file name...
         nsCAutoString dispFileName;
-        dispositionValue.Mid(dispFileName, pos + nsCRT::strlen("filename="), -1);
+        dispositionValue.Right(dispFileName, pos + nsCRT::strlen("filename="));
         if (!dispFileName.IsEmpty()) // if we got a file name back..
         {
           pos = dispFileName.FindChar(';', PR_TRUE);
@@ -1156,7 +1156,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       nsAutoString fileExt;
       PRInt32 pos = mSuggestedFileName.RFindChar(PRUnichar('.'));
       if (pos >= 0)
-        mSuggestedFileName.Mid(fileExt, pos, -1);
+        mSuggestedFileName.Right(fileExt, pos);
       if (fileExt.IsEmpty())
         fileExt = NS_ConvertASCIItoUCS2(mTempFileExtension).get();
 
