@@ -230,16 +230,6 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
       ::HMGetHelpMenuHandle(&mMacMenuHandle);
       mMacMenuID = kHMHelpMenuID;
       
-      if(mMacMenuHandle) {   
-        SInt8 state = ::HGetState((Handle)mMacMenuHandle); 
-        ::HLock((Handle)mMacMenuHandle);
-        //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
-        (**mMacMenuHandle).menuProc = gMDEF;
-        (**mMacMenuHandle).menuWidth = -1;
-        (**mMacMenuHandle).menuHeight = -1;
-        ::HSetState((Handle)mMacMenuHandle, state);
-      }
-      
       int numHelpItems = ::CountMItems(mMacMenuHandle);
       for(int i=0; i<numHelpItems; ++i) {
         mMenuItemVoidArray.AppendElement(nsnull);
@@ -325,8 +315,13 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  aMenuItem->GetLabel(label);
 	  //printf("%s \n", label.ToNewCString());
 	  mNumMenuItems++;
-	  ::InsertMenuItem(mMacMenuHandle, "\pa", mMenuItemVoidArray.Count());
-	  NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
+	  
+	  if(mIsHelpMenu) {
+	    ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mMenuItemVoidArray.Count());
+	  } else {
+	    ::InsertMenuItem(mMacMenuHandle, "\pa", mMenuItemVoidArray.Count());
+	    NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
+	  }
 	  
 	  // I want to be internationalized too!
 	  nsString keyEquivalent = " ";
@@ -586,12 +581,24 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   if(mMacMenuHandle == selectedMenuHandle)
   {
 	  if(!mConstructed) {
-	    MenuConstruct(
-	      aMenuEvent,
-	      nsnull, //mParentWindow 
-	      mDOMNode,
-		  mWebShell);
-		mConstructed = true;
+	    if(mIsHelpMenu) {
+	      if( mConstructed )
+	        RemoveAll();
+	        
+	      HelpMenuConstruct(
+	        aMenuEvent,
+	        nsnull, //mParentWindow 
+	        mDOMNode,
+		    mWebShell);	      
+	    } else {
+	      MenuConstruct(
+	        aMenuEvent,
+	        nsnull, //mParentWindow 
+	        mDOMNode,
+		    mWebShell);
+		  mConstructed = true;
+		}
+		
 	  } else {
 	    //printf("Menu already constructed \n");
 	  }
@@ -649,6 +656,89 @@ nsEventStatus nsMenu::MenuConstruct(
    //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
    // Begin menuitem inner loop
 
+   // Open the node.
+   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+   if (domElement)
+     domElement->SetAttribute("open", "true");
+  
+   gCurrentMenuDepth++;
+   
+    // Now get the kids. Retrieve our menupopup child.
+    nsCOMPtr<nsIDOMNode> menuPopupNode;
+    mDOMNode->GetFirstChild(getter_AddRefs(menuPopupNode));
+    while (menuPopupNode) {
+      nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
+      if (menuPopupElement) {
+        nsString menuPopupNodeType;
+        menuPopupElement->GetNodeName(menuPopupNodeType);
+        if (menuPopupNodeType.Equals("menupopup"))
+          break;
+      }
+      nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
+      oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
+    }
+
+    if (!menuPopupNode)
+      return nsEventStatus_eIgnore;
+      
+  // Now get the kids
+  nsCOMPtr<nsIDOMNode> menuitemNode;
+  menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
+
+	unsigned short menuIndex = 0;
+
+  while (menuitemNode) {
+    
+    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+    if (menuitemElement) {
+      nsString menuitemNodeType;
+      nsString menuitemName;
+      
+      nsString label;
+      menuitemElement->GetAttribute("value", label);
+      //printf("label = %s \n", label.ToNewCString());
+      
+      menuitemElement->GetNodeName(menuitemNodeType);
+      if (menuitemNodeType.Equals("menuitem")) {
+        // LoadMenuItem
+        LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
+      } else if (menuitemNodeType.Equals("menuseparator")) {
+        AddSeparator();
+      } else if (menuitemNodeType.Equals("menu")) {
+        // Load a submenu
+        LoadSubMenu(this, menuitemElement, menuitemNode);
+      }
+    }
+	++menuIndex;
+    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+  } // end menu item innner loop
+  
+  //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+  
+  gCurrentMenuDepth--;
+    
+	//PreviousMenuStackUnwind(this, mMacMenuHandle);
+	//PushMenu(this);
+             
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::HelpMenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
+{
+   //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+   // Begin menuitem inner loop
+
+   int numHelpItems = ::CountMItems(mMacMenuHandle);
+   for(int i=0; i<numHelpItems; ++i) {
+     mMenuItemVoidArray.AppendElement(nsnull);
+   }
+      
    // Open the node.
    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
    if (domElement)

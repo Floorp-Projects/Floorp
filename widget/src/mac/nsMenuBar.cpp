@@ -292,6 +292,15 @@ nsEventStatus nsMenuBar::MenuConstruct(
 				  pnsMenu->SetAccessKey(menuAccessKey);
                   // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
                   pnsMenuBar->AddMenu(pnsMenu); 
+                  
+                  if(menuName == "Help") {
+                    nsMenuEvent event;
+                    MenuHandle handle;
+                    ::HMGetHelpMenuHandle(&handle);
+                    event.mCommand = (unsigned int) handle;
+                    nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
+                    listener->MenuSelected(event);
+                  }
 
                   // Release the menu now that the menubar owns it
                   NS_RELEASE(pnsMenu);
@@ -514,15 +523,10 @@ NS_METHOD nsMenuBar::Paint()
       ::HMGetHelpMenuHandle(&helpMenuHandle);
       ((nsIMenu*)mMenuVoidArray[i])->SetNativeData((void*)helpMenuHandle);
       
-      if(helpMenuHandle) {    
-        SInt8 state = ::HGetState((Handle)helpMenuHandle);
-        ::HLock((Handle)helpMenuHandle);
-        //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
-        (**helpMenuHandle).menuProc = gMDEF;
-        (**helpMenuHandle).menuWidth = -1;
-        (**helpMenuHandle).menuHeight = -1;
-        ::HSetState((Handle)helpMenuHandle, state);
-      }
+      nsMenuEvent event;
+      event.mCommand = (unsigned int) helpMenuHandle;
+      nsCOMPtr<nsIMenuListener> listener(do_QueryInterface((nsIMenu*)mMenuVoidArray[i]));
+      listener->MenuSelected(event);
     }
   }
   ::DrawMenuBar();
