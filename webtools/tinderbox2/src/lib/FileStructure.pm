@@ -6,8 +6,8 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:25:22 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/30 02:22:37 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -102,6 +102,9 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
 $TINDERBOX_DIR = ($TinderConfig::TINDERBOX_DIR || 
                   "/usr/apache/cgibin/webtools/tinderbox");
 
+$GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
+		      "index.html");
+
 # The lookup for where different file/directories are stored on the
 # filesystem.  Local system administrator may need to put different
 # trees onto different disk partitions and this will require making
@@ -117,51 +120,52 @@ sub get_filename {
 
   # all the file names this program uses appear below
 
-  my %all_files = (
+  my %all_files = 
+    (
 
-           # the build log files will be turned into html and stored
-           # here.  Lets have just one big full/brief directory for
-           # all the trees this will make cleanup easier and no one
-           # goes browsing through the tree specific log dir anyway.
-
-           'full-log' => "$TINDERBOX_DIR/full",
-
-           'brief-log' => "$TINDERBOX_DIR/brief",
-
-           # where the binary files mailed inside the log files will
-           # be placed.
-
-           'build_bin_dir' => "$tree_dir/bin",
-
-           # the per tree time stamp file to ensure all updates are at least 
-           # $MIN_TABLE_SPACING apart
-
-           'build_update_time_stamp'  => "$tree_dir/LastMail.stamp",
-
-           # where the tree specific generated html pages are placed
-           # in this directory
-
-           'tree_HTML' => $tree_dir,
-
-           'tree_URL' => "$URL_HTML/$tree",
-
-           # where the database files are stored on disk
-
-           'TinderDB_Dir'=> "$tree_dir/db",
-
-           # header data files
-
-           'TinderHeader_Dir'=> "$tree_dir/h",
-
-           # the set of builds which are not displayed by default.
-
-           'ignore_builds' => "$tree_dir/h/ignorebuilds.DBdat",
-
-           # access to the administration page
-
-           'passwd' => "$tree_dir/h/passwd.DBdat",
-
-          );
+     # the build log files will be turned into html and stored
+     # here.  Lets have just one big full/brief directory for
+     # all the trees this will make cleanup easier and no one
+     # goes browsing through the tree specific log dir anyway.
+     
+     'full-log' => "$TINDERBOX_DIR/full",
+     
+     'brief-log' => "$TINDERBOX_DIR/brief",
+     
+     # where the binary files mailed inside the log files will
+     # be placed.
+     
+     'build_bin_dir' => "$tree_dir/bin",
+     
+     # the per tree time stamp file to ensure all updates are at least 
+     # $MIN_TABLE_SPACING apart
+     
+     'build_update_time_stamp'  => "$tree_dir/LastMail.stamp",
+     
+     # where the tree specific generated html pages are placed
+     # in this directory
+     
+     'tree_HTML' => $tree_dir,
+     
+     'tree_URL' => "$URL_HTML/$tree",
+     
+     # where the database files are stored on disk
+     
+     'TinderDB_Dir'=> "$tree_dir/db",
+     
+     # header data files
+     
+     'TinderHeader_Dir'=> "$tree_dir/h",
+     
+     # the index file for this tree
+     
+     'index'=> "$tree_dir/index.html",
+     
+     # access to the administration page
+     
+     'passwd' => "$tree_dir/h/passwd.DBdat",
+     
+    );
 
   my $out = $all_files{$file};
 
