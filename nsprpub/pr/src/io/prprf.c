@@ -1011,7 +1011,7 @@ PR_IMPLEMENT(PRUint32) PR_sxprintf(PRStuffFunc func, void *arg,
                                  const char *fmt, ...)
 {
     va_list ap;
-    int rv;
+    PRUint32 rv;
 
     va_start(ap, fmt);
     rv = PR_vsxprintf(func, arg, fmt, ap);
@@ -1135,7 +1135,7 @@ static int LimitStuff(SprintfState *ss, const char *sp, PRUint32 len)
 PR_IMPLEMENT(PRUint32) PR_snprintf(char *out, PRUint32 outlen, const char *fmt, ...)
 {
     va_list ap;
-    int rv;
+    PRUint32 rv;
 
     PR_ASSERT((PRInt32)outlen > 0);
     if ((PRInt32)outlen <= 0) {
