@@ -539,7 +539,7 @@ void nsFileURL::operator +=(const char* inRelativeUnixPath)
 {
     char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
     mURL += escapedPath;
-    delete [] escapedPath;
+    nsCRT::free(escapedPath);
 #ifdef XP_MAC
     mFileSpec += inRelativeUnixPath;
 #endif
@@ -584,7 +584,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 #endif
     if (escapedPath)
         mURL += escapedPath;
-    delete [] escapedPath;
+    nsCRT::free(escapedPath);
 } // nsFileURL::operator =
 #endif
 
@@ -738,7 +738,7 @@ void nsFilePath::operator +=(const char* inRelativeUnixPath)
 {
     char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
     mPath += escapedPath;
-    delete [] escapedPath;
+    nsCRT::free(escapedPath);
 #ifdef XP_MAC
     mFileSpec += inRelativeUnixPath;
 #endif
