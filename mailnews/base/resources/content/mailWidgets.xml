@@ -271,8 +271,8 @@
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem value="read" class="search-value-menuitem"/>
-          <xul:menuitem value="replied" class="search-value-menuitem"/>
+          <xul:menuitem data="1" value="read" class="search-value-menuitem"/>
+          <xul:menuitem data ="2" value="replied" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
     </content>
