@@ -35,7 +35,7 @@
 #include "EmbeddedFramePluginInstance.h"
 
 #include "nsIServiceManager.h"
-#include "nsIMemory.h"
+#include "nsMemory.h"
 #include "nsRepository.h"
 #include "nsIJVMManager.h"
 #include "nsIJVMPluginTagInfo.h"
@@ -64,7 +64,7 @@ short thePluginRefnum = -1;
 
 static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
@@ -84,7 +84,7 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kAllocatorCID, NS_GET_IID(nsIMemory), (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (theServiceManager->GetService(kMemoryCID, NS_GET_IID(nsIMemory), (nsISupports**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 

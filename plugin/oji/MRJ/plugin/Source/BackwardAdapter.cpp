@@ -33,7 +33,7 @@
 #include "npapi.h"
 #include "nsIPluginManager2.h"
 #include "nsIServiceManager.h"
-#include "nsIMemory.h"
+#include "nsMemory.h"
 #include "nsLiveConnect.h"
 #include "nsIEventHandler.h"
 #include "nsplugin.h"
@@ -925,7 +925,7 @@ nsIPlugin* thePlugin = NULL;
 
 static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
@@ -1886,7 +1886,7 @@ CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
                nsIShutdownListener* shutdownListener)
 {
 	// the only service we support currently is nsIMemory.
-	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kAllocatorCID)) {
+	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kMemoryCID)) {
 		return QueryInterface(aIID, (void**) result);
 	}
 	if (aClass.Equals(nsILiveconnect::GetCID())) {
