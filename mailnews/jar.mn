@@ -291,7 +291,6 @@ en-US.jar:
     locale/en-US/messenger/SmtpServerList.dtd                           (base/prefs/resources/locale/en-US/SmtpServerList.dtd)
     locale/en-US/messenger/smtpEditOverlay.dtd                          (base/prefs/resources/locale/en-US/smtpEditOverlay.dtd)
     locale/en-US/messenger/mailPrefsOverlay.dtd                         (base/prefs/resources/locale/en-US/mailPrefsOverlay.dtd)
-    locale/en-US/messenger/addressbook/absync.properties                (absync/resources/locale/en-US/absync.properties)                  
     locale/en-US/messenger/addressbook/pref-addressing.dtd              (addrbook/prefs/resources/locale/en-US/pref-addressing.dtd)
     locale/en-US/messenger/addressbook/pref-directory.dtd               (addrbook/prefs/resources/locale/en-US/pref-directory.dtd)
     locale/en-US/messenger/addressbook/pref-directory-add.dtd           (addrbook/prefs/resources/locale/en-US/pref-directory-add.dtd)

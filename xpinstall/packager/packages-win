@@ -275,8 +275,6 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\impComm4xMail.dll
 bin\components\impComm4xMail.xpt
-bin\components\absyncsv.dll
-bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
 bin\chrome\messenger.jar
 bin\chrome\messenger\*

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public base db/msgdb news local mime compose imap addrbook import absync extensions
+DIRS		= public base db/msgdb news local mime compose imap addrbook import extensions
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= mapi

@@ -280,7 +280,6 @@ bin\components\msglocal.xpt
 bin\components\msgnews.xpt
 bin\components\msgsearch.xpt
 bin\components\import.xpt
-bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
 bin\components\msgsmime.xpt
 bin\components\smime-service.js
