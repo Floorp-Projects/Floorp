@@ -31,6 +31,7 @@
 #include "prmem.h"
 #include "prnetdb.h"
 
+#include "nsCOMPtr.h"
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
@@ -60,6 +61,8 @@
 #include "nsAppFileLocationProvider.h"
 #include "nsMPFileLocProvider.h" 
 #include "nsDirectoryServiceDefs.h" 
+#include "nsIHTTPProtocolHandler.h"
+#include "nsBuildID.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -1063,9 +1066,33 @@ static void DumpHelp(char *appname)
   DumpArbitraryHelp();
 }
 
-static void DumpVersion(char *appname)
+
+// Print out user agent from the HTTP Handler service,
+// and the Build ID from nsBuildID.h.
+static nsresult DumpVersion(char *appname)
 {
-	printf("%s: version info\n", appname);
+  nsresult rv = NS_OK;
+  long buildID = NS_BUILD_ID;  // 10-digit number
+
+  // Get httpHandler service.
+  nsCOMPtr <nsIHTTPProtocolHandler> httpHandler = do_GetService("@mozilla.org/network/protocol;1?name=http", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLString agent;
+  httpHandler->GetUserAgent(getter_Copies(agent));
+  
+  nsCAutoString agentCStr;
+  agentCStr.AssignWithConversion(agent);
+
+  printf("%s", (const char *)agentCStr);
+
+  if(buildID) {
+    printf(", build %u\n", (unsigned int)buildID);
+  } else {
+    printf(" <developer build>\n");
+  }
+  
+  return rv;
 }
 
 #ifdef XP_UNIX
