@@ -1373,6 +1373,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_a:
       mSink->ProcessATag(aNode, content);
       break;
+    case eHTMLTag_form:
     case eHTMLTag_table:
     case eHTMLTag_thead:
     case eHTMLTag_tbody:
