@@ -318,7 +318,7 @@ function onListChanUsers ()
 
 function onListClick (e)
 {
-    var name = e.target.options[e.target.selectedIndex].text;
+    var name = e.target.text;
     var ary = name.match(/\[.*\] (.*)/);
     var name = (ary) ? ary[1] : name;
     var btn = document.getElementById ("btnCommand");
