@@ -13,12 +13,12 @@
     var dialogWindow = null;
 
     function NewBrowser() {
-      return window.open("http://www.mozilla.org/", "New");
+      return window.open("http://www.mozilla.org/");
     }
 
     // show a nonmodal dialog, sending parameters as part of the URL
     function MakeURLDialog() {
-      var newWin = window.open("resource:/res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New", "chrome");
+      var newWin = window.open("resource:/res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "", "chrome");
       return newWin;
     }
 

@@ -559,14 +559,16 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
   if (!window)
     rv = NS_ERROR_OUT_OF_MEMORY;
   else {
-    // temporarily disabling parentage because non-Windows platforms
-    // seem to be interpreting it in unexpected ways.
     nsWidgetInitData widgetInitData;
 
     widgetInitData.mWindowType = aChromeMask & NS_CHROME_OPEN_AS_DIALOG ?
                                  eWindowType_dialog : eWindowType_toplevel;
 
-    if ((aChromeMask & NS_CHROME_ALL_CHROME) == NS_CHROME_ALL_CHROME)
+    // note default chrome overrides other OS chrome settings, but
+    // not internal chrome
+    if (aChromeMask & NS_CHROME_DEFAULT_CHROME)
+      widgetInitData.mBorderStyle = eBorderStyle_default;
+    else if ((aChromeMask & NS_CHROME_ALL_CHROME) == NS_CHROME_ALL_CHROME)
       widgetInitData.mBorderStyle = eBorderStyle_all;
     else {
       widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00

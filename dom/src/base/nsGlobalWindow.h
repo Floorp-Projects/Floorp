@@ -229,11 +229,11 @@ protected:
   PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
 
   nsresult      OpenInternal(JSContext *cx, jsval *argv, PRUint32 argc, 
-                             PRBool aAttachArguments, nsIDOMWindow** aReturn);
+                             PRBool aDialog, nsIDOMWindow** aReturn);
   nsresult      AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 argc);
-  PRUint32      CalculateChromeFlags(char *aFeatures);
-  nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures,
-                                          PRBool aNewWindow);
+  PRUint32      CalculateChromeFlags(char *aFeatures, PRBool aDialog);
+  nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
+                  char *aFeatures, PRBool aNewWindow, PRBool aDialog);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 
   static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);

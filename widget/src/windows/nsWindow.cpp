@@ -673,7 +673,10 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         } 
       }
 
-      if (aInitData->mBorderStyle != eBorderStyle_all) {
+      if (aInitData->mBorderStyle == eBorderStyle_default) {
+        if (mWindowType == eWindowType_dialog)
+          style &= ~(WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+      } else if (aInitData->mBorderStyle != eBorderStyle_all) {
         if (aInitData->mBorderStyle == eBorderStyle_none ||
             !(aInitData->mBorderStyle & eBorderStyle_border))
           style &= ~WS_BORDER;
