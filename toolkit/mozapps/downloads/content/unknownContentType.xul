@@ -69,12 +69,12 @@
     </hbox>
     <separator class="thin"/>
     <hbox align="center">
-      <label value="&from.label;" id="from"/>
-      <textbox id="source" class="plain" readonly="true" flex="1"/>
-    </hbox>
-    <hbox align="center">
       <label value="&whichIsA.label;" id="whichIsA"/>
       <textbox id="type" class="plain" readonly="true" flex="1"/>
+    </hbox>
+    <hbox align="center">
+      <label value="&from.label;" id="from"/>
+      <textbox id="source" class="plain" readonly="true" flex="1"/>
     </hbox>
     
     <separator class="thin"/>
