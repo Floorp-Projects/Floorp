@@ -1545,7 +1545,7 @@ ifdef PERL
 # because it handles the case when header files are removed from the build.
 # 'make' would complain that there is no way to build missing headers.
 $(MDDEPDIR)/.all.pp: FORCE
-	@$(PERL) $(BUILD_TOOLS)/mddepend.pl $@ $(MDDEPEND_FILES) 
+	@$(PERL) $(BUILD_TOOLS)/mddepend.pl $@ < $(MDDEPEND_FILES) 
 -include $(MDDEPDIR)/.all.pp
 else
 include $(MDDEPEND_FILES)
