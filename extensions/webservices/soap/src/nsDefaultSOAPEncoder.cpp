@@ -2132,6 +2132,13 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
           rc = aEncoding->Decode(aElement, type, aAttachments, getter_AddRefs(value));
           if (NS_FAILED(rc))
             return rc;
+          if (!value) {
+            nsCOMPtr<nsIWritableVariant> nullVariant(do_CreateInstance("@mozilla.org/variant;1"));
+            if (nullVariant) {
+              nullVariant->SetAsISupports(nsnull);
+              value = do_QueryInterface(nullVariant);
+            }
+          }
           rc = aDestination->AddProperty(name, value);
           if (NS_FAILED(rc))
             return rc;
@@ -2281,6 +2288,13 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
     rc = aEncoding->Decode(child, nsnull, aAttachments, getter_AddRefs(value));
     if (NS_FAILED(rc))
       return rc;
+    if (!value) {
+      nsCOMPtr<nsIWritableVariant> nullVariant(do_CreateInstance("@mozilla.org/variant;1"));
+      if (nullVariant) {
+        nullVariant->SetAsISupports(nsnull);
+        value = do_QueryInterface(nullVariant);
+      }
+    }
     rc = aDestination->AddProperty(name, value);
     if (NS_FAILED(rc))
       return rc;
