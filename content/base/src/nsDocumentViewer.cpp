@@ -1463,7 +1463,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
 
         if (domdoc) {
-          global->SetNewDocument(domdoc, PR_TRUE);
+          global->SetNewDocument(domdoc, PR_TRUE, PR_TRUE);
         }
       }
     }
@@ -1634,7 +1634,7 @@ DocumentViewerImpl::Close()
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
 
     if (globalObject) {
-      globalObject->SetNewDocument(nsnull, PR_TRUE);
+      globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
     }
 
     // out of band cleanup of webshell
@@ -1786,7 +1786,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
   if (global) {
     mDocument->SetScriptGlobalObject(global);
-    global->SetNewDocument(aDocument, PR_TRUE);
+    global->SetNewDocument(aDocument, PR_TRUE, PR_TRUE);
 
     rv = SyncParentSubDocMap();
     NS_ENSURE_SUCCESS(rv, rv);

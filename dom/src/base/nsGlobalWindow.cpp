@@ -349,7 +349,8 @@ GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
 
 NS_IMETHODIMP
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
-                                 PRBool removeEventListeners)
+                                 PRBool aRemoveEventListeners,
+                                 PRBool aClearScopeHint)
 {
   if (!aDocument) {
     if (mDocument) {
@@ -386,6 +387,11 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     mNavigator->SetDocShell(nsnull);
 
     NS_RELEASE(mNavigator);
+  }
+
+  if (mSidebar) {
+    mSidebar->SetWindow(nsnull);
+    mSidebar = nsnull;
   }
 
   if (mFirstDocumentLoad) {
@@ -446,7 +452,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       doc = nsnull;             // Forces release now
     }
 
-    if (removeEventListeners && mListenerManager) {
+    if (aRemoveEventListeners && mListenerManager) {
       mListenerManager->RemoveAllListeners(PR_FALSE);
       mListenerManager = nsnull;
     }
@@ -454,23 +460,16 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     if (docURL) {
       nsCAutoString url;
 
-      docURL->GetSpec(url);
+      if (!aClearScopeHint) {
+        docURL->GetSpec(url);
+      }
 
-      //about:blank URL's do not have ClearScope called on page change.
-      if (strcmp(url.get(), "about:blank") != 0) {
+      if (aClearScopeHint || !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
+        // aClearScopeHint is true, or the current document is *not*
+        // about:blank, clear timeouts and clear the scope.
         ClearAllTimeouts();
 
-        if (mSidebar) {
-          mSidebar->SetWindow(nsnull);
-          mSidebar = nsnull;
-        }
-
         if (mContext && mJSObject) {
-//      if (mContext && mJSObject && aDocument) {
-//      not doing this unless there's a new document prevents a closed window's
-//      JS properties from going away (that's good) and causes everything,
-//      and I mean everything, to be leaked (that's bad)
-
           ::JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                           mJSObject);
 
@@ -478,9 +477,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         }
       }
     }
-
-    //XXX Should this be outside the about:blank clearscope exception?
-    mDocument = nsnull;         // Forces Release
   }
 
   if (mContext && aDocument) {
@@ -5680,7 +5676,6 @@ NavigatorImpl::Preference()
       STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 action;
   if (argc == 1) {
       action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
