@@ -27,7 +27,7 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="if( parent.handle ) parent.handle.onpageload( 'pref-colors' ); else parent.queuedTag = 'pref-colors'; InitSingleEngineList(); "  title="&title.label;"
+        onload="if( parent.handle ) parent.handle.onpageload( 'pref-search' ); else parent.queuedTag = 'pref-search'; InitSingleEngineList(); "  title="&title.label;"
 	      align="vertical">
 
 	<html:script language="javascript" src="chrome://pref/content/pref-search.js"/>
