@@ -148,6 +148,7 @@ DSLoadObserver.prototype =
   { 
     var ds = XPCU.QI(aSink, "nsIRDFDataSource");
     this.mListener.onDataSourceReady(ds);
+    aSink = XPCU.QI(aSink, "nsIRDFXMLSink");
     aSink.removeXMLSinkObserver(this);
   }
     
