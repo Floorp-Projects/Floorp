@@ -167,7 +167,7 @@ public:
     // nsDummyBufferStream methods:
     nsDummyBufferStream(const char* buffer, PRUint32 length)
         : mBuffer(buffer), mLength(length) {}
-    ~nsDummyBufferStream() {}
+    virtual ~nsDummyBufferStream() {}
 
 protected:
     const char* mBuffer;
