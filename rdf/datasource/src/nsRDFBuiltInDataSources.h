@@ -46,6 +46,9 @@ nsresult NS_NewRDFFindDataSource(nsIRDFDataSource** result);
 // in nsFTPDataSource.cpp
 nsresult NS_NewRDFFTPDataSource(nsIRDFDataSource** result);
 
+// in nsRelatedLinksDataSource.cpp
+nsresult NS_NewRDFRelatedLinksDataSource(nsIRDFDataSource **result);
+
 // in nsMemoryDataSource.cpp
 nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 
