@@ -154,8 +154,6 @@ public:
     PRBool   OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
     PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    void     SetIgnoreResize(PRBool aIgnore);
-    PRBool   IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
     PRBool   DispatchMouseEvent(nsMouseEvent& aEvent);
     virtual  PRBool OnResize(nsSizeEvent &aEvent);
