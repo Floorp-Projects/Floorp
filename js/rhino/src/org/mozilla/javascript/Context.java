@@ -1361,8 +1361,8 @@ public class Context {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public void setClassRepository(ClassRepository classRepository) {
-	  if (nameHelper != null)
-	      nameHelper.setClassRepository(classRepository);
+        if (nameHelper != null)
+            nameHelper.setClassRepository(classRepository);
     }
 
     /**
@@ -1373,12 +1373,14 @@ public class Context {
      */
     public ClassOutput getClassOutput() {
         if (nameHelper != null) {
-	       ClassRepository repository = nameHelper.getClassRepository();
-		 if ((repository != null) && (repository instanceof ClassOutputWrapper)) {
-		     return ((ClassOutputWrapper)repository).classOutput;
-		 }
-	  }
-    	  return null;
+            ClassRepository repository = nameHelper.getClassRepository();
+            if ((repository != null) && 
+                (repository instanceof ClassOutputWrapper)) 
+            {
+                return ((ClassOutputWrapper)repository).classOutput;
+            }
+        }
+        return null;
     }
 
     /**
@@ -1391,11 +1393,12 @@ public class Context {
      * @since 1.5 Release 2
      */
     public void setClassOutput(ClassOutput classOutput) {
-        if (nameHelper != null)
-	      if (classOutput != null) 
+        if (nameHelper != null) {
+            if (classOutput != null) 
                 nameHelper.setClassRepository(new ClassOutputWrapper(classOutput));
-		else
-		    nameHelper.setClassRepository(null);
+            else
+                nameHelper.setClassRepository(null);
+        }
     }
     
     /**
@@ -2153,65 +2156,70 @@ public class Context {
     // Implement class file saving here instead of inside codegen.
     private class FileClassRepository implements ClassRepository {
     
-        FileClassRepository(String classFileName) {	  
-	  	int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
-      	String initialName;
-      	if (lastSeparator == -1) {
+        FileClassRepository(String classFileName) {
+            int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
+            String initialName;
+            if (lastSeparator == -1) {
                 generatingDirectory = null;
                 initialName = classFileName;
-      	} else {
+            } else {
                 generatingDirectory = classFileName.substring(0, lastSeparator);
                 initialName = classFileName.substring(lastSeparator+1);
-      	}
-      	if (initialName.endsWith(".class"))
-                initialName = initialName.substring(0, initialName.length() - 6);
-      	nameHelper.setClassName(initialName);
-	  }
+            }
+            if (initialName.endsWith(".class"))
+                initialName = initialName.substring(0, initialName.length()-6);
+            nameHelper.setClassName(initialName);
+        }
     
-        public boolean storeClass(String className, byte[] bytes, boolean tl) throws IOException {
-
-		// no "elegant" way of getting file name from fully qualified class name.
-	  	String targetPackage = nameHelper.getTargetPackage();
-		if ((targetPackage != null) && (targetPackage.length()>0) && className.startsWith(targetPackage+".")) {
-		    className = className.substring(targetPackage.length()+1);
-		}
+        public boolean storeClass(String className, byte[] bytes, boolean tl) 
+            throws IOException 
+        {
+            // no "elegant" way of getting file name from fully 
+            // qualified class name.
+            String targetPackage = nameHelper.getTargetPackage();
+            if ((targetPackage != null) && (targetPackage.length()>0) && 
+                className.startsWith(targetPackage+".")) 
+            {
+                className = className.substring(targetPackage.length()+1);
+            }
 
             FileOutputStream out = new FileOutputStream(getTargetClassFileName(className));
             out.write(bytes);
             out.close();
-		
-		return false;
-	  }
-	  
-	  String getTargetClassFileName(String className) {
-      	StringBuffer sb = new StringBuffer();
-      	if (generatingDirectory != null) {
-                sb.append(generatingDirectory);
-                sb.append(File.separator);
-      	}
-      	sb.append(className);
-      	sb.append(".class");
-      	return sb.toString();	  
-	  }
-	  
- 	  String generatingDirectory;
+
+            return false;
+        }
+
+        String getTargetClassFileName(String className) {
+            StringBuffer sb = new StringBuffer();
+            if (generatingDirectory != null) {
+            sb.append(generatingDirectory);
+            sb.append(File.separator);
+            }
+            sb.append(className);
+            sb.append(".class");
+            return sb.toString();
+        }
+      
+        String generatingDirectory;
     };
     
     private static class ClassOutputWrapper implements ClassRepository {
-	  
-	  ClassOutputWrapper(ClassOutput classOutput) {
-	     this.classOutput = classOutput;
-	  }
-	  
-	  public boolean storeClass(String name, byte[] bytes, boolean tl) throws IOException {
-	  
-	  	OutputStream out = classOutput.getOutputStream(name, tl);
-		out.write(bytes);
+
+        ClassOutputWrapper(ClassOutput classOutput) {
+            this.classOutput = classOutput;
+        }
+
+        public boolean storeClass(String name, byte[] bytes, boolean tl) 
+            throws IOException 
+        {
+            OutputStream out = classOutput.getOutputStream(name, tl);
+            out.write(bytes);
             out.close();
-		
-		return true;
-	  }
-	  
-	  ClassOutput classOutput;
+
+            return true;
+        }
+
+        ClassOutput classOutput;
     }
 }
