@@ -118,85 +118,28 @@ PR_Now(void)
 static int assembleCmdLine(char *const *argv, char **cmdLine)
 {
     char *const *arg;
-    char *p, *q;
     int cmdLineSize;
-    int numBackslashes;
-    int i;
 
     /*
      * Find out how large the command line buffer should be.
      */
     cmdLineSize = 0;
     for (arg = argv+1; *arg; arg++) {
-        /*
-         * \ and " need to be escaped by a \.  In the worst case,
-         * every character is a \ or ", so the string of length
-         * may double.  If we quote an argument, that needs two ".
-         * Finally, we need a space between arguments, a null between
-         * the EXE name and the arguments, and 2 nulls at the end 
-         * of command line.
-         */
-        cmdLineSize += 2 * strlen(*arg)  /* \ and " need to be escaped */
-                + 4;                     /* space in between, or final nulls */
+        cmdLineSize += strlen(*arg) + 1; /* space in between, or final null */
     }
-    p = *cmdLine = PR_MALLOC(cmdLineSize);
-    if (p == NULL) {
+    *cmdLine = PR_MALLOC(cmdLineSize);
+    if (*cmdLine == NULL) {
         return -1;
     }
 
+    (*cmdLine)[0] = '\0';
+
     for (arg = argv+1; *arg; arg++) {
-        /* Add a space to separates the arguments */
-        if (arg > argv + 1) {
-            *p++ = ' '; 
+        if (arg > argv +1) {
+            strcat(*cmdLine, " ");
         }
-        q = *arg;
-        numBackslashes = 0;
-
-        while (*q) {
-            if (*q == '\\') {
-                numBackslashes++;
-                q++;
-            } else if (*q == '"') {
-                if (numBackslashes) {
-                    /*
-                     * Double the backslashes since they are followed
-                     * by a quote
-                     */
-                    for (i = 0; i < 2 * numBackslashes; i++) {
-                        *p++ = '\\';
-                    }
-                    numBackslashes = 0;
-                }
-                /* To escape the quote */
-                *p++ = '\\';
-                *p++ = *q++;
-            } else {
-                if (numBackslashes) {
-                    /*
-                     * Backslashes are not followed by a quote, so
-                     * don't need to double the backslashes.
-                     */
-                    for (i = 0; i < numBackslashes; i++) {
-                        *p++ = '\\';
-                    }
-                    numBackslashes = 0;
-                }
-                *p++ = *q++;
-            }
-        }
-
-        /* Now we are at the end of this argument */
-        if (numBackslashes) {
-            for (i = 0; i < numBackslashes; i++) {
-                *p++ = '\\';
-            }
-        }
-        if(arg == argv)
-           *p++ = ' ';
+        strcat(*cmdLine, *arg);
     } 
-
-    /* Add a null at the end */
-    *p = '\0';
     return 0;
 }
 
