@@ -24,6 +24,9 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -687,7 +690,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   GetParentContent(content);
 
   mWebShell = do_CreateInstance(kWebShellCID);
-  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
@@ -697,7 +701,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   mWebShell->SetScrolling(GetScrolling(content, mode));
   nsString frameName;
   if (GetName(content, frameName)) {
-    mWebShell->SetName(frameName.GetUnicode());
+    docShellAsItem->SetName(frameName.GetUnicode());
   }
 
   // If our container is a web-shell, inform it that it has a new
@@ -706,10 +710,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   nsISupports* container;
   aPresContext->GetContainer(&container);
   if (nsnull != container) {
-    nsIWebShell* outerShell = nsnull;
-    container->QueryInterface(kIWebShellIID, (void**) &outerShell);
-    if (nsnull != outerShell) {
-      outerShell->AddChild(mWebShell);
+    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
+    if (parentAsNode) {
+      parentAsNode->AddChild(docShellAsItem);
 
       // connect the container...
       nsIWebShellContainer* outerContainer = nsnull;
@@ -720,8 +723,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       }
 
 #ifdef INCLUDE_XUL
-      nsWebShellType parentType;
-      outerShell->GetWebShellType(parentType);
+      nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsNode));
+      PRInt32 parentType;
+      parentAsItem->GetItemType(&parentType);
       nsIAtom* typeAtom = NS_NewAtom("type");
       nsAutoString value, valuePiece;
       PRBool isContent;
@@ -740,20 +744,19 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       }
       if (isContent) {
         // The web shell's type is content.
-        mWebShell->SetWebShellType(nsWebShellContent);
-        nsCOMPtr<nsIWebShellContainer> shellAsContainer;
-        shellAsContainer = do_QueryInterface(mWebShell);
+        docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+        nsCOMPtr<nsIWebShellContainer> shellAsContainer(do_QueryInterface(mWebShell));
         shellAsContainer->ContentShellAdded(mWebShell, content);
       } else {
         // Inherit our type from our parent webshell.  If it is
         // chrome, we'll be chrome.  If it is content, we'll be
         // content.
-        mWebShell->SetWebShellType(parentType);
+        docShellAsItem->SetItemType(parentType);
       }
 
       // Make sure all shells have links back to the content element in the
       // nearest enclosing chrome shell.
-      
+      nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
       nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
       if (parentType == nsWebShellChrome) {
         // Our parent shell is a chrome shell. It is therefore our nearest
@@ -764,20 +767,18 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       else {
         // Our parent shell is a content shell. Get the chrome info from
         // it and use that for our shell as well.
-        outerShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+        parentShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
       }
 
       mWebShell->SetChromeEventHandler(chromeEventHandler);
       
 #endif // INCLUDE_XUL 
 
-      nsIPref*  outerPrefs = nsnull;  // connect the prefs
-      outerShell->GetPrefs(outerPrefs);
-      if (nsnull != outerPrefs) {
-        mWebShell->SetPrefs(outerPrefs);
-        NS_RELEASE(outerPrefs);
+      nsCOMPtr<nsIPref> parentPrefs; // connect the prefs
+      parentShell->GetPrefs(getter_AddRefs(parentPrefs));
+      if (parentPrefs) {
+        mWebShell->SetPrefs(parentPrefs);
       } 
-      NS_RELEASE(outerShell);
     }
     NS_RELEASE(container);
   }

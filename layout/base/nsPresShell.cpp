@@ -86,7 +86,7 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIFormatConverter.h"
-#include "nsIWebShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIBrowserWindow.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
@@ -130,7 +130,6 @@ static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
 // Largest chunk size we recycle
@@ -774,13 +773,12 @@ PresShell::Init(nsIDocument* aDocument,
   nsCOMPtr<nsISupports> container;
   result = aPresContext->GetContainer(getter_AddRefs(container));
   if (NS_SUCCEEDED(result) && container) {
-    nsCOMPtr<nsIWebShell> webShell;
-    webShell = do_QueryInterface(container,&result);
-    if (NS_SUCCEEDED(result) && webShell){
-      nsWebShellType webShellType;
-      result = webShell->GetWebShellType(webShellType);
+    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
+    if (NS_SUCCEEDED(result) && docShell){
+      PRInt32 docShellType;
+      result = docShell->GetItemType(&docShellType);
       if (NS_SUCCEEDED(result)){
-        if (nsWebShellContent == webShellType){
+        if (nsIDocShellTreeItem::typeContent == docShellType){
           mDocument->SetDisplaySelection(PR_TRUE);
         }
       }      
@@ -2613,16 +2611,6 @@ PresShell::HandleEvent(nsIView         *aView,
   if (nsnull != frame) {
     PushCurrentEventFrame();
 
-    nsIWebShell* webShell = nsnull;
-    nsISupports* container;
-    mPresContext->GetContainer(&container);
-    if (nsnull != container) {
-      if (NS_OK != container->QueryInterface(kIWebShellIID, (void**)&webShell)) {
-        NS_ASSERTION(webShell, "No webshell to grab during event dispatch");
-      }
-      NS_RELEASE(container);
-    }
-
     nsIEventStateManager *manager;
     nsIContent* focusContent = nsnull;
     if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
@@ -2674,7 +2662,6 @@ PresShell::HandleEvent(nsIView         *aView,
       NS_IF_RELEASE(focusContent);
     }
     PopCurrentEventFrame();
-    NS_IF_RELEASE(webShell);
   }
   else {
     rv = NS_OK;

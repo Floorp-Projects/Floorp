@@ -60,6 +60,9 @@
 #include "nsIContentViewerFile.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIDocShell.h"
 
 
 #include "nsIServiceManager.h"
@@ -566,16 +569,19 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
   nsIView                     *view;
   nsresult                    rv;
   PRInt32                     count,i;
-  nsCOMPtr<nsIWebShell>       childWebShell;
   nsCOMPtr<nsIContentViewer>  viewer;
+  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(aParent));
 
-  aParent->GetChildCount(count);
+  parentAsNode->GetChildCount(&count);
   if(count> 0) { 
     for(i=0;i<count;i++) {
-      aParent->ChildAt(i, *(getter_AddRefs(childWebShell)));
-      childWebShell->GetContentViewer(getter_AddRefs(viewer));
-      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      parentAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      childAsShell->GetContentViewer(getter_AddRefs(viewer));
+      nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
       if (viewerFile) {
+        nsCOMPtr<nsIWebShell> childWebShell(do_QueryInterface(child));
         NS_ENSURE_SUCCESS(viewerFile->PrintContent(childWebShell,aDContext), NS_ERROR_FAILURE);
       }
     }
@@ -1271,22 +1277,22 @@ NS_IMETHODIMP DocumentViewerImpl::SetDefaultCharacterSet(const PRUnichar* aDefau
 {
   mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
   // now set the default char set on all children of mContainer
-  nsCOMPtr<nsIWebShell> webShell;
-  webShell = do_QueryInterface(mContainer);
-  if (webShell)
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  if (docShellNode)
   {
-    nsCOMPtr<nsIWebShell> childWebShell;
     PRInt32 i;
     PRInt32 n;
-    webShell->GetChildCount(n);
+    docShellNode->GetChildCount(&n);
     for (i=0; i < n; i++) 
     {
-      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
-      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
-      if (childWebShell) 
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      NS_ASSERTION(childAsShell, "null child in docshell");
+      if (childAsShell) 
       {
         nsCOMPtr<nsIContentViewer> childCV;
-        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV) 
         {
           nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
@@ -1321,22 +1327,22 @@ NS_IMETHODIMP DocumentViewerImpl::SetForceCharacterSet(const PRUnichar* aForceCh
 {
   mForceCharacterSet = aForceCharacterSet;
   // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIWebShell> webShell;
-  webShell = do_QueryInterface(mContainer);
-  if (webShell)
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  if (docShellNode)
   {
-    nsCOMPtr<nsIWebShell> childWebShell;
     PRInt32 i;
     PRInt32 n;
-    webShell->GetChildCount(n);
+    docShellNode->GetChildCount(&n);
     for (i=0; i < n; i++) 
     {
-      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
-      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
-      if (childWebShell) 
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      NS_ASSERTION(childAsShell, "null child in docshell");
+      if (childAsShell) 
       {
         nsCOMPtr<nsIContentViewer> childCV;
-        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV) 
         {
           nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
@@ -1380,22 +1386,22 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharact
 {
   mHintCharsetSource = (nsCharsetSource)aHintCharacterSetSource;
   // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIWebShell> webShell;
-  webShell = do_QueryInterface(mContainer);
-  if (webShell)
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  if (docShellNode)
   {
-    nsCOMPtr<nsIWebShell> childWebShell;
     PRInt32 i;
     PRInt32 n;
-    webShell->GetChildCount(n);
+    docShellNode->GetChildCount(&n);
     for (i=0; i < n; i++) 
     {
-      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
-      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
-      if (childWebShell) 
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      NS_ASSERTION(childAsShell, "null child in docshell");
+      if (childAsShell) 
       {
         nsCOMPtr<nsIContentViewer> childCV;
-        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV) 
         {
           nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
@@ -1413,22 +1419,22 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintChar
 {
   mHintCharset = aHintCharacterSet;
   // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIWebShell> webShell;
-  webShell = do_QueryInterface(mContainer);
-  if (webShell)
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  if (docShellNode)
   {
-    nsCOMPtr<nsIWebShell> childWebShell;
     PRInt32 i;
     PRInt32 n;
-    webShell->GetChildCount(n);
+    docShellNode->GetChildCount(&n);
     for (i=0; i < n; i++) 
     {
-      webShell->ChildAt(i, *(getter_AddRefs(childWebShell)));
-      NS_WARN_IF_FALSE(childWebShell, "null child in docshell");
-      if (childWebShell) 
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      NS_ASSERTION(childAsShell, "null child in docshell");
+      if (childAsShell) 
       {
         nsCOMPtr<nsIContentViewer> childCV;
-        childWebShell->GetContentViewer(getter_AddRefs(childCV));
+        childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV) 
         {
           nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
