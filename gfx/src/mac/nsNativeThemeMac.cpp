@@ -97,6 +97,7 @@ nsNativeThemeMac::nsNativeThemeMac()
     sTextfieldBorderSize.left = sTextfieldBorderSize.top = 2;
     sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 2;
     sTextfieldBGTransparent = PR_FALSE;
+    sListboxBGTransparent = PR_TRUE;
   }
 }
 
@@ -776,9 +777,6 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
-    case NS_THEME_DROPDOWN_TEXT:
     case NS_THEME_TEXTFIELD:
     //case NS_THEME_TOOLBOX:
     //case NS_THEME_TOOLBAR_BUTTON:
@@ -787,8 +785,6 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     case NS_THEME_TOOLBAR_SEPARATOR:
-    
-    case NS_THEME_LISTBOX:
     
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB:
@@ -815,11 +811,15 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-      // for now, only use on osx since i haven't yet verified on os9
-      if ( nsRenderingContextMac::OnMacOSX() )
-        retVal = PR_TRUE;
-      break;
+      retVal = PR_TRUE;
   
+    case NS_THEME_LISTBOX:
+    case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_DROPDOWN_TEXT:
+      // Support listboxes and dropdowns regardless of styling,
+      // since non-themed ones look totally wrong.
+      return PR_TRUE;
   }
 
   return retVal ? !IsWidgetStyled(aPresContext, aFrame, aWidgetType) : PR_FALSE;
