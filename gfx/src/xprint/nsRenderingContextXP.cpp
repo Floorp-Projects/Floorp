@@ -147,7 +147,7 @@ nsRenderingContextXP :: ~nsRenderingContextXP()
     mStateCache = nsnull;
   }
 
-  mTMatrix = nsnull;
+  mTranMatrix = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -219,7 +219,7 @@ nsRenderingContextXP :: Init(nsIDeviceContext* aContext)
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
-  mTMatrix->AddScale(app2dev, app2dev);
+  mTranMatrix->AddScale(app2dev, app2dev);
 
   // mRenderingSurface = new nsDrawingSurfaceXP();
   // mRenderingSurface->InitDrawingSurface(mPrintContext);
@@ -333,7 +333,7 @@ nsRenderingContextXP :: PushState(void)
     mStates = state;
   }
 
-  mTMatrix = &mStates->mMatrix;
+  mTranMatrix = &mStates->mMatrix;
 
   return NS_OK;
 }
@@ -356,11 +356,11 @@ nsRenderingContextXP :: PopState(PRBool &aClipEmpty)
     mStateCache->AppendElement(oldstate);
 
     if (nsnull != mStates){
-      mTMatrix = &mStates->mMatrix;
+      mTranMatrix = &mStates->mMatrix;
       SetLineStyle(mStates->mLineStyle);
     }
     else
-      mTMatrix = nsnull;
+      mTranMatrix = nsnull;
   }
 
   aClipEmpty = retval;
@@ -389,7 +389,7 @@ PRInt32     cliptype;
   Region rgn;
   mStates->mLocalClip = aRect;
 
-  mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
   switch(aCombine) {
@@ -608,7 +608,7 @@ nsRenderingContextXP :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 NS_IMETHODIMP 
 nsRenderingContextXP :: Translate(nscoord aX, nscoord aY)
 {
-  mTMatrix->AddTranslation((float)aX,(float)aY);
+  mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -618,7 +618,7 @@ nsRenderingContextXP :: Translate(nscoord aX, nscoord aY)
 NS_IMETHODIMP 
 nsRenderingContextXP :: Scale(float aSx, float aSy)
 {
-  mTMatrix->AddScale(aSx, aSy);
+  mTranMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
@@ -628,7 +628,7 @@ nsRenderingContextXP :: Scale(float aSx, float aSy)
 NS_IMETHODIMP 
 nsRenderingContextXP :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  aTransform = mTMatrix;
+  aTransform = mTranMatrix;
   return NS_OK;
 }
 
@@ -656,11 +656,11 @@ nsRenderingContextXP :: DestroyDrawingSurface(nsDrawingSurface aDS)
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  if (nsnull == mTMatrix )
+  if (nsnull == mTranMatrix )
     return NS_ERROR_FAILURE;
 
-  mTMatrix->TransformCoord(&aX0,&aY0);
-  mTMatrix->TransformCoord(&aX1,&aY1);
+  mTranMatrix->TransformCoord(&aX0,&aY0);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
 
   
   ::XDrawLine(mPrintContext->GetDisplay(), mPrintContext->GetDrawable(),
@@ -675,7 +675,7 @@ nsRenderingContextXP :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix) {
+  if (nsnull == mTranMatrix) {
     return NS_ERROR_FAILURE;
   }
 
@@ -689,7 +689,7 @@ nsRenderingContextXP :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
-    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+    mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
   ::XDrawLines(mPrintContext->GetDisplay(),
@@ -718,7 +718,7 @@ nsRenderingContextXP :: DrawRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
 
@@ -729,7 +729,7 @@ nsRenderingContextXP :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
   
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
@@ -762,7 +762,7 @@ nsRenderingContextXP :: FillRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextXP :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -771,7 +771,7 @@ nsRenderingContextXP :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
   // Hack for background page
   if ((x == 0) && (y == 0)) {
      return NS_OK;
@@ -793,7 +793,7 @@ nsRenderingContextXP :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextXP :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix )
+  if (nsnull == mTranMatrix )
     return NS_ERROR_FAILURE;
 
   nscoord x,y,w,h;
@@ -803,7 +803,7 @@ nsRenderingContextXP :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   // Set XOR drawing mode
   ::XSetFunction(mPrintContext->GetDisplay(),
@@ -832,7 +832,7 @@ nsRenderingContextXP :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
@@ -845,7 +845,7 @@ nsRenderingContextXP :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
-    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+    mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
   ::XDrawLines(mPrintContext->GetDisplay(),
@@ -864,7 +864,7 @@ nsRenderingContextXP :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 NS_IMETHODIMP 
 nsRenderingContextXP :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
@@ -878,7 +878,7 @@ nsRenderingContextXP :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint = (xpoints+i);
     x = aPoints[i].x;
     y = aPoints[i].y;
-    mTMatrix->TransformCoord(&x,&y);
+    mTranMatrix->TransformCoord(&x,&y);
     thispoint->x = x;
     thispoint->y = y;
   }
@@ -911,7 +911,7 @@ nsRenderingContextXP :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -921,7 +921,7 @@ nsRenderingContextXP :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   ::XDrawArc(mPrintContext->GetDisplay(),
              mPrintContext->GetDrawable(),
@@ -942,7 +942,7 @@ nsRenderingContextXP :: FillEllipse(const nsRect& aRect)
  */
 NS_IMETHODIMP nsRenderingContextXP :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -952,7 +952,7 @@ NS_IMETHODIMP nsRenderingContextXP :: FillEllipse(nscoord aX, nscoord aY, nscoor
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   ::XFillArc(mPrintContext->GetDisplay(),
              mPrintContext->GetDrawable(),
@@ -990,7 +990,7 @@ nsRenderingContextXP :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -1000,7 +1000,7 @@ nsRenderingContextXP :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   ::XDrawArc(mPrintContext->GetDisplay(),
              mPrintContext->GetDrawable(),
@@ -1030,7 +1030,7 @@ nsRenderingContextXP :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
 {
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
-  if (nsnull == mTMatrix ) {
+  if (nsnull == mTranMatrix ) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -1040,7 +1040,7 @@ nsRenderingContextXP :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   ::XFillArc(mPrintContext->GetDisplay(),
              mPrintContext->GetDrawable(),
@@ -1182,7 +1182,7 @@ nsRenderingContextXP :: DrawString(const char *aString, PRUint32 aLength,
 {
   if (0 == aLength)
     return NS_OK;
-  if (mTMatrix == nsnull)
+  if (mTranMatrix == nsnull)
       return NS_ERROR_FAILURE;
   if (aString == nsnull)
       return NS_ERROR_FAILURE;
@@ -1205,7 +1205,7 @@ nsRenderingContextXP :: DrawString(const char *aString, PRUint32 aLength,
         char ch = *aString++;
         nscoord xx = x;
         nscoord yy = y;
-        mTMatrix->TransformCoord(&xx, &yy);
+        mTranMatrix->TransformCoord(&xx, &yy);
         XDrawString(mPrintContext->GetDisplay(),
                     mPrintContext->GetDrawable(),
                     mPrintContext->GetGC(),
@@ -1213,7 +1213,7 @@ nsRenderingContextXP :: DrawString(const char *aString, PRUint32 aLength,
         x += *aSpacing++;
      }
   } else {
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
     if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
       XDrawString(mPrintContext->GetDisplay(),
                   mPrintContext->GetDrawable(),
@@ -1258,7 +1258,7 @@ nsRenderingContextXP :: DrawString(const PRUnichar *aString, PRUint32 aLength,
     return NS_OK;
   if (nsnull == mFontMetrics)
       return NS_ERROR_FAILURE;
-  if (mTMatrix == nsnull)
+  if (mTranMatrix == nsnull)
       return NS_ERROR_FAILURE;
   if (aString == nsnull)
       return NS_ERROR_FAILURE;
@@ -1275,7 +1275,7 @@ nsRenderingContextXP :: DrawString(const PRUnichar *aString, PRUint32 aLength,
     y = aY;
 #endif
 
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
 
     nsFontMetricsXP* metrics = (nsFontMetricsXP*) mFontMetrics;
     nsFontXP* prevFont = nsnull;
@@ -1304,7 +1304,7 @@ FoundFont:
             while (str < end) {
               x = aX;
               y = aY;
-              mTMatrix->TransformCoord(&x, &y);
+              mTranMatrix->TransformCoord(&x, &y);
               prevFont->DrawString(mPrintContext, x, y, str, 1);
               aX += *aSpacing++;
               str++;
@@ -1331,14 +1331,14 @@ FoundFont:
         while (str < end) {
           x = aX;
           y = aY;
-          mTMatrix->TransformCoord(&x, &y);
+          mTranMatrix->TransformCoord(&x, &y);
           prevFont->DrawString(mPrintContext, x, y, str, 1);
           aX += *aSpacing++;
           str++;
         }
       }
       else {
-        // mTMatrix->TransformCoord(&x, &y);
+        // mTranMatrix->TransformCoord(&x, &y);
         prevFont->DrawString(mPrintContext, x, y, &aString[start],
           i - start);
       }
@@ -1386,7 +1386,7 @@ nsRenderingContextXP :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x, &y, &w, &h);
+  mTranMatrix->TransformCoord(&x, &y, &w, &h);
 
   return mPrintContext->DrawImage(aImage, x, y, w, h);
 }
@@ -1400,13 +1400,13 @@ nsRenderingContextXP :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
    nsRect	sr,dr;
 
    sr = aSRect;
-   mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
    sr.x = aSRect.x;
    sr.y = aSRect.y;
    mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
    dr = aDRect;
-   mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
    return mPrintContext->DrawImage(aImage,
                       sr.x, sr.y,
                       sr.width, sr.height,
