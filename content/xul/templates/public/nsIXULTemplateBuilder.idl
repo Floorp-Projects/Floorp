@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Chris Waterson <waterson@netscape.com>
+ *  Ben Goodger <ben@netscape.com>
  */
 
 #include "domstubs.idl"
@@ -45,6 +47,68 @@ interface nsIXULTemplateBuilder : nsISupports
     void rebuild();
 };
 
+/**
+ * nsIXULOutlinerBuilderObserver
+ *  This interface allows clients of the XULOutlinerBuilder to define domain 
+ *  specific handling of specific nsIOutlinerView methods that 
+ *  XULOutlinerBuilder does not implement.
+ */
+[scriptable, uuid(f6ed69be-1dd1-11b2-adfc-9db02ac57d88)]
+interface nsIXULOutlinerBuilderObserver : nsISupports
+{
+    /** 
+     * Called when an item is opened or closed. 
+     */
+	void onToggleOpenState (in long index);
+
+    /** 
+	 * Called when a header is clicked.
+     */
+    void onCycleHeader(in wstring colID, in nsIDOMElement elt);
+
+    /**
+     * Called when a cell in a non-selectable cycling column (e.g. 
+     * unread/flag/etc.) is clicked.
+     */
+    void onCycleCell(in long row, in wstring colID);
+
+    /** 
+     * Called when selection in the outliner changes
+     */
+    void onSelectionChanged();
+
+    /** 
+     * APIs for inline editing.  isEditable is called to ask the view if the 
+     * cell contents are editable.  A value of true will result in the 
+     * outliner popping up a text field when the user tries to inline edit 
+     * the cell. 
+     */
+    boolean isEditable(in long row, in wstring colID);
+
+    /** 
+     * onSetCellText is called when the contents of the cell have been edited by the user.
+     */
+    void onSetCellText(in long row, in wstring colID, in wstring value);
+
+    /**
+     * A command API that can be used to invoke commands on the selection.  
+     * The outliner will automatically invoke this method when certain keys 
+     * are pressed.  For example, when the DEL key is pressed, performAction 
+     * will be called with the "delete" string. 
+     */
+    void onPerformAction(in wstring action);
+
+    /**
+     * A command API that can be used to invoke commands on a specific row.
+     */
+    void onPerformActionOnRow(in wstring action, in long row);
+
+    /**
+     * A command API that can be used to invoke commands on a specific cell.
+     */
+    void onPerformActionOnCell(in wstring action, in long row, in wstring colID);
+};
+
 [scriptable, uuid(06b31b15-ebf5-4e74-a0e2-6bc0a18a3969)]
 interface nsIXULOutlinerBuilder : nsISupports
 {
@@ -52,4 +116,16 @@ interface nsIXULOutlinerBuilder : nsISupports
      * Retrieve the RDF resource associated with the specified row.
      */
     nsIRDFResource getResourceFor(in long aRowIndex);
+
+    /** 
+     * Add a Outliner Builder Observer to handle Outliner View 
+     * methods that the base builder does not implement. 
+     */
+    void addObserver(in nsIXULOutlinerBuilderObserver aObserver);
+
+    /** 
+     * Remove an Outliner Builder Observer.
+     */
+    void removeObserver(in nsIXULOutlinerBuilderObserver aObserver);
 };
+

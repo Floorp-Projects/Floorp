@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Chris Waterson <waterson@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
  *
  * Notes
  *
@@ -71,6 +72,8 @@ public:
 
     // nsXULTemplateBuilder
     NS_IMETHOD Rebuild();
+
+    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
     friend NS_IMETHODIMP
@@ -249,6 +252,11 @@ protected:
      * The current collation
      */
     nsCOMPtr<nsICollation> mCollation;
+
+    /** 
+     * The builder observers.
+     */
+    nsCOMPtr<nsISupportsArray> mObservers;
 };
 
 //----------------------------------------------------------------------
@@ -325,6 +333,24 @@ nsXULOutlinerBuilder::GetResourceFor(PRInt32 aRowIndex, nsIRDFResource** aResult
 
     *aResult = GetResourceFor(aRowIndex);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULOutlinerBuilder::AddObserver(nsIXULOutlinerBuilderObserver* aObserver)
+{
+    nsresult rv;  
+    if (!mObservers) {
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return mObservers->AppendElement(aObserver);
+}
+
+NS_IMETHODIMP
+nsXULOutlinerBuilder::RemoveObserver(nsIXULOutlinerBuilderObserver* aObserver)
+{
+    return mObservers ? mObservers->RemoveElement(aObserver) : NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -509,7 +535,7 @@ nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnich
     GetTemplateActionCellFor(aRow, aColID, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, raw);
+        cell->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, raw);
 
         nsAutoString cooked;
         SubstituteText(*(mRows[aRow]->mMatch), raw, cooked);
@@ -559,6 +585,17 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
 NS_IMETHODIMP
 nsXULOutlinerBuilder::ToggleOpenState(PRInt32 aIndex)
 {
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnToggleOpenState(aIndex);
+        }
+    }
+    
     if (mPersistStateStore) {
         nsIRDFResource* container = GetResourceFor(aIndex);
         if (! container)
@@ -590,6 +627,17 @@ nsXULOutlinerBuilder::ToggleOpenState(PRInt32 aIndex)
 NS_IMETHODIMP
 nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aElement)
 {
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnCycleHeader(aColID, aElement);
+        }
+    }
+
     nsCOMPtr<nsIContent> header = do_QueryInterface(aElement);
     if (! header)
         return NS_ERROR_FAILURE;
@@ -632,47 +680,129 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
 NS_IMETHODIMP
 nsXULOutlinerBuilder::SelectionChanged()
 {
-    // XXX do we care?
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnSelectionChanged();
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::CycleCell(PRInt32 row, const PRUnichar* colID)
 {
-    // XXX do we care?
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnCycleCell(row, colID);
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::IsEditable(PRInt32 row, const PRUnichar* colID, PRBool* _retval)
 {
-    // XXX Oy. Don't make me do this.
     *_retval = PR_FALSE;
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                observer->IsEditable(row, colID, _retval);
+                if (*_retval)
+                    // No need to keep asking, show a textfield as at least one client will handle it. 
+                    break;
+            }
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::SetCellText(PRInt32 row, const PRUnichar* colID, const PRUnichar* value)
 {
-    // XXX ...or this.
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                // If the current observer supports a name change operation, go ahead and invoke it. 
+                PRBool isEditable = PR_FALSE;
+                observer->IsEditable(row, colID, &isEditable);
+                if (isEditable)
+                    observer->OnSetCellText(row, colID, value);
+            }
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::PerformAction(const PRUnichar* action)
 {
+    if (mObservers) {  
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnPerformAction(action);
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::PerformActionOnRow(const PRUnichar* action, PRInt32 row)
 {
+    if (mObservers) {  
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnPerformActionOnRow(action, row);
+        }
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::PerformActionOnCell(const PRUnichar* action, PRInt32 row, const PRUnichar* colID)
 {
+    if (mObservers) {  
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer)
+                observer->OnPerformActionOnCell(action, row, colID);
+        }
+    }
+
     return NS_OK;
 }
 
@@ -723,6 +853,16 @@ nsXULOutlinerBuilder::Rebuild()
 // nsXULTemplateBuilder abstract methods
 //
 
+NS_IMETHODIMP
+nsXULOutlinerBuilder::DocumentWillBeDestroyed(nsIDocument* aDocument)
+{
+    if (mObservers)
+        mObservers->Clear();
+
+    return nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
+}
+
+ 
 nsresult
 nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
                                    const nsTemplateMatch* aOldMatch,
