@@ -785,8 +785,17 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 	// scroll the rect
 	StartDraw();
+		nsRect scrollRect;
+		if (aClipRect)
+			scrollRect = *aClipRect;
+		else
+		{
+			scrollRect = mBounds;
+			scrollRect.x = scrollRect.y = 0;
+		}
+
 		Rect macRect;
-		nsRectToMacRect(*aClipRect, macRect);
+		nsRectToMacRect(scrollRect, macRect);
 
 		RgnHandle updateRgn = ::NewRgn();
 		if (updateRgn == nil)
