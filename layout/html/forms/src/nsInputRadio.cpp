@@ -29,6 +29,9 @@
 #include "nsIRadioButton.h"
 #include "nsWidgetsCID.h"
 #include "nsSize.h"
+#include "nsHTMLAtoms.h"
+#include "nsIFormManager.h"
+#include "nsIView.h"
 
 class nsInputRadioFrame : public nsInputFrame {
 public:
@@ -36,17 +39,22 @@ public:
                    PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                               nsSize& aBounds);
-
-  virtual void InitializeWidget(nsIView *aView);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
   virtual const nsIID GetCID();
 
   virtual const nsIID GetIID();
 
+  virtual void MouseClicked(nsIPresContext* aPresContext);
+
 protected:
+
   virtual ~nsInputRadioFrame();
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsSize& aDesiredWidgetSize);
 };
 
 nsInputRadioFrame::nsInputRadioFrame(nsIContent* aContent,
@@ -76,30 +84,94 @@ nsInputRadioFrame::GetCID()
 }
 
 void 
-nsInputRadioFrame::PreInitializeWidget(nsIPresContext* aPresContext, 
-								       nsSize& aBounds)
+nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                  const nsSize& aMaxSize,
+                                  nsReflowMetrics& aDesiredLayoutSize,
+                                  nsSize& aDesiredWidgetSize)
 {
   float p2t = aPresContext->GetPixelsToTwips();
-  aBounds.width  = (int)(12 * p2t);
-  aBounds.height = (int)(12 * p2t);
+  aDesiredLayoutSize.width  = (int)(12 * p2t);
+  aDesiredLayoutSize.height = (int)(12 * p2t);
+  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }
 
 void 
-nsInputRadioFrame::InitializeWidget(nsIView *aView)
+nsInputRadioFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
+  nsInputRadio* content = (nsInputRadio *)mContent; 
+  PRInt32 checkedAttr; 
+  nsContentAttr result = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::checked, checkedAttr); 
+  if ((result == eContentAttr_HasValue) && (PR_FALSE != checkedAttr)) {
+    nsIRadioButton* radio;
+    if (NS_OK == GetWidget(aView, (nsIWidget **)&radio)) {
+	    radio->SetState(PR_TRUE);
+      NS_RELEASE(radio);
+    }
+  }
 }
 
 // nsInputRadio
 
+const nsString* nsInputRadio::kTYPE = new nsString("radio");
+
 nsInputRadio::nsInputRadio(nsIAtom* aTag, nsIFormManager* aManager)
   : nsInput(aTag, aManager) 
 {
+  mChecked = PR_FALSE;
 }
 
 nsInputRadio::~nsInputRadio()
 {
 }
 
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+
+void 
+nsInputRadioFrame::MouseClicked(nsIPresContext* aPresContext) 
+{
+  nsIRadioButton* radioWidget;
+  nsIView* view;
+  GetView(view);
+  if (NS_OK == GetWidget(view, (nsIWidget **)&radioWidget)) {
+	  radioWidget->SetState(PR_TRUE);
+    NS_RELEASE(radioWidget);
+    nsInputRadio* radio;
+    GetContent((nsIContent *&) radio);
+    nsIFormControl* control;
+    nsresult status = radio->QueryInterface(kIFormControlIID, (void **)&control); 
+    NS_ASSERTION(NS_OK == status, "nsInputRadio has no nsIFormControl interface");
+    if (NS_OK == status) {
+      radio->GetFormManager()->OnRadioChecked(*control);
+      NS_RELEASE(radio);
+    } 
+  }
+  NS_RELEASE(view);
+}
+
+PRBool
+nsInputRadio::GetChecked(PRBool aGetInitialValue) const
+{
+  if (aGetInitialValue) {
+    return mChecked;
+  }
+  else {
+    NS_ASSERTION(mWidget, "no widget for this nsInputRadio");
+    return ((nsIRadioButton *)mWidget)->GetState();
+  }
+}
+
+void
+nsInputRadio::SetChecked(PRBool aValue, PRBool aSetInitialValue)
+{
+  if (aSetInitialValue) {
+    mChecked = aValue;
+  }
+  NS_ASSERTION(mWidget, "no widget for this nsInputRadio");
+  ((nsIRadioButton *)mWidget)->SetState(aValue);
+}
+
+ 
 nsIFrame* 
 nsInputRadio::CreateFrame(nsIPresContext* aPresContext,
                          PRInt32 aIndexInParent,
@@ -114,7 +186,62 @@ void nsInputRadio::GetType(nsString& aResult) const
   aResult = "radio";
 }
 
-NS_HTML nsresult
+void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
+                                const nsString& aValue)
+{
+  if (aAttribute == nsHTMLAtoms::checked) {
+    mChecked = PR_TRUE;
+  }
+  else {
+    nsInput::SetAttribute(aAttribute, aValue);
+  }
+}
+
+nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
+                                         nsHTMLValue& aResult) const
+{
+  aResult.Reset();
+  if (aAttribute == nsHTMLAtoms::checked) {
+    return GetCacheAttribute(mChecked, aResult);
+  }
+  else {
+    return nsInput::GetAttribute(aAttribute, aResult);
+  }
+}
+
+PRBool
+nsInputRadio::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                        nsString* aValues)
+{
+  if (aMaxNumValues <= 0) {
+    return PR_FALSE;
+  }
+  nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
+  PRBool state = radio->GetState();
+  if(PR_TRUE != state) {
+    return PR_FALSE;
+  }
+
+  if (nsnull == mValue) {
+    aValues[0] = "on";
+  } else {
+    aValues[0] = *mValue;
+  }
+  aNumValues = 1;
+
+  return PR_TRUE;
+}
+
+void 
+nsInputRadio::Reset() 
+{
+  nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
+  if (nsnull != radio) {
+    radio->SetState(mChecked);
+  }
+}  
+
+nsresult
 NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager)
 {
@@ -131,3 +258,56 @@ NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+// CLASS nsInputRadioGroup
+
+nsInputRadioGroup::nsInputRadioGroup(nsString& aName)
+:mName(aName), mCheckedRadio(nsnull)
+{
+}
+
+nsInputRadioGroup::~nsInputRadioGroup()
+{
+  mCheckedRadio = nsnull;
+}
+  
+PRInt32 
+nsInputRadioGroup::GetRadioCount() const 
+{ 
+  return mRadios.Count(); 
+}
+
+nsIFormControl* 
+nsInputRadioGroup::GetRadioAt(PRInt32 aIndex) const 
+{ 
+  return (nsIFormControl*) mRadios.ElementAt(aIndex);
+}
+
+PRBool 
+nsInputRadioGroup::AddRadio(nsIFormControl* aRadio) 
+{ 
+  return mRadios.AppendElement(aRadio);
+}
+
+PRBool 
+nsInputRadioGroup::RemoveRadio(nsIFormControl* aRadio) 
+{ 
+  return mRadios.RemoveElement(aRadio);
+}
+
+nsIFormControl* 
+nsInputRadioGroup::GetCheckedRadio()
+{
+  return mCheckedRadio;
+}
+
+void    
+nsInputRadioGroup::SetCheckedRadio(nsIFormControl* aRadio)
+{
+  mCheckedRadio = aRadio;
+}
+
+void
+nsInputRadioGroup::GetName(nsString& aNameResult) const
+{
+  aNameResult = mName;
+}

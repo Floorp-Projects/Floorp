@@ -53,13 +53,15 @@ public:
   * @param aMode the mode of the widget
   * @param aContext context for displaying widget
   * @param aToolkit toolkit associated with file widget
+  * @param aInitData data that is used for widget initialization
   */ 
 
   virtual void  Create( nsIWidget *aParent,
                         nsString& aTitle,
                         nsMode aMode,
                         nsIDeviceContext *aContext = nsnull,
-                        nsIToolkit *aToolkit = nsnull) = 0;
+                        nsIToolkit *aToolkit = nsnull,
+                        void *aInitData = 0) = 0;
 
  /**
   * Set the list of file filters 

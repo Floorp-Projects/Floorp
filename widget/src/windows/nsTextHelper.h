@@ -47,6 +47,8 @@ public:
     virtual         LPCTSTR         WindowClass();
     virtual         DWORD           WindowStyle();
 
+    virtual         void            PreCreateWidget(void *aInitData);
+
 protected:
 
     PRBool  mIsPassword;

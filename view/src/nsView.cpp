@@ -246,12 +246,14 @@ nsresult nsView :: Init(nsIViewManager* aManager,
                         const nsRect &aBounds,
                         nsIView *aParent,
                         const nsCID *aWindowCIID,
+                        void *aWidgetInitData,
                         nsNativeWindow aNative,
                         PRInt32 aZIndex,
                         const nsRect *aClipRect,
                         float aOpacity,
                         nsViewVisibility aVisibilityFlag)
 {
+  //printf(" \n callback=%d data=%d", aWidgetCreateCallback, aCallbackData);
   NS_PRECONDITION(nsnull != aManager, "null ptr");
   if (nsnull == aManager) {
     return NS_ERROR_NULL_POINTER;
@@ -277,14 +279,15 @@ nsresult nsView :: Init(nsIViewManager* aManager,
 
     trect *= cx->GetTwipsToPixels();
 
+    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (NS_OK == LoadWidget(*aWindowCIID))
     {
       if (aNative)
-        mWindow->Create(aNative, trect, ::HandleEvent, dx);
+        mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
       else
       {
         nsIWidget *parent = GetWindowTemp(aParent); 
-        mWindow->Create(parent, trect, ::HandleEvent, dx);
+        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
       }
     }

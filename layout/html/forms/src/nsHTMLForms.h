@@ -22,6 +22,10 @@
 class nsIAtom;
 class nsIFormManager;
 
+// fix these
+#define CSS_NOTSET    0    
+#define ATTR_NOTSET   0    
+
 // Form and Form Controls
 
 /** 
@@ -96,6 +100,15 @@ NS_NewHTMLInputImage(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager);
 
 /** 
+  * Construct an nsIHTMLContent with behavior of an html select
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
+extern nsresult
+NS_NewHTMLOption(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag);
+
+
+/** 
   * Construct an nsIHTMLContent with behavior of an html input password
   * @see NS_NewHTMLInputButton for parameter and return values
   */
@@ -112,11 +125,27 @@ NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager);
 
 /** 
+  * Construct an nsIHTMLContent with behavior of an html select
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
+extern nsresult
+NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag, nsIFormManager* aManager, PRInt32 aHackIndex);
+
+/** 
   * Construct an nsIHTMLContent with behavior of an html input text
   * @see NS_NewHTMLInputButton for parameter and return values
   */
 extern nsresult
 NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager);
+
+/** 
+  * Construct an nsIHTMLContent with behavior of an html text area
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
+extern nsresult
+NS_NewHTMLTextArea(nsIHTMLContent** aInstancePtrResult,
+                   nsIAtom* aTag, nsIFormManager* aManager);
 
 #endif /* nsHTMLForms_h___ */

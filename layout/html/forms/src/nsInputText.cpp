@@ -27,10 +27,12 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsITextWidget.h"
+#include "nsITextAreaWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsSize.h"
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLForms.h"
 
 class nsInputTextFrame : public nsInputFrame {
 public:
@@ -38,18 +40,24 @@ public:
                    PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                               nsSize& aBounds);
+  virtual nsInputWidgetData* GetWidgetInitData();
 
-  virtual void InitializeWidget(nsIView *aView);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
   virtual const nsIID GetCID();
 
   virtual const nsIID GetIID();
 
 protected:
+
   virtual ~nsInputTextFrame();
-  nsString mCacheValue;
+  
+  nsInputTextType GetTextType();
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsSize& aDesiredWidgetSize);
 };
 
 nsInputTextFrame::nsInputTextFrame(nsIContent* aContent,
@@ -67,50 +75,117 @@ const nsIID
 nsInputTextFrame::GetIID()
 {
   static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
-  return kTextIID;
+  static NS_DEFINE_IID(kTextAreaIID, NS_ITEXTAREAWIDGET_IID);
+
+  if (kInputTextArea == GetTextType()) {
+    return kTextAreaIID;
+  }
+  else {
+    return kTextIID;
+  }
 }
   
 const nsIID
 nsInputTextFrame::GetCID()
 {
   static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
-  return kTextCID;
+  static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
+
+  if (kInputTextArea == GetTextType()) {
+    return kTextAreaCID;
+  }
+  else {
+    return kTextCID;
+  }
+}
+
+nsInputTextType
+nsInputTextFrame::GetTextType()
+{
+  nsInputText* content;
+  GetContent((nsIContent *&) content);
+  nsInputTextType type = content->GetTextType();
+  NS_RELEASE(content);
+  return type;
 }
 
 void 
-nsInputTextFrame::PreInitializeWidget(nsIPresContext* aPresContext, 
-                                      nsSize& aBounds)
+nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                 const nsSize& aMaxSize,
+                                 nsReflowMetrics& aDesiredLayoutSize,
+                                 nsSize& aDesiredWidgetSize)
 {
-  nsInputText* content = (nsInputText *)mContent; // this must be an nsInputButton 
+  // get the css size and let the frame use or override it
+  nsSize styleSize;
+  GetStyleSize(*aPresContext, aMaxSize, styleSize);
 
-  // get the value of the text
-  if (nsnull != content->mValue) {
-    mCacheValue = *content->mValue;
-  } else {
-    mCacheValue = "";
+  nsSize size;
+  
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  if ((kInputTextText == GetTextType()) || (kInputTextPassword == GetTextType())) {
+    nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsHTMLAtoms::value,
+                                  20, PR_FALSE, nsnull, 1);
+    CalculateSize(aPresContext, this, styleSize, textSpec, size, 
+                  widthExplicit, heightExplicit, ignore);
+  } 
+  else {
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 10, 
+                                  PR_FALSE, nsHTMLAtoms::rows, 1);
+    CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
+                  widthExplicit, heightExplicit, ignore);
+  }
+  if (!heightExplicit && (kInputTextArea != GetTextType())) {
+    size.height += 100;
   }
 
-  float p2t = aPresContext->GetPixelsToTwips();
-  aBounds.width  = (int)(120 * p2t);
-  aBounds.height = (int)(20 * p2t);
+  aDesiredLayoutSize.width  = size.width;
+  aDesiredLayoutSize.height = size.height;
+  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+}
+
+nsInputWidgetData*
+nsInputTextFrame::GetWidgetInitData()
+{
+  static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
+
+  nsInputWidgetData* data = nsnull;
+  nsInputText* content;
+  GetContent((nsIContent *&) content);
+  if (kInputTextPassword == content->GetTextType()) {
+    data = new nsInputWidgetData();
+    data->arg1 = 1;
+  }
+  NS_RELEASE(content);
+
+  return data;
 }
 
 void 
-nsInputTextFrame::InitializeWidget(nsIView *aView)
+nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsITextWidget* text;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&text)) {
-	text->SetText(mCacheValue);
-    NS_RELEASE(text);
+	  text->SetFont(GetFont(aPresContext));
+    nsInputText* content;
+    GetContent((nsIContent *&) content);
+    nsAutoString valAttr;
+    nsContentAttr valStatus = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
+    text->SetText(valAttr);
+    NS_RELEASE(content);
   }
 }
 
 //----------------------------------------------------------------------
 // nsInputText
 
-nsInputText::nsInputText(nsIAtom* aTag, nsIFormManager* aManager)
-  : nsInput(aTag, aManager)
+nsInputText::nsInputText(nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType)
+  : nsInput(aTag, aManager), mType(aType)
 {
+  mMaxLength = CSS_NOTSET;
+  mNumRows   = CSS_NOTSET;
+  mNumCols   = CSS_NOTSET;
 }
 
 nsInputText::~nsInputText()
@@ -120,14 +195,18 @@ nsInputText::~nsInputText()
   }
 }
 
+nsInputTextType
+nsInputText::GetTextType() const
+{
+  return mType;
+}
+
 nsIFrame* 
 nsInputText::CreateFrame(nsIPresContext* aPresContext,
                          PRInt32 aIndexInParent,
                          nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsInputTextFrame(this, aIndexInParent, aParentFrame);
-  printf("** nsInputText::CreateFrame frame=%d", rv);
-  return rv;
+  return new nsInputTextFrame(this, aIndexInParent, aParentFrame);
 }
 
 PRInt32 
@@ -165,27 +244,27 @@ nsInputText::Reset()
 
 void nsInputText::GetType(nsString& aResult) const
 {
-  aResult = "text";
+  if (kInputTextText == mType) {
+    aResult = "text";
+  } 
+  else if (kInputTextPassword == mType) {
+    aResult = "password";
+  }
+  else if (kInputTextArea == mType) {   
+    aResult = "";
+  }
 }
 
 void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
-  if (aAttribute == nsHTMLAtoms::size) {
-    nsHTMLValue value;
-    ParseValue(aValue, 1, value);
-    mSize = value.GetIntValue();
+  if (aAttribute == nsHTMLAtoms::maxlength) {
+    CacheAttribute(aValue, CSS_NOTSET, mMaxLength);
   }
-  else if (aAttribute == nsHTMLAtoms::maxlength) {
-    nsHTMLValue value;
-    ParseValue(aValue, 1, value);/* XXX nav doesn't clamp; what does it do with illegal values? */
-    mMaxLength = value.GetIntValue();
+  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
+    CacheAttribute(aValue, CSS_NOTSET, mNumRows);
   }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull == mValue) {
-      mValue = new nsString(aValue);
-    } else {
-      *mValue = aValue;
-    }
+  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
+    CacheAttribute(aValue, CSS_NOTSET, mNumCols);
   }
   else {
     nsInput::SetAttribute(aAttribute, aValue);
@@ -195,33 +274,21 @@ void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
                                         nsHTMLValue& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
-  aResult.Reset();
-  if (aAttribute == nsHTMLAtoms::size) {
-    if (0 < mSize) {
-      aResult.Set(mSize, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
+  if (aAttribute == nsHTMLAtoms::maxlength) {
+    return GetCacheAttribute(mMaxLength, aResult);
+  } 
+  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
+    return GetCacheAttribute(mNumRows, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::maxlength) {
-    if (0 < mMaxLength) {
-      aResult.Set(mMaxLength, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull != mValue) {
-      aResult.Set(*mValue);
-      ca = eContentAttr_HasValue;
-    }
+  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
+    return GetCacheAttribute(mNumCols, aResult);
   }
   else {
-    ca = nsInput::GetAttribute(aAttribute, aResult);
+    return nsInput::GetAttribute(aAttribute, aResult);
   }
-  return ca;
 }
 
-NS_HTML nsresult
+nsresult
 NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager)
 {
@@ -230,7 +297,7 @@ NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsInputText(aTag, aManager);
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextText);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -238,3 +305,36 @@ NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+nsresult
+NS_NewHTMLInputPassword(nsIHTMLContent** aInstancePtrResult,
+                        nsIAtom* aTag, nsIFormManager* aManager)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextPassword);
+
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+}
+
+nsresult
+NS_NewHTMLTextArea(nsIHTMLContent** aInstancePtrResult,
+                   nsIAtom* aTag, nsIFormManager* aManager)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextArea);
+
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+}

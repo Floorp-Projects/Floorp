@@ -162,7 +162,8 @@ void nsWindow::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
-                      nsIToolkit *aToolkit)
+                      nsIToolkit *aToolkit,
+                      void *aInitData)
 {
     if (NULL == mToolkit) {
         if (NULL != aToolkit) {
@@ -195,7 +196,8 @@ void nsWindow::Create(nsIWidget *aParent,
         args[2] = (DWORD)aHandleEventFunction;
         args[3] = (DWORD)aContext;
         args[4] = (DWORD)aToolkit;
-        MethodInfo info(this, nsWindow::CREATE, 5, args);
+        args[5] = (DWORD)aInitData;
+        MethodInfo info(this, nsWindow::CREATE, 6, args);
         mToolkit->CallMethod(&info);
         return;
     }
@@ -218,6 +220,10 @@ void nsWindow::Create(nsIWidget *aParent,
 
       if (NS_OK == res)
         mContext->Init();
+    }
+
+    if (nsnull != aInitData) {
+      PreCreateWidget(aInitData);
     }
 
     mWnd = ::CreateWindowEx(WindowExStyle(),
@@ -279,7 +285,8 @@ void nsWindow::Create(nsNativeWindow aParent,
                          const nsRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
-                         nsIToolkit *aToolkit)
+                         nsIToolkit *aToolkit,
+                         void *aInitData)
 {
 
     if (NULL == mToolkit) {
@@ -306,6 +313,7 @@ void nsWindow::Create(nsNativeWindow aParent,
         args[2] = (DWORD)aHandleEventFunction;
         args[3] = (DWORD)aContext;
         args[4] = (DWORD)aToolkit;
+        args[5] = (DWORD)aInitData;
         MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
         mToolkit->CallMethod(&info);
         return;
@@ -329,6 +337,10 @@ void nsWindow::Create(nsNativeWindow aParent,
 
       if (NS_OK == res)
         mContext->Init();
+    }
+
+    if (nsnull != aInitData) {
+      PreCreateWidget(aInitData);
     }
 
     mWnd = ::CreateWindowEx(WindowExStyle(),
@@ -898,21 +910,23 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 
     switch (info->methodId) {
         case nsWindow::CREATE:
-            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+            NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
             Create((nsIWidget*)(info->args[0]), 
                         (nsRect&)*(nsRect*)(info->args[1]), 
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
-                        (nsIToolkit*)(info->args[4]));
+                        (nsIToolkit*)(info->args[4]),
+                        (void*)(info->args[5]));
             break;
 
         case nsWindow::CREATE_NATIVE:
-            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+            NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
             Create((nsNativeWindow)(info->args[0]), 
                         (nsRect&)*(nsRect*)(info->args[1]), 
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
-                        (nsIToolkit*)(info->args[4]));
+                        (nsIToolkit*)(info->args[4]),
+                        (void*)(info->args[5]));
             return TRUE;
 
         case nsWindow::DESTROY:

@@ -117,12 +117,15 @@ class nsIWidget : public nsISupports {
      * @param      parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
+     * @param aInitData data that is used for widget initialization
+     *
      */
     virtual void Create(nsIWidget        *aParent,
                         const nsRect     &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
-                        nsIToolkit       *aToolkit = nsnull) = 0;
+                        nsIToolkit       *aToolkit = nsnull,
+                        void             *aInitData = nsnull) = 0;
 
     /**
      * Create and initialize a widget with a native window parent
@@ -147,7 +150,8 @@ class nsIWidget : public nsISupports {
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
                         nsIDeviceContext *aContext,
-                        nsIToolkit *aToolkit = nsnull) = 0;
+                        nsIToolkit *aToolkit = nsnull,
+                        void *aInitData = nsnull) = 0;
 
     /**
      * Close and destroy the internal native window. 

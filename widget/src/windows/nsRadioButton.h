@@ -70,8 +70,6 @@ protected:
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
 
-    virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
-
 };
 
 #endif // nsRadioButton_h__

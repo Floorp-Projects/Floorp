@@ -34,7 +34,7 @@ public:
                    PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
-  virtual void InitializeWidget(nsIView *aView);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
 protected:
   virtual ~nsInputFileFrame();
@@ -53,7 +53,7 @@ nsInputFileFrame::~nsInputFileFrame()
 
 
 void 
-nsInputFileFrame::InitializeWidget(nsIView *aView)
+nsInputFileFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
 }
 
@@ -86,60 +86,8 @@ void nsInputFile::GetType(nsString& aResult) const
   aResult = "file";
 }
 
-void nsInputFile::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
-{
-  if (aAttribute == nsHTMLAtoms::size) {
-    nsHTMLValue value;
-    ParseValue(aValue, 1, value);
-    mSize = value.GetIntValue();
-  }
-  else if (aAttribute == nsHTMLAtoms::maxlength) {
-    nsHTMLValue value;
-    ParseValue(aValue, 1, value);/* XXX nav doesn't clamp; what does it do with illegal values? */
-    mMaxLength = value.GetIntValue();
-  }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull == mValue) {
-      mValue = new nsString(aValue);
-    } else {
-      *mValue = aValue;
-    }
-  }
-  else {
-    nsInput::SetAttribute(aAttribute, aValue);
-  }
-}
 
-nsContentAttr nsInputFile::GetAttribute(nsIAtom* aAttribute,
-                                        nsHTMLValue& aResult) const
-{
-  nsContentAttr ca = eContentAttr_NotThere;
-  aResult.Reset();
-  if (aAttribute == nsHTMLAtoms::size) {
-    if (0 < mSize) {
-      aResult.Set(mSize, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::maxlength) {
-    if (0 < mMaxLength) {
-      aResult.Set(mMaxLength, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull != mValue) {
-      aResult.Set(*mValue);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else {
-    ca = nsInput::GetAttribute(aAttribute, aResult);
-  }
-  return ca;
-}
-
-NS_HTML nsresult
+nsresult
 NS_NewHTMLInputFile(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager)
 {

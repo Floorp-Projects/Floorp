@@ -32,13 +32,8 @@ public:
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
-
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-
 protected:
+
   virtual ~nsInputImage();
 
   virtual void GetType(nsString& aResult) const;

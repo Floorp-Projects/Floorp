@@ -36,6 +36,14 @@
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 
+// data passed in and used before the widget's create method is called
+struct nsWidgetInitData {
+  DWORD arg1;
+  DWORD arg2;
+  DWORD arg3;
+  DWORD arg4;
+};
+
 /**
  * Native WIN32 window wrapper. 
  */
@@ -54,17 +62,20 @@ public:
 
     virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
 
+    virtual void            PreCreateWidget(void *aWidgetInitData) {}
     // nsIWidget interface
     virtual void            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
-                                     nsIToolkit *aToolkit = nsnull);
+                                     nsIToolkit *aToolkit = nsnull,
+                                     void *aInitData = nsnull);
     virtual void            Create(nsNativeWindow aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
-                                     nsIToolkit *aToolkit = nsnull);
+                                     nsIToolkit *aToolkit = nsnull,
+                                     void *aInitData = nsnull);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -220,9 +231,10 @@ protected:
                     const nsRect &aRect, \
                     EVENT_CALLBACK aHandleEventFunction, \
                     nsIDeviceContext *aContext, \
-                    nsIToolkit *aToolkit = nsnull) \
+                    nsIToolkit *aToolkit = nsnull, \
+                    void *aInitData = nsnull) \
     { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit); \
+        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
     } \
 
 #define BASE_WINDOWS_METHODS \
@@ -230,9 +242,10 @@ protected:
                  const nsRect &aRect, \
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \
-                 nsIToolkit *aToolkit = nsnull) \
+                 nsIToolkit *aToolkit = nsnull, \
+                 void *aInitData = nsnull) \
     { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit); \
+        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
     } \
     void Destroy(void) \
     { \

@@ -25,11 +25,17 @@ class nsIAtom;
 class nsString;
 class nsView;
 
+enum nsInputTextType {
+  kInputTextText,
+  kInputTextPassword,
+  kInputTextArea
+};
+
 // this class definition will move to nsInputText.cpp
 
 class nsInputText : public nsInput {
 public:
-  nsInputText (nsIAtom* aTag, nsIFormManager* aManager);
+  nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
@@ -42,20 +48,25 @@ public:
 
   virtual PRInt32 GetMaxNumValues();
   
+  nsInputTextType GetTextType() const;
+
   virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                            nsString* aValues);
 
   virtual void Reset();
 
-  // Note: this has a copy of code from nsInputFile
-  nsString* mValue;
-  PRInt32 mSize;
-  PRInt32 mMaxLength;
-
 protected:
+
   virtual ~nsInputText();
 
   virtual void GetType(nsString& aResult) const;
+
+  nsInputTextType  mType;
+
+  PRInt32 mMaxLength;  // text, password only
+  PRInt32 mNumRows;    // textarea only
+  PRInt32 mNumCols;    // textarea only
+
 };
 
 #endif

@@ -33,7 +33,7 @@ public:
                    PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
-  virtual void InitializeWidget(nsIView *aView);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
 protected:
   virtual ~nsInputImageFrame();
@@ -52,7 +52,7 @@ nsInputImageFrame::~nsInputImageFrame()
 
 
 void 
-nsInputImageFrame::InitializeWidget(nsIView *aView)
+nsInputImageFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
 }
 
@@ -82,23 +82,7 @@ void nsInputImage::GetType(nsString& aResult) const
   aResult = "image";
 }
 
-void nsInputImage::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
-{
-  // XXX need to read nav4 code first
-  nsInput::SetAttribute(aAttribute, aValue);
-}
-
-nsContentAttr nsInputImage::GetAttribute(nsIAtom* aAttribute,
-                                         nsHTMLValue& aResult) const
-{
-  // XXX need to read nav4 code first
-  nsContentAttr ca = eContentAttr_NotThere;
-  aResult.Reset();
-  ca = nsInput::GetAttribute(aAttribute, aResult);
-  return ca;
-}
-
-NS_HTML nsresult
+nsresult
 NS_NewHTMLInputImage(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager)
 {
