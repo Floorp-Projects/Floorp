@@ -101,9 +101,9 @@ public:
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  friend nsresult NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult,
+                                   nsIContent* aContent,
+                                   nsIFrame*   aParent);
 
   // Overloaded new operator. Initializes the memory to 0
   void* operator new(size_t size);

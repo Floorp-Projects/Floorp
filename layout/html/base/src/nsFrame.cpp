@@ -208,9 +208,9 @@ nsIFrame::GetLogModuleInfo()
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsresult
-nsFrame::NewFrame(nsIFrame**  aInstancePtrResult,
-                  nsIContent* aContent,
-                  nsIFrame*   aParent)
+NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult,
+                 nsIContent* aContent,
+                 nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {

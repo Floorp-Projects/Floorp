@@ -25,7 +25,7 @@ NS_NewWBRFrame(nsIContent* aContent,
                nsIFrame*& aResult)
 {
   nsIFrame* frame = nsnull;
-  nsresult rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
+  nsresult rv = NS_NewEmptyFrame(&frame, aContent, aParentFrame);
   if (NS_OK != rv) {
     return rv;
   }

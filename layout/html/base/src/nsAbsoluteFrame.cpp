@@ -23,10 +23,10 @@
 #include "nsHTMLIIDs.h"
 
 nsresult
-nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
-                          nsIContent* aContent,
-                          nsIFrame*   aParent,
-                          nsIFrame*   aAbsoluteFrame)
+NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult,
+                    nsIContent* aContent,
+                    nsIFrame*   aParent,
+                    nsIFrame*   aAbsoluteFrame)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
