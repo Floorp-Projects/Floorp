@@ -133,8 +133,7 @@ PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
 $(SDK):
-	cd $(DIST)
-	@if [ -d $(SDK_DIR) ]; then $(MAKE_SDK); fi
+	cd $(DIST); if [ -d $(SDK_DIR) ]; then $(MAKE_SDK); fi
 
 $(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
