@@ -130,4 +130,33 @@
     </handlers>
   </binding>
 
+  <binding id="editor">
+    <handlers>
+      <handler event="keypress" key="h" modifiers="control" command="cmd_deleteCharBackward"/>
+      <handler event="keypress" key="d" modifiers="control" command="cmd_deleteCharForward"/>
+      <handler event="keypress" key="k" modifiers="control" command="cmd_deleteToEndOfLine"/>
+      <handler event="keypress" key="u" modifiers="control" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
+      <handler event="keypress" key="e" modifiers="control" command="cmd_endLine"/>
+      <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
+      <handler event="keypress" key="f" modifiers="control" command="cmd_charNext"/>
+      <handler event="keypress" key="p" modifiers="control" command="cmd_linePrevious"/>
+      <handler event="keypress" key="n" modifiers="control" command="cmd_lineNext"/>
+      <handler event="keypress" key="x" modifiers="control" command="cmd_cut"/>
+      <handler event="keypress" key="c" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" key="v" modifiers="control" command="cmd_paste"/>
+      <handler event="keypress" key="z" modifiers="control" command="cmd_undo"/>
+      <handler event="keypress" key="r" modifiers="control" command="cmd_redo"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_selectWordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_selectWordNext"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom"/>
+    </handlers>
+  </binding>
 </bindings>

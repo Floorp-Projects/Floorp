@@ -81,4 +81,21 @@
       <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_scrollBottom"/>
     </handlers>
   </binding>
+
+  <binding id="editor">
+    <handlers>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_cut"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="accel" command="cmd_wordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="accel" command="cmd_wordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,accel" command="cmd_selectWordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,accel" command="cmd_selectWordNext"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_moveBottom"/>
+    </handlers>
+  </binding>
 </bindings>
