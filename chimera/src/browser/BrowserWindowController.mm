@@ -437,6 +437,24 @@ static NSArray* sToolbarDefaults = nil;
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
   if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
     mSidebarToolbarItem = item;
+  else if ([[item itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
+    // For our custom location bar view, the custom toolbar dialog thinks it's ok
+    // to allow more than one of these. When we add it, scan the list and if it's
+    // already there, remove it. When creating a window, this code runs into problems
+    // (looks like a bug in OS X 10.1.5). Cocoa tries to add the buttons before the window
+    // is created and if it isn't, asking for an array of toolbar items leads
+    // to a crash (basically, it cycles through this method endlessly until it dies).
+    // Just ensure the window is visible before we ask for the array.
+    if ([[self window] isVisible]) {
+      NSArray *toolbarItemArray = [[notification object] items];
+      for (unsigned int i = 0;i < [toolbarItemArray count];i++) {
+        if ([[[toolbarItemArray objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
+          [[notification object] removeItemAtIndex:i];
+          return;
+        }
+      }
+    }
+  }
 }
 
 //

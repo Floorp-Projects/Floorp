@@ -154,6 +154,27 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
 }
 
+
+//
+// we need -initWithCoder & -encodeWithCoder for the toolbar customization palette.
+// in OS X 10.1.5, cocoa doesn't help us out very much in encoding/decoding NSTextViews.
+// Max Horn says 10.2 does more than 10.1.5, so this may not be necessay in the future.
+//
+
+-(id) initWithCoder:(NSCoder *)coder
+{
+  if ((self = [super initWithFrame:NSMakeRect(0,0,0,0)]))
+    [self replaceCharactersInRange:NSMakeRange(0,[[self string] length]) withRTFD:[coder decodeObject]];
+
+  return self;
+}
+
+-(void) encodeWithCoder:(NSCoder *)coder
+{
+  [coder encodeObject:[self RTFDFromRange:NSMakeRange(0,[[self string] length])]];
+  return;
+}
+
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -167,6 +188,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NS_IF_RELEASE(mSession);
   NS_IF_RELEASE(mResults);
   NS_IF_RELEASE(mListener);
+  
+  [super dealloc];
 }
 
 - (void) setSession:(NSString *)aSession
