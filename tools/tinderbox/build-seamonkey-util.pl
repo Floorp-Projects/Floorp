@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.67 $ ';
+$::UtilsVersion = '$Revision: 1.68 $ ';
 
 package TinderUtils;
 
@@ -581,7 +581,7 @@ sub BuildIt {
 		# Tack on pull by date if requested.  Don't pull by date on a branch,
 		# cvs currently only supports one tag, either a date tag or a branch tag,
 		# we will assume branch tag wins for now.
-		if (not defined($Settings::BuildTag)) {
+		if ((not defined($Settings::BuildTag)) or $Settings::BuildTag eq '') {
 		  if ($Settings::UseTimeStamp) {
             $start_time = adjust_start_time($start_time);
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
