@@ -132,6 +132,7 @@ public:
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   virtual PRBool IsContainingBlock() const;
+  virtual PRBool IsFloatContainingBlock() const;
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,

@@ -1623,6 +1623,9 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     if (NS_FAILED(rv))
       break;
 
+    // Give it a space manager, so it won't crash of ancestors don't have one
+    divFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+    
     nsHTMLContainerFrame::CreateViewForFrame(divFrame, this, PR_FALSE);
     mFrames.AppendFrame(this, divFrame);
 

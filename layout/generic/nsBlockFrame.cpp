@@ -537,6 +537,12 @@ nsBlockFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
+/* virtual */ PRBool
+nsBlockFrame::IsFloatContainingBlock() const
+{
+  return PR_TRUE;
+}
+
 //////////////////////////////////////////////////////////////////////
 // Frame structure methods
 
@@ -5524,7 +5530,6 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       // width. Reflow it again, this time pinning the width to the
       // maxElementWidth.
       availSpace.width = maxElementWidth;
-      nsCollapsingMargin marginMEW;
       // construct the html reflow state for the float. 
       // ReflowBlock will initialize it.
       nsHTMLReflowState redoFloatRS(aState.mPresContext, aState.mReflowState,
