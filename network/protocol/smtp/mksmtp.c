@@ -543,15 +543,17 @@ net_smtp_auth_login_response(ActiveEntry *cur_entry)
   switch (CD_RESPONSE_CODE/100) {
   case 2:
 	  {
+#ifdef MOZ_MAIL_NEWS
 		  char *pop_password = (char *)NET_GetPopPassword();
 		  CD_NEXT_STATE = SMTP_SEND_HELO_RESPONSE;
 		  if (pop_password == NULL)
 			NET_SetPopPassword2(net_smtp_password);
-#ifdef MOZ_MAIL_NEWS
 		  if ( IMAP_GetPassword() == NULL )
 			  IMAP_SetPassword(net_smtp_password);
-#endif /* MOZ_MAIL_NEWS */
 		  XP_FREEIF(pop_password);
+#else /* MOZ_MAIL_NEWS */
+          XP_ASSERT(0);
+#endif /* MOZ_MAIL_NEWS */
 	  }
 	break;
   case 3:
@@ -565,7 +567,7 @@ net_smtp_auth_login_response(ActiveEntry *cur_entry)
 		char *username = 0;
 		char host[256];
 		int len = 256;
-#endif;
+#endif
 		/* NET_GetPopUsername () returns pointer to the cached
 		 * username. It did *NOT* alloc a new string
 		 */
@@ -656,7 +658,9 @@ net_smtp_auth_login_password(ActiveEntry *cur_entry)
   
   if (!net_smtp_password || !*net_smtp_password) {
 	  XP_FREEIF(net_smtp_password); /* in case its an empty string */
+#ifdef MOZ_MAIL_NEWS
 	  net_smtp_password = (char *) NET_GetPopPassword();
+#endif /* MOZ_MAIL_NEWS */
   }
 
   if (!net_smtp_password || !*net_smtp_password) {
@@ -1304,10 +1308,12 @@ HG61365
 									encrypt_p, sign_p, force_plain_text,
 									html_part);
 
+#ifdef MOZ_MAIL_NEWS
 		if (cpane && CE_URL_S->fe_data) {
 			/* Tell libmsg what to do after deliver the message */
 			MSG_SetPostDeliveryActionInfo (cpane, CE_URL_S->fe_data);
 		}
+#endif /* MOZ_MAIL_NEWS */
 
 		FREEIF(from);
 		FREEIF(reply_to);
@@ -1679,6 +1685,13 @@ Subject: %s\n\
     
 }
 
+#ifndef MOZ_MAIL_NEWS
+PUBLIC const char*
+NET_GetPopUsername ()
+{
+  return 0;
+}
+#endif /* MOZ_MAIL_NEWS */
 
 
 #endif /* defined(MOZILLA_CLIENT) || defined(LIBNET_SMTP) */
