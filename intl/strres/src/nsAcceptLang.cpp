@@ -27,7 +27,6 @@
 #include "nsIServiceManager.h"
 #include "nsID.h"
 #include "nsString.h"
-#include "nsILocale.h"
 #include "nsIStringBundle.h"
 #include "nsAcceptLang.h"
 
@@ -87,10 +86,10 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   nsIStringBundle *bundle = nsnull;
 #if 1
   res = sBundleService->CreateBundle("resource:/res/language.properties",
-                              nsnull, &bundle);
+                              &bundle);
 #else
   res = sBundleService->CreateBundle("chrome://global/locale/languageNames.properties",
-                              nsnull, &bundle);
+                              &bundle);
 #endif
   PRUnichar *ptrv = nsnull;
   nsString  lc_tmp(aLocale);
@@ -182,7 +181,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
   nsIStringBundle *bundle = nsnull;
   /* shall we put the file in res/ instead ? */
   res = sBundleService->CreateBundle("chrome://global/locale/accept2locale.properties",
-                                     nsnull, &bundle);
+                                     &bundle);
     
   PRUnichar *ptrv = nsnull;
   if (NS_OK == (res = bundle->GetStringFromName(acceptLang.GetUnicode(), &ptrv))) {

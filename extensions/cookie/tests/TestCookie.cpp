@@ -90,9 +90,7 @@ int main(PRInt32 argc, char *argv[])
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
         char*  propertyURL = "chrome://necko/locale/necko.properties";
-        nsILocale *locale = nsnull;
-        rv = bundleService->CreateBundle(propertyURL, locale,
-                                          getter_AddRefs(stringBundle));
+        rv = bundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
     }
 
     NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
