@@ -107,7 +107,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 	/* First move the Key */
 	for (space = FREESPACE(p) - BIGOVERHEAD; key_size;
 	    space = FREESPACE(p) - BIGOVERHEAD) {
-		move_bytes = MIN(space, key_size);
+		move_bytes = PR_MIN(space, key_size);
 		off = OFFSET(p) - move_bytes;
 		memmove(cp + off, key_data, move_bytes);
 		key_size -= move_bytes;
@@ -124,7 +124,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 		n = p[0];
 		if (!key_size) {
 			if (FREESPACE(p)) {
-				move_bytes = MIN(FREESPACE(p), val_size);
+				move_bytes = PR_MIN(FREESPACE(p), val_size);
 				off = OFFSET(p) - move_bytes;
 				p[n] = off;
 				memmove(cp + off, val_data, move_bytes);
@@ -144,7 +144,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 	/* Now move the data */
 	for (space = FREESPACE(p) - BIGOVERHEAD; val_size;
 	    space = FREESPACE(p) - BIGOVERHEAD) {
-		move_bytes = MIN(space, val_size);
+		move_bytes = PR_MIN(space, val_size);
 		/*
 		 * Here's the hack to make sure that if the data ends on the
 		 * same page as the key ends, FREESPACE is at least one.

@@ -224,14 +224,6 @@ XP_END_PROTOS
 #include <limits.h>
 #endif
 
-#ifndef MIN
-#define MIN(x, y)	(((x) < (y)) ? (x) : (y))
-#endif
-
-#ifndef MAX
-#define MAX(x, y)	(((x) > (y)) ? (x) : (y))
-#endif
-
 #define	RET_ERROR	-1		/* Return values. */
 #define	RET_SUCCESS	 0
 #define	RET_SPECIAL	 1
