@@ -323,6 +323,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     return NS_OK;                                                             \
   }                                                                           \
   return NS_NOINTERFACE;                                                      \
+}
 
 /**
  * Convenience macro for implementing all nsISupports methods for
