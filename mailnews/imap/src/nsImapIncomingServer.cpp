@@ -2048,33 +2048,44 @@ nsresult nsImapIncomingServer::GetStringBundle()
 
 NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
 {
-	nsAutoString	resultString(NS_LITERAL_STRING("???"));
 	nsresult res = NS_OK;
 
   GetStringBundle();
 	if (m_stringBundle)
 	{
-		PRUnichar *ptrv = nsnull;
-		res = m_stringBundle->GetStringFromID(aMsgId, &ptrv);
-
-		if (NS_FAILED(res)) 
-		{
-			resultString.Assign(NS_LITERAL_STRING("[StringID"));
-			resultString.AppendInt(aMsgId, 10);
-			resultString.Assign(NS_LITERAL_STRING("?]"));
+    res = m_stringBundle->GetStringFromID(aMsgId, aString);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+  nsAutoString	resultString(NS_LITERAL_STRING("String ID "));
+  resultString.AppendInt(aMsgId);
 			*aString = ToNewUnicode(resultString);
+  return NS_OK;
 		}
-		else
+
+NS_IMETHODIMP  nsImapIncomingServer::FormatStringWithHostNameByID(PRInt32 aMsgId, PRUnichar **aString)
 		{
-			*aString = ptrv;
+  nsresult res = NS_OK;
+  
+  GetStringBundle();
+  if (m_stringBundle)
+  {
+    nsXPIDLCString hostName;
+    res = GetRealHostName(getter_Copies(hostName));
+    if (NS_SUCCEEDED(res))
+    {
+      nsAutoString hostStr;
+      hostStr.AssignWithConversion(hostName.get());
+      const PRUnichar *params[] = { hostStr.get() };
+      res = m_stringBundle->FormatStringFromID(aMsgId, params, 1, aString);
+      if (NS_SUCCEEDED(res))
+        return res;
 		}
 	}
-	else
-	{
-		res = NS_OK;
+  nsAutoString	resultString(NS_LITERAL_STRING("String ID "));
+  resultString.AppendInt(aMsgId);
 		*aString = ToNewUnicode(resultString);
-	}
-	return res;
+  return NS_OK;
 }
 
 nsresult nsImapIncomingServer::ResetFoldersToUnverified(nsIFolder *parentFolder)

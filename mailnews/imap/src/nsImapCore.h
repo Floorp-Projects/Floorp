@@ -201,9 +201,6 @@ public:
 	nsIMAPNamespace *namespaceForFolder;
 };
 
-const int kImapServerDisconnected = 1;
-const int kImapOutOfMemory = 2;
-const int kImapDownloadingMessage = 3;
 
 typedef struct _GenericInfo {
 	char *c, *hostName;

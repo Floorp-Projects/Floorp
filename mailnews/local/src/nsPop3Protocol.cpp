@@ -854,7 +854,22 @@ nsPop3Protocol::Error(PRInt32 err_code)
               else
               {
                 nsXPIDLString serverSaidPrefix;
-                mStringService->GetStringByID(POP3_SERVER_SAID,getter_Copies(serverSaidPrefix));
+                nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+                nsXPIDLCString hostName;
+                // Fomat string with hostname.
+                if (server)
+                  rv = server->GetRealHostName(getter_Copies(hostName));
+                if (NS_SUCCEEDED(rv))
+                {
+                  nsAutoString hostStr;
+                  hostStr.AssignWithConversion(hostName.get());
+                  const PRUnichar *params[] = { hostStr.get() };
+                  nsCOMPtr<nsIStringBundle> bundle;
+                  rv = mStringService->GetBundle(getter_AddRefs(bundle));
+                  if (NS_SUCCEEDED(rv))
+                    bundle->FormatStringFromID(POP3_SERVER_SAID, params, 1, getter_Copies(serverSaidPrefix));
+                }
+
                 nsAutoString message(alertString + NS_LITERAL_STRING(" ") +
                                      serverSaidPrefix + NS_LITERAL_STRING(" ") +
                                      NS_ConvertASCIItoUCS2(m_commandResponse));

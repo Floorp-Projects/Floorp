@@ -107,4 +107,5 @@ NS_END_EXTERN_C
 #define IMAP_PFC_READ_MAIL                          5063
 #define IMAP_PFC_SENT_MAIL                          5064
 #define IMAP_SPECIAL_CHAR                           5065
+#define IMAP_SERVER_DISCONNECTED                    5066
 #endif /* _nsImapStringBundle_H__ */

@@ -74,6 +74,8 @@ NS_INTERFACE_MAP_BEGIN(nsMsgProtocol)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 static PRUnichar *GetStringByID(PRInt32 stringID);
+static PRUnichar *FormatStringWithHostNameByID(PRInt32 stringID, nsIMsgMailNewsUrl *msgUri);
+
 
 nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 {
@@ -334,7 +336,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
       
       NS_ASSERTION(errorID != UNKNOWN_ERROR, "unknown error, but don't alert user.");
       if (errorID != UNKNOWN_ERROR) {
-        PRUnichar *errorMsg = GetStringByID(errorID);
+        PRUnichar *errorMsg = FormatStringWithHostNameByID(errorID, msgUrl);
         if (errorMsg == nsnull) {
           nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
           resultString.AppendInt(errorID, 10);
@@ -1219,7 +1221,7 @@ PRUnichar *GetStringByID(PRInt32 stringID)
    nsCOMPtr <nsIStringBundle> sBundle = nsnull;
 
    nsCOMPtr<nsIStringBundleService> sBundleService = 
-            do_GetService(kStringBundleServiceCID, &rv);
+            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
    if (NS_FAILED(rv) || (nsnull == sBundleService)) 
       return nsnull;
 
@@ -1236,3 +1238,37 @@ PRUnichar *GetStringByID(PRInt32 stringID)
    return (ptrv);
 }
 
+PRUnichar *FormatStringWithHostNameByID(PRInt32 stringID, nsIMsgMailNewsUrl *msgUri)
+{
+  if (! msgUri)
+    return nsnull;
+
+  nsresult rv;
+  nsCOMPtr <nsIStringBundle> sBundle = nsnull;
+
+  nsCOMPtr<nsIStringBundleService> sBundleService = 
+          do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv) || (! sBundleService)) 
+    return nsnull;
+
+  rv = sBundleService->CreateBundle(MSGS_URL, getter_AddRefs(sBundle));
+  if (NS_FAILED(rv)) 
+    return nsnull;
+
+  PRUnichar *ptrv = nsnull;
+  nsXPIDLCString hostName;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = msgUri->GetServer(getter_AddRefs(server));
+
+  if (NS_SUCCEEDED(rv) && server)
+   rv = server->GetRealHostName(getter_Copies(hostName));
+
+  nsAutoString hostStr;
+  hostStr.AssignWithConversion(hostName.get());
+  const PRUnichar *params[] = { hostStr.get() };
+  rv = sBundle->FormatStringFromID(stringID, params, 1, &ptrv);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+
+  return (ptrv);
+}

@@ -4068,7 +4068,7 @@ nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
     if (!suppressErrorMsg)
     {
       PRUnichar *progressString = nsnull;
-      m_imapServerSink->GetImapStringByID(aMessageId, &progressString);
+      m_imapServerSink->FormatStringWithHostNameByID(aMessageId, &progressString);
       nsCOMPtr<nsIMsgWindow> msgWindow;
       GetMsgWindow(getter_AddRefs(msgWindow));
       m_imapServerSink->FEAlert(progressString, msgWindow);

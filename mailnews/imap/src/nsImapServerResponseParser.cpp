@@ -127,7 +127,7 @@ PRBool nsImapServerResponseParser::GetNextLineForParser(char **nextLine)
 	// we'd really like to try to silently reconnect, but we shouldn't put this
 	// message up just in the interrupt case
 	if (fServerConnection.GetConnectionStatus() <= 0 && !fServerConnection.DeathSignalReceived())
-		fServerConnection.AlertUserEventUsingId(kImapServerDisconnected);
+		fServerConnection.AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
 	return rv;
 }
 
@@ -285,10 +285,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 
 void nsImapServerResponseParser::HandleMemoryFailure()
 {
-#ifdef DEBUG_chrisf
-	PR_ASSERT(PR_FALSE);
-#endif
-	fServerConnection.AlertUserEventUsingId(kImapOutOfMemory);
+	fServerConnection.AlertUserEventUsingId(IMAP_OUT_OF_MEMORY);
 	nsIMAPGenericParser::HandleMemoryFailure();
 }
 

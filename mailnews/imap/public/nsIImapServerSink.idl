@@ -57,6 +57,7 @@ interface nsIImapServerSink : nsISupports {
 	void loadNextQueuedUrl(out boolean urlRun);
 
 	void getImapStringByID(in long aMsgId, out wstring aString);
+  void formatStringWithHostNameByID(in long aMsgId, out wstring aString);
 	void fEAlert(in wstring aString, in nsIMsgWindow aMsgWindow);
 	void fEAlertFromServer(in string aString, in nsIMsgWindow aMsgWindow);
 	void commitNamespaces();
