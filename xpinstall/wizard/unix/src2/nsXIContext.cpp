@@ -123,13 +123,22 @@ int
 nsXIContext::LoadResources()
 {
     int err = OK;
-    nsINIParser *parser = new nsINIParser(RES_FILE);    
+    nsINIParser *parser = NULL;
+    char *resfile = NULL;
     kvpair *currkv = NULL;
     char currkey[MAX_KEY_SIZE];
     int len, i;
 
+    resfile = nsINIParser::ResolveName(RES_FILE);
+    if (!resfile)
+        return E_INVALID_PTR;
+
+    parser = new nsINIParser(resfile);
     if (!parser)
+    {
+        XI_IF_FREE(resfile);
         return E_MEM;
+    }
 
     char *strkeys[] = 
     {
@@ -203,6 +212,7 @@ BAIL:
     {
         fprintf(stderr, "FATAL ERROR: Failed to load resources!");
     }
+    XI_IF_FREE(resfile);
     XI_IF_DELETE(parser);
     return err;
 }
