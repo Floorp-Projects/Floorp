@@ -1678,9 +1678,9 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   // this code checks to see if it does
   // if so then it resets the entire selection of listbox
   PRBool wasReset = PR_FALSE;
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
   if (options) {
-    nsIDOMHTMLOptionElement* option = GetOption(*options, aIndex);
+    nsCOMPtr<nsIDOMHTMLOptionElement> option = getter_AddRefs(GetOption(*options, aIndex));
     if (option) {
       PRBool selected = PR_FALSE;
       option->GetDefaultSelected(&selected);
@@ -1689,7 +1689,6 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
         //Reset(aPresContext);             // this sets mSelectedIndex to the defaulted selection
         wasReset = PR_TRUE;
       }
-      NS_RELEASE(option);
     }
   }
 
@@ -1919,7 +1918,7 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, co
         ToggleSelected(selectedIndex);// sets mSelectedIndex
 	// Should we send an event here?
         if (nsnull != mComboboxFrame) {
-          mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+          // XXX mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
         } else {
 	  InitSelectionCache(-1);
 	}
