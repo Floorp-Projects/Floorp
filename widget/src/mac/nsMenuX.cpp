@@ -39,7 +39,6 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
@@ -882,13 +881,13 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     inMenuItemContent->GetDocument(*getter_AddRefs(document));
     if ( !document ) 
       return;
-    nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-    if ( !xulDocument )
+    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+    if ( !domDocument )
       return;
-  
+
     nsCOMPtr<nsIDOMElement> keyElement;
     if (!keyValue.IsEmpty())
-      xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
+      domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     if ( keyElement ) {
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
