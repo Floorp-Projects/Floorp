@@ -36,7 +36,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="630" height="400" screenX="20" screenY="20"
         persist="width height screenX screenY sizemode"
-        onload="Startup();" onunload="Shutdown();">
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -51,7 +52,7 @@
               oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
   </commandset>
 
-  <command id="cmd_close" oncommand="window.close()"/>
+  <command id="cmd_close" oncommand="closeWindow(true);"/>
   <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
   <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
   <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
