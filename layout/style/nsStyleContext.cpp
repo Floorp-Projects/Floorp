@@ -55,10 +55,6 @@
 
 #include "nsRuleNode.h"
 
-#ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
-#endif
-
 #ifdef DEBUG
 // #define NOISY_DEBUG
 #endif

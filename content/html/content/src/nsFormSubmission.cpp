@@ -62,8 +62,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 
 //BIDI
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
-//static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
+#include "nsBidiUtils.h"
 #else
 //
 // Make BIDI stuff work when BIDI is off
@@ -882,17 +881,14 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
   PRUint8 textDirAtSubmit = GET_BIDI_OPTION_DIRECTION(mBidiOptions);
   //ahmed 15-1
   nsAutoString temp;
-  nsCOMPtr<nsIUBidiUtils> bidiUtils(
-    do_GetService("@mozilla.org/intl/unicharbidiutil;1", &rv));
-
   nsAutoString newBuffer;
   //This condition handle the RTL,LTR for a logical file
   if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
      && mCharset.Equals(NS_LITERAL_STRING("windows-1256"),
                 nsCaseInsensitiveStringComparator())) {
-    bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc),
-                                      newBuffer,
-                                      textDirAtSubmit);
+    Conv_06_FE_WithReverse(nsString(aSrc),
+                           newBuffer,
+                           textDirAtSubmit);
     aSrc = (PRUnichar*)newBuffer.get();
     aLen=newBuffer.Length();
   }
@@ -901,7 +897,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
                              nsCaseInsensitiveStringComparator())) {
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
-    bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
+    Conv_FE_06(nsString(aSrc), newBuffer);
     aSrc = (PRUnichar*)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
@@ -921,7 +917,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
                              nsCaseInsensitiveStringComparator())
                   && textDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
-    bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
+    Conv_FE_06(nsString(aSrc), newBuffer);
     aSrc = (PRUnichar*)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();

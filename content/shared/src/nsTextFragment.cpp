@@ -41,7 +41,7 @@
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 // Static buffer used for newline fragments

@@ -53,10 +53,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsHankakuToZenkaku.obj \
 	.\$(OBJDIR)\nsEntityConverter.obj \
 	.\$(OBJDIR)\nsSaveAsCharset.obj \
-!ifdef IBMBIDI
-	.\$(OBJDIR)\nsBidiUtilsImp.obj \
-	.\$(OBJDIR)\nsBidiImp.obj \
-!endif
 	$(NULL)
 
 LLIBS= \

@@ -51,7 +51,7 @@
 #include "nsIObserver.h"
 #include "nsILookAndFeel.h"
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 #include "nsHashtable.h"

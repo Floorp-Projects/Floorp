@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,52 +17,14 @@
  * Copyright (C) 2000 IBM Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Maha Abou El Rous <mahar@eg.ibm.com>
+ *   Lina Kemmel <lkemmel@il.ibm.com>
+ *   Simon Montagu <smontagu@netscape.com>
  *   Roozbeh Pournader <roozbeh@sharif.edu>
  */
 #ifdef IBMBIDI
-#include "nsCom.h"
-#include "pratom.h"
-#include "nsUUDll.h"
-#include "nsISupports.h"
-#include "nsBidiUtilsImp.h"
-#include "bidicattable.h"
-#include "symmtable.h"
-
-#include "nsIServiceManager.h"
-#include "nsIUBidiUtils.h"
-#include "nsIBidi.h"
-static NS_DEFINE_CID(kBidiCID, NS_BIDI_CID);
-NS_IMPL_ISUPPORTS1(nsBidiUtilsImp, nsIUBidiUtils)
-
-static nsCharType ebc2ucd[15] = {
-    eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */
-    eCharType_LeftToRight,
-    eCharType_RightToLeft,
-    eCharType_RightToLeftArabic,
-    eCharType_ArabicNumber,
-    eCharType_EuropeanNumber,
-    eCharType_EuropeanNumberSeparator,
-    eCharType_EuropeanNumberTerminator,
-    eCharType_CommonNumberSeparator,
-    eCharType_OtherNeutral,
-    eCharType_DirNonSpacingMark,
-    eCharType_BoundaryNeutral,
-    eCharType_BlockSeparator,
-    eCharType_SegmentSeparator,
-    eCharType_WhiteSpaceNeutral
-};
-
-static nsCharType cc2ucd[5] = {
-    eCharType_LeftToRightEmbedding,
-    eCharType_RightToLeftEmbedding,
-    eCharType_PopDirectionalFormat,
-    eCharType_LeftToRightOverride,
-    eCharType_RightToLeftOverride
-};
-
-#define FULL_ARABIC_SHAPING 1
-// the Array Index = FE_CHAR - FE_TO_06_OFFSET
+#include "nsBidiUtils.h"
 
 #define FE_TO_06_OFFSET 0xfe70
 
@@ -265,90 +227,10 @@ static PRUint16 gArabicLigatureMap[] =
 0x8EDF, // 0xFE8E 0xFEDF -> 0xFEFB
 0x8EE0  // 0xFE8E 0xFEE0 -> 0xFEFC
 };
-#define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
-#define CHAR_IS_ARABIC(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
-// Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
-#define LRM_CHAR 0x200e
-#define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
-#define NUM_TO_ARABIC(c) \
-  ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
-   ((c) - (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
-   (c))
-#define NUM_TO_HINDI(c) \
-  ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
-   ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
-   (c))
-
-nsBidiUtilsImp::nsBidiUtilsImp()
+nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
+                       PRUnichar* aBuf, PRUint32 *aBufLen)
 {
-  NS_INIT_REFCNT();
-}
-
-nsBidiUtilsImp::~nsBidiUtilsImp()
-{
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::GetBidiCategory(PRUnichar aChar, eBidiCategory* oResult)
-{
-  *oResult = GetBidiCat(aChar);
-  if (eBidiCat_CC == *oResult)
-    *oResult = (eBidiCategory)(aChar & 0xFF); /* Control codes have special treatment to keep the tables smaller */
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory, PRBool* oResult)
-{
-  eBidiCategory bCat = GetBidiCat(aChar);
-  if (eBidiCat_CC == bCat)
-    bCat = (eBidiCategory)(aChar & 0xFF);
-  *oResult = (bCat == aBidiCategory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::IsBidiControl(PRUnichar aChar, PRBool* oResult)
-{
-  // This method is used when stripping Bidi control characters for
-  // display, so it will return TRUE for LRM and RLM as well as the
-  // characters with category eBidiCat_CC
-  *oResult = (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffe)==LRM_CHAR);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::GetCharType(PRUnichar aChar, nsCharType* oResult)
-{
-  eBidiCategory bCat = GetBidiCat(aChar);
-  if (eBidiCat_CC != bCat) {
-    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
-    if(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
-      *oResult = ebc2ucd[bCat];
-    else 
-      *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
-  } else {
-    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)), "size mismatch");
-    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)))
-      *oResult = cc2ucd[aChar - 0x202a];
-    else 
-      *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::SymmSwap(PRUnichar* aChar)
-{
-  *aChar = Mirrored(*aChar);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-                                            PRUnichar* aBuf, PRUint32 *aBufLen)
-{
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-#ifdef FULL_ARABIC_SHAPING
-  // Start Unreview Code
   const PRUnichar* src = aString;
   const PRUnichar* p;
   PRUnichar* dest = aBuf;
@@ -361,11 +243,11 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
     leftJ = thisJ;
 
     if ((eTr != leftJ) || ((leftJ == eTr) && 
-        ( ( (src-1) >= aString ) && !CHAR_IS_ARABIC(*(src-1)))))
+        ( ( (src-1) >= aString ) && !IS_ARABIC_CHAR(*(src-1)))))
       leftNoTrJ = thisJ;
 
     if(src-2 >= (aString)){
-      for(p=src-2; (p >= (aString))&& (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))) ; p--)  
+      for(p=src-2; (p >= (aString))&& (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))) ; p--)  
         leftNoTrJ = GetJoiningClass(*(p)) ;
     }
 
@@ -373,7 +255,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
     rightJ = rightNoTrJ = GetJoiningClass(*(src+1)) ;
 
     if(src+2 <= (aString+aLen-1)){
-      for(p=src+2; (p <= (aString+aLen-1))&&(eTr == rightNoTrJ) && (CHAR_IS_ARABIC(*(src+1))); p++)
+      for(p=src+2; (p <= (aString+aLen-1))&&(eTr == rightNoTrJ) && (IS_ARABIC_CHAR(*(src+1))); p++)
         rightNoTrJ = GetJoiningClass(*(p)) ;
     }
 
@@ -383,11 +265,11 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
 
   }
   if((eTr != thisJ) || 
-     ((thisJ == eTr) && (((src-1)>=aString) && (!CHAR_IS_ARABIC(*(src-1))))))
+     ((thisJ == eTr) && (((src-1)>=aString) && (!IS_ARABIC_CHAR(*(src-1))))))
     leftNoTrJ = thisJ;
 
   if(src-2 >= (aString)){
-    for(p=src-2; (src-2 >= (aString)) && (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))); p--)
+    for(p=src-2; (src-2 >= (aString)) && (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))); p--)
       leftNoTrJ = GetJoiningClass(*(p)) ;
   }
 
@@ -426,58 +308,10 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
   *aBufLen = lDest - aBuf;
 
   return NS_OK;
-#else
-  for(*aBufLen = 0;*aBufLen < aLen; (*aBufLen)++)
-    aBuf[*aBufLen] = aString[*aBufLen];
-  return NS_OK;
-#endif
 }
 
-
-NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+nsresult Conv_FE_06(const nsString& aSrc, nsString& aDst)
 {
-  PRUint32 i;
-  // IBMBIDI_NUMERAL_REGULAR *
-  // IBMBIDI_NUMERAL_HINDICONTEXT
-  // IBMBIDI_NUMERAL_ARABIC
-  // IBMBIDI_NUMERAL_HINDI
-  mNumflag=aNumFlag;
-  
-  switch (aNumFlag) {
-    case IBMBIDI_NUMERAL_HINDI:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-      break;
-    case IBMBIDI_NUMERAL_ARABIC:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      break;
-    default : // IBMBIDI_NUMERAL_REGULAR, IBMBIDI_NUMERAL_HINDICONTEXT for HandleNum() which is called for clipboard handling
-      for (i=1;i<aSize;i++) {
-        if (IS_ARABIC_CHAR(aBuffer[i-1])) 
-          aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-        else 
-          aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      }
-      break;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(const nsString aSrc, nsString & aDst)
-{
-  aDst = aSrc;
-  return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(),mNumflag);
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
-{
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-#ifdef FULL_ARABIC_SHAPING
-  // Start Unreview Code
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i, size = aSrc.Length();
   aDst.Truncate();
@@ -499,20 +333,11 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
       aDst += aSrcUnichars[i]; // copy it even if it is not in FE range
     }
   }// for : loop the buffer
-#else
-  aDst= aSrc;
-#endif
   return NS_OK;
 }
-/////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst)
+
+nsresult Conv_FE_06_WithReverse(const nsString& aSrc, nsString& aDst)
 {
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-#ifdef FULL_ARABIC_SHAPING
-  // Start Unreview Code
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRBool foundArabic = PR_FALSE;
   PRUint32 i,endArabic, beginArabic, size = aSrc.Length();
@@ -522,7 +347,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
       break; // no need to convert char after the NULL
 
     while( (IS_FE_CHAR(aSrcUnichars[endArabic]))||
-           (CHAR_IS_ARABIC(aSrcUnichars[endArabic]))||
+           (IS_ARABIC_CHAR(aSrcUnichars[endArabic]))||
            (IS_ARABIC_DIGIT(aSrcUnichars[endArabic]))||
            (aSrcUnichars[endArabic]==0x0020)) 
     {
@@ -544,7 +369,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
           } // if expands to 2 char
         } else {
           // do we need to check the following if ?
-          if((CHAR_IS_ARABIC(aSrcUnichars[i]))||
+          if((IS_ARABIC_CHAR(aSrcUnichars[i]))||
              (IS_ARABIC_DIGIT(aSrcUnichars[i]))||
              (aSrcUnichars[i]==0x0020))
             aDst += aSrcUnichars[i];
@@ -555,22 +380,13 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
     }
     foundArabic=PR_FALSE;
   }// for : loop the buffer
-#else
-  aDst= aSrc;
-#endif
   return NS_OK;
 }
-////////////////////////////////////////////////////////////
-//ahmed
-NS_IMETHODIMP nsBidiUtilsImp::Conv_06_FE_WithReverse(const nsString aSrc,
-nsString & aDst,PRUint32 aDir)
+
+nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
+                                nsString& aDst,
+                                PRUint32 aDir)
 {
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-#ifdef FULL_ARABIC_SHAPING
-  // Start Unreview Code
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i,beginArabic, endArabic, size = aSrc.Length();
   aDst.Truncate();
@@ -580,7 +396,7 @@ nsString & aDst,PRUint32 aDir)
       break; // no need to convert char after the NULL
 
     while( (IS_06_CHAR(aSrcUnichars[endArabic])) || 
-           (CHAR_IS_ARABIC(aSrcUnichars[endArabic])) || 
+           (IS_ARABIC_CHAR(aSrcUnichars[endArabic])) || 
            (aSrcUnichars[endArabic]==0x0020) || 
            (IS_ARABIC_DIGIT(aSrcUnichars[endArabic]))  ) 
     {
@@ -641,10 +457,6 @@ nsString & aDst,PRUint32 aDir)
     }
     foundArabic=PR_FALSE;
   }// for : loop the buffer
-#else
-  aDst= aSrc;
-#endif
   return NS_OK;
 }
-
-#endif // IBMBIDI
+#endif //IBMBIDI

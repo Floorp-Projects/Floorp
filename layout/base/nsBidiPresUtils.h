@@ -28,8 +28,8 @@
 
 #include "nsVoidArray.h"
 #include "nsIFrame.h"
-#include "nsIBidi.h"
-#include "nsIUBidiUtils.h"
+#include "nsBidi.h"
+#include "nsBidiUtils.h"
 #include "nsCOMPtr.h"
 
 class nsBidiPresUtils {
@@ -75,9 +75,9 @@ public:
                              PRBool          aIsBidiSystem);
 
   /**
-   * Return our nsIBidi object (bidi reordering engine)
+   * Return our nsBidi object (bidi reordering engine)
    */
-  nsresult GetBidiEngine(nsIBidi** aBidiEngine);
+  nsresult GetBidiEngine(nsBidi** aBidiEngine);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
@@ -99,6 +99,24 @@ public:
                       nsIRenderingContext& aRenderingContext,
                       nscoord              aX,
                       nscoord              aY);
+
+  /**
+   * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place
+   * @param aBuffer is the string
+   * @param aSize is the size of aBuffer
+   * @param aNumFlag specifies the conversion to perform:
+   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
+   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
+   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
+   */
+  nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
+
+  /**
+   * Scan an nsString, converting numerals to Arabic or Hindi forms
+   * @param aSrc is the input string
+   * @param aDst is the output string
+   */
+  nsresult HandleNumbers(const nsString& aSrc, nsString& aDst);
 
 private:
   /**
@@ -169,9 +187,9 @@ private:
   PRInt32*        mIndexMap;
   PRUint8*        mLevels;
   nsresult        mSuccess;
+  PRUint32        mNumflag;
 
-  nsCOMPtr<nsIBidi>        mBidiEngine;
-  nsCOMPtr<nsIUBidiUtils>  mUnicodeUtils;
+  nsBidi*         mBidiEngine;
 };
 
 #endif /* nsBidiPresUtils_h___ */

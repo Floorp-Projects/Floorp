@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -17,100 +17,18 @@
  * Copyright (C) 2000 IBM Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Maha Abou El Rous <mahar@eg.ibm.com>
+ *   Lina Kemmel <lkemmel@il.ibm.com>
+ *   Simon Montagu <smontagu@netscape.com>
  *
  */
 
-#ifndef nsIUBidiUtils_h__
-#define nsIUBidiUtils_h__
+#ifndef nsBidiUtils_h__
+#define nsBidiUtils_h__
 
-#include "nsISupports.h"
-#include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
-// Include nsIBidi.h for nsCharType data type
-#include "nsIBidi.h"
-
-   /**
-    *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
-    *  section BIDIRECTIONAL PROPERTIES
-    *  for the detailed definition of the following categories
-    *
-    *  The values here must match the equivalents in %map in
-    * mozilla/intl/unicharutil/tools/genbidicattable.pl
-    */
-
-typedef enum {
-  eBidiCat_Undefined,
-  eBidiCat_L,          /* Left-to-Right               */
-  eBidiCat_R,          /* Right-to-Left               */
-  eBidiCat_AL,         /* Right-to-Left Arabic        */
-  eBidiCat_AN,         /* Arabic Number               */
-  eBidiCat_EN,         /* European Number             */
-  eBidiCat_ES,         /* European Number Separator   */
-  eBidiCat_ET,         /* European Number Terminator  */
-  eBidiCat_CS,         /* Common Number Separator     */
-  eBidiCat_ON,         /* Other Neutrals              */
-  eBidiCat_NSM,        /* Non-Spacing Mark            */
-  eBidiCat_BN,         /* Boundary Neutral            */
-  eBidiCat_B,          /* Paragraph Separator         */
-  eBidiCat_S,          /* Segment Separator           */
-  eBidiCat_WS,         /* Whitespace                  */
-  eBidiCat_CC = 0xf,   /* Control Code                */
-                       /* (internal use only - will never be outputed) */
-  eBidiCat_LRE = 0x2a, /* Left-to-Right Embedding     */
-  eBidiCat_RLE = 0x2b, /* Right-to-Left Embedding     */
-  eBidiCat_PDF = 0x2c, /* Pop Directional Formatting  */
-  eBidiCat_LRO = 0x2d, /* Left-to-Right Override      */
-  eBidiCat_RLO = 0x2e  /* Right-to-Left Override      */
-} eBidiCategory;
-
-/* {D23D2DD0-E2F9-11d3-B6DF-00104B4119F8} */
-#define NS_UNICHARBIDIUTIL_CID \
-                 { 0xd23d2dd0, 0xe2f9, 0x11d3, \
-                 {0xb6, 0xdf, 0x0, 0x10, 0x4b, 0x41, 0x19, 0xf8} }
-
-#define NS_UNICHARBIDIUTIL_CONTRACTID "@mozilla.org/intl/unicharbidiutil;1"
-
-
-/* {49926730-E221-11d3-B6DE-00104B4119F8} */
-#define NS_IUBIDIUTILS_IID \
-                { 0x49926730, 0xe221, 0x11d3, \
-                { 0xb6, 0xde, 0x0, 0x10, 0x4b, 0x41, 0x19, 0xf8} }
-
-class nsIUBidiUtils : public nsISupports {
-
-  public: 
-
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUBIDIUTILS_IID)
-
-   /**
-    * Give a Unichar, return an eBidiCategory
-    */
-    NS_IMETHOD GetBidiCategory(PRUnichar aChar, eBidiCategory* oResult) = 0 ;
-
-   /**
-    * Give a Unichar, and a eBidiCategory, 
-    * return PR_TRUE if the Unichar is in that category, 
-    * return PR_FALSE, otherwise
-    */
-    NS_IMETHOD IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory, PRBool* oResult) = 0;
-
-   /**
-    * Give a Unichar
-    * return PR_TRUE if the Unichar is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
-    * return PR_FALSE, otherwise
-    */
-    NS_IMETHOD IsBidiControl(PRUnichar aChar, PRBool* oResult) = 0;
-
-   /**
-    * Give a Unichar, return a nsCharType (compatible with ICU)
-    */
-    NS_IMETHOD GetCharType(PRUnichar aChar, nsCharType* oResult) = 0 ;
-
-   /**
-    * Give a Unichar, return the symmetric equivalent
-    */
-    NS_IMETHOD SymmSwap(PRUnichar* aChar) = 0 ;
 
   /**
    * Perform Arabic shaping on a Unichar string
@@ -119,26 +37,8 @@ class nsIUBidiUtils : public nsISupports {
    * @param aBuf receives the shaped output
    * @param aBuflen receives the length of aBuf
    */
-    NS_IMETHOD ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-                             PRUnichar* aBuf, PRUint32* aBufLen)=0;
-
-  /**
-   * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place
-   * @param aBuffer is the string
-   * @param aSize is the size of aBuffer
-   * @param aNumFlag specifies the conversion to perform:
-   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
-   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
-   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
-   */
-    NS_IMETHOD HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag)=0;
-
-  /**
-   * Scan an nsString, converting numerals to Arabic or Hindi forms
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   */
-    NS_IMETHOD HandleNumbers(const nsString aSrc, nsString & aDst) = 0;
+  nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
+                         PRUnichar* aBuf, PRUint32* aBufLen);
 
   /**
    * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
@@ -146,7 +46,7 @@ class nsIUBidiUtils : public nsISupports {
    * @param aSrc is the input string
    * @param aDst is the output string
    */
-    NS_IMETHOD Conv_FE_06(const nsString aSrc, nsString & aDst) = 0;
+  nsresult Conv_FE_06(const nsString& aSrc, nsString& aDst);
 
   /**
    * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
@@ -154,7 +54,7 @@ class nsIUBidiUtils : public nsISupports {
    * @param aSrc is the input string
    * @param aDst is the output string
    */
-    NS_IMETHOD Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst) = 0;
+  nsresult Conv_FE_06_WithReverse(const nsString& aSrc, nsString& aDst);
 
   /**
    * Scan an nsString, converting characters in the 06xx range to the equivalent characters in the 0Fxx range (Arabic presentation
@@ -165,9 +65,8 @@ class nsIUBidiUtils : public nsISupports {
    *        IBMBIDI_TEXTDIRECTION_LTR: do not reverse the string
    *        IBMBIDI_TEXTDIRECTION_RTL: reverse the string
    */
-    NS_IMETHOD Conv_06_FE_WithReverse(const nsString aSrc, nsString & aDst, PRUint32 aDir) = 0;
+  nsresult Conv_06_FE_WithReverse(const nsString& aSrc, nsString& aDst, PRUint32 aDir);
 
-};
 // --------------------------------------------------
 // IBMBIDI 
 // --------------------------------------------------
@@ -298,6 +197,4 @@ class nsIUBidiUtils : public nsISupports {
 
 #define CHAR_IS_BIDI(c) ( (IS_HINDI_DIGIT(c) ) || (IS_HEBREW_CHAR(c) ) \
                         || (IS_06_CHAR(c) ) || (IS_FE_CHAR(c) ) )
-#endif  /* nsIUbidiUtils_h__ */
-
-
+#endif  /* nsBidiUtils_h__ */

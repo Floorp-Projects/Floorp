@@ -172,7 +172,7 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 #include "nsITransformMediator.h"
 
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);

@@ -22,26 +22,16 @@
  *   Copyright (C) 2000, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Simon Montagu
  */
-#ifdef IBMBIDI
 
-#ifndef nsIBidi_h__
-#define nsIBidi_h__
+#ifndef nsBidi_h__
+#define nsBidi_h__
 
-#include "nsISupports.h"
-#include "prtypes.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
 
-#define NS_BIDI_CID \
-                    { 0xd9123b91, 0xf4f2, 0x11d3, \
-                    {0xb6, 0xf1, 0x0, 0x10, 0x4b, 0x41, 0x19, 0xf8} }
-
-#define NS_BIDI_CONTRACTID "@mozilla.org/intl/bidi;1" 
-
-#define NS_BIDI_IID \
-                    { 0xd9123b92, 0xf4f2, 0x11d3, \
-                    { 0xb6, 0xf1, 0x0, 0x10, 0x4b, 0x41, 0x19, 0xf8 } }
-
+// Bidi reordering engine from ICU
 /*
  * javadoc-style comments are intended to be transformed into HTML
  * using DOC++ - see
@@ -153,6 +143,40 @@ typedef enum nsBidiDirection nsBidiDirection;
 
 /* miscellaneous definitions ------------------------------------------------ */
 
+   /**
+    *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
+    *  section BIDIRECTIONAL PROPERTIES
+    *  for the detailed definition of the following categories
+    *
+    *  The values here must match the equivalents in %map in
+    * mozilla/intl/unicharutil/tools/genbidicattable.pl
+    */
+
+typedef enum {
+  eBidiCat_Undefined,
+  eBidiCat_L,          /* Left-to-Right               */
+  eBidiCat_R,          /* Right-to-Left               */
+  eBidiCat_AL,         /* Right-to-Left Arabic        */
+  eBidiCat_AN,         /* Arabic Number               */
+  eBidiCat_EN,         /* European Number             */
+  eBidiCat_ES,         /* European Number Separator   */
+  eBidiCat_ET,         /* European Number Terminator  */
+  eBidiCat_CS,         /* Common Number Separator     */
+  eBidiCat_ON,         /* Other Neutrals              */
+  eBidiCat_NSM,        /* Non-Spacing Mark            */
+  eBidiCat_BN,         /* Boundary Neutral            */
+  eBidiCat_B,          /* Paragraph Separator         */
+  eBidiCat_S,          /* Segment Separator           */
+  eBidiCat_WS,         /* Whitespace                  */
+  eBidiCat_CC = 0xf,   /* Control Code                */
+                       /* (internal use only - will never be outputed) */
+  eBidiCat_LRE = 0x2a, /* Left-to-Right Embedding     */
+  eBidiCat_RLE = 0x2b, /* Right-to-Left Embedding     */
+  eBidiCat_PDF = 0x2c, /* Pop Directional Formatting  */
+  eBidiCat_LRO = 0x2d, /* Left-to-Right Override      */
+  eBidiCat_RLO = 0x2e  /* Right-to-Left Override      */
+} eBidiCategory;
+
 enum nsCharType   { 
   eCharType_LeftToRight              = 0, 
   eCharType_RightToLeft              = 1, 
@@ -217,6 +241,236 @@ typedef enum nsCharType nsCharType;
  */
 #define NSBIDI_REMOVE_BIDI_CONTROLS      8
 
+/* helper macros for each allocated array member */
+#define GETDIRPROPSMEMORY(length) \
+                                  GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
+                                  mMayAllocateText, (length))
+
+#define GETLEVELSMEMORY(length) \
+                                GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
+                                mMayAllocateText, (length))
+
+#define GETRUNSMEMORY(length) \
+                              GetMemory((void **)&mRunsMemory, &mRunsSize, \
+                              mMayAllocateRuns, (length)*sizeof(Run))
+
+/* additional macros used by constructor - always allow allocation */
+#define GETINITIALDIRPROPSMEMORY(length) \
+                                         GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
+                                         PR_TRUE, (length))
+
+#define GETINITIALLEVELSMEMORY(length) \
+                                       GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
+                                       PR_TRUE, (length))
+
+#define GETINITIALRUNSMEMORY(length) \
+                                     GetMemory((void **)&mRunsMemory, &mRunsSize, \
+                                     PR_TRUE, (length)*sizeof(Run))
+
+/*
+ * Sometimes, bit values are more appropriate
+ * to deal with directionality properties.
+ * Abbreviations in these macro names refer to names
+ * used in the Bidi algorithm.
+ */
+typedef PRUint8 DirProp;
+
+#define DIRPROP_FLAG(dir) (1UL<<(dir))
+
+/* special flag for multiple runs from explicit embedding codes */
+#define DIRPROP_FLAG_MULTI_RUNS (1UL<<31)
+
+/* are there any characters that are LTR or RTL? */
+#define MASK_LTR (DIRPROP_FLAG(L)|DIRPROP_FLAG(EN)|DIRPROP_FLAG(AN)|DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO))
+#define MASK_RTL (DIRPROP_FLAG(R)|DIRPROP_FLAG(AL)|DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO))
+
+/* explicit embedding codes */
+#define MASK_LRX (DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO))
+#define MASK_RLX (DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO))
+#define MASK_OVERRIDE (DIRPROP_FLAG(LRO)|DIRPROP_FLAG(RLO))
+
+#define MASK_EXPLICIT (MASK_LRX|MASK_RLX|DIRPROP_FLAG(PDF))
+#define MASK_BN_EXPLICIT (DIRPROP_FLAG(BN)|MASK_EXPLICIT)
+
+/* paragraph and segment separators */
+#define MASK_B_S (DIRPROP_FLAG(B)|DIRPROP_FLAG(S))
+
+/* all types that are counted as White Space or Neutral in some steps */
+#define MASK_WS (MASK_B_S|DIRPROP_FLAG(WS)|MASK_BN_EXPLICIT)
+#define MASK_N (DIRPROP_FLAG(O_N)|MASK_WS)
+
+/* all types that are included in a sequence of European Terminators for (W5) */
+#define MASK_ET_NSM_BN (DIRPROP_FLAG(ET)|DIRPROP_FLAG(NSM)|MASK_BN_EXPLICIT)
+
+/* types that are neutrals or could becomes neutrals in (Wn) */
+#define MASK_POSSIBLE_N (DIRPROP_FLAG(CS)|DIRPROP_FLAG(ES)|DIRPROP_FLAG(ET)|MASK_N)
+
+/*
+ * These types may be changed to "e",
+ * the embedding type (L or R) of the run,
+ * in the Bidi algorithm (N2)
+ */
+#define MASK_EMBEDDING (DIRPROP_FLAG(NSM)|MASK_POSSIBLE_N)
+
+/* the dirProp's L and R are defined to 0 and 1 values in nsCharType */
+#define GET_LR_FROM_LEVEL(level) ((DirProp)((level)&1))
+
+#define IS_DEFAULT_LEVEL(level) (((level)&0xfe)==0xfe)
+
+/* handle surrogate pairs --------------------------------------------------- */
+
+#define IS_FIRST_SURROGATE(uchar) (((uchar)&0xfc00)==0xd800)
+#define IS_SECOND_SURROGATE(uchar) (((uchar)&0xfc00)==0xdc00)
+
+/* get the UTF-32 value directly from the surrogate pseudo-characters */
+#define SURROGATE_OFFSET ((0xd800<<10UL)+0xdc00-0x10000)
+#define GET_UTF_32(first, second) (((first)<<10UL)+(second)-SURROGATE_OFFSET)
+
+
+#define UTF_ERROR_VALUE 0xffff
+/* definitions with forward iteration --------------------------------------- */
+
+/*
+ * all the macros that go forward assume that
+ * the initial offset is 0<=i<length;
+ * they update the offset
+ */
+
+/* fast versions, no error-checking */
+
+#define UTF16_APPEND_CHAR_UNSAFE(s, i, c){ \
+                                         if((PRUint32)(c)<=0xffff) { \
+                                         (s)[(i)++]=(PRUnichar)(c); \
+                                         } else { \
+                                         (s)[(i)++]=(PRUnichar)((c)>>10)+0xd7c0; \
+                                         (s)[(i)++]=(PRUnichar)(c)&0x3ff|0xdc00; \
+                                         } \
+}
+
+/* safe versions with error-checking and optional regularity-checking */
+
+#define UTF16_APPEND_CHAR_SAFE(s, i, length, c) { \
+                                                if((PRUInt32)(c)<=0xffff) { \
+                                                (s)[(i)++]=(PRUnichar)(c); \
+                                                } else if((PRUInt32)(c)<=0x10ffff) { \
+                                                if((i)+1<(length)) { \
+                                                (s)[(i)++]=(PRUnichar)((c)>>10)+0xd7c0; \
+                                                (s)[(i)++]=(PRUnichar)(c)&0x3ff|0xdc00; \
+                                                } else /* not enough space */ { \
+                                                (s)[(i)++]=UTF_ERROR_VALUE; \
+                                                } \
+                                                } else /* c>0x10ffff, write error value */ { \
+                                                (s)[(i)++]=UTF_ERROR_VALUE; \
+                                                } \
+}
+
+/* definitions with backward iteration -------------------------------------- */
+
+/*
+ * all the macros that go backward assume that
+ * the valid buffer range starts at offset 0
+ * and that the initial offset is 0<i<=length;
+ * they update the offset
+ */
+
+/* fast versions, no error-checking */
+
+/*
+ * Get a single code point from an offset that points behind the last
+ * of the code units that belong to that code point.
+ * Assume 0<=i<length.
+ */
+#define UTF16_PREV_CHAR_UNSAFE(s, i, c) { \
+                                        (c)=(s)[--(i)]; \
+                                        if(IS_SECOND_SURROGATE(c)) { \
+                                        (c)=GET_UTF_32((s)[--(i)], (c)); \
+                                        } \
+}
+
+#define UTF16_BACK_1_UNSAFE(s, i) { \
+                                  if(IS_SECOND_SURROGATE((s)[--(i)])) { \
+                                  --(i); \
+                                  } \
+}
+
+#define UTF16_BACK_N_UNSAFE(s, i, n) { \
+                                     PRInt32 __N=(n); \
+                                     while(__N>0) { \
+                                     UTF16_BACK_1_UNSAFE(s, i); \
+                                     --__N; \
+                                     } \
+}
+
+/* safe versions with error-checking and optional regularity-checking */
+
+#define UTF16_PREV_CHAR_SAFE(s, start, i, c, strict) { \
+                                                     (c)=(s)[--(i)]; \
+                                                     if(IS_SECOND_SURROGATE(c)) { \
+                                                     PRUnichar __c2; \
+                                                     if((i)>(start) && IS_FIRST_SURROGATE(__c2=(s)[(i)-1])) { \
+                                                     --(i); \
+                                                     (c)=GET_UTF_32(__c2, (c)); \
+      /* strict: ((c)&0xfffe)==0xfffe is caught by UTF_IS_ERROR() */ \
+                                                     } else if(strict) {\
+      /* unmatched second surrogate */ \
+                                                     (c)=UTF_ERROR_VALUE; \
+                                                     } \
+                                                     } else if(strict && IS_FIRST_SURROGATE(c)) { \
+      /* unmatched first surrogate */ \
+                                                     (c)=UTF_ERROR_VALUE; \
+  /* else strict: (c)==0xfffe is caught by UTF_IS_ERROR() */ \
+                                                     } \
+}
+
+#define UTF16_BACK_1_SAFE(s, start, i) { \
+                                       if(IS_SECOND_SURROGATE((s)[--(i)]) && (i)>(start) && IS_FIRST_SURROGATE((s)[(i)-1])) { \
+                                       --(i); \
+                                       } \
+}
+
+#define UTF16_BACK_N_SAFE(s, start, i, n) { \
+                                          PRInt32 __N=(n); \
+                                          while(__N>0 && (i)>(start)) { \
+                                          UTF16_BACK_1_SAFE(s, start, i); \
+                                          --__N; \
+                                          } \
+}
+
+#define UTF_PREV_CHAR_UNSAFE(s, i, c)                UTF16_PREV_CHAR_UNSAFE(s, i, c)
+#define UTF_PREV_CHAR_SAFE(s, start, i, c, strict)   UTF16_PREV_CHAR_SAFE(s, start, i, c, strict)
+#define UTF_BACK_1_UNSAFE(s, i)                      UTF16_BACK_1_UNSAFE(s, i)
+#define UTF_BACK_1_SAFE(s, start, i)                 UTF16_BACK_1_SAFE(s, start, i)
+#define UTF_BACK_N_UNSAFE(s, i, n)                   UTF16_BACK_N_UNSAFE(s, i, n)
+#define UTF_BACK_N_SAFE(s, start, i, n)              UTF16_BACK_N_SAFE(s, start, i, n)
+#define UTF_APPEND_CHAR_UNSAFE(s, i, c)              UTF16_APPEND_CHAR_UNSAFE(s, i, c)
+#define UTF_APPEND_CHAR_SAFE(s, i, length, c)        UTF16_APPEND_CHAR_SAFE(s, i, length, c)
+
+#define UTF_PREV_CHAR(s, start, i, c)                UTF_PREV_CHAR_SAFE(s, start, i, c, PR_FALSE)
+#define UTF_BACK_1(s, start, i)                      UTF_BACK_1_SAFE(s, start, i)
+#define UTF_BACK_N(s, start, i, n)                   UTF_BACK_N_SAFE(s, start, i, n)
+#define UTF_APPEND_CHAR(s, i, length, c)             UTF_APPEND_CHAR_SAFE(s, i, length, c)
+
+/* Run structure for reordering --------------------------------------------- */
+
+typedef struct Run {
+  PRInt32 logicalStart,  /* first character of the run; b31 indicates even/odd level */
+  visualLimit;  /* last visual position of the run +1 */
+} Run;
+
+/* in a Run, logicalStart will get this bit set if the run level is odd */
+#define INDEX_ODD_BIT (1UL<<31)
+
+#define MAKE_INDEX_ODD_PAIR(index, level) (index|((PRUint32)level<<31))
+#define ADD_ODD_BIT_FROM_LEVEL(x, level)  ((x)|=((PRUint32)level<<31))
+#define REMOVE_ODD_BIT(x)          ((x)&=~INDEX_ODD_BIT)
+
+#define GET_INDEX(x)   (x&~INDEX_ODD_BIT)
+#define GET_ODD_BIT(x) ((PRUint32)x>>31)
+#define IS_ODD_RUN(x)  ((x&INDEX_ODD_BIT)!=0)
+#define IS_EVEN_RUN(x) ((x&INDEX_ODD_BIT)==0)
+
+typedef PRUint32 Flags;
+
 /**
  * This class holds information about a paragraph of text
  * with Bidi-algorithm-related details, or about one line of
@@ -233,10 +487,61 @@ typedef enum nsCharType nsCharType;
  * <code>SetPara</code> will allocate additional memory for
  * internal structures as necessary.
  */
-class nsIBidi : public nsISupports
+class nsBidi
 {
 public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_BIDI_IID)
+  /** @brief Default constructor.
+   * 
+   * The nsBidi object is initially empty. It is assigned
+   * the Bidi properties of a paragraph by <code>SetPara()</code>
+   * or the Bidi properties of a line of a paragraph by
+   * <code>GetLine()</code>.<p>
+   * This object can be reused for as long as it is not destroyed.<p>
+   * <code>SetPara()</code> will allocate additional memory for
+   * internal structures as necessary.
+   *
+   */
+  nsBidi();
+
+  /** @brief Preallocating constructor
+   * Allocate an <code>nsBidi</code>
+   * object with preallocated memory for internal structures.   This
+   * constructor provides an <code>nsBidi</code> object like
+   * the default constructor, but it also
+   * preallocates memory for internal structures according to the sizings
+   * supplied by the caller.<p> Subsequent functions will not allocate
+   * any more memory, and are thus guaranteed not to fail because of lack
+   * of memory.<p> The preallocation can be limited to some of the
+   * internal memory by setting some values to 0 here. That means that
+   * if, e.g., <code>aMaxRunCount</code> cannot be reasonably
+   * predetermined and should not be set to <code>aMaxLength</code> (the
+   * only failproof value) to avoid wasting memory, then
+   * <code>aMaxRunCount</code> could be set to 0 here and the internal
+   * structures that are associated with it will be allocated on demand,
+   * just like with the default constructor.
+   *
+   * If sufficient memory could not be allocated, no exception is thrown.
+   * Test whether mDirPropsSize == aMaxLength and/or mRunsSize == aMaxRunCount.
+   *
+   * @param aMaxLength is the maximum paragraph or line length that internal memory
+   *      will be preallocated for. An attempt to associate this object with a
+   *      longer text will fail, unless this value is 0, which leaves the allocation
+   *      up to the implementation.
+   *
+   * @param aMaxRunCount is the maximum anticipated number of same-level runs
+   *      that internal memory will be preallocated for. An attempt to access
+   *      visual runs on an object that was not preallocated for as many runs
+   *      as the text was actually resolved to will fail,
+   *      unless this value is 0, which leaves the allocation up to the implementation.<p>
+   *      The number of runs depends on the actual text and maybe anywhere between
+   *      1 and <code>aMaxLength</code>. It is typically small.<p>
+   */
+  nsBidi(PRUint32 aMaxLength, PRUint32 aMaxRunCount);
+
+  /** @brief Destructor. */
+  virtual ~nsBidi();
+
+
   /**
    * Perform the Unicode Bidi algorithm. It is defined in the
    * <a href="http://www.unicode.org/unicode/reports/tr9/">Unicode Technical Report 9</a>,
@@ -298,7 +603,7 @@ public:
    *      <strong>The <code>aEmbeddingLevels</code> array must be
    *      at least <code>aLength</code> long.</strong>
    */
-  NS_IMETHOD SetPara(const PRUnichar *aText, PRInt32 aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels) = 0;
+  nsresult SetPara(const PRUnichar *aText, PRInt32 aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -334,7 +639,7 @@ public:
    *
    * @see SetPara
    */
-  NS_IMETHOD SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit) = 0;  
+  nsresult SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit);  
 
   /**
    * Get the directionality of the text.
@@ -345,14 +650,14 @@ public:
    *
    * @see nsBidiDirection
    */
-  NS_IMETHOD GetDirection(nsBidiDirection* aDirection) = 0;
+  nsresult GetDirection(nsBidiDirection* aDirection);
 
   /**
    * Get the length of the text.
    *
    * @param aLength receives the length of the text that the nsBidi object was created for.
    */
-  NS_IMETHOD GetLength(PRInt32* aLength) = 0;
+  nsresult GetLength(PRInt32* aLength);
 
   /**
    * Get the paragraph level of the text.
@@ -361,7 +666,7 @@ public:
    *
    * @see nsBidiLevel
    */
-  NS_IMETHOD GetParaLevel(nsBidiLevel* aParaLevel) = 0;
+  nsresult GetParaLevel(nsBidiLevel* aParaLevel);
 
   /**
    * Get the level for one character.
@@ -372,7 +677,7 @@ public:
    *
    * @see nsBidiLevel
    */
-  NS_IMETHOD GetLevelAt(PRInt32 aCharIndex,  nsBidiLevel* aLevel) = 0;
+  nsresult GetLevelAt(PRInt32 aCharIndex,  nsBidiLevel* aLevel);
 
   /**
    * Get an array of levels for each character.<p>
@@ -385,7 +690,7 @@ public:
    *
    * @see nsBidiLevel
    */
-  NS_IMETHOD GetLevels(nsBidiLevel** aLevels) = 0;
+  nsresult GetLevels(nsBidiLevel** aLevels);
 #endif // FULL_BIDI_ENGINE
   /**
    * Get the bidirectional type for one character.
@@ -394,7 +699,7 @@ public:
    *
    * @param aType receives the bidirectional type of the character at aCharIndex.
    */
-  NS_IMETHOD GetCharTypeAt(PRInt32 aCharIndex,  nsCharType* aType) = 0;
+  nsresult GetCharTypeAt(PRInt32 aCharIndex,  nsCharType* aType);
 
   /**
    * Get a logical run.
@@ -415,7 +720,7 @@ public:
    *      This pointer can be <code>NULL</code> if this
    *      value is not necessary.
    */
-  NS_IMETHOD GetLogicalRun(PRInt32 aLogicalStart, PRInt32* aLogicalLimit, nsBidiLevel* aLevel) = 0;
+  nsresult GetLogicalRun(PRInt32 aLogicalStart, PRInt32* aLogicalLimit, nsBidiLevel* aLevel);
 
   /**
    * Get the number of runs.
@@ -427,7 +732,7 @@ public:
    *
    * @param aRunCount will receive the number of runs.
    */
-  NS_IMETHOD CountRuns(PRInt32* aRunCount) = 0;
+  nsresult CountRuns(PRInt32* aRunCount);
 
   /**
    * Get one run's logical start, length, and directionality,
@@ -477,7 +782,7 @@ public:
    * modifier letters before base characters and second surrogates
    * before first ones.
    */
-  NS_IMETHOD GetVisualRun(PRInt32 aRunIndex, PRInt32* aLogicalStart, PRInt32* aLength, nsBidiDirection* aDirection) = 0;
+  nsresult GetVisualRun(PRInt32 aRunIndex, PRInt32* aLogicalStart, PRInt32* aLength, nsBidiDirection* aDirection);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -497,7 +802,7 @@ public:
    * @see GetLogicalMap
    * @see GetLogicalIndex
    */
-  NS_IMETHOD GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualIndex) = 0;
+  nsresult GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualIndex);
 
   /**
    * Get the logical text position from a visual position.
@@ -514,7 +819,7 @@ public:
    * @see GetVisualMap
    * @see GetVisualIndex
    */
-  NS_IMETHOD GetLogicalIndex(PRInt32 aVisualIndex, PRInt32* aLogicalIndex) = 0;
+  nsresult GetLogicalIndex(PRInt32 aVisualIndex, PRInt32* aLogicalIndex);
 
   /**
    * Get a logical-to-visual index map (array) for the characters in the nsBidi
@@ -528,7 +833,7 @@ public:
    * @see GetVisualMap
    * @see GetVisualIndex
    */
-  NS_IMETHOD GetLogicalMap(PRInt32 *aIndexMap) = 0;
+  nsresult GetLogicalMap(PRInt32 *aIndexMap);
 
   /**
    * Get a visual-to-logical index map (array) for the characters in the nsBidi
@@ -542,7 +847,7 @@ public:
    * @see GetLogicalMap
    * @see GetLogicalIndex
    */
-  NS_IMETHOD GetVisualMap(PRInt32 *aIndexMap) = 0;
+  nsresult GetVisualMap(PRInt32 *aIndexMap);
 
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -563,7 +868,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aLogicalIndex]==aVisualIndex</code>.
    */
-  NS_IMETHOD ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap) = 0;
+  nsresult ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
 #endif // FULL_BIDI_ENGINE
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -584,7 +889,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.
    */
-  NS_IMETHOD ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap) = 0;
+  nsresult ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -600,7 +905,7 @@ public:
    *
    * @param aLength is the length of each array.
    */
-  NS_IMETHOD InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt32 aLength) = 0;
+  nsresult InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt32 aLength);
 #endif // FULL_BIDI_ENGINE
   /**
    * Reverse a Right-To-Left run of Unicode text.
@@ -637,10 +942,106 @@ public:
    *
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
-  NS_IMETHOD WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize) = 0;
+  nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
+protected:
+  /** length of the current text */
+  PRInt32 mLength;
+
+  /** memory sizes in bytes */
+  PRSize mDirPropsSize, mLevelsSize, mRunsSize;
+
+  /** allocated memory */
+  DirProp* mDirPropsMemory;
+  nsBidiLevel* mLevelsMemory;
+  Run* mRunsMemory;
+
+  /** indicators for whether memory may be allocated after construction */
+  PRBool mMayAllocateText, mMayAllocateRuns;
+
+  const DirProp* mDirProps;
+  nsBidiLevel* mLevels;
+
+  /** the paragraph level */
+  nsBidiLevel mParaLevel;
+
+  /** flags is a bit set for which directional properties are in the text */
+  Flags mFlags;
+
+  /** the overall paragraph or line directionality - see nsBidiDirection */
+  nsBidiDirection mDirection;
+
+  /** characters after trailingWSStart are WS and are */
+  /* implicitly at the paraLevel (rule (L1)) - levels may not reflect that */
+  PRInt32 mTrailingWSStart;
+
+  /** fields for line reordering */
+  PRInt32 mRunCount;     /* ==-1: runs not set up yet */
+  Run* mRuns;
+
+  /** for non-mixed text, we only need a tiny array of runs (no malloc()) */
+  Run mSimpleRuns[1];
+
+private:
+
+  void Init();
+
+  PRBool GetMemory(void **aMemory, PRSize* aSize, PRBool aMayAllocate, PRSize aSizeNeeded);
+
+  void Free();
+
+  void GetDirProps(const PRUnichar *aText);
+
+  nsBidiDirection ResolveExplicitLevels();
+
+  nsresult CheckExplicitLevels(nsBidiDirection *aDirection);
+
+  nsBidiDirection DirectionFromFlags(Flags aFlags);
+
+  void ResolveImplicitLevels(PRInt32 aStart, PRInt32 aLimit, DirProp aSOR, DirProp aEOR);
+
+  void AdjustWSLevels();
+
+  void SetTrailingWSStart();
+
+  PRBool GetRuns();
+
+  void GetSingleRun(nsBidiLevel aLevel);
+
+  void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
+
+  PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
+  /**
+   * Give a Unichar, return an eBidiCategory
+   */
+  eBidiCategory GetBidiCategory(PRUnichar aChar);
+
+  /**
+   * Give a Unichar, and a eBidiCategory, 
+   * return PR_TRUE if the Unichar is in that category, 
+   * return PR_FALSE, otherwise
+   */
+  PRBool IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory);
+
+  /**
+   * Give a Unichar
+   * return PR_TRUE if the Unichar is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
+   * return PR_FALSE, otherwise
+   */
+  PRBool IsBidiControl(PRUnichar aChar);
+
+  /**
+   * Give a Unichar, return a nsCharType (compatible with ICU)
+   */
+  nsCharType GetCharType(PRUnichar aChar);
+
+  /**
+   * Give a Unichar, return the symmetric equivalent
+   */
+  PRUnichar SymmSwap(PRUnichar aChar);
+
+  PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
+                         PRUnichar *dest, PRUint16 options);
+
 };
 
-#endif  /* nsIBidi_h__ */
-
-#endif /* IBMBIDI */
-
+#endif // _nsBidi_h_
