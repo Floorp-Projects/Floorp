@@ -18,45 +18,78 @@
       <xref linkend="template-http-accept"/>.
     </para>
     
-    <section>
-      <title>What to Edit</title>
+    <section id="template-directory">
+      <title>Template Directory Structure</title>
       <para>
-        The template directory structure is that there's a top level directory,
-        <filename>template</filename>, which contains a directory for
-        each installed localization. The default English templates are
-        therefore in <filename>en</filename>. Underneath that, there
-        is the <filename>default</filename> directory and optionally the 
-        <filename>custom</filename> directory. The <filename>default</filename>
-        directory contains all the templates shipped with Bugzilla, whereas
-        the <filename>custom</filename> directory does not exist at first and
-        must be created if you want to use it.
+        The template directory structure starts with top level directory 
+        named <filename>template</filename>, which contains a directory
+        for each installed localization. The next level defines the
+        language used in the templates. Bugzilla comes with English
+        templates, so the directory name is <filename>en</filename>,
+        and we will discuss <filename>template/en</filename> throughout
+        the documentation. Below <filename>template/en</filename> is the
+        <filename>default</filename> directory, which contains all the
+        standard templates shipped with Bugzilla.
       </para>
 
+      <warning>
+        <para>
+          A directory <filename>data/templates</filename> also exists;
+          this is where Template Toolkit puts the compiled versions of
+          the templates from either the default or custom directories.
+          <emphasis>Do not</emphasis> directly edit the files in this
+          directory, or all your changes will be lost the next time
+          Template Toolkit recompiles the templates.
+        </para>
+      </warning>
+    </section>
+
+    <section id="template-method">
+      <title>Choosing a Customization Method</title>
       <para>
-        There are two different ways of editing Bugzilla's templates,
-        and which you use depends mainly on the method you plan to use to
-        upgrade Bugzilla. 
+        If you want to edit Bugzilla's templates, the first decision
+        you must make is how you want to go about doing so. There are two
+        choices, and which you use depends mainly on the scope of your 
+        modifications, and the method you plan to use to upgrade Bugzilla.
+      </para> 
+
+      <para>
         The first method of making customizations is to directly edit the
-        templates in <filename>template/en/default</filename>. This is
-        probably the best method for small changes if you are going to use
-        the CVS method of upgrading, because if you then execute a
-        <command>cvs update</command>, any template fixes will get
-        automagically merged into your modified versions.
+        templates found in <filename>template/en/default</filename>.
+        This is probably the best way to go about it if you are going to
+        be upgrading Bugzilla through CVS, because if you then execute
+        a <command>cvs update</command>, any changes you have made will
+        be merged automagically with the updated versions.
       </para>
 
-      <para>
-        If you use this method, your installation will break if CVS conflicts
-        occur.
-      </para>
+      <note>
+        <para>
+          If you use this method, and CVS conflicts occur during an
+          update, the conflicted templates (and possibly other parts
+          of your installation) will not work until they are resolved.
+        </para>
+      </note>
 
       <para>
-        The other method is to copy the templates to be modified into a 
-        mirrored directory
-        structure under <filename>template/en/custom</filename>.  The templates
-        in this directory automatically override those in default.  
-        This is the technique you
-        need to use if you use the overwriting method of upgrade, because
-        otherwise your changes will be lost.  This method is also better if
+        The second method is to copy the templates to be modified
+        into a mirrored directory structure under 
+        <filename>template/en/custom</filename>. Templates in this
+        directory structure automatically override any identically-named
+        and identically-located templates in the 
+        <filename>default</filename> directory. 
+      </para>
+
+      <note>
+        <para>
+          The <filename>custom</filename> directory does not exist
+          at first and must be created if you want to use it.
+        </para>
+      </note>
+
+      <para>
+        The second method of customization should be used if you 
+        use the overwriting method of upgrade, because otherwise 
+        your changes will be lost.  This method may also be better if
         you are using the CVS method of upgrading and are going to make major
         changes, because it is guaranteed that the contents of this directory
         will not be touched during an upgrade, and you can then decide whether
@@ -65,9 +98,9 @@
       </para>
 
       <para>
-        If you use this method, your installation may break if incompatible
-        changes are made to the template interface.  If such changes are made
-        they will be documented in the release notes, provided you are using a
+        Using this method, your installation may break if incompatible
+        changes are made to the template interface.  Such changes should
+        be documented in the release notes, provided you are using a
         stable release of Bugzilla.  If you use using unstable code, you will
         need to deal with this one yourself, although if possible the changes
         will be mentioned before they occur in the deprecations section of the
@@ -76,21 +109,25 @@
 
       <note>
         <para>
-          Don't directly edit the compiled templates in 
-          <filename class="directory">data/template/*</filename> - your
-          changes will be lost when Template Toolkit recompiles them.
+          Regardless of which method you choose, it is recommended that
+          you run <command>./checksetup.pl</command> after creating or
+          editing any templates in the <filename>template/en/default</filename>
+          directory, and after editing any templates in the 
+          <filename>custom</filename> directory.
         </para>
       </note>
 
-      <note>
-        <para>It is recommended that you run <command>./checksetup.pl</command>
-        after any template edits, especially if you've created a new file in
-        the <filename class="directory">custom</filename> directory.
+      <warning>
+        <para>
+          It is <emphasis>required</emphasis> that you run 
+          <command>./checksetup.pl</command> after creating a new
+          template in the <filename>custom</filename> directory. Failure
+          to do so will raise an incomprehensible error message.
         </para>
-      </note>
+      </warning>
     </section>
     
-    <section>
+    <section id="template-edit">
       <title>How To Edit Templates</title>
       
       <note>
@@ -132,9 +169,11 @@
       </para>
  
       <para>
-        Editing templates is a good way of doing a "poor man's custom fields".
+        Editing templates is a good way of doing a <quote>poor man's custom
+        fields</quote>.
         For example, if you don't use the Status Whiteboard, but want to have
-        a free-form text entry box for "Build Identifier", then you can just
+        a free-form text entry box for <quote>Build Identifier</quote>,
+        then you can just
         edit the templates to change the field labels. It's still be called
         status_whiteboard internally, but your users don't need to know that.
       </para>
@@ -142,7 +181,7 @@
     </section>
             
     
-    <section>
+    <section id="template-formats">
       <title>Template Formats and Types</title>
       
       <para>
@@ -163,7 +202,7 @@
       
       <para>
         To see if a CGI supports multiple output formats and types, grep the
-        CGI for "GetFormat". If it's not present, adding
+        CGI for <quote>GetFormat</quote>. If it's not present, adding
         multiple format/type support isn't too hard - see how it's done in
         other CGIs, e.g. config.cgi.
       </para>
@@ -208,7 +247,7 @@
     </section>
     
     
-    <section>
+    <section id="template-specific">
       <title>Particular Templates</title>
       
       <para>
@@ -232,7 +271,8 @@
 
       <para>
         <command>global/banner.html.tmpl</command>:
-        This contains the "banner", the part of the header that appears
+        This contains the <quote>banner</quote>, the part of the header
+        that appears
         at the top of all Bugzilla pages.  The default banner is reasonably
         barren, so you'll probably want to customize this to give your
         installation a distinctive look and feel.  It is recommended you
@@ -249,10 +289,11 @@
 
       <para>
         <command>global/variables.none.tmpl</command>:
-        This defines a list of terms that may be changed in order to "brand"
-        the Bugzilla instance. In this way, terms like "bugs" can be
-        replaced with "issues" across the whole Bugzilla installation.
-        The name "Bugzilla" and other words can be customized as well.
+        This defines a list of terms that may be changed in order to
+        <quote>brand</quote> the Bugzilla instance In this way, terms
+        like <quote>bugs</quote> can be replaced with <quote>issues</quote>
+        across the whole Bugzilla installation. The name
+        <quote>Bugzilla</quote> and other words can be customized as well.
       </para>
 
       <para>
@@ -265,7 +306,7 @@
         default; this behaviour is also controlled by this template, and
         that value can be modified here.
        </para>
- 
+
       <para>
         <command>bug/create/user-message.html.tmpl</command>:
         This is a message that appears near the top of the bug reporting page.
@@ -297,7 +338,7 @@
         such as drop-down lists or textboxes, to the bug entry page
         and have their values appear formatted in the initial comment.
       </para>
-      
+
       <para>  
         An example of this is the mozilla.org 
         <ulink url="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi?product=WorldControl&amp;format=guided">guided 
@@ -339,7 +380,7 @@
         would appear in the initial comment.
       </para>            
     </section>          
-    
+
 
     <section id="template-http-accept">
       <title>Configuring Bugzilla to Detect the User's Language</title>
@@ -609,15 +650,15 @@
       <filename>CheckCanChangeField()</filename>,
       and is found in <filename>process_bug.cgi</filename> in your 
       Bugzilla directory. If you open that file and search for 
-      "sub CheckCanChangeField", you'll find it.
+      <quote>sub CheckCanChangeField</quote>, you'll find it.
     </para>
     
     <para>
       This function has been carefully commented to allow you to see exactly
-      how it works, and give you an idea of how to make changes to it. Certain
-      marked sections should not be changed - these are the "plumbing" which
-      makes the rest of the function work. In between those sections, you'll
-      find snippets of code like:
+      how it works, and give you an idea of how to make changes to it.
+      Certain marked sections should not be changed - these are
+      the <quote>plumbing</quote> which makes the rest of the function work.
+      In between those sections, you'll find snippets of code like:
       <programlisting>    # Allow the owner to change anything.
     if ($ownerid eq $whoid) {
         return 1;
@@ -627,11 +668,11 @@
       
     <para>
       So, how does one go about changing this function? Well, simple changes
-      can be made just be removing pieces - for example, if you wanted to 
+      can be made just by removing pieces - for example, if you wanted to 
       prevent any user adding a comment to a bug, just remove the lines marked
-      "Allow anyone to change comments." And if you want the reporter to have
-      no special rights on bugs they have filed, just remove the entire section
-      which refers to him.
+      <quote>Allow anyone to change comments.</quote> If you don't want the
+      Reporter to have any special rights on bugs they have filed, just
+      remove the entire section that deals with the Reporter.
     </para>
     
     <para>
@@ -650,7 +691,11 @@
         }
     }</programlisting>
       This says that only users in the group "quality_assurance" can change
-      the QA Contact field of a bug. Getting more weird:
+      the QA Contact field of a bug.
+    </para>
+
+    <para>
+      Getting more weird:
       <programlisting><![CDATA[    if (($field eq "priority") &&
         (Bugzilla->user->email =~ /.*\@example\.com$/))
     {
@@ -665,6 +710,15 @@
       and their email address is @example.com, they can only do so if the
       old value of the field was "P1". Not very useful, but illustrative.
     </para>
+
+    <warning>
+      <para>
+        If you are modifying <filename>process_bug.cgi</filename> in any
+        way, do not change the code that is bounded by DO_NOT_CHANGE blocks.
+        Doing so could compromise security, or cause your installation to
+        stop working entirely.
+      </para>
+    </warning>
     
     <para>
       For a list of possible field names, look in 
@@ -675,29 +729,29 @@
   </section>   
   
   <section id="dbmodify">
-      <title>Modifying Your Running System</title>
+    <title>Modifying Your Running System</title>
 
-      <para>Bugzilla optimizes database lookups by storing all relatively
-      static information in the 
-      <filename>versioncache</filename> file, located in the 
-      <filename class="directory">data/</filename>
-      subdirectory under your installation directory.</para>
+      <para>
+        Bugzilla optimizes database lookups by storing all relatively
+        static information in the <filename>versioncache</filename>
+        file, located in the <filename class="directory">data/</filename>
+        subdirectory under your installation directory.
+      </para>
 
-      <para>If you make a change to the structural data in your database (the
-      versions table for example), or to the 
-      <quote>constants</quote>
+      <para>
+        If you make a change to the structural data in your database (the
+        versions table for example), or to the <quote>constants</quote>
+        encoded in <filename>defparams.pl</filename>, you will need to remove 
+        the cached content from the data directory (by doing a 
+        <command>rm data/versioncache</command>), or your changes won't show up.
+      </para>
 
-      encoded in <filename>defparams.pl</filename>, you will need to remove 
-      the cached content from the data directory (by doing a 
-      <quote>rm data/versioncache</quote>
-
-      ), or your changes won't show up.</para>
-
-      <para> <filename>versioncache</filename> 
-      gets automatically regenerated whenever it's more than
-      an hour old, so Bugzilla will eventually notice your changes by itself,
-      but generally you want it to notice right away, so that you can test
-      things.</para>
+      <para>
+        <filename>versioncache</filename> gets regenerated automatically
+        whenever it's more than an hour old, so Bugzilla will eventually
+        notice your changes by itself, but generally you want it to notice
+        right away, so that you can test things.
+      </para>
     </section>
 
   <section id="dbdoc">
