@@ -51,17 +51,30 @@ NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags)
 
 nsAreaFrame::nsAreaFrame()
 {
-  mSpaceManager = new nsSpaceManager(this);
-  NS_ADDREF(mSpaceManager);
 }
 
 nsAreaFrame::~nsAreaFrame()
 {
-  NS_RELEASE(mSpaceManager);
+  NS_IF_RELEASE(mSpaceManager);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
+
+NS_IMETHODIMP
+nsAreaFrame::Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext)
+{
+  // Create a space manager if requested
+  if (0 == (mFlags & NS_AREA_NO_SPACE_MGR)) {
+    mSpaceManager = new nsSpaceManager(this);
+    NS_ADDREF(mSpaceManager);
+  }
+
+  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext);
+}
 
 NS_IMETHODIMP
 nsAreaFrame::DeleteFrame(nsIPresContext& aPresContext)
@@ -190,42 +203,44 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
   nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
                                     aDirtyRect, aWhichLayer);
 
-  if ((eFramePaintLayer_Overlay == aWhichLayer) &&
-      nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && nsIFrame::GetShowFrameBorders()) {
     // Render the bands in the spacemanager
-    BandData band;
     nsISpaceManager* sm = mSpaceManager;
-    nscoord y = 0;
-    while (y < mRect.height) {
-      sm->GetBandData(y, nsSize(mRect.width, mRect.height - y), band);
-      band.ComputeAvailSpaceRect();
 
-      // Render a box and a diagonal line through the band
-      aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(0, band.availSpace.y,
-                                 mRect.width, band.availSpace.height);
-      aRenderingContext.DrawLine(0, band.availSpace.y,
-                                 mRect.width, band.availSpace.YMost());
-
-      // Render boxes and opposite diagonal lines around the
-      // unavailable parts of the band.
-      PRInt32 i;
-      for (i = 0; i < band.count; i++) {
-        nsBandTrapezoid* trapezoid = &band.data[i];
-        if (nsBandTrapezoid::Available != trapezoid->state) {
-          nsRect r;
-          trapezoid->GetRect(r);
-          if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-            aRenderingContext.SetColor(NS_RGB(0,255,128));
+    if (nsnull != sm) {
+      BandData band;
+      nscoord y = 0;
+      while (y < mRect.height) {
+        sm->GetBandData(y, nsSize(mRect.width, mRect.height - y), band);
+        band.ComputeAvailSpaceRect();
+  
+        // Render a box and a diagonal line through the band
+        aRenderingContext.SetColor(NS_RGB(0,255,0));
+        aRenderingContext.DrawRect(0, band.availSpace.y,
+                                   mRect.width, band.availSpace.height);
+        aRenderingContext.DrawLine(0, band.availSpace.y,
+                                   mRect.width, band.availSpace.YMost());
+  
+        // Render boxes and opposite diagonal lines around the
+        // unavailable parts of the band.
+        PRInt32 i;
+        for (i = 0; i < band.count; i++) {
+          nsBandTrapezoid* trapezoid = &band.data[i];
+          if (nsBandTrapezoid::Available != trapezoid->state) {
+            nsRect r;
+            trapezoid->GetRect(r);
+            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+              aRenderingContext.SetColor(NS_RGB(0,255,128));
+            }
+            else {
+              aRenderingContext.SetColor(NS_RGB(128,255,0));
+            }
+            aRenderingContext.DrawRect(r);
+            aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
           }
-          else {
-            aRenderingContext.SetColor(NS_RGB(128,255,0));
-          }
-          aRenderingContext.DrawRect(r);
-          aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
         }
+        y = band.availSpace.YMost();
       }
-      y = band.availSpace.YMost();
     }
   }
 
@@ -249,10 +264,13 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Make a copy of the reflow state so we can set the space manager
   nsHTMLReflowState reflowState(aReflowState);
-  reflowState.spaceManager = mSpaceManager;
 
-  // Clear the spacemanager's regions.
-  mSpaceManager->ClearRegions();
+  if (nsnull != mSpaceManager) {
+    reflowState.spaceManager = mSpaceManager;
+
+    // Clear the spacemanager's regions.
+    mSpaceManager->ClearRegions();
+  }
 
   // See if the reflow command is for an absolutely positioned frame
   PRBool  wasHandled = PR_FALSE;
@@ -329,20 +347,22 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our desired size. Take into account any floaters when computing the
   // height
-  nscoord floaterYMost;
-  mSpaceManager->YMost(floaterYMost);
-  if (floaterYMost > 0) {
-    // What we need to check for is if the bottom most floater extends below
-    // the content area of the desired size
-    nsMargin  borderPadding;
-    nscoord   contentYMost;
-
-    nsHTMLReflowState::ComputeBorderPaddingFor(this, aReflowState.parentReflowState,
-                                               borderPadding);
-    contentYMost = aDesiredSize.height - borderPadding.bottom;
-
-    if (floaterYMost > contentYMost) {
-      aDesiredSize.height += floaterYMost - contentYMost;
+  if (nsnull != mSpaceManager) {
+    nscoord floaterYMost;
+    mSpaceManager->YMost(floaterYMost);
+    if (floaterYMost > 0) {
+      // What we need to check for is if the bottom most floater extends below
+      // the content area of the desired size
+      nsMargin  borderPadding;
+      nscoord   contentYMost;
+  
+      nsHTMLReflowState::ComputeBorderPaddingFor(this, aReflowState.parentReflowState,
+                                                 borderPadding);
+      contentYMost = aDesiredSize.height - borderPadding.bottom;
+  
+      if (floaterYMost > contentYMost) {
+        aDesiredSize.height += floaterYMost - contentYMost;
+      }
     }
   }
 

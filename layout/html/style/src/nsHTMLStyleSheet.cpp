@@ -1875,6 +1875,31 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
 
+  // See if it's a relatively positioned block
+  } else if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) &&
+             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay))) {
+
+    // Create an area frame. No space manager, though
+    NS_NewAreaFrame(aNewFrame, NS_AREA_NO_SPACE_MGR);
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+
+    // Create a view
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Process the child content. Relatively positioned frames becomes a
+    // container for child frames that are positioned
+    nsAbsoluteItems  absoluteItems(aNewFrame);
+    nsIFrame*        childList = nsnull;
+    ProcessChildren(aPresContext, aContent, aNewFrame, absoluteItems, childList);
+
+    // Set the frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    if (nsnull != absoluteItems.childList) {
+      aNewFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                     absoluteItems.childList);
+    }
+
   } else {
     PRBool  processChildren = PR_FALSE;  // whether we should process child content
 

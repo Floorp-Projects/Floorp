@@ -244,6 +244,7 @@ extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 #define NS_BLOCK_NO_AUTO_MARGINS 0x2
 #define NS_BLOCK_MARGIN_ROOT     0x4
 #define NS_BLOCK_DOCUMENT_ROOT   0x8
+#define NS_AREA_NO_SPACE_MGR     0x10
 
 extern nsresult NS_NewCommentFrame(nsIFrame*& aFrameResult);
 extern nsresult NS_NewHRFrame(nsIFrame*& aNewFrame);
