@@ -46,9 +46,11 @@ public class Interpreter {
 
 // Additional interpreter-specific codes
     private static final int
+    // See comments in Interpreter.interpret in CATCH_ICODE case
+        CATCH_ICODE                     = Token.LAST_TOKEN + 1,
+
     // To indicating a line number change in icodes.
-        LINE_ICODE                      = Token.LAST_TOKEN + 1,
-        SOURCEFILE_ICODE                = Token.LAST_TOKEN + 2,
+        LINE_ICODE                      = Token.LAST_TOKEN + 2,
 
     // To store shorts and ints inline
         SHORTNUMBER_ICODE               = Token.LAST_TOKEN + 3,
@@ -89,6 +91,7 @@ public class Interpreter {
         scriptOrFn = tree;
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(securityDomain);
+        itsData.itsSourceFile = scriptOrFn.getSourceName();
         if (tree instanceof FunctionNode) {
             generateFunctionICode(cx, scope);
             return createFunction(cx, scope, itsData, false);
@@ -100,8 +103,6 @@ public class Interpreter {
 
     private void generateScriptICode(Context cx, Scriptable scope)
     {
-        itsSourceFile = scriptOrFn.getSourceName();
-        itsData.itsSourceFile = itsSourceFile;
         debugSource = scriptOrFn.getOriginalSource();
 
         generateNestedFunctions(cx, scope);
@@ -136,7 +137,6 @@ public class Interpreter {
         generateICodeFromTree(theFunction.getLastChild());
 
         itsData.itsName = theFunction.getFunctionName();
-        itsData.itsSourceFile = theFunction.getSourceName();
         itsData.itsSource = theFunction.getEncodedSource();
         if (Token.printICode) dumpICode(itsData);
 
@@ -156,8 +156,8 @@ public class Interpreter {
             FunctionNode def = scriptOrFn.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
             jsi.scriptOrFn = def;
-            jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(itsData.securityDomain);
+            jsi.itsData.itsSourceFile = itsData.itsSourceFile;
             jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
@@ -195,7 +195,7 @@ public class Interpreter {
         }
         // Add special CATCH to simplify Interpreter.interpret logic
         // and workaround lack of goto in Java
-        theICodeTop = addByte(Token.CATCH, theICodeTop);
+        theICodeTop = addByte(CATCH_ICODE, theICodeTop);
 
         itsData.itsICodeTop = theICodeTop;
 
@@ -410,14 +410,6 @@ public class Interpreter {
 
             case Token.NEW :
             case Token.CALL : {
-                if (itsSourceFile != null
-                    && (itsData.itsSourceFile == null
-                        || !itsSourceFile.equals(itsData.itsSourceFile)))
-                {
-                    itsData.itsSourceFile = itsSourceFile;
-                }
-                iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
-
                 int childCount = 0;
                 String functionName = null;
                 while (child != null) {
@@ -442,7 +434,6 @@ public class Interpreter {
                     iCodeTop = addByte(type == Token.NEW ? 1 : 0,
                                        iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
-                    iCodeTop = addString(itsSourceFile, iCodeTop);
                 } else {
                     iCodeTop = addByte(type, iCodeTop);
                     iCodeTop = addString(functionName, iCodeTop);
@@ -458,8 +449,6 @@ public class Interpreter {
                 iCodeTop = addIndex(childCount, iCodeTop);
                 if (childCount > itsData.itsMaxCalleeArgs)
                     itsData.itsMaxCalleeArgs = childCount;
-
-                iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
                 break;
             }
 
@@ -1234,14 +1223,14 @@ public class Interpreter {
                 return Token.name(icode);
             } else {
                 switch (icode) {
-                    case LINE_ICODE:         return "line";
-                    case SOURCEFILE_ICODE:   return "sourcefile";
-                    case SHORTNUMBER_ICODE:  return "shortnumber";
-                    case INTNUMBER_ICODE:    return "intnumber";
-                    case RETURN_UNDEF_ICODE: return "return_undef";
-                    case GOSUB:              return "gosub";
-                    case RETSUB:             return "retsub";
+                    case CATCH_ICODE:        return "catch";
                     case END_ICODE:          return "end";
+                    case GOSUB:              return "gosub";
+                    case INTNUMBER_ICODE:    return "intnumber";
+                    case LINE_ICODE:         return "line";
+                    case RETSUB:             return "retsub";
+                    case RETURN_UNDEF_ICODE: return "return_undef";
+                    case SHORTNUMBER_ICODE:  return "shortnumber";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1302,11 +1291,9 @@ public class Interpreter {
                             int callType = iCode[pc] & 0xFF;
                             boolean isNew =  (iCode[pc + 1] != 0);
                             int line = getShort(iCode, pc+2);
-                            String source = strings[getIndex(iCode, pc + 4)];
-                            int count = getIndex(iCode, pc + 6);
+                            int count = getIndex(iCode, pc + 4);
                             out.println(tname + " " + callType  + " " + isNew
-                                        + " " + count
-                                        + " " + line + " " + source);
+                                        + " " + count + " " + line);
                             pc += 8;
                             break;
                         }
@@ -1414,7 +1401,6 @@ public class Interpreter {
             case Token.ENTERWITH :
             case Token.LEAVEWITH :
             case Token.RETURN :
-            case Token.CATCH:
             case Token.THROW :
             case Token.GETTHIS :
             case Token.SETELEM :
@@ -1460,7 +1446,7 @@ public class Interpreter {
             case Token.FALSE :
             case Token.TRUE :
             case Token.UNDEFINED :
-            case SOURCEFILE_ICODE :
+            case CATCH_ICODE:
             case RETURN_UNDEF_ICODE:
             case END_ICODE:
                 return 1;
@@ -1488,9 +1474,8 @@ public class Interpreter {
                 // call type
                 // is new
                 // line number
-                // name string index
                 // arg count
-                return 1 + 1 + 1 + 2 + 2 + 2;
+                return 1 + 1 + 1 + 2 + 2;
 
             case Token.REGEXP :
                 // regexp index
@@ -1703,6 +1688,7 @@ public class Interpreter {
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
+        String savedSourceFile = cx.interpreterSourceFile;
         cx.interpreterSourceFile = idata.itsSourceFile;
 
         Object result = undefined;
@@ -1729,10 +1715,11 @@ public class Interpreter {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
-    case Token.CATCH: {
-        // See comments in generateICodeFromTree: the following code should
-        // be executed inside try/catch inside main loop, not in the loop catch
-        // block itself
+    case CATCH_ICODE: {
+        // The following code should be executed inside try/catch inside main
+        // loop, not in the loop catch block itself to deal withnexceptions
+        // from observeInstructionCount. A special bytecode is used only to
+        // simplify logic.
         if (javaException == null) Context.codeBug();
 
         int pcNew = -1;
@@ -2287,8 +2274,7 @@ public class Interpreter {
         int callType = iCode[pc + 1] & 0xFF;
         boolean isNew =  (iCode[pc + 2] != 0);
         int sourceLine = getShort(iCode, pc + 3);
-        String sourceName = strings[getIndex(iCode, pc + 5)];
-        int count = getIndex(iCode, pc + 7);
+        int count = getIndex(iCode, pc + 5);
         stackTop -= count;
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, count);
         Object functionThis;
@@ -2306,8 +2292,8 @@ public class Interpreter {
         stack[stackTop] = ScriptRuntime.callSpecial(
                               cx, function, isNew, functionThis, outArgs,
                               scope, thisObj, callType,
-                              sourceName, sourceLine);
-        pc += 8;
+                              idata.itsSourceFile, sourceLine);
+        pc += 6;
         instructionCount = cx.instructionCount;
         break;
     }
@@ -2626,9 +2612,6 @@ public class Interpreter {
         pc += 2;
         break;
     }
-    case SOURCEFILE_ICODE :
-        cx.interpreterSourceFile = idata.itsSourceFile;
-        break;
     case LINE_ICODE : {
         int line = getShort(iCode, pc + 1);
         cx.interpreterLine = line;
@@ -2665,6 +2648,8 @@ public class Interpreter {
                 continue Loop;
             }
         }
+
+        cx.interpreterSourceFile = savedSourceFile;
 
         if (debuggerFrame != null) {
             if (javaException != null) {
@@ -2990,7 +2975,7 @@ public class Interpreter {
     private static int getJavaCatchPC(byte[] iCode)
     {
         int pc = iCode.length - 1;
-        if ((iCode[pc] & 0xFF) != Token.CATCH) Context.codeBug();
+        if ((iCode[pc] & 0xFF) != CATCH_ICODE) Context.codeBug();
         return pc;
     }
 
@@ -3000,7 +2985,6 @@ public class Interpreter {
     private ScriptOrFnNode scriptOrFn;
     private int itsStackDepth = 0;
     private int itsWithDepth = 0;
-    private String itsSourceFile;
     private int itsLineNumber = 0;
     private LabelTable itsLabels = new LabelTable();
     private int itsDoubleTableTop;
