@@ -1149,7 +1149,7 @@ public:
    * should be considered empty whenever margins collapse through them,
    * even though those margins are relevant.  Text frames containing
    * only whitespace that does not contribute to the height of the line
-   * should return false.
+   * should return true.
    */
   virtual PRBool IsEmpty() = 0;
 
