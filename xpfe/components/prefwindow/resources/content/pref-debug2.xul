@@ -45,7 +45,9 @@
       <vbox align="start" class="indent">
         <radiogroup id="dirFormat"
                     prefstring="network.dir.format">
-          <radio value="1" label="&raw.label;"/>
+          <!-- If we display a raw option, then people select it, and complain
+               when they don't actually get results -->
+          <!-- <radio value="1" label="&raw.label;"/> -->
           <radio value="2" label="&html.label;"/>
           <!-- OK, this is application/http-index-format, not XUL. But the
                result is that the XUL viwer is used. Anyway, this is only a
