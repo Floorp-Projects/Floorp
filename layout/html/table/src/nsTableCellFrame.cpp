@@ -324,8 +324,7 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
     return rv;
 
   nsIHTMLTableCellElement* cellContent = nsnull;
-  rv = cell->QueryInterface(NS_GET_IID(nsIHTMLTableCellElement), 
-                            (void **)&cellContent);  // cellContent: REFCNT++
+  rv = CallQueryInterface(cell, &cellContent); // cellContent: REFCNT++
   if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
     cellContent->SetColIndex(aColIndex);
     NS_RELEASE(cellContent);
@@ -1020,8 +1019,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (0 == kidSize.height) {
     if ((pos->mHeight.GetUnit() != eStyleUnit_Coord) &&
         (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
-      // Standard mode should probably be 0 pixels high instead of 1
-      PRInt32 pixHeight = (eCompatibility_NavQuirks == compatMode) ? 2 : 1;
+      PRInt32 pixHeight = (eCompatibility_NavQuirks == compatMode) ? 1 : 0;
       kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
       if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->height))
         pMaxElementSize->height = kidSize.height;
@@ -1288,7 +1286,6 @@ NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsIAccessible* acc = nsnull;
     return accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
@@ -1328,11 +1325,10 @@ nsTableCellFrame::GetPreviousCellInColumn(nsITableCellLayout **aCellLayout)
   {
     // Get the cellframe at previous colIndex
     nsTableCellFrame *cellFrame = tableFrame->GetCellFrameAt(rowIndex, colIndex-1);
-    if (cellFrame)
-      cellFrame->QueryInterface(NS_GET_IID(nsITableCellLayout), (void **)aCellLayout);  
+    if (!cellFrame) return NS_ERROR_FAILURE;
+    return CallQueryInterface(cellFrame, aCellLayout);
   }
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1352,10 +1348,8 @@ nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
 
   // Get the cellframe at next colIndex
   nsTableCellFrame *cellFrame = tableFrame->GetCellFrameAt(rowIndex, colIndex+1);
-  if (cellFrame)
-    cellFrame->QueryInterface(NS_GET_IID(nsITableCellLayout), (void **)aCellLayout);  
-
-  return NS_OK;
+  if (!cellFrame) return NS_ERROR_FAILURE;
+  return CallQueryInterface(cellFrame, aCellLayout);
 }
 
 nsresult 
