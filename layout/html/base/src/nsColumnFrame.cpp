@@ -990,187 +990,116 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   aSpaceManager->GetTranslation(txIn, tyIn);
 #endif
 
-  // Who's the reflow command targeted for?
-  if (aReflowCommand.GetTarget() == mGeometricParent) {
-    // It's targeted for our parent frame which passed the reflow
-    // command along to us.
-    //
-    // Currently we only support appended content, but this could also
-    // be an inserted reflow command.
-    if (aReflowCommand.GetType() != nsReflowCommand::FrameAppended) {
+  // Initialize our reflow state
+  ColumnReflowState state(aPresContext, aSpaceManager, aMaxSize);
+  
+  // XXX This nees to be computed the hard way. This value will be
+  // wrong because it includes our previous border+padding
+  // values. Since those values may have changed we need to
+  // recalculate our maxChildWidth based on our children and then we
+  // can add back in order border+padding
+  state.kidXMost = mRect.width;
+
+  nsIFrame* target = aReflowCommand.GetTarget();
+  if (this == target) {
+    if (aReflowCommand.GetType() == nsReflowCommand::FrameAppended) {
+      nsIFrame* prevKidFrame;
+      LastChild(prevKidFrame);
+
+      // Factor in the previous kid's bottom margin information
+      if (nsnull != prevKidFrame) {
+        // When we have a previous kid frame, get it's y most coordinate
+        // and then setup the state so that the starting y is correct
+        // and the previous kid's bottom margin information is correct.
+        nsRect startKidRect;
+        prevKidFrame->GetRect(startKidRect);
+  
+        // Get style info
+        nsStyleSpacing* kidSpacing;
+        prevKidFrame->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
+  
+        // XXX Style system should do this...
+        nscoord bottomMargin = ChildIsPseudoFrame(prevKidFrame)
+          ? 0
+          : kidSpacing->mMargin.bottom;
+  
+        state.y = startKidRect.YMost();
+        if (bottomMargin < 0) {
+          state.prevMaxNegBottomMargin = -bottomMargin;
+        } else {
+          state.prevMaxPosBottomMargin = bottomMargin;
+        }
+
+        if (PR_FALSE == state.unconstrainedHeight) {
+          state.availSize.height -= state.y;
+        }
+      }
+
+      aSpaceManager->Translate(0, state.y);
+  
+      // Now reflow unmapped children
+      aStatus = ReflowUnmappedChildren(aPresContext, state, nsnull);
+  
+      // Restore the coordinate space
+      aSpaceManager->Translate(0, -state.y);
+    
+    } else {
       NS_NOTYETIMPLEMENTED("unexpected reflow command");
     }
+  } else if (ChildIsPseudoFrame(target)) {
+    if (aReflowCommand.GetType() == nsReflowCommand::FrameAppended) {
+      // Because our last child is a pseudo-frame we passed along the content
+      // appended notification. First let the pseudo-frame reflow unmapped,
+      // and then we'll reflow unmapped
+      nsRect  kidRect;
 
-#if 0
-    // Initialize body reflow state
-    ColumnReflowState state(aPresContext, aSpaceManager, aMaxSize);
-
-    // Get to the frame that we should begin reflowing (where the
-    // append occured).
-    PRInt32 startOffset = aReflowCommand.GetIndex();
-    nsIFrame* kidFrame = mFirstChild;
-    nsIFrame* prevKidFrame = nsnull;
-    PRInt32 kidIndex = mFirstContentOffset;
-    for (;;) {
-      if (ChildIsPseudoFrame(kidFrame)) {
-        nsBlockFrame* pseudo = (nsBlockFrame*) kidFrame;
-        PRInt32 fco = pseudo->GetFirstContentOffset();
-        PRInt32 lco = pseudo->GetLastContentOffset();
-        /* XXX <=? mLastContentIsComplete? */
-        if ((fco <= startOffset) && (startOffset <= lco)) {
-          break;
-        }
-      } else {
-        PRInt32 kidIndexInParent;
-
-        kidFrame->GetIndexInParent(kidIndexInParent);
-        if (kidIndexInParent == startOffset) {
-          break;
-        }
-      }
-      prevKidFrame = kidFrame;
-      kidFrame->GetNextSibling(kidFrame);
-    }
-
-    // Factor in the previous kid's bottom margin information
-    // XXX inline version of RecoverState
-    if (nsnull != prevKidFrame) {
-      // When we have a previous kid frame, get it's y most coordinate
-      // and then setup the state so that the starting y is correct
-      // and the previous kid's bottom margin information is correct.
-      nsRect startKidRect;
-      prevKidFrame->GetRect(startKidRect);
-
-      // Get style info
-      nsIStyleContextPtr kidSC;
-
-      prevKidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(kStyleSpacingSID);
-      // XXX Style system should do this...
-      nscoord bottomMargin = ChildIsPseudoFrame(prevKidFrame)
-        ? 0
-        : kidSpacing->mMargin.bottom;
-
-      state.y = startKidRect.YMost();
-      if (bottomMargin < 0) {
-        state.prevMaxNegBottomMargin = -bottomMargin;
-      } else {
-        state.prevMaxPosBottomMargin = bottomMargin;
-      }
-    } else {
-      state.prevMaxNegBottomMargin = 0;
-      state.prevMaxPosBottomMargin = 0;
-      state.y = 0;
-    }
-
-    aSpaceManager->Translate(0, state.y);
-
-    // XXX This nees to be computed the hard way. This value will be
-    // wrong because it includes our previous border+padding
-    // values. Since those values may have changed we need to
-    // recalculate our maxChildWidth based on our children and then we
-    // can add back in order border+padding
-
-    // XXX subtract out old border+padding?
-    state.kidXMost = mRect.width;
-
-    // Now ResizeReflow the appended frames
-    while (nsnull != kidFrame) {
-      nsIStyleContextPtr kidSC;
-
-      kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(kStyleSpacingSID);
-      nscoord topMargin = GetTopMarginFor(aPresContext, state,
-                                          kidFrame, kidSpacing);
-
-      nsRect kidRect;
-      nsSize kidAvailSize(state.availSize);
-
+      // Restore our state's running y-offset and available size
+      target->GetRect(kidRect);
+      state.y = kidRect.y;
       if (PR_FALSE == state.unconstrainedHeight) {
-        kidAvailSize.height -= topMargin;
-      }
-  
-      // Reflow the child
-      state.spaceManager->Translate(0, topMargin);
-      aStatus = ReflowChild(kidFrame, aPresContext, state.spaceManager,
-                            kidAvailSize, kidRect, nsnull);
-      state.spaceManager->Translate(0, -topMargin);
-
-      // Did it fit?
-      if ((kidFrame != mFirstChild) &&
-          ((kidAvailSize.height <= 0) ||
-           (kidRect.YMost() > kidAvailSize.height)))
-      {
-        // No, it didn't fit. This means we need to push this child
-        // to our next-in-flow and get it to reflow the appended
-        // children.
-        // XXX write me
-        NS_ABORT();
+        state.availSize.height -= state.y;
       }
 
-      // Place the child
-      state.y += topMargin;
-      state.spaceManager->Translate(0, topMargin);
-      nsSize  kidMaxElementSize;  // XXX unused
-      kidRect.x += kidSpacing->mMargin.left;
-      kidRect.y += state.y;
-      PlaceChild(aPresContext, state, kidFrame, kidSpacing,
-                 kidRect, nsnull, kidMaxElementSize);
+      nsIRunaround* reflowRunaround;
+      nsSize        kidAvailSize(state.availSize);
 
-      // XXX Style system should do this...
-      nscoord bottomMargin = ChildIsPseudoFrame(kidFrame)
-        ? 0
-        : kidSpacing->mMargin.bottom;
-      if (bottomMargin < 0) {
-        state.prevMaxNegBottomMargin = -bottomMargin;
-      } else {
-        state.prevMaxPosBottomMargin = bottomMargin;
+      aSpaceManager->Translate(0, state.y);
+      target->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
+      reflowRunaround->IncrementalReflow(aPresContext, aSpaceManager,
+        kidAvailSize, kidRect, aReflowCommand, aStatus);
+      
+      // Place and size the child
+      nsSize          kidMaxElementSize;
+      nsStyleSpacing* kidSpacing;
+
+      target->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
+      PlaceChild(aPresContext, state, target, kidSpacing, kidRect,
+                 nsnull, kidMaxElementSize);
+
+      // Set our last content offset
+      SetLastContentOffset(target);
+
+      // If the child's status is complete then reflow unmapped children
+      if (frComplete == aStatus) {
+        aStatus = ReflowUnmappedChildren(aPresContext, state, nsnull);
       }
 
-      // Is the child complete?
-      if (frNotComplete == aStatus) {
-        // No. Create a continuing frame
-        nsIFrame* continuingFrame;
-         
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+      aSpaceManager->Translate(0, -state.y);
 
-        // Insert the frame. We'll reflow it next pass through the loop
-        nsIFrame* nextSibling;
-         
-        kidFrame->GetNextSibling(nextSibling);
-        continuingFrame->SetNextSibling(nextSibling);
-        kidFrame->SetNextSibling(continuingFrame);
-        mChildCount++;
-      }
-
-      // Get the next child frame
-      prevKidFrame = kidFrame;
-      kidFrame->GetNextSibling(kidFrame);
+    } else {
+      NS_NOTYETIMPLEMENTED("unexpected reflow command");
     }
-    SetLastContentOffset(prevKidFrame);
-
-    // Restore the coordinate space
-    aSpaceManager->Translate(0, -state.y);
-  
-    // Return our desired size
-    // XXX What about adding in the bottom margin from our last child like we
-    // did in ResizeReflow()?
-    aDesiredRect.x = 0;
-    aDesiredRect.y = 0;
-    aDesiredRect.width = state.kidXMost;/* XXX */
-    aDesiredRect.height = state.y;
-#endif
-    return ResizeReflow(aPresContext, aSpaceManager, aMaxSize, aDesiredRect,
-                        nsnull, aStatus);
-  } else if (aReflowCommand.GetTarget() == this) {
-    // The reflow command is targeted for us. This could be a deleted or
-    // changed reflow command
-    NS_NOTYETIMPLEMENTED("unexpected reflow command");
   } else {
     NS_NOTYETIMPLEMENTED("unexpected reflow command");
   }
+
+  // Return our desired size
+  // XXX What about adding in the bottom margin from our last child like we
+  // did in ResizeReflow()?
+  aDesiredRect.x = 0;
+  aDesiredRect.y = 0;
+  aDesiredRect.width = state.kidXMost;/* XXX */
+  aDesiredRect.height = state.y;
 
 #ifdef NS_DEBUG
   // Verify we properly restored the coordinate space
@@ -1182,149 +1111,28 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-// XXX factor nicely with reflow-unmapped
 NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
                                        nsIPresContext* aPresContext,
                                        nsIContent* aContainer)
 {
-#if 0
-  // We must only be called by the body frame since we are a
-  // pseudo-frame; the body frame makes sure that it's dealing with
-  // it's last-in-flow therefore we must also be a last-in-flow
-  NS_ASSERTION(nsnull == mNextInFlow, "improper content-appended");
-  NS_ASSERTION(mLastContentIsComplete == PR_TRUE, "huh?");
+  // Get the last-in-flow
+  ColumnFrame* lastInFlow = (ColumnFrame*)GetLastInFlow();
 
-  // Get index of where the content has been appended
-  PRInt32 kidIndex = NextChildOffset();
-  PRInt32 startIndex = kidIndex;
-  nsIContent* content = mContent;
-  nsIFrame* prevKidFrame;
-   
-  LastChild(prevKidFrame);
-  nsBlockFrame* pseudoFrame = nsnull;
-  if ((nsnull != prevKidFrame) && ChildIsPseudoFrame(prevKidFrame)) {
-    pseudoFrame = (nsBlockFrame*) prevKidFrame;
+  // Get the last child frame, and see if it's a pseudo frame
+  nsIFrame* lastKidFrame;
+  LastChild(lastKidFrame);
+
+  if ((nsnull != lastKidFrame) && ChildIsPseudoFrame(lastKidFrame)) {
+    // Pass along the notification to the pseudo frame
+    return lastKidFrame->ContentAppended(aShell, aPresContext, aContainer);
+
+  } else {
+    // Generate a reflow command for the last-in-flow
+    nsReflowCommand* cmd = new nsReflowCommand(aPresContext, lastInFlow,
+                                               nsReflowCommand::FrameAppended);
+    aShell->AppendReflowCommand(cmd);
+    return NS_OK;
   }
-
-  // Create frames for each new child
-  for (;;) {
-    // Get the next content object
-    nsIContentPtr kid = content->ChildAt(kidIndex);
-    if (nsnull == kid) {
-      break;
-    }
-
-    // Get style context for the kid
-    nsIStyleContextPtr kidStyleContext =
-      aPresContext->ResolveStyleContextFor(kid, this);
-    nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-      kidStyleContext->GetData(kStyleDisplaySID);
-    nsStylePosition* kidPosition = (nsStylePosition*)
-      kidStyleContext->GetData(kStylePositionSID);
-
-    // See what display mode it has
-    nsIFrame* kidFrame;
-    nsIContentDelegate* del;
-    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-    } else {
-      switch (kidDisplay->mDisplay) {
-      case NS_STYLE_DISPLAY_NONE:
-        // Create place holder frame
-        nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
-  
-        // Append it to the child list
-        if (nsnull == prevKidFrame) {
-          mFirstChild = kidFrame;
-          mFirstContentOffset = kidIndex;
-        } else {
-          prevKidFrame->SetNextSibling(kidFrame);
-        }
-        mChildCount++;
-        prevKidFrame = kidFrame;
-        pseudoFrame = nsnull;
-        kidIndex++;
-        mLastContentOffset = kidIndex;
-        break;
-  
-      case NS_STYLE_DISPLAY_BLOCK:
-      case NS_STYLE_DISPLAY_LIST_ITEM:
-        // Block and list-item's don't go into our pseudo-frames
-        // therefore we just make a frame.
-        del = kid->GetDelegate(aPresContext);
-        kidFrame = del->CreateFrame(aPresContext, kid, kidIndex, this);
-        NS_RELEASE(del);
-        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
-  
-        // Append it to the child list
-        if (nsnull == prevKidFrame) {
-          mFirstChild = kidFrame;
-          mFirstContentOffset = kidIndex;
-        } else {
-          prevKidFrame->SetNextSibling(kidFrame);
-        }
-        mChildCount++;
-        prevKidFrame = kidFrame;
-        pseudoFrame = nsnull;
-        kidIndex++;
-        mLastContentOffset = kidIndex;
-        break;
-  
-      case NS_STYLE_DISPLAY_INLINE:
-        if (nsnull == pseudoFrame) {
-          // Inline elements are wrapped in a block pseudo frame; that
-          // way the body doesn't have to deal with 2D layout
-          nsBlockFrame::NewFrame(&kidFrame, mContent, mIndexInParent, this);
-  
-          // Resolve style for the pseudo-frame (kid's style won't do)
-          kidStyleContext = aPresContext->ResolveStyleContextFor(mContent, this);
-          kidFrame->SetStyleContext(aPresContext,kidStyleContext);
-  
-          // Append the pseudo frame to the child list
-          pseudoFrame = (nsBlockFrame*) kidFrame;
-          if (nsnull == prevKidFrame) {
-            mFirstChild = kidFrame;
-            mFirstContentOffset = kidIndex;
-          } else {
-            prevKidFrame->SetNextSibling(pseudoFrame);
-          }
-          mChildCount++;
-  
-          // Set the content offset for the pseudo frame, so it knows
-          // which content to begin with
-          pseudoFrame->SetFirstContentOffset(kidIndex);
-          pseudoFrame->SetLastContentOffset(kidIndex);
-          prevKidFrame = pseudoFrame;
-        }
-  
-        // The child frame needs to belong to the pseudo-frame (or one
-        // of it's pseudos). Let it do the content appended frame
-        // creation.
-        pseudoFrame->ContentAppended(aShell, aPresContext, aContainer);
-  
-        // Update *our* last content offset since this child is our last
-        // child and it just consumed one or more of the appended
-        // children.
-  #ifdef NS_DEBUG
-        if (pseudoFrame == mFirstChild) {
-          PRInt32 pfco = pseudoFrame->GetFirstContentOffset();
-          NS_ASSERTION(mFirstContentOffset == pfco, "bad pseudo first offset");
-        }
-  #endif
-        mLastContentOffset = pseudoFrame->GetLastContentOffset();
-  
-        // Pick up where it stopped
-        kidIndex = NextChildOffset();
-        break;
-      }
-    }
-  }
-  SetLastContentOffset(prevKidFrame);
-  // Note: Column frames *never* directly generate reflow commands
-  // because they are always pseudo-frames for bodies.
-#endif
-  return NS_OK;
 }
 
 NS_METHOD ColumnFrame::CreateContinuingFrame(nsIPresContext* aPresContext,

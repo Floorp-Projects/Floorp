@@ -47,13 +47,13 @@ public:
                                nsReflowCommand& aReflowCommand,
                                ReflowStatus&    aStatus);
 
-  NS_IMETHOD ContentAppended(nsIPresShell* aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent* aContainer);
-
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame*       aParent,
                                    nsIFrame*&      aContinuingFrame);
+
+  NS_IMETHOD ColumnFrame::ContentAppended(nsIPresShell*   aShell,
+                                          nsIPresContext* aPresContext,
+                                          nsIContent*     aContainer);
 
   // Debugging
   NS_IMETHOD ListTag(FILE* out = stdout) const;

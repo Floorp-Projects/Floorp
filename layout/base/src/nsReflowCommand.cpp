@@ -27,13 +27,9 @@ static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 // and a reflow command type
 nsReflowCommand::nsReflowCommand(nsIPresContext* aPresContext,
                                  nsIFrame*       aTargetFrame,
-                                 ReflowType      aReflowType,
-                                 PRInt32         aIndex)
+                                 ReflowType      aReflowType)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mPresContext(aPresContext),
-    mIndex(aIndex),
-    mContainer(nsnull),
-    mChild(nsnull),
-    mOldChild(nsnull)
+    mChildFrame(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   aPresContext->AddRef();
@@ -42,104 +38,23 @@ nsReflowCommand::nsReflowCommand(nsIPresContext* aPresContext,
 nsReflowCommand::nsReflowCommand(nsIPresContext* aPresContext,
                                  nsIFrame*       aTargetFrame,
                                  ReflowType      aReflowType,
-                                 nsIContent*     aContainer)
+                                 nsIFrame*       aChildFrame)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mPresContext(aPresContext),
-    mIndex(-1),
-    mContainer(aContainer),
-    mChild(nsnull),
-    mOldChild(nsnull)
+    mChildFrame(aChildFrame)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
-  NS_PRECONDITION(mContainer != nsnull, "null container");
+  NS_PRECONDITION(mChildFrame != nsnull, "null child frame");
   NS_ADDREF(aPresContext);
-  NS_ADDREF(aContainer);
-}
-
-nsReflowCommand::nsReflowCommand(nsIPresContext* aPresContext,
-                                 nsIFrame*       aTargetFrame,
-                                 ReflowType      aReflowType,
-                                 nsIContent*     aContainer,
-                                 nsIContent*     aChild,
-                                 PRInt32         aIndexInParent)
-  : mType(aReflowType), mTargetFrame(aTargetFrame), mPresContext(aPresContext),
-    mIndex(aIndexInParent),
-    mContainer(aContainer),
-    mChild(aChild),
-    mOldChild(nsnull)
-{
-  NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
-  NS_PRECONDITION(mContainer != nsnull, "null container");
-  NS_PRECONDITION(mChild != nsnull, "null child");
-  NS_ADDREF(aPresContext);
-  NS_ADDREF(aContainer);
-  NS_ADDREF(aChild);
-}
-
-nsReflowCommand::nsReflowCommand(nsIPresContext* aPresContext,
-                                 nsIFrame*       aTargetFrame,
-                                 ReflowType      aReflowType,
-                                 nsIContent*     aContainer,
-                                 nsIContent*     aOldChild,
-                                 nsIContent*     aNewChild,
-                                 PRInt32         aIndexInParent)
-  : mType(aReflowType), mTargetFrame(aTargetFrame), mPresContext(aPresContext),
-    mIndex(aIndexInParent),
-    mContainer(aContainer),
-    mChild(aNewChild),
-    mOldChild(aOldChild)
-{
-  NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
-  NS_PRECONDITION(mContainer != nsnull, "null container");
-  NS_PRECONDITION(mChild != nsnull, "null new child");
-  NS_PRECONDITION(mOldChild != nsnull, "null old child");
-  NS_ADDREF(aPresContext);
-  NS_ADDREF(aContainer);
-  NS_ADDREF(aNewChild);
-  NS_ADDREF(aOldChild);
 }
 
 nsReflowCommand::~nsReflowCommand()
 {
   NS_IF_RELEASE(mPresContext);
-  NS_IF_RELEASE(mContainer);
-  NS_IF_RELEASE(mChild);
-  NS_IF_RELEASE(mOldChild);
 }
 
 void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize)
 {
-  // Special handling for content tree change commands
-  nsIPresShell* shell;
-  switch (mType) {
-  case nsReflowCommand::ContentAppended:
-    shell = mPresContext->GetShell();
-    mTargetFrame->ContentAppended(shell, mPresContext, mContainer);
-    NS_RELEASE(shell);
-    return;
-
-  case nsReflowCommand::ContentInserted:
-    shell = mPresContext->GetShell();
-    mTargetFrame->ContentInserted(shell, mPresContext, mContainer,
-                                  mChild, mIndex);
-    NS_RELEASE(shell);
-    return;
-
-  case nsReflowCommand::ContentReplaced:
-    shell = mPresContext->GetShell();
-    mTargetFrame->ContentReplaced(shell, mPresContext, mContainer,
-                                  mOldChild, mChild, mIndex);
-    NS_RELEASE(shell);
-    return;
-
-  case nsReflowCommand::ContentDeleted:
-    shell = mPresContext->GetShell();
-    mTargetFrame->ContentDeleted(shell, mPresContext, mContainer,
-                                 mChild, mIndex);
-    NS_RELEASE(shell);
-    return;
-  }
-
   // Build the path from the target frame (index 0) to the root frame
   mPath.Clear();
   for (nsIFrame* f = (nsIFrame*)mTargetFrame; nsnull != f;
@@ -151,7 +66,7 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
   nsIFrame* root = (nsIFrame*)mPath[mPath.Count() - 1];
 
 #ifdef NS_DEBUG
-  shell = mPresContext->GetShell();
+  nsIPresShell* shell = mPresContext->GetShell();
   if (nsnull != shell) {
     NS_ASSERTION(shell->GetRootFrame() == root, "bad root frame");
     NS_RELEASE(shell);

@@ -200,7 +200,10 @@ nsLineLayout::nsLineLayout(nsBlockReflowState& aState)
   mSpaceManager = aState.mSpaceManager;
   mBlock->GetContent(mBlockContent);
   mPresContext = aState.mPresContext;
+#if 0
+  // XXX Do we still need this?
   mBlockIsPseudo = aState.mBlockIsPseudo;
+#endif
   mUnconstrainedWidth = aState.mUnconstrainedWidth;
   mUnconstrainedHeight = aState.mUnconstrainedHeight;
   mMaxElementSizePointer = aState.mMaxElementSizePointer;
@@ -856,6 +859,9 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
     switch (kidDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
+#if 0
+      // XXX Do we still need this? Now that the body code is changed it
+      // causes a problem...
       if (mBlockIsPseudo) {
         // Don't create the frame! It doesn't belong in us.
 
@@ -864,6 +870,7 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
 
         return NS_LINE_LAYOUT_PSEUDO_BREAK_BEFORE_BLOCK;
       }
+#endif
       kidDel = aKid->GetDelegate(mPresContext);
       kidFrame = kidDel->CreateFrame(mPresContext, aKid, mKidIndex, mBlock);
       NS_RELEASE(kidDel);

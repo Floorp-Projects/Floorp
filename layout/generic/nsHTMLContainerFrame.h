@@ -42,6 +42,10 @@ public:
                           nsIFrame** aFrame,
                           PRInt32& aCursor);
 
+  NS_IMETHOD ContentAppended(nsIPresShell* aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent* aContainer);
+
 protected:
   virtual ~nsHTMLContainerFrame();
 

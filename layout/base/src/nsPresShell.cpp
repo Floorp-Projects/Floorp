@@ -476,61 +476,55 @@ void PresShell::ContentChanged(nsIContent* aContent,
 void PresShell::ContentAppended(nsIContent* aContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-  nsReflowCommand* rc = new nsReflowCommand(mPresContext,
-                                            FindFrameWithContent(aContainer),
-                                            nsReflowCommand::ContentAppended,
-                                            aContainer);
-  AppendReflowCommand(rc);
+
+  nsIFrame* frame = FindFrameWithContent(aContainer);
+  NS_PRECONDITION(nsnull != frame, "null frame");
+  frame->ContentAppended(this, mPresContext, aContainer);
   ProcessReflowCommands();
 }
 
 void PresShell::ContentInserted(nsIContent* aContainer,
                                 nsIContent* aChild,
-                                PRInt32 aIndexInContainer)
+                                PRInt32     aIndexInContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-  nsReflowCommand* rc = new nsReflowCommand(mPresContext,
-                                            FindFrameWithContent(aContainer),
-                                            nsReflowCommand::ContentInserted,
-                                            aContainer, aChild,
-                                            aIndexInContainer);
-  AppendReflowCommand(rc);
+
+  nsIFrame* frame = FindFrameWithContent(aContainer);
+  NS_PRECONDITION(nsnull != frame, "null frame");
+  frame->ContentInserted(this, mPresContext, aContainer, aChild, aIndexInContainer);
   ProcessReflowCommands();
 }
 
 void PresShell::ContentReplaced(nsIContent* aContainer,
                                 nsIContent* aOldChild,
                                 nsIContent* aNewChild,
-                                PRInt32 aIndexInContainer)
+                                PRInt32     aIndexInContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-  nsReflowCommand* rc = new nsReflowCommand(mPresContext,
-                                            FindFrameWithContent(aContainer),
-                                            nsReflowCommand::ContentReplaced,
-                                            aContainer, aOldChild, aNewChild,
-                                            aIndexInContainer);
-  AppendReflowCommand(rc);
+
+  nsIFrame* frame = FindFrameWithContent(aContainer);
+  NS_PRECONDITION(nsnull != frame, "null frame");
+  frame->ContentReplaced(this, mPresContext, aContainer, aOldChild,
+    aNewChild, aIndexInContainer);
   ProcessReflowCommands();
 }
 
 // XXX keep this?
 void PresShell::ContentWillBeRemoved(nsIContent* aContainer,
                                      nsIContent* aChild,
-                                     PRInt32 aIndexInContainer)
+                                     PRInt32     aIndexInContainer)
 {
 }
 
 void PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
                                       nsIContent* aChild,
-                                      PRInt32 aIndexInContainer)
+                                      PRInt32     aIndexInContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-  nsReflowCommand* rc = new nsReflowCommand(mPresContext,
-                                            FindFrameWithContent(aContainer),
-                                            nsReflowCommand::ContentDeleted,
-                                            aContainer, aChild,
-                                            aIndexInContainer);
-  AppendReflowCommand(rc);
+
+  nsIFrame* frame = FindFrameWithContent(aContainer);
+  NS_PRECONDITION(nsnull != frame, "null frame");
+  frame->ContentDeleted(this, mPresContext, aContainer, aChild, aIndexInContainer);
   ProcessReflowCommands();
 }
 
