@@ -26,7 +26,7 @@
 
 // Hack to get to nsRegistry implementation.                                                                                       
 extern "C" NS_EXPORT nsresult
-nsRegistry_GetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
+NS_RegistryGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
 
 static void display( nsIRegistry *reg, nsIRegistry::Key root, const char *name );
 static void displayValues( nsIRegistry *reg, nsIRegistry::Key root );
@@ -50,7 +50,7 @@ int main( int argc, char *argv[] ) {
     // Get nsRegistry factory.
     nsCID cid = NS_IREGISTRY_IID; // Not really an IID, but this factory stuff is a hack anyway.
     nsIFactory *factory;
-    nsresult rv = nsRegistry_GetFactory( cid, 0, &factory );
+    nsresult rv = NS_RegistryGetFactory( cid, 0, &factory );
 
     // Check result.
     if ( rv == NS_OK ) {
