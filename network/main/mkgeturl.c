@@ -1092,7 +1092,7 @@ net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
 
 #ifdef MOZILLA_CLIENT
 	if(URL_s->refresh_url && status != MK_INTERRUPTED)
-		FE_SetRefreshURLTimer(window_id, URL_s->refresh, URL_s->refresh_url);
+		FE_SetRefreshURLTimer(window_id, URL_s);
 #endif /* MOZILLA_CLIENT */
 
     if (URL_s->pre_exit_fn)

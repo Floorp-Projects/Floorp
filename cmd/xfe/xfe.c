@@ -2135,13 +2135,13 @@ fe_refresh_url_timer (XtPointer closure, XtIntervalId *id)
   if (! CONTEXT_DATA (context)->refresh_url_timer_url)
     return;
   url = NET_CreateURLStruct (CONTEXT_DATA (context)->refresh_url_timer_url,
-			     NET_NORMAL_RELOAD);
-  url->force_reload = NET_NORMAL_RELOAD;
+			CONTEXT_DATA (context)->url_refresh_force_reload);
+  url->force_reload = CONTEXT_DATA (context)->url_refresh_force_reload ;
   fe_GetURL (context, url, FALSE);
 }
 
 void
-FE_SetRefreshURLTimer (MWContext *context, uint32 secs, char *url)
+FE_SetRefreshURLTimer (MWContext *context, URL_Struct *URL_s)
 {
   if(context->type != MWContextBrowser)
 	return;
@@ -2151,13 +2151,21 @@ FE_SetRefreshURLTimer (MWContext *context, uint32 secs, char *url)
   if (CONTEXT_DATA (context)->refresh_url_timer_url)
     free (CONTEXT_DATA (context)->refresh_url_timer_url);
   CONTEXT_DATA (context)->refresh_url_timer = 0;
-  CONTEXT_DATA (context)->refresh_url_timer_secs = secs;
-  CONTEXT_DATA (context)->refresh_url_timer_url = strdup (url);
-  if (secs <= 0)
+  CONTEXT_DATA (context)->refresh_url_timer_secs = URL_s->refresh;
+  CONTEXT_DATA (context)->refresh_url_timer_url = strdup (URL_s->refresh_url);
+  
+  /* Place the force reload method into the fe data. We can't access this
+   * info in the fe_refresh_url_timer timeout */
+  if(URL_s->dont_cache)
+       CONTEXT_DATA (context)->url_refresh_force_reload = NET_SUPER_RELOAD;
+  else
+       CONTEXT_DATA (context)->url_refresh_force_reload = URL_s->force_reload;
+
+  if (URL_s->refresh <= 0)
     fe_refresh_url_timer ((XtPointer) context, 0);
   else
     CONTEXT_DATA (context)->refresh_url_timer =
-      XtAppAddTimeOut (fe_XtAppContext, secs * 1000,
+      XtAppAddTimeOut (fe_XtAppContext, URL_s->refresh * 1000,
 		       fe_refresh_url_timer, (XtPointer) context);
 }
 
