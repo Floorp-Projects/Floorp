@@ -874,7 +874,6 @@ function FillAttachmentListPopup(popup)
   // First clear out the old view...
   ClearAttachmentMenu(popup);
 
-
   for (index in currentAttachments)
   {
     addAttachmentToPopup(popup, currentAttachments[index]);
@@ -975,6 +974,9 @@ function SaveAllAttachments()
 
 function ClearAttachmentTreeList() 
 { 
+  // clear selection
+  document.getElementById('attachmentTree').clearSelection();
+
   var attachmentTreebody = document.getElementById("attachmentsBody"); 
   if ( attachmentTreebody ) 
   { 
