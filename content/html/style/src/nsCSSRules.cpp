@@ -758,7 +758,7 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 SetParentRuleReference(nsISupports* aRule, void* aParentRule)
 {
   nsICSSRule* rule = (nsICSSRule*)aRule;
