@@ -913,7 +913,20 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
 	if ((searchMode == 1) || (forceDialogFlag == true))
 	{
-		window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+		// Use a single search dialog
+		var cwindowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
+		var iwindowManager = Components.interfaces.nsIWindowMediator;
+		var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+		var searchWindow = windowManager.GetMostRecentWindow("search:window");
+		if (searchWindow)
+		{
+			searchWindow.focus();
+			if (searchWindow.loadPage)	searchWindow.loadPage(tabName, searchStr);
+		}
+		else
+		{
+			window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+		}
 	}
 	else
 	{

@@ -1,5 +1,6 @@
 
 var	gSearchStr = "";
+var	gTabName = "";
 
 function loadPage(thePage, searchStr)
 {
@@ -37,6 +38,9 @@ function loadPage(thePage, searchStr)
 		content="about:blank";
 		results="about:blank";
 	}
+
+	if (tabName == gTabName)	return(true);
+	gTabName = tabName;
 
 	if ((content != "") && (results != ""))
 	{
