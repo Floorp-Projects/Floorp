@@ -101,7 +101,7 @@ toolbargrippy:hover {
   background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
 } 
 
-.standard {
+toolbar.standard {
 	color: white;
 	background-color: #003366;
 	padding: 0px;
@@ -109,6 +109,15 @@ toolbargrippy:hover {
 	border: none;
 	min-height: 46px;
 }
+
+.standard {
+	color: white;
+	background-color: #003366;
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+
 
 /**
  * Navigation Toolbar
