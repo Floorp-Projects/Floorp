@@ -78,9 +78,12 @@ nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsISc
 {
   DragReference theDragRef;
   OSErr result = ::NewDrag(&theDragRef);
-  if ( result )
+  if ( result != noErr )
     return NS_ERROR_FAILURE;
   mDragRef = theDragRef;
+#if DEBUG_DD
+printf("**** created drag ref %ld\n", theDragRef);
+#endif
   
   // add the flavors from the transferables. Cache this array for the send data proc
   mDataItems = aTransferableArray;
@@ -122,6 +125,9 @@ nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsISc
   // clean up after ourselves 
   ::DisposeRgn ( theDragRgn );
   result = ::DisposeDrag ( theDragRef );
+#if DEBUG_DD
+printf("**** disposing drag ref %ld\n", theDragRef);
+#endif
   NS_ASSERTION ( result == noErr, "Error disposing drag" );
   mDragRef = 0L;
   mDataItems = nsnull;
@@ -289,19 +295,24 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
+#if DEBUG_DD
 printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
-	    
+#endif	    
       // check if it is present in the current drag item.
       FlavorFlags unused;
       if ( macOSFlavor && ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
 	      
+#if DEBUG_DD
 printf("flavor found\n");
+#endif
         // we have it, pull it out of the drag manager. Put it into memory that we allocate
         // with new[] so that the tranferable can own it (and then later use delete[]
         // on it).
         Size dataSize = 0;
         OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
+#if DEBUG_DD
 printf("flavor data size is %ld\n", dataSize);
+#endif
         if ( !err && dataSize > 0 ) {
           char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
           if ( !dataBuff )
