@@ -756,12 +756,61 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
 
 
 /**
- *  This method gets called to determine whether a given 
- *  tag is itself a container
+ *  This method gets called when a tag needs to be sent out
  *  
  *  @update  gess 3/25/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
+ *  @param   
+ *  @return  result status
+ */
+nsresult WriteNewline(nsIContentSink& aSink) {
+  nsresult result=NS_OK;
+  CStartToken theBRToken(eHTMLTag_br);
+  nsCParserNode theBRNode(&theBRToken,0);
+  result=aSink.AddLeaf(theBRNode); 
+  return NS_OK;
+}
+
+/**
+ *  This method gets called when a tag needs to be sent out
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
+ */
+nsresult EmitText(CToken* aToken,nsIContentSink& aSink) {
+  nsresult result=NS_OK;
+
+  nsString& theText=aToken->GetStringValueXXX();
+  PRInt32 theStart=0;
+  PRInt32 theOffset=theText.Find(kNewLine,theStart);
+  if(-1<theOffset){
+    while(-1!=theOffset){
+      nsString temp;
+      theText.Mid(temp,theStart,theOffset-theStart);
+      CTextToken theToken(temp);  
+      nsCParserNode theNode((CToken*)&theToken,0);
+      result=aSink.AddLeaf(theNode); //just dump the whole string...
+      WriteNewline(aSink);
+      theStart=theOffset+1;
+      theOffset=theText.Find(kNewLine,theStart);
+    }
+    if(theStart>=theText.Length())
+      return result;
+  }
+  nsString temp;
+  theText.Mid(temp,theStart,theText.Length()-theStart);
+  CTextToken theToken(temp);  
+  nsCParserNode theNode((CToken*)&theToken,0);
+  result=aSink.AddLeaf(theNode); //just dump the whole string...
+  return result;
+}
+
+/**
+ *  This method gets called when a tag needs to be sent out
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
  */
 PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
   static nsString     theString;
@@ -849,11 +898,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
 
     case eToken_newline:
       mLineNumber++; //now fall through
-      {
-        CStartToken theBRToken(eHTMLTag_br);
-        nsCParserNode theBRNode(&theBRToken,mLineNumber);
-        result=mSink->AddLeaf(theBRNode); 
-      }
+      WriteNewline(*mSink);
       break;
 
     case eToken_whitespace:
@@ -868,8 +913,11 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       break;
 
     case eToken_entity:
-    case eToken_text:
       result=mSink->AddLeaf(theNode); 
+      break;
+
+    case eToken_text:
+      EmitText(aToken,*mSink);
       break;
 
     case eToken_comment:
