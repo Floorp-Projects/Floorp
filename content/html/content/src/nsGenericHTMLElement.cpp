@@ -67,6 +67,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "nsIFormControlFrame.h"  
 
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
@@ -83,6 +84,7 @@ static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -1407,6 +1409,31 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
   return PR_FALSE;
 }
 
+// XXX This creates a dependency between content and frames
+nsresult 
+nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
+                                      nsIFormControlFrame *&aFormControlFrame)
+{
+  nsIDocument* doc = nsnull;
+  nsresult res;
+   // Get the document
+  if (NS_OK == aContent->GetDocument(doc)) {
+     // Get presentation shell 0
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (nsnull != presShell) {
+      nsIFrame *frame = nsnull;
+      presShell->GetPrimaryFrameFor(aContent, frame);
+      if (nsnull != frame) {
+        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+      }
+      NS_RELEASE(presShell);
+    }
+  NS_RELEASE(doc);
+  }
+
+  return res;
+}         
+          
 // XXX check all mappings against ebina's usage
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
