@@ -1476,6 +1476,20 @@ nsDOMClassInfo::RegisterExternalClasses()
     d.mInterfaces = interface_list;                                           \
   }
 
+#define DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES                                    \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)                                 \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)                              \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)                              \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)                            \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)                               \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)                              \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)                          \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+
+
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)                      \
@@ -1602,17 +1616,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
@@ -1725,17 +1729,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
@@ -2171,17 +2165,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
@@ -2270,17 +2254,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
 #ifdef MOZ_XUL
@@ -2343,17 +2317,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNode)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   // SVG element classes
