@@ -29,7 +29,7 @@ var editCardCallback = 0;
 var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
 
 // localization strings
-var prefixTo = Bundle.GetStringFromName("prefixTo) + ": ";
+var prefixTo = Bundle.GetStringFromName("prefixTo") + ": ";
 var prefixCc = Bundle.GetStringFromName("prefixCc") + ": ";
 var prefixBcc = Bundle.GetStringFromName("prefixBcc") + ": ";
 
