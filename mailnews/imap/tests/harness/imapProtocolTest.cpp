@@ -189,6 +189,8 @@ public:
                                    GenericInfo* aInfo);
 	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
                                                  GenericInfo* aInfo);
+    NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
+                                        PRBool* aBool);
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
 	// ****
@@ -850,6 +852,14 @@ nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
                                                  GenericInfo* aInfo)
 {
     printf("**** nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
+                                            PRBool* aBool)
+{
+    printf("**** nsIMAP4TestDriver::GetShowAttachmentsInLine\r\n");
     return NS_OK;
 }
 
