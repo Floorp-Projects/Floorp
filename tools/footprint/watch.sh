@@ -61,6 +61,8 @@ done
 
 rm -f ${OUTPUT_FILE}
 
+echo "vmsize vmexe vmlib vmdata vmstk vmrss" > ${OUTPUT_FILE}
+
 # treat the arguments as the command to execute
 $* &
 
@@ -71,8 +73,10 @@ while [ -e /proc/${PID} ]; do
     cat /proc/${PID}/status |\
     awk '$1=="VmSize:" { vmsize = $2; }
 $1=="VmData:" { vmdata = $2; }
+$1=="VmStk:" { vmstk = $2; }
+$1=="VmExe:" { vmexe = $2; }
 $1=="VmLib:" { vmlib = $2; }
 $1=="VmRSS:" { vmrss = $2; }
-END { print vmsize, vmdata, vmlib, vmrss; }' >> ${OUTPUT_FILE}
+END { print vmsize, vmexe, vmlib, vmdata, vmstk, vmrss; }' >> ${OUTPUT_FILE}
     sleep ${INTERVAL}
 done
