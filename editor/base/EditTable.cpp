@@ -130,10 +130,11 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
   if (NS_FAILED(res)) return res;
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan;
+  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   res = GetCellDataAt(table, startRowIndex, startColIndex, *getter_AddRefs(curCell),
-                      curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                      curStartRowIndex, curStartColIndex, rowSpan, colSpan,
+                      actualRowSpan, actualColSpan, isSelected);
   if (NS_FAILED(res)) return res;
   if (!curCell) return NS_ERROR_FAILURE;
   PRInt32 newCellIndex = aAfter ? (startColIndex+colSpan) : startColIndex;
@@ -154,6 +155,28 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
   return res;
 }
 
+nsresult nsHTMLEditor::GetRowAt(nsCOMPtr<nsIDOMElement> &aTable, PRInt32 rowIndex, nsCOMPtr<nsIDOMElement> &aRow)
+{
+  aRow = nsnull;  
+  nsCOMPtr<nsIDOMElement> nextRow;
+  PRInt32 index = 0;
+  nsAutoString tagName("tr");
+
+  nsresult res = GetNextElementByTagName(aTable, &tagName, getter_AddRefs(nextRow));
+  if (NS_FAILED(res)) return res;
+  if (!nextRow) return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> parentTable;
+  res = GetElementOrParentByTagName("table", nextRow, getter_AddRefs(parentTable));
+  if (NS_FAILED(res)) return res;
+  if (!parentTable) return NS_ERROR_NULL_POINTER;  
+
+  if (parentTable == aTable)
+    aRow = nextRow;    
+
+  return res;
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
@@ -166,10 +189,11 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   if (NS_FAILED(res)) return res;
 
   // Get more data for current cell (we need ROWSPAN)
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan;
+  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   res = GetCellDataAt(table, startRowIndex, startColIndex, *getter_AddRefs(curCell),
-                      curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                      curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                      actualRowSpan, actualColSpan, isSelected);
   if (NS_FAILED(res)) return res;
   if (!curCell) return NS_ERROR_FAILURE;
 
@@ -192,7 +216,8 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
     {
       // We are inserting before an existing column
       res = GetCellDataAt(table, row, startColIndex, *getter_AddRefs(curCell),
-                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                          actualRowSpan, actualColSpan, isSelected);
       if (NS_FAILED(res)) return res;
 
       // Don't fail entire process if we fail to find a cell
@@ -201,11 +226,16 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
       {
         if (curStartColIndex < startColIndex)
         {
-          // We have a cell spanning this location
-          // Simply increase its colspan to keep table rectangular
-          nsAutoString newColSpan;
-          newColSpan.Append(colSpan+aNumber, 10);
-          SetAttribute(curCell, "colspan", newColSpan);
+          if (colSpan > 0)
+          {
+            // We have a cell spanning this location
+            // Simply increase its colspan to keep table rectangular
+            nsAutoString newColSpan;
+            newColSpan.Append(colSpan+aNumber, 10);
+            SetAttribute(curCell, "colspan", newColSpan);
+          }
+          // Note: we do nothing if colsSpan=0,
+          //  since it should automatically span the new column
         } else {
           // Simply set selection to the current cell 
           //  so we can let InsertTableCell() do the work
@@ -215,13 +245,16 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
         }
       }
     } else {
+      // We are inserting after all existing columns
+
       //TODO: A better strategy is to get the row at index "row"
       //   and append a cell to the end of it.
       // Need to write "GetRowAt()" to do this
 
       // Get last cell in row and insert new cell after it
       res = GetCellDataAt(table, row, lastColumn, *getter_AddRefs(curCell),
-                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                          actualRowSpan, actualColSpan, isSelected);
       if (NS_FAILED(res)) return res;
       if (curCell)
       {
@@ -245,10 +278,11 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   if (NS_FAILED(res)) return res;
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan;
+  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   res = GetCellDataAt(table, startRowIndex, startColIndex, *getter_AddRefs(curCell),
-                      curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                      curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                      actualRowSpan, actualColSpan, isSelected);
   if (NS_FAILED(res)) return res;
   if (!curCell) return NS_ERROR_FAILURE;
   
@@ -272,9 +306,9 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   if (aAfter)
   {
     // Use row after current cell
-    startRowIndex += rowSpan;
+    startRowIndex += actualRowSpan;
     // offset to use for new row insert
-    newRowOffset += rowSpan;
+    newRowOffset += actualRowSpan;
   }
 
   nsAutoEditBatch beginBatching(this);
@@ -290,31 +324,50 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
     // This returns NS_TABLELAYOUT_CELL_NOT_FOUND when we run past end of row,
     //   which passes the NS_SUCCEEDED macro
     while ( NS_OK == GetCellDataAt(table, newRowOffset, colIndex, *getter_AddRefs(curCell), 
-                                   curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected) )
+                                   curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                                   actualRowSpan, actualColSpan, isSelected) )
     {
       if (curCell)
       {
         if (curStartRowIndex < startRowIndex)
         {
-          // We have a cell spanning this location
-          // Simply increase its colspan to keep table rectangular
-          nsAutoString newRowSpan;
-          newRowSpan.Append(rowSpan+aNumber, 10);
-          SetAttribute(curCell, "rowspan", newRowSpan);
+          if (rowSpan > 0)
+          {
+            // We have a cell spanning this location
+            // Simply increase its rowspan
+            nsAutoString newRowSpan;
+            newRowSpan.Append(rowSpan+aNumber, 10);
+            SetAttribute(curCell, "rowspan", newRowSpan);
+          }
+          //Note that if rowSpan == 0, we do nothing,
+          //  since that cell should automatically extend into the new row
         } else {
           // Count the number of cells we need to add to the new row
-          cellsInRow += colSpan;
+          cellsInRow += actualColSpan;
         }
         // Next cell in row
-        colIndex += colSpan;
+        colIndex += actualColSpan;
       }
       else
         colIndex++;
     }
   } else {
-    // We are adding after existing rows, 
-    //  so use max number of cells in a row
+    // We are adding a new row after all others
+    // If it weren't for colspan=0 effect, 
+    // we could simply use colCount for number of new cells...
     cellsInRow = colCount;
+    
+    // ...but we must compensate for all cells with rowSpan = 0 in the last row
+    PRInt32 lastRow = rowCount-1;
+    PRInt32 tempColIndex = 0;
+    while ( NS_OK == GetCellDataAt(table, lastRow, tempColIndex, *getter_AddRefs(curCell), 
+                                   curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                                   actualRowSpan, actualColSpan, isSelected) )
+    {
+      if (rowSpan == 0)
+        cellsInRow -= actualColSpan;
+    }
+    tempColIndex += actualColSpan;
   }
 
   if (cellsInRow > 0)
@@ -527,7 +580,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
 
   // Scan through cells in row to do rowspan adjustments
   nsCOMPtr<nsIDOMElement> curCell;
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan;
+  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   PRInt32 rowIndex = 0;
 
@@ -535,40 +588,44 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
   {
     do {
       res = GetCellDataAt(table, rowIndex, startColIndex, *getter_AddRefs(curCell),
-                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                          actualRowSpan, actualColSpan, isSelected);
 
       if (NS_FAILED(res)) return res;
-      NS_ASSERTION((colSpan > 0),"COLSPAN = 0 in DeleteTableColumn");
-      NS_ASSERTION((rowSpan > 0),"ROWSPAN = 0 in DeleteTableColumn");
+
+      NS_ASSERTION((actualColSpan > 0),"Effective COLSPAN = 0 in DeleteTableColumn");
+      NS_ASSERTION((actualRowSpan > 0),"Effective ROWSPAN = 0 in DeleteTableColumn");
 
       if (curCell)
       {
         // Find cells that don't start in column we are deleting
-        if (curStartColIndex < startColIndex || colSpan > 1)
+        if (curStartColIndex < startColIndex || colSpan > 1 || colSpan == 0)
         {
-          NS_ASSERTION((colSpan > 1),"Bad COLSPAN in DeleteTableColumn");
           // We have a cell spanning this location
-          // Decrease its colspan to keep table rectangular
-
-          nsAutoString newColSpan;
-          //This calculates final span for all columns deleted,
-          //  but we are iterating aNumber times through here so
-          //  just decrement current value by 1
-          //PRInt32 minSpan = startColIndex - curStartColIndex;
-          //PRInt32 newSpan = PR_MAX(minSpan, colSpan - aNumber);
-          //newColSpan.Append(newSpan, 10);
-          newColSpan.Append(colSpan-1, 10);
-          SetAttribute(curCell, "colspan", newColSpan);
-
-          // Delete contents of cell instead of cell itself
+          // Decrease its colspan to keep table rectangular,
+          // but if colSpan=0, it will adjust automatically
+          if (colSpan > 0)
+          {
+            NS_ASSERTION((colSpan > 1),"Bad COLSPAN in DeleteTableColumn");
+            nsAutoString newColSpan;
+            //This calculates final span for all columns deleted,
+            //  but we are iterating aNumber times through here so
+            //  just decrement current value by 1
+            //PRInt32 minSpan = startColIndex - curStartColIndex;
+            //PRInt32 newSpan = PR_MAX(minSpan, colSpan - aNumber);
+            //newColSpan.Append(newSpan, 10);
+            newColSpan.Append(colSpan-1, 10);
+            SetAttribute(curCell, "colspan", newColSpan);
+          }
           if (curStartColIndex == startColIndex)
           {
+            // Cell is in column to be deleted, 
+            // but delete contents of cell instead of cell itself
             selection->Collapse(curCell,0);
             DeleteTableCellContents();
           }
-          // To next cell in row
-          rowIndex++;
-                  
+          // To next cell in column
+          rowIndex += actualRowSpan;
         } else {
           // Delete the cell
           if (1 == GetNumberOfCellsInRow(table, rowIndex))
@@ -603,7 +660,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
             if (NS_FAILED(res)) return res;
 
             //Skipover any rows spanned by this cell
-            rowIndex +=rowSpan;
+            rowIndex += actualRowSpan;
           }
         }
       } else {
@@ -649,15 +706,16 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
   
   // Scan through cells in row to do rowspan adjustments
   nsCOMPtr<nsIDOMElement> curCell;
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan;
+  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   PRInt32 colIndex = 0;
   do {
     res = GetCellDataAt(table, startRowIndex, colIndex, *getter_AddRefs(curCell),
-                        curStartRowIndex, curStartColIndex, rowSpan, colSpan, isSelected);
+                        curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                        actualRowSpan, actualColSpan, isSelected);
 
-    NS_ASSERTION((colSpan > 0),"COLSPAN = 0 in DeleteTableRow");
-    NS_ASSERTION((rowSpan > 0),"ROWSPAN = 0 in DeleteTableRow");
+    NS_ASSERTION((actualColSpan > 0),"Effective COLSPAN = 0 in DeleteTableRow");
+    NS_ASSERTION((actualRowSpan > 0),"Effective ROWSPAN = 0 in DeleteTableRow");
 
     // Find cells that don't start in row we are deleting
     if (NS_SUCCEEDED(res) && curCell)
@@ -666,14 +724,18 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
       {
         // We have a cell spanning this location
         // Decrease its rowspan to keep table rectangular
-        nsAutoString newRowSpan;
-        PRInt32 minSpan = startRowIndex - curStartRowIndex;
-        PRInt32 newSpan = PR_MAX(minSpan, rowSpan - aNumber);
-        newRowSpan.Append(newSpan, 10);
-        SetAttribute(curCell, "rowspan", newRowSpan);
+        //  but we don't need to do this if rowspan=0,
+        //  since it will automatically adjust
+        if (rowSpan > 0)
+        {
+          nsAutoString newRowSpan;
+          PRInt32 newSpan = PR_MAX((startRowIndex - curStartRowIndex), actualRowSpan - aNumber);
+          newRowSpan.Append(newSpan, 10);
+          SetAttribute(curCell, "rowspan", newRowSpan);
+        }
       }
       // Skip over locations spanned by this cell
-      colIndex += colSpan;
+      colIndex += actualColSpan;
     }
     else
       colIndex++;
@@ -776,10 +838,11 @@ PRBool nsHTMLEditor::GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowInd
   PRInt32 colIndex = 0;
   nsresult res;
   do {
-    PRInt32 startRowIndex, startColIndex, rowSpan, colSpan;
+    PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
     PRBool  isSelected;
     res = GetCellDataAt(aTable, rowIndex, colIndex, *getter_AddRefs(cell),
-                        startRowIndex, startColIndex, rowSpan, colSpan, isSelected);
+                        startRowIndex, startColIndex, rowSpan, colSpan, 
+                        actualRowSpan, actualColSpan, isSelected);
     if (NS_FAILED(res)) return res;
     if (cell)
     {
@@ -788,7 +851,7 @@ PRBool nsHTMLEditor::GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowInd
         cellCount++;
       
       //Next possible location for a cell
-      colIndex += colSpan;
+      colIndex += actualColSpan;
     }
     else
       colIndex++;
@@ -830,7 +893,9 @@ nsHTMLEditor::GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& a
 NS_IMETHODIMP 
 nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
                             PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
-                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)
+                            PRInt32& aRowSpan, PRInt32& aColSpan, 
+                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
+                            PRBool& aIsSelected)
 {
   nsresult res=NS_ERROR_FAILURE;
   aCell = nsnull;
@@ -838,6 +903,8 @@ nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aC
   aStartColIndex = 0;
   aRowSpan = 0;
   aColSpan = 0;
+  aActualRowSpan = 0;
+  aActualColSpan = 0;
   aIsSelected = PR_FALSE;
 
   if (!aTable)
@@ -862,17 +929,20 @@ nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aC
   //  the index(es) are out of bounds
   return tableLayoutObject->GetCellDataAt(aRowIndex, aColIndex, aCell, 
                                           aStartRowIndex, aStartColIndex,
-                                          aRowSpan, aColSpan, aIsSelected);
+                                          aRowSpan, aColSpan, 
+                                          aActualRowSpan, aActualColSpan, 
+                                          aIsSelected);
 }
 
 // When all you want is the cell
 NS_IMETHODIMP 
 nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
 {
-  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan;
+  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   return GetCellDataAt(aTable, aRowIndex, aColIndex, aCell, 
-                       startRowIndex, startColIndex, rowSpan, colSpan, isSelected);
+                       startRowIndex, startColIndex, rowSpan, colSpan, 
+                       actualRowSpan, actualColSpan, isSelected);
 }
 
 NS_IMETHODIMP

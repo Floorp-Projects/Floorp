@@ -138,6 +138,8 @@ public:
   NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsString *aTagName, nsIDOMElement **aReturn);
+
 
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
@@ -187,7 +189,9 @@ public:
   NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell);
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
-                           PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
+                           PRInt32& aRowSpan, PRInt32& aColSpan, 
+                           PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
+                           PRBool& aIsSelected);
   NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection);
   NS_IMETHOD GetSelectedOrParentTableElement(nsCOMPtr<nsIDOMElement> &aTableElement, nsString& aTagName, PRBool &aIsSelected);
     
@@ -318,7 +322,8 @@ protected:
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
-  PRInt32 GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
+  PRInt32  GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
+  nsresult GetRowAt(nsCOMPtr<nsIDOMElement> &aTable, PRInt32 rowIndex, nsCOMPtr<nsIDOMElement> &aRow);
   
   // Most insert methods need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,

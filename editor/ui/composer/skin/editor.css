@@ -121,9 +121,8 @@ box#DisplayModeBar titledbutton.DisplayModeButton {
   border-left: 1px solid darkgray;
   padding: 0px 4px 0px 4px;
   margin: 0px;
-  /* Same as toolbar.standard titledbutton */
-	color: #CCFFFF;
-	background-color: #003366;
+  color: black;
+  background-color: #CCCCCC;
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton:hover {
@@ -143,8 +142,6 @@ box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"] {
   padding: 0px 4px 0px 4px;
   margin: -2px 0px 0px 0px;
   font-weight: bold;
-  color: black;
-	background-color: #CCCCCC;
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"]:hover {

@@ -134,15 +134,27 @@ public:
     *   A "layout column" is all cells sharing the same left edge
     *   This is important to determine what to do when inserting or deleting a column or row
     * 
-    * @param aTable                   A table in the document
-    * @param aRowIndex, aColIndex     The 0-based cellmap indexes
+    *  @param aTable                   A table in the document
+    *  @param aRowIndex, aColIndex     The 0-based cellmap indexes
+    * returns values:
+    *  @param aCell                    The cell at this cellmap location
+    *  @param aStartRowIndex           The row index where cell starts
+    *  @param aStartColIndex           The col index where cell starts
+    *  @param aRowSpan                 May be 0 (to span down entire table) or number of cells spanned
+    *  @param aColSpan                 May be 0 (to span across entire table) or number of cells spanned
+    *  @param aActualRowSpan           The actual number of cellmap locations (rows) spanned by the cell
+    *  @param aActualColSpan           The actual number of cellmap locations (columns) spanned by the cell
+    *  @param aIsSelected
+    *  @param 
     *
     * Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND
     *   when a cell is not found at the given indexes  (see note for GetCellAt())
     */
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
-                           PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)=0;
+                           PRInt32& aRowSpan, PRInt32& aColSpan, 
+                           PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
+                           PRBool& aIsSelected)=0;
 
 
   /** Preferred direction to search for neighboring cell

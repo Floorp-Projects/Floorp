@@ -118,11 +118,15 @@ function EditorTestTableLayout()
   var startColIndexObj = new Object();
   var rowSpanObj = new Object();
   var colSpanObj = new Object();
+  var actualRowSpanObj = new Object();
+  var actualColSpanObj = new Object();
   var isSelectedObj = new Object();
   var startRowIndex = 0;
   var startColIndex = 0;
   var rowSpan;
   var colSpan;
+  var actualRowSpan;
+  var actualColSpan;
   var isSelected;
   var col = 0;
   var row = 0;
@@ -138,19 +142,24 @@ function EditorTestTableLayout()
 
   while (!doneWithRow)  // Iterate through rows
   {  
+    dump("* Data for ROW="+row+":\n");
     while(!doneWithCol)  // Iterate through cells in the row
     {
       try {
         cell = editorShell.GetCellDataAt(table, row, col, startRowIndexObj, startColIndexObj,
-                                         rowSpanObj, colSpanObj, isSelectedObj);
+                                         rowSpanObj, colSpanObj, actualRowSpanObj, actualColSpanObj, 
+                                         isSelectedObj);
 
         if (cell)
         {
           rowSpan = rowSpanObj.value;
           colSpan = colSpanObj.value;
+          actualRowSpan = actualRowSpanObj.value;
+          actualColSpan = actualColSpanObj.value;
           isSelected = isSelectedObj.value;
           
-          dump("Row,Col: "+row+","+col+" StartRow,StartCol: "+startRowIndexObj.value+","+startColIndexObj.value+" RowSpan="+rowSpan+" ColSpan="+colSpan);
+          dump(" Row="+row+", Col="+col+"  StartRow="+startRowIndexObj.value+", StartCol="+startColIndexObj.value+"\n");
+          dump("  RowSpan="+rowSpan+", ColSpan="+colSpan+"  ActualRowSpan="+actualRowSpan+", ActualColSpan="+actualColSpan);
           if (isSelected)
             dump("  Cell is selected\n");
           else
@@ -172,12 +181,12 @@ function EditorTestTableLayout()
           // Get maximum number of cells in any row
           if (col > maxColCount)
             maxColCount = col;
-          dump(" End of row found\n\n");
+          dump("  End of row found\n\n");
         }
       }
       catch (e) {
-        dump("  *** GetCellDataAt barfed at Row,Col:"+row+","+col+" ***\n\n");
-        col++;
+        dump("  *** GetCellDataAt failed at Row="+row+, Col="+col+" ***\n\n");
+        return;
       }
     }
     if (col == 0) {
@@ -191,7 +200,6 @@ function EditorTestTableLayout()
       col = 0;
       row++;
       doneWithCol = false;
-      dump("Setup for next row\n");
     }      
   }
   dump("Counted during scan: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n");
