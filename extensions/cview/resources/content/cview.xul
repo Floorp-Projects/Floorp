@@ -24,8 +24,7 @@
 
 <!DOCTYPE window>
 
-<!-- ?xml-stylesheet href="chrome://cview/skin" type="text/css"? -->
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://cview/skin" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -36,15 +35,10 @@
 -->
 
 <window id="main-window"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:xpcom="http://www.mozilla.org/NC-xpcom#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical" onload="onLoad();" onunload="onUnload();"
         persist="width height" title="XPCOM Component Viewer">
 <!--
-  note the xmlns:xpcom in the <window> tag, it's used in the <rule>s
-  below.
   The persist attribute contains attributes that should be saved to
   localstore.rdf when the window closes.  The next time this window is
   opened, persisted properties will be automatically restored.
@@ -55,18 +49,23 @@
   it to take effect.
 
   files loaded are:
+    outliner-utils.js  General purpose outliner classes
+
     cview-utils.js     generic utility functions.
     cview-rdf.js       RDF utility class (RDFHelper).
     cview-static.js    Non event-handler functions core to cview.
     cview-handlers.js  Event-handlers core to cview.
+    cview-outliners.js CView specific outliners
 -->
   <script>
     var DEBUG = true;
   </script>
-  <script type="application/x-javascript" src="chrome://cview/content/cview-utils.js"/>
-  <script type="application/x-javascript" src="chrome://cview/content/cview-rdf.js"/>
-  <script type="application/x-javascript" src="chrome://cview/content/cview-static.js"/>
-  <script type="application/x-javascript" src="chrome://cview/content/cview-handlers.js"/>
+  <script src="chrome://cview/content/outliner-utils.js"/>
+  <script src="chrome://cview/content/cview-utils.js"/>
+  <script src="chrome://cview/content/cview-rdf.js"/>
+  <script src="chrome://cview/content/cview-static.js"/>
+  <script src="chrome://cview/content/cview-handlers.js"/>
+  <script src="chrome://cview/content/cview-outliners.js"/>
 
 <!--
   This popup is the context menu for elements in the interfaces list.
@@ -120,132 +119,51 @@
     </menubar>
   </toolbox>
 
-  <hbox id="outer-box" flex="1">
+  <vbox id="outer-box" flex="1">
+  <hbox id="inner-box" flex="9">
     <vbox id="component-box" flex="1" width="50%">
-    <text id="component-label" value="Components..." crop="right"
-      autostretch="never"/>
-<!--
-  datasources="rdf:null" makes the tree able to get it's contents from an
-  rdf datasource, but delays saying which one until runtime.
--->
-  containment="http://www.mozilla.org/NC-xpcom#component" says that
-    <tree id="component-list" container="true" datasources="rdf:null" flex="1"
-      containment="http://www.mozilla.org/NC-xpcom#component">
+      <text id="component-label" value="Components..." crop="right"
+        autostretch="never"/>
 
-      <template>
-<!--
-  xpcom: here refers to the namespace declared in the <window> tag.  If the
-  resource has a http://www.mozilla.org/NC-xpcom#show arc pointing the
-  literal value "false", no content will be created for that resource
--->
-        <rule xpcom:show="false"/>
-<!--
-  If, on the otherhand, the resource has a
-  http://www.mozilla.org/NC-xpcom#show arc pointing the literal value
-  "true", the following content will be created.
--->
-        <rule xpcom:show="true">
-        <treechildren flex="1">
-          <treeitem uri="..." flex="1">
-            <treerow onclick="onComponentClick(event);" flex="1" crop="right"
-              contractid="rdf:http://www.mozilla.org/NC-xpcom#contractid">
-<!--
-  Even though we specified the onClick handler as an attribute of the
-  <treerow> tag, the event's target will be the <treecell>.  We compensate
-  by looking at the target's parentNode.  See
-  cview-handlers.js:onComponentClick().
--->
-                <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#contractid"
-                    crop="right" flex="1" autostretch="never"/>
-                </treecell>
-                <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#clsid"
-                    crop="right" flex="1" autostretch="never"/>
-                </treecell>
-            </treerow>
-          </treeitem>
-        </treechildren>
-        </rule>
-      </template>
+      <outliner flex="1" id="component-outliner" persist="height"
+        primary="true" onselect="onComponentSelect(event);"
+        onclick="onComponentClick(event);">
 
-      <treecolgroup>
-        <treecol flex="1" width="75%"
-          resource="http://www.mozilla.org/NC-xpcom#contractid"/>
+        <outlinercol id="cmp-name" label="Name" primary="true" flex="1"
+          persist="hidden width"/>
         <splitter class="tree-splitter"/>
-        <treecol flex="1" width="25%"
-          resource="http://www.mozilla.org/NC-xpcom#clsid"/>
-      </treecolgroup>
+        <outlinercol id="cmp-number" flex="1" label="Number"
+          persist="hidden width"/>
+        <outlinerbody id="project-body" flex="1"/>
+      </outliner>
 
-      <treehead>
-        <treerow>
-          <treecell id="componentcol-contractid" flex="1"
-            resource="http://www.mozilla.org/NC-xpcom#contractid"
-            class="treecell-header sortDirectionIndicator" label="ContractID"
-            onclick="return onSortCol('componentcol-contractid');"/>
-          <treecell id="componentcol-clsid" flex="1"
-            resource="http://www.mozilla.org/NC-xpcom#clsid"
-            class="treecell-header sortDirectionIndicator" label="CLSID"
-            onclick="return onSortCol('componentcol-clsid');"/>
-        </treerow>
-      </treehead>
-    </tree>
     </vbox>
 
-    <splitter id="main-splitter" orient="vertical" collapse="before">
+    <splitter id="main-splitter" orient="vertical" collapse="after">
       <grippy/>
     </splitter>
 
     <vbox id="interface-box" flex="1" width="50%">
     <text id="interface-label" value="Interfaces..." crop="right"
       autostretch="never"/>
-    <tree id="interface-list" container="true" datasources="rdf:null" flex="1"
-      containment="http://www.mozilla.org/NC-xpcom#interface">
 
-      <template>
-        <rule xpcom:show="false"/>
-        <rule xpcom:show="true">
-        <treechildren flex="1">
-          <treeitem uri="...">
-            <treerow onclick="onInterfaceClick(event);" crop="right"
-              iname="rdf:http://www.mozilla.org/NC-xpcom#iname"
-              context="interfacePopup">
-                <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iname"
-                    crop="right" flex="1" autostretch="never"/>
-                </treecell>
-                <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iid"
-                    crop="right" flex="1" autostretch="never"/>
-                </treecell>
-            </treerow>
-          </treeitem>
-        </treechildren>
-        </rule>
-      </template>
+      <outliner flex="1" id="interface-outliner" persist="height"
+        onclick="onInterfaceClick(event);" context="interfacePopup"
+        onselect="onInterfaceSelect(event);">
 
-      <treecolgroup>
-        <treecol flex="1" width="75%"
-          resource="http://www.mozilla.org/NC-xpcom#iname"/>
+        <outlinercol id="ifc-name" label="Name" primary="true" flex="1"
+          persist="hidden width"/>
         <splitter class="tree-splitter"/>
-        <treecol flex="1" width="25%"
-          resource="http://www.mozilla.org/NC-xpcom#iid"/>
-      </treecolgroup>
+        <outlinercol id="ifc-number" flex="1" label="Number"
+          persist="hidden width"/>
+        <outlinerbody id="project-body" flex="1"/>
+      </outliner>
 
-      <treehead>
-        <treerow>
-          <treecell id="interfacecol-iname"
-            resource="http://www.mozilla.org/NC-xpcom#iname"
-            class="treecell-header sortDirectionIndicator" label="Interface"
-            onclick="return onSortCol('interfacecol-iname');"/>
-          <treecell id="interfacecol-iid"
-            resource="http://www.mozilla.org/NC-xpcom#iid"
-            class="treecell-header sortDirectionIndicator" label="IID"
-            onclick="return onSortCol('interfacecol-iid');"/>
-        </treerow>
-      </treehead>
-    </tree>
     </vbox>
 
-  </hbox>
+  </hbox> <!-- inner-box -->
+
+    <textbox multiline="true" readonly="true" id="output-text" flex="1"/>
+
+  </vbox> <!-- outer-box -->
 </window>

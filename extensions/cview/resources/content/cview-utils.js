@@ -326,10 +326,10 @@ function getPriv (priv)
 
 function keys (o)
 {
-    var rv = "";
+    var rv = new Array();
     
     for (var p in o)
-        rv += rv ? ", " + p : p;
+        rv.push(p);
 
     return rv;
     

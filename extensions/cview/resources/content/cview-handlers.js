@@ -28,24 +28,12 @@
 
 function onLoad()
 {
-
-    /* see cview-rdf.js for the definition of RDFHelper */
-    cview.rdf = new RDFHelper();
-    
-    cview.rdf.initTree ("component-list");
-    cview.rdf.initTree ("interface-list");
-
-    cview.rdf.setTreeRoot ("component-list", cview.rdf.resRoot);
-    cview.rdf.setTreeRoot ("interface-list", cview.rdf.resRoot);
-
-    onSortCol ("componentcol-contractid");
-    onSortCol ("interfacecol-iname");
-    
-    refreshComponents();
-    refreshInterfaces();
-
+    initOutliners();
+    cview.totalComponents = cview.visibleComponents = 
+        cview.componentView.rowCount;
+    cview.totalInterfaces = cview.visibleInterfaces = 
+        cview.interfaceView.rowCount;
     refreshLabels();
-    
 }
 
 function onUnload()
@@ -53,109 +41,100 @@ function onUnload()
     /* nothing important to do onUnload yet */
 }
 
-function onSortCol(sortColName)
-{
-    /* sort the <tree> widget on the column name |sortColName|.  This code
-     * was basically ripped off some mozilla code that I can't recall at the
-     * moment.
-     */
-    const nsIXULSortService = Components.interfaces.nsIXULSortService;
-   /* XXX remove the rdf version once 0.8 is a distant memory
-    * 2/22/2001
-    */
-    const isupports_uri =
-        (Components.classes["@mozilla.org/xul/xul-sort-service;1"]) ?
-         "@mozilla.org/xul/xul-sort-service;1" :
-         "@mozilla.org/rdf/xul-sort-service;1";
-    
-    var node = document.getElementById(sortColName);
-    // determine column resource to sort on
-    var sortResource =
-        node.getAttribute("resource");
-    if (!node)
-        return false;
- 
-    var sortDirection = "ascending";
-        //node.setAttribute("sortActive", "true");
-
-    switch (sortColName)
-    {
-        case "componentcol-contractid":
-            document.getElementById("componentcol-clsid")
-                .setAttribute("sortDirection", "natural");
-            break;
-        case "componentcol-clsid":
-            document.getElementById("componentcol-contractid")
-                .setAttribute("sortDirection", "natural");
-            break;
-        case "interfacecol-iname":
-            document.getElementById("interfacecol-iid")
-                .setAttribute("sortDirection", "natural");
-            break;
-        case "interfacecol-iid":
-            document.getElementById("interfacecol-iname")
-                .setAttribute("sortDirection", "natural");
-            break;
-    }
-    
-    var currentDirection = node.getAttribute('sortDirection');
-    
-    if (currentDirection == "ascending")
-        sortDirection = "descending";
-    else if (currentDirection == "descending")
-        sortDirection = "natural";
-    else
-        sortDirection = "ascending";
-    
-    node.setAttribute ("sortDirection", sortDirection);
- 
-    var xulSortService =
-        Components.classes[isupports_uri].getService(nsIXULSortService);
-    if (!xulSortService)
-        return false;
-    try
-    {
-        xulSortService.Sort(node, sortResource, sortDirection);
-    }
-    catch(ex)
-    {
-        //dd("Exception calling xulSortService.Sort()");
-    }
-    
-}
-
 function onComponentClick(e)
 {
-    cview.lastContractID = e.target.parentNode.getAttribute("contractid");
-    
-    if (cview.interfaceMode == "implemented-by")
+    if (e.originalTarget.localName == "outlinercol")
     {
-        cview.interfaceFilter = cview.lastContractID;
-        filterInterfaces();
+        onOutlinerResort(e, cview.componentView);
+    }
+    else
+    {
+        /*
+        cview.lastContractID = e.target.parentNode.getAttribute("contractid");
+    
+        if (cview.interfaceMode == "implemented-by")
+        {
+            cview.interfaceFilter = cview.lastContractID;
+            filterInterfaces();
+        }
+        */
     }
 }
 
 function onInterfaceClick(e)
 {
-    cview.lastIID = e.target.parentNode.getAttribute("iid");
-    refreshLabels();
+    if (e.originalTarget.localName == "outlinercol")
+    {
+        onOutlinerResort(e, cview.interfaceView);
+    }
+    else
+    {
+        /*
+        cview.lastIID = e.target.parentNode.getAttribute("iid");
+        refreshLabels();
+        */
+    }
 }
 
+function onOutlinerResort (e, view)
+{
+    /* resort by column */
+    var rowIndex = new Object();
+    var colID = new Object();
+    var childElt = new Object();
+    
+    var obo = view.outliner;
+    obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
+    var prop;
+    switch (colID.value.substr(4))
+    {
+        case "name":
+            prop = "sortName";
+            break;
+        case "number":
+            prop = "sortNumber";
+            break;
+    }
+    
+    var root = view.childData;
+    var dir = (prop == root._share.sortColumn) ?
+        root._share.sortDirection * -1 : 1;
+    root.setSortColumn (prop, dir);
+}
+
+function onComponentSelect (e)
+{
+    var index = cview.componentView.outliner.selection.currentIndex;
+    var row = cview.componentView.childData.locateChildByVisualRow (index);
+    if (!row)
+        return;
+
+    var text = document.getElementById ("output-text");
+    text.value = row.getText();
+}
+
+function onInterfaceSelect (e)
+{
+    var index = cview.interfaceView.outliner.selection.currentIndex;
+    var row = cview.interfaceView.childData.locateChildByVisualRow (index);
+    if (!row)
+        return;
+
+    var text = document.getElementById ("output-text");
+    text.value = row.getText();
+}
+            
 function onLXRIFCLookup (e, type)
 {
-    var treerow = document.popupNode.parentNode;
+    var index = cview.interfaceView.outliner.selection.currentIndex;
+    var row = cview.interfaceView.childData.locateChildByVisualRow (index);
+    if (!row)
+        return;
     
-    var iname = treerow.getAttribute("iname");
-    if (!iname)
-    {
-        dd ("** NO INAME attribute in onLXRIFCLookup **");
-        return;    
-    }
-
     /* Specifing "_content" as the second parameter to window.open places
      * the url in the most recently open browser window
      */
-    window.open ("http://lxr.mozilla.org/mozilla/" + type + iname,
+    window.open ("http://lxr.mozilla.org/mozilla/" + type + row.name,
                  "_content", "");
 }
 

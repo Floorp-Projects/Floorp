@@ -22,3 +22,23 @@
  */
 
 @import url(chrome://communicator/skin/);
+
+#output-text {
+    font-family: monospace;
+}
+
+outlinerbody:-moz-outliner-image(cmp-name,component) {
+    list-style-image: url("chrome://cview/skin/images/component.gif");
+}
+
+outlinerbody:-moz-outliner-image(cmp-name,interface) {
+    list-style-image: url("chrome://cview/skin/images/interface.gif");
+}
+
+outlinerbody:-moz-outliner-image(cmp-name,method) {
+    list-style-image: url("chrome://cview/skin/images/method.gif");
+}
+
+outlinerbody:-moz-outliner-image(ifc-name) {
+    list-style-image: url("chrome://cview/skin/images/interface.gif");
+}
