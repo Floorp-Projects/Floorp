@@ -26,7 +26,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIScriptObjectOwner.h"
 
-typedef PRBool (*nsContentListMatchFunc)(nsIContent *aContent);
+typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent, void* aData);
 
 class nsIDocument;
 
@@ -43,6 +43,7 @@ public:
                 nsIContent* aRootContent=nsnull);
   nsContentList(nsIDocument *aDocument, 
                 nsContentListMatchFunc aFunc,
+                void* aData,
                 nsIContent* aRootContent=nsnull);
   virtual ~nsContentList();
 
@@ -129,6 +130,7 @@ protected:
   nsIAtom* mMatchAtom;
   PRInt32 mMatchNameSpaceId;
   nsContentListMatchFunc mFunc;
+  void* mData;
   nsVoidArray mContent;
   void *mScriptObject;
   nsIDocument *mDocument;

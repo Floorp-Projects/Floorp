@@ -1110,7 +1110,7 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 }
 
 PRBool
-nsHTMLDocument::MatchLinks(nsIContent *aContent)
+nsHTMLDocument::MatchLinks(nsIContent *aContent, void* aData)
 {
   nsIAtom *name;
   aContent->GetTag(name);
@@ -1131,7 +1131,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 {
   if (nsnull == mLinks) {
-    mLinks = new nsContentList(this, MatchLinks);
+    mLinks = new nsContentList(this, MatchLinks, nsnull);
     if (nsnull == mLinks) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1145,7 +1145,7 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 }
 
 PRBool
-nsHTMLDocument::MatchAnchors(nsIContent *aContent)
+nsHTMLDocument::MatchAnchors(nsIContent *aContent, void* aData)
 {
   nsIAtom *name;
   aContent->GetTag(name);
@@ -1166,7 +1166,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 {
   if (nsnull == mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors);
+    mAnchors = new nsContentList(this, MatchAnchors, nsnull);
     if (nsnull == mAnchors) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1393,25 +1393,46 @@ nsHTMLDocument::GetElementById(const nsString& aElementId, nsIDOMElement** aRetu
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn)
+PRBool
+nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, void* aData)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result;
+  nsAutoString name;
+  char* matchName = (char*)aData;
+
+  result = aContent->GetAttribute(kNameSpaceID_None, 
+                                  nsHTMLAtoms::name,
+                                  name);
+  if ((result == NS_OK) && name.Equals(matchName)) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetElementsByName(const nsString& aElementName, 
+                                  nsIDOMNodeList** aReturn)
+{
+  char* name = aElementName.ToNewCString();
+  nsContentList* elements = new nsContentList(this, 
+                                              MatchNameAttribute, 
+                                              name);
+  if (nsnull == elements) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return elements->QueryInterface(kIDOMNodeListIID, (void**)aReturn);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetALink(aAlinkColor);
     NS_RELEASE(body);
@@ -1423,15 +1444,10 @@ nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->SetALink(aAlinkColor);
     NS_RELEASE(body);
@@ -1443,15 +1459,10 @@ nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetLinkColor(nsString& aLinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetLink(aLinkColor);
     NS_RELEASE(body);
@@ -1463,15 +1474,10 @@ nsHTMLDocument::GetLinkColor(nsString& aLinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->SetLink(aLinkColor);
     NS_RELEASE(body);
@@ -1483,15 +1489,10 @@ nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetVLink(aVlinkColor);
     NS_RELEASE(body);
@@ -1503,15 +1504,10 @@ nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->SetVLink(aVlinkColor);
     NS_RELEASE(body);
@@ -1523,15 +1519,10 @@ nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetBgColor(nsString& aBgColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetBgColor(aBgColor);
     NS_RELEASE(body);
@@ -1543,15 +1534,10 @@ nsHTMLDocument::GetBgColor(nsString& aBgColor)
 NS_IMETHODIMP    
 nsHTMLDocument::SetBgColor(const nsString& aBgColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->SetBgColor(aBgColor);
     NS_RELEASE(body);
@@ -1563,15 +1549,10 @@ nsHTMLDocument::SetBgColor(const nsString& aBgColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetFgColor(nsString& aFgColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetText(aFgColor);
     NS_RELEASE(body);
@@ -1583,15 +1564,10 @@ nsHTMLDocument::GetFgColor(nsString& aFgColor)
 NS_IMETHODIMP    
 nsHTMLDocument::SetFgColor(const nsString& aFgColor)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
-  }
-  
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
-  result = mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
-                                        (void**)&body);
+  result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->SetText(aFgColor);
     NS_RELEASE(body);
@@ -2775,6 +2751,17 @@ nsHTMLDocument::GetBodyContent()
   }
   NS_RELEASE(root);
   return PR_FALSE;
+}
+
+nsresult
+nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
+{
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  return mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+                                      (void**)aBody);
 }
 
 // forms related stuff

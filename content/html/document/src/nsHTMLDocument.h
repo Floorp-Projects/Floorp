@@ -24,6 +24,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
 #include "plhash.h"
 
@@ -160,10 +161,12 @@ protected:
   nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
-  static PRBool MatchLinks(nsIContent *aContent);
-  static PRBool MatchAnchors(nsIContent *aContent);
+  static PRBool MatchLinks(nsIContent *aContent, void* aData);
+  static PRBool MatchAnchors(nsIContent *aContent, void* aData);
+  static PRBool MatchNameAttribute(nsIContent* aContent, void* aData);
 
   PRBool GetBodyContent();
+  nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
   virtual nsresult Reset(nsIURL *aURL);
   nsresult WriteCommon(JSContext *cx, 

@@ -58,15 +58,18 @@ nsContentList::nsContentList(nsIDocument *aDocument,
   }
   mMatchNameSpaceId = aMatchNameSpaceId;
   mFunc = nsnull;
+  mData = nsnull;
   mRootContent = aRootContent;
   Init(aDocument);
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument, 
                              nsContentListMatchFunc aFunc,
+                             void* aData,
                              nsIContent* aRootContent)
 {
   mFunc = aFunc;
+  mData = aData;
   mMatchAtom = nsnull;
   mRootContent = aRootContent;
   mMatchAll = PR_FALSE;
@@ -96,6 +99,12 @@ nsContentList::~nsContentList()
   }
   
   NS_IF_RELEASE(mMatchAtom);
+
+  // XXX This is absolutely gross, since this is allocated
+  // elsewhere.
+  if (nsnull != mData) {
+    delete mData;
+  }
 }
 
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
@@ -336,7 +345,7 @@ nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
     NS_IF_RELEASE(name);
   }
   else if (nsnull != mFunc) {
-    *aMatch = (*mFunc)(aContent);
+    *aMatch = (*mFunc)(aContent, mData);
   }
   else {
     *aMatch = PR_FALSE;
