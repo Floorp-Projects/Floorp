@@ -273,8 +273,10 @@ static PRBool isAccessRestricted() {
 // Implementation of method that checks settings versus registry and prompts user
 // if out of synch.
 NS_IMETHODIMP
-nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
+nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent, 
+                               PRBool *_retval ) {
     nsresult rv = NS_OK;
+    *_retval = PR_FALSE;
 
     // Only do this once!
     static PRBool alreadyChecked = PR_FALSE;
@@ -407,6 +409,9 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                                                               nsnull, nsnull, nsnull, labelArg, &showDialog, &dlgResult);
                                 
                                 if ( NS_SUCCEEDED( rv ) ) {
+                                    // Dialog was shown
+                                    *_retval = PR_TRUE; 
+
                                     // Did they say go ahead?
                                     switch ( dlgResult ) {
                                         case 0:
