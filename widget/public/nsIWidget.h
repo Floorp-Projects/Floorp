@@ -80,14 +80,17 @@ typedef void* nsNativeWidget;
  */
 
 enum nsBorderStyle {   
-                  ///no border
+                  // no border
                 eBorderStyle_none,
-                  ///dialog box border + title area
+                  // dialog box border + title area
                 eBorderStyle_dialog,
-                  ///window border
+                  // window border
                 eBorderStyle_window,
-                  ///child window 3D border hint
-                eBorderStyle_3DChildWindow
+                  // child window 3D border hint
+                eBorderStyle_3DChildWindow,
+                  // top level window without border (drop down in combo
+		  // boxes, etc)
+                eBorderStyle_BorderlessTopLevel
               }; 
 
 /**
