@@ -83,6 +83,13 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
 #endif
     return;
   }
+  if (!in) {
+#ifdef NS_DEBUG
+    printf("OpenBlockingStream returned success value, but pointer is NULL\n");
+#endif
+    *aResult = NS_ERROR_UNEXPECTED;
+    return;
+  }
   *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
     kIPersistentPropertiesIID, (void**) &mProps);
   if (NS_FAILED(*aResult)) {
