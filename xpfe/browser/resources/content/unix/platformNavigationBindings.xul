@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/platformNavigationBindings.dtd">
+<!DOCTYPE window SYSTEM "chrome://navigator-platform/locale/platformNavigationBindings.dtd">
 
 <overlay id="platformNavigationBindings"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

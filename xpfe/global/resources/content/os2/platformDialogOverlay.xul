@@ -21,7 +21,7 @@
    -->
 <!-- os2 version of platformDialogOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/platformDialogOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd">
 
 <overlay id="platformDialogOverlay"
              xmlns:html="http://www.w3.org/1999/xhtml"

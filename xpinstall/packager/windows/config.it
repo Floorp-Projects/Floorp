@@ -435,9 +435,9 @@ Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
 
 [Component En US lang pack]
 ;*** LOCALIZE ME BABY ***
-Description Short=English-US language pack
+Description Short=English (US) language pack
 ;*** LOCALIZE ME BABY ***
-Description Long=English-US language pack
+Description Long=English (US)language pack
 Archive=langenus.xpi
 $InstallSize$:langenus
 $InstallSizeSystem$

@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <!-- mac version of platformGlobalOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/platformGlobalOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformGlobalOverlay.dtd">
 
 
 <overlay id="platformGlobalOverlay"

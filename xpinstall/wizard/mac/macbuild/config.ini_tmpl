@@ -88,9 +88,9 @@ Install Size=<#deflenus_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component5]
-Description Short=English US Language Pack
+Description Short=English (US) Language Pack
 ; *** LOCALIZE ME BABY ***
-Description Long=English US Language Pack
+Description Long=English (US) Language Pack
 Archive=langenus.xpi
 Install Size=<#langenus_size>
 Attributes=SELECTED|INVISIBLE

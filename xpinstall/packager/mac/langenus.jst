@@ -4,10 +4,14 @@ var err;
 var fProgram;
 
 // --- LOCALIZATION NOTE: translate only these ---
-var prettyName = "English-US Language Pack";
-var regName    = "locales/mozilla/en-US";
-var chromeName = "en-US.jar";
+var prettyName = "English (US) Language Pack";
+var langcode = "en";
+var chromeNode = langcode + "-US";
 // --- END LOCALIZABLE RESOURCES ---
+var regName      = "locales/mozilla/" + chromeNode;
+var chromeName   = chromeNode + ".jar";
+var platformName = langcode + "-mac.jar";
+var localeName   = "locale/" + chromeNode + "/";
 
 err = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
@@ -26,14 +30,17 @@ if (verifyDiskSpace(fProgram, srDest))
     logComment("addDirectory() returned: " + err);
 
     var cf = getFolder("Chrome");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/global/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/communicator/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/messenger/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/editor/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/navigator/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/necko/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/cookie/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/wallet/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "global/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "communicator/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "messenger/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "editor/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "navigator/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "necko/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "cookie/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "wallet/");
+
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, platformName), localeName + "global-platform/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, platformName), localeName + "communicator-platform/");
 
     if(err == SUCCESS)
     {

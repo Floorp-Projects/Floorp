@@ -1,4 +1,5 @@
 comm.jar:
+    content/communicator-platform/contents.rdf           (resources/content/contents-platform.rdf)
     content/communicator-region/contents.rdf             (resources/content/contents-region.rdf)
     content/communicator/contents.rdf                    (resources/content/contents.rdf)
     content/communicator/communicatorOverlay.xul         (resources/content/communicatorOverlay.xul) 

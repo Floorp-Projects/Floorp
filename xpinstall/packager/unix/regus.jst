@@ -4,9 +4,11 @@ var fProgram;
 
 // --- LOCALIZATION NOTE: translate only these ---
 var prettyName = "US Regional Pack";
-var regName    = "locales/mozilla/US";
-var chromeName = "US.jar";
+var chromeNode = "US";
 // --- END LOCALIZABLE RESOURCES ---
+var regName    = "locales/mozilla/" + chromeNode;
+var chromeName = chromeNode + ".jar";
+var localeName = "locale/" + chromeNode + "/";
 
 err = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
@@ -26,11 +28,11 @@ if (verifyDiskSpace(fProgram, srDest))
 
     // register chrome
     var cf = getFolder("Chrome");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/global-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/communicator-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/editor-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/messenger-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/navigator-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "global-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "communicator-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "editor-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "messenger-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "navigator-region/");
 
     if (err == SUCCESS)
     {

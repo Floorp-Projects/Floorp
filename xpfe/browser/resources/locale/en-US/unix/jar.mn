@@ -1,2 +1,3 @@
-en-US.jar:
-        locale/en-US/navigator/platformNavigationBindings.dtd
+en-unix.jar:
+        locale/en-US/navigator-platform/contents.rdf 			(contents-platform.rdf)
+        locale/en-US/navigator-platform/platformNavigationBindings.dtd

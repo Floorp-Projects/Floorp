@@ -1,4 +1,5 @@
-en-US.jar:
-    locale/en-US/global/platformGlobalOverlay.dtd
-    locale/en-US/global/platformDialogOverlay.dtd
-    locale/en-US/global/printdialog.dtd
+en-unix.jar:
+    locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
+    locale/en-US/global-platform/platformGlobalOverlay.dtd
+    locale/en-US/global-platform/platformDialogOverlay.dtd
+    locale/en-US/global-platform/printdialog.dtd

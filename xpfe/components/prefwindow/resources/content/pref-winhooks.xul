@@ -29,7 +29,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % platformDTD SYSTEM "chrome://global/locale/platformDialogOverlay.dtd" >
+<!ENTITY % platformDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
 %platformDTD;
 <!ENTITY % prefWinhooksDTD SYSTEM "chrome://communicator/locale/pref/pref-winhooks.dtd" >
 %prefWinhooksDTD;
