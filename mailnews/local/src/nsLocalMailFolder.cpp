@@ -1249,15 +1249,16 @@ done:
 void
 nsMsgLocalMailFolder::ClearCopyState()
 {
+  if (mCopyState)
     delete mCopyState;
-    mCopyState = nsnull;
-
-    PRBool haveSemaphore;
-    nsresult result;
-    result = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
-                           &haveSemaphore);
-    if(NS_SUCCEEDED(result) && haveSemaphore)
-      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+  mCopyState = nsnull;
+  
+  PRBool haveSemaphore;
+  nsresult result;
+  result = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
+    &haveSemaphore);
+  if(NS_SUCCEEDED(result) && haveSemaphore)
+    ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
 }
                 
 NS_IMETHODIMP
@@ -1522,7 +1523,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+
+  // rhp - rv isn't being set correctly further down...
+  if (!copySucceeded)
+  	rv = NS_ERROR_FAILURE;
+
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->message)
 	{
@@ -1572,10 +1578,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         copyService->NotifyCompletion(mCopyState->srcSupport, this, rv);
     }
 
-    if (NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)
+    if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)
       mTxnMgr->Do(mCopyState->undoMsgTxn);
 
     ClearCopyState();
+    // rhp - otherwise, its not set...
+    rv = NS_OK;
   }
 
 	return rv;
