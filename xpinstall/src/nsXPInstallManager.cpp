@@ -57,15 +57,15 @@
 
 #include "nsProxiedService.h"
 #include "nsIAppShellComponentImpl.h"
-#include "nsINetSupportDialogService.h"
-#include "nsIPrompt.h"
+#include "nsICommonDialogs.h"
+#include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kCommonDialogCID, NS_CommonDialog_CID);
 
 #include "nsIEventQueueService.h"
 
@@ -160,7 +160,7 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
+nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
@@ -192,9 +192,9 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeTyp
       LoadDialogWithNames(ioParamBlock);
 
       if (mChromeType == 0 || mChromeType > CHROME_SAFEMAX )
-          OKtoInstall = ConfirmInstall(ioParamBlock);
+          OKtoInstall = ConfirmInstall(aGlobalObject, ioParamBlock);
       else
-          OKtoInstall = ConfirmChromeInstall();
+          OKtoInstall = ConfirmChromeInstall(aGlobalObject);
     }
 
     // --- create and open the progress dialog
@@ -251,54 +251,58 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeTyp
     return rv;
 }
 
-PRBool nsXPInstallManager::ConfirmInstall(nsIDialogParamBlock* ioParamBlock)
+PRBool nsXPInstallManager::ConfirmInstall(nsIScriptGlobalObject* aGlobalObject, nsIDialogParamBlock* ioParamBlock)
 {
     nsresult rv = NS_OK;
     PRBool result = PR_FALSE;
 
-    // create a window and pass the JS args to it.
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
-    if ( NS_SUCCEEDED( rv ) ) 
+    if (aGlobalObject)
     {
-      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-      JSContext* jsContext;
-      rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
-      if (NS_SUCCEEDED(rv))
-      {
-        void* stackPtr;
-        jsval *argv = JS_PushArguments( jsContext,
-                                        &stackPtr,
-                                        "sss%ip",
-                                        "chrome://communicator/content/xpinstall/institems.xul",
-                                        "_blank",
-                                        "chrome,modal,titlebar",
-                                        (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                        (nsISupports*)ioParamBlock);
-
-        if (argv)
+        nsCOMPtr<nsIScriptContext> scriptContext;  
+        aGlobalObject->GetContext(getter_AddRefs(scriptContext));
+        if (scriptContext)
         {
-          nsCOMPtr<nsIDOMWindowInternal> newWindow;
-          rv = hiddenWindow->OpenDialog( jsContext,
-                                         argv,
-                                         4,
-                                         getter_AddRefs( newWindow));
-          if (NS_SUCCEEDED(rv))
-          {
-            JS_PopArguments( jsContext, stackPtr);
+            JSContext* jsContext = (JSContext*) scriptContext->GetNativeContext();
+            nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(aGlobalObject));
+            if (parentWindow)
+            {
 
-            //Now get which button was pressed from the ParamBlock
-            PRInt32 buttonPressed = 0;
-            ioParamBlock->GetInt( 0, &buttonPressed );
-            result = buttonPressed ? PR_FALSE : PR_TRUE;
-          }
+                void* stackPtr;
+                jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "sss%ip",
+                                            "chrome://communicator/content/xpinstall/institems.xul",
+                                            "_blank",
+                                            "chrome,modal,titlebar",
+                                            (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
+                                            (nsISupports*)ioParamBlock);
+
+                if (argv)
+                {
+                    nsCOMPtr<nsIDOMWindowInternal> newWindow;
+                    rv = parentWindow->OpenDialog( jsContext,
+                                                   argv,
+                                                   4,
+                                                   getter_AddRefs( newWindow));
+                 
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        JS_PopArguments( jsContext, stackPtr);
+
+                        //Now get which button was pressed from the ParamBlock
+                        PRInt32 buttonPressed = 0;
+                        ioParamBlock->GetInt( 0, &buttonPressed );
+                        result = buttonPressed ? PR_FALSE : PR_TRUE;
+                    }
+                }
+            }
         }
-      }
     }
-
+    
     return result;
 }
 
-PRBool nsXPInstallManager::ConfirmChromeInstall()
+PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalObject)
 {
     nsXPITriggerItem* item = (nsXPITriggerItem*)mTriggers->Get(0);
 
@@ -346,14 +350,19 @@ PRBool nsXPInstallManager::ConfirmChromeInstall()
     PRBool bInstall = PR_FALSE;
     if (confirmText)
     {
-        NS_WITH_SERVICE(nsIPrompt, dlgService, kNetSupportDialogCID, &rv);
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(aGlobalObject));
+        if (parentWindow)
         {
-            rv = dlgService->ConfirmCheck( nsnull,
-                                           confirmText, 
-                                           applyNowText, 
-                                           &mSelectChrome, 
-                                           &bInstall );
+            NS_WITH_SERVICE(nsICommonDialogs, dlgService, kCommonDialogCID, &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = dlgService->ConfirmCheck( parentWindow,
+                                               nsnull,
+                                               confirmText, 
+                                               applyNowText, 
+                                               &mSelectChrome, 
+                                               &bInstall );
+            }
         }
     }
 

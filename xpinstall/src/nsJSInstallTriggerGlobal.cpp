@@ -225,9 +225,18 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     if (trigger->Size() > 0)
     {
         PRBool result;
-        nativeThis->Install(trigger,&result);
-        *rval = BOOLEAN_TO_JSVAL(result);
-        return JS_TRUE;
+
+        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+        if (scriptContext)
+        {
+            nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+            if (globalObject)
+            {
+                nativeThis->Install(globalObject, trigger,&result);
+                *rval = BOOLEAN_TO_JSVAL(result);
+                return JS_TRUE;
+            }
+        }
     }
     else
         delete trigger;
@@ -297,8 +306,20 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );
 
-        nsresult rv = nativeThis->InstallChrome(chromeType, item, &nativeRet);
-        if (NS_FAILED(rv))
+        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+        if (scriptContext)
+        {
+            nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+            if (globalObject)
+            {
+                nsresult rv = nativeThis->InstallChrome(globalObject, chromeType, item, &nativeRet);
+                if (NS_FAILED(rv))
+                    return JS_FALSE;
+            }
+            else
+                return JS_FALSE;
+        }
+        else
             return JS_FALSE;
 
         *rval = BOOLEAN_TO_JSVAL(nativeRet);
@@ -334,169 +355,28 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
         return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->StartSoftwareUpdate(b0, b1, &nativeRet))
+    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+    if (scriptContext)
     {
-      return JS_FALSE;
+        nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+        if (globalObject)
+        {
+             if(NS_OK != nativeThis->StartSoftwareUpdate(globalObject, b0, b1, &nativeRet))
+             {
+                  return JS_FALSE;
+             }
+        }
+        else
+           return JS_FALSE;
     }
+    else
+        return JS_FALSE;
+
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else
   {
     JS_ReportError(cx, "Function StartSoftwareUpdate requires 2 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method ConditionalSoftwareUpdate
-//
-PR_STATIC_CALLBACK(JSBool)
-InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
-  nsAutoString b2str;
-  PRInt32      b2int;
-  nsAutoString b3str;
-  PRInt32      b3int;
-  PRInt32      b4;
-
-  *rval = JSVAL_NULL;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_FALSE;
-
-  if(argc >= 5)
-  {
-    //  public int ConditionalSoftwareUpdate(String url,
-    //                                       String registryName,
-    //                                       int    diffLevel,
-    //                                       String version, --OR-- VersionInfo version
-    //                                       int    mode);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(!JS_ValueToInt32(cx, argv[2], (int32 *)&b2int))
-    {
-      JS_ReportError(cx, "3rd parameter must be a number");
-      return JS_FALSE;
-    }
-
-    if(!JS_ValueToInt32(cx, argv[4], (int32 *)&b4))
-    {
-      JS_ReportError(cx, "5th parameter must be a number");
-      return JS_FALSE;
-    }
-    
-    if(JSVAL_IS_OBJECT(argv[3]))
-    {
-        JSObject* jsobj = JSVAL_TO_OBJECT(argv[3]);
-        JSClass* jsclass = JS_GetClass(cx, jsobj);
-        if((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) 
-        {
-          nsIDOMInstallVersion* version = (nsIDOMInstallVersion*)JS_GetPrivate(cx, jsobj);
-
-          if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2int, version, b4, &nativeRet))
-          {
-                return JS_FALSE;
-          }
-        }
-    }
-    else
-    {
-        ConvertJSValToStr(b3str, cx, argv[3]);
-        if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2int, b3str, b4, &nativeRet))
-        {
-          return JS_FALSE;
-        }
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else if(argc >= 4)
-  {
-    //  public int ConditionalSoftwareUpdate(String url,
-    //                                       String registryName,
-    //                                       String version,  --OR-- VersionInfo version
-    //                                       int    mode);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(!JS_ValueToInt32(cx, argv[3], (int32 *)&b3int))
-    {
-      JS_ReportError(cx, "4th parameter must be a number");
-      return JS_FALSE;
-    }
-
-    if(JSVAL_IS_OBJECT(argv[2]))
-    {
-        JSObject* jsobj = JSVAL_TO_OBJECT(argv[2]);
-        JSClass* jsclass = JS_GetClass(cx, jsobj);
-        if((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) 
-        {
-          nsIDOMInstallVersion* version = (nsIDOMInstallVersion*)JS_GetPrivate(cx, jsobj);
-
-          if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, version, b3int, &nativeRet))
-          {
-                return JS_FALSE;
-          }
-        }
-    }
-    else
-    {
-        ConvertJSValToStr(b2str, cx, argv[2]);
-        if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2str, b3int, &nativeRet))
-        {
-          return JS_FALSE;
-        }
-    }
-        
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else if(argc >= 3)
-  {
-    //  public int ConditionalSoftwareUpdate(String url,
-    //                                       String registryName,
-    //                                       String version);  --OR-- VersionInfo version
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(JSVAL_IS_OBJECT(argv[2]))
-    {
-        JSObject* jsobj = JSVAL_TO_OBJECT(argv[2]);
-        JSClass* jsclass = JS_GetClass(cx, jsobj);
-        if((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) 
-        {
-          nsIDOMInstallVersion* version = (nsIDOMInstallVersion*)JS_GetPrivate(cx, jsobj);
-
-          if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, version, &nativeRet))
-          {
-                return JS_FALSE;
-          }
-        }
-    }
-    else
-    {
-        ConvertJSValToStr(b2str, cx, argv[2]);
-        if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2str, &nativeRet))
-        {
-          return JS_FALSE;
-        }
-    }
-        
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function ConditionalSoftwareUpdate requires 5 parameters");
     return JS_FALSE;
   }
 
@@ -646,11 +526,9 @@ static JSFunctionSpec InstallTriggerGlobalMethods[] =
   // -- obsolete forms, do not document. Kept for 4.x compatibility
   {"UpdateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
   {"StartSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
-  {"ConditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
   {"CompareVersion",            InstallTriggerGlobalCompareVersion,            5},
   {"GetVersion",                InstallTriggerGlobalGetVersion,                2},
   {"updateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
-  {"conditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
   // -- new forms to match JS style --
   {"enabled",                   InstallTriggerGlobalUpdateEnabled,             0},
   {"install",                   InstallTriggerGlobalInstall,                   2},

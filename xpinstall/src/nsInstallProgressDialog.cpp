@@ -27,7 +27,7 @@
 #include "nsInstallProgressDialog.h"
 
 #include "nsIAppShellComponentImpl.h"
-
+#include "nsIScriptGlobalObject.h"
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
@@ -161,7 +161,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
                                             "sss%ip%ip",
                                             "chrome://communicator/content/xpinstall/xpistatus.xul",
                                             "_blank",
-                                            "chrome,titlebar",
+                                            "chrome,centered,titlebar,resizeable",
                                             (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),
                                             (nsISupports*)ioParamBlock,
                                             (const nsIID*)&NS_GET_IID(nsPIXPIManagerCallbacks),
@@ -174,10 +174,8 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
                                                5,
                                                getter_AddRefs( mWindow ));
             }
-
             JS_PopArguments( jsContext, stackPtr);  
         }
-        
     }
     return rv;
 }
@@ -267,7 +265,7 @@ nsInstallProgressDialog::StartInstallPhase()
     nsresult rv = NS_OK;
 
     // don't care if this fails
-    setDlgAttribute("dialog.cancel", "disabled", NS_ConvertASCIItoUCS2("true"));
+    setDlgAttribute("cancel", "disabled", NS_ConvertASCIItoUCS2("true"));
 
     return rv;
 }

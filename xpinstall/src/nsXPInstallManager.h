@@ -38,6 +38,7 @@
 #include "nsXPITriggerInfo.h"
 #include "nsIXPIProgressDlg.h"
 #include "nsIChromeRegistry.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsISoftwareUpdate.h"
 
@@ -62,7 +63,7 @@ class nsXPInstallManager : public nsIXPIListener,
 
         NS_DECL_ISUPPORTS
 
-        NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger, PRUint32 chromeType );
+        NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
         // nsIStreamObserver
         NS_DECL_NSISTREAMOBSERVER
@@ -88,8 +89,8 @@ class nsXPInstallManager : public nsIXPIListener,
         void        Shutdown();
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
-        PRBool      ConfirmInstall(nsIDialogParamBlock* ioParamBlock);
-        PRBool      ConfirmChromeInstall();
+        PRBool      ConfirmInstall(nsIScriptGlobalObject* aGlobalObject, nsIDialogParamBlock* ioParamBlock);
+        PRBool      ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalObject);
         PRBool      TimeToUpdate(PRTime now);
         
         nsXPITriggerInfo*   mTriggers;

@@ -51,6 +51,9 @@ function onLoad()
         addTreeItem(row++, moduleName, URL);
     }
     manager.dialogOpened(window);
+    document.getElementById("cancel").focus();
+
+    return;
 
 }
 
@@ -69,7 +72,7 @@ function addTreeItem(num, modName, url)
     elem.setAttribute("value", modName);
     newrow.appendChild(elem);
 
-    var elem = document.createElement('treecell');
+    elem = document.createElement('treecell');
     elem.setAttribute("value", url);
     newrow.appendChild(elem);
 
