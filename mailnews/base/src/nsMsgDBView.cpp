@@ -4357,25 +4357,19 @@ PRBool nsMsgDBView::WantsThisThread(nsIMsgThread * /*threadHdr*/)
   return PR_TRUE; // default is to want all threads.
 }
 
-nsMsgViewIndex nsMsgDBView::FindParentInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex)
+nsMsgViewIndex nsMsgDBView::FindParentInThread(nsMsgKey parentKey, nsMsgViewIndex startOfThreadViewIndex)
 {
-  nsCOMPtr<nsIMsgDBHdr> curMsgHdr;
-  nsMsgKey parentKey;
-  msgHdr->GetThreadParent(&parentKey);
-
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
   while (parentKey != nsMsgKey_None)
   {
-    if (NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr))))
-      break;
-
-    nsMsgKey parentKey;
-    curMsgHdr->GetThreadParent(&parentKey);
-    if (parentKey == nsMsgKey_None)
-      break;
-
     nsMsgViewIndex parentIndex = m_keys.FindIndex(parentKey, startOfThreadViewIndex);
     if (parentIndex != nsMsgViewIndex_None)
       return parentIndex;
+
+    if (NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(msgHdr))))
+      break;
+
+    msgHdr->GetThreadParent(&parentKey);
   }
 
   return startOfThreadViewIndex;

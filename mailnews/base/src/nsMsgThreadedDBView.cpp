@@ -595,15 +595,16 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentK
           // levels of other hdrs may have changed!
           PRUint32	newFlags = msgFlags;
           PRInt32 level = 0;
-          nsMsgViewIndex insertIndex = FindParentInThread(newHdr, threadIndex);
+          nsMsgViewIndex insertIndex = threadIndex;
           if (aParentKey == nsMsgKey_None)
           {
             newFlags |= MSG_VIEW_FLAG_ISTHREAD | MSG_VIEW_FLAG_HASCHILDREN;
           }
           else
           {
-            level = m_levels[insertIndex];
-            insertIndex = GetInsertInfoForNewHdr(newHdr, threadIndex, level);
+            nsMsgViewIndex parentIndex = FindParentInThread(aParentKey, threadIndex);
+            level = m_levels[parentIndex] + 1;
+            insertIndex = GetInsertInfoForNewHdr(newHdr, parentIndex, level);
           }
           m_keys.InsertAt(insertIndex, newKey);
           m_flags.InsertAt(insertIndex, newFlags, 1);
