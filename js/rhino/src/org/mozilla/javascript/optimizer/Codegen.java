@@ -1883,30 +1883,7 @@ class BodyCodegen
                 break;
 
               case Token.BINDNAME:
-              case Token.GETBASE:
-                visitBind(node, type, child);
-                break;
-
-              case Token.GETTHIS:
-                generateCodeFromNode(child, node);
-                addScriptRuntimeInvoke("getThis",
-                                       "(Lorg/mozilla/javascript/Scriptable;"
-                                       +")Lorg/mozilla/javascript/Scriptable;");
-                break;
-
-              case Token.PARENT:
-                generateCodeFromNode(child, node);
-                addScriptRuntimeInvoke("getParent",
-                                       "(Ljava/lang/Object;"
-                                       +")Lorg/mozilla/javascript/Scriptable;");
-                break;
-
-              case Token.NEWTEMP:
-                visitNewTemp(node, child);
-                break;
-
-              case Token.USETEMP:
-                visitUseTemp(node, child);
+                visitBind(node, child);
                 break;
 
               case Token.LOCAL_LOAD:
@@ -2380,8 +2357,7 @@ class BodyCodegen
 
     private void generateFunctionAndThisObj(Node node, Node parent)
     {
-// REMOVE Token.PARENT, Token.GETBASE, Token.GETTHIS, NETEMP?, USETEMP? !
-        // Place on stack function object, function this pair
+        // Place on stack (function object, function this) pair
         switch (node.getType()) {
           case Token.GETPROP:
             // x.y(...)
@@ -3295,16 +3271,12 @@ class BodyCodegen
         Node nameChild = child.getNext();
         generateCodeFromNode(nameChild, node);  // the name
         /*
-            for 'this.foo' we call thisGet which can skip some
+            for 'this.foo' we call getPropScriptable which can skip some
             casting overhead.
 
         */
         int childType = child.getType();
-        if ((childType == Token.THIS
-            || (childType == Token.NEWTEMP
-                && child.getFirstChild().getType() == Token.THIS))
-            && nameChild.getType() == Token.STRING)
-        {
+        if (childType == Token.THIS && nameChild.getType() == Token.STRING) {
             addOptRuntimeInvoke(
                 "getPropScriptable",
                 "(Lorg/mozilla/javascript/Scriptable;"
@@ -3430,7 +3402,7 @@ class BodyCodegen
             +")Ljava/lang/Object;");
     }
 
-    private void visitBind(Node node, int type, Node child)
+    private void visitBind(Node node, Node child)
     {
         while (child != null) {
             generateCodeFromNode(child, node);
@@ -3439,8 +3411,7 @@ class BodyCodegen
         // Generate code for "ScriptRuntime.bind(varObj, "s")"
         cfw.addALoad(variableObjectLocal);             // get variable object
         cfw.addPush(node.getString());                 // push name
-        addScriptRuntimeInvoke(
-            type == Token.BINDNAME ? "bind" : "getBase",
+        addScriptRuntimeInvoke("bind",
             "(Lorg/mozilla/javascript/Scriptable;"
             +"Ljava/lang/String;"
             +")Lorg/mozilla/javascript/Scriptable;");
@@ -3451,31 +3422,6 @@ class BodyCodegen
         Node localBlock = (Node)node.getProp(Node.LOCAL_BLOCK_PROP);
         int localSlot = localBlock.getExistingIntProp(Node.LOCAL_PROP);
         return localSlot;
-    }
-
-    private void visitNewTemp(Node node, Node child)
-    {
-        generateCodeFromNode(child, node);
-        int local = getNewWordLocal();
-        node.putIntProp(Node.LOCAL_PROP, local);
-        cfw.add(ByteCode.DUP);
-        cfw.addAStore(local);
-        if (node.getIntProp(Node.USES_PROP, 0) == 0)
-            releaseWordLocal((short)local);
-    }
-
-    private void visitUseTemp(Node node, Node child)
-    {
-        Node temp = (Node) node.getProp(Node.TEMP_PROP);
-        int local = temp.getExistingIntProp(Node.LOCAL_PROP);
-        cfw.addALoad(local);
-        int n = temp.getIntProp(Node.USES_PROP, 0);
-        if (n <= 1) {
-            releaseWordLocal((short)local);
-        }
-        if (n != 0 && n != Integer.MAX_VALUE) {
-            temp.putIntProp(Node.USES_PROP, n - 1);
-        }
     }
 
     private void dcpLoadAsNumber(int dcp_register)

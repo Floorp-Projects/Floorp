@@ -364,16 +364,13 @@ public class Node
 
     public static final int
         FUNCTION_PROP     =  1,
-        TEMP_PROP         =  2,
-        LOCAL_PROP        =  3,
-        LOCAL_BLOCK_PROP  =  4,
-        FIXUPS_PROP       =  5,
-        USES_PROP         =  6,
-        REGEXP_PROP       =  7,
-        CASES_PROP        =  8,
-        DEFAULT_PROP      =  9,
-        CASEARRAY_PROP    = 10,
-        SPECIAL_PROP_PROP = 11,
+        LOCAL_PROP        =  2,
+        LOCAL_BLOCK_PROP  =  3,
+        REGEXP_PROP       =  4,
+        CASES_PROP        =  5,
+        DEFAULT_PROP      =  6,
+        CASEARRAY_PROP    =  7,
+        SPECIAL_PROP_PROP =  8,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -386,11 +383,11 @@ public class Node
                           matches.
     */
 
-        TARGETBLOCK_PROP  = 12,
-        VARIABLE_PROP     = 13,
-        ISNUMBER_PROP     = 14,
-        DIRECTCALL_PROP   = 15,
-        SPECIALCALL_PROP  = 16;
+        TARGETBLOCK_PROP  =  9,
+        VARIABLE_PROP     = 10,
+        ISNUMBER_PROP     = 11,
+        DIRECTCALL_PROP   = 12,
+        SPECIALCALL_PROP  = 13;
 
     public static final int    // this value of the SPECIAL_PROP_PROP specifies
         SPECIAL_PROP_PROTO  = 1,
@@ -412,11 +409,8 @@ public class Node
             // can remove all these strings.
             switch (propType) {
                 case FUNCTION_PROP:      return "function";
-                case TEMP_PROP:          return "temp";
                 case LOCAL_PROP:         return "local";
                 case LOCAL_BLOCK_PROP:   return "local_block";
-                case FIXUPS_PROP:        return "fixups";
-                case USES_PROP:          return "uses";
                 case REGEXP_PROP:        return "regexp";
                 case CASES_PROP:         return "cases";
                 case DEFAULT_PROP:       return "default";
@@ -620,9 +614,6 @@ public class Node
                 sb.append(": ");
                 String value;
                 switch (type) {
-                  case FIXUPS_PROP : // can't add this as it recurses
-                    value = "fixups property";
-                    break;
                   case TARGETBLOCK_PROP : // can't add this as it recurses
                     value = "target block property";
                     break;

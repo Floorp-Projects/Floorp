@@ -791,7 +791,6 @@ public class Interpreter
                 break;
             }
 
-            case Token.GETBASE :
             case Token.BINDNAME :
             case Token.NAME :
             case Token.STRING :
@@ -1595,7 +1594,6 @@ public class Interpreter
                     case Token.CATCH_SCOPE :
                     case Icode_TYPEOFNAME :
                     case Icode_NAME_AND_THIS :
-                    case Token.GETBASE :
                     case Token.BINDNAME :
                     case Token.SETNAME :
                     case Token.NAME :
@@ -1767,7 +1765,6 @@ public class Interpreter
             case Token.CATCH_SCOPE :
             case Icode_TYPEOFNAME :
             case Icode_NAME_AND_THIS :
-            case Token.GETBASE :
             case Token.BINDNAME :
             case Token.SETNAME :
             case Token.NAME :
@@ -2469,12 +2466,6 @@ public class Interpreter
     case Token.BINDNAME : {
         String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.bind(scope, name);
-        pc += 2;
-        break;
-    }
-    case Token.GETBASE : {
-        String name = strings[getIndex(iCode, pc + 1)];
-        stack[++stackTop] = ScriptRuntime.getBase(scope, name);
         pc += 2;
         break;
     }
