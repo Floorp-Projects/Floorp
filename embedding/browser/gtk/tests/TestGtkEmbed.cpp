@@ -33,6 +33,10 @@
 #include "nsTraceMalloc.h"
 #endif
 
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
+
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
   GtkWidget  *topLevelVBox;
@@ -168,6 +172,10 @@ main(int argc, char **argv)
 
   gtk_set_locale();
   gtk_init(&argc, &argv);
+
+#ifdef MOZ_JPROF
+  setupProfilingStuff();
+#endif
 
   char *home_path;
   char *full_path;
