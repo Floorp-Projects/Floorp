@@ -461,7 +461,7 @@ treechildren::-moz-tree-image(remote-err) {
 
 #FormatToolbar > toolbarbutton {
   min-width: 32px;
-  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
 }
  
 #FormatToolbar > toolbarbutton > .toolbarbutton-text {
@@ -745,26 +745,25 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #smileButtonMenu {
-  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu.png") !important;
+  -moz-image-region: rect(227px 17px 244px 0px);
 }
 
 #smileButtonMenu:hover {
-  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu-pressed.png") !important;
+  -moz-image-region: rect(227px 34px 244px 17px);
 }
 
 #smileButtonMenu[open="true"] {
-  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu-pressed.png") !important;
+  -moz-image-region: rect(227px 51px 244px 34px) !important;
 }
 
 #smileButtonMenu[disabled="true"] {
   -moz-image-region: rect(227px 68px 244px 51px) !important;
-	list-style-image: url("chrome://editor/skin/icons/btn2.gif") !important;
 }
 
 /* ..... align menu ..... */
 
 #AlignPopup > menuitem {
-  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
 }
 
 #AlignLeftItem {
