@@ -181,13 +181,13 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
          format = nsIMsgCompFormat::PlainText;
 
        //ugghh more conversion work!!!!
-       nsAutoString uniToPart = aToPart;
-       nsAutoString uniCcPart = aCcPart;
-       nsAutoString unicBccPart = aBccPart;
-       nsAutoString uniNewsgroup = aNewsgroup;
-       nsAutoString uniSubjectPart = aSubjectPart;
-       nsAutoString uniBodyPart = aBodyPart;
-       nsAutoString uniAttachmentPart = aAttachmentPart;
+       nsAutoString uniToPart((const char*)aToPart);
+       nsAutoString uniCcPart((const char*)aCcPart);
+       nsAutoString unicBccPart((const char*)aBccPart);
+       nsAutoString uniNewsgroup((const char*)aNewsgroup);
+       nsAutoString uniSubjectPart((const char*)aSubjectPart);
+       nsAutoString uniBodyPart((const char*)aBodyPart);
+       nsAutoString uniAttachmentPart((const char*)aAttachmentPart);
        
        rv = OpenComposeWindowWithValues(aMsgComposeWindowURL, format, uniToPart.GetUnicode(), 
                                         uniCcPart.GetUnicode(),
