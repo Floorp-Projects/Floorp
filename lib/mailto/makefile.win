@@ -47,6 +47,7 @@ EXPORTS = \
 	mhtmlstm.h \
 	mprdecod.h \
       msg.h \
+	msgutils.h \
 	$(NULL)
 
 MODULE=mailto
