@@ -25,18 +25,18 @@
 #include "icodegenerator.h"
 
 namespace JavaScript {    
-    namespace Interpreter {
-        using namespace ICG;
-        using namespace JSTypes;
-    
-        JSValue interpret(ICodeModule* iCode, const JSValues& args);
+namespace Interpreter {
 
-        JSValue& defineGlobalProperty(const String& name,
-                                      const JSValue& value);
-        JSValue& defineFunction(const String& name, ICodeModule* iCode);
-    };
+    using namespace ICG;
+    using namespace JSTypes;
     
-};
+    JSValue interpret(ICodeModule* iCode, const JSValues& args);
+    
+    JSValue& defineGlobalProperty(const String& name,
+                                  const JSValue& value);
+    JSValue& defineFunction(const String& name, ICodeModule* iCode);
 
+} /* namespace Interpreter */
+} /* namespace JavaScript */
 
 #endif /* interpreter_h */

@@ -1,7 +1,7 @@
 use strict;
 
 my $tab = "    ";
-my $tab2 = "        ";
+my $init_tab = $tab;
 my $enum_decs = "";
 my $class_decs = "";
 my @name_array;
@@ -186,20 +186,21 @@ sub collect {
     }    
     
     push (@name_array, $opname);
-    $enum_decs .= "$tab2$tab$opname, /* $rem */\n";
-    $class_decs .= ($tab2 . "class $cname : public $super {\n" .
-                    $tab2 . "public:\n" .
-                    $tab2 . $tab . "/* $rem */\n" .
-                    $tab2 . $tab . "$cname ($dec_list) :\n" .
-                    $tab2 . $tab . $tab . "$super\n$tab2$tab$tab($params) " .
+    $enum_decs .= "$init_tab$tab$opname, /* $rem */\n";
+    $class_decs .= ($init_tab . "class $cname : public $super {\n" .
+                    $init_tab . "public:\n" .
+                    $init_tab . $tab . "/* $rem */\n" .
+                    $init_tab . $tab . "$cname ($dec_list) :\n" .
+                    $init_tab . $tab . $tab . "$super\n" .
+                    "$init_tab$tab$tab($params) " .
                     "{};\n" .
-                    $tab2 . $tab . 
+                    $init_tab . $tab . 
                     "virtual Formatter& print (Formatter& f) {\n" .
-                    $tab2 . $tab . $tab . "f << opcodeNames[$opname];\n" .
+                    $init_tab . $tab . $tab . "f << opcodeNames[$opname];\n" .
                     $printbody .
-                    $tab2 . $tab . $tab . "return f;\n" .
-                    $tab2 . $tab . "}\n" .
-                    $tab2 . "};\n\n");
+                    $init_tab . $tab . $tab . "return f;\n" .
+                    $init_tab . $tab . "}\n" .
+                    $init_tab . "};\n\n");
 }
 
 sub spew {
@@ -274,7 +275,7 @@ sub get_printbody {
     my $type;
     my @oplist;
     my $op = 1;
-    my $in = $tab2 . $tab . $tab;
+    my $in = $init_tab . $tab . $tab;
 
     for $type (@types) {
         print "type $type\n";
