@@ -64,7 +64,6 @@ protected:
     PRBool        mSkipAttachment;  // attachments we shouldn't show...
 
     nsCOMPtr<nsIMsgHeaderSink> mHeaderSink;
-    nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
 
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
     PRBool BroadCastHeadersAndAttachments();
