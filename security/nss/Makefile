@@ -109,6 +109,7 @@ endif
 # passed to Windows build tools (for example, cl), it
 # is mistaken as a command-line option.  If that is the case,
 # we use a relative pathname as NSPR's prefix on Windows.
+#
 
 USEABSPATH="YES"
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
