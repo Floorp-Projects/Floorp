@@ -12,8 +12,8 @@
   <box id="okCancelButtons" align="horizontal">
     <spring flex="1"/>
     <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
-    <button class="dialog" id="Button2" value="&cancelButton.label;" hidden="true" onclick="doButton2()"/>	
-    <button class="dialog" id="Button3" value="&cancelButton.label;" hidden="true" onclick="doButton3()"/>	
+    <button class="dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
+    <button class="dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
     <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
     <spring flex="1"/>
   </box>
@@ -21,8 +21,8 @@
   <box id="okCancelButtonsRight" align="horizontal">
     <spring flex="1"/>
     <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
-    <button class="dialog" id="Button2" value="&cancelButton.label;" hidden="true" onclick="doButton2()"/>	
-    <button class="dialog" id="Button3" value="&cancelButton.label;" hidden="true" onclick="doButton3()"/>	
+    <button class="dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
+    <button class="dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
     <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
     <spring flex="1"/>
   </box>
