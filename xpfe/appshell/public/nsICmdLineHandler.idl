@@ -74,7 +74,7 @@ NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
     return NS_OK; \
 }
 
-#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_handles_args, macro_open_window_with_args)\
 NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
 { \
     if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
@@ -104,7 +104,11 @@ NS_IMETHODIMP macro_class::GetOpenWindowWithArgs(PRBool *aOpenWindowWithArgs) \
     if (!aOpenWindowWithArgs) return NS_ERROR_FAILURE; \
     *aOpenWindowWithArgs = macro_open_window_with_args; \
     return NS_OK; \
-} \
+}
+
+#define CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, \
+                                         macro_pretty_name, \
+                                         macro_contractid) \
 NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info) \
 { \
     nsresult rv; \
@@ -123,19 +127,68 @@ NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aP
     return NS_OK; \
 }
 
-#define CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args) \
-CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+// basic definition
+#define CMDLINEHANDLER1_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_help_text, \
+                             macro_handles_args, \
+                             macro_default_args, \
+                             macro_open_window_with_args)\
+CMDLINEHANDLER_OTHERS_IMPL(macro_class, macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args)
+
+// provides everything above, plus GetChromeUrl and regproc stuff
+#define CMDLINEHANDLER2_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_chrome_url, \
+                             macro_help_text, \
+                             macro_contractid, \
+                             macro_pretty_name, \
+                             macro_handles_args, \
+                             macro_open_window_with_args) \
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args) \
+CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, macro_pretty_name, \
+                                 macro_contractid) \
 CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)
 
-#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args) \
-CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
-CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)
+// deprecated: includes everything above, plus getdefaultargs
+#define CMDLINEHANDLER_IMPL(macro_class, \
+                            macro_cmd_line_arg,\
+                            macro_pref_name, \
+                            macro_chrome_url,\
+                            macro_help_text, \
+                            macro_contractid, \
+                            macro_pretty_name, \
+                            macro_handles_args, \
+                            macro_default_args, \
+                            macro_open_window_with_args) \
+CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args) \
+CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name, \
+                     macro_chrome_url,macro_help_text, macro_contractid, \
+                     macro_pretty_name, macro_handles_args, \
+                     macro_open_window_with_args)
 
 //Creates a version without the GetChromeUrlForTaskFunction
-#define CMDLINEHANDLER3_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args)\
+#define CMDLINEHANDLER3_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_help_text, \
+                             macro_contractid, \
+                             macro_pretty_name, \
+                             macro_handles_args, \
+                             macro_default_args, \
+                             macro_open_window_with_args)\
 CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
-CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
-
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args) \
+CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, macro_pretty_name, \
+                                    macro_contractid)
 
 %}
 
