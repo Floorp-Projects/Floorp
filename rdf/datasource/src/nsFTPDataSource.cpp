@@ -231,10 +231,10 @@ static PRBool
 isFTPURI(nsIRDFResource *r)
 {
 	PRBool		isFTPURIFlag = PR_FALSE;
-        nsXPIDLCString	uri;
+        const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kFTPprotocol, sizeof(kFTPprotocol) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kFTPprotocol, sizeof(kFTPprotocol) - 1)))
 	{
 		isFTPURIFlag = PR_TRUE;
 	}
@@ -247,10 +247,10 @@ static PRBool
 isFTPCommand(nsIRDFResource *r)
 {
 	PRBool		isFTPCommandFlag = PR_FALSE;
-        nsXPIDLCString	uri;
+        const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kFTPcommand, sizeof(kFTPcommand) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kFTPcommand, sizeof(kFTPcommand) - 1)))
 	{
 		isFTPCommandFlag = PR_TRUE;
 	}
@@ -263,10 +263,10 @@ static PRBool
 isFTPDirectory(nsIRDFResource *r)
 {
 	PRBool		isFTPDirectoryFlag = PR_FALSE;
-        nsXPIDLCString uri;
+	const char	*uri = nsnull;
 	int		len;
 	
-	r->GetValue( getter_Copies(uri) );
+	r->GetValueConst(&uri);
 	if (uri)
 	{
 		if ((len = PL_strlen(uri)) > 0)

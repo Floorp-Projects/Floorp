@@ -173,10 +173,10 @@ static PRBool
 isFindURI(nsIRDFResource *r)
 {
 	PRBool		isFindURIFlag = PR_FALSE;
-        nsXPIDLCString uri;
+	const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kFindProtocol, sizeof(kFindProtocol) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kFindProtocol, sizeof(kFindProtocol) - 1)))
 	{
 		isFindURIFlag = PR_TRUE;
 	}
