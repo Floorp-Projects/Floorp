@@ -105,6 +105,25 @@ public:
   */
   NS_IMETHOD SetDefaultString(nsString& aString) = 0;
 
+ /**
+  * Set the directory that the file open/save dialog initially displays
+  *
+  * @param      aDirectory          the name of the directory
+  * @return     void
+  *
+  */
+  NS_IMETHOD SetDisplayDirectory(nsString& aDirectory) = 0;
+
+ /**
+  * Get the directory that the file open/save dialog was last displaying
+  *
+  * @param      aDirectory          the name of the directory
+  * @return     void
+  *
+  */
+  NS_IMETHOD GetDisplayDirectory(nsString& aDirectory) = 0;
+
+
 };
 
 #endif // nsIFileWidget_h__

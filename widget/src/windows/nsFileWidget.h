@@ -53,7 +53,8 @@ class nsFileWidget : public nsIFileWidget
     NS_IMETHOD            GetFile(nsString& aFile);
     NS_IMETHOD            SetDefaultString(nsString& aFile);
     NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
-  
+    NS_IMETHOD            GetDisplayDirectory(nsString& aDirectory);
+    NS_IMETHOD            SetDisplayDirectory(nsString& aDirectory);
   protected:
 
      HWND                   mWnd;
@@ -64,6 +65,7 @@ class nsFileWidget : public nsIFileWidget
      const nsString*        mTitles;
      const nsString*        mFilters;
      nsString               mDefault;
+     nsString               mDisplayDirectory;
 
 
      void GetFilterListArray(nsString& aFilterList);

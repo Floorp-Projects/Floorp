@@ -58,15 +58,20 @@ PRBool nsFileWidget::Show()
   GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
   char *title = mTitle.ToNewCString();
+  char *initialDir = mDisplayDirectory.ToNewCString();
+  if (mDisplayDirectory.Length() > 0) {
+     ofn.lpstrInitialDir = initialDir;
+  }
+
   ofn.lpstrTitle = title;
   ofn.lpstrFilter = filterBuffer;
   ofn.nFilterIndex = 1;
   ofn.hwndOwner = mWnd;
   ofn.lpstrFile = fileBuffer;
   ofn.nMaxFile = MAX_PATH;
-  ofn.Flags = OFN_SHAREAWARE | OFN_NOCHANGEDIR | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+  ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
   
-  BOOL result;
+  PRBool result;
 
     // Save current directory, so we can reset if it changes.
   char* currentDirectory = new char[MAX_PATH+1];
@@ -82,15 +87,25 @@ PRBool nsFileWidget::Show()
     NS_ASSERTION(0, "Only load and save are supported modes"); 
   }
 
+   // Store the current directory in mDisplayDirectory
+  char* newCurrentDirectory = new char[MAX_PATH+1];
+  VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
+  mDisplayDirectory.SetLength(0);
+  mDisplayDirectory.Append(newCurrentDirectory);
+  delete newCurrentDirectory;
+
+
   VERIFY(::SetCurrentDirectory(currentDirectory));
+  delete currentDirectory;
   
    // Clean up filter buffers
   delete filterBuffer;
   delete title;
+  delete initialDir;
 
    // Set user-selected location of file or directory
   mFile.SetLength(0);
-  if (result==PR_TRUE) {
+  if (result == PR_TRUE) {
     mFile.Append(fileBuffer);
   }
   
@@ -158,7 +173,29 @@ NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 }
 
 
- 
+//-------------------------------------------------------------------------
+//
+// Set the display directory
+//
+//-------------------------------------------------------------------------
+NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+{
+  mDisplayDirectory = aDirectory;
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Get the display directory
+//
+//-------------------------------------------------------------------------
+NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+{
+  aDirectory = mDisplayDirectory;
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,

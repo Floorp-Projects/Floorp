@@ -239,6 +239,28 @@ NS_IMETHODIMP  nsFileWidget::SetDefaultString(nsString& aString)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set the display directory
+//
+//-------------------------------------------------------------------------
+NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+{
+  mDisplayDirectory = aDirectory;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the display directory
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+{
+  aDirectory = mDisplayDirectory;
+  return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------
