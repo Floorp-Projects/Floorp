@@ -969,7 +969,8 @@ xfeDoPopupAction(Widget w,
 
   cmd = xfeCmdShowPopup;
 
-  XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION, w, event, NULL, 0);
+  XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION, w, event, 
+                       (String*)NULL, 0);
 
 #ifdef MOZ_MAIL_NEWS
   v = f->widgetToView(w);
