@@ -551,7 +551,7 @@ LM_SetUntransformedSource(JSPrincipals *principals, char *original,
                           char *transformed);
 
 extern JSPrincipals * PR_CALLBACK
-LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, int callerDepth);
+LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray);
 
 /*
  * LM_RegisterPrincipals will verify and register a set of principals 
