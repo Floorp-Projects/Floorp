@@ -9,7 +9,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:chatzilla"
-        chrome:displayName="ChatZilla 0.9.63"
+        chrome:displayName="ChatZilla 0.9.64"
         chrome:author="mozilla.org"
         chrome:authorURL="http://www.mozilla.org/projects/rt-messaging/chatzilla/"
         chrome:description="A simple, straightforward Internet Relay Chat (IRC) client."
