@@ -19,6 +19,7 @@
 */
     var SECTION = "number-001";
     var VERSION = "JS1_4";
+    var TITLE   = "Exceptions for Number.toString()";
 
     startTest();
     writeHeaderToLog( SECTION + " Number.prototype.toString()");
