@@ -202,7 +202,7 @@ sub print_page_head {
             </td></tr><tr><td colspan=2>
               <table cellspacing=1 cellpadding=1 border=1>
                 <tr bgcolor="$colormap{success}"><td>Successful Build, optional bloaty stats:<br>
-                  XXXXX (bytes leaked)<br>YYYYYYY (bytes allocated)</td>
+                  <tt>Lk:XXX</tt> (bytes leaked)<br><tt>Bl:YYYY</tt> (bytes allocated, bloat)</td>
                 <tr bgcolor="$colormap{building}"><td>Build in Progress</td>
                 <tr bgcolor="$colormap{testfailed}"><td>Successful Build,
                                                           but Tests Failed</td>
