@@ -946,6 +946,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
         if (count > 0)
         {
+            // search in reverse order to catch more recently used matches first
             for (index = count - 1; index >= 0; --index)
             {
                 nsCOMPtr<nsIURI> uri;
@@ -967,7 +968,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                 if (idleport == -1)
                                     GetDefaultPort (&idleport);
 
-                                if (idleport == usingProxy ? proxyPort : port)
+                                if (idleport == (usingProxy ? proxyPort : port))
                                 {
                                     // Addref it before removing it!
                                     trans = cTrans;
@@ -985,6 +986,10 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     // if we didn't find any from the keep-alive idlelist
     if (!trans)
     {
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS,
+              ("nsHTTPHandler::RequestTransport - "
+               "Didn't find a matching transport in the keep-alive idle list\n"));
+
         if (! (flags & TRANSPORT_OPEN_ALWAYS) )
         {
             count = 0;
