@@ -300,9 +300,15 @@ public:
             return rv;
 
         rv = loader->GetFactory(mCid, mLocation, mgr->mLoaderData[mTypeIndex].type, aFactory);
-        if (NS_SUCCEEDED(rv))
-            mFactory = do_QueryInterface(*aFactory);
-        return rv;
+        if (NS_FAILED(rv))
+            return rv;
+
+        NS_ASSERTION(*aFactory, "Loader says it succeeded; got null factory!");
+        mFactory = do_QueryInterface(*aFactory);
+        if (!mFactory)
+            return NS_ERROR_NO_INTERFACE;
+
+        return NS_OK;
     }
 
     nsCID mCid;
