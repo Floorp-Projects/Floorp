@@ -335,11 +335,6 @@ input[type="submit"] {
   -moz-binding: none;
 }
 
-button {
-  padding: 0px 1px 0px 1px;
-}
-
-
 *|*:button-content {
   display: block;
   text-align: center;
@@ -350,7 +345,7 @@ input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
   border-style: inset;
-  padding: 0px 0 0 2px;
+  padding: 3px 0 1px 0;
 }
 
 button:-moz-focus-inner,
