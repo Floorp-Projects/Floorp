@@ -111,8 +111,20 @@ public:
 
   static void GetFont(nsIFormControlFrame *   aFormFrame,
                       nsIPresContext*        aPresContext, 
-                       nsIStyleContext * aStyleContext, 
+                      nsIStyleContext * aStyleContext, 
                       nsFont&                aFont);
+
+  // returns the an addref'ed FontMetrics for the default font for the frame
+  static void GetFrameFontFM(nsIPresContext& aPresContext, 
+                             nsIFormControlFrame * aFrame,
+                             nsIFontMetrics** aFontMet);
+
+  static nscoord CalcNavQuirkSizing(nsIPresContext&      aPresContext, 
+                                    nsIRenderingContext* aRendContext,
+                                    nsIFontMetrics*      aFontMet, 
+                                    nsIFormControlFrame* aFrame,
+                                    PRInt32              aLength,
+                                    nsSize&              aSize);
 
   static void ForceDrawFrame(nsIFrame * aFrame);
 
@@ -143,6 +155,20 @@ public:
   static  nscoord GetScrollbarWidth(float aPixToTwip);
 
   static nsCompatibility GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2);
+
+  typedef enum {
+    eHTMLTextWrap_Unknown = 0,
+    eHTMLTextWrap_Off     = 1,
+    eHTMLTextWrap_Hard    = 2,
+    eHTMLTextWrap_Soft    = 3,
+  } nsHTMLTextWrap;
+
+  /** returns the value of the "wrap" property in aOutValue
+    * returns NS_CONTENT_ATTR_NOT_THERE if the property does not exist for this
+    */
+  static nsresult GetWrapProperty(nsIContent * aContent, nsString &aOutValue);
+
+  static nsresult GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
 
 //
 //-------------------------------------------------------------------------------------

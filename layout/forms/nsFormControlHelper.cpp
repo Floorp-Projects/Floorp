@@ -60,6 +60,12 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
+// For figuring out the "WRAP" property
+#define kTextControl_Wrap_Soft "SOFT"
+#define kTextControl_Wrap_Hard "HARD"
+#define kTextControl_Wrap_Off  "OFF"
+
+
 MOZ_DECL_CTOR_COUNTER(nsFormControlHelper);
 
 nsFormControlHelper::nsFormControlHelper()
@@ -127,22 +133,182 @@ nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char
   }
 }
 
+void nsFormControlHelper::GetFrameFontFM(nsIPresContext& aPresContext, 
+                                         nsIFormControlFrame * aFrame,
+                                         nsIFontMetrics** aFontMet)
+{
+  // Initialize with default font
+  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
+  // Get frame font
+  aFrame->GetFont(&aPresContext, font);
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+  NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
+  // Get font metrics
+  deviceContext->GetMetricsFor(font, *aFontMet);
+}
+
+nsresult
+nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
+{
+  aOutValue = "";
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    result = content->GetHTMLAttribute(nsHTMLAtoms::wrap, value);
+    if (eHTMLUnit_String == value.GetUnit()) { 
+      value.GetStringValue(aOutValue);
+    }
+    NS_RELEASE(content);
+  }
+  return result;
+}
+
+
+nsresult 
+nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp)
+{
+  nsString wrap;
+  nsresult result = GetWrapProperty(aContent, wrap);
+
+  if (NS_CONTENT_ATTR_NOT_THERE != result) {
+    nsAutoString wrapOff(kTextControl_Wrap_Off);
+    if (wrap.EqualsIgnoreCase(wrapOff)) {
+      aWrapProp = eHTMLTextWrap_Off;
+      return result;
+    }
+
+    nsAutoString wrapHard(kTextControl_Wrap_Hard);
+    if (wrap.EqualsIgnoreCase(wrapHard)) {
+      aWrapProp = eHTMLTextWrap_Hard;
+      return result;
+    }
+
+    nsAutoString wrapSoft(kTextControl_Wrap_Soft);
+    if (wrap.EqualsIgnoreCase(wrapSoft)) {
+      aWrapProp = eHTMLTextWrap_Soft;
+      return result;
+    }
+    aWrapProp = eHTMLTextWrap_Unknown;
+  }
+  return result;
+}
+
+nscoord 
+nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext, 
+                                        nsIRenderingContext* aRendContext,
+                                        nsIFontMetrics*      aFontMet, 
+                                        nsIFormControlFrame* aFrame,
+                                        PRInt32              aLength,
+                                        nsSize&              aSize)
+{
+  float p2t;
+  float t2p;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext.GetTwipsToPixels(&t2p);
+
+  nscoord ascent;
+  nscoord descent;
+  nscoord maxCharWidth;
+  aFontMet->GetMaxAscent(ascent);
+  aFontMet->GetMaxDescent(descent);
+  aFontMet->GetMaxAdvance(maxCharWidth);
+
+  ascent       = NSToCoordRound(ascent * t2p);
+  descent      = NSToCoordRound(descent * t2p);
+  maxCharWidth = NSToCoordRound(maxCharWidth * t2p);
+
+  char char1, char2;
+  nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
+  nscoord char1Width, char2Width;
+  aRendContext->GetWidth(char1, char1Width);
+  aRendContext->GetWidth(char2, char2Width);
+  char1Width = NSToCoordRound(char1Width * t2p);
+  char2Width = NSToCoordRound(char2Width * t2p);
+
+  // Nav Quirk Calculation for TextField
+  PRInt32 type;
+  aFrame->GetType(&type);
+  nscoord width;
+  nscoord hgt;
+  nscoord height;
+  nscoord average;
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    average = (char1Width + char2Width) / 2;
+    width   = maxCharWidth;
+    hgt     = ascent + descent;
+    height  = hgt + (hgt / 2);
+    width  += aLength * average;
+  } else if (NS_FORM_TEXTAREA == type) {
+    nscoord lines = 1;
+    nscoord scrollbarWidth  = 0;
+    nscoord scrollbarHeight = 0;
+    float   scale;
+    nsCOMPtr<nsIDeviceContext> dx;
+    aPresContext.GetDeviceContext(getter_AddRefs(dx));
+    if (dx) { 
+      float sbWidth;
+      float sbHeight;
+      dx->GetCanonicalPixelScale(scale);
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
+      scrollbarWidth  = PRInt32(sbWidth * scale);
+      scrollbarHeight = PRInt32(sbHeight * scale);
+      scrollbarWidth  = NSToCoordRound(scrollbarWidth * t2p);
+      scrollbarHeight  = NSToCoordRound(scrollbarHeight * t2p);
+    } else {
+      NS_ASSERTION(0, "Couldn't get the device context"); 
+      scrollbarWidth  = 16;
+      scrollbarHeight = 16;
+    }
+    average = (char1Width + char2Width) / 2;
+    width   = ((aLength + 1) * average) + scrollbarWidth;
+    hgt     = ascent + descent;
+    height  = (lines + 1) * hgt;
+
+    nsIContent * content;
+    aFrame->GetFormContent(content);
+    // then if not word wrapping
+    nsHTMLTextWrap wrapProp;
+    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(content, wrapProp);
+    if (wrapProp == eHTMLTextWrap_Off) {
+      height += scrollbarHeight;
+    }
+    NS_RELEASE(content);
+
+  }
+
+#ifdef DEBUG_rods
+  printf("********* Nav Quirks: %d,%d  max:%d average:%d ascent:%d descent:%d\n", 
+          width, height, maxCharWidth, average, ascent, descent);
+#endif
+
+  aSize.width  = NSIntPixelsToTwips(width, p2t);
+  aSize.height = NSIntPixelsToTwips(height, p2t);
+  average      = NSIntPixelsToTwips(average, p2t);
+
+  return average;
+
+}
+
 nscoord 
 nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFrame* aFrame,
                                 const nsString& aString, nsSize& aSize,
                                 nsIRenderingContext *aRendContext)
 {
-  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
-  aFrame->GetFont(&aPresContext, font);
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (fontMet) {
+    aRendContext->SetFont(fontMet);
 
-  nsIFontMetrics* fontMet;
-  deviceContext->GetMetricsFor(font, fontMet);
-  aRendContext->SetFont(fontMet);
-  aRendContext->GetWidth(aString, aSize.width);
-  fontMet->GetHeight(aSize.height);
-  NS_RELEASE(fontMet);
+    // measure string
+    aRendContext->GetWidth(aString, aSize.width);
+    fontMet->GetHeight(aSize.height);
+  } else {
+    NS_ASSERTION(PR_FALSE, "Couldn't get Font Metrics"); 
+    aSize.width = 0;
+  }
 
   char char1, char2;
   nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
@@ -237,6 +403,10 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     }
   }
 #endif
+
+  nsCompatibility qMode;
+  aPresContext->GetCompatibilityMode(&qMode);
+
   // determine the width, char height, row height
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
@@ -264,7 +434,22 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
       aDesiredSize.width = aSpec.mColDefaultSize;
     } else  {                                     // use default width in num characters
-      charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+      if (eCompatibility_NavQuirks == qMode) {
+        nsCOMPtr<nsIFontMetrics> fontMet;
+        GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+        if (fontMet) {
+          aRendContext->SetFont(fontMet);
+          // this passes in a 
+          charWidth = CalcNavQuirkSizing(*aPresContext, aRendContext, fontMet, 
+                                         aFrame, aSpec.mColDefaultSize, aDesiredSize);
+        } else {
+          NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
+          aDesiredSize.width = 300;  // arbitrary values
+          aDesiredSize.width = 1500;
+        }
+      } else {
+        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+      }
     }
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
@@ -312,14 +497,14 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   if (PR_TRUE == requiresWidget || eWidgetRendering_Native == mode ||
       type==NS_FORM_INPUT_TEXT || type==NS_FORM_TEXTAREA || type==NS_FORM_INPUT_PASSWORD) 
   {
-//    if (!aWidthExplicit && mode == eWidgetRendering_Native) {
-	  if (!aWidthExplicit) {
+    if (!aWidthExplicit && mode == eWidgetRendering_Native) {
+	  //if (!aWidthExplicit) {
       PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
       aDesiredSize.width += hPadding;
       aMinSize.width += hPadding;
     }
-//    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
-	  if (!aHeightExplicit) { 
+    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
+	  //if (!aHeightExplicit) { 
       PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(*aPresContext, p2t, aRowHeight));
       aDesiredSize.height += vPadding;
       aMinSize.height += vPadding;
