@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.5 $ $Date: 2002/03/06 21:41:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.6 $ $Date: 2002/08/27 23:29:36 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1092,7 +1092,7 @@ nssCKFWInstance_GetLibraryVersion
       fwInstance->mdInstance, fwInstance);
   } else {
     fwInstance->libraryVersion.major = 0;
-    fwInstance->libraryVersion.minor = 1;
+    fwInstance->libraryVersion.minor = 3;
   }
 
   rv = fwInstance->libraryVersion;
