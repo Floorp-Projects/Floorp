@@ -195,6 +195,17 @@ public:
 
     NS_IMETHOD
     UnregisterPlugin(REFNSIID aCID);
+
+    NS_IMETHOD
+    GetURLWithHeaders(nsISupports* pluginInst, 
+                      const char* url, 
+                      const char* target = NULL,
+                      nsIPluginStreamListener* streamListener = NULL,
+                      const char* altHost = NULL,
+                      const char* referrer = NULL,
+                      PRBool forceJSEnabled = PR_FALSE,
+                      PRUint32 getHeadersLength = 0, 
+                      const char* getHeaders = NULL);
     
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1672,7 +1683,19 @@ CPluginManager::UnregisterPlugin(REFNSIID aCID)
     return NS_OK;
 }
 
-
+NS_IMETHODIMP
+CPluginManager::GetURLWithHeaders(nsISupports* pluginInst, 
+                                  const char* url, 
+                                  const char* target,
+                                  nsIPluginStreamListener* streamListener,
+                                  const char* altHost,
+                                  const char* referrer,
+                                  PRBool forceJSEnabled,
+                                  PRUint32 getHeadersLength, 
+                                  const char* getHeaders)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //////////////////////////////
 // nsIPluginManager2 methods.
