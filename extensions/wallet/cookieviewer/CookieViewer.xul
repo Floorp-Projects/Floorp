@@ -42,9 +42,9 @@
 
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
-      <tab selected="true">&tab.cookiesonsystem.label;</tab>
-      <tab>&tab.bannedservers.label;</tab>
-      <tab id="imagesTab" style="display:none">&tab.bannedimages.label;</tab>
+      <tab selected="true" value="&tab.cookiesonsystem.label;"/>
+      <tab value="&tab.bannedservers.label;"/>
+      <tab id="imagesTab" style="display:none" value="&tab.bannedimages.label;"/>
 	  <spring flex="1"/>
     </tabbox>
     <tabpanel align="horizontal" style="width: 400px;">

@@ -47,8 +47,8 @@
 
   <tabcontrol align="vertical">
 	  <tabbox align="horizontal" flex="100%">
-		  <tab id="TableTab" selected="true" onclick="SelectTableTab()">&tableTab.label;</tab>
-		  <tab id="CellTab" onclick="SelectCellTab()">&cellTab.label;</tab>
+		  <tab id="TableTab" selected="true" onclick="SelectTableTab()" value="&tableTab.label;"/>
+		  <tab id="CellTab" onclick="SelectCellTab()" value="&cellTab.label;"/>
 	  	<spring flex="1"/>
 	  </tabbox>
 
