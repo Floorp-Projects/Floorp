@@ -3788,14 +3788,8 @@ GlobalWindowImpl::GetSelection(nsISelection** aSelection)
   if (!presShell)
     return NS_OK;
 
-  nsCOMPtr<nsIFrameSelection> selection;
-  presShell->GetFrameSelection(getter_AddRefs(selection));
-
-  if (!selection)
-    return NS_OK;
-
-  return selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                 aSelection);
+  return presShell->FrameSelection()->
+    GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
 }
 
 // Non-scriptable version of window.find(), part of nsIDOMWindowInternal

@@ -5657,7 +5657,7 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       frameSelection = do_QueryInterface(selCon);
     }
     else
-      shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      frameSelection = shell->FrameSelection();
     if (!frameSelection || NS_FAILED(frameSelection->GetMouseDownState(&mouseDown)) || !mouseDown) 
       return NS_OK;//do not handle
   }
@@ -5733,14 +5733,13 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
           if (displayresult == nsISelectionController::SELECTION_OFF)
             return NS_OK;//nothing to do we cannot affect selection from here
         }
-        nsCOMPtr<nsIFrameSelection> frameselection;
-        shell->GetFrameSelection(getter_AddRefs(frameselection));
         PRBool mouseDown = aEvent->message == NS_MOUSE_MOVE;
-        if (frameselection)
-        {
-          result = frameselection->HandleClick(pos.mResultContent, pos.mContentOffset, 
-                                               pos.mContentOffsetEnd, mouseDown || me->isShift, PR_FALSE, pos.mPreferLeft);
-        }
+        result = shell->FrameSelection()->HandleClick(pos.mResultContent,
+                                                      pos.mContentOffset, 
+                                                      pos.mContentOffsetEnd,
+                                                      mouseDown || me->isShift,
+                                                      PR_FALSE,
+                                                      pos.mPreferLeft);
       }
       else
         result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);//else let the frame/container do what it needs

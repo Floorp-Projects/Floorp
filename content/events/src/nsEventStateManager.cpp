@@ -827,10 +827,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             }
 
             // disable selection mousedown state on activation
-            nsCOMPtr<nsIFrameSelection> frameSel;
-            shell->GetFrameSelection(getter_AddRefs(frameSel));
-            if (frameSel)
-              frameSel->SetMouseDownState(PR_FALSE);
+            shell->FrameSelection()->SetMouseDownState(PR_FALSE);
           }
         }
       }
@@ -1419,7 +1416,7 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
       if (! frameSel) {
         nsIPresShell *shell = inPresContext->GetPresShell();
         if (shell)
-          shell->GetFrameSelection(getter_AddRefs(frameSel));
+          frameSel = shell->FrameSelection();
       }
 
       *outSelection = frameSel.get();
@@ -1950,11 +1947,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
       nsIPresShell *shell = aPresContext->GetPresShell();
       if (shell) {
-        nsCOMPtr<nsIFrameSelection> frameSel;
-        nsresult rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
-        if (NS_SUCCEEDED(rv) && frameSel){
-            frameSel->SetMouseDownState(PR_FALSE);
-        }
+        shell->FrameSelection()->SetMouseDownState(PR_FALSE);
       }
     }
     break;
@@ -4414,9 +4407,9 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   if (mPresContext)
     shell = mPresContext->GetPresShell();
 
-  nsCOMPtr<nsIFrameSelection> frameSelection;
+  nsIFrameSelection *frameSelection = nsnull;
   if (shell)
-    rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+    frameSelection = shell->FrameSelection();
 
   nsCOMPtr<nsISelection> domSelection;
   if (frameSelection)
@@ -4755,15 +4748,14 @@ nsEventStateManager::MoveCaretToFocus()
     if (shell) {
       // rangeDoc is a document interface we can create a range with
       nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(mDocument));
-      nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(mCurrentFocus));
-      nsCOMPtr<nsIFrameSelection> frameSelection;
-      shell->GetFrameSelection(getter_AddRefs(frameSelection));
 
-      if (frameSelection && rangeDoc) {
+      if (rangeDoc) {
         nsCOMPtr<nsISelection> domSelection;
-        frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-          getter_AddRefs(domSelection));
+        shell->FrameSelection()->
+          GetSelection(nsISelectionController::SELECTION_NORMAL,
+                       getter_AddRefs(domSelection));
         if (domSelection) {
+          nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(mCurrentFocus));
           // First clear the selection
           domSelection->RemoveAllRanges();
           if (currentFocusNode) {
@@ -4826,14 +4818,15 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
-  nsCOMPtr<nsIFrameSelection> frameSelection, docFrameSelection;
+  nsCOMPtr<nsIFrameSelection> frameSelection;
   if (aFocusedContent) {
     nsIFrame *focusFrame = nsnull;
     aPresShell->GetPrimaryFrameFor(aFocusedContent, &focusFrame);
 
     GetSelection(focusFrame, mPresContext, getter_AddRefs(frameSelection));
   }
-  aPresShell->GetFrameSelection(getter_AddRefs(docFrameSelection));
+
+  nsIFrameSelection *docFrameSelection = aPresShell->FrameSelection();
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aFocusedContent)) {

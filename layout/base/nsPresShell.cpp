@@ -1085,17 +1085,10 @@ public:
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
 
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
-  NS_IMETHOD GetViewManager(nsIViewManager** aResult);
-  nsIViewManager* GetViewManager() { return mViewManager; }
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  NS_IMETHOD GetAuthorStyleDisabled(PRBool* aStyleDisabled);
-  NS_IMETHOD SetAuthorStyleDisabled(PRBool aStyleDisabled);
-  NS_IMETHOD ReconstructStyleData();
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
-  NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
-  NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
 
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
 
@@ -1103,7 +1096,6 @@ public:
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
   NS_IMETHOD RepaintSelection(SelectionType aType);
-  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);  
 
   NS_IMETHOD BeginObservingDocument();
   NS_IMETHOD EndObservingDocument();
@@ -1395,14 +1387,12 @@ protected:
   nsVoidArray               mReflowCommands;
   PLDHashTable              mReflowCommandTable;
 
-  PRPackedBool mEnablePrefStyleSheet;
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
 
   PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
-  PRPackedBool mStylesHaveChanged;
   PRPackedBool mHaveShutDown;
 
   nsIFrame*   mCurrentEventFrame;
@@ -1416,7 +1406,6 @@ protected:
   nsIView* mCurrentTargetView;
 #endif
   
-  nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
@@ -1607,12 +1596,12 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
                             (void **) aInstancePtrResult);
 }
 
-PresShell::PresShell():
+PresShell::PresShell()
 #ifdef IBMBIDI
-  mBidiLevel(BIDI_LEVEL_UNDEFINED),
+  : mBidiLevel(BIDI_LEVEL_UNDEFINED)
 #endif
-  mEnablePrefStyleSheet(PR_TRUE)
 {
+  mSelection = nsnull;
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
@@ -1662,6 +1651,7 @@ PresShell::~PresShell()
 
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mSelection);
 }
 
 /**
@@ -1740,7 +1730,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  mSelection = do_CreateInstance(kFrameSelectionCID, &result);
+  result = CallCreateInstance(kFrameSelectionCID, &mSelection);
   if (NS_FAILED(result)) {
     mStyleSet = nsnull;
     return result;
@@ -2027,18 +2017,6 @@ PresShell::GetPresContext(nsPresContext** aResult)
 }
 
 NS_IMETHODIMP
-PresShell::GetViewManager(nsIViewManager** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mViewManager;
-  NS_IF_ADDREF(mViewManager);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
 { // first non-html sheet in style set that has title
   if (mStyleSet) {
@@ -2096,7 +2074,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
     }
 
     mStyleSet->EndUpdate();
-    return ReconstructStyleData();
+    ReconstructStyleData();
   }
   return NS_OK;
 }
@@ -2129,61 +2107,19 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PresShell::SetAuthorStyleDisabled(PRBool aStyleDisabled)
+void
+nsIPresShell::SetAuthorStyleDisabled(PRBool aStyleDisabled)
 {
   if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
-    nsresult rv = mStyleSet->SetAuthorStyleDisabled(aStyleDisabled);
-    if (NS_FAILED(rv)) return rv;
-    return ReconstructStyleData();
+    mStyleSet->SetAuthorStyleDisabled(aStyleDisabled);
+    ReconstructStyleData();
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-PresShell::GetAuthorStyleDisabled(PRBool* aStyleDisabled)
+PRBool
+nsIPresShell::GetAuthorStyleDisabled()
 {
-  *aStyleDisabled = mStyleSet->GetAuthorStyleDisabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-PresShell::EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType/*=0xFF*/)
-{
-  nsresult result = NS_OK;
-
-  // capture change in state
-  PRBool bChanging = (mEnablePrefStyleSheet != aEnable) ? PR_TRUE : PR_FALSE;
-  // set to desired state
-  mEnablePrefStyleSheet = aEnable;
-
-#ifdef DEBUG_attinasi
-  printf("PrefStyleSheet %s %s\n",
-    mEnablePrefStyleSheet ? "ENABLED" : "DISABLED",
-    bChanging ? "(state toggled)" : "(state unchanged)");
-#endif
-
-  // deal with changing state
-  if(bChanging){
-    switch (mEnablePrefStyleSheet){
-    case PR_TRUE:
-      // was off, now on, so create the rules
-      result = SetPreferenceStyleRules(PR_TRUE);
-      break;
-    default :
-      // was on, now off, so clear the rules
-      result = ClearPreferenceStyleRules();
-      break;
-    }
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-PresShell::ArePrefStyleRulesEnabled(PRBool& aEnabled)
-{
-  aEnabled = mEnablePrefStyleSheet;
-  return NS_OK;
+  return mStyleSet->GetAuthorStyleDisabled();
 }
 
 NS_IMETHODIMP
@@ -2207,16 +2143,6 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
   NS_PRECONDITION(mPresContext, "presContext cannot be null");
   if (mPresContext) {
     nsresult result = NS_OK;
-
-    // zeroth, make sure this feature is enabled
-    // XXX: may get more granularity later 
-    //      (i.e. each pref may be controlled independently)
-    if (!mEnablePrefStyleSheet) {
-#ifdef DEBUG_attinasi
-      printf("PrefStyleSheet disabled\n");
-#endif
-      return PR_TRUE;
-    }
 
     // first, make sure this is not a chrome shell 
     nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
@@ -2614,17 +2540,6 @@ PresShell::RepaintSelection(SelectionType aType)
 
   return mSelection->RepaintSelection(mPresContext, aType);
 }
-
-NS_IMETHODIMP
-PresShell::GetFrameSelection(nsIFrameSelection** aSelection)
-{
-  if (!aSelection || !mSelection)
-    return NS_ERROR_NULL_POINTER;
-  *aSelection = mSelection;
-  (*aSelection)->AddRef();
-  return NS_OK;
-}
-
 
 // Make shell be a document observer
 NS_IMETHODIMP
@@ -5269,14 +5184,14 @@ PresShell::ReconstructFrames(void)
   return rv;
 }
 
-NS_IMETHODIMP
-PresShell::ReconstructStyleData()
+void
+nsIPresShell::ReconstructStyleDataInternal()
 {
   mStylesHaveChanged = PR_FALSE;
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (!rootFrame)
-    return NS_OK;
+    return;
 
   nsStyleChangeList changeList;
   FrameManager()->ComputeStyleChangeFor(rootFrame, &changeList,
@@ -5285,8 +5200,12 @@ PresShell::ReconstructStyleData()
   mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
   VERIFY_STYLE_TREE;
+}
 
-  return NS_OK;
+void
+nsIPresShell::ReconstructStyleDataExternal()
+{
+  ReconstructStyleDataInternal();
 }
 
 void

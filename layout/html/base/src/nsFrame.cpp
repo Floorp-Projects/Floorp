@@ -829,11 +829,9 @@ nsFrame::Paint(nsPresContext*      aPresContext,
       frameSelection = do_QueryInterface(selCon); //this MAY implement
     }
     if (!frameSelection)
-      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-    if (NS_SUCCEEDED(result) && frameSelection){
-      result = frameSelection->LookUpSelection(newContent, offset, 
-                            1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
-    }
+      frameSelection = shell->FrameSelection();
+    result = frameSelection->LookUpSelection(newContent, offset, 
+                                             1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
   }
   
   if (details)
@@ -1327,7 +1325,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     frameselection = do_QueryInterface(selCon); //this MAY implement
 
   if (!frameselection)//if we must get it from the pres shell's
-    rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
+    frameselection = shell->FrameSelection();
 
   if (!frameselection)
     return NS_ERROR_FAILURE;
@@ -1667,11 +1665,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   // maintain selection
   nsCOMPtr<nsIFrameSelection> frameselection = do_QueryInterface(selcon); //this MAY implement
   if (!frameselection)
-  {
-    rv = aPresContext->PresShell()->GetFrameSelection(getter_AddRefs(frameselection));
-    if (NS_FAILED(rv) || !frameselection)
-      return NS_OK;   // return NS_OK; we don't care if this fails
-  }
+    frameselection = aPresContext->PresShell()->FrameSelection();
 
   return frameselection->MaintainSelection();
 }
@@ -1695,7 +1689,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                   nsEventStatus*  aEventStatus)
 {
   PRBool  selectable;
-  IsSelectable(&selectable, nsnull);
+  PRUint8 selectStyle;
+  IsSelectable(&selectable, &selectStyle);
   if (!selectable)
     return NS_OK;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
@@ -1713,60 +1708,47 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     frameselection = do_QueryInterface(selCon); //this MAY implement
   }
   if (!frameselection)
-    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+    frameselection = presShell->FrameSelection();
 
-  if (NS_SUCCEEDED(result) && frameselection)
-  {
-    PRBool mouseDown = PR_FALSE;
-    if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && !mouseDown)
-      return NS_OK;            
+  PRBool mouseDown = PR_FALSE;
+  if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && !mouseDown)
+    return NS_OK;            
 
-    // check whether style allows selection
-    // if not, don't tell selection the mouse event even occurred.  
-    PRBool  selectable;
-    PRUint8 selectStyle;
-    result = IsSelectable(&selectable, &selectStyle);
-    if (NS_FAILED(result)) 
-      return result;
+  frameselection->StopAutoScrollTimer();
+  // Check if we are dragging in a table cell
+  nsCOMPtr<nsIContent> parentContent;
+  PRInt32 contentOffset;
+  PRInt32 target;
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  result = GetDataForTableSelection(frameselection, presShell, me,
+                                    getter_AddRefs(parentContent),
+                                    &contentOffset, &target);      
 
-    // check for select: none
-    if (selectable)
-    {
-      frameselection->StopAutoScrollTimer();
-      // Check if we are dragging in a table cell
-      nsCOMPtr<nsIContent> parentContent;
-      PRInt32 contentOffset;
-      PRInt32 target;
-      nsMouseEvent *me = (nsMouseEvent *)aEvent;
-      result = GetDataForTableSelection(frameselection, presShell, me, getter_AddRefs(parentContent), &contentOffset, &target);      
+  if (NS_SUCCEEDED(result) && parentContent)
+    frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+  else
+    frameselection->HandleDrag(aPresContext, this, aEvent->point);
 
-      if (NS_SUCCEEDED(result) && parentContent)
-        frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-      else
-        frameselection->HandleDrag(aPresContext, this, aEvent->point);
-
-      nsIView* captureView = GetNearestCapturingView(this);
-      if (captureView) {
-        // Get the view that aEvent->point is relative to. This is disgusting.
-        nsPoint dummyPoint;
-        nsIView* eventView;
-        GetOffsetFromView(aPresContext, dummyPoint, &eventView);
-        nsPoint pt = aEvent->point;
-        nsIView* view = eventView;
-        while (view && view != captureView) {
-          pt += view->GetPosition();
-          view = view->GetParent();
-        }
-        if (!view) {
-          // Hmm. Maybe captureView is a child of eventView? Recover by
-          // subtracting the global offset of eventView.
-          for (view = eventView; view; view = view->GetParent()) {
-            pt -= view->GetPosition();
-          }
-        }
-        frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
+  nsIView* captureView = GetNearestCapturingView(this);
+  if (captureView) {
+    // Get the view that aEvent->point is relative to. This is disgusting.
+    nsPoint dummyPoint;
+    nsIView* eventView;
+    GetOffsetFromView(aPresContext, dummyPoint, &eventView);
+    nsPoint pt = aEvent->point;
+    nsIView* view = eventView;
+    while (view && view != captureView) {
+      pt += view->GetPosition();
+      view = view->GetParent();
+    }
+    if (!view) {
+      // Hmm. Maybe captureView is a child of eventView? Recover by
+      // subtracting the global offset of eventView.
+      for (view = eventView; view; view = view->GetParent()) {
+        pt -= view->GetPosition();
       }
     }
+    frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
   }
 
   return NS_OK;
@@ -1796,13 +1778,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   if (NS_SUCCEEDED(result) && selCon)
     frameselection = do_QueryInterface(selCon); //this MAY implement
   if (!frameselection)
-    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!frameselection)
-    return NS_ERROR_FAILURE;
+    frameselection = presShell->FrameSelection();
 
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
