@@ -157,7 +157,7 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifneq ($(OS_TARGET),WIN16)
-OS_LIBS		= advapi32.lib wsock32.lib winmm.lib
+OS_LIBS		= advapi32.lib wsock32.lib
 endif
 endif
 
