@@ -41,6 +41,8 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 class nsXULPDGlobalObject : public nsIScriptObjectOwner,
                             public nsIScriptGlobalObject,
@@ -369,34 +371,27 @@ nsXULPrototypeDocument::GetScriptGlobalObject(nsIScriptGlobalObject** _result)
 }
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::ReportScriptError(const char* aErrorString,
-                                          const char* aFileName,
-                                          PRInt32 aLineNo,
-                                          const char* aLineBuf)
+nsXULPrototypeDocument::ReportScriptError(nsIScriptError *errorObject)
 {
-    // XXX Eventually replace this with something that shows a dialog
-    // box or similar fanciness.
-    nsAutoString error = "JavaScript Error: ";
-    error += aErrorString;
-    error += "\n";
+   nsresult rv;
 
-    if (aFileName) {
-        error += "URL: ";
-        error += aFileName;
-    }
+   if (errorObject == nsnull)
+      return NS_ERROR_NULL_POINTER;
 
-    if (aLineNo) {
-        error += ", line ";
-        error += aLineNo;
-    }
+   // Get the console service, where we're going to register the error.
+   nsCOMPtr<nsIConsoleService> consoleService
+      (do_GetService("mozilla.consoleservice.1"));
 
-    if (aLineBuf) {
-        error += "\n";
-        error += aLineBuf;
-    }
-
-    printf("%s\n", (const char*) nsCAutoString(error));
-    return NS_OK;
+   if (consoleService != nsnull) {
+       rv = consoleService->LogMessage(errorObject);
+       if (NS_SUCCEEDED(rv)) {
+           return NS_OK;
+       } else {
+           return rv;
+       }
+   } else {
+       return NS_ERROR_NOT_AVAILABLE;
+   }
 }
 
 //----------------------------------------------------------------------

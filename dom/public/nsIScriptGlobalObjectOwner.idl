@@ -34,6 +34,7 @@
  */
 
 interface nsIScriptGlobalObject;
+interface nsIScriptError;
 
 [scriptable, uuid(413E8400-A87F-11d3-AFC6-00A024FFC08C)]
 interface nsIScriptGlobalObjectOwner : nsISupports
@@ -48,6 +49,5 @@ interface nsIScriptGlobalObjectOwner : nsISupports
    * occurred while a script was being evaluted.
    *
    */
-	void reportScriptError(in string aErrorString, in string aFileName,
-		in long aLineNo, in string aLineBuf);
+	void reportScriptError(in nsIScriptError aError);
 };
