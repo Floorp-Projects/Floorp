@@ -69,7 +69,7 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 }
 
 NS_METHOD OutlookRegister(nsIComponentManager *aCompMgr,
-                                            nsIFileSpec *aPath,
+                                            nsIFile *aPath,
                                             const char *registryLocation,
                                             const char *componentType)
 {
