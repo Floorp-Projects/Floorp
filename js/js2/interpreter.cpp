@@ -168,7 +168,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             argv[i] = (*registers)[*src];
                         }
                         if (op2(call) != NotARegister)
-                            (*registers)[op2(call)] = *static_cast<JSNativeFunction*>(target)->mCode(argv);
+                            (*registers)[op2(call)] = static_cast<JSNativeFunction*>(target)->mCode(argv);
                         break;
                     }
                     else {
