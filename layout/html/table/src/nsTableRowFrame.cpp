@@ -1256,7 +1256,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*      aPresContext,
   // Now iterate over the remaining cells, and update our max cell
   // height and our running x-offset
   //
-  // We don't know to re-position any of the child frames that follow, because
+  // We don't have to re-position any of the child frames that follow, because
   // the column width hasn't changed...
   nscoord maxCellTopMargin = 0;
   nscoord maxCellBottomMargin = 0;

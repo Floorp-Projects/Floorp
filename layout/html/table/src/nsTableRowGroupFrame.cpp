@@ -830,8 +830,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 /**
   */
 void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                                              nsReflowMetrics& aDesiredSize,
-                                              nsSize* aMaxElementSize)
+                                              nsReflowMetrics& aDesiredSize)
 {
   // iterate children, tell all rows to shrink wrap
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
@@ -905,7 +904,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       PRInt32 rowSpan = ((nsTableFrame*)mGeometricParent)->GetEffectiveRowSpan(rowIndex,
                                                                                cellFrame);
       if (rowSpan > 1)
-      { // found a cell with rowspan > 1, determine it's height
+      { // found a cell with rowspan > 1, determine its height
         nscoord heightOfRowsSpanned = 0;
         PRInt32 i;
         for ( i = 0; i < rowSpan; i++)
@@ -922,7 +921,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
           // Realign cell content based on new height
           cellFrame->VerticallyAlignChild(aPresContext);
         }
-        /* otherwise, distribute the excess height to the rows effected, and to the cells in those rows
+        /* otherwise, distribute the excess height to the rows effected.
          * push all subsequent rows down by the total change in height of all the rows above it
          */
         else
@@ -934,10 +933,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
           nsTableRowFrame *rowFrameToBeResized = rowFrame;
           for (i = rowIndex; i < numRows; i++)
           {
-            // if the row is within the spanned range, resize the row and it's cells
-            // XXX Why do this now? Let's wait until we're done and we know the
-            // final height of each row. Then resize the row and its cells and
-            // re-align the cells...
+            // if the row is within the spanned range, resize the row
             if (i < (rowIndex + rowSpan))
             {
               // update the row height
@@ -947,29 +943,6 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
               nsSize  rowFrameSize;
               rowFrameToBeResized->GetSize(rowFrameSize);
               rowFrameToBeResized->SizeTo(rowFrameSize.width, rowHeights[i]);
-
-              // adjust the height of each of the cells, and re-align the cell
-              nsTableCellFrame *cellFrame;
-              rowFrameToBeResized->FirstChild((nsIFrame*&)cellFrame);
-              while (nsnull != cellFrame)
-              {
-                PRInt32 frameRowSpan = ((nsTableFrame*)mGeometricParent)->GetEffectiveRowSpan(i,
-                                                                            cellFrame);
-                if (1 == frameRowSpan)
-                {
-                  // Resize the cell's height
-                  nsSize  cellFrameSize;
-                  cellFrame->GetSize(cellFrameSize);
-                  cellFrame->SizeTo(cellFrameSize.width, cellFrameSize.height +
-                                    excessHeightPerRow);
-
-                  // Realign cell content based on new height
-                  cellFrame->VerticallyAlignChild(aPresContext);
-                }
-
-                // Get the next cell
-                cellFrame->GetNextSibling((nsIFrame*&)cellFrame);
-              }
             }
 
             // if we're dealing with a row below the row containing the spanning cell, 
@@ -1042,6 +1015,8 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aP
     // Get the last frame
     LastChild(lastKidFrame);
   }
+
+  // XXX Deal with cells that have rowspans.
 
   // Update our running y-offset to reflect the bottommost child
   nsRect  rect;
@@ -1168,7 +1143,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
     aDesiredSize.height = state.y;
 
     // shrink wrap rows to height of tallest cell in that row
-    ShrinkWrapChildren(aPresContext, aDesiredSize, aDesiredSize.maxElementSize);
+    ShrinkWrapChildren(aPresContext, aDesiredSize);
   }
 
 #ifdef NS_DEBUG
