@@ -566,9 +566,11 @@ finish:
         PR_Free(cipher);
     }
     if( issuer != NULL ) {
-        PR_Free(issuer);
+        PORT_Free(issuer);
     }
-    /* subject is not allocated so it doesn't need to be freed */
+    if ( subject != NULL) {
+        PORT_Free(subject);
+    }
     if( peerCert != NULL ) {
         CERT_DestroyCertificate(peerCert);
     }
