@@ -33,8 +33,6 @@ function EditorFillContextMenu(event, contextMenuNode)
   // Set appropriate text for join cells command
   InitJoinCellMenuitem("joinTableCells_cm");
 
-  // If displaying cell commands,
-  // Set  these are the only commands that need enable/disabling
   goUpdateCommand("cmd_JoinTableCells");
   goUpdateCommand("cmd_SplitTableCell");
   goUpdateCommand("cmd_TableOrCellColor");
