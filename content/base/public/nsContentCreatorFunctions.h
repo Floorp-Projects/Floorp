@@ -93,4 +93,7 @@ nsresult
 NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
                          imgIRequest* aImageRequest);
 
+nsresult
+NS_NewXMLEventsElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
+
 #endif // nsContentCreatorFunctions_h__

@@ -130,7 +130,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
-
 nsresult
 nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                       const nsAString& aValue, PRBool aNotify)

@@ -594,6 +594,8 @@ public:
 
   virtual PRBool IsScriptEnabled() = 0;
 
+  virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement) = 0;
+
   /**
    * Create an element with the specified name, prefix and namespace ID.
    * If aDocumentDefaultType is true we create an element of the default type

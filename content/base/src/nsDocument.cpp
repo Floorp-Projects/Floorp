@@ -104,6 +104,8 @@
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
 
+#include "nsXMLEventsManager.h"
+
 #include "nsBidiUtils.h"
 
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
@@ -673,6 +675,18 @@ nsDocument::Init()
   NS_ADDREF(mNodeInfoManager);
 
   return mNodeInfoManager->Init(this);
+}
+
+nsresult
+nsDocument::AddXMLEventsContent(nsIContent *aXMLEventsElement)
+{
+  if (!mXMLEventsManager) {
+    mXMLEventsManager = new nsXMLEventsManager();
+    NS_ENSURE_TRUE(mXMLEventsManager, NS_ERROR_OUT_OF_MEMORY);
+    AddObserver(mXMLEventsManager);
+  }
+  mXMLEventsManager->AddXMLEventsContent(aXMLEventsElement);
+  return NS_OK;
 }
 
 void

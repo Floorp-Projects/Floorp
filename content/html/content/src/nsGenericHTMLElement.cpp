@@ -1746,6 +1746,11 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
   }
   
+  if (aNamespaceID == kNameSpaceID_XMLEvents && 
+      aAttribute == nsHTMLAtoms::_event && mNodeInfo->GetDocument()) {
+    mNodeInfo->GetDocument()->AddXMLEventsContent(this);
+  }
+
   return NS_OK;
 }
 

@@ -3344,6 +3344,11 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
   }
 
+  if (aNamespaceID == kNameSpaceID_XMLEvents && aName == nsHTMLAtoms::_event && 
+      mNodeInfo->GetDocument()) {
+    mNodeInfo->GetDocument()->AddXMLEventsContent(this);
+  }
+
   return NS_OK;
 }
 

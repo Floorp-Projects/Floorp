@@ -57,6 +57,7 @@ class nsINameSpace;
 #define kNameSpaceID_RDF      8
 #define kNameSpaceID_XUL      9
 #define kNameSpaceID_SVG      10
+#define kNameSpaceID_XMLEvents 11
 
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
