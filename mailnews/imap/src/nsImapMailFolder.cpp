@@ -51,6 +51,7 @@
 #include "nsImapStringBundle.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsTextFormatter.h"
 
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterService.h"
@@ -317,36 +318,47 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 		rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
 
 		currentFolderDBNameStr = currentFolderNameStr;
+		nsAutoString utf7LeafName = currentFolderNameStr;
+
 		if (NS_SUCCEEDED(rv) && curFolder)
 		{
 			rv = GetFolderCacheElemFromFileSpec(curFolder, getter_AddRefs(cacheElement));
 
 			if (NS_SUCCEEDED(rv) && cacheElement)
 			{
-				nsXPIDLCString onlineName;
-				rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineName));
-				if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
+				nsXPIDLString unicodeName;
+				nsXPIDLCString onlineFullUtf7Name;
+
+				rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineFullUtf7Name));
+				if (NS_SUCCEEDED(rv) && (const char *) onlineFullUtf7Name && nsCRT::strlen((const char *) onlineFullUtf7Name))
 				{
 					if (imapServer)
-					{
-						nsXPIDLString nonUtf7Name;
-						imapServer->CreatePRUnicharStringFromUTF7(onlineName, getter_Copies(nonUtf7Name));
-						currentFolderNameStr = nonUtf7Name;
+						imapServer->CreatePRUnicharStringFromUTF7(onlineFullUtf7Name, getter_Copies(unicodeName));
 
-					}
-					else
-						currentFolderNameStr = onlineName;
-
+					// take the full unicode folder name and find the unicode leaf name.
+					currentFolderNameStr = unicodeName;
 					PRInt32 leafPos = currentFolderNameStr.RFindChar('/');
 					if (leafPos > 0)
 						currentFolderNameStr.Cut(0, leafPos + 1);
+
+					// take the utf7 full online name, and determine the utf7 leaf name
+					utf7LeafName = onlineFullUtf7Name;
+					leafPos = utf7LeafName.RFindChar('/');
+					if (leafPos > 0)
+						utf7LeafName.Cut(0, leafPos + 1);
 				}
 			}
 		}
-		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
-		// make the imap folder remember the file spec it was created with.
+		// use the utf7 name as the uri for the folder.
+		AddSubfolder(&utf7LeafName, getter_AddRefs(child));
 		if (child)
 		{
+			// use the unicode name as the "pretty" name. Set it so it won't be
+			// automatically computed from the URI, which is in utf7 form.
+			if (currentFolderNameStr.Length() > 0)
+				child->SetName(currentFolderNameStr.GetUnicode());
+
+			// make the imap folder remember the file spec it was created with.
 			nsCAutoString leafName (currentFolderDBNameStr);
 			nsCOMPtr <nsIFileSpec> msfFileSpec;
 			rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
@@ -3298,16 +3310,11 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
 
 				if (extraInfo)
 				{
-					// lossy, but what can we do?
-					nsCAutoString cProgressString(progressMsg);
-
-					char *printfString = PR_smprintf(cProgressString, extraInfo);
+					PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
 					if (printfString)
 					{
-						nsString formattedString(printfString);
-						PR_FREEIF(progressMsg);
-						progressMsg = nsCRT::strdup(formattedString.GetUnicode());	
-						PR_smprintf_free(printfString);
+						progressMsg = nsCRT::strdup(printfString);	
+						nsTextFormatter::smprintf_free(printfString);
 
 					}
 				}

@@ -51,7 +51,7 @@
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
 #include "nsICopyMsgStreamListener.h"
-
+#include "nsTextFormatter.h"
 #include "nsAutoLock.h"
 
 // for the memory cache...
@@ -3943,22 +3943,22 @@ nsImapProtocol::ShowProgress()
     if (m_progressString && m_progressStringId)
     {
       PRUnichar *progressString = NULL;
-      // lossy if localized string has non-8-bit chars, but we're 
-      // stuck with PR_smprintf for now.
       nsCString cProgressString(m_progressString);
       const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
-      char *printfString = PR_smprintf(cProgressString, (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
-      if (printfString)
-      {
-        nsString formattedString(printfString);
-        PR_FREEIF(printfString);
-        progressString = nsCRT::strdup(formattedString.GetUnicode()); 
+	  nsXPIDLString unicodeMailboxName;
 
-      }
-      if (progressString)
-        PercentProgressUpdateEvent(progressString,(100*(m_progressIndex))/m_progressCount );
-      PR_FREEIF(progressString);
+	  nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
+	  if (NS_SUCCEEDED(rv))
+	  {
+		  // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
+		  progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
+		  if (progressString)
+		  {
+			PercentProgressUpdateEvent(progressString,(100*(m_progressIndex))/m_progressCount );
+			nsTextFormatter::smprintf_free(progressString);
+		  }
+	  }
     }
 }
 
