@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -35,9 +37,11 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 class GtkMozEmbedPrivate
 {
 public:
-  nsCOMPtr<nsIWebBrowser>  webBrowser;
-  nsCOMPtr<nsIGtkEmbed>    embed;
-  GdkSuperWin             *superwin;
+  nsCOMPtr<nsIWebBrowser>     webBrowser;
+  nsCOMPtr<nsIGtkEmbed>       embed;
+  nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
+  nsVoidArray                 topLevelWindows;
+  GdkSuperWin                *superwin;
 };
 
 static void
@@ -67,6 +71,14 @@ gtk_moz_embed_handle_show(GtkWidget *widget, gpointer user_data);
 
 static void
 gtk_moz_embed_handle_event_queue(gpointer data, gint source, GdkInputCondition condition);
+
+/* call back to create a new toplevel window */
+static nsresult
+gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
+
+/* call back to track visibility changes */
+static void
+gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData);
 
 static GtkWidgetClass *parent_class;
 
@@ -168,13 +180,14 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // this is how we hook into when show() is called on the widget
   gtk_signal_connect(GTK_OBJECT(embed), "show",
 		     GTK_SIGNAL_FUNC(gtk_moz_embed_handle_show), NULL);
-  // set our tree owner here
+  // get our hands on the browser chrome
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(embed_private->embed);
   if (!browserChrome)
     g_print("Warning: Failed to QI embed window to nsIWebBrowserChrome\n");
-
+  // set the toplevel window
   embed_private->webBrowser->SetTopLevelWindow(browserChrome);
-
+  // set the widget as the owner of the object
+  embed_private->embed->Init((GtkWidget *)embed);
 
 }
 
@@ -258,11 +271,13 @@ gtk_moz_embed_realize(GtkWidget *widget)
   webBrowserBaseWindow->Create();
   PRBool visibility;
   webBrowserBaseWindow->GetVisibility(&visibility);
+  // if the widget is visible, set the base window as visible as well
   if (GTK_WIDGET_VISIBLE(widget))
   {
     webBrowserBaseWindow->SetVisibility(PR_TRUE);
   }
-
+  // set our callback for creating new browser windows
+  embed_private->embed->SetNewBrowserCallback(gtk_moz_embed_handle_new_browser, widget);
 }
 
 void
@@ -288,6 +303,8 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     // set the size of the base window
     nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = do_QueryInterface(embed_private->webBrowser);
     webBrowserBaseWindow->SetPositionAndSize(0, 0, allocation->width, allocation->height, PR_TRUE);
+    nsCOMPtr<nsIBaseWindow> embedBaseWindow = do_QueryInterface(embed_private->embed);
+    embedBaseWindow->SetPositionAndSize(0, 0, allocation->width, allocation->height, PR_TRUE);
   }
 }
 
@@ -308,6 +325,8 @@ gtk_moz_embed_destroy(GtkObject *object)
     embed_private->webBrowser = nsnull;
     embed_private->embed = nsnull;
     gtk_object_unref(GTK_OBJECT(embed_private->superwin));
+    // XXX XXX delete all the members of the topLevelWindows
+    // nsVoidArray and then delete the array
     delete embed_private;
     embed->data = NULL;
   }
@@ -338,4 +357,77 @@ gtk_moz_embed_handle_event_queue(gpointer data, gint source, GdkInputCondition c
 {
   nsIEventQueue *eventQueue = (nsIEventQueue *)data;
   eventQueue->ProcessPendingEvents();
+}
+
+static nsresult
+gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+
+  g_print("gtk_moz_embed_handle_new_browser\n");
+
+  g_return_val_if_fail ((aData != NULL), NS_ERROR_INVALID_ARG);
+  g_return_val_if_fail ((GTK_IS_MOZ_EMBED(aData)), NS_ERROR_INVALID_ARG);
+
+  embed = GTK_MOZ_EMBED(aData);
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  // XXX what we need to do here is have a signal or something that
+  // allows us to allow user defined functions to create the toplevel
+  // window
+  GtkWidget *newTopLevel = NULL;
+  GtkWidget *newMozEmbed = NULL;
+  GtkMozEmbed        *newEmbed = NULL;
+  GtkMozEmbedPrivate *newEmbedPrivate = NULL;
+  
+  newTopLevel = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_realize(newTopLevel);
+
+  newMozEmbed = gtk_moz_embed_new();
+  // add this new child as a container of the toplevel window before
+  // we realize it
+  gtk_container_add(GTK_CONTAINER(newTopLevel), newMozEmbed);
+  // realize it to trigger the creation of all of the mozilla objects
+  gtk_widget_realize(newMozEmbed);
+  
+  // get our hands on the embed internals
+  newEmbed = GTK_MOZ_EMBED(newMozEmbed);
+  newEmbedPrivate = (GtkMozEmbedPrivate *)newEmbed->data;
+
+  // track visibility requests
+  newEmbedPrivate->embed->SetVisibilityCallback(gtk_moz_embed_handle_toplevel_visibility_change, newMozEmbed);
+  
+  *_retval = newEmbedPrivate->webBrowser;
+  g_print("returning new toplevel web browser as %p\n", *_retval);
+  NS_ADDREF(*_retval);
+  
+  return NS_OK;
+}
+
+static void
+gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_print("gtk_moz_embed_handle_toplevel_visibility_change\n");
+
+  g_return_if_fail (aData != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(aData));
+
+  embed = GTK_MOZ_EMBED(aData);
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  // the ->parent is always going to be the GtkWindow
+  if (aVisibility) 
+  {
+    gtk_widget_show(GTK_WIDGET(embed));
+    gtk_widget_show(GTK_WIDGET(embed)->parent);
+  }
+  else
+  {
+    gtk_widget_hide(GTK_WIDGET(embed)->parent);
+    gtk_widget_hide(GTK_WIDGET(embed));
+  }
 }

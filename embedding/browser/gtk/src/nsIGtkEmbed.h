@@ -23,6 +23,7 @@
 #define __nsIGtkEmbed_h__
 
 #include <gtk/gtk.h>
+#include "nsIWebBrowser.h"
 
 #define NS_IGTKEMBED_IID_STR "ebe19ea4-1dd1-11b2-bc20-8e8105516b2f"
 
@@ -30,13 +31,20 @@
  {0xebe19ea4, 0x1dd1, 0x11b2, \
    { 0xbc, 0x20, 0x8e, 0x81, 0x05, 0x51, 0x6b, 0x2f }}
 
+typedef nsresult (GtkMozEmbedChromeCB)     (PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
+typedef void     (GtkMozEmbedDestroyCB)    (void *aData);
+typedef void     (GtkMozEmbedVisibilityCB) (PRBool aVisibility, void *aData);
+
 class nsIGtkEmbed : public nsISupports
 {
 public:
   
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGTKEMBED_IID)
   
-  NS_IMETHOD Init(GdkWindow *aParentWindow) = 0;
+  NS_IMETHOD Init                         (GtkWidget *aOwningWidget) = 0;
+  NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData) = 0;
 };
 
 #endif /* __nsIGtkEmbed_h__ */

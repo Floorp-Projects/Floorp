@@ -45,7 +45,11 @@ public:
   virtual ~GtkMozEmbedChrome();
 
   // nsIGtkEmbed
-  NS_IMETHOD Init(GdkWindow *aParentWindow);
+
+  NS_IMETHOD Init                         (GtkWidget *aOwningWidget);
+  NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData);
+  NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData);
+  NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData);
 
   NS_DECL_ISUPPORTS
 
@@ -56,7 +60,15 @@ public:
   NS_DECL_NSIBASEWINDOW
 
 private:
-  
+  GtkWidget                 *mOwningGtkWidget;
+  GtkMozEmbedChromeCB       *mNewBrowserCB;
+  void                      *mNewBrowserCBData;
+  GtkMozEmbedDestroyCB      *mDestroyCB;
+  void                      *mDestroyCBData;
+  GtkMozEmbedVisibilityCB   *mVisibilityCB;
+  void                      *mVisibilityCBData;
+  nsRect                     mBounds;
+  PRBool                     mVisibility;
 };
 
 #endif /* __GtkMozEmbedChrome_h */
