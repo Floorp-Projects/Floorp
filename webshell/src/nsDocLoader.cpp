@@ -1348,7 +1348,19 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
 
     NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnDataAvailable(aURL, aStream, aLength);
+       /*
+        * Bump the refcount in case the stream gets destroyed while the data
+        * is being processed...  If Stop(...) is called the stream could be
+        * freed prematurely :-(
+        *
+        * Currently this can happen if javascript loads a new URL 
+        * (via nsIWebShell::LoadURL) during the parse phase... 
+        */
+        nsIStreamListener* listener = m_NextStream;
+
+        NS_ADDREF(listener);
+        rv = listener->OnDataAvailable(aURL, aStream, aLength);
+        NS_RELEASE(listener);
     }
 
 done:
