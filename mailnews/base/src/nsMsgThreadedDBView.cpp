@@ -697,8 +697,9 @@ nsresult nsMsgThreadedDBView::RemoveByIndex(nsMsgViewIndex index)
   nsCOMPtr <nsIMsgThread> threadHdr; 
   GetThreadContainingIndex(index, getter_AddRefs(threadHdr));
   NS_ENSURE_SUCCESS(rv, rv);
-  PRUint32 numThreadChildren;
-  threadHdr->GetNumChildren(&numThreadChildren);
+  PRUint32 numThreadChildren = 0; // if we can't get thread, it's already deleted and thus has 0 children
+  if (threadHdr)
+    threadHdr->GetNumChildren(&numThreadChildren);
   // check if we're the top level msg in the thread, and we're not collapsed.
   if ((flags & MSG_VIEW_FLAG_ISTHREAD) && !(flags & MSG_FLAG_ELIDED) && (flags & MSG_VIEW_FLAG_HASCHILDREN))
   {
