@@ -667,6 +667,10 @@ NS_IMETHODIMP nsNNTPProtocol::GetLastActiveTimeStamp(PRTime *aTimeStamp)
 
 NS_IMETHODIMP nsNNTPProtocol::LoadNewsUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
+  // clear the previous channel listener and use the new one....
+  // don't reuse an existing channel listener
+  m_channelListener = nsnull;
+  m_channelListener = do_QueryInterface(aConsumer);
   return LoadUrl(aURL, aConsumer);
 }
 
@@ -5047,7 +5051,8 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 
 	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
 		// if it is an article url, it has a @ or %40 in it.
-		if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40")) {
+    if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40") 
+        || m_typeWanted == ARTICLE_WANTED) {
 			*aContentType = nsCRT::strdup("message/rfc822");
 		}
 		else {
