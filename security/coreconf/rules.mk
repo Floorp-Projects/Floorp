@@ -57,7 +57,7 @@ USE_NT_C_SYNTAX=1
 endif
 
 ifdef XP_OS2_VACPP
-USE_NT_C_SYTNAX=1
+USE_NT_C_SYNTAX=1
 endif
 
 #
@@ -297,7 +297,6 @@ else
 	$(AR) $(OBJS)
 endif
 	$(RANLIB) $@
-	echo $(BUILT_SRCS) $(OBJS)
 
 
 ifeq ($(OS_ARCH),OS2)
