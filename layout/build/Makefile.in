@@ -31,9 +31,6 @@ BUILD_DATE = gbdate.h
 MODULE		= layout
 LIBRARY_NAME	= gklayout
 EXPORT_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
-SHORT_LIBNAME	= gkhtml
-endif
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 GRE_MODULE	= 1
