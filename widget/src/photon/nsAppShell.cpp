@@ -55,7 +55,6 @@
 /* Global Definitions */
 PRBool nsAppShell::gExitMainLoop = PR_FALSE;
 
-static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
 
@@ -73,7 +72,7 @@ our_photon_input_add (int               fd,
                       PtFdProc_t        event_processor_callback,
                       void		         *data)
 {
-  int err = PtAppAddFdPri( NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ), event_processor_callback, data, getprio( 0 ) + 1 );
+  int err = PtAppAddFd( NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ), event_processor_callback, data );
   if (err != 0)
   {
     NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
@@ -136,9 +135,10 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 static int event_processor_callback(int fd, void *data, unsigned mode)
 {
 	nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+	PtHold();
 	if (eventQueue)
 	   eventQueue->ProcessPendingEvents();
-
+	PtRelease();
   return Pt_CONTINUE;
 }
 

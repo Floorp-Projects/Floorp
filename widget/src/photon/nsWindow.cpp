@@ -55,6 +55,7 @@
 #include "nsGfxCIID.h"
 #include "nsIMenuBar.h"
 #include "nsToolkit.h"
+#include "nsIPref.h"
 
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
@@ -69,7 +70,6 @@
 #include "nsIWindowMediator.h"
 #include "nsIPresShell.h"
 #include "nsReadableUtils.h"
-
 
 PRBool             nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
@@ -117,9 +117,6 @@ nsWindow::~nsWindow()
   Destroy();
 
   RemoveResizeWidget();
-#if 0
-	RemoveDamagedWidget( mWidget );
-#endif
 }
 
 PRBool nsWindow::IsChild() const
@@ -146,15 +143,11 @@ NS_IMETHODIMP nsWindow::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect
 void nsWindow::DestroyNative(void)
 {
   RemoveResizeWidget();
-#if 0
-	RemoveDamagedWidget( mWidget );
-#endif  
   if ( mClientWidget )
   {
     PtDestroyWidget(mClientWidget );  
     mClientWidget = nsnull;
   }
-	
   // destroy all of the children that are nsWindow() classes
   // preempting the gdk destroy system.
   DestroyNativeChildren();
@@ -208,71 +201,32 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-  if (!mWidget) return NS_OK; // mWidget will be null during printing.
-  if (!PtWidgetIsRealized(mWidget)) return NS_OK;
-#if 0
-  /* Damage has to be relative Widget coords */
-  mUpdateArea->SetTo( 0,0, mBounds.width, mBounds.height );
-
-  if (aIsSynchronous) UpdateWidgetDamage();
-  else QueueWidgetDamage();
-#else
+	if (!mWidget) return NS_OK; // mWidget will be null during printing.
+	if (!PtWidgetIsRealized(mWidget)) return NS_OK;
 	nsWidget::Invalidate(aIsSynchronous);
-#endif	
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 {
-  if (!mWidget) return NS_OK; // mWidget will be null during printing.
-  if (!PtWidgetIsRealized(mWidget)) return NS_OK;
-#if 0  
-  /* Offset the rect by the mBounds X,Y to fix damaging inside widget in test14 */
-  if (mWindowType == eWindowType_popup) mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
-	else mUpdateArea->Union((aRect.x+mBounds.x), (aRect.y+mBounds.y), aRect.width, aRect.height);
-
-  if (aIsSynchronous)
-  {
-    UpdateWidgetDamage();
-  }
-  else
-  {
-    QueueWidgetDamage();
-  }
-#else
+	if (!mWidget) return NS_OK; // mWidget will be null during printing.
+	if (!PtWidgetIsRealized(mWidget)) return NS_OK;
 	nsWidget::Invalidate(aRect, aIsSynchronous);
-#endif	
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous)
 {
-  
-  if (!mWidget) return NS_OK; // mWidget will be null during printing.
-  if (!PtWidgetIsRealized(mWidget)) return NS_OK;
-#if 0
-  nsIRegion *newRegion;
-
-  newRegion = GetRegion( );
-  newRegion->SetTo( *aRegion );
-     
-  if (mWindowType != eWindowType_popup)
-    newRegion->Offset(mBounds.x, mBounds.y);
-  mUpdateArea->Union(*newRegion);
-
-	NS_RELEASE( newRegion );
-
-  if (aIsSynchronous)	UpdateWidgetDamage();
-  else								QueueWidgetDamage();
-#else
+	if (!mWidget) return NS_OK; // mWidget will be null during printing.
+	if (!PtWidgetIsRealized(mWidget)) return NS_OK;
 	nsWidget::InvalidateRegion(aRegion,aIsSynchronous);
-#endif	
-  return NS_OK;
+	return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetBackgroundColor( const nscolor &aColor ) {
-  return nsWidget::SetBackgroundColor(aColor);
-	}
+NS_IMETHODIMP nsWindow::SetBackgroundColor( const nscolor &aColor ) 
+{
+	return nsWidget::SetBackgroundColor(aColor);
+}
 
 
 NS_IMETHODIMP nsWindow::SetFocus( PRBool aRaise ) {
@@ -398,7 +352,6 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
-      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT, Ph_FORCE_FRONT );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
       PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_GETS_FOCUS | Pt_DELAY_REALIZE);
@@ -419,7 +372,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
       mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
      }
 	else {
-		PtSetParentWidget( nsnull );
+		PtSetParentWidget( NULL );
 
 		/* Dialog and TopLevel Windows */
 		PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
@@ -430,16 +383,25 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 		PtCallback_t cb_resize = { ResizeHandler, NULL };
 		PtSetArg( &arg[arg_count++], Pt_CB_RESIZE, &cb_resize, NULL );
 		PtSetArg( &arg[arg_count++], Pt_CB_RAW, &cb_raw, NULL );
-
 		mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
-		}
+#if 0
+		PhRect_t rect;
+		memset(&rect, 0, sizeof(rect));
+		PtSetArg( &arg[0], Pt_ARG_ANCHOR_OFFSETS, &rect, 0 );
+		PtSetArg( &arg[1], Pt_ARG_ANCHOR_FLAGS, -1,
+				          Pt_LEFT_ANCHORED_LEFT |
+				          Pt_RIGHT_ANCHORED_RIGHT |
+				          Pt_TOP_ANCHORED_TOP |
+				          Pt_BOTTOM_ANCHORED_BOTTOM );
+		mClientWidget = PtCreateWidget( PtOSContainer, mWidget, 2, arg );
+#endif
+	}
   }
 
   if( mWidget ) {
-    SetInstance( mWidget, this );
-    if( mClientWidget ) SetInstance( mClientWidget, this );
- 
-    if( mWindowType == eWindowType_child ) {
+	  SetInstance( mWidget, this );
+	  if( mClientWidget ) SetInstance( mClientWidget, this );
+	  if( mWindowType == eWindowType_child ) {
       	PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       	PtAddEventHandler( mWidget,
       	  Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
@@ -570,9 +532,26 @@ NS_METHOD nsWindow::Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect ) {
 
 	PtEndFlux( widget);
 
-	PhRect_t source = {{widget->area.pos.x, widget->area.pos.y},{widget->area.pos.x+ widget->area.size.w, widget->area.pos.y + widget->area.size.h}};
+	PhRect_t source = {{widget->area.pos.x, widget->area.pos.y},{widget->area.pos.x+ widget->area.size.w-1, widget->area.pos.y + widget->area.size.h-1}};
 	PhPoint_t point = { aDx, aDy };
-	PtBlit( widget, &source, &point );
+
+	if( !widget->damage_list )
+		PtBlit( widget, &source, &point );
+	else {
+		/* first noticed as a scrolling problem in netscape email */
+		/* the scrolling should be clipped out by the rectangles given by Invalidate(). These are accumulated in widget->damage_list */
+		PhTile_t original = { source, NULL }, *clip;
+
+		clip = PhGetTile();
+		clip->rect = source;
+		clip->next = NULL;
+		clip = PhClipTilings( clip, widget->damage_list, NULL );
+
+		if( clip ) {
+			PtClippedBlit( widget, &original, &point, clip );
+			PhFreeTiles( clip );
+			}
+		}
   
 	return NS_OK;
 	}
@@ -706,12 +685,12 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     }
   }
 
-  PtArg_t  arg;
-  PhDim_t  dim = { aWidth, aHeight };
-
+	PtArg_t  arg;
+	PhDim_t  dim = { aWidth, aHeight };
+	
 	if( mWidget ) {
-//		EnableDamage( mWidget, PR_FALSE );
-
+		//		EnableDamage( mWidget, PR_FALSE );
+		
 		// center the dialog
 		if( mWindowType == eWindowType_dialog ) {
 			PhPoint_t p, pos = nsToolkit::GetConsoleOffset( );
@@ -719,10 +698,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 			p.x -= pos.x;
 			p.y -= pos.y;
 			Move(p.x, p.y); // the move should be in coordinates assuming the console is 0, 0
-			}
-
-	PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
-    PtSetResources( mWidget, 1, &arg );
+		}
+		
+		PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
+		PtSetResources( mWidget, 1, &arg );
+		
 		/* This fixes XUL dialogs */
     if (mClientWidget) {
       PtWidget_t *theClientChild = PtWidgetChildBack(mClientWidget);
@@ -798,42 +778,24 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 		break;
 		
 		default:
-		/* destroy any pop up widgets ( menus ) */
-		if (we->event_f == Ph_WM_FOCUS && we->state_f == Ph_WM_EVSTATE_FOCUS)
+		if( we->event_f == Ph_WM_TOFRONT || ( we->event_f == Ph_WM_FOCUS && we->state_f == Ph_WM_EVSTATE_FOCUS ) )
 		   return Pt_CONTINUE;
+
+		/* destroy any pop up widgets ( menus ) */
 		if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
 	}
 	
 	return Pt_CONTINUE;
 }
 
-#if 0
-NS_METHOD nsWindow::Show( PRBool bState ) {
-
-  if( !mWidget ) return NS_OK; // Will be null durring printing
-	if( ( mShown && bState ) || ( !mShown && !bState ) ) return NS_OK;
-
-	if( mWindowType == eWindowType_popup ) {
-
-  	//EnableDamage( mWidget, PR_FALSE );
-
-  	if( bState ) PtRealizeWidget( mWidget );
-		else PtUnrealizeWidget( mWidget );
-
-//  	EnableDamage( mWidget, PR_TRUE );
-		}
-
-  return nsWidget::Show(bState);
-	}
-#endif
 //-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
+PRBool nsWindow::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 /* if in the future you add code here, modify nsWidget::HandleEvent() to allow you this call */
-	return nsWidget::HandleEvent(aCbInfo);
+	return nsWidget::HandleEvent( widget, aCbInfo);
 	}
 
 void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
@@ -873,8 +835,8 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 //			new_damage = PhRectsToTiles( &pWidget->extent, 1 );
 //		}
 //		else {
-//			new_damage = PhRectsToTiles(&damage->rect, 1);
-			new_damage = PhCopyTiles(damage->next);
+			new_damage = PhRectsToTiles(&damage->rect, 1);
+//			new_damage = PhCopyTiles(damage->next);
 			/* new_damage is the same as tiles... I need to release it later */
 			new_damage = PhClipTilings( new_damage, clip_tiles, NULL);
 //		}
@@ -984,7 +946,7 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
 
     /* This enables the resize holdoff */
     if (PtWidgetIsRealized(widget)) {
-      someWindow->ResizeHoldOff();
+//      someWindow->ResizeHoldOff();
       someWindow->OnResize( rect );
     }
   }
@@ -998,7 +960,14 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
 
 	if( cbinfo->event && cbinfo->event->type == Ph_EV_INFO && cbinfo->event->subtype == Ph_OFFSCREEN_INVALID ) {
-
+		nsresult rv;
+		
+		nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+		if (NS_SUCCEEDED(rv)) {
+			 PRBool displayInternalChange = PR_FALSE;
+			 pPrefs->GetBoolPref("browser.display.internaluse.graphics_changed", &displayInternalChange);
+			 pPrefs->SetBoolPref("browser.display.internaluse.graphics_changed", !displayInternalChange);
+		 }
 		nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
 		NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
 

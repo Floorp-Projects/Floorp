@@ -184,12 +184,12 @@ static nsModuleComponentInfo components[] =
 { "Ph Sound",
   NS_SOUND_CID,
   "@mozilla.org/sound;1",
-  nsSoundConstructor }
+  nsSoundConstructor },
 #ifdef IBMBIDI
-    , { "Gtk Bidi Keyboard",
+    { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor }
+    nsBidiKeyboardConstructor },
 #endif // IBMBIDI
 };
 

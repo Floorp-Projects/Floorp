@@ -41,7 +41,7 @@
 #include "nsPhWidgetLog.h"
 
 #include "nsXPLookAndFeel.h"
- 
+
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff) 
@@ -321,9 +321,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   case eMetric_SubmenuDelay:
     aMetric = 200;
     break;
-	case eMetric_DragFullWindow:
-		aMetric = 0;
-		break;
+  case eMetric_DragFullWindow:
+	aMetric = 1;
+	break;
   default:
     aMetric = -1;
     res     = NS_ERROR_FAILURE;
@@ -378,6 +378,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
 }
 
 #ifdef NS_DEBUG
+#include "nsSize.h"
+
 NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const nsMetricNavFontID   aFontID, 
                                         const PRInt32             aFontSize, 

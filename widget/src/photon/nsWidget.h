@@ -41,6 +41,7 @@
 #include "nsBaseWidget.h"
 #include "nsIKBStateControl.h"
 #include "nsIRegion.h"
+#include "nsIDragService.h"
 
 class nsILookAndFeel;
 class nsIAppShell;
@@ -106,8 +107,6 @@ public:
 
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(PRBool aRaise);
-
-  virtual void LoseFocus(void);
 
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
@@ -197,6 +196,8 @@ protected:
 //#endif
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
+	void DispatchDragDropEvent( PRUint32 aEventType, PhPoint_t *pos );
+	void ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *pos );
 
   // this is the "native" destroy code that will destroy any
   // native windows / widgets for this logical widget
@@ -213,7 +214,7 @@ protected:
   //
   //////////////////////////////////////////////////////////////////
   static int       RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-  virtual PRBool   HandleEvent( PtCallbackInfo_t* aCbInfo );
+  virtual PRBool   HandleEvent( PtWidget_t *, PtCallbackInfo_t* aCbInfo );
   PRBool           DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
   PRBool           DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
   virtual void     ScreenToWidget( PhPoint_t &pt );
@@ -260,6 +261,7 @@ protected:
   static int  GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int  LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int  DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  static int  DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 
   PtWidget_t          *mWidget;
   nsIWidget						*mParent;
@@ -283,6 +285,8 @@ protected:
   static nsIWidget         *gRollupWidget;
 
   static nsILookAndFeel *sLookAndFeel;
+//	static nsCOMPtr<nsIDragService> sDragService;
+	static nsIDragService *sDragService;
   static PRUint32 sWidgetCount;
 };
 
