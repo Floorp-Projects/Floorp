@@ -373,7 +373,7 @@ add_java_method_to_class_descriptor(JSContext *cx, JNIEnv *jEnv,
     const char *sig_cstr = NULL;
     const char *method_name = NULL;
     JavaMethodSignature *signature = NULL;
-    JavaMethodSpec *method_spec = NULL;
+    JavaMethodSpec **specp, *method_spec = NULL;
             
     if (is_constructor) {
         member_descriptor = jsj_GetJavaClassConstructors(cx, class_descriptor);
@@ -420,9 +420,12 @@ add_java_method_to_class_descriptor(JSContext *cx, JNIEnv *jEnv,
     
     JS_free(cx, (char*)sig_cstr);
 
-    /* Add method to list of overloaded methods for this class member */
-    method_spec->next = member_descriptor->methods;
-    member_descriptor->methods = method_spec;
+    /* Add method to end of list of overloaded methods for this class member */ 
+    specp = &member_descriptor->methods;
+    while (*specp) {
+        specp = &(*specp)->next;
+    }
+    *specp = method_spec;
 
     return JS_TRUE;
 
@@ -675,11 +678,16 @@ resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *mem
         if (!method_signature_matches_JS_args(cx, jEnv, argc, argv, &method->signature, &cost))
             continue;
 
+#ifdef LIVECONNECT_IMPROVEMENTS
         if (cost < lowest_cost) {
             lowest_cost = cost;
             best_method_match = method;
             num_method_matches++;
         }
+#else
+        best_method_match = method;
+        break;
+#endif
     }
 
     if (!best_method_match)
