@@ -8266,7 +8266,7 @@ NS_IMETHODIMP
 nsImapMockChannel::OnTransportStatus(nsITransport *transport, nsresult status,
                                      PRUint32 progress, PRUint32 progressMax)
 {
-  if (mProgressEventSink && !(mLoadFlags & LOAD_BACKGROUND))
+  if (mProgressEventSink && NS_SUCCEEDED(m_cancelStatus) && !(mLoadFlags & LOAD_BACKGROUND))
   {
     // these transport events should not generate any status messages
     if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||

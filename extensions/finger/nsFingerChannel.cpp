@@ -425,7 +425,7 @@ nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                    PRUint32 progress, PRUint32 progressMax)
 {
     // suppress status notification if channel is no longer pending!
-    if (mProgressSink && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
+    if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
         NS_ConvertUTF8toUCS2 host(mHost);
         mProgressSink->OnStatus(this, nsnull, status, host.get());
 
