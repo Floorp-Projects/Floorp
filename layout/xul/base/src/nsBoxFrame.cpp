@@ -667,13 +667,13 @@ nsBoxFrame::BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect)
   if (aRect.width == NS_INTRINSICSIZE ) 
       aRect.width = aBoxInfo.prefSize.width;
 
-  /*
+  
   // make sure the available size is no bigger than the max size
   if (aRect.height > aBoxInfo.maxSize.height)
      aRect.height = aBoxInfo.maxSize.height;
 
   if (aRect.width > aBoxInfo.maxSize.width)
-     aRect.width = aBoxInfo.maxSize.width);
+     aRect.width = aBoxInfo.maxSize.width;
 
   // make sure the available size is at least as big as the min size
   if (aRect.height < aBoxInfo.minSize.height)
@@ -681,7 +681,7 @@ nsBoxFrame::BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect)
 
   if (aRect.width < aBoxInfo.minSize.width)
      aRect.width = aBoxInfo.minSize.width;
-     */
+     
 }
 
 /**
