@@ -124,8 +124,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       aLocale.SetString("C");
     }
 
-    nsCOMPtr <nsIPosixLocale> posixLocale;
-    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, getter_AddRefs(posixLocale));
+    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
       char platformLocale[kPlatformLocaleLength+1];
       res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
@@ -134,9 +133,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       }
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset;
-    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
