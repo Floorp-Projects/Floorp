@@ -94,7 +94,7 @@ CSRCS = \
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
 	$(NSPR_LIBS)	\
-	-ljs			\
+	-lmozjs			\
 	-lraptorbase	\
 	-lpref			\
 	-lsecfree		\
