@@ -81,6 +81,7 @@ public:
   NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
   NS_IMETHOD CreateSubfolder(const char *folderName);
+  NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(void);
   NS_IMETHOD EmptyTrash(void);
   NS_IMETHOD Rename(const char *name);

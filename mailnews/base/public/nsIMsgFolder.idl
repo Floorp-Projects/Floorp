@@ -39,6 +39,7 @@ interface nsIMsgDatabase;
 interface nsMsgKeyArray;
 
 interface nsIMsgFolderCacheElement;
+interface nsAutoString;
 
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
@@ -83,7 +84,8 @@ interface nsIMsgFolder : nsIFolder {
 	void recursiveDelete(in boolean deleteStorage);
 
 	void createSubfolder(in string folderName);
-
+  nsIMsgFolder addSubfolder(in nsAutoString folderName);
+  
   void compact();
   void emptyTrash();
 
