@@ -102,14 +102,7 @@ function checkForDomain()
   currentDomain = accountData.domain;
   
   var postEmailText = document.getElementById("postEmailText");
-  if (postEmailText) {
-    if (postEmailText.firstChild)
-      postEmailText.removeChild(postEmailText.firstChild);
-
-    var domainText = "@" + currentDomain;
-    postEmailText.appendChild(document.createTextNode(domainText));
-  }
-
+  postEmailText.setAttribute("value", "@" + currentDomain);
 }
 
 function checkForFullName() {

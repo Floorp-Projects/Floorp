@@ -41,7 +41,7 @@ function setDivTextFromForm(divid, value) {
     // hide the .label if the div has no value
     if (!value || value =="") {
         var div = document.getElementById(divid + ".label");
-        div.style.display="none";
+        div.setAttribute("hidden","true");
         return;
     }
 
