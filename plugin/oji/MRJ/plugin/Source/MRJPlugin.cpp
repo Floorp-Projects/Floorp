@@ -538,7 +538,7 @@ NS_METHOD MRJPluginInstance::OnDataAvailable(const char* url, nsIInputStream* in
 	// hopefully all our data is available.
 	char* codeBase = new char[length + 1];
 	if (codeBase != NULL) {
-		if (input->Read(codeBase, 0, length, &length) == NS_OK) {
+		if (input->Read(codeBase, length, &length) == NS_OK) {
 			// We've delayed processing the applet tag, because we
 			// don't know the location of the curren document yet.
 			codeBase[length] = '\0';
