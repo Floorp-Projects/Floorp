@@ -23,16 +23,16 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.cpp,v 1.7 2001/06/10 11:30:25 axel%pike.org Exp $
+ * $Id: StringList.cpp,v 1.8 2001/06/10 13:50:46 axel%pike.org Exp $
  */
 
 /**
  * StringList
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2001/06/10 11:30:25 $
+ * @version $Revision: 1.8 $ $Date: 2001/06/10 13:50:46 $
 **/
 
-#ifdef TX_EXE
+#ifndef MOZ_XSL
 #include <iostream.h>
 #endif
 #include "StringList.h"

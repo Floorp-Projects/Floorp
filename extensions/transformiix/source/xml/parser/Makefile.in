@@ -26,13 +26,13 @@ VPATH           = @srcdir@ @srcdir@/xmltok @srcdir@/xmlparse
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef TX_EXE
+ifdef MOZ_XSL
 MODULE = transformiix
 REQUIRES = string xpcom necko dom layout widget webbrwsr js docshell webshell gfx2 uriloader locale appshell xpconnect
 endif
 
 CPPSRCS = XMLParser.cpp
-ifndef TX_EXE
+ifdef MOZ_XSL
 CPPSRCS += nsSyncLoader.cpp
 else
 CSRCS = xmltok.c xmlrole.c xmlparse.c hashtable.c
@@ -41,7 +41,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net -I$(srcdir)/../dom
-ifdef TX_EXE
+ifndef MOZ_XSL
 INCLUDES += -I$(srcdir)/xmlparse
 COMPILE_CFLAGS += -DXML_UNICODE -I$(srcdir)/xmltok
 endif

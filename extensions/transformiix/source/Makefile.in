@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = base net xml xpath xslt 
 
-ifdef TX_EXE
+ifndef MOZ_XSL
 DIRS += main
 endif
 

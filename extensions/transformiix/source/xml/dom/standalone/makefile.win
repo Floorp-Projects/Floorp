@@ -22,7 +22,9 @@
 DEPTH=..\..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DEFINES=$(DEFINES) -DTX_EXE
+!ifdef MOZ_XSL
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
 
 CPPSRCS=Attr.cpp \
         CDATASection.cpp \

@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "TxString.h"
-#ifdef TX_EXE
+#ifndef MOZ_XSL
 #include <iostream.h>
 #endif
 
