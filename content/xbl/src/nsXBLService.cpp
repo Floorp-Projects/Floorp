@@ -484,6 +484,7 @@ PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
+nsIAtom* nsXBLService::kEventAtom = nsnull;
 nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
 nsIAtom* nsXBLService::kInputAtom = nsnull;
 
@@ -523,6 +524,7 @@ nsXBLService::nsXBLService(void)
 
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
+    kEventAtom = NS_NewAtom("event");
     kScrollbarAtom = NS_NewAtom("scrollbar");
     kInputAtom = NS_NewAtom("input");
 
@@ -554,6 +556,7 @@ nsXBLService::~nsXBLService(void)
     
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
+    NS_RELEASE(kEventAtom);
     NS_RELEASE(kScrollbarAtom);
     NS_RELEASE(kInputAtom);
 
@@ -1291,28 +1294,51 @@ static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** a
 }
 
 nsresult
-nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
+nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult,
+                                nsIXBLPrototypeHandler** aSpecialResult)
 {
   nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
   nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
+  
+  nsCOMPtr<nsIXBLPrototypeHandler> firstSpecialHandler;
+  nsCOMPtr<nsIXBLPrototypeHandler> currSpecialHandler;
+
   PRInt32 handlerCount;
   aContent->ChildCount(handlerCount);
   for (PRInt32 j = 0; j < handlerCount; j++) {
     nsCOMPtr<nsIContent> handler;
     aContent->ChildAt(j, *getter_AddRefs(handler));
     
+    PRBool special = PR_FALSE;
+    nsAutoString event;
+    handler->GetAttribute(kNameSpaceID_None, kEventAtom, event);
+    if (event.Equals(NS_LITERAL_STRING("bindingattached")) || 
+        event.Equals(NS_LITERAL_STRING("bindingdetached")))
+      special = PR_TRUE;
+
     nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
     NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));
+    
     if (newHandler) {
-      if (currHandler)
-        currHandler->SetNextHandler(newHandler);
-      else firstHandler = newHandler;
-      currHandler = newHandler;
+      if (special) {
+        if (currSpecialHandler)
+          currSpecialHandler->SetNextHandler(newHandler);
+        else firstSpecialHandler = newHandler;
+        currSpecialHandler = newHandler;
+      }
+      else {
+        if (currHandler)
+          currHandler->SetNextHandler(newHandler);
+        else firstHandler = newHandler;
+        currHandler = newHandler;
+      }
     }
   }
 
   *aResult = firstHandler;
+  *aSpecialResult = firstSpecialHandler;
   NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aSpecialResult);
  
   return NS_OK;
 }

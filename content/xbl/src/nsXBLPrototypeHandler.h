@@ -56,10 +56,16 @@ public:
 
   NS_IMETHOD GetEventName(nsIAtom** aResult);
 
+  NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver);
+  NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver);
+  
 public:
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
   static PRUint32 gRefCnt;
+  
+  static nsIAtom* kBindingAttachedAtom;
+  static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kKeyAtom;
   static nsIAtom* kKeyCodeAtom;
   static nsIAtom* kCharCodeAtom;

@@ -29,6 +29,7 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIDOMEventReceiver;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
 
@@ -50,10 +51,15 @@ public:
 
   NS_IMETHOD GetAllowScripts(PRBool* aResult)=0;
 
+  NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver)=0;
+  NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver)=0;
+
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 
-  NS_IMETHOD GetPrototypeHandler(nsIXBLPrototypeHandler** aHandler)=0;
-  NS_IMETHOD SetPrototypeHandler(nsIXBLPrototypeHandler* aHandler)=0;
+  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler, 
+                                  nsIXBLPrototypeHandler** aSpecialHandler)=0;
+  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler,
+                                  nsIXBLPrototypeHandler* aSpecialHandler)=0;
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;

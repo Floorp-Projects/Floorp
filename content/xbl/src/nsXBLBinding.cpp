@@ -160,8 +160,6 @@ nsIAtom* nsXBLBinding::kSetterAtom = nsnull;
 nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
-nsIAtom* nsXBLBinding::kBindingAttachedAtom = nsnull;
-nsIAtom* nsXBLBinding::kBindingDetachedAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -257,9 +255,7 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
     kNameAtom = NS_NewAtom("name");
     kReadOnlyAtom = NS_NewAtom("readonly");
     kAttachToAtom = NS_NewAtom("attachto");
-    kBindingAttachedAtom = NS_NewAtom("bindingattached");
-    kBindingDetachedAtom = NS_NewAtom("bindingdetached");
-   
+    
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
       entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
@@ -299,7 +295,6 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kReadOnlyAtom);
     NS_RELEASE(kAttachToAtom);
-    NS_RELEASE(kBindingAttachedAtom);
     
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -542,8 +537,14 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
-    mPrototypeBinding->GetPrototypeHandler(getter_AddRefs(handlerChain));
+    nsCOMPtr<nsIXBLPrototypeHandler> specialChain;
+    mPrototypeBinding->GetPrototypeHandlers(getter_AddRefs(handlerChain), getter_AddRefs(specialChain));
   
+    if (specialChain && !*aBinding) {
+      *aBinding = this;
+      NS_ADDREF(*aBinding);
+    }
+
     nsCOMPtr<nsIXBLPrototypeHandler> curr = handlerChain;
     nsXBLEventHandler* currHandler = nsnull;
 
@@ -558,17 +559,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
 
       nsIID iid;
       PRBool found = PR_FALSE;
-      PRBool special = PR_FALSE;
-      if (eventAtom.get() == kBindingAttachedAtom ||
-          eventAtom.get() == kBindingDetachedAtom) {
-        *aBinding = this;
-        NS_ADDREF(*aBinding);
-        special = PR_TRUE;
-      }
-      else
-        GetEventHandlerIID(eventAtom, &iid, &found);
+      GetEventHandlerIID(eventAtom, &iid, &found);
 
-      if (found || special) { 
+      if (found) { 
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
         nsAutoString attachType;
         child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
@@ -607,9 +600,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
         eventAtom->ToString(type);
 
         // Add the event listener.
-        if (special)
-          NS_NewXBLEventHandler(receiver, curr, &handler);
-        else if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+        if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
           nsXBLMouseHandler* mouseHandler;
           NS_NewXBLMouseHandler(receiver, curr, &mouseHandler);
           receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
@@ -682,8 +673,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
 
           currHandler = handler;
 
-          if (!special) // Let the listener manager hold on to the handler.
-            NS_RELEASE(handler);
+          // Let the listener manager hold on to the handler.
+          NS_RELEASE(handler);
         }
       }
 
@@ -997,8 +988,8 @@ nsXBLBinding::ExecuteAttachedHandler()
   if (mNextBinding)
     mNextBinding->ExecuteAttachedHandler();
 
-  if (mFirstHandler)
-    mFirstHandler->BindingAttached();
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
+  mPrototypeBinding->BindingAttached(rec);
 
   return NS_OK;
 }
@@ -1006,8 +997,8 @@ nsXBLBinding::ExecuteAttachedHandler()
 NS_IMETHODIMP 
 nsXBLBinding::ExecuteDetachedHandler()
 {
-  if (mFirstHandler)
-    mFirstHandler->BindingDetached();
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
+  mPrototypeBinding->BindingDetached(rec);
 
   if (mNextBinding)
     mNextBinding->ExecuteDetachedHandler();

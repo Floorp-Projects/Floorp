@@ -53,6 +53,9 @@ public:
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult) = 0;
 
+  NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aRec)=0;
+  NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec)=0;
+
   NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult) = 0;
   NS_IMETHOD SetNextHandler(nsIXBLPrototypeHandler* aHandler) = 0;
 
