@@ -120,9 +120,6 @@ protected:
 
   void DrainOverflowLists();
 
-  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aFloatedFrame);
-
   // XXX CONSTRUCTION
   nsresult CreateNewFrames(nsIPresContext* aPresContext);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);

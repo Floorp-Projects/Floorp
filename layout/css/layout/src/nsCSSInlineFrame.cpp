@@ -143,27 +143,6 @@ nsCSSInlineFrame::GetSkipSides() const
   return skip;
 }
 
-nsPlaceholderFrame*
-nsCSSInlineFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
-                                         nsIFrame*       aFloatedFrame)
-{
-  nsIContent* content;
-  aFloatedFrame->GetContent(content);
-
-  // XXX We should wrap the floated element in a BODY frame...
-  nsPlaceholderFrame* placeholder;
-  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
-  NS_IF_RELEASE(content);
-
-  // Let the placeholder share the same style context as the floated element
-  nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
-  placeholder->SetStyleContext(aPresContext, kidSC);
-  NS_RELEASE(kidSC);
-  
-  return placeholder;
-}
-
 nsresult
 nsCSSInlineFrame::AppendNewFrames(nsIPresContext* aPresContext,
                                   nsIFrame*       aNewFrame)
