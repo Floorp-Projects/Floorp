@@ -244,115 +244,7 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   }
 }
 
-  // Implementation for nsIDOMElement
-nsresult
-nsGenericHTMLElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
-{
-  // XXX need to parse namepsace from name, presume HTML if none
-  // XXX need to uppercase name only if HTML namespace
-  nsAutoString  upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* nameAtom = NS_NewAtom(upper);
-  nsresult rv = mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, aReturn);
-  NS_RELEASE(nameAtom);
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::SetDOMAttribute(const nsString& aName, const nsString& aValue)
-{
-  // XXX need to parse namepsace from name, presume HTML if none
-  // XXX need to uppercase name only if HTML namespace
-  nsAutoString  upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* nameAtom = NS_NewAtom(upper);
-  nsresult rv = mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, aValue, PR_TRUE);
-  NS_RELEASE(nameAtom);
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
-{
-  // XXX need to parse namepsace from name, presume HTML if none
-  // XXX need to uppercase name only if HTML namespace
-  nsAutoString  upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* nameAtom = NS_NewAtom(upper);
-  nsresult rv = mContent->UnsetAttribute(kNameSpaceID_HTML, nameAtom, PR_TRUE);
-  NS_RELEASE(nameAtom);
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
-                                       nsIDOMAttr** aReturn)
-{
-  // XXX need to parse namepsace from name, presume HTML if none
-  // XXX need to uppercase name only if HTML namespace
-  nsAutoString  upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* nameAtom = NS_NewAtom(upper);
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, value)) {
-    *aReturn = new nsDOMAttribute(aName, value);
-  }
-  else {
-    *aReturn = nsnull;
-  }
-  NS_RELEASE(nameAtom);
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetAttributeNode(nsIDOMAttr* aAttribute, nsIDOMAttr** aReturn)
-{
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
-
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
-    nsAutoString name, value;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      res = aAttribute->GetValue(value);
-      if (NS_OK == res) {
-        // XXX need to parse out namespace
-        // XXX need to only uppercase if HTML namespace (or none since this is an HTML element)
-        name.ToUpperCase();
-        nsIAtom* nameAtom = NS_NewAtom(name);
-        mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, value, PR_TRUE);
-        NS_RELEASE(nameAtom);
-      }
-    }
-  }
-  return res;
-}
-
-nsresult
-nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, nsIDOMAttr** aReturn)
-{
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
-
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
-    nsAutoString name;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      // XXX need to parse out namespace
-      // XXX need to only uppercase if HTML namespace (or none since this is an HTML element)
-      name.ToUpperCase();
-      nsIAtom* nameAtom = NS_NewAtom(name);
-      mContent->UnsetAttribute(kNameSpaceID_HTML, nameAtom, PR_TRUE);
-      NS_RELEASE(nameAtom);
-    }
-  }
-
-  return res;
-}
-
-
+// Implementation for nsIDOMHTMLElement
 nsresult
 nsGenericHTMLElement::GetId(nsString& aId)
 {
@@ -516,6 +408,27 @@ static nsGenericHTMLElement::EnumTable kDirTable[] = {
   { 0 }
 };
 #endif
+
+nsresult 
+nsGenericHTMLElement::ParseAttributeString(const nsString& aStr, 
+                                           nsIAtom*& aName,
+                                           PRInt32& aNameSpaceID)
+{
+  nsAutoString  upper;
+  aStr.ToUpperCase(upper);  
+  aName = NS_NewAtom(upper);
+  aNameSpaceID = kNameSpaceID_HTML;
+  
+  return NS_OK;
+}
+
+nsresult 
+nsGenericHTMLElement::GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                         nsIAtom*& aPrefix)
+{
+  aPrefix = nsnull;
+  return NS_OK;
+}
 
 nsresult
 nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,

@@ -33,6 +33,7 @@ class nsVoidArray;
 class nsIXMLDocument;
 class nsIUnicharInputStream;
 class nsIParser;
+class nsINameSpace;
 
 typedef enum {
   eXMLContentSinkState_InProlog,
@@ -104,7 +105,7 @@ protected:
   void    PushNameSpacesFrom(const nsIParserNode& aNode);
   nsIAtom*  CutNameSpacePrefix(nsString& aString);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
-  void    PopNameSpaces();
+  nsINameSpace*    PopNameSpaces();
   PRBool  IsHTMLNameSpace(PRInt32 aId);
 
   nsIContent* GetCurrentContent();

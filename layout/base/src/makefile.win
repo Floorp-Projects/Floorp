@@ -29,6 +29,8 @@ CPPSRCS =				\
 	nsContentIterator.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
+	nsDOMAttribute.cpp		\
+	nsDOMAttributeMap.cpp		\
 	nsFrameImageLoader.cpp		\
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
@@ -54,9 +56,11 @@ EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsGenericElement.obj 	\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
-	.\$(OBJDIR)\nsContentIterator.obj 	 	\
+	.\$(OBJDIR)\nsContentIterator.obj 	\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
+	.\$(OBJDIR)\nsDOMAttribute.obj		\
+	.\$(OBJDIR)\nsDOMAttributeMap.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\

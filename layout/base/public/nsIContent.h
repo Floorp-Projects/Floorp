@@ -91,6 +91,32 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult) = 0;
 
   /**
+   * Parses an attribute string into an atom that represents the
+   * attribute name and an identifier that represents the namespace
+   * of the attribute. The namespace identifier may be computed
+   * from a namespace prefix that must be interpreted in the context
+   * of the content itself.
+   *
+   * @param aStr the unparsed attribute string
+   * @param aName out parameter representing the name of the attribute
+   * @param aNameSpaceID out parameter reprsenting the namespace 
+   *                     of the attribute
+   */
+  NS_IMETHOD ParseAttributeString(const nsString& aStr, 
+                                  nsIAtom*& aName,
+                                  PRInt32& aNameSpaceID) = 0;
+
+  /**
+   * Returns the prefix for the specified name space identifier in 
+   * the context of the content element itself.
+   *
+   * @param aNameSpaceID identifier of the namespace
+   * @param aPrefix out parameter representing the prefix for the namespace
+   */
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) = 0;
+
+  /**
    * Set attribute values. All attribute values are assumed to have a
    * canonical String representation that can be used for these
    * methods. The setAttribute method is assumed to perform a translation

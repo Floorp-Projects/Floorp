@@ -25,6 +25,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
+#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -52,9 +53,6 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init((nsIContent *)(nsIXMLContent *)this, aTag);
-  mNameSpacePrefix = nsnull;
-  mNameSpaceID = kNameSpaceID_None;
-  mScriptObject = nsnull;
   mIsLink = PR_FALSE;
 
   if (nsnull == kLinkAtom) {
@@ -71,7 +69,6 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
  
 nsXMLElement::~nsXMLElement()
 {
-  NS_IF_RELEASE(mNameSpacePrefix);
   nsrefcnt  refcnt;
   NS_RELEASE2(kLinkAtom, refcnt);
   NS_RELEASE2(kHrefAtom, refcnt);
@@ -96,92 +93,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
 NS_IMPL_ADDREF(nsXMLElement)
 NS_IMPL_RELEASE(nsXMLElement)
 
-NS_IMETHODIMP 
-nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  // XXX Yuck! Reaching into the generic content object isn't good.
-  nsDOMSlots *slots = mInner.GetDOMSlots();
-  if (nsnull == slots->mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    nsAutoString tag;
-    nsIContent* parent;
-
-    mInner.GetTagName(tag);
-    mInner.GetParent(parent);
-
-    res = factory->NewScriptXMLElement(tag, aContext, 
-				       (nsISupports *)(nsIDOMElement *)this,
-				       parent, (void**)&slots->mScriptObject);
-    NS_IF_RELEASE(parent);
-    NS_RELEASE(factory);
-    
-    char tagBuf[50];
-    tag.ToCString(tagBuf, sizeof(tagBuf));
-    
-    nsIDocument *document;
-    mInner.GetDocument(document);
-    if (nsnull != document) {
-      aContext->AddNamedReference((void *)&slots->mScriptObject,
-                                  slots->mScriptObject,
-                                  tagBuf);
-      NS_RELEASE(document);
-    }
-  }
-  *aScriptObject = slots->mScriptObject;
-  return res;
-}
-
-NS_IMETHODIMP 
-nsXMLElement::SetScriptObject(void *aScriptObject)
-{
-  return mInner.SetScriptObject(aScriptObject);
-}
-
-NS_IMETHODIMP 
-nsXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
-{
-  NS_IF_RELEASE(mNameSpacePrefix);
-
-  mNameSpacePrefix = aNameSpacePrefix;
-
-  NS_IF_ADDREF(mNameSpacePrefix);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXMLElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
-{
-  aNameSpacePrefix = mNameSpacePrefix;
-  
-  NS_IF_ADDREF(mNameSpacePrefix);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLElement::SetNameSpaceID(PRInt32 aNameSpaceID)
-{
-  mNameSpaceID = aNameSpaceID;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXMLElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
-{
-  aNameSpaceID = mNameSpaceID;
-  
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
@@ -292,9 +203,6 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mInner.CopyInnerTo((nsIContent *)(nsIXMLContent *)this, &it->mInner);
-  it->mNameSpacePrefix = mNameSpacePrefix;
-  NS_IF_ADDREF(mNameSpacePrefix);
-  it->mNameSpaceID = mNameSpaceID;
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 

@@ -592,13 +592,6 @@ nsHTMLDocument::CreateEntityReference(const nsString& aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::CreateAttribute(const nsString& aName, 
-                                nsIDOMAttr** aReturn)
-{
-  // XXX To be implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)

@@ -302,14 +302,6 @@ nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget, const nsStri
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn)
-{
-  // XXX TBI
-  *aReturn = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
- 
-NS_IMETHODIMP    
 nsXMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {

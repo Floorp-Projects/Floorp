@@ -40,6 +40,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetCollection.h"
+#include "nsDOMAttribute.h"
 
 #include "nsCSSPropIDs.h"
 #include "nsCSSProps.h"
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSDocumentIID, NS_IDOMNSDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
@@ -1104,8 +1106,16 @@ NS_IMETHODIMP
 nsDocument::CreateAttribute(const nsString& aName, 
                             nsIDOMAttr** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAutoString value;
+  nsDOMAttribute* attribute;
+  
+  value.Truncate();
+  attribute = new nsDOMAttribute(nsnull, aName, value);
+  if (nsnull == attribute) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return attribute->QueryInterface(kIDOMAttrIID, (void**)aReturn);
 }
 
 NS_IMETHODIMP    

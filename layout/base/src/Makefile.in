@@ -32,6 +32,8 @@ CPPSRCS =				\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
+	nsDOMAttribute.cpp		\
+	nsDOMAttributeMap.cpp		\
 	nsFrameImageLoader.cpp		\
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
