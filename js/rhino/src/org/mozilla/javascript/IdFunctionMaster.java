@@ -35,20 +35,23 @@
 
 package org.mozilla.javascript;
 
-/** Master for id-based functions that knows their properties and how to
- ** execute them
+/**
+ * Master for id-based functions that knows their properties and how to
+ * execute them.
  */
-public interface IdFunctionMaster {
-    /** 'thisObj' will be null if invoked as constructor, in which case
-     ** instance of Scriptable should be returned */
-    public Object execMethod(int methodId, IdFunction function,
-                             Context cx, Scriptable scope,
-                             Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+public interface IdFunctionMaster
+{
+    /**
+     * 'thisObj' will be null if invoked as constructor, in which case
+     * instance of Scriptable should be returned
+     */
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args);
 
-    /** Get arity or defined argument count for method with given id.
-     ** Should return -1 if methodId is not known or can not be used
-     ** with execMethod call */
-    public int methodArity(int methodId);
+    /**
+     * Get arity or defined argument count for the given {@link IdFunction}
+     * instance.
+     */
+    public int methodArity(IdFunction f);
 }
 

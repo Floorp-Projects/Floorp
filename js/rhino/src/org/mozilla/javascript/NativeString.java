@@ -88,10 +88,10 @@ final class NativeString extends IdScriptable {
         return super.getIdValue(id);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case ConstructorId_fromCharCode:   return 1;
 
                 case Id_constructor:               return 1;
@@ -129,16 +129,14 @@ final class NativeString extends IdScriptable {
                 case Id_replace:                   return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case ConstructorId_fromCharCode: {
                     int N = args.length;
                     if (N < 1)
@@ -178,11 +176,11 @@ final class NativeString extends IdScriptable {
                     String target = ScriptRuntime.toString(thisObj);
                     double pos = ScriptRuntime.toInteger(args, 0);
                     if (pos < 0 || pos >= target.length()) {
-                        if (methodId == Id_charAt) return "";
+                        if (f.methodId == Id_charAt) return "";
                         else return ScriptRuntime.NaNobj;
                     }
                     char c = target.charAt((int)pos);
-                    if (methodId == Id_charAt) return String.valueOf(c);
+                    if (f.methodId == Id_charAt) return String.valueOf(c);
                     else return wrap_int(c);
                 }
 
@@ -262,7 +260,7 @@ final class NativeString extends IdScriptable {
                 case Id_equalsIgnoreCase: {
                     String s1 = ScriptRuntime.toString(thisObj);
                     String s2 = ScriptRuntime.toString(args, 0);
-                    return wrap_boolean(methodId == Id_equals
+                    return wrap_boolean(f.methodId == Id_equals
                         ? s1.equals(s2) : s1.equalsIgnoreCase(s2));
                 }
 
@@ -279,7 +277,7 @@ final class NativeString extends IdScriptable {
                         replace(cx, scope, thisObj, args);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static NativeString realThis(Scriptable thisObj, IdFunction f)

@@ -81,33 +81,34 @@ final class NativeError extends IdScriptable
         return obj;
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            if (methodId == Id_constructor) return 1;
-            if (methodId == Id_toString) return 0;
-            if (methodId == Id_toSource) return 0;
+            switch (f.methodId) {
+              case Id_constructor: return 1;
+              case Id_toString: return 0;
+              case Id_toSource: return 0;
+            }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            if (methodId == Id_constructor) {
+            switch (f.methodId) {
+              case Id_constructor:
                 return make(cx, scope, f, args);
 
-            } else if (methodId == Id_toString) {
+              case Id_toString:
                 return js_toString(thisObj);
 
-            } else if (methodId == Id_toSource) {
+              case Id_toSource:
                 return js_toSource(cx, scope, thisObj);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static String js_toString(Scriptable thisObj)

@@ -54,7 +54,6 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeGlobal obj = new NativeGlobal();
-        obj.scopeSlaveFlag = true;
 
         for (int id = 1; id <= LAST_SCOPE_FUNCTION_ID; ++id) {
             String name;
@@ -74,8 +73,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 default:
                     Kit.codeBug(); name = null;
             }
-            IdFunction.define(scope, name, obj, id,
-                              ScriptableObject.DONTENUM, sealed);
+            IdFunction f = new IdFunction(FTAG, obj, name, id);
+            f.defineAsScopeProperty(scope, sealed);
         }
 
         ScriptableObject.defineProperty(scope, "NaN",
@@ -110,7 +109,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                         newObject(cx, scope, "Error",
                                                   ScriptRuntime.emptyArgs);
             errorProto.put("name", errorProto, name);
-            IdFunction ctor = new IdFunction(obj, name, Id_new_CommonError);
+            IdFunction ctor = new IdFunction(FTAG, obj, name,
+                                             Id_new_CommonError);
             ctor.initAsConstructor(scope, errorProto);
             if (sealed) {
                 ctor.sealObject();
@@ -124,23 +124,21 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         }
     }
 
-    public Object execMethod(int methodId, IdFunction function, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
-        if (scopeSlaveFlag) {
-            switch (methodId) {
+        if (f.hasTag(FTAG)) {
+            switch (f.methodId) {
                 case Id_decodeURI:
                 case Id_decodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return decode(cx, str, methodId == Id_decodeURI);
+                    return decode(cx, str, f.methodId == Id_decodeURI);
                 }
 
                 case Id_encodeURI:
                 case Id_encodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return encode(cx, str, methodId == Id_encodeURI);
+                    return encode(cx, str, f.methodId == Id_encodeURI);
                 }
 
                 case Id_escape:
@@ -185,16 +183,16 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_new_CommonError:
                     // The implementation of all the ECMA error constructors
                     // (SyntaxError, TypeError, etc.)
-
-                    return NativeError.make(cx, scope, function, args);
+                    return NativeError.make(cx, scope, f, args);
             }
         }
-        throw IdFunction.onBadMethodId(this, methodId);
+        throw f.unknown();
     }
 
-    public int methodArity(int methodId) {
-        if (scopeSlaveFlag) {
-            switch (methodId) {
+    public int methodArity(IdFunction f)
+    {
+        if (f.hasTag(FTAG)) {
+            switch (f.methodId) {
                 case Id_decodeURI:           return 1;
                 case Id_decodeURIComponent:  return 1;
                 case Id_encodeURI:           return 1;
@@ -211,7 +209,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_new_CommonError:     return 1;
             }
         }
-        return -1;
+        throw f.unknown();
     }
 
     /**
@@ -474,9 +472,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     {
         if (functionObj instanceof IdFunction) {
             IdFunction function = (IdFunction)functionObj;
-            if (function.master instanceof NativeGlobal
-                && function.getMethodId() == Id_eval)
-            {
+            if (function.hasTag(FTAG) && function.methodId == Id_eval) {
                 return true;
             }
         }
@@ -729,6 +725,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         return utf8Length;
     }
 
+    private static final Object FTAG = new Object();
+
     private static final int
         Id_decodeURI           =  1,
         Id_decodeURIComponent  =  2,
@@ -746,7 +744,4 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         LAST_SCOPE_FUNCTION_ID = 12,
 
         Id_new_CommonError     = 13;
-
-    private boolean scopeSlaveFlag;
-
 }

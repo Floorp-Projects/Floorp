@@ -72,9 +72,9 @@ final class NativeObjectPrototype extends NativeObject
         addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
-        switch (methodId) {
+        switch (f.methodId) {
             case Id_constructor:           return 1;
             case Id_toString:              return 0;
             case Id_toLocaleString:        return 0;
@@ -84,15 +84,13 @@ final class NativeObjectPrototype extends NativeObject
             case Id_isPrototypeOf:         return 1;
             case Id_toSource:              return 0;
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
-        switch (methodId) {
+        switch (f.methodId) {
             case Id_constructor: {
                 if (thisObj != null) {
                     // BaseFunction.construct will set up parent, proto
@@ -164,7 +162,7 @@ final class NativeObjectPrototype extends NativeObject
             case Id_toSource:
                 return toSource(cx, scope, thisObj, args);
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static String toSource(Context cx, Scriptable scope,

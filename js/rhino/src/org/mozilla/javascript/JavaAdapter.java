@@ -168,24 +168,29 @@ public final class JavaAdapter implements IdFunctionMaster
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         JavaAdapter obj = new JavaAdapter();
-        IdFunction.defineConstructor(scope, "JavaAdapter", obj, Id_JavaAdapter,
-                                     ScriptableObject.DONTENUM, sealed);
+        new IdFunction(FTAG, obj, "JavaAdapter", Id_JavaAdapter)
+            .defineAsScopeProperty(scope, sealed);
     }
 
-    public Object execMethod(int methodId, IdFunction function, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
-        if (methodId == Id_JavaAdapter) {
-            return js_createAdpter(cx, scope, args);
+        if (f.hasTag(FTAG)) {
+            if (f.methodId == Id_JavaAdapter) {
+                return js_createAdpter(cx, scope, args);
+            }
         }
-        throw IdFunction.onBadMethodId(this, methodId);
+        throw f.unknown();
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
-        if (methodId == Id_JavaAdapter) { return 1; }
-        throw IdFunction.onBadMethodId(this, methodId);
+        if (f.hasTag(FTAG)) {
+            if (f.methodId == Id_JavaAdapter) {
+                return 1;
+            }
+        }
+        throw f.unknown();
     }
 
     public static Object convertResult(Object result, Class c)
@@ -1226,5 +1231,6 @@ public final class JavaAdapter implements IdFunctionMaster
         return array;
     }
 
+    private static final Object FTAG = new Object();
     private static final int Id_JavaAdapter = 1;
 }

@@ -147,18 +147,16 @@ final class NativeCallPrototype extends IdScriptable
         return "Call";
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
-        if (methodId == Id_constructor) return 1;
-        return super.methodArity(methodId);
+        if (f.methodId == Id_constructor) return 1;
+        return super.methodArity(f);
     }
 
-    public Object execMethod(int methodId, IdFunction f,
-                             Context cx, Scriptable scope,
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
-        if (methodId == Id_constructor) {
+        if (f.methodId == Id_constructor) {
             if (thisObj != null) {
                 throw Context.reportRuntimeError1("msg.only.from.new", "Call");
             }
@@ -167,7 +165,7 @@ final class NativeCallPrototype extends IdScriptable
             result.setPrototype(getObjectPrototype(scope));
             return result;
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     protected String getIdName(int id)

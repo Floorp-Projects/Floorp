@@ -84,9 +84,9 @@ final class NativeMath extends IdScriptable
         return super.getIdValue(id);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
-        switch (methodId) {
+        switch (f.methodId) {
             case Id_toSource: return 0;
             case Id_abs:      return 1;
             case Id_acos:     return 1;
@@ -107,16 +107,14 @@ final class NativeMath extends IdScriptable
             case Id_sqrt:     return 1;
             case Id_tan:      return 1;
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         double x;
-        switch (methodId) {
+        switch (f.methodId) {
             case Id_toSource:
                 return "Math";
 
@@ -130,7 +128,7 @@ final class NativeMath extends IdScriptable
             case Id_asin:
                 x = ScriptRuntime.toNumber(args, 0);
                 if (x == x && -1.0 <= x && x <= 1.0) {
-                    x = (methodId == Id_acos) ? Math.acos(x) : Math.asin(x);
+                    x = (f.methodId == Id_acos) ? Math.acos(x) : Math.asin(x);
                 } else {
                     x = Double.NaN;
                 }
@@ -178,7 +176,7 @@ final class NativeMath extends IdScriptable
 
             case Id_max:
             case Id_min:
-                x = (methodId == Id_max)
+                x = (f.methodId == Id_max)
                     ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
                 for (int i = 0; i != args.length; ++i) {
                     double d = ScriptRuntime.toNumber(args[i]);
@@ -186,7 +184,7 @@ final class NativeMath extends IdScriptable
                         x = d; // NaN
                         break;
                     }
-                    if (methodId == Id_max) {
+                    if (f.methodId == Id_max) {
                         // if (x < d) x = d; does not work due to -0.0 >= +0.0
                         x = Math.max(x, d);
                     } else {
@@ -242,7 +240,7 @@ final class NativeMath extends IdScriptable
                 break;
 
             default:
-                return super.execMethod(methodId, f, cx, scope, thisObj, args);
+                return super.execMethod(f, cx, scope, thisObj, args);
         }
         return wrap_double(x);
     }

@@ -97,10 +97,10 @@ final class NativeDate extends IdScriptable
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case ConstructorId_now:     return 0;
                 case ConstructorId_parse:   return 1;
                 case ConstructorId_UTC:     return 1;
@@ -151,15 +151,14 @@ final class NativeDate extends IdScriptable
                 case Id_setYear:            return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
+            int methodId = f.methodId;
             switch (methodId) {
                 case ConstructorId_now:
                     return wrap_double(now());
@@ -349,7 +348,7 @@ final class NativeDate extends IdScriptable
             }
         }
 
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static NativeDate realThis(Scriptable thisObj, IdFunction f)

@@ -42,8 +42,22 @@ public class IdFunction extends BaseFunction
     public IdFunction(IdFunctionMaster master, String name, int id)
     {
         this.functionName = name;
+        this.tag = null;
         this.master = master;
         this.methodId = id;
+    }
+
+    public IdFunction(Object tag, IdFunctionMaster master, String name, int id)
+    {
+        this.tag = tag;
+        this.functionName = name;
+        this.master = master;
+        this.methodId = id;
+    }
+
+    public final boolean hasTag(Object tag)
+    {
+        return this.tag == tag;
     }
 
     public static void define(Scriptable scope, String name,
@@ -61,23 +75,32 @@ public class IdFunction extends BaseFunction
 
     public static void define(Scriptable scope, String name,
                               IdFunctionMaster master, int id,
-                              int attributes, boolean sealed)
+                              int attributes, boolean seal)
     {
         IdFunction f = new IdFunction(master, name, id);
-        f.setParentScope(scope);
-        if (sealed) { f.sealObject(); }
-        ScriptableObject.defineProperty(scope, name, f, attributes);
+        f.defineAsScopeProperty(scope, attributes, seal);
     }
 
     public static void defineConstructor(Scriptable scope, String name,
                                          IdFunctionMaster master, int id,
-                                         int attributes, boolean sealed)
+                                         int attributes, boolean seal)
     {
         IdFunction f = new IdFunction(master, name, id);
-        f.setParentScope(scope);
         f.useCallAsConstructor = true;
-        if (sealed) { f.sealObject(); }
-        ScriptableObject.defineProperty(scope, name, f, attributes);
+        f.defineAsScopeProperty(scope, attributes, seal);
+    }
+
+    public final void defineAsScopeProperty(Scriptable scope, boolean seal)
+    {
+        defineAsScopeProperty(scope, ScriptableObject.DONTENUM, seal);
+    }
+
+    public void defineAsScopeProperty(Scriptable scope, int attributes,
+                                      boolean seal)
+    {
+        setParentScope(scope);
+        if (seal) { sealObject(); }
+        ScriptableObject.defineProperty(scope, functionName, this, attributes);
     }
 
     public final int getMethodId()
@@ -101,7 +124,7 @@ public class IdFunction extends BaseFunction
                        Object[] args)
         throws JavaScriptException
     {
-        return master.execMethod(methodId, this, cx, scope, thisObj, args);
+        return master.execMethod(this, cx, scope, thisObj, args);
     }
 
     public Scriptable createObject(Context cx, Scriptable scope)
@@ -140,11 +163,7 @@ public class IdFunction extends BaseFunction
 
     public int getArity()
     {
-        int arity = master.methodArity(methodId);
-        if (arity < 0) {
-            throw onBadMethodId(master, methodId);
-        }
-        return arity;
+        return master.methodArity(this);
     }
 
     public int getLength() { return getArity(); }
@@ -160,14 +179,15 @@ public class IdFunction extends BaseFunction
         setImmunePrototypeProperty(prototype);
     }
 
-    static RuntimeException onBadMethodId(IdFunctionMaster master, int id)
+    public final RuntimeException unknown()
     {
         // It is program error to call id-like methods for unknown or
         // non-function id
-        return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
+        return new RuntimeException("BAD FUNCTION ID="+methodId+" MASTER="+master);
     }
 
-    IdFunctionMaster master;
-    private int methodId;
+    private final Object tag;
+    private final IdFunctionMaster master;
+    public final int methodId;
     private boolean useCallAsConstructor;
 }

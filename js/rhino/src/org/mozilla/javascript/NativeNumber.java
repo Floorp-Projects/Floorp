@@ -86,9 +86,9 @@ final class NativeNumber extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(IdFunction f) {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_constructor:     return 1;
                 case Id_toString:        return 1;
                 case Id_toLocaleString:  return 1;
@@ -99,16 +99,14 @@ final class NativeNumber extends IdScriptable {
                 case Id_toPrecision:     return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_constructor: {
                     double val = (args.length >= 1)
                         ? ScriptRuntime.toNumber(args[0]) : 0.0;
@@ -154,7 +152,7 @@ final class NativeNumber extends IdScriptable {
                                   1, 0);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static double realThisValue(Scriptable thisObj, IdFunction f)

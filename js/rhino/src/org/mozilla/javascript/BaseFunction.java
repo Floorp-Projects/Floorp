@@ -155,10 +155,10 @@ public class BaseFunction extends IdScriptable implements Function {
         super.deleteIdValue(id);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_constructor: return 1;
                 case Id_toString:    return 1;
                 case Id_toSource:    return 1;
@@ -166,16 +166,14 @@ public class BaseFunction extends IdScriptable implements Function {
                 case Id_call:        return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod(int methodId, IdFunction f, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
               case Id_constructor:
                 return jsConstructor(cx, scope, args);
 
@@ -202,11 +200,11 @@ public class BaseFunction extends IdScriptable implements Function {
 
               case Id_apply:
               case Id_call:
-                return applyOrCall(methodId == Id_apply, cx, scope,
+                return applyOrCall(f.methodId == Id_apply, cx, scope,
                                    thisObj, args);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private BaseFunction realFunction(Scriptable thisObj, IdFunction f)

@@ -371,20 +371,21 @@ public abstract class IdScriptable extends ScriptableObject
 
     /** 'thisObj' will be null if invoked as constructor, in which case
      ** instance of Scriptable should be returned. */
-    public Object execMethod(int methodId, IdFunction function,
-                             Context cx, Scriptable scope,
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
-        throw IdFunction.onBadMethodId(this, methodId);
+        throw f.unknown();
     }
 
-    /** Get arity or defined argument count for method with given id.
-     ** Should return -1 if methodId is not known or can not be used
-     ** with execMethod call. */
-    public int methodArity(int methodId)
+    /**
+     * Get arity or defined argument count for the given {@link IdFunction}
+     * instance.
+     * If subclass overrides ths method, it should always calls
+     * <tt>super.methodArity(f)</tt> for unknown functions.
+     */
+    public int methodArity(IdFunction f)
     {
-        return -1;
+        throw f.unknown();
     }
 
     /** Get maximum id mapNameToId can generate */

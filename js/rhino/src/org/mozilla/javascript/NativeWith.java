@@ -49,7 +49,8 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         NativeWith obj = new NativeWith();
         obj.prototypeFlag = true;
 
-        IdFunction ctor = new IdFunction(obj, "constructor", Id_constructor);
+        IdFunction ctor = new IdFunction(FTAG, obj, "constructor",
+                                         Id_constructor);
         ctor.initAsConstructor(scope, obj);
         if (sealed) { ctor.sealObject(); }
 
@@ -144,36 +145,31 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         return prototype.hasInstance(value);
     }
 
-    public Object execMethod(int methodId, IdFunction function, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            if (methodId == Id_constructor) {
+        if (f.hasTag(FTAG)) {
+            if (f.methodId == Id_constructor) {
                 throw Context.reportRuntimeError1
                     ("msg.cant.call.indirect", "With");
             }
         }
-        throw IdFunction.onBadMethodId(this, methodId);
+        throw f.unknown();
     }
 
-    public int methodArity(int methodId) {
-        if (prototypeFlag) {
-            if (methodId == Id_constructor) { return 0; }
+    public int methodArity(IdFunction f)
+    {
+        if (f.hasTag(FTAG)) {
+            if (f.methodId == Id_constructor) { return 0; }
         }
-        return -1;
+        throw f.unknown();
     }
 
     static boolean isWithFunction(Object functionObj)
     {
         if (functionObj instanceof IdFunction) {
-            IdFunction function = (IdFunction)functionObj;
-            if (function.master instanceof NativeWith
-                && function.getMethodId() == Id_constructor)
-            {
-                return true;
-            }
+            IdFunction f = (IdFunction)functionObj;
+            return f.hasTag(FTAG) && f.methodId == Id_constructor;
         }
         return false;
     }
@@ -190,6 +186,8 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         thisObj.setParentScope(scope);
         return thisObj;
     }
+
+    private static final Object FTAG = new Object();
 
     private static final int
         Id_constructor = 1;

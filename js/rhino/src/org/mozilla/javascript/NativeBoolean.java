@@ -66,23 +66,25 @@ final class NativeBoolean extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
-    public int methodArity(int methodId) {
-        if (prototypeFlag) {
-            if (methodId == Id_constructor) return 1;
-            if (methodId == Id_toString) return 0;
-            if (methodId == Id_toSource) return 0;
-            if (methodId == Id_valueOf) return 0;
-        }
-        return super.methodArity(methodId);
-    }
-
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            if (methodId == Id_constructor) {
+            switch (f.methodId) {
+              case Id_constructor: return 1;
+              case Id_toString:    return 0;
+              case Id_toSource:    return 0;
+              case Id_valueOf:     return 0;
+            }
+        }
+        return super.methodArity(f);
+    }
+
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
+    {
+        if (prototypeFlag) {
+            switch (f.methodId) {
+              case Id_constructor: {
                 boolean b = ScriptRuntime.toBoolean(args, 0);
                 if (thisObj == null) {
                     // new Boolean(val) creates a new boolean object.
@@ -90,22 +92,23 @@ final class NativeBoolean extends IdScriptable {
                 }
                 // Boolean(val) converts val to a boolean.
                 return wrap_boolean(b);
+              }
 
-            } else if (methodId == Id_toString) {
+              case Id_toString:
                 return realThisBoolean(thisObj, f) ? "true" : "false";
 
-            } else if (methodId == Id_toSource) {
+              case Id_toSource:
                 if (realThisBoolean(thisObj, f))
                     return "(new Boolean(true))";
                 else
                     return "(new Boolean(false))";
 
-            } else if (methodId == Id_valueOf) {
+              case Id_valueOf:
                 return wrap_boolean(realThisBoolean(thisObj, f));
-            }
+          }
         }
 
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static boolean realThisBoolean(Scriptable thisObj, IdFunction f)
@@ -117,10 +120,12 @@ final class NativeBoolean extends IdScriptable {
 
     protected String getIdName(int id) {
         if (prototypeFlag) {
-            if (id == Id_constructor) return "constructor";
-            if (id == Id_toString) return "toString";
-            if (id == Id_toSource) return "toSource";
-            if (id == Id_valueOf) return "valueOf";
+            switch (id) {
+              case Id_constructor: return "constructor";
+              case Id_toString:    return "toString";
+              case Id_toSource:    return "toSource";
+              case Id_valueOf:     return "valueOf";
+            }
         }
         return null;
     }

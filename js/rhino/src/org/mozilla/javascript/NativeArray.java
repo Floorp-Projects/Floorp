@@ -125,10 +125,10 @@ public class NativeArray extends IdScriptable {
         super.setIdValue(id, value);
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_constructor:     return 1;
                 case Id_toString:        return 0;
                 case Id_toLocaleString:  return 1;
@@ -145,16 +145,14 @@ public class NativeArray extends IdScriptable {
                 case Id_slice:           return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_constructor:
                     return jsConstructor(cx, scope, args, f, thisObj == null);
 
@@ -200,7 +198,7 @@ public class NativeArray extends IdScriptable {
                     return js_slice(cx, thisObj, args);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     public Object get(int index, Scriptable start)

@@ -2621,10 +2621,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         lastIndex = value;
     }
 
-    public int methodArity(int methodId)
+    public int methodArity(IdFunction f)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
                 case Id_compile:  return 1;
                 case Id_toString: return 0;
                 case Id_toSource: return 0;
@@ -2633,16 +2633,14 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 case Id_prefix:   return 1;
             }
         }
-        return super.methodArity(methodId);
+        return super.methodArity(f);
     }
 
-    public Object execMethod(int methodId, IdFunction f, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
-        throws JavaScriptException
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
               case Id_compile:
                 return realThis(thisObj, f).compile(cx, scope, args);
 
@@ -2662,7 +2660,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 return realThis(thisObj, f).execSub(cx, scope, args, PREFIX);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static NativeRegExp realThis(Scriptable thisObj, IdFunction f)
