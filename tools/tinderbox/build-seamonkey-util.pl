@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.261 $ ';
+$::UtilsVersion = '$Revision: 1.262 $ ';
 
 package TinderUtils;
 
@@ -1098,12 +1098,14 @@ sub get_profile_dir {
         }
         if ($Settings::VendorName) {
           $profile_dir .= "\\$Settings::VendorName\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
-          $profile_dir = <"$profile_dir*">;
         }
         else {
           $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
         }
         $profile_dir =~ s|\\|/|g;
+        if ($Settings::VendorName) {
+          $profile_dir = <"$profile_dir*">;
+        }
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
     } elsif ($Settings::OS eq "Darwin") {
