@@ -32,6 +32,13 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= nsWalletViewerFactory.cpp
 
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../cookieviewer \
+		-I$(srcdir)/../editor \
+		-I$(srcdir)/../signonviewer \
+		-I$(srcdir)/../walletpreview \
+		$(NULL)
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libcookieviewer_s.a \
 		$(DIST)/lib/libsignonviewer_s.a \

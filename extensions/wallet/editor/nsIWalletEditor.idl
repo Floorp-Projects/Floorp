@@ -44,7 +44,4 @@ interface nsIWalletEditor : nsISupports
 // {F86A2E60-1C6A-11d3-ABA9-0080C787AD96}
 #define NS_WALLETEDITOR_CID \
 { 0xf86a2e60, 0x1c6a, 0x11d3, { 0xab, 0xa9, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 } }
-
-extern nsresult
-NS_NewWalletEditor(nsIWalletEditor** aWalletEditor);
 %}

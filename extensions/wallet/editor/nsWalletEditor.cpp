@@ -31,40 +31,9 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIWalletEditor.h"
+#include "nsWalletEditor.h"
 
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-
-class WalletEditorImpl : public nsIWalletEditor
-{
-public:
-  WalletEditorImpl();
-  virtual ~WalletEditorImpl();
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIWalletEditor interface
-  NS_DECL_NSIWALLETEDITOR
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewWalletEditor(nsIWalletEditor** aWalletEditor)
-{
-  NS_PRECONDITION(aWalletEditor != nsnull, "null ptr");
-  if (!aWalletEditor) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aWalletEditor = new WalletEditorImpl();
-  if (! *aWalletEditor) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(*aWalletEditor);
-  return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +46,7 @@ WalletEditorImpl::~WalletEditorImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(WalletEditorImpl, nsIWalletEditor::GetIID());
+NS_IMPL_ISUPPORTS1(WalletEditorImpl, nsIWalletEditor);
 
 NS_IMETHODIMP
 WalletEditorImpl::GetValue(char** aValue)

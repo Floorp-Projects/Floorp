@@ -31,40 +31,9 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsISignonViewer.h"
+#include "nsSignonViewer.h"
 
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-
-class SignonViewerImpl : public nsISignonViewer
-{
-public:
-  SignonViewerImpl();
-  virtual ~SignonViewerImpl();
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsISignonViewer interface
-  NS_DECL_NSISIGNONVIEWER
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewSignonViewer(nsISignonViewer** aSignonViewer)
-{
-  NS_PRECONDITION(aSignonViewer != nsnull, "null ptr");
-  if (!aSignonViewer) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aSignonViewer = new SignonViewerImpl();
-  if (! *aSignonViewer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(*aSignonViewer);
-  return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 

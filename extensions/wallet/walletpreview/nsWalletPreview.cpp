@@ -31,40 +31,9 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIWalletPreview.h"
+#include "nsWalletPreview.h"
 
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-
-class WalletPreviewImpl : public nsIWalletPreview
-{
-public:
-  WalletPreviewImpl();
-  virtual ~WalletPreviewImpl();
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIWalletPreview interface
-  NS_DECL_NSIWALLETPREVIEW
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewWalletPreview(nsIWalletPreview** aWalletPreview)
-{
-  NS_PRECONDITION(aWalletPreview != nsnull, "null ptr");
-  if (!aWalletPreview) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aWalletPreview = new WalletPreviewImpl();
-  if (! *aWalletPreview) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(*aWalletPreview);
-  return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +46,7 @@ WalletPreviewImpl::~WalletPreviewImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(WalletPreviewImpl, nsIWalletPreview::GetIID());
+NS_IMPL_ISUPPORTS1(WalletPreviewImpl, nsIWalletPreview)
 
 NS_IMETHODIMP
 WalletPreviewImpl::GetPrefillValue(char** aValue)

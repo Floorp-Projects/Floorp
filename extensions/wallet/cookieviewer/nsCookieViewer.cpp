@@ -31,40 +31,9 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsICookieViewer.h"
+#include "nsCookieViewer.h"
 
-static NS_DEFINE_IID(kICookieServiceIID, NS_ICOOKIESERVICE_IID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-
-class CookieViewerImpl : public nsICookieViewer
-{
-public:
-  CookieViewerImpl();
-  virtual ~CookieViewerImpl();
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsICookieViewer interface
-  NS_DECL_NSICOOKIEVIEWER
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewCookieViewer(nsICookieViewer** aCookieViewer)
-{
-  NS_PRECONDITION(aCookieViewer != nsnull, "null ptr");
-  if (!aCookieViewer) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aCookieViewer = new CookieViewerImpl();
-  if (! *aCookieViewer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(*aCookieViewer);
-  return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +46,7 @@ CookieViewerImpl::~CookieViewerImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(CookieViewerImpl, nsICookieViewer::GetIID());
+NS_IMPL_ISUPPORTS1(CookieViewerImpl, nsICookieViewer)
 
 NS_IMETHODIMP
 CookieViewerImpl::GetCookieValue(char** aValue)
