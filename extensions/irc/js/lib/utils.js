@@ -193,16 +193,8 @@ function matchObject (o, pattern, negate)
         return Boolean (negate ^ _match(o, pattern));
             
     for (var i in pattern)
-    {
         if (_match (o, pattern[i]))
-            if (!negate)
-            {
-                return true;
-            }
-            else
-                if (negate)
-                    return false;
-    }
+            return !negate;
 
     return negate;
     
@@ -211,6 +203,9 @@ function matchObject (o, pattern, negate)
 function renameProperty (obj, oldname, newname)
 {
 
+    if (oldname == newname)
+        return;
+    
     obj[newname] = obj[oldname];
     delete obj[oldname];
     

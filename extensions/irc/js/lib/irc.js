@@ -181,6 +181,7 @@ function CIRCServer (parent, connection)
     this.sendsThisRound = 0;
     this.savedLine = "";
     this.lag = -1;    
+    this.usersStable = true;
     
     this.parent.eventPump.addEvent (new CEvent ("server", "poll", this,
                                                 "onPoll"));
@@ -707,7 +708,8 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
                     var nick = e.params[BASE_PARAM + params_eaten];
                     var user = new CIRCChanUser (e.channel, nick, true);
                     params_eaten++;
-                } else
+                }
+                else
                     if (modifier == "-")
                     {
                         var nick = e.params[BASE_PARAM + params_eaten];
@@ -723,7 +725,8 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
                     var user = new CIRCChanUser (e.channel, nick, (void 0),
                                                  true);
                     params_eaten++;
-                } else
+                }
+                else
                     if (modifier == "-")
                     {
                         var nick = e.params[BASE_PARAM + params_eaten];
@@ -747,7 +750,8 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
                     ban_evt.ban = ban;
                     ban_evt.source = e.user;
                     this.parent.eventPump.addEvent (e);
-                } else
+                }
+                else
                     if (modifier == "-")
                         delete e.channel.bans[ban];
                 break;
@@ -761,8 +765,9 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
                     params_eaten++;
                     e.channel.mode.limit = limit;
                 }
-                else if (modifier == "-")
-                    e.channel.mode.limit = -1;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.limit = -1;
                 break;
 
             case "k": /* key */
@@ -771,50 +776,57 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
 
                 if (modifier == "+")
                     e.channel.mode.key = key;
-                else if (modifier == "-")
-                    e.channel.mode.key = "";
+                else
+                    if (modifier == "-")
+                        e.channel.mode.key = "";
                 break;
 
             case "m": /* moderated */
                 if (modifier == "+")
                     e.channel.mode.moderated = true;
-                else if (modifier == "-")
-                    e.channel.mode.moderated = false;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.moderated = false;
                 break;
 
             case "n": /* no outside messages */
                 if (modifier == "+")
                     e.channel.mode.publicMessages = false;
-                else if (modifier == "-")
-                    e.channel.mode.publicMessages = true;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.publicMessages = true;
                 break;
 
             case "t": /* topic */
                 if (modifier == "+")
                     e.channel.mode.publicTopic = false;
-                else if (modifier == "-")
-                    e.channel.mode.publicTopic = true;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.publicTopic = true;
                 break;
                 
             case "i": /* invite */
                 if (modifier == "+")
                     e.channel.mode.invite = true;
-                else if (modifier == "-")
-                    e.channel.mode.invite = false;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.invite = false;
                 break;
 
             case "s": /* secret */
                 if (modifier == "+")
                     e.channel.mode.secret  = true;
-                else if (modifier == "-")
-                    e.channel.mode.secret = false;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.secret = false;
                 break;
                 
             case "p": /* private */
                 if (modifier == "+")
                     e.channel.mode.pvt = true;
-                else if (modifier == "-")
-                    e.channel.mode.pvt = false;
+                else
+                    if (modifier == "-")
+                        e.channel.mode.pvt = false;
                 break;
                 
         }
@@ -829,20 +841,31 @@ CIRCServer.prototype.onChanMode = function serv_chanmode (e)
 
 CIRCServer.prototype.onNick = function serv_nick (e)
 {
-    var new_nick = e.meat.toLowerCase();
+    var newKey = e.meat.toLowerCase();
+    var oldKey = e.user.nick;
     
-    renameProperty (e.server.users, e.user.nick, new_nick);   
-
+    renameProperty (e.server.users, oldKey, newKey);
+    e.oldNick = e.user.properNick;
+    e.user.changeNick(e.meat);
+    
     for (var c in e.server.channels)
     {
-        if (typeof e.server.channels[c].users[e.user.nick] != "undefined")
-            renameProperty (e.server.channels[c].users, e.user.nick,
-                            new_nick);
+        var cuser = e.server.channels[c].users[oldKey];
 
+        if (typeof cuser != "undefined")
+        {
+            renameProperty (e.server.channels[c].users, oldKey, newKey);
+            var ev = new CEvent ("channel", "nick", e.server.channels[c],
+                                 "onNick");
+            ev.channel = e.server.channels[c];
+            ev.user = cuser;
+            ev.server = ev.channel.parent;
+            ev.oldNick = e.oldNick;
+            this.parent.eventPump.addEvent(ev);
+        }
+        
     }
 
-    e.oldNick = e.user.nick;
-    e.user.nick = new_nick;
     e.destObject = e.user;
     e.set = "user";    
 
@@ -854,7 +877,19 @@ CIRCServer.prototype.onQuit = function serv_quit (e)
 {
 
     for (var c in e.server.channels)
-        delete e.server.channels[c].users[e.user.nick];
+    {
+        if (e.server.channels[c].users[e.user.nick])
+        {
+            var ev = new CEvent ("channel", "quit", e.server.channels[c],
+                                 "onQuit");
+            ev.user = e.server.channels[c].users[e.user.nick];
+            ev.channel = e.server.channels[c];
+            ev.server = ev.channel.parent;
+            ev.reason = e.meat;
+            this.parent.eventPump.addEvent(ev);
+            delete e.server.channels[c].users[e.user.nick];
+        }
+    }
 
     this.users[e.user.nick].lastQuitMessage = e.meat;
     this.users[e.user.nick].lastQuitDate = new Date;
@@ -1351,6 +1386,7 @@ CIRCChanMode.prototype.setSecret = function chan_secret (f)
 
 function CIRCUser (parent, nick, name, host)
 {
+    var properNick = nick;
     nick = nick.toLowerCase();
     
     var existingUser = parent.users[nick];
@@ -1364,6 +1400,7 @@ function CIRCUser (parent, nick, name, host)
 
     this.parent = parent;
     this.nick = nick;
+    this.properNick = properNick;
     this.name = name;
     this.host = host;
 
@@ -1372,7 +1409,16 @@ function CIRCUser (parent, nick, name, host)
 }
 
 CIRCUser.prototype.TYPE = "IRCUser";
+
+CIRCUser.prototype.changeNick =
+function usr_changenick (nick)
+{
+
+    this.properNick = nick;
+    this.nick = nick.toLowerCase();
     
+}
+
 CIRCUser.prototype.getHostMask = function usr_hostmask (pfx)
 {
     pfx = (typeof pfx != "undefined") ? pfx : "*!" + this.name + "@*.";
@@ -1410,6 +1456,7 @@ CIRCUser.prototype.act = function usr_act (msg)
  */
 function CIRCChanUser (parent, nick, isOp, isVoice)
 {
+    var properNick = nick;
     nick = nick.toLowerCase();    
 
     var existingUser = parent.users[nick];
@@ -1421,7 +1468,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
         return existingUser;
     }
         
-    protoUser = new CIRCUser (parent.parent, nick);
+    protoUser = new CIRCUser (parent.parent, properNick);
         
     this.__proto__ = protoUser;
     this.setOp = cusr_setop;
