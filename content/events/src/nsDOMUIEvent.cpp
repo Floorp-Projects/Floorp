@@ -43,7 +43,6 @@
 #include "nsIPresShell.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
