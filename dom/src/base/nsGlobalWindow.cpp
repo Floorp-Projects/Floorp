@@ -141,7 +141,7 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mTimeouts(nsnull), mTimeoutInsertionPoint(&mTimeouts), mRunningTimeout(nsnull),
   mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
   mFirstDocumentLoad(PR_TRUE), mGlobalObjectOwner(nsnull), mDocShell(nsnull),
-  mChromeEventHandler(nsnull), mMutationBits(0)
+  mMutationBits(0), mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
   if (gRefCnt++ == 0) {
@@ -327,7 +327,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
      When that happens, setting status isn't a big requirement,
      so don't. (Doesn't happen under normal circumstances, but
      bug 49615 describes a case.) */
-  if (mDocShell) {
+  /* We only want to do this when we're setting a new document rather
+     than going away.  See bug 61840.  */
+  if (mDocShell && aDocument) {
     SetStatus(nsString());
     SetDefaultStatus(nsString());
   }
