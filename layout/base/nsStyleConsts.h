@@ -285,8 +285,8 @@
 // See nsStyleFont
 #define NS_STYLE_FONT_WEIGHT_NORMAL             400
 #define NS_STYLE_FONT_WEIGHT_BOLD               700
-#define NS_STYLE_FONT_WEIGHT_BOLDER             101
-#define NS_STYLE_FONT_WEIGHT_LIGHTER            -101
+#define NS_STYLE_FONT_WEIGHT_BOLDER             1
+#define NS_STYLE_FONT_WEIGHT_LIGHTER            -1
 
 // See nsStyleFont
 #define NS_STYLE_FONT_SIZE_XXSMALL              0
