@@ -33,7 +33,7 @@
 #include "nsXPIDLString.h"
 
 /* Some UNIXy platforms don't have pw_gecos. In this case we use pw_name */
-#if defined(VMS)
+#if defined(NO_PW_GECOS)
 #define PW_GECOS pw_name
 #else
 #define PW_GECOS pw_gecos
@@ -56,8 +56,6 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     struct passwd *pw = nsnull;
 
     pw = getpwuid (geteuid());
-
-    // do I need to free pw? 
 
     if (!pw || !pw->PW_GECOS) return NS_ERROR_FAILURE;
 
@@ -83,8 +81,6 @@ nsUserInfo::GetUsername(char * *aUsername)
     // is this portable?  those are POSIX compliant calls, but I need to check
     pw = getpwuid(geteuid());
 
-    // do I need to free pw? 
-
     if (!pw || !pw->pw_name) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
@@ -108,11 +104,11 @@ nsUserInfo::GetDomain(char * *aDomain)
     if (uname(&buf)) { 
         return rv;
     }
- 
-    // I need to see why on linux it is __domainname, yet for the header file, it is domainname
-#ifdef __linux__
+
+#if defined(HAVE_UNAME_DOMAINNAME_FIELD)
+    domainname = buf.domainname;
+#elif defined(HAVE_UNAME_US_DOMAINNAME_FIELD)
     domainname = buf.__domainname;
-    //domainname = buf.domainname;
 #endif
 
     if (domainname && nsCRT::strlen(domainname)) {   
