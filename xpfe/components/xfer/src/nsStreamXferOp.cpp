@@ -59,6 +59,10 @@
 #include "nsILocalFile.h"
 #include "nsICachingChannel.h"
 
+#ifdef XP_MAC
+#include "nsILocalFileMac.h"
+#endif
+
 #include "prprf.h"
 
 #include "nsIStringBundle.h"
@@ -508,14 +512,14 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
     if (mInputChannel)
     {
         // Get the content type
-        nsXPIDLCString contentType;
-        rv = mInputChannel->GetContentType(getter_Copies(contentType));
+        nsCAutoString contentType;
+        rv = mInputChannel->GetContentType(contentType);
         
         if (NS_SUCCEEDED(rv))
         {
             // Set the creator and file type on the output file
             nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mOutputFile);
-            if (contentType.get() && *contentType.get() && macFile)
+            if (!contentType.IsEmpty() && macFile)
                 macFile->SetFileTypeAndCreatorFromMIMEType(contentType.get());
         }
     }
