@@ -169,11 +169,16 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 #endif
   } else if (nsnull == mImageLoader) {
     // Create an absolute URL
-    nsString empty;
-    nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, *mURLSpec, src);
+    if (mBaseURL) {
+      nsString empty;
+      nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, *mURLSpec, src);
 
-    if (NS_OK != rv) {
-      return rv;
+      if (NS_OK != rv) {
+        return rv;
+      }
+    } else {
+      // Just use the URL spec
+      src = *mURLSpec;
     }
   }
 
