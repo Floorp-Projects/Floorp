@@ -97,9 +97,10 @@
     <key id="key_selectAll"/>
     <key id="key_find"         key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"    key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
-    <key id="key_findNext"     key="&findPrevCmd.commandkey;"  command="Browser:FindPrev"  modifiers="accel, shift"/>
+    <key id="key_findPrev"     key="&findPrevCmd.commandkey;"  command="Browser:FindPrev"  modifiers="accel, shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="Browser:FindAgain"/>
     <key keycode="&findPrevCmd.commandkey2;"  command="Browser:FindPrev"  modifiers="shift"/>
+    <key id="key_findTypeText"/>
 
     <keyset id="viewZoomKeys"/>
   </keyset>
@@ -160,6 +161,8 @@
                     label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;"/>
           <menuitem id="menu_findPrev" key="key_findPrev" command="Browser:FindPrev"
                     label="&findPrevCmd.label;" accesskey="&findPrevCmd.accesskey;"/>
+          <menuseparator/> 
+          <menuitem id="menu_findTypeText"/>
         </menupopup>
       </menu>
 

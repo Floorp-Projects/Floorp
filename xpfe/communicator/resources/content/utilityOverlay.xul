@@ -132,6 +132,16 @@
             key="key_selectAll"
             accesskey="&selectAllCmd.accesskey;"
             command="cmd_selectAll"/>
+  <menuitem id="menu_findTypeText"
+            label="&findTypeTextCmd.label;"
+            key="key_findTypeText"
+            accesskey="&findTypeTextCmd.accesskey;"
+            command="cmd_findTypeText"/>
+  <menuitem id="menu_findTypeLinks"
+            label="&findTypeLinksCmd.label;"
+            key="key_findTypeLinks"
+            accesskey="&findTypeLinksCmd.accesskey;"
+            command="cmd_findTypeLinks"/>
 
   <!-- These key nodes are here only for show. The real bindings come from
        XBL, in platformHTMLBindings.xml. See bugs 57078 and 71779. -->
@@ -151,6 +161,10 @@
   <key id="key_paste"
        key="&pasteCmd.key;"
        modifiers="accel"/>
+  <key id="key_findTypeText"
+       key="&findTypeTextCmd.key;"/>
+  <key id="key_findTypeLinks"
+       key="&findTypeLinksCmd.key;"/>
 
   <commandset id="globalEditMenuItems"
               commandupdater="true"
@@ -200,6 +214,10 @@
   <command id="cmd_selectAll"
            oncommand="goDoCommand('cmd_selectAll')"
            disabled="true"/>
+  <command id="cmd_findTypeText" 
+           oncommand="goDoCommand('cmd_findTypeText')"/>
+  <command id="cmd_findTypeLinks" 
+           oncommand="goDoCommand('cmd_findTypeLinks')"/>
         
   <!-- Not needed yet, window will need this: -->
   <!-- broadcaster id="cmd_preferences"/ -->
