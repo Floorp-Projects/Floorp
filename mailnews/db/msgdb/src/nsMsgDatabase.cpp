@@ -596,7 +596,9 @@ void nsMsgDatabase::DumpCache()
 #endif /* DEBUG */
 
 nsMsgDatabase::nsMsgDatabase()
-    : m_dbFolderInfo(nsnull), m_mdbEnv(nsnull), m_mdbStore(nsnull),
+    : m_dbFolderInfo(nsnull), 
+	  m_nextPseudoMsgKey(-1),
+      m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbAllMsgHeadersTable(nsnull), m_dbName(""), m_newSet(nsnull),
       m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
       m_hdrRowScopeToken(0),
@@ -629,7 +631,6 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_HeaderParser(nsnull),
 	  m_headersInUse(nsnull),
 	  m_cachedHeaders(nsnull),
-	  m_nextPseudoMsgKey(-1),
 	  m_bCacheHeaders(PR_FALSE)
 
 {
@@ -2280,15 +2281,6 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 	}
 	outputKeys.QuickSort();
 	return err;
-}
-
-static nsresult
-nsMsgDBThreadUnreadFilter(nsIMsgThread *thread)
-{
-    PRUint32 numUnreadChildren = 0;
-    nsresult rv = thread->GetNumUnreadChildren(&numUnreadChildren);
-    if (NS_FAILED(rv)) return rv;
-    return (numUnreadChildren > 0) ? NS_OK : NS_COMFALSE;
 }
 
 class nsMsgDBThreadEnumerator : public nsISimpleEnumerator
