@@ -75,6 +75,10 @@ static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 #include "fullsoft.h"
 #endif
 
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
+
 // header file for profile manager
 #include "nsIProfile.h"
 
@@ -656,6 +660,11 @@ int main(int argc, char* argv[])
 	}
   }
     
+  // Call the code to install our handler
+#ifdef MOZ_JPROF
+  setupProfilingStuff();
+#endif
+
   if( !NS_CanRun() )
     return 1; 
   NS_ShowSplashScreen();

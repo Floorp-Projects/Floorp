@@ -680,6 +680,13 @@ END_L10N_LANG_MAKEFILES
 fi
 #
 
+# tools/jprof
+if [ "$MOZ_JPROF" ]; then
+  add_makefiles <<END_JPROF_MAKEFILES
+  tools/jprof/Makefile
+END_JPROF_MAKEFILES
+fi
+
 # tools/leaky
 if [ "$MOZ_LEAKY" ]; then
   add_makefiles <<END_LEAKY_MAKEFILES

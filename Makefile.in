@@ -107,6 +107,10 @@ ifdef MOZ_LEAKY
 DIRS        += tools/leaky
 endif
 
+ifdef MOZ_JPROF
+DIRS        += tools/jprof
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 real_all: all
