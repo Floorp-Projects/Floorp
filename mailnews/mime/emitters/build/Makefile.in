@@ -53,11 +53,10 @@ MODULE_NAME	= nsMimeEmitterModule
 PACKAGE_FILE = mimeemitter.pkg
 
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+		  xpcom_obsolete \
 		  string \
 		  mime \
 		  necko \
-		  pref \
 		  intl \
 		  locale \
 		  msgbase \

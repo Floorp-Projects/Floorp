@@ -60,14 +60,11 @@ REQUIRES	= xpcom \
 		  msgbase \
 		  msgbaseutil \
 		  rdfutil \
-		  docshell \
-		  appshell \
 		  appcomps \
 		  dom \
 		  widget \
 		  locale \
 		  mork \
-		  appcomps \
 		  layout \
 		  intl \
 		  uriloader \

@@ -52,13 +52,12 @@ MODULE_NAME	= nsMsgNewsModule
 PACKAGE_FILE = msgnews.pkg
 
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+		  xpcom_obsolete \
 		  string \
 		  mailnews \
 		  msgbase \
 		  msgbaseutil \
 		  msgdb \
-		  appshell \
 		  appcomps \
 		  mime \
 		  necko \

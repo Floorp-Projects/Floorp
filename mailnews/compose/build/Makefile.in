@@ -56,7 +56,7 @@ endif
 PACKAGE_FILE = msgcompose.pkg
 
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+		  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  msgbaseutil \
@@ -73,7 +73,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  widget \
 		  msgdb \
-		  appshell \
 		  appcomps \
 		  nkcache \
 		  $(NULL)

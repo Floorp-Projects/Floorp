@@ -51,9 +51,7 @@ REQUIRES = \
 	js \
 	widget \
 	appshell \
-	docshell \
 	exthandler \
-	webshell \
 	dom \
 	necko \
 	pref \
@@ -62,7 +60,6 @@ REQUIRES = \
 	windowwatcher \
 	intl \
 	profile \
-	util \
 	$(NULL)
 
 CPPSRCS = \

@@ -50,7 +50,6 @@ REQUIRES	= xpcom \
 		  wallet \
 		  dom \
 		  widget \
-		  necko \
 		  docshell \
 		  $(NULL)
 

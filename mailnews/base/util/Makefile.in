@@ -72,9 +72,8 @@ REQUIRES	= xpcom \
 		  mime \
 		  caps \
 		  msgcompose \
-          addrbook \
+		  addrbook \
 		  docshell \
-		  webshell \
 		  uriloader \
 		  appshell \
 		  msgimap \

@@ -50,7 +50,6 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  rdfutil \
-		  appshell \
 		  toolkitcomps \
 		  appcomps \
 		  dom \
@@ -66,7 +65,6 @@ REQUIRES	= xpcom \
 		  msgbase \
 		  msgbaseutil \
 		  mime \
-		  appcomps \
 		  intl \
 		  import \
 		  windowwatcher \

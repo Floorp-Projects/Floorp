@@ -71,7 +71,6 @@ REQUIRES	= xpcom \
 		  msgimap \
 		  msgnews \
 		  docshell \
-		  webshell \
 		  addrbook \
 		  widget \
 		  htmlparser \

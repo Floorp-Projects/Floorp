@@ -56,13 +56,11 @@ REQUIRES	= xpcom \
 		  string \
 		  uconv \
 		  dom \
-		  webshell \
 		  docshell \
 		  plugin \
 		  content \
 		  layout \
 		  view \
-		  xul \
 		  necko \
 		  nkcache \
 		  locale \

@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  necko \
-		  layout \
 		  content \
 		  xuldoc \
 		  jar \

@@ -76,13 +76,11 @@ REQUIRES	= xpcom \
 		  msgcompose \
 		  msgbaseutil \
 		  msgdb \
-		  appshell \
 		  appcomps \
 		  msgnews \
 		  msgimap \
 		  gfx \
 		  webbrwsr \
-		  content \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

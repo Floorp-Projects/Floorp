@@ -53,7 +53,7 @@ MODULE_NAME	= local_mail_services
 PACKAGE_FILE = msglocal.pkg
 
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+		  xpcom_obsolete \
 		  string \
 		  mailnews \
 		  msgbase \
@@ -67,8 +67,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  pref \
 		  nkcache \
-		  xmlextras \
-		  dom \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

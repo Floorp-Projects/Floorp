@@ -77,7 +77,6 @@ REQUIRES	= xpcom \
 		  mork \
 		  msgnews \
 		  addrbook \
-		  prefmigr \
 		  mime \
 		  mimetype \
 		  windowwatcher \

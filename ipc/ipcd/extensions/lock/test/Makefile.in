@@ -46,7 +46,6 @@ MODULE = dconnect
 
 REQUIRES	= ipcd \
 		  nspr \
-		  string \
 		  xpcom \
 		  $(NULL)
 
