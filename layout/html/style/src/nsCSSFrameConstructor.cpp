@@ -151,6 +151,9 @@ struct nsAbsoluteItems : nsFrameItems {
   nsIFrame* const containingBlock;
 
   nsAbsoluteItems(nsIFrame* aContainingBlock);
+
+  // Appends the frame to the end of the list
+  void AddChild(nsIFrame* aChild);
 };
 
 nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
@@ -158,6 +161,17 @@ nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
 {
 }
 
+// Additional behavior is that it sets the frame's NS_FRAME_OUT_OF_FLOW flag
+void
+nsAbsoluteItems::AddChild(nsIFrame* aChild)
+{
+  nsFrameState  frameState;
+
+  // Mark the frame as being moved out of the flow
+  aChild->GetFrameState(&frameState);
+  aChild->SetFrameState(frameState | NS_FRAME_OUT_OF_FLOW);
+  nsFrameItems::AddChild(aChild);
+}
 
 // -----------------------------------------------------------
 

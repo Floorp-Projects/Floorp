@@ -123,6 +123,10 @@ typedef PRUint32 nsFrameState;
 // its lifetime.
 #define NS_FRAME_HAS_LOADED_IMAGES 0x00000080
 
+// If this bit is set, then the frame is has been moved out of the flow,
+// e.g., it is absolutely positioned or floated
+#define NS_FRAME_OUT_OF_FLOW 0x00000100
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
