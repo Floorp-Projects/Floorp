@@ -64,6 +64,3 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-        $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpccomponents.xpt $(DIST)\bin\components
-        $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpcjsid.xpt       $(DIST)\bin\components
-        $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpctest.xpt       $(DIST)\bin\components

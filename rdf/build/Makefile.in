@@ -82,7 +82,3 @@ $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
 
 install:: $(TARGETS)
-	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/nsISupports.xpt   $(DIST)/bin/components
-	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpccomponents.xpt $(DIST)/bin/components
-	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpcjsid.xpt       $(DIST)/bin/components
-	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpctest.xpt       $(DIST)/bin/components
