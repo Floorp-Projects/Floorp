@@ -2311,6 +2311,49 @@ XFE_FreeEdgeElement (MWContext *context, LO_EdgeStruct *edge)
   XP_FREE (sashinfo);
 }
 
+#ifdef SHACK
+extern Widget fe_showRDFView (Widget w, int width, int height);
+
+void
+XFE_DisplayBuiltin (MWContext *context, int iLocation,
+                                   LO_BuiltinStruct *builtin_struct)
+{
+	fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
+	Drawable drawable = fe_drawable->xdrawable;
+	Display *dpy = XtDisplay (CONTEXT_WIDGET (context));
+	Widget w = XtWindowToWidget (dpy, drawable);
+	Widget view = NULL;
+
+#ifdef DEBUG_spence
+    printf ("XFE_DisplayBuiltin\n");
+#endif
+
+	if (!builtin_struct) return;
+	
+	if (builtin_struct->FE_Data) return; /* been here XXX */
+
+	view = fe_showRDFView (CONTEXT_DATA (context)->drawing_area,
+						   builtin_struct->width, builtin_struct->height);
+    builtin_struct->FE_Data = (void *) view;
+}
+
+void
+XFE_FreeBuiltinElement (MWContext *context, LO_BuiltinStruct *builtin_struct)
+{
+	Widget view;
+
+#ifdef DEBUG_spence
+	printf ("XFE_FreeBuiltinElement\n");
+#endif
+
+	if (!builtin_struct || !builtin_struct->FE_Data) return;
+
+	view = (Widget) builtin_struct->FE_Data;
+	XtDestroyWidget (view);
+	builtin_struct->FE_Data = NULL;
+}
+#endif /* SHACK */
+
 /*
  * This is called by the plugin code to create a new embedded window
  * for the plugin in the specified context.
@@ -2588,10 +2631,6 @@ XFE_FreeEmbedElement (MWContext *context, LO_EmbedStruct *embed_struct)
     NPL_EmbedDelete(context, embed_struct);
 }
 
-#ifdef SHACK
-extern void fe_showRDFView (Widget w, int width, int height);
-#endif /* SHACK */
-
 void
 XFE_DisplayEmbed (MWContext *context,
 		  int iLocation, LO_EmbedStruct *embed_struct)
@@ -2672,18 +2711,6 @@ XFE_DisplayEmbed (MWContext *context,
     /* Manage the embed window. XFE_GetEmbedSize() only creates the it. */
     if (!XtIsManaged((Widget)eApp->fe_data))
 	XtManageChild((Widget)eApp->fe_data);
-
-#ifdef SHACK
-    /* ... and now for the SHACK stuff */
-    {
-        NPWindow *nWin = (NPWindow *) eApp->wdata;
-        int width = nWin->width;
-       	int height = nWin->height;
-       	Widget w = (Widget) eApp->fe_data;
-
-        fe_showRDFView (w, width, height);
-    }
-#endif /* SHACK */
 }
 
 void
