@@ -61,8 +61,6 @@ public:
     NS_DECL_NSIINPUTSTREAM
 
 private:
-    friend class nsDiskCacheStreamIO;
-    
     nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
     PRFileDesc *                    mFD;
     const char *                    mBuffer;
@@ -191,9 +189,9 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
 
+    void ReleaseStreamIO() { NS_IF_RELEASE(mStreamIO); }
+
 private:
-    friend class nsDiskCacheStreamIO;
-    
     nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
     PRBool                          mClosed;
 };
@@ -213,7 +211,7 @@ nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
 nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 {
     Close();
-    NS_RELEASE(mStreamIO);
+    NS_ASSERTION(mStreamIO == nsnull, "leak");
 }
 
 
@@ -221,9 +219,9 @@ NS_IMETHODIMP
 nsDiskCacheOutputStream::Close()
 {
     if (!mClosed) {
+        mClosed = PR_TRUE;
         // tell parent streamIO we are closing
         mStreamIO->CloseOutputStream(this);
-        mClosed = PR_TRUE;
     }
     return NS_OK;
 }
@@ -441,7 +439,7 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
     if (!mBinding) {    // if we're severed, just clear member variables
         NS_ASSERTION(!mBufDirty, "oops");
         mOutStream = nsnull;
-        outputStream->mStreamIO = nsnull;
+        outputStream->ReleaseStreamIO();
         return NS_ERROR_NOT_AVAILABLE;
     }
 
