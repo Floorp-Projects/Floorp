@@ -52,14 +52,14 @@
                 pref="true" preftype="int" prefstring="news.keep.method" 
                 prefattribute="data">
       <box autostretch="never">
-        <radio data="1" value="&keepMsgs.label;" accesskey="&keepMsgs.accesskey;"/>
+        <radio group="newsKeepMethod" data="1" value="&keepMsgs.label;" accesskey="&keepMsgs.accesskey;"/>
         <textfield id="newsKeepDays" size="4" pref="true" preftype="int"
                    prefstring="news.keep.days" prefattribute="value"/>
         <text class="label" value="&days.label;"/>
       </box>
-      <radio data="0" value="&keepAllMsg.label;" accesskey="&keepAllMsg.accesskey;"/>
+      <radio group="newsKeepMethod" data="0" value="&keepAllMsg.label;" accesskey="&keepAllMsg.accesskey;"/>
       <box autostretch="never">
-        <radio data="2" value="&keepTheNewest.label;" accesskey="&keepTheNewest.accesskey;"/>
+        <radio group="newsKeepMethod" data="2" value="&keepTheNewest.label;" accesskey="&keepTheNewest.accesskey;"/>
         <textfield id="newsKeepCount" size="4" pref="true" preftype="int"
                    prefstring="news.keep.count" prefattribute="value"/>
         <text class="label" value="&messages.label;"/>

@@ -31,9 +31,9 @@
     <radiogroup id="requestReturnReceipt" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="mail.request.return_receipt"
                 prefattribute="data">
-      <radio data="1" value="&dsn.label;" accesskey="&dsn.accesskey;"/>
-      <radio data="2" value="&mdn.label;" accesskey="&mdn.accesskey;"/>
-      <radio data="3" value="&both.label;" accesskey="&both.accesskey;"/>		
+      <radio group="requestReturnReceipt" data="1" value="&dsn.label;" accesskey="&dsn.accesskey;"/>
+      <radio group="requestReturnReceipt" data="2" value="&mdn.label;" accesskey="&mdn.accesskey;"/>
+      <radio group="requestReturnReceipt" data="3" value="&both.label;" accesskey="&both.accesskey;"/>		
     </radiogroup>
     
   </titledbox>
@@ -44,8 +44,8 @@
     <radiogroup id="incorporateReturnReceipt" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="mail.incorporate.return_receipt"
                 prefattribute="data">
-      <radio data="0" value="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
-      <radio data="1" value="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/>		
+      <radio group="incorporateReturnReceipt" data="0" value="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
+      <radio group="incorporateReturnReceipt" data="1" value="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/>		
     </radiogroup>
 
 	</titledbox>
@@ -57,9 +57,9 @@
     <radiogroup id="mdnReportEnabled" orient="vertical"
                 pref="true" preftype="bool" prefstring="mail.mdn.report.enabled"
                 prefattribute="data">
-      <radio data="false" value="&never.label;" accesskey="&never.accesskey;"/>
+      <radio group="mdnReportEnabled" data="false" value="&never.label;" accesskey="&never.accesskey;"/>
       <box autostretch="never">
-        <radio data="true" value="&returnSome.label;" accesskey="&returnSome.accesskey;"/>	
+        <radio group="mdnReportEnabled" data="true" value="&returnSome.label;" accesskey="&returnSome.accesskey;"/>	
         <spring flex="1"/>
         <button class="dialog" value="&custom.label;" accesskey="&custom.accesskey;"
                 oncommand="doCustomize();"/>

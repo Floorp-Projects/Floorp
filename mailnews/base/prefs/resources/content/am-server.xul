@@ -110,8 +110,8 @@
          <title><text value="&abbreviate.label;"/></title>
 
          <radiogroup orient="vertical" wsm_persist="true" id="nntp.abbreviate">
-           <radio wsm_persist="true" data="true" value="&abbreviateOn.label;"/>
-           <radio wsm_persist="true" data="false" value="&abbreviateOff.label;"/>
+           <radio group="nntp.abbreviate" wsm_persist="true" data="true" value="&abbreviateOn.label;"/>
+           <radio group="nntp.abbreviate" wsm_persist="true" data="false" value="&abbreviateOff.label;"/>
          </radiogroup>
       </titledbox>
   </box>

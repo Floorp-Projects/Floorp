@@ -37,13 +37,13 @@ Rights Reserved.
 	<box orient="vertical">
 		<spring flex="100%"/>
 		<text id="info"/>
-		<radiogroup orient="vertical">
+		<radiogroup orient="vertical" id="downloadGroup">
 			<box orient="horizontal">
-				<radio id="all" /> 
+				<radio group="downloadGroup" id="all" /> 
 				<text value="&all.label;" />
 			</box>
 			<box orient="horizontal">
-				<radio id="some" checked="true" />
+				<radio group="downloadGroup" id="some" checked="true" />
 				<text value="&download.label;" />
 				<textfield id="number" size="10"/>
 				<text value="&headers.label;" />

@@ -112,8 +112,8 @@
     <radiogroup id="strictlyMime" orient="vertical" autostretch="never"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="data">
-      <radio data="false" value="&asIs.label;" accesskey="&asIs.accesskey;"/>
-      <radio data="true" value="&useMIME.label;" accesskey="&useMIME.accesskey;"/>
+      <radio group="strictlyMime" data="false" value="&asIs.label;" accesskey="&asIs.accesskey;"/>
+      <radio group="strictlyMime" data="true" value="&useMIME.label;" accesskey="&useMIME.accesskey;"/>
     </radiogroup>                
 	</titledbox>
 

@@ -32,8 +32,8 @@
       <spring flex="1"/>
       <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
                   prefattribute="data">
-        <radio class="iconic" data="0" id="classic"/>
-        <radio class="iconic" data="1" id="wide"/>
+        <radio group="mailPaneConfig" class="iconic" data="0" id="classic"/>
+        <radio group="mailPaneConfig" class="iconic" data="1" id="wide"/>
       </radiogroup>
     </box>
     

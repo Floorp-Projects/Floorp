@@ -37,8 +37,8 @@
     <radiogroup id="showDialogForMultipleMatches" orient="vertical" autostretch="never"
               pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches"
               prefattribute="data">
-      <radio data="false" value="&acceptList.label;" accesskey="&acceptList.accesskey;"/>
-      <radio data="true" value="&showList.label;" accesskey="&showList.accesskey;"/>
+      <radio group="showDialogForMultipleMatches" data="false" value="&acceptList.label;" accesskey="&acceptList.accesskey;"/>
+      <radio group="showDialogForMultipleMatches" data="true" value="&showList.label;" accesskey="&showList.accesskey;"/>
     </radiogroup>
 
     <separator class="thin"/>

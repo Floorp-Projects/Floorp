@@ -111,8 +111,8 @@
     <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
                 pref="true" preftype="bool" prefstring="browser.use_document_colors"
                 prefattribute="data">
-      <radio data="true" value="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
-      <radio data="false" value="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
+      <radio group="browserUseDocumentColors" data="true" value="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
+      <radio group="browserUseDocumentColors" data="false" value="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
     </radiogroup>
     
   </titledbox>

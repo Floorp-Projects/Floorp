@@ -66,8 +66,8 @@
           preftype = "int"
           prefstring="editor.table.delete_key"
           prefattribute="data">
-        <radio data="0" value="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
-        <radio data="1" value="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
+        <radio group="tableDeleteKey" data="0" value="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
+        <radio group="tableDeleteKey" data="1" value="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
       </radiogroup>
     </box>
   </titledbox>

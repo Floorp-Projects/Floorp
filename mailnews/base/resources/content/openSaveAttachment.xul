@@ -28,9 +28,9 @@
 			<separator class="thin"/>
 			<text value="&openSaveAttachmentToDo.label;" />
 			<separator class="thin"/>
-			<radiogroup orient="vertical">
-				<radio value="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
-				<radio id="saveIt" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
+			<radiogroup orient="vertical" id="openSaveGroup">
+				<radio group="openSaveGroup" value="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
+				<radio group="openSaveGroup" id="saveIt" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
 			</radiogroup>
 			<separator class="thin"/>
 		</box>

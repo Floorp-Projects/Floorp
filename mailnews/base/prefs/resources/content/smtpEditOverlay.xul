@@ -51,8 +51,8 @@
      <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
      <radiogroup id="smtp.trySSL">
        <box orient="horizontal">
-         <radio value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
-         <radio value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
+         <radio group="smtp.trySSL" value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
+         <radio group="smtp.trySSL" value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
        </box>
      </radiogroup>
   </box>

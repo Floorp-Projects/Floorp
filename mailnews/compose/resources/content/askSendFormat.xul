@@ -26,9 +26,9 @@
             <spring style="height:1em"/>
 
 			<radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
-				<radio id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
-				<radio id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
-				<radio id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
+				<radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
+				<radio group="mailDefaultHTMLAction" id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
+				<radio group="mailDefaultHTMLAction" id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
 			</radiogroup>
         </box>
         <spring style="width:10px"/>

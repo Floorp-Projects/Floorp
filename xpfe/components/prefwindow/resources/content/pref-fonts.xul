@@ -138,8 +138,8 @@
     <box autostretch="never" class="indent">
       <text class="label" value="&default.type.label;"/>
       <radiogroup id="defaultFont" autostretch="never" preftype="string" prefstring="font.default">
-        <radio data="serif" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
-        <radio data="sans-serif" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
+        <radio group="defaultFont" data="serif" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
+        <radio group="defaultFont" data="sans-serif" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
       </radiogroup>
     </box>
 

@@ -63,8 +63,8 @@
     <radiogroup id="mailFixedWidthMessages" orient="vertical" autostretch="never"
                 pref="true" preftype="bool" prefstring="mail.fixed_width_messages"
                 prefattribute="data">
-      <radio data="true" value="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
-      <radio data="false" value="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+      <radio group="mailFixedWidthMessages" data="true" value="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
+      <radio group="mailFixedWidthMessages" data="false" value="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
     </radiogroup>
 	</titledbox>
 	   
