@@ -67,6 +67,8 @@ public:
   inline int SupportsChar(PRUnichar aChar)
     { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
 
+  virtual GdkFont* GetGDKFont(void);
+  virtual PRBool   GetGDKFontIs10646(void);
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual gint DrawString(nsRenderingContextGTK* aContext,
                           nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -82,13 +84,15 @@ public:
                      nsBoundingMetrics& aBoundingMetrics) = 0;
 #endif
 
-  GdkFont*               mFont;
   PRUint32*              mMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
   nsFontGTKUserDefined*  mUserDefinedFont;
   PRUint16               mSize;
   PRInt16                mBaselineAdjust;
+
+protected:
+  GdkFont*               mFont;
 };
 
 class nsFontMetricsGTK : public nsIFontMetrics
@@ -170,7 +174,6 @@ protected:
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   nsFontGTK           *mWesternFont;
-  GdkFont             *mFontHandle;
 
   nscoord             mLeading;
   nscoord             mEmHeight;

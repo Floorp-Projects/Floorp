@@ -728,7 +728,6 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   mWesternFont = nsnull;
-  mFontHandle = nsnull;
 
   if (!--gFontMetricsGTKCount) {
     FreeGlobals();
@@ -893,7 +892,6 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   if (!mWesternFont) {
     return NS_ERROR_FAILURE;
   }
-  mFontHandle = mWesternFont->mFont;
 
   RealizeFont();
 
@@ -910,7 +908,7 @@ void nsFontMetricsGTK::RealizeFont()
 {
   XFontStruct *fontInfo;
   
-  fontInfo = (XFontStruct *)GDK_FONT_XFONT(mFontHandle);
+  fontInfo = (XFontStruct *)GDK_FONT_XFONT(mWesternFont->GetGDKFont());
 
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
@@ -936,7 +934,7 @@ void nsFontMetricsGTK::RealizeFont()
   // 56% of ascent, best guess for non-true type
   mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
 
-  gint rawWidth = gdk_text_width(mFontHandle, " ", 1); 
+  gint rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), " ", 1); 
   mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
@@ -1135,7 +1133,7 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetLangGroup(nsIAtom** aLangGroup)
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 {
-  aHandle = (nsFontHandle)mFontHandle;
+  aHandle = (nsFontHandle)mWesternFont;
   return NS_OK;
 }
 
@@ -1672,6 +1670,18 @@ nsFontGTK::LoadFont(void)
 
 }
 
+GdkFont* 
+nsFontGTK::GetGDKFont(void)
+{
+  return mFont;
+}
+
+PRBool
+nsFontGTK::GetGDKFontIs10646(void)
+{
+  return ((PRBool) (mCharSetInfo == &ISO106461));
+}
+
 MOZ_DECL_CTOR_COUNTER(nsFontGTK);
 
 nsFontGTK::nsFontGTK()
@@ -1806,6 +1816,8 @@ public:
   nsFontGTKSubstitute(nsFontGTK* aFont);
   virtual ~nsFontGTKSubstitute();
 
+  virtual GdkFont* GetGDKFont(void);
+  virtual PRBool   GetGDKFontIs10646(void);
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
   virtual gint DrawString(nsRenderingContextGTK* aContext,
                           nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -1926,6 +1938,18 @@ nsFontGTKSubstitute::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif
 
+GdkFont* 
+nsFontGTKSubstitute::GetGDKFont(void)
+{
+  return mSubstituteFont->GetGDKFont();
+}
+
+PRBool
+nsFontGTKSubstitute::GetGDKFontIs10646(void)
+{
+  return mSubstituteFont->GetGDKFontIs10646();
+}
+
 class nsFontGTKUserDefined : public nsFontGTK
 {
 public:
@@ -1959,13 +1983,13 @@ nsFontGTKUserDefined::~nsFontGTKUserDefined()
 PRBool
 nsFontGTKUserDefined::Init(nsFontGTK* aFont)
 {
-  if (!aFont->mFont) {
+  if (!aFont->GetGDKFont()) {
     aFont->LoadFont();
-    if (!aFont->mFont) {
+    if (!aFont->GetGDKFont()) {
       return PR_FALSE;
     }
   }
-  mFont = aFont->mFont;
+  mFont = aFont->GetGDKFont();
   mMap = gUserDefinedMap;
   mName = aFont->mName;
 
@@ -2121,7 +2145,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     font->mMap = aCharSet->mMap;
     if (FONT_HAS_GLYPH(font->mMap, aChar)) {
       font->LoadFont();
-      if (!font->mFont) {
+      if (!font->GetGDKFont()) {
         return nsnull;
       }
     }
@@ -2129,7 +2153,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
   else {
     if (aCharSet == &ISO106461) {
       font->LoadFont();
-      if (!font->mFont) {
+      if (!font->GetGDKFont()) {
         return nsnull;
       }
     }
@@ -2748,7 +2772,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     }
     stretch->mSizes[stretch->mSizesCount++] = size;
     size->mName = copy;
-    size->mFont = nsnull;
+    // size->mFont is initialized in the constructor
     size->mSize = pixels;
     size->mBaselineAdjust = 0;
     size->mMap = nsnull;
