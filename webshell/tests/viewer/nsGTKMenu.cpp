@@ -74,7 +74,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/Edit/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Edit/Find in Page",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_EDIT_FINDINPAGE,	nsnull },
 
-#ifdef DEBUG
+//#ifdef DEBUG // turning off for now
   { "/_Debug",				nsnull,	nsnull,			0,			"<Branch>"	},
   { "/Debug/_Visual Debugging",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_VISUAL_DEBUGGING,nsnull },
   { "/Debug/_Reflow Test",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_REFLOW_TEST,	nsnull },
@@ -116,7 +116,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/Debug/Style/_Widget Render Mode",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/Debug/Style/Widget Render Mode/Native",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_NATIVE_WIDGET_MODE,	nsnull },
   { "/Debug/Style/Widget Render Mode/Gfx",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_WIDGET_MODE,	nsnull },
-#endif
+//#endif
 
   { "/_Tools",                                nsnull, nsnull,                 0,              "<Branch>" },
   { "/Tools/_JavaScript Console",	nsnull,	(GIFC)gtk_ifactory_cb,	JS_CONSOLE,	nsnull },
