@@ -92,6 +92,37 @@ class nsHashtable;
    fixed-position frames.
  */
 
+/**
+   Invalidation model:
+
+   1) Callers call into the view manager and ask it to update a view.
+   
+   2) The view manager finds the "right" widget for the view, henceforth called
+      the root widget.
+
+   3) The view manager traverses descendants of the root widget and for each
+      one that needs invalidation either
+
+      a)  Calls Invalidate() on the widget (no batching)
+    or
+      b)  Stores the rect to invalidate on the widget's view (batching)
+
+   // XXXbz we want to change this a bit.  See bug 243726
+
+   4) When batching, the call to end the batch either processes the pending
+      Invalidate() calls on the widgets or posts an event to do so.
+
+   It's important to note that widgets associated to views outside this view
+   manager can end up being invalidated during step 3.  Therefore, the end of a
+   view update batch really needs to traverse the entire view tree, to ensure
+   that those invalidates happen.
+
+   To cope with this, invalidate event processing and view update batch
+   handling should only happen on the root viewmanager.  This means the root
+   view manager is the only thing keeping track of mUpdateCnt.  As a result,
+   Composite() calls should also be forwarded to the root view manager.
+*/
+
 class nsZPlaceholderView : public nsView
 {
 public:
@@ -309,6 +340,12 @@ private:
   PRBool IsViewInserted(nsView *aView);
 
   /**
+   * Function to recursively call Update() on all widgets belonging to
+   * a view or its kids.
+   */
+  void UpdateWidgetsForView(nsView* aView);
+
+  /**
    * Returns the nearest parent view with an attached widget. Can be the
    * same view as passed-in.
    */
@@ -364,10 +401,47 @@ private:
     }
   }
 
+  // Safety helpers
+  void IncrementUpdateCount() {
+    NS_ASSERTION(IsRootVM(),
+                 "IncrementUpdateCount called on non-root viewmanager");
+    ++mUpdateCnt;
+  }
+
+  void DecrementUpdateCount() {
+    NS_ASSERTION(IsRootVM(),
+                 "DecrementUpdateCount called on non-root viewmanager");
+    --mUpdateCnt;
+  }
+
+  PRInt32 UpdateCount() const {
+    NS_ASSERTION(IsRootVM(),
+                 "DecrementUpdateCount called on non-root viewmanager");
+    return mUpdateCnt;
+  }
+
+  void ClearUpdateCount() {
+    NS_ASSERTION(IsRootVM(),
+                 "DecrementUpdateCount called on non-root viewmanager");
+    mUpdateCnt = 0;
+  }
+
+  PRBool IsPainting() const {
+    return RootViewManager()->mPainting;
+  }
+
+  void SetPainting(PRBool aPainting) {
+    RootViewManager()->mPainting = aPainting;
+  }
+
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
-  nsView* GetMouseEventGrabber() const;
+  nsView* GetMouseEventGrabber() const {
+    return RootViewManager()->mMouseGrabber;
+  }
   nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
+  nsViewManager* RootViewManager() const { return mRootViewManager; }
+  PRBool IsRootVM() const { return this == RootViewManager(); }
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
@@ -389,18 +463,14 @@ public: // NOT in nsIViewManager, so private to the view module
   // not be in this view manager).
   static nsPoint ComputeViewOffset(const nsView *aView);
 
-  PRBool IsRefreshEnabled() { return mRefreshEnabled; }
+  PRBool IsRefreshEnabled() { return RootViewManager()->mRefreshEnabled; }
 
 private:
   nsIDeviceContext  *mContext;
   float             mTwipsToPixels;
   float             mPixelsToTwips;
   nsIViewObserver   *mObserver;
-  nsView            *mMouseGrabber;
   nsView            *mKeyGrabber;
-  PRInt32           mUpdateCnt;
-  PRInt32           mUpdateBatchCnt;
-  PRUint32          mUpdateBatchFlags;
   nsIScrollableView *mRootScrollable;
   nscolor           mDefaultBackgroundColor;
   nsPoint           mMouseLocation; // device units, relative to mRootView
@@ -413,13 +483,28 @@ private:
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
   nsView            *mRootView;
+  nsViewManager     *mRootViewManager;
   nsCOMPtr<nsIEventQueueService>  mEventQueueService;
-  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   nsCOMPtr<nsIEventQueue>         mSynthMouseMoveEventQueue;
+  PRPackedBool      mAllowDoubleBuffering;
+
+  // The following members should not be accessed directly except by
+  // the root view manager.  Some have accessor functions to enforce
+  // this, as noted.
+  
+  // Use GrabMouseEvents() and GetMouseEventGrabber() to access mMouseGrabber.
+  nsView            *mMouseGrabber;
+  // Use IncrementUpdateCount(), DecrementUpdateCount(), UpdateCount(),
+  // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
+  PRInt32           mUpdateCnt;
+  PRInt32           mUpdateBatchCnt;
+  PRUint32          mUpdateBatchFlags;
+  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
+  // Use IsRefreshEnabled() to check the value of mRefreshEnabled.
   PRPackedBool      mRefreshEnabled;
+  // Use IsPainting() and SetPainting() to access mPainting.
   PRPackedBool      mPainting;
   PRPackedBool      mRecursiveRefreshPending;
-  PRPackedBool      mAllowDoubleBuffering;
   PRPackedBool      mHasPendingInvalidates;
 
   //from here to public should be static and locked... MMP

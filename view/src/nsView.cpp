@@ -181,6 +181,7 @@ nsView::nsView()
   mOpacity = 1.0f;
   mViewManager = nsnull;
   mChildRemoved = PR_FALSE;
+  mDirtyRegion = nsnull;
 }
 
 void nsView::DropMouseGrabbing() {
