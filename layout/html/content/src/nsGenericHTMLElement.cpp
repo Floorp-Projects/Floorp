@@ -471,6 +471,8 @@ nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
     aNodeName.Append(tmp);
   } else {
     mNodeInfo->GetName(aNodeName);
+
+    aNodeName.ToUpperCase();
   }
 
   if (kStrictDOMLevel2) {
