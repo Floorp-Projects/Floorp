@@ -74,6 +74,8 @@ typedef enum {
    kCharsetFromAutoDetection,
    kCharsetFromMetaTag,
    kCharsetFromHTTPHeader,
+   kCharsetFromUserForced,
+   kCharsetFromOtherComponent,
    kCharsetFromPreviousLoading
 } nsCharsetSource;
 
