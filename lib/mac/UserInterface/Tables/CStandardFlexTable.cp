@@ -290,6 +290,7 @@ CStandardFlexTable::CStandardFlexTable(LStream *inStream)
 ,	mFancyDoubleClick(false)
 ,	mHiliteDisabled(false)
 ,	mDropRow(LArray::index_Bad)
+,	mInlineFeedbackOn(true)
 ,	mIsInternalDrop(false)
 ,	mIsDropBetweenRows(false)
 ,	mAllowDropAfterLastRow(true)
@@ -953,8 +954,10 @@ Boolean	CStandardFlexTable::ClickSelect(
 	else
 	{
 		// since the click is not in the icon and not in the text, the selection should be
-		// cleared before we try to show any context menus.
-		UnselectAllCells();
+		// cleared before we try to show any context menus. This is faster than using
+		// UnselectAllCells() because it only iterates over the current selection.
+		Rect empty = { 0, 0, 0, 0 };
+		UnselectCellsNotInSelectionOutline(empty);
 		
 		if (mClickTimer)
 			mClickTimer->NoteSingleClick();
@@ -1007,8 +1010,10 @@ void CStandardFlexTable::ClickSelf(const SMouseDownEvent &inMouseDown)
 	else
 	{
 		// since the click is not in any cell, the selection should be cleared before
-		// we try to show the context menus.
-		UnselectAllCells();
+		// we try to show the context menus. This is faster than using
+		// UnselectAllCells() because it only iterates over the current selection.
+		Rect empty = { 0, 0, 0, 0 };
+		UnselectCellsNotInSelectionOutline(empty);
 
 		CContextMenuAttachment::SExecuteParams params;
 		params.inMouseDown = &inMouseDown;
@@ -1159,7 +1164,7 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 		{
 			::PenPat( &qd.gray );
 			::PenMode( patXor );
-			::PenSize( 1, 1 );
+			::PenSize( 2, 2 );
 
 			if ( !::EmptyRect(&selectionRect) )
 				::FrameRect( &selectionRect );
@@ -1189,7 +1194,7 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 		
 			STableCell theCell(0, GetHiliteColumn());
 			
-			//Do this inline now, because we need to get a some more local variables
+			//Do this inline now, because we need to get at some more local variables
 			//UnselectCellsNotInSelectionOutline(selectionRect);
 			
 			if (!shiftKeyDown && !cmdKeyDown)
@@ -1298,7 +1303,7 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 
 			::PenPat( &qd.gray );
 			::PenMode( patXor );
-			::PenSize( 1, 1 );
+			::PenSize( 2, 2 );
 			::FrameRect( &selectionRect );
 
 		} // if mouse has moved
@@ -1314,7 +1319,7 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 		
 		::PenPat( &qd.gray );
 		::PenMode( patXor );
-		::PenSize( 1, 1 );
+		::PenSize( 2, 2 );
 		::FrameRect( &selectionRect );
 		
 		oldPenState.Normalize();
@@ -1325,13 +1330,16 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::UnselectCellsNotInSelectionOutline( const Rect & inSelectionRect )
 // Iterate over existing selection looking for things that are no longer w/in
-// the rectangle and unselect them. 
+// the rectangle and unselect them. We turn off the "notify on selection changed"
+// mechanism so as not to be very slow...
 //
 // IMPORTANT: This routine assumes a selection model that selects the entire row.
 // If another selection model is used (such as one that only selects individual
 // cells), this needs to be rewritten.
 //----------------------------------------------------------------------------------------
 {
+	SetNotifyOnSelectionChange ( false );
+	
 	TableIndexT currentRow = LArray::index_Bad;
 	while ( GetNextSelectedRow(currentRow) ) {
 
@@ -1344,6 +1352,8 @@ void CStandardFlexTable::UnselectCellsNotInSelectionOutline( const Rect & inSele
 		}
 		
 	}
+	
+	SetNotifyOnSelectionChange ( true );
 
 } // UnselectCellsNotInSelectionOutline
 
@@ -1557,6 +1567,12 @@ Boolean CStandardFlexTable::ObeyCommand(
 		case cmd_Clear:
 			DeleteSelection();
 			return true;
+			
+		case msg_TabSelect:
+			// accept tab-in's from an LTabGroup (Pro2 and later)
+			return true;
+			break;
+
 		default:
 			result = LCommander::ObeyCommand(inCommand, ioParam);
 			break;
@@ -1648,6 +1664,30 @@ TableIndexT CStandardFlexTable::GetHiliteColumn() const
 } // CStandardFlexTable::GetHiliteColumn
 
 //----------------------------------------------------------------------------------------
+void CStandardFlexTable::HiliteDropArea(DragReference inDragRef)
+// Show that this view is a drop site, but only if there aren't any items
+// in the tree already. If there are, the inline drop feedback should take care of it.
+//----------------------------------------------------------------------------------------
+{
+	if ( mRows && mInlineFeedbackOn )		// let in-line drop feedback do the job
+		return;
+
+	Rect frame;
+	CalcLocalFrameRect ( frame );
+	
+	// show the drag hilite in drop area
+	try {
+		StRegion rgn;
+		::RectRgn ( rgn, &frame );
+		StColorPenState::Normalize();
+		::InsetRgn ( rgn, 5, 5 );
+		::ShowDragHilite ( inDragRef, rgn, true );
+	}
+	catch ( ... ) { }
+	
+} // CStandardFlexTable::HiliteDropArea
+
+//----------------------------------------------------------------------------------------
 void CStandardFlexTable::ComputeItemDropAreas(
 	const Rect& inLocalCellRect,
 	Rect& outTop, 
@@ -1673,7 +1713,7 @@ void CStandardFlexTable::ComputeFolderDropAreas(
 // after, respectively) taking up the rest at the ends.
 //----------------------------------------------------------------------------------------
 {
-	const Uint8 capAreaHeight = 3;
+	const Uint8 capAreaHeight = 4;
 
 	outBottom = outTop = inLocalCellRect;
 	outTop.bottom = outTop.top + capAreaHeight;
@@ -1690,6 +1730,17 @@ void CStandardFlexTable::InsideDropArea(DragReference inDragRef)
 	Rect			rowBounds;					// only top/bottom are important
 	
 	FocusDraw();
+	
+#if 0
+	// If the table is sorted, don't let the user drop in any given location. Just
+	// hilight the entire area
+	//еее this can't go here, else you won't be able to drop in folders when view sorted!!
+	if ( ! TableSupportsNaturalOrderSort() ) {
+		StValueChanger<Boolean> old ( mInlineFeedbackOn, false );
+		HiliteDropArea(inDragRef);
+		return;
+	} // if container is sorted	
+#endif
 	
 	::GetDragMouse(inDragRef, &mouseLoc, NULL);
 	::GlobalToLocal(&mouseLoc);
@@ -1749,8 +1800,10 @@ void CStandardFlexTable::InsideDropArea(DragReference inDragRef)
 		
 		// we now know where the drop SHOULD go, now check if it CAN go there.
 		newIsDropBetweenRows &= RowCanAcceptDropBetweenAbove(inDragRef, newDropRow);
-		if (!newIsDropBetweenRows && !RowCanAcceptDrop(inDragRef, newDropRow))
+		if (!newIsDropBetweenRows && !RowCanAcceptDrop(inDragRef, newDropRow)) {
+			mCanAcceptCurrentDrag = false;
 			newDropRow = LArray::index_Bad;
+		}
 	}
 	
 	// if things have changed from last time, unhilite the last drop feedback and redraw
@@ -1762,14 +1815,15 @@ void CStandardFlexTable::InsideDropArea(DragReference inDragRef)
 		HiliteDropRow(oldDropRow, mIsDropBetweenRows);
 		mIsDropBetweenRows = newIsDropBetweenRows;
 		
-		if (newDropRow > LArray::index_Bad && newDropRow <= mRows)
+		if (newDropRow != LArray::index_Bad && mAllowDropAfterLastRow)
 		{
 			mDropRow = newDropRow; // so that we'll hilite
 			HiliteDropRow(newDropRow, mIsDropBetweenRows);
 		}
 		else
 		{
-			mDropRow = LArray::index_Bad;
+			if ( mDropRow > mRows )
+				mDropRow = LArray::index_Bad;
 		}
 	}
 	
@@ -1850,9 +1904,27 @@ void CStandardFlexTable::DrawCell(
 		return;
 		
 	// Save clip, and clip to the cell/updateRgn intersection
-	StClipRgnState savedClip;
-	::ClipRect(&intersection);
+	StClipRgnState savedClip(intersection);
 
+	Rect insetRect = inLocalRect;
+	insetRect.right--;
+	EraseCellBackground ( inCell, inLocalRect );
+
+	// Save pen state
+	ApplyTextStyle(inCell.row);
+	if ( mRowBeingEdited != inCell.row )
+		DrawCellContents(inCell, insetRect);
+} // CStandardFlexTable::DrawCell
+
+
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::EraseCellBackground(
+	const STableCell& inCell,
+	const Rect& inLocalRect)
+// Erase the background of the cell. Override to draw different colors or do things like
+// _not_ draw when you have, for instance, a background image.
+//----------------------------------------------------------------------------------------
+{
 	StColorState penState;
 	RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF };
 	::RGBBackColor(&white);
@@ -1867,11 +1939,8 @@ void CStandardFlexTable::DrawCell(
 		localRect = insetRect;
 	::EraseRect(&inLocalRect);
 
-	// Save pen state
-	ApplyTextStyle(inCell.row);
-	if ( mRowBeingEdited != inCell.row )
-		DrawCellContents(inCell, insetRect);
-} // CStandardFlexTable::DrawCell
+} // CStandardFlexTable::EraseCellBackground
+
 
 //----------------------------------------------------------------------------------------
 Boolean CStandardFlexTable::GetRowDragRgn(TableIndexT inRow, RgnHandle ioHiliteRgn) const
@@ -1940,16 +2009,18 @@ void CStandardFlexTable::GetHiliteRgn(RgnHandle	ioHiliteRgn)
 
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::EnterDropArea(
-	DragReference		/*inDragRef*/,
-	Boolean				/*inDragHasLeftSender*/)
+	DragReference		inDragRef,
+	Boolean				inDragHasLeftSender)
 // CStandardFlexTable overrides the LDropArea base method, because it assumes a drop-on-row
 // scenario
 //----------------------------------------------------------------------------------------
 {
+	LDragAndDrop::EnterDropArea(inDragRef,inDragHasLeftSender);
+	
 } // CStandardFlexTable::EnterDropArea
 
 //----------------------------------------------------------------------------------------
-void CStandardFlexTable::LeaveDropArea(DragReference /*inDragRef*/)
+void CStandardFlexTable::LeaveDropArea(DragReference inDragRef)
 // CStandardFlexTable overrides the LDropArea base method, because it assumes a drop-on-row
 // scenario
 //----------------------------------------------------------------------------------------
@@ -1965,6 +2036,9 @@ void CStandardFlexTable::LeaveDropArea(DragReference /*inDragRef*/)
 //	HiliteSelection( IsActive(), true); // Finder does not do this.
 	mIsDropBetweenRows = false;
 	mIsInternalDrop = false;
+	
+	LDragAndDrop::LeaveDropArea(inDragRef);
+	
 } // CStandardFlexTable::LeaveDropArea
 
 //----------------------------------------------------------------------------------------
@@ -2363,6 +2437,15 @@ void CStandardFlexTable::SetRightmostVisibleColumn(UInt16 inLastDesiredColumn)
 {
 	mTableHeader->SetRightmostVisibleColumn(inLastDesiredColumn);
 } // CStandardFlexTable::SetRightmostVisibleColumn
+
+//----------------------------------------------------------------------------------------
+Boolean CStandardFlexTable::TableSupportsNaturalOrderSort() const
+// Describes whether or not the table currently supports dropping things in the middle
+// (natural order). This will not be the case, for example, when the table is sorted.
+//----------------------------------------------------------------------------------------
+{
+	return true;
+} // CStandardFlexTable::TableSupportsNaturalOrderSort
 
 #pragma mark -
 #if defined(QAP_BUILD)

@@ -100,6 +100,7 @@ public:
 	virtual void		SetNotifyOnSelectionChange(Boolean inDoNotify);
 	virtual Boolean 	GetNotifyOnSelectionChange();
 	void				SetRightmostVisibleColumn(UInt16 inLastDesiredColumn);
+	virtual Boolean		TableSupportsNaturalOrderSort() const;
 
 	void				DoInlineEditing ( const STableCell & inCell ) ;
 		// a public way to tell the table to begin an in-place edit. This is
@@ -237,6 +238,9 @@ protected:
 	virtual void		DrawCellContents(
 							const STableCell		&inCell,
 							const Rect				&inLocalRect);
+	virtual void 		EraseCellBackground(
+							const STableCell& inCell,
+							const Rect& inLocalRect);
 	virtual void		GetMainRowText(
 							TableIndexT			inRow,
 							char*				outText,
@@ -302,6 +306,7 @@ protected:
 	virtual void			AddRowDataToDrag(
 								TableIndexT		/* inRow */,
 											DragReference	/* inDragRef */	) {};
+	virtual void		HiliteDropArea(DragReference inDragRef);
 	virtual void		InsideDropArea(DragReference inDragRef);
 	virtual void		EnterDropArea(DragReference inDragRef, Boolean inDragHasLeftSender);
 	virtual void		LeaveDropArea(DragReference	inDragRef);
@@ -408,7 +413,8 @@ protected:
 	Boolean				mIsInternalDrop;		// a drop of one row on another ?
 	Boolean				mIsDropBetweenRows;		// changing order
 	Boolean				mAllowDropAfterLastRow;	// true to allow drops in the whitespace after the table
-	
+	Boolean				mInlineFeedbackOn;		// do we draw the inline feedback or frame entire area?
+
 	CInlineEditField*	mNameEditor;			// used for inline editing
 	TableIndexT			mRowBeingEdited;
 	CInlineEditorListener mInlineListener;		// listens to the editor and tells us things
