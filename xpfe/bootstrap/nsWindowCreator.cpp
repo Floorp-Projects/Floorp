@@ -106,10 +106,9 @@ nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
     NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
     if (xulParent)
       xulParent->CreateNewWindow(aChromeFlags, getter_AddRefs(newWindow));
-  }
-
-  // no parent or incompetent parent. try again using basic methods:
-  if (!newWindow) {
+    // And if it fails, don't try again without a parent. It could fail
+    // intentionally (bug 115969).
+  } else { // try using basic methods:
     /* You really shouldn't be making dependent windows without a parent.
       But unparented modal (and therefore dependent) windows happen
       in our codebase, so we allow it after some bellyaching: */
