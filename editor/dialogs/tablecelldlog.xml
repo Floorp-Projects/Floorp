@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<!DOCTYPE dialog>
+<window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40">
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+      <td width=500>
+        <fieldset><legend> Selection </legend>
+          <select size="1" name="tablecell.selection">
+            <optgroup label="selection">
+              <option label="Cell" value="Cell">Cell</option>
+              <option label="Column" value="Column">Column</option>
+              <option label="Row" value="Row">Row</option>
+              <option label="Mixed" value="Mixed">Mixed (?)</option>
+            </optgroup>
+          </select>
+          <input type="button" class=genericbutton value=" Previous " />
+          <input type="button" class=genericbutton value=" Next " />
+        </fieldset>
+
+        <fieldset><legend> Cell Size </legend>
+          <table>
+            <tr>
+              <td>
+                <xul:checkbox value="Width:" />
+                <xul:label>Width:</xul:label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" name="cell.width" />
+                <select size="1" name="cell.widthType">
+                  <optgroup label="pixels">
+                    <option label="pixels" value="pixels">pixels</option>
+                    <option label="% of window" value="% of window">% of window</option>
+                  </optgroup>
+                </select>
+              </td>
+              <td width="20px"/>
+              <td>
+                <xul:label>Spans:</xul:label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" name="table.spannumrows" />
+                <xul:label>rows</xul:label>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <xul:checkbox value="Height:" />
+                <xul:label>Height:</xul:label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" name="cell.height" />
+                <select size="1" name="cell.heightType">
+                  <optgroup label="pixels">
+                    <option label="pixels" value="pixels">pixels</option>
+                    <option label="% of window" value="% of window">% of window</option>
+                  </optgroup>
+                </select>
+              </td>
+              <td width="20px"/>
+              <td/>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" name="table.spannumcols" />
+                <xul:label>columns</xul:label>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+
+        <table cellspacing=0 cellpadding=0 width="100%">
+          <tr>
+            <td width="60%" valign=top>
+
+              <fieldset><legend> Content Alignment </legend>
+                <table cellspacing=0 cellpadding=2>
+                  <tr>
+                    <td valign=middle align=right>
+                      <xul:label>Horizontal</xul:label>
+                    </td>
+                    <td>
+                      <select size="1" name="cell.horizontalalignment">
+                        <optgroup label="alignment">
+                          <option label="Left" value="Left">Left</option>
+                          <option label="Center" value="Center">Center</option>
+                          <option label="Right" value="Right">Right</option>
+                        </optgroup>
+                      </select>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td valign=middle align=right>
+                      <xul:label>Vertical</xul:label>
+                    </td>
+                    <td>
+                      <select size="1" name="cell.verticalalignment">
+                        <optgroup label="valignment">
+                          <option label="Top" value="Top">Top</option>
+                          <option label="Center" value="Center">Center</option>
+                          <option label="Baselines" value="Baselines">Baselines</option>
+                          <option label="Bottom" value="Bottom">Bottom</option>
+                        </optgroup>
+                      </select>
+                    </td>
+                  </tr>
+                </table>
+              </fieldset>
+
+            </td>
+
+            <td width="40%" align=right>
+              <table>
+                <tr>
+                  <td>
+                    <fieldset><legend> Text Style </legend>
+                      <table>
+                        <tr>
+                          <td>
+                            <xul:checkbox value="Header" />
+                            <xul:label> Header </xul:label>
+                          </td>
+                          <td width=20 />
+                          <td>
+                            <xul:checkbox value="Nonbreaking" />
+                            <xul:label> Nonbreaking </xul:label>
+                          </td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td align=right>
+                    <p/>
+                    <input type="button" class=genericbutton value=" Extra HTML... " disabled />
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+        <fieldset><legend> Cell Background </legend>
+          <table cellspacing=0 cellpadding=2 width="100%">
+            <tr>
+              <td valign=middle>
+                <xul:checkbox value="Color:" />
+                <xul:label>Color:</xul:label>
+              </td>
+              <td valign=middle>
+                <xul:label>[Color Picker Here]</xul:label>
+              </td>
+            </tr>
+
+            <tr valign=middle>
+              <td>
+                <xul:checkbox value="Image:" />
+                <xul:label>Image:</xul:label>
+              </td>
+              <td>
+                <input type="file" value=" Choose Image... " size="50" length="50" maxlength="255" name="table.imageurl" />
+              </td>
+            </tr>
+
+            <tr>
+              <td/>
+              <td valign=middle>
+                <xul:checkbox value="Leave image at the original location" />
+                <xul:label>Leave image at the original location</xul:label>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+
+        <input type="button" id="helpbutton" value=" Help " disabled />
+        <input type="submit" id="cancelbutton" value=" Cancel " />
+        <input type="button" id="applybutton" value=" Apply " disabled />
+        <input type="submit" id="okbutton" value=" OK " />
+      </td>
+    </tr>
+  </table>
+
+</window>
