@@ -29,8 +29,8 @@
 #include "nsVoidArray.h"
 #include "nsIFrame.h"
 #include "nsIBidi.h"
-
-class nsIUBidiUtils;
+#include "nsIUBidiUtils.h"
+#include "nsCOMPtr.h"
 
 class nsBidiPresUtils {
 public:
@@ -146,8 +146,8 @@ private:
   PRUint8*        mLevels;
   nsresult        mSuccess;
 
-  nsIBidi*        mBidiEngine;
-  nsIUBidiUtils*  mUnicodeUtils;
+  nsCOMPtr<nsIBidi>        mBidiEngine;
+  nsCOMPtr<nsIUBidiUtils>  mUnicodeUtils;
 };
 
 #endif /* nsBidiPresUtils_h___ */
