@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: ExprParser.cpp,v 1.3 1999/11/18 04:40:02 kvisco%ziplink.net Exp $
+ * $Id: ExprParser.cpp,v 1.4 2000/03/19 08:00:01 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -29,7 +29,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.3 $ $Date: 1999/11/18 04:40:02 $
+ * @version $Revision: 1.4 $ $Date: 2000/03/19 08:00:01 $
 **/
 
 #include "ExprParser.h"
@@ -448,6 +448,20 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     else if ( XPathNames::TRUE_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TRUE);
     }
+    // OG+
+    else if ( XPathNames::NUMBER_FN.isEqual(tok->value) ) {
+        fnCall = new NumberFunctionCall(NumberFunctionCall::NUMBER);
+    }
+    else if ( XPathNames::ROUND_FN.isEqual(tok->value) ) {
+        fnCall = new NumberFunctionCall(NumberFunctionCall::ROUND);
+    }
+    else if ( XPathNames::CEILING_FN.isEqual(tok->value) ) {
+        fnCall = new NumberFunctionCall(NumberFunctionCall::CEILING);
+    }
+    else if ( XPathNames::FLOOR_FN.isEqual(tok->value) ) {
+        fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
+    }
+    // OG-
     else {
         //-- create error function() for now, should be ext function
         String err = "not a valid function: ";

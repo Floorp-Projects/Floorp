@@ -52,6 +52,7 @@ FUNCTION_CALL_OBJS = \
             ErrorFunctionCall.o \
             FunctionCall.o \
             NodeSetFunctionCall.o \
+            NumberFunctionCall.o \
             StringFunctionCall.o
 
 ALL_OBJS = $(EXPR_OBJS) \
@@ -158,6 +159,9 @@ FunctionCall.o: FunctionLib.h FunctionCall.cpp
 
 NodeSetFunctionCall.o: FunctionLib.h NodeSetFunctionCall.cpp
 	$(CC) $(INCLUDE_PATHS) -c NodeSetFunctionCall.cpp
+
+NumberFunctionCall.o: FunctionLib.h NumberFunctionCall.cpp
+	$(CC) $(INCLUDE_PATHS) -c NumberFunctionCall.cpp
 
 StringFunctionCall.o: FunctionLib.h StringFunctionCall.cpp
 	$(CC) $(INCLUDE_PATHS) -c StringFunctionCall.cpp

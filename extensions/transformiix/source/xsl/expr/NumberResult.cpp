@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: NumberResult.cpp,v 1.2 1999/11/15 07:13:12 nisheeth%netscape.com Exp $
+ * $Id: NumberResult.cpp,v 1.3 2000/03/19 08:00:20 kvisco%ziplink.net Exp $
  */
 
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:12 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/19 08:00:20 $
 **/
 
 #include "ExprResult.h"
@@ -99,7 +99,11 @@ void NumberResult::stringValue(String& str)  {
 } //-- stringValue
 
 MBool NumberResult::booleanValue() {
-   return (MBool)(this->value != 0.0);
+  // OG+
+  // As per the XPath spec, the boolean value of a number is true if and only if
+  // it is neither positive 0 nor negative 0 nor NaN
+  return (MBool)(this->value != 0.0 && this->value != -0.0 && ! isNaN());
+  // OG-
 } //-- booleanValue
 
 double NumberResult::numberValue() {

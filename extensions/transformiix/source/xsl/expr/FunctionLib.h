@@ -20,8 +20,11 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ *
+ * Olivier Gerardin, ogerardin@vo.lu
+ *   -- added number functions
  *    
- * $Id: FunctionLib.h,v 1.2 1999/11/15 07:13:12 nisheeth%netscape.com Exp $
+ * $Id: FunctionLib.h,v 1.3 2000/03/19 08:00:13 kvisco%ziplink.net Exp $
  */
 
 
@@ -64,6 +67,12 @@ static const String SUBSTRING_AFTER_FN;
 static const String SUBSTRING_BEFORE_FN;
 static const String TRANSLATE_FN;
 static const String TRUE_FN;
+// OG+
+static const String NUMBER_FN;
+static const String ROUND_FN;
+static const String CEILING_FN;
+static const String FLOOR_FN;
+// OG-
 
 //-- internal XSL processor functions
 static const String ERROR_FN;
@@ -312,5 +321,45 @@ public:
 private:
     short type;
 }; //-- StringFunctionCall
+
+
+// OG+
+/**
+ * Represents the XPath Number Function Calls
+**/
+class NumberFunctionCall : public FunctionCall {
+
+public:
+
+    enum _NumberFunctions {
+        NUMBER = 1,            //-- number()
+	ROUND,                 //-- round()
+	FLOOR,                 //-- floor()
+	CEILING                //-- ceiling()
+    };
+
+    /**
+     * Creates a default Number function. number() function is the default.
+    **/
+    NumberFunctionCall();
+
+    /**
+     * Creates a Number function of the given type
+    **/
+    NumberFunctionCall(short type);
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param ps the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+    short type;
+}; //-- NumberFunctionCall
+// OG-
 
 #endif

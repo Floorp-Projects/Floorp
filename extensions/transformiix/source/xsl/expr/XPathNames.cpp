@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: XPathNames.cpp,v 1.1 1999/11/15 07:28:04 nisheeth%netscape.com Exp $
+ * $Id: XPathNames.cpp,v 1.2 2000/03/19 08:00:20 kvisco%ziplink.net Exp $
  */
 
 /**
  * XPath names
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 1999/11/15 07:28:04 $
+ * @version $Revision: 1.2 $ $Date: 2000/03/19 08:00:20 $
 **/
 
 #include "FunctionLib.h"
@@ -52,6 +52,12 @@ const String XPathNames::SUBSTRING_AFTER_FN      = "substring-after";
 const String XPathNames::SUBSTRING_BEFORE_FN     = "substring-before";
 const String XPathNames::TRANSLATE_FN            = "translate";
 const String XPathNames::TRUE_FN                 = "true";
+// OG+
+const String XPathNames::NUMBER_FN               = "number";
+const String XPathNames::ROUND_FN                = "round";
+const String XPathNames::CEILING_FN              = "ceiling";
+const String XPathNames::FLOOR_FN                = "floor";
+// OG-
 
 //-- internal XSL processor functions
 const String XPathNames::ERROR_FN                = "error";
