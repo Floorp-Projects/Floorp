@@ -51,6 +51,7 @@
 // MACRO_NAME=CSS_PSEUDO_CLASS
 
 CSS_PSEUDO_CLASS(empty, ":empty")
+CSS_PSEUDO_CLASS(mozOnlyWhitespace, ":-moz-only-whitespace")
 CSS_PSEUDO_CLASS(lang, ":lang")
 CSS_PSEUDO_CLASS(notPseudo, ":not")
 CSS_PSEUDO_CLASS(mozBoundElement, ":-moz-bound-element")

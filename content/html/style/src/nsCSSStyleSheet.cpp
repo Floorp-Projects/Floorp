@@ -3007,8 +3007,11 @@ inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 }
 
 
-static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespaceText)
+static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, PRBool aWhitespaceIsSignificant)
 {
+  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
+               "Nonsensical arguments");
+
   nsIAtom *tag = aChild->Tag(); // skip text, comments, and PIs
   if ((tag != nsLayoutAtoms::textTagName) && 
       (tag != nsLayoutAtoms::commentTagName) &&
@@ -3016,12 +3019,15 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
     return PR_TRUE;
   }
 
-  if (aAcceptNonWhitespaceText) {
-    if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
-      nsCOMPtr<nsITextContent> text = do_QueryInterface(aChild);
-
-      if (text && !text->IsOnlyWhitespace())
-        return PR_TRUE;
+  if (aTextIsSignificant && tag == nsLayoutAtoms::textTagName) {
+    if (!aWhitespaceIsSignificant) {
+       nsCOMPtr<nsITextContent> text = do_QueryInterface(aChild);
+      
+       if (text && !text->IsOnlyWhitespace())
+         return PR_TRUE;
+    }
+    else {
+      return PR_TRUE;
     }
   }
 
@@ -3116,7 +3122,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // stop at first non-comment and non-whitespace node (and
           // non-text node for firstChild)
         } while (firstChild &&
-                 !IsSignificantChild(firstChild, acceptNonWhitespace));
+                 !IsSignificantChild(firstChild, acceptNonWhitespace, PR_FALSE));
       }
       result = localTrue == (data.mContent == firstChild);
     }
@@ -3133,7 +3139,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // stop at first non-comment and non-whitespace node (and
           // non-text node for lastChild)
         } while (lastChild &&
-                 !IsSignificantChild(lastChild, acceptNonWhitespace));
+                 !IsSignificantChild(lastChild, acceptNonWhitespace, PR_FALSE));
       }
       result = localTrue == (data.mContent == lastChild);
     }
@@ -3147,25 +3153,29 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           onlyChild = parent->GetChildAt(++index);
           // stop at first non-comment, non-whitespace and non-text node
         } while (onlyChild &&
-                 !IsSignificantChild(onlyChild, PR_FALSE));
+                 !IsSignificantChild(onlyChild, PR_FALSE, PR_FALSE));
         if (data.mContent == onlyChild) {
           // see if there's any more
           do {
             moreChild = parent->GetChildAt(++index);
-          } while (moreChild && !IsSignificantChild(moreChild, PR_FALSE));
+          } while (moreChild && !IsSignificantChild(moreChild, PR_FALSE, PR_FALSE));
         }
       }
       result = localTrue == (data.mContent == onlyChild &&
                              moreChild == nsnull);
     }
-    else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
+    else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::mozOnlyWhitespace == pseudoClass->mAtom) {
       nsIContent *child = nsnull;
       nsIContent *element = data.mContent;
+      PRBool isWhitespaceSignificant =
+        nsCSSPseudoClasses::empty == pseudoClass->mAtom;
       PRInt32 index = -1;
+
       do {
         child = element->GetChildAt(++index);
         // stop at first non-comment and non-whitespace node
-      } while (child && !IsSignificantChild(child, PR_TRUE));
+      } while (child && !IsSignificantChild(child, PR_TRUE, isWhitespaceSignificant));
       result = localTrue == (child == nsnull);
     }
     else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
