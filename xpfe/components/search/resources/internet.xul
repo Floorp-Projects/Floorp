@@ -71,7 +71,7 @@
 
 			<html:tr><html:td>
 				<html:input type="button" value="&uncheckall.button.label;" onclick="return doUncheckAll();" />
-				<html:input type="button" value="&savesearch.button.label;" onclick="return saveSearch();" />
+				<html:input id="SaveSearch" type="button" disabled="true" value="&savesearch.button.label;" onclick="return saveSearch();" />
 			</html:td></html:tr>
 		</html:table>
 		</html:center>
