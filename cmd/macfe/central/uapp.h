@@ -144,8 +144,8 @@ public:
 							return sCommandsToUpdateBeforeSelectingMenu;
 						}
 
+	virtual void		MakeMenuBar();
 	virtual void		ClickMenuBar(const EventRecord& inMacEvent);
-
 	virtual void		SetMenubar( ResIDT mbar, Boolean inUpdateNow = false );	// If appleMenu is 0, do not rebuild it
 	virtual void		UpdateMenus();
 	void				UpdateHierarchicalMenus();

@@ -43,6 +43,7 @@
 
 #include <LGARadioButton.h>
 #include <LGACheckbox.h>
+#include <LAppearanceMBAR.h>
 
 	// macfe
 //#include "NavigationServicesSupport.h"
@@ -1861,11 +1862,12 @@ void CFrontApp::OpenBookmarksFile( FSSpec* inFileSpec, CBrowserWindow * /*win*/,
 {
 	Try_
 	{
-		vector<char> url(500);
+		const int kBufferLen = 500;
+		vector<char> url (kBufferLen);
 		OSErr err = ReadBookmarksFile(url, *inFileSpec);
 		ThrowIfOSErr_(err);
 		
-		URL_Struct * request = NET_CreateURLStruct( url.begin(), NET_DONT_RELOAD );
+		URL_Struct * request = NET_CreateURLStruct( &(*url.begin()), NET_DONT_RELOAD );
 		CURLDispatcher::DispatchURL(request, NULL);	
 	}
 	Catch_(inErr)
@@ -1953,6 +1955,23 @@ void CFrontApp::PrintDocument(FSSpec* inFileSpec)
 	ProperStartup( inFileSpec, FILE_TYPE_ODOC );
 	PrintDocument( inFileSpec );
 }
+
+
+//
+// MakeMenuBar
+//
+// Overidden to make an appearance-savvy menu bar.
+//
+void
+CFrontApp::MakeMenuBar()
+{
+	if ( UEnvironment::HasFeature( env_HasAppearance ) )
+		new LAppearanceMBAR(MBAR_Initial);
+	else
+		new LMenuBar(MBAR_Initial);
+	LMenuBar::GetCurrentMenuBar()->SetModifierKeys ( cmdKey | shiftKey );
+}
+
 
 // ---------------------------------------------------------------------------
 //		¥ ClickMenuBar
@@ -3198,7 +3217,6 @@ void CFrontApp::DoHelpMenuItem( short itemNum )
 	}
 }
 
-extern pascal long MDEF_MenuKey( long theMessage, short theModifiers, MenuHandle hMenu );
 
 //-----------------------------------
 void CFrontApp::EventKeyDown( const EventRecord& inMacEvent )
@@ -3235,7 +3253,14 @@ void CFrontApp::EventKeyDown( const EventRecord& inMacEvent )
 			{
 				CTargetedUpdateMenuRegistry::SetCommands(CFrontApp::GetCommandsToUpdateBeforeSelectingMenu());
 				CTargetedUpdateMenuRegistry::UpdateMenus();
-				
+
+				// MacOS8 can do the weird key combos for us w/out Mercutio.
+				SInt32 unused;
+				LAppearanceMBAR* bar = dynamic_cast<LAppearanceMBAR*>(LMenuBar::GetCurrentMenuBar());
+				if ( bar )
+					keyCommand = bar->FindKeyCommand ( inMacEvent, unused );
+
+#if 0			
 				menuChoice = MDEF_MenuKey(
 					inMacEvent.message,
 					inMacEvent.modifiers, ::GetMenu( 666 ) );
@@ -3258,6 +3283,7 @@ void CFrontApp::EventKeyDown( const EventRecord& inMacEvent )
 					keyCommand = LMenuBar::GetCurrentMenuBar()->FindCommand(
 											HiWord(menuChoice),
 											LoWord(menuChoice));
+#endif
 			}
 	}
 	SignalIf_(LCommander::GetTarget() == nil);
