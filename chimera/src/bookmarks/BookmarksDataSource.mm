@@ -349,6 +349,9 @@
   if (index >= total)
     index = total - 1;
   [mOutlineView selectRow: index byExtendingSelection: NO];
+  // lame, but makes sure we catch all delete events in Info Panel
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"NSOutlineViewSelectionDidChangeNotification" object:mOutlineView];
+
 }
 
 -(void)deleteBookmark:(id)aItem
@@ -720,24 +723,25 @@
   if (!mBookmarkInfoController) 
     mBookmarkInfoController = [[BookmarkInfoController alloc] initWithOutlineView: mOutlineView]; 
 
-  [mBookmarkInfoController showWindow:mBookmarkInfoController];
-
   int index = [mOutlineView selectedRow];
   BookmarkItem* item = [mOutlineView itemAtRow: index];
   [mBookmarkInfoController setBookmark:item];
+  
+  [mBookmarkInfoController showWindow:mBookmarkInfoController];
 }
 
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
 {
   int index = [mOutlineView selectedRow];
   if (index == -1) {
-    if (mBookmarkInfoController)
-      [mBookmarkInfoController setBookmark:NULL];
+    [mEditBookmarkButton setEnabled:NO];
+    [mDeleteBookmarkButton setEnabled:NO];
   }
-  else {  
-    BookmarkItem* item = [mOutlineView itemAtRow:index];
-    if (mBookmarkInfoController)
-      [mBookmarkInfoController setBookmark:item];
+  else {
+    [mEditBookmarkButton setEnabled:YES];
+    [mDeleteBookmarkButton setEnabled:YES];
+    if ([[mBookmarkInfoController window] isVisible]) 
+      [mBookmarkInfoController setBookmark:[mOutlineView itemAtRow:index]];
   }
 }
 

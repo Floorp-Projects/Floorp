@@ -55,6 +55,8 @@ class BookmarksService;
 
   IBOutlet id mOutlineView;	
   IBOutlet id mBrowserWindowController;
+  IBOutlet id mEditBookmarkButton;
+  IBOutlet id mDeleteBookmarkButton;
   
   NSString* mCachedHref;
   

@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   Ben Goodger <ben@netscape.com> (Original Author)
+*   David Haas <haasd@cae.wisc.edu>
 */
 #import <AppKit/AppKit.h>
 #import "BookmarksService.h"
@@ -34,6 +35,7 @@
     IBOutlet NSTextField* mDescriptionLabel;
     
     BookmarkItem* mBookmarkItem;
+    NSTextView* mFieldEditor;
     
     NSOutlineView* mOutlineView;
 }
@@ -42,7 +44,5 @@
 
 -(void)setBookmark:(BookmarkItem*)aBookmark;
 
--(void)showUIElementPair: (id)aLabel control: (id) aControl;
--(void)hideUIElementPair: (id)aLabel control: (id) aControl;
 
 @end

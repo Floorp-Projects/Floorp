@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   Ben Goodger <ben@netscape.com> (Original Author)
+*   David Haas  <haasd@cae.wisc.edu>
 */
 
 #import "BookmarkInfoController.h"
@@ -27,19 +28,27 @@
 #include "nsIContent.h"
 #include "nsINamespaceManager.h"
 
+
+@interface BookmarkInfoController(Private)
+
+- (void)showUIElementPair: (id)aLabel control: (id) aControl;
+- (void)hideUIElementPair: (id)aLabel control: (id) aControl;
+- (void)commitChanges:(id)sender;
+- (void)commitField:(id)textField toProperty:(nsIAtom*)propertyAtom;
+
+@end;
+
 @implementation BookmarkInfoController
 
 -(id) init
 {
-#if 0
-  [mNameField         setDelegate: self];
-  [mLocationField     setDelegate: self];
-  [mKeywordField      setDelegate: self];
-  [mDescriptionField  setDelegate: self];
-#endif
-
   [super initWithWindowNibName:@"BookmarkInfoPanel"];
 
+  //custom field editor lets us undo our changes
+  mFieldEditor = [[NSTextView alloc] init];
+  [mFieldEditor setAllowsUndo:YES];
+  [mFieldEditor setFieldEditor:YES];
+  
   return self;
 }
 
@@ -50,126 +59,120 @@
   return [self init];
 }
 
--(void)windowDidLoad
+-(void)dealloc
 {
-
+  [mFieldEditor release];
+  [super dealloc];
 }
 
 -(void)controlTextDidEndEditing: (NSNotification*) aNotification
 {
+  [self commitChanges:[aNotification object]];
+  [[mFieldEditor undoManager] removeAllActions];
+}
+
+-(void)windowDidResignKey:(NSNotification*) aNotification
+{
+  [self commitChanges:nil];
+}
+
+// if changedField is nil, commit everything
+- (void)commitChanges:(id)changedField
+{
   if (![mBookmarkItem contentNode])
     return;
- 
+
+  // Name
+  if (!changedField || changedField == mNameField)
+    [self commitField:mNameField toProperty:BookmarksService::gNameAtom];
+  
+  // Location
+  if (!changedField || changedField == mLocationField)
+    [self commitField:mLocationField toProperty:BookmarksService::gHrefAtom];
+
+  // Keyword
+  if (!changedField || changedField == mKeywordField)
+    [self commitField:mKeywordField toProperty:BookmarksService::gKeywordAtom];
+
+  // Description
+  if (!changedField || changedField == mDescriptionField)
+    [self commitField:mDescriptionField toProperty:BookmarksService::gDescriptionAtom];
+
+  [[mFieldEditor undoManager] removeAllActions];
+  [mOutlineView reloadItem: mBookmarkItem reloadChildren: NO];
+  BookmarksService::BookmarkChanged([mBookmarkItem contentNode], TRUE);
+}
+
+- (void)commitField:(id)textField toProperty:(nsIAtom*)propertyAtom
+{
   unsigned int len;
   PRUnichar* buffer;
   nsXPIDLString buf;
-  
-  // Name
-  len = [[mNameField stringValue] length];
-  buffer = new PRUnichar[len + 1];
-  if (!buffer) return;
-  
-  [[mNameField stringValue] getCharacters:buffer];
-  buffer[len] = (PRUnichar)'\0';
-  
-  buf.Adopt(buffer);
-  [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, buf, PR_TRUE);
 
-  // Location
-  len = [[mLocationField stringValue] length];
+  // we really need a category on NSString for this
+  len = [[textField stringValue] length];
   buffer = new PRUnichar[len + 1];
   if (!buffer) return;
-  
-  [[mLocationField stringValue] getCharacters:buffer];
+  [[textField stringValue] getCharacters:buffer];
   buffer[len] = (PRUnichar)'\0';
-  
   buf.Adopt(buffer);
-  [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, buf, PR_TRUE);
-  
-  // Keyword
-  len = [[mKeywordField stringValue] length];
-  buffer = new PRUnichar[len + 1];
-  if (!buffer) return;
-  
-  [[mKeywordField stringValue] getCharacters:buffer];
-  buffer[len] = (PRUnichar)'\0';
-  
-  buf.Adopt(buffer);
-  [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gKeywordAtom, buf, PR_TRUE);
-  
-  // Description
-  len = [[mDescriptionField stringValue] length];
-  buffer = new PRUnichar[len + 1];
-  if (!buffer) return;
-  
-  [[mDescriptionField stringValue] getCharacters:buffer];
-  buffer[len] = (PRUnichar)'\0';
-  
-  buf.Adopt(buffer);
-  [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, buf, PR_TRUE);
-  
-  [mOutlineView reloadItem: mBookmarkItem reloadChildren: NO];
-  BookmarksService::BookmarkChanged([mBookmarkItem contentNode], TRUE);  
+  [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, propertyAtom, buf, PR_TRUE);
 }
+
 
 -(void)setBookmark: (BookmarkItem*) aBookmark
 {
-  if (aBookmark) {
-    nsAutoString group;
-    [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-    BOOL isGroup = !group.IsEmpty();
-    BOOL isFolder = !isGroup && [mOutlineView isExpandable: aBookmark];
+  // See bug 154081 - don't show this window if Bookmark doesn't exist
+  // after fix - this should never happen unless disaster strikes.
+  if (![aBookmark contentNode])
+    return;
 
-    // First, Show/Hide the appropriate UI
-    if (isGroup) {
-      [self showUIElementPair: mNameLabel        control: mNameField];
-      [self showUIElementPair: mKeywordLabel     control: mKeywordField];
-      [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-      [self hideUIElementPair: mLocationLabel    control: mLocationField];
-    }
-    else if (isFolder) {
-      [self showUIElementPair: mNameLabel        control: mNameField];
-      [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-      [self hideUIElementPair: mKeywordLabel     control: mKeywordField];
-      [self hideUIElementPair: mLocationLabel    control: mLocationField];
-    }
-    else {
-      [self showUIElementPair: mNameLabel        control: mNameField];
-      [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-      [self showUIElementPair: mKeywordLabel     control: mKeywordField];
-      [self showUIElementPair: mLocationLabel    control: mLocationField];
-    }
-  
-    // Then, fill with appropriate values from Bookmarks
-    nsAutoString value;
-  
-    [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, value);
-    NSString* bookmarkName = [NSString stringWithCharacters: value.get() length: value.Length()];
-    [mNameField setStringValue: bookmarkName];
-    NSString* infoForString = [NSString stringWithCString: "Info for "];
-    [[self window] setTitle: [infoForString stringByAppendingString: bookmarkName]];
+  nsAutoString group;
+  [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
+  BOOL isGroup = !group.IsEmpty();
+  BOOL isFolder = !isGroup && [mOutlineView isExpandable: aBookmark];
 
-    if (!isGroup && !isFolder) {
-      [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
-      [mLocationField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
-    }
-    
-    if (!isFolder) {
-      [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gKeywordAtom, value);
-      [mKeywordField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
-    }
-    
-    [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
-    [mDescriptionField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+  // First, Show/Hide the appropriate UI
+  if (isGroup) {
+    [self showUIElementPair: mNameLabel        control: mNameField];
+    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
+    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
+    [self hideUIElementPair: mLocationLabel    control: mLocationField];
   }
-  else {
-    [[self window] setTitle: [NSString stringWithCString: "Bookmark Info"]];
-    
-    [self hideUIElementPair: mNameLabel        control: mNameField];
-    [self hideUIElementPair: mDescriptionLabel control: mDescriptionField];
+  else if (isFolder) {
+    [self showUIElementPair: mNameLabel        control: mNameField];
+    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
     [self hideUIElementPair: mKeywordLabel     control: mKeywordField];
     [self hideUIElementPair: mLocationLabel    control: mLocationField];
   }
+  else {
+    [self showUIElementPair: mNameLabel        control: mNameField];
+    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
+    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
+    [self showUIElementPair: mLocationLabel    control: mLocationField];
+  }
+  
+  // Then, fill with appropriate values from Bookmarks
+  nsAutoString value;
+  
+  [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, value);
+  NSString* bookmarkName = [NSString stringWithCharacters: value.get() length: value.Length()];
+  [mNameField setStringValue: bookmarkName];
+  NSString* infoForString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkInfoTitle",@"Info for "), bookmarkName];
+  [[self window] setTitle: infoForString];
+
+  if (!isGroup && !isFolder) {
+    [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
+    [mLocationField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+  }
+    
+  if (!isFolder) {
+    [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gKeywordAtom, value);
+    [mKeywordField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+  }
+    
+  [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
+  [mDescriptionField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
   
   mBookmarkItem = aBookmark;  
 }
@@ -197,5 +200,11 @@
     [aControl retain]; 
   }
 }
+
+-(NSText *)windowWillReturnFieldEditor:(NSWindow *)aPanel toObject:(id)aObject
+{
+  return mFieldEditor;
+}
+
 
 @end
