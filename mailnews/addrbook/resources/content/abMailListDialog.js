@@ -79,9 +79,9 @@ function mailingListExists(listname)
 
 function GetListValue(mailList, doAdd)
 {
-  mailList.dirName = document.getElementById('ListName').value;
+  var listname = document.getElementById('ListName').value;
 
-  if (mailList.dirName.length == 0)
+  if (listname.length == 0)
   {
     var alertText = gAddressBookBundle.getString("emptyListName");
     alert(alertText);
@@ -89,21 +89,21 @@ function GetListValue(mailList, doAdd)
   }
   else
   {
-    var listname = mailList.dirName;
-    listname = listname.toLowerCase();
-    oldListName = oldListName.toLowerCase();
+    var canonicalNewListName = listname.toLowerCase();
+    var canonicalOldListName = oldListName.toLowerCase();
     if (doAdd)
     {
-      if (mailingListExists(listname))
+      if (mailingListExists(canonicalNewListName))
         return false;
     }
-    else if (oldListName != listname)
+    else if (canonicalOldListName != canonicalNewListName)
     {
-      if (mailingListExists(listname))
+      if (mailingListExists(canonicalNewListName))
         return false;
     }
   }
 
+  mailList.dirName = listname;
   mailList.listNickName = document.getElementById('ListNickName').value;
   mailList.description = document.getElementById('ListDescription').value;
 
