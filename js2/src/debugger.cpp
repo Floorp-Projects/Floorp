@@ -34,14 +34,15 @@
 #include "world.h"
 #include "debugger.h"
 
-#include <iostream>
 #include <string>
 #include <ctype.h>
 #include <assert.h>
 
 namespace JavaScript {
 namespace Debugger {
-    
+
+    using namespace Interpreter;
+
     enum ShellCommand {
         ASSEMBLE,
         AMBIGUOUS,
@@ -191,7 +192,8 @@ registers, or set the value of a single register."},
 
         static string lastLine("help\n");
         string line;
-        
+        LineReader reader(mIn);
+
         do {            
             ICodeModule *iCode = cx->getICode();
             InstructionIterator pc = cx->getPC();
@@ -200,8 +202,7 @@ registers, or set the value of a single register."},
             printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
             stdOut << "]> ";
         
-            if (std::getline(mIn, line).eof())
-                std::exit(0);
+            reader.readLine(line);
 
             if (line.size() == 0)
                 line = lastLine;
