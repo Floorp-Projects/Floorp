@@ -39,6 +39,8 @@
 #include "primpl.h"
 #include "prgc.h"
 
+
+
 enum {
 	uppExitToShellProcInfo 				= kPascalStackBased,
 	uppStackSpaceProcInfo				= kRegisterBased 
@@ -60,23 +62,10 @@ unsigned char GarbageCollectorCacheFlusher(PRUint32 size);
 
 extern PRThread *gPrimaryThread;
 
-pascal void ExitToShellPatch(void);
-
-UniversalProcPtr	gExitToShellPatchCallThru = NULL;
-#if GENERATINGCFM
-RoutineDescriptor 	gExitToShellPatchRD = BUILD_ROUTINE_DESCRIPTOR(uppExitToShellProcInfo, &ExitToShellPatch);
-#else
-#define gExitToShellPatchRD ExitToShellPatch
-#endif
 
 UniversalProcPtr	gStackSpacePatchCallThru = NULL;
-#if GENERATINGCFM
 pascal long StackSpacePatch(UInt16);
 RoutineDescriptor 	StackSpacePatchRD = BUILD_ROUTINE_DESCRIPTOR(uppStackSpaceProcInfo, &StackSpacePatch);
-#else
-pascal long StackSpacePatch();
-asm pascal long StackSpacePatchGlue();
-#endif
 
 
 //##############################################################################
@@ -85,69 +74,8 @@ asm pascal long StackSpacePatchGlue();
 #pragma mark CREATING MACINTOSH THREAD STACKS
 
 
-#if !GENERATINGCFM
 
-asm long pascal StackSpacePatchCallThruGlue(long theAddress)
-{
-	move.l	4(sp), a0
-	jsr		(a0)
-	move.l	(sp)+, a0
-	add		#0x8, sp 
-	move.l	d0, -(sp)
-	jmp		(a0)
-}
-
-asm pascal long StackSpacePatchGlue()
-{
-
-	//	Check out LocalA5.  If it is zero, then
-	//	it is our first time through, and we should
-	//	store away our A5.  If not, then we are
-	//	a real time manager callback, so we should
-	//	store away A5, set up our local a5, jsr
-	//	to our callback, and then restore the
-	//	previous A5.
-	
-	lea			LocalA5, a0
-	move.l		(a0), d0
-	cmpi.l		#0, d0
-	bne			DoStackSpace
-	
-	move.l		a5, (a0)
-	rts
-
-DoStackSpace:
-	
-	//	Save A5, restore our local A5
-	
-	move.l		a5, -(sp)
-	move.l		d0, a5 
-	
-	//	Jump to our C routine
-	
-	clr.l		-(sp)
-	jsr 		StackSpacePatch
-	move.l		(sp)+, d0
-	
-	//	Restore the previous A5
-	
-	move.l		(sp)+, a5
-
-	rts
-
-LocalA5:
-
-	dc.l		0
-	
-}
-
-#endif
-
-#if GENERATINGCFM
 pascal long StackSpacePatch(UInt16 trapNo)
-#else
-pascal long StackSpacePatch()
-#endif
 {
 	char		tos;
 	PRThread	*thisThread;
@@ -160,11 +88,7 @@ pascal long StackSpacePatch()
 	if ((thisThread == gPrimaryThread) || 	
 		(&tos < thisThread->stack->stackBottom) || 
 		(&tos > thisThread->stack->stackTop)) {
-#if GENERATINGCFM
 		return CallOSTrapUniversalProc(gStackSpacePatchCallThru, uppStackSpaceProcInfo, trapNo);
-#else
-		return StackSpacePatchCallThruGlue((long)gStackSpacePatchCallThru);
-#endif
 	}
 	else {
 		return &tos - thisThread->stack->stackBottom;
@@ -286,6 +210,7 @@ void _MD_EarlyInit()
 {
 	Handle		environmentVariables;
 
+
 #if !defined(MAC_NSPR_STANDALONE)
 	// MacintoshInitializeMemory();  Moved to mdmacmem.c: AllocateRawMemory(Size blockSize)
 #else
@@ -325,29 +250,13 @@ void _MD_EarlyInit()
 #ifdef PR_INTERNAL_LOGGING
 	_MD_PutEnv ("NSPR_LOG_MODULES=clock:6,cmon:6,io:6,mon:6,linker:6,cvar:6,sched:6,thread:6");
 #endif
-	
-#if GENERATINGCFM
+
 	gStackSpacePatchCallThru = GetOSTrapAddress(0x0065);
 	SetOSTrapAddress((UniversalProcPtr)&StackSpacePatchRD, 0x0065);
 	{
 		long foo;
 		foo = StackSpace();
 	}
-#else
-	gStackSpacePatchCallThru = GetOSTrapAddress(0x0065);
-	SetOSTrapAddress((UniversalProcPtr)&StackSpacePatchGlue, 0x0065);
-	StackSpace();
-#endif
-
-	//	THIS IS VERY IMPORTANT.  Install our ExitToShell patch.  
-	//	This allows us to deactivate our Time Mananger task even
-	//	if we are not totally gracefully exited.  If this is not
-	//	done then we will randomly crash at later times when the
-	//	task is called after the app heap is gone.
-	
-	gExitToShellPatchCallThru = GetToolboxTrapAddress(0x01F4);
-	SetToolboxTrapAddress((UniversalProcPtr)&gExitToShellPatchRD, 0x01F4);
-
 }
 
 void _MD_FinalInit()
@@ -357,7 +266,7 @@ void _MD_FinalInit()
 
 void PR_InitMemory(void) {
 #ifndef NSPR_AS_SHARED_LIB
-	//	Needed for Mac browsers without Java.  We don’t want them calling PR_INIT, since it
+	//	Needed for Mac browsers without Java.  We don't want them calling PR_INIT, since it
 	//	brings in all of the thread support.  But we do need to allow them to initialize
 	//	the NSPR memory package.
 	//	This should go away when all clients of the NSPR want threads AND memory.
@@ -370,9 +279,8 @@ void PR_InitMemory(void) {
 #pragma mark -
 #pragma mark TERMINATION
 
-typedef pascal void (* ExitToShellProc)(void);  
 
-//	THIS IS *** VERY *** IMPORTANT... our ExitToShell patch.
+//	THIS IS *** VERY *** IMPORTANT... our CFM Termination proc.
 //	This allows us to deactivate our Time Mananger task even
 //	if we are not totally gracefully exited.  If this is not
 //	done then we will randomly crash at later times when the
@@ -380,21 +288,13 @@ typedef pascal void (* ExitToShellProc)(void);
 
 extern TMTask		gTimeManagerTaskElem;
 
-pascal void ExitToShellPatch(void)
+void CleanupTermProc(void)
 {
 	_MD_StopInterrupts();	
 
-	CloseOpenTransport();	
-
-#if GENERATINGCFM
-	CallUniversalProc(gExitToShellPatchCallThru, uppExitToShellProcInfo);
-#else 
-	{
-		ExitToShellProc	*exitProc = (ExitToShellProc *)&gExitToShellPatchCallThru;
-		(*exitProc)();
-	}
-#endif
-
+	CloseOpenTransport();
+	
+	__terminate();
 }
 
 
@@ -442,7 +342,7 @@ PStrFromCStr(const char* src, Str255 dst)
 		short 				overflow = 255;		// count down so test it loop is faster
 		register char		temp;
 	
-		// Can't do the K&R C thing of “while (*s++ = *t++)” because it will copy trailing zero
+		// Can't do the K&R C thing of "while (*s++ = *t++)" because it will copy trailing zero
 		// which might overrun pascal buffer.  Instead we use a temp variable.
 		while ( (temp = *src++) != 0 ) 
 		{
@@ -550,7 +450,7 @@ void PStrFromCStr(const char* src, Str255 dst)
 		short 				overflow = 255;		// count down so test it loop is faster
 		register char		temp;
 	
-		// Can't do the K&R C thing of “while (*s++ = *t++)” because it will copy trailing zero
+		// Can't do the K&R C thing of "while (*s++ = *t++)" because it will copy trailing zero
 		// which might overrun pascal buffer.  Instead we use a temp variable.
 		while ( (temp = *src++) != 0 ) 
 		{
@@ -636,54 +536,6 @@ int strcasecmp(const char *str1, const char *str2)
 	return strcmpcore(str1, str2, false);
 }
 
-#if GENERATING68K
-asm void *memset(void *target, int pattern, size_t length)										// Legal asm qualifier
-{
-				MOVEA.L		4(SP),A0			// target -> A0
-				MOVE.W		10(SP),D0			// pattern -> D0, length -> D1
-				MOVE.L		12(SP),D1
-				CMPI.L		#30,D1
-				BLT			end
-				
-				// Fill D0 with the pattern
-				MOVEQ		#0,D2				// Clear D2, we’ll use it as scratch
-				MOVE.B		D0,D2				// Fill the bottom byte
-				LSL.W		#8,D0				//  
-				OR.W		D0,D2
-				MOVE.L		D2,D0
-				SWAP		D2
-				OR.L		D2,D0
-				
-				// Are we odd aligned?
-				MOVE.L		A0,D2				// Copy target address into scratch
-				LSR.B		#1,D2				// Sets C bit
-				BCC.S		checkAlign2			// If even, check for 16-byte alignment
-				MOVE.B		D0,(A0)+			// Take care of odd byte
-				SUBQ.L		#1,D1				// Update length
-				
-				// Are we odd 16-byte word alligned?
-checkAlign2:	LSR.B		#1,D2				// Still set from last check
-				BCC			totallyAligned
-				MOVE.W		D0,(A0)+
-				SUBQ.L		#2,D1
-			
-totallyAligned:	MOVE.L		D1,D2
-				LSR.L		#4,D2
-				SUBQ.L		#1,D2
-copyHunk:		MOVE.L		D0,(A0)+
-				MOVE.L		D0,(A0)+
-				MOVE.L		D0,(A0)+
-				MOVE.L		D0,(A0)+
-				SUBQ.L		#1,D2
-				BCC			copyHunk
-				ANDI.W		#15,D1				// Check done?
-				BRA			end
-dribble:		MOVE.B		D0,(A0)+
-end:			DBF			D1,dribble
-				MOVE.L		4(SP),D0			// Return the target
-				RTS								
-}
-#endif
 
 void *memcpy(void *to, const void *from, size_t size)
 {
