@@ -21,6 +21,24 @@
 
 
 source CGI.tcl
+
+if {![info exists FORM(product)]} {
+    GetVersionTable
+    if {[array size versions] != 1} {
+        puts "Content-type: text/html\n"
+        PutHeader "Enter Bug" "Enter Bug"
+        
+        puts "<H2>First, you must pick a product on which to enter a bug.</H2>"
+        foreach p [array names versions] {
+            puts "<a href=enter_bug.cgi?product=$p&$buffer>$p</a><br>"
+        }
+        exit
+    }
+    set $FORM(product) [array names versions]
+}
+
+set product $FORM(product)
+
 confirm_login
 
 puts "Content-type: text/html\n"
@@ -41,27 +59,7 @@ proc pickplatform {} {
     }
 }
 
-proc pickproduct {} {
-    global FORM env COOKIE product versions
-    set product missingProductSoPickDefault
-    
-    set product [formvalue product]
-    if {$product == ""} {
-        if {[info exists COOKIE(PRODUCT)]} {
-            set product $COOKIE(PRODUCT)
-        } else {
-            switch -regexp $env(HTTP_USER_AGENT) {
-                {2.0Gold}       {set product "Hearst"}
-                {4\.0.*; *Nav} { set product "Ratbert"}
-                {4\.0}  {set product "Communicator"}
-                {3\.0}  {set product "Akbar"}
-                {2\.0}  {set product "Cheddar"}
-            }
-        }
-    }
-    if {![info exists versions($product)]} { set product "Communicator" }
-    return $product
-}
+
 
 proc pickversion {} {
     global env versions product FORM
@@ -131,7 +129,6 @@ proc formvalue {name {default ""}} {
 }
 
 GetVersionTable
-pickproduct
 
 set assign_element [GeneratePersonInput assigned_to 1 [formvalue assigned_to]]
 set cc_element [GeneratePeopleInput cc [formvalue cc ""]]
@@ -151,10 +148,13 @@ puts "
 <FORM NAME=enterForm METHOD=POST ACTION=\"post_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
 <INPUT TYPE=HIDDEN NAME=reporter VALUE=$COOKIE(Bugzilla_login)>
+<INPUT TYPE=HIDDEN NAME=product VALUE=$product>
   <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
   <TR>
     <td ALIGN=right valign=top><B>Product:</B></td>
-    <td>[Product_element $product]</td>
+    <td valign=top>$product</td>
+  </TR>
+  <TR>
     <td ALIGN=right valign=top><B>Version:</B></td>
     <td>[Version_element [pickversion] $product]</td>
     <td align=right valign=top><b>Component:</b></td>
