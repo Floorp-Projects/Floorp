@@ -33,7 +33,13 @@ CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base -I$(PUBLIC)\jsurl 
+	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base 
+
+!ifdef NECKO
+LINCS = $(LINCS) -I..\jsurl 
+!else
+LINCS = $(LINCS) -I$(PUBLIC)\jsurl 
+!endif
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = jsdom

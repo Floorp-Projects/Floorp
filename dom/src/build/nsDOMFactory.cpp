@@ -111,6 +111,9 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMSelectionListener.h"
 #include "plhash.h"
+#ifdef NECKO
+#include "nsJSProtocolHandler.h"
+#endif
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
 
@@ -548,9 +551,12 @@ nsDOMScriptObjectFactory::NewScriptProcessingInstruction(nsIScriptContext *aCont
 //////////////////////////////////////////////////////////////////////
 
 
-static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
-static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_CID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
+static NS_DEFINE_CID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
+#ifdef NECKO
+static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
+#endif
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -651,6 +657,11 @@ nsresult nsDOMFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCScriptNameSetRegistry)) {
     inst = (nsISupports *)new nsScriptNameSetRegistry();
   }
+#ifdef NECKO
+  else if (mClassID.Equals(kJSProtocolHandlerCID)) {
+    return nsJSProtocolHandler::Create(aOuter, aIID, aResult);
+  }
+#endif
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
@@ -720,6 +731,8 @@ void XXXDomNeverCalled()
   NS_NewScriptRange(0, 0, 0, 0);
   NS_NewScriptSelection(0, 0, 0, 0);
   NS_NewScriptSelectionListener(0, 0, 0, 0);
+#ifndef NECKO
   NET_InitJavaScriptProtocol();
+#endif
   NS_InitDocumentClass(nsnull, nsnull);
 }
