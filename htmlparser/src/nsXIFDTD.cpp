@@ -1284,7 +1284,8 @@ nsresult nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
       result=mSink->DoFragment(PR_TRUE);
     }
   }
-  result=mSink->DoFragment(PR_FALSE);
+  else
+    result=mSink->DoFragment(PR_FALSE);
 
   return result;
 }
