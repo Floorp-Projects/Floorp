@@ -139,6 +139,7 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_removeLinks", "href");
 
   // lists
   NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
