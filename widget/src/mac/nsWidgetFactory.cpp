@@ -31,8 +31,6 @@
 #include "nsMacWindow.h"
 #include "nsAppShell.h"
 #include "nsButton.h"
-#include "nsRadioButton.h"
-#include "nsCheckButton.h"
 #include "nsTextWidget.h"
 #include "nsLabel.h"
 #include "nsFileWidget.h"
@@ -48,9 +46,14 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
 
-#include "nsTextAreaWidget.h"
-#include "nsListBox.h"
-#include "nsComboBox.h"
+#if USE_NATIVE_VERSION
+# include "nsTextAreaWidget.h"
+# include "nsListBox.h"
+# include "nsComboBox.h"
+# include "nsRadioButton.h"
+# include "nsCheckButton.h"
+#endif
+
 #include "nsLookAndFeel.h"
 
 #include "nsIComponentManager.h"
