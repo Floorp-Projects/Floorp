@@ -35,6 +35,24 @@
 
 #ifndef NSS_HELPER_
 #define NSS_HELPER_
+
+#include "nsIInterfaceRequestor.h"
+
+//
+// Implementation of an nsIInterfaceRequestor for use
+// as context for NSS calls
+//
+class PipUIContext : public nsIInterfaceRequestor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  PipUIContext();
+  virtual ~PipUIContext();
+
+};
+
 //
 // Function to get the implementor for a certain set of NSS
 // specific dialogs.
@@ -42,5 +60,18 @@
 
 nsresult 
 getNSSDialogs(void **_result, REFNSIID aIID);
+
+extern "C" {
+// a "fake" unicode conversion function
+PRBool
+pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
+                             unsigned char *inBuf,
+                             unsigned int inBufLen,
+                             unsigned char *outBuf,
+                             unsigned int maxOutBufLen,
+                             unsigned int *outBufLen,
+                             PRBool swapBytes);
+}
+
 #endif
 

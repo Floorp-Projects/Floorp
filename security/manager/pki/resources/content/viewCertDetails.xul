@@ -79,13 +79,40 @@
       </columns>
       <rows>
         <row>
-          <text value="&certmgr.certdetail.cn;" /> <text id="commonname"/>
+          <text value="&certmgr.certdetail.cn;" /> 
+          <text id="commonname"/>
         </row>
         <row>
-          <text value="&certmgr.certdetail.o;"  /> <text id="organization"/>
+          <text value="&certmgr.certdetail.o;"  /> 
+          <text id="organization"/>
         </row>
         <row>
-          <text value="&certmgr.certdetail.ou;" /> <text id="orgunit" />
+          <text value="&certmgr.certdetail.ou;" /> 
+          <text id="orgunit" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.subjectname;" /> 
+          <text id="subjectname" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.issuername;" /> 
+          <text id="issuername" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.serialnumber;" /> 
+          <text id="serialnumber" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.rsapubmodulus;" /> 
+          <text id="rsapubmodulus" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.sha1fingerprint;" /> 
+          <text id="sha1fingerprint" />
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.md5fingerprint;" /> 
+          <text id="md5fingerprint" />
         </row>
       </rows>
     </grid>

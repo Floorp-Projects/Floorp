@@ -48,9 +48,17 @@ interface nsIX509Cert : nsISupports {
   /*
    * attributes for certs
    */
+  readonly attribute wstring nickname;
+  readonly attribute wstring emailAddress;
   readonly attribute wstring commonName;
   readonly attribute wstring organization;
   readonly attribute wstring organizationalUnit;
+  readonly attribute wstring subjectName;
+  readonly attribute wstring issuerName;
+  readonly attribute wstring serialNumber;
+  readonly attribute wstring rsaPubModulus;
+  readonly attribute wstring sha1Fingerprint;
+  readonly attribute wstring md5Fingerprint;
 
   readonly attribute nsIX509CertValidity validity;
 
@@ -63,6 +71,7 @@ interface nsIX509Cert : nsISupports {
   const unsigned long EMAIL_CERT   = 1 << 2;
   const unsigned long SERVER_CERT  = 1 << 3;
 
+  /* XXX I think these should be moved to nsIX509CertDB */
   const unsigned long UNTRUSTED       =      0;
   const unsigned long TRUSTED_SSL     = 1 << 0;
   const unsigned long TRUSTED_EMAIL   = 1 << 1;

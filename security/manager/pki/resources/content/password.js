@@ -43,6 +43,14 @@ function onLoad()
   document.getElementById('pw1').focus();
 }
 
+function onP12Load()
+{
+  pw1 = document.getElementById("pw1");
+  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  // Select first password field
+  document.getElementById('pw1').focus();
+}
+
 function setPassword()
 {
   var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
@@ -52,6 +60,26 @@ function setPassword()
   // Return value
   params.SetInt(1, 1);
 
+  // Terminate dialog
+  window.close();
+}
+
+function getPassword()
+{
+  // grab what was entered
+  params.SetString(2, pw1.value);
+  // Return value
+  params.SetInt(1, 1);
+  // Terminate dialog
+  window.close();
+}
+
+function setP12Password()
+{
+  // grab what was entered
+  params.SetString(2, pw1.value);
+  // Return value
+  params.SetInt(1, 1);
   // Terminate dialog
   window.close();
 }

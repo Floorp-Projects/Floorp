@@ -34,6 +34,11 @@
 <!ENTITY setPassword.stats.symbols "Symbols:">
 <!ENTITY setPassword.stats.upper "Uppercase:">
 
+<!-- Values for getpassword.xul -->
+<!ENTITY getPassword.title  "Enter Master Password">
+<!ENTITY getPassword.tokenName.label "Token Name">
+<!ENTITY getPassword.password.label "Password:">
+
 <!-- These should be common -->
 <!ENTITY ok.label "OK">
 <!ENTITY cancel.label "Cancel">
@@ -68,3 +73,11 @@
 <!ENTITY serverCertExpired.title "Security Error: Security Certificate Expired">
 <!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
 
+<!ENTITY pkcs12.setpassword.title  "Choose a Portable Security Password">
+<!ENTITY pkcs12.setpassword.message  "The portable security password you set here protects the backup file that you are about to create.  You must set this password to proceed with the backup.">
+<!ENTITY pkcs12.setpassword.label1 "Portable security password:">
+<!ENTITY pkcs12.setpassword.label2 "Portable security password (again):">
+<!ENTITY pkcs12.setpassword.reminder "Important: If you forget your portable security password, you will not be able to restore this backup later.  Please record it in a safe location.">
+
+<!ENTITY pkcs12.getpassword.title  "Password Entry Dialog">
+<!ENTITY pkcs12.getpassword.message  "Please enter the portable security password protecting this security certificate and private key.">

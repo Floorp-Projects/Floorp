@@ -266,6 +266,38 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
+nsresult
+nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
+                          const PRUnichar *tokenName, 
+                          PRUnichar **_password,
+                          PRBool* _canceled)
+{
+  nsresult rv;
+  *_canceled = PR_FALSE;
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  if (!block) return NS_ERROR_FAILURE;
+  // Set the token name in the window
+  rv = block->SetString(1, tokenName);
+  if (NS_FAILED(rv)) return rv;
+  // open up the window
+  rv = nsNSSDialogHelper::openDialog(parent,
+                                     "chrome://pippki/content/getpassword.xul",
+                                     block);
+  if (NS_FAILED(rv)) return rv;
+  // see if user canceled
+  PRInt32 status;
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+  *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
+  if (!*_canceled) {
+    // retrieve the password
+    rv = block->GetString(2, _password);
+  }
+  return rv;
+}
+
 /* boolean unknownIssuer (in nsITransportSecurityInfo socketInfo,
                           in nsIX509Cert cert, out addType); */
 NS_IMETHODIMP
@@ -647,6 +679,72 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
 
   *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
 
+  return rv;
+}
+
+/*
+ * void setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
+ *                            out wstring password,
+ *                            out boolean canceled);
+ */
+NS_IMETHODIMP 
+nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
+                                    PRUnichar **_password,
+                                    PRBool *_canceled)
+{
+  nsresult rv;
+  *_canceled = PR_FALSE;
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  if (!block) return NS_ERROR_FAILURE;
+  // open up the window
+  rv = nsNSSDialogHelper::openDialog(parent,
+                                  "chrome://pippki/content/setp12password.xul",
+                                  block);
+  if (NS_FAILED(rv)) return rv;
+  // see if user canceled
+  PRInt32 status;
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+  *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
+  if (!*_canceled) {
+    // retrieve the password
+    rv = block->GetString(2, _password);
+  }
+  return rv;
+}
+
+/*
+ *  void getPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
+ *                             out wstring password,
+ *                             out boolean canceled);
+ */
+NS_IMETHODIMP 
+nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
+                                    PRUnichar **_password,
+                                    PRBool *_canceled)
+{
+  nsresult rv;
+  *_canceled = PR_FALSE;
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  if (!block) return NS_ERROR_FAILURE;
+  // open up the window
+  rv = nsNSSDialogHelper::openDialog(parent,
+                                  "chrome://pippki/content/getp12password.xul",
+                                  block);
+  if (NS_FAILED(rv)) return rv;
+  // see if user canceled
+  PRInt32 status;
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+  *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
+  if (!*_canceled) {
+    // retrieve the password
+    rv = block->GetString(2, _password);
+  }
   return rv;
 }
 
