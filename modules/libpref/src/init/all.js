@@ -33,7 +33,7 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("general.bproxy_cert_digest",0);
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
-pref("keyword.enabled", true);
+pref("keyword.enabled", false);
 
 pref("general.startup.browser",             true);
 pref("general.startup.mail",                false);
