@@ -284,11 +284,6 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
 */
 DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay )
 {
-   
-   // build up the text to show for this event
-
-   var eventText = calendarEventDisplay.event.title;
-      
    var eventStartDate = calendarEventDisplay.displayDate;
    var startHour = eventStartDate.getHours();
    var startMinutes = eventStartDate.getMinutes();
@@ -300,23 +295,33 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    
    var hourDuration = eventDuration / (3600000);
    
-   var eventBox = document.createElement( "hbox" );
+   var eventBox = document.createElement( "vbox" );
    
    var topHeight = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
    topHeight = Math.round( topHeight ) - 1;
    eventBox.setAttribute( "top", topHeight );
+   
    eventBox.setAttribute( "height", Math.round( ( hourDuration*kDayViewHourHeight ) + 1 ) );
+   
    var daywidth = parseInt(document.defaultView.getComputedStyle(document.getElementById("day-tree-item-0"), "").getPropertyValue("width"));
    var width = Math.round( ( daywidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
    eventBox.setAttribute( "width", width );
+   
    var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );
    left = left - ( 1 * ( calendarEventDisplay.CurrentSpot - 1 ));
    eventBox.setAttribute( "left", Math.round( left ) );
+   
+   //if you change this class, you have to change calendarViewDNDObserver in calendarDragDrop.js
    eventBox.setAttribute( "class", "day-view-event-class" );
    eventBox.setAttribute( "flex", "1" );
    eventBox.setAttribute( "eventbox", "dayview" );
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
+   // dragdrop events
+   eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
+   eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
+   eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
+
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
@@ -325,15 +330,22 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
       eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
    }
 
-   var eventHTMLElement = document.createElement( "label" );
-   eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
-   var eventTextElement = document.createTextNode( eventText );
-   eventHTMLElement.appendChild( eventTextElement );
+   var eventHTMLElement = document.createElement( "description" );
+   eventHTMLElement.setAttribute( "value", calendarEventDisplay.event.title );
    eventHTMLElement.setAttribute( "flex", "1" );
    eventHTMLElement.setAttribute( "crop", "end" );
-
    eventBox.appendChild( eventHTMLElement );
-
+   
+   /*
+   if( calendarEventDisplay.event.description != "" )
+   {
+      var eventHTMLElement2 = document.createElement( "description" );
+      eventHTMLElement2.setAttribute( "value", calendarEventDisplay.event.description );
+      eventHTMLElement2.setAttribute( "flex", "1" );
+      eventHTMLElement2.setAttribute( "crop", "end" );
+      eventBox.appendChild( eventHTMLElement2 );
+   }
+   */
    // add a property to the event box that holds the calendarEvent that the
    // box represents
    
@@ -441,24 +453,6 @@ DayView.prototype.refreshDisplay = function dayview_refreshDisplay( )
    dayTextItemNext1.setAttribute( "value" , dayNameNext1 );
    dayTextItemNext2.setAttribute( "value" , dayNameNext2 );
 	daySpecificTextItem.setAttribute( "value" , dateString );
-}
-
-
-/** PUBLIC  -- monthview only
-*
-*   Called when an event box item is single clicked
-*/
-
-DayView.prototype.clickEventBox = function dayview_clickEventBox( eventBox, event )
-{
-   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-   // Do not let the click go through, suppress default selection
-   
-   if ( event )
-   {
-      event.stopPropagation();
-   }
-
 }
 
 
@@ -571,51 +565,3 @@ DayView.prototype.hiliteTodaysDate = function dayview_hiliteTodaysDate( )
 {
    return;
 }
-
-
-
-var gStartDate = null;
-
-var gEndDate = null;
-
-var dayEventEndObserver = {
-  getSupportedFlavours : function () {
-    var flavours = new FlavourSet();
-    flavours.appendFlavour("text/unicode");
-    return flavours;
-  },
-  onDragOver: function (evt,flavour,session){
-    evt.target.setAttribute( "draggedover", "true" );    
-  },
-  onDrop: function (evt,dropdata,session){
-      gEndDate = new Date( gStartDate.getTime() );
-      gEndDate.setHours( evt.target.getAttribute( "hour" ) );
-      if( gEndDate.getTime() < gStartDate.getTime() )
-      {
-         var Temp = gEndDate;
-         gEndDate = gStartDate;
-         gStartDate = Temp;
-      }
-
-      newEvent( gStartDate, gEndDate );  
-      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
-      for( var i = 0; i < allDraggedElements.length; i++ )
-      {
-         allDraggedElements[i].removeAttribute( "draggedover" );
-      }
-  }
-};
-
-var dayEventStartObserver  = {
-  onDragStart: function (evt, transferData, action){
-     gStartDate = new Date( gCalendarWindow.getSelectedDate() );
-   
-     gStartDate.setHours( evt.target.getAttribute( "hour" ) );
-     gStartDate.setMinutes( 0 );
-     gStartDate.setSeconds( 0 );
-   
-     transferData.data=new TransferData();
-     transferData.data.addDataForFlavour("text/unicode",0);
-  }
-};
-
