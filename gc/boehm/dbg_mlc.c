@@ -146,7 +146,7 @@ ptr_t p;
     wp = (word*)((unsigned long)ohdr + sizeof(oh));
 
 #ifdef MACOS
-    GC_err_printf3("0x%08lX <%s> (sz=%ld)\n", wp, getTypeName(wp),
+    GC_err_printf3("0x%08lX <%s> (%ld)\n", wp, getTypeName(wp),
                    (unsigned long)(ohdr -> oh_sz));
 #else
     GC_err_printf1("0x%08lX (", wp);
