@@ -30,7 +30,10 @@
 #include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIModule.h"
-
+#include "nsDirectoryServiceDefs.h"
+#include "nsILocalFile.h"
+#include "nsXPIDLString.h"
+ 
 #include <nsFileStream.h> // For console logging.
 
 #ifdef HAVE_LONG_LONG
@@ -78,6 +81,36 @@ pfnPyXPCOM_NSGetModule pfnEntryPoint = nsnull;
 
 
 static void LogError(const char *fmt, ...);
+static void LogDebug(const char *fmt, ...);
+
+#ifdef LOADER_LINKS_WITH_PYTHON
+// Ensure that any paths guaranteed by this package exist on sys.path
+// Only called once as we are first loaded into the process.
+void AddStandardPaths()
+{
+	// Put {bin}\Python on the path if it exists.
+	nsCOMPtr<nsIFile> aFile;
+	nsCOMPtr<nsILocalFile> aLocalFile;
+	NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+	if (!aFile) {
+		LogError("The Python XPCOM loader could not locate the 'bin' directory\n");
+		return;
+	}
+	aFile->Append("python");
+	nsXPIDLCString pathBuf;
+	aFile->GetPath(getter_Copies(pathBuf));
+	PyObject *obPath = PySys_GetObject("path");
+	if (!obPath) {
+		LogError("The Python XPCOM loader could not get the Python sys.path variable\n");
+		return;
+	}
+    LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)pathBuf);
+//    DebugBreak();
+	PyObject *newStr = PyString_FromString(pathBuf);
+	PyList_Insert(obPath, 0, newStr);
+	Py_XDECREF(newStr);
+}
+#endif
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFile* location,
@@ -91,14 +124,12 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 #ifdef LOADER_LINKS_WITH_PYTHON	
 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
 	if (bDidInitPython) {
-		// If Python was already initialized, we almost certainly
-		// do not have the thread-lock, so can not attempt to import anything
-		// We simply must assume/hope that Python already has our module loaded.
 		Py_Initialize();
 		if (!Py_IsInitialized()) {
 			LogError("Python initialization failed!\n");
 			return NS_ERROR_FAILURE;
 		}
+		AddStandardPaths();
 		PyObject *mod = PyImport_ImportModule("xpcom._xpcom");
 		if (mod==NULL) {
 			LogError("Could not import the Python XPCOM extension\n");
@@ -224,14 +255,16 @@ static void LogWarning(const char *fmt, ...)
 }
 
 #ifdef DEBUG
-void LogDebug(const char *fmt, ...)
+static void LogDebug(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
 	VLogF("PyXPCOM Loader Debug: ", fmt, marker);
 }
 #else
-#define LogDebug()
+static void LogDebug(const char *fmt, ...)
+{
+}
 #endif
 
 #ifdef LOADER_LINKS_WITH_PYTHON	

@@ -50,6 +50,69 @@ extern PRInt32 _PyXPCOM_GetGatewayCount(void);
 extern PRInt32 _PyXPCOM_GetInterfaceCount(void);
 
 extern void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
+extern void PyXPCOM_InterpreterState_Ensure();
+
+#ifdef XP_WIN
+// Can only assume dynamic loading on Windows.
+#define LOADER_LINKS_WITH_PYTHON
+
+#endif // XP_WIN
+
+////////////////////////////////////////////////////////////
+// This is the main entry point called by the Python component
+// loader.
+extern "C" NS_EXPORT nsresult PyXPCOM_NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFile* location,
+                                          nsIModule** result)
+{
+	NS_PRECONDITION(result!=NULL, "null result pointer in PyXPCOM_NSGetModule!");
+	NS_PRECONDITION(location!=NULL, "null nsIFile pointer in PyXPCOM_NSGetModule!");
+	NS_PRECONDITION(servMgr!=NULL, "null servMgr pointer in PyXPCOM_NSGetModule!");
+#ifndef LOADER_LINKS_WITH_PYTHON
+	if (!Py_IsInitialized()) {
+		Py_Initialize();
+		if (!Py_IsInitialized()) {
+			PyXPCOM_LogError("Python initialization failed!\n");
+			return NS_ERROR_FAILURE;
+		}
+		PyEval_InitThreads();
+		PyXPCOM_InterpreterState_Ensure();
+		PyEval_SaveThread();
+	}
+#endif // LOADER_LINKS_WITH_PYTHON	
+	CEnterLeavePython _celp;
+	PyObject *func = NULL;
+	PyObject *obServMgr = NULL;
+	PyObject *obLocation = NULL;
+	PyObject *wrap_ret = NULL;
+	PyObject *args = NULL;
+	PyObject *mod = PyImport_ImportModule("xpcom.server");
+	if (!mod) goto done;
+	func = PyObject_GetAttrString(mod, "NS_GetModule");
+	if (func==NULL) goto done;
+	obServMgr = Py_nsISupports::PyObjectFromInterface(servMgr, NS_GET_IID(nsIComponentManager), PR_TRUE);
+	if (obServMgr==NULL) goto done;
+	obLocation = Py_nsISupports::PyObjectFromInterface(location, NS_GET_IID(nsIFile), PR_TRUE);
+	if (obLocation==NULL) goto done;
+	args = Py_BuildValue("OO", obServMgr, obLocation);
+	if (args==NULL) goto done;
+	wrap_ret = PyEval_CallObject(func, args);
+	if (wrap_ret==NULL) goto done;
+	Py_nsISupports::InterfaceFromPyObject(wrap_ret, NS_GET_IID(nsIModule), (nsISupports **)result, PR_FALSE, PR_FALSE);
+done:
+	nsresult nr = NS_OK;
+	if (PyErr_Occurred()) {
+		PyXPCOM_LogError("Obtaining the module object from Python failed.\n");
+		nr = PyXPCOM_SetCOMErrorFromPyException();
+	}
+	Py_XDECREF(func);
+	Py_XDECREF(obServMgr);
+	Py_XDECREF(obLocation);
+	Py_XDECREF(wrap_ret);
+	Py_XDECREF(mod);
+	Py_XDECREF(args);
+	return nr;
+}
 
 // Hrm - So we can't have templates, eh??
 // preprocessor to the rescue, I guess.
@@ -107,7 +170,6 @@ PyXPCOMMethod_NS_LocateSpecialSystemDirectory(PyObject *self, PyObject *args)
 	int typ;
 	if (!PyArg_ParseTuple(args, "i", &typ))
 		return NULL;
-	nsIFileSpec *spec = NULL;
 	nsSpecialSystemDirectory systemDir((nsSpecialSystemDirectory::SystemDirectories)typ);
 	return PyString_FromString(systemDir.GetNativePathCString());
 }
@@ -523,6 +585,14 @@ init_xpcom() {
 		return;
 	}
 	PyDict_SetItemString(dict, "IIDType", (PyObject *)&Py_nsIID::type);
+
+	// register our entry point.
+	PyObject *obFuncPtr = PyLong_FromVoidPtr((void *)&PyXPCOM_NSGetModule);
+	if (obFuncPtr)
+		PyDict_SetItemString(dict, 
+		                             "_NSGetModule_FuncPtr", 
+		                             obFuncPtr);
+	Py_XDECREF(obFuncPtr);
 
 	REGISTER_IID(nsISupports);
 	REGISTER_IID(nsISupportsString);
