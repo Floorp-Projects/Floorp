@@ -1340,16 +1340,17 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
 {
   nsSize s(0,0);
   nsHTMLReflowMetrics desiredSize(&s);
+  const PRInt32 kDefaultSize = 10;
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  const PRInt32 kDefaultSizeInTwips = NSIntPixelsToTwips(kDefaultSize, p2t);
+
 // not calculated? Get the intrinsic size
 	if (mHasImage) {
 	  // get the size of the image and set the desired size
 	  if (mSizeFrozen) {
-			float p2t;
-			aPresContext->GetScaledPixelsToTwips(&p2t);
-			int v = NSIntPixelsToTwips(30, p2t);
-
-			mImageRect.width = v;
-			mImageRect.height = v;
+			mImageRect.width = kDefaultSizeInTwips;
+			mImageRect.height = kDefaultSizeInTwips;
       return;
 	  } else {
       // Ask the image loader for the *intrinsic* image size
@@ -1357,13 +1358,8 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
 
       if (desiredSize.width == 1 || desiredSize.height == 1)
       {
-        // Use temporary size of 30x30 pixels until the size arrives
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        int v = NSIntPixelsToTwips(30, p2t);
-
-        mImageRect.width = v;
-        mImageRect.height = v;
+        mImageRect.width = kDefaultSizeInTwips;
+        mImageRect.height = kDefaultSizeInTwips;
         return;
       }
 	  }
