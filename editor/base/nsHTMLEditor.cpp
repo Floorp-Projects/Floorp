@@ -1727,7 +1727,9 @@ nsHTMLEditor::InsertList(const nsString& aListType)
   // Find out if the selection is collapsed:
   if (NS_FAILED(res) || !selection) return res;
 
-  nsAutoSelectionReset selectionResetter(selection);
+  // Using nsAutoSelectionReset isn't appropriate here, can cause a crash
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=7801
+  // nsAutoSelectionReset selectionResetter(selection);
 
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
