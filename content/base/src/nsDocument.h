@@ -454,8 +454,7 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
 
-  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
-                                       PRBool aUpdateViews = PR_FALSE);
+  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);

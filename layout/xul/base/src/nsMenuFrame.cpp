@@ -755,7 +755,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
          nsCOMPtr<nsIPresShell> shell;
          mPresContext->GetShell(getter_AddRefs(shell));
-         shell->FlushPendingNotifications(PR_FALSE);
+         shell->FlushPendingNotifications();
       }
 
       nsRect curRect;
@@ -776,7 +776,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
          menuPopup->MarkDirty(state);
          nsCOMPtr<nsIPresShell> shell;
          mPresContext->GetShell(getter_AddRefs(shell));
-         shell->FlushPendingNotifications(PR_FALSE);
+         shell->FlushPendingNotifications();
       }
 
       ActivateMenu(PR_TRUE);

@@ -1166,7 +1166,7 @@ if (realTimeDrag) {
     }
 
     viewManager->DisableRefresh();
-    shell->FlushPendingNotifications(PR_FALSE);
+    shell->FlushPendingNotifications();  
     viewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
 
     viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);

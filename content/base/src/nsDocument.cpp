@@ -3259,7 +3259,7 @@ nsDocument::GetFileSpec(nsIFile * *aFileSpec)
 }
 
 NS_IMETHODIMP 
-nsDocument::FlushPendingNotifications(PRBool aFlushReflows, PRBool aUpdateViews)
+nsDocument::FlushPendingNotifications(PRBool aFlushReflows)
 {
   if (aFlushReflows) {
 
@@ -3268,7 +3268,7 @@ nsDocument::FlushPendingNotifications(PRBool aFlushReflows, PRBool aUpdateViews)
     for (i = 0; i < count; i++) {
       nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
       if (shell) {
-        shell->FlushPendingNotifications(aUpdateViews);
+        shell->FlushPendingNotifications();
       }
     }
   }
