@@ -2,9 +2,15 @@
 <!ENTITY nameColumn.label "Filter Name">
 <!ENTITY activeColumn.label "Enabled">
 <!ENTITY newButton.label "New...">
+<!ENTITY newButton.accesskey "N">
 <!ENTITY editButton.label "Edit...">
+<!ENTITY editButton.accesskey "E">
 <!ENTITY deleteButton.label "Delete">
+<!ENTITY deleteButton.accesskey "D">
 <!ENTITY reorderUpButton.label "Move Up">
+<!ENTITY reorderUpButton.accesskey "M">
 <!ENTITY reorderDownButton.label "Move Down">
+<!ENTITY reorderDownButton.accesskey "o">
 <!ENTITY filterHeader.label "Enabled filters are run automatically in the order shown below.">
 <!ENTITY filtersForPrefix.label "Filters for:">
+<!ENTITY filtersForPrefix.accesskey "F">

@@ -55,7 +55,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
   <hbox align="start">
-    <label value="&filterName.label;"/>
+    <label value="&filterName.label;" accesskey="&filterName.accesskey;" control="filterName"/>
     <textbox flex="50%" id="filterName"/>
     <spacer flex="50%"/>
   </hbox>
@@ -70,7 +70,7 @@ Contributor(s):
   <separator/>
 
   <vbox>
-    <label value="&filterActionDesc.label;"/>
+    <label value="&filterActionDesc.label;" accesskey="&filterActionDesc.accesskey;" control="actionMenu"/>
     <hbox align="start">
       <menulist class="indent" id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
@@ -90,7 +90,7 @@ Contributor(s):
             <!-- see MailNewsTypes2.idl -->
             <menuitem value="6" label="&highestPriorityCmd.label;"/>
             <menuitem value="5" label="&highPriorityCmd.label;"/>
-            <menuitem value="4" label="&normalPriorityCmd.label;"/>
+            <menuitem value="4" label="&normalPriorityCmd.label;" selected="true" />
             <menuitem value="3" label="&lowPriorityCmd.label;"/>
             <menuitem value="2" label="&lowestPriorityCmd.label;"/>
           </menupopup>
@@ -109,6 +109,7 @@ Contributor(s):
       </deck>
       <spacer flex="100%"/>
       <button id="newFolderButton" label="&newFolderButton.label;" 
+              accesskey="&newFolderButton.accesskey;" 
               oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
     </hbox>
   </vbox>

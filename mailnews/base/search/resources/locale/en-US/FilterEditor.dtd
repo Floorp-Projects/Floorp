@@ -24,6 +24,7 @@
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY filterName.label "Filter name:">
+<!ENTITY filterName.accesskey "i">
 
 <!ENTITY lowestPriorityCmd.label "lowest">
 <!ENTITY lowPriorityCmd.label "low">
@@ -31,8 +32,10 @@
 <!ENTITY highPriorityCmd.label "high">
 <!ENTITY highestPriorityCmd.label "highest">
 
-<!ENTITY conditionDesc.label "For incoming messages that match:">
+<!ENTITY conditionDesc.label "For incoming messages that:">
 <!ENTITY filterActionDesc.label "Perform this action:">
+<!ENTITY filterActionDesc.accesskey "P">
 
 <!ENTITY newFolderButton.label "New folder...">
+<!ENTITY newFolderButton.accesskey "N">
 

@@ -44,7 +44,8 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   <keyset id="dialogKeys"/>
 
   <hbox align="center">
-    <label value="&filtersForPrefix.label;"/>
+    <label value="&filtersForPrefix.label;" accesskey="&filtersForPrefix.accesskey;"
+           control="serverMenu"/>
       <menulist oncommand="onServerClick(event);" id="serverMenu">
         <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                    containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
@@ -121,12 +122,17 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
         </vbox>
 
         <vbox>
-          <button id="newButton" label="&newButton.label;" oncommand="onNewFilter(null);"/>
-          <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
-          <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
+          <button id="newButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+                  oncommand="onNewFilter(null);"/>
+          <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                  oncommand="onEditFilter();"/>
+          <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+                  oncommand="onDeleteFilter();"/>
           <spacer flex="1"/>
-          <button id="reorderUpButton" label="&reorderUpButton.label;" oncommand="onUp(event);"/>
-          <button id="reorderDownButton" label="&reorderDownButton.label;" oncommand="onDown(event);"/>
+          <button id="reorderUpButton" label="&reorderUpButton.label;" accesskey="&reorderUpButton.accesskey;" 
+                  oncommand="onUp(event);"/>
+          <button id="reorderDownButton" label="&reorderDownButton.label;" accesskey="&reorderDownButton.accesskey;" 
+                  oncommand="onDown(event);"/>
           <spacer flex="1"/>
         </vbox>
       </row>
