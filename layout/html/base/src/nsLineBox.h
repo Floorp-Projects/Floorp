@@ -136,7 +136,7 @@ protected:
 //----------------------------------------------------------------------
 
 #define LINE_MAX_BREAK_TYPE  ((1 << 4) - 1)
-#define LINE_MAX_CHILD_COUNT ((1 << 24) - 1)
+#define LINE_MAX_CHILD_COUNT ((1 << 21) - 1)
 
 #if NS_STYLE_CLEAR_LAST_VALUE > 15
 need to rearrange the mBits bitfield;
@@ -221,6 +221,15 @@ public:
   }
   PRBool IsLineWrapped() const {
     return mFlags.mLineWrapped;
+  }
+
+  // mLineWrapped bit
+  void SetForceInvalidate(PRBool aOn) {
+    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
+    mFlags.mForceInvalidate = aOn;
+  }
+  PRBool IsForceInvalidate() const {
+    return mFlags.mForceInvalidate;
   }
   
   // mChildCount value
@@ -328,10 +337,11 @@ public:
     PRUint32 mTrimmed : 1;
     PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
+    PRUint32 mForceInvalidate: 1;
 
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 22;
+    PRUint32 mChildCount : 21;
   };
 
   struct ExtraData {

@@ -25,6 +25,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsLineLayout.h"
+#include "nsBlockFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
@@ -933,6 +934,48 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->SetFlag(PFD_ISBULLET, PR_FALSE);
 
   aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
+
+  // SEC: added this next block for bug 45152
+  // text frames don't know how to invalidate themselves on initial reflow.  Do it for them here.
+  // This only shows up in textareas, so do a quick check to see if we're inside one
+  if (eReflowReason_Initial == reflowState.reason)
+  {
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType && nsLayoutAtoms::textFrame == frameType.get()) 
+    { // aFrame is a text frame, see if it's inside a text control
+      // although this is a bit slow, the frame tree shouldn't be too deep, it's only called
+      // for the text frame's initial reflow (once in the text frame's lifetime)
+      // and we don't make any expensive calls.
+      // Doing it this way shields us from knowing anything about the frame structure inside a text control.
+      nsIFrame *parentFrame;
+      aFrame->GetParent(&parentFrame);
+      PRBool inTextControl = PR_FALSE;
+      while (parentFrame)
+      { 
+        nsCOMPtr<nsIAtom> frameType;
+        parentFrame->GetFrameType(getter_AddRefs(frameType));
+        if (frameType)
+        {
+          if (nsLayoutAtoms::textInputFrame == frameType.get()) 
+          {
+            inTextControl = PR_TRUE; // found it
+            break;
+          }
+        }
+        parentFrame->GetParent(&parentFrame);  // advance the loop up the frame tree
+      }
+      if (inTextControl)
+      {
+        nsLineBox *currentLine=nsnull;
+        nsresult rv = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
+        if (NS_SUCCEEDED(rv) && currentLine) {
+          currentLine->SetForceInvalidate(PR_TRUE);
+        }
+      }
+    }
+  }
+  // end fix for bug 45152
 
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;
   pfd->mJustificationNumLetters = mTextJustificationNumLetters;
