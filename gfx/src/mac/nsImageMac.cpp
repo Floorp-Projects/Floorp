@@ -1522,8 +1522,6 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 	imageRect.right = mWidth;
 	imageRect.bottom = mHeight;
 
-  NS_ASSERTION(mMaskBitsHandle == nsnull, "No MaskBits Handle");
-  
   // get the destination pix map
   nsDrawingSurfaceMac* destSurface = static_cast<nsDrawingSurfaceMac*>(aSurface);
   
