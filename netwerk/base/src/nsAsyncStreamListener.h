@@ -45,7 +45,7 @@ public:
         NS_INIT_REFCNT();
     }
     
-    virtual ~nsAsyncStreamObserver();
+    virtual ~nsAsyncStreamObserver() {}
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -94,7 +94,13 @@ public:
     }
 
     // nsAsyncStreamListener methods:
-    nsAsyncStreamListener() {}
+    nsAsyncStreamListener() {
+        MOZ_COUNT_CTOR(nsAsyncStreamListener);
+    }
+
+    virtual ~nsAsyncStreamListener() {
+        MOZ_COUNT_DTOR(nsAsyncStreamListener);
+    }
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
