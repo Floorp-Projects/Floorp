@@ -18,6 +18,22 @@
 #include "stdafx.h"
 
 
+enum InstanceType
+{
+	itScript,
+	itControl
+};
+
+struct InstanceData {
+	InstanceType nType;
+	union
+	{
+		CActiveScriptSiteInstance *pScriptSite;
+		CControlSiteInstance *pControlSite;
+	};
+};
+
+
 // NPP_Initialize
 //
 //	Initialize the plugin library. Your DLL global initialization
@@ -71,27 +87,35 @@ jref NPP_GetJavaClass(void)
 }
 
 
-// NPP_New
-//
-//	create a new plugin instance 
-//	handle any instance specific code initialization here
-//
-NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
-                NPP instance,
-                uint16 mode,
-                int16 argc,
-                char* argn[],
-                char* argv[],
-                NPSavedData* saved)
+#define MIME_OLEOBJECT1   "application/x-oleobject"
+#define MIME_OLEOBJECT2   "application/oleobject"
+#define MIME_ACTIVESCRIPT "text/x-activescript"
+
+
+NPError NewScript(const char *pluginType,
+					InstanceData *pData,
+					uint16 mode,
+					int16 argc,
+					char *argn[],
+					char *argv[],
+					NPSavedData *saved)
 {
-	NG_TRACE_METHOD(NPP_New);
+	CActiveScriptSiteInstance *pScriptSite = NULL;
+	CActiveScriptSiteInstance::CreateInstance(&pScriptSite);
 
-	// trap a NULL ptr 
-	if (instance == NULL)
-	{
-		return NPERR_INVALID_INSTANCE_ERROR;
-	}
+	// TODO support ActiveScript
+	MessageBox(NULL, _T("ActiveScript not supported yet!"), NULL, MB_OK);
+	return NPERR_GENERIC_ERROR;
+}
 
+NPError NewControl(const char *pluginType,
+					InstanceData *pData,
+					uint16 mode,
+					int16 argc,
+					char *argn[],
+					char *argv[],
+					NPSavedData *saved)
+{
 	// Read the parameters
 	CLSID clsid = CLSID_NULL;
 	tstring szName;
@@ -105,8 +129,8 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 		{
 			// Accept CLSIDs specified in various ways
 			// e.g:
-            //   "CLSID:C16DF970-D1BA-11d2-A252-000000000000"
-            //   "C16DF970-D1BA-11d2-A252-000000000000"
+			//   "CLSID:C16DF970-D1BA-11d2-A252-000000000000"
+			//   "C16DF970-D1BA-11d2-A252-000000000000"
 			//   "{C16DF970-D1BA-11d2-A252-000000000000}"
 			//
 			// The first example is the proper way
@@ -212,14 +236,75 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 		LPOLESTR szClsid;
 		StringFromCLSID(clsid, &szClsid);
 		TCHAR szBuffer[256];
-		_stprintf(szBuffer, _T("Could not create the control %s. Check that is has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
+		_stprintf(szBuffer, _T("Could not create the control %s. Check that it has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
 		MessageBox(NULL, szBuffer, _T("ActiveX Error"), MB_OK | MB_ICONWARNING);
+		CoTaskMemFree(szClsid);
 
 		pSite->Release();
 		return NPERR_GENERIC_ERROR;
 	}
 
-    instance->pdata = pSite;
+	pData->nType = itControl;
+	pData->pControlSite = pSite;
+
+	return NPERR_NO_ERROR;
+}
+
+
+
+
+// NPP_New
+//
+//	create a new plugin instance 
+//	handle any instance specific code initialization here
+//
+NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
+                NPP instance,
+                uint16 mode,
+                int16 argc,
+                char* argn[],
+                char* argv[],
+                NPSavedData* saved)
+{
+	NG_TRACE_METHOD(NPP_New);
+
+	// trap duff args
+	if (instance == NULL)
+	{
+		return NPERR_INVALID_INSTANCE_ERROR;
+	}
+
+	InstanceData *pData = new InstanceData;
+	if (pData == NULL)
+	{
+		return NPERR_GENERIC_ERROR;
+	}
+
+	// Create a plugin according to the mime type
+
+	NPError rv = NPERR_GENERIC_ERROR;
+	if (strcmp(pluginType, MIME_ACTIVESCRIPT) == 0)
+	{
+		rv = NewScript(pluginType, pData, mode, argc, argn, argv, saved);
+	}
+	else if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
+             strcmp(pluginType, MIME_OLEOBJECT2) == 0)
+	{
+		rv = NewControl(pluginType, pData, mode, argc, argn, argv, saved);
+	}
+	else
+	{
+		// Unknown MIME type
+	}
+
+	// Test if plugin creation has succeeded and cleanup if it hasn't
+	if (rv != NPERR_NO_ERROR)
+	{
+		delete pData;
+		return rv;
+	}
+
+    instance->pdata = pData;
 
 	return NPERR_NO_ERROR;
 }
@@ -234,13 +319,29 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 {
 	NG_TRACE_METHOD(NPP_Destroy);
 
-	// Destroy the site
-	CControlSiteInstance *pSite = (CControlSiteInstance *) instance->pdata;
-	if (pSite)
+	InstanceData *pData = (InstanceData *) instance->pdata;
+	if (pData == NULL)
 	{
-		pSite->Detach();
-		pSite->Release();
+		return NPERR_INVALID_INSTANCE_ERROR;
 	}
+
+	if (pData->nType == itControl)
+	{
+		// Destroy the site
+		CControlSiteInstance *pSite = pData->pControlSite;
+		if (pSite)
+		{
+			pSite->Detach();
+			pSite->Release();
+		}
+	}
+	else if (pData->nType == itScript)
+	{
+		// TODO
+	}
+
+	delete pData;
+
 	instance->pdata = 0;
 
     return NPERR_NO_ERROR;
@@ -274,32 +375,37 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 	{
 		return NPERR_GENERIC_ERROR;
 	}
-	if (!instance)
+
+	InstanceData *pData = (InstanceData *) instance->pdata;
+	if (pData == NULL)
 	{
 		return  NPERR_INVALID_INSTANCE_ERROR;
 	}
 
-	CControlSiteInstance *pSite = (CControlSiteInstance *) instance->pdata;
-	if (pSite == NULL)
+	if (pData->nType == itControl)
 	{
-		return NPERR_GENERIC_ERROR;
-	}
-
-	HWND hwndParent = (HWND) window->window;
-	if (hwndParent)
-	{
-		RECT rcPos;
-		GetClientRect(hwndParent, &rcPos);
-
-		if (pSite->GetParentWindow() == NULL)
+		CControlSiteInstance *pSite = pData->pControlSite;
+		if (pSite == NULL)
 		{
-			pSite->Attach(hwndParent, rcPos, NULL);
+			return NPERR_GENERIC_ERROR;
 		}
-		else
+
+		HWND hwndParent = (HWND) window->window;
+		if (hwndParent)
 		{
-			pSite->SetPosition(rcPos);
+			RECT rcPos;
+			GetClientRect(hwndParent, &rcPos);
+
+			if (pSite->GetParentWindow() == NULL)
+			{
+				pSite->Attach(hwndParent, rcPos, NULL);
+			}
+			else
+			{
+				pSite->SetPosition(rcPos);
+			}
 		}
-	}
+}
 
 	return NPERR_NO_ERROR;
 }
@@ -395,7 +501,6 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 int32 NP_LOADDS
 NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 {   
-	//MessageBox(NULL,"NPError NP_EXPORT NPE_Write()","Plug-in-test",MB_OK);
 	return len;
 }
 
