@@ -93,7 +93,9 @@ public:
   NS_IMETHOD PasteAsCitedQuotation(const nsAString& aCitation,
                                    PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText, nsIDOMNode** aNodeInserted);
-  NS_IMETHOD InsertAsPlaintextQuotation(const nsAString& aQuotedText, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsPlaintextQuotation(const nsAString& aQuotedText,
+                                        PRBool aAddCites,
+                                        nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText, const nsAString& aCitation, 
                                     PRBool aInsertHTML, const nsAString& aCharset, 
                                     nsIDOMNode** aNodeInserted);

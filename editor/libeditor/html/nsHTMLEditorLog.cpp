@@ -421,6 +421,7 @@ nsHTMLEditorLog::InsertAsQuotation(const nsAString& aQuotedText,
 
 NS_IMETHODIMP
 nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
+                                            PRBool aAddCites,
                                             nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -434,7 +435,9 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     Flush();
   }
 
-  return nsHTMLEditor::InsertAsPlaintextQuotation(aQuotedText, aNodeInserted);
+  return nsHTMLEditor::InsertAsPlaintextQuotation(aQuotedText,
+                                                  aAddCites,
+                                                  aNodeInserted);
 }
 
 NS_IMETHODIMP
