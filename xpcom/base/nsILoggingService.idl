@@ -67,6 +67,7 @@ interface nsILogEventSink : nsISupports
 
 [ptr] native FILE(FILE);
 
+[uuid(ef373116-a9d7-4b94-a3ae-2bc4e10213b3)]
 interface nsIFileLogEventSink : nsILogEventSink
 {
     /**

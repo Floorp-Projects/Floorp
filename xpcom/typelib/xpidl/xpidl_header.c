@@ -205,9 +205,9 @@ interface(TreeState *state)
                 id.m3[4], id.m3[5], id.m3[6], id.m3[7]);
         fputc('\n', state->file);
     } else {
-        XPIDL_WARNING((iface, IDL_WARNING1,
-                       "interface %s lacks a uuid attribute",
-                       className));
+        IDL_tree_error(state->tree, "interface %s lacks a uuid attribute\n", 
+            className);
+        FAIL;
     }
 
     if (doc_comments != NULL)

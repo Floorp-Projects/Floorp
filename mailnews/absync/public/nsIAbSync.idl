@@ -38,6 +38,7 @@
 #include "nsIAbSyncListener.idl"
 #include "nsIMsgStatusFeedback.idl"
 
+[uuid(3c9cbef8-070b-4123-98b2-9297443a8cd1)]
 interface nsIAbSyncState
 { 
   const long nsIAbSyncIdle = 0;

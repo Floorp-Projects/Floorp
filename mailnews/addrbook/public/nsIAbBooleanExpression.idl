@@ -75,6 +75,7 @@ typedef long nsAbBooleanOperationType;
  * should be performed between two boolean expressions
  *
  */
+ [uuid(9bdd2e51-2be4-49a4-a558-36d1a812231a)]
 interface nsIAbBooleanOperationTypes
 {
     const long AND        = 0;
