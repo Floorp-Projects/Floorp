@@ -679,11 +679,11 @@ nsHTMLDocument::TryWeakDocTypeDefault(PRInt32& aCharsetSource,
   if (prefs) {
     nsXPIDLString defCharset;
     nsresult rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && !defCharset.IsEmpty()) {
       aCharset.Assign(defCharset);
+      aCharsetSource = kCharsetFromWeakDocTypeDefault;
     }
   }
-  aCharsetSource = kCharsetFromWeakDocTypeDefault;
   return PR_TRUE;
 }
 
