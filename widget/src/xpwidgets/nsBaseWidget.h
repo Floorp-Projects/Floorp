@@ -87,6 +87,7 @@ public:
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
     NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
+    NS_IMETHOD              EnableFileDrop(PRBool aEnable);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 protected:
 
