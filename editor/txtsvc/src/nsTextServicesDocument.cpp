@@ -5016,6 +5016,7 @@ nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
   return NS_OK;
 }
 
+#ifdef DEBUG_kin
 void
 nsTextServicesDocument::PrintOffsetTable()
 {
@@ -5025,7 +5026,7 @@ nsTextServicesDocument::PrintOffsetTable()
   for (i = 0; i < mOffsetTable.Count(); i++)
   {
     entry = (OffsetEntry *)mOffsetTable[i];
-    printf("ENTRY %4d: 0x%.8p  %c  %c  %4d  %4d  %4d\n",
+    printf("ENTRY %4d: %p  %c  %c  %4d  %4d  %4d\n",
            i, entry->mNode,  entry->mIsValid ? 'V' : 'N',
            entry->mIsInsertedText ? 'I' : 'B',
            entry->mNodeOffset, entry->mStrOffset, entry->mLength);
@@ -5070,3 +5071,4 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
   printf("\n");
   fflush(stdout);
 }
+#endif
