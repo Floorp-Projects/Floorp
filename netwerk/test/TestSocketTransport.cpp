@@ -270,18 +270,18 @@ TestConnection::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIRunnable)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
     *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
@@ -574,7 +574,7 @@ main(int argc, char* argv[])
   //
   for (i=0; i<NUM_TEST_THREADS; i++) {
     gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
-    rv = NS_NewThread(&gThreads[i], gConnections[i]);
+    rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
   }
 
 

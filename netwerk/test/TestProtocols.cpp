@@ -94,7 +94,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsISupports>::GetIID());
+NS_IMPL_ISUPPORTS(URLLoadInfo,NS_GET_IID(nsISupports));
 
 
 class TestHTTPEventSink : public nsIHTTPEventSink
@@ -131,7 +131,7 @@ TestHTTPEventSink::~TestHTTPEventSink()
 }
 
 
-NS_IMPL_ISUPPORTS(TestHTTPEventSink,nsCOMTypeInfo<nsIHTTPEventSink>::GetIID());
+NS_IMPL_ISUPPORTS(TestHTTPEventSink,NS_GET_IID(nsIHTTPEventSink));
 
 NS_IMETHODIMP
 TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
@@ -267,7 +267,7 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-NS_IMPL_ISUPPORTS(InputTestConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
+NS_IMPL_ISUPPORTS(InputTestConsumer,NS_GET_IID(nsIStreamListener));
 
 
 NS_IMETHODIMP
@@ -402,7 +402,7 @@ public:
         nsresult rv = NS_ERROR_FAILURE;
 
         if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
-            if (eventSinkIID.Equals(nsCOMTypeInfo<nsIHTTPEventSink>::GetIID())) {
+            if (eventSinkIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
                 TestHTTPEventSink *sink;
 
                 sink = new TestHTTPEventSink();
@@ -417,7 +417,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsCOMTypeInfo<nsIEventSinkGetter>::GetIID());
+NS_IMPL_ISUPPORTS(nsEventSinkGetter, NS_GET_IID(nsIEventSinkGetter));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,14 +462,13 @@ nsresult StartLoadingURL(const char* aUrlString)
         nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
 
         if (pHTTPCon) {
-            // Setting a sample user agent string.
-            nsCOMPtr<nsIAtom> userAgent;
+            // Setting a sample header.
+            nsCOMPtr<nsIAtom> sampleHeader;
 
-            userAgent = NS_NewAtom("user-agent");
-            rv = pHTTPCon->SetRequestHeader(userAgent, "Mozilla/5.0 [en] (Win98; U)");
+            sampleHeader = NS_NewAtom("sample-header-minus-the-colon");
+            rv = pHTTPCon->SetRequestHeader(sampleHeader, "Sample-Value");
             if (NS_FAILED(rv)) return rv;
-        }
-            
+        }            
         InputTestConsumer* listener;
 
         listener = new InputTestConsumer;

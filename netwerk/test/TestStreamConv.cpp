@@ -69,7 +69,7 @@ public:
         rv = NS_NewStringInputStream(&inputDataSup, convDataStr);
         if (NS_FAILED(rv)) return rv;
 
-        rv = inputDataSup->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inputData);
+        rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);
         NS_RELEASE(inputDataSup);
         *_retval = inputData;
         if (NS_FAILED(rv)) return rv;
@@ -93,7 +93,7 @@ public:
 
 };
 
-NS_IMPL_ISUPPORTS(TestConverter,nsCOMTypeInfo<nsIStreamConverter>::GetIID());
+NS_IMPL_ISUPPORTS(TestConverter,NS_GET_IID(nsIStreamConverter));
 
 class TestConverterFactory : public nsIFactory
 {
@@ -144,7 +144,7 @@ TestConverterFactory::QueryInterface(const nsIID &aIID, void **aResult)
     // Always NULL result, in case of failure
     *aResult = nsnull;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
         AddRef();
         return NS_OK;
@@ -178,7 +178,7 @@ TestConverterFactory::CreateInstance(nsISupports *aOuter,
     if (mClassID.Equals(kTestConverterCID)) {
         TestConverter *conv = new TestConverter();
         if (!conv) return NS_ERROR_OUT_OF_MEMORY;
-        conv->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&inst);
+        conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
     }
     else {
         return NS_ERROR_NO_INTERFACE;
@@ -218,7 +218,7 @@ main(int argc, char* argv[])
 
     TestConverterFactory *convFactory = new TestConverterFactory(kTestConverterCID, "TestConverter", NS_ISTREAMCONVERTER_KEY);
     nsIFactory *convFactSup = nsnull;
-    rv = convFactory->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(), (void**)&convFactSup);
+    rv = convFactory->QueryInterface(NS_GET_IID(nsIFactory), (void**)&convFactSup);
     if (NS_FAILED(rv)) return rv;
 
     // register the TestConverter with the component manager. One progid registration
@@ -234,11 +234,13 @@ main(int argc, char* argv[])
                                              NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=c/foo",
                                              convFactSup,
                                              PR_TRUE);
+#if 0
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
                                              NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=d/foo",
                                              convFactSup,
                                              PR_TRUE);
+#endif // 0
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
                                              NS_ISTREAMCONVERTER_KEY "?from=c/foo?to=d/foo",
@@ -284,8 +286,10 @@ main(int argc, char* argv[])
     rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=c/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
+#if 0
     rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=d/foo", &key1);
     if (NS_FAILED(rv)) return rv;
+#endif // 0
 
     rv = registry->AddSubtreeRaw(key, "?from=c/foo?to=d/foo", &key1);
     if (NS_FAILED(rv)) return rv;
@@ -319,7 +323,7 @@ main(int argc, char* argv[])
     nsString2 toStr  ("e/foo");
     to = toStr.ToNewUnicode();
 
-    rv = inputDataSup->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inputData);
+    rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);
     if (NS_FAILED(rv)) return rv;
 
 

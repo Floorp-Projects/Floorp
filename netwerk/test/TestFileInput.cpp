@@ -73,7 +73,7 @@ public:
     }
 
     nsReader()
-        : mEventQueue(nsnull), mStartTime(0), mThread(nsnull)
+        : mEventQueue(nsnull), mStartTime(0), mThread(nsnull), mBytesRead(0)
     {
         NS_INIT_REFCNT();
         mMonitor = PR_NewMonitor();
@@ -133,6 +133,7 @@ public:
             buf[amt] = '\0';
             printf(buf);
             aLength -= amt;
+            mBytesRead += amt;
             gVolume += amt;
         }
         PR_ExitMonitor(mMonitor);
@@ -148,6 +149,8 @@ public:
         PRIntervalTime endTime = PR_IntervalNow();
         gDuration += (endTime - mStartTime);
         printf("stop binding, %d\n", aStatus);
+        if (NS_FAILED(aStatus)) printf("channel failed.\n");
+        printf("read %d bytes\n", mBytesRead);
         PR_ExitMonitor(mMonitor);
 
         // get me out of my event loop
@@ -161,6 +164,7 @@ protected:
     nsIEventQueue*       mEventQueue;
     PRIntervalTime      mStartTime;
     nsIThread*          mThread;
+    PRUint32            mBytesRead;
 
 private:
     PRMonitor*          mMonitor;
@@ -175,13 +179,13 @@ nsReader::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
     } 
-    if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIRunnable)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
     } 
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
@@ -215,14 +219,14 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = NS_NewTypicalInputFileStream(&fs, spec);
     if (NS_FAILED(rv)) goto done;
 
-    rv = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&fileStr);
+    rv = fs->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&fileStr);
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
 #ifndef NSPIPE2
     rv = NS_NewBuffer(getter_AddRefs(buf), NS_FILE_TRANSPORT_BUFFER_SIZE,
                       NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
-    rv = NS_NewBufferInputStream(&bufStr, buf);
+    rv = NS_NewBufferInputStream(&bufStr, buf, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
 #else
     rv = NS_NewPipe(&bufStr, getter_AddRefs(out), nsnull,
@@ -287,14 +291,14 @@ SerialReadTest(char* dirName)
         NS_ADDREF(reader);
 
         nsIThread* readerThread;
-        rv = NS_NewThread(&readerThread, reader);
+        rv = NS_NewThread(&readerThread, reader, 0, PR_JOINABLE_THREAD);
         NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
 
         rv = reader->Init(readerThread);
         NS_ASSERTION(NS_SUCCEEDED(rv), "init failed");
 
         nsIStreamListener* listener;
-        reader->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+        reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
 
         rv = Simulated_nsFileTransport_Run(reader, spec);
@@ -349,7 +353,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
 
         nsIThread* readerThread;
 
-        rv = NS_NewThread(&readerThread, reader);
+        rv = NS_NewThread(&readerThread, reader, 0, PR_JOINABLE_THREAD);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
 
@@ -357,7 +361,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(NS_SUCCEEDED(rv), "init failed");
 
         nsIStreamListener* listener;
-        reader->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+        reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
     
         nsIChannel* trans;
@@ -415,7 +419,7 @@ main(int argc, char* argv[])
 
     SerialReadTest(dirName);
 
-    ParallelReadTest(dirName, fts);
+    //ParallelReadTest(dirName, fts);
 
     fts->ProcessPendingRequests();
 

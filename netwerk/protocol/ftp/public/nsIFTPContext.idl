@@ -24,6 +24,7 @@ interface nsIFTPContext : nsISupports
     boolean IsCmdResponse();
 
     attribute string ContentType;
+    attribute long   ContentLength;
 };
 
 
