@@ -133,7 +133,7 @@ _APPNAME	= $(MOZ_PKG_APPNAME).app
 endif
 PKG_SUFFIX	= .dmg.gz
 _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
-MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_PKG_APPNAME) && gzip -9 $(PKG_BASENAME).dmg
+MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_PKG_APPNAME) && gzip -vf9 $(PKG_BASENAME).dmg
 MAKE_SDK	=
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
