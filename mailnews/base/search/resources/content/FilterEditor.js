@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Håkan Waara <hwaara@chello.se>
  */
 
 // the actual filter that we're editing
@@ -59,6 +60,18 @@ function filterEditorOnLoad()
         }
     }
 
+    var stub = gFilterBundle.getString("untitledFilterName");
+    var count = 1;
+    var name = stub;
+
+    // Set the default filter name to be "untitled filter"
+    while (duplicateFilterNameExists(name)) 
+    {
+        count++;
+        name = stub + " " + count.toString();
+    }
+    gFilterNameElement.value = name;
+
     gFilterNameElement.focus();
     doSetOKCancel(onOk, null);
     moveToAlertPosition();
@@ -71,7 +84,7 @@ function onEnterInSearchTerm()
 
 function onOk()
 {
-    if (isDuplicateFilterNameExists())
+    if (duplicateFilterNameExists(gFilterNameElement.value))
     {
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
         promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
@@ -97,24 +110,9 @@ function onOk()
     window.close();
 }
 
-function isDuplicateFilterNameExists()
+function duplicateFilterNameExists(filterName)
 {
-    var args = window.arguments[0];
-    var myFilterList;
-    var filterName= gFilterNameElement.value;
-
-    if ("filterList" in args)
-        myFilterList = args.filterList;
-
-    if (myFilterList) {
-        for (var i = 0; i < myFilterList.filterCount; i++)
-        {
-            if (filterName == myFilterList.getFilterAt(i).filterName)
-                return true;
-        }
-    }
-
-    return false;
+    return (gFilterList.getFilterNamed(filterName)) ? true : false;
 }
 
 function getScopeFromFilterList(filterList)
