@@ -24,7 +24,6 @@
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIHttpURL.h"
-#include "nsHTMLDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -52,6 +51,7 @@
 
 #include "nsIWebShell.h"
 #include "nsIHTMLDocument.h"
+#include "nsHTMLDocument.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -179,8 +179,10 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
   nsIDocument* mDocument;
+  nsIHTMLDocument* mHTMLDocument;
   nsIScriptObjectOwner* mDocumentScript;
   nsIURL* mDocumentURL;
+  nsIURL* mDocumentBaseURL;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
@@ -1062,18 +1064,20 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       case eHTMLTag_input:
         mSink->AddBaseTagInfo(content);
 
-        // HTML defines the checked attribute to mean default checked.
-        // The DOM defines checked to be the current state and a separate 
-        // defaultchecked attribute is used to hold the defaultchecked setting.
-        //
-        // The following code sets the initial value of default checked to be the same 
-        // as the checked attribute.
+        if (nodeType == eHTMLTag_input) {
+          // HTML defines the checked attribute to mean default checked.
+          // The DOM defines checked to be the current state and a separate 
+          // defaultchecked attribute is used to hold the defaultchecked setting.
+          //
+          // The following code sets the initial value of default checked to be the same 
+          // as the checked attribute.
 
-        nsHTMLValue val;        
-        nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::checked, val);
-        if (NS_CONTENT_ATTR_NOT_THERE != rv) {
-          nsHTMLValue empty(eHTMLUnit_Empty);
-          content->SetHTMLAttribute(nsHTMLAtoms::defaultchecked, empty, PR_FALSE);
+          nsHTMLValue val;        
+          nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::checked, val);
+          if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+            nsHTMLValue empty(eHTMLUnit_Empty);
+            content->SetHTMLAttribute(nsHTMLAtoms::defaultchecked, empty, PR_FALSE);
+          }
         }
      
         break;
@@ -1301,6 +1305,7 @@ HTMLContentSink::HTMLContentSink()
 #endif
   mNotAtRef = PR_TRUE;
   mParser = nsnull;
+  mDocumentBaseURL = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -1311,7 +1316,9 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mRoot);
 
   NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mHTMLDocument);
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
 
@@ -1364,7 +1371,10 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mDocument = aDoc;
   NS_ADDREF(aDoc);
+  aDoc->QueryInterface(kIHTMLDocumentIID, (void**)&mHTMLDocument);
   mDocumentURL = aURL;
+  NS_ADDREF(aURL);
+  mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
@@ -1414,7 +1424,7 @@ NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
   if (nsnull == mTitle) {
-    ((nsHTMLDocument*)mDocument)->SetTitle("");
+    mHTMLDocument->SetTitle("");
   }
 
   // XXX this is silly; who cares?
@@ -1559,7 +1569,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   }
   ReduceEntities(*mTitle);
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
-  ((nsHTMLDocument*)mDocument)->SetTitle(*mTitle);
+  mHTMLDocument->SetTitle(*mTitle);
 
   nsIAtom* atom = NS_NewAtom("TITLE");
   nsIHTMLContent* it = nsnull;
@@ -1702,13 +1712,8 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   AddLeaf(aNode);
 
   // add the form to the document
-  nsIHTMLDocument* htmlDoc = nsnull;
-  if (mDocument && mCurrentForm) {
-    rv = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
-    if ((NS_OK == rv) && htmlDoc) {
-      htmlDoc->AddForm(mCurrentForm);
-      NS_RELEASE(htmlDoc);
-    }
+  if (mCurrentForm) {
+    mHTMLDocument->AddForm(mCurrentForm);
   }
 
   return NS_OK;
@@ -1795,7 +1800,7 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
   domMap->SetName(name);
 
   // Add the map to the document
-  ((nsHTMLDocument*)mDocument)->AddImageMap(domMap);
+  mHTMLDocument->AddImageMap(domMap);
   mCurrentMap = map;
   mCurrentDOMMap = domMap;
 
@@ -2110,10 +2115,25 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
+    nsAutoString value;
     if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, i, mBaseHREF, sco);
+      GetAttributeValueAt(aNode, i, value, sco);
+      if (nsnull == mBody) {  // still in real HEAD
+        mHTMLDocument->SetBaseURL(value);
+        NS_RELEASE(mDocumentBaseURL);
+        mDocument->GetBaseURL(mDocumentBaseURL);
+      }
+      else {  // NAV compatibility quirk
+        mBaseHREF = value;
+      }
     } else if (key.EqualsIgnoreCase("target")) {
-      GetAttributeValueAt(aNode, i, mBaseTarget, sco);
+      GetAttributeValueAt(aNode, i, value, sco);
+      if (nsnull == mBody) { // still in real HEAD
+        mHTMLDocument->SetBaseTarget(value);
+      }
+      else {  // NAV compatibility quirk
+        mBaseTarget = value;
+      }
     }
   }
   NS_RELEASE(sco);
@@ -2195,8 +2215,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, index, media, sco);
-      media.ToUpperCase();
+      GetAttributeValueAt(aNode, index, media, sco);  // media is case sensative
     }
   }
 
@@ -2223,19 +2242,14 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   if (rel.EqualsIgnoreCase("stylesheet") || rel.EqualsIgnoreCase("alternate stylesheet")) {
     if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) {
       nsIURL* url = nsnull;
-      nsAutoString absURL;
-      nsIURLGroup* urlGroup;
-      (void)mDocumentURL->GetURLGroup(&urlGroup);
-      result = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, href, absURL);
-      if (NS_OK != result) {
-        return result;
-      }
+      nsIURLGroup* urlGroup = nsnull;
+      mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
-        result = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        result = urlGroup->CreateURL(&url, mDocumentBaseURL, href, nsnull);
         NS_RELEASE(urlGroup);
       }
       else {
-        result = NS_NewURL(&url, absURL);
+        result = NS_NewURL(&url, href, mDocumentBaseURL);
       }
       if (NS_OK != result) {
         return result;
@@ -2470,19 +2484,14 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
       nsIURL* url = nsnull;
-      nsAutoString absURL;
-      nsIURLGroup* urlGroup;
-      (void)mDocumentURL->GetURLGroup(&urlGroup);
-      rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
-      if (NS_OK != rv) {
-        return rv;
-      }
+      nsIURLGroup* urlGroup = nsnull;
+      mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
-        rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
         NS_RELEASE(urlGroup);
       }
       else {
-        rv = NS_NewURL(&url, absURL);
+        rv = NS_NewURL(&url, src, mDocumentBaseURL);
       }
       if (NS_OK != rv) {
         return rv;
@@ -2547,8 +2556,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, index, media, sco);
-      media.ToUpperCase();
+      GetAttributeValueAt(aNode, index, media, sco);  // case sensative
     }
   }
 
@@ -2576,7 +2584,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     // The skipped content contains the inline style data
     const nsString& content = aNode.GetSkippedContent();
 
-    nsIURL* url = nsnull;
     nsIUnicharInputStream* uin = nsnull;
     if (0 == src.Length()) {
       // Create a string to hold the data and wrap it up in a unicode
@@ -2584,52 +2591,35 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
       if (NS_OK != rv) {
         return rv;
-	  }
-
-      // Use the document's url since the style data came from there
-      if (0 < mBaseHREF.Length()) { // use base URL
-        rv = NS_NewURL(&url, mBaseHREF);
-        if (NS_FAILED(rv)) {
-          url = mDocumentURL;
-          NS_IF_ADDREF(url);
-		}
-	  }
-      else {
-        url = mDocumentURL;
-        NS_IF_ADDREF(url);
-	  }
+      }
 
       // Now that we have a url and a unicode input stream, parse the
       // style sheet.
-      rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
-      NS_RELEASE(url);
+      rv = LoadStyleSheet(mDocumentBaseURL, uin, PR_TRUE, title, media, element);
       NS_RELEASE(uin);
-	} else {
+    } 
+    else {
       // src with immediate style data doesn't add up
       // XXX what does nav do?
       // Use the SRC attribute value to load the URL
-      nsAutoString absURL;
-      nsIURLGroup* urlGroup;
-      (void)mDocumentURL->GetURLGroup(&urlGroup);
-      rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
-      if (NS_OK != rv) {
-        return rv;
-	  }
+      nsIURL* url = nsnull;
+      nsIURLGroup* urlGroup = nsnull;
+      mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
-        rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
         NS_RELEASE(urlGroup);
-	  }
+      }
       else {
-        rv = NS_NewURL(&url, absURL);
-	  }
+        rv = NS_NewURL(&url, src, mDocumentBaseURL);
+      }
       if (NS_OK != rv) {
         return rv;
-	  }
+      }
 
       nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
       if (nsnull == d) {
         return NS_ERROR_OUT_OF_MEMORY;
-	  }
+      }
       d->mTitle.SetString(title);
       d->mMedia.SetString(media);
       d->mIsActive = PR_TRUE;
@@ -2648,8 +2638,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
-	  }
-	}
+      }
+    }
   }
 
   NS_RELEASE(element);
@@ -2659,7 +2649,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
 
 typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
-
+const PRUnichar kHyphenCh = PRUnichar('-');
 
 static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
 {
@@ -2704,6 +2694,16 @@ static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFun
       *end = kNullCh; // end string here
     }
 
+    // truncate at first non letter, digit or hyphen
+    PRUnichar* test = start;
+    while (test <= end) {
+      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
+          (PR_FALSE == nsString::IsDigit(*test)) && (kHyphenCh != *test)) {
+        *test = kNullCh;
+        break;
+      }
+      test++;
+    }
     subStr = start;
 
     if (PR_FALSE == quoted) {
