@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.89 $ ';
+$::Version = '$Revision: 1.90 $ ';
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
@@ -150,11 +150,13 @@ sub run_shell_command {
     my ($shell_command) = @_;
     local $_;
 
+    my $status = 0;
     chomp($shell_command);
     print_log "$shell_command\n";
-    open CMD, "$shell_command 2>&1|" or die "open: $!\n";
+    open CMD, "$shell_command 2>&1|" or die "open: $!";
     print_log $_ while <CMD>;
-    close CMD;
+    close CMD or $status = 1;
+    return $status;
 }
 
 sub adjust_start_time {
@@ -224,37 +226,41 @@ sub BuildIt {
         }
         
         chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
-        
-        DeleteBinary($full_binary_name); # Delete the binary before rebuilding
 
         # Build it
+        my $build_status = 'none';
         unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
+            DeleteBinary($full_binary_name);
+
+            my $make = "$Settings::Make -f client.mk";
             my $targets = '';
             $targets = 'checkout realclean build' unless $Settings::BuildDepend;
-            run_shell_command "$Settings::Make -f client.mk $targets";
+            my $status = run_shell_command "$make $targets";
+            if ($status != 0) {
+              $build_status = 'busted';
+            } elsif (not BinaryExists($full_binary_name)) {
+              print_log "Error: binary not found: $binary_basename\n";
+              $build_status = 'busted';
+            }
         }
         
-        my $build_status;
-        if (BinaryExists($full_binary_name)) {
+        if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
+            print_log "$binary_basename binary exists, build successful.\n";
             if ($Settings::RunTest) {
                 $build_status = run_tests($full_binary_name, $build_dir);
             } else {
-                print_log "$binary_basename binary exists, build successful.\n";
-                print_log "Skipping test.\n";
+                print_log "Skipping tests.\n";
                 $build_status = 'success';
             }
-        } else {
-            print_log "Error: $binary_basename binary missing, build FAILED\n";
-            $exit_early++ if $Settings::TestOnly;
-            $build_status = 'busted';
         }
-        
+
         close LOG;
         chdir $build_dir;
         
         mail_build_finished_message($start_time, $build_status, $logfile)
           if $Settings::ReportStatus;
 
+        $exit_early++ if $Settings::TestOnly and $build_status ne 'success';
         $exit_early++ if $Settings::BuildOnce;
     }
 }
@@ -430,12 +436,9 @@ sub DeleteBinary {
     my ($binary_basename) = basename($binary);
 
     if (BinaryExists($binary)) {
-        # Don't delete binary if we're only running tests.
-        unless ($Settings::TestOnly) {
-            print_log "Deleting binary: $binary_basename\n";
-            print_log "unlinking $binary\n";
-            unlink $binary or print_log "Error: Unlinking $binary failed\n";
-        }
+      print_log "Deleting binary: $binary_basename\n";
+      print_log "unlinking $binary\n";
+      unlink $binary or print_log "Error: Unlinking $binary failed\n";
     } else {
         print_log "No binary detected; none deleted.\n";
     }
