@@ -65,7 +65,7 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
     nsCAutoString path;
     aFile->GetNativePath(path);
     if (path.IsEmpty())
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_INVALID_ARG;
     return InitWithNativePath(path); 
 }
 #endif
