@@ -381,9 +381,13 @@ ifdef MOZ_INTERNAL_LIBART_LGPL
 $(error MOZ_INTERNAL_LIBART_LGPL is obsolete, use MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl instead.)
 endif
 ifdef MOZ_PHOENIX
-$(error MOZ_PHOENIX is obsolete, use MOZ_CO_PROJECT=browser and --enable-application=browser)
+$(warning MOZ_PHOENIX is obsolete.)
+MOZ_MODULE_LIST += $(MODULES_browser)
+# $(error MOZ_PHOENIX is obsolete, use MOZ_CO_PROJECT=browser and --enable-application=browser)
 endif
 ifdef MOZ_THUNDERBIRD
+$(warning MOZ_THUNDERBIRD is obsolete.)
+MOZ_MODULE_LIST += $(MODULES_mail)
 $(error MOZ_THUNDERBIRD is obsolete, use MOZ_CO_PROJECT=mail and --enable-application=mail)
 endif
 
