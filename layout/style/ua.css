@@ -286,8 +286,10 @@ DFN, SPAN {
 SUB {
   display: inline;
   vertical-align: sub;
+  font-size: smaller;
 }
 SUP {
   display: inline;
   vertical-align: super;
+  font-size: smaller;
 }
