@@ -3,3 +3,5 @@ typedef struct s_xpi {
 	CString filename;
 	} XPI;
 void CreateRshell(void);
+void CreateHelpMenu(void);
+void CreateBuddyList(void);

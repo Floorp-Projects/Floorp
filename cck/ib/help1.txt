@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/helpMenu.dtd" >
+
+<overlay id="helpMenuID"
+xmlns:html="http://www.w3.org/TR/REC-html40"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<menupopup id="helpPopup">
+	<menuitem  id="nscpHelpCmd.label" position="1" value="&nscpHelpCmd.label;" oncommand="openTopWin('urn:clienturl:help:nscphelp')" />
+	<menuitem  id="whatNew" position="2" value="&whatNewCmd.label;" disabled="true" oncommand="" />  
+	<menuitem  id="netHelp"  position="3" value="&netHelpCmd.label;" oncommand="openTopWin('urn:clienturl:help:nethelp')" />
+	<menuseparator position="4" />
+	<menuitem  id="feedBack"  position="5" value="&feedBackCmd.label;" oncommand="openTopWin('urn:clienturl:help:feedback')" />
+	<menuitem  id="intUsers"  position="6" value="&intUsersCmd.label;" 

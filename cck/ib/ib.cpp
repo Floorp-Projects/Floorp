@@ -667,6 +667,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 //end of filesize check;
 
+// Check to see if the animatedlogourl has the http before it or not- else the browser
+// looks only in the chrome directory.
 	CString animLogoUrl = GetGlobal("AnimatedLogoURL");
 	CString leftvalue = animLogoUrl.Left(7);
 	CString httpvalue = "http://";
@@ -676,7 +678,20 @@ int StartIB(CString parms, WIDGET *curWidget)
 		SetGlobal("AnimatedLogoURL",httpvalue);
 	}
 	
-	
+	CString HelpUrl = GetGlobal("HelpMenuCommandUrl");
+	leftvalue = HelpUrl.Left(7);
+	httpvalue = "http://";
+	if (leftvalue.CompareNoCase("http://") != 0)
+	{
+		httpvalue = httpvalue + HelpUrl;
+		SetGlobal("HelpMenuCommandUrl",httpvalue);
+	}
+// Create the HelpMenu.xul in the beginning so that it can be called from the script.ib
+	CString setHlpXul = tempPath +"\\HelpMenu.xul";
+	SetGlobal("HlpXul",setHlpXul);
+	CreateHelpMenu();
+
+
 	if (cdDir.Compare("1") ==0)
 	{
 		_mkdir((char *)(LPCTSTR) cdPath);

@@ -36,6 +36,8 @@ OBJS=					\
 	.\$(OBJDIR)\wizshell.obj \
 	.\$(OBJDIR)\ib.obj		\
 	.\$(OBJDIR)\comp.obj	\
+	.\$(OBJDIR)\Helpmenu.obj	\
+	.\$(OBJDIR)\buddylist.obj	\
 	$(NULL)
 
 #		-I$(DEPTH)\xpinstall\wizard\windows\setup \
