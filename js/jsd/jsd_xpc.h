@@ -48,42 +48,17 @@
 
 struct LiveEphemeral {
     /* link in a chain of live values list */
-    PRCList         links;
+    PRCList        links;
     jsdIEphemeral *value;
 };
 
+struct PCMapEntry {
+    PRUint32 pc, line;
+};
+    
 /*******************************************************************************
  * reflected jsd data structures
  *******************************************************************************/
-
-class jsdPC : public jsdIPC
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_JSDIPC
-
-    /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdPC (jsuword aPC) : mPC(aPC)
-    {
-        NS_INIT_ISUPPORTS();
-    }
-
-    static jsdIPC *FromPtr (jsuword aPC)
-    {
-        if (!aPC)
-            return nsnull;
-        
-        jsdIPC *rv = new jsdPC (aPC);
-        NS_IF_ADDREF(rv);
-        return rv;
-    }
-
-  private:
-    jsdPC(); /* no implementation */
-    jsdPC(const jsdPC&); /* no implementation */
-
-    jsuword  mPC;
-};
 
 class jsdObject : public jsdIObject
 {
@@ -183,17 +158,30 @@ class jsdScript : public jsdIScript
         return rv;
     }
 
+    static void InvalidateAll();
+
   private:
+    static PRUint32 LastTag;
+    
     jsdScript(); /* no implementation */
     jsdScript (const jsdScript&); /* no implementation */
+    PCMapEntry* CreatePPLineMap();
+    PRUint32    PPPcToLine(PRUint32 aPC);
+    PRUint32    PPLineToPc(PRUint32 aLine);
     
     PRBool      mValid;
+    PRUint32    mTag;
     JSDContext *mCx;
     JSDScript  *mScript;
     nsCString  *mFileName;
     nsCString  *mFunctionName;
     PRUint32    mBaseLineNumber, mLineExtent;
+    PCMapEntry *mPPLineMap;
+    PRUint32    mPCMapSize;
+    jsuword     mFirstPC;
 };
+
+PRUint32 jsdScript::LastTag = 0;
 
 class jsdStackFrame : public jsdIStackFrame
 {

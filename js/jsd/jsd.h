@@ -350,6 +350,12 @@ extern JSDScript*
 jsd_FindJSDScript(JSDContext*  jsdc,
                   JSScript     *script);
 
+extern JSScript *
+jsd_GetJSScript (JSDContext *jsdc, JSDScript *script);
+
+extern JSFunction *
+jsd_GetJSFunction (JSDContext *jsdc, JSDScript *script);
+
 extern JSDScript*
 jsd_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
 
