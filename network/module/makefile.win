@@ -27,6 +27,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIURL.h                      \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
+          nsIRelatedLinks.h             \
           nsINetContainerApplication.h  \
           $(NULL)
 
@@ -58,6 +59,7 @@ DEFFILE=net.def
 OBJS=                                   \
         .\$(OBJDIR)\nsNetService.obj    \
         .\$(OBJDIR)\nsNetStream.obj     \
+        .\$(OBJDIR)\nsRelatedLinks.obj     \
         .\$(OBJDIR)\nsURL.obj           \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \

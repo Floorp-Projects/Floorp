@@ -22,6 +22,7 @@ LIBRARY_NAME		= netlib
 
 CPPSRCS			= \
 			  nsNetService.cpp    \
+			  nsRelatedLinks.cpp  \
 			  nsNetStream.cpp     \
 			  nsURL.cpp           \
 			  nsHttpUrl.cpp       \
@@ -37,6 +38,7 @@ REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 EXPORTS = nsIStreamListener.h           \
           nsINetService.h               \
           nsIURL.h                      \
+          nsIRelatedLinks.h             \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
           nsINetContainerApplication.h  \
