@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.4 $ $Date: 2000/10/13 22:41:36 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.5 $ $Date: 2002/05/20 14:38:48 $ $Name:  $';
 
 $copyright = '/* THIS IS A GENERATED FILE */
 /* 
@@ -325,7 +325,9 @@ static const char NSSCKAPI_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
 
-#define __ADJOIN(x,y) x##y
+#define ADJOIN(x,y) x##y
+
+#define __ADJOIN(x,y) ADJOIN(x,y)
 
 /*
  * The anchor.  This object is used to store an "anchor" pointer in
@@ -335,7 +337,7 @@ static const char NSSCKAPI_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
 
 static NSSCKFWInstance *fwInstance = (NSSCKFWInstance *)0;
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Initialize)
 (
   CK_VOID_PTR pInitArgs
@@ -355,7 +357,7 @@ C_Initialize
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Finalize)
 (
   CK_VOID_PTR pReserved
@@ -375,7 +377,7 @@ C_Finalize
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetInfo)
 (
   CK_INFO_PTR pInfo
@@ -403,7 +405,7 @@ EOD
     ;
 
 for( $j = 4; $j <= $count; $j++ ) {
-  print "CK_RV CK_ENTRY\n";
+  print "static CK_RV CK_ENTRY\n";
   print "__ADJOIN(MODULE_NAME,$x[$j]{name})\n";
   print "(\n";
   for( $i = 0; $i < $x[$j]{nargs}; $i++ ) {
@@ -455,7 +457,7 @@ for( $j = 4; $j <= $count; $j++ ) {
 }
 
 print <<EOD
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetFunctionList)
 (
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
@@ -476,7 +478,7 @@ for( $j = 0; $j <= $count; $j++ ) {
 }
 
 print <<EOD
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetFunctionList)
 (
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
