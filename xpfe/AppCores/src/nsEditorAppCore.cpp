@@ -730,6 +730,7 @@ nsEditorAppCore::CreateWindowWithURL(const char* urlStr)
 {
   nsresult rv = NS_OK;
   
+#if 0
   /*
    * Create the Application Shell instance...
    */
@@ -755,6 +756,29 @@ done:
   if (nsnull != appShell) {
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
+#else
+  // This code is to ensure that the editor's pseudo-onload handler is always called.
+  static NS_DEFINE_CID(kToolkitCoreCID,           NS_TOOLKITCORE_CID);
+
+  /*
+   * Create the toolkit core instance...
+   */
+  nsIDOMToolkitCore* toolkit = nsnull;
+  rv = nsServiceManager::GetService(kToolkitCoreCID,
+                                    nsIDOMToolkitCore::GetIID(),
+                                    (nsISupports**)&toolkit);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsIWebShellWindow* newWindow = nsnull;
+  
+  toolkit->ShowWindowWithArgs( urlStr, nsnull, "chrome://editor/content/EditorInitPage.html" );
+  
+  /* Release the toolkit... */
+  if (nsnull != toolkit) {
+    nsServiceManager::ReleaseService(kToolkitCoreCID, toolkit);
+  }
+#endif
 
   return rv;
 }

@@ -20,8 +20,7 @@
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Saving file"
         width="425"
-        height="225"
-        onload="onLoad()">
+        height="225">
 
     <data>
         <broadcaster id="data.location" type="url" value="url"/>
@@ -30,6 +29,9 @@
         <broadcaster id="data.progress" type="progress" value="0" max="0" completed="false"/>
         <broadcaster id="data.status" type="string" value=""/>
         <broadcaster id="data.execute" command=""/>
+        <!-- Temporary onLoad() trigger -->
+        <broadcaster id="dialog.start" ready="false"/>
+        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
     </data>
 
     <dialog>

@@ -290,6 +290,10 @@
   <broadcaster id="Browser:Throbber" busy="false"/>
   <broadcaster id="args" value="http://www.mozilla.org/quality/smoketests/"/>
 
+  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+  <broadcaster id="dialog.start" ready="false"/>
+  <observes element="dialog.start" attribute="ready" onchange="onLoadWithArgs()"/>
+    
   <menubar chromeclass="menubar">
       <menu name="&fileMenu.label;">
       <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>

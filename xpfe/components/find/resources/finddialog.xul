@@ -5,7 +5,7 @@
 
 <window width="400" height="200" xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoad()" title="Search">
+        title="Search">
 
     <data>
         <broadcaster id="data.findKey" type="string" value=""/>
@@ -13,6 +13,8 @@
         <broadcaster id="data.searchBackwards" type="boolean" value="false"/>
         <broadcaster id="data.wrap" type="boolean" value="false"/>
         <broadcaster id="data.execute" command="" findKey="" caseSensitive="" searchBackwards="" wrap=""/>
+        <broadcaster id="dialog.start" ready="false"/>
+        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
     </data>
 
   <html:script language="JavaScript" src="resource:/res/samples/finddialog.js">

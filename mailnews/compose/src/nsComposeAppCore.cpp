@@ -284,6 +284,8 @@ NS_IMETHODIMP
 nsComposeAppCore::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 {
     setAttribute( aWebShell, "args", "value", mArgs );
+    // Trigger pseudo-onload handler, now that args are ready.
+    setAttribute( aWebShell, "dialog.start", "ready", "true" );
 	return NS_OK;
 }
 

@@ -4,11 +4,13 @@
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
-  onload="onLoad()" title="Bookmark Properties">
+  title="Bookmark Properties">
 
 
   <xul:data>
     <xul:broadcaster id="properties_node"/>
+    <xul:broadcaster id="dialog.start" ready="false"/>
+    <xul:observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
   </xul:data>
 
   <script>

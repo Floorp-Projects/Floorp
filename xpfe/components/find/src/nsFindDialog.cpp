@@ -187,6 +187,9 @@ nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
     } else {
     }
 
+    // Trigger dialog startup.
+    setAttribute( mDialogWebShell, "dialog.start", "ready", "true" );
+
     return rv;
 }
 

@@ -17,14 +17,16 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&unknownWindow.title;"
         width="425"
-        height="180"
-        onload="onLoad()">
+        height="180">
 
     <data>
         <broadcaster id="data.location" type="url" value="url...to be replaced"/>
         <broadcaster id="data.contentType" type="string" value="content-type...to be replaced"/>
         <!-- Commands: more/pick/save/close -->
         <broadcaster id="data.execute" command=""/>
+        <!-- Temporary onLoad() trigger -->
+        <broadcaster id="dialog.start" ready="false"/>
+        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
     </data>
 
     <html:script>

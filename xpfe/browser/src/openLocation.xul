@@ -14,6 +14,10 @@
     </html:script>
     
     <broadcaster id="args" value=""/>
+
+    <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+    <broadcaster id="dialog.start" ready="false"/>
+    <observes element="dialog.start" attribute="ready" onchange="onLoadWithArgs()"/>
     
     <!--
     <box align="vertical">

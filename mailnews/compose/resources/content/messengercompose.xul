@@ -81,7 +81,6 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="ComposeStartup()"
 		onunload="ComposeUnload()"
 		title="&msgComposeWindow.title;"
 		style="width:100%;height:100%"> 
@@ -98,6 +97,11 @@
 <broadcaster id="Editor:Style:IsItalic"/>
 <broadcaster id="Editor:Style:IsUnderline"/>
 
+
+<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+<broadcaster id="dialog.start" ready="false"/>
+<observes element="dialog.start" attribute="ready" onchange="ComposeStartup()"/>
+    
 
 <menubar>
 	<menu name="File">

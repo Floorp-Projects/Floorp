@@ -274,9 +274,23 @@ nsUnknownContentDialog::ConstructBeforeJavaScript( nsIWebShell *aWebShell ) {
                             if ( contentType ) {
                                 rv = contentType->SetAttribute( "value", mContentType );
                                 if ( NS_SUCCEEDED( rv ) ) {
+                                    // Set dialog.start value attribute to trigger onLoad().
+                                    nsCOMPtr<nsIDOMElement> trigger;
+                                    rv = xulDoc->GetElementById( "dialog.start", getter_AddRefs(trigger) );
+                                    if ( trigger ) {
+                                        rv = trigger->SetAttribute( "ready", "true" );
+                                        if ( NS_SUCCEEDED( rv ) ) {
+                                        } else {
+                                            DEBUG_PRINTF( PR_STDOUT, "SetAttribute failed, rv=0x%X\n", (int)rv );
+                                        }
+                                    } else {
+                                        DEBUG_PRINTF( PR_STDOUT, "GetElementById failed, rv=0x%X\n", (int)rv );
+                                    }
                                 } else {
                                     DEBUG_PRINTF( PR_STDOUT, "SetAttribute failed, rv=0x%X\n", (int)rv );
                                 }
+                            } else {
+                                DEBUG_PRINTF( PR_STDOUT, "GetElementById failed, rv=0x%X\n", (int)rv );
                             }
                         } else {
                             DEBUG_PRINTF( PR_STDOUT, "SetAttribute failed, rv=0x%X\n", (int)rv );
