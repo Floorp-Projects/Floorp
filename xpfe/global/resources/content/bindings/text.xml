@@ -6,7 +6,7 @@
    xmlns:html="http://www.w3.org/1999/xhtml">
 
   <!-- bound to <description>s -->
-  <binding id="text-base">
+  <binding id="text-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -16,10 +16,6 @@
           ]]>
         </getter>
       </property>
-      <property name="disabled" onget="return this.hasAttribute('disabled');"
-                                onset="if (val) this.setAttribute('disabled', 'true');
-                                       else this.removeAttribute('disabled');
-                                       return val;"/>
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
       <property name="crop" onget="return this.getAttribute('crop');"

@@ -5,17 +5,26 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="basetext">
+  <binding id="basecontrol">
+    <implementation implements="nsIDOMXULControlElement">
+      <!-- public implementation -->
+      <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
+                                       else this.removeAttribute('disabled');
+                                       return val;"
+                                onget="return this.getAttribute('disabled') == 'true';"/>
+      <property name="tabIndex" onget="return parseInt(this.getAttribute('tabindex'));"
+                                onset="if (val) this.setAttribute('tabindex', val);
+                                       else this.removeAttribute('tabindex'); return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="basetext" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation>
       <!-- public implementation -->
       <property name="label"      onset="return this.setAttribute('label',val);"
                                   onget="return this.getAttribute('label');"/>
       <property name="crop"       onset="return this.setAttribute('crop',val);"
                                   onget="return this.getAttribute('crop');"/>
-      <property name="disabled"   onset="if (val) this.setAttribute('disabled', 'true');
-                                         else this.removeAttribute('disabled');
-                                         return val;"
-                                  onget="return this.getAttribute('disabled') == 'true';"/>
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
       <property name="accessKey">

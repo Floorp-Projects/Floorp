@@ -5,7 +5,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="listbox-base">
+  <binding id="listbox-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
     </resources>
@@ -57,11 +57,6 @@
       </property>
       
       <!-- ///////////////// public listbox members ///////////////// -->
-
-      <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
-                                       else this.removeAttribute('disabled');
-                                       return val;"
-                                onget="return this.hasAttribute('disabled');"/>
 
       <property name="listBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIListBoxObject);"
@@ -773,9 +768,6 @@
                              onset="this.setAttribute('value', val); return val;"/>
       <property name="label" onget="return this.getAttribute('label');"
                              onset="this.setAttribute('label', val); return val;"/>
-      
-      <property name="disabled" onget="return this.getAttribute('disabled') == 'true';"
-                                onset="if (val) this.setAttribute('disabled', 'true'); else this.removeAttribute('disabled');"/>
       
       <property name="selected" onget="return this.getAttribute('selected') == 'true';">
         <setter><![CDATA[
