@@ -119,6 +119,37 @@ nsCutCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
 
 
 NS_IMETHODIMP
+nsCutOrDeleteCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  *outCmdEnabled = (editor != nsnull);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCutOrDeleteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (editor)
+  {
+    nsCOMPtr<nsISelection> selection;
+    nsresult rv = editor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+    {
+      PRBool isCollapsed;
+      rv = selection->GetIsCollapsed(&isCollapsed);
+      if (NS_SUCCEEDED(rv) && isCollapsed)
+        return editor->DeleteSelection(nsIEditor::eNext);
+    }
+    return editor->Cut();
+  }
+    
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
 nsCopyCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(refCon);
@@ -136,6 +167,37 @@ nsCopyCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(refCon);
   if (aEditor)
     return aEditor->Copy();
+    
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsCopyOrDeleteCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  *outCmdEnabled = (editor != nsnull);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCopyOrDeleteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (editor)
+  {
+    nsCOMPtr<nsISelection> selection;
+    nsresult rv = editor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+    {
+      PRBool isCollapsed;
+      rv = selection->GetIsCollapsed(&isCollapsed);
+      if (NS_SUCCEEDED(rv) && isCollapsed)
+        return editor->DeleteSelection(nsIEditor::eNext);
+    }
+    return editor->Copy();
+  }
     
   return NS_ERROR_FAILURE;
 }

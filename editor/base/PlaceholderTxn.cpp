@@ -176,7 +176,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
 //  efficiency hack: no need to remember selection here, as we haven't yet 
 //  finished the inital batch and we know we will be told when the batch ends.
 //  we can remeber the selection then.
-    if (gNoisy) { printf("Placeholder txn assimilated %p\n", aTransaction); }
+    if (gNoisy) { printf("Placeholder txn assimilated %p\n", (void*)aTransaction); }
   }
   else
   { // merge typing or IME or deletion transactions if the selection matches

@@ -249,13 +249,6 @@ public:
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
-  NS_IMETHOD Undo(PRUint32 aCount);
-  NS_IMETHOD Redo(PRUint32 aCount);
-
-  NS_IMETHOD Cut();
-  NS_IMETHOD CanCut(PRBool &aCanCut);
-  NS_IMETHOD Copy();
-  NS_IMETHOD CanCopy(PRBool &aCanCopy);
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
 

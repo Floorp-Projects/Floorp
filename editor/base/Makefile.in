@@ -52,9 +52,9 @@ CPPSRCS		=                           \
 		nsEditorUtils.cpp           \
 		nsEditProperty.cpp          \
 		nsHTMLEditUtils.cpp         \
-        nsPlaintextDataTransfer.cpp \
-        nsPlaintextEditor.cpp       \
-        nsSelectionState.cpp        \
+		nsPlaintextDataTransfer.cpp \
+		nsPlaintextEditor.cpp       \
+		nsSelectionState.cpp        \
 		nsStyleSheetTxns.cpp        \
 		nsTextEditRules.cpp         \
 		PlaceholderTxn.cpp          \
