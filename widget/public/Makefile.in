@@ -81,10 +81,12 @@ EXPORTS = \
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = raptor
-XPILD_MODULE = widget
+XPIDL_MODULE = widget
 
-XPIDLSRCS = nsISound.idl \
-						$(NULL)
+XPIDLSRCS =                              \
+	\nsIFileSpecWithUI.idl               \
+	\nsISound.idl                        \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
