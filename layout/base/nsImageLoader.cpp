@@ -164,6 +164,18 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest, nsISupports *aCo
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
+  
+#ifdef NS_DEBUG
+// Make sure the image request status's STATUS_FRAME_COMPLETE flag has been set to ensure
+// the image will be painted when invalidated
+  if (aRequest) {
+   PRUint32 status = imgIRequest::STATUS_ERROR;
+   nsresult rv = aRequest->GetImageStatus(&status);
+   if (NS_SUCCEEDED(rv)) {
+     NS_ASSERTION((status & imgIRequest::STATUS_FRAME_COMPLETE), "imgIRequest::STATUS_FRAME_COMPLETE not set");
+   }
+  }
+#endif
 
   // Draw the background image
   RedrawDirtyFrame(nsnull);

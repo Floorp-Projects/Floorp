@@ -55,6 +55,7 @@ interface imgIRequest : nsIRequest
   const long STATUS_LOAD_PARTIAL     = 0x2;
   const long STATUS_LOAD_COMPLETE    = 0x4;
   const long STATUS_ERROR            = 0x8;
+  const long STATUS_FRAME_COMPLETE   = 0x10;
   //@}
 
   /**
