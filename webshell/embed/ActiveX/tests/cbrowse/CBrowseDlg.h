@@ -41,6 +41,7 @@ public:
 	CTreeCtrl	m_tcTests;
 	CListBox	m_lbMessages;
 	CString	m_szTestDescription;
+	BOOL	m_bNewWindow;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -69,6 +70,7 @@ protected:
 	afx_msg void OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnRefreshDOM();
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -239,6 +239,10 @@ SOURCE=.\res\testpassed.ico
 
 SOURCE=.\Scripts\Basic.vbs
 # End Source File
+# Begin Source File
+
+SOURCE=.\Scripts\NewWindow.vbs
+# End Source File
 # End Group
 # Begin Source File
 

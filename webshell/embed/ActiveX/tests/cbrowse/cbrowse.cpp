@@ -3,12 +3,12 @@
 
 #include "stdafx.h"
 #include "cbrowse.h"
-#include "CBrowseDlg.h"
 #include "PickerDlg.h"
 #include <initguid.h>
 #include "Cbrowse_i.c"
 #include "TestScriptHelper.h"
 #include "ControlEventSink.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,26 +79,14 @@ BOOL CBrowseApp::InitInstance()
 		return FALSE;
 	}
 
-	CBrowseDlg dlg;
-
-	dlg.m_clsid = pickerDlg.m_clsid;
-
-	m_pMainWnd = &dlg;
-	nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
-	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
-	}
-	else if (nResponse == IDCANCEL)
-	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with Cancel
-	}
+	m_pDlg = new CBrowseDlg;
+	m_pDlg->m_clsid = pickerDlg.m_clsid;
+	m_pDlg->Create(IDD_CBROWSE_DIALOG);
+	m_pMainWnd = m_pDlg;
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
-	return FALSE;
+	return TRUE;
 }
 
 CBrowseModule _Module;
