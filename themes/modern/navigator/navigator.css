@@ -5,11 +5,6 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
-#navigator-throbber
-  {
-    margin-top            : 0px;
-  }    
-
 #sidebar-parent 
   {
 	  margin-right          : 2px;
@@ -334,16 +329,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     width                 : 100px;
   }
 
-#statusbar-display
-  {
-    list-style-image      : url("chrome://communicator/skin/document.gif");
-  }
-  
-#statusbar-display[error="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/document-error.gif");
-  }  
-  
 #search-button
   {
     margin-right          : 4px;
