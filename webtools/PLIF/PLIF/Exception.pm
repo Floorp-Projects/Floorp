@@ -32,7 +32,7 @@ use vars qw(@ISA @EXPORT);
 use overload '""' => 'stringify', 'cmp' => 'comparison';
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(try raise handle with unhandled except otherwise finally);
+@EXPORT = qw(try raise catch with fallthrough except otherwise finally);
 
 # To use this package, you first have to define your own exceptions:
 #
@@ -46,13 +46,14 @@ require Exporter;
 #         # some code that might raise an exception:
 #         raise MyException if $condition;
 #         # ... more code ...
-#     } handle MemoryException with {
+#     } catch MemoryException with {
 #         my($exception) = @_;
 #         raise $exception; # reraise
-#     } handle IOException with {
+#     } catch IOException with {
 #         my($exception) = @_;
-#         unhandled; # fall through to the following handlers
-#     } handle DBError with {
+#         return fallthrough; # fall through to the following handlers
+#         fallthrough; # alternative form if the directive is the last one in the block
+#     } catch DBError with {
 #         my($exception) = @_;
 #     } except {
 #         my($exception) = @_;
@@ -130,15 +131,15 @@ sub try(&;$) {
     }
 }
 
-sub handle($$) {
+sub catch($$) {
     my($class, $continuation, @more) = @_;
-    syntax "Syntax error in \"handle ... with\" clause: \"$class\" is not a PLIF::Exception class", caller unless $class->isa('PLIF::Exception');
+    syntax "Syntax error in \"catch ... with\" clause: \"$class\" is not a PLIF::Exception class", caller unless $class->isa('PLIF::Exception');
     if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::With')) {
-        syntax 'Syntax error: missing "with" operator in "handle" clause', caller;
+        syntax 'Syntax error: missing "with" operator in "catch" clause', caller;
     }
-    syntax 'Syntax error after "handle ... with" clause', caller if (scalar(@more));
+    syntax 'Syntax error after "catch ... with" clause', caller if (scalar(@more));
     $continuation->{'resolved'} = 1;
     my $handler = $continuation->{'handler'};
     $continuation = $continuation->{'continuation'};
@@ -154,7 +155,7 @@ sub with(&;$) {
     if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::Continuation')) {
-        syntax 'Syntax error after "handle ... with" clause', caller;
+        syntax 'Syntax error after "catch ... with" clause', caller;
     }
     return PLIF::Exception::Internal::With->create($handler, $continuation, caller);
 }
@@ -200,8 +201,8 @@ sub finally(&;@) {
     return $continuation;
 }
 
-sub unhandled() {
-    return PLIF::Exception::Internal::Unhandled->create(caller);
+sub fallthrough() {
+    return PLIF::Exception::Internal::Fallthrough->create(caller);
 }
 
 sub stringify {
@@ -265,10 +266,10 @@ sub handle {
                     $reraise = wrap($@);
                     if (not defined($result) or # $result is not defined if $reraise is now defined
                         not ref($result) or
-                        not $result->isa('PLIF::Exception::Internal::Unhandled')) {
+                        not $result->isa('PLIF::Exception::Internal::Fallthrough')) {
                         last handler;
                     }
-                    # else, it's the result of an "unhandled" function call
+                    # else, it's the result of an "fallthrough" function call
                     $result->{'resolved'} = 1;
                 }
             }
@@ -276,7 +277,7 @@ sub handle {
                 my $result = eval { &{$self->{'except'}}($exception) };
                 $reraise = wrap($@);
             } else {
-                # unhandled exception
+                # fallthrough exception
                 $reraise = $exception;
             }
         } else {
@@ -305,13 +306,13 @@ sub DESTROY {
     $parts |= 0x02 if defined($self->{'except'});
     $parts |= 0x04 if defined($self->{'finally'});
     my $messages = ["Incorrectly used PLIF::Exception::Internal::Continuation object at $self->{'filename'} line $self->{'line'}\n",
-                    "Incorrectly used \"handle ... with\" clause at $self->{'filename'} line $self->{'line'}\n",
+                    "Incorrectly used \"catch ... with\" clause at $self->{'filename'} line $self->{'line'}\n",
                     "Incorrectly used \"except\" clause at $self->{'filename'} line $self->{'line'}\n",
-                    "Incorrectly used \"handle ... with\" and \"except\" clauses at $self->{'filename'} line $self->{'line'}\n",
+                    "Incorrectly used \"catch ... with\" and \"except\" clauses at $self->{'filename'} line $self->{'line'}\n",
                     "Incorrectly used \"finally\" clause at $self->{'filename'} line $self->{'line'}\n",
-                    "Incorrectly used \"handle ... with\" and \"finally\" clauses at $self->{'filename'} line $self->{'line'}\n",
+                    "Incorrectly used \"catch ... with\" and \"finally\" clauses at $self->{'filename'} line $self->{'line'}\n",
                     "Incorrectly used \"except\" and \"finally\" clauses at $self->{'filename'} line $self->{'line'}\n",
-                    "Incorrectly used \"handle ... with\", \"except\", and \"finally\" clauses at $self->{'filename'} line $self->{'line'}\n",];
+                    "Incorrectly used \"catch ... with\", \"except\", and \"finally\" clauses at $self->{'filename'} line $self->{'line'}\n",];
     warn $messages->[$parts]; # XXX can't raise an exception in a destructor
 }
 
@@ -335,7 +336,7 @@ sub DESTROY {
 }
 
 
-package PLIF::Exception::Internal::Unhandled;
+package PLIF::Exception::Internal::Fallthrough;
 
 sub create {
     my($package, $filename, $line) = @_;
@@ -349,7 +350,7 @@ sub create {
 sub DESTROY {
     my $self = shift;
     return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
-    warn "Incorrectly used \"unhandled\" function at $self->{'filename'} line $self->{'line'}\n"; # XXX can't raise an exception in a destructor
+    warn "Incorrectly used \"fallthrough\" function at $self->{'filename'} line $self->{'line'}\n"; # XXX can't raise an exception in a destructor
 }
 
 
