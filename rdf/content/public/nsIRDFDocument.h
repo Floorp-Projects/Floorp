@@ -17,6 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  An RDF-specific extension to nsIXMLDocument. Includes methods for
+  setting the root resource of the document content model, a factory
+  method for constructing the children of a node, etc.
+
+ */
+
 #ifndef nsIRDFDocument_h___
 #define nsIRDFDocument_h___
 

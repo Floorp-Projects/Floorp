@@ -16,6 +16,14 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
+/*
+
+  An RDF-specific content sink. The content sink is targeted by the
+  parser for building the RDF content model.
+
+ */
+
 #ifndef nsIRDFContentSink_h___
 #define nsIRDFContentSink_h___
 
