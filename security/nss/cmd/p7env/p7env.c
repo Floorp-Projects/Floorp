@@ -34,7 +34,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.4 2001/01/31 23:24:47 kirke%netscape.com Exp $
+ * $Id: p7env.c,v 1.5 2001/02/01 00:57:20 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -169,7 +169,7 @@ main(int argc, char **argv)
     struct recipient *recipients, *rcpt;
     PLOptState *optstate;
     PLOptStatus status;
-	SECStatus rv;
+    SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];

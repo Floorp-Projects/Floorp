@@ -34,7 +34,7 @@
 /*
  * p7content -- A command to display pkcs7 content.
  *
- * $Id: p7content.c,v 1.4 2001/01/31 23:24:44 kirke%netscape.com Exp $
+ * $Id: p7content.c,v 1.5 2001/02/01 00:54:34 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -203,7 +203,7 @@ main(int argc, char **argv)
     PRFileDesc *inFile;
     PLOptState *optstate;
     PLOptStatus status;
-	SECStatus rv;
+    SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
