@@ -30,7 +30,7 @@ var	pref = null;
 function debug(msg)
 {
 	// uncomment for debugging information
-	// dump(msg+"\n");
+	dump(msg+"\n");
 }
 
 
@@ -955,6 +955,7 @@ function saveSearch()
 		if (target && target != "")
 		{
 			lastSearchURI = target;
+			debug("Bookmark search  URL: '" + lastSearchURI + "'\n");
 		}
 
 		// look for last search text
@@ -968,14 +969,28 @@ function saveSearch()
 			target = target.replace(/+/i, " ");
 
 			lastSearchText = unescape(target);
+			debug("Bookmark search Name: '" + lastSearchText + "'\n");
 		}
 	}
 
-	debug("Bookmark search Name: '" + lastSearchText + "'\n");
-	debug("Bookmark search  URL: '" + lastSearchURI + "'\n");
 
 	if ((lastSearchURI == null) || (lastSearchURI == ""))	return(false);
-	if ((lastSearchText == null) || (lastSearchText == ""))	return(false);
+
+// 	rjc says: if lastSearchText is empty/null, that's still OK, synthesize the text
+	if ((lastSearchText == null) || (lastSearchText == ""))
+	{
+		lastSearchText = lastSearchURI;
+		var siteOffset = lastSearchText.indexOf("://");
+		if (siteOffset > 0)
+		{
+			siteOffset += 3;
+			var endOffset = lastSearchText.indexOf("/", siteOffset);
+			if (endOffset > 0)
+			{
+				lastSearchText = lastSearchText.substr(0, endOffset+1);
+			}
+		}
+	}
 
 	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
