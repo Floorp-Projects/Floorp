@@ -73,9 +73,10 @@ sub GotURI {
         $output =~ s/';\n1;$//gosi; # strip back
         $output =~ s/\\\'/\'/gosi; # dequote quotes
         # heuristics
+        $output =~ s/<!--.*?-->//gos;
         $output =~ s/\n|\r|<a\s+href="|<\/a>//gosi;
         $output =~ s/">/, /gosi;
-        $output =~ s/<br>/ /gosi;
+        $output =~ s/<br>|<\/?p><\/?div>/ /gosi;
         $output =~ s/<\/?(?:b|strong)>/*/gosi;
         $output =~ s/<\/?(?:u|em)>/_/gosi;
         $output =~ s/<\/?(?:q)>/"/gosi;
