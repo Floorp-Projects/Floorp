@@ -416,8 +416,11 @@ function awAppendNewRow(setFocus)
       var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value");
 
     var nextDummy = awGetNextDummyRow();
+    if (nextDummy)  {
+      body.removeChild(nextDummy);
+      nextDummy = awGetNextDummyRow();
+    }
     var newNode = awCopyNode(treeitem1, body, nextDummy);
-    if (nextDummy) body.removeChild(nextDummy);
 
     top.MAX_RECIPIENTS++;
 
