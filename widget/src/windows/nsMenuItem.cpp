@@ -28,10 +28,8 @@
 
 //#include "nsIAppShell.h"
 #include "nsGUIEvent.h"
-//#include "nsIDeviceContext.h"
-//#include "nsRect.h"
-//#include "nsGfxCIID.h"
 #include "nsIMenu.h"
+#include "nsMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIPopUpMenu.h"
 #include "nsIWidget.h"
@@ -146,6 +144,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32
 {
   mCommand = aCommand;
   mLabel   = aLabel;
+  mMenu    = aParent;
 
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
@@ -163,6 +162,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRU
 {
   mCommand = aCommand;
   mLabel   = aLabel;
+  //mMenu    = aParent;
 
   if (NS_OK != aParent->GetParent(mTarget)) {
     mTarget = nsnull;
@@ -174,6 +174,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRU
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
 {
+  mMenu    = aParent;
   mIsSeparator = PR_TRUE;
   return NS_OK;
 }
@@ -181,6 +182,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
 {
+  //mMenu    = aParent;
   mIsSeparator = PR_TRUE;
   return NS_OK;
 }
@@ -250,6 +252,37 @@ PRInt32 nsMenuItem::GetCmdId()
 NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 {
   aIsSep = mIsSeparator;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
+{
+  MENUITEMINFO menuInfo;
+  memset(&menuInfo, 0, sizeof(menuInfo));
+  menuInfo.cbSize     = sizeof(menuInfo);
+  menuInfo.fMask      = MIIM_STATE;
+  menuInfo.fState     = (aIsEnabled ? MFS_ENABLED:MFS_DISABLED);
+
+  BOOL status = ::SetMenuItemInfo(((nsMenu *)mMenu)->GetNativeMenu(), mCmdId, FALSE, &menuInfo);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
+{
   return NS_OK;
 }
 

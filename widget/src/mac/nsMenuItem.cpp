@@ -264,6 +264,30 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   aCommand = mCommand;
