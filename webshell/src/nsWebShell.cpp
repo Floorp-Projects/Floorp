@@ -1848,14 +1848,14 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
       anchor1 = PL_strrchr(file1, '#');
 	  if (anchor1) {
           char * tmp = PL_strstr(file1, file2);
-	    if (tmp && tmp == file1) {
+	    if (tmp && (const char *)tmp == file1) {
 				  return PR_TRUE;
 		}
 	  }
 	  anchor2 = PL_strrchr(file2, '#');
 	  if (anchor2) {
           char * tmp = PL_strstr(file2, file1);
-	    if (tmp && tmp == file2) {			 
+	    if (tmp && (const char *)tmp == file2) {			 
 				  return PR_TRUE;
 		}
 	  }
