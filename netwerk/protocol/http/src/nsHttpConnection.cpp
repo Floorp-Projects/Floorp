@@ -47,9 +47,11 @@ nsHttpConnection::nsHttpConnection()
     : mTransaction(0)
     , mConnectionInfo(0)
     , mLock(nsnull)
+    , mReadStartTime(0)
     , mLastActiveTime(0)
     , mIdleTimeout(0)
-    , mKeepAlive(0)
+    , mKeepAlive(1) // assume to keep-alive by default
+    , mKeepAliveMask(1)
     , mWriteDone(0)
     , mReadDone(0)
 {
@@ -72,7 +74,7 @@ nsHttpConnection::~nsHttpConnection()
 }
 
 nsresult
-nsHttpConnection::Init(nsHttpConnectionInfo *info)
+nsHttpConnection::Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime)
 {
     LOG(("nsHttpConnection::Init [this=%x]\n", this));
 
@@ -86,6 +88,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info)
     mConnectionInfo = info;
     NS_ADDREF(mConnectionInfo);
 
+    mMaxHangTime = maxHangTime;
     return NS_OK;
 }
 
@@ -102,6 +105,10 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
     // take ownership of the transaction
     mTransaction = transaction;
     NS_ADDREF(mTransaction);
+
+    // default mKeepAlive according to what will be requested
+    mKeepAliveMask = mKeepAlive =
+        mTransaction->Capabilities() & NS_HTTP_ALLOW_KEEPALIVE;
 
     // build a proxy for the progress event sink
     mProgressSink = 0;
@@ -160,6 +167,7 @@ nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
         else
             mKeepAlive = PR_TRUE;
     }
+    mKeepAliveMask = mKeepAlive;
 
     // if this connection is persistent, then the server may send a "Keep-Alive"
     // header specifying the maximum number of times the connection can be
@@ -290,8 +298,8 @@ nsHttpConnection::ProxyStepUp()
 PRBool
 nsHttpConnection::CanReuse()
 {
-    return mKeepAlive && (NowInSeconds() - mLastActiveTime < mIdleTimeout)
-                      && IsAlive();
+    return IsKeepAlive() && (NowInSeconds() - mLastActiveTime < mIdleTimeout)
+                         && IsAlive();
 }
 
 PRBool
@@ -318,7 +326,7 @@ nsHttpConnection::DropTransaction()
     mProgressSink = 0;
     
     // if the transaction was dropped, then we cannot reuse this connection.
-    mKeepAlive = PR_FALSE;
+    mKeepAliveMask = mKeepAlive = PR_FALSE;
 }
 
 // called on the socket thread
@@ -574,8 +582,10 @@ nsHttpConnection::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             mTransaction->SetSecurityInfo(info);
         }
     }
-    else
+    else {
         mReadRequest = request;
+        mReadStartTime = NowInSeconds();
+    }
 
     return NS_OK;
 }
@@ -629,6 +639,9 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             trans->OnStopTransaction(status);
             NS_RELEASE(trans);
         }
+
+        // reset the keep-alive mask
+        mKeepAliveMask = mKeepAlive;
 
         nsHttpHandler::get()->ReclaimConnection(this);
     }
@@ -690,14 +703,23 @@ nsHttpConnection::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *inputStream,
                                   PRUint32 offset, PRUint32 count)
 {
+    LOG(("nsHttpConnection::OnDataAvailable [this=%x]\n", this));
+
     if (!mTransaction) {
-        LOG(("nsHttpConnection: no transaction! closing stream\n"));
+        LOG(("no transaction! closing stream\n"));
         return NS_BASE_STREAM_CLOSED;
     }
 
     mLastActiveTime = NowInSeconds();
 
-    LOG(("nsHttpConnection::OnDataAvailable [this=%x]\n", this));
+    if (mKeepAliveMask &&
+            (mLastActiveTime - mReadStartTime >= PRUint32(mMaxHangTime))) {
+        LOG(("max hang time exceeded!\n"));
+        // give the handler a chance to create a new persistent connection to
+        // this host if we've been busy for too long.
+        mKeepAliveMask = PR_FALSE;
+        nsHttpHandler::get()->ProcessTransactionQ();
+    }
 
     nsresult rv = mTransaction->OnDataReadable(inputStream);
 

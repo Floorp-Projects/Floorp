@@ -291,7 +291,7 @@ nsHttpChannel::SetupTransaction()
     if (NS_FAILED(rv)) return rv;
 
     // create the transaction object
-    mTransaction = new nsHttpTransaction(listenerProxy, this);
+    mTransaction = new nsHttpTransaction(listenerProxy, this, mCapabilities);
     if (!mTransaction)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransaction);

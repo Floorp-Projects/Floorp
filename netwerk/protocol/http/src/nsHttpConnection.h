@@ -63,7 +63,12 @@ public:
     nsHttpConnection();
     virtual ~nsHttpConnection();
 
-    nsresult Init(nsHttpConnectionInfo *);
+    // Initialize the connection:
+    //  info        - specifies the connection parameters.
+    //  maxHangTime - limits the amount of time this connection can spend on a
+    //                single transaction before it should no longer be kept 
+    //                alive.  a value of 0xffff indicates no limit.
+    nsresult Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime);
 
     // SetTransaction causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction.
@@ -83,13 +88,11 @@ public:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStepUp();
 
-    PRBool   CanReuse(); // can this connection be reused?
-    PRBool   IsAlive();
-    PRBool   IsKeepAlive()   { return mKeepAlive; }
-    PRUint16 IdleTimeout()   { return mIdleTimeout; }
-
-    void     DontReuse()     { mKeepAlive = PR_FALSE;
-                               mIdleTimeout = 0; }
+    PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
+    PRBool   CanReuse();   // can this connection be reused?
+    void     DontReuse()   { mKeepAliveMask = PR_FALSE;
+                             mKeepAlive = PR_FALSE;
+                             mIdleTimeout = 0; }
 
     void DropTransaction();
     void ReportProgress(PRUint32 progress, PRInt32 progressMax);
@@ -107,6 +110,8 @@ private:
 
     nsresult SetupSSLProxyConnect();
 
+    PRBool   IsAlive();
+
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIRequest>            mWriteRequest;
@@ -122,10 +127,13 @@ private:
 
     PRLock                         *mLock;
 
+    PRUint32                        mReadStartTime;  // time of OnStartRequest
     PRUint32                        mLastActiveTime;
-    PRUint16                        mIdleTimeout;   // value of keep-alive: timeout=
+    PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
+    PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
 
     PRPackedBool                    mKeepAlive;
+    PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mWriteDone;
     PRPackedBool                    mReadDone;
 };

@@ -106,9 +106,7 @@ public:
     // Called to kick-off a new transaction, by default the transaction
     // will be put on the pending transaction queue if it cannot be 
     // initiated at this time.  Callable from any thread.
-    nsresult InitiateTransaction(nsHttpTransaction *,
-                                 nsHttpConnectionInfo *,
-                                 PRBool failIfBusy = PR_FALSE);
+    nsresult InitiateTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
 
     // Called to cancel a transaction, which may or may not be assigned to
     // a connection.  Callable from any thread.
@@ -117,6 +115,10 @@ public:
     // Called when a connection is done processing a transaction.  Callable
     // from any thread.
     nsresult ReclaimConnection(nsHttpConnection *);
+
+    // Called when a connection has been busy with a single transaction for
+    // longer than mMaxRequestDelay.
+    nsresult ProcessTransactionQ();
 
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
@@ -150,15 +152,19 @@ private:
         nsHttpTransaction    *Transaction()    { return mTransaction; }
         nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
 
+        PRBool IsBusy()              { return mBusy; }
+        void   SetBusy(PRBool value) { mBusy = value; }
+
     private:
         nsHttpTransaction    *mTransaction;
         nsHttpConnectionInfo *mConnectionInfo;
+        PRPackedBool          mBusy;
     };
 
     //
     // Transaction queue helper methods
     //
-    void     ProcessTransactionQ();
+    void     ProcessTransactionQ_Locked();
     nsresult EnqueueTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
 
     // Called with mConnectionLock held
@@ -167,10 +173,7 @@ private:
                                         PRBool failIfBusy = PR_FALSE);
 
     nsresult RemovePendingTransaction(nsHttpTransaction *);
-
-    PRUint8  CountActiveConnections(nsHttpConnectionInfo *);
-    PRUint8  CountIdleConnections(nsHttpConnectionInfo *);
-
+    PRBool   AtActiveConnectionLimit(nsHttpConnectionInfo *, PRUint8 caps);
     void     DropConnections(nsVoidArray &);
 
     //
@@ -213,10 +216,11 @@ private:
 
     PRUint16 mIdleTimeout;
     PRUint16 mMaxRequestAttempts;
+    PRUint16 mMaxRequestDelay;
 
     PRUint16 mMaxConnections;
     PRUint8  mMaxConnectionsPerServer;
-    PRUint8  mMaxIdleConnectionsPerServer;
+    PRUint8  mMaxPersistentConnectionsPerServer;
 
     nsCString mAccept;
     nsCString mAcceptLanguages;
@@ -230,10 +234,10 @@ private:
     PRUint32                  mSessionStartTime;
 
     // connection management
-    nsVoidArray mActiveConnections;    // list of nsHttpConnection objects
-    nsVoidArray mIdleConnections;      // list of nsHttpConnection objects
-    nsVoidArray mTransactionQ;         // list of nsPendingTransaction objects
-    PRLock     *mConnectionLock;       // protect connection lists
+    nsVoidArray mActiveConnections; // list of nsHttpConnection objects
+    nsVoidArray mIdleConnections;   // list of nsHttpConnection objects
+    nsVoidArray mTransactionQ;      // list of nsPendingTransaction objects
+    PRLock     *mConnectionLock;    // protect connection lists
 
     // useragent components
     nsXPIDLCString mAppName;

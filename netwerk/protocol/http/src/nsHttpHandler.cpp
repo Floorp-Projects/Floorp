@@ -62,6 +62,11 @@
 #include <Gestalt.h>
 #endif
 
+#ifdef DEBUG
+// defined by the socket transport service while active
+extern PRThread *NS_SOCKET_THREAD;
+#endif
+
 static const char NETWORK_PREFS[] = "network.";
 static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
 static const char INTL_ACCEPT_CHARSET[] = "intl.charset.default";
@@ -95,9 +100,10 @@ nsHttpHandler::nsHttpHandler()
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
-    , mMaxConnections(16)
+    , mMaxRequestDelay(10)
+    , mMaxConnections(24)
     , mMaxConnectionsPerServer(8)
-    , mMaxIdleConnectionsPerServer(4)
+    , mMaxPersistentConnectionsPerServer(2)
     , mActiveConnections(0)
     , mIdleConnections(0)
     , mTransactionQ(0)
@@ -378,8 +384,7 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
 // may be called from any thread
 nsresult
 nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
-                                   nsHttpConnectionInfo *ci,
-                                   PRBool failIfBusy)
+                                   nsHttpConnectionInfo *ci)
 {
     LOG(("nsHttpHandler::InitiateTransaction\n"));
 
@@ -388,19 +393,22 @@ nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
 
     nsAutoLock lock(mConnectionLock);
 
-    return InitiateTransaction_Locked(trans, ci, failIfBusy);
+    return InitiateTransaction_Locked(trans, ci);
 }
 
-// may be called from any thread
+// called from the socket thread
 nsresult
 nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 {
     NS_ENSURE_ARG_POINTER(conn);
+#ifdef DEBUG
+    NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
+#endif
 
     PRBool reusable = conn->CanReuse();
 
-    LOG(("nsHttpHandler::ReclaimConnection [conn=%x keep-alive=%d]\n",
-        conn, reusable));
+    LOG(("nsHttpHandler::ReclaimConnection [conn=%x(%s:%d) keep-alive=%d]\n",
+        conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port(), reusable));
 
     nsAutoLock lock(mConnectionLock);
 
@@ -408,21 +416,11 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
     mActiveConnections.RemoveElement(conn);
 
     if (reusable) {
-        // verify that we aren't already maxed out on the number of
-        // keep-alives we can have for this server.
-        PRUint32 count = CountIdleConnections(conn->ConnectionInfo());
-        if (count == PRUint32(mMaxIdleConnectionsPerServer)) {
-            LOG(("not caching keep-alive connection: "
-                 "would exceed max allowed per server\n"));
-            NS_RELEASE(conn);
-        }
-        else {
-            LOG(("adding connection to idle list [conn=%x]\n", conn));
-            // hold onto this connection in the idle list.  we push it
-            // to the end of the list so as to ensure that we'll visit
-            // older connections first before getting to this one.
-            mIdleConnections.AppendElement(conn);
-        }
+        LOG(("adding connection to idle list [conn=%x]\n", conn));
+        // hold onto this connection in the idle list.  we push it
+        // to the end of the list so as to ensure that we'll visit
+        // older connections first before getting to this one.
+        mIdleConnections.AppendElement(conn);
     }
     else {
         LOG(("closing connection: connection can't be reused\n"));
@@ -433,7 +431,26 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 
     // process the pending transaction queue...
     if (mTransactionQ.Count() > 0)
-        ProcessTransactionQ();
+        ProcessTransactionQ_Locked();
+
+    return NS_OK;
+}
+
+// called from the socket thread (see nsHttpConnection::OnDataAvailable)
+nsresult
+nsHttpHandler::ProcessTransactionQ()
+{
+    LOG(("nsHttpHandler::ProcessTransactionQ\n"));
+#ifdef DEBUG
+    NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
+#endif
+
+    nsAutoLock lock(mConnectionLock);
+
+    // conn is no longer keep-alive, so we may be able to initiate
+    // a pending transaction to the same host.
+    if (mTransactionQ.Count() > 0)
+        ProcessTransactionQ_Locked();
 
     return NS_OK;
 }
@@ -632,9 +649,9 @@ nsHttpHandler::UserAgent()
 
 // called with the connection lock held
 void
-nsHttpHandler::ProcessTransactionQ()
+nsHttpHandler::ProcessTransactionQ_Locked()
 {
-    LOG(("nsHttpHandler::ProcessTransactionQ\n"));
+    LOG(("nsHttpHandler::ProcessTransactionQ_Locked\n"));
 
     nsPendingTransaction *pt = nsnull;
 
@@ -644,16 +661,29 @@ nsHttpHandler::ProcessTransactionQ()
 
         pt = (nsPendingTransaction *) mTransactionQ[i];
 
-        // try to initiate this transaction... if it fails
-        // then we'll just skip over this pending transaction
-        // and try the next.
+        // skip over a busy pending transaction
+        if (pt->IsBusy())
+            continue;
+
+        // the connection lock is released during InitiateTransaction_Locked, so
+        // the transaction queue could get modified.  mark this pending transaction
+        // as busy to cause it to be skipped if this function happens to recurse.
+        pt->SetBusy(PR_TRUE);
+
+        // try to initiate this transaction... if it fails then we'll just skip
+        // over this pending transaction and try the next.
         nsresult rv = InitiateTransaction_Locked(pt->Transaction(),
                                                  pt->ConnectionInfo(),
                                                  PR_TRUE);
+
         if (NS_SUCCEEDED(rv)) {
             mTransactionQ.RemoveElementAt(i);
             delete pt;
             i--;
+        }
+        else {
+            LOG(("InitiateTransaction_Locked failed [rv=%x]\n", rv));
+            pt->SetBusy(PR_FALSE);
         }
     }
 }
@@ -671,7 +701,7 @@ nsHttpHandler::EnqueueTransaction(nsHttpTransaction *trans,
 
     mTransactionQ.AppendElement(pt);
 
-    LOG(("transaction queue contains %u elements\n", mTransactionQ.Count()));
+    LOG((">> transaction queue contains %u elements\n", mTransactionQ.Count()));
     return NS_OK;
 }
 
@@ -682,57 +712,59 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
                                           PRBool failIfBusy)
 {
     nsresult rv;
+    PRUint8 caps = trans->Capabilities();
 
     LOG(("nsHttpHandler::InitiateTransaction_Locked [failIfBusy=%d]\n", failIfBusy));
 
-    if ((mActiveConnections.Count() == PRInt32(mMaxConnections)) || 
-        (CountActiveConnections(ci) == mMaxConnectionsPerServer)) {
-        LOG(("unable to perform the transaction at this time [trans=%x]\n", trans));
-        if (failIfBusy) return NS_ERROR_FAILURE;
-        return EnqueueTransaction(trans, ci);
+    if (AtActiveConnectionLimit(ci, caps)) {
+        LOG((">> unable to perform the transaction at this time [trans=%x]\n", trans));
+        return failIfBusy ? NS_ERROR_FAILURE : EnqueueTransaction(trans, ci);
     }
 
     nsHttpConnection *conn = nsnull;
 
-    // search the idle connection list
-    PRInt32 i;
-    for (i=0; i<mIdleConnections.Count(); ++i) {
-        conn = (nsHttpConnection *) mIdleConnections[i];
+    if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
+        // search the idle connection list
+        PRInt32 i;
+        for (i=0; i<mIdleConnections.Count(); ++i) {
+            conn = (nsHttpConnection *) mIdleConnections[i];
 
-        LOG(("comparing against idle connection [host=%s:%d]\n",
-            conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
+            LOG((">> comparing against idle connection [conn=%x host=%s:%d]\n",
+                conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
 
-        // we check if the connection can be reused before even checking if it
-        // is a "matching" connection.  this is how we keep the idle connection
-        // list fresh.  we could alternatively use some sort of timer for this.
-        if (!conn->CanReuse()) {
-            LOG(("dropping stale connection: [conn=%x]\n", conn));
-            mIdleConnections.RemoveElementAt(i);
-            i--;
-            NS_RELEASE(conn);
+            // we check if the connection can be reused before even checking if it
+            // is a "matching" connection.  this is how we keep the idle connection
+            // list fresh.  we could alternatively use some sort of timer for this.
+            if (!conn->CanReuse()) {
+                LOG(("   dropping stale connection: [conn=%x]\n", conn));
+                mIdleConnections.RemoveElementAt(i);
+                i--;
+                NS_RELEASE(conn);
+            }
+            else if (conn->ConnectionInfo()->Equals(ci)) {
+                LOG(("   reusing connection [conn=%x]\n", conn));
+                mIdleConnections.RemoveElementAt(i);
+                i--;
+                break;
+            }
+            conn = nsnull;
         }
-        else if (conn->ConnectionInfo()->Equals(ci)) {
-            LOG(("reusing connection [conn=%x]\n", conn));
-            mIdleConnections.RemoveElementAt(i);
-            i--;
-            break;
-        }
-        conn = nsnull;
     }
 
     if (!conn) {
-        LOG(("creating new connection...\n"));
+        LOG((">> creating new connection...\n"));
         NS_NEWXPCOM(conn, nsHttpConnection);
         if (!conn)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(conn);
 
-        rv = conn->Init(ci);
+        rv = conn->Init(ci, mMaxRequestDelay);
         if (NS_FAILED(rv)) {
             NS_RELEASE(conn);
             return rv;
         }
-    } else {
+    }
+    else {
         // Update the connectionInfo (bug 94038)
         conn->ConnectionInfo()->SetOriginServer(ci->Host(), ci->Port());
     }
@@ -750,6 +782,7 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
     PR_Lock(mConnectionLock);
 
     if (NS_FAILED(rv)) {
+        LOG(("nsHttpConnection::SetTransaction failed [rv=%x]\n", rv));
         // the connection may already have been removed from the 
         // active connection list.
         if (mActiveConnections.RemoveElement(conn))
@@ -783,57 +816,41 @@ nsHttpHandler::RemovePendingTransaction(nsHttpTransaction *trans)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-PRUint8
-nsHttpHandler::CountActiveConnections(nsHttpConnectionInfo *ci)
+// we're at the active connection limit if any one of the following conditions is true:
+//  (1) at max-connections
+//  (2) keep-alive enabled and at max-persistent-connections-per-host
+//  (3) keep-alive disabled and at max-connections-per-host
+PRBool
+nsHttpHandler::AtActiveConnectionLimit(nsHttpConnectionInfo *ci, PRUint8 caps)
 {
-    PRUint8 count = 0;
-    nsHttpConnection *conn = 0;
+    LOG(("nsHttpHandler::AtActiveConnectionLimit [host=%s:%d caps=%x]\n",
+        ci->Host(), ci->Port(), caps));
 
-    LOG(("nsHttpHandler::CountActiveConnections [host=%s:%d]\n",
-        ci->Host(), ci->Port()));
+    // use >= just to be safe
+    if (mActiveConnections.Count() >= mMaxConnections)
+        return PR_TRUE;
 
+    nsHttpConnection *conn;
+    PRUint8 totalCount = 0, persistentCount = 0;
     PRInt32 i;
     for (i=0; i<mActiveConnections.Count(); ++i) {
         conn = NS_STATIC_CAST(nsHttpConnection *, mActiveConnections[i]); 
-        // only include a matching connection in the count...
-        if (conn->ConnectionInfo()->Equals(ci))
-            count++;
-    }
-
-    LOG(("found count=%u\n", (PRUintn) count));
-    return count;
-}
-
-PRUint8
-nsHttpHandler::CountIdleConnections(nsHttpConnectionInfo *ci)
-{
-    PRUint8 count = 0;
-    nsHttpConnection *conn = 0;
-
-    if (!ci)
-        return 0;
-
-    LOG(("nsHttpHandler::CountIdleConnections [host=%s:%d]\n",
-        ci->Host(), ci->Port()));
-
-    PRInt32 i;
-    for (i=0; i<mIdleConnections.Count(); ++i) {
-        conn = NS_STATIC_CAST(nsHttpConnection *, mIdleConnections[i]);
-        // only include a matching connection in the count if it
-        // can still be reused.
+        LOG((">> comparing against active connection [conn=%x host=%s:%d]\n", 
+            conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
         if (conn->ConnectionInfo()->Equals(ci)) {
-            if (conn->CanReuse())
-                count++;
-            else {
-                mIdleConnections.RemoveElementAt(i);
-                NS_RELEASE(conn);
-                i--;
-            }
+            totalCount++;
+            if (conn->IsKeepAlive())
+                persistentCount++;
         }
     }
 
-    LOG(("found count=%u\n", (PRUintn) count));
-    return count;
+    LOG(("   total-count=%u, persistent-count=%u\n",
+        PRUint32(totalCount), PRUint32(persistentCount)));
+
+    // use >= just to be safe
+    return (totalCount >= mMaxConnectionsPerServer) ||
+               ((caps & NS_HTTP_ALLOW_KEEPALIVE) &&
+                (persistentCount >= mMaxPersistentConnectionsPerServer));
 }
 
 void
@@ -1075,6 +1092,12 @@ nsHttpHandler::PrefsChanged(const char *pref)
             mMaxRequestAttempts = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
+    if (bChangedAll || PL_strcmp(pref, "network.http.request.max-start-delay") == 0) {
+        rv = mPrefs->GetIntPref("network.http.request.max-start-delay", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxRequestDelay = (PRUint16) CLAMP(val, 0, 0xffff);
+    }
+
     if (bChangedAll || PL_strcmp(pref, "network.http.max-connections") == 0) {
         rv = mPrefs->GetIntPref("network.http.max-connections", &val);
         if (NS_SUCCEEDED(rv))
@@ -1087,18 +1110,10 @@ nsHttpHandler::PrefsChanged(const char *pref)
             mMaxConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
-    /*
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections") == 0) {
-        rv = mPrefs->GetIntPref("network.http.keep-alive.max-connections", &val);
+    if (bChangedAll || PL_strcmp(pref, "network.http.max-persistent-connections-per-server") == 0) {
+        rv = mPrefs->GetIntPref("network.http.max-persistent-connections-per-server", &val);
         if (NS_SUCCEEDED(rv))
-            mMaxIdleConnections = (PRUint16) CLAMP(val, 1, 0xffff);
-    }
-    */
-
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections-per-server") == 0) {
-        rv = mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server", &val);
-        if (NS_SUCCEEDED(rv))
-            mMaxIdleConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+            mMaxPersistentConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
     if (bChangedAll || PL_strcmp(pref, "network.http.sendRefererHeader") == 0) {
@@ -1787,6 +1802,7 @@ nsPendingTransaction::nsPendingTransaction(nsHttpTransaction *trans,
                                            nsHttpConnectionInfo *ci)
     : mTransaction(trans)
     , mConnectionInfo(ci)
+    , mBusy(0)
 {
     LOG(("Creating nsPendingTransaction @%x\n", this));
 

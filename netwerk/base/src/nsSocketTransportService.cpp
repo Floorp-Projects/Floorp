@@ -31,6 +31,11 @@
 #include "nsString.h"
 #include "nsNetCID.h"
 
+#ifdef DEBUG
+// in debug builds this will be valid while the socket transport service is active.
+PRThread *NS_SOCKET_THREAD = 0;
+#endif
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -356,6 +361,10 @@ nsSocketTransportService::Run(void)
   PRBool hadThreadEvent = mThreadEvent ? PR_TRUE : PR_FALSE;
 #endif
 
+#ifdef DEBUG
+  NS_SOCKET_THREAD = PR_GetCurrentThread();
+#endif
+
   if (mThreadEvent)
   {
     //
@@ -517,7 +526,10 @@ nsSocketTransportService::Run(void)
         /* Process any pending operations on the mWorkQ... */
         rv = ProcessWorkQ();
   }
-   return NS_OK;
+#ifdef DEBUG
+  NS_SOCKET_THREAD = 0;
+#endif
+  return NS_OK;
 }
 
 
