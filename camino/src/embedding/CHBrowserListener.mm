@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,19 +40,22 @@
 #import "NSString+Utils.h"
 
 // Embedding includes
-#include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
-//#include "nsIWidget.h"
+#include "nsIDOMPopupBlockedEvent.h"
+
 // XPCOM and String includes
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIRequest.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMPopupBlockedEvent.h"
 #include "nsNetError.h"
+
 #import "CHBrowserView.h"
+
 #include "CHBrowserListener.h"
 
 
@@ -568,13 +571,20 @@ CHBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aR
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
 CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                          nsIURI *location)
+                                          nsIURI *aLocation)
 {
-  if (!location)
+  if (!aLocation || !aWebProgress)
     return NS_ERROR_FAILURE;
-    
+
+  // only pay attention to location change for our nsIDOMWindow
+  nsCOMPtr<nsIDOMWindow> windowForProgress;
+  aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
+  nsCOMPtr<nsIDOMWindow> ourWindow = do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, this));
+  if (windowForProgress != ourWindow)
+    return NS_OK;
+
   nsCAutoString spec;
-  location->GetSpec(spec);
+  aLocation->GetSpec(spec);
   NSString* str = [NSString stringWithUTF8String:spec.get()];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
