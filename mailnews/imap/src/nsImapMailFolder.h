@@ -365,6 +365,8 @@ protected:
   nsresult  ParseAdoptedHeaderLine(const char *messageLine, PRUint32 msgKey);
   nsresult  NormalEndHeaderParseStream(nsIImapProtocol *aProtocol);
   
+  void EndOfflineDownload();
+
   nsresult MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db);
   
   void UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead);
@@ -463,8 +465,7 @@ protected:
   // "Other Users' Mailboxes"
   
   nsCString m_adminUrl;   // url to run to set admin privileges for this folder
-  nsIMAPNamespace  *m_namespace;	// Opaque pointer to the IMAP namespace for this folder
-  // Use libnet accessors for various namespace functionality
+  nsIMAPNamespace  *m_namespace;	
   PRPackedBool m_verifiedAsOnlineFolder;
   PRPackedBool m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
   PRPackedBool m_folderIsNamespace;

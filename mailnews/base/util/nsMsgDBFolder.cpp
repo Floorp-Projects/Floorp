@@ -144,8 +144,6 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 
 NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed ()
 {
-   NotifyStoreClosedAllHeaders();
-
     PRUint32 cnt = 0, i;
     if (mSubFolders)
     {
@@ -1265,12 +1263,6 @@ NS_IMETHODIMP nsMsgDBFolder::IsCommandEnabled(const char *command, PRBool *resul
   return NS_OK;
 }
 
-nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
-{
-  // don't need this anymore.
-  return NS_OK;
-}
-
 
 nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
 {
@@ -1317,7 +1309,18 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
 
 nsresult nsMsgDBFolder::StartNewOfflineMessage()
 {
-  nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
+  nsresult rv = NS_OK;
+  if (!m_tempMessageStream)
+    rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
+  else
+  {
+    nsCOMPtr <nsISeekableStream> seekable;
+
+    seekable = do_QueryInterface(m_tempMessageStream);
+
+    if (seekable)
+      seekable->Seek(PR_SEEK_END, 0);
+  }
   if (NS_SUCCEEDED(rv))
     WriteStartOfNewLocalMessage();
   m_numOfflineMsgLines = 0;

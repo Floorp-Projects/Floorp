@@ -1361,7 +1361,6 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
         leafname.Cut(0, leafpos+1);
     m_msgParser = nsnull;
     PrepareToRename();
-    NotifyStoreClosedAllHeaders();
     ForceDBClosed();
 
     nsresult rv = NS_OK;
@@ -2349,7 +2348,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (mDatabase)
       {
         dbFolderInfo = nsnull;
-        NotifyStoreClosedAllHeaders();
         mDatabase->ForceClosed();
       }
       mDatabase = nsnull;
@@ -3455,53 +3453,27 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
 void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch,
                                                 nsIMailboxSpec *boxSpec)
 {
-    PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
-    if (theKeys)
-    {
+  PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
+  if (theKeys)
+  {
     PRUint32 total = keysToFetch.GetSize();
-
-        for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
-          theKeys[keyIndex] = keysToFetch[keyIndex];
-        
-//        m_DownLoadState = kDownLoadingAllMessageHeaders;
-
-        nsresult res = NS_OK; /*ImapMailDB::Open(m_pathName,
-                                         PR_TRUE, // create if necessary
-                                         &mailDB,
-                                         m_master,
-                                         &dbWasCreated); */
-
-    // don't want to download headers in a composition pane
-        if (NS_SUCCEEDED(res))
-        {
-#if 0
-      SetParseMailboxState(new ParseIMAPMailboxState(m_master, m_host, this,
-                               urlQueue,
-                               boxSpec->flagState));
-          boxSpec->flagState = nsnull;    // adopted by ParseIMAPMailboxState
-      GetParseMailboxState()->SetPane(url_pane);
-
-            GetParseMailboxState()->SetDB(mailDB);
-            GetParseMailboxState()->SetIncrementalUpdate(PR_TRUE);
-          GetParseMailboxState()->SetMaster(m_master);
-          GetParseMailboxState()->SetContext(url_pane->GetContext());
-          GetParseMailboxState()->SetFolder(this);
-          
-          GetParseMailboxState()->BeginParsingFolder(0);
-#endif // 0 hook up parsing later.
-          // the imap libnet module will start downloading message headers imap.h
-      if (aProtocol)
-        aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
+    
+    for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
+      theKeys[keyIndex] = keysToFetch[keyIndex];
+    
+    // tell the imap thread which hdrs to download
+    if (aProtocol)
+    {
+      aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
       // now, tell it we don't need any bodies.
-      if (aProtocol)
-        aProtocol->NotifyBodysToDownload(nsnull, 0);
-        }
-        else
-        {
-      if (aProtocol)
-        aProtocol->NotifyHdrsToDownload(nsnull, 0);
-        }
+      aProtocol->NotifyBodysToDownload(nsnull, 0);
     }
+  }
+  else
+  {
+    if (aProtocol)
+      aProtocol->NotifyHdrsToDownload(nsnull, 0);
+  }
 }
 
 
@@ -3699,7 +3671,7 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
   nsresult rv = NS_OK;
   // remember the uid of the message we're downloading.
   m_curMsgUid = uidOfMessage;
-  if (m_downloadMessageForOfflineUse && !m_tempMessageStream)
+  if (m_downloadMessageForOfflineUse && !m_offlineHeader)
   {
     GetMessageHeader(uidOfMessage, getter_AddRefs(m_offlineHeader));
     rv = StartNewOfflineMessage();
@@ -3728,6 +3700,17 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
   return rv;
 }
 
+void nsImapMailFolder::EndOfflineDownload()
+{
+  if (m_tempMessageStream)
+  {
+    m_tempMessageStream->Close();
+    m_tempMessageStream = nsnull;
+    if (mDatabase)
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+}
+
 NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, 
                                           PRBool markRead,
@@ -3736,15 +3719,8 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
   nsresult res = NS_OK;
   PRBool commit = PR_FALSE;
   if (m_offlineHeader)
-  {
     EndNewOfflineMessage();
-    commit = PR_TRUE;
-  }
-  if (m_tempMessageStream)
-  {
-    m_tempMessageStream->Close();
-    m_tempMessageStream = nsnull;
-  }
+
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   m_curMsgUid = uidOfMessage;
   res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
@@ -4231,12 +4207,14 @@ NS_IMETHODIMP
 nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
   nsresult rv = NS_OK;
-
+  PRBool endedOfflineDownload = PR_FALSE;
   m_urlRunning = PR_FALSE;
   if (m_downloadingFolderForOfflineUse)
   {
     ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
     m_downloadingFolderForOfflineUse = PR_FALSE;
+    endedOfflineDownload = PR_TRUE;
+    EndOfflineDownload();
   }
   nsCOMPtr<nsIMsgMailSession> session = 
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
@@ -4264,6 +4242,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         {
           ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
           SetNotifyDownloadedLines(PR_FALSE);
+          if (!endedOfflineDownload)
+            EndOfflineDownload();
         }
 
         switch(imapAction)
@@ -4602,13 +4582,9 @@ NS_IMETHODIMP
 nsImapMailFolder::RefreshFolderRights()
 {
   if (GetFolderACL()->GetIsFolderShared())
-  {
     SetFlag(MSG_FOLDER_FLAG_PERSONAL_SHARED);
-  }
   else
-  {
     ClearFlag(MSG_FOLDER_FLAG_PERSONAL_SHARED);
-  }
   return NS_OK;
 }
 
@@ -4695,37 +4671,33 @@ nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl,
         currentPosition += strlen("SEARCH");
         char *newStr;
           
-          PRBool shownUpdateAlert = PR_FALSE;
-          char *hitUidToken = nsCRT::strtok(currentPosition, WHITESPACE, &newStr);
-          while (hitUidToken)
+        PRBool shownUpdateAlert = PR_FALSE;
+        char *hitUidToken = nsCRT::strtok(currentPosition, WHITESPACE, &newStr);
+        while (hitUidToken)
+        {
+          long naturalLong; // %l is 64 bits on OSF1
+          sscanf(hitUidToken, "%ld", &naturalLong);
+          nsMsgKey hitUid = (nsMsgKey) naturalLong;
+      
+          nsCOMPtr <nsIMsgDBHdr> hitHeader;
+          rv = mDatabase->GetMsgHdrForKey(hitUid, getter_AddRefs(hitHeader));
+          if (NS_SUCCEEDED(rv) && hitHeader)
           {
-            long naturalLong; // %l is 64 bits on OSF1
-            sscanf(hitUidToken, "%ld", &naturalLong);
-            nsMsgKey hitUid = (nsMsgKey) naturalLong;
+            nsCOMPtr <nsIMsgSearchSession> searchSession;
+            nsCOMPtr <nsIMsgSearchAdapter> searchAdapter;
+            aUrl->GetSearchSession(getter_AddRefs(searchSession));
+            if (searchSession)
+            {
+              searchSession->GetRunningAdapter(getter_AddRefs(searchAdapter));
+              if (searchAdapter)
+                searchAdapter->AddResultElement(hitHeader);
+            }
+          }
+          else if (!shownUpdateAlert)
+          {
+          }
         
-            nsCOMPtr <nsIMsgDBHdr> hitHeader;
-            rv = mDatabase->GetMsgHdrForKey(hitUid, getter_AddRefs(hitHeader));
-            if (NS_SUCCEEDED(rv) && hitHeader)
-            {
-              nsCOMPtr <nsIMsgSearchSession> searchSession;
-              nsCOMPtr <nsIMsgSearchAdapter> searchAdapter;
-              aUrl->GetSearchSession(getter_AddRefs(searchSession));
-              if (searchSession)
-              {
-                searchSession->GetRunningAdapter(getter_AddRefs(searchAdapter));
-                if (searchAdapter)
-                  searchAdapter->AddResultElement(hitHeader);
-              }
-            }
-            else if (!shownUpdateAlert)
-            {
-#if 0 // can't do this yet
-            FE_Alert(context, XP_GetString(MK_MSG_SEARCH_HITS_NOT_IN_DB));
-            shownUpdateAlert = PR_TRUE;
-#endif
-            }
-          
-            hitUidToken = nsCRT::strtok(newStr, WHITESPACE, &newStr);
+          hitUidToken = nsCRT::strtok(newStr, WHITESPACE, &newStr);
         }
     }
 
@@ -4755,8 +4727,6 @@ nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
 
     if (mailCopyState->m_undoMsgTxn) // CopyMessages()
     {
-        //            nsImapMailCopyState* mailCopyState = 
-        //                (nsImapMailCopyState*) copyState;
         nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
         msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
         if (NS_SUCCEEDED(rv))
@@ -4876,7 +4846,7 @@ nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                         nsMsgBiffState biffState)
 {
   SetBiffState(biffState);
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5641,6 +5611,7 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
   {
     ProgressStatus(aProtocol, IMAP_DONE, nsnull);
     m_urlRunning = PR_FALSE;
+    EndOfflineDownload();
     if (m_downloadingFolderForOfflineUse)
     {
       ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));

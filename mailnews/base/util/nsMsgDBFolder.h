@@ -138,7 +138,6 @@ protected:
 
   nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
-  nsresult NotifyStoreClosedAllHeaders();
 
   // offline support methods.
   nsresult StartNewOfflineMessage();

@@ -1107,7 +1107,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   
   if(mDatabase)
   {
-    NotifyStoreClosedAllHeaders();
     mDatabase->ForceClosed();
     mDatabase = nsnull;
   }
@@ -1260,7 +1259,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       return rv;
   }
     
-	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
   
   nsCAutoString newNameDirStr(newDiskName.get());  //save of dir name before appending .msf 
