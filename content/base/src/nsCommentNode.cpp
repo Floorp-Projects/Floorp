@@ -63,6 +63,7 @@ public:
 
   // nsIContent
   virtual nsIAtom *Tag() const;
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -118,6 +119,12 @@ nsIAtom *
 nsCommentNode::Tag() const
 {
   return nsLayoutAtoms::commentTagName;
+}
+
+PRBool
+nsCommentNode::IsContentOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~eCOMMENT);
 }
 
 NS_IMETHODIMP
