@@ -59,7 +59,8 @@
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 // Get nth child element
-static nsresult GetChild(nsIDOMNode *aParent, PRInt32 aChildNum, nsIDOMNode **aChild)
+static nsresult
+GetChild(nsIDOMNode *aParent, PRInt32 aChildNum, nsIDOMNode **aChild)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aChild);
@@ -94,7 +95,8 @@ static nsresult GetChild(nsIDOMNode *aParent, PRInt32 aChildNum, nsIDOMNode **aC
 }
 
 // Get range for char index
-static nsresult GetCharRange(nsIDOMNode *aParent, PRInt32 aCharNum, nsIDOMRange **aRange)
+static nsresult
+GetCharRange(nsIDOMNode *aParent, PRInt32 aCharNum, nsIDOMRange **aRange)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aRange);
@@ -128,7 +130,7 @@ static nsresult GetCharRange(nsIDOMNode *aParent, PRInt32 aCharNum, nsIDOMRange 
         return NS_ERROR_OUT_OF_MEMORY;
       range->SetStart(node, aCharNum - prevCharNum);
       range->SetEnd(node, aCharNum - prevCharNum + 1);
-      *aRange = range.get();
+      *aRange = range;
       NS_ADDREF(*aRange);
       break;
     }
@@ -138,15 +140,18 @@ static nsresult GetCharRange(nsIDOMNode *aParent, PRInt32 aCharNum, nsIDOMRange 
 }
 
 // Get node by tumbler
-static nsresult GetTumblerNode(nsIDOMNode *aParent, const nsString &aTumbler, nsIDOMNode **aNode)
+static nsresult
+GetTumblerNode(nsIDOMNode *aParent, const nsString &aTumbler,
+               nsIDOMNode **aNode)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aNode);
 
   *aNode = nsnull;
   nsAutoString tumbler(aTumbler);
-  if (tumbler[0] == '/')
+  if (!tumbler.IsEmpty() && tumbler[0] == '/')
     tumbler.Cut(0, 1);
+
   nsCOMPtr<nsIDOMNode> node(aParent);
   while (!tumbler.IsEmpty() && node) {
     PRInt32 sep = tumbler.FindChar('/');
@@ -177,15 +182,14 @@ static nsresult GetTumblerNode(nsIDOMNode *aParent, const nsString &aTumbler, ns
     }
     tumbler.Cut(0, sep + 1);
   }
-  *aNode = node.get();
+  *aNode = node;
   NS_IF_ADDREF(*aNode);
   return NS_OK;
 }
 
-static nsresult GetRange(
-                   nsIDOMDocument *aDocument,
-                   const nsAString& aExpression,
-                   nsIDOMRange **aRange)
+static nsresult
+GetRange(nsIDOMDocument *aDocument, const nsAString& aExpression,
+         nsIDOMRange **aRange)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> node;
@@ -271,7 +275,7 @@ static nsresult GetRange(
     if (!range)
       return NS_ERROR_OUT_OF_MEMORY;
     range->SelectNode(node);
-    *aRange = range.get();
+    *aRange = range;
     NS_ADDREF(*aRange);
   }
 
@@ -298,15 +302,16 @@ nsFIXptr::Evaluate(nsIDOMDocument *aDocument,
 
   PRInt32 split = aExpression.FindChar(',');
   if (split >= 0) {
-    nsAutoString expr1, expr2;
     nsCOMPtr<nsIDOMRange> range1, range2;
 
-    expr1 = Substring(aExpression, 0, split);
-    expr2 = Substring(aExpression, split + 1,
-                      aExpression.Length() - (split + 1));
+    const nsDependentSubstring &expr1 = Substring(aExpression, 0, split);
+    const nsDependentSubstring &expr2 =
+      Substring(aExpression, split + 1, aExpression.Length() - (split + 1));
+
     rv = GetRange(aDocument, expr1, getter_AddRefs(range1)); 
     if (!range1)
       return rv;
+
     rv = GetRange(aDocument, expr2, getter_AddRefs(range2));
     if (!range2)
       return rv;
@@ -324,7 +329,7 @@ nsFIXptr::Evaluate(nsIDOMDocument *aDocument,
 
     range->SetStart(begin, beginOffset);
     range->SetEnd(end, endOffset);
-    *aRange = range.get();
+    *aRange = range;
     NS_ADDREF(*aRange);
   } else {
     rv = GetRange(aDocument, aExpression, aRange); 
