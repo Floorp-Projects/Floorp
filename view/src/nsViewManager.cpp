@@ -870,6 +870,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     localcx->FillRect(damageRegion.GetBounds());
   }
   RenderViews(aView, *localcx, damageRegion, ds, displayList);
+  PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
 
   if (usingDoubleBuffer) {
@@ -2302,6 +2303,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
     }
   }
 
+  PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
 
   // release death grips
@@ -2864,6 +2866,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
     }
   }
 
+  PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
 
   return !anyUnscrolledViews && !anyUnblittableViews;
@@ -3271,6 +3274,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   BuildRenderingDisplayList(view, nsRegion(trect), &displayList, displayArena);
   RenderViews(view, *localcx, nsRegion(trect), PR_FALSE, displayList);
+  PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
 
   NS_RELEASE(localcx);
