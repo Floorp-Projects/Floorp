@@ -1820,23 +1820,32 @@ nsWebShell::DoContent(const char * aContentType,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
+  nsresult rv = NS_OK;
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
+
+  nsXPIDLCString strCommand;
+  // go to the uri loader and ask it to convert the uri load command into a old
+  // world style string
+  NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+    pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand));
+
 
   // first, run any uri preparation stuff that we would have run normally
   // had we gone through OpenURI
   nsCOMPtr<nsIURI> aUri;
   aOpenedChannel->GetURI(getter_AddRefs(aUri));
-  PrepareToLoadURI(aUri, "view", nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
+  PrepareToLoadURI(aUri, strCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
   // mscott: when I called DoLoadURL I found that we ran into problems because
   // we currently don't have channel retargeting yet. Basically, what happens is that
   // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
   // however since we can't retarget yet, we were basically canceling our very
   // own load group!!! So the request would get canceled out from under us...
   // after retargeting we may be able to safely call DoLoadURL. 
-  DoLoadURL(aUri, "view", nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+  DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
   return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
-                                        "view",
+                                        strCommand,
                                         this,
                                         nsnull,
                                         nsnull,
