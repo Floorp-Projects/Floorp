@@ -30,13 +30,6 @@ require "CGI.pl";
 
 use RelationSet;
 
-# Shut up misguided -w warnings about "used only once". "use vars" just
-# doesn't work for me.
-sub sillyness {
-    my $zz;
-    $zz = $::defaultqueryname;
-}
-
 # Use global template variables.
 use vars qw($template $vars $userid);
 
@@ -269,61 +262,6 @@ sub SaveEmail {
 }
 
 
-sub DoFooter {
-    SendSQL("SELECT mybugslink FROM profiles " .
-            "WHERE userid = $userid");
-    $vars->{'mybugslink'} = FetchSQLData();
-    
-    SendSQL("SELECT name, linkinfooter FROM namedqueries " .
-            "WHERE userid = $userid");
-    
-    my @queries;        
-    while (MoreSQLData()) {
-        my ($name, $footer) = (FetchSQLData());
-        next if ($name eq $::defaultqueryname);
-        
-        push (@queries, { name => $name, footer => $footer });        
-    }
-    
-    $vars->{'queries'} = \@queries;
-}
-              
-sub SaveFooter {
-    my %old;
-    SendSQL("SELECT name, linkinfooter FROM namedqueries " .
-            "WHERE userid = $userid");
-    while (MoreSQLData()) {
-        my ($name, $footer) = (FetchSQLData());
-        $old{$name} = $footer;
-    }
-    
-    for (my $c = 0; $c < $::FORM{'numqueries'}; $c++) {
-        my $name = $::FORM{"name-$c"};
-        if (exists $old{$name}) {
-            my $new = $::FORM{"query-$c"};
-            if ($new ne $old{$name}) {
-                detaint_natural($new);
-                SendSQL("UPDATE namedqueries SET linkinfooter = $new " .
-                        "WHERE userid = $userid " .
-                        "AND name = " . SqlQuote($name));
-            }
-        } else {
-            ThrowUserError("missing_query", {queryname => $name});
-        }
-    }
-    SendSQL("UPDATE profiles SET mybugslink = " . 
-            SqlQuote($::FORM{'mybugslink'}) . " WHERE userid = $userid");
-
-    # Make sure that cached queries in the user object are invalidated
-    # so that the footer is correct
-    my $user = Bugzilla->user;
-    $user->flush_queries_cache();
-
-    # Also need to update showmybugslink
-    $user->{showmybugslink} = $::FORM{'mybugslink'} ? 1 : 0;
-}
-    
-    
 sub DoPermissions {
     my (@has_bits, @set_bits);
     
@@ -385,11 +323,6 @@ SWITCH: for ($current_tab_name) {
         DoEmail();
         last SWITCH;
     };
-    /^footer$/ && do {
-        SaveFooter() if $::FORM{'dosave'};
-        DoFooter();
-        last SWITCH;
-    };
     /^permissions$/ && do {
         DoPermissions();
         last SWITCH;
@@ -402,4 +335,3 @@ SWITCH: for ($current_tab_name) {
 print $cgi->header();
 $template->process("account/prefs/prefs.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
-

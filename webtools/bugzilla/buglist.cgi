@@ -274,7 +274,7 @@ if ($::FORM{'cmdtype'} eq "dorem" && $::FORM{'remaction'} =~ /^run/) {
 if ($::FORM{'cmdtype'} eq "dorem") {  
     if ($::FORM{'remaction'} eq "run") {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
-        $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
+        $vars->{'searchname'} = $::FORM{'namedcmd'};
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }
@@ -283,17 +283,6 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
-    }
-    elsif ($::FORM{'remaction'} eq "load") {
-        my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
-        print $cgi->redirect(-location=>$url);
-        # Generate and return the UI (HTML page) from the appropriate template.
-        $vars->{'message'} = "buglist_load_named_query";
-        $vars->{'namedcmd'} = $::FORM{'namedcmd'};
-        $vars->{'url'} = $url;
-        $template->process("global/message.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        exit;
     }
     elsif ($::FORM{'remaction'} eq "forget") {
         confirm_login();
@@ -314,18 +303,18 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         exit;
     }
 }
-elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
-    if ($::FORM{'remember'} == 1 && $::FORM{'remtype'} eq "asdefault") {
+elsif ($::FORM{'cmdtype'} eq "doit") {
+    if ($::FORM{'remtype'} eq "asdefault") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
         SendSQL("REPLACE INTO namedqueries (userid, name, query)
                  VALUES ($userid, $qname, $qbuffer)");
-        # Generate and return the UI (HTML page) from the appropriate template.
+                 
         $vars->{'message'} = "buglist_new_default_query";
     }
-    elsif ($::FORM{'remember'} == 1 && $::FORM{'remtype'} eq "asnamed") {
+    elsif ($::FORM{'remtype'} eq "asnamed") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 
@@ -334,10 +323,9 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
         $name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
         my $qname = SqlQuote($name);
 
-        $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
-        my $qbuffer = SqlQuote($::buffer);
+        my $qbuffer = SqlQuote($::FORM{'newquery'});
 
-        my $tofooter = $::FORM{'tofooter'} ? 1 : 0;
+        my $tofooter = 1;
 
         $vars->{'message'} = "buglist_new_named_query";
 
@@ -363,6 +351,11 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
         Bugzilla->user->flush_queries_cache();
 
         $vars->{'queryname'} = $name;
+        
+        print "Content-Type: text/html\n\n";
+        $template->process("global/message.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+        exit;
     }
 }
 

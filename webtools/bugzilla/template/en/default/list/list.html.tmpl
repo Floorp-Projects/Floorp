@@ -25,7 +25,11 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% DEFAULT title = "$terms.Bug List" %]
+[% title = "$terms.Bug List" %]
+[% IF searchname %]
+  [% title = title _ ": " _ searchname FILTER html %]
+[% END %]
+
 [% style_urls = [ "css/buglist.css" ] %]
 [% qorder = order FILTER url_quote IF order %]
 [% message = "buglist_sorted_by_relevance" IF sorted_by_relevance %]
@@ -132,33 +136,59 @@
 [%############################################################################%]
 
 [% IF bugs.size > 0 %]
-  <form method="post" action="long_list.cgi">
-    <input type="hidden" name="buglist" value="[% buglist %]">
-    <input type="submit" value="Long Format">
-    &nbsp;&nbsp;
-    <a href="buglist.cgi?
-             [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> &nbsp;&nbsp;
-    <a href="colchange.cgi?
-                [% urlquerypart FILTER html %]">Change Columns</a> &nbsp;&nbsp;
+  <p>
+  <table>
+    <tr>
+      <td valign="top">
+        <form method="post" action="long_list.cgi">
+          <input type="hidden" name="buglist" value="[% buglist %]">
+          <input type="submit" value="Long Format">
+        </form>
+      </td>
+      <td>&nbsp;</td>
+      <td valign="top">
+        <a href="buglist.cgi?
+        [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
+        <a href="colchange.cgi?
+        [% urlquerypart FILTER html %]">Change&nbsp;Columns</a> |
 
-    [% IF bugs.size > 1 && caneditbugs && !dotweak %]
-      <a href="buglist.cgi?[% urlquerypart FILTER html %]
-        [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1">Change Several&nbsp;
-        [% terms.Bugs %] at Once</a>
-      &nbsp;&nbsp;
-    [% END %]
+        [% IF bugs.size > 1 && caneditbugs && !dotweak %]
+          <a href="buglist.cgi?[% urlquerypart FILTER html %]
+            [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1"
+            >Change&nbsp;Several&nbsp;[% terms.Bugs %]&nbsp;at&nbsp;Once</a>
+          |
+        [% END %]
 
-    [% IF bugowners %]
-      <a href="mailto:[% bugowners FILTER html %]">Send 
-      Mail to [% terms.Bug %] Owners</a> 
-      &nbsp;&nbsp;
-    [% END %]
+        [% IF bugowners %]
+          <a href="mailto:
+            [% bugowners FILTER html %]">Send&nbsp;Mail&nbsp;to&nbsp;[% terms.Bug %]&nbsp;Owners</a> |
+        [% END %]
 
-    <a href="query.cgi?
-               [% urlquerypart FILTER html %]">Edit this Query</a> &nbsp;&nbsp;
-
-  </form>
-
+        <a href="query.cgi?[% urlquerypart FILTER html %]">Edit&nbsp;Search</a>
+      </td>
+      [% IF searchname %]
+        <td valign="top" nowrap="nowrap">
+          |
+          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                  [% searchname FILTER html %]">Forget&nbsp;Search&nbsp;'
+                  [% searchname FILTER html %]'</a>
+        </td>
+      [% ELSE %]
+        <td>&nbsp;</td>
+        <td>
+          <form method="get" action="buglist.cgi">
+            <input type="submit" value="Remember search"> as 
+            <input type="hidden" name="newquery" 
+                   value="[% urlquerypart FILTER html %]">
+            <input type="hidden" name="cmdtype" value="doit">
+            <input type="hidden" name="remtype" value="asnamed">
+            <input type="text" name="newqueryname" size="20"> 
+          </form> 
+        </td>
+      [% END %]  
+    </tr>
+  </table>
+  </p>  
 [% END %]
 
 

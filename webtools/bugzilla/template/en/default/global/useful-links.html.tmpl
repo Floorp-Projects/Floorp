@@ -33,7 +33,7 @@
       
       <td valign="middle" nowrap="nowrap">
         <a href="enter_bug.cgi">New</a> | 
-        <a href="query.cgi">Query</a> |
+        <a href="query.cgi">Search</a> |
         
         <input type="submit" value="Find"> [% terms.bug %] # 
         <input name="id" size="6"> | 
@@ -78,22 +78,12 @@
       </td>
     </tr> 
 
-    [%# Preset queries %]
+    [%# Saved searches %]
     
-    [% preset_queries = user.showmybugslink %]
-    [% IF NOT preset_queries %]
-       [% FOREACH q = user.queries %]
-         [% IF q.linkinfooter %]
-           [% preset_queries = 1 %]
-           [% LAST %]
-         [% END %]
-       [% END %]
-     [% END %]
-      
     <tr>
-      [% IF preset_queries %]
+      [% IF user.showmybugslink OR user.queries.size %]
         <td>
-          Preset&nbsp;Queries:
+          Saved&nbsp;Searches:
         </td>
       [% END %]
       

@@ -72,19 +72,17 @@
   [% END %]
 
 
-  [%# *** Preset Queries *** %]
+  [%# *** Saved Searches *** %]
   [% IF user.showmybugslink %]
     [% user_login = user.login FILTER url_quote %]
-    <link rel="Preset&nbsp;Queries" title="My [% terms.Bugs %]"                 
+    <link rel="Saved&nbsp;Searches" title="My [% terms.Bugs %]"
           href="[% Param('mybugstemplate').replace('%userid%', user_login) %]">
   [% END %]
 
   [% FOREACH q = user.queries %]
-     [% IF q.linkinfooter %]
-        <link rel="Preset&nbsp;Queries" 
-              title="[% q.name FILTER html %]"
-              href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">
-     [% END %]        
+    <link rel="Saved&nbsp;Searches" 
+          title="[% q.name FILTER html %]"
+          href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">
   [% END %]
 
   [%# *** Bugzilla Administration Tools *** %]

@@ -31,112 +31,7 @@
    "Assignee"     => "Assignee",
    "Last Changed" => "Last Changed" } %]
 
-<br>
-[% IF NOT user %]
-  <input type="hidden" name="cmdtype" value="doit">
-[% ELSE %]
-  <script type="text/javascript"> <!--
-    function remCheckboxChanged() {
-      if (document.queryform.remember.checked == true) {
-        document.queryform.remtype[0].disabled = false;
-        document.queryform.remtype[1].disabled = false;
-        remTypeChanged();
-      }
-      else {
-        document.queryform.remtype[0].disabled = true;
-        document.queryform.remtype[1].disabled = true;
-        document.queryform.newqueryname.disabled = true;
-        document.queryform.tofooter.disabled = true;
-      }
-    }
-
-    function remTypeChanged() {
-      if (document.queryform.remtype[0].checked == true) {
-        document.queryform.newqueryname.disabled = false;
-        document.queryform.tofooter.disabled = false;
-      }
-      else {
-        document.queryform.newqueryname.disabled = true;
-        document.queryform.tofooter.disabled = true;
-      }
-    }
-
-    function selectDoRem() {
-      document.queryform.cmdtype[1].checked = true;
-    }
-    // -->
-  </script>
-
-  <table>
-    [% IF namedqueries.size > 0 %]
-      <tr>
-        <td>
-          <input type="radio" id="cmdtype-doit"
-                 name="cmdtype" value="doit" checked="checked">
-          <label for="cmdtype-doit">Run this search</label>
-        </td>
-        <td>&nbsp;</td>
-      </tr>
-    [% END %]
-    <tr>
-      <td valign="top">
-        [% IF namedqueries.size > 0 %]
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        [% END %]
-        <input type="checkbox" id="remember" name="remember" value="1"
-               onclick="remCheckboxChanged()">
-        [% IF namedqueries.size > 0 %]
-          <label for="remember">and remember it</label>
-        [% ELSE %]
-          <label for="remember">Remember this search</label>
-          <input type="hidden" id="cmdtype-doit"
-                 name="cmdtype" value="doit">
-        [% END %]
-      </td>
-      <td>
-        <input type="radio" id="remtype-asnamed"
-               name="remtype" value="asnamed" checked="checked"
-               onclick="remTypeChanged()">
-        <label for="remtype-asnamed">with this name:</label>
-        <input type="text" name="newqueryname"><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <input type="checkbox" id="tofooter" name="tofooter" value="1">
-          <label for="tofooter">and put it in my page footer</label><br>
-        <input type="radio" id="remtype-asdefault"
-               name="remtype" value="asdefault"
-               onclick="remTypeChanged()">
-        <label for="remtype-asdefault">
-          as my default options for this page
-        </label><br>
-      </td>
-    </tr>
-
-    <tr>
-      <td colspan="2">
-        [% IF namedqueries.size > 0 %]
-          <input type="radio" id="cmdtype-dorem" name="cmdtype" value="dorem">
-          <select name="remaction" onclick="selectDoRem()">
-            <option value="run">Run</option>
-            <option value="load">Load</option>
-            <option value="forget">Forget</option>
-          </select>
-          <label for="cmdtype-dorem">my remembered search:</label>
-          <select name="namedcmd" onclick="selectDoRem()">
-            [% FOREACH query = namedqueries %]
-              <option value="[% query FILTER html %]">
-                [% query FILTER html %]</option>
-            [% END %]
-          </select>
-        [% END %]
-      </td>
-    </tr>
-  </table>
-
-  <script type="text/javascript"> <!--
-    remCheckboxChanged();
-    // -->
-  </script>
-[% END %]
+<input type="hidden" name="cmdtype" value="doit">
 
 <p>
   Sort results by:
@@ -147,14 +42,24 @@
          [% ordersdesc.$order FILTER html %]</option>
   [% END %]
   </select>
-
-  <input type="submit" value="[% button_name FILTER html %]">
-
-  [% IF userdefaultquery %]
-     <p>
-       <a href="query.cgi?nukedefaultquery=1">
-         Set my default query back to the system default</a>.
-     </p>
-  [% END %]
 </p>
 
+<p>  
+  <input type="submit" value="[% button_name FILTER html %]">
+</p>
+
+<p>
+  &nbsp;&nbsp;&nbsp;
+  <input type="checkbox" id="remasdefault"
+         name="remtype" value="asdefault">
+  <label for="remasdefault">
+    and remember these as my default search options
+  </label>
+</p>
+        
+[% IF userdefaultquery %]
+  <p>
+    <a href="query.cgi?nukedefaultquery=1">
+      Set my default query back to the system default</a>.
+  </p>
+[% END %]
