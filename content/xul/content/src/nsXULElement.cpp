@@ -2785,16 +2785,20 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
       return NS_OK; // Don't let these events bubble or be captured.  Just allow them
                     // on the target image.
 
-    if (GetParent()) {
-        // Find out if we're anonymous.
-        if (*aDOMEvent) {
-            (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-            nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
-            if (content && content->GetBindingParent() == GetParent())
+    // Find out whether we're anonymous.
+    if (IsNativeAnonymous()) {
+        retarget = PR_TRUE;
+    } else {
+        nsIContent* parent = GetParent();
+        if (parent) {
+            if (*aDOMEvent) {
+                (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+                nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
+                if (content && content->GetBindingParent() == parent)
+                    retarget = PR_TRUE;
+            } else if (GetBindingParent() == parent) {
                 retarget = PR_TRUE;
-        }
-        else if (GetBindingParent() == GetParent()) {
-            retarget = PR_TRUE;
+            }
         }
     }
 
