@@ -62,57 +62,57 @@ public:
   nsGrid();
   ~nsGrid();
 
-  nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
+  nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
   nsGridCell* GetCellAt(PRInt32 aX, PRInt32 aY);
 
   void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
   void RebuildIfNeeded();
 
-  nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsRow = PR_TRUE);
+  nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
+  nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
+  nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
+  nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsHorizontal = PR_TRUE);
 
-  nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
-  nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
-  nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
-  void GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsRow = PR_TRUE);
+  nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
+  nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
+  nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
+  void GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsHorizontal = PR_TRUE);
 
-  void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow = PR_TRUE);
-  void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsHorizontal = PR_TRUE);
+  void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
+  void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
+  void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
   void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
 #ifdef DEBUG_grid
   void PrintCellMap();
 #endif
-  PRInt32 GetExtraColumnCount(PRBool aIsRow = PR_TRUE);
-  PRInt32 GetExtraRowCount(PRBool aIsRow = PR_TRUE);
+  PRInt32 GetExtraColumnCount(PRBool aIsHorizontal = PR_TRUE);
+  PRInt32 GetExtraRowCount(PRBool aIsHorizontal = PR_TRUE);
 
 // accessors
   void SetBox(nsIBox* aBox) { mBox = aBox; }
   nsIBox* GetBox() { return mBox; }
   nsGridRow* GetColumns();
   nsGridRow* GetRows();
-  PRInt32 GetRowCount(PRInt32 aIsRow = PR_TRUE);
-  PRInt32 GetColumnCount(PRInt32 aIsRow = PR_TRUE);
+  PRInt32 GetRowCount(PRInt32 aIsHorizontal = PR_TRUE);
+  PRInt32 GetColumnCount(PRInt32 aIsHorizontal = PR_TRUE);
 
   static nsIBox* GetScrolledBox(nsIBox* aChild);
   static nsIBox* GetScrollBox(nsIBox* aChild);
 
 private:
   void GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart);
-  void GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow = PR_TRUE);
+  void GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal = PR_TRUE);
 
   void FreeMap();
   void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
-  void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsRow = PR_TRUE);
+  void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsHorizontal = PR_TRUE);
   void BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells);
-  void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow = PR_TRUE);
+  void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsHorizontal = PR_TRUE);
   void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
-  void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
+  void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsHorizontal = PR_TRUE);
+  void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsHorizontal = PR_TRUE);
   PRBool IsGrid(nsIBox* aBox);
 
   // the box that implement the <grid> tag

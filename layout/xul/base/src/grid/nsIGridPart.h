@@ -65,7 +65,7 @@ public:
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)=0;
-  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)=0;
+  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)=0;
   NS_IMETHOD GetRowCount(PRInt32& aRowCount)=0;
 };
 

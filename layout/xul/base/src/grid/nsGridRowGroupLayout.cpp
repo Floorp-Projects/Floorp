@@ -79,18 +79,18 @@ nsGridRowGroupLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isRow = IsHorizontal(aBox);
+  PRInt32 isHorizontal = IsHorizontal(aBox);
 
   if (grid)
-    grid->RowAddedOrRemoved(aState, index, isRow);
+    grid->RowAddedOrRemoved(aState, index, isHorizontal);
 
   return NS_OK;
 }
 
 void
-nsGridRowGroupLayout::AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsRow)
+nsGridRowGroupLayout::AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal)
 {
-  nscoord& size = GET_WIDTH(aSize, aIsRow);
+  nscoord& size = GET_WIDTH(aSize, aIsHorizontal);
 
   if (size == NS_INTRINSICSIZE || aSize2 == NS_INTRINSICSIZE)
     size = NS_INTRINSICSIZE;
@@ -118,16 +118,16 @@ nsGridRowGroupLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    PRInt32 isRow = IsHorizontal(aBox);
-    PRInt32 extraColumns = grid->GetExtraColumnCount(isRow);
-    PRInt32 start = grid->GetColumnCount(isRow) - grid->GetExtraColumnCount(isRow);
+    PRInt32 isHorizontal = IsHorizontal(aBox);
+    PRInt32 extraColumns = grid->GetExtraColumnCount(isHorizontal);
+    PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isRow);
+      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
-      grid->GetPrefRowHeight(aState, i+start, size, !isRow); // GetPrefColumnWidth
+      grid->GetPrefRowHeight(aState, i+start, size, !isHorizontal); // GetPrefColumnWidth
 
-      AddWidth(aSize, size, isRow);
+      AddWidth(aSize, size, isHorizontal);
     }
   }
 
@@ -146,16 +146,16 @@ nsGridRowGroupLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    PRInt32 isRow = IsHorizontal(aBox);
-    PRInt32 extraColumns = grid->GetExtraColumnCount(isRow);
-    PRInt32 start = grid->GetColumnCount(isRow) - grid->GetExtraColumnCount(isRow);
+    PRInt32 isHorizontal = IsHorizontal(aBox);
+    PRInt32 extraColumns = grid->GetExtraColumnCount(isHorizontal);
+    PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isRow);
+      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
-      grid->GetMaxRowHeight(aState, i+start, size, !isRow); // GetMaxColumnWidth
+      grid->GetMaxRowHeight(aState, i+start, size, !isHorizontal); // GetMaxColumnWidth
 
-      AddWidth(aSize, size, isRow);
+      AddWidth(aSize, size, isHorizontal);
     }
   }
 
@@ -174,16 +174,16 @@ nsGridRowGroupLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    PRInt32 isRow = IsHorizontal(aBox);
-    PRInt32 extraColumns = grid->GetExtraColumnCount(isRow);
-    PRInt32 start = grid->GetColumnCount(isRow) - grid->GetExtraColumnCount(isRow);
+    PRInt32 isHorizontal = IsHorizontal(aBox);
+    PRInt32 extraColumns = grid->GetExtraColumnCount(isHorizontal);
+    PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isRow);
+      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
-      grid->GetMinRowHeight(aState, i+start, size, !isRow); // GetMinColumnWidth
+      grid->GetMinRowHeight(aState, i+start, size, !isHorizontal); // GetMinColumnWidth
 
-      AddWidth(aSize, size, isRow);
+      AddWidth(aSize, size, isHorizontal);
     }
   }
 
@@ -331,11 +331,11 @@ nsGridRowGroupLayout::CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)
 }
 
 NS_IMETHODIMP
-nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
 {
   // group have border and padding added to the total margin
 
-  nsresult rv = nsGridRowLayout::GetTotalMargin(aBox, aMargin, aIsRow);
+  nsresult rv = nsGridRowLayout::GetTotalMargin(aBox, aMargin, aIsHorizontal);
   
   // make sure we have the scrollframe on the outside if it has one.
   // thats where the border it.

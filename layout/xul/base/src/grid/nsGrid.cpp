@@ -114,7 +114,7 @@ and one from the row list. When a cell is asked for its size it returns that sma
 be to accommodate the 2 cells. Row lists and Column lists use the same data structure: nsGridRow. 
 Essentially a row and column are the same except a row goes alone the x axis and a column the y. 
 To make things easier and save code everything is written in terms of the x dimension. A flag is 
-passed in called "isRow" that can flip the calculations to the y axis.
+passed in called "isHorizontal" that can flip the calculations to the y axis.
 
 Usually the number of cells in a row match the number of columns, but not always. 
 It is possible to define 5 columns for a grid but have 10 cells in one of the rows. 
@@ -303,8 +303,8 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
        nsGridRowGroupLayout* rowGroup = nsnull;
        monument->CastToRowGroupLayout(&rowGroup);
        if (rowGroup) {
-          PRBool isRow = !nsSprocketLayout::IsHorizontal(child);
-          if (isRow)
+          PRBool isHorizontal = !nsSprocketLayout::IsHorizontal(child);
+          if (isHorizontal)
             *aRows = child;
           else
             *aColumns = child;
@@ -347,7 +347,7 @@ nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputed
  * Given the number of rows create nsGridRow objects for them and full them out.
  */
 void
-nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsRow)
+nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsHorizontal)
 {
   // if not rows then return null
   if (aRowCount == 0) {
@@ -360,7 +360,7 @@ nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsR
   nsGridRow* row;
   
   // only create new rows if we have to. Reuse old rows.
-  if (aIsRow)
+  if (aIsHorizontal)
   { 
     if (aRowCount > mRowCount) {
        delete[] mRows;
@@ -433,7 +433,7 @@ nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
  * from the column
  */
 void
-nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow)
+nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsHorizontal)
 {
   if (!aRows)
     return;
@@ -466,7 +466,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
            continue;
          }
 
-         if (aIsRow)
+         if (aIsHorizontal)
            GetCellAt(j,i)->SetBoxInRow(child);
          else
            GetCellAt(i,j)->SetBoxInColumn(child);
@@ -518,17 +518,17 @@ nsGridRow* nsGrid::GetRows()
 }
 
 nsGridRow*
-nsGrid::GetColumnAt(PRInt32 aIndex, PRBool aIsRow)
+nsGrid::GetColumnAt(PRInt32 aIndex, PRBool aIsHorizontal)
 {
-  return GetRowAt(aIndex, !aIsRow);
+  return GetRowAt(aIndex, !aIsHorizontal);
 }
 
 nsGridRow*
-nsGrid::GetRowAt(PRInt32 aIndex, PRBool aIsRow)
+nsGrid::GetRowAt(PRInt32 aIndex, PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  if (aIsRow) {
+  if (aIsHorizontal) {
     NS_ASSERTION(aIndex < mRowCount || aIndex >= 0, "Index out of range");
     return &mRows[aIndex];
   } else {
@@ -548,17 +548,17 @@ nsGrid::GetCellAt(PRInt32 aX, PRInt32 aY)
 }
 
 PRInt32
-nsGrid::GetExtraColumnCount(PRBool aIsRow)
+nsGrid::GetExtraColumnCount(PRBool aIsHorizontal)
 {
-  return GetExtraRowCount(!aIsRow);
+  return GetExtraRowCount(!aIsHorizontal);
 }
 
 PRInt32
-nsGrid::GetExtraRowCount(PRBool aIsRow)
+nsGrid::GetExtraRowCount(PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  if (aIsRow)
+  if (aIsHorizontal)
     return mExtraRowCount;
   else
     return mExtraColumnCount;
@@ -567,49 +567,49 @@ nsGrid::GetExtraRowCount(PRBool aIsRow)
 
 /**
  * These methods return the preferred, min, max sizes for a given row index.
- * aIsRow if aIsRow is PR_TRUE. If you pass PR_FALSE you will get the inverse.
+ * aIsHorizontal if aIsHorizontal is PR_TRUE. If you pass PR_FALSE you will get the inverse.
  * As if you called GetPrefColumnSize(aState, index, aPref)
  */
 nsresult
-nsGrid::GetPrefRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow)
+nsGrid::GetPrefRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow), "Row index out of range!");
-  //if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow)))
+  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
+  //if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
   //  return NS_OK;
 
   nscoord height = 0;
-  GetPrefRowHeight(aState, aRowIndex, height, aIsRow);
-  SetLargestSize(aSize, height, aIsRow);
+  GetPrefRowHeight(aState, aRowIndex, height, aIsHorizontal);
+  SetLargestSize(aSize, height, aIsHorizontal);
 
   return NS_OK;
 }
 
 nsresult
-nsGrid::GetMinRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow)
+nsGrid::GetMinRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow), "Row index out of range!");
+  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
 
-//  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow)))
+//  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
   //  return NS_OK;
 
   nscoord height = 0;
-  GetMinRowHeight(aState, aRowIndex, height, aIsRow);
-  SetLargestSize(aSize, height, aIsRow);
+  GetMinRowHeight(aState, aRowIndex, height, aIsHorizontal);
+  SetLargestSize(aSize, height, aIsHorizontal);
 
   return NS_OK;
 }
 
 nsresult
-nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow)
+nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow), "Row index out of range!");
+  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
 
- // if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsRow)))
+ // if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
    // return NS_OK;
 
   nscoord height = 0;
-  GetMaxRowHeight(aState, aRowIndex, height, aIsRow);
-  SetSmallestSize(aSize, height, aIsRow);
+  GetMaxRowHeight(aState, aRowIndex, height, aIsHorizontal);
+  SetSmallestSize(aSize, height, aIsHorizontal);
 
   return NS_OK;
 }
@@ -633,7 +633,7 @@ nsGrid::GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart)
 }
 
 void
-nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
 {
   // walk the boxes parent chain getting the border/padding/margin of our parent rows
   
@@ -642,7 +642,7 @@ nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
   nsCOMPtr<nsIGridPart> parent;
   GetPartFromBox(aBox, getter_AddRefs(part));
   if (part)
-    part->GetTotalMargin(aBox, aMargin, aIsRow);
+    part->GetTotalMargin(aBox, aMargin, aIsHorizontal);
 }
 
 /**
@@ -651,12 +651,12 @@ nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
  * have a top or bottom margin. 
  */
 void
-nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsRow)
+nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsHorizontal)
 {
 
   RebuildIfNeeded();
 
-  nsGridRow* row = GetRowAt(aIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
   if (row->IsOffsetSet()) 
   {
@@ -664,7 +664,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
     aBottom = row->mBottom;
     return;
   }
-  PRInt32 lastRow = GetRowCount(aIsRow)-1;
+  PRInt32 lastRow = GetRowCount(aIsHorizontal)-1;
 
   // first get the rows top and bottom border and padding
   nsIBox* box = row->GetBox();
@@ -701,12 +701,12 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
      // fortunately they only affect the first
      // and last row inside the <rows> tag
 
-     GetBoxTotalMargin(box, margin, aIsRow);
+     GetBoxTotalMargin(box, margin, aIsHorizontal);
 
      totalMargin = margin;
   }
 
-  if (aIsRow) {
+  if (aIsHorizontal) {
     row->mTop = totalBorderPadding.top;
     row->mBottom = totalBorderPadding.bottom;
     row->mTopMargin = totalMargin.top;
@@ -732,7 +732,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
     // run through the columns. Look at each column
     // pick the largest top border or bottom border
-    PRInt32 count = GetColumnCount(aIsRow); 
+    PRInt32 count = GetColumnCount(aIsHorizontal); 
 
     PRBool isCollapsed = PR_FALSE;
 
@@ -740,7 +740,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
     {  
       nsMargin totalChildBorderPadding(0,0,0,0);
 
-      nsGridRow* column = GetColumnAt(i,aIsRow);
+      nsGridRow* column = GetColumnAt(i,aIsHorizontal);
       nsIBox* box = column->GetBox();
 
       if (box) 
@@ -753,7 +753,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
            // include the margin of the columns. To the row
            // at this point border/padding and margins all added
            // up to more needed space.
-           GetBoxTotalMargin(box, margin, !aIsRow);
+           GetBoxTotalMargin(box, margin, !aIsHorizontal);
            box->GetInset(inset);
            // get real border and padding. GetBorderAndPadding
            // is redefined on nsGridRowLeafFrame. If we called it here
@@ -771,7 +771,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
         // pick the largest top margin
         if (aIndex == 0) {
-          if (aIsRow) {
+          if (aIsHorizontal) {
             top = totalChildBorderPadding.top;
           } else {
             top = totalChildBorderPadding.left;
@@ -782,7 +782,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
         // pick the largest bottom margin
         if (aIndex == lastRow) {
-          if (aIsRow) {
+          if (aIsHorizontal) {
             bottom = totalChildBorderPadding.bottom;
           } else {
             bottom = totalChildBorderPadding.right;
@@ -815,15 +815,15 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
 /**
  * These methods return the preferred, min, max coord for a given row index if
- * aIsRow is PR_TRUE. If you pass PR_FALSE you will get the inverse.
+ * aIsHorizontal is PR_TRUE. If you pass PR_FALSE you will get the inverse.
  * As if you called GetPrefColumnHeight(aState, index, aPref).
  */
 nsresult
-nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsRow)
+nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  nsGridRow* row = GetRowAt(aIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
   if (row->IsPrefSet()) 
   {
@@ -840,7 +840,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
     cssSize.height = -1;
     nsIBox::AddCSSPrefSize(aState, box, cssSize);
 
-    row->mPref = GET_HEIGHT(cssSize, aIsRow);
+    row->mPref = GET_HEIGHT(cssSize, aIsHorizontal);
 
     // yep do nothing.
     if (row->mPref != -1)
@@ -853,7 +853,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsRow);
+  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
 
 
   // is the row bogus? If so then just ask it for its size
@@ -868,7 +868,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
        nsStackLayout::AddOffset(aState, box, size);
      }
 
-     row->mPref = GET_HEIGHT(size, aIsRow);
+     row->mPref = GET_HEIGHT(size, aIsHorizontal);
      aSize = row->mPref;
 
      return NS_OK;
@@ -878,13 +878,13 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
 
   nsGridCell* child;
 
-  PRInt32 count = GetColumnCount(aIsRow); 
+  PRInt32 count = GetColumnCount(aIsHorizontal); 
 
   PRBool isCollapsed = PR_FALSE;
 
   for (PRInt32 i=0; i < count; i++)
   {  
-    if (aIsRow)
+    if (aIsHorizontal)
      child = GetCellAt(i,aIndex);
     else
      child = GetCellAt(aIndex,i);
@@ -898,11 +898,11 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
 
       child->GetPrefSize(aState, childSize);
 
-      nsSprocketLayout::AddLargestSize(size, childSize, aIsRow);
+      nsSprocketLayout::AddLargestSize(size, childSize, aIsHorizontal);
     }
   }
 
-  row->mPref = GET_HEIGHT(size, aIsRow) + top + bottom;
+  row->mPref = GET_HEIGHT(size, aIsHorizontal) + top + bottom;
 
 
   aSize = row->mPref;
@@ -911,11 +911,11 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
 }
 
 nsresult
-nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsRow)
+nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  nsGridRow* row = GetRowAt(aIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
   if (row->IsMinSet()) 
   {
@@ -932,7 +932,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
     cssSize.height = -1;
     nsIBox::AddCSSMinSize(aState, box, cssSize);
 
-    row->mMin = GET_HEIGHT(cssSize, aIsRow);
+    row->mMin = GET_HEIGHT(cssSize, aIsHorizontal);
 
     // yep do nothing.
     if (row->mMin != -1)
@@ -945,7 +945,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsRow);
+  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
 
     // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid. 
@@ -959,7 +959,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
        nsStackLayout::AddOffset(aState, box, size);
      }
 
-     row->mMin = GET_HEIGHT(size, aIsRow) + top + bottom;
+     row->mMin = GET_HEIGHT(size, aIsHorizontal) + top + bottom;
      aSize = row->mMin;
 
      return NS_OK;
@@ -969,13 +969,13 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
   nsGridCell* child;
 
-  PRInt32 count = GetColumnCount(aIsRow); 
+  PRInt32 count = GetColumnCount(aIsHorizontal); 
 
   PRBool isCollapsed = PR_FALSE;
 
   for (PRInt32 i=0; i < count; i++)
   {  
-    if (aIsRow)
+    if (aIsHorizontal)
      child = GetCellAt(i,aIndex);
     else
      child = GetCellAt(aIndex,i);
@@ -989,11 +989,11 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
       child->GetMinSize(aState, childSize);
 
-      nsSprocketLayout::AddLargestSize(size, childSize, aIsRow);
+      nsSprocketLayout::AddLargestSize(size, childSize, aIsHorizontal);
     }
   }
 
-  row->mMin = GET_HEIGHT(size, aIsRow);
+  row->mMin = GET_HEIGHT(size, aIsHorizontal);
 
   aSize = row->mMin;
 
@@ -1001,11 +1001,11 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 }
 
 nsresult
-nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsRow)
+nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  nsGridRow* row = GetRowAt(aIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
   if (row->IsMaxSet()) 
   {
@@ -1022,7 +1022,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
     cssSize.height = -1;
     nsIBox::AddCSSMaxSize(aState, box, cssSize);
     
-    row->mMax = GET_HEIGHT(cssSize, aIsRow);
+    row->mMax = GET_HEIGHT(cssSize, aIsHorizontal);
 
     // yep do nothing.
     if (row->mMax != -1)
@@ -1035,7 +1035,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsRow);
+  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
 
   // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid. 
@@ -1049,7 +1049,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
        nsStackLayout::AddOffset(aState, box, size);
      }
 
-     row->mMax = GET_HEIGHT(size, aIsRow);
+     row->mMax = GET_HEIGHT(size, aIsHorizontal);
      aSize = row->mMax;
 
      return NS_OK;
@@ -1059,13 +1059,13 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
   nsGridCell* child;
 
-  PRInt32 count = GetColumnCount(aIsRow); 
+  PRInt32 count = GetColumnCount(aIsHorizontal); 
 
   PRBool isCollapsed = PR_FALSE;
 
   for (PRInt32 i=0; i < count; i++)
   {  
-    if (aIsRow)
+    if (aIsHorizontal)
      child = GetCellAt(i,aIndex);
     else
      child = GetCellAt(aIndex,i);
@@ -1079,11 +1079,11 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
       child->GetMaxSize(aState, childSize);
 
-      nsSprocketLayout::AddLargestSize(size, childSize, aIsRow);
+      nsSprocketLayout::AddLargestSize(size, childSize, aIsHorizontal);
     }
   }
 
-  row->mMax = GET_HEIGHT(size, aIsRow) + top + bottom;
+  row->mMax = GET_HEIGHT(size, aIsHorizontal) + top + bottom;
 
   aSize = row->mMax;
 
@@ -1116,11 +1116,11 @@ nsGrid::IsGrid(nsIBox* aBox)
  * tags are around us. Their flexibilty will affect ours.
  */
 nsresult
-nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aFlex, PRBool aIsRow)
+nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aFlex, PRBool aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  nsGridRow* row = GetRowAt(aIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
   if (row->IsFlexSet()) 
   {
@@ -1220,9 +1220,9 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aFlex, PRB
 }
 
 void
-nsGrid::SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow)
+nsGrid::SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsHorizontal)
 {
-  if (aIsRow) {
+  if (aIsHorizontal) {
     if (aSize.height < aHeight)
       aSize.height = aHeight;
   } else {
@@ -1232,9 +1232,9 @@ nsGrid::SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow)
 }
 
 void
-nsGrid::SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow)
+nsGrid::SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsHorizontal)
 {
-  if (aIsRow) {
+  if (aIsHorizontal) {
     if (aSize.height > aHeight)
       aSize.height = aHeight;
   } else {
@@ -1244,20 +1244,20 @@ nsGrid::SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow)
 }
 
 PRInt32 
-nsGrid::GetRowCount(PRInt32 aIsRow)
+nsGrid::GetRowCount(PRInt32 aIsHorizontal)
 {
   RebuildIfNeeded();
 
-  if (aIsRow)
+  if (aIsHorizontal)
     return mRowCount;
   else
     return mColumnCount;
 }
 
 PRInt32 
-nsGrid::GetColumnCount(PRInt32 aIsRow)
+nsGrid::GetColumnCount(PRInt32 aIsHorizontal)
 {
-  return GetRowCount(!aIsRow);
+  return GetRowCount(!aIsHorizontal);
 }
 
 /**
@@ -1265,7 +1265,7 @@ nsGrid::GetColumnCount(PRInt32 aIsRow)
  * in some way.
  */
 void 
-nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow)
+nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsHorizontal)
 { 
   // if we are already dirty do nothing.
   if (mNeedsRebuild || mMarkingDirty)
@@ -1274,7 +1274,7 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
   mMarkingDirty = PR_TRUE;
 
   // index out of range. Rebuild it all
-  if (aRowIndex >= GetRowCount(aIsRow) || aColumnIndex >= GetColumnCount(aIsRow))
+  if (aRowIndex >= GetRowCount(aIsHorizontal) || aColumnIndex >= GetColumnCount(aIsHorizontal))
   {
      NeedsRebuild(aState);
      return;
@@ -1293,10 +1293,10 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
     mColumnBox->MarkDirty(aState);
 
   // dirty just our row and column that we were given
-  nsGridRow* row = GetRowAt(aRowIndex, aIsRow);
+  nsGridRow* row = GetRowAt(aRowIndex, aIsHorizontal);
   row->MarkDirty(aState);
 
-  nsGridRow* column = GetColumnAt(aColumnIndex, aIsRow);
+  nsGridRow* column = GetColumnAt(aColumnIndex, aIsHorizontal);
   column->MarkDirty(aState);
 
 
@@ -1308,7 +1308,7 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
  * force it to change size
  */
 void 
-nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
+nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizontal)
 {
   if (mMarkingDirty)
     return;
@@ -1320,7 +1320,7 @@ nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
  * A cell in the given row or columns at the given index has had a child added or removed
  */
 void 
-nsGrid::CellAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
+nsGrid::CellAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizontal)
 {
   // TBD see if the cell will fit in our current row. If it will
   // just add it in. 
@@ -1335,7 +1335,7 @@ nsGrid::CellAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsR
  * A row or columns at the given index had been added or removed
  */
 void 
-nsGrid::RowAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
+nsGrid::RowAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizontal)
 {
   // TBD see if we have extra room in the table and just add the new row in
   // for now rebuild the world
