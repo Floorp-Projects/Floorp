@@ -1804,6 +1804,19 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    event.eventStructType = NS_KEY_EVENT;
    event.charCode = 0;
 
+   if (((event.keyCode == NS_VK_UP) || (event.keyCode == NS_VK_DOWN)) && (!(fsFlags & KC_KEYUP))) {
+      if (!(WinGetPhysKeyState(HWND_DESKTOP, CHAR4FROMMP(mp1)) & 0x8000)) {
+         /* This isn't a real keyboard event - assume it is a scroll mouse */
+         MPARAM mp2;
+         if (event.keyCode == NS_VK_UP)
+            mp2 = MPFROM2SHORT(0, SB_LINEUP);
+         else
+            mp2 = MPFROM2SHORT(0, SB_LINEDOWN);
+         WinSendMsg(mWnd, WM_VSCROLL, 0, mp2);
+         return FALSE;
+      }
+   }
+
    PRBool rc = DispatchWindowEvent( &event);
 
    // Break off now if this was a key-up.
