@@ -94,7 +94,6 @@ private:
   PRUint8    *mConvertedBits;
   PRInt32    mSizeImage;
   PRBool     mIsTopToBottom;
-  PRBool     mImageUpdated;
 
   PRInt8     mNumBytesPixel;
 
@@ -106,10 +105,7 @@ private:
   PRInt16    mAlphaWidth;        // alpha layer width
   PRInt16    mAlphaHeight;       // alpha layer height
   nsPoint    mLocation;          // alpha mask location
-
   GdkPixmap  *mImagePixmap;
-
-  GdkGC      *mGC;
 };
 
 #endif
