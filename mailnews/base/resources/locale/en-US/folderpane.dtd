@@ -21,4 +21,5 @@ Rights Reserved.
 <!ENTITY unreadColumn.label "Unread"> 
 <!ENTITY totalColumn.label "Total"> 
 <!ENTITY accounts.label "Accounts">
+<!-- LOCALIZATION NOTE (accounts.img) : do not translate below line -->
 <!ENTITY accounts.img "chrome://messenger/skin/localMailHost.gif">
