@@ -680,7 +680,7 @@ sub bot_tinderbox {
             {
             foreach my $e (sort keys %{$$trees{$t}})
                 {
-                next if ($terse && $$trees{$t}{$e} ne "Horked");
+                next if ($terse && $$trees{$t}{$e} eq "Success");
                 $buf .= "[$e: $$trees{$t}{$e}] ";
                 $bustage++;
                 }
