@@ -101,12 +101,12 @@ protected:
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
   nsresult DeleteNonTableElements(nsIDOMNode *aNode);
-  nsresult WillMakeList(nsIDOMSelection *aSelection, const nsString *aListType, PRBool *aCancel, PRBool *aHandled, const nsString *aItemType=nsnull);
+  nsresult WillMakeList(nsIDOMSelection *aSelection, const nsString *aListType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled, const nsString *aItemType=nsnull);
   nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel, PRBool *aHandled);
-  nsresult WillMakeDefListItem(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillMakeDefListItem(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
   nsresult DidMakeBasicBlock(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
@@ -144,7 +144,7 @@ protected:
                                 PRBool aDontTouchContent=PR_FALSE);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
-  nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
+  nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aEntireList, PRBool aDontTouchContent=PR_FALSE);
   nsresult GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD);
   nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);

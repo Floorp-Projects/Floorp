@@ -408,7 +408,7 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kMakeList:
-      return WillMakeList(aSelection, info->blockType, aCancel, aHandled);
+      return WillMakeList(aSelection, info->blockType, info->entireList, aCancel, aHandled);
     case kIndent:
       return WillIndent(aSelection, aCancel, aHandled);
     case kOutdent:
@@ -420,7 +420,7 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kRemoveList:
       return WillRemoveList(aSelection, info->bOrdered, aCancel, aHandled);
     case kMakeDefListItem:
-      return WillMakeDefListItem(aSelection, info->blockType, aCancel, aHandled);
+      return WillMakeDefListItem(aSelection, info->blockType, info->entireList, aCancel, aHandled);
     case kInsertElement:
       return WillInsert(aSelection, aCancel);
   }
@@ -460,7 +460,7 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_FALSE, PR_TRUE);
   if (NS_FAILED(res)) return res;
 
   // examine list type for nodes in selection
@@ -512,7 +512,7 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_FALSE, PR_TRUE);
   if (NS_FAILED(res)) return res;
 
   // examine list type for nodes in selection
@@ -649,7 +649,7 @@ nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
   aCanOutdent = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_FALSE, PR_TRUE);
   if (NS_FAILED(res)) return res;
 
   // examine nodes in selection for blockquotes or list elements;
@@ -1719,6 +1719,7 @@ nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
 nsresult
 nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, 
                               const nsString *aListType, 
+                              PRBool aEntireList,
                               PRBool *aCancel,
                               PRBool *aHandled,
                               const nsString *aItemType)
@@ -1752,7 +1753,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   nsAutoSelectionReset selectionResetter(aSelection, mEditor);
 
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetListActionNodes(&arrayOfNodes);
+  res = GetListActionNodes(&arrayOfNodes, aEntireList);
   if (NS_FAILED(res)) return res;
   
   PRUint32 listCount;
@@ -2132,13 +2133,14 @@ nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection,
 nsresult
 nsHTMLEditRules::WillMakeDefListItem(nsIDOMSelection *aSelection, 
                                      const nsString *aItemType, 
+                                     PRBool aEntireList, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
 {
   // for now we let WillMakeList handle this
   nsAutoString listType; 
   listType.AssignWithConversion("dl");
-  return WillMakeList(aSelection, &listType, aCancel, aHandled, aItemType);
+  return WillMakeList(aSelection, &listType, aEntireList, aCancel, aHandled, aItemType);
 }
 
 nsresult
@@ -2487,9 +2489,15 @@ nsHTMLEditRules::ConvertListType(nsIDOMNode *aList,
   aList->GetFirstChild(getter_AddRefs(child));
   while (child)
   {
-    if (!mEditor->NodeIsType(child, aItemType))
+    if (nsHTMLEditUtils::IsListItem(child) && !mEditor->NodeIsType(child, aItemType))
     {
       res = mEditor->ReplaceContainer(child, &temp, aItemType);
+      if (NS_FAILED(res)) return res;
+      child = temp;
+    }
+    else if (nsHTMLEditUtils::IsList(child) && !mEditor->NodeIsType(child, aListType))
+    {
+      res = mEditor->ReplaceContainer(child, &temp, aListType);
       if (NS_FAILED(res)) return res;
       child = temp;
     }
@@ -2685,9 +2693,22 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
   res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kAlign);
   if (NS_FAILED(res)) return res;                                 
                                      
+  // if we don't have any nodes, or we have only a single br, then we are
+  // creating an empty alignment div.  We have to do some different things for these.
+  PRBool emptyDiv = PR_FALSE;
   PRUint32 listCount;
   arrayOfNodes->Count(&listCount);
-  if (!listCount) 
+  if (!listCount) emptyDiv = PR_TRUE;
+  if (listCount == 1)
+  {
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(isupports ) );
+    if (nsHTMLEditUtils::IsBreak(theNode))
+    {
+      emptyDiv = PR_TRUE;
+    }
+  }
+  if (emptyDiv)
   {
     PRInt32 offset;
     nsCOMPtr<nsIDOMNode> brNode, parent, theDiv, sib;
@@ -3180,6 +3201,11 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       if (NS_FAILED(res)) return res;
       while ((IsFirstNode(node)) && (!nsHTMLEditUtils::IsBody(parent)))
       {
+        // some cutoffs are here: we don't need to also include them in the aWhere == kEnd case.
+        // as long as they are in one or the other it will work.
+        
+        // dont cross table cell boundaries
+        if (nsHTMLEditUtils::IsTableCell(parent)) break;
         // special case for outdent: don't keep looking up 
         // if we have found a blockquote element to act on
         if ((actionID == kOutdent) && nsHTMLEditUtils::IsBlockquote(parent))
@@ -3545,14 +3571,63 @@ nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode,
 //                       
 nsresult 
 nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
+                                    PRBool aEntireList,
                                     PRBool aDontTouchContent)
 {
   if (!outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
   
   nsCOMPtr<nsIDOMSelection>selection;
-  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
+  // added this in so that ui code can ask to change an entire list, even if selection
+  // is only in part of it.  used by list item dialog.
+  if (aEntireList)
+  {       
+    res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
+    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIEnumerator> enumerator;
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
+    if (NS_FAILED(res)) return res;
+    if (!enumerator) return NS_ERROR_UNEXPECTED;
+
+    for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
+    {
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if (NS_FAILED(res)) return res;
+      if (!currentItem) return NS_ERROR_UNEXPECTED;
+
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      nsCOMPtr<nsIDOMNode> commonParent, parent, tmp;
+      range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
+      if (commonParent)
+      {
+        parent = commonParent;
+        while (parent)
+        {
+          if (nsHTMLEditUtils::IsList(parent))
+          {
+            nsCOMPtr<nsISupports> isupports = do_QueryInterface(parent);
+            (*outArrayOfNodes)->AppendElement(isupports);
+            break;
+          }
+          parent->GetParentNode(getter_AddRefs(tmp));
+          parent = tmp;
+        }
+      }
+    }
+    // if we didn't find any nodes this way, then try the normal way.  perhaps the
+    // selection spans multiple lists but with no common list parent.
+    if (*outArrayOfNodes)
+    {
+      PRUint32 nodeCount;
+      (*outArrayOfNodes)->Count(&nodeCount);
+      if (nodeCount) return NS_OK;
+    }
+  }
+  
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
   res = GetPromotedRanges(selection, &arrayOfRanges, kMakeList);
   if (NS_FAILED(res)) return res;

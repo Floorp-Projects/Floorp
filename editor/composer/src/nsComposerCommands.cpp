@@ -380,7 +380,7 @@ nsListCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
   if (inList)
     rv = aEditorShell->RemoveList(listType.GetUnicode());    
   else
-    rv = aEditorShell->MakeOrChangeList(listType.GetUnicode());
+    rv = aEditorShell->MakeOrChangeList(listType.GetUnicode(), PR_FALSE);
     
   return rv;
 }

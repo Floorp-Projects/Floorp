@@ -377,7 +377,7 @@ public:
    * Document me!
    * 
    */
-  NS_IMETHOD MakeOrChangeList(const nsString& aListType)=0;
+  NS_IMETHOD MakeOrChangeList(const nsString& aListType, PRBool entireList)=0;
 
   /**
    * Document me!

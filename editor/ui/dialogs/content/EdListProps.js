@@ -320,9 +320,6 @@ function onOK()
     var changeList;
     if (ListElement && dialog.ChangeAllRadio.checked)
     {
-      // Select the entire list element so all items are
-      //   changed to the requested new type
-      editorShell.SelectElement(ListElement);
       changeList = true;
     }
     else
@@ -330,7 +327,7 @@ function onOK()
 
     if (changeList)
     {
-      editorShell.MakeOrChangeList(ListType);
+      editorShell.MakeOrChangeList(ListType, dialog.ChangeAllRadio.checked);
 
       // Get the new list created:
       ListElement = editorShell.GetElementOrParentByTagName(ListType, null);

@@ -84,7 +84,7 @@ public:
 
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
-  NS_IMETHOD MakeOrChangeList(const nsString& aListType);
+  NS_IMETHOD MakeOrChangeList(const nsString& aListType, PRBool entireList);
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);

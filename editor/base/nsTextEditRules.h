@@ -192,6 +192,8 @@ class nsTextRulesInfo : public nsRulesInfo
     outputFormat(0),
     maxLength(-1),
     collapsedAction(nsIEditor::eNext),
+    bOrdered(PR_FALSE),
+    entireList(PR_FALSE),
     alignType(0),
     blockType(0),
     insertElement(0)
@@ -210,7 +212,8 @@ class nsTextRulesInfo : public nsRulesInfo
   
   // kMakeList
   PRBool bOrdered;
-  
+  PRBool entireList;
+
   // kAlign
   const nsString *alignType;
   

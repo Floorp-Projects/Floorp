@@ -3412,7 +3412,7 @@ nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
 
 
 NS_IMETHODIMP
-nsEditorShell::MakeOrChangeList(const PRUnichar *listType)
+nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
 {
   nsresult err = NS_NOINTERFACE;
 
@@ -3432,7 +3432,7 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType)
         }
       }
       else
-        err = mEditor->MakeOrChangeList(aListType);
+        err = mEditor->MakeOrChangeList(aListType, entireList);
       break;
 
     case ePlainTextEditorType:
