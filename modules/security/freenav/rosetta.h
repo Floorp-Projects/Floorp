@@ -390,7 +390,7 @@
 #define HG82772
 #define HG03903
 #define HG82773 FALSE
-#define HG22087
+#define HG22087 FALSE
 #define HG22088
 #define HG22089 FALSE
 #define HG21092
