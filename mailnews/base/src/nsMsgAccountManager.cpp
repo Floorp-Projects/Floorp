@@ -202,6 +202,11 @@ nsresult nsMsgAccountManager::Init()
 
 nsresult nsMsgAccountManager::Shutdown()
 {
+  if (m_haveShutdown) {
+    // do not shutdown twice
+    return NS_OK;
+  }
+
   nsresult rv;
 
   if(m_msgFolderCache)
