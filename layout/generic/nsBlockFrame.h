@@ -279,10 +279,6 @@ protected:
                              const nsPoint &aPoint, 
                              PRInt32 &aClosestLine);
 
-  void NextOverAllLines(nsLineList::iterator* aIterator,
-                        nsLineList::iterator* aEndIterator,
-                        PRBool* aInOverflowLines);
-
   void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
     mState |= aFlags;
