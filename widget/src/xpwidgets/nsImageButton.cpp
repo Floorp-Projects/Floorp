@@ -190,7 +190,7 @@ nsresult nsImageButton::SetBounds(const nsRect &aBounds)
 //------------------------------------------------------------
 nsIImageRequest * nsImageButton::GetImageForPainting()
 {
-  nsIImageRequest * img;
+  nsIImageRequest * img = nsnull;
 
   if ((mState & eButtonState_pressed) && (mPressedImageRequest != nsnull))
     img = mPressedImageRequest;
