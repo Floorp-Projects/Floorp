@@ -1048,7 +1048,7 @@ nsresult nsCharsetMenu::InitOthers()
     // tag a whole bunch of 'font encoders' with '.notForOutgoing' in 
     // charsetData.properties file. 
     nsCStringArray othersEncoderList;
-    CloneCStringArray(mDecoderList, othersDecoderList);
+    CloneCStringArray(mDecoderList, othersEncoderList);
 
     res = InitMoreMenu(othersEncoderList, kNC_EncodersRoot, ".notForOutgoing");                 
     if (NS_FAILED(res)) return res;
@@ -1504,7 +1504,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
 
     // if this charset is not on the accepted list of charsets, ignore it
     PRInt32 index;
-    index = aDecs.IndexOf(nsCAutoString(p));
+    index = aDecs.IndexOfIgnoreCase(nsCAutoString(p));
     if (index >= 0) {
 
       // else, add it to the menu
