@@ -803,14 +803,14 @@ DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "", 1);
 DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "bugs.status_whiteboard", 1);
 DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
-       "bugs.component");
+	"bugs.component");
 DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
 DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
 DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
-DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords");
+DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -978,8 +978,10 @@ my @th;
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         my $h = "";
-        if ($::needquote{$c}) {
+        if ($::needquote{$c} == 1) { 
             $h .= "<TH WIDTH=100%>";
+		} elsif ($::needquote{$c} == 5) {
+			$h .= "<TH>";
         } else {
             $h .= "<TH>";
         }
@@ -1099,11 +1101,12 @@ while (@row = FetchSQLData()) {
                 if ($c eq "owner") {
                     $ownerhash{$value} = 1;
                 }
-                if ($::needquote{$c}) {
+                if ($::needquote{$c} || $::needquote{$c} == 5) {
                     $value = html_quote($value);
                 } else {
                     $value = "<nobr>$value</nobr>";
                 }
+
                 pnl "<td class=$c>$value";
             }
         }
