@@ -794,6 +794,12 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 nsresult    
 nsGenericHTMLElement::GetInnerHTML(nsString& aInnerHTML)
 {
+  aInnerHTML.Truncate();
+
+  if (!mDocument) {
+    return NS_OK; // We rely on the document for doing XIF conversion
+  }
+
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mContent));
   nsresult rv = NS_OK;
 
@@ -805,7 +811,7 @@ nsGenericHTMLElement::GetInnerHTML(nsString& aInnerHTML)
                            NS_GET_IID(nsIXIFConverter),
                            getter_AddRefs(xifc));
   NS_ENSURE_TRUE(xifc,NS_ERROR_FAILURE);
-  xifc->Init(aInnerHTML);
+  xifc->Init(buf);
 
   PRUint32 i, count = 0;
   nsCOMPtr<nsIDOMNodeList> childNodes;
