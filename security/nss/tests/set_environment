@@ -75,7 +75,7 @@ then
     then
         PATH=/usr/ucb:/opt/usr/local/bin:$PATH
     else
-        PATH=/usr/ucb:/h/tortoise/export/share/builds/tools/sparc_sun_solaris2.5.1/perl5.004/bin:$PATH
+        PATH=/usr/ucb:$PATH
     fi
     export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
 elif [ "$os_name" = "IRIX" ]
@@ -102,25 +102,26 @@ then
     export TERM
 elif [ "$os_name" = "OSF1" ]
 then
-    PATH=/h/tortoise/export/share/builds/tools/alpha_dec_osf4.0/perl5.004/bin:$PATH:/usr/local/bin
+    PATH=$PATH:/usr/local/bin
 fi
 
-if [ "$os_full" = "HPUX 11.00" ]
-then
-    PATH=/h/tortoise/export/share/builds/tools/hppa1.1_hp_hpux11.00/perl5.004/bin:$PATH
-elif [ "$os_full" = "HPUX 10.10" ]
-then
-    PATH=/h/tortoise/export/share/builds/tools/hppa1.1_hp_hpux10.10/perl5.004/bin:$PATH
-elif [ "$os_full" = "AIX 4.1.4.0" ]
-then
-    PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix3.2.5/perl5.004/bin:$PATH
-elif [ "$os_full" = "AIX 4.1.5.0" ]
-then
-    PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix3.2.5/perl5.004/bin:$PATH
-elif [ "$os_full" = "AIX 4.2.1.0" ]
-then
-    PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix4.1/perl5.004/bin:$PATH
-elif [ "$os_name" = "IRIX" ]
+#if [ "$os_full" = "HPUX 11.00" ]
+#then
+    #PATH=$PATH
+#elif [ "$os_full" = "HPUX 10.10" ]
+#then
+    #PATH=$PATH
+#elif [ "$os_full" = "AIX 4.1.4.0" ]
+#then
+    #PATH=$PATH
+#elif [ "$os_full" = "AIX 4.1.5.0" ]
+#then
+    #PATH=$PATH
+#elif [ "$os_full" = "AIX 4.2.1.0" ]
+#then
+    #PATH=$PATH
+#elif [ "$os_name" = "IRIX" ]
+if [ "$os_name" = "IRIX" ]
 then
     PATH=/tools/ns-arch/soft/perl-5.004_04/run/default/mips_sgi_irix5.3/bin:$PATH
 elif [ "$os_name" = "IRIX64" ]
@@ -211,7 +212,7 @@ fi
 
 BASEPATH=$PATH    # in  case we we set and reset DIST directories the PATH 
                 # needs to change accordingly
-export PATH EDITOR EMACSLOADPATH PYTHONPATH PAGER XMCD_LIBDIR DISPLAY MANPATH os_full os_name BASEPATH RSH
+export PATH EDITOR EMACSLOADPATH PYTHONPATH PAGER XMCD_LIBDIR DISPLAY MANPATH os_full os_name BASEPATH RSH O_WIN
 
 umask 022
 
