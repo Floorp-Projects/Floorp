@@ -308,39 +308,43 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
   Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
+  mAppShell = aAppShell;
 
   InitToolkit(aToolkit, aWidgetParent);
   
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
-  InitDeviceContext(aContext, (Widget)aInitData);
+  InitDeviceContext(aContext, 
+                    (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
   
   Widget frameParent = 0;
 
   if (gFirstTopLevelWindow == 0) {
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
- 					   xmMainWindowWidgetClass,
-					   (Widget)aInitData, 
-  					   nsnull);
-       gFirstTopLevelWindow = mainWindow;
+        xmMainWindowWidgetClass,
+        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 
+        nsnull);
+    gFirstTopLevelWindow = mainWindow;
   }
   else {
     Widget shell = ::XtVaCreatePopupShell(" ",
         xmDialogShellWidgetClass,
-        (Widget)aInitData, 0);
+        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 0);
     XtVaSetValues(shell, 
-             XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+        XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
-					   xmMainWindowWidgetClass,
-					   shell, 
-  					   nsnull);
-    XtVaSetValues(mainWindow, XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+				 xmMainWindowWidgetClass,
+				 shell, 
+         nsnull);
+    XtVaSetValues(mainWindow, 
+         XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
   }
 
   frame = ::XtVaCreateManagedWidget("frame",
@@ -383,10 +387,12 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
   mBounds = aRect;
+  mAppShell = aAppShell;
 
   InitToolkit(aToolkit, aWidgetParent);
   
@@ -439,14 +445,16 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
   if (0==aNativeParent)
-    CreateMainWindow(aNativeParent, aWidgetParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+    CreateMainWindow(aNativeParent, aWidgetParent, aRect, 
+        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
   else
-    CreateChildWindow(aNativeParent, aWidgetParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
-
+    CreateChildWindow(aNativeParent, aWidgetParent, aRect, 
+        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 }
 
 
@@ -539,10 +547,13 @@ void nsWindow::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+    CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
+        aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
+        aInitData);
 }
 
 //-------------------------------------------------------------------------
@@ -551,13 +562,14 @@ void nsWindow::Create(nsIWidget *aParent,
 //
 //-------------------------------------------------------------------------
 void nsWindow::Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
 {
-    CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+    CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 }
 
 
@@ -854,6 +866,7 @@ void nsWindow::SetFont(const nsFont &aFont)
 //-------------------------------------------------------------------------
 nsCursor nsWindow::GetCursor()
 {
+  return eCursor_standard;
 }
 
     
@@ -965,6 +978,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
 //-------------------------------------------------------------------------
 nsIToolkit* nsWindow::GetToolkit()
 {
+  return nsnull;
 }
 
 
@@ -987,6 +1001,15 @@ nsIDeviceContext* nsWindow::GetDeviceContext()
   return mContext;
 }
 
+//-------------------------------------------------------------------------
+//
+// Return the used app shell
+//
+//-------------------------------------------------------------------------
+nsIAppShell* nsWindow::GetAppShell()
+{ 
+  return mAppShell;
+}
 
 //-------------------------------------------------------------------------
 //

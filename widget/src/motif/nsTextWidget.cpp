@@ -56,6 +56,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
@@ -66,7 +67,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (Widget) aInitData ;
+    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
@@ -124,6 +125,7 @@ void nsTextWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {

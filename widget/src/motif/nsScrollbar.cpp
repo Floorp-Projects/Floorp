@@ -47,6 +47,7 @@ void nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
@@ -106,17 +107,19 @@ void nsScrollbar::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-Widget parentWidget;
+  Widget parentWidget;
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (Widget) aInitData ;
+    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
-  Create((nsNativeWidget)parentWidget, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+
+  Create((nsNativeWidget)parentWidget, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 
 }
 

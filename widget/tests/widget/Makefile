@@ -20,7 +20,8 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	main.cpp	\
+	main.cpp	 \
+	nsWidgetTest.cpp \
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/shell
@@ -39,14 +40,8 @@ EX_LIBS = \
 	$(DIST)/bin/libgfxunix.so \
 	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libgmbaseunix.so \
-	$(DIST)/bin/libraptorhtmlbase_s.so \
-	$(DIST)/bin/libraptorhtmldoc_s.so \
-	$(DIST)/bin/libraptorhtmlforms_s.so \
+	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libraptorhtmlpars.so \
-	$(DIST)/bin/libraptorhtmlstyle_s.so \
-	$(DIST)/bin/libraptorhtmltable_s.so \
-	$(DIST)/bin/libraptorlayout_s.so \
-	$(DIST)/bin/libraptorevents_s.so \
 	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libabouturl.so \
@@ -84,8 +79,6 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
-	$(DIST)/bin/libnglcsslay_s.so \
-	$(DIST)/bin/libnglhtmlcon_s.so \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -95,36 +88,28 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+PROG   = widget
 
-TARGETS = $(PROGS)
+TARGETS = $(OBJDIR)/$(PROG)
 
 include $(DEPTH)/config/rules.mk
-
-$(OBJDIR)/nsWidgetTest.o::	nsWidgetTest.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsWidgetTest.cpp $(LDFLAGS) 
-
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsWidgetTest.o $(EX_LIBS)
+$(OBJDIR)/$(PROG): $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsWidgetTest.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
+	$(CCC) -rdynamic -o $@ $(OBJDIR)/main.o $(OBJDIR)/nsWidgetTest.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
 	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsWidgetTest.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
-export::
-
-
-
 install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+	$(INSTALL) $(OBJDIR)/$(PROG) $(DIST)/bin
 
 clobber::
-	rm -f $(DIST)/bin/viewer.exe
+	rm -f $(DIST)/bin/$(PROG)
 
 

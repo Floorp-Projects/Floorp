@@ -22,7 +22,7 @@ DEFINES = -D_IMPL_NS_UI
 EXPORTS =               \
 	nsStringUtil.h		\
 	nsui.h		\
-		nsITabWidget.h  \
+	nsITabWidget.h  \
         nsIWidget.h     \
         nsIButton.h     \
         nsICheckButton.h\
@@ -41,8 +41,9 @@ EXPORTS =               \
         nsIEventListener.h \
         nsIToolkit.h \
         nsWidgetsCID.h \
-		nsITooltipWidget.h \
-		nsIAppShell.h \
+	nsITooltipWidget.h \
+	nsIAppShell.h \
+	nsILookAndFeel.h \
         $(NULL)
 
 MODULE = raptor

@@ -37,18 +37,20 @@ public:
     NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
 
     void Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
+                const nsRect &aRect,
+                EVENT_CALLBACK aHandleEventFunction,
+                nsIDeviceContext *aContext,
+                nsIAppShell *aAppShell = nsnull,
+                nsIToolkit *aToolkit = nsnull,
+                nsWidgetInitData *aInitData = nsnull);
 
     void Create(nsNativeWidget aParent,
-              const nsRect &aRect, 
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
+                const nsRect &aRect, 
+                EVENT_CALLBACK aHandleEventFunction,
+                nsIDeviceContext *aContext,
+                nsIAppShell *aAppShell = nsnull,
+                nsIToolkit *aToolkit = nsnull,
+                nsWidgetInitData *aInitData = nsnull);
 
 
     virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);

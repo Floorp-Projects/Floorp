@@ -39,6 +39,7 @@ class nsFileWidget : public nsWindow
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext = nsnull,
+                nsIAppShell *aAppShell = nsnull,
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
@@ -46,6 +47,7 @@ class nsFileWidget : public nsWindow
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext = nsnull,
+                nsIAppShell *aAppShell = nsnull,
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
@@ -55,6 +57,7 @@ class nsFileWidget : public nsWindow
                                     nsString& aTitle,
                                     nsMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
+                                    nsIAppShell *aAppShell = nsnull,
                                     nsIToolkit *aToolkit = nsnull,
                                     void *aInitData = nsnull);
 
@@ -106,6 +109,7 @@ class nsFileWidget : public nsWindow
                                       nsString& aTitle,
                                       nsMode aMode,
                                       nsIDeviceContext *aContext = nsnull,
+                                      nsIAppShell *aAppShell = nsnull,
                                       nsIToolkit *aToolkit = nsnull,
                                       void *aInitData = nsnull);
 
