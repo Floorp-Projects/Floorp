@@ -36,6 +36,25 @@ class nsIToolkit;
 #undef NOISY_DESTROY
 #endif
 
+
+#define NSRECT_TO_GDKRECT(ns,gdk) \
+  PR_BEGIN_MACRO \
+  gdk.x = ns.x; \
+  gdk.y = ns.y; \
+  gdk.width = ns.width; \
+  gdk.height = ns.height; \
+  PR_END_MACRO
+
+#define NSCOLOR_TO_GDKCOLOR(n,g) \
+  PR_BEGIN_MACRO \
+  g.red = 256 * NS_GET_R(n); \
+  g.green = 256 * NS_GET_G(n); \
+  g.blue = 256 * NS_GET_B(n); \
+  PR_END_MACRO
+
+#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
+
 /**
  * Base of all GTK+ native widgets.
  */

@@ -115,7 +115,7 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
-  g_print("nsWidget::WidgetToScreen\n");
+  g_print("nsWindow::WidgetToScreen\n");
   if (mIsToplevel && mShell)
   {
     if (mShell->window)
@@ -133,8 +133,8 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
     if (mWidget->window)
     {
       gdk_window_get_origin(mWidget->window, &x, &y);
-      aNewRect.x = x - aOldRect.x;
-      aNewRect.y = y - aOldRect.y;
+      aNewRect.x = x + aOldRect.x;
+      aNewRect.y = y + aOldRect.y;
       g_print("  x = %i, y = %i\n", x, y);
     }
     else
@@ -316,6 +316,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
 
     // is this needed?
+
     /*
       gtk_signal_connect(GTK_OBJECT(mShell),
       "delete_event",
@@ -327,6 +328,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   else if (!parentWidget) {
     // mainWindow = gtk_window_new(mBorderStyle);
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
 
     // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
@@ -337,9 +339,9 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     mIsToplevel = PR_TRUE;
 
     gtk_signal_connect(GTK_OBJECT(mShell),
-                     "delete_event",
-                     GTK_SIGNAL_FUNC(handle_delete_event),
-                     this);
+                       "delete_event",
+                       GTK_SIGNAL_FUNC(handle_delete_event),
+                       this);
   }
   
   // Force cursor to default setting
@@ -649,69 +651,43 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-#ifdef DEBUG_pavlov
-  g_print("nsWindow::Show(%i)   %p\n", bState, this);
-#endif
-
   if (!mWidget)
     return NS_OK; // Will be null durring printing
-
 
   // show
   if (bState)
   {
     // show mWidget
     ::gtk_widget_show(mWidget);
-#ifdef DEBUG_pavlov
-    g_print("  showing mWidget\n");
-#endif
 
     // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
-
       // popup windows don't have vboxes
       if (mVBox)
-      {
         gtk_widget_show(mVBox);
-#ifdef DEBUG_pavlov
-        g_print("  showing mmVBox\n");
-#endif
-      }
 
       gtk_widget_show(mShell);
-#ifdef DEBUG_pavlov
-      g_print("  showing mShell\n");
-#endif
     }
   }
   // hide
   else
   {
-    gtk_widget_hide(mWidget);
-#ifdef DEBUG_pavlov
-    g_print("  hiding mWidget\n");
-#endif
+    // hide toplevel first so that things don't disapear from the screen one by one
 
     // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
+      gtk_widget_hide(mShell);
 
       // popup windows don't have vboxes
       if (mVBox)
-      {
         gtk_widget_hide(mVBox);
-#ifdef DEBUG_pavlov
-        g_print("  hiding mVBox\n");
-#endif
-      }
+    } 
 
-      gtk_widget_hide(mShell);
-#ifdef DEBUG_pavlov
-      g_print("  hiding mShell\n");
-#endif
+    gtk_widget_hide(mWidget);
 
-    }    
+   
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
     gtk_widget_unmap(mWidget);
@@ -741,15 +717,19 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
+NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  *aVisible = PR_TRUE;
+  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
+}
+
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   // not implimented for toplevel windows
   if (mIsToplevel && mShell)
   {
-    mShell->allocation.x = aX;
-    mShell->allocation.y = aY;
-    if (mShell->window)
-      gdk_window_move(mShell->window, aX, aY);
+    gtk_widget_set_uposition(mShell, aX, aY);
+
   }
   else if (mWidget) {
     ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -784,43 +764,13 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     {
       mShell->allocation.width = aWidth;
       mShell->allocation.height = aHeight;
-
-      if (mShell->window)
-        ::gdk_window_resize(mShell->window, aWidth, aHeight);
-      else
-      {
-#ifdef DEBUG_pavlov
-        g_print("nsWindow::Resize on toplevel window with null gdkwindow for parent -- window not yet realized\n");
-#endif
-        gtk_widget_realize(mShell);
-        if (mShell->window)
-          gdk_window_resize(mShell->window, aWidth, aHeight);
-#ifdef DEBUG_pavlov
-        else
-          g_print("still not working..grrr\n");
-#endif
-        if (GTK_WIDGET_VISIBLE (mShell))
-          ::gtk_widget_queue_draw (mShell);
-
-      }
-
-#if 0 // why the hell does this code not work?
-      ::gtk_widget_set_usize(mShell, aWidth, aHeight);
-      if (aRepaint)
-      {
-        if (GTK_WIDGET_VISIBLE (mShell))
-          ::gtk_widget_queue_draw (mShell);
-      }
-#endif
+      gtk_widget_set_usize(mShell, aWidth, aHeight);
     }
 
-    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+    gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
-    if (aRepaint) {
-      if (GTK_WIDGET_VISIBLE (mWidget)) {
-        ::gtk_widget_queue_draw (mWidget);
-      }
-    }
+    if (aRepaint)
+      Invalidate(PR_FALSE);
   }
 
   return NS_OK;
@@ -835,10 +785,83 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
   return NS_OK;
 }
 
-NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
+NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-  *aVisible = PR_TRUE;
-  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
+  if (mWidget == nsnull) {
+    return NS_OK; // mWidget will be null during printing. 
+  }
+
+  if (!GTK_IS_WIDGET (mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aIsSynchronous)
+  {
+    if (mIsToplevel && mShell)
+      gtk_widget_draw(mShell, NULL);
+
+    gtk_widget_draw(mWidget, NULL);
+    mUpdateArea.SetRect(0, 0, 0, 0);
+  }
+  else
+  {
+    if (mIsToplevel && mShell)
+      gtk_widget_queue_draw(mShell);
+
+    gtk_widget_queue_draw(mWidget);
+    mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
+  }
+
+#ifdef DEBUG_pavlov
+  g_print("nsWindow::Invalidate(this=%p, %i)\n", this, aIsSynchronous);
+#endif
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  if (mWidget == nsnull) {
+    return NS_OK;  // mWidget is null during printing
+  }
+
+  if (!GTK_IS_WIDGET (mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
+
+
+  if (aIsSynchronous) {
+      GdkRectangle nRect;
+      NSRECT_TO_GDKRECT(aRect, nRect);
+      gtk_widget_draw(mWidget, &nRect);
+
+    if (mIsToplevel && mShell)
+      gtk_widget_draw(mShell, &nRect);
+
+  } else {
+      mUpdateArea.UnionRect(mUpdateArea, aRect);
+      ::gtk_widget_queue_draw_area(mWidget,
+                                   aRect.x, aRect.y,
+                                   aRect.width, aRect.height);
+    if (mIsToplevel && mShell)
+      gtk_widget_queue_draw_area(mShell,
+                                 aRect.x, aRect.y,
+                                 aRect.width, aRect.height);
+  }
+
+#ifdef DEBUG_pavlov
+  g_print("nsWindow::Invalidate(this=%p, {x=%i,y=%i,w=%i,h=%i}, %i)\n",
+          this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
+#endif
+
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

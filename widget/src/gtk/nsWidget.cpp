@@ -28,25 +28,6 @@
 #include "nsWidgetsCID.h"
 #include <gdk/gdkx.h>
 
-#undef DEBUG_pavlov
-
-#define NSRECT_TO_GDKRECT(ns,gdk) \
-  PR_BEGIN_MACRO \
-  gdk.x = ns.x; \
-  gdk.y = ns.y; \
-  gdk.width = ns.width; \
-  gdk.height = ns.height; \
-  PR_END_MACRO
-
-#define NSCOLOR_TO_GDKCOLOR(n,g) \
-  PR_BEGIN_MACRO \
-  g.red = 256 * NS_GET_R(n); \
-  g.green = 256 * NS_GET_G(n); \
-  g.blue = 256 * NS_GET_B(n); \
-  PR_END_MACRO
-
-// Taken from nsRenderingContextGTK.cpp
-#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
@@ -121,8 +102,8 @@ NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
     if (mWidget->window)
     {
       gdk_window_get_origin(mWidget->window, &x, &y);
-      aNewRect.x = x - aOldRect.x;
-      aNewRect.y = y - aOldRect.y;
+      aNewRect.x = x + aOldRect.x;
+      aNewRect.y = y + aOldRect.y;
       g_print("  x = %i, y = %i\n", x, y);
     }
     else
@@ -633,14 +614,7 @@ NS_METHOD nsWidget::Update(void)
 
   if (mUpdateArea.width && mUpdateArea.height) {
     if (!mIsDestroying) {
-      GdkRectangle nRect;
-      NSRECT_TO_GDKRECT(mUpdateArea,nRect);
-#ifdef DEBUG_pavlov
-      g_print("nsWidget::Update(this=%p): update {%i,%i,%i,%i}\n",
-              this, mUpdateArea.x, mUpdateArea.y,
-              mUpdateArea.width, mUpdateArea.height);
-#endif
-      ::gtk_widget_draw(mWidget, &nRect);
+      Invalidate(mUpdateArea, PR_TRUE);
 
       mUpdateArea.SetRect(0, 0, 0, 0);
       return NS_OK;
