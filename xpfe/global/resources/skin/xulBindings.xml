@@ -428,7 +428,7 @@
 
   <binding id="popups">
     <content>
-      <xul:box class="internal-box" orient="vertical">
+      <xul:box class="internal-box" orient="vertical" flex="1" style="overflow: auto">
         <children/>
       </xul:box>
     </content>
