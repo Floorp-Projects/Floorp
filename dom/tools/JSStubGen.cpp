@@ -951,8 +951,7 @@ static const char *kMethodBeginStr = "\n\n"
 "PR_STATIC_CALLBACK(JSBool)\n"
 "%s%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
-"  nsIDOM%s *nativeThis = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n"
-"  JSBool rBool = JS_FALSE;\n";
+"  nsIDOM%s *nativeThis = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n";
 
 static const char *kMethodBeginNonPrimaryStr = "\n\n"
 "//\n"
@@ -967,8 +966,7 @@ static const char *kMethodBeginNonPrimaryStr = "\n\n"
 "    JS_ReportError(cx, \"Object must be of type %s\");\n"
 "    return JS_FALSE;\n"
 "  }\n"
-"\n"
-"  JSBool rBool = JS_FALSE;\n";
+"\n";
 
 static const char *kMethodReturnStr = 
 "  %s nativeRet;\n";
