@@ -22,6 +22,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsMathMLFrame.h"
 #include "nsMathMLChar.h"
+#include "nsCSSAnonBoxes.h"
 
 // used to map attributes into CSS rules
 #include "nsIDocument.h"
@@ -112,11 +113,11 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                                       nsMathMLChar*    aMathMLChar,
                                       PRBool           aIsMutableChar)
 {
-  nsIAtom* fontAtom = (aIsMutableChar) ?
-    nsMathMLAtoms::fontstyle_stretchy :
-    nsMathMLAtoms::fontstyle_anonymous; // savings
+  nsIAtom* pseudoStyle = (aIsMutableChar) ?
+    nsCSSAnonBoxes::mozMathStretchy :
+    nsCSSAnonBoxes::mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
-  newStyleContext = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
+  newStyleContext = aPresContext->ResolvePseudoStyleContextFor(aContent, pseudoStyle,
 							       aParentStyleContext);
   if (newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);

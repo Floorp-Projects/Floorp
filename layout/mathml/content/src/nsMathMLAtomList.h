@@ -40,15 +40,12 @@
 
 MATHML_ATOM(fontsize, "-moz-math-font-size") // different from fontsize_
 MATHML_ATOM(fontstyle, "-moz-math-font-style") // different from fontstyle_
-MATHML_ATOM(fontstyle_stretchy, ":-moz-math-font-style-stretchy")
-MATHML_ATOM(fontstyle_anonymous, ":-moz-math-font-style-anonymous")
 MATHML_ATOM(rowline, "-moz-math-rowline") // different from rowlines_
 MATHML_ATOM(columnline, "-moz-math-columnline") // different from columnlines_
 MATHML_ATOM(firstrow, "-moz-math-firstrow")
 MATHML_ATOM(lastrow, "-moz-math-lastrow")
 MATHML_ATOM(firstcolumn, "-moz-math-firstcolumn")
 MATHML_ATOM(lastcolumn, "-moz-math-lastcolumn")
-MATHML_ATOM(mozMathInline, ":-moz-math-inline")
 
 // Alphabetical list of MathML frame types
 MATHML_ATOM(operatorVisibleMathMLFrame, "OperatorVisibleMathMLFrame")
