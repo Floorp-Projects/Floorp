@@ -120,8 +120,6 @@ Initialize(nsIModule* self)
 
   nsCSSFrameConstructor::InitGlobals();
 
-  NS_InitializeGamma();
-
   return nsTextTransformer::Initialize();
 }
 

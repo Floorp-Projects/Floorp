@@ -1044,14 +1044,14 @@ NS_IMETHODIMP nsWebBrowser::Create()
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
 
+   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
+   NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
+
    // get the system default window background colour
    {
       nsCOMPtr<nsILookAndFeel> laf = do_GetService(kLookAndFeelCID);
       laf->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackgroundColor);
    }
-
-   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
-   NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
    // the docshell has been set so we now have our listener registrars.
    if (mListenerArray) {
