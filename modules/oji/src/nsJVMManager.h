@@ -39,6 +39,7 @@
 #include "nsILiveConnectManager.h"
 
 class nsSymantecDebugManager;
+class nsIWebBrowserChrome;
 
 
 /*******************************************************************************
@@ -197,6 +198,15 @@ public:
 protected:    
 
     void        EnsurePrefCallbackRegistered(void);
+
+    /**
+
+     * @return conjure up THE nsIWebBrowserChrome instance from thin
+     * air!
+
+     */
+
+    nsresult    GetChrome(nsIWebBrowserChrome **theChrome);
     const char* GetJavaErrorString(JRIEnv* env);
 
     nsIJVMPlugin*       fJVM;
@@ -206,6 +216,7 @@ protected:
     JSJavaVM *          fJSJavaVM;  
     nsVoidArray*        fClassPathAdditions;
     char*               fClassPathAdditionsString;
+    PRBool              fStartupMessagePosted;
 };
 
 /*******************************************************************************

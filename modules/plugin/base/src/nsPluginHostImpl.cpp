@@ -3541,6 +3541,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
           }
         }
 #endif
+        this->PostStartupMessageForType(aMimeType, aOwner);
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
 
 #ifdef XP_WIN
@@ -4004,6 +4005,49 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsPluginHostImpl::PostStartupMessageForType(const char* aMimeType, 
+                                            nsIPluginInstanceOwner* aOwner)
+{
+  nsresult rv;
+  NS_ASSERTION(aOwner && aMimeType, 
+               "PostStartupMessageForType: invalid arguments");
+
+  PRUnichar *messageUni = nsnull;
+  nsAutoString msg;
+  nsCOMPtr<nsIStringBundle> regionalBundle;
+  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID,
+                                                         &rv));
+  if (!strings) {
+    return rv;
+  }
+  rv = strings->CreateBundle(PLUGIN_REGIONAL_URL, 
+                             getter_AddRefs(regionalBundle));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = regionalBundle->GetStringFromName(NS_LITERAL_STRING("pluginStartupMessage").get(), 
+                                         &messageUni);
+  if (NS_FAILED(rv)){
+    return rv;
+  }
+  msg = messageUni;
+  nsMemory::Free((void *)messageUni);
+
+  msg.AppendWithConversion(" ", 1);
+  msg.AppendWithConversion(aMimeType, PL_strlen(aMimeType));
+#ifdef PLUGIN_LOGGING
+  PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,
+        ("nsPluginHostImpl::PostStartupMessageForType(aMimeType=%s)\n", 
+         aMimeType));
+
+  PR_LogFlush();
+#endif
+
+  rv = aOwner->ShowStatus(msg.get());
+  
+  return rv;
+}
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)

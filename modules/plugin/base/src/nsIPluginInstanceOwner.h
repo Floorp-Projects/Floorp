@@ -92,6 +92,9 @@ public:
   NS_IMETHOD
   ShowStatus(const char *aStatusMsg) = 0;
 
+  NS_IMETHOD
+  ShowStatus(const PRUnichar *aStatusMsg) = 0;
+
   /**
    * Get the associated document.
    */
