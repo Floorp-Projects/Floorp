@@ -40,9 +40,12 @@
   	<rule rootcontainment="treechildren" subcontainment="treechildren">
 		<treeitem uri="...">
 	  		<treerow >
+				<treecell treeallowevents="true">
+					<titledbutton align="right" class="twisty" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
+				</treecell>
 				<treecell>
 					<treeindentation />
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" class="folderIcon"/>
 				</treecell>
 				<treecell>
 					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" align="right" style="list-style-image: none;" />
@@ -55,11 +58,13 @@
 	</rule>
   </template>
 
-  <treecol style="width:70%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width:20px"/>
+  <treecol style="width:65%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
+	  <treecell></treecell>
       <treecell>&nameColumn.label;</treecell>
       <treecell>&unreadColumn.label;</treecell>
       <treecell>&totalColumn.label;</treecell>
@@ -70,6 +75,7 @@
 
 	<treeitem ref="msgaccounts:/" open="true">
 		<treerow>
+		  <treecell/>
 		  <treecell>
 			<treeindentation/>
 			<html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;

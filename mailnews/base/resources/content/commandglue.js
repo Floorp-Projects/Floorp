@@ -71,7 +71,7 @@ function GetThreadTree()
 function GetThreadTreeFolder()
 {
   var tree = GetThreadTree();
-  return tree.childNodes[8];
+  return tree.childNodes[9];
 }
 
 function FindMessenger()
@@ -186,7 +186,8 @@ function ChangeFolderByDOMNode(folderNode)
 {
   var uri = folderNode.getAttribute('id');
   dump(uri + "\n");
-  ChangeFolderByURI(uri);
+  if(uri)
+	  ChangeFolderByURI(uri);
 }
 
 function ChangeFolderByURI(uri)
@@ -284,8 +285,26 @@ function RefreshThreadTreeView()
 
 function ToggleTwisty(treeItem)
 {
-	dump(treeItem);
-	return true;
 
+	var openState = treeItem.getAttribute('open');
+	if(openState == 'true')
+	{
+		treeItem.removeAttribute('open');
+	}
+	else
+	{
+		treeItem.setAttribute('open', 'true');
+	}
 }
+
+function ToggleMessageRead(treeItem)
+{
+
+	var tree = GetThreadTree();
+	var status = treeItem.getAttribute('Status');
+	var unread = (status == "") || (status == "new");
+	messenger.MarkMessageRead(tree.database, treeItem, unread);
+}
+
+
 
