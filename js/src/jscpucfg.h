@@ -353,6 +353,12 @@
 #elif __i386__
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
+#elif __alpha__
+#define IS_BIG_ENDIAN    1
+#undef  IS_LITTLE_ENDIAN
+#elif __sparc__
+#define IS_BIG_ENDIAN    1
+#undef  IS_LITTLE_ENDIAN
 #else
 #error "linux cpu architecture not supported by jscpucfg.h"
 #endif
