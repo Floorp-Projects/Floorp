@@ -22,6 +22,7 @@
 #                 David Gardiner <david.gardiner@unisa.edu.au>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
@@ -31,76 +32,72 @@ use lib qw(.);
 require "CGI.pl";
 
 # Shut up misguided -w warnings about "used only once":
-
 use vars %::FORM;
+
+# Use the template toolkit (http://www.template-toolkit.org/)
+use Template;
+
+# Create the global template object that processes templates
+my $template = Template->new(
+{
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/custom:template/default",
+    RELATIVE => 1,
+    PRE_CHOMP => 1,
+});
+
+# Define the global variables and functions that will be passed to the UI 
+# template. 
+my $vars = 
+{
+    'Param' => \&Param, 
+    'PerformSubsts' => \&PerformSubsts,
+};
 
 ConnectToDatabase();
 
-# Clear out the login cookies.  Make people log in again if they create an
-# account; otherwise, they'll probably get confused.
-
-my $cookiepath = Param("cookiepath");
-print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Content-type: text/html
-
-";
-
 # If we're using LDAP for login, then we can't create a new account here.
 if(Param('useLDAP')) {
-  PutHeader("Can't create LDAP accounts");
-  print "This site is using LDAP for authentication.  Please contact an LDAP ";
-  print "administrator to get a new account created.\n";
+  DisplayError("This site is using LDAP for authentication.  Please contact 
+                an LDAP administrator to get a new account created.",
+               "Can't create LDAP accounts");
   PutFooter();
   exit;
 }
 
+# Clear out the login cookies.  Make people log in again if they create an
+# account; otherwise, they'll probably get confused.
+my $cookiepath = Param("cookiepath");
+print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+
+print "Content-Type: text/html\n\n";
+
 my $login = $::FORM{'login'};
 my $realname = trim($::FORM{'realname'});
-if (defined $login) {
+
+if (defined($login)) {
+    # We've been asked to create an account.
     CheckEmailSyntax($login);
+    $vars->{'login'} = $login;
+    
     if (DBname_to_id($login) != 0) {
-        PutHeader("Account Exists");
-        print qq|
-          <form method="get" action="token.cgi">
-            <input type="hidden" name="a" value="reqpw">
-            <input type="hidden" name="loginname" value="$login">
-            A Bugzilla account for <tt>$login</tt> already exists.  If you
-            are the account holder and have forgotten your password, 
-            <input type="submit" value="submit a request to change it">.
-          </form>
-        |;
-        PutFooter();
+        # Account already exists        
+        $template->process("admin/account_exists.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error());
         exit;
     }
-    PutHeader("Account created");
+    
+    # Create account
     my $password = InsertNewUser($login, $realname);
     MailPassword($login, $password);
-    print " You can also <a href=query.cgi?GoAheadAndLogIn>click\n";
-    print "here</a> to log in for the first time.";
-    PutFooter();
+    
+    $template->process("admin/account_created.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error());
     exit;
 }
 
-PutHeader("Create a new bugzilla account");
-print q{
-To create a bugzilla account, all that you need to do is to enter a
-legitimate e-mail address.  The account will be created, and its
-password will be mailed to you. Optionally you may enter your real name 
-as well.
-
-<FORM method=get>
-<table>
-<tr>
-<td align=right><b>E-mail address:</b></td>
-<td><input size=35 name=login>}.Param('emailsuffix').q{</td>
-</tr>
-<tr>
-<td align=right><b>Real name:</b></td>
-<td><input size=35 name=realname></td>
-</tr>
-</table>
-<input type="submit" value="Create Account">
-};
-
-PutFooter();
+# Show the standard "would you like to create an account?" form.
+$template->process("admin/create_account.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;

@@ -747,11 +747,6 @@ sub MailPassword {
     open SENDMAIL, "|/usr/lib/sendmail -t";
     print SENDMAIL $msg;
     close SENDMAIL;
-
-    print "The password for the e-mail address\n";
-    print "$login has been e-mailed to that address.\n";
-    print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-    print "and enter your password in the form there.\n";
 }
 
 
@@ -791,9 +786,17 @@ sub confirm_login {
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             my $password = InsertNewUser($enteredlogin, "");
+            # There's a template for this - account_created.tmpl - but
+            # it's easier to wait to use it until templatisation has progressed
+            # further; we want to avoid sprinkling multiple copies of the
+            # template setup code everywhere - Gerv.
             print "Content-Type: text/html\n\n";
             PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
+            print "The password for the e-mail address\n";
+            print "$enteredlogin has been e-mailed to that address.\n";
+            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
+            print "and enter your password in the form there.\n";
             PutFooter();
             exit;
         }
