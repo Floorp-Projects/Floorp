@@ -215,7 +215,7 @@ public:
   NS_IMETHOD        GetAttention();
 
   // nsIPluginWidget
-  NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin);
+  NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();
   
