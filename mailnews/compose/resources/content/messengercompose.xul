@@ -199,7 +199,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-      <menuitem id="menu_pasteQuote"/>
+            <menuitem id="menu_pasteQuote"/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
@@ -419,14 +419,16 @@ END of Deprecated -->
 					<text value="&subject.label;"/>
 					<spring style="width:0.5em"/>
 				    <textfield id="msgSubject" type="text" flex="100%"
-						onkeyup="SetComposeWindowTitle(event.which);
-						         if (event.which == 13)
-						            contentWindow.focus();"
-						onkeypress="if (event.which == 9)
+						onkeyup="SetComposeWindowTitle(event.which);"
+						onkeypress="if (event.which == 9) {
 						                if (event.shiftKey == false) {
 						                    contentWindow.focus();
 						                    event.preventDefault();
-						                }"
+						                }
+						            }
+						            else
+						                if (event.which == 13)
+						                    contentWindow.focus();"
 						onchange="contentChanged=true;"
 						/>
 				</box>
