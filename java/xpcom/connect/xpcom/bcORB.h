@@ -19,6 +19,7 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
+
 #ifndef _bcORB_h
 #define _bcORB_h
 #include "nsISupports.h"

@@ -63,6 +63,7 @@ NS_IMETHODIMP bcORB::GetORB(bcIORB **_orb) {
 	orb = new ORB();
     }
     *_orb = orb;
+    return NS_OK;
 }
 
 

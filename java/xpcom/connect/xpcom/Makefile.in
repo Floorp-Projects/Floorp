@@ -34,14 +34,14 @@ LIBRARY_NAME = bcorb
 MODULE          = bcorb
 IS_COMPONENT    = 1
 
-CPPSRCS =  \
-           bcORB.cpp \
-	   ../src/Allocator.cpp \
-	   ../src/Call.cpp \
-	   ../src/Marshaler.cpp \
-	   ../src/ORB.cpp  \
-	   ../src/UnMarshaler.cpp \
-	   ../src/util.cpp \
+OBJS =  \
+           .\$(OBJDIR)\bcORB.cpp \
+	   ..\$(OBJDIR)\src\Allocator.cpp \
+	   ..\$(OBJDIR)\src\Call.cpp \
+	   ..\$(OBJDIR)\src\Marshaler.cpp \
+	   ..\$(OBJDIR)\src\ORB.cpp  \
+	   ..\$(OBJDIR)\src\UnMarshaler.cpp \
+	   ..\$(OBJDIR)\src\util.cpp \
 	   $(NULL)
 	   
 EXPORTS = \
@@ -57,18 +57,6 @@ EXPORTS = \
 
 	  
 CXXFLAGS        += -I../public -I../src
-
-DSO_LDOPTS += \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
-      -ljava -ljvm \
-      $(NULL)
-      
-ifneq ($(OS_ARCH), Linux)
-DSO_LDOPTS      += \
-                  -lthread -lXm -lX11 -lXt -lm
-endif
-		
 
 include $(topsrcdir)/config/rules.mk
 

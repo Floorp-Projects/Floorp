@@ -60,7 +60,7 @@ int UnMarshaler::ReadArray(void *ptr, size_t *length, bcXPType type, bcIAllocato
                 char **strArray = *(char***)ptr;
                 *strArray = (char*)allocator->Alloc(*length * sizeof(char*));
                 
-                for (int i = 0; i < *length; i++) {
+                for (unsigned int i = 0; i < *length; i++) {
                     char * str;
                     size_t size;
                     ReadString((void*)&str, &size, allocator);

@@ -23,9 +23,10 @@
 #ifndef _bcJavaMarshalToolkit_h
 #define _bcJavaMarshalToolkit_h
 
-#include "jni.h"
-#include "nsISupports.h"
+#include "nscore.h"
 #include "xptcall.h"
+#include "nsISupports.h"
+#include "jni.h"
 #include "bcIMarshaler.h"
 #include "bcIUnMarshaler.h"
 #include "bcIORB.h"

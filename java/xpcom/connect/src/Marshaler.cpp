@@ -21,7 +21,8 @@
  */
 
 #include <iostream.h>
-#include <strings.h>
+
+#include <string.h>
 #include "Marshaler.h"
 #include "util.h"
 
@@ -56,7 +57,7 @@ int Marshaler::WriteArray(void *ptr, size_t length, bcXPType type) {
         case bc_T_CHAR_STR:
         case bc_T_WCHAR_STR:
             {
-                for (int i = 0; i < length; i++) {
+                for (unsigned int i = 0; i < length; i++) {
                     char *str = ((char**)ptr)[i];
                     size_t size = (!str) ? 0 : strlen(str)+1; //we want to store \0
                     WriteString((void *)str, size);

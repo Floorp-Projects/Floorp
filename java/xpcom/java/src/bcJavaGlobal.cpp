@@ -25,7 +25,12 @@
 
 JavaVM *bcJavaGlobal::jvm = NULL;
 
+#ifdef XP_PC
+#define PATH_SEPARATOR ';'
+#else
 #define PATH_SEPARATOR ':'
+#endif
+
 JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
     JNIEnv * res;
     if (!jvm) {
@@ -53,6 +58,7 @@ void bcJavaGlobal::StartJVM() {
     /* Append USER_CLASSPATH to the default system class path */
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
+    printf("--[c++] classpath %s\n",classpath);
     char **props = new char*[2];
     props[0]="java.compiler=NONE";
     props[1]=0;

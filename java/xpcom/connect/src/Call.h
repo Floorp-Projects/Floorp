@@ -22,7 +22,12 @@
 
 #ifndef __Call_h
 #define __Call_h
+
+#ifdef WIN32
+#include <strstrea.h>
+#else
 #include <strstream.h>
+#endif
 #include "bcICall.h"
 
 class Call : public bcICall {

@@ -116,7 +116,7 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
     PRUint32 paramCount = info->GetParamCount();
     jobject value;
     void * data = allocator->Alloc(sizeof(nsXPTCMiniVariant)); // sizeof(nsXPTCMiniVariant) is ok
-    for (int i = 0; i < paramCount; i++) {
+    for (unsigned int i = 0; i < paramCount; i++) {
         nsXPTParamInfo param = info->GetParam(i);
         PRBool isOut = param.IsOut();
         nsXPTType type = param.GetType();
@@ -230,6 +230,8 @@ bcXPType bcJavaMarshalToolkit::XPTType2bcXPType(uint8 type) {
 	    return bc_T_INTERFACE;
 	case nsXPTType::T_ARRAY:
 	    return bc_T_ARRAY;
+	default:
+	    return bc_T_UNDEFINED;
 	    
     }
 }

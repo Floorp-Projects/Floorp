@@ -20,15 +20,15 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
+
+#include "nscore.h"
+#include "xptcall.h"
 #include "bcJavaStub.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
-#include "xptcall.h"
 #include "bcJavaMarshalToolkit.h"
 #include "bcJavaGlobal.h"
 #include "bcIIDJava.h"
-#include "unistd.h"
-#include "signal.h"
 
 jclass bcJavaStub::objectClass = NULL;
 jclass bcJavaStub::utilitiesClass = NULL;

@@ -62,8 +62,8 @@ void bcXPCOMStub::Dispatch(bcICall *call) {
     }
     //nb return value; excepion handling
     XPTC_InvokeByIndex(object, mid, paramCount, params);
-    bcIMarshaler * m = call->GetMarshaler();     //nb **  to do
-    mt->Marshal(m);
+    //bcIMarshaler * m = call->GetMarshaler();     //nb **  to do
+    //mt->Marshal(m);
     return;
 }
 

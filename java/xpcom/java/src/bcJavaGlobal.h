@@ -21,6 +21,7 @@
  */
 #ifndef __bcJavaGlobal_h_
 #define __bcJavaGlobal_h_
+#include "nscore.h"
 #include "jni.h"
 
 class bcJavaGlobal {

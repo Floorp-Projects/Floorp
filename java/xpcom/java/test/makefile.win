@@ -22,31 +22,42 @@
 #
 
 
-DEPTH		= ../../../..
-topsrcdir	= ../../../..
+DEPTH		= ..\..\..\..
+topsrcdir	= ..\..\..\..
 srcdir		= .
 VPATH		= .
 
-include $(DEPTH)/config/autoconf.mk
+MAKE_OBJ_TYPE=DLL
+MODULE=javaSample
+COMPONENT=1
+DLLNAME=$(MODULE)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-MODULE		= javaSample
-LIBRARY_NAME    = javaSample
-IS_COMPONENT    = 1
-XPIDL_MODULE	= javaSample
-XPIDLSRCS	= bcIJavaSample.idl
-CPPSRCS         = bcJavaSample.cpp
-include $(topsrcdir)/config/rules.mk
+XPIDLSRCS	= \
+	.\bcIJavaSample.idl \
+	$(NULL)
 
-bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class 
-	$(JDKHOME)/bin/jar cvfm bcJavaSample.jar.comp  manifest *.class
+OBJS	= bcJavaSample.obj
+LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
+
+include <$(DEPTH)\config\rules.mak>
+
+bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class
+	$(JDKHOME)\bin\jar cvfm bcJavaSample.jar.comp  manifest *.class
+
+.SUFFIXES: .java .class
+
 .java.class:
-	$(JDKHOME)/bin/javac -classpath .:../classes $<
-install-component: bcJavaSample.jar.comp bcJavaSample.jar.info	
-	cp  bcJavaSample.jar.comp bcJavaSample.jar.info $(DEPTH)/dist/bin/components/
+	$(JDKHOME)\bin\javac -classpath .;..\classes $<
+
+install-component: bcJavaSample.jar.comp bcJavaSample.jar.info $(DLL)
+	copy bcJavaSample.jar* $(DIST)\bin\components
+        copy $(DLL) $(DIST)\bin\components
 	
 clobber-java:
-	rm -f *.class *.jar
+	-del *.class *.jar.comp
 clobber:: clobber-java
+	rm $(DIST)\bin\components\$(DLLNAME).dll
+	rm $(DIST)\bin\components\bcJavaSample.jar.*
 clobber_all:: clobber-java
 install:: install-component
-

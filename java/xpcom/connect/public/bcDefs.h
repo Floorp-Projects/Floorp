@@ -32,7 +32,8 @@ enum bcXPType {
     bc_T_IID ,
     bc_T_CHAR_STR, bc_T_WCHAR_STR,
     bc_T_ARRAY,
-    bc_T_INTERFACE
+    bc_T_INTERFACE,
+    bc_T_UNDEFINED
 };
     
 typedef long bcOID;

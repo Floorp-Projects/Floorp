@@ -41,7 +41,7 @@ bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterface
         if (params == nsnull) {
             return;
 	}
-	for (int i = 0; i < paramCount; i++) {
+	for (unsigned int i = 0; i < paramCount; i++) {
             (params)[i].Init(_params[i], info->GetParam(i).GetType());
 	    if (info->GetParam(i).IsOut()) {
 		params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
@@ -66,7 +66,7 @@ bcXPCOMMarshalToolkit::~bcXPCOMMarshalToolkit() {
 
 nsresult bcXPCOMMarshalToolkit::Marshal(bcIMarshaler *m) {
     PRUint32 paramCount = info->GetParamCount();
-    for (int i = 0; i < paramCount; i++) {
+    for (unsigned int i = 0; i < paramCount; i++) {
         nsXPTParamInfo param = info->GetParam(i);
         nsXPTType type = param.GetType();
         PRBool isOut = param.IsOut();
@@ -172,7 +172,7 @@ nsresult bcXPCOMMarshalToolkit::Marshal(bcIMarshaler *m) {
 		return NS_ERROR_FAILURE;
 	}
     }
-    
+    return NS_ERROR_FAILURE;
 }
 
 class xpAllocator : public bcIAllocator {
@@ -197,7 +197,7 @@ private:
 nsresult bcXPCOMMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
     bcIAllocator * allocator = new xpAllocator(nsAllocator::GetGlobalAllocator());
     PRUint32 paramCount = info->GetParamCount();
-    for (int i = 0; i < paramCount; i++) {
+    for (unsigned int i = 0; i < paramCount; i++) {
         nsXPTParamInfo param = info->GetParam(i);
         PRBool isOut = param.IsOut();
         nsXPTCMiniVariant tmpValue = params[i]; //we need to set value for client side
@@ -344,6 +344,8 @@ bcXPType bcXPCOMMarshalToolkit::XPTType2bcXPType(uint8 type) {
 	    return bc_T_INTERFACE;
 	case nsXPTType::T_ARRAY:
 	    return bc_T_ARRAY;
+        default:
+            return bc_T_UNDEFINED;
 	    
     }
 }

@@ -25,11 +25,6 @@
 #include "bcXPCOMProxy.h"
 #include "bcXPCOMMarshalToolkit.h"
 
-#include "unistd.h"
-#include "signal.h"
-
-
-
 NS_IMPL_ISUPPORTS(bcXPCOMProxy, NS_GET_IID(bcXPCOMProxy));
 
 

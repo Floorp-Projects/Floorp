@@ -23,6 +23,7 @@
 /*
   A bunch  of stuff was copied from mozJSComponentLoader.cpp
  */
+#include "nsICategoryManager.h"
 #include "bcJavaComponentLoader.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
@@ -32,17 +33,19 @@
 #include "bcJavaModule.h"
 
 
-/*********************************************************************************/
-
-//#include "bcIJavaSample.h"
-#include "unistd.h"
-#include "signal.h"
-
-
-/********************************************************************************/
         
 const char javaComponentTypeName[] = JAVACOMPONENTTYPENAME;
-extern const char xpcomKeyName[];
+
+/* XXX export properly from libxpcom, for now this will let Mac build */
+#ifdef RHAPSODY
+extern const char fileSizeValueName[]; // = "FileSize";
+extern const char lastModValueName[]; // = "LastModTimeStamp";
+extern const char xpcomKeyName[]; // = "Software/Mozilla/XPCOM";
+#else
+const char fileSizeValueName[] = "FileSize";
+const char lastModValueName[] = "LastModTimeStamp";
+const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
+#endif
 
 NS_IMPL_ISUPPORTS(bcJavaComponentLoader,NS_GET_IID(nsIComponentLoader));
 
@@ -50,7 +53,6 @@ bcJavaComponentLoader::bcJavaComponentLoader()
     : mCompMgr(NULL),
       
       mXPCOMKey(0)
-    
 {
     NS_INIT_REFCNT();
     printf("--bcJavaComponentLoader::bcJavaComponentLoader \n");
@@ -126,10 +128,16 @@ NS_IMETHODIMP bcJavaComponentLoader::OnRegister(const nsIID & aCID, const char *
 /**
  * AutoRegister components in the given directory.
  */
-/* void autoRegisterComponents (in long aWhen, in nsIFile aDirectory); */
 NS_IMETHODIMP bcJavaComponentLoader::AutoRegisterComponents(PRInt32 aWhen, nsIFile *aDirectory) {
-    //printf("--bcJavaComponentLoader::AutoRegisterComponents \n");
+    printf("--bcJavaComponentLoader::AutoRegisterComponents \n");
     return RegisterComponentsInDir(aWhen,aDirectory);
+}
+
+NS_IMETHODIMP bcJavaComponentLoader::AutoUnregisterComponent(PRInt32 when,
+                                                             nsIFile *component,
+                                                             PRBool *unregistered) {
+    //nb need to impelement
+    return NS_OK;
 }
 
 nsresult bcJavaComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFile *dir)
@@ -403,230 +411,56 @@ NS_IMETHODIMP bcJavaComponentLoader::UnloadAll(PRInt32 aWhen) { //nb
 
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaComponentLoader)
-    
-static  nsModuleComponentInfo components[] =
+//---------------------------------------------------------------------------------------------------
+
+/* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
+static NS_METHOD
+RegisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
+		 const char *registryLocation, const char *componentType)
 {
-    {
-        "Java Component Loader",
-        BC_JAVACOMPONENTLOADER_CID,
-	BC_JAVACOMPONENTLOADER_PROGID,
-        bcJavaComponentLoaderConstructor
-    }
-};
+    printf("--JavaLoader got registered\n");
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString previous;
+    return catman->AddCategoryEntry("component-loader", javaComponentTypeName,
+                                    BC_JAVACOMPONENTLOADER_PROGID,
+                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
 
-
-/* copied-and-pasted from mozJSComponentLoader */
-#include "nsHashtable.h"
-class bcJavaComponentLoaderModule : public nsIModule
-{
-public:
-    bcJavaComponentLoaderModule(const char *moduleName, PRUint32 componentCount,
-                nsModuleComponentInfo *components);
-    virtual ~bcJavaComponentLoaderModule();
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool                      mInitialized;
-    const char*                 mModuleName;
-    PRUint32                    mComponentCount;
-    nsModuleComponentInfo*      mComponents;
-    nsSupportsHashtable         mFactories;
-};
-
-bcJavaComponentLoaderModule::bcJavaComponentLoaderModule(const char* moduleName, PRUint32 componentCount,
-                         nsModuleComponentInfo* aComponents)
-    : mInitialized(PR_FALSE), 
-      mModuleName(moduleName),
-      mComponentCount(componentCount),
-      mComponents(aComponents),
-      mFactories(8, PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
 }
 
-bcJavaComponentLoaderModule::~bcJavaComponentLoaderModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS1(bcJavaComponentLoaderModule, nsIModule)
-
-// Perform our one-time intialization for this module
-nsresult
-bcJavaComponentLoaderModule::Initialize()
-{
-    if (mInitialized) {
-        return NS_OK;
-    }
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-bcJavaComponentLoaderModule::Shutdown()
-{
-    // Release the factory objects
-    mFactories.Reset();
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-bcJavaComponentLoaderModule::GetClassObject(nsIComponentManager *aCompMgr,
-                                const nsCID& aClass,
-                                const nsIID& aIID,
-                                void** r_classObj)
+static NS_METHOD
+UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
+		   const char *registryLocation)
 {
     nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString javaLoader;
+    rv = catman->GetCategoryEntry("component-loader", javaComponentTypeName,
+                                  getter_Copies(javaLoader));
+    if (NS_FAILED(rv)) return rv;
 
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj) {
-        return NS_ERROR_INVALID_POINTER;
+    // only unregister if we're the current JS component loader
+    if (!strcmp(javaLoader, BC_JAVACOMPONENTLOADER_PROGID)) {
+        return catman->DeleteCategoryEntry("component-loader",
+					   javaComponentTypeName, PR_TRUE,
+                                           getter_Copies(javaLoader));
     }
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    if (!mInitialized) {
-        rv = Initialize();
-        if (NS_FAILED(rv)) {
-            // Initialization failed! yikes!
-            return rv;
-        }
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsIDKey key(aClass);
-    nsCOMPtr<nsIGenericFactory> fact = getter_AddRefs(NS_REINTERPRET_CAST(nsIGenericFactory *, mFactories.Get(&key)));
-    if (fact == nsnull) {
-        nsModuleComponentInfo* desc = mComponents;
-        for (PRUint32 i = 0; i < mComponentCount; i++) {
-            if (desc->mCID.Equals(aClass)) {
-                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc->mConstructor);
-                if (NS_FAILED(rv)) return rv;
-
-                (void)mFactories.Put(&key, fact);
-                goto found;
-            }
-            desc++;
-        }
-        // not found in descriptions
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
-        nsCRT::free(cs);
-#endif
-        // XXX put in stop-gap so that we don't search for this one again
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
-    }
-  found:    
-    rv = fact->QueryInterface(aIID, r_classObj);
-    return rv;
-}
-
-NS_IMETHODIMP
-bcJavaComponentLoaderModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                              nsIFile* aPath,
-                              const char* registryLocation,
-                              const char* componentType)
-{
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    printf("*** Registering %s components (all right -- an almost-generic module!)\n", mModuleName);
-#endif
-
-    nsModuleComponentInfo* cp = mComponents;
-    for (PRUint32 i = 0; i < mComponentCount; i++) {
-        rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsGenericModule %s: unable to register %s component => %x\n",
-                   mModuleName, cp->mDescription, rv);
-#endif
-            break;
-        }
-        cp++;
-    }
-    printf("JavaComponentLoaderModule::RegisterSelf \n");
-    return aCompMgr->RegisterComponentLoader(javaComponentTypeName,
-					     BC_JAVACOMPONENTLOADER_PROGID,
-                                             PR_TRUE);
-}
-
-NS_IMETHODIMP
-bcJavaComponentLoaderModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFile* aPath,
-                            const char* registryLocation)
-{
-#ifdef DEBUG
-    printf("*** Unregistering %s components (all right -- an almost-generic module!)\n", mModuleName);
-#endif
-    nsModuleComponentInfo* cp = mComponents;
-    for (PRUint32 i = 0; i < mComponentCount; i++) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsGenericModule %s: unable to unregister %s component => %x\n",
-                   mModuleName, cp->mDescription, rv);
-#endif
-        }
-        cp++;
-    }
-
     return NS_OK;
 }
 
-NS_IMETHODIMP
-bcJavaComponentLoaderModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    printf("--bcJavaComponentLoaderModule::CanUnload\n");
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_TRUE;
-    return NS_OK;
-}
+NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaComponentLoader);
+static nsModuleComponentInfo components[] = {
+    { "Java component loader", BC_JAVACOMPONENTLOADER_CID,
+      BC_JAVACOMPONENTLOADER_PROGID, 
+      bcJavaComponentLoaderConstructor,
+      RegisterJavaLoader, UnregisterJavaLoader }
+};
 
-NS_EXPORT nsresult
-NS_NewJavaComponentLoaderModule(const char* moduleName,
-               PRUint32 componentCount,
-               nsModuleComponentInfo* aComponents,
-               nsIModule* *result)
-{
-    nsresult rv = NS_OK;
+NS_IMPL_NSGETMODULE("Java component loader", components);
 
-    NS_ASSERTION(result, "Null argument");
 
-    // Create and initialize the module instance
-    bcJavaComponentLoaderModule *m =  new bcJavaComponentLoaderModule(moduleName, componentCount, aComponents);
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    return rv;
-}
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
-                                          nsIFile *location,
-                                          nsIModule** result)
-{
-    return NS_NewJavaComponentLoaderModule("bcJavaComponentLoaderModule",
-                          sizeof(components) / sizeof(components[0]),
-                          components, result);
-}
 
