@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="sort.xsl" type="text/xsl"?>
+<!--
+  This is a sample XML document supplied with TransforMiiX
+  author: Keith Visco, kvisc@ziplink.net
+-->
+<sort>
+
+  <entry>Satriani, Joe</entry>
+  <entry>Dream Theatre</entry>
+  <entry>Royal Hunt</entry>
+  <entry>Gilbert, Paul</entry>
+
+</sort>
