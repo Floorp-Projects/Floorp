@@ -78,7 +78,7 @@ static MacLibrary	libraries[] = {
 	DOM_DLL,		NSGetFactory_DOM_DLL,		NULL,
 	LAYOUT_DLL,		NSGetFactory_LAYOUT_DLL,	NULL,
 	NETLIB_DLL,		NSGetFactory_NETLIB_DLL,	NULL,
-	EDITOR_DLL,		NSGetFactory_EDITOR_DLL,	NULL,
+	//EDITOR_DLL,		NSGetFactory_EDITOR_DLL,	NULL,		// FIX ME
 	NULL};
 
 static void* FindMacSymbol(char* libName, const char *symbolName)
