@@ -448,6 +448,9 @@ nsFTPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsFTPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
+    if (mLoadGroup) // if we already had a load group remove ourselves...
+      (void)mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+
     mLoadGroup = aLoadGroup;
     if (mLoadGroup) {
         nsresult rv = mLoadGroup->AddChannel(this, nsnull);
