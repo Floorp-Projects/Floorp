@@ -178,12 +178,25 @@ nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
       if (child) {
         PRInt32 count;
         child->ChildCount(count);
-        if (count > 0) {
+        PRInt32 i;
+        for (i = 0; i < count; i++) {
+          nsCOMPtr<nsIContent> item;
+          child->ChildAt(i, *getter_AddRefs(item));
+          nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
+
+          nsAutoString isSelected;
+          selectedElement->GetAttribute(nsAutoString("selected"), isSelected);
+          if (isSelected == "true") {
+            SetSelectedItem(selectedElement);
+            break;
+          }
+        }
+
+        if (i == count && count > 0) {
           nsCOMPtr<nsIContent> item;
           child->ChildAt(0, *getter_AddRefs(item));
           nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
-          if (selectedElement) 
-            SetSelectedItem(selectedElement);
+          SetSelectedItem(selectedElement);  
         }
       }
     }
@@ -198,7 +211,20 @@ nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
 NS_IMETHODIMP
 nsXULMenuListElement::SetSelectedItem(nsIDOMElement* aElement)
 {
+  if (mSelectedItem.get() == aElement)
+    return NS_OK;
+
+  if (mSelectedItem) {
+    mSelectedItem->RemoveAttribute(nsAutoString("selected"));
+  }
+
   mSelectedItem = aElement;
+  
+  if (!mSelectedItem)
+    return NS_OK;
+
+  mSelectedItem->SetAttribute(nsAutoString("selected"), nsAutoString("true"));
+
   nsAutoString value, src, data;
   aElement->GetAttribute(nsAutoString("value"), value);
   aElement->GetAttribute(nsAutoString("src"), src);
