@@ -1448,20 +1448,6 @@ sub PerformSubsts {
     return $str;
 }
 
-sub FormatTimeUnit {
-    # Returns a number with 2 digit precision, unless the last digit is a 0
-    # then it returns only 1 digit precision
-    my ($time) = (@_);
- 
-    my $newtime = sprintf("%.2f", $time);
-
-    if ($newtime =~ /0\Z/) {
-        $newtime = sprintf("%.1f", $time);
-    }
-
-    return $newtime;
-    
-}
 
 ###############################################################################
 

@@ -182,7 +182,7 @@ sub ProcessOneBug($) {
     if ($values{'qa_contact'}) {
         $values{'qa_contact'} = DBID_to_name($values{'qa_contact'});
     }
-    $values{'estimated_time'} = FormatTimeUnit($values{'estimated_time'});
+    $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
 
     my @dependslist;
     SendSQL("SELECT dependson FROM dependencies WHERE 
@@ -235,8 +235,8 @@ sub ProcessOneBug($) {
         $what =~ s/^(Attachment )?/Attachment #$attachid / if $attachid;
         if( $fieldname eq 'estimated_time' ||
             $fieldname eq 'remaining_time' ) {
-            $old = FormatTimeUnit($old);
-            $new = FormatTimeUnit($new);
+            $old = format_time_decimal($old);
+            $new = format_time_decimal($new);
         }
         if ($attachid) {
             SendSQL("SELECT isprivate FROM attachments 

@@ -32,7 +32,8 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
-                             trim diff_strings format_time);
+                             trim diff_strings
+                             format_time format_time_decimal);
 
 use Bugzilla::Config;
 
@@ -207,6 +208,18 @@ sub format_time {
     return $time;
 }
 
+sub format_time_decimal {
+    my ($time) = (@_);
+
+    my $newtime = sprintf("%.2f", $time);
+
+    if ($newtime =~ /0\Z/) {
+        $newtime = sprintf("%.1f", $time);
+    }
+
+    return $newtime;
+}
+
 1;
 
 __END__
@@ -372,6 +385,12 @@ Takes a time and appends the timezone as defined in editparams.cgi.  This routin
 will be expanded in the future to adjust for user preferences regarding what
 timezone to display times in.  In the future, it may also allow for the time to be
 shown in different formats.
+
+=item C<format_time_decimal($time)>
+
+Returns a number with 2 digit precision, unless the last digit is a 0. Then it 
+returns only 1 digit precision.
+
 
 =back
 
