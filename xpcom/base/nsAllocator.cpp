@@ -21,7 +21,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsAllocator.h"
-#include "nsIServiceManager.h"
 #include <string.h>     /* for memcpy */
 
 nsAllocatorImpl::nsAllocatorImpl(nsISupports* outer)
