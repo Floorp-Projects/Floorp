@@ -25,10 +25,11 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPref.h"
+#include "nsIBrowserHistory.h"
 
 const int kDefaultExpireDays = 9;
 
-@implementation OrgMozillaNavigatorPreferenceNavigation
+@implementation OrgMozillaChimeraPreferenceNavigation
 
 - (void) dealloc
 {
@@ -75,7 +76,7 @@ const int kDefaultExpireDays = 9;
     [checkboxOpenTabs setState:YES];
 }
 
-- (IBAction)buttonSystemPreferencesClicked:(id)sender
+- (IBAction)openSystemInternetPanel:(id)sender
 {
   if ([[NSWorkspace sharedWorkspace] openFile:@"/System/Library/PreferencePanes/Internet.prefPane"] == NO) {
     // XXXw. pop up a dialog warning that System Preferences couldn't be launched?
@@ -128,6 +129,19 @@ const int kDefaultExpireDays = 9;
   }
 
   mPrefService->SetIntPref("browser.history_expire_days", [sender intValue]);
+}
+
+
+//
+// clearGlobalHistory:
+//
+// use the browser history service to clear out the user's global history
+//
+- (IBAction)clearGlobalHistory:(id)sender
+{
+  nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;1") );
+  if ( hist )
+    hist->RemoveAllPages();
 }
 
 @end
