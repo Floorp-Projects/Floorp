@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Doug Turner <dougt@netscape.com> (Original Author)
+ *                 Dan Mosedale <dmose@netscape.com>
  */
 #include "nsISupports.idl"
 interface nsIEventQueue;
@@ -54,4 +55,17 @@ interface nsIProxyObjectManager : nsISupports
  {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
 } 
 
+/**
+ * Helper function for code that already has a link-time dependency on
+ * libxpcom and needs to get proxies in a bunch of different places.
+ * This way, the caller isn't forced to get the proxy object manager
+ * themselves every single time, thus making the calling code more
+ * readable.
+ */
+extern NS_COM nsresult
+NS_GetProxyForObject(nsIEventQueue *destQueue, 
+                     REFNSIID aIID, 
+                     nsISupports* aObj, 
+                     PRInt32 proxyType, 
+                     void** aProxyObject);
 %}
