@@ -691,7 +691,8 @@ nsresult nsMsgThreadedDBView::RemoveByIndex(nsMsgViewIndex index)
   
   flags = m_flags[index];
   
-  if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+  //we don't support threaded view in quick search
+  if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || mIsSearchView) 
     return nsMsgDBView::RemoveByIndex(index);
   
   nsCOMPtr <nsIMsgThread> threadHdr; 
