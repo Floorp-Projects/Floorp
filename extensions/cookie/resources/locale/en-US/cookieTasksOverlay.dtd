@@ -1,3 +1,5 @@
+<!-- the following is for the task menu overlay -->
+
 <!ENTITY cookieDisplayCookiesCmd.label "Manage Stored Cookies">
 <!ENTITY cookieDisplayCookiesCmd.accesskey "m">
 <!ENTITY cookieAllowCookiesCmd.label "Unblock Cookies from this Site">
@@ -20,3 +22,7 @@
 <!ENTITY cookieCookieManager.accesskey "c">
 <!ENTITY cookieImageManager.label "Image Manager">
 <!ENTITY cookieImageManager.accesskey "i">
+
+<!-- the following is for the statusbar overlay -->
+
+<!ENTITY  cookieIcon.label  "Show cookie information">

@@ -73,11 +73,15 @@ class nsCookieEnumerator : public nsISimpleEnumerator
           char * path;
           PRBool isSecure;
           PRUint64 expires;
+          nsCookieStatus_t status;
+          nsCookiePolicy_t policy;
           nsresult rv = COOKIE_Enumerate
-            (mCookieCount++, &name, &value, &isDomain, &host, &path, &isSecure, &expires);
+            (mCookieCount++, &name, &value, &isDomain, &host, &path, &isSecure, &expires,
+              &status, &policy);
           if (NS_SUCCEEDED(rv)) {
             nsICookie *cookie =
-              new nsCookie(name, value, isDomain, host, path, isSecure, expires);
+              new nsCookie(name, value, isDomain, host, path, isSecure, expires,
+                           status, policy);
             *result = cookie;
             NS_ADDREF(*result);
           } else {

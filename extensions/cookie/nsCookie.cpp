@@ -55,7 +55,9 @@ nsCookie::nsCookie
    char * host,
    char * path,
    PRBool isSecure,
-   PRUint64 expires) {
+   PRUint64 expires,
+   nsCookieStatus_t status,
+   nsCookiePolicy_t policy) {
   cookieName = name;
   cookieValue = value;
   cookieIsDomain = isDomain;
@@ -63,6 +65,8 @@ nsCookie::nsCookie
   cookiePath = path;
   cookieIsSecure = isSecure;
   cookieExpires = expires;
+  cookieStatus = status;
+  cookiePolicy = policy;
   NS_INIT_REFCNT();
 }
 
@@ -117,5 +121,15 @@ NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure) {
 
 NS_IMETHODIMP nsCookie::GetExpires(PRUint64 *aExpires) {
   *aExpires = cookieExpires;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus_t *aStatus) {
+  *aStatus = cookieStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy_t *aPolicy) {
+  *aPolicy = cookiePolicy;
   return NS_OK;
 }

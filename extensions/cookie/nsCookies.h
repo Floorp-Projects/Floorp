@@ -40,6 +40,7 @@
 #define COOKIES_H
 
 #include "nsString.h"
+#include "nsCookie.h"
 
 #ifdef _IMPL_NS_COOKIE
 #define NS_COOKIE NS_EXPORT
@@ -71,7 +72,9 @@ extern nsresult COOKIE_Enumerate
      char ** host,
      char ** path,
      PRBool * isSecure,
-     PRUint64 * expires);
+     PRUint64 * expires,
+     nsCookieStatus_t * status,
+     nsCookiePolicy_t * policy);
 extern void COOKIE_Remove
   (const char* host, const char* name, const char* path, const PRBool permanent);
 

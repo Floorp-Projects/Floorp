@@ -56,11 +56,14 @@
                     onkeypress="HandleCookieKeyPress(event)"
                     onselect="CookieSelected();">
             <outlinercols>
-              <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="3"
+              <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="6"
                            onclick="CookieColumnSort('rawHost');"/>
               <splitter class="tree-splitter"/>
-              <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="7"
+              <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="14"
                            onclick="CookieColumnSort('name');"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="statusCol" label="&treehead.cookiestatus.label;" flex="1"
+                           hidden="true" onclick="CookieColumnSort('status');"/>
             </outlinercols>
             <outlinerchildren/>
           </outliner>
@@ -96,6 +99,10 @@
                 <row align="center">
                   <label value="&props.expires.label;"/>
                   <textbox id="ifl_expires" readonly="true"/>
+                </row>
+                <row align="center" id="policyField" hidden="true">
+                  <label value="&props.policy.label;"/>
+                  <textbox id="ifl_policy" readonly="true"/>
                 </row>
               </rows>
             </grid>

@@ -4,6 +4,7 @@
 <!ENTITY     div.cookiesonsystem.label      "View and Remove Cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Site"> 
+<!ENTITY     treehead.cookiestatus.label    "Status"> 
 <!ENTITY     treehead.infoselected.label    "Information about the selected Cookie">
 <!ENTITY     button.removecookie.label      "Remove Cookie">
 <!ENTITY     button.removeallcookies.label  "Remove All Cookies">
@@ -14,6 +15,7 @@
 <!ENTITY     props.path.label               "Path:">
 <!ENTITY     props.secure.label             "Server Secure:">
 <!ENTITY     props.expires.label            "Expires:">
+<!ENTITY     props.policy.label             "Policy:"> 
 
 <!ENTITY     treehead.sitename.label        "Site">
 <!ENTITY     treehead.status.label          "Status">
