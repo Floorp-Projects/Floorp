@@ -428,7 +428,7 @@ sub validateName {
 }
 
 sub validateDescription {
-    length($::FORM{'description'}) < 2^16-1
+    length($::FORM{'description'}) < 2**16-1
       || ThrowUserError("flag_type_description_invalid");
 }
 
