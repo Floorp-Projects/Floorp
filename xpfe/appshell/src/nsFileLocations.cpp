@@ -198,7 +198,7 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 
 
 //----------------------------------------------------------------------------------------
-static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
+static void GetDefaultsFolder(nsFileSpec& outSpec)
 //----------------------------------------------------------------------------------------
 {
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -210,7 +210,44 @@ static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
 #endif
 
     outSpec = cwd;
+} // GetDefaultsFolder
+
+//----------------------------------------------------------------------------------------
+static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpec cwd;
+    GetDefaultsFolder(cwd);
+
+    if(cwd) {
+#if defined(XP_MAC)
+        cwd += "Profile";
+#else
+        cwd += "profile";
+#endif
+
+        outSpec = cwd;
+    }
 } // GetProfileDefaultsFolder
+
+//----------------------------------------------------------------------------------------
+static void GetPrefDefaultsFolder(nsFileSpec& outSpec)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpec cwd;
+    GetDefaultsFolder(cwd);
+
+    if(cwd) {
+#if defined(XP_MAC)
+        cwd += "Pref";
+#else
+        cwd += "pref";
+#endif
+
+        outSpec = cwd;
+    }
+} // GetProfileDefaultsFolder
+
 
 
 //========================================================================================
@@ -290,7 +327,10 @@ void nsSpecialFileSpec::operator = (Type aType)
 #endif
             }
             break;
-		
+
+        case App_DefaultsFolder50:
+            GetDefaultsFolder(*this);
+            break;
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
             NS_NOTYETIMPLEMENTED("Write me!");
@@ -314,6 +354,9 @@ void nsSpecialFileSpec::operator = (Type aType)
             break;    
         case App_ProfileDefaultsFolder50:
             GetProfileDefaultsFolder(*this);
+            break; 
+        case App_PrefDefaultsFolder50:
+            GetPrefDefaultsFolder(*this);
             break;    
             
             
