@@ -18,23 +18,60 @@
 
 #include "nsGenericFactory.h"
 
-nsGenericFactory::nsGenericFactory(CreatorProcPtr creator) :	mCreator(creator)
+nsGenericFactory::nsGenericFactory(ConstructorProcPtr constructor) : mConstructor(constructor)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsGenericFactory::~nsGenericFactory() {}
 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {                                            
+        return NS_ERROR_NULL_POINTER;                                        
+    }                                                                      
+    if (aIID.Equals(nsIFactory::IID()) ||
+    	aIID.Equals(nsIGenericFactory::IID()) ||
+        aIID.Equals(nsISupports::IID())) {
+        *aInstancePtr = (void*) this;
+        AddRef();
+        return NS_OK; 
+    } 
+    return NS_NOINTERFACE;
+}
 
-NS_IMPL_ISUPPORTS(nsGenericFactory, kIFactoryIID)
+NS_IMPL_ADDREF(nsGenericFactory)
+NS_IMPL_RELEASE(nsGenericFactory)
 
 NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-	return mCreator(aOuter, aIID, aResult);
+	return mConstructor(aOuter, aIID, aResult);
 }
 
 NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
 {
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::SetConstructor(ConstructorProcPtr constructor)
+{
+	mConstructor = constructor;
+	return NS_OK;
+}
+
+NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+	// sorry, aggregation not spoken here.
+	nsresult res = NS_ERROR_NO_AGGREGATION;
+	if (outer == NULL) {
+		nsGenericFactory* factory = new nsGenericFactory;
+		if (factory != NULL) {
+			res = factory->QueryInterface(aIID, aInstancePtr);
+			if (res != NS_OK)
+				delete factory;
+		} else {
+			res = NS_ERROR_OUT_OF_MEMORY;
+		}
+	}
+	return res;
 }

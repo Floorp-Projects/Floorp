@@ -19,27 +19,30 @@
 #ifndef nsGenericFactory_h___
 #define nsGenericFactory_h___
 
-#include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 
 /**
  * Most factories follow this simple pattern, so why not just use a function pointer
  * for most creation operations?
  */
-class nsGenericFactory : public nsIFactory {
+class nsGenericFactory : public nsIGenericFactory {
 public:
-	typedef nsresult (*CreatorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    static const nsCID& CID() { static nsCID cid = NS_GENERICFACTORY_CID; return cid; }
 
-	nsGenericFactory(CreatorProcPtr creator);
+	nsGenericFactory(ConstructorProcPtr constructor = NULL);
 	virtual ~nsGenericFactory();
-
+	
 	NS_DECL_ISUPPORTS
 	
 	NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 	NS_IMETHOD LockFactory(PRBool aLock);
 
+    NS_IMETHOD SetConstructor(ConstructorProcPtr constructor);
+
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
-	CreatorProcPtr mCreator;
+	ConstructorProcPtr mConstructor;
 };
 
 #endif /* nsGenericFactory_h___ */
