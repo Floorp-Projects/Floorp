@@ -19,6 +19,8 @@
 #ifndef nsFontMetricsMac_h__
 #define nsFontMetricsMac_h__
 
+#include <TextEdit.h>	// for TextStyle
+
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsString.h"
@@ -57,10 +59,13 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 
-  static void SetFont(const nsFont& aFont, nsIDeviceContext* aContext);
+	// fill a native TextStyle record with the font, size and style (not color)
+	static void 	GetNativeTextStyle(	const nsIFontMetrics& inMetrics,
+																		const nsIDeviceContext& inDevContext, TextStyle &outStyle);
+	
 protected:
-	void	RealizeFont();
-protected:
+	void				RealizeFont();
+
 	short							mFontNum;
   nscoord           mHeight;
   nscoord           mAscent;
