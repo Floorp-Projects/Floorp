@@ -38,6 +38,12 @@ VPATH  = $(CORE_DEPTH)/../dbm/src
 
 MODULE = dbm
 
+#
+# memmove.c, snprintf.c, and strerror.c are not in CSRCS because
+# the Standard C Library has memmove and strerror and DBM is not
+# using snprintf.
+#
+
 CSRCS = db.c	   \
 	h_bigkey.c \
 	h_func.c   \
@@ -46,11 +52,8 @@ CSRCS = db.c	   \
 	hash.c	   \
 	hash_buf.c \
 	hsearch.c  \
-	memmove.c  \
 	mktemp.c   \
 	ndbm.c	   \
-#	snprintf.c \
-	strerror.c \
 	nsres.c	   \
 	$(NULL)
 
