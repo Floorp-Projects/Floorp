@@ -27,7 +27,7 @@
 
 #include <md/Asm.h>
 
-.file "x86FreeBSDInvokeNative.S"
+.file "x86InvokeNative_gas.s"
 								
 #define sysInvokeNative(N);											\
 STATIC_ENTRY(CAT(sysInvokeNative,N));										\

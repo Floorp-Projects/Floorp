@@ -38,8 +38,8 @@ include $(DEPTH)/config/config.mk
 #######################################################################
 
 ifeq ($(OS_ARCH),Linux)
-ASFILES	=	x86LinuxException.s					\
-		x86LinuxInvokeNative.s					\
+ASFILES	=	x86Exception_gas.s					\
+		x86InvokeNative_gas.s					\
 		$(NULL)
 
 CPPSRCS	+= 	x86LinuxThread.cpp					\
@@ -51,8 +51,8 @@ LOCAL_MD_EXPORTS_x86 +=  	x86LinuxThread.h			\
 endif
 
 ifeq ($(OS_ARCH),FreeBSD)
-ASFILES	=	x86FreeBSDException.s					\
-		x86FreeBSDInvokeNative.s					\
+ASFILES	=	x86Exception_gas.s					\
+		x86InvokeNative_gas.s					\
 		$(NULL)
 
 CPPSRCS	+= 	x86FreeBSDThread.cpp					\
