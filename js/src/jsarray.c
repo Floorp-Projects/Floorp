@@ -525,7 +525,7 @@ array_join(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
 
-    if (argc == 0)
+    if (JSVAL_IS_VOID(argv[0]))
 	return array_join_sub(cx, obj, &comma, JS_FALSE, rval, JS_FALSE);
     str = js_ValueToString(cx, argv[0]);
     if (!str)
