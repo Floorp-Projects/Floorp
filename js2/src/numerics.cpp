@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <cfloat>
-#include <cstdio>
 #include <algorithm>
 #include "numerics.h"
 
@@ -2517,7 +2516,7 @@ char *JS::doubleToStr(char *buffer, size_t DEBUG_ONLY(bufferSize), double value,
                 numBegin[0] = numBegin[1];
                 numBegin[1] = '.';
             }
-            STD::sprintf(numEnd, "e%+d", decPt-1);
+            sprintf(numEnd, "e%+d", decPt-1);
         } else if (decPt != nDigits) {
             // Some kind of a fraction in fixed notation
             ASSERT(decPt <= nDigits);
