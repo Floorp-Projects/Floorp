@@ -55,7 +55,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
     : mScope(Scope),
       mJSProtoObject(nsnull),
       mClassInfo(ClassInfo),
-      mClassInfoFlags(0),
+      mClassInfoFlags(ClassInfoFlags),
       mSet(Set),
       mSecurityInfo(nsnull),
       mScriptableInfo(nsnull)
