@@ -48,6 +48,7 @@ public:
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
+  NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel);
   NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
@@ -131,6 +132,7 @@ protected:
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
+  nsILookAndFeel*       mLookAndFeel;
   nsFont                mDefaultFont;
   nsFont                mDefaultFixedFont;
   PRInt32               mFontScaler;

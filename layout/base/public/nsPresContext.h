@@ -41,6 +41,7 @@ class nsIAtom;
 class nsString;
 class nsIEventStateManager;
 class nsIURI;
+class nsILookAndFeel;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -107,6 +108,11 @@ public:
    */
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult) = 0;
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode) = 0;
+
+  /**
+   * Get look and feel object
+   */
+  NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel) = 0;
 
   /** 
    * Get base url for presentation

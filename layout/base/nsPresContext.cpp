@@ -36,6 +36,9 @@
 #include "nsIDocument.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsIComponentManager.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -53,6 +56,8 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 }
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 nsPresContext::nsPresContext()
   : mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
@@ -76,7 +81,8 @@ nsPresContext::nsPresContext()
 #else
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
 #endif
- 
+
+  mLookAndFeel = nsnull;
 
 #ifdef _WIN32
   // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
@@ -105,6 +111,8 @@ nsPresContext::~nsPresContext()
 
   if (mEventManager)
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
+
+  NS_IF_RELEASE(mLookAndFeel);
 
   // Unregister preference callbacks
   if (mPrefs) {
@@ -366,6 +374,28 @@ nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
   mWidgetRenderingMode = aMode;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
+{
+  NS_PRECONDITION(nsnull != aLookAndFeel, "null ptr");
+  if (nsnull == aLookAndFeel) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsresult result = NS_OK;
+  if (! mLookAndFeel) {
+    result = nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
+                                                kILookAndFeelIID, (void**)&mLookAndFeel);
+    if (NS_FAILED(result)) {
+      mLookAndFeel = nsnull;
+    }
+  }
+  NS_IF_ADDREF(mLookAndFeel);
+  *aLookAndFeel = mLookAndFeel;
+  return result;
+}
+
 
 
 NS_IMETHODIMP
