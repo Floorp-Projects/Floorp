@@ -62,13 +62,13 @@
 
 #include <Resources.h>
 
-extern nsIServiceManager* theServiceManager;	// needs to be in badaptor.cpp.
-extern nsIPluginManager* thePluginManager;		// now in badaptor.cpp.
+extern nsIServiceManager* theServiceManager;
+extern nsIPluginManager* thePluginManager;
 extern nsIPlugin* thePlugin;
 
 nsIServiceManager* theServiceManager = NULL;
 nsIPluginManager2* thePluginManager2 = NULL;
-nsIMemory* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
+nsIMemory* theMemoryAllocator = NULL;
 
 #if TARGET_CARBON
 #pragma export on
@@ -155,13 +155,15 @@ pascal void MRJPlugin__terminate()
 	RemoveEventFilters();
 #endif
 
-	__terminate();
-
+#if !TARGET_CARBON
     // last ditch release of the memory allocator.
     if (theMemoryAllocator != NULL) {
         theMemoryAllocator->Release();
         theMemoryAllocator = NULL;
     }
+#endif
+
+	__terminate();
 }
 
 //
@@ -356,12 +358,7 @@ NS_METHOD MRJPlugin::StartupJVM()
 	if (mSession == NULL) {
 		// start a session with MRJ.
 		mSession = new MRJSession();
-		if (mSession->getStatus() != noErr) {
-			// how can we signal an error?
-			delete mSession;
-			mSession = NULL;
-			return NS_ERROR_FAILURE;
-		}
+
 #if 0
 		// Apply the initialization args.
 		if (initArgs != NULL && initArgs->version >= nsJVMInitArgs_Version) {
@@ -391,6 +388,15 @@ NS_METHOD MRJPlugin::StartupJVM()
 		// Add "MRJPlugin.jar" to the class path.
 		FSSpec jarFileSpec = { thePluginSpec.vRefNum, thePluginSpec.parID, "\pMRJPlugin.jar" };
 		mSession->addToClassPath(jarFileSpec);
+		
+		mSession->open();
+
+		if (mSession->getStatus() != noErr) {
+			// how can we signal an error?
+			delete mSession;
+			mSession = NULL;
+			return NS_ERROR_FAILURE;
+		}
 
 		InitLiveConnectSupport(this);
 
@@ -782,7 +788,7 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 			mSession->idle(kDefaultJMTime);	// now SpendTime does this.
 		} else {
 #if TARGET_CARBON
-		    mContext->handleEvent(event);
+		    *eventHandled = mContext->handleEvent(event);
 #else
 			MRJFrame* frame = mContext->findFrame(pluginEvent->window);
 			if (frame != NULL) {
