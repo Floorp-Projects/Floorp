@@ -218,7 +218,9 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = do_QueryInterface(nsnull);
     // there is no longer any legit selection, so clear it.
-    aSelection->ClearSelection();
+    
+    // xxx why?  The selection is still legit, it just happens to be in an empty doc
+    //aSelection->ClearSelection();
   }
 
   return NS_OK;
@@ -887,8 +889,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   if (PR_TRUE==needsBogusContent)
   {
-    // set mBogusNode to be the newly created <P>
-    res = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
+    // set mBogusNode to be the newly created <div>
+    res = mEditor->CreateNode(nsAutoString("div"), bodyNode, 0, 
                                  getter_AddRefs(mBogusNode));
 		if (NS_FAILED(res)) return res;
 		if (!mBogusNode) return NS_ERROR_NULL_POINTER;
