@@ -160,7 +160,6 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 //----------------------------------------------------------------------
