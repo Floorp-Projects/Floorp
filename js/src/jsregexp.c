@@ -1233,8 +1233,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
 
     re->ren = ren;
 
-    /* Success: lock re->source string. */
-    (void) js_LockGCThing(cx, str);
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return re;
@@ -1313,7 +1311,6 @@ void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
-        js_UnlockGCThing(cx, re->source);
         freeRENtree(cx, re->ren, NULL);
         JS_free(cx, re);
     }
@@ -2557,13 +2554,22 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 
 #endif /* !JS_HAS_XDR */
 
+static uint32
+regexp_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    JSRegExp *re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    if (re)
+        JS_MarkGCThing(cx, re->source, "source", arg);
+    return 0;
+}
+
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
     NULL,             NULL,             regexp_call,        NULL,
-    regexp_xdrObject, NULL,             NULL,               0
+    regexp_xdrObject, NULL,             regexp_mark,        0
 };
 
 static JSBool
