@@ -132,7 +132,11 @@ MDCPUCFG_H = _scoos.cfg
 endif
 
 ifeq ($(OS_ARCH),UNIXWARE)
+ifeq (,$(filter-out 2.1,$(OS_RELEASE)))
 MDCPUCFG_H = _unixware.cfg
+else
+MDCPUCFG_H = _unixware7.cfg
+endif
 endif
 
 ifeq ($(OS_ARCH),NCR)
