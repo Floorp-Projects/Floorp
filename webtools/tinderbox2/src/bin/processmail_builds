@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.22 $ 
-# $Date: 2002/05/01 04:12:31 $ 
+# $Revision: 1.23 $ 
+# $Date: 2002/05/02 01:43:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -437,6 +437,17 @@ sub backward_compatibility {
     $TINDERBOX{'build'} = undef;
   }
 
+  # traditional mozilla name shortening conventions.
+
+  $TINDERBOX{'buildname'} =~ s/Clobber/Clbr/g;
+  $TINDERBOX{'buildname'} =~ s/Depend/Dep/g;    
+
+  # keep funky characters out of the buildname.  We use ',' as a
+  # separator so that must not appear.
+
+  $TINDERBOX{'buildname'} =~ s/[.,;:'"\+]+/_/g;
+  $TINDERBOX{'buildname'} =~ s/__+/_/g;
+ 
   return 1;
 }
 
@@ -796,7 +807,7 @@ sub highlight_errors {
         );
     }
     
-    my $color = $Error_Parse::LINE_TYPE2COLOR{$line_type};
+    my $color = Error_Parse::type2color($line_type);
     ($color) &&
       ($color = "color=$color");
 
@@ -920,7 +931,14 @@ sub parse_mail_body {
 
     # prepare the line for browser display
     my ($line_type) = &$func_line_type($line);
-    
+    my %args = (
+                'lineno' => $lineno, 
+                'line_type' => $line_type, 
+                'line' => $line,
+                );
+
+    Error_Parse::run_status_handler(%TINDERBOX, %args);
+
     @html = &highlight_errors($line, $line_type, $lineno, \$next_err, 
                                    $func_parse_errorline);
 
