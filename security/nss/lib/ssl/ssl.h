@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.7 2001/02/09 00:32:03 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.8 2001/05/21 21:25:29 wtc%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -203,8 +203,9 @@ SSL_IMPORT CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 ** (because of SSL_REQUIRE_CERTIFICATE in SSL_Enable) to authenticate the
 ** certificate.
 */
-typedef SECStatus (*SSLAuthCertificate)(void *arg, PRFileDesc *fd, 
-					PRBool checkSig, PRBool isServer);
+typedef SECStatus (PR_CALLBACK *SSLAuthCertificate)(void *arg, PRFileDesc *fd, 
+                                                    PRBool checkSig,
+                                                    PRBool isServer);
 
 SSL_IMPORT SECStatus SSL_AuthCertificateHook(PRFileDesc *fd, 
 					     SSLAuthCertificate f,
@@ -221,10 +222,11 @@ SSL_IMPORT SECStatus SSL_AuthCertificate(void *arg, PRFileDesc *fd,
  *	pRetCert - pointer to pointer to cert, for return of cert
  *	pRetKey - pointer to key pointer, for return of key
  */
-typedef SECStatus (*SSLGetClientAuthData)(void *arg, PRFileDesc *fd,
-				    CERTDistNames *caNames,
-				    CERTCertificate **pRetCert,/*return */
-				    SECKEYPrivateKey **pRetKey);/* return */
+typedef SECStatus (PR_CALLBACK *SSLGetClientAuthData)(void *arg,
+                                PRFileDesc *fd,
+                                CERTDistNames *caNames,
+                                CERTCertificate **pRetCert,/*return */
+                                SECKEYPrivateKey **pRetKey);/* return */
 
 /*
  * Set the client side callback for SSL to retrieve user's private key
@@ -249,7 +251,7 @@ SSL_IMPORT SECStatus SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 ** by the client.  The client app can decide that it actually likes the
 ** cert by some external means and restart the connection.
 */
-typedef SECStatus (*SSLBadCertHandler)(void *arg, PRFileDesc *fd);
+typedef SECStatus (PR_CALLBACK *SSLBadCertHandler)(void *arg, PRFileDesc *fd);
 SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, 
 				     void *arg);
 
@@ -313,7 +315,8 @@ SSL_IMPORT SECStatus SSL_InheritMPServerSIDCache(const char * envString);
 ** Set the callback on a particular socket that gets called when we finish
 ** performing a handshake.
 */
-typedef void (*SSLHandshakeCallback)(PRFileDesc *fd, void *client_data);
+typedef void (PR_CALLBACK *SSLHandshakeCallback)(PRFileDesc *fd,
+                                                 void *client_data);
 SSL_IMPORT SECStatus SSL_HandshakeCallback(PRFileDesc *fd, 
 			          SSLHandshakeCallback cb, void *client_data);
 
