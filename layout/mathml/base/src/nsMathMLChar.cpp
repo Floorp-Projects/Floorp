@@ -836,7 +836,7 @@ struct StretchyFontEnumContext {
 
 // check if the current font is associated to a known glyph table, if so the
 // glyph table is added to the list of tables that can be used for the char
-static PRBool PR_CALLBACK
+static PRBool
 StretchyFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   if (aGeneric) return PR_FALSE; // stop now
@@ -934,7 +934,7 @@ struct PreferredFontEnumContext {
 };
 
 // mark a glyph table as a preferred table that can be used for a char
-static PRBool PR_CALLBACK
+static PRBool
 PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   PRInt32 i;
@@ -1026,7 +1026,7 @@ struct MathFontEnumContext {
   nsString*       mMissingFamilyList;
 };
 
-static PRBool PR_CALLBACK
+static PRBool
 MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   // check if the font is missing
