@@ -1545,6 +1545,14 @@ nsLocalFile::Load(PRLibrary * *_retval)
 	if (! isFile)
 		return NS_ERROR_FILE_IS_DIRECTORY;
 	
+#if !TARGET_CARBON      
+  	// This call to SystemTask is here to give the OS time to grow its
+  	// FCB (file control block) list, which it seems to be unable to
+  	// do unless we yield some time to the OS. See bugs 64978 & 70543
+  	// for the whole story.
+  	::SystemTask();
+#endif
+
 	// Use the new PR_LoadLibraryWithFlags which allows us to use a FSSpec
 	PRLibSpec libSpec;
 	libSpec.type = PR_LibSpec_MacIndexedFragment;
