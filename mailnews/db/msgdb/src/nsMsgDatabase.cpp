@@ -113,7 +113,7 @@ NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 oldFlags, PRUint32 newFlags,
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull)
+    if (m_ChangeListeners == nsnull || oldFlags == newFlags)
 		return NS_OK;
 	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
 	{

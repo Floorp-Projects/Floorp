@@ -180,10 +180,18 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
 	PRUint32 newHdrFlags = 0;
 	nsMsgKey newHdrKey = 0;
+	PRBool parentKeyNeedsSetting = PR_TRUE;
 	
 	nsIMdbRow *hdrRow = hdr->GetMDBRow();
 	hdr->GetFlags(&newHdrFlags);
 	hdr->GetMessageKey(&newHdrKey);
+
+
+	PRUint32 numChildren;
+	PRUint32 childIndex = 0;
+
+	// get the num children before we add the new header.
+	GetNumChildren(&numChildren);
 
 	if (m_mdbTable)
 	{
@@ -197,13 +205,9 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 		nsMsgKey parentKey;
 		inReplyTo->GetMessageKey(&parentKey);
 		child->SetThreadParent(parentKey);
+		parentKeyNeedsSetting = PR_FALSE;
 	}
 	// check if this header is a parent of one of the messages in this thread
-
-	PRUint32 numChildren;
-	PRUint32 childIndex = 0;
-
-	GetNumChildren(&numChildren);
 
 	nsCOMPtr <nsIMsgDBHdr> curHdr;
 	for (childIndex = 0; childIndex < numChildren; childIndex++)
@@ -219,6 +223,9 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 				curHdr->GetThreadParent(&oldThreadParent);
 				curHdr->GetMessageKey(&msgKey);
 				curHdr->SetThreadParent(newHdrKey);
+				if (msgKey == newHdrKey)
+					parentKeyNeedsSetting = PR_FALSE;
+
 				// OK, this is a reparenting - need to send notification
 				if (announcer)
 					announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newHdrKey, nsnull);
@@ -228,7 +235,10 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 #endif
 				// If this hdr was the root, then the new hdr is the root.
 				if (msgKey == m_threadRootKey)
+				{
 					SetThreadRootKey(newHdrKey);
+					parentKeyNeedsSetting = PR_FALSE;
+				}
 			}
 		}
 	}
@@ -254,10 +264,15 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 				m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, 0, &outPos);
 #endif // MOVE_ROW_IMPL
 				topLevelHdr->SetThreadParent(newHdrKey);
+				parentKeyNeedsSetting = PR_FALSE;
 				SetThreadRootKey(newHdrKey);
 			}
 		}
 	}
+	// OK, check to see if we added this header, and didn't parent it.
+
+	if (numChildren > 0 && parentKeyNeedsSetting)
+		child->SetThreadParent(m_threadRootKey);
 
 	return ret;
 }
@@ -666,6 +681,7 @@ nsresult nsMsgThreadEnumerator::Prefetch()
 	if (mThreadParentKey == nsMsgKey_None)
 	{
 		rv = mThread->GetRootHdr(&mChildIndex, getter_AddRefs(mResultHdr));
+		NS_ASSERTION(NS_SUCCEEDED(rv) && mResultHdr, "better be able to get root hdr");
 		mChildIndex = 0; // since root can be anywhere, set mChildIndex to 0.
 	}
 	else if (!mDone)
@@ -692,6 +708,8 @@ nsresult nsMsgThreadEnumerator::Prefetch()
 					break;
 				mResultHdr = nsnull;
 			}
+			else
+				NS_ASSERTION(PR_FALSE, "better be able to get child");
 		}
 	}
 	if (!mResultHdr) 
@@ -742,14 +760,22 @@ NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumer
 
 NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result)
 {
-	if (m_threadRootKey == nsMsgKey_None)
+	nsresult ret;
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	if (m_threadRootKey != nsMsgKey_None)
 	{
-		if (resultIndex)
-			*resultIndex = 0;
-		return GetChildHdrAt(0, result);
+		ret = GetChildHdrForKey(m_threadRootKey, result, resultIndex);
+		if (NS_SUCCEEDED(ret) && *result)
+			return ret;
+		// if we can't get the thread root key, we'll just get the first hdr.
+		// there's a bug where sometimes we weren't resetting the thread root key 
+		// when removing the thread root key.
 	}
-	else
-		return GetChildHdrForKey(m_threadRootKey, result, resultIndex);
+	if (resultIndex)
+		*resultIndex = 0;
+	return GetChildHdrAt(0, result);
 }
 
 nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
@@ -764,6 +790,7 @@ nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
 	NS_ASSERTION((PRInt32) childCount >= 0, "child count gone to 0 or below");
 
 	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+	m_numChildren = childCount;
 	return ret;
 }
 
@@ -775,6 +802,7 @@ nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
 	childCount += delta;
 
 	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
+	m_numUnreadChildren = childCount;
 	return ret;
 }
 
