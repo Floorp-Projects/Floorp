@@ -477,6 +477,14 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
           rv = card->GetNickName(getter_Copies(pNickNameStr));
           if (NS_FAILED(rv))
               continue;
+
+          // in the address book a mailing list does not have an email address field. However,
+          // we do "fix up" mailing lists in the UI sometimes to look like "My List <My List>"
+          // if we are looking up an address and we are comparing it to a mailing list to see if it is a match
+          // instead of just looking for an exact match on "My List", hijack the unused email address field 
+          // and use that to test against "My List <My List>"
+          if (bIsMailList)
+            mParser->MakeFullAddressWString (pDisplayNameStr, pDisplayNameStr, getter_Copies(pEmailStr[0]));  
             
           for (i = 0 ; i < MAX_NUMBER_OF_EMAIL_ADDRESSES; i ++)
           {
