@@ -614,7 +614,7 @@ nsMenuBarX::DocumentWillBeDestroyed( nsIDocument * aDocument )
 
 NS_IMETHODIMP
 nsMenuBarX::AttributeChanged( nsIDocument * aDocument, nsIContent * aContent, PRInt32 aNameSpaceID,
-                              nsIAtom * aAttribute, PRInt32 aHint)
+                              nsIAtom * aAttribute, PRInt32 aModType, PRInt32 aHint)
 {
   // lookup and dispatch to registered thang.
   nsCOMPtr<nsIChangeObserver> obs;
