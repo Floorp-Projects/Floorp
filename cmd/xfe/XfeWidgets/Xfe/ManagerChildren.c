@@ -304,7 +304,7 @@ XfeManagerApply(Widget					w,
 	/* Freeze layout if needed */
 	if (freeze_layout)
 	{
-		_XfemIgnoreConfigure(w) = True;
+		_XfemLayoutFrozen(w) = True;
 	}
 	
 	/* Iterate through all the items */
@@ -327,7 +327,7 @@ XfeManagerApply(Widget					w,
 	/* Un-freeze layout if needed */
 	if (freeze_layout)
 	{
-		_XfemIgnoreConfigure(w) = False;
+		_XfemLayoutFrozen(w) = False;
 
 		/* ??? I think this should be optional ??? */
 		XfeManagerLayout(w);
@@ -387,7 +387,7 @@ XfeManagerApplyLinked(Widget				w,
 		/* Freeze layout if needed */
 		if (freeze_layout)
 		{
-			_XfemIgnoreConfigure(w) = True;
+			_XfemLayoutFrozen(w) = True;
 		}
 		
 		_XfeManagerApplyProcToChildren(w,children,mask,proc,data);
@@ -395,7 +395,7 @@ XfeManagerApplyLinked(Widget				w,
 		/* Un-freeze layout if needed */
 		if (freeze_layout)
 		{
-			_XfemIgnoreConfigure(w) = False;
+			_XfemLayoutFrozen(w) = False;
 			
 			/* ??? I think this should be optional ??? */
 			XfeManagerLayout(w);

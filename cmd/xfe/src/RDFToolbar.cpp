@@ -262,7 +262,7 @@ XFE_RDFToolbar::updateRoot()
 {
 	// Since a lot of changes will happen to the toolbar, we tell it to 
 	// any geometry or layout changes.  We will force these to occur later.
-	XtVaSetValues(_toolbar,XmNignoreConfigure,True,NULL);
+	XtVaSetValues(_toolbar,XmNlayoutFrozen,True,NULL);
 
 	// Destroy the current widgets
 	destroyToolbarWidgets();
@@ -282,7 +282,7 @@ XFE_RDFToolbar::updateRoot()
 	}
 
 	// Tell the toolbar not too ignore geometry or layout changes anymore
-	XtVaSetValues(_toolbar,XmNignoreConfigure,False,NULL);
+	XtVaSetValues(_toolbar,XmNlayoutFrozen,False,NULL);
 
 	// Force the toolbar to reconfigure.
 	XfeManagerLayout(_toolbar);

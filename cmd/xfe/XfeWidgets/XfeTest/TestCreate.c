@@ -71,7 +71,7 @@ XfeLoadToolBar(Widget			tool_bar,
 
 	tool_items = XfeMalloc(Widget,tool_count);
 
-	XtVaSetValues(tool_bar,XmNignoreConfigure,True,NULL);
+	XtVaSetValues(tool_bar,XmNlayoutFrozen,True,NULL);
     
     for (i = 0; i < tool_count; i++)
     {
@@ -127,7 +127,7 @@ XfeLoadToolBar(Widget			tool_bar,
 		}
     }
 
-	XtVaSetValues(tool_bar,XmNignoreConfigure,False,NULL);
+	XtVaSetValues(tool_bar,XmNlayoutFrozen,False,NULL);
 
 	XfeManagerLayout(tool_bar);
 
@@ -281,7 +281,7 @@ XfeLoadTaskBar(Widget			task_bar,
 
 	task_items = XfeMalloc(Widget,task_count);
 	
-	XtVaSetValues(task_bar,XmNignoreConfigure,True,NULL);
+	XtVaSetValues(task_bar,XmNlayoutFrozen,True,NULL);
 
 	for(i = 0; i < task_count; i++)
 	{
@@ -318,7 +318,7 @@ XfeLoadTaskBar(Widget			task_bar,
 		}
 	}
 
-	XtVaSetValues(task_bar,XmNignoreConfigure,False,NULL);
+	XtVaSetValues(task_bar,XmNlayoutFrozen,False,NULL);
 
 	XfeManagerLayout(task_bar);
 

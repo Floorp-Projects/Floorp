@@ -203,16 +203,7 @@ static const XtResource resources[] =
     },
 
 
-	/* Misc resources */
-    { 
-		XmNignoreConfigure,
-		XmCIgnoreConfigure,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeManagerRec , xfe_manager . ignore_configure),
-		XmRImmediate, 
-		(XtPointer) False
-    },
+	/* Shadow resources */
     { 
 		XmNshadowType,
 		XmCShadowType,
@@ -223,6 +214,16 @@ static const XtResource resources[] =
 		(XtPointer) XfeDEFAULT_SHADOW_TYPE
     },
 
+	/* Layout resources */
+    { 
+		XmNlayoutFrozen,
+		XmCLayoutFrozen,
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfeManagerRec , xfe_manager . layout_frozen),
+		XmRImmediate, 
+		(XtPointer) False
+    },
 
 	/* Geometry resources */
 	{ 
@@ -1370,12 +1371,12 @@ CompositeChangeManaged(Widget w)
 	XfeDebugPrintfFunction(w,
 						   "CompositeChangeManaged",
 						   "%s",
-						   (_XfemIgnoreConfigure(w) ? " - ignored" : ""),
+						   (_XfemLayoutFrozen(w) ? " - ignored" : ""),
 						   "NULL");
 #endif
 
-    /* Update widget geometry only if ignore_configure is False */
-    if (!_XfemIgnoreConfigure(w))
+    /* Update widget geometry only if layout_frozen is False */
+    if (!_XfemLayoutFrozen(w))
     {
 		Boolean		change_width = False;
 		Boolean		change_height = False;
@@ -1697,7 +1698,7 @@ CompositeGeometryManager(Widget				child,
 	
 	if (dim_flag)
 	{
-		if (!_XfemIgnoreConfigure(XtParent(w)))
+		if (!_XfemLayoutFrozen(XtParent(w)))
 		{
 			XfeResize(XtParent(w));
 		}

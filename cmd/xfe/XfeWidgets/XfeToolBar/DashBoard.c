@@ -916,7 +916,7 @@ ManagerStaticChildren(Widget w)
 {
     XfeDashBoardPart *	dp = _XfeDashBoardPart(w);
 
-	_XfemIgnoreConfigure(w) = True;
+	_XfemLayoutFrozen(w) = True;
 
 	if (IsDocked(w))
 	{
@@ -945,7 +945,7 @@ ManagerStaticChildren(Widget w)
 		}
 	}
 	
-	_XfemIgnoreConfigure(w) = False;
+	_XfemLayoutFrozen(w) = False;
 }
 /*----------------------------------------------------------------------*/
 static Dimension

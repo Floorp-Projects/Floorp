@@ -107,9 +107,11 @@ typedef struct _XfeManagerPart
 	Cursor				busy_cursor;			/* Busy Cursor			*/
 	Boolean				busy_cursor_on;			/* Busy Cursor On ?		*/
 
-	/* Misc resources */
+	/* Shadow resources */
 	XtEnum				shadow_type;			/* Shadow Type			*/
-	Boolean				ignore_configure;		/* Ignore Configure		*/
+
+	/* Layout resources */
+	Boolean				layout_frozen;		/* Layout frozen ?		*/
 
 	/* Geometry resources */
 	Dimension			preferred_width;		/* Preferred Width		*/
@@ -498,8 +500,8 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 #define _XfemOrderData(w) \
 (((XfeManagerWidget) (w))->xfe_manager . order_data)
 /*----------------------------------------------------------------------*/
-#define _XfemIgnoreConfigure(w) \
-(((XfeManagerWidget) (w))->xfe_manager . ignore_configure)
+#define _XfemLayoutFrozen(w) \
+(((XfeManagerWidget) (w))->xfe_manager . layout_frozen)
 /*----------------------------------------------------------------------*/
 #define _XfemPreferredWidth(w) \
 (((XfeManagerWidget) (w))->xfe_manager . preferred_width)

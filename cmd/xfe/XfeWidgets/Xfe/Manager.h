@@ -39,7 +39,12 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNchangeManagedCallback			"changeManagedCallback"
 #define XmNlayoutCallback					"layoutCallback"
 
+#define XmNbusy								"busy"
+#define XmNbusyCursor						"busyCursor"
+#define XmNbusyCursorOn						"busyCursorOn"
 #define XmNcomponentChildren				"componentChildren"
+#define XmNlayoutFrozen						"layoutFrozen"
+#define XmNmanagerChildType					"managerChildType"
 #define XmNmaxComponentChildrenHeight		"maxComponentChildrenHeight"
 #define XmNmaxComponentChildrenWidth		"maxComponentChildrenWidth"
 #define XmNmaxStaticChildrenHeight			"maxStaticChildrenHeight"
@@ -52,19 +57,14 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNtotalComponentChildrenHeight		"totalComponentChildrenHeight"
 #define XmNtotalComponentChildrenWidth		"totalComponentChildrenWidth"
 #define XmNtotalStaticChildrenHeight		"totalStaticChildrenHeight"
-#define XmNmanagerChildType				"managerChildType"
-#define XmNignoreConfigure				"ignoreConfigure"
 #define XmNtotalStaticChildrenWidth			"totalStaticChildrenWidth"
-#define XmNbusy							"busy"
-#define XmNbusyCursor					"busyCursor"
-#define XmNbusyCursorOn					"busyCursorOn"
 
-#define XmRManagerChildType				"ManagerChildType"
-#define XmCBusy							"Busy"
-#define XmCBusyCursor					"BusyCursor"
-#define XmCIgnoreConfigure				"IgnoreConfigure"
-#define XmCBusyCursorOn					"BusyCursorOn"
-#define XmRLinkedChildren				"LinkedChildren"
+#define XmCBusy								"Busy"
+#define XmCBusyCursor						"BusyCursor"
+#define XmCBusyCursorOn						"BusyCursorOn"
+#define XmCLayoutFrozen						"LayoutFrozen"
+#define XmRLinkedChildren					"LinkedChildren"
+#define XmRManagerChildType					"ManagerChildType"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
