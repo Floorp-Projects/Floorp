@@ -64,7 +64,7 @@ nsMsgSearchDataSource::~nsMsgSearchDataSource()
 
 NS_IMPL_ISUPPORTS2(nsMsgSearchDataSource,
                    nsIRDFDataSource,
-                   nsIMsgSearchHitNotify)
+                   nsIMsgSearchNotify)
 
     NS_IMETHODIMP
 nsMsgSearchDataSource::OnSearchHit(nsIMsgHdr* aMessage)

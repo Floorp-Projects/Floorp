@@ -23,21 +23,21 @@
 
 #include "nsMsgRDFDataSource.h"
 #include "nsIRDFResource.h"
-#include "nsIMsgSearchHitNotify.h"
+#include "nsIMsgSearchNotify.h"
 #include "nsISupportsArray.h"
 #include "nsIMsgSearchSession.h"
 
 #include "nsCOMPtr.h"
 
 class nsMsgSearchDataSource : public nsMsgRDFDataSource,
-                              public nsIMsgSearchHitNotify
+                              public nsIMsgSearchNotify
 {
 public:
     nsMsgSearchDataSource();
     virtual ~nsMsgSearchDataSource();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMSGSEARCHHITNOTIFY
+    NS_DECL_NSIMSGSEARCHNOTIFY
 
     NS_IMETHOD GetURI(char **aResult);
     NS_IMETHOD GetTargets(nsIRDFResource *aSource,
