@@ -64,7 +64,7 @@ typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
 class ns4xPlugin : public nsILiveConnectPlugin
 {
 public:
-  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown);
+  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, NP_PLUGININIT aInit);
   ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -219,6 +219,7 @@ protected:
    */
   NPPluginFuncs fCallbacks;
 
+  NP_PLUGININIT fInitialize;
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
   /**
