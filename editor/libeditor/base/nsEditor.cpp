@@ -1099,8 +1099,8 @@ nsEditor::InsertText(const nsString& aStringToInsert)
     {
       nsCOMPtr<nsIDOMNode> selectedNode;
       PRInt32 offset;
-      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(selectedNode), &offset);
-      if ((NS_SUCCEEDED(result)) && selectedNode)
+      result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
+      if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
       {
         nsCOMPtr<nsIDOMNode> newNode;
         result = CreateNode(GetTextNodeTag(), selectedNode, offset+1, 
@@ -1334,8 +1334,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       }
 #ifdef NS_DEBUG
       nsCOMPtr<nsIDOMNode>testSelectedNode;
-      PRInt32 testOffset;
-      nsresult debugResult = selection->GetAnchorNodeAndOffset(getter_AddRefs(testSelectedNode), &testOffset);
+      nsresult debugResult = selection->GetAnchorNode(getter_AddRefs(testSelectedNode));
       // no selection is ok.
       // if there is a selection, it must be collapsed
       if (testSelectedNode)
@@ -1349,8 +1348,8 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
     }
     // split the selected node
     PRInt32 offsetOfSelectedNode;
-    result = selection->GetAnchorNodeAndOffset(getter_AddRefs(parentSelectedNode), &offsetOfSelectedNode);
-    if ((NS_SUCCEEDED(result)) && parentSelectedNode)
+    result = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
+    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetOfSelectedNode)) && parentSelectedNode)
     {
       nsCOMPtr<nsIDOMNode> selectedNode;
       PRUint32 selectedNodeContentCount=0;
