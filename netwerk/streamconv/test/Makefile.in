@@ -33,7 +33,7 @@ CPPSRCS		= \
 		$(NULL)
 
 ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
+LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
 endif
 
 LIBS		= \
