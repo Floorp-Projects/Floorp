@@ -77,21 +77,16 @@ nsMsgGroupView::~nsMsgGroupView()
 
 NS_IMETHODIMP nsMsgGroupView::Open(nsIMsgFolder *aFolder, nsMsgViewSortTypeValue aSortType, nsMsgViewSortOrderValue aSortOrder, nsMsgViewFlagsTypeValue aViewFlags, PRInt32 *aCount)
 {
-  nsCOMPtr <nsISimpleEnumerator> headers;
-  nsresult rv = aFolder->GetMsgDatabase(nsnull, getter_AddRefs(m_db));
+  nsresult rv = nsMsgDBView::Open(aFolder, aSortType, aSortOrder, aViewFlags, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
-  m_db->AddListener(this);
-
-  m_viewFlags = aViewFlags;
-  m_sortOrder = aSortOrder;
-  m_sortType = aSortType;
 
   nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
   PersistFolderInfo(getter_AddRefs(dbFolderInfo));
 
+  nsCOMPtr <nsISimpleEnumerator> headers;
   rv = m_db->EnumerateMessages(getter_AddRefs(headers));
   NS_ENSURE_SUCCESS(rv, rv);
-  m_folder = aFolder;
+
   return OpenWithHdrs(headers, aSortType, aSortOrder, aViewFlags, aCount);
 }
 
