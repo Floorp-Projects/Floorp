@@ -2,18 +2,9 @@ var srDest = $SpaceRequired$;
 
 var err;
 var fProgram;
-
-// OS type detection
-// which platform?
-var platformStr = new String(Install.platform);
 var platformNode;
-if (!platformStr.search(/^Macintosh/))
-    platformNode = 'mac';
-else if (!platformStr.search(/^Win/))
-    platformNode = 'win';
-else
-    platformNode = 'unix';
 
+platformNode = getPlatform();
 logComment("initInstall: platformNode=" + platformNode);
 // end
 // end - OS type detection
