@@ -764,6 +764,11 @@ function onInputKeyPress (e)
     
     switch (e.keyCode)
     {        
+        case 9:  /* tab */
+            onTabCompleteRequest(e);
+            e.preventDefault();
+            break;
+
         case 13: /* CR */
             e.line = e.target.value;
             e.target.value = "";
@@ -792,6 +797,7 @@ function onInputKeyPress (e)
                         client.inputHistory[++client.lastHistoryReferenced];
                 }
             }
+            e.preventDefault();
             break;
 
         case 40: /* down */
@@ -808,6 +814,7 @@ function onInputKeyPress (e)
                 client.lastHistoryReferenced = -1;
                 e.target.value = client.incompleteLine;
             }
+            e.preventDefault();
             break;
 
         default:
@@ -830,8 +837,6 @@ function onTabCompleteRequest (e)
     if (document.getBindingParent(elem) != singleInput)
         return;
 
-    e.preventDefault();
-    
     var selStart = singleInput.selectionStart;
     var selEnd = singleInput.selectionEnd;            
     var line = singleInput.value;
@@ -967,10 +972,6 @@ function onWindowKeyPress (e)
             e.preventDefault();
             break;
 
-        case 9: /* tab */
-            e.preventDefault();
-            break;
-            
         default:
             
     }

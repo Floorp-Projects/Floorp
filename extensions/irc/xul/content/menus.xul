@@ -104,8 +104,6 @@
         modifiers="control" keycode="VK_PAGE_DOWN"/>
       <key id="key_prev_view" observes="cmd_prev_view"
         modifiers="control" keycode="VK_PAGE_UP"/>
-      <key id="key_tab_complete" oncommand="onTabCompleteRequest(event);" 
-        keycode="VK_TAB"/>
 
       <!-- File:Options keys -->
       <key id="key_debug" observes="cmd_debug"
