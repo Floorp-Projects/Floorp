@@ -81,7 +81,7 @@ if ($NEWFILE =~ /all\-(\d+)\-(\d+)\-(\d+)\-(\d{2})(\d{2})(\d{2}).txt/) {
     $summary = "delta-$1-$2-$3-$4$5$6.txt";
 }
 else {
-    local ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+    local ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
     $summary = sprintf "delta-%s-%02d-%02d-%02d%02d%02d", ($year, $mon+1, $mday, $hour, $min, $sec);
 }
 
@@ -108,6 +108,6 @@ close(SF);
 
 ################################################################################
 
-printf "<a href=$summary>leaks: %10d %+8.2f%%<br>\n", leaksDelta("TOTAL");
-printf "bloat: %10d %+8.2f%%</a>\n", bloatDelta("TOTAL");
+printf "<pre><a href=$summary>\nleaks: %10d %+8.2f%%\n", leaksDelta("TOTAL");
+printf "bloat: %10d %+8.2f%%\n</a></pre>\n", bloatDelta("TOTAL");
 
