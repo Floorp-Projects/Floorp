@@ -1121,6 +1121,9 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
     // It's important to identifying areas that are covered by native widgets to avoid
     // painting their views many times as we process invalidates from the root widget all the
     // way down to the nested widgets.
+    // 
+    // NB: we must NOT add widgets that correspond to floating views!
+    // We may be required to paint behind them
     if (nsnull != aRgn) {
       aRgn->SetTo(0, 0, 0, 0);
       nsCOMPtr<nsIWidget> widget;
@@ -1135,9 +1138,13 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
               nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
               if (childWidget != nsnull) {
                 PRBool visible = PR_FALSE;
-       
                 childWidget->IsVisible(visible);
-                if (visible) {
+
+                nsIView* view = nsView::GetViewFor(childWidget);
+                PRBool floating = PR_FALSE;
+                view->GetFloating(floating);               
+
+                if (visible && !floating) {
                   nsRect bounds;
                   float p2t;
 
@@ -1198,8 +1205,10 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
     ComputeViewOffset(displayRoot, &displayRootOrigin);
     
     // Create the Z-ordered view tree
+    PRBool paintFloaters;
+    displayRoot->GetFloating(paintFloaters);
     CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
-      aRootView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y);
+      aRootView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y, paintFloaters);
     mMapPlaceholderViewToZTreeNode.Reset();
     
     if (nsnull != zTree) {
@@ -2985,7 +2994,7 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRBool aReparentedViewsP
                                          DisplayZTreeNode* &aResult, PRBool aInsideRealView,
                                          nscoord aOriginX, nscoord aOriginY, nsIView *aRealView,
                                          const nsRect *aDamageRect, nsIView *aTopView,
-                                         nscoord aX, nscoord aY)
+                                         nscoord aX, nscoord aY, PRBool aPaintFloaters)
 {
 	PRBool retval = PR_FALSE;
 
@@ -3033,6 +3042,18 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRBool aReparentedViewsP
       return PR_FALSE;
     }
 
+    // Don't paint floating views unless the root view being painted is a floating view.
+    // This is important because we may be asked to paint
+    // a window that's behind a transient floater; in this case we must paint the real window
+    // contents, not the floater contents (bug 63496)
+    if (!aPaintFloaters) {
+      PRBool isFloating = PR_FALSE;
+      aView->GetFloating(isFloating);
+      if (isFloating) {
+        return PR_FALSE;
+      }
+    }
+
     if (!aReparentedViewsPresent) {
       nsIView *childView = nsnull;
       for (aView->GetChild(0, childView); nsnull != childView; childView->GetNextSibling(childView)) {
@@ -3077,7 +3098,7 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRBool aReparentedViewsP
           DisplayZTreeNode* createdNode;
           retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
             aInsideRealView || aRealView == aView,
-            aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y);
+            aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y, aPaintFloaters);
           if (createdNode != nsnull) {
             EnsureZTreeNodeCreated(aView, aResult);
             createdNode->mZSibling = aResult->mZChild;
@@ -3133,7 +3154,7 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRBool aReparentedViewsP
               DisplayZTreeNode* createdNode;
               retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                 aInsideRealView || aRealView == aView,
-                aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y);
+                aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y, aPaintFloaters);
               if (createdNode != nsnull) {
                 EnsureZTreeNodeCreated(aView, aResult);
                 createdNode->mZSibling = aResult->mZChild;
