@@ -5406,9 +5406,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.AssignWithConversion("(null)");
   }
-  PRINTF(NS_ConvertUCS2toUTF8(name));
-
-  PRINTF(" != ");
+  const char* str = NS_ConvertUCS2toUTF8(name);
+  PRINTF("%s != ", str);
 
   if (nsnull != k2) {
     nsIFrameDebug*  frameDebug;
@@ -5421,9 +5420,9 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.AssignWithConversion("(null)");
   }
-  PRINTF(NS_ConvertUCS2toUTF8(name));
+  str = NS_ConvertUCS2toUTF8(name);
 
-  PRINTF(" %s", aMsg);
+  PRINTF("%s %s", str, aMsg);
 }
 
 static void
@@ -5438,7 +5437,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     PRINTF("  ");
     frameDebug->GetFrameName(name);
-    PRINTF("%s %p ", name, k1);
+    nsCAutoString tmp; tmp.AssignWithConversion(name);
+    PRINTF("%s %p ", tmp.GetBuffer(), k1);
   }
   PRINTF("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
 
@@ -5448,7 +5448,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     PRINTF("  ");
     frameDebug->GetFrameName(name);
-    PRINTF("%s %p ", name, k2);
+    nsCAutoString tmp; tmp.AssignWithConversion(name);
+    PRINTF("%s %p ", tmp.GetBuffer(), k2);
   }
   PRINTF("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
 
@@ -5678,14 +5679,16 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       nsAutoString tmp;
       if (nsnull != listName1) {
         listName1->ToString(tmp);
-        PRINTF(NS_ConvertUCS2toUTF8(tmp));
+        const char* str = NS_ConvertUCS2toUTF8(tmp);
+        PRINTF(str);
       }
       else
         PRINTF("(null)");
       PRINTF(" != ");
       if (nsnull != listName2) {
         listName2->ToString(tmp);
-        PRINTF(NS_ConvertUCS2toUTF8(tmp));
+        const char* str = NS_ConvertUCS2toUTF8(tmp);
+        PRINTF(str);
       }
       else
         PRINTF("(null)");
