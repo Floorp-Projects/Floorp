@@ -133,8 +133,6 @@ static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 static NS_DEFINE_CID(kControllerCommandManagerCID, NS_CONTROLLERCOMMANDMANAGER_CID);
 
-extern nsresult NS_NewAnonymousContent2(nsIContent** aInstancePtrResult);
-
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewDomSelection(nsISelection** aResult);
 extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
@@ -262,13 +260,6 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewHTMLAttributes((nsIHTMLAttributes**)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLAttributes", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kAnonymousElementCID)) {
-    res = NS_NewAnonymousContent2((nsIContent**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewAnonymousContent2", res);
       return res;
     }
   }
