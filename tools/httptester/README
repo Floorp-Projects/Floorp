@@ -4,7 +4,7 @@ The summary
 ===========
 
 1) start the server, with python server.py
-2) Get an file of all tests avilable by getting http://localhost:8000/
+2) Get a file of all tests available by getting http://localhost:8000/
 3) Use that file as an argument to mozilla -f (this requires either a 
 debug build or a build with --enable-perf-metrics)
 4) Look at the results of http://localhost:8000/id/report

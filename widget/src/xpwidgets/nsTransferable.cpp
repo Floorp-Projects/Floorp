@@ -86,7 +86,7 @@ struct DataStruct
   void SetData( nsISupports* inData, PRUint32 inDataLen );
   void GetData( nsISupports** outData, PRUint32 *outDataLen );
   nsIFile * GetFileSpec(const char * aFileName);
-  PRBool IsDataAvilable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
+  PRBool IsDataAvailable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
   
 protected:
 
@@ -418,7 +418,7 @@ nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32
 
   for ( PRInt32 i=0; i < mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (data->IsDataAvilable()) {
+    if (data->IsDataAvailable()) {
       *aFlavor = ToNewCString(data->GetFlavor());
       data->GetData(aData, aDataLen);
       return NS_OK;
