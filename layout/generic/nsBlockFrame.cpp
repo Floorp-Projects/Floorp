@@ -1294,6 +1294,13 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // When style defines the width use it for the max-element-width
     // because we can't shrink any smaller.
     maxWidth = aMetrics.width;
+    if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
+      // Allow overflowed children to influence mes width to accomodate tables.
+      nscoord inset = (NS_STYLE_DIRECTION_LTR == aState.mReflowState.mStyleVisibility->mDirection)
+                      ? borderPadding.left 
+                      : borderPadding.right;
+      maxWidth = PR_MAX(inset + aState.mMaxElementWidth, aMetrics.width);
+    }
   }
   else {
     nscoord computedWidth;
@@ -1527,7 +1534,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
     // We need to add in for the right border/padding
     // XXXldb Why right and not left?
-    aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
+    aMetrics.mMaximumWidth = PR_MAX(maxWidth, aState.mMaximumWidth + borderPadding.right);
 #ifdef NOISY_MAXIMUM_WIDTH
     printf("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
 #endif
