@@ -211,7 +211,8 @@ public class TestArray {
     for (int index = 0; (index < count) && (index < aExpectedCount); index++) {
       IFoo foo = (IFoo) aArray.queryElementAt(index, IFoo.IFOO_IID);
         System.out.println(index + ": " + aElementIDs[index] + "=" +
-                           foo.getId() + " (" + foo.hashCode() + ") " + 
+                           foo.getId() + " (" +
+                           Integer.toHexString(foo.hashCode()) + ") " + 
                            assertEqual(foo.getId(), aElementIDs[index]));
         foo = null;
       }

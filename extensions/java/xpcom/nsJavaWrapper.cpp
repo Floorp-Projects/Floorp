@@ -334,26 +334,8 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
                        env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      void* xpcom_obj;
+      nsISupports* xpcom_obj;
       if (java_obj) {
-        // Check if we already have a corresponding XPCOM object
-        jboolean isProxy = env->CallStaticBooleanMethod(xpcomJavaProxyClass,
-                                                        isXPCOMJavaProxyMID,
-                                                        java_obj);
-        if (env->ExceptionCheck()) {
-          rv = NS_ERROR_FAILURE;
-          break;
-        }
-
-        void* inst;
-        if (isProxy) {
-          rv = GetXPCOMInstFromProxy(env, java_obj, &inst);
-          if (NS_FAILED(rv))
-            break;
-        } else {
-          inst = gBindings->GetXPCOMObject(env, java_obj);
-        }
-
         // Get IID for this param
         nsID iid;
         rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
@@ -362,53 +344,57 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
         if (NS_FAILED(rv))
           break;
 
-        PRBool isWeakRef = iid.Equals(NS_GET_IID(nsIWeakReference));
-
-        if (inst == nsnull && !isWeakRef) {
-          // If there is not corresponding XPCOM object, then that means that the
-          // parameter is non-generated class (that is, it is not one of our
-          // Java stubs that represent an exising XPCOM object).  So we need to
-          // create an XPCOM stub, that can route any method calls to the class.
-
-          // Get interface info for class
-          nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-          nsCOMPtr<nsIInterfaceInfo> iinfo;
-          rv = iim->GetInfoForIID(&iid, getter_AddRefs(iinfo));
-          if (NS_FAILED(rv))
-            break;
-
-          // Create XPCOM stub
-          nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, java_obj, iinfo);
-          if (!xpcomStub) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-          inst = SetAsXPTCStub(xpcomStub);
-          gBindings->AddBinding(env, java_obj, inst);
+        // If the requested interface is nsIWeakReference, then we look for or
+        // create a stub for the nsISupports interface.  Then we create a weak
+        // reference from that stub.
+        PRBool isWeakRef;
+        if (iid.Equals(NS_GET_IID(nsIWeakReference))) {
+          isWeakRef = PR_TRUE;
+          iid = NS_GET_IID(nsISupports);
+        } else {
+          isWeakRef = PR_FALSE;
         }
 
+        PRBool isXPTCStub;
+        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj,
+                                     &isXPTCStub);
+        if (NS_FAILED(rv))
+          break;
+
+        // If the function expects a weak reference, then we need to
+        // create it here.
         if (isWeakRef) {
-          // If the function expects an weak reference, then we need to
-          // create it here.
-          nsJavaXPTCStubWeakRef* weakref =
-                                      new nsJavaXPTCStubWeakRef(env, java_obj);
-          if (!weakref) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
+          if (isXPTCStub) {
+            nsJavaXPTCStub* stub = NS_STATIC_CAST(nsJavaXPTCStub*,
+                                                 NS_STATIC_CAST(nsXPTCStubBase*,
+                                                                xpcom_obj));
+            nsJavaXPTCStubWeakRef* weakref;
+            weakref = new nsJavaXPTCStubWeakRef(env, java_obj, stub);
+            if (!weakref) {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              break;
+            }
+            xpcom_obj = weakref;
+            NS_ADDREF(xpcom_obj);
+            aVariant.SetValIsAllocated();
+          } else { // if is native XPCOM object
+            nsCOMPtr<nsISupportsWeakReference> supportsweak =
+                                                   do_QueryInterface(xpcom_obj);
+            if (supportsweak) {
+              nsWeakPtr weakref;
+              supportsweak->GetWeakReference(getter_AddRefs(weakref));
+              xpcom_obj = weakref;
+              NS_ADDREF(xpcom_obj);
+            } else {
+              xpcom_obj = nsnull;
+            }
           }
-          NS_ADDREF(weakref);
-          xpcom_obj = (void*) weakref;
+
+        } else if (isXPTCStub) {
           aVariant.SetValIsAllocated();
 
-        } else if (IsXPTCStub(inst)) {
-          nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
-          NS_ADDREF(xpcomStub);
-          xpcom_obj = (void*) xpcomStub;
-          aVariant.SetValIsAllocated();
-
-        } else {
-          JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
-          xpcom_obj = (void*) xpcomInst->GetInstance();
+        } else { // if is native XPCOM object
+          xpcom_obj->Release();
         }
       } else {
         xpcom_obj = nsnull;
@@ -682,7 +668,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      void* xpcom_obj = aVariant.val.p;
+      nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
 
       if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
         jobject java_obj = nsnull;
@@ -694,9 +680,13 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
             break;
 
           // Get matching Java object for given xpcom object
-          rv = gBindings->GetJavaObject(env, xpcom_obj, iid, PR_TRUE, &java_obj);
+          PRBool isNewProxy;
+          rv = GetNewOrUsedJavaObject(env, xpcom_obj, iid, &java_obj,
+                                      &isNewProxy);
           if (NS_FAILED(rv))
             break;
+          if (isNewProxy)
+            NS_RELEASE(xpcom_obj);   // Java proxy owns ref to object
         }
 
         // put new Java object into output array
@@ -706,8 +696,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
       // If VAL_IS_ALLOCD is set, that means that an XPCOM object was created
       // is SetupParams that now needs to be released.
       if (xpcom_obj && aVariant.IsValAllocated()) {
-        nsISupports* variant = NS_STATIC_CAST(nsISupports*, xpcom_obj);
-        NS_RELEASE(variant);
+        NS_RELEASE(xpcom_obj);
       }
     }
     break;
@@ -877,7 +866,8 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      if (aVariant.val.p) {
+      nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
+      if (xpcom_obj) {
         nsID iid;
         rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo, aMethodIndex,
                                   aDispatchParams, PR_TRUE, iid);
@@ -886,13 +876,15 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
 
         // Get matching Java object for given xpcom object
         jobject java_obj;
-        rv = gBindings->GetJavaObject(env, aVariant.val.p, iid, PR_TRUE,
-                                      &java_obj);
+        PRBool isNewProxy;
+        rv = GetNewOrUsedJavaObject(env, xpcom_obj, iid, &java_obj,
+                                    &isNewProxy);
         if (NS_FAILED(rv))
           break;
+        if (isNewProxy)
+          xpcom_obj->Release();   // Java proxy owns ref to object
 
         // If returned object is an nsJavaXPTCStub, release it.
-        nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
         nsJavaXPTCStub* stub = nsnull;
         xpcom_obj->QueryInterface(NS_GET_IID(nsJavaXPTCStub), (void**) &stub);
         if (stub) {
@@ -1079,7 +1071,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
 #ifdef DEBUG_JAVAXPCOM
   const char* ifaceName;
   iinfo->GetNameShared(&ifaceName);
-  LOG(("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName()));
+  LOG(("===> (XPCOM) %s::%s()\n", ifaceName, methodInfo->GetName()));
 #endif
 
   // Convert the Java params
@@ -1199,6 +1191,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     ThrowException(env, invokeResult, message.get());
   }
 
+  LOG(("<=== (XPCOM) %s::%s()\n", ifaceName, methodInfo->GetName()));
   return result;
 }
 
@@ -1247,8 +1240,16 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
     }
 
     if (java_obj) {
+#ifdef DEBUG_JAVAXPCOM
+      char* iid_str = aIID.ToString();
+      LOG(("+ CreateJavaProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
+           env->CallIntMethod(java_obj, hashCodeMID),
+           (int) aXPCOMObject, iid_str));
+      PR_Free(iid_str);
+#endif
+
       // Associate XPCOM object with Java proxy
-      rv = gBindings->AddBinding(env, java_obj, inst);
+      rv = gNativeToJavaProxyMap->Add(env, aXPCOMObject, aIID, java_obj);
       if (NS_SUCCEEDED(rv)) {
         *aResult = java_obj;
         return NS_OK;
@@ -1278,6 +1279,17 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
   }
 
   *aResult = NS_REINTERPRET_CAST(void*, xpcom_obj);
+#ifdef DEBUG_JAVAXPCOM
+  JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, *aResult);
+  nsIID* iid;
+  inst->InterfaceInfo()->GetInterfaceIID(&iid);
+  char* iid_str = iid->ToString();
+  LOG(("< GetXPCOMInstFromProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
+       env->CallIntMethod(aJavaObject, hashCodeMID),
+       (int) inst->GetInstance(), iid_str));
+  PR_Free(iid_str);
+  nsMemory::Free(iid);
+#endif
   return NS_OK;
 }
 
@@ -1287,15 +1299,6 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
 extern "C" JX_EXPORT void JNICALL
 JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
 {
-#ifdef DEBUG_JAVAXPCOM
-  jstring string = nsnull;
-  string = (jstring) env->CallStaticObjectMethod(xpcomJavaProxyClass,
-                                                 proxyToStringMID, aJavaProxy);
-  const char* javaObjectName = env->GetStringUTFChars(string, nsnull);
-  LOG(("*** Finalize(java_obj=%s)\n", javaObjectName));
-  env->ReleaseStringUTFChars(string, javaObjectName);
-#endif
-
   // Due to Java's garbage collection, this finalize statement may get called
   // after FreeJavaGlobals().  So check to make sure that everything is still
   // initialized.
@@ -1307,7 +1310,20 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
     nsresult rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
     if (NS_SUCCEEDED(rv)) {
       JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
-      gBindings->RemoveBinding(env, aJavaProxy, nsnull);
+      nsIID* iid;
+      rv = inst->InterfaceInfo()->GetInterfaceIID(&iid);
+      if (NS_SUCCEEDED(rv)) {
+        rv = gNativeToJavaProxyMap->Remove(env, inst->GetInstance(), *iid);
+#ifdef DEBUG_JAVAXPCOM
+        char* iid_str = iid->ToString();
+        LOG(("- Finalize (Java=%08x | XPCOM=%08x | IID=%s)\n",
+             env->CallIntMethod(aJavaProxy, hashCodeMID),
+             (int) inst->GetInstance(), iid_str));
+        PR_Free(iid_str);
+#endif
+        nsMemory::Free(iid);
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to RemoveJavaProxy");
       delete inst;
     }
   }

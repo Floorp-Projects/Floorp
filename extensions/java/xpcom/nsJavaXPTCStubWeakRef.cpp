@@ -42,15 +42,32 @@
 #include "nsIInterfaceInfoManager.h"
 
 
-nsJavaXPTCStubWeakRef::nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject)
+/**
+ * How we handle XPCOM weak references to a Java object:
+ *
+ * If XPCOM requires or asks for a weak reference of a Java object, we first
+ * find (or create) an nsJavaXPTCStub for that Java object.  That way, there is
+ * always an nsJavaXPTCStub for any nsJavaXPTCStubWeakRef.  However, the
+ * XPTCStub may not always be 'valid'; that is, its refcount may be zero if
+ * is not currently referenced by any XPCOM class.
+ * When an XPCOM method queries the referent from the weak reference, the 
+ * weak ref checks first whether the Java object is still valid.  If so, we can
+ * immediately return an addref'd nsJavaXPTCStub.  The XPTCStub takes care of
+ * finding an XPTCStub for the required IID.
+ */
+
+nsJavaXPTCStubWeakRef::nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject,
+                                             nsJavaXPTCStub* aXPTCStub)
+  : mJavaEnv(env)
+  , mXPTCStub(aXPTCStub)
 {
-  mJavaEnv = env;
   mWeakRef = mJavaEnv->NewWeakGlobalRef(aJavaObject);
 }
 
 nsJavaXPTCStubWeakRef::~nsJavaXPTCStubWeakRef()
 {
   mJavaEnv->DeleteWeakGlobalRef(mWeakRef);
+  mXPTCStub->ReleaseWeakRef();
 }
 
 NS_IMPL_ADDREF(nsJavaXPTCStubWeakRef)
@@ -61,6 +78,8 @@ NS_IMPL_QUERY_INTERFACE1(nsJavaXPTCStubWeakRef, nsIWeakReference)
 NS_IMETHODIMP
 nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
 {
+  LOG(("nsJavaXPTCStubWeakRef::QueryReferent()\n"));
+
   // Is weak ref still valid?
   // We create a strong local ref to make sure Java object isn't garbage
   // collected during this call.
@@ -68,35 +87,7 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
   if (!javaObject)
     return NS_ERROR_NULL_POINTER;
 
-  // Java object has not been garbage collected.  Do we have an
-  // associated nsJavaXPTCStub?
-  void* inst = gBindings->GetXPCOMObject(mJavaEnv, javaObject);
-
-  if (!inst) {
-    // No XPTCStub exists, so create one
-
-    // Get interface info for class
-    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-    nsCOMPtr<nsIInterfaceInfo> iinfo;
-    nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Create XPCOM stub
-    nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(mJavaEnv, javaObject, iinfo);
-    if (!xpcomStub)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(xpcomStub);
-    gBindings->AddBinding(mJavaEnv, javaObject, SetAsXPTCStub(xpcomStub));
-
-    // return created stub
-    *aInstancePtr = (void*) xpcomStub;
-    return NS_OK;
-  }
-  NS_ASSERTION(IsXPTCStub(inst), "Found xpcom object was not an XPTCStub");
-
-  // We have an exising XPTCStub, so return QI result
-  nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
-  return xpcomStub->QueryInterface(aIID, aInstancePtr);
+  // Java object has not been garbage collected, so return QI from XPTCStub.
+  return mXPTCStub->QueryInterface(aIID, aInstancePtr);
 }
 

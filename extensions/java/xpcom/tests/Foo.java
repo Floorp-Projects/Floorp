@@ -46,7 +46,8 @@ public class Foo implements IFoo {
   {
     mID = aID;
     ++gCount;
-    System.out.println("init: " + mID + " (" + this.hashCode() + "), " +
+    System.out.println("init: " + mID + " (" +
+                       Integer.toHexString(this.hashCode()) + "), " +
                        gCount +" total");
   }
 
@@ -65,7 +66,8 @@ public class Foo implements IFoo {
   protected void finalize() throws Throwable
   {
     --gCount;
-    System.out.println("destruct: " + mID + " (" + this.hashCode() + "), " +
+    System.out.println("destruct: " + mID + " (" +
+                       Integer.toHexString(this.hashCode()) + "), " +
                        gCount +" remain");
   }
 }
