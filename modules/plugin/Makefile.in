@@ -40,6 +40,10 @@ endif
 
 endif
 
+ifdef MOZ_ENABLE_GTK2
+DIRS		+= samples/default/unix
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= samples/default/windows
 endif
