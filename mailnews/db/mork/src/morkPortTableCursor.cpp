@@ -77,6 +77,8 @@ morkPortTableCursor::morkPortTableCursor(morkEnv* ev,
   mdb_kind inTableKind, nsIMdbHeap* ioSlotHeap)
 : morkCursor(ev, inUsage, ioHeap)
 , mPortTableCursor_Store( 0 )
+, mPortTableCursor_RowSpace( 0 )
+, mPortTableCursor_LastTable ( 0 )
 , mPortTableCursor_RowScope( inRowScope )
 , mPortTableCursor_TableKind( inTableKind )
 {
@@ -105,6 +107,7 @@ morkPortTableCursor::ClosePortTableCursor(morkEnv* ev)
       mCursor_Pos = -1;
       mCursor_Seed = 0;
       morkStore::SlotWeakStore((morkStore*) 0, ev, &mPortTableCursor_Store);
+	  morkRowSpace::SlotStrongRowSpace((morkRowSpace*) 0, ev, &mPortTableCursor_RowSpace);
       this->CloseCursor(ev);
       this->MarkShut();
     }
@@ -141,5 +144,52 @@ morkPortTableCursor::AcquirePortTableCursorHandle(morkEnv* ev)
   return outCursor;
 }
 
+morkTable *
+morkPortTableCursor::NextTable(morkEnv* ev)
+{
+	if (!mPortTableCursor_RowScope)
+	{
+		morkStore* store = mPortTableCursor_Store;
+		morkRowSpaceMapIter* rsi = &mPortTableCursor_SpaceIter;
+		rsi->InitRowSpaceMapIter(ev, &store->mStore_RowSpaces);
+	}
+
+
+	morkStore* store = mPortTableCursor_Store;
+	mdb_scope scope = mPortTableCursor_RowScope;
+	if (!mPortTableCursor_RowSpace)
+	{
+		morkRowSpace* rowSpace = store->LazyGetRowSpace(ev, scope);
+		morkRowSpace::SlotStrongRowSpace(rowSpace, ev, &mPortTableCursor_RowSpace);
+		if ( rowSpace && ev->Good() )
+		{
+			morkTableMapIter* ti = &mPortTableCursor_TableIter;
+			ti->InitTableMapIter(ev, &rowSpace->mRowSpace_Tables);
+		}
+	}
+	mork_tid* key = 0; // ignore keys in table map
+	morkTable* table = 0; // old value table in the map
+	morkTableMapIter* ti = &mPortTableCursor_TableIter;
+
+	mork_change* c = ( mPortTableCursor_LastTable )?
+	ti->NextTable(ev, key, &table) : c = ti->FirstTable(ev, key, &table);
+
+	for ( ; c && ev->Good(); c = ti->NextTable(ev, key, &table) )
+	{
+		if ( table && table->IsTable() )
+		{
+		if ( table->mTable_Kind == mPortTableCursor_TableKind )
+		{
+			mPortTableCursor_LastTable = table;
+			return table;
+		}
+	}
+	else
+		table->NonTableTypeWarning(ev);
+	}
+	morkRowSpace::SlotStrongRowSpace(0, ev, &mPortTableCursor_RowSpace);
+
+	return (morkTable*) 0;
+}
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

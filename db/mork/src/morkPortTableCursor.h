@@ -27,6 +27,10 @@
 #include "morkCursor.h"
 #endif
 
+#ifndef _MORKROWSPACE_
+#include "morkRowSpace.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 class orkinPortTableCursor;
@@ -59,7 +63,11 @@ public: // state is public because the entire Mork system is private
   mdb_kind      mPortTableCursor_TableKind;
   
   // $$$ need use a map iter for covering tables in port map (hash table)
-  
+  morkTable* mPortTableCursor_LastTable; // nil or last table
+  morkRowSpace* mPortTableCursor_RowSpace; // current space in store
+
+  morkRowSpaceMapIter mPortTableCursor_SpaceIter; // iter over spaces
+  morkTableMapIter    mPortTableCursor_TableIter; // iter over tables  
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // ClosePortTableCursor()
@@ -85,6 +93,7 @@ public: // other cell cursor methods
   static void NonPortTableCursorTypeError(morkEnv* ev);
   
   orkinPortTableCursor* AcquirePortTableCursorHandle(morkEnv* ev);
+  morkTable *NextTable(morkEnv* ev);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakPortTableCursor(morkPortTableCursor* me,

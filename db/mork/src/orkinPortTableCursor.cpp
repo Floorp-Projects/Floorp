@@ -417,8 +417,13 @@ orkinPortTableCursor::NextTable( // get table at next position in the db
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
-    outErr = ev->AsErr();
+	  
+    morkPortTableCursor* cursor = (morkPortTableCursor*) mHandle_Object;
+	morkTable* table = cursor->NextTable(ev);
+    if ( table && ev->Good() )
+		*acqTable = table->AcquireTableHandle(ev);
+      
+	outErr = ev->AsErr();
   }
   return outErr;
 }
