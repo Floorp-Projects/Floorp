@@ -984,6 +984,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   SetDesiredSize(aDesiredSize);
 
   if (aReflowState.mFlags.mSpecialTableReflow) {
+    aDesiredSize.height = mRect.height;
     SetNeedSpecialReflow(PR_FALSE);
   }
 
