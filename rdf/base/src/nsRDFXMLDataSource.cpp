@@ -671,7 +671,6 @@ static const char kResourceURIPrefix[] = "resource:";
 #endif
 
     rv = gRDFService->RegisterDataSource(this, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "somebody already registered this");
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
