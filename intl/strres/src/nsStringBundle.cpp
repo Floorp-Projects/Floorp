@@ -605,7 +605,6 @@ nsExtensibleStringBundle::FormatStringFromID(PRInt32 aID,
                                              PRUint32 aLength,
                                              PRUnichar ** aResult)
 {
-  nsXPIDLString formatStr;
   nsAutoString idStr;
   idStr.AppendInt(aID, 10);
   return FormatStringFromName(idStr.GetUnicode(), aParams, aLength, aResult);
