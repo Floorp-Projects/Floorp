@@ -993,7 +993,7 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 
   char *cParams[ARG_SLOTS];
   char *arguments = nsnull;
-  int   argcount = -1;
+  int   argcount = 0;
 
   nsresult rv;
 
