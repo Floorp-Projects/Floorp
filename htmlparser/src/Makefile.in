@@ -61,6 +61,7 @@ CPPSRCS = \
 		nsToken.cpp         \
 		nsWellFormedDTD.cpp \
 		nsViewSourceHTML.cpp\
+		nsParserMsgUtils.cpp\
 		$(NULL)
 
 ifndef MOZ_DISABLE_DTD_DEBUG

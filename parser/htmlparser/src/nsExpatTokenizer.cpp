@@ -42,6 +42,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIURL.h"
 
+#include "nsParserMsgUtils.h"
+#include "nsTextFormatter.h"
+
 typedef struct _XMLParserState {
   XML_Parser parser;
   nsScanner* scanner;
@@ -278,21 +281,24 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
   }
 }
 
-
 static nsresult 
 CreateErrorText(const nsParserError* aError, nsString& aErrorString)
 {
-  aErrorString.AssignWithConversion("XML Parsing Error: ");
+  aErrorString.Truncate();
 
   if (aError) {
-    aErrorString.Append(aError->description);
-    aErrorString.AppendWithConversion("\nLocation: ");
-    aErrorString.Append(aError->sourceURL);
-    aErrorString.AppendWithConversion("\nLine Number ");
-    aErrorString.AppendInt(aError->lineNumber, 10);
-    aErrorString.AppendWithConversion(", Column ");
-    aErrorString.AppendInt(aError->colNumber, 10);
-    aErrorString.AppendWithConversion(":");
+    nsAutoString msg;
+    nsresult rv = nsParserMsgUtils::GetLocalizedStringByName(XMLPARSER_PROPERTIES,"XMLParsingError",msg);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // XML Parsing Error: %1$S\nLocation: %2$S\nLine Number %3$d, Column %4$d:
+    PRUnichar *message = nsTextFormatter::smprintf(msg.get(),aError->description.get(),aError->sourceURL.get(),aError->lineNumber,aError->colNumber);
+    if (!message) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aErrorString.Assign(message);
+    nsTextFormatter::smprintf_free(message);
   }
 
   return NS_OK;
@@ -379,89 +385,109 @@ nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBo
 {
   CErrorToken* errorToken= (CErrorToken *) mState->tokenAllocator->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
-  nsresult rv = NS_OK;
-  
-  if (error && errorToken) {  
-    /* Fill in the values of the error token */
-    error->code = XML_GetErrorCode(mExpatParser);
-    error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
-    // Adjust the column number so that it is one based rather than zero based.
-    error->colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
-    error->description.AssignWithConversion(XML_ErrorString(error->code));
-    if (error->code==XML_ERROR_TAG_MISMATCH){
-      /*
-       * Certain things can be assumed about the token stream because of
-       * the way expat behaves.  eg:
-       *
-       *  - data:text/xml,</foo> is NOT WELL-FORMED
-       *  - data:text/xml,<foo></bar> is a TAG_MISMATCH.
-       *
-       * We can assume that there is at least one extra open tag (the one we 
-       * want), so balance is initially set to one.
-       *
-       * Then loop through the tokens:
-       *  - Each time we see eToken_end (</tag>) increment balance, because 
-       *    that means there is another pair of tags we don't care about.
-       *  - Each time we see eToken_start (<tag>) decrement balance because it
-       *    matches a close tag (perhaps the MISMATCHed tag in which case 
-       *    balance should hit 0).
-       *  - If balance ever hits zero, exit the loop.  Because of the way  
-       *    balance is adjusted, if balance is zero expected *must* be a start
-       *    tag.
-       *
-       * We must check expected in the condition in case expat or nsDeque go
-       * crazy and give us 0 (null) before balance reaches 0.
-       */
-      nsDequeIterator current = mState->tokenDeque->End();
-      CToken *expected = NS_STATIC_CAST(CToken*,--current);
-      PRUint32 balance = 1;
-
-      while (expected) {
-        switch (expected->GetTokenType()) {
-          case eToken_start:
-            --balance;
-            break;
-          case eToken_end:
-            ++balance;
-            break;
-          default:
-            break; // we don't care about newlines or other tokens
-        }
-
-        if (!balance) {
-          // if balance is zero, this must be a start tag
-          CStartToken *startToken=NS_STATIC_CAST(CStartToken*,expected);
-          error->description.Append(NS_LITERAL_STRING(". Expected: </"));
-          error->description.Append(startToken->GetStringValue());
-          error->description.Append(NS_LITERAL_STRING(">"));
-          break;
-        }
-
-        expected = NS_STATIC_CAST(CToken*,--current);
-      }
-    }
-    error->sourceURL.Assign((PRUnichar*)XML_GetBase(mExpatParser));
-    if (!aIsFinal) {
-      PRInt32 byteIndexRelativeToFile = 0;
-      byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
-      GetLine(aBuffer, aLength, (byteIndexRelativeToFile - mBytesParsed), error->sourceLine);
-    }
-    else {
-      error->sourceLine.Append(mLastLine);
-    }
-
-    errorToken->SetError(error);
-
- 
-    /* Add the error token */
-    CToken* newToken = (CToken*) errorToken;
-    AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);
-
-    /* Add the error message tokens */
-    AddErrorMessageTokens(error);
+  if (!error || !errorToken) {
+    delete error;
+    IF_FREE(errorToken,mState->tokenAllocator);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return rv;
+  /* Fill in the values of the error token */
+  error->code = XML_GetErrorCode(mExpatParser);
+  error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+  // Adjust the column number so that it is one based rather than zero based.
+  error->colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
+
+  NS_WARN_IF_FALSE(error->code >= 1, "unexpected XML error code");
+  // Map Expat error code to an error string
+  nsAutoString errorMsg;
+  // XXX Deal with error returns.
+  nsParserMsgUtils::GetLocalizedStringByID(XMLPARSER_PROPERTIES,error->code,errorMsg);
+
+  if (error->code==XML_ERROR_TAG_MISMATCH) {
+    /*
+     * Certain things can be assumed about the token stream because of
+     * the way expat behaves.  eg:
+     *
+     *  - data:text/xml,</foo> is NOT WELL-FORMED
+     *  - data:text/xml,<foo></bar> is a TAG_MISMATCH.
+     *
+     * We can assume that there is at least one extra open tag (the one we 
+     * want), so balance is initially set to one.
+     *
+     * Then loop through the tokens:
+     *  - Each time we see eToken_end (</tag>) increment balance, because 
+     *    that means there is another pair of tags we don't care about.
+     *  - Each time we see eToken_start (<tag>) decrement balance because it
+     *    matches a close tag (perhaps the MISMATCHed tag in which case 
+     *    balance should hit 0).
+     *  - If balance ever hits zero, exit the loop.  Because of the way  
+     *    balance is adjusted, if balance is zero expected *must* be a start
+     *    tag.
+     *
+     * We must check expected in the condition in case expat or nsDeque go
+     * crazy and give us 0 (null) before balance reaches 0.
+     */
+    nsDequeIterator current = mState->tokenDeque->End();
+    CToken *expected = NS_STATIC_CAST(CToken*,--current);
+    PRUint32 balance = 1;
+
+    while (expected) {
+      switch (expected->GetTokenType()) {
+        case eToken_start:
+          --balance;
+          break;
+        case eToken_end:
+          ++balance;
+          break;
+        default:
+          break; // we don't care about newlines or other tokens
+      }
+
+      if (!balance) {
+        // if balance is zero, this must be a start tag
+        CStartToken *startToken=NS_STATIC_CAST(CStartToken*,expected);
+
+        nsAutoString expectedMsg;
+        nsParserMsgUtils::GetLocalizedStringByName(XMLPARSER_PROPERTIES,"Expected",expectedMsg);
+
+        // . Expected: </%S>.
+        PRUnichar *message = nsTextFormatter::smprintf(expectedMsg.get(),nsAutoString(startToken->GetStringValue()).get());
+        if (!message) {
+          delete error;
+          IF_FREE(errorToken,mState->tokenAllocator);
+          return NS_ERROR_OUT_OF_MEMORY;        
+        }
+        errorMsg.Append(message);
+        nsTextFormatter::smprintf_free(message);
+        break;
+      }
+
+      expected = NS_STATIC_CAST(CToken*,--current);
+    }
+  }
+
+  error->description.Assign(errorMsg);
+
+  error->sourceURL.Assign((PRUnichar*)XML_GetBase(mExpatParser));
+  if (!aIsFinal) {
+    PRInt32 byteIndexRelativeToFile = 0;
+    byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
+    GetLine(aBuffer, aLength, (byteIndexRelativeToFile - mBytesParsed), error->sourceLine);
+  }
+  else {
+    error->sourceLine.Append(mLastLine);
+  }
+
+  errorToken->SetError(error);
+
+  /* Add the error token */
+  CToken* newToken = (CToken*) errorToken;
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);
+
+  /* Add the error message tokens */
+  AddErrorMessageTokens(error);
+
+  return NS_OK;
 }
 
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal)
