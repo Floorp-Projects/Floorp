@@ -921,6 +921,55 @@ nsresult testLatin1Encoder()
   }
 }
 
+/**
+ * Test the Shift-JIS encoder.
+ */
+nsresult testSJISEncoder()
+{
+  char * testName = "T202";
+  printf("\n[%s] UnicodeToSJIS\n", testName);
+
+  // create converter
+  CREATE_ENCODER("Shift_JIS");
+  enc->SetOutputErrorBehavior(enc->kOnError_Replace, NULL, 0x00cc);
+
+  // test data
+  PRUnichar src[] = {
+    0x004A, 0x0061, 0x0070, 0x0061, 0x006E, 0x0065, 0x0073, 0x0065,
+    0x6f22, 0x5b57,
+    0x30ab, 0x30bf, 0x30ab, 0x30ca,
+    0x3072, 0x3089, 0x304c, 0x306a,
+    0xff11, 0xff12, 0xff13, 0xff21, 0xff22, 0xff23
+  };
+  char exp[] = {
+    "Japanese" /* English */
+    "\x8a\xbf\x8e\x9a" /* Kanji */
+    "\x83\x4a\x83\x5e\x83\x4a\x83\x69" /* Kantakana */
+    "\x82\xd0\x82\xe7\x82\xaa\x82\xc8" /* Hiragana */
+    "\x82\x50\x82\x51\x82\x52\x82\x60\x82\x61\x82\x62" /* full width 123ABC */
+  };
+
+  // test converter - easy test
+  res = testEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetEncoder(enc, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // release converter
+  NS_RELEASE(enc);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 nsresult  testPlatformCharset()
 {
   nsIPlatformCharset * cinfo;
@@ -966,6 +1015,7 @@ nsresult testAll()
 
   // test encoders
   testLatin1Encoder();
+  testSJISEncoder();
 
   // older tests - XXX to be rewritten in new style
   testSJISDecoder();
