@@ -201,6 +201,10 @@ H6 {
   font-size: 8pt;
   font-weight: bold;
 }
+LAYER {
+  display: block;
+  position: absolute;
+}
 LISTING {
   display: block;
   font-family: monospace;
@@ -293,7 +297,7 @@ SMALL {
   display: inline;
   font-size: smaller;
 }
-DFN, SPAN {
+ABBR, ACRONYM, DEL, DFN, INS, Q, SPAN {
   display: inline;
 }
 SUB {
@@ -305,4 +309,8 @@ SUP {
   display: inline;
   vertical-align: super;
   font-size: smaller;
+}
+ILAYER {
+  position: absolute;
+  display: inline;
 }
