@@ -71,12 +71,15 @@ private:
 
 #ifdef NS_DEBUG
   Node* DepthFirstSearch(Node* aNode, void* aKey) const;
-  void  VerifyTree(Node* aNode, PtrBits aBitMask) const;
+  void  VerifyTree(Node* aNode, int aLevel = 0, PtrBits aLevelKeyBits = 0) const;
   void  GatherStatistics(Node* aNode,
                          int   aLevel,
                          int&  aNumNodes,
                          int   aNodesPerLevel[]) const;
 #endif
+
+	nsDST(const nsDST&);           // no implementation
+	void operator=(const nsDST&);  // no implementation
 };
 
 #endif /* nsDST_h___ */

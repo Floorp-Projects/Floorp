@@ -130,7 +130,7 @@ nsDST::Insert(void* aKey, void* aValue)
   }
 
 #ifdef NS_DEBUG
-  VerifyTree(mRoot, mLevelZeroBit);
+  VerifyTree(mRoot);
 #endif
   return previousValue;
 }
@@ -199,7 +199,7 @@ nsDST::Remove(void* aKey)
 
     DestroyNode(tmp);
 #ifdef NS_DEBUG
-    VerifyTree(mRoot, mLevelZeroBit);
+    VerifyTree(mRoot);
 #endif
     return value;
   }
@@ -272,20 +272,27 @@ nsDST::DepthFirstSearch(Node* aNode, void* aKey) const
   }
 }
 
+// Helper function that verifies the integrity of the tree
 void
-nsDST::VerifyTree(Node* aNode, PtrBits aBitMask) const
+nsDST::VerifyTree(Node* aNode, int aLevel, PtrBits aLevelKeyBits) const
 {
-  if (aNode->mLeft) {
-    // Verify that the bit in the left child's pointer is 0
-    NS_ASSERTION(0 == (PtrBits(aNode->mLeft->mKey) & aBitMask),
-                 "child in left subtree is invalid");
-    VerifyTree(aNode->mLeft, aBitMask << 1);
-  }
-  if (aNode->mRight) {
-    // Verify that the bit in the right child's pointer is 1
-    NS_ASSERTION((PtrBits(aNode->mRight->mKey) & aBitMask),
-                 "child in right subtree is invalid");
-    VerifyTree(aNode->mRight, aBitMask << 1);
+  if (aNode) {
+    // Verify that the first "aLevel" bits of this node's key agree with the
+    // accumulated key bits that apply to this branch of the tree, i.e., the
+    // path to this node as specified by the bits of the key
+    if (aLevel > 0) {
+      // When calculating the bit mask, take into consideration the low-order
+      // bits we ignore
+      PtrBits bitMask = (mLevelZeroBit << aLevel) - 1;
+      NS_ASSERTION(aLevelKeyBits == (PtrBits(aNode->mKey) & bitMask),
+                   "key's bits don't match");
+    }
+
+    // All node keys in the left subtree should have the next bit set to 0
+    VerifyTree(aNode->mLeft, aLevel + 1, aLevelKeyBits);
+
+    // All node keys in the left subtree should have the next bit set to 1
+    VerifyTree(aNode->mRight, aLevel + 1, aLevelKeyBits | (mLevelZeroBit << aLevel));
   }
 }
 
