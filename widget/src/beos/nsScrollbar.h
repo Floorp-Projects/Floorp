@@ -38,6 +38,7 @@
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
 
+#include "nsISupportsUtils.h"
 #include "nsdefs.h"
 #include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
@@ -49,22 +50,21 @@
 class nsScrollbarBeOS;
 
 /**
- * Native WIN32 scrollbar wrapper. 
+ * Native BeOS scrollbar wrapper. 
  */
 
 class nsScrollbar : public nsWindow,
                     public nsIScrollbar
 {
 
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
 public:
                             nsScrollbar(PRBool aIsVertical);
     virtual                 ~nsScrollbar();
 
-      // nsISupports
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
-    NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
-    NS_IMETHOD_(nsrefcnt) Release(void);          
-
+    NS_IMETHOD Destroy(void);
     // nsIScrollBar implementation
     NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
     NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
