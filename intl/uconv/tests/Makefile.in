@@ -23,7 +23,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= nsTestUConv.cpp  \
-                  nsconv.cpp 
+                  nsconv.cpp \
+		  plattest.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
@@ -34,7 +35,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../ucvja \
 		$(NULL)
 
-LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom -luconv
+LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

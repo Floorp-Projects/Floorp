@@ -22,10 +22,14 @@
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
 #include "nsURLProperties.h"
-
+#include "nsCOMPtr.h"
+#include "nsIPosixLocale.h"
+#include "nsLocaleCID.h"
 #include "nsUConvDll.h"
+#include "nsIComponentManager.h"
 
-
+NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
+NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 
 class nsUNIXCharset : public nsIPlatformCharset
 {
@@ -93,7 +97,45 @@ nsUNIXCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 NS_IMETHODIMP 
 nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
-	return NS_OK;
+  nsCOMPtr<nsIPosixLocale> pPosixLocale;
+  nsString charset("ISO-8859-1"), localeNameAsString(localeName);
+  char posix_locale[9];
+
+  //
+  // convert the locale name
+  //
+  nsresult rv = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,nsnull,
+                                                   kIPosixLocaleIID,
+                                                   getter_AddRefs(pPosixLocale));
+  if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+
+  rv = pPosixLocale->GetPlatformLocale(&localeNameAsString,posix_locale,sizeof(posix_locale));
+  if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+
+  //
+  // convert from locale to charset
+  //
+  nsAutoString property_url("resource:/res/unixcharset.properties"); 
+  nsURLProperties *charset_properties = new nsURLProperties(property_url);
+  
+  if (!charset_properties) { *_retValue=charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+
+
+  nsAutoString locale_key("locale." OSTYPE "."); 
+  locale_key.Append(posix_locale); 
+ 
+  rv = charset_properties->Get(locale_key,charset);
+  if(NS_FAILED(rv)) { 
+    locale_key="locale.all."; 
+    locale_key.Append(posix_locale); 
+    rv = charset_properties->Get(locale_key,charset); 
+    if(NS_FAILED(rv)) { charset="ISO-8859-1";}
+  }
+
+  delete charset_properties;
+  *_retValue = charset.ToNewUnicode();
+	return rv;
+
 }
 
 class nsUNIXCharsetFactory : public nsIFactory {
