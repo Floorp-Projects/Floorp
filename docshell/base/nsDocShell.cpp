@@ -2526,7 +2526,7 @@ nsDocShell::Create()
     // so read it in once here and be done with it...
     mPrefs->GetBoolPref("network.protocols.useSystemDefaults",
                         &mUseExternalProtocolHandler);
-    mPrefs->GetBoolPref("browser.target_new_blocked", &mDisallowPopupWindows);
+    mPrefs->GetBoolPref("browser.block.target_new_window", &mDisallowPopupWindows);
     mPrefs->GetBoolPref("browser.frames.enabled", &mAllowSubframes);
 
     // Check pref to see if we should prevent frameset spoofing
