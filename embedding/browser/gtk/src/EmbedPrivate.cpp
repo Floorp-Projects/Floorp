@@ -94,19 +94,26 @@ nsProfileDirServiceProvider *EmbedPrivate::sProfileDirServiceProvider = nsnull;
 NS_GENERIC_FACTORY_CONSTRUCTOR(GtkPromptService)
 #endif
 
-static const nsModuleComponentInfo defaultAppComps[] = {
 #ifdef MOZ_WIDGET_GTK2
+
+static const nsModuleComponentInfo defaultAppComps[] = {
   {
     "Prompt Service",
     NS_PROMPTSERVICE_CID,
     "@mozilla.org/embedcomp/prompt-service;1",
     GtkPromptServiceConstructor
   }
-#endif
 };
 
 const nsModuleComponentInfo *EmbedPrivate::sAppComps = defaultAppComps;
 int   EmbedPrivate::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
+
+#else
+
+const nsModuleComponentInfo *EmbedPrivate::sAppComps = nsnull;
+int   EmbedPrivate::sNumAppComps = 0;
+
+#endif
 
 EmbedPrivate::EmbedPrivate(void)
 {
