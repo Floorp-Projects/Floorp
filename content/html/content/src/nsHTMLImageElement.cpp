@@ -245,6 +245,9 @@ NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 nsresult
 nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
 {
+  NS_ENSURE_ARG_POINTER(aImageFrame);
+  *aImageFrame = nsnull;
+
   nsresult result;
   nsCOMPtr<nsIPresContext> context;
   nsCOMPtr<nsIPresShell> shell;
