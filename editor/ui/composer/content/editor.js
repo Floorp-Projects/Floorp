@@ -1431,11 +1431,12 @@ function EditorSetDefaultPrefs()
     var prefCharsetString = 0;
     try
     {
-      prefCharsetString = gPrefs.CopyCharPref("intl.charset.default");
+      prefCharsetString = gPrefs.getLocalizedUnicharPref("intl.charset.default");
     }
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
     {
+dump("\n**************** frank tang ********\n");
         var element = domdoc.createElement("meta");
         if ( element )
         {
