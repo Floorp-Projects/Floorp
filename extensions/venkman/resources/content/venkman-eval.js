@@ -44,6 +44,8 @@ function con_eval(__s)
     }
     catch (__ex)
     {
+        dd ("doEval caught: " + __ex);
+        
         if (__ex.fileName && __ex.fileName.search (/venkman-eval.js$/) != -1)
         {
             __ex.fileName = MSG_VAL_CONSOLE;
