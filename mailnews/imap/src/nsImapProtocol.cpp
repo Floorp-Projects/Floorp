@@ -163,6 +163,9 @@ static PRInt32 gChunkThreshold = 10240 + 4096;
 static PRBool gFetchByChunks = PR_TRUE;
 static PRInt32 gMaxChunkSize = 40960;
 static PRBool gInitialized = PR_FALSE;
+static PRBool gHideUnusedNamespaces = PR_TRUE;
+static PRBool gHideOtherUsersFromList = PR_FALSE;
+
 nsresult nsImapProtocol::GlobalInitialization()
 {
   nsresult rv;
@@ -175,6 +178,10 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefs->GetIntPref("mail.imap.chunk_size", &gChunkSize);
     prefs->GetIntPref("mail.imap.min_chunk_size_threshold", &gChunkThreshold);
     prefs->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
+    prefs->GetBoolPref("mail.imap.hide_other_users",
+                       &gHideOtherUsersFromList);
+    prefs->GetBoolPref("mail.imap.hide_unused_namespaces",
+                       &gHideUnusedNamespaces);
   }
   gInitialized = PR_TRUE;
   return rv;
@@ -5257,8 +5264,101 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 
 void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
 {
-	printf("jefft fix DiscoverAllAndSubscribedBoxes() to be like 4.x\n");
-	DiscoverMailboxList();
+	// used for subscribe pane
+	// iterate through all namespaces
+    PRUint32 count = 0;
+    m_hostSessionList->GetNumberOfNamespacesForHost(GetImapServerKey(), count);
+
+	for (PRUint32 i = 0; i < count; i++ )
+	{
+		nsIMAPNamespace *ns = nsnull;
+
+        m_hostSessionList->GetNamespaceNumberForHost(GetImapServerKey(), i,
+                                                     ns);
+		if (ns &&
+			gHideOtherUsersFromList ? (ns->GetType() != kOtherUsersNamespace)
+            : TRUE)
+		{
+			const char *prefix = ns->GetPrefix();
+			if (prefix)
+			{
+				if (!gHideUnusedNamespaces && *prefix &&
+                    PL_strcasecmp(prefix, "INBOX.")) /* only do it for
+                     non-empty namespace prefixes */
+				{
+					// Explicitly discover each Namespace, just so they're
+                    // there in the subscribe UI 
+					nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
+					if (boxSpec)
+					{
+                        NS_ADDREF(boxSpec);
+						boxSpec->folderSelected = PR_FALSE;
+						boxSpec->hostName = nsCRT::strdup(GetImapHostName());
+						boxSpec->connection = this;
+						boxSpec->flagState = nsnull;
+						boxSpec->discoveredFromLsub = PR_TRUE;
+						boxSpec->onlineVerified = PR_TRUE;
+						boxSpec->box_flags = kNoselect;
+						boxSpec->hierarchySeparator = ns->GetDelimiter();
+						m_runningUrl->AllocateCanonicalPath(
+                            ns->GetPrefix(), ns->GetDelimiter(),
+                            &boxSpec->allocatedPathName);
+						boxSpec->namespaceForFolder = ns;
+                        boxSpec->box_flags |= kNameSpace;
+
+						switch (ns->GetType())
+						{
+						case kPersonalNamespace:
+							boxSpec->box_flags |= kPersonalMailbox;
+							break;
+						case kPublicNamespace:
+							boxSpec->box_flags |= kPublicMailbox;
+							break;
+						case kOtherUsersNamespace:
+							boxSpec->box_flags |= kOtherUsersMailbox;
+							break;
+						default:	// (kUnknownNamespace)
+							break;
+						}
+
+						DiscoverMailboxSpec(boxSpec);
+					}
+					else
+						HandleMemoryFailure();
+				}
+
+                nsCAutoString allPattern = prefix;
+                allPattern += '*';
+
+                nsCAutoString topLevelPattern = prefix;
+                topLevelPattern += '%';
+
+                nsCAutoString secondLevelPattern;
+
+				char delimiter = ns->GetDelimiter();
+				if (delimiter)
+				{
+					// Hierarchy delimiter might be NIL, in which case there's no hierarchy anyway
+                    secondLevelPattern = prefix;
+                    secondLevelPattern += '%';
+                    secondLevelPattern += delimiter;
+                    secondLevelPattern += '%';
+				}
+				if (allPattern.Length())
+				{
+					Lsub(allPattern, PR_TRUE);	// LSUB all the subscribed
+				}
+				if (topLevelPattern.Length())
+				{
+					List(topLevelPattern, PR_TRUE);	// LIST the top level
+				}
+				if (secondLevelPattern.Length())
+				{
+					List(secondLevelPattern, PR_TRUE);	// LIST the second level
+				}
+			}
+		}
+	}
 }
 
 // DiscoverMailboxList() is used to actually do the discovery of folders
@@ -5293,7 +5393,7 @@ void nsImapProtocol::DiscoverMailboxList()
       const char *prefix = ns->GetPrefix();
       if (prefix)
       {
-        static PRBool gHideUnusedNamespaces = PR_TRUE;
+        // static PRBool gHideUnusedNamespaces = PR_TRUE;
         // mscott -> WARNING!!! i where are we going to get this
                 // global variable for unusued name spaces from??? *wince*
         // dmb - we should get this from a per-host preference,

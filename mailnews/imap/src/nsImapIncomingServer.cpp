@@ -167,8 +167,12 @@ NS_IMETHODIMP
 nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
 {
     nsCAutoString dirString = serverDirectory;
-    if (dirString.Last() != '/')
-        dirString += '/';
+
+    if (dirString.Length() > 0)
+    {
+        if (dirString.Last() != '/')
+            dirString += '/';
+    }
     nsXPIDLCString serverKey;
     nsresult rv = GetKey(getter_Copies(serverKey));
     if (NS_SUCCEEDED(rv))
