@@ -356,6 +356,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   //longest element in the list
   nsHTMLReflowState secondPassState(aReflowState);
   nsHTMLReflowState firstPassState(aReflowState);
+
   //nsHTMLReflowState   firstPassState(aPresContext, nsnull,
   //                                   this, aDesiredSize);
 
@@ -454,7 +455,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       visibleWidth = scrolledAreaWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth - scrollbarWidth;
-      visibleWidth  -= (border.left + border.right + padding.left + padding.right);
+      // XXX rods - this hould not be subtracted in
+      //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
     }
   }
   
