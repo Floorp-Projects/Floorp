@@ -1753,7 +1753,6 @@ static JSValue objectEqual(Context *cx, const JSValue& /*thisValue*/, JSValue *a
     return compareEqual(cx, r1, r2);
 }
 
-
 void Context::initOperators()
 {
     struct OpTableEntry {
@@ -1801,7 +1800,8 @@ void Context::initOperators()
         { Less, Object_Type, Object_Type, objectLess, Boolean_Type },
         { LessEqual, Object_Type, Object_Type, objectLessEqual, Boolean_Type },
 
-        { Equal, Object_Type, Object_Type, objectEqual, Boolean_Type },
+        { Equal, Object_Type, Object_Type, objectEqual, Boolean_Type }
+
     };
 
     for (uint32 i = 0; i < sizeof(OpTable) / sizeof(OpTableEntry); i++) {

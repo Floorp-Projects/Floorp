@@ -681,7 +681,7 @@ XXX ...couldn't get this to work...
         JSType(Context *cx, const StringAtom *name, JSType *super);
         JSType(JSType *xClass);     // used for constructing the static component type
 
-        virtual ~JSType() { } // keeping gcc happy
+        virtual ~JSType() { }       // keeping gcc happy
 
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSType", s, t); return t; }
@@ -733,7 +733,8 @@ XXX ...couldn't get this to work...
 
         void setDefaultConstructor(Context *cx, JSFunction *f)
         {
-            defineConstructor(cx, *mClassName, NULL, f);    // XXX attr?
+            mDefaultConstructor = f;
+//            defineConstructor(cx, *mClassName, NULL, f);    // XXX attr?
         }
 
         void addMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
@@ -751,7 +752,7 @@ XXX ...couldn't get this to work...
 
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
-        JSFunction *getDefaultConstructor();
+        JSFunction *getDefaultConstructor() { return mDefaultConstructor; }
 
         JSValue getUninitializedValue()    { return mUninitializedValue; }
 
@@ -764,6 +765,7 @@ XXX ...couldn't get this to work...
 
         uint32          mVariableCount;
         JSFunction      *mInstanceInitializer;
+        JSFunction      *mDefaultConstructor;
 
         // the 'vtable'
         MethodList          mMethods;
@@ -805,8 +807,8 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(Context *cx, const StringAtom *name, JSType *super) 
-            : JSType(cx, name, super)
+        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super) 
+            : mElementType(elementType), JSType(cx, name, super)
         {
         }
         virtual ~JSArrayType() { } // keeping gcc happy
@@ -817,6 +819,8 @@ XXX ...couldn't get this to work...
 #endif
 
         JSInstance *newInstance(Context *cx);
+
+        JSType *mElementType;
 
     };
 

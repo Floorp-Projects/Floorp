@@ -723,12 +723,37 @@ JSType *ScopeChain::extractType(ExprNode *t)
 {
     JSType *type = Object_Type;
     if (t) {
-        if (t->getKind() == ExprNode::identifier) {
-            IdentifierExprNode* typeExpr = checked_cast<IdentifierExprNode *>(t);
-            type = findType(typeExpr->name, t->pos);
-        }
-        else
+        switch (t->getKind()) {
+        case ExprNode::identifier:
+            {
+                IdentifierExprNode* typeExpr = checked_cast<IdentifierExprNode *>(t);
+                type = findType(typeExpr->name, t->pos);
+            }
+            break;
+        case ExprNode::index:
+            // array type
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(t);
+                JSType *base = extractType(i->op);
+                JSType *element = Object_Type;
+                ExprPairList *p = i->pairs;
+                if (p != NULL) {
+                    element = extractType(p->value);
+                    ASSERT(p->next == NULL);
+                }
+                ASSERT(base == Array_Type);
+                if (element == Object_Type)
+                    type = Array_Type;
+                else {
+                    type = new JSArrayType(m_cx, element, NULL, Object_Type);    // XXX or is this a descendat of Array[Object]?
+                    type->setDefaultConstructor(m_cx, Array_Type->getDefaultConstructor());
+                }
+            }
+            break;
+        default:
             NOT_REACHED("implement me - more complex types");
+            break;
+        }
     }
     return type;
 }
@@ -999,13 +1024,18 @@ void ScopeChain::collectNames(StmtNode *p)
                     }                    
                 }
                 else {
+                    bool isDefaultConstructor = false;
                     if (topClass() && (topClass()->mClassName->compare(name) == 0)) {
                         isConstructor = true;
                         fnc->setIsConstructor(true);
+                        isDefaultConstructor = true;
                     }
                     if (!isNestedFunction()) {
-                        if (isConstructor)
+                        if (isConstructor) {
                             defineConstructor(m_cx, name, f, fnc);
+                            if (isDefaultConstructor)
+                                topClass()->setDefaultConstructor(m_cx, fnc);
+                        }
                         else {
                             switch (f->function.prefix) {
                             case FunctionName::Get:
@@ -1086,9 +1116,11 @@ void JSType::completeClass(Context *cx, ScopeChain *scopeChain)
         fnc->setByteCode(bcm);        
 
         scopeChain->defineConstructor(cx, *mClassName, NULL, fnc);   // XXX attributes?
+        setDefaultConstructor(cx, fnc);
     }
 }
 
+/*
 // constructor functions are added as static methods
 // XXX is it worth just having a default constructor 
 // pointer in the class?
@@ -1103,7 +1135,7 @@ JSFunction *JSType::getDefaultConstructor()
     }
     return NULL;
 }
-
+*/
 void JSType::defineMethod(Context *cx, const String& name, AttributeStmtNode *attr, JSFunction *f)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
@@ -1256,12 +1288,17 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super)
                     mSuperType(super), 
                     mVariableCount(0),
                     mInstanceInitializer(NULL),
+                    mDefaultConstructor(NULL),
                     mClassName(name),
-                    mPrivateNamespace(&cx->mWorld.identifiers[*name + " private"]),
                     mIsDynamic(false),
                     mUninitializedValue(kNullValue),
                     mPrototypeObject(NULL)
 {
+    if (mClassName)
+        mPrivateNamespace = &cx->mWorld.identifiers[*mClassName + " private"];
+    else
+        mPrivateNamespace = &cx->mWorld.identifiers["unique id needed? private"]; // XXX. No, really?
+
     for (uint32 i = 0; i < OperatorCount; i++)
         mUnaryOperators[i] = NULL;
 
@@ -1277,6 +1314,7 @@ JSType::JSType(JSType *xClass)     // used for constructing the static component
                     mSuperType(xClass), 
                     mVariableCount(0),
                     mInstanceInitializer(NULL),
+                    mDefaultConstructor(NULL),
                     mClassName(NULL),
                     mPrivateNamespace(NULL),
                     mIsDynamic(false),
@@ -1783,7 +1821,21 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
     if (pdef) delete pdef;
 }
 
+static JSValue arrayMaker(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    ASSERT(argc == 2);
+    ASSERT(argv[0].isType() && argv[1].isType());
 
+    JSType *baseType = argv[0].type;
+    ASSERT(baseType == Array_Type);
+
+    JSType *elementType = argv[1].type;
+
+    JSType *result = new JSArrayType(cx, elementType, NULL, Object_Type);
+    result->setDefaultConstructor(cx, Array_Type->getDefaultConstructor());
+
+    return JSValue(result);
+}
 
 void Context::initBuiltins()
 {
@@ -1812,7 +1864,7 @@ void Context::initBuiltins()
     Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
     String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
-    Array_Type          = new JSArrayType(this, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
+    Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
     Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
     Void_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
     Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
@@ -1870,6 +1922,9 @@ void Context::initBuiltins()
     initClass(Unit_Type,            &builtInClasses[9],  NULL);
     initClass(Attribute_Type,       &builtInClasses[10], NULL);
     initClass(NamedArgument_Type,   &builtInClasses[11], NULL);
+
+    Type_Type->defineUnaryOperator(Index, new JSFunction(arrayMaker, Type_Type));
+
 }
 
 

@@ -2360,7 +2360,7 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case SetElementOp:
         {
             uint16 u = bcm.getShort(i);
-            printFormat(f, "%uh", u);
+            printFormat(f, "%hu", u);
             i += 2;
         }
         break;
@@ -2375,7 +2375,7 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case DupInsertNOp:
         {
             uint16 u = bcm.getShort(i);
-            printFormat(f, "%uh", u);
+            printFormat(f, "%hu", u);
             i += 2;
         }
         break;
