@@ -356,10 +356,9 @@ function EditorGetScriptFileSpec()
 
 function EditorStartLog()
 {
-  var fs;
-
-  fs = EditorGetScriptFileSpec();
-  editorShell.StartLogging(fs);
+  var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
+  var fs = EditorGetScriptFileSpec();
+  edlog.startLogging(fs);
   window._content.focus();
 
   fs = null;
@@ -367,7 +366,8 @@ function EditorStartLog()
 
 function EditorStopLog()
 {
-  editorShell.StopLogging();
+  var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
+  edlog.stopLogging();
   window._content.focus();
 }
 

@@ -34,6 +34,7 @@ nsICiter.idl
 nsIEditActionListener.idl
 nsIEditorIMESupport.idl
 nsIEditorObserver.idl
+nsIEditorLogging.idl
 nsIEditorMailSupport.idl
 nsIEditorStyleSheets.idl
 nsITableEditor.idl
