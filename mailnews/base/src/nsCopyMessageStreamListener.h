@@ -28,7 +28,7 @@ class nsCopyMessageStreamListener : public nsIStreamListener {
 public:
 	nsCopyMessageStreamListener(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination,
 								nsISupports *listenerData);
-	~nsCopyMessageStreamListener();
+	virtual ~nsCopyMessageStreamListener();
 
 	NS_DECL_ISUPPORTS
 
