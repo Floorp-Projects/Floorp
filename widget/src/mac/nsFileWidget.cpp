@@ -600,6 +600,15 @@ bail_wo_IC:
 }
 
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+NS_IMETHODIMP  nsFileWidget::GetSelectedType(PRInt16& theType)
+{
+  theType = mSelectedType;
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
 //
 // Get the file + path
 //
@@ -628,7 +637,7 @@ NS_IMETHODIMP  nsFileWidget::SetDefaultString(const nsString& aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
+NS_IMETHODIMP  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -640,7 +649,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
+NS_IMETHODIMP  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
   aDirectory = mDisplayDirectory;
   return NS_OK;

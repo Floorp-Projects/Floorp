@@ -70,6 +70,8 @@ class nsFileWidget : public nsIFileWidget
      const nsString   & promptString,    // Window title for the dialog
      nsFileSpec       & theFileSpec);    // Populate with initial path for file dialog
 
+    NS_IMETHOD            GetSelectedType(PRInt16& theType);
+
   protected:
 
      HWND                   mWnd;
@@ -84,6 +86,7 @@ class nsFileWidget : public nsIFileWidget
 
 
      void GetFilterListArray(nsString& aFilterList);
+     PRInt16				mSelectedType;
 };
 
 #endif // nsFileWidget_h__

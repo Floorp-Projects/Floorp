@@ -96,6 +96,17 @@ public:
 
   NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]) = 0;
 
+  
+ /**
+  * Get the index into the filter list for the type of file the user wants to save
+  *
+  * @param      theType          the index into the filter list
+  * @return     void
+  *
+  */
+
+  NS_IMETHOD GetSelectedType(PRInt16& theType) = 0;
+
  /**
   * Show File Dialog. The dialog is displayed modally.
   *
@@ -156,6 +167,7 @@ public:
     nsIWidget        * aParent,
     const nsString   & promptString,    // Window title for the dialog
     nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog 
+
 };
 
 #endif // nsIFileWidget_h__

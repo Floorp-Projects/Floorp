@@ -125,6 +125,9 @@ PRBool nsFileWidget::Show()
   else {
     NS_ASSERTION(0, "Only load and save are supported modes"); 
   }
+  
+  // Remember what filter type the user selected
+  mSelectedType = ofn.nFilterIndex;
 
    // Store the current directory in mDisplayDirectory
   char* newCurrentDirectory = new char[MAX_PATH+1];
@@ -181,9 +184,17 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsStri
 }
 
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+NS_IMETHODIMP  nsFileWidget::GetSelectedType(PRInt16& theType)
+{
+  theType = mSelectedType;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
+NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   Show();
   nsFilePath filePath(mFile);
