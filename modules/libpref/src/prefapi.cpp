@@ -1015,7 +1015,7 @@ PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc)
 PR_IMPLEMENT(PrefResult)
 PREF_SavePrefFile()
 {
-#if 0// defined(XP_MAC) || defined(XP_PC)
+#if 0 /* defined(XP_MAC) || defined(XP_PC) */
     return (PrefResult)pref_SaveProfile();
 #else
     if (!m_HashTable)
@@ -2196,13 +2196,13 @@ PrefResult pref_DoCallback(const char* changed_pref)
 }
 
 /* !! Front ends need to implement */
-#ifndef XP_MAC // see macpref.cp
+#ifndef XP_MAC /* see macpref.cp */
 PR_IMPLEMENT(PRBool)
 PREF_IsAutoAdminEnabled()
 {
 	return PR_TRUE;
 }
-#endif // XP_MAC
+#endif /* XP_MAC */
 
 /* Called from JavaScript */
 typedef char* (*ldap_func)(char*, char*, char*, char*, char**); 
