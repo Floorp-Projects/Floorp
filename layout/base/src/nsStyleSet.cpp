@@ -30,12 +30,6 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
 
-// XXX Temporary fix to make sure that ua.css only gets applied
-// to HTML content. When this removed, remember to get rid of
-// the include dependency in the makefile.
-#include "nsIHTMLContent.h"
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
-
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
