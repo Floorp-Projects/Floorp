@@ -636,8 +636,8 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     // make a style rule that maps to the equivalent CSS property
     nsAutoString cssRule;
     cssRule.Assign(NS_LITERAL_STRING("[")  + nsDependentString(attrName) +
-                   NS_LITERAL_STRING("='") + attrValue + NS_LITERAL_STRING("']{"));
-    cssRule.Append(cssProperty + NS_LITERAL_STRING("}"));
+                   NS_LITERAL_STRING("='") + attrValue +
+                   NS_LITERAL_STRING("']{") + cssProperty + NS_LITERAL_STRING("}"));
 
     if (!sheet) {
       // first time... we do this to defer the lookup up to the
@@ -659,17 +659,35 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
       sheet->SetOwningDocument(nsnull);
     }
 
-    // insert the rule (note: when the sheet has @namespace and friends,
-    // insert after them, e.g., at the end, otherwise it won't work)
-    PRInt32 pos = 0;
-    if (map->compatibility == kMathMLversion2) {
-      // MathML 2, insert at the end to give it precedence
-      cssSheet->StyleRuleCount(pos);
+    // check for duplicate, if a similar rule is already there, don't bother to add another one
+    // XXX bug 142648 - GetSourceSelectorText is in the format *[color=blue] (i.e., no quotes...) 
+    // XXXrbs need to keep this in sync with the fix for bug 142648
+    nsAutoString selector;
+    selector.Assign(NS_LITERAL_STRING("*[") + nsDependentString(attrName) +
+                    NS_LITERAL_STRING("=") + attrValue +
+                    NS_LITERAL_STRING("]"));
+    PRInt32 k, count;
+    cssSheet->StyleRuleCount(count);
+    for (k = 0; k < count; ++k) {
+      nsAutoString tmpSelector;
+      nsCOMPtr<nsICSSRule> tmpRule;
+      cssSheet->GetStyleRuleAt(k, *getter_AddRefs(tmpRule));
+      nsCOMPtr<nsICSSStyleRule> tmpStyleRule(do_QueryInterface(tmpRule));
+      tmpStyleRule->GetSourceSelectorText(tmpSelector);
+      if (tmpSelector.Equals(selector)) {
+        k = -1;
+        break;
+      }
     }
-    //XXX possibly check for duplicate, but might be faster to just insert
-    PRUint32 index;
-    domSheet->InsertRule(cssRule, pos, &index);
-    ++ruleCount;
+    if (k >= 0) {
+      // insert the rule (note: when the sheet already has @namespace and
+      // friends, insert after them, e.g., at the end, otherwise it won't work)
+      // For MathML 2, insert at the end to give it precedence
+      PRInt32 pos = (map->compatibility == kMathMLversion2) ? count : 0;
+      PRUint32 index;
+      domSheet->InsertRule(cssRule, pos, &index);
+      ++ruleCount;
+    }
   }
   // restore the sheet to its owner
   if (sheet) {

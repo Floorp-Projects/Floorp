@@ -1071,6 +1071,16 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                          PRInt32         aModType, 
                                          PRInt32         aHint)
 {
+  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
+      aAttribute == nsMathMLAtoms::color_          ||
+      aAttribute == nsMathMLAtoms::mathsize_       ||
+      aAttribute == nsMathMLAtoms::fontsize_       ||
+      aAttribute == nsMathMLAtoms::fontfamily_     ||
+      aAttribute == nsMathMLAtoms::mathbackground_ ||
+      aAttribute == nsMathMLAtoms::background_) {
+    MapAttributesIntoCSS(aPresContext, this);
+  }
+
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   return ReflowDirtyChild(presShell, nsnull);
