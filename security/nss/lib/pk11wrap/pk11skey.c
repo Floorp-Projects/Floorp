@@ -3003,8 +3003,8 @@ PK11SymKey *
 PK11_PubDeriveExtended(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
 	PRBool isSender, SECItem *randomA, SECItem *randomB, 
 	CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
-	CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx,
-	CK_ULONG kdf, SECItem *sharedData)
+	CK_ATTRIBUTE_TYPE operation, int keySize,
+	CK_ULONG kdf, SECItem *sharedData, void *wincx)
 {
     PK11SlotInfo *slot = privKey->pkcs11Slot;
     PK11SymKey *symKey;

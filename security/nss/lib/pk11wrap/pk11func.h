@@ -333,8 +333,8 @@ PK11SymKey *PK11_PubDerive( SECKEYPrivateKey *privKey,
 PK11SymKey *PK11_PubDeriveExtended( SECKEYPrivateKey *privKey, 
  SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
  CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
-		 CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx,
-		 CK_ULONG kdf, SECItem *sharedData);
+		 CK_ATTRIBUTE_TYPE operation, int keySize,
+		 CK_ULONG kdf, SECItem *sharedData, void *wincx);
 
 /*
  * unwrap a new key with a symetric key.
