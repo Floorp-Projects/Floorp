@@ -31,6 +31,8 @@
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
 
+#define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
+
 #if defined(PR_LOGGING)
 //
 // Log module for nsFileTransport logging...
@@ -204,7 +206,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     NS_ADDREF(fileIn);
     rv = fileIn->Init(mFile, mIOFlags, mPerm);
     if (NS_SUCCEEDED(rv)) {
-#ifdef NO_BUFFERING
+#ifdef NS_NO_INPUT_BUFFERING
         *aInputStream = fileIn;
         NS_ADDREF(*aInputStream);
 #else
@@ -237,7 +239,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
     rv = fileOut->Init(mFile, mIOFlags, mPerm);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIOutputStream> bufStr;
-#ifdef NO_BUFFERING
+#ifdef NS_NO_OUTPUT_BUFFERING
         *aOutputStream = fileOut;
         NS_ADDREF(*aOutputStream);
 #else
