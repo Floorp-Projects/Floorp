@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIDOMXULDocument.h"
+
 #include "nsMenu.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
@@ -310,9 +316,56 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
   nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aMenuItem));
   if (menuItem) {
     menuItem->GetLabel(name);
+	printf("%s \n", name.ToNewCString());
     nsIWidget * win = GetParentWidget();
     PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
-    ((nsMenuItem *)((nsIMenuItem *)menuItem))->SetCmdId(id);
+    ((nsMenuItem *)((nsIMenuItem *)menuItem))->SetCmdId(id);   
+
+	//NS_ASSERTION(false, "get debugger");
+
+	PRUint8 modifiers = knsMenuItemNoModifier;
+    menuItem->GetModifiers(&modifiers);
+
+    if(modifiers != knsMenuItemNoModifier) {
+          //strcat the shortcut to the end of the name
+          nsString shortcut = "\t";
+  
+          name.Append(shortcut);
+
+          //Ctrl + Alt + Shift
+          PRBool isFirst = PR_TRUE;
+          if((knsMenuItemCommandModifier & modifiers) || (knsMenuItemControlModifier & modifiers))
+		  {
+            isFirst = PR_FALSE;
+		  }
+
+          if(knsMenuItemAltModifier & modifiers)
+		  {
+	        if(isFirst)
+	 	      isFirst = PR_FALSE;
+	        else
+		      name.Append(" + ");
+
+            name.Append("Alt");
+		  }
+
+          if(knsMenuItemShiftModifier & modifiers)
+		  {
+	        if(isFirst)
+		      isFirst = PR_FALSE;
+	        else
+		      name.Append(" + ");
+
+	        name.Append("Shift");
+		  }
+        
+          menuItem->GetShortcutChar(shortcut);
+
+          if(!isFirst)
+            name.Append(" + ");
+
+          name.Append(shortcut);
+	}
 
     char * nameStr = GetACPString(name);
 
@@ -582,10 +635,7 @@ void nsMenu::LoadMenuItem(
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, 0);   
 	
-    nsISupports * supports = nsnull;
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
-    pParentMenu->AddItem(supports); // Parent should now own menu item
-    NS_RELEASE(supports);
+
           
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
@@ -600,6 +650,7 @@ void nsMenu::LoadMenuItem(
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
+    printf("%s \n", cmdName.ToNewCString());
 
     pnsMenuItem->SetCommand(cmdName);
 	// DO NOT use passed in wehshell because of messed up windows dynamic loading
@@ -607,8 +658,72 @@ void nsMenu::LoadMenuItem(
     pnsMenuItem->SetWebShell(mWebShell);
     pnsMenuItem->SetDOMElement(domElement);
 
+	//NS_ASSERTION(false, "get debugger");
+    // Set key shortcut and modifiers
+    nsAutoString keyAtom("key");
+    nsString keyValue;
+    domElement->GetAttribute(keyAtom, keyValue);
+
+    // Try to find the key node.
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
+    if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+      NS_ERROR("Unable to retrieve the document.");
+      return; //rv;
+    }
+
+    // Turn the document into a XUL document so we can use getElementById
+    nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+    if (xulDocument == nsnull) {
+      NS_ERROR("not XUL!");
+      return; //NS_ERROR_FAILURE;
+    }
+  
+    nsIDOMElement * keyElement = nsnull;
+    xulDocument->GetElementById(keyValue, &keyElement);
+    
+    if(keyElement){
+        PRUint8 modifiers = knsMenuItemNoModifier;
+	    nsAutoString shiftAtom("shift");
+	    nsAutoString altAtom("alt");
+	    nsAutoString commandAtom("command");
+	    nsString shiftValue;
+	    nsString altValue;
+	    nsString commandValue;
+		nsString controlValue;
+	    nsString keyChar = " ";
+	    
+	    keyElement->GetAttribute(keyAtom, keyChar);
+	    keyElement->GetAttribute(shiftAtom, shiftValue);
+	    keyElement->GetAttribute(altAtom, altValue);
+	    keyElement->GetAttribute(commandAtom, commandValue);
+	    
+		if(keyChar != " ") 
+	      pnsMenuItem->SetShortcutChar(keyChar);
+	      
+		if(shiftValue == "true") 
+		  modifiers |= knsMenuItemShiftModifier;
+	    
+	    if(altValue == "true")
+	      modifiers |= knsMenuItemAltModifier;
+	    
+	    if(commandValue == "true")
+	      modifiers |= knsMenuItemCommandModifier;
+
+		if(controlValue == "true")
+	      modifiers |= knsMenuItemControlModifier;
+	      
+        pnsMenuItem->SetModifiers(modifiers);
+    }
+
+
 	if(disabled == NS_STRING_TRUE )
 		::EnableMenuItem(mMenu, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
+
+	nsISupports * supports = nsnull;
+    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->AddItem(supports); // Parent should now own menu item
+    NS_RELEASE(supports);
 
 	NS_RELEASE(pnsMenuItem);
   } 

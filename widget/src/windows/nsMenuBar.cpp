@@ -302,7 +302,6 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 		name.Insert("&", offset);
   }
 
-  //strcat the accelerator to the end of the name
 
   char * nameStr = GetACPString(name);
 
