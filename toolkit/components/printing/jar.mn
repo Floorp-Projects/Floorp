@@ -26,4 +26,4 @@ classic.jar:
 +  skin/classic/global/Landscape-small.png          (skin/Landscape-small.png)
 +  skin/classic/global/Portrait.png                 (skin/Portrait.png)
 +  skin/classic/global/Portrait-small.png           (skin/Portrait-small.png)
-+  skin/classic/global/printing.css                 (skin/printing.css)
+*+ skin/classic/global/printing.css                 (skin/printing.css)
