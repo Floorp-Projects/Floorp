@@ -51,6 +51,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
+#include "nsICSSLoader.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -450,8 +451,6 @@ public:
   NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
 
-public:
-  
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
 
@@ -514,8 +513,6 @@ public:
 protected:
   NS_IMETHOD GetDTD(nsIDTD** aDTD) const;
 
-protected:
-
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hooks for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
@@ -566,10 +563,15 @@ protected:
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
+
+  PRBool mIsGoingAway; // True if the document is being destroyed.
+
   nsSupportsHashtable* mBoxObjectTable;
   PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
 
   nsSupportsHashtable mContentWrapperHash;
+
+  nsCOMPtr<nsICSSLoader> mCSSLoader;
 
 private:
   // These are not implemented and not supported.

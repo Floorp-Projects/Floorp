@@ -23,7 +23,6 @@
 
 
 #include "nsMarkupDocument.h"
-#include "nsIURL.h"
 
 #include "nsLayoutCID.h"
 #include "nsIPresShell.h"

@@ -33,14 +33,17 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "nsStyleLinkElement.h"
+#include "nsNetUtil.h"
+#include "nsIDocument.h"
+#include "nsHTMLUtils.h"
 
 // XXX no SRC attribute
 
 
 class nsHTMLStyleElement : public nsGenericHTMLContainerElement,
                            public nsIDOMHTMLStyleElement,
-                           public nsIDOMLinkStyle,
-                           public nsIStyleSheetLinkingElement
+                           public nsStyleLinkElement
 {
 public:
   nsHTMLStyleElement();
@@ -61,17 +64,48 @@ public:
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
 
-  // nsIDOMLinkStyle
-  NS_DECL_NSIDOMLINKSTYLE
-
-  // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers) {
+    nsIDocument *oldDoc = mDocument;
+    nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                             aCompileEventHandlers);
+    UpdateStyleSheet(PR_TRUE, oldDoc);
+    return rv;
+  }
+ 
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsAReadableString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::SetAttribute(aNameSpaceID, aName,
+                                                              aValue, aNotify);
+    UpdateStyleSheet(aNotify);
+    return rv;
+  }
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsAReadableString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::SetAttribute(aNodeInfo, aValue,
+                                                              aNotify);
+    UpdateStyleSheet(aNotify);
+    return rv;
+  }
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                            PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::UnsetAttribute(aNameSpaceID,
+                                                                aAttribute,
+                                                                aNotify);
+    UpdateStyleSheet(aNotify);
+    return rv;
+  }
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsIStyleSheet* mStyleSheet;
+  virtual void GetStyleSheetInfo(nsAWritableString& aUrl,
+                                 nsAWritableString& aTitle,
+                                 nsAWritableString& aType,
+                                 nsAWritableString& aMedia,
+                                 PRBool* aDoBlock);
+
+  nsresult GetHrefCString(char* &aBuf);
 };
 
 nsresult
@@ -103,12 +137,12 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLStyleElement::nsHTMLStyleElement()
 {
-  mStyleSheet = nsnull;
+  nsHTMLUtils::AddRef(); // for GetHrefCString
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
-  NS_IF_RELEASE(mStyleSheet);
+  nsHTMLUtils::Release(); // for GetHrefCString
 }
 
 
@@ -130,6 +164,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLStyleElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLStyleElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -200,26 +235,6 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
-NS_IMETHODIMP 
-nsHTMLStyleElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
-{
-  NS_IF_RELEASE(mStyleSheet);
-
-  mStyleSheet = aStyleSheet;
-  NS_IF_ADDREF(mStyleSheet);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsHTMLStyleElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
-{
-  aStyleSheet = mStyleSheet;
-  NS_IF_ADDREF(aStyleSheet);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -228,18 +243,107 @@ nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleElement::GetSheet(nsIDOMStyleSheet** aSheet)
+nsresult
+nsHTMLStyleElement::GetHrefCString(char* &aBuf)
 {
-  NS_ENSURE_ARG_POINTER(aSheet);
-  *aSheet = 0;
+  // Get src= attribute (relative URL).
+  nsAutoString relURLSpec;
 
-  if (mStyleSheet) {
-    mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aSheet);
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      nsGenericHTMLContainerElement::GetAttribute(kNameSpaceID_HTML,
+                                                  nsHTMLAtoms::src, relURLSpec)) {
+    // Clean up any leading or trailing whitespace
+    relURLSpec.Trim(" \t\n\r");
+
+    // Get base URL.
+    nsCOMPtr<nsIURI> baseURL;
+    GetBaseURL(*getter_AddRefs(baseURL));
+
+    if (baseURL) {
+      // Get absolute URL.
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mDocument, baseURL,
+                                    nsHTMLUtils::IOService,
+                                    nsHTMLUtils::CharsetMgr);
+    }
+    else {
+      // Absolute URL is same as relative URL.
+      aBuf = relURLSpec.ToNewUTF8String();
+    }
+  }
+  else {
+    // Absolute URL is empty because we have no HREF.
+    aBuf = nsnull;
   }
 
-  // Always return NS_OK to avoid throwing JS exceptions if mStyleSheet
-  // is not a nsIDOMStyleSheet
   return NS_OK;
+}
+
+void
+nsHTMLStyleElement::GetStyleSheetInfo(nsAWritableString& aUrl,
+                                      nsAWritableString& aTitle,
+                                      nsAWritableString& aType,
+                                      nsAWritableString& aMedia,
+                                      PRBool* aIsAlternate)
+{
+  nsresult rv = NS_OK;
+
+  aUrl.Truncate();
+  aTitle.Truncate();
+  aType.Truncate();
+  aMedia.Truncate();
+  *aIsAlternate = PR_FALSE;
+
+  nsAutoString href, rel, title, type;
+
+  char *buf;
+  GetHrefCString(buf);
+  if (buf) {
+    href.Assign(NS_ConvertASCIItoUCS2(buf));
+    nsCRT::free(buf);
+  }
+  if (href.IsEmpty()) {
+    // if href is empty then just bail
+    return;
+  }
+
+  GetAttribute(NS_LITERAL_STRING("title"), title);
+  title.CompressWhitespace();
+  aTitle.Assign(title);
+
+  GetAttribute(NS_LITERAL_STRING("media"), aMedia);
+  ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+
+  GetAttribute(NS_LITERAL_STRING("type"), type);
+  aType.Assign(aType);
+
+  nsAutoString mimeType;
+  nsAutoString notUsed;
+  nsStyleLinkElement::SplitMimeType(type, mimeType, notUsed);
+  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
+    return;
+  }
+
+  // If we get here we assume that we're loading a css file, so set the
+  // type to 'text/css'
+  aType.Assign(NS_LITERAL_STRING("text/css"));
+  
+  nsCOMPtr<nsIURI> url, base;
+
+  nsCOMPtr<nsIURI> baseURL;
+  GetBaseURL(*getter_AddRefs(baseURL));
+  rv = NS_MakeAbsoluteURI(aUrl, href, baseURL);
+
+  if (!aTitle.IsEmpty()) {
+    *aIsAlternate = PR_FALSE;
+    nsAutoString prefStyle;
+    mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                             prefStyle);
+    if (prefStyle.IsEmpty()) { // Set as preferred
+      mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                               title);
+    }
+  }
+
+  return;
 }
 

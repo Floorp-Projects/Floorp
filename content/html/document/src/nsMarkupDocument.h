@@ -23,10 +23,6 @@
 #define nsMarkupDocument_h___
 
 #include "nsDocument.h"
-#include "nsIHTMLDocument.h"
-
-class nsICSSDeclaration;
-class nsICSSStyleRule;
 
 /**
   * MODULE NOTES:

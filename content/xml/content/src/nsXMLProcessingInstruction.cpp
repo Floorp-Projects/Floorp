@@ -32,16 +32,18 @@
 #include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIXMLContent.h"
+#include "nsStyleLinkElement.h"
 
 #include "nsNetUtil.h"
 
 
 class nsXMLProcessingInstruction : public nsIDOMProcessingInstruction,
-                                   public nsIDOMLinkStyle,
-                                   public nsIContent
+                                   public nsIContent,
+                                   public nsStyleLinkElement
 {
 public:
   nsXMLProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData);
@@ -51,18 +53,211 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);
+  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {
+    return mInner.GetLocalName(aLocalName);
+  }
+  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {
+    return mInner.GetNodeValue(aNodeValue);
+  }
+  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {
+    nsresult rv = mInner.SetNodeValue(this, aNodeValue);
+    UpdateStyleSheet(PR_TRUE);
+    return rv;
+  }
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
+  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {
+    return mInner.GetParentNode(aParentNode);
+  }
+  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {
+    return mInner.GetChildNodes(aChildNodes);
+  }
+  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {
+    return mInner.HasChildNodes(aHasChildNodes);
+  }
+  NS_IMETHOD HasAttributes(PRBool* aHasAttributes) {
+    return mInner.HasAttributes(aHasAttributes);
+  }
+  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {
+    return mInner.GetFirstChild(aFirstChild);
+  }
+  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild) {
+    return mInner.GetLastChild(aLastChild);
+  }
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling) {
+    return mInner.GetPreviousSibling(this, aPreviousSibling);
+  }
+  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) {
+    return mInner.GetNextSibling(this, aNextSibling);
+  }
+  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {
+    return mInner.GetAttributes(aAttributes);
+  }
+  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                             nsIDOMNode** aReturn) {
+    return mInner.InsertBefore(aNewChild, aRefChild, aReturn);
+  }
+  NS_IMETHOD AppendChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
+    return mInner.AppendChild(aOldChild, aReturn);
+  }
+  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                             nsIDOMNode** aReturn) {
+    return mInner.ReplaceChild(aNewChild, aOldChild, aReturn);
+  }
+  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
+    return mInner.RemoveChild(aOldChild, aReturn);
+  }
+  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {
+    return mInner.GetOwnerDocument(aOwnerDocument);
+  }
+  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {
+    return mInner.GetNamespaceURI(aNamespaceURI);
+  }
+  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {
+    return mInner.GetPrefix(aPrefix);
+  }
+  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {
+    return mInner.SetPrefix(aPrefix);
+  }
+  NS_IMETHOD Normalize() {
+    return NS_OK;
+  }
+  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,
+                      const nsAReadableString& aVersion,
+                      PRBool* aReturn) {
+    return mInner.IsSupported(aFeature, aVersion, aReturn);
+  }
+  NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {
+    return mInner.GetBaseURI(aURI);
+  }
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMProcessingInstruction
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
-  // nsIDOMLinkStyle
-  NS_DECL_NSIDOMLINKSTYLE
-
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
+    return mInner.GetDocument(aResult);
+  }
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers) {
+    nsIDocument *oldDoc = mInner.mDocument;
+    nsresult rv = mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
+    UpdateStyleSheet(PR_TRUE, oldDoc);
+    return rv;
+  }
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {
+    return mInner.GetParent(aResult);
+  }
+  NS_IMETHOD SetParent(nsIContent* aParent) {
+    return mInner.SetParent(aParent);
+  }
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
+    return mInner.CanContainChildren(aResult);
+  }
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
+    return mInner.ChildCount(aResult);
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    return mInner.ChildAt(aIndex, aResult);
+  }
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    return mInner.IndexOf(aPossibleChild, aResult);
+  }
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                           PRBool aNotify, PRBool aDeepSetDocument) {
+    return mInner.InsertChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
+  }
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                            PRBool aNotify, PRBool aDeepSetDocument) {
+    return mInner.ReplaceChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
+  }
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument) {
+    return mInner.AppendChildTo(aKid, aNotify, aDeepSetDocument);
+  }
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return mInner.RemoveChildAt(aIndex, aNotify);
+  }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {
+    return mInner.GetNameSpaceID(aID);
+  }
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
+                                      nsINodeInfo*& aNodeInfo) {
+    return mInner.NormalizeAttributeString(aStr, aNodeInfo);
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                          nsAWritableString& aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);
+  }
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                          const nsAReadableString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);
+  }
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsAReadableString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
+  }
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                            PRBool aNotify) {
+    return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);
+  }
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID,
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const {
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
+  }
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
+    return mInner.GetAttributeCount(aResult);
+  }
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out,
+                         PRInt32 aIndent,
+                         PRBool aDumpAll) const;
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD GetContentID(PRUint32* aID);
+  NS_IMETHOD SetContentID(PRUint32 aID);
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){
+    return mInner.RangeAdd(aRange);
+  }
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){
+    return mInner.RangeRemove(aRange);
+  }
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
+    return mInner.GetRangeList(aResult);
+  }
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) {
+    return mInner.SetFocus(aPresContext);
+  }
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {
+    return mInner.RemoveFocus(aPresContext);
+  }
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
+    return mInner.GetBindingParent(aContent);
+  }
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
+    return mInner.SetBindingParent(aParent);
+  }
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
+  void GetStyleSheetInfo(nsAWritableString& aUrl,
+                         nsAWritableString& aTitle,
+                         nsAWritableString& aType,
+                         nsAWritableString& aMedia,
+                         PRBool* aIsAlternate);
 
 protected:
   PRBool GetAttrValue(const char *aAttr, nsString& aValue);
@@ -117,6 +312,8 @@ NS_INTERFACE_MAP_BEGIN(nsXMLProcessingInstruction)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()
   NS_INTERFACE_MAP_ENTRY(nsIDOMProcessingInstruction)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ProcessingInstruction)
 NS_INTERFACE_MAP_END
 
@@ -142,9 +339,9 @@ nsXMLProcessingInstruction::GetData(nsAWritableString& aData)
 NS_IMETHODIMP
 nsXMLProcessingInstruction::SetData(const nsAReadableString& aData)
 {
-  // XXX Check if this is a stylesheet PI. If so, we may need
-  // to parse the contents and see if anything has changed.
-  return mInner.SetData(this, aData);
+  nsresult rv = mInner.SetData(this, aData);
+  UpdateStyleSheet(PR_TRUE);
+  return rv;
 }
 
 PRBool
@@ -192,64 +389,6 @@ nsXMLProcessingInstruction::GetAttrValue(const char *aAttr, nsString& aValue)
   }
 
   return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsXMLProcessingInstruction::GetSheet(nsIDOMStyleSheet** aSheet)
-{
-  NS_ENSURE_ARG_POINTER(aSheet);
-  *aSheet = nsnull;
-
-  if (!mInner.mDocument)
-    return NS_OK;
-
-  nsAutoString data;
-  GetData(data);
-
-  if (!mTarget.EqualsWithConversion("xml-stylesheet")) {
-    return NS_OK;
-  }
-
-  if (!GetAttrValue("href", data))
-    return NS_OK;
-
-  nsCOMPtr<nsIURI> baseURI;
-
-  mInner.mDocument->GetBaseURL(*getter_AddRefs(baseURI));
-
-  nsString href;
-
-  NS_MakeAbsoluteURI(href, data, baseURI);
-
-  PRInt32 i, count;
-
-  count = mInner.mDocument->GetNumberOfStyleSheets();
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIStyleSheet> sheet;
-    sheet = dont_AddRef(mInner.mDocument->GetStyleSheetAt(i));
-
-    if (!sheet)
-      continue;
-
-    nsCOMPtr<nsIURI> url;
-
-    sheet->GetURL(*getter_AddRefs(url));
-
-    if (!url)
-      continue;
-
-    nsXPIDLCString urlspec;
-
-    url->GetSpec(getter_Copies(urlspec));
-
-    if (href.EqualsWithConversion(urlspec)) {
-      return sheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet),
-                                   (void **)aSheet);
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -366,3 +505,85 @@ nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags)
 {
   return PR_FALSE;
 }
+
+void
+nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
+                                              nsAWritableString& aTitle,
+                                              nsAWritableString& aType,
+                                              nsAWritableString& aMedia,
+                                              PRBool* aIsAlternate)
+{
+  nsresult rv = NS_OK;
+
+  aUrl.Truncate();
+  aTitle.Truncate();
+  aType.Truncate();
+  aMedia.Truncate();
+  *aIsAlternate = PR_FALSE;
+
+  if (!mTarget.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
+    return;
+  }
+
+  nsAutoString href, title, type, media, alternate;
+
+  GetAttrValue("href", href);
+  if (href.IsEmpty()) {
+    // if href is empty then just bail
+    return;
+  }
+
+  GetAttrValue("title", title);
+  title.CompressWhitespace();
+  aTitle.Assign(title);
+
+  GetAttrValue("alternate", alternate);
+
+  // if alternate, does it have title?
+  if (alternate.Equals(NS_LITERAL_STRING("yes"))) {
+    if (aTitle.IsEmpty()) { // alternates must have title
+      return;
+    } else {
+      *aIsAlternate = PR_TRUE;
+    }
+  }
+
+  GetAttrValue("media", media);
+  aMedia.Assign(media);
+  ToLowerCase(aMedia); // case sensitivity?
+
+  GetAttrValue("type", type);
+
+  nsAutoString mimeType;
+  nsAutoString notUsed;
+  SplitMimeType(type, mimeType, notUsed);
+  if (!mimeType.EqualsIgnoreCase("text/css")) {
+    aType.Assign(type);
+    return;
+  }
+
+  // If we get here we assume that we're loading a css file, so set the
+  // type to 'text/css'
+  aType.Assign(NS_LITERAL_STRING("text/css"));
+
+  nsCOMPtr<nsIURI> url, baseURL;
+  if (mInner.mDocument) {
+    mInner.mDocument->GetBaseURL(*getter_AddRefs(baseURL));
+  }
+  rv = NS_MakeAbsoluteURI(aUrl, href, baseURL);
+
+  if (*aIsAlternate) {
+    if (!aTitle.IsEmpty()) {  // possibly preferred sheet
+      nsAutoString prefStyle;
+      mInner.mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                                      prefStyle);
+
+      if (prefStyle.IsEmpty()) {
+        mInner.mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                                        title);
+      }
+    }
+  }
+
+  return;
+ }

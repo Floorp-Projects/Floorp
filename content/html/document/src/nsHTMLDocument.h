@@ -99,9 +99,6 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
-  NS_IMETHOD SetHeaderData(nsIAtom* aHeaderField,
-                           const nsAReadableString& aData);
-
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIContent* aContainer,
@@ -198,7 +195,6 @@ protected:
   nsString*   mReferrer;
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
-  nsICSSLoader* mCSSLoader;
 
   nsContentList *mImages;
   nsContentList *mApplets;

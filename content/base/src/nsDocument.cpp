@@ -117,6 +117,7 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 #include "nsLWBrkCIID.h"
 
 #include "nsIHTMLDocument.h"
+#include "nsHTMLAtoms.h"
 
 
 nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
@@ -430,7 +431,8 @@ nsDocumentChildNodes::DropReference()
 // =
 // ==================================================================
 
-nsDocument::nsDocument()
+nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
+                           mCSSLoader(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -923,7 +925,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
 {
   if (nsnull != aHeaderField) {
     if (nsnull == mHeaderData) {
-      if (0 < aData.Length()) { // don't bother storing empty string
+      if (!aData.IsEmpty()) { // don't bother storing empty string
         mHeaderData = new nsDocHeaderData(aHeaderField, aData);
       }
     }
@@ -932,7 +934,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
       nsDocHeaderData** lastPtr = &mHeaderData;
       do {  // look for existing and replace
         if (data->mField == aHeaderField) {
-          if (0 < aData.Length()) {
+          if (!aData.IsEmpty()) {
             data->mData.Assign(aData);
           }
           else {  // don't store empty string
@@ -946,8 +948,33 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
         data = data->mNext;
       } while (nsnull != data);
       // didn't find, append
-      if (0 < aData.Length()) {
+      if (!aData.IsEmpty()) {
         *lastPtr = new nsDocHeaderData(aHeaderField, aData);
+      }
+    }
+    if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
+      // switch alternate style sheets based on default
+      nsAutoString type;
+      nsAutoString title;
+      nsAutoString textHtml;
+      textHtml.Assign(NS_LITERAL_STRING("text/html"));
+      PRInt32 index;
+
+      mCSSLoader->SetPreferredSheet(nsAutoString(aData));
+
+      PRInt32 count = mStyleSheets.Count();
+      for (index = 0; index < count; index++) {
+        nsIStyleSheet* sheet = (nsIStyleSheet*)mStyleSheets.ElementAt(index);
+        sheet->GetType(type);
+        if (!type.Equals(textHtml)) {
+          sheet->GetTitle(title);
+          if (!title.IsEmpty()) {  // if sheet has title
+            nsAutoString data(aData);
+            PRBool disabled = (aData.IsEmpty() || 
+                               !title.EqualsIgnoreCase(data));
+            SetStyleSheetDisabledState(sheet, disabled);
+          }
+        }
       }
     }
     return NS_OK;
@@ -1174,7 +1201,7 @@ void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   PRBool enabled = PR_TRUE;
   aSheet->GetEnabled(enabled);
 
-  if (enabled) {
+  if (enabled && !mIsGoingAway) {
     RemoveStyleSheetFromStyleSets(aSheet);
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
@@ -1347,7 +1374,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // content elements can remove references to their script objects.
   if (!aScriptGlobalObject) {
     PRUint32 ucount, indx;
+
     mChildren->Count(&ucount);
+
+    mIsGoingAway = PR_TRUE;
+
     for (indx = 0; indx < ucount; indx++) {
       nsCOMPtr<nsIContent> content(dont_AddRef(NS_STATIC_CAST(nsIContent*,mChildren->ElementAt(indx))));
       content->SetDocument(nsnull, PR_TRUE, PR_TRUE);

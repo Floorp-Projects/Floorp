@@ -275,7 +275,6 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mForms);
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();  // release weak ref
-    NS_RELEASE(mCSSLoader);
   }
 
   NS_IF_RELEASE(mBodyContent);
@@ -1115,7 +1114,7 @@ nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 {
   nsresult result = NS_OK;
   if (! mCSSLoader) {
-    result = NS_NewCSSLoader(this, &mCSSLoader);
+    result = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
   }
   if (mCSSLoader) {
     mCSSLoader->SetCaseSensitive(PR_FALSE);
@@ -1154,38 +1153,6 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetHeaderData(nsIAtom* aHeaderField,
-                              const nsAReadableString& aData)
-{
-  nsresult result = nsMarkupDocument::SetHeaderData(aHeaderField, aData);
-
-  if (NS_SUCCEEDED(result)) {
-    if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
-      // switch alternate style sheets based on default
-      nsAutoString type;
-      nsAutoString title;
-      nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
-      PRInt32 index;
-      PRInt32 count = mStyleSheets.Count();
-      for (index = 0; index < count; index++) {
-        nsIStyleSheet* sheet = (nsIStyleSheet*)mStyleSheets.ElementAt(index);
-        sheet->GetType(type);
-        if (PR_FALSE == type.Equals(textHtml)) {
-          sheet->GetTitle(title);
-          if (0 < title.Length()) {  // if sheet has title
-            nsAutoString data(aData);
-            PRBool disabled = ((0 == aData.Length()) || 
-                               (PR_FALSE == title.EqualsIgnoreCase(data)));
-            SetStyleSheetDisabledState(sheet, disabled);
-          }
-        }
-      }
-    }
-  }
-  return result;
 }
 
 NS_IMETHODIMP 

@@ -318,6 +318,12 @@ public:
     //    then use that
     //  - othersise set the default charset
 
+  // stop loading all sheets
+  NS_IMETHOD Stop(void);
+
+  // stop loading one sheet
+  NS_IMETHOD StopLoadingSheet(nsIURI* aURL);
+
 #ifdef NS_DEBUG
   PRBool  mSyncCallback;
 #endif
@@ -468,7 +474,9 @@ static PRBool PR_CALLBACK DeleteSheetMap(nsHashKey* aKey, void* aData, void* aCl
 
 CSSLoaderImpl::~CSSLoaderImpl(void)
 {
-  NS_ASSERTION(0 == mLoadingSheets.Count(), "destructing loader while sheets loading");
+  if (mLoadingSheets.Count() > 0) {
+    Stop();
+  }
   NS_IF_RELEASE(mParsers);
   mLoadedSheets.Enumerate(ReleaseSheet);
   mLoadingSheets.Enumerate(DeleteHashLoadData);
@@ -1650,4 +1658,40 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
     rv = SetCharset(str);
   }
   return rv;
+}
+
+static PRBool PR_CALLBACK StopLoadingSheetCallback(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  NS_ENSURE_TRUE(aData, NS_ERROR_NULL_POINTER);
+
+  SheetLoadData* data = (SheetLoadData*)aData;
+  NS_ENSURE_TRUE(data->mLoader, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(data->mURL, NS_ERROR_NULL_POINTER);
+
+  data->mLoader->StopLoadingSheet(data->mURL);
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::Stop()
+{
+  if (mLoadingSheets.Count() > 0) {
+    mLoadingSheets.Enumerate(StopLoadingSheetCallback);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::StopLoadingSheet(nsIURI* aURL)
+{
+  NS_ENSURE_TRUE(aURL, NS_ERROR_NULL_POINTER);
+  if (mLoadingSheets.Count() > 0) {
+    URLKey key(aURL);
+    SheetLoadData* loadData = (SheetLoadData*)mLoadingSheets.Get(&key);
+    if (loadData) {
+      Cleanup(key, loadData);
+    }
+  }
+  return NS_OK;
 }
