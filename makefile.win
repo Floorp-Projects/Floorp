@@ -79,6 +79,7 @@ DIRS =                         \
   rdf                          \
   docshell                     \
   webshell                     \
+  embedding                    \
   profile                      \
   editor                       \
 !if defined(GC_LEAK_DETECTOR)
