@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.245 $ ';
+$::UtilsVersion = '$Revision: 1.246 $ ';
 
 package TinderUtils;
 
@@ -925,9 +925,11 @@ sub rebootSystem {
 # Create a profile named $Settings::MozProfileName in the normal $build_dir place.
 sub create_profile {
     my ($build_dir, $binary_dir, $binary) = @_;
+    my $profile_log = "$build_dir/create-profile.log";
     my $result = run_cmd($build_dir, $binary_dir,
                          [$binary, "-CreateProfile", $Settings::MozProfileName],
-                         "/dev/null", $Settings::CreateProfileTimeout);
+                         $profile_log, $Settings::CreateProfileTimeout);
+    print_logfile($profile_log, "Profile Creation");
     return $result;
 }
 
@@ -1281,7 +1283,7 @@ sub run_cmd {
     my $now = localtime();
 
     print_log "Begin: $now\n";
-    print_log "cmd = @$args[0]\n";
+    print_log "cmd = " . join(' ', @{$args}) . "\n";
 
     my $pid = fork_and_log($home_dir, $binary_dir, $args, $logfile);
     my $result = wait_for_pid($pid, $timeout_secs);
