@@ -1416,7 +1416,8 @@ function mainStep()
 function openQueryTab(server, nick)
 {
     var user = server.addUser(nick);
-    client.globalHistory.addPage(user.getURL());
+    if (client.globalHistory)
+        client.globalHistory.addPage(user.getURL());
     if (!("messages" in user))
     {
         var value = "";

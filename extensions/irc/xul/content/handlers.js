@@ -901,7 +901,8 @@ function my_showtonet (e)
 
             // Update everything.
             // Welcome to history.
-            client.globalHistory.addPage(this.getURL());
+            if (client.globalHistory)
+                client.globalHistory.addPage(this.getURL());
             updateTitle(this);
             this.updateHeader();
             client.updateHeader();
@@ -1914,7 +1915,8 @@ function my_cjoin (e)
     {
         this.display (getMsg(MSG_YOU_JOINED, e.channel.unicodeName), "JOIN",
                       e.server.me, this);
-        client.globalHistory.addPage(this.getURL());
+        if (client.globalHistory)
+            client.globalHistory.addPage(this.getURL());
 
         if ("joinTimer" in this)
         {
