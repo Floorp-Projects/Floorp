@@ -897,7 +897,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;
     nsCAutoString dn;
-    nsString entry;
+    nsCString entry;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
 
@@ -908,8 +908,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     entry.SetCapacity(256);
-    entry = NS_LITERAL_STRING("dn: ") + NS_ConvertUTF8toUCS2(dn)
-        + NS_LITERAL_STRING("\n");
+    entry = NS_LITERAL_CSTRING("dn: ") + dn + NS_LITERAL_CSTRING("\n");
 
     char **attrs;
     PRUint32 attrCount;
@@ -947,10 +946,10 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // print all values of this attribute
         //
         for ( PRUint32 j=0 ; j < valueCount; j++ ) {
-            AppendASCIItoUTF16(attrs[i], entry);
-            entry.Append(NS_LITERAL_STRING(": "));
-            entry.Append(vals[j]);
-            entry.Append(NS_LITERAL_STRING("\n"));
+            entry.Append(attrs[i]);
+            entry.Append(": ");
+            AppendUTF16toUTF8(vals[j], entry);
+            entry.Append('\n');
         }
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(valueCount, vals);
 
@@ -967,7 +966,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 
     // separate this entry from the next
     //
-    entry.Append(NS_LITERAL_STRING("\n"));
+    entry.Append('\n');
 
     // do the write
     // XXX better err handling
@@ -975,8 +974,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     PRUint32 bytesWritten = 0;
     PRUint32 entryLength = entry.Length();
 
-    rv = mReadPipeOut->Write(NS_ConvertUCS2toUTF8(entry).get(),
-                             entryLength, &bytesWritten);
+    rv = mReadPipeOut->Write(entry.get(), entryLength, &bytesWritten);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // short writes shouldn't happen on blocking pipes!
