@@ -76,6 +76,11 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nsIXULKeyListener.h"
+#include "nsIDOMEventListener.h"
+#include "nsIEventListenerManager.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIXULPopupListener.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
@@ -94,6 +99,10 @@ static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXULDocumentInfoIID,        NS_IXULDOCUMENTINFO_IID);
+static NS_DEFINE_IID(kIXULKeyListenerIID,         NS_IXULKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMElementIID,             NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMEventReceiverIID,       NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIXULPopupListenerIID,       NS_IXULPOPUPLISTENER_IID);
 
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -105,6 +114,8 @@ static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
 static NS_DEFINE_CID(kXULDocumentCID,             NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,         NS_XULDOCUMENTINFO_CID);
+static NS_DEFINE_CID(kXULKeyListenerCID,          NS_XULKEYLISTENER_CID);
+static NS_DEFINE_CID(kXULPopupListenerCID,          NS_XULPOPUPLISTENER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +166,7 @@ private:
     static nsIAtom* kInstanceOfAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuBarAtom;
+    static nsIAtom* kKeysetAtom;
     static nsIAtom* kToolbarAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kXMLNSAtom;
@@ -284,6 +296,7 @@ nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kInstanceOfAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuBarAtom;
+nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
 nsIAtom*        RDFXULBuilderImpl::kToolbarAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
 nsIAtom*        RDFXULBuilderImpl::kXMLNSAtom;
@@ -355,6 +368,7 @@ RDFXULBuilderImpl::Init()
         kInstanceOfAtom           = NS_NewAtom("instanceof");
         kMenuAtom                 = NS_NewAtom("menu");
         kMenuBarAtom              = NS_NewAtom("menubar");
+        kKeysetAtom               = NS_NewAtom("keyset");
         kToolbarAtom              = NS_NewAtom("toolbar");
         kTreeAtom                 = NS_NewAtom("tree");
         kXMLNSAtom                = NS_NewAtom("xmlns");
@@ -427,6 +441,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kMenuAtom);
         NS_IF_RELEASE(kMenuBarAtom);
+        NS_IF_RELEASE(kKeysetAtom);
         NS_IF_RELEASE(kToolbarAtom);
     }
 }
@@ -2247,6 +2262,42 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
             rv = CreateBuilder(builderCID, element, dataSources);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
         }
+    }
+    
+    // We also need to pay special attention to the keyset tag to set up a listener
+    if(aTagName == kKeysetAtom) {
+        // Create our nsXULKeyListener and hook it up.
+        nsIXULKeyListener * keyListener = nsnull;
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(
+            kXULKeyListenerCID,
+            nsnull,
+            kIXULKeyListenerIID,
+            (void**) &keyListener))) {
+            NS_ERROR("unable to create a key listener");
+            return rv;
+        }
+        
+        nsCOMPtr<nsIDOMEventListener> domEventListener = do_QueryInterface(keyListener);
+        if (domEventListener) {
+            // Take the key listener and add it as an event listener for keypress events.
+            nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
+            
+            // Init the listener with the keyset node
+            nsIDOMElement* domElement = nsnull;
+            element->QueryInterface(kIDOMElementIID, (void**) &domElement);
+        
+            keyListener->Init(domElement, document);
+            
+            nsIDOMEventTarget* target;
+            document->QueryInterface(kIDOMEventReceiverIID, (void**) &target);
+            if(target) {
+				target->AddEventListener("keypress", domEventListener, PR_FALSE, PR_FALSE); 
+				target->AddEventListener("keydown", domEventListener, PR_FALSE, PR_FALSE);  
+				target->AddEventListener("keyup", domEventListener, PR_FALSE, PR_FALSE);   
+			}
+			NS_RELEASE(target);
+        }
+        // Who has ownership of the listener?
     }
 
     // Finally, assign the newly constructed element to the result
