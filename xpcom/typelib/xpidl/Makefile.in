@@ -29,6 +29,7 @@ CSRCS = \
 	xpidl_header.c \
 	xpidl_typelib.c \
 	xpidl_doc.c \
+	xpidl_java.c \
 	$(NULL)
 
 # Compile directly against the static lib, so we can use xpidl during the build
