@@ -131,7 +131,9 @@ nsContextMenu.prototype = {
         // Select All is always OK.
     
         // Copy depends on whether there is selected text.
-        this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
+        // Enabling this context menu item is now done through the global
+        // command updating system
+        // this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
     
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );

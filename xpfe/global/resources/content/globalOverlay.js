@@ -178,7 +178,7 @@ function goSetMenuValue(command, valueAttribute)
 
 function goUpdateGlobalEditMenuItems()
 {
-	dump("Updating edit menu items\n");
+	//dump("Updating edit menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
 	goUpdateCommand('cmd_cut');
@@ -192,7 +192,7 @@ function goUpdateGlobalEditMenuItems()
 // update menu items that rely on the current selection
 function goUpdateSelectEditMenuItems()
 {
-	dump("Updating select menu items\n");
+	//dump("Updating select menu items\n");
 	goUpdateCommand('cmd_cut');
 	goUpdateCommand('cmd_copy');
 	goUpdateCommand('cmd_delete');
@@ -201,7 +201,7 @@ function goUpdateSelectEditMenuItems()
 // update menu items that relate to undo/redo
 function goUpdateUndoEditMenuItems()
 {
-	dump("Updating undo/redo menu items\n");
+	//dump("Updating undo/redo menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
 
