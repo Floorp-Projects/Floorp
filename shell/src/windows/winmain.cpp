@@ -35,6 +35,8 @@ static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
 
 static NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
 static NS_DEFINE_IID(kCShellInstanceCID, NS_SHELLINSTANCE_CID);
+static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
+static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
 
 int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
@@ -45,6 +47,8 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
 
     // Let get a ShellInstance for this Application instance
     NSRepository::RegisterFactory(kCShellInstanceCID, SHELL_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCMenuBarCID, SHELL_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCMenuItemCID, SHELL_DLL, PR_FALSE, PR_FALSE);
 
 	result = NSRepository::CreateInstance(kCShellInstanceCID,
 										  NULL,
