@@ -176,22 +176,30 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction)newTab:(id)aSender
 {
-  [(BrowserWindowController*)[[mApplication mainWindow] windowController] newTab:YES];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController newTab:YES];
 }
 
 -(IBAction)closeTab:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] closeTab];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController closeTab];
 }
 
 -(IBAction) previousTab:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] previousTab];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController previousTab];
 }
 
 -(IBAction) nextTab:(id)aSender;
 {
-	[[[mApplication mainWindow] windowController] nextTab];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController nextTab];
 }
 
 -(IBAction) openFile:(id)aSender
@@ -213,10 +221,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         // ----------------------
         [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
         // ----------------------
-        NSWindow* mainWindow = [mApplication mainWindow];
-        if (mainWindow) {
-          [[mainWindow windowController] loadURL:[url absoluteString] referrer:nil];
-          [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] setActive: YES];
+
+        BrowserWindowController* browserController = [self getMainWindowBrowserController];
+        if (browserController)
+        {
+          [browserController loadURL:[url absoluteString] referrer:nil];
+          [[[browserController getBrowserWrapper] getBrowserView] setActive: YES];
         }
         else
           [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil];
@@ -225,28 +235,37 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) openLocation:(id)aSender
 {
-    NSWindow* mainWindow = [mApplication mainWindow];
-    if (!mainWindow) {
+    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+    if (!browserWindow) {
       [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
-      mainWindow = [mApplication mainWindow];
+      browserWindow = [mApplication mainWindow];
+    }
+    else if (![browserWindow isMainWindow]) {
+      [browserWindow makeKeyAndOrderFront:self];
     }
     
-    [[mainWindow windowController] performAppropriateLocationAction];
+    [[browserWindow windowController] performAppropriateLocationAction];
 }
 
 -(IBAction) savePage:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] saveDocument: mFilterView filterList: mFilterList];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController saveDocument: mFilterView filterList: mFilterList];
 }
 
 -(IBAction) printPage:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] printDocument];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController printDocument];
 }
 
 -(IBAction) printPreview:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] printPreview];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController printPreview];
 }
 
 -(IBAction) toggleOfflineMode:(id)aSender
@@ -304,27 +323,44 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) goBack:(id)aSender
 {
-    [[[mApplication mainWindow] windowController] back: aSender]; 
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController back: aSender]; 
 }
 
 -(IBAction) goForward:(id)aSender
 {
-    [[[mApplication mainWindow] windowController] forward: aSender]; 
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController forward: aSender]; 
 }
 
 -(IBAction) doReload:(id)aSender
 {
-    [(BrowserWindowController*)([[mApplication mainWindow] windowController]) reload: aSender]; 
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController reload: aSender]; 
 }
 
 -(IBAction) doStop:(id)aSender
 {
-    [(BrowserWindowController*)([[mApplication mainWindow] windowController]) stop: aSender]; 
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController stop: aSender]; 
 }
 
 -(IBAction) goHome:(id)aSender
 {
-    [[[mApplication mainWindow] windowController] home: aSender];
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (browserWindow) {
+    if (![browserWindow isMainWindow])
+      [browserWindow makeKeyAndOrderFront:self];
+    
+    [[browserWindow windowController] home: aSender];
+  }
+  else {
+      [self newWindow:self];  
+  }
 }
 
 - (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
@@ -403,7 +439,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
   
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
-
 }
 
 
@@ -449,24 +484,28 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       return;
     NSURL* url = [urlArray objectAtIndex: 0];
 
-    NSWindow* window = [mApplication mainWindow];
-    if (!window) {
+    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+    if (!browserWindow) {
       [self newWindow: self];
-      window = [mApplication mainWindow];
+      browserWindow = [mApplication mainWindow];
     }
     
-    [[window windowController] importBookmarks: [url absoluteString]];
+    [[browserWindow windowController] importBookmarks: [url absoluteString]];
   }
 }
 
 -(IBAction) addBookmark:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: NO URL:nil title:nil];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController addBookmarkExtended: YES isFolder: NO URL:nil title:nil];
 }
 
 -(IBAction) addFolder:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: YES URL:nil title:nil];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController addBookmarkExtended: YES isFolder: YES URL:nil title:nil];
 }
 
 -(IBAction) addSeparator:(id)aSender
@@ -476,24 +515,24 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) openMenuBookmark:(id)aSender
 {
-    NSWindow* mainWind = [mApplication mainWindow];
-    if (!mainWind) {
+    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+    if (!browserWindow) {
         [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
-        mainWind = [mApplication mainWindow];
+        browserWindow = [mApplication mainWindow];
     }
 
-    BookmarksService::OpenMenuBookmark([mainWind windowController], aSender);
+    BookmarksService::OpenMenuBookmark([browserWindow windowController], aSender);
 }
 
 -(IBAction)manageBookmarks: (id)aSender
 {
-  NSWindow* mainWindow = [mApplication mainWindow];
-  if (!mainWindow) {
-    [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
-    mainWindow = [mApplication mainWindow];
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (!browserWindow) {
+    [self newWindow:self];
+    browserWindow = [mApplication mainWindow];
   }
 
-  [[mainWindow windowController] manageBookmarks: aSender];
+  [[browserWindow windowController] manageBookmarks: aSender];
 }
 
 - (CHPreferenceManager *)preferenceManager
@@ -544,26 +583,38 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)biggerTextSize:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] biggerTextSize];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController biggerTextSize];
 }
 
 - (IBAction)smallerTextSize:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] smallerTextSize];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController smallerTextSize];
 }
 
 -(IBAction) viewSource:(id)aSender
 {
-  NSWindow* mainWindow = [mApplication mainWindow];
-  if (mainWindow && [[mainWindow windowController] respondsToSelector:@selector(viewSource:)] )
-    [[mainWindow windowController] viewSource: self];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController viewSource: self];
 }
-
 
 -(BOOL)isMainWindowABrowserWindow
 {
   // see also getFrontmostBrowserWindow
   return [[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]];
+}
+
+- (BrowserWindowController*)getMainWindowBrowserController
+{
+  NSWindowController* mainWindowController = [[mApplication mainWindow] windowController];
+  if (mainWindowController && [mainWindowController isMemberOfClass:[BrowserWindowController class]])
+    return (BrowserWindowController*)mainWindowController;
+  
+  return nil;
 }
 
 - (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs
@@ -588,14 +639,18 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 // Close Tab/Close Window accordingly
 - (void)fixCloseMenuItemKeyEquivalents
 {
-  BOOL windowWithMultipleTabs = ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1);
-  
-  [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
-  [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController) {
+    BOOL windowWithMultipleTabs = ([[browserController getTabBrowser] numberOfTabViewItems] > 1);    
+    [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
+    [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
+  }
 }
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+
   // disable items that aren't relevant if there's no main browser window open
   SEL action = [aMenuItem action];
 
@@ -611,14 +666,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         action == @selector(viewSource:) ||
         action == @selector(goHome:) ||
         action == @selector(savePage:)) {
-    if ([self isMainWindowABrowserWindow])
+    if (browserController)
       return YES;
     return NO;
   }
 
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:)) {
-    if ([self isMainWindowABrowserWindow])
+    if (browserController)
       return (mFindDialog && [[mFindDialog getSearchText] length] > 0);
     else
       return NO;
@@ -628,8 +683,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // window open. Popup windows that have the personal toolbar removed should always gray
   // out this menu.
   if (action == @selector(toggleBookmarksToolbar:)) {
-    if ([self isMainWindowABrowserWindow]) {
-      NSView* bookmarkToolbar = [[[mApplication mainWindow] windowController] bookmarksToolbar];
+    if (browserController) {
+      NSView* bookmarkToolbar = [browserController bookmarksToolbar];
       if ( bookmarkToolbar ) {
         float height = [bookmarkToolbar frame].size.height;
         BOOL toolbarShowing = (height > 0);
@@ -651,21 +706,21 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
        action == @selector (nextTab:) ||
        action == @selector (previousTab:)))
   {
-    if ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1)
+    if (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1)
       return YES;
 
     return NO;
   }
 
   if ( action == @selector(doStop:) ) {
-    if ([self isMainWindowABrowserWindow])
-      return [[[[mApplication mainWindow] windowController] getBrowserWrapper] isBusy];
+    if (browserController)
+      return [[browserController getBrowserWrapper] isBusy];
     else
       return NO;
   }
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
-    if ([self isMainWindowABrowserWindow]) {
-      CHBrowserView* browserView = [[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView];
+    if (browserController) {
+      CHBrowserView* browserView = [[browserController getBrowserWrapper] getBrowserView];
       if (action == @selector(goBack:))
         return [browserView canGoBack];
       if (action == @selector(goForward:))
@@ -681,20 +736,17 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) toggleBookmarksToolbar:(id)aSender
 {
-  // do nothing if there is no window. we shouldn't get here in that case anyway, but
-  // just to be safe. If there is a browser window, toggle it's personal toolbar.
-  if ( [self isMainWindowABrowserWindow] ) {
-    NSWindow* mainWindow = [mApplication mainWindow];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (!browserController) return;
 
-    float height = [[[mainWindow windowController] bookmarksToolbar] frame].size.height;
-    BOOL showToolbar = (BOOL)(!(height > 0));
+  float height = [[browserController bookmarksToolbar] frame].size.height;
+  BOOL showToolbar = (BOOL)(!(height > 0));
   
-    [[[mainWindow windowController] bookmarksToolbar] showBookmarksToolbar: showToolbar];
+  [[browserController bookmarksToolbar] showBookmarksToolbar: showToolbar];
   
-    // save prefs here
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
-  }
+  // save prefs here
+  NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+  [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
 -(IBAction) infoLink:(id)aSender

@@ -141,6 +141,9 @@ class BookmarksService;
 - (CHPreferenceManager *)preferenceManager;
 - (BOOL)isMainWindowABrowserWindow;
 
+// if the main window is a browser window, return its controller, otherwise nil
+- (BrowserWindowController*)getMainWindowBrowserController;
+
 - (IBAction)showAboutBox:(id)sender;
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;

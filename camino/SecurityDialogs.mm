@@ -77,7 +77,7 @@ SecurityDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *outAddType = (PRBool)[controller unknownCert:[NSApp mainWindow]];
+  *outAddType = (PRBool)[controller unknownCert:[[NSApp delegate] getFrontmostBrowserWindow]];
   switch ( *outAddType ) {
   case nsIBadCertListener::ADD_TRUSTED_FOR_SESSION:
   case nsIBadCertListener::ADD_TRUSTED_PERMANENTLY:
@@ -105,7 +105,7 @@ SecurityDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *_retval = (PRBool)[controller badCert:[NSApp mainWindow]];
+  *_retval = (PRBool)[controller badCert:[[NSApp delegate] getFrontmostBrowserWindow]];
 
   return NS_OK;
 }
@@ -124,7 +124,7 @@ SecurityDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *_retval = (PRBool)[controller expiredCert:[NSApp mainWindow]];
+  *_retval = (PRBool)[controller expiredCert:[[NSApp delegate] getFrontmostBrowserWindow]];
 
   return NS_OK;
 }
@@ -205,7 +205,7 @@ SecurityDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *_result = (PRBool)[controller postToInsecureFromSecure:[NSApp mainWindow]];
+  *_result = (PRBool)[controller postToInsecureFromSecure:[[NSApp delegate] getFrontmostBrowserWindow]];
 
   return NS_OK;
 }
