@@ -657,7 +657,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FOCUS_CONTENT:
       {
         nsIFormControlFrame* formControlFrame = nsnull;
-        nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+        rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
         if (NS_SUCCEEDED(rv)) {
           mSkipFocusEvent = PR_TRUE;
           formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
