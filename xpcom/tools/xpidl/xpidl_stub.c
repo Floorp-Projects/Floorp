@@ -64,9 +64,10 @@ stub_pass_1(TreeState *state)
 {
     if (state->tree) {
         fprintf(state->file,
-	    "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
-	    "#include \"jsapi.h\"\n",
-	    state->basename);
+		"/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
+		"#include \"jsapi.h\"\n"
+		"#include \"nsIXPConnect.h\"\n",
+		state->basename);
 
     	state->priv = NULL;
     } else {
@@ -94,7 +95,7 @@ stub_list(TreeState *state)
 static gboolean
 stub_type_dcl(TreeState *state)
 {
-    fputs("type_dcl\n", state->file);
+    fputs("XXXbe type_dcl\n", state->file);
     return TRUE;
 }
 
@@ -121,12 +122,12 @@ js_convert_arguments_format(IDL_tree param)
 	  case IDL_INTEGER_TYPE_LONG:
 	    return sign ? 'i' : 'u';
 	  default:
-	    return '*';
+	    return '*'; /* XXXbe */
 	}
 	break;
       }
       case IDLN_TYPE_CHAR:
-	return '*';
+	return '*'; /* XXXbe */
       case IDLN_TYPE_WIDE_CHAR:
 	return 'c';
       case IDLN_TYPE_STRING:
@@ -138,7 +139,7 @@ js_convert_arguments_format(IDL_tree param)
       case IDLN_IDENT:
 	return 'o';
       default:
-      	return '*';
+      	return '*'; /* XXXbe */
     }
 }
 
@@ -238,8 +239,9 @@ stub_op_dcl(TreeState *state)
 	fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
         break;
       case IDLN_IDENT:
+        break;
       default:
-	assert(0);
+	assert(0); /* XXXbe */
         break;
     }
     fputs("  return JS_TRUE;\n"
@@ -251,7 +253,7 @@ stub_op_dcl(TreeState *state)
 static gboolean
 stub_type_enum(TreeState *state)
 {
-    fputs("type_enum\n", state->file);
+    fputs("XXXbe type_enum\n", state->file);
     return TRUE;
 }
 
@@ -326,11 +328,84 @@ stub_interface(TreeState *state)
 	    }
 	    fputs("  {0}\n};\n", state->file);
 
-	    /* emit getter and setter */
-
+	    /* Emit GetProperty. */
+	    /* Emit SetProperty. */
 	}
 
-	/* emit JSClass and init fun */
+	/* Emit a finalizer. */
+	fprintf(state->file,
+		"\nstatic void\n"
+		"%s_Finalize(JSContext *cx, JSObject *obj)\n"
+		"{\n"
+		"  %s *priv = JS_GetPrivate(cx, obj);\n"
+		"  if (!priv)\n"
+		"    return;\n"
+		"  NS_RELEASE(priv);\n"
+		"}\n",
+		className, className);
+
+	/* Emit a constructor. */
+	fprintf(state->file,
+		"\nstatic JSBool\n"
+		"%s_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,"
+		       " jsval *rval)\n"
+		"{\n"
+		"  return JS_TRUE;\n"
+		"}\n",
+		className);
+
+	/* Emit an initialized JSClass struct. */
+	fprintf(state->file,
+		"\nstatic JSClass %s_class = {\n"
+		"  \"%s\",\n"
+		"  JSCLASS_HAS_PRIVATE,\n"
+		"  JS_PropertyStub, JS_PropertyStub, ",
+		className, className);
+	if (priv->props) {
+	    fprintf(state->file,
+		    "%s_GetProperty, %s_SetProperty",
+		    className, className);
+	} else {
+	    fputs("JS_PropertyStub, JS_PropertyStub",
+		  state->file);
+	}
+	fputs(",\n  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ",
+	      state->file);
+	fprintf(state->file, "%s_Finalize\n};\n", className);
+
+	/* Emit a JSClass initialization function. */
+	fprintf(state->file,
+		"\nextern JSObject *\n"
+		"%s_InitJSClass(JSContext *cx, JSObject *obj, JSObject *parent_proto)\n"
+		"{\n"
+		"  JSObject *proto = JS_InitClass(cx, obj, parent_proto,\n"
+		"                                 &%s_class, %s_ctor, 0,\n",
+		className, className, className);
+	fputs(	"                                 ",
+		state->file);
+    	if (priv->props)
+	    fprintf(state->file, "%s_props", className);
+	else
+	    fputc('0', state->file);
+	fputs(", ", state->file);
+    	if (priv->funcs)
+	    fprintf(state->file, "%s_funcs", className);
+	else
+	    fputc('0', state->file);
+	fputs(	", 0, 0);\n"
+		"  if (!proto)\n"
+		"    return 0;\n",
+		state->file);
+	if (priv->const_dbls) {
+	    fprintf(state->file,
+		    "  JSObject *ctor = JS_GetConstructor(cx, proto);\n"
+		    "  if (!JS_DefineConstDoubles(cx, ctor, &%s_const_dbls))\n"
+		    "    return 0;\n",
+		    className);
+	}
+	fputs(	"  return proto;\n"
+		"}\n",
+		state->file);
     }
 
     /* Clean up whether or not there were errors. */
