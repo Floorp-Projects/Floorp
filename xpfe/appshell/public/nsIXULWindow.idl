@@ -97,6 +97,11 @@ interface nsIXULWindow : nsISupports
   readonly attribute unsigned long zlevel;
 
   /**
+   * contextFlags are from nsIWindowCreator2
+   */
+           attribute PRUint32  contextFlags;
+
+  /**
   Create a new window.
   @param aChromeFlags: see nsIWebBrowserChrome
   @return the newly minted window

@@ -125,7 +125,8 @@ protected:
    PRPackedBool            mCenterAfterLoad;
    PRPackedBool            mIsHiddenWindow;
    PRPackedBool            mHadChildWindow;
-   unsigned long           mZlevel;
+   PRUint32                mZlevel;
+   PRUint32                mContextFlags;
 };
 
 // nsContentShellInfo

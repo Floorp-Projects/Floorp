@@ -104,7 +104,7 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
    mHadChildWindow(PR_FALSE),
-   mZlevel(nsIXULWindow::normalZ)
+   mZlevel(nsIXULWindow::normalZ), mContextFlags(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -183,6 +183,22 @@ NS_IMETHODIMP nsXULWindow::GetZlevel(PRUint32 *outLevel)
 {
    *outLevel = mZlevel;
    return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetContextFlags(PRUint32 *aContextFlags)
+{
+  NS_ENSURE_ARG_POINTER(aContextFlags);
+  *aContextFlags = mContextFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetContextFlags(PRUint32 aContextFlags)
+{
+  mContextFlags = aContextFlags;
+  if(mContentTreeOwner)
+    mContentTreeOwner->ApplyChromeFlags();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::SetIntrinsicallySized(PRBool aIntrinsicallySized)
