@@ -481,7 +481,6 @@ xpcom/reflect/xptcall/src/Makefile
 xpcom/reflect/xptcall/src/md/Makefile
 xpcom/reflect/xptcall/src/md/test/Makefile
 xpcom/reflect/xptcall/src/md/unix/Makefile
-xpcom/reflect/xptcall/src/md/win32/Makefile
 xpcom/reflect/xptcall/tests/Makefile
 xpcom/reflect/xptinfo/Makefile
 xpcom/reflect/xptinfo/public/Makefile
