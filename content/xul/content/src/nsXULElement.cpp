@@ -383,7 +383,7 @@ public:
     ExecuteJSCode(nsIDOMElement* anElement);
 
     // Used with treecol width attributes
-    static PRInt32 ParseNumericValue(const nsString& aString,
+    static PRBool ParseNumericValue(const nsString& aString,
                                   PRInt32& aIntValue,
                                   float& aFloatValue,
                                   nsHTMLUnit& aValueUnit);
