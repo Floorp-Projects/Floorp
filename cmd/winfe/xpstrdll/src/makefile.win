@@ -69,6 +69,10 @@ RCFLAGS=$(RCFLAGS) $(MOZ_LITENESS_FLAGS)
 
 !include "$(DEPTH)\config\rules.mak"
 
+.\$(OBJDIR)\xpstrdll.res : $(MOZ_SRC)\mozilla\include\allxpstr.rc
+
+$(DLL) : .\$(OBJDIR)\xpstrdll.res
+
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
