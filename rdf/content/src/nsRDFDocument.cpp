@@ -1591,7 +1591,7 @@ RDFDocumentImpl::CreateChildren(nsIRDFContent* element)
         NS_RELEASE(property);
     }
 
-    if (rv = NS_ERROR_RDF_CURSOR_EMPTY)
+    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
         // This is a normal return code from nsIRDFCursor::Advance()
         rv = NS_OK;
 
