@@ -104,7 +104,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                 this);
 
   if (mMakeReadOnly) {
-    PRUint32 oldReadOnly;
+    PRBool oldReadOnly;
     SetReadOnly(PR_TRUE, oldReadOnly);
   }
   if (mMakePassword) {
