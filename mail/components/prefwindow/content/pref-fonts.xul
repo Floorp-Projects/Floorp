@@ -84,7 +84,7 @@
       
       <rows>
         <row align="center">
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&proportional.label;" 
                    accesskey="&proportional.accesskey;" 
                    control="proportionalFont"/>
@@ -99,7 +99,7 @@
             </menupopup>
           </menulist>
           
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&sizes.label;"/>
           </hbox> 
 
@@ -135,7 +135,7 @@
           </menulist>
         </row>
         <row align="center">
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&serif.label;" 
                    accesskey="&serif.accesskey;" 
                    control="serif"/>
@@ -146,7 +146,7 @@
           <spacer/>
         </row>
         <row align="center">
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&sans-serif.label;" 
                    accesskey="&sans-serif.accesskey;" 
                    control="sans-serif"/>
@@ -157,7 +157,7 @@
           <spacer/>
         </row>
         <row align="center">
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&monospace.label;" 
                    accesskey="&monospace.accesskey;" 
                    control="monospace"/>
@@ -165,7 +165,7 @@
           <menulist id="monospace">
             <menupopup/>
           </menulist>
-          <hbox align="center" pack="end">
+          <hbox pack="end">
             <label value="&sizes.label;"/>
           </hbox> 
           <menulist id="sizeMono" class="small-margin">
