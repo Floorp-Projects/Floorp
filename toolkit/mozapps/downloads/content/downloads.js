@@ -270,6 +270,7 @@ function onDownloadShow(aEvent)
 
   if (f.exists()) {
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
     // on unix, open a browser window rooted at the parent
     var parent = f.parent;
     if (parent) {
@@ -278,6 +279,10 @@ function onDownloadShow(aEvent)
       var browserURL = pref.getCharPref("browser.chromeURL");                          
       window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
     }
+#else
+    // MacOS X identifies as Unix.
+    f.reveal();
+#endif
 #else
     f.reveal();
 #endif
