@@ -132,6 +132,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 {
     JSRuntime *rt;
     JSBool last;
+    JSArgumentFormatMap *map;
 
     rt = cx->runtime;
 
@@ -200,6 +201,15 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     if (cx->requestDepth)
         JS_EndRequest(cx);
 #endif
+
+    /* remove any argument formatters */
+    map = cx->argumentFormatMap;
+    while (map) {
+        JSArgumentFormatMap *temp = map;
+        map = map->next;
+        JS_free(cx, temp);
+    }
+
     free(cx);
 
     if (last) {
