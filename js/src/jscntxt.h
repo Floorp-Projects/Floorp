@@ -317,6 +317,9 @@ struct JSContext {
     /* Most recently created things by type, members of the GC's root set. */
     JSGCThing           *newborn[GCX_NTYPES];
 
+    /* Atom root for the last-looked-up atom on this context. */
+    JSAtom              *lastAtom;
+
     /* Regular expression class statics (XXX not shared globally). */
     JSRegExpStatics     regExpStatics;
 
