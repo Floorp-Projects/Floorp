@@ -233,6 +233,11 @@
       if (!window._content || !window._content.document) {
         return hide;
       }
+      var document = window._content.document;
+      if (!("forms" in document)) {
+        // this will occur if document is xul document instead of html document for example
+        return hide;
+      }
 
       // test for wallet service being available
       var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"]
@@ -266,7 +271,7 @@
       }
 
       // process top-level document
-      formsArray = window._content.document.forms;
+      formsArray = document.forms;
       state =
         getStateFromFormsArray(formsArray, captureOrPrefill, threshhold, walletService);
       if (state == enable) {
