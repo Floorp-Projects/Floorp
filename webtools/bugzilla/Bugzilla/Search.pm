@@ -922,7 +922,7 @@ sub init {
                 } elsif ($unit eq 'y') {
                     $unitinterval = 'YEAR';
                 }
-                my $cutoff = "DATE_SUB(NOW(), " .
+                my $cutoff = "NOW() - " .
                              $dbh->sql_interval("$quantity $unitinterval");
                 my $assigned_fieldid = &::GetFieldID('assigned_to');
                 push(@supptables, "LEFT JOIN longdescs comment_$table " .
