@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -65,13 +64,13 @@
     <stringbundle id="pluginWizardString" src="chrome://mozapps/locale/plugins/plugins.properties"/>
   </stringbundleset>
 
-  <wizardpage>
+  <wizardpage label="&pluginWizard.firstPage.title;">
     <description value="&pluginWizard.checkingForPlugins.description.label;"/>
     <separator />
     <progressmeter id="ws_request_progress" mode="undetermined"/>
   </wizardpage>
 
- <wizardpage label="&pluginWizard.availablePluginsPage.title;"  
+  <wizardpage label="&pluginWizard.availablePluginsPage.title;"
               onpageshow="gPluginInstaller.showPluginList()">
 
     <description value="&pluginWizard.availablePluginsPage.description.label;"/>
@@ -102,7 +101,7 @@
              label="&pluginWizard.licensePage.accept.label;"/>
       <radio id="licenseRadioGroup2" disabled="true" selected="true"
              label="&pluginWizard.licensePage.deny.label;"/>
-    </radiogroup>    
+    </radiogroup>
   </wizardpage>
 
   <wizardpage label="&pluginWizard.installPluginsPage.title;" 
@@ -145,3 +144,4 @@
   </wizardpage>
 
 </wizard>
+
