@@ -30,7 +30,7 @@
 #include "nsIWebShell.h"
 #include "nsJavaDOMImpl.h"
 
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
 #include "ProxyJNI.h"
 #include "nsIServiceManager.h"
 #endif
@@ -48,7 +48,7 @@ static char* strip_whitespace(const PRUnichar* input, int length);
 static const char* describe_type(int type);
 #endif
 
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
 #endif
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
   return NS_NOINTERFACE;
 }
 
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
 nsJVMManager* nsJavaDOMImpl::jvmManager = NULL;
 JavaDOMSecurityContext* nsJavaDOMImpl::securityContext = NULL;
 #else
@@ -470,7 +470,7 @@ NS_IMETHODIMP nsJavaDOMImpl::HandleUnknownContentType(nsIDocumentLoader* loader,
 
 JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
    JNIEnv* env;
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
    nsresult result;
    if (!jvmManager) {
        NS_WITH_SERVICE(nsIJVMManager, _jvmManager, kJVMManagerCID, &result);
@@ -487,20 +487,21 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
 //     }
    //   SetSecurityContext(env,securityContext);
    SetSecurityContext(env, new JavaDOMSecurityContext());
-#else  /* JAVA_DOM_OJI_DISABLE */
+#else  /* JAVA_DOM_OJI_ENABLE */
    if (!jvm) {
 	StartJVM();
    }
 #ifdef XP_PC
-   jvm->AttachCurrentThread((void**)&env,NULL);
+   jvm->AttachCurrentThread(&env,NULL);
+   //   jvm->AttachCurrentThread((void**)&env,NULL);
 #else
    jvm->AttachCurrentThread(&env,NULL);
 #endif
-#endif /* JAVA_DOM_OJI_DISABLE */
+#endif /* JAVA_DOM_OJI_ENABLE */
    return env;
 }
 
-#ifdef JAVA_DOM_OJI_DISABLE
+#ifndef JAVA_DOM_OJI_ENABLE
 void nsJavaDOMImpl::StartJVM(void) {
   JNIEnv *env = NULL;	
   JDK1_1InitArgs vm_args;
@@ -527,7 +528,8 @@ void nsJavaDOMImpl::StartJVM(void) {
   printf("classpath is \"%s\"\n", vm_args.classpath);
 #endif // DEBUG
 #ifdef XP_PC
-  jint rv = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+  jint rv = JNI_CreateJavaVM(&jvm, &env, &vm_args);
+  //  jint rv = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
 #else
   jint rv = JNI_CreateJavaVM(&jvm, &env, &vm_args);
 #endif
@@ -538,7 +540,7 @@ void nsJavaDOMImpl::StartJVM(void) {
   }
   delete[] p;
 }
-#endif /* JAVA_DOM_OJI_DISABLE */
+#endif /* JAVA_DOM_OJI_ENABLE */
 
 
 #if defined(DEBUG)

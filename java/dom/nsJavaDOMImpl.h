@@ -3,10 +3,10 @@
 
 #include "jni.h"
 #include "nsIJavaDOM.h"
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
 #include "nsJVMManager.h"
 #include "JavaDOMSecurityContext.h"
-#endif /* JAVA_DOM_OJI_DISABLE */
+#endif 
 
 class nsIURI;
 class nsIDOMDocument;
@@ -50,7 +50,7 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 				      const char *aCommand);
 
  private:
-#ifndef JAVA_DOM_OJI_DISABLE
+#ifdef JAVA_DOM_OJI_ENABLE
   static nsJVMManager* jvmManager;
   static JavaDOMSecurityContext* securityContext;
 #else

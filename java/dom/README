@@ -5,7 +5,7 @@ A Java component obtains a org.w3c.dom.Document by registering for
 Document load notifications. The Document is passed in along with the
 notifications. The preferred way for a Java component to register for
 Document load notifications is to register via the DOMAccessor
-class. However until OJI is used to obtain JNIEnv one has to apply
+class. However if OJI is not use to obtain JNIEnv one has to apply
 two patches
 
   webshell/src/nsWebShell.cpp.patch
@@ -17,6 +17,10 @@ Note:
   any class that implements the DocumentLoadListener interface may
   stand for TestDocLoadListener.
 See the section on Building for instructions on how to apply the patches.
+
+To enable OJI usage on win nt add -DJAVA_DOM_OJI_ENABLE to the
+DEFINES variable in makefile.win and also set an environment 
+variable JAVA_DOM_OJI_ENABLE=true
 
 
 Makefiles
