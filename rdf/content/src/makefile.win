@@ -20,15 +20,12 @@ MODULE=rdf
 LIBRARY_NAME=rdfcontent_s
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsRDFContentSink.obj          \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFDocument.obj             \
-        .\$(OBJDIR)\nsRDFDocumentContentSink.obj  \
         .\$(OBJDIR)\nsRDFGenericElement.obj       \
         .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
         .\$(OBJDIR)\nsRDFResourceElement.obj      \
-        .\$(OBJDIR)\nsRDFSimpleContentSink.obj    \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
 	$(NULL)
 

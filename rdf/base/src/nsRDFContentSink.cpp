@@ -46,18 +46,19 @@
 
 */
 
-#include "nsCRT.h"
+#include "nsIContentSink.h"
+#include "nsINameSpace.h"
+#include "nsINameSpaceManager.h"
+#include "nsIRDFContentSink.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsRDFCID.h"
+#include "nsIRDFXMLDocument.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsRDFContentSink.h"
+#include "nsIXMLContentSink.h"
+#include "nsRDFCID.h"
 #include "nsVoidArray.h"
-#include "nsINameSpaceManager.h"
-#include "nsINameSpace.h"
-#include "nsRDFContentUtils.h"
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
@@ -250,6 +251,45 @@ rdf_StripAndConvert(nsString& aResult)
     }
 }
 
+nsresult
+rdf_GetQuotedAttributeValue(const nsString& aSource, 
+                            const nsString& aAttribute,
+                            nsString& aValue)
+{
+static const char kQuote = '\"';
+static const char kApostrophe = '\'';
+
+    PRInt32 offset;
+    PRInt32 endOffset = -1;
+    nsresult result = NS_OK;
+
+    offset = aSource.Find(aAttribute);
+    if (-1 != offset) {
+        offset = aSource.Find('=', offset);
+
+        PRUnichar next = aSource.CharAt(++offset);
+        if (kQuote == next) {
+            endOffset = aSource.Find(kQuote, ++offset);
+        }
+        else if (kApostrophe == next) {
+            endOffset = aSource.Find(kApostrophe, ++offset);	  
+        }
+  
+        if (-1 != endOffset) {
+            aSource.Mid(aValue, offset, endOffset-offset);
+        }
+        else {
+            // Mismatched quotes - return an error
+            result = NS_ERROR_FAILURE;
+        }
+    }
+    else {
+        aValue.Truncate();
+    }
+
+    return result;
+}
+
 
 static void
 rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
@@ -268,10 +308,122 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFContentSink::nsRDFContentSink()
+class nsIURL;
+class nsVoidArray;
+class nsIRDFResource;
+class nsIRDFDataSource;
+class nsIRDFService;
+class nsINameSpaceManager;
+
+typedef enum {
+    eRDFContentSinkState_InProlog,
+    eRDFContentSinkState_InDocumentElement,
+    eRDFContentSinkState_InDescriptionElement,
+    eRDFContentSinkState_InContainerElement,
+    eRDFContentSinkState_InPropertyElement,
+    eRDFContentSinkState_InMemberElement,
+    eRDFContentSinkState_InEpilog
+} RDFContentSinkState;
+
+
+class RDFContentSinkImpl : public nsIRDFContentSink
+{
+public:
+    RDFContentSinkImpl();
+    virtual ~RDFContentSinkImpl();
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIContentSink
+    NS_IMETHOD WillBuildModel(void);
+    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+    NS_IMETHOD WillInterrupt(void);
+    NS_IMETHOD WillResume(void);
+    NS_IMETHOD SetParser(nsIParser* aParser);  
+    NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+    NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+    NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+    NS_IMETHOD AddComment(const nsIParserNode& aNode);
+    NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+    NS_IMETHOD NotifyError(nsresult aErrorResult);
+
+    // nsIXMLContentSink
+    NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
+    NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+    NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
+    NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
+    NS_IMETHOD AddNotation(const nsIParserNode& aNode);
+    NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
+
+    // nsIRDFContentSink
+    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& ds);
+    NS_IMETHOD SetRDFXMLDocument(nsIRDFXMLDocument* aDocument);
+
+protected:
+    // Text management
+    nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
+                       PRBool* aDidFlush=nsnull);
+
+    PRUnichar* mText;
+    PRInt32 mTextLength;
+    PRInt32 mTextSize;
+    PRBool mConstrainSize;
+
+    // namespace management
+    void      PushNameSpacesFrom(const nsIParserNode& aNode);
+    nsIAtom*  CutNameSpacePrefix(nsString& aString);
+    PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
+    void      GetNameSpaceURI(PRInt32 aID, nsString& aURI);
+    void      PopNameSpaces();
+
+    nsINameSpaceManager*  mNameSpaceManager;
+    nsVoidArray* mNameSpaceStack;
+    PRInt32      mRDFNameSpaceID;
+
+    void SplitQualifiedName(const nsString& aQualifiedName,
+                            PRInt32& rNameSpaceID,
+                            nsString& rProperty);
+
+    // RDF-specific parsing
+    nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsString& rResource);
+    nsresult GetResourceAttribute(const nsIParserNode& aNode, nsString& rResource);
+    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
+
+    virtual nsresult OpenRDF(const nsIParserNode& aNode);
+    virtual nsresult OpenObject(const nsIParserNode& aNode);
+    virtual nsresult OpenProperty(const nsIParserNode& aNode);
+    virtual nsresult OpenMember(const nsIParserNode& aNode);
+    virtual nsresult OpenValue(const nsIParserNode& aNode);
+
+    // Miscellaneous RDF junk
+    nsIRDFService*         mRDFService;
+    nsIRDFDataSource*      mDataSource;
+    nsIRDFXMLDocument*     mDocument;
+    RDFContentSinkState    mState;
+
+    // content stack management
+    PRInt32         PushContext(nsIRDFResource *aContext, RDFContentSinkState aState);
+    nsresult        PopContext(nsIRDFResource*& rContext, RDFContentSinkState& rState);
+    nsIRDFResource* GetContextElement(PRInt32 ancestor = 0);
+
+    nsVoidArray* mContextStack;
+
+    nsIURL*      mDocumentURL;
+    PRUint32     mGenSym; // for generating anonymous resources
+
+    PRBool       mHaveSetRootResource;
+};
+
+////////////////////////////////////////////////////////////////////////
+
+RDFContentSinkImpl::RDFContentSinkImpl()
     : mDocumentURL(nsnull),
       mRDFService(nsnull),
       mDataSource(nsnull),
+      mDocument(nsnull),
       mGenSym(0),
       mNameSpaceManager(nsnull),
       mNameSpaceStack(nsnull),
@@ -280,13 +432,14 @@ nsRDFContentSink::nsRDFContentSink()
       mText(nsnull),
       mTextLength(0),
       mTextSize(0),
-      mConstrainSize(PR_TRUE)
+      mConstrainSize(PR_TRUE),
+      mHaveSetRootResource(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
 
 
-nsRDFContentSink::~nsRDFContentSink()
+RDFContentSinkImpl::~RDFContentSinkImpl()
 {
     NS_IF_RELEASE(mDocumentURL);
 
@@ -329,11 +482,11 @@ nsRDFContentSink::~nsRDFContentSink()
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ADDREF(nsRDFContentSink);
-NS_IMPL_RELEASE(nsRDFContentSink);
+NS_IMPL_ADDREF(RDFContentSinkImpl);
+NS_IMPL_RELEASE(RDFContentSinkImpl);
 
 NS_IMETHODIMP
-nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
+RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
 {
     NS_PRECONDITION(result, "null ptr");
     if (! result)
@@ -356,37 +509,37 @@ nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
 // nsIContentSink interface
 
 NS_IMETHODIMP 
-nsRDFContentSink::WillBuildModel(void)
+RDFContentSinkImpl::WillBuildModel(void)
+{
+    return (mDocument != nsnull) ? mDocument->BeginLoad() : NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
+{
+    return (mDocument != nsnull) ? mDocument->EndLoad() : NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFContentSinkImpl::WillInterrupt(void)
+{
+    return (mDocument != nsnull) ? mDocument->Interrupt() : NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFContentSinkImpl::WillResume(void)
+{
+    return (mDocument != nsnull) ? mDocument->Resume() : NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFContentSinkImpl::SetParser(nsIParser* aParser)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::DidBuildModel(PRInt32 aQualityLevel)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsRDFContentSink::WillInterrupt(void)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsRDFContentSink::WillResume(void)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsRDFContentSink::SetParser(nsIParser* aParser)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 {
     // XXX Hopefully the parser will flag this before we get here. If
     // we're in the epilog, there should be no new elements
@@ -441,7 +594,7 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::CloseContainer(const nsIParserNode& aNode)
+RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 {
 #ifdef DEBUG
     const nsString& text = aNode.GetText();
@@ -468,7 +621,7 @@ nsRDFContentSink::CloseContainer(const nsIParserNode& aNode)
 
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddLeaf(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddLeaf(const nsIParserNode& aNode)
 {
     // XXX For now, all leaf content is character data
     AddCharacterData(aNode);
@@ -476,24 +629,24 @@ nsRDFContentSink::AddLeaf(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-nsRDFContentSink::NotifyError(nsresult aErrorResult)
+RDFContentSinkImpl::NotifyError(nsresult aErrorResult)
 {
-    printf("nsRDFContentSink::NotifyError\n");
+    printf("RDFContentSinkImpl::NotifyError\n");
     return NS_OK;
 }
 
 // nsIXMLContentSink
 NS_IMETHODIMP 
-nsRDFContentSink::AddXMLDecl(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddXMLDecl(const nsIParserNode& aNode)
 {
     // XXX We'll ignore it for now
-    printf("nsRDFContentSink::AddXMLDecl\n");
+    printf("RDFContentSinkImpl::AddXMLDecl\n");
     return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddComment(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddComment(const nsIParserNode& aNode)
 {
     FlushText();
     nsAutoString text;
@@ -508,22 +661,80 @@ nsRDFContentSink::AddComment(const nsIParserNode& aNode)
 
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
+
+static const char kStyleSheetPI[] = "<?xml-stylesheet";
+static const char kCSSType[] = "text/css";
+
+static const char kDataSourcePI[] = "<?rdf-datasource";
+
+    nsresult rv;
     FlushText();
-    return NS_OK;
+
+    if (! mDocument)
+        return NS_OK;
+
+    // XXX For now, we don't add the PI to the content model.
+    // We just check for a style sheet PI
+    const nsString& text = aNode.GetText();
+
+    // If it's a stylesheet PI...
+    if (0 == text.Find(kStyleSheetPI)) {
+        nsAutoString href;
+        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "href", href)))
+            return rv;
+
+        // If there was an error or there's no href, we can't do
+        // anything with this PI
+        if (! href.Length())
+            return NS_OK;
+    
+        nsAutoString type;
+        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "type", type)))
+            return rv;
+    
+        if (! type.Equals(kCSSType))
+            return NS_OK;
+
+        nsIURL* url = nsnull;
+        nsAutoString absURL;
+        nsAutoString emptyURL;
+        emptyURL.Truncate();
+        if (NS_FAILED(rv = NS_MakeAbsoluteURL(mDocumentURL, emptyURL, href, absURL)))
+            return rv;
+
+        if (NS_FAILED(rv = NS_NewURL(&url, absURL)))
+            return rv;
+
+        rv = mDocument->AddCSSStyleSheetURL(url);
+        NS_RELEASE(url);
+    }
+    else if (0 == text.Find(kDataSourcePI)) {
+        nsAutoString href;
+        rv = rdf_GetQuotedAttributeValue(text, "href", href);
+        if (NS_FAILED(rv) || (0 == href.Length()))
+            return rv;
+
+        char uri[256];
+        href.ToCString(uri, sizeof(uri));
+
+        rv = mDocument->AddNamedDataSourceURI(uri);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode)
 {
-    printf("nsRDFContentSink::AddDocTypeDecl\n");
+    printf("RDFContentSinkImpl::AddDocTypeDecl\n");
     return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddCharacterData(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 {
     nsAutoString text = aNode.GetText();
 
@@ -581,23 +792,23 @@ nsRDFContentSink::AddCharacterData(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddUnparsedEntity(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddUnparsedEntity(const nsIParserNode& aNode)
 {
-    printf("nsRDFContentSink::AddUnparsedEntity\n");
+    printf("RDFContentSinkImpl::AddUnparsedEntity\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddNotation(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddNotation(const nsIParserNode& aNode)
 {
-    printf("nsRDFContentSink::AddNotation\n");
+    printf("RDFContentSinkImpl::AddNotation\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsRDFContentSink::AddEntityReference(const nsIParserNode& aNode)
+RDFContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 {
-    printf("nsRDFContentSink::AddEntityReference\n");
+    printf("RDFContentSinkImpl::AddEntityReference\n");
     return NS_OK;
 }
 
@@ -605,7 +816,7 @@ nsRDFContentSink::AddEntityReference(const nsIParserNode& aNode)
 // nsIRDFContentSink interface
 
 NS_IMETHODIMP
-nsRDFContentSink::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
+RDFContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
 {
     NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
     if ((! aURL) || (! aNameSpaceManager))
@@ -628,7 +839,7 @@ nsRDFContentSink::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
 }
 
 NS_IMETHODIMP
-nsRDFContentSink::SetDataSource(nsIRDFDataSource* ds)
+RDFContentSinkImpl::SetDataSource(nsIRDFDataSource* ds)
 {
     NS_IF_RELEASE(mDataSource);
     mDataSource = ds;
@@ -638,10 +849,18 @@ nsRDFContentSink::SetDataSource(nsIRDFDataSource* ds)
 
 
 NS_IMETHODIMP
-nsRDFContentSink::GetDataSource(nsIRDFDataSource*& ds)
+RDFContentSinkImpl::GetDataSource(nsIRDFDataSource*& ds)
 {
     ds = mDataSource;
     NS_IF_ADDREF(mDataSource);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFContentSinkImpl::SetRDFXMLDocument(nsIRDFXMLDocument* aDocument)
+{
+    mDocument = aDocument;
+    NS_IF_ADDREF(mDocument);
     return NS_OK;
 }
 
@@ -665,7 +884,7 @@ rdf_IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
 
 
 nsresult
-nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
+RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 {
     nsresult rv = NS_OK;
     PRBool didFlush = PR_FALSE;
@@ -721,7 +940,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 // Qualified name resolution
 
 void
-nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
+RDFContentSinkImpl::SplitQualifiedName(const nsString& aQualifiedName,
                                      PRInt32& rNameSpaceID,
                                      nsString& rProperty)
 {
@@ -733,7 +952,7 @@ nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
 
 
 nsresult
-nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
+RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
                                       nsString& rResource)
 {
     // This corresponds to the dirty work of production [6.5]
@@ -790,7 +1009,7 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
 
 
 nsresult
-nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
+RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
                                        nsString& rResource)
 {
     nsAutoString k;
@@ -825,7 +1044,7 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
 }
 
 nsresult
-nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
+RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
                                 nsIRDFResource* aSubject)
 {
     // Add tag attributes to the content attributes
@@ -865,7 +1084,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
 // RDF-specific routines used to build the model
 
 nsresult
-nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenRDF(const nsIParserNode& aNode)
 {
     // ensure that we're actually reading RDF by making sure that the
     // opening tag is <rdf:RDF>, where "rdf:" corresponds to whatever
@@ -888,7 +1107,7 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
 
 
 nsresult
-nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
 {
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
@@ -976,6 +1195,12 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     }
 
     AddProperties(aNode, rdfResource);
+
+    if (mDocument && !mHaveSetRootResource) {
+        mHaveSetRootResource = PR_TRUE;
+        mDocument->SetRootResource(rdfResource);
+    }
+
     NS_RELEASE(rdfResource);
 
     return NS_OK;
@@ -983,7 +1208,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
 
 
 nsresult
-nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
 {
     if (! mRDFService)
         return NS_ERROR_NOT_INITIALIZED;
@@ -1043,7 +1268,7 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
 
 
 nsresult
-nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
 {
     // ensure that we're actually reading a member element by making
     // sure that the opening tag is <rdf:li>, where "rdf:" corresponds
@@ -1093,7 +1318,7 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
 
 
 nsresult
-nsRDFContentSink::OpenValue(const nsIParserNode& aNode)
+RDFContentSinkImpl::OpenValue(const nsIParserNode& aNode)
 {
     // a "value" can either be an object or a string: we'll only get
     // *here* if it's an object, as raw text is added as a leaf.
@@ -1110,7 +1335,7 @@ struct RDFContextStackElement {
 };
 
 nsIRDFResource* 
-nsRDFContentSink::GetContextElement(PRInt32 ancestor /* = 0 */)
+RDFContentSinkImpl::GetContextElement(PRInt32 ancestor /* = 0 */)
 {
     if ((nsnull == mContextStack) ||
         (ancestor >= mContextStack->Count())) {
@@ -1124,7 +1349,7 @@ nsRDFContentSink::GetContextElement(PRInt32 ancestor /* = 0 */)
 }
 
 PRInt32 
-nsRDFContentSink::PushContext(nsIRDFResource *aResource, RDFContentSinkState aState)
+RDFContentSinkImpl::PushContext(nsIRDFResource *aResource, RDFContentSinkState aState)
 {
     if (! mContextStack) {
         mContextStack = new nsVoidArray();
@@ -1145,7 +1370,7 @@ nsRDFContentSink::PushContext(nsIRDFResource *aResource, RDFContentSinkState aSt
 }
  
 nsresult
-nsRDFContentSink::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& rState)
+RDFContentSinkImpl::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& rState)
 {
     RDFContextStackElement* e;
     if ((nsnull == mContextStack) ||
@@ -1170,7 +1395,7 @@ nsRDFContentSink::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& rS
 // Namespace management
 
 void
-nsRDFContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
+RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
     nsAutoString k, uri, prefix;
     PRInt32 ac = aNode.GetAttributeCount();
@@ -1228,7 +1453,7 @@ nsRDFContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 }
 
 nsIAtom* 
-nsRDFContentSink::CutNameSpacePrefix(nsString& aString)
+RDFContentSinkImpl::CutNameSpacePrefix(nsString& aString)
 {
     nsAutoString  prefix;
     PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
@@ -1243,7 +1468,7 @@ nsRDFContentSink::CutNameSpacePrefix(nsString& aString)
 }
 
 PRInt32 
-nsRDFContentSink::GetNameSpaceID(nsIAtom* aPrefix)
+RDFContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
 {
     PRInt32 id = kNameSpaceID_Unknown;
   
@@ -1258,13 +1483,13 @@ nsRDFContentSink::GetNameSpaceID(nsIAtom* aPrefix)
 }
 
 void
-nsRDFContentSink::GetNameSpaceURI(PRInt32 aID, nsString& aURI)
+RDFContentSinkImpl::GetNameSpaceURI(PRInt32 aID, nsString& aURI)
 {
   mNameSpaceManager->GetNameSpaceURI(aID, aURI);
 }
 
 void
-nsRDFContentSink::PopNameSpaces()
+RDFContentSinkImpl::PopNameSpaces()
 {
     if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
         PRInt32 index = mNameSpaceStack->Count() - 1;
@@ -1278,3 +1503,20 @@ nsRDFContentSink::PopNameSpaces()
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewRDFContentSink(nsIRDFContentSink** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    RDFContentSinkImpl* sink = new RDFContentSinkImpl();
+    if (! sink)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(sink);
+    *aResult = sink;
+    return NS_OK;
+}

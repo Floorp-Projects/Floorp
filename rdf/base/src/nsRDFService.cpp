@@ -318,6 +318,7 @@ class ServiceImpl : public nsIRDFService
 protected:
     PrefixMap    mResourceFactories;
     PLHashTable* mNamedDataSources;
+    PLHashTable* mDataSourceConstructors;
     PLHashTable* mResources;
 
     ServiceImpl(void);
@@ -344,9 +345,11 @@ public:
     NS_IMETHOD RegisterResourceFactory(const char* aURIPrefix, nsIRDFResourceFactory* aFactory);
     NS_IMETHOD UnRegisterResourceFactory(const char* aURIPrefix);
 
-    NS_IMETHOD RegisterNamedDataSource(const char* uri, nsIRDFDataSource* dataSource);
-    NS_IMETHOD UnRegisterNamedDataSource(const char* uri);
-    NS_IMETHOD GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource);
+    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource);
+    NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
+    NS_IMETHOD RegisterDataSourceConstructor(const char* uri, NSDataSourceConstructorCallback fn);
+    NS_IMETHOD UnregisterDataSourceConstructor(const char* uri);
+    NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
     NS_IMETHOD CreateDatabase(const char** uris, nsIRDFDataBase** dataBase);
     NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase);
 };
@@ -370,18 +373,28 @@ ServiceImpl::ServiceImpl(void)
                                         PL_CompareStrings,
                                         PL_CompareValues,
                                         nsnull, nsnull);
+
+    mDataSourceConstructors = PL_NewHashTable(23,
+                                              PL_HashString,
+                                              PL_CompareStrings,
+                                              PL_CompareValues,
+                                              nsnull, nsnull);
 }
 
 
 ServiceImpl::~ServiceImpl(void)
 {
-    if (mResources) {
-        PL_HashTableDestroy(mResources);
-        mResources = nsnull;
+    if (mDataSourceConstructors) {
+        PL_HashTableDestroy(mDataSourceConstructors);
+        mDataSourceConstructors = nsnull;
     }
     if (mNamedDataSources) {
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nsnull;
+    }
+    if (mResources) {
+        PL_HashTableDestroy(mResources);
+        mResources = nsnull;
     }
     gRDFService = nsnull;
 }
@@ -522,17 +535,37 @@ ServiceImpl::UnRegisterResourceFactory(const char* aURIPrefix)
 }
 
 NS_IMETHODIMP
-ServiceImpl::RegisterNamedDataSource(const char* uri, nsIRDFDataSource* dataSource)
+ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource)
 {
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
+        return rv;
+
     // XXX check for dups, etc.
-    NS_ADDREF(dataSource); // XXX is this the right thing to do?
-    PL_HashTableAdd(mNamedDataSources, uri, dataSource);
+
+    PL_HashTableAdd(mNamedDataSources, uri, aDataSource);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-ServiceImpl::UnRegisterNamedDataSource(const char* uri)
+ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 {
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
+        return rv;
+
     nsIRDFDataSource* ds = 
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
@@ -540,36 +573,70 @@ ServiceImpl::UnRegisterNamedDataSource(const char* uri)
         return NS_ERROR_ILLEGAL_VALUE;
 
     PL_HashTableRemove(mNamedDataSources, uri);
-    NS_RELEASE(ds);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-ServiceImpl::GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource)
+ServiceImpl::RegisterDataSourceConstructor(const char* uri, NSDataSourceConstructorCallback fn)
+{
+    // XXX check for dups, etc.
+    PL_HashTableAdd(mDataSourceConstructors, uri, fn);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceImpl::UnregisterDataSourceConstructor(const char* uri)
+{
+    PL_HashTableRemove(mDataSourceConstructors, uri);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 {
     nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
-    // XXX if it's not a named data source, and it looks like it might be
-    // a URL, then try to create a stream data source on the URL.
-    if (! ds) {
-		size_t len = strlen(uri);
-		if ((len > 4) && (strcmp(&uri[len-4], ".rdf") == 0)) {
-            extern nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
-            if (NS_OK != NS_NewRDFStreamDataSource(&ds)) {
-                return NS_ERROR_ILLEGAL_VALUE;
-            } else {
-                ds->Init(uri);
-
-                // XXX do we really want to globally register this datasource?
-                RegisterNamedDataSource(uri, ds);
-            }
-        } else return NS_ERROR_ILLEGAL_VALUE;
+    if (ds) {
+        NS_ADDREF(ds);
+        *aDataSource = ds;
+        return NS_OK;
     }
 
-    NS_ADDREF(ds);
-    *dataSource = ds;
-    return NS_OK;
+    // Otherwise, see if we have a lazy constructor
+    NSDataSourceConstructorCallback constructor =
+        (NSDataSourceConstructorCallback)
+        PL_HashTableLookup(mDataSourceConstructors, uri);
+
+    if (constructor) {
+        // Yep, so try to construct it on the fly...
+        nsresult rv;
+
+        if (NS_FAILED(rv = constructor(&ds))) {
+#ifdef DEBUG
+            printf("error constructing built-in datasource %s\n", uri);
+#endif
+            return rv;
+        }
+
+        // If it wants to register itself, it should do so in the Init() method.
+        if (NS_FAILED(rv = ds->Init(uri))) {
+#ifdef DEBUG
+            printf("error initializing named datasource %s\n", uri);
+#endif
+            NS_RELEASE(ds);
+            return rv;
+        }
+
+        // constructor did an implicit addref
+        *aDataSource = ds;
+        return NS_OK;
+    }
+
+    // XXX at this point, we might want to try to construct a
+    // stream URI and load it that way...
+    return NS_ERROR_ILLEGAL_VALUE;
+
 }
 
 NS_IMETHODIMP
@@ -669,17 +736,12 @@ ServiceImpl::RegisterBuiltInNamedDataSources(void)
 
     nsresult rv;
     for (DataSourceTable* entry = gTable; entry->mURI != nsnull; ++entry) {
-        nsIRDFDataSource* ds;
-
-        if (NS_FAILED(rv = (entry->mDataSourceConstructor)(&ds)))
+        if (NS_FAILED(rv = gRDFService->RegisterDataSourceConstructor(entry->mURI, entry->mDataSourceConstructor))) {
+#ifdef DEBUG
+            printf("error registering built-in datasource constructor for %s\n", entry->mURI);
+#endif
             continue;
-
-        if (NS_SUCCEEDED(rv = ds->Init(entry->mURI))) {
-            rv = gRDFService->RegisterNamedDataSource(entry->mURI, ds);
-            PR_ASSERT(NS_SUCCEEDED(rv));
         }
-
-        NS_RELEASE(ds);
     }
 }
 

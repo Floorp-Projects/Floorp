@@ -23,14 +23,21 @@
   implementation serves as the basis for generating an NGLayout
   content model.
 
+  TO DO
+
+  1) Figure out how to get rid of the DummyListener hack.
+
  */
 
 #include "nsIArena.h"
 #include "nsICollection.h"
 #include "nsIContent.h"
+#include "nsICSSParser.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
+#include "nsIEnumerator.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
@@ -45,6 +52,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
+#include "nsIRDFXMLDocument.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
@@ -64,6 +72,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kICSSParserIID,          NS_ICSS_PARSER_IID); // XXX grr..
 static NS_DEFINE_IID(kICollectionIID,         NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDTDIID,                NS_IDTD_IID);
@@ -78,17 +87,21 @@ static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIRDFXMLDocumentIID,     NS_IRDFXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,        NS_IXMLDOCUMENT_IID);
 
+static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
 static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
@@ -106,7 +119,8 @@ rdf_HashPointer(const void* key)
 
 class RDFDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
-                        public nsIRDFObserver
+                        public nsIRDFObserver,
+                        public nsIRDFXMLDocumentObserver
 {
 public:
     RDFDocumentImpl();
@@ -281,11 +295,31 @@ public:
                           nsIRDFResource* predicate,
                           nsIRDFNode* object);
 
+    // nsIRDFXMLDocumentObserver interface
+    NS_IMETHOD OnBeginLoad(void);
+    NS_IMETHOD OnInterrupt(void);
+    NS_IMETHOD OnResume(void);
+    NS_IMETHOD OnEndLoad(void);
+
+    NS_IMETHOD OnRootResourceFound(nsIRDFResource* aResource);
+    NS_IMETHOD OnCSSStyleSheetAdded(nsIURL* aStyleSheetURI);
+    NS_IMETHOD OnNamedDataSourceAdded(const char* aNamedDataSourceURI);
+
+    // Implementation methods
+    nsresult StartLayout(void);
+
 protected:
     nsIContent*
     FindContent(const nsIContent* aStartNode,
                 const nsIContent* aTest1,
                 const nsIContent* aTest2) const;
+
+    nsresult
+    LoadCSSStyleSheet(nsIURL* url);
+
+    nsresult
+    AddNamedDataSource(const char* uri);
+
 
     nsIArena*              mArena;
     nsVoidArray            mObservers;
@@ -302,14 +336,108 @@ protected:
     nsVoidArray            mPresShells;
     nsINameSpaceManager*   mNameSpaceManager;
     nsIStyleSheet*         mAttrStyleSheet;
-    nsIParser*             mParser;
     nsIRDFDataBase*        mDB;
     nsIRDFService*         mRDFService;
     nsISupportsArray*      mTreeProperties;
     nsIRDFContentModelBuilder* mBuilder;
     PLHashTable*           mResources;
+    nsIRDFDataSource*      mLocalDataSource;
+    nsIRDFDataSource*      mDocumentDataSource;
 };
 
+
+////////////////////////////////////////////////////////////////////////
+// DummyListener
+//
+//   This is a _total_ hack that is used to get stuff to draw right
+//   when a second copy is loaded. I need to talk to Guha about what
+//   the expected behavior should be...
+//
+class DummyListener : public nsIStreamListener
+{
+private:
+    RDFDocumentImpl* mRDFDocument;
+    PRBool mWasNotifiedOnce; // XXX why do we get _two_ OnStart/StopBinding() calls?
+
+public:
+    DummyListener(RDFDocumentImpl* aRDFDocument)
+        : mRDFDocument(aRDFDocument),
+          mWasNotifiedOnce(PR_FALSE)
+    {
+        NS_INIT_REFCNT();
+        NS_ADDREF(mRDFDocument);
+    }
+
+    virtual ~DummyListener(void) {
+        NS_RELEASE(mRDFDocument);
+    }
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIStreamObserver interface
+    NS_IMETHOD
+    OnStartBinding(nsIURL* aURL, const char *aContentType) {
+        if (! mWasNotifiedOnce) {
+            mRDFDocument->BeginLoad();
+            mRDFDocument->StartLayout();
+        }
+        return NS_OK;
+    }
+
+    NS_IMETHOD
+    OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) {
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) {
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) {
+        if (! mWasNotifiedOnce) {
+            mRDFDocument->EndLoad();
+            mWasNotifiedOnce = PR_TRUE;
+        }
+        return NS_OK;
+    }
+    
+
+    // nsIStreamListener interface
+    NS_IMETHOD
+    GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) {
+        aInfo->seekable = PR_FALSE;
+        return NS_OK;
+    }
+
+    NS_IMETHOD
+    OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength) {
+        return NS_OK;
+    }
+};
+
+NS_IMPL_ADDREF(DummyListener);
+NS_IMPL_RELEASE(DummyListener);
+
+NS_IMETHODIMP
+DummyListener::QueryInterface(REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(kIStreamListenerIID) ||
+        aIID.Equals(kIStreamObserverIID) ||
+        aIID.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsIStreamListener*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -325,12 +453,13 @@ RDFDocumentImpl::RDFDocumentImpl(void)
       mDisplaySelection(PR_FALSE),
       mNameSpaceManager(nsnull),
       mAttrStyleSheet(nsnull),
-      mParser(nsnull),
       mDB(nsnull),
       mRDFService(nsnull),
       mTreeProperties(nsnull),
       mBuilder(nsnull),
-      mResources(nsnull)
+      mResources(nsnull),
+      mLocalDataSource(nsnull),
+      mDocumentDataSource(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -348,10 +477,18 @@ RDFDocumentImpl::RDFDocumentImpl(void)
 
 RDFDocumentImpl::~RDFDocumentImpl()
 {
+    if (mDocumentDataSource) {
+        nsIRDFXMLDocument* doc;
+        if (NS_SUCCEEDED(mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
+            doc->RemoveDocumentObserver(this);
+            NS_RELEASE(doc);
+        }
+        NS_RELEASE(mDocumentDataSource);
+    }
+    NS_IF_RELEASE(mLocalDataSource);
+
     if (mResources)
         PL_HashTableDestroy(mResources);
-
-    NS_IF_RELEASE(mParser);
 
     if (mRDFService) {
         nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
@@ -439,99 +576,145 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
     (void)aURL->GetURLGroup(&mDocumentURLGroup);
 
-    rv = nsRepository::CreateInstance(kParserCID, 
-                                      nsnull,
-                                      kIParserIID, 
-                                      (void**) &mParser);
-    PR_ASSERT(NS_SUCCEEDED(rv));
+    // Create an HTML style sheet for the HTML content.
+    nsIHTMLStyleSheet* sheet;
+    if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kHTMLStyleSheetCID,
+                                                       nsnull,
+                                                       kIHTMLStyleSheetIID,
+                                                       (void**) &sheet))) {
+        if (NS_SUCCEEDED(rv = sheet->Init(aURL, this))) {
+            mAttrStyleSheet = sheet;
+            NS_ADDREF(mAttrStyleSheet);
+
+            AddStyleSheet(mAttrStyleSheet);
+        }
+        NS_RELEASE(sheet);
+    }
+
     if (NS_FAILED(rv))
         return rv;
-
-    nsIWebShell* webShell              = nsnull;
-    nsIRDFContentSink* sink            = nsnull;
-    nsIRDFDataSource* ds               = nsnull;
-    nsIHTMLStyleSheet* sheet           = nsnull;
-    nsIDTD* dtd = nsnull;
-
-    if (NS_FAILED(rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    if (NS_FAILED(rv = NS_NewRDFDocumentContentSink(&sink, this, aURL, webShell))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    NS_RELEASE(webShell);
-
+      
+    // Create a "scratch" in-memory data store to associate with the
+    // document to be a catch-all for any doc-specific info that we
+    // need to store (e.g., current sort order, etc.)
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
-                                                    (void**) &ds))) {
+                                                    (void**) &mLocalDataSource)))
+        return rv;
+
+    if (NS_FAILED(rv = mDB->AddDataSource(mLocalDataSource)))
+        return rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aURL->GetSpec(&uri)))
+        return rv;
+
+    // Now load the actual XML/RDF document data source.
+    if (NS_SUCCEEDED(rv = mRDFService->GetDataSource(uri, &mDocumentDataSource))) {
+        if (NS_FAILED(rv = mDB->AddDataSource(mDocumentDataSource)))
+            return rv;
+
+        // we found the data source already loaded locally. Load it's
+        // style sheets and attempt to include any named data sources
+        // that it references into this document.
+        nsIRDFXMLDocument* doc;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
+            nsIURL** styleSheetURLs;
+            PRInt32 count;
+            if (NS_SUCCEEDED(rv = doc->GetCSSStyleSheetURLs(&styleSheetURLs, &count))) {
+                for (PRInt32 i = 0; i < count; ++i) {
+                    if (NS_FAILED(rv = LoadCSSStyleSheet(styleSheetURLs[i]))) {
+                        NS_ASSERTION(PR_FALSE, "couldn't load style sheet");
+                    }
+                }
+            }
+
+            const char* const* namedDataSourceURIs;
+            if (NS_SUCCEEDED(rv = doc->GetNamedDataSourceURIs(&namedDataSourceURIs, &count))) {
+                for (PRInt32 i = 0; i < count; ++i) {
+                    if (NS_FAILED(rv = AddNamedDataSource(namedDataSourceURIs[i]))) {
+#ifdef DEBUG
+                        printf("error adding named data source %s\n", namedDataSourceURIs[i]);
+#endif
+                    }
+                }
+            }
+
+            nsIRDFResource* root;
+            if (NS_SUCCEEDED(rv = doc->GetRootResource(&root))) {
+                SetRootResource(root);
+                StartLayout();
+            }
+            NS_RELEASE(doc);
+        }
+
+        // XXX Allright, this is an atrocious hack. Basically, we
+        // construct a dummy listener object so that we can load the
+        // URL, which allows us to receive StartLayout() and EndLoad()
+        // calls asynchronously. If we don't do this, then there is no
+        // way (that I could figure out) to force the content model to
+        // be traversed so that a document is laid out again.
+        //
+        // Looking at the "big picture" here, the real problem is that
+        // the "registered" data sources mechanism is really just a
+        // cache of stream data sources. It's not really clear what
+        // should happen when somebody opens a second document on the
+        // same source. You'd kinda like both to refer to the same
+        // thing, so changes to one are immediately reflected in the
+        // other. On the other hand, you'd also like to be able to
+        // _unload_ and reload a content model, say by doing
+        // "shift+reload". _So_, that kinda ties into the real cache,
+        // etc. etc.
+        //
+        // What I guess I'm saying is, maybe it doesn't make that much
+        // sense to register stream data sources when they're
+        // created...I dunno...
+        if (aDocListener) {
+            nsIStreamListener* lsnr = new DummyListener(this);
+            if (! lsnr)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(lsnr);
+            *aDocListener = lsnr;
+
+            if (NS_FAILED(rv = NS_OpenURL(aURL, lsnr)))
+                return rv;
+        }
+    }
+    else if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
+                                                            nsnull,
+                                                            kIRDFDataSourceIID,
+                                                            (void**) &mDocumentDataSource))) {
+        if (NS_FAILED(rv = mDB->AddDataSource(mDocumentDataSource)))
+            return rv;
+
+        // We need to construct a new stream and load it. The stream
+        // will automagically register itself as a named data source,
+        // so if subsequent docs ask for it, they'll get the real
+        // deal. In the meantime, add us as an
+        // nsIRDFXMLDocumentObserver so that we'll be notified when we
+        // need to load style sheets, etc.
+
+        nsIRDFXMLDocument* doc;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
+            doc->AddDocumentObserver(this);
+            NS_RELEASE(doc);
+        }
+
+        if (NS_FAILED(rv = mDocumentDataSource->Init(uri)))
+            return rv;
+
+        if (aDocListener) {
+            *aDocListener = nsnull;
+        }
+    }
+    else {
+        // an error occurred
         PR_ASSERT(0);
-        goto done;
     }
 
-    if (NS_FAILED(rv = sink->SetDataSource(ds))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    if (NS_FAILED(rv = mDB->AddDataSource(ds))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    // Create an HTML style sheet for the HTML content.
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kHTMLStyleSheetCID,
-                                                    nsnull,
-                                                    kIHTMLStyleSheetIID,
-                                                    (void**) &sheet))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    if (NS_FAILED(rv = sheet->Init(aURL, this))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    mAttrStyleSheet = sheet;
-    NS_ADDREF(mAttrStyleSheet);
-
-    AddStyleSheet(mAttrStyleSheet);
-      
-    // Set the parser as the stream listener for the document loader...
-    if (NS_FAILED(rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kWellFormedDTDCID,
-                                                    nsnull,
-                                                    kIDTDIID,
-                                                    (void**) &dtd))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-    mParser->RegisterDTD(dtd);
-    mParser->SetCommand(aCommand);
-    mParser->SetContentSink(sink);
-
-    if (NS_FAILED(rv = mParser->Parse(aURL))) {
-        PR_ASSERT(0);
-        goto done;
-    }
-
-done:
-    NS_IF_RELEASE(dtd);
-    NS_IF_RELEASE(sheet);
-    NS_IF_RELEASE(ds);
-    NS_IF_RELEASE(sink);
-    NS_IF_RELEASE(webShell);
-    return rv;
+    return NS_OK;
 }
 
 const nsString*
@@ -568,9 +751,9 @@ RDFDocumentImpl::SetDocumentCharacterSet(nsCharSetID aCharSetID)
 
 nsresult 
 RDFDocumentImpl::CreateShell(nsIPresContext* aContext,
-                           nsIViewManager* aViewManager,
-                           nsIStyleSet* aStyleSet,
-                           nsIPresShell** aInstancePtrResult)
+                             nsIViewManager* aViewManager,
+                             nsIStyleSet* aStyleSet,
+                             nsIPresShell** aInstancePtrResult)
 {
     NS_PRECONDITION(aInstancePtrResult, "null ptr");
     if (! aInstancePtrResult)
@@ -591,7 +774,7 @@ RDFDocumentImpl::CreateShell(nsIPresContext* aContext,
     }
 
     mPresShells.AppendElement(shell);
-    *aInstancePtrResult = shell;
+    *aInstancePtrResult = shell; // addref implicit
 
     return NS_OK;
 }
@@ -772,7 +955,7 @@ RDFDocumentImpl::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwne
     // reference to the document. This has to be done before we
     // actually set the script context owner to null so that the
     // content elements can remove references to their script objects.
-    if (!aScriptContextOwner && !mRootContent)
+    if (!aScriptContextOwner && mRootContent)
         mRootContent->SetDocument(nsnull, PR_TRUE);
 
     NS_IF_RELEASE(mScriptContextOwner);
@@ -825,8 +1008,6 @@ RDFDocumentImpl::EndLoad()
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->EndLoad(this);
     }
-
-    NS_IF_RELEASE(mParser);
     return NS_OK;
 }
 
@@ -1094,7 +1275,7 @@ RDFDocumentImpl::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurr
     PRBool result = PR_FALSE;
 
     if (nsnull != aNewContent && nsnull != aCurrentContent && aNewContent != aCurrentContent) {
-        nsIContent* test = FindContent(mRootContent,aNewContent,aCurrentContent);
+        nsIContent* test = FindContent(mRootContent, aNewContent, aCurrentContent);
         if (test == aNewContent)
             result = PR_TRUE;
 
@@ -1604,14 +1785,69 @@ RDFDocumentImpl::OnUnassert(nsIRDFResource* subject,
 }
 
 
+////////////////////////////////////////////////////////////////////////
+// nsIRDFXMLDocumentObserver interface
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnBeginLoad(void)
+{
+    return BeginLoad();
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnInterrupt(void)
+{
+    // flow any content that we have up until now.
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnResume(void)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnEndLoad(void)
+{
+    return EndLoad();
+}
+
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnRootResourceFound(nsIRDFResource* aResource)
+{
+    nsresult rv;
+    if (NS_SUCCEEDED(rv = SetRootResource(aResource))) {
+        rv = StartLayout();
+    }
+    return rv;
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnCSSStyleSheetAdded(nsIURL* aStyleSheetURL)
+{
+    return LoadCSSStyleSheet(aStyleSheetURL);
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnNamedDataSourceAdded(const char* aNamedDataSourceURI)
+{
+    return AddNamedDataSource(aNamedDataSourceURI);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
 nsIContent*
 RDFDocumentImpl::FindContent(const nsIContent* aStartNode,
-                           const nsIContent* aTest1, 
-                           const nsIContent* aTest2) const
+                             const nsIContent* aTest1, 
+                             const nsIContent* aTest2) const
 {
     PRInt32 count;
     aStartNode->ChildCount(count);
@@ -1634,6 +1870,106 @@ RDFDocumentImpl::FindContent(const nsIContent* aStartNode,
     }
     return nsnull;
 }
+
+
+nsresult
+RDFDocumentImpl::LoadCSSStyleSheet(nsIURL* url)
+{
+    nsresult rv;
+    nsIInputStream* iin;
+    rv = NS_OpenURL(url, &iin);
+    if (NS_OK != rv) {
+        NS_RELEASE(url);
+        return rv;
+    }
+
+    nsIUnicharInputStream* uin = nsnull;
+    rv = NS_NewConverterStream(&uin, nsnull, iin);
+    NS_RELEASE(iin);
+    if (NS_OK != rv) {
+        NS_RELEASE(url);
+        return rv;
+    }
+      
+    nsICSSParser* parser;
+    rv = nsRepository::CreateInstance(kCSSParserCID,
+                                      nsnull,
+                                      kICSSParserIID,
+                                      (void**) &parser);
+
+    if (NS_SUCCEEDED(rv)) {
+        nsICSSStyleSheet* sheet = nsnull;
+        // XXX note: we are ignoring rv until the error code stuff in the
+        // input routines is converted to use nsresult's
+        parser->SetCaseSensitive(PR_TRUE);
+        parser->Parse(uin, url, sheet);
+        if (nsnull != sheet) {
+            AddStyleSheet(sheet);
+            NS_RELEASE(sheet);
+            rv = NS_OK;
+        } else {
+            rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
+        }
+        NS_RELEASE(parser);
+    }
+
+    NS_RELEASE(uin);
+    NS_RELEASE(url);
+    return rv;
+}
+
+
+nsresult
+RDFDocumentImpl::AddNamedDataSource(const char* uri)
+{
+    nsresult rv;
+    nsIRDFDataSource* ds = nsnull;
+
+    if (NS_FAILED(rv = mRDFService->GetDataSource(uri, &ds)))
+        goto done;
+
+    if (NS_FAILED(rv = mDB->AddDataSource(ds)))
+        goto done;
+
+done:
+    NS_IF_RELEASE(ds);
+    return rv;
+}
+
+
+nsresult
+RDFDocumentImpl::StartLayout(void)
+{
+    PRInt32 count = GetNumberOfShells();
+    for (PRInt32 i = 0; i < count; i++) {
+        nsIPresShell* shell = GetShellAt(i);
+        if (nsnull == shell)
+            continue;
+
+        // Resize-reflow this time
+        nsIPresContext* cx = shell->GetPresContext();
+        nsRect r;
+        cx->GetVisibleArea(r);
+        shell->InitialReflow(r.width, r.height);
+        NS_RELEASE(cx);
+
+        // Now trigger a refresh
+        nsIViewManager* vm = shell->GetViewManager();
+        if (nsnull != vm) {
+            vm->EnableRefresh();
+            NS_RELEASE(vm);
+        }
+
+        // Start observing the document _after_ we do the initial
+        // reflow. Otherwise, we'll get into an trouble trying to
+        // creat kids before the root frame is established.
+        shell->BeginObservingDocument();
+
+        NS_RELEASE(shell);
+    }
+    return NS_OK;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////

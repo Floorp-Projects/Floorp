@@ -42,12 +42,17 @@
 #include "nsIRDFContentSink.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFNode.h"
+#include "nsIRDFService.h"
+#include "nsIRDFXMLDocument.h"
 #include "nsIRDFXMLSource.h"
+#include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
+#include "nsVoidArray.h"
 #include "plstr.h"
 #include "prio.h"
 
@@ -59,6 +64,8 @@ static NS_DEFINE_IID(kIOutputStreamIID,      NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIParserIID,            NS_IPARSER_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,     NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,    NS_IRDFCONTENTSINK_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,        NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIRDFXMLDocumentIID,    NS_IRDFXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFXMLSourceIID,      NS_IRDFXMLSOURCE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,    NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
@@ -66,7 +73,8 @@ static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -119,12 +127,19 @@ NS_IMPL_ISUPPORTS(FileOutputStreamImpl, kIOutputStreamIID);
 // StreamDataSourceImpl
 
 class StreamDataSourceImpl : public nsIRDFDataSource,
+                             public nsIRDFXMLDocument,
                              public nsIRDFXMLSource
 {
 protected:
     nsIRDFDataSource* mInner;
     PRBool            mIsWritable;
     PRBool            mIsDirty;
+    nsVoidArray       mObservers;
+    char**            mNamedDataSourceURIs;
+    PRInt32           mNumNamedDataSourceURIs;
+    nsIURL**          mCSSStyleSheetURLs;
+    PRInt32           mNumCSSStyleSheetURLs;
+    nsIRDFResource*   mRootResource;
 
 public:
     StreamDataSourceImpl(void);
@@ -218,8 +233,24 @@ public:
         return mInner->DoCommand(aCommand, aCommandTarget);
     }
 
+    // nsIRDFXMLDocument interface
+    NS_IMETHOD BeginLoad(void);
+    NS_IMETHOD Interrupt(void);
+    NS_IMETHOD Resume(void);
+    NS_IMETHOD EndLoad(void);
+    NS_IMETHOD SetRootResource(nsIRDFResource* aResource);
+    NS_IMETHOD GetRootResource(nsIRDFResource** aResource);
+    NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL);
+    NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount);
+    NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI);
+    NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount);
+    NS_IMETHOD AddDocumentObserver(nsIRDFXMLDocumentObserver* aObserver);
+    NS_IMETHOD RemoveDocumentObserver(nsIRDFXMLDocumentObserver* aObserver);
+
     // nsIRDFXMLSource interface
     NS_IMETHOD Serialize(nsIOutputStream* aStream);
+
+    // Implementation methods
 };
 
 
@@ -227,14 +258,42 @@ public:
 
 
 StreamDataSourceImpl::StreamDataSourceImpl(void)
-    : mIsWritable(PR_FALSE)
+    : mIsWritable(PR_FALSE),
+      mNamedDataSourceURIs(nsnull),
+      mNumNamedDataSourceURIs(0),
+      mCSSStyleSheetURLs(nsnull),
+      mNumCSSStyleSheetURLs(0)
 {
+    nsresult rv;
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
+                                                    nsnull,
+                                                    kIRDFDataSourceIID,
+                                                    (void**) &mInner)))
+        PR_ASSERT(0);
 }
 
 
 StreamDataSourceImpl::~StreamDataSourceImpl(void)
 {
+    nsIRDFService* rdfService;
+    if (NS_SUCCEEDED(nsServiceManager::GetService(kRDFServiceCID,
+                                                  kIRDFServiceIID,
+                                                  (nsISupports**) &rdfService))) {
+        rdfService->UnregisterDataSource(this);
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+    }
+
     Flush();
+
+    while (--mNumNamedDataSourceURIs >= 0)
+        delete mNamedDataSourceURIs[mNumNamedDataSourceURIs];
+
+    delete mNamedDataSourceURIs;
+
+    while (--mNumCSSStyleSheetURLs >= 0)
+        NS_RELEASE(mCSSStyleSheetURLs[mNumCSSStyleSheetURLs]);
+
+    delete mCSSStyleSheetURLs;
 }
 
 
@@ -258,6 +317,11 @@ StreamDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF(this);
         return NS_OK;
     }
+    else if (iid.Equals(kIRDFXMLDocumentIID)) {
+        *result = NS_STATIC_CAST(nsIRDFXMLDocument*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
     else {
         *result = nsnull;
         return NS_NOINTERFACE;
@@ -270,6 +334,10 @@ const PRInt32 kFileURIPrefixLen = 5;
 NS_IMETHODIMP
 StreamDataSourceImpl::Init(const char* uri)
 {
+    NS_PRECONDITION(mInner != nsnull, "not initialized");
+    if (! mInner)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     nsresult rv;
 
     // XXX this is a hack: any "file:" URI is considered writable. All
@@ -277,6 +345,7 @@ StreamDataSourceImpl::Init(const char* uri)
     if (PL_strncmp(uri, kFileURIPrefix, kFileURIPrefixLen) == 0)
         mIsWritable = PR_TRUE;
 
+    nsIRDFService* rdfService = nsnull;
     nsINameSpaceManager* ns = nsnull;
     nsIRDFContentSink* sink = nsnull;
     nsIParser* parser       = nsnull;
@@ -287,13 +356,15 @@ StreamDataSourceImpl::Init(const char* uri)
     if (NS_FAILED(rv = NS_NewURL(&url, uri)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFDataSourceIID,
-                                                    (void**) &mInner)))
+    if (NS_FAILED(rv = mInner->Init(uri)))
         goto done;
 
-    if (NS_FAILED(rv = mInner->Init(uri)))
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &rdfService)))
+        goto done;
+
+    if (NS_FAILED(rv = rdfService->RegisterDataSource(this)))
         goto done;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
@@ -302,7 +373,7 @@ StreamDataSourceImpl::Init(const char* uri)
                                                     (void**) &ns)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleContentSinkCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFContentSinkCID,
                                                     nsnull,
                                                     kIRDFContentSinkIID,
                                                     (void**) &sink)))
@@ -312,8 +383,11 @@ StreamDataSourceImpl::Init(const char* uri)
         goto done;
 
     // We set the content sink's data source directly to our in-memory
-    // store. We _always_ fail asserts because they're not allowed.
+    // store. This allows the initial content to be generated "directly".
     if (NS_FAILED(rv = sink->SetDataSource(mInner)))
+        goto done;
+
+    if (NS_FAILED(rv = sink->SetRDFXMLDocument(this)))
         goto done;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kParserCID,
@@ -324,6 +398,9 @@ StreamDataSourceImpl::Init(const char* uri)
 
     parser->SetContentSink(sink);
 
+    // XXX this should eventually be kRDFDTDCID (oh boy, that's a
+    // pretty identifier). The RDF DTD will be a much more
+    // RDF-resilient parser.
     if (NS_FAILED(rv = nsRepository::CreateInstance(kWellFormedDTDCID,
                                                     nsnull,
                                                     kIDTDIID,
@@ -346,6 +423,10 @@ done:
     NS_IF_RELEASE(dtd);
     NS_IF_RELEASE(parser);
     NS_IF_RELEASE(sink);
+    if (rdfService) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+        rdfService = nsnull;
+    }
     NS_IF_RELEASE(url);
     return rv;
 }
@@ -406,6 +487,175 @@ StreamDataSourceImpl::Flush(void)
     mIsDirty = PR_FALSE;
     return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFXMLDocument methods
+
+NS_IMETHODIMP
+StreamDataSourceImpl::BeginLoad(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnBeginLoad();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::Interrupt(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnInterrupt();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::Resume(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnResume();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::EndLoad(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnEndLoad();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::SetRootResource(nsIRDFResource* aResource)
+{
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(aResource);
+    mRootResource = aResource;
+
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnRootResourceFound(mRootResource);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::GetRootResource(nsIRDFResource** aResource)
+{
+    NS_ADDREF(mRootResource);
+    *aResource = mRootResource;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::AddCSSStyleSheetURL(nsIURL* aCSSStyleSheetURL)
+{
+    NS_PRECONDITION(aCSSStyleSheetURL != nsnull, "null ptr");
+    if (! aCSSStyleSheetURL)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIURL** p = new nsIURL*[mNumCSSStyleSheetURLs + 1];
+    if (! p)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 i;
+    for (i = mNumCSSStyleSheetURLs - 1; i >= 0; --i)
+        p[i] = mCSSStyleSheetURLs[i];
+
+    NS_ADDREF(aCSSStyleSheetURL);
+    p[mNumCSSStyleSheetURLs] = aCSSStyleSheetURL;
+
+    ++mNumCSSStyleSheetURLs;
+    mCSSStyleSheetURLs = p;
+
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnCSSStyleSheetAdded(aCSSStyleSheetURL);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::GetCSSStyleSheetURLs(nsIURL*** aCSSStyleSheetURLs, PRInt32* aCount)
+{
+    *aCSSStyleSheetURLs = mCSSStyleSheetURLs;
+    *aCount = mNumCSSStyleSheetURLs;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::AddNamedDataSourceURI(const char* aNamedDataSourceURI)
+{
+    NS_PRECONDITION(aNamedDataSourceURI != nsnull, "null ptr");
+    if (! aNamedDataSourceURI)
+        return NS_ERROR_NULL_POINTER;
+
+    char** p = new char*[mNumNamedDataSourceURIs + 1];
+    if (! p)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 i;
+    for (i = mNumNamedDataSourceURIs - 1; i >= 0; --i)
+        p[i] = mNamedDataSourceURIs[i];
+
+    PRInt32 len = PL_strlen(aNamedDataSourceURI);
+    char* buf = new char[len + 1];
+    if (! buf) {
+        delete p;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    PL_strcpy(buf, aNamedDataSourceURI);
+    p[mNumNamedDataSourceURIs] = buf;
+
+    ++mNumNamedDataSourceURIs;
+    mNamedDataSourceURIs = p;
+
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDocumentObserver* obs = (nsIRDFXMLDocumentObserver*) mObservers[i];
+        obs->OnNamedDataSourceAdded(aNamedDataSourceURI);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount)
+{
+    *aNamedDataSourceURIs = mNamedDataSourceURIs;
+    *aCount = mNumNamedDataSourceURIs;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::AddDocumentObserver(nsIRDFXMLDocumentObserver* aObserver)
+{
+    mObservers.AppendElement(aObserver);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamDataSourceImpl::RemoveDocumentObserver(nsIRDFXMLDocumentObserver* aObserver)
+{
+    mObservers.RemoveElement(aObserver);
+    return NS_OK;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFXMLSource methods
 
 NS_IMETHODIMP
 StreamDataSourceImpl::Serialize(nsIOutputStream* stream)

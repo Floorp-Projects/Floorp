@@ -515,6 +515,15 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 
 BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 {
+    // unregister this from the RDF service
+    nsresult rv;
+    nsIRDFService* rdfService;
+    if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                       kIRDFServiceIID,
+                                                       (nsISupports**) &rdfService))) {
+        rdfService->UnregisterDataSource(this);
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+    }
     Flush();
     NS_RELEASE(mInner);
 }
@@ -537,6 +546,15 @@ BookmarkDataSourceImpl::Init(const char* uri)
 
     if (NS_FAILED(rv = ReadBookmarks()))
         return rv;
+
+    // register this as a named data source with the RDF service
+    nsIRDFService* rdfService;
+    if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                       kIRDFServiceIID,
+                                                       (nsISupports**) &rdfService))) {
+        rdfService->RegisterDataSource(this);
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+    }
 
     return NS_OK;
 }

@@ -19,8 +19,7 @@
 
 /*
 
-  An abstract base class that serves as the basis for the
-  implementation of the nsIRDFContentSink interface.
+
 
  */
 
@@ -47,11 +46,11 @@ typedef enum {
 } RDFContentSinkState;
 
 
-class nsRDFContentSink : public nsIRDFContentSink
+class RDFContentSinkImpl : public nsIRDFContentSink
 {
 public:
-    nsRDFContentSink();
-    virtual ~nsRDFContentSink();
+    RDFContentSinkImpl();
+    virtual ~RDFContentSinkImpl();
 
     // nsISupports
     NS_DECL_ISUPPORTS

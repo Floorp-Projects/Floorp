@@ -32,7 +32,9 @@ CPPSRCS =				\
 	nsDefaultResourceFactory.cpp	\
 	nsEmptyCursor.cpp               \
 	nsInMemoryDataSource.cpp        \
+	nsRDFContentSink.cpp		\
 	nsRDFService.cpp                \
+	nsStreamDataSource.cpp		\
 	rdfutil.cpp			\
 	$(NULL)
 
@@ -43,7 +45,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = rdfbase
 
-REQUIRES = rdf raptor xpcom
+REQUIRES = netlib rdf raptor xpcom
 
 MKSHLIB :=
 
