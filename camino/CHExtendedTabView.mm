@@ -135,11 +135,11 @@
 - (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
   if (overTabViewItem) {
-    [[[overTabViewItem view] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
+    [[[overTabViewItem view] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
   } else if (overContentArea) {
-    [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
+    [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
   } else
-    [self addTabForURL:url];
+    [self addTabForURL:url referrer:nil];
 }
 
 // NSDraggingDestination ///////////
@@ -222,7 +222,7 @@
   return YES;    
 }
 
--(void)addTabForURL:(NSString*)aURL
+-(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
 {
   NSTabViewItem* tabViewItem;
   CHBrowserWrapper* newView;
@@ -234,7 +234,7 @@
   [tabViewItem setView: newView];
   [self addTabViewItem: tabViewItem];
   
-  [[[tabViewItem view] getBrowserView] loadURI: aURL
+  [[[tabViewItem view] getBrowserView] loadURI: aURL referrer:aReferrer
                                           flags: NSLoadFlagsNone];
 }
 

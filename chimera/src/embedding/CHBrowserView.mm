@@ -1042,7 +1042,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   return window;
 }
 
-- (void)loadURI:(NSString *)urlSpec flags:(unsigned int)flags
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
   
@@ -1051,6 +1051,9 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   [urlSpec getCharacters:specStr];
   specStr[length] = PRUnichar(0);
   
+  nsCOMPtr<nsIURI> referrerURI;
+  if ( referrer )
+    NS_NewURI(getter_AddRefs(referrerURI), [referrer cString]);
 
   PRUint32 navFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
   if (flags & NSLoadFlagsDontPutInHistory) {
@@ -1064,7 +1067,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
                 nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  nsresult rv = nav->LoadURI(specStr, navFlags, nsnull, nsnull, nsnull);
+  nsresult rv = nav->LoadURI(specStr, navFlags, referrerURI, nsnull, nsnull);
   if (NS_FAILED(rv)) {
     // XXX need to throw
   }

@@ -786,7 +786,7 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
 
   // Now load the URL in the window.
-  [aController loadURL:url];
+  [aController loadURL:url referrer:nil];
 
   // Focus and activate our content area.
   [[[aController getBrowserWrapper] getBrowserView] setActive: YES];
@@ -1013,7 +1013,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
         else
           tabViewItem = [aTabView tabViewItemAtIndex: currentIndex];
 
-        [[[tabViewItem view] getBrowserView] loadURI: url
+        [[[tabViewItem view] getBrowserView] loadURI: url referrer:nil
                                                flags: NSLoadFlagsNone];
       }
     }

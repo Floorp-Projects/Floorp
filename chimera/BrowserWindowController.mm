@@ -273,12 +273,20 @@ static NSArray* sToolbarDefaults = nil;
 //  We now remove the IB tab, then add one of our own.
 
     [mTabBrowser removeTabViewItem:[mTabBrowser tabViewItemAtIndex:0]];
-    [self newTab:mShouldLoadHomePage];
     
-    if (mURL) {
+    // create ourselves a new tab and fill it with the appropriate content. If we
+    // have a URL pending to be opened here, don't load anything in it, otherwise,
+    // load the homepage if that's what the user wants (or about:blank).
+    [self newTab:(!mPendingURL && mShouldLoadHomePage)];
+    
+    // we have a url "pending" from the "open new window with link" command. Deal
+    // with it now that everything is loaded.
+    if (mPendingURL) {
       if (mShouldLoadHomePage)
-        [self loadURL: mURL];
-      [mURL release];
+        [self loadURL: mPendingURL referrer:mPendingReferrer];
+      [mPendingURL release];
+      [mPendingReferrer release];
+      mPendingURL = mPendingReferrer = nil;
     }
     
     [mSidebarDrawer setDelegate: self];
@@ -332,7 +340,7 @@ static NSArray* sToolbarDefaults = nil;
 - (void)drawerDidOpen:(NSNotification *)aNotification
 {
   // XXXdwh This is temporary.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html" flags:NSLoadFlagsNone];
+  //  [[mSidebarBrowserView getBrowserView] loadURI: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html" referrer: nil flags:NSLoadFlagsNone];
 
   // Toggle the sidebar icon.
   if(mSidebarToolbarItem)
@@ -346,7 +354,7 @@ static NSArray* sToolbarDefaults = nil;
     [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
 
   // XXXdwh ignore for now.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
+  //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" referrer:nil flags:NSLoadFlagsNone];
 
   if (mDrawerCachedFrame) {
     mDrawerCachedFrame = NO;
@@ -619,7 +627,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   [mLocationSheetWindow orderOut:self];
   [NSApp endSheet:mLocationSheetWindow returnCode:1];
-  [self loadURL:[mLocationSheetURLField stringValue]];
+  [self loadURL:[mLocationSheetURLField stringValue] referrer:nil];
   
   // Focus and activate our content area.
   [[mBrowserView getBrowserView] setActive: YES];
@@ -668,7 +676,7 @@ static NSArray* sToolbarDefaults = nil;
   [newView setFrame: NSZeroRect];
   [newView setIsBookmarksImport: YES];
   [[[self window] contentView] addSubview: newView];
-  [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
+  [[newView getBrowserView] loadURI:aURLSpec referrer: nil flags:NSLoadFlagsNone];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
@@ -676,7 +684,7 @@ static NSArray* sToolbarDefaults = nil;
   // trim off any whitespace around url
   NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
   CFStringTrimWhitespace((CFMutableStringRef)theURL);
-  [self loadURL:theURL];
+  [self loadURL:theURL referrer:nil];
   [theURL release];
     
   // Focus and activate our content area.
@@ -703,7 +711,7 @@ static NSArray* sToolbarDefaults = nil;
   PRBool loadInBackground;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-  [self openNewTabWithURL: viewSource loadInBackground: loadInBackground];
+  [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
 }
 
 - (void)printDocument
@@ -729,7 +737,7 @@ static NSArray* sToolbarDefaults = nil;
         searchEngine = @"http://dmoz.org/";
   }
 
-  [[mBrowserView getBrowserView] loadURI:searchEngine flags:NSLoadFlagsNone];
+  [[mBrowserView getBrowserView] loadURI:searchEngine  referrer: nil flags:NSLoadFlagsNone];
 }
 
 
@@ -771,7 +779,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"ThrobberPageDefault"])
-    [self loadURL:pageToLoad];
+    [self loadURL:pageToLoad referrer:nil];
 }
 
 - (void)startThrobber
@@ -859,7 +867,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)home:(id)aSender
 {
-  [[mBrowserView getBrowserView] loadURI:[[CHPreferenceManager sharedInstance] homePage:NO] flags:NSLoadFlagsNone];
+  [[mBrowserView getBrowserView] loadURI:[[CHPreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone];
 }
 
 - (IBAction)toggleSidebar:(id)aSender
@@ -877,14 +885,18 @@ static NSArray* sToolbarDefaults = nil;
     [[self window] makeFirstResponder: resp];
 }
 
--(void)loadURL:(NSString*)aURLSpec
+-(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer
 {
     if (mInitialized) {
-        [[mBrowserView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
+        [[mBrowserView getBrowserView] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone];
     }
     else {
-        mURL = aURLSpec;
-        [mURL retain];
+        // we haven't yet initialized all the browser machinery, stash the url and referrer
+        // until we're ready in windowDidLoad:
+        mPendingURL = aURLSpec;
+        [mPendingURL retain];
+        mPendingReferrer = aReferrer;
+        [mPendingReferrer retain];
     }
 }
 
@@ -923,7 +935,7 @@ static NSArray* sToolbarDefaults = nil;
     [mTabBrowser addTabViewItem: newTab];
 
     if (allowHomepage)
-      [[newView getBrowserView] loadURI: ((newTabPage == 1) ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") flags:NSLoadFlagsNone];
+      [[newView getBrowserView] loadURI: ((newTabPage == 1) ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") referrer:nil flags:NSLoadFlagsNone];
 
     [mTabBrowser selectLastTabViewItem: self];
 
@@ -990,13 +1002,13 @@ static NSArray* sToolbarDefaults = nil;
   return mBrowserView;
 }
 
--(void)openNewWindowWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG
+-(void)openNewWindowWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
 
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
-  [browser loadURL: aURLSpec];
+  [browser loadURL: aURLSpec referrer:aReferrer];
   if (aLoadInBG)
     [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
   else {
@@ -1025,7 +1037,7 @@ static NSArray* sToolbarDefaults = nil;
   [mSidebarBookmarksDataSource openBookmarkGroup: tabBrowser groupElement: aFolderElement];
 }
 
--(void)openNewTabWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG
+-(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
     NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
     
@@ -1039,7 +1051,7 @@ static NSArray* sToolbarDefaults = nil;
     [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
     [newTab setView: newView];
 
-    [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
+    [[newView getBrowserView] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone];
 
     if (!aLoadInBG) {
       [mTabBrowser selectTabViewItem: newTab];
@@ -1257,10 +1269,12 @@ static NSArray* sToolbarDefaults = nil;
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
+  NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
+
   if (aUseWindow)
-    [self openNewWindowWithURL: hrefStr loadInBackground: loadInBackground];
+    [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
   else
-    [self openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
+    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
 }
 
 - (IBAction)savePageAs:(id)aSender
@@ -1330,8 +1344,9 @@ static NSArray* sToolbarDefaults = nil;
     imgElement->GetSrc(url);
 
     NSString* urlStr = [NSString stringWithCharacters: url.get() length:nsCRT::strlen(url.get())];
-
-    [self loadURL: urlStr];
+    NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
+    
+    [self loadURL: urlStr referrer:referrer];
 
     // Focus and activate our content area.
     [[mBrowserView getBrowserView] setActive: YES];

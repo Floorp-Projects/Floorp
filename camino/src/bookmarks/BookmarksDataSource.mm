@@ -396,7 +396,7 @@
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
       NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
+      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
       // Focus and activate our content area.
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
     }
@@ -682,7 +682,7 @@
     PRBool loadInBackground;
     pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
-    [mBrowserWindowController openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
+    [mBrowserWindowController openNewTabWithURL: hrefStr referrer:nil loadInBackground: loadInBackground];
   }
 }
 
@@ -702,7 +702,7 @@
     nsAutoString group;
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
     if (group.IsEmpty()) 
-      [mBrowserWindowController openNewWindowWithURL: hrefStr loadInBackground: NO];
+      [mBrowserWindowController openNewWindowWithURL: hrefStr referrer: nil loadInBackground: NO];
     else {
       nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
       [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];

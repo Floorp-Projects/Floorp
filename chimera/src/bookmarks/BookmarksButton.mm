@@ -63,7 +63,7 @@
   NSString* url = [NSString stringWithCString: cref.get()];
 
   // Now load the URL in the window.
-  [[[self window] windowController] loadURL: url];
+  [[[self window] windowController] loadURL: url referrer:nil];
 
   // Focus and activate our content area.
   [[[[[self window] windowController] getBrowserWrapper] getBrowserView] setActive: YES];

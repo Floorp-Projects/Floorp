@@ -120,7 +120,8 @@ class nsIDOMNode;
   NSToolbarItem*                mSidebarToolbarItem;
 
   BOOL mInitialized;
-  NSString* mURL;
+  NSString* mPendingURL;
+  NSString* mPendingReferrer;
 
   CHBrowserWrapper* mBrowserView;
 
@@ -155,7 +156,7 @@ class nsIDOMNode;
 -(id)getTabBrowser;
 -(CHBrowserWrapper*)getBrowserWrapper;
 
-- (void)loadURL:(NSString*)aURLSpec;
+- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateToolbarItems;
 - (void)focusURLBar;
@@ -209,9 +210,9 @@ class nsIDOMNode;
 
 -(void)enterModalSession;
 
--(void)openNewWindowWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG;
+-(void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
 -(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG;
--(void)openNewTabWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG;
+-(void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
 
 -(void)autosaveWindowFrame;
 -(void)disableAutosave;

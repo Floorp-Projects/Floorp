@@ -30,6 +30,6 @@
 - (BOOL)autoHides;
 - (void)setAutoHides:(BOOL)newSetting;
 
--(void)addTabForURL:(NSString*)aURL;
+-(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
 
 @end

@@ -24,17 +24,13 @@
 #import "CHGetURLCommand.h"
 #import <AppKit/AppKit.h>
 
-#import "BrowserWindowController.h"
-
-#include "nsIPref.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManagerUtils.h"
+#import "MainController.h"
 
 @implementation CHGetURLCommand
 
 - (id)performDefaultImplementation 
 {
-  [[NSApp delegate] openNewWindowOrTabWithURL:[self directParameter]];
+  [(MainController*)[NSApp delegate] openNewWindowOrTabWithURL:[self directParameter] andReferrer:nil];
   return nil;
 }
 
