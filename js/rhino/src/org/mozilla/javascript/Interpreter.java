@@ -111,8 +111,13 @@ public class Interpreter
         Icode_LITERAL_NEW               = BASE_ICODE + 30,
         Icode_LITERAL_SET               = BASE_ICODE + 31,
 
+    // Load string register to prepare for the following string operation
+        Icode_LOAD_STR1                 = BASE_ICODE + 32,
+        Icode_LOAD_STR2                 = BASE_ICODE + 33,
+        Icode_LOAD_STR4                 = BASE_ICODE + 34,
+
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 31;
+        MAX_ICODE                       = BASE_ICODE + 34;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -523,13 +528,6 @@ public class Interpreter
                     if (itsStackDepth - savedStackDepth != 2)
                         Kit.codeBug();
                 }
-                String functionName = null;
-                int childType = child.getType();
-                if (childType == Token.NAME || childType == Token.GETPROP
-                    || childType == Token.GETVAR)
-                {
-                    functionName = lastAddString;
-                }
                 int argCount = 0;
                 while ((child = child.getNext()) != null) {
                     iCodeTop = generateICode(child, iCodeTop);
@@ -544,7 +542,7 @@ public class Interpreter
                     iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
                 } else {
-                    iCodeTop = addString(type, functionName, iCodeTop);
+                    iCodeTop = addToken(type, iCodeTop);
                 }
                 // adjust stack
                 if (type == Token.NEW) {
@@ -773,7 +771,7 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addString(Token.SETNAME, firstChild.getString(), iCodeTop);
+                iCodeTop = addStringOp(Token.SETNAME, firstChild.getString(), iCodeTop);
                 itsStackDepth--;
                 break;
 
@@ -786,15 +784,14 @@ public class Interpreter
                 if (itsInFunctionFlag && !itsData.itsNeedsActivation)
                     index = scriptOrFn.getParamOrVarIndex(name);
                 if (index == -1) {
-                    iCodeTop = addString(Icode_TYPEOFNAME, name, iCodeTop);
+                    iCodeTop = addStringOp(Icode_TYPEOFNAME, name, iCodeTop);
+                    stackChange(1);
                 } else {
                     iCodeTop = addToken(Token.GETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
+                    stackChange(1);
                     iCodeTop = addToken(Token.TYPEOF, iCodeTop);
                 }
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
                 break;
             }
 
@@ -802,10 +799,8 @@ public class Interpreter
             case Token.NAME :
             case Token.STRING :
                 stackDelta = 1;
-                iCodeTop = addString(type, node.getString(), iCodeTop);
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                iCodeTop = addStringOp(type, node.getString(), iCodeTop);
+                stackChange(1);
                 break;
 
             case Token.INC :
@@ -817,7 +812,7 @@ public class Interpreter
                         String name = child.getString();
                         if (itsData.itsNeedsActivation) {
                             iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                            iCodeTop = addString(Token.STRING, name, iCodeTop);
+                            iCodeTop = addStringOp(Token.STRING, name, iCodeTop);
                             itsStackDepth += 2;
                             if (itsStackDepth > itsData.itsMaxStack)
                                 itsData.itsMaxStack = itsStackDepth;
@@ -858,10 +853,10 @@ public class Interpreter
                         break;
                     }
                     default : {
-                        iCodeTop = addString(type == Token.INC
-                                             ? Icode_NAMEINC
-                                             : Icode_NAMEDEC,
-                                             child.getString(), iCodeTop);
+                        iCodeTop = addStringOp(type == Token.INC
+                                               ? Icode_NAMEINC
+                                               : Icode_NAMEDEC,
+                                               child.getString(), iCodeTop);
                         itsStackDepth++;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;
@@ -921,7 +916,7 @@ public class Interpreter
             case Token.CATCH_SCOPE :
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addString(Token.CATCH_SCOPE, node.getString(), iCodeTop);
+                iCodeTop = addStringOp(Token.CATCH_SCOPE, node.getString(), iCodeTop);
                 break;
 
             case Token.LEAVEWITH :
@@ -1018,7 +1013,7 @@ public class Interpreter
                     // bogus children. Instead we use a special op to
                     // push the current scope.
                     iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                    iCodeTop = addString(Token.STRING, name, iCodeTop);
+                    iCodeTop = addStringOp(Token.STRING, name, iCodeTop);
                     itsStackDepth += 2;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -1133,7 +1128,7 @@ public class Interpreter
             boolean skipGetThis = (itsWithDepth == 0
                                    && (itsInFunctionFlag
                                        || !itsData.itsFromEvalCode));
-            iCodeTop = addString(Icode_NAME_AND_THIS, name, iCodeTop);
+            iCodeTop = addStringOp(Icode_NAME_AND_THIS, name, iCodeTop);
             iCodeTop = addByte(skipGetThis ? 1 : 0, iCodeTop);
             stackChange(2);
             break;
@@ -1446,20 +1441,28 @@ public class Interpreter
         return iCodeTop;
     }
 
-    private int addString(int op, String str, int iCodeTop)
+    private int addStringOp(int op, String str, int iCodeTop)
     {
-        if (op > BASE_ICODE) {
-            iCodeTop = addIcode(op, iCodeTop);
-        } else {
-            iCodeTop = addToken(op, iCodeTop);
-        }
         int index = itsStrings.get(str, -1);
         if (index == -1) {
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        iCodeTop = addIndex(index, iCodeTop);
-        lastAddString = str;
+        if (index <= 0xFF) {
+            iCodeTop = addIcode(Icode_LOAD_STR1, iCodeTop);
+            iCodeTop = addByte(index, iCodeTop);
+        } else if (index <= 0xFFFF) {
+            iCodeTop = addIcode(Icode_LOAD_STR2, iCodeTop);
+            iCodeTop = addIndex(index, iCodeTop);
+        } else {
+            iCodeTop = addIcode(Icode_LOAD_STR4, iCodeTop);
+            iCodeTop = addInt(index, iCodeTop);
+        }
+        if (op > BASE_ICODE) {
+            iCodeTop = addIcode(op, iCodeTop);
+        } else {
+            iCodeTop = addToken(op, iCodeTop);
+        }
         return iCodeTop;
     }
 
@@ -1588,6 +1591,9 @@ public class Interpreter
                     case Icode_INTNUMBER:        return "INTNUMBER";
                     case Icode_LITERAL_NEW:      return "LITERAL_NEW";
                     case Icode_LITERAL_SET:      return "LITERAL_SET";
+                    case Icode_LOAD_STR1:        return "LOAD_STR1";
+                    case Icode_LOAD_STR2:        return "LOAD_STR2";
+                    case Icode_LOAD_STR4:        return "LOAD_STR4";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1685,10 +1691,9 @@ public class Interpreter
                     }
                     case Token.NEW :
                     case Token.CALL : {
-                        int count = getIndex(iCode, pc + 2);
-                        String name = strings[getIndex(iCode, pc)];
-                        out.println(tname+' '+count+" \""+name+'"');
-                        pc += 4;
+                        int count = getIndex(iCode, pc);
+                        out.println(tname+' '+count);
+                        pc += 2;
                         break;
                     }
                     case Token.THROW : {
@@ -1716,24 +1721,10 @@ public class Interpreter
                         pc += 2;
                         break;
                     }
-                    case Token.CATCH_SCOPE :
-                    case Icode_TYPEOFNAME :
-                    case Token.BINDNAME :
-                    case Token.SETNAME :
-                    case Token.NAME :
-                    case Icode_NAMEINC :
-                    case Icode_NAMEDEC :
-                    case Token.STRING : {
-                        String str = strings[getIndex(iCode, pc)];
-                        out.println(tname + " \"" + str + '"');
-                        pc += 2;
-                        break;
-                    }
                     case Icode_NAME_AND_THIS : {
-                        String str = strings[getIndex(iCode, pc)];
-                        boolean skipGetThis = (0 != iCode[pc + 2]);
-                        out.println(tname + " \"" + str + '"'+" "+skipGetThis);
-                        pc += 3;
+                        boolean skipGetThis = (0 != iCode[pc]);
+                        out.println(tname+" "+skipGetThis);
+                        ++pc;
                         break;
                     }
                     case Icode_LINE : {
@@ -1747,6 +1738,21 @@ public class Interpreter
                         out.println(tname + " : " + numberOfValues);
                         pc += 4;
                         break;
+                    }
+                    case Icode_LOAD_STR1: {
+                        String str = strings[0xFF & iCode[pc]];
+                        out.println(tname + " \"" + str + '"');
+                        ++pc;
+                    }
+                    case Icode_LOAD_STR2: {
+                        String str = strings[getIndex(iCode, pc)];
+                        out.println(tname + " \"" + str + '"');
+                        pc += 2;
+                    }
+                    case Icode_LOAD_STR4: {
+                        String str = strings[getInt(iCode, pc)];
+                        out.println(tname + " \"" + str + '"');
+                        pc += 4;
                     }
                 }
                 if (old_pc + icodeLength != pc) Kit.codeBug();
@@ -1841,6 +1847,14 @@ public class Interpreter
             case Icode_CATCH:
             case Icode_RETUNDEF:
             case Icode_LITERAL_SET:
+            case Token.STRING :
+            case Token.NAME :
+            case Token.SETNAME :
+            case Icode_TYPEOFNAME :
+            case Token.BINDNAME :
+            case Icode_NAMEINC :
+            case Icode_NAMEDEC :
+            case Token.CATCH_SCOPE :
                 return 1;
 
             case Token.THROW :
@@ -1885,9 +1899,8 @@ public class Interpreter
 
             case Token.NEW :
             case Token.CALL :
-                // name string index
                 // arg count
-                return 1 + 2 + 2;
+                return 1 + 2;
 
             case Icode_SHORTNUMBER :
                 // short number
@@ -1901,20 +1914,21 @@ public class Interpreter
                 // index of double number
                 return 1 + 2;
 
-            case Token.CATCH_SCOPE :
-            case Icode_TYPEOFNAME :
-            case Token.BINDNAME :
-            case Token.SETNAME :
-            case Token.NAME :
-            case Icode_NAMEINC :
-            case Icode_NAMEDEC :
-            case Token.STRING :
-                // string index
+            case Icode_LOAD_STR1:
+                // ubyte string index
+                return 1 + 1;
+
+            case Icode_LOAD_STR2:
+                // ushort string index
                 return 1 + 2;
 
+            case Icode_LOAD_STR4:
+                // int string index
+                return 1 + 4;
+
             case Icode_NAME_AND_THIS :
-                // string index skipGetThis
-                return 1 + 2 + 1;
+                // skipGetThis flag
+                return 1 + 1;
 
             case Icode_LINE :
                 // line number
@@ -2129,9 +2143,7 @@ public class Interpreter
         int exceptionPC = -1;
 
         byte[] iCode = idata.itsICode;
-        String[] strings = idata.itsStringTable;
         int pc = 0;
-
         int pcPrevBranch = 0;
         final int instructionThreshold = cx.instructionThreshold;
         // During function call this will be set to -1 so catch can properly
@@ -2140,6 +2152,9 @@ public class Interpreter
         // arbitrary number to add to instructionCount when calling
         // other functions
         final int INVOCATION_COST = 100;
+
+        String[] strings = idata.itsStringTable;
+        String stringReg = null;
 
         Loop: for (;;) {
             int pcJump;
@@ -2552,20 +2567,27 @@ public class Interpreter
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     }
-    case Token.BINDNAME : {
-        String name = strings[getIndex(iCode, pc)];
-        stack[++stackTop] = ScriptRuntime.bind(scope, name);
+    case Icode_LOAD_STR1:
+        stringReg = strings[0xFF & iCode[pc]];
+        ++pc;
+        continue Loop;
+    case Icode_LOAD_STR2:
+        stringReg = strings[getIndex(iCode, pc)];
         pc += 2;
         continue Loop;
-    }
+    case Icode_LOAD_STR4:
+        stringReg = strings[getInt(iCode, pc)];
+        pc += 4;
+        continue Loop;
+    case Token.BINDNAME :
+        stack[++stackTop] = ScriptRuntime.bind(scope, stringReg);
+        continue Loop;
     case Token.SETNAME : {
-        String name = strings[getIndex(iCode, pc)];
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, scope, name);
-        pc += 2;
+        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, scope, stringReg);
         continue Loop;
     }
     case Token.DELPROP : {
@@ -2677,7 +2699,7 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int count = getIndex(iCode, pc + 2);
+        int count = getIndex(iCode, pc);
         stackTop -= count;
         int calleeArgShft = stackTop + 1;
         Object rhs = stack[stackTop];
@@ -2712,15 +2734,14 @@ public class Interpreter
             else if (lhs == undefined) {
                 // special code for better error message for call
                 // to undefined
-                lhs = strings[getIndex(iCode, pc)];
-                if (lhs == null) lhs = undefined;
+                lhs = stringReg;
             }
             throw ScriptRuntime.typeError1("msg.isnt.function",
                                            ScriptRuntime.toString(lhs));
         }
 
         instructionCount = cx.instructionCount;
-        pc += 4;
+        pc += 2;
         continue Loop;
     }
     case Token.NEW : {
@@ -2729,7 +2750,7 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int count = getIndex(iCode, pc + 2);
+        int count = getIndex(iCode, pc);
         stackTop -= count;
         int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
@@ -2756,15 +2777,14 @@ public class Interpreter
             else if (lhs == undefined) {
                 // special code for better error message for call
                 // to undefined
-                lhs = strings[getIndex(iCode, pc)];
-                if (lhs == null) lhs = undefined;
+                lhs = stringReg;
             }
             throw ScriptRuntime.typeError1("msg.isnt.function",
                                            ScriptRuntime.toString(lhs));
 
         }
         instructionCount = cx.instructionCount;
-        pc += 4;
+        pc += 2;
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2773,22 +2793,17 @@ public class Interpreter
         stack[stackTop] = ScriptRuntime.typeof(lhs);
         continue Loop;
     }
-    case Icode_TYPEOFNAME : {
-        String name = strings[getIndex(iCode, pc)];
-        stack[++stackTop] = ScriptRuntime.typeofName(scope, name);
-        pc += 2;
+    case Icode_TYPEOFNAME :
+        stack[++stackTop] = ScriptRuntime.typeofName(scope, stringReg);
         continue Loop;
-    }
     case Icode_NAME_AND_THIS : {
-        String name = strings[getIndex(iCode, pc)];
-        boolean skipGetThis = (0 != iCode[pc + 2]);
-        stackTop = do_nameAndThis(stack, stackTop, scope, name, skipGetThis);
-        pc += 3;
+        boolean skipGetThis = (0 != iCode[pc]);
+        stackTop = do_nameAndThis(stack, stackTop, scope, stringReg, skipGetThis);
+        ++pc;
         continue Loop;
     }
     case Token.STRING :
-        stack[++stackTop] = strings[getIndex(iCode, pc)];
-        pc += 2;
+        stack[++stackTop] = stringReg;
         continue Loop;
     case Icode_SHORTNUMBER :
         ++stackTop;
@@ -2808,19 +2823,13 @@ public class Interpreter
         sDbl[stackTop] = idata.itsDoubleTable[getIndex(iCode, pc)];
         pc += 2;
         continue Loop;
-    case Token.NAME : {
-        String name = strings[getIndex(iCode, pc)];
-        stack[++stackTop] = ScriptRuntime.name(scope, name);
-        pc += 2;
+    case Token.NAME :
+        stack[++stackTop] = ScriptRuntime.name(scope, stringReg);
         continue Loop;
-    }
     case Icode_NAMEINC :
-    case Icode_NAMEDEC : {
-        String name = strings[getIndex(iCode, pc)];
-        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, op == Icode_NAMEINC);
-        pc += 2;
+    case Icode_NAMEDEC :
+        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, stringReg, op == Icode_NAMEINC);
         continue Loop;
-    }
     case Token.SETVAR : {
         int slot = (iCode[pc] & 0xFF);
         if (!useActivationVars) {
@@ -2912,12 +2921,9 @@ public class Interpreter
         scope = ScriptRuntime.leaveWith(scope);
         --withDepth;
         continue Loop;
-    case Token.CATCH_SCOPE : {
-        String name = strings[getIndex(iCode, pc)];
-        stack[stackTop] = ScriptRuntime.newCatchScope(name, stack[stackTop]);
-        pc += 2;
+    case Token.CATCH_SCOPE :
+        stack[stackTop] = ScriptRuntime.newCatchScope(stringReg, stack[stackTop]);
         continue Loop;
-    }
     case Token.ENUM_INIT : {
         int slot = (iCode[pc] & 0xFF);
         Object lhs = stack[stackTop];
@@ -3418,7 +3424,6 @@ public class Interpreter
     private int itsLineNumber = 0;
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
-    private String lastAddString;
     private int itsLocalTop;
 
     private static final int MIN_LABEL_TABLE_SIZE = 32;
