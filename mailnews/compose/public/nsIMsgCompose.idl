@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  David Bienvenu - bienvenu@nventure.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,6 +46,7 @@
 interface nsIDOMWindowInternal;
 interface nsIDOMNode;
 interface nsIEditor;
+interface nsIMsgWindow;
 
 typedef long MSG_ComposeSaveType;
 
@@ -139,7 +141,7 @@ interface nsIMsgCompose : nsISupports {
 	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgProgress progress);
+	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow, in nsIMsgProgress progress);
 
 	/* ... */
   void CloseWindow(in boolean reclycleIt);

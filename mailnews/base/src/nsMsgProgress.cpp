@@ -68,13 +68,16 @@ nsMsgProgress::~nsMsgProgress()
   (void)ReleaseListeners();
 }
 
-/* void openProgressDialog (in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters); */
-NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
+/* void openProgressDialog (in nsIDOMWindowInternal parent, in nsIMsgWindow aMsgWindow,
+  in string dialogURL, in nsISupports parameters); 
+*/
+NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent, nsIMsgWindow *aMsgWindow,
                                                 const char *dialogURL,
                                                 nsISupports *parameters)
 {
   nsresult rv = NS_ERROR_FAILURE;
   
+  m_msgWindow = aMsgWindow;
   if (m_dialog)
     return NS_ERROR_ALREADY_INITIALIZED;
   
@@ -206,6 +209,9 @@ NS_IMETHODIMP nsMsgProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequ
     }
   }
   
+  if (aStateFlags == nsIWebProgressListener::STATE_STOP && m_msgWindow)
+    m_msgWindow->StopUrls();
+
   return NS_OK;
 }
 
@@ -331,3 +337,15 @@ NS_IMETHODIMP nsMsgProgress::CloseWindow()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsMsgProgress::SetMsgWindow(nsIMsgWindow *aMsgWindow)
+{
+  m_msgWindow = aMsgWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProgress::GetMsgWindow(nsIMsgWindow **aMsgWindow)
+{
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+  NS_IF_ADDREF(*aMsgWindow = m_msgWindow);
+  return NS_OK;
+}

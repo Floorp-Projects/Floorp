@@ -4681,7 +4681,6 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   // default to the default "Flagged" folder choices
   //
   nsresult    rv;
-
   if (dest_uri && *dest_uri)
     m_folderName = dest_uri;
   else

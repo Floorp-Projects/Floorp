@@ -41,6 +41,7 @@
 #include "nsIWebProgressListener.idl"
 
 interface nsIDOMWindowInternal;
+interface nsIMsgWindow;
 
 [scriptable, uuid(9f4dd200-3b1f-11d5-9daa-c345c9453d3c)]
 interface nsIMsgProgress: nsIWebProgressListener {
@@ -48,7 +49,7 @@ interface nsIMsgProgress: nsIWebProgressListener {
   /* Open the progress dialog
      you can specify parameters through an xpcom object
   */
-  void openProgressDialog(in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters);
+  void openProgressDialog(in nsIDOMWindowInternal parent, in nsIMsgWindow aMsgWindow, in string dialogURL, in nsISupports parameters);
   
   /* Close the progress dialog */
   void closeProgressDialog(in boolean forceClose);
@@ -64,6 +65,8 @@ interface nsIMsgProgress: nsIWebProgressListener {
 
   /* Indicated if the user asked to cancel the current process */
   attribute boolean processCanceledByUser;
+
+  attribute nsIMsgWindow msgWindow;
 };
 
 

@@ -970,7 +970,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   return rv;
 }
 
-NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgProgress *progress)
+NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgWindow *aMsgWindow, nsIMsgProgress *progress)
 {
   nsresult rv = NS_OK;
   PRBool entityConversionDone = PR_FALSE;
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
         params->SetSubject((const PRUnichar*) msgSubject);
         params->SetDeliveryMode(deliverMode);
         
-        mProgress->OpenProgressDialog(m_window, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
+        mProgress->OpenProgressDialog(m_window, aMsgWindow, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
         mProgress->GetPrompter(getter_AddRefs(prompt));
       }
     }
@@ -2795,10 +2795,6 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
     nsCOMPtr<nsIMsgProgress> progress;
     compose->GetProgress(getter_AddRefs(progress));
     
-    //Unregister ourself from msg compose progress
-    if (progress)
-      progress->UnregisterListener(this);
-
     if (NS_SUCCEEDED(aStatus))
     {
 #ifdef NS_DEBUG
@@ -2821,7 +2817,10 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
           {
             compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
+            {
+              progress->UnregisterListener(this);
               progress->CloseProgressDialog(PR_FALSE);
+            }
             compose->CloseWindow(PR_TRUE);
           }
         }
@@ -2830,7 +2829,10 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
         compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
         if (progress)
+        {
+          progress->UnregisterListener(this);
           progress->CloseProgressDialog(PR_FALSE);
+        }
         compose->CloseWindow(PR_TRUE);  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                         // windows hanging around to prevent the app from exiting.
       }
@@ -2848,7 +2850,10 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #endif
       compose->NotifyStateListeners(eComposeProcessDone,aStatus);
       if (progress)
+      {
         progress->CloseProgressDialog(PR_TRUE);
+        progress->UnregisterListener(this);
+      }
     }
 
     nsCOMPtr<nsIMsgSendListener> externalListener;
@@ -2915,7 +2920,12 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
     nsCOMPtr<nsIMsgProgress> progress;
     compose->GetProgress(getter_AddRefs(progress));
     if (progress)
+    {
+    //Unregister ourself from msg compose progress
+      progress->UnregisterListener(this);
       progress->CloseProgressDialog(NS_FAILED(aStatus));
+    }
+
     compose->NotifyStateListeners(eComposeProcessDone,aStatus);
 
     if (NS_SUCCEEDED(aStatus))

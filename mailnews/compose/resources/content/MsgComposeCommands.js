@@ -54,6 +54,7 @@ var sNameProperty = null;
    in the other js file.
 */
 var msgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance();
+msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 
 /**
@@ -1668,7 +1669,9 @@ function GenericSendMessage( msgType )
           progress.registerListener(progressListener);
           gSendOrSaveOperationInProgress = true;
         }
-        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
+        msgWindow.SetDOMWindow(window);
+
+        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), msgWindow, progress);
       }
       catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
@@ -2309,7 +2312,7 @@ function FocusOnFirstAttachment()
 
 function AttachmentElementHasItems()
 {
-  var element = document.getElementById("bucketList");
+  var element = document.getElementById("attachmentBucket");
 
   return element ? element.childNodes.length : 0;
 }  

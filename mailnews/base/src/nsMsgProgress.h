@@ -43,17 +43,18 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsString.h"
+#include "nsIMsgWindow.h"
 
 class nsMsgProgress : public nsIMsgProgress, public nsIMsgStatusFeedback
 {
 public: 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIMSGSTATUSFEEDBACK
 
-	nsMsgProgress();
-	virtual ~nsMsgProgress();
+  nsMsgProgress();
+  virtual ~nsMsgProgress();
 
 private:
   nsresult ReleaseListeners(void);
@@ -64,5 +65,6 @@ private:
   PRInt32                           m_pendingStateFlags;
   PRInt32                           m_pendingStateValue;
   nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
+  nsCOMPtr<nsIMsgWindow>            m_msgWindow;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
 };
