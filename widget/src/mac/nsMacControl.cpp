@@ -25,6 +25,10 @@
 #include "nsColor.h"
 #include "nsFontMetricsMac.h"
 
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
+
 
 //-------------------------------------------------------------------------
 //
@@ -142,7 +146,12 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 
 		::SetControlVisibility(mControl, isVisible, false);
 		::DrawOneControl(mControl);
+#if TARGET_CARBON
+		Rect bounds;
+		::ValidWindowRect(mWindowPtr, ::GetControlBounds(mControl, &bounds));
+#else
 		::ValidRect(&(*mControl)->contrlRect);
+#endif
 	}
 	return PR_FALSE;
 }
