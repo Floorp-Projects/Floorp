@@ -4102,7 +4102,6 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
-  printf("InsertAsPlaintextQuotation(%s)\n", aQuotedText.ToNewCString());
   // We have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
   nsresult rv;
