@@ -66,7 +66,7 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(
     m_host = nsnull;
     m_file = nsnull;
     m_ref = nsnull;
-    m_port = -1;
+    m_port = SMTP_PORT;
     m_spec = nsnull;
     m_search = nsnull;
 	m_errorMessage = nsnull;
@@ -472,7 +472,7 @@ nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_ref);
 	PR_FREEIF(m_search);
 
-    m_port = -1;
+    m_port = SMTP_PORT;
 
     if (nsnull == cSpec) 
 	{
