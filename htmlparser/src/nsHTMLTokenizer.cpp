@@ -264,12 +264,6 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
 
 }
 
-static nsDeque& GetTempStack() {
-  static nsDeque theTempStack(0);
-  return theTempStack;
-}
-
-
 /**
  * This is a utilty method for ScanDocStructure, which finds a given
  * tag in the stack.
@@ -333,7 +327,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
 
   theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos); //init to root
 
-  nsDeque       &theStack=GetTempStack();
+  nsDeque       theStack(0);
   eHTMLTags     theRootTag=eHTMLTag_unknown;
   CHTMLToken    *theToken=theRootToken; //init to root
   PRInt32       theStackDepth=0;    
@@ -417,7 +411,6 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
     theToken=(CHTMLToken*)mTokenDeque.ObjectAt(++mTokenScanPos);
   }
 
-  theStack.Empty();
   return result;
 }
 
@@ -635,12 +628,6 @@ nsresult nsHTMLTokenizer::ConsumeScriptContent(nsScanner& aScanner,CToken*& aTok
   nsresult result=NS_OK;
 
   return result;
-}
-
-nsString& GetScratchString(void) {
-  static nsString gScratchString;
-  gScratchString.Truncate(0);
-  return gScratchString;
 }
 
 /**
