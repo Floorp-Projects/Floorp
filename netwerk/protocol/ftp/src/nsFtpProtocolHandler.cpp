@@ -255,7 +255,8 @@ nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure)
 }
 
 nsresult
-nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
+nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_retval)
+{
     NS_ASSERTION(_retval, "null pointer");
     NS_ASSERTION(aKey, "null pointer");
     
@@ -292,7 +293,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
 }
 
 nsresult
-nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
+nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aConn)
 {
     NS_ASSERTION(aConn, "null pointer");
     NS_ASSERTION(aKey, "null pointer");

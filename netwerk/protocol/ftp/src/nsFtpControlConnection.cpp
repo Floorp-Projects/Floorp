@@ -116,18 +116,18 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo)
                                      FTP_COMMAND_CHANNEL_SEG_COUNT,
                                      getter_AddRefs(mInStream));
         if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIInputStreamPump> pump;
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump), mInStream);
+        if (NS_FAILED(rv)) return rv;
+
+        // get the ball rolling by reading on the control socket.
+        rv = pump->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
+        if (NS_FAILED(rv)) return rv;
+
+        // cyclic reference!
+        mReadRequest = pump;
     }
-
-    nsCOMPtr<nsIInputStreamPump> pump;
-    rv = NS_NewInputStreamPump(getter_AddRefs(pump), mInStream);
-    if (NS_FAILED(rv)) return rv;
-
-    // get the ball rolling by reading on the control socket.
-    rv = pump->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    // cyclic reference!
-    mReadRequest = pump;
     return NS_OK;
 }
 
@@ -139,15 +139,15 @@ nsFtpControlConnection::Disconnect(nsresult status)
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
 
     if (NS_FAILED(status)) {
+        // break cyclic reference!
         mReadRequest->Cancel(status);
+        mReadRequest = 0;
         mCPipe->Close(status);
         mCPipe = 0;
         mInStream = 0;
         mOutStream = 0;
     }
 
-    // break cyclic reference!
-    mReadRequest = 0;
     return NS_OK;
 }
 
