@@ -119,8 +119,8 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
     if (nsLayoutAtoms::tableColFrame == kidType) {
       ((nsTableColFrame*)kidFrame)->SetColIndex(colIndex);
       if (!foundLastFrame) {
-        tableFrame->InsertCol(aPresContext, (nsTableColFrame &)*kidFrame, colIndex);
         mColCount++;
+        tableFrame->InsertCol(aPresContext, (nsTableColFrame &)*kidFrame, colIndex);
       }
       colIndex++;
     }
