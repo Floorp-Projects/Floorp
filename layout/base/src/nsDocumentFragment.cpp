@@ -193,11 +193,11 @@ public:
     }
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const
     { return mInner.List(out, aIndent); }
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const
     { return NS_OK; }
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const
     { return NS_OK; }
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const
     { return NS_OK; }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,

@@ -47,6 +47,7 @@
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIIndependentSelection.h"
 
 #include "nsIDOMText.h"
 
@@ -108,7 +109,7 @@ class nsSelectionIterator;
 class nsSelection;
 class nsAutoScrollTimer;
 
-class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner, public nsSupportsWeakReference
+class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner, public nsSupportsWeakReference, public nsIIndependentSelection
 {
 public:
   nsDOMSelection();
@@ -116,6 +117,8 @@ public:
   virtual ~nsDOMSelection();
   
   NS_DECL_ISUPPORTS
+  /*BEGIN nsIIndependentSelection interface implementations */
+  NS_IMETHOD    SetPresShell(nsIPresShell *aPresShell);
 
   /*BEGIN nsIDOMSelection interface implementations*/
   NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode);
@@ -142,7 +145,7 @@ public:
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 
-  NS_IMETHOD    ToString(nsString& aReturn);
+  NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn);
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
 
@@ -224,7 +227,7 @@ private:
   PRBool mFixupState; //was there a fixup?
 
   nsSelection *mFrameSelection;
-
+  nsWeakPtr mPresShellWeak; //weak reference to presshell.
   // for nsIScriptObjectOwner
   void*		mScriptObject;
   SelectionType mType;//type of this nsDOMSelection;
@@ -258,6 +261,8 @@ public:
 
 /*BEGIN nsIFrameSelection interfaces*/
   NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter);
+  NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollView);
+
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
@@ -330,6 +335,7 @@ private:
   NS_IMETHOD    GetHint(PRBool *aHintRight);
 
   nsDOMSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
+  nsIScrollableView *GetScrollView(){return mScrollView;}
 
   // Table selection support. Unfortunately, we can't get at nsITableCellLayout
   //   and nsITableLayout through nsIFrame, so we have to duplicate editor code here
@@ -361,7 +367,7 @@ private:
   PRInt32 mDesiredX;
   PRBool mDesiredXSet;
   enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
-  
+  nsIScrollableView *mScrollView;
 public:
   static nsIAtom *sTableAtom;
   static nsIAtom *sCellAtom;
@@ -1228,9 +1234,16 @@ nsSelection::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
   mMouseDownState = PR_FALSE;
   mDesiredXSet = PR_FALSE;
   mLimiter = aLimiter;
+  mScrollView = nsnull;
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSelection::SetScrollableView(nsIScrollableView *aScrollView)
+{
+  mScrollView = aScrollView;
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP
@@ -1463,12 +1476,14 @@ nsSelection::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 //BEGIN nsIFrameSelection methods
 
 NS_IMETHODIMP
-nsDOMSelection::ToString(nsString& aReturn)
+nsDOMSelection::ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn)
 {
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = nsComponentManager::CreateInstance(NS_DOC_ENCODER_PROGID_BASE "text/plain",
+  nsCAutoString formatType = NS_DOC_ENCODER_PROGID_BASE;
+  formatType.AppendWithConversion(aFormatType);
+  rv = nsComponentManager::CreateInstance(formatType,
                                           nsnull,
                                           NS_GET_IID(nsIDocumentEncoder),
                                           getter_AddRefs(encoder));
@@ -1484,12 +1499,13 @@ nsDOMSelection::ToString(nsString& aReturn)
   rv = shell->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = encoder->Init(doc, NS_ConvertASCIItoUCS2("text/plain"),
-                     nsIDocumentEncoder::OutputFormatted ||
-                     nsIDocumentEncoder::OutputSelectionOnly);
+  rv = encoder->Init(doc, aFormatType,
+                     aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetSelection(this);
+  if (aWrapCount != 0)
+    encoder->SetWrapColumn(aWrapCount);
 
   rv = encoder->EncodeToString(aReturn);
 
@@ -1693,7 +1709,7 @@ nsSelection::SetMouseDownState(PRBool aState)
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
-    //NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);//notify that reason is mouse up please.
   }
   return NS_OK;
 }
@@ -2632,6 +2648,7 @@ nsDOMSelection::nsDOMSelection(nsSelection *aList)
 
 nsDOMSelection::nsDOMSelection()
 {
+  mFrameSelection = nsnull;
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
@@ -2674,10 +2691,19 @@ NS_IMPL_ADDREF(nsDOMSelection)
 
 NS_IMPL_RELEASE(nsDOMSelection)
 
-NS_IMPL_QUERY_INTERFACE3(nsDOMSelection, nsIDOMSelection, nsIScriptObjectOwner, nsISupportsWeakReference)
+NS_IMPL_QUERY_INTERFACE4(nsDOMSelection, nsIDOMSelection, nsIScriptObjectOwner, nsISupportsWeakReference, nsIIndependentSelection)
+ 
+
+NS_IMETHODIMP
+nsDOMSelection::SetPresShell(nsIPresShell *aPresShell)
+{
+  mPresShellWeak = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  return NS_OK;
+}
 
 
-NS_METHOD
+
+NS_IMETHODIMP
 nsDOMSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 {
 	if (!aAnchorNode || !mAnchorFocusRange)
@@ -2692,7 +2718,7 @@ nsDOMSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 	return result;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsDOMSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
 {
 	if (!aAnchorOffset || !mAnchorFocusRange)
@@ -2708,7 +2734,7 @@ nsDOMSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
 }
 
 // note: this can return a nil focus node
-NS_METHOD
+NS_IMETHODIMP
 nsDOMSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 {
 	if (!aFocusNode || !mAnchorFocusRange)
@@ -2724,7 +2750,7 @@ nsDOMSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 	return result;
 }
 
-NS_METHOD nsDOMSelection::GetFocusOffset(PRInt32* aFocusOffset)
+NS_IMETHODIMP nsDOMSelection::GetFocusOffset(PRInt32* aFocusOffset)
 {
 	if (!aFocusOffset || !mAnchorFocusRange)
 		return NS_ERROR_NULL_POINTER;
@@ -3211,7 +3237,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
           newDetails->mType = aType;
         }
       }
-      else if (passedInNode == startNode){
+      else if (passedInNode == startNode){ //are we at the beginning?
         if (startOffset < (aContentOffset + aContentLength)){
           if (!details){
             details = new SelectionDetails;
@@ -3229,7 +3255,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
           newDetails->mType = aType;
         }
       }
-      else if (passedInNode == endNode){
+      else if (passedInNode == endNode){//are we at the end?
         if (endOffset > aContentOffset){
           if (!details){
             details = new SelectionDetails;
@@ -3247,8 +3273,9 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
           newDetails->mType = aType;
         }
       }
-      else {
-        if (cnt > 1 || aSlowCheck){
+      else { //then we MUST be completely selected! unless someone needs us to check to make sure with slowcheck
+
+        if (cnt > 1 || aSlowCheck){ //if more than 1 selection or we need to do slow check see if farther than start or less than end.
           //we only have to look at start offset because anything else would have been in the range
           PRInt32 resultnum = ComparePoints(startNode, startOffset 
                                   ,passedInNode, aContentOffset);
@@ -3382,27 +3409,13 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
   if (mAutoScrollTimer)
     result = mAutoScrollTimer->Stop();
 
-  nsCOMPtr<nsIPresShell> presShell;
-
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-
   //
   // Get a hold of the root scrollable view for presShell.
   //
 
-  nsCOMPtr<nsIViewManager> viewManager;
-
-  result = presShell->GetViewManager(getter_AddRefs(viewManager));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!viewManager)
-    return NS_ERROR_NULL_POINTER;
-
   nsIScrollableView *scrollableView = 0;
 
-  result = viewManager->GetRootScrollableView(&scrollableView);
+  result = GetRootScrollableView(&scrollableView);
 
   if (NS_SUCCEEDED(result) && scrollableView)
   {
@@ -3454,7 +3467,7 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 
           if (NS_FAILED(result))
             view = 0;
-          else if (view)
+          else if (view && view != cView)
           {
             result = view->GetPosition(&x, &y);
 
@@ -3557,6 +3570,16 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
               if (dx != 0 || dy != 0)
               {
 // make sure latest bits are available before we scroll them.
+//get the presshell
+                nsCOMPtr<nsIPresShell> presShell;
+                result = aPresContext->GetShell(getter_AddRefs(presShell));
+                NS_ENSURE_TRUE(presShell,result);
+
+//get viewmanager
+                nsCOMPtr<nsIViewManager> viewManager;
+                result = presShell->GetViewManager(getter_AddRefs(viewManager));
+                NS_ENSURE_TRUE(viewManager,result);
+
                 viewManager->Composite();
                 result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
                 if (mAutoScrollTimer)
@@ -4616,6 +4639,13 @@ nsDOMSelection::GetPresContext(nsIPresContext **aPresContext)
 nsresult
 nsDOMSelection::GetPresShell(nsIPresShell **aPresShell)
 {
+  if (mPresShellWeak)
+  {
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+    if (presShell)
+      NS_ADDREF(*aPresShell = presShell);
+    return NS_OK;
+  }
   nsresult rv = NS_OK;
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
@@ -4635,10 +4665,11 @@ nsDOMSelection::GetPresShell(nsIPresShell **aPresShell)
   if (!presContext)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIPresShell> presShell;
-
-  rv = presContext->GetShell(aPresShell);
-
+  nsCOMPtr<nsIPresShell> shell;
+  rv = presContext->GetShell(getter_AddRefs(shell));
+	mPresShellWeak = getter_AddRefs(NS_GetWeakReference(shell));		// the presshell owns us, so no addref
+  if (mPresShellWeak)
+    NS_ADDREF(*aPresShell = shell);
   return rv;
 }
 
@@ -4649,36 +4680,46 @@ nsDOMSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
   // NOTE: This method returns a NON-AddRef'd pointer
   //       to the scrollable view!
   //
+  NS_ENSURE_ARG_POINTER(aScrollableView);
+
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
-
   nsresult rv = NS_OK;
+  nsIScrollableView *scrollView = mFrameSelection->GetScrollView();
+  if (!scrollView)
+  {
 
-  nsCOMPtr<nsIPresShell> presShell;
+    nsCOMPtr<nsIPresShell> presShell;
 
-  rv = GetPresShell(getter_AddRefs(presShell));
+    rv = GetPresShell(getter_AddRefs(presShell));
 
-  if (NS_FAILED(rv))
-    return rv;
+    if (NS_FAILED(rv))
+      return rv;
 
-  if (!presShell)
-    return NS_ERROR_NULL_POINTER;
+    if (!presShell)
+      return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIViewManager> viewManager;
+    nsCOMPtr<nsIViewManager> viewManager;
 
-  rv = presShell->GetViewManager(getter_AddRefs(viewManager));
+    rv = presShell->GetViewManager(getter_AddRefs(viewManager));
 
-  if (NS_FAILED(rv))
-    return rv;
+    if (NS_FAILED(rv))
+      return rv;
 
-  if (!viewManager)
-    return NS_ERROR_NULL_POINTER;
+    if (!viewManager)
+      return NS_ERROR_NULL_POINTER;
 
-  //
-  // nsIViewManager::GetRootScrollableView() does not
-  // AddRef the pointer it returns.
-  //
-  return viewManager->GetRootScrollableView(aScrollableView);
+    //
+    // nsIViewManager::GetRootScrollableView() does not
+    // AddRef the pointer it returns.
+    //
+    return viewManager->GetRootScrollableView(aScrollableView);
+  }
+  else //SCROLLVIEW_FROM_FRAME
+  {
+    *aScrollableView = scrollView;
+  }
+  return NS_OK;
 }
 
 nsresult

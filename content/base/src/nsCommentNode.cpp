@@ -27,7 +27,7 @@
 #include "nsFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMSelection.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsIDocument.h"
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
@@ -144,11 +144,11 @@ public:
     return mInner.GetAttributeCount(aResult);
   }
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.BeginConvertToXIF(aConverter);
   }
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.FinishConvertToXIF(aConverter);
   }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
@@ -390,11 +390,11 @@ NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult)
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 nsresult
-nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsCommentNode::ConvertContentToXIF(nsIXIFConverter* aConverter) const
 {
   const nsIContent* content = this;
-  nsIDOMSelection* sel = aConverter.GetSelection();
-
+  nsCOMPtr<nsIDOMSelection> sel;
+  aConverter->GetSelection(getter_AddRefs(sel));
   nsIDocument* document;
   nsresult res;
   res = GetDocument(document);
@@ -448,7 +448,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
             if (startContent.get() == content)
              buffer.Cut(0,startOffset); 
           }
-          aConverter.AddContentComment(buffer);
+          aConverter->AddContentComment(buffer);
         }
       }
     }
@@ -457,7 +457,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   {
     nsString  buffer;
     textFrag->AppendTo(buffer);
-    aConverter.AddContentComment(buffer);
+    aConverter->AddContentComment(buffer);
   }
   NS_IF_RELEASE(document);
   // XXX Possible mem leak: Do we need to delete textFrag?
@@ -466,13 +466,13 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
 #if 0
 nsresult
-nsCommentNode::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsCommentNode::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }
 
 nsresult
-nsCommentNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsCommentNode::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }

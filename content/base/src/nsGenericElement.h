@@ -332,9 +332,9 @@ public:
   nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult BeginConvertToXIF(nsIXIFConverter * aConverter) const;
+  nsresult ConvertContentToXIF(nsIXIFConverter * aConverter) const;
+  nsresult FinishConvertToXIF(nsIXIFConverter * aConverter) const;
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
 
@@ -584,13 +584,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
@@ -706,13 +706,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
@@ -828,13 +828,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
@@ -948,13 +948,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
@@ -1072,13 +1072,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
@@ -1188,13 +1188,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \
   }                                                                        \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(aConverter);                             \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \

@@ -17,27 +17,63 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *     Greg Kostello
+ *
  * Contributor(s): 
+ *     Michael F. Judge mjudge@netscape.com
  */
 
+#include "nsCOMPtr.h"
 #include "nsXIFConverter.h"
 #include <fstream.h>
+#include "nsIDOMSelection.h"
+
 
 MOZ_DECL_CTOR_COUNTER(nsXIFConverter);
 
-nsXIFConverter::nsXIFConverter(nsString& aBuffer)
-  : mIndent(0),
-    mBuffer(aBuffer)
+NS_IMPL_ISUPPORTS(nsXIFConverter, NS_GET_IID(nsIXIFConverter))
+
+
+nsresult
+NS_NewXIFConverter(nsIXIFConverter **aResult)
+{
+  *aResult = (nsIXIFConverter *)new nsXIFConverter;
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsXIFConverter::nsXIFConverter()
+  : mIndent(0)
 {
   MOZ_COUNT_CTOR(nsXIFConverter);
-
+  NS_INIT_REFCNT();
+  
   mInScript = PR_FALSE;
+}
+
+nsXIFConverter::~nsXIFConverter()
+{
+  MOZ_COUNT_DTOR(nsXIFConverter);
+#ifdef DEBUG_XIF
+  WriteDebugFile();
+#endif
+}
+
+
+NS_IMETHODIMP
+nsXIFConverter::Init(nsString &aBuffer)
+{
+  mBuffer = &aBuffer;
+  NS_ENSURE_ARG_POINTER(mBuffer);
 
   char* prolog = "<?xml version=\"1.0\"?>\n";
   char* doctype = "<!DOCTYPE xif>\n";
 
-  mBuffer.AppendWithConversion(prolog);
-  mBuffer.AppendWithConversion(doctype);
+  mBuffer->AppendWithConversion(prolog);
+  mBuffer->AppendWithConversion(doctype);
   
   mAttr.AssignWithConversion("attr");
   mName.AssignWithConversion("name");
@@ -66,24 +102,18 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
   mQuote.AssignWithConversion((char)'\"');
   mEqual.AssignWithConversion((char)'=');
   mMarkupDeclarationOpen.AssignWithConversion("markup_declaration");
-
-  mSelection = nsnull;
+  return NS_OK;
 }
 
-nsXIFConverter::~nsXIFConverter()
+NS_IMETHODIMP
+nsXIFConverter::SetSelection(nsIDOMSelection* aSelection) 
 {
-  MOZ_COUNT_DTOR(nsXIFConverter);
-#ifdef DEBUG_XIF
-  WriteDebugFile();
-#endif
-}
-
-
-void nsXIFConverter::SetSelection(nsIDOMSelection* aSelection) {
-  mSelection = aSelection;
+  NS_ENSURE_ARG_POINTER(aSelection);
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
+  mSelectionWeak = getter_AddRefs( NS_GetWeakReference(aSelection) );
   
   BeginStartTag( NS_ConvertToString("encode") );
-  if (mSelection == nsnull)
+  if (!mSelectionWeak)
   {
     AddAttribute( NS_ConvertToString("selection"), NS_ConvertToString("0") );
   }
@@ -92,131 +122,175 @@ void nsXIFConverter::SetSelection(nsIDOMSelection* aSelection) {
     AddAttribute( NS_ConvertToString("selection"), NS_ConvertToString("1") );
   }
   FinishStartTag(NS_ConvertToString("encode"),PR_TRUE,PR_TRUE);
+  return NS_OK;
 }
 
 
+NS_IMETHODIMP
+nsXIFConverter::GetSelection(nsIDOMSelection** aSelection)
+{ 
+  NS_ENSURE_ARG_POINTER(aSelection);
+  nsCOMPtr<nsIDOMSelection> sel =  do_QueryReferent(mSelectionWeak);
+  NS_IF_ADDREF(*aSelection = sel);
+  return *aSelection?NS_OK :NS_ERROR_FAILURE;
+}
 
 
-void nsXIFConverter::BeginStartTag(const nsString& aTag)
+NS_IMETHODIMP
+nsXIFConverter::BeginStartTag(const nsString& aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // Make all element names lowercase
   nsString tag(aTag);
   tag.ToLowerCase();
 
-  for (PRInt32 i = mIndent; --i >= 0; ) mBuffer.Append(mSpacing);
-  mBuffer.Append(mLT);
-  mBuffer.Append(tag);
-//mIndent++;
+  for (PRInt32 i = mIndent; --i >= 0; ) 
+    mBuffer->Append(mSpacing);
+  mBuffer->Append(mLT);
+  mBuffer->Append(tag);
+  return NS_OK;
 }
 
-void nsXIFConverter::BeginStartTag(nsIAtom* aTag)
+NS_IMETHODIMP
+nsXIFConverter::BeginStartTag(nsIAtom* aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag; tag.Assign(mNULL);
 
   if (nsnull != aTag) 
     aTag->ToString(tag);
 
   BeginStartTag(tag);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddAttribute(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP
+nsXIFConverter::AddAttribute(const nsString& aName, const nsString& aValue)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // Make all attribute names lowercase
   nsAutoString name(aName);
   name.ToLowerCase();
 
-  mBuffer.Append(mSpace);
-  mBuffer.Append(name);
+  mBuffer->Append(mSpace);
+  mBuffer->Append(name);
 
-  mBuffer.Append(mEqual);
-  mBuffer.Append(mQuote);    // XML requires quoted attributes
-  mBuffer.Append(aValue);
-  mBuffer.Append(mQuote);
+  mBuffer->Append(mEqual);
+  mBuffer->Append(mQuote);    // XML requires quoted attributes
+  mBuffer->Append(aValue);
+  mBuffer->Append(mQuote);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddHTMLAttribute(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP
+nsXIFConverter::AddHTMLAttribute(const nsString& aName, const nsString& aValue)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(mAttr);
   AddAttribute(mName,aName);
   AddAttribute(mValue,aValue);
   FinishStartTag(mAttr,PR_TRUE,PR_TRUE);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::AddAttribute(const nsString& aName, nsIAtom* aValue)
+NS_IMETHODIMP
+nsXIFConverter::AddAttribute(const nsString& aName, nsIAtom* aValue)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString value(mNULL);
 
   if (nsnull != aValue) 
     aValue->ToString(value);
 
   AddAttribute(aName,value);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddAttribute(const nsString& aName)
+NS_IMETHODIMP
+nsXIFConverter::AddAttribute(const nsString& aName)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // A convention in XML DTD's is that ATTRIBUTE
   // names are lowercase.
   nsAutoString name(aName);
   name.ToLowerCase();
 
-  mBuffer.Append(mSpace);
-  mBuffer.Append(name);
+  mBuffer->Append(mSpace);
+  mBuffer->Append(name);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddAttribute(nsIAtom* aName)
+NS_IMETHODIMP
+nsXIFConverter::AddAttribute(nsIAtom* aName)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString name(mNULL);
 
   if (nsnull != aName) 
     aName->ToString(name);
   AddAttribute(name);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::FinishStartTag(const nsString& aTag, PRBool aIsEmpty, PRBool aAddReturn)
+NS_IMETHODIMP
+nsXIFConverter::FinishStartTag(const nsString& aTag, PRBool aIsEmpty, PRBool aAddReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   if (aIsEmpty)
   {
-    mBuffer.Append(mSlash);  
-    mBuffer.Append(mGT);  
+    mBuffer->Append(mSlash);  
+    mBuffer->Append(mGT);  
 //    mIndent--;
   }
   else
-    mBuffer.Append(mGT);  
+    mBuffer->Append(mGT);  
   
   if (aAddReturn == PR_TRUE)
-    mBuffer.Append(mLF);
+    mBuffer->Append(mLF);
+  return NS_OK;
 }
 
-void nsXIFConverter::FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty, PRBool aAddReturn)
+NS_IMETHODIMP
+nsXIFConverter::FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty, PRBool aAddReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag(mNULL);
 
   if (nsnull != aTag) 
     aTag->ToString(tag);
 
   FinishStartTag(tag,aIsEmpty,aAddReturn);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddStartTag(const nsString& aTag, PRBool aAddReturn)
+NS_IMETHODIMP
+nsXIFConverter::AddStartTag(const nsString& aTag, PRBool aAddReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(aTag);
   FinishStartTag(aTag,PR_FALSE,aAddReturn);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddStartTag(nsIAtom* aTag, PRBool aAddReturn)
+NS_IMETHODIMP
+nsXIFConverter::AddStartTag(nsIAtom* aTag, PRBool aAddReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag(mNULL);
 
   if (nsnull != aTag) 
     aTag->ToString(tag);
   AddStartTag(tag,aAddReturn);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::AddEndTag(const nsString& aTag, PRBool aDoIndent, PRBool aDoReturn)
+NS_IMETHODIMP
+nsXIFConverter::AddEndTag(const nsString& aTag, PRBool aDoIndent, PRBool aDoReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // A convention in XML DTD's is that ELEMENT
   // names are UPPERCASE.
   nsString tag(aTag);
@@ -225,47 +299,57 @@ void nsXIFConverter::AddEndTag(const nsString& aTag, PRBool aDoIndent, PRBool aD
 //  mIndent--;
   
   if (aDoIndent == PR_TRUE)
-    for (PRInt32 i = mIndent; --i >= 0; ) mBuffer.Append(mSpacing);
-  mBuffer.Append(mLT);
-  mBuffer.Append(mSlash);
-  mBuffer.Append(tag);
-  mBuffer.Append(mGT);
+    for (PRInt32 i = mIndent; --i >= 0; ) mBuffer->Append(mSpacing);
+  mBuffer->Append(mLT);
+  mBuffer->Append(mSlash);
+  mBuffer->Append(tag);
+  mBuffer->Append(mGT);
   if (aDoReturn == PR_TRUE)
-    mBuffer.Append(mLF);
+    mBuffer->Append(mLF);
+  return NS_OK;
 }
 
-void nsXIFConverter::AddEndTag(nsIAtom* aTag, PRBool aDoIndent, PRBool aDoReturn)
+NS_IMETHODIMP
+nsXIFConverter::AddEndTag(nsIAtom* aTag, PRBool aDoIndent, PRBool aDoReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag(mNULL);
 
   if (nsnull != aTag) 
     aTag->ToString(tag);
   AddEndTag(tag,aDoIndent,aDoReturn);
+  return NS_OK;
 }
 
 
 
-PRBool  nsXIFConverter::IsMarkupEntity(const PRUnichar aChar)
+NS_IMETHODIMP
+nsXIFConverter::IsMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_ARG_POINTER(aReturn);
   // If we're in a script, pass entities straight through without conversion:
   if (mInScript)
     return PR_FALSE;
 
-  PRBool result = PR_FALSE;
+  *aReturn = PR_FALSE;
   switch (aChar)
   {
     case '<':
     case '>':
     case '&':
-      result = PR_TRUE;
+      *aReturn = PR_TRUE;
     break;
   }
-  return result;
+  return NS_OK;
 
 }
 
-PRBool  nsXIFConverter::AddMarkupEntity(const PRUnichar aChar)
+NS_IMETHODIMP
+nsXIFConverter::AddMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_ARG_POINTER(aReturn);
   nsAutoString data;
   PRBool  result = PR_TRUE;
 
@@ -275,21 +359,23 @@ PRBool  nsXIFConverter::AddMarkupEntity(const PRUnichar aChar)
     case '>': data.AssignWithConversion("gt"); break;
     case '&': data.AssignWithConversion("amp"); break;
     default:
-      result = PR_FALSE;
+      *aReturn = PR_FALSE;
     break;
   }
-  if (result == PR_TRUE)
+  if (*aReturn == PR_TRUE)
   {
     BeginStartTag(mEntity);
     AddAttribute(mValue,data);
     FinishStartTag(mEntity,PR_TRUE,PR_FALSE);
   }
-  return result;
+  return NS_OK;
 }
 
 
-void nsXIFConverter::AddContent(const nsString& aContent)
+NS_IMETHODIMP
+nsXIFConverter::AddContent(const nsString& aContent)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString  tag(mContent);
 
   AddStartTag(tag,PR_FALSE);
@@ -297,17 +383,19 @@ void nsXIFConverter::AddContent(const nsString& aContent)
   PRBool  startTagAdded = PR_TRUE;
   PRInt32   length = aContent.Length();
   PRUnichar ch;
+  PRBool boolVal(PR_FALSE);
   for (PRInt32 i = 0; i < length; i++)
   {
     ch = aContent[i];
-    if (IsMarkupEntity(ch))
+    IsMarkupEntity(ch, &boolVal);
+    if (boolVal)
     {
       if (startTagAdded == PR_TRUE)
       {
         AddEndTag(tag,PR_FALSE);
         startTagAdded = PR_FALSE;
       }
-      AddMarkupEntity(ch);
+      AddMarkupEntity(ch, &boolVal);
     }
     else
     {
@@ -316,10 +404,11 @@ void nsXIFConverter::AddContent(const nsString& aContent)
         AddStartTag(tag,PR_FALSE);
         startTagAdded = PR_TRUE;
       }
-      mBuffer.Append(ch);
+      mBuffer->Append(ch);
     }
   }
   AddEndTag(tag,PR_FALSE);
+  return NS_OK;
 }
 
 //
@@ -327,11 +416,14 @@ void nsXIFConverter::AddContent(const nsString& aContent)
 // not something that was a comment in the html;
 // that would be a content comment.
 //
-void nsXIFConverter::AddComment(const nsString& aContent)
+NS_IMETHODIMP
+nsXIFConverter::AddComment(const nsString& aContent)
 {
-  mBuffer.Append(mBeginComment);
-  mBuffer.Append(aContent);
-  mBuffer.Append(mEndComment);
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
+  mBuffer->Append(mBeginComment);
+  mBuffer->Append(aContent);
+  mBuffer->Append(mEndComment);
+  return NS_OK;
 }
 
 //
@@ -339,38 +431,49 @@ void nsXIFConverter::AddComment(const nsString& aContent)
 // which will be mapped back into the right thing
 // in the content sink on the other end when this is parsed.
 //
-void nsXIFConverter::AddContentComment(const nsString& aContent)
+NS_IMETHODIMP
+nsXIFConverter::AddContentComment(const nsString& aContent)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString tag(mComment);
   AddStartTag(tag, PR_FALSE);
   AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
+  return NS_OK;
 }
 
 //
 // Use this method to add DOCTYPE, MARKEDSECTION, etc., that are
 // not really classified as ** tags **
 //
-void nsXIFConverter::AddMarkupDeclaration(const nsString& aContent)
+NS_IMETHODIMP
+nsXIFConverter::AddMarkupDeclaration(const nsString& aContent)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString tag(mMarkupDeclarationOpen);
   AddStartTag(tag, PR_FALSE);
   AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginContainer(nsIAtom* aTag)
+NS_IMETHODIMP
+nsXIFConverter::BeginContainer(nsIAtom* aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString  container(mContainer);
 
   BeginStartTag(container);
     AddAttribute(mIsa,aTag);
   FinishStartTag(container,PR_FALSE);
+  return NS_OK;
 }
 
-void nsXIFConverter::EndContainer(nsIAtom* aTag)
+NS_IMETHODIMP
+nsXIFConverter::EndContainer(nsIAtom* aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString  container(mContainer);
 
   AddEndTag(container,PR_TRUE,PR_FALSE);
@@ -380,13 +483,16 @@ void nsXIFConverter::EndContainer(nsIAtom* aTag)
     aTag->ToString(tag);
   AddComment(tag);
 
-  mBuffer.Append(mLF);
+  mBuffer->Append(mLF);
+  return NS_OK;
 }
 
 
 
-void nsXIFConverter::BeginContainer(const nsString& aTag)
+NS_IMETHODIMP
+nsXIFConverter::BeginContainer(const nsString& aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString  container(mContainer);
 
   BeginStartTag(container);
@@ -396,124 +502,164 @@ void nsXIFConverter::BeginContainer(const nsString& aTag)
   // Remember if we're inside a script tag:
   if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
     mInScript = PR_TRUE;
+  return NS_OK;
 }
 
-void nsXIFConverter::EndContainer(const nsString& aTag)
+
+NS_IMETHODIMP
+nsXIFConverter::EndContainer(const nsString& aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsString  container(mContainer);
 
   AddEndTag(container,PR_TRUE,PR_FALSE);
   AddComment(aTag);
-  mBuffer.Append(mLF);
+  mBuffer->Append(mLF);
 
   // Remember if we're exiting a script tag:
   if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
     mInScript = PR_FALSE;
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginLeaf(const nsString& aTag)
+NS_IMETHODIMP
+nsXIFConverter::BeginLeaf(const nsString& aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
   if (aTag.EqualsIgnoreCase("STYLE"))
-    return;
+    return NS_OK;
 
 
   BeginStartTag(mLeaf);
     AddAttribute(mIsa,aTag);
   FinishStartTag(mLeaf,PR_FALSE);
+  return NS_OK;
 }
 
-void nsXIFConverter::EndLeaf(const nsString& aTag)
+NS_IMETHODIMP
+nsXIFConverter::EndLeaf(const nsString& aTag)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
   if (aTag.EqualsIgnoreCase("STYLE"))
-    return;
+    return NS_OK;
 
 
   AddEndTag(mLeaf,PR_TRUE,PR_FALSE);
   AddComment(aTag);
-  mBuffer.Append(mLF);
+  mBuffer->Append(mLF);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginCSSStyleSheet()
+NS_IMETHODIMP
+nsXIFConverter::BeginCSSStyleSheet()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddStartTag(mSheet);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::EndCSSStyleSheet()
+NS_IMETHODIMP
+nsXIFConverter::EndCSSStyleSheet()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddEndTag(mSheet);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginCSSRule()
+NS_IMETHODIMP
+nsXIFConverter::BeginCSSRule()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddStartTag(mRule);
+  return NS_OK;
 }
 
-void nsXIFConverter::EndCSSRule()
+NS_IMETHODIMP
+nsXIFConverter::EndCSSRule()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddEndTag(mRule);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginCSSSelectors()
+NS_IMETHODIMP
+nsXIFConverter::BeginCSSSelectors()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(mSelector);
+  return NS_OK;
 }
 
-void nsXIFConverter::EndCSSSelectors()
+NS_IMETHODIMP nsXIFConverter::EndCSSSelectors()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   FinishStartTag(mSelector,PR_TRUE);
+  return NS_OK;
 }
 
 
 
-void nsXIFConverter::AddCSSSelectors(const nsString& aSelectors)
+NS_IMETHODIMP nsXIFConverter::AddCSSSelectors(const nsString& aSelectors)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddAttribute(NS_ConvertToString("selectors"),aSelectors);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginCSSDeclarationList()
+NS_IMETHODIMP nsXIFConverter::BeginCSSDeclarationList()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddStartTag(NS_ConvertToString("css_declaration_list"));
+  return NS_OK;
 }
 
-void nsXIFConverter::EndCSSDeclarationList()
+NS_IMETHODIMP nsXIFConverter::EndCSSDeclarationList()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddEndTag(NS_ConvertToString("css_declaration_list"),PR_TRUE);
+  return NS_OK;
 }
 
 
-void nsXIFConverter::BeginCSSDeclaration()
+NS_IMETHODIMP nsXIFConverter::BeginCSSDeclaration()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(NS_ConvertToString("css_declaration"));
+  return NS_OK;
 }
 
-void nsXIFConverter::AddCSSDeclaration(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP nsXIFConverter::AddCSSDeclaration(const nsString& aName, const nsString& aValue)
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddAttribute(NS_ConvertToString("property"),aName);
   AddAttribute(NS_ConvertToString("value"),aValue);
+  return NS_OK;
 }
 
-void nsXIFConverter::EndCSSDeclaration()
+NS_IMETHODIMP nsXIFConverter::EndCSSDeclaration()
 {
+  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   FinishStartTag(NS_ConvertToString("css_declaration"),PR_TRUE);
+  return NS_OK;
 }
 
 #ifdef DEBUG_XIF
 //
 // Leave a temp file for debugging purposes
 //
-void nsXIFConverter::WriteDebugFile() {
+NS_IMETHODIMP nsXIFConverter::WriteDebugFile() {
 
 #if defined(WIN32)
   const char* filename="c:\\temp\\xif.xif";
@@ -530,11 +676,18 @@ void nsXIFConverter::WriteDebugFile() {
 #endif
 
   ofstream out(filename);
-  char* s = mBuffer.ToNewUTF8String();
+  char* s = mBuffer->ToNewUTF8String();
   if (s) {
     out << s;
     Recycle(s);
   }
   out.close();
+  return NS_OK;
 }
+#else
+NS_IMETHODIMP nsXIFConverter::WriteDebugFile()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #endif /* DEBUG */

@@ -23,15 +23,17 @@
 #define nsXIFConverter_h__
 
 #include "nsString.h"
+#include "nsWeakReference.h"
+#include "nsIXIFConverter.h"
 
 class nsIDOMSelection;
 
-class nsXIFConverter
+class nsXIFConverter :public nsIXIFConverter
 {
 
 private:
   PRInt32    mIndent;
-  nsString&  mBuffer;
+  nsString  *mBuffer;
     
   nsString mAttr;
   nsString mName;
@@ -55,7 +57,7 @@ private:
   nsString mNULL;
   nsString mSpacing;
   nsString mSpace;
-  nsString mLT;
+  nsString mLT; 
   nsString mGT;
   nsString mLF;
   nsString mSlash;
@@ -64,78 +66,83 @@ private:
   nsString mQuote;
   nsString mEqual;
   nsString mMarkupDeclarationOpen;
-  nsIDOMSelection*  mSelection;
+  nsWeakPtr mSelectionWeak;
 
 public:
-
-  nsXIFConverter(nsString& aBuffer);
+  NS_DECL_ISUPPORTS
+  nsXIFConverter();
   virtual ~nsXIFConverter();
 
-  void BeginStartTag(const nsString& aTag);
-  void BeginStartTag(nsIAtom* aTag);
-  void AddAttribute(const nsString& aName, const nsString& aValue);
-  void AddAttribute(const nsString& aName, nsIAtom* aValue);
-  void AddAttribute(const nsString& aName);
-  void AddAttribute(nsIAtom* aName);
+  NS_IMETHOD Init(nsString &aBuffer);
+  NS_IMETHOD BeginStartTag(const nsString& aTag);
+  NS_IMETHOD BeginStartTag(nsIAtom* aTag);
+  NS_IMETHOD AddAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD AddAttribute(const nsString& aName, nsIAtom* aValue);
+  NS_IMETHOD AddAttribute(const nsString& aName);
+  NS_IMETHOD AddAttribute(nsIAtom* aName);
 
-  void FinishStartTag(const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
-  void FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
+  //parameters normally: const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
+  NS_IMETHOD FinishStartTag(const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
+  
+  //parameters normally: nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
+  NS_IMETHOD FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
 
   // Short-cut for starting a new tag that has no attributes
-  void AddStartTag(const nsString& aTag, PRBool aAddReturn = PR_TRUE);
-  void AddStartTag(nsIAtom* aTag, PRBool aAddReturn = PR_TRUE);
+  //default aAddReturn to true
+  NS_IMETHOD AddStartTag(const nsString& aTag, PRBool aAddReturn = PR_TRUE);
+  //default aAddReturn to true
+  NS_IMETHOD AddStartTag(nsIAtom* aTag, PRBool aAddReturn = PR_TRUE);
   
-  void AddEndTag(const nsString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
-  void AddEndTag(nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
+  //parameter defaults: const nsString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
+  NS_IMETHOD AddEndTag(const nsString& aTag, PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
+  //parameter defaults: nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
+  NS_IMETHOD AddEndTag(nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
   
   // High Level Methods
 
-  void BeginContainer(nsIAtom* aTag);
-  void EndContainer(nsIAtom* aTag);
+  NS_IMETHOD BeginContainer(nsIAtom* aTag);
+  NS_IMETHOD EndContainer(nsIAtom* aTag);
 
-  void BeginContainer(const nsString& aTag);
-  void EndContainer(const nsString& aTag);
+  NS_IMETHOD BeginContainer(const nsString& aTag);
+  NS_IMETHOD EndContainer(const nsString& aTag);
 
-  void BeginLeaf(const nsString& aTag);
-  void EndLeaf(const nsString& aTag);
+  NS_IMETHOD BeginLeaf(const nsString& aTag);
+  NS_IMETHOD EndLeaf(const nsString& aTag);
 
-  void AddContent(const nsString& aContent);
-  void AddComment(const nsString& aComment);
-  void AddContentComment(const nsString& aComment);
+  NS_IMETHOD AddContent(const nsString& aContent);
+  NS_IMETHOD AddComment(const nsString& aComment);
+  NS_IMETHOD AddContentComment(const nsString& aComment);
   
-  void AddMarkupDeclaration(const nsString& aComment);
+  NS_IMETHOD AddMarkupDeclaration(const nsString& aComment);
 
-  void AddHTMLAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD AddHTMLAttribute(const nsString& aName, const nsString& aValue);
 
 
-  void BeginCSSStyleSheet();
-  void EndCSSStyleSheet();
+  NS_IMETHOD BeginCSSStyleSheet();
+  NS_IMETHOD EndCSSStyleSheet();
 
-  void BeginCSSRule();
-  void EndCSSRule();
+  NS_IMETHOD BeginCSSRule();
+  NS_IMETHOD EndCSSRule();
 
-  void BeginCSSSelectors();
-  void AddCSSSelectors(const nsString& aSelectors);
-  void EndCSSSelectors();
+  NS_IMETHOD BeginCSSSelectors();
+  NS_IMETHOD AddCSSSelectors(const nsString& aSelectors);
+  NS_IMETHOD EndCSSSelectors();
 
-  void BeginCSSDeclarationList();
-  void BeginCSSDeclaration();
-  void AddCSSDeclaration(const nsString& aName, const nsString& aValue);
-  void EndCSSDeclaration();
-  void EndCSSDeclarationList();
+  NS_IMETHOD BeginCSSDeclarationList();
+  NS_IMETHOD BeginCSSDeclaration();
+  NS_IMETHOD AddCSSDeclaration(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD EndCSSDeclaration();
+  NS_IMETHOD EndCSSDeclarationList();
 
-  PRBool IsMarkupEntity(const PRUnichar aChar);
-  PRBool AddMarkupEntity(const PRUnichar aChar);
+  NS_IMETHOD IsMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal);
+  NS_IMETHOD AddMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal);
 
-#ifdef DEBUG_XIF
-  void WriteDebugFile();        // saves to a temp file
-#endif
 
-  void SetSelection(nsIDOMSelection* aSelection);
+  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
 
-  nsIDOMSelection*  GetSelection() {
-    return mSelection;
-  }
+  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
+//helper
+  NS_IMETHOD WriteDebugFile();        // saves to a temp file
 };
 
 #endif
