@@ -426,11 +426,11 @@ use Bugzilla::Config qw(:DEFAULT :admin :locations);
 # know, we never want to overwrite your own version of 'localconfig', so
 # we can't put it into the CVS/tarfile, can we?
 #
-# Now, we need a new variable. We simply add the necessary stuff to checksetup.
-# The user get's the new version of Bugzilla from the CVS, runs checksetup
-# and checksetup finds out "Oh, there is something new". Then it adds some
-# default value to the user's local setup and informs the user to check that
-# to see if that is what the user wants.
+# Now, when we need a new variable, we simply add the necessary stuff to
+# checksetup. When the user gets the new version of Bugzilla from CVS and
+# runs checksetup, it finds out "Oh, there is something new". Then it adds
+# some default value to the user's local setup and informs the user to
+# check that to see if it is what the user wants.
 #
 # Cute, ey?
 #
