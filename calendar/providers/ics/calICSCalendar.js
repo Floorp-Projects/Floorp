@@ -52,7 +52,7 @@ function calICSCalendar () {
     this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
                                      .createInstance(Components.interfaces.calICalendar);
     this.mICSService = Components.classes["@mozilla.org/calendar/ics-service;1"]
-                                 .createInstance(Components.interfaces.calIICSService);
+                                 .getService(Components.interfaces.calIICSService);
     this.mObserver = new calICSObserver(this);
     this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
 }
@@ -61,7 +61,8 @@ calICSCalendar.prototype = {
     mMemoryCalendar: null,
     mUri: null,
     mICSService: null,
-
+    mInitializing: false,
+  
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.calICalendar))
@@ -82,7 +83,11 @@ calICSCalendar.prototype = {
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {}
         };
 
-        this.mUri = aUri
+        // XXX If this ever uses async io, make sure to also make this
+        // async. The ui should not be able to edit the calendar while loading
+        this.mInitializing = true;
+
+        this.mUri = aUri;
         var file = Components.classes["@mozilla.org/file/local;1"]
                              .createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(this.mUri.path);
@@ -110,6 +115,7 @@ calICSCalendar.prototype = {
             }
         } catch(e) {
         }
+        this.mInitializing = false;
     },
 
     // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
@@ -124,29 +130,37 @@ calICSCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
-        return this.mMemoryCalendar.modifyItem(aItem, aListener);
+        var listener = new calICSListener(this, aListener);
+        this.mMemoryCalendar.modifyItem(aItem, listener);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
-        return this.mMemoryCalendar.deleteItem(aItem, aListener);
+        var listener = new calICSListener(this, aListener);
+        this.mMemoryCalendar.deleteItem(aItem, listener);
     },
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
-        this.mMemoryCalendar.addItem(aItem, aListener);
+        // XXX Need to set the of the new item.
+        // can't set it here, because memoy calendar clones the item,
+        // and doesn't return the clone.
+        var listener = new calICSListener(this, aListener);
+        this.mMemoryCalendar.addItem(aItem, listener);
     },
 
     // void getItem( in string aId, in calIOperationListener aListener );
     getItem: function (aId, aListener) {
-        this.mMemoryCalendar.getItem(aId, aListener);
+        var listener = new calICSListener(this, aListener);
+        this.mMemoryCalendar.getItem(aId, listener);
     },
 
     // void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
     //                in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
     //                in calIOperationListener aListener );
     getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener) {
-        this.mMemoryCalendar.getItems(aItemFilter, aCount, aRangeStart, aRangeEnd, aListener);
+        var listener = new calICSListener(this, aListener);
+        this.mMemoryCalendar.getItems(aItemFilter, aCount, aRangeStart, aRangeEnd, listener);
     },
 
     writeICS: function () {
@@ -183,6 +197,28 @@ calICSCalendar.prototype = {
     }
 
 };
+
+// This wrapper is needed to convert the calendar parameter from the
+// memory to this.
+function calICSListener(aCalendar, aListener) {
+    this.mCalendar = aCalendar;
+    this.mListener = aListener;
+}
+
+calICSListener.prototype = {
+    mCalendar: null,
+    mListener: null,
+
+    onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+        if (this.mListener)
+            this.mListener.onOperationComplete(this.mCalendar, aStatus, aOperationType, aId, aDetail)
+    },
+    onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+        if (this.mListener)
+            this.mListener.onGetResult(this.mCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+    }
+};
+
 
 function calICSObserver(aCalendar) {
     this.mCalendar = aCalendar;
