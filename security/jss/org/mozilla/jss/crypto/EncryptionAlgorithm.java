@@ -234,7 +234,7 @@ public class EncryptionAlgorithm extends Algorithm {
     {
         Object alg = oidMap.get(oid);
         if( alg == null ) {
-            throw new NoSuchAlgorithmException();
+            throw new NoSuchAlgorithmException("OID: " + oid.toString());
         } else {
             return (EncryptionAlgorithm) alg;
         }
@@ -270,9 +270,7 @@ public class EncryptionAlgorithm extends Algorithm {
         for(i = 0; i < len; ++i ) {
             EncryptionAlgorithm cur =
                 (EncryptionAlgorithm) algList.elementAt(i);
-            System.out.print("Comparing against " + cur.toString() +"...");
             if( cur.alg == alg && cur.mode == mode && cur.padding == padding ) {
-                System.out.print("Matched alg/mode/padding...");
                 if( cur.keyStrength == 0 || cur.keyStrength == keyStrength ) {
                     break;
                 }
