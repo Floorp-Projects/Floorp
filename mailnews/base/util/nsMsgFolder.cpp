@@ -67,6 +67,7 @@ nsMsgFolder::nsMsgFolder(void)
 
 	mListeners = new nsVoidArray();
 
+	m_server = nsnull;
 }
 
 nsMsgFolder::~nsMsgFolder(void)
@@ -318,8 +319,12 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
     PR_FREEIF(username);
 		PR_FREEIF(hostname);
 		if (NS_FAILED(rv)) return rv;
-    
+	
 		m_server = server;
+		// release because we don't wan't to keep a reference.
+		// the server keeps a reference to the folder, and if the
+		// folder keeps one back to the server, we'd get a cycle.
+		NS_IF_RELEASE(server);
 	}
 
 	if (aServer)

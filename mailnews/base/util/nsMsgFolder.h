@@ -321,7 +321,7 @@ protected:
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
 								//Due to ownership issues, this won't be AddRef'd.
 
-  nsCOMPtr<nsIMsgIncomingServer> m_server; // this will be addrefed....no ownership issue here
+  nsIMsgIncomingServer* m_server; //this won't be addrefed....ownership issue here
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;
