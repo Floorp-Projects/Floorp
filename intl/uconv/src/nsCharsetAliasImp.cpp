@@ -76,7 +76,7 @@ nsCharsetAlias::nsCharsetAlias()
   eucjp =     "EUC-JP";
   iso2022jp = "ISO-2022-JP";
   xmacroman = "x-mac-roman";
-  utf8      = "UTF8";
+  utf8      = "UTF-8";
   unknown   = "";
   iso88597 =  "ISO-8859-7";
   windows1253 =  "Windows-1253";
