@@ -305,8 +305,8 @@ void ProcessWindowsMessages()
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
-#endif /* XP_WIN */
 }
+#endif /* XP_WIN */
 
 #endif /* STANDALONE */
 
