@@ -47,12 +47,12 @@ public:
   /**
    * Executes the transaction.
    */
-  virtual nsresult Do(void) = 0;
+  NS_IMETHOD Do(void) = 0;
 
   /**
    * Restores the state to what it was before the transaction was executed.
    */
-  virtual nsresult Undo(void) = 0;
+  NS_IMETHOD Undo(void) = 0;
 
   /**
    * Executes the transaction again. Can only be called on a transaction that
@@ -61,7 +61,7 @@ public:
    * In most cases, the Redo() method will actually call the Do() method to
    * execute the transaction again.
    */
-  virtual nsresult Redo(void) = 0;
+  NS_IMETHOD Redo(void) = 0;
 
   /**
    * Retrieves the transaction's transient state. This method is called by
@@ -75,7 +75,7 @@ public:
    * manager.
    * @param aIsTransient will contain the transaction's transient state.
    */
-  virtual nsresult GetIsTransient(PRBool *aIsTransient) = 0;
+  NS_IMETHOD GetIsTransient(PRBool *aIsTransient) = 0;
 
   /**
    * Attempts to merge a transaction into "this" transaction. Both transactions
@@ -88,25 +88,25 @@ public:
    * pushing it on the undo stack.
    * @param aTransaction the previously executed transaction to merge.
    */
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction) = 0;
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction) = 0;
 
   /**
    * Write a stream representation of the current state of the transaction.
    * @param aOutputStream the stream to write to.
    */
-  virtual nsresult Write(nsIOutputStream *aOutputStream) = 0;
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream) = 0;
 
   /**
    * Returns the string to display for the undo menu item.
    * @param aString will point to string to display.
    */
-  virtual nsresult GetUndoString(nsString **aString) = 0;
+  NS_IMETHOD GetUndoString(nsString **aString) = 0;
 
   /**
    * Returns the string to display for the redo menu item.
    * @param aString will point to string to display.
    */
-  virtual nsresult GetRedoString(nsString **aString) = 0;
+  NS_IMETHOD GetRedoString(nsString **aString) = 0;
 };
 
 #endif // nsITransaction_h__
