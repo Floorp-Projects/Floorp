@@ -50,7 +50,7 @@ SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
-LIBS += \
+OS_LIBS += \
 		imagehlp.lib \
 		$(NULL)
 endif
