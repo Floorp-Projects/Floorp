@@ -889,10 +889,24 @@ void AddressBookParser::ClearLdifRecordBuffer()
   }
 }
 
+
 // We have two copies of this function in the code, one here for import and 
 // the other one in addrbook/src/nsAddressBook.cpp for migrating.  If ths 
 // function need modification, make sure change in both places until we resolve
 // this problem.
+static void SplitCRLFAddressField(nsCString &inputAddress, nsCString &outputLine1, nsCString &outputLine2)
+{
+  PRInt32 crlfPos = inputAddress.Find("\r\n");
+  if (crlfPos != kNotFound)
+  {
+    inputAddress.Left(outputLine1, crlfPos);
+    inputAddress.Right(outputLine2, inputAddress.Length() - (crlfPos + 2));
+  }
+  else
+    outputLine1.Assign(inputAddress);
+}
+
+
 void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList)
 {
     nsCAutoString colType(typeSlot);
@@ -1109,8 +1123,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
       }
 
       else if ( kNotFound != colType.Find("postOfficeBox") )
-        mDatabase->AddWorkAddress(newRow, column.get());
-
+      {
+        nsCAutoString workAddr1, workAddr2;
+        SplitCRLFAddressField(column, workAddr1, workAddr2);
+        mDatabase->AddWorkAddress(newRow, workAddr1.get());
+        mDatabase->AddWorkAddress2(newRow, workAddr2.get());
+      }
       else if ( kNotFound != colType.Find("pager") ||
         kNotFound != colType.Find("pagerphone") )
         mDatabase->AddPagerNumber(newRow, column.get());
@@ -1157,12 +1175,19 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
       else if ( kNotFound != colType.Find("streetaddress") )
        {
+          nsCAutoString addr1, addr2;
+          SplitCRLFAddressField(column, addr1, addr2);
       if (mStoreLocAsHome )
-          mDatabase->AddHomeAddress(newRow, column.get());
+          {
+              mDatabase->AddHomeAddress(newRow, addr1.get());
+              mDatabase->AddHomeAddress2(newRow, addr2.get());
+          }
       else
-          mDatabase->AddWorkAddress(newRow, column.get());
+          {
+              mDatabase->AddWorkAddress(newRow, addr1.get());
+              mDatabase->AddWorkAddress2(newRow, addr2.get());
+          }
       }
-
       else if ( kNotFound != colType.Find("st") )
       {
       if (mStoreLocAsHome )
