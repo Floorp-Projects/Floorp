@@ -19,6 +19,7 @@
  * Contributor(s):
  *  Ian McGreer <mcgreer@netscape.com>
  *  Javier Delgadillo <javi@netscape.com>
+ *  John Gardiner Myers <jgmyers@speakeasy.net>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -200,77 +201,151 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
 { 
   nsresult rv;
   SECOidTag oidTag = SECOID_FindOIDTag(oid);
+  const char *bundlekey = 0;
 
   switch (oidTag) {
   case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpMD2WithRSA").get(),
-                                             text);
+    bundlekey = "CertDumpMD2WithRSA";
     break;
   case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpMD5WithRSA").get(),
-                                             text);
+    bundlekey = "CertDumpMD5WithRSA";
     break;
   case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSHA1WithRSA").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_COUNTRY_NAME:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVACountry").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_COMMON_NAME:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVACN").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAOU").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_ORGANIZATION_NAME:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAOrg").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_LOCALITY:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVALocality").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_DN_QUALIFIER:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVADN").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_DC:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVADC").get(),
-                                             text);
-    break;
-  case SEC_OID_AVA_STATE_OR_PROVINCE:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAState").get(),
-                                             text);
+    bundlekey = "CertDumpSHA1WithRSA";
     break;
   case SEC_OID_PKCS1_RSA_ENCRYPTION:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpRSAEncr").get(),
-                                             text);
+    bundlekey = "CertDumpRSAEncr";
     break;
-  case SEC_OID_X509_KEY_USAGE:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKeyUsage").get(),
-                                             text);
+  case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+    bundlekey = "CertDumpSHA256WithRSA";
+    break;
+  case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+    bundlekey = "CertDumpSHA384WithRSA";
+    break;
+  case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+    bundlekey = "CertDumpSHA512WithRSA";
     break;
   case SEC_OID_NS_CERT_EXT_CERT_TYPE:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertType").get(),
-                                             text);
+    bundlekey = "CertDumpCertType";
+    break;
+  case SEC_OID_NS_CERT_EXT_BASE_URL:
+    bundlekey = "CertDumpNSCertExtBaseUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_REVOCATION_URL:
+    bundlekey = "CertDumpNSCertExtRevocationUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_CA_REVOCATION_URL:
+    bundlekey = "CertDumpNSCertExtCARevocationUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_URL:
+    bundlekey = "CertDumpNSCertExtCertRenewalUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_CA_POLICY_URL:
+    bundlekey = "CertDumpNSCertExtCAPolicyUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME:
+    bundlekey = "CertDumpNSCertExtSslServerName";
+    break;
+  case SEC_OID_NS_CERT_EXT_COMMENT:
+    bundlekey = "CertDumpNSCertExtComment";
+    break;
+  case SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL:
+    bundlekey = "CertDumpNSCertExtLostPasswordUrl";
+    break;
+  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_TIME:
+    bundlekey = "CertDumpNSCertExtCertRenewalTime";
+    break;
+  case SEC_OID_NETSCAPE_AOLSCREENNAME:
+    bundlekey = "CertDumpNetscapeAolScreenname";
+    break;
+  case SEC_OID_AVA_COUNTRY_NAME:
+    bundlekey = "CertDumpAVACountry";
+    break;
+  case SEC_OID_AVA_COMMON_NAME:
+    bundlekey = "CertDumpAVACN";
+    break;
+  case SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME:
+    bundlekey = "CertDumpAVAOU";
+    break;
+  case SEC_OID_AVA_ORGANIZATION_NAME:
+    bundlekey = "CertDumpAVAOrg";
+    break;
+  case SEC_OID_AVA_LOCALITY:
+    bundlekey = "CertDumpAVALocality";
+    break;
+  case SEC_OID_AVA_DN_QUALIFIER:
+    bundlekey = "CertDumpAVADN";
+    break;
+  case SEC_OID_AVA_DC:
+    bundlekey = "CertDumpAVADC";
+    break;
+  case SEC_OID_AVA_STATE_OR_PROVINCE:
+    bundlekey = "CertDumpAVAState";
+    break;
+  case SEC_OID_X509_SUBJECT_DIRECTORY_ATTR:
+    bundlekey = "CertDumpSubjectDirectoryAttr";
+    break;
+  case SEC_OID_X509_SUBJECT_KEY_ID:
+    bundlekey = "CertDumpSubjectKeyID";
+    break;
+  case SEC_OID_X509_KEY_USAGE:
+    bundlekey = "CertDumpKeyUsage";
+    break;
+  case SEC_OID_X509_SUBJECT_ALT_NAME:
+    bundlekey = "CertDumpSubjectAltName";
+    break;
+  case SEC_OID_X509_ISSUER_ALT_NAME:
+    bundlekey = "CertDumpIssuerAltName";
+    break;
+  case SEC_OID_X509_BASIC_CONSTRAINTS:
+    bundlekey = "CertDumpBasicConstraints";
+    break;
+  case SEC_OID_X509_NAME_CONSTRAINTS:
+    bundlekey = "CertDumpNameConstraints";
+    break;
+  case SEC_OID_X509_CRL_DIST_POINTS:
+    bundlekey = "CertDumpCrlDistPoints";
+    break;
+  case SEC_OID_X509_CERTIFICATE_POLICIES:
+    bundlekey = "CertDumpCertPolicies";
+    break;
+  case SEC_OID_X509_POLICY_MAPPINGS:
+    bundlekey = "CertDumpPolicyMappings";
+    break;
+  case SEC_OID_X509_POLICY_CONSTRAINTS:
+    bundlekey = "CertDumpPolicyConstraints";
     break;
   case SEC_OID_X509_AUTH_KEY_ID:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAuthKeyID").get(),
-                                             text);
+    bundlekey = "CertDumpAuthKeyID";
+    break;
+  case SEC_OID_X509_EXT_KEY_USAGE:
+    bundlekey = "CertDumpExtKeyUsage";
+    break;
+  case SEC_OID_X509_AUTH_INFO_ACCESS:
+    bundlekey = "CertDumpAuthInfoAccess";
+    break;
+  case SEC_OID_ANSIX9_DSA_SIGNATURE:
+    bundlekey = "CertDumpAnsiX9DsaSignature";
+    break;
+  case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+    bundlekey = "CertDumpAnsiX9DsaSignatureWithSha1";
+    break;
+  case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
+    bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha1";
     break;
   case SEC_OID_RFC1274_UID:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpUserID").get(),
-                                             text);
+    bundlekey = "CertDumpUserID";
     break;
   case SEC_OID_PKCS9_EMAIL_ADDRESS:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpPK9Email").get(),
-                                             text);
+    bundlekey = "CertDumpPK9Email";
     break;
-  default:
+  default: ;
+  }
+
+  if (bundlekey) {
+    rv = nssComponent->GetPIPNSSBundleString(NS_ConvertASCIItoUTF16(bundlekey).get(),
+                                             text);
+  } else {
     rv = GetDefaultOIDFormat(oid, text);
     if (NS_FAILED(rv))
       return rv;
@@ -281,7 +356,6 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
                                                      params, 1,
                                                      getter_Copies(text2));
     text = text2;
-    break;
   }
   return rv;  
 }
