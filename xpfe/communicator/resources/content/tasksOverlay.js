@@ -372,12 +372,10 @@ function WalletDialog( which )
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no"); 
       break;
     case "cookie":
-      this.pref.SetBoolPref("cookieviewer.cookieTab", true);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",0); 
       break;
     case "image":
-      this.pref.SetBoolPref("cookieviewer.cookieTab", false);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",2); 
       break;
     case "samples":
       window._content.location.href= 'http://www.mozilla.org/wallet/samples/';

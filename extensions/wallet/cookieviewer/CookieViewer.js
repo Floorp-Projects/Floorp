@@ -76,7 +76,8 @@ function Startup()
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
     try {
-      if (pref.GetBoolPref("cookieviewer.cookieTab")) {
+      var tab = window.arguments[0];
+      if (tab == "0") {
         element = document.getElementById("cookiesTab");
         element.setAttribute("selected","true" );
         element = document.getElementById("panel");
