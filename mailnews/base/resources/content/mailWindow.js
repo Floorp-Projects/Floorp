@@ -73,12 +73,10 @@ var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
 var accountManagerDataSource;
 var folderDataSource;
 
-var messagesBox = null;
 var accountCentralBox = null;
 var gSearchBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
-var gPaneConfig = null;
 //End progress and Status variables
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
@@ -206,10 +204,10 @@ function CreateMailWindowGlobals()
   accountManagerDataSource = Components.classes[accountManagerDSContractID].getService();
   folderDataSource         = Components.classes[folderDSContractID].getService();
 
-  messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
-  gPaneConfig = pref.getIntPref("mail.pane_config");
+  if (gSearchBox)
+    gSearchBox.collapsed = false;
 }
 
 function InitMsgWindow()
@@ -570,28 +568,15 @@ function ShowAccountCentral()
                                                    Components.interfaces.nsIPrefLocalizedString).data;
         GetUnreadCountElement().hidden = true;
         GetTotalCountElement().hidden = true;
-        switch (gPaneConfig)
-        {
-            case 0:
-                messagesBox.setAttribute("collapsed", "true");
-                gSearchBox.setAttribute("collapsed", "true");
-                accountCentralBox.removeAttribute("collapsed");
-                window.frames["accountCentralPane"].location = acctCentralPage;
-                gAccountCentralLoaded = true;
-                break;
-
-            case 1:
-                var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.setAttribute("collapsed", "true");
-                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
-                searchAndThreadPaneBox.setAttribute("collapsed", "true");
-                var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.setAttribute("collapsed", "true");
-                accountCentralBox.removeAttribute("collapsed");
-                window.frames["accountCentralPane"].location = acctCentralPage;
-                gAccountCentralLoaded = true;
-                break;
-        }
+        GetMessagePane().collapsed = true;
+        document.getElementById("threadpane-splitter").collapsed = true;
+        gSearchBox.collapsed = true;
+        GetThreadTree().collapsed = true;
+        document.getElementById("accountCentralBox").collapsed = false;
+        window.frames["accountCentralPane"].location = acctCentralPage;
+        if (!IsFolderPaneCollapsed())
+            GetFolderTree().focus();
+        gAccountCentralLoaded = true;
     }
     catch (ex)
     {
@@ -607,32 +592,15 @@ function HideAccountCentral()
 {
     try
     {
-        switch (gPaneConfig)
-        {
-            case 0:
-                window.frames["accountCentralPane"].location = "about:blank";
-                accountCentralBox.setAttribute("collapsed", "true");
-                gSearchBox.removeAttribute("collapsed");
-                messagesBox.removeAttribute("collapsed");
-                gAccountCentralLoaded = false;
-                break;
-
-            case 1:
-                window.frames["accountCentralPane"].location = "about:blank";
-                accountCentralBox.setAttribute("collapsed", "true");
-                // XXX todo
-                // the code below that always removes the collapsed attribute
-                // makes it so in this pane config, you can't keep the message pane hidden
-                // see bug #188393
-                var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.removeAttribute("collapsed");
-                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
-                searchAndThreadPaneBox.removeAttribute("collapsed");
-                var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.removeAttribute("collapsed");
-                gAccountCentralLoaded = false;
-                break;
-        }
+        window.frames["accountCentralPane"].location = "about:blank";
+        document.getElementById("accountCentralBox").collapsed = true;
+        GetThreadTree().collapsed = false;
+        gSearchBox.collapsed = false;
+        var threadPaneSplitter = document.getElementById("threadpane-splitter");
+        threadPaneSplitter.collapsed = false;
+        if (!threadPaneSplitter.hidden && threadPaneSplitter.getAttribute("state") != "collapsed")
+            GetMessagePane().collapsed = false;
+        gAccountCentralLoaded = false;
     }
     catch (ex)
     {

@@ -650,12 +650,54 @@ var gThreePaneIncomingServerListener = {
     }
 }
 
+function GetMailPaneConfig() {
+  try {
+    return pref.getIntPref("mail.pane_config.dynamic");
+  } catch (e) {
+    return pref.getIntPref("mail.pane_config");
+  }
+}
+
+function UpdateMailPaneConfig() {
+  const dynamicIds = ["messagesBox", "mailContent", "threadPaneBox"]
+  var desiredId = dynamicIds[GetMailPaneConfig()];
+  var messagePane = GetMessagePane();
+  if (messagePane.parentNode.id != desiredId) {
+    ClearAttachmentList();
+    var messagePaneSplitter = GetThreadAndMessagePaneSplitter();
+    var desiredParent = document.getElementById(desiredId);
+    desiredParent.appendChild(messagePaneSplitter);
+    desiredParent.appendChild(messagePane);
+    messagePaneSplitter.orient = desiredParent.orient;
+    messenger.SetWindow(null, null);
+    messenger.SetWindow(window, msgWindow);
+    if (gDBView)
+      gDBView.reloadMessage();
+  }
+}
+
+const MailPaneConfigObserver = {
+  observe: function observe(subject, topic, prefName) {
+    // verify that we're changing the mail pane config pref
+    if (topic == "nsPref:changed")
+      UpdateMailPaneConfig();
+  }
+};
+
+function UpdateMailPaneConfigMenu(menuitems) {
+  var pane_config = GetMailPaneConfig();
+  for (var i = 0; i < menuitems.length; i++)
+    menuitems[i].setAttribute("checked", i == pane_config);
+}
 
 /* Functions related to startup */
 function OnLoadMessenger()
 {
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
+  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.addObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
+  UpdateMailPaneConfig();
   Create3PaneGlobals();
   AddToolBarPrefListener();
   ShowHideToolBarButtons();
@@ -697,20 +739,14 @@ function OnLoadMessenger()
 
   gNotifyDefaultInboxLoadedOnStartup = true;
 
-  // fix for #168937.  now that we don't have a sidebar
-  // users who haven't moved the splitter will
-  // see it jump around
-  var messengerBox = document.getElementById("messengerBox");
-  if (!messengerBox.getAttribute("width")) {
-    messengerBox.setAttribute("width","500px");
-  }
-
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
 }
 
 function OnUnloadMessenger()
 {
+  pref.removeObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
+
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
   RemoveToolBarPrefListener();
   // FIX ME - later we will be able to use onload from the overlay
@@ -1072,20 +1108,12 @@ function GetTotalCountElement()
 
 function IsMessagePaneCollapsed()
 {
-  var messagePane = GetMessagePane();
-  try {
-    return (messagePane.getAttribute("collapsed") == "true");
-  }
-  catch (ex) {
-    return false;
-  }
+  return GetMessagePane().collapsed;
 }
 
 function IsFolderPaneCollapsed()
 {
-  var folderPaneBox = GetFolderTree().parentNode;
-  return folderPaneBox.getAttribute("collapsed") == "true"
-    || folderPaneBox.getAttribute("hidden") == "true";
+  return GetFolderTree().parentNode.collapsed;
 }
 
 function FindMessenger()

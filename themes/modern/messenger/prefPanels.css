@@ -54,3 +54,7 @@
   list-style-image: url("chrome://messenger/skin/icons/layout2.gif");
 }
 
+#vertical {
+  list-style-image: url("chrome://messenger/skin/icons/layout3.gif");
+}
+

@@ -56,3 +56,8 @@
   list-style-image : url("chrome://messenger/skin/icons/winwide.gif");
 }
 
+#vertical {
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/icons/winvertical.gif");
+}
+

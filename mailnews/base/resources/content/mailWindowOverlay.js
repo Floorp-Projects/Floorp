@@ -155,12 +155,9 @@ function view_init()
       gMessengerBundle = document.getElementById("bundle_messenger");
   var message_menuitem=document.getElementById('menu_showMessage');
 
-  if (message_menuitem)
-  {
-      var message_menuitem_hidden = message_menuitem.getAttribute("hidden");
-      if(message_menuitem_hidden != "true"){
-          message_menuitem.setAttribute('checked', !IsMessagePaneCollapsed());
-      }
+  if (message_menuitem && !message_menuitem.hidden) {
+      message_menuitem.setAttribute('checked', !IsMessagePaneCollapsed());
+      message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
   }
 
   // Disable some menus if account manager is showing

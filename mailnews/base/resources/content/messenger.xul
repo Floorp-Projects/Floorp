@@ -83,13 +83,11 @@
 <script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
-<script type="application/x-javascript" src="chrome://messenger/content/searchBar.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-
+<script type="application/x-javascript" src="chrome://messenger/content/searchBar.js"/>
 
 <commandset id="mailCommands">
   <commandset id="mailFileMenuItems"/>
@@ -112,7 +110,6 @@
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
   <commandset id="tasksCommands"/>
-  <command id="toggleSidebar"/>
 </commandset>
 
 <broadcasterset id="mailBroadcasters">
@@ -122,7 +119,6 @@
 </broadcasterset>
 
 <keyset id="mailKeys">
-  <key id="showHideSidebar"/>
   <keyset id="tasksKeys"/>
 </keyset>
 
@@ -158,45 +154,45 @@
     <menubar id="mailMenubar"/>
   </toolbox>
 
-  <hbox flex="1">
-    <vbox id="folderPaneBox" persist="width">
-      <tree id="folderTree" style="width: 15em; min-width: 7em;"
-            context="folderPaneContext" persist="collapsed width height"/>
-    </vbox>
-      
-    <splitter id="gray_vertical_splitter" collapse="before" persist="state">
-      <grippy/>
-    </splitter>
-    
-    <vbox id="messengerBox" flex="1" persist="width">
-      <vbox id="accountCentralBox" flex="1">
-        <iframe name="accountCentralPane" flex="1" src="about:blank"/>
+  <!-- The main mail three pane frame -->
+  <box id="mailContent" orient="vertical" flex="1">
+    <box id="messengerBox" orient="horizontal" flex="1" minheight="100" height="100" persist="height">
+      <vbox id="folderPaneBox" minwidth="100" width="200" persist="collapsed width">
+        <tree id="folderTree" flex="1" context="folderPaneContext" class="window-focusborder" focusring="false"/>
       </vbox>
-      <vbox id="messagesBox" flex="1">
-      <hbox id="searchBox"/>
-      <tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
-      <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
-      <splitter collapse="after" persist="state" 
-		onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
-                id="threadpane-splitter">
-        <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
+      <splitter id="gray_vertical_splitter" collapse="before" persist="state" resizeafter="grow">
+        <grippy/>
       </splitter>
-      
-      <vbox id="messagepanebox" flex="3" persist="collapsed height">
 
-        <hbox id="junkBar"/>
+      <box id="messagesBox" orient="vertical" flex="1">
+        <hbox id="searchBox"/>
+        <box id="threadPaneBox" orient="horizontal" flex="1" minheight="100" height="100" persist="height">
+          <tree id="threadTree" flex="1" minwidth="100" width="100" persist="width" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+          <vbox id="accountCentralBox" flex="1" collapsed="true">
+            <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
+          </vbox>
+        </box>
 
-        <hbox id="msgHeaderView"/>
-    
-        <browser id="messagepane" context="messagePaneContext"
-                 style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
-                 disablehistory="true" type="content-primary" src="about:blank"
-                 disablesecurity="true" onclick="messagePaneOnClick(event);" autofind="false"/>
-       </vbox>  
-     </vbox>
-   </vbox>             
-  </hbox>
+        <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
+        <splitter id="threadpane-splitter" collapse="after" persist="state hidden"
+                  onmouseup="OnMouseUpThreadAndMessagePaneSplitter()">
+          <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
+        </splitter>
+
+        <vbox id="messagepanebox" flex="2" minheight="100" height="200" minwidth="100" width="200" persist="collapsed height width" class="window-focusborder" focusring="false">
+          <hbox id="junkBar"/>
+
+          <hbox id="msgHeaderView"/>
+
+          <browser id="messagepane" name="messagepane" height="0" flex="1"
+                   context="messagePaneContext" minwidth="1" minheight="1"
+                   disablesecurity="true" disablehistory="true" autofind="false"
+                   type="content-primary" onclick="messagePaneOnClick(event);"/>
+        </vbox>
+      </box>
+    </box>
+  </box>
 
   <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar"/>
 </window>

@@ -44,27 +44,31 @@
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-windows.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-windows.xul');"
+      onload="OnLoad();parent.initPanel('chrome://messenger/content/pref-windows.xul');"
       headertitle="&pane.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig",
                        "mailnewsDoubleClick2NewWindow"];
+    function OnLoad()
+    {
+      var paneConfig = top.hPrefWindow.getPref("int", "mail.pane_config");
+      document.getElementById("mailPaneConfig").setAttribute("prefdefval", paneConfig);
+    }
   ]]>
   </script>
   
   <groupbox>
     <caption label="&windowSettings.label;"/>
     
-    <hbox align="center">
-      <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
-      <spacer flex="1"/>
-      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
-        <radio class="iconic" value="0" id="classic"/>
-        <radio class="iconic" value="1" id="wide"/>
-      </radiogroup>
-    </hbox>
+    <radiogroup id="mailPaneConfig" prefstring="mail.pane_config.dynamic" orient="horizontal">
+      <label flex="1" accesskey="&selectWindowLayout.accesskey;"
+             control="mailPaneConfig">&selectWindowLayout.label;</label>
+      <radio class="iconic" value="0" id="classic"/>
+      <radio class="iconic" value="1" id="wide"/>
+      <radio class="iconic" value="2" id="vertical"/>
+    </radiogroup>
     
     <label value="&reuseExp.label;"/>
     <hbox class="indent" align="center">
