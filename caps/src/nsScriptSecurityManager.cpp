@@ -1883,23 +1883,23 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
                                               nsIPrincipal **result,
                                               JSStackFrame **frameResult)
 {
-    // Get principals from innermost frame of JavaScript or Java.
-    JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
-    for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp))
-    {
-        if (NS_FAILED(GetFramePrincipal(cx, fp, result)))
-            return NS_ERROR_FAILURE;
-        if (*result)
-        {
-            *frameResult = fp;
-            return NS_OK;
-        }
-    }
-
     //-- If there's no principal on the stack, look at the global object
     //   and return the innermost frame for annotations.
     if (cx)
     {
+        // Get principals from innermost frame of JavaScript or Java.
+        JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
+        for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp))
+        {
+            if (NS_FAILED(GetFramePrincipal(cx, fp, result)))
+                return NS_ERROR_FAILURE;
+            if (*result)
+            {
+                *frameResult = fp;
+                return NS_OK;
+            }
+        }
+
         nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
@@ -2301,6 +2301,9 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
         return NS_ERROR_FAILURE;
+    if (!principal)
+        return NS_ERROR_NOT_AVAILABLE;
+
     void *annotation = JS_GetFrameAnnotation(cx, fp);
     PRBool enabled;
     if (NS_FAILED(principal->IsCapabilityEnabled(capability, annotation,
@@ -2357,6 +2360,8 @@ nsScriptSecurityManager::RevertCapability(const char *capability)
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
         return NS_ERROR_FAILURE;
+    if (!principal)
+        return NS_ERROR_NOT_AVAILABLE;
     void *annotation = JS_GetFrameAnnotation(cx, fp);
     principal->RevertCapability(capability, &annotation);
     JS_SetFrameAnnotation(cx, fp, annotation);
@@ -2371,6 +2376,8 @@ nsScriptSecurityManager::DisableCapability(const char *capability)
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
         return NS_ERROR_FAILURE;
+    if (!principal)
+        return NS_ERROR_NOT_AVAILABLE;
     void *annotation = JS_GetFrameAnnotation(cx, fp);
     principal->DisableCapability(capability, &annotation);
     JS_SetFrameAnnotation(cx, fp, annotation);
