@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kStandardURICID, NS_STANDARDURL_CID);
 

@@ -123,12 +123,6 @@ NS_IMETHODIMP nsIconChannel::GetURI(nsIURI* *aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetURI(nsIURI* aURI)
-{
-  mUrl = aURI;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream **_retval)
 {
@@ -308,7 +302,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 
           nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
           aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
-          aListener->OnStopRequest(this, ctxt, NS_OK, nsnull);
+          aListener->OnStopRequest(this, ctxt, NS_OK);
 
         } // if we got valid bits for the main bitmap mask
         
@@ -323,13 +317,13 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::GetLoadFlags(PRUint32 *aLoadAttributes)
 {
   *aLoadAttributes = mLoadAttributes;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::SetLoadFlags(PRUint32 aLoadAttributes)
 {
   mLoadAttributes = aLoadAttributes;
   return NS_OK;
