@@ -21,12 +21,12 @@
 
 #include "config.h"
 #include "art_affine.h"
-#include "art_misc.h" /* for M_PI */
 
 #include <math.h>
 #include <stdio.h> /* for sprintf */
 #include <string.h> /* for strcpy */
 
+#include "art_misc.h" /* for M_PI */
 
 /* According to a strict interpretation of the libart structure, this
    routine should go into its own module, art_point_affine.  However,
