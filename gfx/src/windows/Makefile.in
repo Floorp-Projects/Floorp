@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsScreenWin.cpp \
 		nsScreenManagerWin.cpp \
 		nsPrintOptionsWin.cpp \
+		nsPrintSettingsWin.cpp \
 		nsGfxFactoryWin.cpp \
 		nsCompressedCharMap.cpp \
 		nsNativeThemeWin.cpp \

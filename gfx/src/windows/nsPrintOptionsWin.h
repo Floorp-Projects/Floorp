@@ -35,6 +35,7 @@ public:
   nsPrintOptionsWin();
   virtual ~nsPrintOptionsWin();
 
+  NS_IMETHOD CreatePrintSettings(nsIPrintSettings **_retval);
 
 };
 

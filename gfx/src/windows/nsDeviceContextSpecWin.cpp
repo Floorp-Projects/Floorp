@@ -352,6 +352,16 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
     aPrintSettings->SetNumCopies(PRInt32(aDevMode->dmCopies));
   }
 
+  if (aDevMode->dmFields & DM_SCALE) {
+    double scale = double(aDevMode->dmScale) / 100.0f;
+    if (scale != 1.0) {
+      aPrintSettings->SetScaling(scale);
+      aDevMode->dmScale = 100;
+      // To turn this on you must change where the mPrt->mShrinkToFit is being set in the DocumentViewer
+      //aPrintSettings->SetShrinkToFit(PR_FALSE);
+    }
+  }
+
   if (doingPaperSize) {
     aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeNativeData);
     aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
@@ -1092,6 +1102,12 @@ nsDeviceContextSpecWin::ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuiet)
   BOOL result = ::PrintDlg(&prntdlg);
 
   if (TRUE == result) {
+    if (mPrintSettings && prntdlg.hDevMode != NULL) {
+      // Transfer the settings from the native data to the PrintSettings
+      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
+      SetPrintSettingsFromDevMode(mPrintSettings, devMode);
+      ::GlobalUnlock(prntdlg.hDevMode);
+    }
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
     if ( NULL != devnames ) {
 
