@@ -21,6 +21,7 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 
 <!-- hiddenwindow is a "minimal" XUL window intended for creating the,
      er, hidden window.  This window is never shown, but on platforms
@@ -46,7 +47,12 @@ Contributor(s): ______________________________________. -->
 
   <!-- JS from navigator.xul, to handle the menu commands -->
   <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
+
+		<!-- keys are appended from the overlay -->
+  <keyset id="defaultBrowserKeySet"/>
   
+  <broadcasterset id="browserbroadcasterset">
+	</broadcasterset>  
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
        on a platform that wants to leave the app running, like the Mac.
@@ -55,41 +61,8 @@ Contributor(s): ______________________________________. -->
   -->
 
     <menubar chromeclass="menubar">
-      <menu accesskey="f" value="&fileMenu.label;">
-        <menupopup>
-          <menuitem value="&browserCmd.label;" oncommand="BrowserNewWindow();"/>
-		           <menu value="New">
-              <menupopup>
-                <menuitem value="&newMailCmd.label;" oncommand="MsgNewMessage();"/>
-                  <menuseparator />
-                  <menuitem value="&newBlankPageCmd.label;" oncommand="BrowserNewEditorWindow();"/>
-                  <menuitem value="&newPageFromTemplateCmd.label;" oncommand="BrowserNewWindow();"/>
-                  <menuitem value="&newPageFromDraftCmd.label;" oncommand="BrowserNewWindow();"/>
-              </menupopup>
-            </menu>
-
-          <menuitem value="&openCmd.label;" oncommand="BrowserOpenWindow();"/>
-          <menuitem value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
-          <menuseparator/>
-          <menuitem value="&sendPageCmd.label;" oncommand="BrowserReload();"/>
-          <menuitem value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);" />
-          <menuseparator />
-          <menu value="&offlineMenu.label;">
-            <menupopup>
-              <menuitem value="&offlineGoOfflineCmd.label;" oncommand="BrowserReload();"/>
-              <menuseparator />
-              <menuitem value="&offlineSynchronizeCmd.label;" oncommand="BrowserReload();"/>
-            </menupopup>
-          </menu>
-          <menuseparator/>
-          <menuitem value="&printSetupCmd.label;" oncommand=";"/>
-          <menuitem value="&printPreviewCmd.label;" oncommand=""/>
-          <menuitem value="&printCmd.label;" oncommand="BrowserPrint()"/>
-          <menuseparator />
-          <menuitem value="&closeCmd.label;" oncommand="BrowserClose();"/>
-          <menuitem value="&quitCmd.label;" oncommand="BrowserExit();"/>
-      </menupopup>
-    </menu>
+    	 <menu id="fileMenu"/>
+  
 
 	<menu accesskey="e" value="&editMenu.label;">
 	  <menupopup>
@@ -249,11 +222,7 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();"/>
 		  <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
 		  <menuseparator />
-		  <menuitem value="&searchParentCmd.label;" oncommand="BrowserReload();"/>
-		  <menuitem value="&searchParenet2Cmd.label;" oncommand="BrowserReload();"/>
-		  <menuitem value="&appSpecificCmd.label;" oncommand="BrowserReload();"/>
-		  <menuitem value="&appSpecificCmd.label;" oncommand="BrowserReload();"/>
-		  <menuseparator />
+
 		  <menuitem value="&searchBookmarksHistoryCmd.label;" oncommand="OpenSearch('find', null);"/>
 		  <menuitem value="&searchInternetCmd.label;" oncommand="OpenSearch('internet', null);"/>
 		  <menuitem value="&searchAllMailCmd.label;" oncommand="OpenSearch('mail', null);"/>
@@ -262,40 +231,10 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&searchComputerCmd.label;" oncommand="BrowserReload();"/>
 	  </menupopup>
     </menu>
-    <menu accesskey="g" id="gomenu" value="&goMenu.label;">
-	  <menupopup>
-		  <menuitem id="menuitem-back" value="&goBackCmd.label;" oncommand="BrowserBack();"/>
-		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
-		  <menuitem value="&goHomeCmd.label;" oncommand="BrowserHome();"/>
-		  <menuseparator />
-	  </menupopup>
-    </menu>
-    <menu accesskey="b" value="&bookmarksMenu.label;"
-                           datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
-		<template>
-			<rule iscontainer="true">
-			  <menupopup>
-				<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-			  </menupopup>
-			</rule>
-			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-			  <menupopup> 
-				<menuseparator uri="..." />
-			  </menupopup>
-			</rule>
-			<rule>
-			  <menupopup>
-				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target)" />
-			  </menupopup>
-			</rule>
-		</template>
-		<menupopup>
-			<menuitem value="&addCurPageCmd.label;" oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
-			<menuitem value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();"/>
-			<menuseparator/>
-		</menupopup>
-    </menu>
-  
+
+	<menu id = "gomenu" />
+  	<menu id="BookmarksMenu" />
+   
   <menu accesskey="t" id="tasksMenu"/>
   <menu accesskey="h" id="helpMenu"/>
 
