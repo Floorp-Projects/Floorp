@@ -32,6 +32,7 @@ EXPORTS		= \
 		nsColor.h \
 		nsColorNames.h \
 		nsColorNameList.h \
+		nsCompressedCharMap.h \
 		nsCoord.h \
 		nsFont.h \
 		nsRect.h \
