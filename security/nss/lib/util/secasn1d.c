@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.5 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.6 2001/05/08 22:38:02 kirke%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2230,6 +2230,9 @@ SEC_ASN1DecodeInteger(SECItem *src, unsigned long *value)
     unsigned long v;
     int i;
     
+    if (src == NULL)
+	return SECFailure;
+
     if (src->len > sizeof(unsigned long))
 	return SECFailure;
 
