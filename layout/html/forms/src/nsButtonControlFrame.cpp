@@ -272,6 +272,7 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsMargin bp;
     AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
     if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.AddBorderPaddingToMaxElementSize(bp);
       aDesiredSize.maxElementSize->width = aDesiredSize.width;
       aDesiredSize.maxElementSize->height = aDesiredSize.height;
     }

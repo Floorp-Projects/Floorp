@@ -421,8 +421,9 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = maxElementSize.width + borderPadding.left + borderPadding.right;
-    aDesiredSize.maxElementSize->height = maxElementSize.height + borderPadding.top + borderPadding.bottom;
+    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
+    aDesiredSize.maxElementSize->width  = maxElementSize.width;
+    aDesiredSize.maxElementSize->height = maxElementSize.height;
   }
 
   aStatus = NS_FRAME_COMPLETE;
