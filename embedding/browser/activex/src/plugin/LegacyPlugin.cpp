@@ -936,28 +936,8 @@ NewControl(const char *pluginType,
                 continue;
             }
 
-            CComVariant vsValue(paramValue);
-            CComVariant vIValue; // Value converted to int
-            CComVariant vRValue; // Value converted to real
-            CComVariant vBValue; // Value converted to bool
-            CComVariant &vValue = vsValue;
-
-            // See if the variant can be converted to a number or boolean
-            if (VariantChangeType(&vIValue, &vsValue, 0, VT_I4) == S_OK)
-            {
-                vValue = vIValue;
-            }
-            else if (VariantChangeType(&vRValue, &vsValue, 0, VT_R8) == S_OK)
-            {
-                vValue = vRValue;
-            }
-            else if (VariantChangeType(&vBValue, &vsValue, 0, VT_BOOL) == S_OK)
-            {
-                vValue = vBValue;
-            }
-
             // Add named parameter to list
-            pl.AddNamedProperty(paramName, vValue);
+            pl.AddNamedProperty(paramName, CComVariant(paramValue));
         }
     }
 
