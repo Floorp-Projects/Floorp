@@ -194,7 +194,8 @@ public:
     * @return void
     */
   virtual void DistributeRemainingSpace(nscoord  aTableFixedWidth,
-                                        nscoord  aComputedTableWidth);
+                                        nscoord  aComputedTableWidth, 
+                                        PRBool   aTableIsAutoWidth);
 
   /** force all cells to be at least their minimum width, removing any excess space
     * created in the process from fat cells that can afford to lose a little tonnage.
@@ -218,6 +219,9 @@ public:
   virtual PRBool IsColumnInList(const PRInt32 colIndex, 
                                 PRInt32 *colIndexes, 
                                 PRInt32 aNumFixedColumns);
+
+  /** returns true if the column is specified to have its min width */
+  virtual PRBool ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex);
 
 
 protected:
