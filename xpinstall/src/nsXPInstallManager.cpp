@@ -708,13 +708,16 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsILocalFile> temp;
-            directoryService->Get(NS_OS_TEMP_DIR,
-                                  NS_GET_IID(nsIFile),
-                                  getter_AddRefs(temp));
-            temp->AppendUnicode(leaf.get());
-            MakeUnique(temp);
-            *file = temp;
-            NS_IF_ADDREF(*file);
+            rv = directoryService->Get(NS_OS_TEMP_DIR,
+                                       NS_GET_IID(nsIFile),
+                                       getter_AddRefs(temp));
+            if (NS_SUCCEEDED(rv))
+            { 
+                temp->Append("tmp.xpi");
+                MakeUnique(temp);
+                *file = temp;
+                NS_IF_ADDREF(*file);
+            }
         }
     }
     else
@@ -728,7 +731,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
 
             rv = directoryService->Get(NS_APP_USER_CHROME_DIR,
                                        NS_GET_IID(nsIFile),
-                            getter_AddRefs(userChrome));
+                                       getter_AddRefs(userChrome));
 
             NS_ASSERTION(NS_SUCCEEDED(rv) && userChrome,
                          "App_UserChromeDirectory not defined!");
