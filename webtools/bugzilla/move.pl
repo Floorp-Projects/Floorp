@@ -119,7 +119,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
 
     my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
-    $comment .= "If the move succeeded, $exporter will recieve a mail\n";
+    $comment .= "If the move succeeded, $exporter will receive a mail\n";
     $comment .= "containing the number of the new bug in the other database.\n";
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
     $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
