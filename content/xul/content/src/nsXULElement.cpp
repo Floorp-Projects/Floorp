@@ -1448,7 +1448,7 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = tabIndex;
   }
 
-  return !disabled;
+  return tabIndex >= 0;
 }
 
 
