@@ -401,7 +401,7 @@ main()
       //foop->Release();
 
 	  /* Solaris Workshop compiler fails to compile this. */
-#if !(defined(SOLARIS) && !defined(__GNUG__))
+#if !defined(XP_UNIX) || !(defined(SOLARIS) && !defined(__GNUG__))
       cout << endl << "### Test  3: can you |AddRef| if you must?" << endl;
       STATIC_CAST(IFoo*, foop)->AddRef();
 
