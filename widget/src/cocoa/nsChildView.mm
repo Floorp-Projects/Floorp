@@ -171,7 +171,7 @@ nsChildView::~nsChildView()
   delete mPluginPort;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIKBStateControl);
+NS_IMPL_ISUPPORTS_INHERITED2(nsChildView, nsBaseWidget, nsIKBStateControl, nsIEventSink);
 
 //-------------------------------------------------------------------------
 //
@@ -1677,6 +1677,88 @@ nsChildView::GetQuickDrawPort()
 #pragma mark -
 
 
+//
+// DispatchEvent
+//
+// Handle an event coming into us and send it to gecko.
+//
+NS_IMETHODIMP
+nsChildView::DispatchEvent ( void* anEvent, PRBool *_retval )
+{
+  return NS_OK;
+}
+
+
+//
+// DragEvent
+//
+// The drag manager has let us know that something related to a drag has
+// occurred in this window. It could be any number of things, ranging from 
+// a drop, to a drag enter/leave, or a drag over event. The actual event
+// is passed in |aMessage| and is passed along to our event hanlder so Gecko
+// knows about it.
+//
+NS_IMETHODIMP
+nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseGlobalY,
+                         PRUint16 aKeyModifiers, PRBool *_retval)
+{
+printf("--------- dragEvent\n");
+  nsMouseEvent geckoEvent;
+	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
+  NSPoint pt; pt.x = aMouseGlobalX; pt.y = aMouseGlobalY;
+	[mView convert:pt message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
+
+printf("mouse location is %d %d\n", geckoEvent.point.x, geckoEvent.point.y);
+  DispatchMouseEvent(geckoEvent);
+
+#if 0
+  nsMouseEvent geckoEvent;
+  geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  [mView convert:theEvent message:aMessage toGeckoEvent:&geckoEvent];
+
+  *_retval = PR_FALSE;
+  Point globalPoint = {aMouseGlobalY, aMouseGlobalX};         // QD Point stored as v, h
+  if (mMacEventHandler.get())
+    *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
+#endif
+  
+  return NS_OK;
+}
+
+
+//
+// Scroll
+//
+// Someone wants us to scroll in the current window, probably as the result
+// of a scrollWheel event or external scrollbars. Pass along to the 
+// eventhandler.
+//
+NS_IMETHODIMP
+nsChildView::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
+                        PRInt16 aMouseLocalY, PRBool *_retval )
+{
+#if 0
+  *_retval = PR_FALSE;
+  Point localPoint = {aMouseLocalY, aMouseLocalX};
+  if ( mMacEventHandler.get() )
+    *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
+                                          aNumLines, localPoint);
+#endif
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsChildView::Idle()
+{
+  // do some idle stuff?
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+#pragma mark -
+
+
 @implementation ChildView
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -1942,17 +2024,23 @@ const PRInt32 kNumLines = 8;
 //
 // -convert:message:toGeckoEvent:
 //
-// convert from one event system to the other for even dispatching
+// convert from one event system to the other for event dispatching
 //
 - (void) convert:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
+  outGeckoEvent->nativeMsg = inEvent;
+  [self convert:[inEvent locationInWindow] message:inMsg modifiers:[inEvent modifierFlags]
+          toGeckoEvent:outGeckoEvent];
+}
+
+- (void) convert:(NSPoint)inPoint message:(PRInt32)inMsg modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent
+{
   outGeckoEvent->message = inMsg;
   outGeckoEvent->widget = [self widget];
-  outGeckoEvent->nativeMsg = inEvent;
   outGeckoEvent->time = PR_IntervalNow();
   
   if (outGeckoEvent->eventStructType != NS_KEY_EVENT) {
-    NSPoint mouseLoc = [inEvent locationInWindow];
+    NSPoint mouseLoc = inPoint;
     
     // convert point to view coordinate system
     NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];
@@ -1966,12 +2054,11 @@ const PRInt32 kNumLines = 8;
   }
   
   // set up modifier keys
-  unsigned int modifiers = [inEvent modifierFlags];
-  outGeckoEvent->isShift = ((modifiers & NSShiftKeyMask) != 0);
-  outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
-  outGeckoEvent->isAlt = ((modifiers & NSAlternateKeyMask) != 0);
-  outGeckoEvent->isMeta = ((modifiers & NSCommandKeyMask) != 0);
-} // convert:toGeckoEvent:
+  outGeckoEvent->isShift = ((inMods & NSShiftKeyMask) != 0);
+  outGeckoEvent->isControl = ((inMods & NSControlKeyMask) != 0);
+  outGeckoEvent->isAlt = ((inMods & NSAlternateKeyMask) != 0);
+  outGeckoEvent->isMeta = ((inMods & NSCommandKeyMask) != 0);
+}
 
  
 //

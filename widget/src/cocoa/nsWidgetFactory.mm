@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dan Rosen <dr@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -59,6 +58,7 @@
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
+#include "nsDragHelperService.h"
 
 #if USE_NATIVE_VERSION
 # include "nsCheckButton.h"
@@ -98,6 +98,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -169,6 +170,10 @@ static nsModuleComponentInfo components[] =
 		NS_DRAGSERVICE_CID,
 		"@mozilla.org/widget/dragservice;1",
 		nsDragServiceConstructor },
+	{	"Drag Helper Service",
+		NS_DRAGHELPERSERVICE_CID,
+		"@mozilla.org/widget/draghelperservice;1",
+		nsDragHelperServiceConstructor },
 #ifdef IBMBIDI
 		{ "Gtk Bidi Keyboard",
 		NS_BIDIKEYBOARD_CID,

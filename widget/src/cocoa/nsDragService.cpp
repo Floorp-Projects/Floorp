@@ -221,7 +221,7 @@ nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTr
   if ( result != noErr )
     return NS_ERROR_FAILURE;
   mDragRef = theDragRef;
-#if DEBUG_DD
+#if 1
 printf("**** created drag ref %ld\n", theDragRef);
 #endif
   
