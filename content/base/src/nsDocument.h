@@ -22,7 +22,8 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsISelection.h"
+
+class nsISelection;
 
 // Base class for our document implementations
 class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner {
