@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: prng.c,v 1.1 2000/07/14 00:45:01 nelsonb%netscape.com Exp $
+ *  $Id: prng.c,v 1.2 2001/10/17 20:35:37 jpierre%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -42,7 +42,12 @@
 #include <limits.h>
 #include <time.h>
 
+#ifdef __OS2__
+#include <types.h>
+#include <process.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "bbs_rand.h"
 

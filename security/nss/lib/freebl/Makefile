@@ -84,6 +84,11 @@ ifneq ($(OS_TARGET),WIN16)
 endif
 endif
 
+ifdef XP_OS2_VACPP
+    ASFILES  = mpi_x86.asm
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
+endif
+
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(USE_N32),1)
     ASFILES  = mpi_mips.s
