@@ -514,9 +514,9 @@ nsDOMEventRTTearoff::LastRelease()
 
     mContent = nsnull;
 
-    // The defcount balancing and destructor re-entrancy code in
-    // Release() sets mRefCnt to 1 so we haveto set it to 0 here to
-    // prevent leaks
+    // The refcount balancing and destructor re-entrancy protection
+    // code in Release() sets mRefCnt to 1 so we have to set it to 0
+    // here to prevent leaks
     mRefCnt = 0;
 
     return;
