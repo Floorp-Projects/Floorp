@@ -979,8 +979,6 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
   GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
 
   // This calculates the reflow size
-  //-2-/////////////////////////////////////////////
-
   // get the css size and let the frame use or override it
   nsSize styleSize;
   GetStyleSize(aPresContext, aReflowState, styleSize);
@@ -1021,8 +1019,6 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
     aDesiredSize.maxElementSize->width  = minSize.width;
     aDesiredSize.maxElementSize->height = minSize.height;
   }
-
-  //-2-//////////////////////////////
 
   // In Nav Quirks mode we only add in extra size for padding
   nsMargin padding;
@@ -1135,22 +1131,21 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
     col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
     aMinSize.width = aDesiredSize.width;
-    //aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+    aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
   } else {
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
       NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.width) {
-        aDesiredSize.width = PR_MAX(aDesiredSize.width,aCSSSize.width);
-        //aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+        aDesiredSize.width = aCSSSize.width;
+        aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
         aWidthExplicit = PR_TRUE;
       }
     } else {
-      //aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+      aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
     }
   }
-  aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
 
   nscoord fontHeight  = 0;
   nscoord fontLeading = 0;
@@ -1178,15 +1173,14 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
       NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
-        aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
-        //aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+        aDesiredSize.height = aCSSSize.height;
+        aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
         aHeightExplicit = PR_TRUE;
       }
     } else {
-      //aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+      aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
     }
   }
-  aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
 
   numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
   if (numRows == 1) {
