@@ -29,10 +29,14 @@
 #include "nsIWidget.h"
 #include "nsIAppShell.h"
 
-#include "nsIWebShell.h"
-
 #include "nsIAppShellService.h"
+#include "nsIWidgetController.h"
+#include "nsAppShellCIDs.h"
 
+// XXX: Only needed for the creation of the widget controller...
+#include "nsIDocumentViewer.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -40,11 +44,12 @@ static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWidgetIID,          NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIWebShellIID,        NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
-
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
+static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kIWidgetControllerIID,   NS_IWIDGETCONTROLLER_IID);
 
 
 
@@ -57,6 +62,7 @@ nsWebShellWindow::nsWebShellWindow()
 
   mWebShell = nsnull;
   mWindow   = nsnull;
+  mController = nsnull;
 }
 
 
@@ -68,6 +74,7 @@ nsWebShellWindow::~nsWebShellWindow()
   }
 
   NS_IF_RELEASE(mWindow);
+  NS_IF_RELEASE(mController);
 }
 
 
@@ -82,6 +89,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+  if (aIID.Equals(kIWebShellContainerIID)) {
+    *aInstancePtr = (void*)(nsIWebShellContainer*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
@@ -91,12 +103,16 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
+nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl, 
+                                      nsString& aControllerIID)
 {
   nsresult rv;
 
   nsString urlString;
   const char *tmpStr = NULL;
+  nsIID iid;
+  char str[40];
+
   aUrl->GetSpec(&tmpStr);
   urlString = tmpStr;
 
@@ -145,7 +161,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
                        nsScrollPreference_kNeverScroll, 
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
-///  webShell->SetContainer((nsIWebShellContainer*) this);
+  mWebShell->SetContainer(this);
 ///  webShell->SetObserver((nsIStreamObserver*)this);
 ///  webShell->SetPrefs(aPrefs);
 
@@ -154,6 +170,14 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
 
   mWindow->Show(PR_TRUE);
 
+  // Create the IWidgetController for the document...
+  mController = nsnull; 
+  aControllerIID.ToCString(str, sizeof(str));
+  iid.Parse(str);
+
+  rv = nsRepository::CreateInstance(iid, nsnull,
+                                    kIWidgetControllerIID,
+                                    (void**)&mController);
 done:
   return rv;
 }
@@ -214,3 +238,80 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
   }
   return nsEventStatus_eIgnore;
 }
+
+
+NS_IMETHODIMP 
+nsWebShellWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                              nsLoadType aReason)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                                  PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                             PRInt32 aStatus)
+{
+  nsresult rv;
+
+  if (nsnull != mController) {
+    static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+    static NS_DEFINE_IID(kIDOMDocumentIID,    NS_IDOMDOCUMENT_IID);
+
+    nsIContentViewer* viewer;
+    nsIDocumentViewer* docViewer;
+    nsIDocument* document;
+    nsIDOMDocument* domDocument;
+
+    mWebShell->GetContentViewer(&viewer);
+    rv = viewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer);
+    if (NS_SUCCEEDED(rv)) {
+      rv = docViewer->GetDocument(document);
+      if (NS_SUCCEEDED(rv)) {
+        rv = document->QueryInterface(kIDOMDocumentIID, (void**)&domDocument);
+        if (NS_SUCCEEDED(rv)) {
+          rv = mController->Initialize(domDocument, mWebShell);
+          NS_RELEASE(domDocument);
+        }
+        NS_RELEASE(document);
+      }
+      NS_RELEASE(docViewer);
+    }
+    NS_RELEASE(viewer);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
+                              nsIWebShell *&aNewWebShell)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
+                                                     nsIWebShell*& aResult)
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
+{
+  return NS_OK;
+}
+
