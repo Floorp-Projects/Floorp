@@ -1996,15 +1996,15 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString scheme;
-  if (NS_FAILED(uri->GetScheme(scheme)))
+  nsCAutoString newURIString;
+  if (NS_FAILED(uri->GetScheme(newURIString)))
     return NS_ERROR_FAILURE;
   nsCAutoString path;
   if (NS_FAILED(uri->GetPath(path)))
     return NS_ERROR_FAILURE;
-  NS_ConvertUTF8toUCS2 newURIString(scheme);
-  newURIString.Append(NS_LITERAL_STRING("://") + aDomain +
-                      NS_ConvertUTF8toUCS2(path));
+  newURIString.Append(NS_LITERAL_CSTRING("://"));
+  AppendUTF16toUTF8(aDomain, newURIString);
+  newURIString.Append(path);
 
   nsCOMPtr<nsIURI> newURI;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))

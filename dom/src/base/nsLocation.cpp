@@ -67,6 +67,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIProtocolHandler.h"
+#include "nsReadableUtils.h"
 
 static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
@@ -334,7 +335,8 @@ LocationImpl::GetHash(nsAString& aHash)
     NS_UnescapeURL(ref);
 
     if (NS_SUCCEEDED(result) && !ref.IsEmpty()) {
-      aHash.Assign(NS_LITERAL_STRING("#") + NS_ConvertASCIItoUCS2(ref));
+      aHash.Assign(PRUnichar('#'));
+      AppendASCIItoUTF16(ref, aHash);
     }
   }
 
@@ -372,7 +374,7 @@ LocationImpl::SetHash(const nsAString& aHash)
 NS_IMETHODIMP
 LocationImpl::GetHost(nsAString& aHost)
 {
-  aHost.SetLength(0);
+  aHost.Truncate();
 
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -385,7 +387,7 @@ LocationImpl::GetHost(nsAString& aHost)
     result = uri->GetHostPort(hostport);
 
     if (NS_SUCCEEDED(result)) {
-      aHost = NS_ConvertUTF8toUCS2(hostport);
+      AppendUTF8toUTF16(hostport, aHost);
     }
   }
 
@@ -411,7 +413,7 @@ LocationImpl::SetHost(const nsAString& aHost)
 NS_IMETHODIMP
 LocationImpl::GetHostname(nsAString& aHostname)
 {
-  aHostname.SetLength(0);
+  aHostname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -424,7 +426,7 @@ LocationImpl::GetHostname(nsAString& aHostname)
     result = uri->GetHost(host);
 
     if (NS_SUCCEEDED(result)) {
-      aHostname = NS_ConvertUTF8toUCS2(host);
+      AppendUTF8toUTF16(host, aHostname);
     }
   }
 
@@ -450,7 +452,7 @@ LocationImpl::SetHostname(const nsAString& aHostname)
 NS_IMETHODIMP
 LocationImpl::GetHref(nsAString& aHref)
 {
-  aHref.SetLength(0);
+  aHref.Truncate();
 
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -463,7 +465,7 @@ LocationImpl::GetHref(nsAString& aHref)
     result = uri->GetSpec(uriString);
 
     if (NS_SUCCEEDED(result)) {
-      aHref = NS_ConvertUTF8toUCS2(uriString);
+      AppendUTF8toUTF16(uriString, aHref);
     }
   }
 
@@ -595,7 +597,7 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
 NS_IMETHODIMP
 LocationImpl::GetPathname(nsAString& aPathname)
 {
-  aPathname.SetLength(0);
+  aPathname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -609,7 +611,7 @@ LocationImpl::GetPathname(nsAString& aPathname)
     result = url->GetFilePath(file);
 
     if (NS_SUCCEEDED(result)) {
-      aPathname = NS_ConvertUTF8toUCS2(file);
+      AppendUTF8toUTF16(file, aPathname);
     }
   }
 
@@ -702,7 +704,7 @@ LocationImpl::GetProtocol(nsAString& aProtocol)
     result = uri->GetScheme(protocol);
 
     if (NS_SUCCEEDED(result)) {
-      aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+      CopyASCIItoUTF16(protocol, aProtocol);
       aProtocol.Append(PRUnichar(':'));
     }
   }
@@ -744,7 +746,8 @@ LocationImpl::GetSearch(nsAString& aSearch)
     result = url->GetQuery(search);
 
     if (NS_SUCCEEDED(result) && !search.IsEmpty()) {
-      aSearch.Assign(NS_LITERAL_STRING("?") + NS_ConvertUTF8toUCS2(search));
+      aSearch.Assign(PRUnichar('?'));
+      AppendUTF8toUTF16(search, aSearch);
     }
   }
 

@@ -4502,7 +4502,7 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
     // Earlier, this code used to call Escape() and would escape characters like
     // '?', '&', and '=' in the url.  This caused bug 174628.
     if (IsASCII(aUrl)) {
-      url.Append(NS_ConvertUCS2toUTF8(aUrl));
+      AppendUTF16toUTF8(aUrl, url);
     }
     else {
       nsXPIDLCString dest;
@@ -4510,7 +4510,7 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
       if (NS_SUCCEEDED(rv))
         NS_EscapeURL(dest, esc_AlwaysCopy | esc_OnlyNonASCII, url);      
       else
-        url.Append(NS_ConvertUCS2toUTF8(aUrl));
+        AppendUTF16toUTF8(aUrl, url);
     }
 
     /* Check whether the URI is allowed, but not for dialogs --
@@ -5775,14 +5775,14 @@ NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
     if (NS_FAILED(res))
       return res;
 
-    aAppVersion += NS_ConvertASCIItoUCS2(str);
+    AppendASCIItoUTF16(str, aAppVersion);
 
     aAppVersion.Append(NS_LITERAL_STRING("; "));
     res = service->GetLanguage(str);
     if (NS_FAILED(res))
       return res;
 
-    aAppVersion += NS_ConvertASCIItoUCS2(str);
+    AppendASCIItoUTF16(str, aAppVersion);
 
     aAppVersion.Append(PRUnichar(')'));
   }

@@ -2384,11 +2384,9 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
         imageControlFrame->GetClickedY(&clickedY);
 
         // Convert the values to strings for submission
-        char buf[20];
-        sprintf(&buf[0], "%d", clickedX);
-        nsAutoString xVal = NS_ConvertASCIItoUCS2(buf);
-        sprintf(&buf[0], "%d", clickedY);
-        nsAutoString yVal = NS_ConvertASCIItoUCS2(buf);
+        nsAutoString xVal, yVal;
+        xVal.AppendInt(clickedX);
+        yVal.AppendInt(clickedY);
 
         if (!name.IsEmpty()) {
           aFormSubmission->AddNameValuePair(this,

@@ -2727,7 +2727,7 @@ nsDocument::GetDir(nsAString& aDirection)
       context->GetBidi(&options);
       for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
         if (GET_BIDI_OPTION_DIRECTION(options) == elt->mValue) {
-          aDirection.Assign(NS_ConvertASCIItoUCS2(elt->mName));
+          CopyASCIItoUTF16(elt->mName, aDirection);
           break;
         }
       }
