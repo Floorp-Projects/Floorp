@@ -106,8 +106,8 @@ nsStringBundle::LoadProperties()
   if (mAttemptedLoad) {
     if (mLoaded)
       return NS_OK;
-    else
-      return NS_ERROR_UNEXPECTED;
+      
+    return NS_ERROR_UNEXPECTED;
   }
   
   mAttemptedLoad = PR_TRUE;
@@ -171,7 +171,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
   char *s = ToNewCString(aResult);
   printf("\n** GetStringFromID: aResult=%s, len=%d\n", s?s:"null", 
          aResult.Length());
-  delete s;
+  if (s) nsMemory::Free(s);
 #endif /* DEBUG_tao_ */
 
   return rv;
@@ -197,7 +197,8 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
        *ss = ToNewCString(aName);
   printf("\n** GetStringFromName: aName=%s, aResult=%s, len=%d\n", 
          ss?ss:"null", s?s:"null", aResult.Length());
-  delete s;
+  if (s)  nsMemory::Free(s);
+  if (ss) nsMemory::Free(ss);
 #endif /* DEBUG_tao_ */
   return rv;
 }
@@ -246,15 +247,18 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 {
   nsresult rv;
   rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   *aResult = nsnull;
   nsAutoString tmpstr;
 
-  nsresult ret = GetStringFromID(aID, tmpstr);
-  if (NS_SUCCEEDED(ret))
-    *aResult = ToNewUnicode(tmpstr);
-  return ret;
+  rv = GetStringFromID(aID, tmpstr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = ToNewUnicode(tmpstr);
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
 }
 
 /* void GetStringFromName (in wstring aName, out wstring aResult); */
@@ -266,16 +270,18 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 
   nsresult rv;
   rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCMonitor(this);
   *aResult = nsnull;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);
-  if (NS_SUCCEEDED(rv))
-    *aResult = ToNewUnicode(tmpstr);
-  
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = ToNewUnicode(tmpstr);
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
 }
 
 nsresult
@@ -288,7 +294,8 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
   nsresult rv;
 
   nsCOMPtr<nsIMutableArray> resultArray;
-  NS_NewArray(getter_AddRefs(resultArray));
+  rv = NS_NewArray(getter_AddRefs(resultArray));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // first, append the override elements
   nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
@@ -296,14 +303,16 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
                                                getter_AddRefs(overrideEnumerator));
   
   PRBool hasMore;
-  overrideEnumerator->HasMoreElements(&hasMore);
+  rv = overrideEnumerator->HasMoreElements(&hasMore);
+  NS_ENSURE_SUCCESS(rv, rv);
   while (hasMore) {
 
     rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv))
       resultArray->AppendElement(supports, PR_FALSE);
 
-    overrideEnumerator->HasMoreElements(&hasMore);
+    rv = overrideEnumerator->HasMoreElements(&hasMore);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // ok, now we have the override elements in resultArray
@@ -332,7 +341,8 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
         resultArray->AppendElement(propElement, PR_FALSE);
     }
 
-    propEnumerator->HasMoreElements(&hasMore);
+    rv = propEnumerator->HasMoreElements(&hasMore);
+    NS_ENSURE_SUCCESS(rv, rv);
   } while (hasMore);
 
   return resultArray->Enumerate(aResult);
@@ -703,11 +713,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec,
 {
 #ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
-  {
-    printf("\n** nsStringBundleService::CreateBundle: %s\n",
-           aURLSpec ? aURLSpec : "null");
-    delete s;
-  }
+  printf("\n** nsStringBundleService::CreateBundle: %s\n", aURLSpec ? aURLSpec : "null");
 #endif
 
   return getStringBundle(aURLSpec,aResult);
@@ -788,6 +794,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   // XXX hack for mailnews who has already formatted their messages:
   if (aStatus == NS_OK && aStatusArg) {
     *result = nsCRT::strdup(aStatusArg);
+    NS_ENSURE_TRUE(*result, NS_ERROR_OUT_OF_MEMORY);
     return NS_OK;
   }
 
