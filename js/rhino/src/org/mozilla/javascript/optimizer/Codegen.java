@@ -165,7 +165,9 @@ public class Codegen extends Interpreter {
         if (tree instanceof OptFunctionNode) {
             if (result == null)
                 return null;
-            return OptRuntime.createFunctionObject(scope, result, cx, true);
+            NativeFunction f = OptRuntime.newOptFunction(result, scope, cx);
+            OptRuntime.setupFunction(f, scope, true);
+            return f;
         } else {
             try {
                 if (result == null)
@@ -384,8 +386,8 @@ public class Codegen extends Interpreter {
         optLevel = cx.getOptimizationLevel();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         superClassName = inFunction
-                         ? normalFunctionSuperClassName
-                         : normalScriptSuperClassName;
+                         ? functionSuperClassName
+                         : scriptSuperClassName;
         superClassSlashName = superClassName.replace('.', '/');
 
         Node codegenBase;
@@ -572,7 +574,8 @@ public class Codegen extends Interpreter {
 
               case TokenStream.FUNCTION:
                 if (inFunction || parent.getType() != TokenStream.SCRIPT) {
-                    FunctionNode fn = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
+                    OptFunctionNode fn
+                        = (OptFunctionNode) node.getProp(Node.FUNCTION_PROP);
                     int t = fn.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
                         visitFunction(fn, t == FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
@@ -1298,16 +1301,13 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.DUP); // make another reference to the array
             push(i);            // to set up for aastore at end of loop
 
-            FunctionNode def = (FunctionNode) fns.get(i);
+            OptFunctionNode fn = (OptFunctionNode) fns.get(i);
             Codegen codegen = new Codegen();
-            String fnClassName = codegen.generateCode(def, namesVector,
-                                                      classFilesVector,
-                                                      itsNameHelper);
-            generateCreateFunction(def, fnClassName);
+            codegen.generateCode(fn, namesVector, classFilesVector,
+                                 itsNameHelper);
+            generateCreateFunction(fn);
             addByteCode(ByteCode.AASTORE);    // store NativeFunction
                                               // instance to array
-
-            def.putIntProp(Node.FUNCTION_PROP, i);
         }
 
         // add the array as the nestedFunctions field; array should
@@ -1321,7 +1321,8 @@ public class Codegen extends Interpreter {
     }
 
     // On exit it leaves on stack new function
-    private void generateCreateFunction(FunctionNode def, String fnClassName) {
+    private void generateCreateFunction(OptFunctionNode fn) {
+        String fnClassName = fn.getClassName();
         addByteCode(ByteCode.NEW, fnClassName);
         addByteCode(ByteCode.DUP);
         if (inFunction) {
@@ -1344,7 +1345,7 @@ public class Codegen extends Interpreter {
             aload(variableObjectLocal);
         }
         // load 'fnName'
-        String str = def.getFunctionName();
+        String str = fn.getFunctionName();
         if (str != null) {
             push(str);
         } else {
@@ -1352,12 +1353,12 @@ public class Codegen extends Interpreter {
         }
         // load boolean indicating whether fn name should be set in scope
         boolean setFnName = str != null && str.length() > 0 &&
-                            def.getFunctionType() ==
+                            fn.getFunctionType() ==
                                 FunctionNode.FUNCTION_STATEMENT;
         addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
 
         addOptRuntimeInvoke("initFunction",
-                            "(Lorg/mozilla/javascript/Function;"
+                            "(Lorg/mozilla/javascript/NativeFunction;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Ljava/lang/String;"
                             +"Z)",
@@ -1543,7 +1544,7 @@ public class Codegen extends Interpreter {
         ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (inFunction && fns != null) {
             for (int i=0; i < fns.size(); i++) {
-                FunctionNode fn = (FunctionNode) fns.get(i);
+                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
                     visitFunction(fn, true);
                     addByteCode(ByteCode.POP);
@@ -1601,24 +1602,26 @@ public class Codegen extends Interpreter {
         addByteCode(ByteCode.ARETURN);
     }
 
-    private void visitFunction(Node fn, boolean setName) {
+    private void visitFunction(OptFunctionNode fn, boolean setName) {
+        String fnClassName = fn.getClassName();
+        addByteCode(ByteCode.NEW, fnClassName);
+        // Call function constructor
+        addByteCode(ByteCode.DUP);
         aload(variableObjectLocal);
-        int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
-        aload(funObjLocal);
-        classFile.add(ByteCode.GETFIELD, "org/mozilla/javascript/NativeFunction",
-                "nestedFunctions", "[Lorg/mozilla/javascript/NativeFunction;");
-        push((short)index);
-        addByteCode(ByteCode.AALOAD);
-        addVirtualInvoke("java/lang/Object", "getClass", "()", "Ljava/lang/Class;");
-        aload(contextLocal);
-        addByteCode(ByteCode.BIPUSH, setName ? (byte)1 : (byte)0);
-
-        addOptRuntimeInvoke("createFunctionObject",
-                            "(Lorg/mozilla/javascript/Scriptable;"
-                            +"Ljava/lang/Class;"
-                            +"Lorg/mozilla/javascript/Context;Z)",
-                            "Lorg/mozilla/javascript/NativeFunction;");
-
+        aload(contextLocal);           // load 'cx'
+        addSpecialInvoke(fnClassName, "<init>",
+                         "(Lorg/mozilla/javascript/Scriptable;" +
+                          "Lorg/mozilla/javascript/Context;)",
+                         "V");
+        addByteCode(ByteCode.DUP); // copy of function
+        aload(variableObjectLocal);
+        push(setName ? 1 : 0);
+        addOptRuntimeInvoke("setupFunction",
+                            "(Lorg/mozilla/javascript/NativeFunction;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Z)",
+                            "V");
+        // leave on stack new function instance
     }
 
     private void visitTarget(Node node) {
@@ -3770,14 +3773,10 @@ public class Codegen extends Interpreter {
         throw new RuntimeException("Bad tree in codegen");
     }
 
-    private static final String normalFunctionSuperClassName =
+    private static final String functionSuperClassName =
                           "org.mozilla.javascript.NativeFunction";
-    private static final String normalScriptSuperClassName =
+    private static final String scriptSuperClassName =
                           "org.mozilla.javascript.NativeScript";
-    private static final String debugFunctionSuperClassName =
-                          "org.mozilla.javascript.debug.NativeFunctionDebug";
-    private static final String debugScriptSuperClassName =
-                          "org.mozilla.javascript.debug.NativeScriptDebug";
     private String superClassName;
     private String superClassSlashName;
     private String name;

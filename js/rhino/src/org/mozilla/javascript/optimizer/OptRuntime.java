@@ -307,52 +307,48 @@ public final class OptRuntime extends ScriptRuntime {
         return result;
     }
 
-    public static void initFunction(Function fn,
+    public static void initFunction(NativeFunction fn,
                                     Scriptable scope,
                                     String fnName,
-                                    boolean doSetName)
+                                    boolean setName)
     {
         initFunction(scope, fn);
-        if (doSetName) {
+        if (setName) {
             ScriptableObject.defineProperty(scope, fnName, fn,
                                             ScriptableObject.PERMANENT);
         }
     }
 
-    public static NativeFunction createFunctionObject(Scriptable scope,
-                                                      Class functionClass,
-                                                      Context cx,
-                                                      boolean setName)
+    public static void setupFunction(NativeFunction fn,
+                                     Scriptable scope,
+                                     boolean setName)
+    {
+        ScriptRuntime.initFunction(scope, fn);
+
+        String fnName = fn.getFunctionName();
+        if (setName && fnName != null && fnName.length() != 0) {
+            ScriptableObject.putProperty(scope, fnName, fn);
+        }
+    }
+
+    static NativeFunction newOptFunction(Class functionClass,
+                                         Scriptable scope,
+                                         Context cx)
     {
         Constructor[] ctors = functionClass.getConstructors();
 
-        NativeFunction result = null;
         Object[] initArgs = { scope, cx };
         try {
-            result = (NativeFunction) ctors[0].newInstance(initArgs);
-        }
-        catch (InstantiationException e) {
+            return (NativeFunction) ctors[0].newInstance(initArgs);
+        } catch (InstantiationException e) {
+            throw WrappedException.wrapException(e);
+        } catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        } catch (IllegalArgumentException e) {
+            throw WrappedException.wrapException(e);
+        } catch (InvocationTargetException e) {
             throw WrappedException.wrapException(e);
         }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (IllegalArgumentException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-
-        ScriptRuntime.initFunction(scope, result);
-
-        String fnName = result.getFunctionName();
-        if (setName && fnName != null && fnName.length() != 0) {
-            ScriptableObject.putProperty(scope, fnName, result);
-        }
-
-        return result;
     }
-
 
 }
