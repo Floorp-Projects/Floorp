@@ -28,6 +28,7 @@
 
 #include "nsHTMLTags.h"
 #include "nsHTMLTokens.h"
+#include "nsParserTypes.h"
 #include "nsCRT.h"
 #include "nsDeque.h"
 #include "nsIDTD.h"
