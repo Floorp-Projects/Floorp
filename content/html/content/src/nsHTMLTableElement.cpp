@@ -131,7 +131,7 @@ protected:
 class TableElementCollection : public nsGenericDOMHTMLCollection 
 {
 public:
-  TableElementCollection(nsGenericHTMLContainerElement *aParent, 
+  TableElementCollection(nsIContent *aParent, 
                          nsIAtom *aTag);
   virtual ~TableElementCollection();
 
@@ -142,12 +142,12 @@ public:
   NS_IMETHOD    ParentDestroyed();
 
 protected:
-  nsGenericHTMLContainerElement * mParent;
+  nsIContent * mParent;
   nsIAtom * mTag;
 };
 
 
-TableElementCollection::TableElementCollection(nsGenericHTMLContainerElement *aParent, 
+TableElementCollection::TableElementCollection(nsIContent *aParent, 
                                                nsIAtom *aTag)
   : nsGenericDOMHTMLCollection()
 {
@@ -171,31 +171,27 @@ TableElementCollection::GetLength(PRUint32* aLength)
   if (nsnull==aLength)
     return NS_ERROR_NULL_POINTER;
   *aLength=0;
-  nsresult rv = NS_OK;
+  nsresult result = NS_OK;
   if (nsnull!=mParent)
   {
-    nsAutoString tagAsString;
-    mTag->ToString(tagAsString);
-    nsIDOMNode *child=nsnull;
-    mParent->GetFirstChild(&child);
+    nsIContent *child=nsnull;
+    PRUint32 childIndex=0;
+    mParent->ChildAt(childIndex, child);
     while (nsnull!=child)
     {
-      nsIDOMElement *element=nsnull;
-      nsresult rv = child->QueryInterface(kIDOMElementIID, (void**)&element);
-      if ((NS_SUCCEEDED(rv)) && (nsnull!=element))
+      nsIAtom *childTag;
+      child->GetTag(childTag);
+      if (mTag==childTag)
       {
-        nsString elementTag;
-        element->GetTagName(elementTag);
-        if (tagAsString==elementTag)
-        {
-          *aLength++;
-        }
-        NS_RELEASE(element);
+        (*aLength)++;
       }
-      child->GetNextSibling(&child);
+      NS_RELEASE(childTag);
+      NS_RELEASE(child);
+      childIndex++;
+      mParent->ChildAt(childIndex, child);
     }
   }
-  return rv;
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -206,31 +202,29 @@ TableElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsresult rv = NS_OK;
   if (nsnull!=mParent)
   {
-    nsAutoString tagAsString;
-    mTag->ToString(tagAsString);
-    nsIDOMNode *child=nsnull;
-    mParent->GetFirstChild(&child);
+    nsIContent *child=nsnull;
+    PRUint32 childIndex=0;
+    mParent->ChildAt(childIndex, child);
     while (nsnull!=child)
     {
-      nsIDOMElement *element=nsnull;
-      nsresult rv = child->QueryInterface(kIDOMElementIID, (void**)&element);
-      if ((NS_SUCCEEDED(rv)) && (nsnull!=element))
+      nsIAtom *childTag;
+      child->GetTag(childTag);
+      if (mTag==childTag)
       {
-        nsString elementTag;
-        element->GetTagName(elementTag);
-        if (tagAsString==elementTag)
+        if (aIndex==index)
         {
-          if (aIndex==index)
-          {
-            element->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
-            NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
-            break;
-          }
-          index++;
+          child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
+          NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
+          NS_RELEASE(childTag);
+          NS_RELEASE(child);
+          break;
         }
-        NS_RELEASE(element);
+        index++;
       }
-      child->GetNextSibling(&child);
+      NS_RELEASE(childTag);
+      NS_RELEASE(child);
+      childIndex++;
+      mParent->ChildAt(childIndex, child);
     }
   }
   return rv;
@@ -304,20 +298,26 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     mParent->GetTHead(&rowGroup);
     if (nsnull!=rowGroup)
     {
-      TableElementCollection head((nsGenericHTMLContainerElement *)rowGroup, 
-                                  nsHTMLAtoms::tr);
+      nsIContent *content=nsnull;
+      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      TableElementCollection head(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       head.GetLength(&rows);
       *aLength = rows;
+      NS_RELEASE(content);
+      NS_RELEASE(rowGroup);
     }
     mParent->GetTFoot(&rowGroup);
     if (nsnull!=rowGroup)
     {
-      TableElementCollection foot((nsGenericHTMLContainerElement *)rowGroup, 
-                                  nsHTMLAtoms::tr);
+      nsIContent *content=nsnull;
+      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      TableElementCollection foot(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       foot.GetLength(&rows);
       *aLength += rows;
+      NS_RELEASE(content);
+      NS_RELEASE(rowGroup);
     }
     nsIDOMHTMLCollection *tbodies;
     mParent->GetTBodies(&tbodies);
@@ -329,17 +329,16 @@ TableRowsCollection::GetLength(PRUint32* aLength)
       tbodies->Item(index, &node);
       while (nsnull!=node)
       {
-        nsresult result = node->QueryInterface(kIDOMHTMLTableSectionElementIID, 
-                                               (void**)&rowGroup);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=rowGroup))
-        {
-          TableElementCollection body((nsGenericHTMLContainerElement *)rowGroup, 
-                                      nsHTMLAtoms::tr);
-          PRUint32 rows;
-          body.GetLength(&rows);
-          *aLength += rows;
-        }
+        nsIContent *content=nsnull;
+        node->QueryInterface(kIContentIID, (void **)&content);
+        TableElementCollection body(content, nsHTMLAtoms::tr);
+        PRUint32 rows;
+        body.GetLength(&rows);
+        *aLength += rows;
         index++;
+        NS_RELEASE(content);
+        NS_RELEASE(node);
+        tbodies->Item(index, &node);
       }
     }
   }
@@ -360,8 +359,9 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     mParent->GetTHead(&rowGroup);
     if (nsnull!=rowGroup)
     {
-      TableElementCollection head((nsGenericHTMLContainerElement *)rowGroup, 
-                                  nsHTMLAtoms::tr);
+      nsIContent *content=nsnull;
+      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      TableElementCollection head(content, nsHTMLAtoms::tr);
       head.GetLength(&rowsInHead);
       count = rowsInHead;
       if (count>aIndex)
@@ -369,6 +369,8 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         head.Item(aIndex, aReturn);
         return NS_OK;
       }
+      NS_RELEASE(content);
+      NS_RELEASE(rowGroup);
     }
     nsIDOMHTMLCollection *tbodies;
     mParent->GetTBodies(&tbodies);
@@ -380,22 +382,20 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       tbodies->Item(index, &node);
       while (nsnull!=node)
       {
-        nsresult result = node->QueryInterface(kIDOMHTMLTableSectionElementIID, 
-                                               (void**)&rowGroup);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=rowGroup))
+        nsIContent *content=nsnull;
+        node->QueryInterface(kIContentIID, (void **)&content);
+        TableElementCollection body(content, nsHTMLAtoms::tr);
+        PRUint32 rows;
+        body.GetLength(&rows);
+        if ((count+rows)>aIndex)
         {
-          TableElementCollection body((nsGenericHTMLContainerElement *)rowGroup, 
-                                      nsHTMLAtoms::tr);
-          PRUint32 rows;
-          body.GetLength(&rows);
-          if ((count+rows)>aIndex)
-          {
-            body.Item(aIndex-count, aReturn);
-            return NS_OK;
-          }
-          count += rows;
+          body.Item(aIndex-count, aReturn);
+          return NS_OK;
         }
+        count += rows;
         index++;
+        NS_RELEASE(content);
+        NS_RELEASE(node);
         tbodies->Item(index, &node);
       }
     }
@@ -403,9 +403,12 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     mParent->GetTFoot(&rowGroup);
     if (nsnull!=rowGroup)
     {
-      TableElementCollection foot((nsGenericHTMLContainerElement *)rowGroup, 
-                                  nsHTMLAtoms::tr);
+      nsIContent *content=nsnull;
+      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      TableElementCollection foot(content, nsHTMLAtoms::tr);
       foot.Item(aIndex-count, aReturn);
+      NS_RELEASE(content);
+      NS_RELEASE(rowGroup);
     }
   }
   return rv;
@@ -654,7 +657,7 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
   if (nsnull==mTBodies)
   {
     NS_ADDREF(nsHTMLAtoms::tbody);
-    mTBodies = new TableElementCollection(&mInner, nsHTMLAtoms::tbody);
+    mTBodies = new TableElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
     NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
   mTBodies->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);  // caller's addref 
