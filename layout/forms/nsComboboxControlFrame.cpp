@@ -300,6 +300,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mItemDisplayWidth             = 0;
 
   mGoodToGo = PR_FALSE;
+  mInRedisplayText = PR_FALSE;
 
   mRecentSelectedIndex = -1;
 
@@ -714,7 +715,7 @@ nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext,
 // in the select's collection
 //---------------------------------------------------------
 static nsIDOMHTMLOptionElement* 
-GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aIndex)
+GetOption(nsIDOMHTMLOptionsCollection& aCollection, PRInt32 aIndex)
 {
   nsIDOMNode* node = nsnull;
   if (NS_SUCCEEDED(aCollection.Item(aIndex, &node))) {
@@ -748,10 +749,10 @@ GetSelect(nsIContent * aContent)
 // This returns the collection for nsIDOMHTMLSelectElement or
 // the nsIContent object is the select is null  (AddRefs)
 //---------------------------------------------------------
-static nsIDOMHTMLCollection* 
+static nsIDOMHTMLOptionsCollection* 
 GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull)
 {
-  nsIDOMHTMLCollection* options = nsnull;
+  nsIDOMHTMLOptionsCollection* options = nsnull;
   if (!aSelect) {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
     if (selectElement) {
@@ -781,7 +782,7 @@ nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
   nscoord maxWidth = 0;
   //nsIRenderingContext * rc = aReflowState.rendContext;
   nsresult rv = NS_ERROR_FAILURE; 
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = getter_AddRefs(GetOptions(mContent));
   if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
@@ -1122,7 +1123,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   printSize("CW", aReflowState.mComputedWidth);
   printSize("CH", aReflowState.mComputedHeight);
 
-  nsCOMPtr<nsIDOMHTMLCollection> optionsTemp = getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> optionsTemp = getter_AddRefs(GetOptions(mContent));
   PRUint32 numOptions;
   optionsTemp->GetLength(&numOptions);
   printSize("NO", (nscoord)numOptions);
@@ -1743,6 +1744,12 @@ nsComboboxControlFrame::RedisplaySelectedText()
 nsresult
 nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 {
+  // Redirect frame insertions during this method (see GetContentInsertionFrame())
+  // so that any reframing that the frame constructor forces upon us is inserted
+  // into the correct parent (mDisplayFrame). See bug 282607.
+  NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
+  mInRedisplayText = PR_TRUE;
+
   // Get the text to display
   nsAutoString textToDisplay;
   if (aIndex != -1) {
@@ -1778,6 +1785,7 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
       ReflowDirtyChild(mPresContext->PresShell(), mDisplayFrame);
     }
   }
+  mInRedisplayText = PR_FALSE;
   return rv;
 }
 
@@ -1951,7 +1959,7 @@ nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 
 nsIFrame*
 nsComboboxControlFrame::GetContentInsertionFrame() {
-  return mDropdownFrame->GetContentInsertionFrame();
+  return mInRedisplayText ? mDisplayFrame : mDropdownFrame->GetContentInsertionFrame();
 }
 
 NS_IMETHODIMP 
