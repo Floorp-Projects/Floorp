@@ -84,6 +84,19 @@ public:
     */
   NS_IMETHOD RemoveElement(nsIFormControl* aElement) = 0;
 
+  /**    
+    * Remove an element from the lookup table mainted by the form.
+    * We can't fold this method into RemoveElement() because when
+    * RemoveElement() is called it doesn't know if the element is
+    * removed because the id attribute has changed, or bacause the
+    * name attribute has changed.
+    *
+    * @param aElement the element to remove
+    * @param aName the name or id of the element to remove
+    * @return NS_OK if the element was successfully removed.
+    */
+  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement, const nsString& aName) = 0;
+
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };
 

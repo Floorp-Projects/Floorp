@@ -117,6 +117,7 @@ public:
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
   NS_IMETHOD GetElementCount(PRUint32* aCount) const;
   NS_IMETHOD RemoveElement(nsIFormControl* aElement);
+  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement, const nsString& aName);
 
 protected:
   nsFormControlList*       mControls;
@@ -145,7 +146,7 @@ public:
   nsresult GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj);
 
   nsresult AddElementToTable(nsIFormControl* aChild, const nsString& aName);
-  nsresult RemoveElementFromTable(nsIFormControl* aChild);
+  nsresult RemoveElementFromTable(nsIFormControl* aChild, const nsString& aName);
 
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -470,13 +471,17 @@ nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
 
 NS_IMETHODIMP 
 nsHTMLFormElement::RemoveElement(nsIFormControl* aChild) 
-{ 
-  PRBool rv = mControls->mElements.RemoveElement(aChild);
-  if (rv) {
-    mControls->RemoveElementFromTable(aChild);
-    // WEAK - don't release
-  }
-  return rv;
+{
+  mControls->mElements.RemoveElement(aChild);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
+                                          const nsString& aName)
+{
+  return mControls->RemoveElementFromTable(aElement, aName);
 }
 
 NS_IMETHODIMP
@@ -607,7 +612,36 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
     return PR_FALSE;
   }
 
-  if (nsnull != obj) {
+  if (!obj && mInner.mDocument) {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mInner.mDocument);
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMNodeList> list;
+      result = htmlDoc->GetElementsByName(name, getter_AddRefs(list));
+      if (NS_FAILED(result)) {
+        return PR_FALSE;
+      }
+      if (list) {
+        PRUint32 count;
+        list->GetLength(&count);
+        if (count > 0) {
+          nsCOMPtr<nsIDOMNode> node;
+          result = list->Item(0, getter_AddRefs(node));
+          if (NS_FAILED(result)) {
+            return PR_FALSE;
+          }
+          if (node) {
+            nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(node);
+            result = owner->GetScriptObject(scriptContext, (void**)&obj);
+            if (NS_FAILED(result)) {
+              return PR_FALSE;
+            }
+          }
+        }
+      }
+    }
+  }
+ 
+  if (obj) {
     JSObject* myObj;
     result = mInner.GetScriptObject(scriptContext, (void**)&myObj);
     ret = ::JS_DefineProperty(aContext, myObj,
@@ -690,14 +724,10 @@ nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
 void
 nsFormControlList::Clear()
 {
-  PRUint32 numElements = mElements.Count();
-  for (PRUint32 i = 0; i < numElements; i++) {
-    nsIFormControl* elem = (nsIFormControl*) mElements.ElementAt(i);
-    if (mLookupTable) {
-      RemoveElementFromTable(elem);
-    }
-    // WEAK, don't release
-  }
+  mElements.Clear();
+
+  if (mLookupTable)
+    mLookupTable->Reset();
 }
 
 NS_IMPL_ISUPPORTS3(nsFormControlList, nsIDOMHTMLCollection, nsIDOMHTMLFormControlList, nsIScriptObjectOwner)
@@ -985,15 +1015,13 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
 }
 
 nsresult
-nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild)
+nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
+                                          const nsString& aName)
 {
   nsAutoString name;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aChild);  
-  if (mLookupTable && content &&
-      (content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE ||
-       content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE))
-  {
-    nsStringKey key(name);
+  if (mLookupTable && content) {
+    nsStringKey key(aName);
 
     nsCOMPtr<nsISupports> supports;
     supports = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
