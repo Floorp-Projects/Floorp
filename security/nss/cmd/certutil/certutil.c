@@ -78,7 +78,7 @@ extern SECKEYPrivateKey *CERTUTIL_GeneratePrivateKey(KeyType keytype,
 						     char *noise,
 						     SECKEYPublicKey **pubkeyp,
 						     char *pqgFile,
-                                                     char *passFile);
+                                                     secuPWData *pwdata);
 
 static char *progName;
 
@@ -842,7 +842,6 @@ SECStatus
 secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 {
     FILE *out;
-    char *name;
     SECKEYPrivateKey *key;
 
     out = (FILE *)data;
