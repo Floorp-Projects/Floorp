@@ -42,6 +42,7 @@ REQUIRES = nss nspr libdbm
 
 DIRS = lib  \
  zlib \
+ addbuiltin \
  atob  \
  bltest \
  btoa  \

@@ -37,14 +37,20 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.8 2004/05/17 20:08:34 ian.mcgreer%sun.com Exp $
+ * $Id: addbuiltin.c,v 1.9 2004/05/25 21:47:44 nelsonb%netscape.com Exp $
  */
 
+#include "nssrenam.h"
 #include "nss.h"
 #include "cert.h"
 #include "certdb.h"
 #include "secutil.h"
 #include "pk11func.h"
+
+#if defined(WIN32)
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 void dumpbytes(unsigned char *buf, int len)
 {
@@ -200,7 +206,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.8 $ $Date: 2004/05/17 20:08:34 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.9 $ $Date: 2004/05/25 21:47:44 $ $Name:  $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
@@ -270,16 +276,16 @@ printheader() {
 
 static void Usage(char *progName)
 {
-    fprintf(stderr, "%s -n nickname -t trust\n", progName);
+    fprintf(stderr, "%s -n nickname -t trust [-i certfile]\n", progName);
     fprintf(stderr, 
-            "read a der-encoded cert from stdin in, and output\n"
-            "it to stdout in a format suitable for the builtin root module.\n"
-            "example: %s -n MyCA -t \"C,C,C\" < myca.der >> certdata.txt\n"
-            "(pipe through atob if the cert is b64-encoded)\n");
-    fprintf(stderr, "%15s nickname to assign to builtin cert.\n", 
+            "\tRead a der-encoded cert from certfile or stdin, and output\n"
+            "\tit to stdout in a format suitable for the builtin root module.\n"
+            "\tExample: %s -n MyCA -t \"C,C,C\" -i myca.der >> certdata.txt\n"
+            "\t(pipe through atob if the cert is b64-encoded)\n", progName);
+    fprintf(stderr, "%-15s nickname to assign to builtin cert.\n", 
                     "-n nickname");
-    fprintf(stderr, "%15s default trust flags (cCTpPuw).\n",
-                    "-t trust");
+    fprintf(stderr, "%-15s trust flags (cCTpPuw).\n", "-t trust");
+    fprintf(stderr, "%-15s file to read (default stdin)\n", "-i certfile");
     exit(-1);
 }
 
@@ -331,6 +337,20 @@ main(int argc, char **argv)
 	    exit(1);
 	}
     } else {
+#if defined(WIN32)
+	/* If we're going to read binary data from stdin, we must put stdin
+	** into O_BINARY mode or else incoming \r\n's will become \n's,
+	** and latin-1 characters will be altered.
+	*/
+
+	int smrv = _setmode(_fileno(stdin), _O_BINARY);
+	if (smrv == -1) {
+	    fprintf(stderr,
+	    "%s: Cannot change stdin to binary mode. Use -i option instead.\n",
+	            progName);
+	    exit(1);
+	}
+#endif
 	infile = PR_STDIN;
     }
 
