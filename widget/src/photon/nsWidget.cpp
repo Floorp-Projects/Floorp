@@ -36,6 +36,9 @@
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
+nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
+PRUint32 nsWidget::sWidgetCount = 0;
+
 //#define DBG 1
 
 DamageQueueEntry *nsWidget::mDmgQueue = nsnull;
@@ -47,12 +50,28 @@ nsWidget::nsWidget()
   // XXX Shouldn't this be done in nsBaseWidget?
   NS_INIT_REFCNT();
 
+#if 1
+  if (!sLookAndFeel) {
+    if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
+                                                    nsnull,
+                                                    NS_GET_IID(nsILookAndFeel),
+                                                    (void**)&sLookAndFeel))
+      sLookAndFeel = nsnull;
+  }
+
+  if (sLookAndFeel)
+    sLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
+                           mBackground);
+
+#else
   // get the proper color from the look and feel code
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
   }
   NS_RELEASE(lookAndFeel);
+#endif
+
   mWidget = nsnull;
   mParent = nsnull;
   mClient = nsnull;
@@ -69,6 +88,8 @@ nsWidget::nsWidget()
   mUpdateArea.SetRect(0, 0, 0, 0);
 //  mCreateHold = PR_TRUE;
 //  mHold = PR_FALSE;
+  sWidgetCount++;
+
 }
 
 
@@ -80,6 +101,9 @@ nsWidget::~nsWidget()
   if (nsnull != mWidget)
   {
     Destroy();
+  }
+  if (!sWidgetCount--) {
+    NS_IF_RELEASE(sLookAndFeel);
   }
 }
 
@@ -121,7 +145,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d> mWidget=<%p>\n",this,mRefCnt, mWidget));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d> mWidget=<%p> mIsDestroying=<%d>\n",this,mRefCnt, mWidget, mIsDestroying));
 
   if( !mIsDestroying )
   {
@@ -162,9 +186,20 @@ void nsWidget::OnDestroy()
     // dispatching of the event may cause the reference count to drop to 0
     // and result in this object being destroyed. To avoid that, add a reference
     // and then release it after dispatching the event
+#if 1
+/* Code stolen from GTK */
+    // dispatching of the event may cause the reference count to drop
+    // to 0 and result in this object being destroyed. To avoid that,
+    // add a reference and then release it after dispatching the event
+    nsrefcnt old = mRefCnt;
+    mRefCnt = 99;
+    DispatchStandardEvent(NS_DESTROY);
+    mRefCnt = old;
+#else
     AddRef();
     DispatchStandardEvent(NS_DESTROY);
     Release();
+#endif
   }
 }
 
@@ -879,10 +914,34 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
+  if (aParent)
+     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget (%p) nsIWidget parent\n", this));
+  else if (aNativeParent)
+     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget (%p) native parent\n",this));
+  else if(aAppShell)
+     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::CreateWidget (%p) nsAppShell parent\n",this));
+			
   PtWidget_t *parentWidget = nsnull;
+
+#if 1
+ nsIWidget *baseParent = aInitData &&
+    (aInitData->mWindowType == eWindowType_dialog ||
+     aInitData->mWindowType == eWindowType_toplevel) ?
+    nsnull : aParent;
+
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
+             aAppShell, aToolkit, aInitData);
+
+  mParent = aParent;
+  NS_IF_ADDREF(mParent);
+
+
+#else			 
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
+#endif
+
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d>\n", mRefCnt));
 
@@ -890,22 +949,56 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if( aNativeParent )
   {
     parentWidget = (PtWidget_t*)aNativeParent;
-    mParent = GetInstance( (PtWidget_t*)aNativeParent );
+//    mParent = GetInstance( (PtWidget_t*)aNativeParent );
   }
   else if( aParent )
   {
     parentWidget = (PtWidget_t*) (aParent->GetNativeData(NS_NATIVE_WIDGET));
-    mParent = aParent;
+//    mParent = aParent;
+  }
+  else if(aAppShell)
+  {
+    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    if (shellWidget)
+	{
+      parentWidget = (PtWidget_t*) shellWidget;
+    }
   }
   else
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - No parent specified!\n" ));
   }
-//  else if(aAppShell) {
-//    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
-//    if (shellWidget)
-//      parentWidget = GTK_WIDGET(shellWidget);
-//  }
+
+
+#if 1
+  mBounds = aRect;
+  CreateNative (parentWidget);
+
+  Resize(aRect.width, aRect.height, PR_FALSE);
+
+  /* place the widget in its parent if it isn't a toplevel window*/
+  if (mIsToplevel)
+  {
+    if (parentWidget)
+    {
+      // set transient properties
+    }
+  }
+  else
+  {
+    // Find the native client widget and store for ALL non-toplevel widgets
+    if( parentWidget )
+    {
+      PtWidget_t *pTop = PtFindDisjoint( parentWidget );
+      nsWindow * pWin = (nsWindow *) GetInstance( pTop );
+      if( pWin )
+      {
+        mClient = (PtWidget_t*) pWin->GetNativeData( NS_NATIVE_WIDGET );
+      }
+    }
+  }
+  
+#else
 
   // REVISIT - Are we really supposed to addref our parent ???
   NS_IF_ADDREF( mParent );
@@ -925,14 +1018,18 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   mBounds = aRect;
 
+#endif
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - bounds=(%i,%i,%i,%i) mRefCnt=<%d>\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height, mRefCnt));
 
+#if 0
   if (aInitData)
     PreCreateWidget(aInitData);
 	
   CreateNative (parentWidget);
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after CreateNative mRefCnt=<%d>\n", mRefCnt));
+#endif
 
   if( mWidget )
   {
@@ -945,7 +1042,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget end mRefCnt=<%d>\n", mRefCnt));
 
-//  InitCallbacks();
+  InitCallbacks();
 
   return NS_OK;
 }
@@ -1038,8 +1135,10 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
   PRBool ret;
   
   DispatchEvent(event, status);
+
+//  printf("nsWidget::DispatchWindowEvent  status=<%d> convtered=<%d>\n", status, ConvertStatus(status) );
+
   ret = ConvertStatus(status);
-  
   return ret;
 }
 
@@ -1298,13 +1397,6 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym)
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
 
-  for (int i = 0; i < length; i++) {
-    if (nsKeycodes[i].keysym == keysym)
-    {
-      return(nsKeycodes[i].vkCode);
-    }
-  }
-
   // First, try to handle alphanumeric input, not listed in nsKeycodes:
   if (keysym >= Pk_a && keysym <= Pk_z)
      return keysym - Pk_a + NS_VK_A;
@@ -1321,22 +1413,69 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym)
   if (keysym >= Pk_F1 && keysym <= Pk_F24)
      return keysym - Pk_F1 + NS_VK_F1;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::nsConvertKey - Did not Find Key! - Not Implemented\n"));
+  for (int i = 0; i < length; i++) {
+    if (nsKeycodes[i].keysym == keysym)
+    {
+      printf("nsWidget::nsConvertKey - Converted <%x> to <%x>\n", keysym, nsKeycodes[i].vkCode);
+      return(nsKeycodes[i].vkCode);
+    }
+  }
 
-  return(keysym & 0x00FF);
+  NS_ASSERTION(0,"nsWidget::nsConvertKey - Did not Find Key! - Not Implemented\n");
+
+  return((int) 0);
+}
+
+//==============================================================
+void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
+                            nsWidget * aWidget,
+                            nsKeyEvent &anEvent,
+                            PRUint32   aEventType)
+{
+//  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::InitKeyEvent\n"));
+
+  anEvent.message = aEventType;
+  anEvent.widget  = aWidget;
+  anEvent.eventStructType = NS_KEY_EVENT;
+
+  if (aPhKeyEvent != nsnull)
+  {
+    anEvent.keyCode =  (nsConvertKey(aPhKeyEvent->key_cap)  & 0x00FF);
+    if (aEventType == NS_KEY_PRESS)
+	{
+      printf("nsWidget::InitKeyEvent key_sym=<%lu> converted=<%lu>\n",
+	     aPhKeyEvent->key_sym, nsConvertKey(aPhKeyEvent->key_cap));
+
+	  anEvent.charCode = aPhKeyEvent->key_sym;
+    }
+	else
+      anEvent.charCode = 0; 
+
+    anEvent.time =      PR_IntervalNow();
+    anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt =     ( aPhKeyEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
+    anEvent.point.x = 0; 
+    anEvent.point.y = 0;
+  }
 }
 
 PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 {
 //  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchEvent Got a Key Event aPhEkyEvent->key_mods:<%x> aPhEkyEvent->key_flags:<%x> aPhEkyEvent->key_sym=<%x> aPhEkyEvent->key_caps=<%x>\n",aPhKeyEvent->key_mods, aPhKeyEvent->key_flags, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap));
-
+  static int counter=0;
+  
   NS_ASSERTION(aPhKeyEvent, "nsWidget::DispatchKeyEvent a NULL PhKeyEvent was passed in");
 
   nsKeyEvent keyEvent;
   PRBool result = PR_FALSE;
    
-  if (mEventCallback == NULL)
-    return PR_TRUE;
+  if ( (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid) == 0)
+  {
+     printf("nsWidget::DispatchKeyEvent throwing away invalid key\n");
+     return PR_TRUE;
+  }
+
   if ( ( aPhKeyEvent->key_cap == Pk_Shift_L ) ||
        ( aPhKeyEvent->key_cap == Pk_Shift_R ) ||	  
        ( aPhKeyEvent->key_cap == Pk_Control_L ) ||	  
@@ -1348,48 +1487,42 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchKeyEvent Ignoring SHIFT, CONTROL and ALT keypress\n"));
     return PR_TRUE;
   }
-	  
-  //mIsShiftDown   = ( aPhEkyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
-  //mIsControlDown = ( aPhEkyEvent->key_mods & Pk_KM_Ctrl ) ? PR_TRUE : PR_FALSE;
-  //mIsAltDown     = ( aPhKeyEvent->key_mods & Pk_KM_Alt ) ? PR_TRUE : PR_FALSE;
 
-  if (PkIsKeyDown(aPhKeyEvent->key_flags))
+  nsWindow *w = (nsWindow *) this;
+  
+printf("nsWidget::DispatchKeyEvent KeyEvent Info: key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d>\n",
+	aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan);
+	
+
+  if (PkIsFirstDown(aPhKeyEvent->key_flags))
   {
-	keyEvent.message = NS_KEY_DOWN;
+    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
+    result = w->OnKey(keyEvent); 
+
+  printf("nsWidget::DispatchKeyEvent Key Down counter=<%d>\n", counter++);
+
+//    if (aPhKeyEvent->key_cap < 0xF000)
+    {
+      InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
+      result = w->OnKey(keyEvent); 
+      printf("nsWidget::DispatchKeyEvent Key Press counter=<%d>\n", counter++);
+    }
   }
-  else
+  else if (PkIsKeyDown(aPhKeyEvent->key_flags) == 0)
   {
-  	keyEvent.message = NS_KEY_UP;
+    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_UP);
+    result = w->OnKey(keyEvent); 
+  printf("nsWidget::DispatchKeyEvent Key Up counter=<%d>\n", counter++);
   }
 
-  keyEvent.widget = this;
-  NS_ADDREF(keyEvent.widget);
-  keyEvent.eventStructType = NS_KEY_EVENT;	  
+  printf("nsWidget::DispatchKeyEvent after events result=<%d>\n", result);
+  
 
-
-  /* this should be keyCode  = nsConvertKey(aPhKeyEvent->key_cap); */
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent key_cap converted to NS_VK = <%x>\n", nsConvertKey(aPhKeyEvent->key_cap)));
-
-  keyEvent.keyCode =  nsConvertKey(aPhKeyEvent->key_cap);
-  keyEvent.charCode =  (aPhKeyEvent->key_cap & 0x00FF);  /* this should be UNICODE */
-  keyEvent.time = 0; // event->timestamp;
-
-  keyEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
-  keyEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
-  keyEvent.isAlt =     ( aPhKeyEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
-  keyEvent.point.x = 0; // aPhKeyEvent->pos.x;
-  keyEvent.point.y = 0; // aPhKeyEvent->pos.y;
-
-
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent Shift=<%d> Control=<%d> Alt=<%d>\n", keyEvent.isShift, keyEvent.isControl, keyEvent.isAlt));
-  //PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent keyCode=<%d> charCode=<%d>\n", keyEvent.keyCode, keyEvent.charCode));
-
-  result = DispatchWindowEvent(&keyEvent);
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent result=<%d>\n", result));
-  result = PR_TRUE;	/* HACK! */
+//  result = PR_FALSE;	/* HACK! */
 
   return result;
 }
+
 
 
 //-------------------------------------------------------------------------
