@@ -32,10 +32,20 @@
  * GPL.
  */
 
-
 extern "C" int psm_main(int argc, char *argv[]);
 
+#if defined(XP_PC) && !defined(DEBUG)
+#include <windows.h>
+
+int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
+                   LPSTR lpszLine, int nShow)
+#else
 int main(int argc, char *argv[])
+#endif
 {
+#if defined(XP_PC) && !defined(DEBUG)
+    int argc = 0;
+    char *argv[] = {"", NULL};
+#endif
     return psm_main(argc, argv);
 }
