@@ -12,6 +12,7 @@ use Exporter;
 
 use Cwd;
 use File::Path;
+use File::Basename;
 
 use Mac::Events;
 use Mac::StandardFile;
@@ -23,21 +24,94 @@ use Moz::MacCVS;
 use vars qw(@ISA @EXPORT);
 
 @ISA      = qw(Exporter);
-@EXPORT   = qw(StartBuildModule
-               EndBuildModule
-               GetBinDirectory
-               BuildOneProject
-               BuildIDLProject
-               BuildFolderResourceAliases
-               AskAndPersistFile
-               DelayFor
-               TimeStart
-               TimeEnd
-               EmptyTree
-               SetupBuildLog
-               SetBuildNumber
-               SetTimeBomb
-               );
+@EXPORT   = qw(
+                SetupDefaultBuildOptions
+                SetupBuildRootDir
+                StartBuildModule
+                EndBuildModule
+                GetBinDirectory
+                BuildOneProject
+                BuildIDLProject
+                BuildFolderResourceAliases
+                AskAndPersistFile
+                DelayFor
+                TimeStart
+                TimeEnd
+                EmptyTree
+                SetupBuildLog
+                SetBuildNumber
+                SetTimeBomb
+              );
+
+#//--------------------------------------------------------------------------------------------------
+#// SetupDefaultBuildOptions
+#//--------------------------------------------------------------------------------------------------
+sub SetupDefaultBuildOptions($$)
+{
+    my($debug, $bin_dir) = @_;
+
+    # Here we set up defaults for the various build flags.
+    # If you want to override any of these, it's best to do
+    # so via the relevant preferences file, which lives in
+    # System Folder:Preferences:Mozilla build prefs:{build prefs file}.
+    # For the name of the prefs file, see the .pl script that you
+    # run to start this build. The prefs files are created when
+    # you run the build, and contain some documentation.
+    
+    #-------------------------------------------------------------
+    # configuration variables that globally affect what is built
+    #-------------------------------------------------------------
+    $main::DEBUG                  = $debug;
+    $main::CARBON                 = 0;    # turn on to build with TARGET_CARBON
+    $main::PROFILE                = 0;
+    $main::RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
+    $main::GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
+    $main::MOZILLA_OFFICIAL       = 0;    # generate build number
+    $main::LOG_TO_FILE            = 0;    # write perl output to a file
+    
+    #-------------------------------------------------------------
+    # configuration variables that affect the manner of building, 
+    # but possibly affecting the outcome.
+    #-------------------------------------------------------------    
+    $main::ALIAS_SYM_FILES        = $main::DEBUG;
+    $main::CLOBBER_LIBS           = 1;      # turn on to clobber existing libs and .xSYM files before
+                                            # building each project                         
+    # The following two options will delete all dist files (if you have $main::build{dist} turned on),
+    # but leave the directory structure intact.
+    $main::CLOBBER_DIST_ALL       = 1;    # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+    $main::CLOBBER_DIST_LIBS      = 0;    # turn on to clobber only aliases/files for libraries/sym files in dist
+    $main::CLOBBER_IDL_PROJECTS   = 0;    # turn on to clobber all IDL projects.
+    
+    $main::UNIVERSAL_INTERFACES_VERSION = 0x0320;
+    
+    #-------------------------------------------------------------
+    # configuration variables that are preferences for the build,
+    # style and do not affect what is built.
+    #-------------------------------------------------------------
+    $main::Moz::CodeWarriorLib::CLOSE_PROJECTS_FIRST = 1;
+                                    # 1 = close then make (for development),
+                                    # 0 = make then close (for tinderbox).
+    $main::USE_TIMESTAMPED_LOGS   = 0;
+    #-------------------------------------------------------------
+    # END OF CONFIG SWITCHES
+    #-------------------------------------------------------------
+    
+    $main::BIN_DIRECTORY = $bin_dir;
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// SetupBuildRootDir
+#//--------------------------------------------------------------------------------------------------
+sub SetupBuildRootDir($)
+{
+    my($rel_path_to_script) = @_;
+
+    my($cur_dir) = dirname($0);
+    $cur_dir =~ s/$rel_path_to_script$//;
+    chdir($cur_dir);
+    $main::MOZ_SRC = cwd();
+}
 
 
 #//--------------------------------------------------------------------------------------------------

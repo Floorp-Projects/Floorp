@@ -11,19 +11,21 @@ use strict;
 use Exporter;
 
 use Cwd;
+use File::Basename;
 
+use Moz::Moz;
 use Moz::Prefs;
 
 use vars qw(@ISA @EXPORT);
 
 @ISA      = qw(Exporter);
-@EXPORT   = qw(SetupBuildParams
-               WriteBuildProgress
-               ClearBuildProgress
-               ReadBuildProgress);
-
-my($script_dir) = cwd();
-
+@EXPORT   = qw(
+                SetupBuildParams
+                InitBuildProgress
+                WriteBuildProgress
+                ClearBuildProgress
+                ReadBuildProgress
+              );
 
 
 my(@pull_flags);
@@ -37,6 +39,8 @@ my(%arrays_list) = (
   "options_flags",  \@options_flags,
   "filepath_flags", \@filepath_flags
 );
+
+my($progress_file) = "¥ÊBuild progress";
 
 #-------------------------------------------------------------------------------
 # appendArrayFlag
@@ -238,13 +242,6 @@ sub PropagateAllFlags($)
 #//--------------------------------------------------------------------------------------------------
 sub _getBuildProgressFile()
 {
-  my($progress_file);
-  
-  if ($main::DEBUG) {
-    $progress_file = $script_dir.":¥Debug build Progress";
-  } else {
-    $progress_file = $script_dir.":¥Opt build Progress";
-  }
   return $progress_file;
 }
 
@@ -274,6 +271,17 @@ sub setBuildProgressStart($$)
   }
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// InitBuildProgress
+#//--------------------------------------------------------------------------------------------------
+sub InitBuildProgress($)
+{
+  my($prog_file) = @_;
+  if ($prog_file ne "") {
+    $progress_file = full_path_to($prog_file);
+    print "Writing build progress to $progress_file\n";
+  }
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// WriteBuildProgress

@@ -19,28 +19,31 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Simon Fraser <sfraser@netscape.com>
 #
 
-#
-# build script (optimized)
-#
+require 5.004;
+
+use strict;
 
 use Cwd;
-use MozillaBuildCore;
+use Moz::BuildUtils;
+use Moz::BuildCore;
 
 #-------------------------------------------------------------
 # Where have the build options gone?
 # 
 # The various build flags have been centralized into one place. 
-# The master list of options is in MozBuildFlags.pm. However, 
+# The master list of options is in MozBuildFlags.txt. However, 
 # you should never need to edit that file, or this one.
 # 
 # To customize what gets built, or where to start the build, 
-# edit the 'Mozilla debug build prefs' file in
-# System Folder:Preferences:Mozilla build prefs.
+# edit the $prefs_file_name file in
+# System Folder:Preferences:Mozilla build prefs:
 # Documentation is provided in that file.
 #-------------------------------------------------------------
 
+my($prefs_file_name) = "Mozilla opt build prefs";
 
 #-------------------------------------------------------------
 # hashes to hold build options
@@ -51,61 +54,26 @@ my(%options);
 my(%filepaths);
 my(%optiondefines);
 
-# hash of input files for this build
-# eventually, there will be input files for manifests,
-# and projects too.
+# Hash of input files for this build. Eventually, there will be
+# input files for manifests, and projects too.
 my(%inputfiles) = (
   "buildflags",     "MozillaBuildFlags.txt",
-  "checkoutdata",   "MozillaCheckoutList.txt"
+  "checkoutdata",   "MozillaCheckoutList.txt",
+  "buildprogress",  "¥ Mozilla opt progress",
+  "buildmodule",    "MozillaBuildList.pm"
 );
-
 #-------------------------------------------------------------
-# configuration variables that globally affect what is built
-#-------------------------------------------------------------
-$DEBUG                  = 0;
-$CARBON                 = 0;    # turn on to build with TARGET_CARBON
-$PROFILE                = 0;
-$RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
-$GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
-$MOZILLA_OFFICIAL       = 0;    # generate build number
-$LOG_TO_FILE            = 0;    # write perl output to a file
-
-#-------------------------------------------------------------
-# configuration variables that affect the manner of building, 
-# but possibly affecting the outcome.
-#-------------------------------------------------------------
-$BIN_DIRECTORY          = ":mozilla:dist:viewer:";
-
-$ALIAS_SYM_FILES        = $DEBUG;
-$CLOBBER_LIBS           = 1;    # turn on to clobber existing libs and .xSYM files before
-                                # building each project                         
-# The following two options will delete all dist files (if you have $build{dist} turned on),
-# but leave the directory structure intact.
-$CLOBBER_DIST_ALL       = 1;    # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
-$CLOBBER_DIST_LIBS      = 0;    # turn on to clobber only aliases/files for libraries/sym files in dist
-$CLOBBER_IDL_PROJECTS   = 0;    # turn on to clobber all IDL projects.
-
-$UNIVERSAL_INTERFACES_VERSION = 0x0320;
-
-#-------------------------------------------------------------
-# configuration variables that are preferences for the build,
-# style and do not affect what is built.
-#-------------------------------------------------------------
-$Moz::CodeWarriorLib::CLOSE_PROJECTS_FIRST
-                        = 1;
-                                # 1 = close then make (for development),
-                                # 0 = make then close (for tinderbox).
-$USE_TIMESTAMPED_LOGS   = 0;
-#-------------------------------------------------------------
-# END OF CONFIG SWITCHES
+# end build hashes
 #-------------------------------------------------------------
 
-my($cur_dir) = cwd();
-$cur_dir =~ s/:mozilla:build:mac:build_scripts$//;
-chdir($cur_dir);
-$MOZ_SRC = cwd();
+# set the build root directory, which is the the dir above mozilla
+SetupBuildRootDir(":mozilla:build:mac:build_scripts");
+
+# Set up all the flags on $main::, like DEBUG, CARBON etc.
+# Override the defaults using the preferences files.
+SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:");
 
 my($do_checkout)    = 0;
 my($do_build)       = 1;
 
-RunBuild($do_checkout, $do_build, \%inputfiles, "Mozilla opt build prefs");
+RunBuild($do_checkout, $do_build, \%inputfiles, $prefs_file_name);
