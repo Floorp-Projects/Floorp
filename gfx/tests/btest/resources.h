@@ -30,5 +30,6 @@
 #define COMPTST                   40017
 #define COMPTSTSPEED              40018
 #define RDMSK                     40019
+#define COMPINT                   40020
 
 #endif /* resources_h___ */

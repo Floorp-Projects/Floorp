@@ -38,6 +38,8 @@
 #include "nsGfxCIID.h"
 #include "nsFont.h"
 
+#include <windows.h>
+
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 
@@ -247,11 +249,12 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
 void
 Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY)
 {
-nsPoint *location;
-PRUint32    min,seconds,milli,i,h,w;
-SYSTEMTIME  thetime;
+nsPoint         *location;
+PRUint32        min,seconds,milli,i,h,w;
+nsBlendQuality  quality=nsMedQual;
+SYSTEMTIME      thetime;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
-nsIImage  *theimage;
+nsIImage        *theimage;
 
 
   if(aTestNum == 1)
@@ -270,17 +273,11 @@ nsIImage  *theimage;
       printf("\n Image Location is %d, %d\n", location->x,location->y);
       }
     
-    aImage->CompositeImage(aBImage,location);
+    aImage->CompositeImage(aBImage,location,quality);
     }
 
   if(aTestNum == 2)
     {
-
-    if(aMImage)
-      {
-      aBImage->SetAlphaMask(aMImage);
-      }
-
     printf("\nSTARTING Blending TEST\n");
     ::GetSystemTime(&thetime);
     min = thetime.wMinute;
@@ -292,20 +289,26 @@ nsIImage  *theimage;
 
     if(aMImage)
       {
+      aBImage->SetAlphaMask(aMImage);
       for(i=0;i<200;i++)
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
+
         theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,location);
+        theimage->CompositeImage(aBImage,location,quality);
         drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
         NS_RELEASE(theimage);
+
         }
       }
     else
       for(i=0;i<200;i++)
         {
-        aImage->CompositeImage(aBImage,location);
-        drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+        aBImage->MoveAlphaMask(rand()%w,rand()%h);
+        theimage = aImage->DuplicateImage();
+        theimage->CompositeImage(aBImage,location,quality);
+        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
+        NS_RELEASE(theimage);
         }
 
     ::GetSystemTime(&thetime);
@@ -321,7 +324,51 @@ nsIImage  *theimage;
 
     printf("The composite Time was %lu Milliseconds\n",milli);
     }
+
   
+    if(aTestNum == 3)
+    {
+    location = new nsPoint(aX,aY);
+
+    if(aMImage)
+      {
+      aBImage->SetAlphaMask(aMImage);
+      for(i=0;i<200;i++)
+        {
+        DWORD pos = ::GetMessagePos();
+        POINT cpos;
+
+        cpos.x = LOWORD(pos);
+        cpos.y = HIWORD(pos);
+
+        ::ScreenToClient(gHwnd, &cpos);
+
+        aBImage->MoveAlphaMask(cpos.x,cpos.y);
+
+        theimage = aImage->DuplicateImage();
+        theimage->CompositeImage(aBImage,location,quality);
+        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
+        NS_RELEASE(theimage);
+
+        MSG msg;
+        if (GetMessage(&msg, NULL, 0, 0)) 
+          {
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+          }
+        }
+      }
+    else
+      for(i=0;i<200;i++)
+        {
+        aBImage->MoveAlphaMask(rand()%w,rand()%h);
+        theimage = aImage->DuplicateImage();
+        theimage->CompositeImage(aBImage,location,quality);
+        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
+        NS_RELEASE(theimage);
+        }
+    }
+
   drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 
   // we are finished with this
@@ -724,8 +771,11 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
             if (OpenFileDialog(szFile, 256))
               MyLoadImage(szFile,PR_TRUE,&gMaskImage);
           break;
+        case COMPINT:
+          gTestNum = 3;
         case COMPTST:
-          gTestNum = 1;
+          if(LOWORD(param) == COMPTST)
+             gTestNum = 1; 
         case COMPTSTSPEED:
           if(LOWORD(param) == COMPTSTSPEED)
             gTestNum = 2;
@@ -793,6 +843,20 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         }	  
       gImageManager->SetCacheSize(1024*1024);
       break;
+
+    /*case WM_MOUSEMOVE: 
+      {
+        DWORD pos = ::GetMessagePos();
+        POINT cpos;
+
+        cpos.x = LOWORD(pos);
+        cpos.y = HIWORD(pos);
+
+        ::ScreenToClient(hWnd, &cpos);
+        // Dothing(cpos.x, cpos.y);
+
+      }
+      break;*/
 
     case WM_DESTROY:
       MyInterrupt();
@@ -890,7 +954,7 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   }
 
   // Create our first top level window
-  HWND gHwnd = CreateTopLevel(class1Name, "Graphics tester", 620, 400);
+  gHwnd = CreateTopLevel(class1Name, "Graphics tester", 620, 400);
 
   // Process messages
   MSG msg;
