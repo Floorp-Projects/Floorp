@@ -44,5 +44,5 @@ ac_add_options --enable-optimize=-Os
 ac_add_options --disable-debug
 ac_add_options --enable-strip
 
-LDFLAGS="-nodefaultlibs -lgcc -lc -lminicpp"
-
+LIBS=-lsupc++
+CXX=gcc
