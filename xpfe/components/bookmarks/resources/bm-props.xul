@@ -67,15 +67,15 @@
               <column flex="1"/>
             </columns>
             <rows>
-              <row>
+              <row align="center">
                 <label value="&bookmarks.name.label;" control="name"/>
                 <textbox id="name"/>
               </row>
-              <row id="locationrow">
+              <row id="locationrow" align="center">
                 <label value="&bookmarks.location.label;" control="url"/>
           			<textbox id="url" />
               </row>
-              <row id="shortcutrow">
+              <row id="shortcutrow" align="center">
                 <label value="&bookmarks.shortcut.label;" control="shortcut"/>
     		      	<textbox id="shortcut" />
               </row>
