@@ -62,7 +62,7 @@ enum {
 };
 
 static guint mozilla_signals[LAST_SIGNAL] = { 0 };
-static GtkLayoutClass *parent_class = NULL;
+static GtkFixedClass *parent_class = NULL;
 
 static void
 gtk_mozilla_class_init (GtkMozillaClass *klass)
@@ -73,7 +73,7 @@ gtk_mozilla_class_init (GtkMozillaClass *klass)
   object_class = (GtkObjectClass*) klass;
   widget_class = (GtkWidgetClass*) klass;
 
-  parent_class = (GtkLayoutClass *)gtk_type_class (GTK_TYPE_LAYOUT);
+  parent_class = (GtkFixedClass *)gtk_type_class (GTK_TYPE_FIXED);
 
   mozilla_signals[WILL_LOAD_URL] =
     gtk_signal_new ("will_load_url",
@@ -142,9 +142,6 @@ gtk_mozilla_init (GtkMozilla *moz)
   
   moz->mozilla_container = NULL;
   
-  gtk_layout_set_hadjustment (GTK_LAYOUT (moz), NULL);
-  gtk_layout_set_vadjustment (GTK_LAYOUT (moz), NULL);
-
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(moz), GTK_CAN_FOCUS);
   
   moz->mozilla_container = new GtkMozillaContainer(moz,sPrefs);
@@ -175,7 +172,7 @@ gtk_mozilla_get_type (void)
       0,
       0
     };
-    mozilla_type = gtk_type_unique (GTK_TYPE_LAYOUT, &mozilla_info);
+    mozilla_type = gtk_type_unique (GTK_TYPE_FIXED, &mozilla_info);
 
     //printf("Setting up registry.\n");
     

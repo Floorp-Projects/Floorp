@@ -36,6 +36,7 @@ ALL_MOZ_LIBS =                 \
         $(JSJ_LIB)     \
         $(NSPR_LIBS)   \
         $(TK_LIBS)     \
+	-lgtksuperwin 	\
         $(NULL)
 
 MOZILLA_LIBS=-L$(MOZILLA_DIR)/lib  \

@@ -27,8 +27,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <gtk/gtklayout.h>
-
 #define GTK_TYPE_MOZILLA              (gtk_mozilla_get_type ())
 #define GTK_MOZILLA(obj)              GTK_CHECK_CAST ((obj), GTK_TYPE_MOZILLA, GtkMozilla)
 #define GTK_MOZILLA_CLASS(klass)      GTK_CHECK_CLASS_CAST ((klass), GTK_TYPE_MOZILLA, GtkMozillaClass)
@@ -56,14 +54,14 @@ typedef struct _GtkMozillaClass  GtkMozillaClass;
   
 struct _GtkMozilla
 {
-  GtkLayout layout;
+  GtkFixed  fixed;
 
   void *mozilla_container;
 };
 
 struct _GtkMozillaClass
 {
-  GtkLayoutClass parent_class;
+  GtkFixedClass parent_class;
 
   gint (*will_load_url) (GtkMozilla  *mozilla,
                          const gchar *url,
