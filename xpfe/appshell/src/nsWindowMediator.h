@@ -40,7 +40,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
-#include "nsIWindowWatcher.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -90,7 +89,6 @@ private:
   PRInt32       mTimeStamp;
   PRInt32       mUpdateBatchNest;
   PRLock       *mListLock;
-  nsCOMPtr<nsIWindowWatcher> mWatcher;
   nsCOMPtr<nsISupportsArray> mListeners;
 
   static PRInt32 gRefCnt;

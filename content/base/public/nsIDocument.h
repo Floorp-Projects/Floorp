@@ -80,7 +80,6 @@ class nsIObserver;
 class nsISupportsArray;
 class nsIScriptLoader;
 class nsString;
-class nsIFocusController;
 class nsIContentSink;
 
 // IID for the nsIDocument interface
@@ -301,14 +300,6 @@ public:
    * Get the script loader for this document
    */ 
   NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader) = 0;
-
-  /**
-   * Get the focus controller for this document
-   * This can usually be gotten through the ScriptGlobalObject, but
-   * it is set to null during document destruction, when we still might
-   * need to fire focus events.
-   */
-  NS_IMETHOD GetFocusController(nsIFocusController** aFocusController) = 0;
 
   //----------------------------------------------------------------------
 

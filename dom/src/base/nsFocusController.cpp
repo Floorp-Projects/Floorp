@@ -42,6 +42,11 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIServiceManagerUtils.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULDocument.h"
@@ -53,7 +58,8 @@
 nsFocusController::nsFocusController(void)
 : mSuppressFocus(0), 
   mSuppressFocusScroll(PR_FALSE), 
-	mActive(PR_FALSE)
+  mActive(PR_FALSE),
+  mUpdateWindowWatcher(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -138,6 +144,14 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
   else if (aWindow) mPreviousWindow = aWindow;
 
   mCurrentWindow = aWindow;
+
+  if (mUpdateWindowWatcher) {
+    NS_ASSERTION(mActive, "This shouldn't happen");
+    if (mCurrentWindow)
+      UpdateWWActiveWindow();
+    mUpdateWindowWatcher = PR_FALSE;
+  }
+
   return NS_OK;
 }
 
@@ -467,7 +481,41 @@ NS_IMETHODIMP
 nsFocusController::SetActive(PRBool aActive)
 {
   mActive = aActive;
+
+  // We may be activated before we ever have a focused window set.
+  // This happens on window creation, where the FocusController
+  // is activated just prior to setting the focused window.
+  // (see nsEventStateManager::PreHandleEvent/NS_ACTIVATE)
+  // If this is the case, we need to queue a notification of the
+  // WindowWatcher until SetFocusedWindow is called.
+  if (mCurrentWindow)
+    UpdateWWActiveWindow();
+  else
+    mUpdateWindowWatcher = PR_TRUE;
+
   return NS_OK;
+}
+
+void
+nsFocusController::UpdateWWActiveWindow()
+{
+  // Inform the window watcher of the new active window.
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+  if (!wwatch) return;
+
+  // This gets the toplevel DOMWindow
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mCurrentWindow);
+  nsCOMPtr<nsIDocShell> docShell;
+  sgo->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell) return;
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  docShellAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  NS_ASSERTION(rootItem, "Invalid docshell tree - no root!");
+
+  nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(rootItem);
+  wwatch->SetActiveWindow(domWin);
 }
 
 NS_IMETHODIMP

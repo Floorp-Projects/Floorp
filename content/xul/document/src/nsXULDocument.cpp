@@ -160,6 +160,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIPref.h"
+#include "nsIFocusController.h"
 
 
 //----------------------------------------------------------------------
@@ -1643,29 +1644,10 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 #endif
 
         mContentWrapperHash.Reset();
-    } else if (mScriptGlobalObject != aScriptGlobalObject) {
-      // Update our weak ref to the focus controller
-      nsCOMPtr<nsPIDOMWindow> domPrivate = do_QueryInterface(aScriptGlobalObject);
-      if (domPrivate) {
-        nsCOMPtr<nsIFocusController> fc;
-        domPrivate->GetRootFocusController(getter_AddRefs(fc));
-        mFocusController = getter_AddRefs(NS_GetWeakReference(fc));
-      }
     }
 
     mScriptGlobalObject = aScriptGlobalObject;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
-{
-  NS_ENSURE_ARG_POINTER(aFocusController);
-
-  nsCOMPtr<nsIFocusController> fc = do_QueryReferent(mFocusController);
-  *aFocusController = fc;
-  NS_IF_ADDREF(*aFocusController);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3630,8 +3612,7 @@ nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 
     // get focus controller
     nsCOMPtr<nsIFocusController> focusController;
-    rv = GetFocusController(getter_AddRefs(focusController));
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetFocusController(getter_AddRefs(focusController));
     NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
     // get popup node
     rv = focusController->GetPopupNode(aNode); // addref happens here
@@ -3646,8 +3627,7 @@ nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 
     // get focus controller
     nsCOMPtr<nsIFocusController> focusController;
-    rv = GetFocusController(getter_AddRefs(focusController));
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetFocusController(getter_AddRefs(focusController));
     NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
     // set popup node
     rv = focusController->SetPopupNode(aNode);
@@ -7079,6 +7059,18 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
     NS_RELEASE(mDocument);
 
     return rv;
+}
+
+void
+nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
+{
+    nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
+    nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(ir);
+    if (windowPrivate) {
+        windowPrivate->GetRootFocusController(aFocusController);
+        NS_IF_ADDREF(*aFocusController);
+    } else
+        *aFocusController = nsnull;
 }
 
 #ifdef IBMBIDI

@@ -55,6 +55,7 @@ class nsIFrameSelection;
 class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
+class nsIFocusController;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -142,18 +143,19 @@ protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
-  NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  nsresult CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
-  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool ignoreTabIndex, nsIContent** aResult);
+  nsresult GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool ignoreTabIndex, nsIContent** aResult);
 
   void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
-  NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
+  nsresult SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
   PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
   void FlushPendingEvents(nsIPresContext* aPresContext);
+  nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
 
   typedef enum {
     eAccessKeyProcessingNormal = 0,

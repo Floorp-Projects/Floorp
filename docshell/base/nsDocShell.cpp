@@ -308,6 +308,13 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
                                          aSink), NS_ERROR_FAILURE);
         return NS_OK;
     }
+    else if (aIID.Equals(NS_GET_IID(nsPIDOMWindow)) &&
+             NS_SUCCEEDED(EnsureScriptEnvironment())) {
+        NS_ENSURE_SUCCESS(mScriptGlobal->
+                          QueryInterface(NS_GET_IID(nsPIDOMWindow), aSink),
+                          NS_ERROR_FAILURE);
+        return NS_OK;
+    }
     else if (aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
         NS_ENSURE_SUCCESS(mScriptGlobal->

@@ -101,9 +101,6 @@ public:
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus) = 0;
   NS_IMETHOD MoveCaretToFocus() = 0;
 
-  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
-                                    PRBool forward, PRBool aIgnoreTabIndex, nsIContent** aResult) = 0;
-
   // This is an experiment and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
 

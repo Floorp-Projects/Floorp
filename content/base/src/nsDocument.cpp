@@ -119,7 +119,6 @@
 
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-#include "nsIFocusController.h"
 #include "nsIDOMElement.h"
 
 #include "nsIBoxObject.h"
@@ -1724,6 +1723,16 @@ nsDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject)
 {
    NS_ENSURE_ARG_POINTER(aScriptGlobalObject);
 
+   // If we're going away, we've already released the reference to our
+   // ScriptGlobalObject.  We can, however, try to obtain it for the
+   // caller through our docshell.
+
+   if (mIsGoingAway) {
+     nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryReferent(mDocumentContainer);
+     if (requestor)
+       return CallGetInterface(requestor.get(), aScriptGlobalObject);
+   }
+
    *aScriptGlobalObject = mScriptGlobalObject;
    NS_IF_ADDREF(*aScriptGlobalObject);
    return NS_OK;
@@ -1770,28 +1779,9 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 #endif
 
     mContentWrapperHash.Reset();
-  } else if (aScriptGlobalObject != mScriptGlobalObject) {
-    // Update our weak ref to the focus controller
-    nsCOMPtr<nsPIDOMWindow> domPrivate = do_QueryInterface(aScriptGlobalObject);
-    if (domPrivate) {
-      nsCOMPtr<nsIFocusController> fc;
-      domPrivate->GetRootFocusController(getter_AddRefs(fc));
-      mFocusController = getter_AddRefs(NS_GetWeakReference(fc));
-    }
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetFocusController(nsIFocusController** aFocusController)
-{
-  NS_ENSURE_ARG_POINTER(aFocusController);
-
-  nsCOMPtr<nsIFocusController> fc = do_QueryReferent(mFocusController);
-  *aFocusController = fc;
-  NS_IF_ADDREF(*aFocusController);
   return NS_OK;
 }
 

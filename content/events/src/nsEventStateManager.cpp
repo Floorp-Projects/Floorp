@@ -730,8 +730,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // de-activation.  This will cause it to remember the last
       // focused sub-window and sub-element for this top-level
       // window.
-      nsCOMPtr<nsIFocusController> focusController;
-      mDocument->GetFocusController(getter_AddRefs(focusController));
+      nsCOMPtr<nsIFocusController> focusController = getter_AddRefs(GetFocusControllerForDocument(mDocument));
         if (focusController) {
           // Suppress the command dispatcher.
           focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
@@ -782,8 +781,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           // the window, but we still need to tell the focus controller
           // that it isn't active.
           
-          nsCOMPtr<nsIFocusController> fc;
-          gLastFocusedDocument->GetFocusController(getter_AddRefs(fc));
+          nsCOMPtr<nsIFocusController> fc = getter_AddRefs(GetFocusControllerForDocument(gLastFocusedDocument));
           if (fc)
             fc->SetActive(PR_FALSE);
         }
@@ -2733,7 +2731,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
   FlushPendingEvents(aPresContext);
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::SetClickCount(nsIPresContext* aPresContext, 
                                    nsMouseEvent *aEvent,
                                    nsEventStatus* aStatus)
@@ -2799,7 +2797,7 @@ nsEventStateManager::SetClickCount(nsIPresContext* aPresContext,
   return ret;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext, 
                                               nsMouseEvent *aEvent,
                                               nsEventStatus* aStatus)
@@ -3243,7 +3241,7 @@ void nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool aIgnoreTabIndex, 
                                             nsIContent** aResult)
 {
@@ -3949,7 +3947,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus)
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -5193,3 +5191,18 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
   }
 }
 
+// Get the FocusController given an nsIDocument
+nsIFocusController*
+nsEventStateManager::GetFocusControllerForDocument(nsIDocument* aDocument)
+{
+  nsCOMPtr<nsISupports> container;
+  aDocument->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
+  nsIFocusController* fc;
+  if (windowPrivate)
+    windowPrivate->GetRootFocusController(&fc);
+  else
+    fc = nsnull;
+
+  return fc;
+}

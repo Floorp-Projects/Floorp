@@ -63,6 +63,8 @@
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
+#include "nsPIDOMWindow.h"
+#include "nsIInterfaceRequestorUtils.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
@@ -201,38 +203,52 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   // We don't want the caret to blink while the menus are active
   // The caret distracts screen readers and other assistive technologies from the menu selection
   // There is 1 caret per document, we need to find the focused document and toggle its caret 
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIFocusController> focusController;
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-  if (presShell) {
+  do {
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    if (!presShell)
+      break;
+
+    nsCOMPtr<nsIDocument> document;
     presShell->GetDocument(getter_AddRefs(document));
-    if (document)
-      document->GetFocusController(getter_AddRefs(focusController));
-  }
-  nsCOMPtr<nsIDOMWindow> window;
-  if (focusController) {
+    if (!document)
+      break;
+
+    nsCOMPtr<nsISupports> container;
+    document->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
+    if (!windowPrivate)
+      break;
+
+    nsCOMPtr<nsIFocusController> focusController;
+    windowPrivate->GetRootFocusController(getter_AddRefs(focusController));
+    if (!focusController)
+      break;
+
     nsCOMPtr<nsIDOMWindowInternal> windowInternal;
     focusController->GetFocusedWindow(getter_AddRefs(windowInternal));
-    window = do_QueryInterface(windowInternal);
-  }
-  nsCOMPtr<nsICaret> caret;
-  if (window) {
+    if (!windowInternal)
+      break;
+
     nsCOMPtr<nsIDOMDocument> domDoc;
-    window->GetDocument(getter_AddRefs(domDoc));
+    windowInternal->GetDocument(getter_AddRefs(domDoc));
     document = do_QueryInterface(domDoc);
-    if (document) {
-      document->GetShellAt(0, getter_AddRefs(presShell));
-      if (presShell)
-        presShell->GetCaret(getter_AddRefs(caret));
-    }
-  }
-  if (caret) {
-    if (mIsActive)  // store whether caret was visible so that we can restore that state when menu is closed
+    if (!document)
+      break;
+
+    document->GetShellAt(0, getter_AddRefs(presShell));
+    if (!presShell)
+      break;
+    nsCOMPtr<nsICaret> caret;
+    presShell->GetCaret(getter_AddRefs(caret));
+    if (!caret)
+      break;
+
+    if (mIsActive) // store whether caret was visible so that we can restore that state when menu is closed
       caret->GetCaretVisible(&mCaretWasVisible);
     if (mCaretWasVisible)
       caret->SetCaretVisible(!mIsActive);
-  }
+  } while (0);
 
   NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
   NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");

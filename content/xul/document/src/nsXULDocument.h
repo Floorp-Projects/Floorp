@@ -84,7 +84,6 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIFocusController.h"
 #include "nsScriptLoader.h"
 #include "pldhash.h"
 
@@ -97,6 +96,7 @@ class nsIRDFService;
 class nsITimer;
 class nsIXULContentUtils;
 class nsIXULPrototypeCache;
+class nsIFocusController;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -261,8 +261,6 @@ public:
     NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
 
     NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
-
-    NS_IMETHOD GetFocusController(nsIFocusController** aFocusController);
 
     virtual void AddObserver(nsIDocumentObserver* aObserver);
 
@@ -497,6 +495,8 @@ protected:
                                  nsIDOMElement* aListener,
                                  nsIAtom* aAttr);
 
+    void GetFocusController(nsIFocusController** aFocusController);
+
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
@@ -611,8 +611,6 @@ protected:
 
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
     nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // [OWNER] list of names in the document
-
-    nsWeakPtr mFocusController;
 
     /**
      * Context stack, which maintains the state of the Builder and allows
