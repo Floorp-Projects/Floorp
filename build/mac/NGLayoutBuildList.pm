@@ -601,9 +601,9 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
 
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:gifcom.mcp",				"gifcom$D.shlb", "gifcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:pngcom.mcp",				"pngcom$D.shlb", "pngcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:jpegcom.mcp",				"jpegcom$D.shlb", "jpegcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",				"gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",				"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",				"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
