@@ -68,6 +68,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, ShortcutURL);
 
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastVisitDate);
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastModifiedDate);
@@ -100,6 +101,7 @@ protected:
     static nsIRDFResource* kNC_Name;
     static nsIRDFResource* kNC_PersonalToolbarFolder;
     static nsIRDFResource* kNC_URL;
+    static nsIRDFResource* kNC_ShortcutURL;
     static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kWEB_LastModifiedDate;
     static nsIRDFResource* kWEB_LastVisitDate;
@@ -126,7 +128,8 @@ public:
     nsresult Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource);
     nsresult Parse(nsIRDFResource* aContainer);
     nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
-			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate);
+			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
+			const char *shortcutURL);
 };
 
 
@@ -139,6 +142,7 @@ nsIRDFResource* BookmarkParser::kNC_Folder;
 nsIRDFResource* BookmarkParser::kNC_Name;
 nsIRDFResource* BookmarkParser::kNC_PersonalToolbarFolder;
 nsIRDFResource* BookmarkParser::kNC_URL;
+nsIRDFResource* BookmarkParser::kNC_ShortcutURL;
 nsIRDFResource* BookmarkParser::kRDF_type;
 nsIRDFResource* BookmarkParser::kWEB_LastModifiedDate;
 nsIRDFResource* BookmarkParser::kWEB_LastVisitDate;
@@ -161,6 +165,7 @@ BookmarkParser::BookmarkParser()
         gRDFService->GetResource(kURINC_Name,              &kNC_Name);
         gRDFService->GetResource(kURINC_PersonalToolbarFolder, &kNC_PersonalToolbarFolder);
         gRDFService->GetResource(kURINC_URL,               &kNC_URL);
+        gRDFService->GetResource(kURINC_ShortcutURL,       &kNC_ShortcutURL);
         gRDFService->GetResource(kURIRDF_type,             &kRDF_type);
         gRDFService->GetResource(kURIWEB_LastModifiedDate, &kWEB_LastModifiedDate);
         gRDFService->GetResource(kURIWEB_LastVisitDate,    &kWEB_LastVisitDate);
@@ -188,6 +193,7 @@ BookmarkParser::~BookmarkParser(void)
         NS_IF_RELEASE(kNC_Name);
         NS_IF_RELEASE(kNC_PersonalToolbarFolder);
         NS_IF_RELEASE(kNC_URL);
+        NS_IF_RELEASE(kNC_ShortcutURL);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kWEB_LastModifiedDate);
         NS_IF_RELEASE(kWEB_LastVisitDate);
@@ -215,6 +221,7 @@ static const char kTargetEquals[]       = "TARGET=\"";
 static const char kAddDateEquals[]      = "ADD_DATE=\"";
 static const char kLastVisitEquals[]    = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[] = "LAST_MODIFIED=\"";
+static const char kShortcutURLEquals[]  = "SHORTCUTURL=\"";
 
 
 nsresult
@@ -359,7 +366,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
         }
     }
 
-    // 5. Parse the last modified date
+    // 6. Parse the last modified date
 
     PRInt32 lastModifiedDate;
 
@@ -372,6 +379,11 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
         }
     }
 
+    // 7. Parse the shortcut URL
+
+    nsAutoString	shortcut("");
+    ParseAttribute(aLine, kShortcutURLEquals, sizeof(kShortcutURLEquals) -1, shortcut);
+
     // Dunno. 4.5 did it, so will we.
     if (!lastModifiedDate)
         lastModifiedDate = lastVisitDate;
@@ -383,9 +395,12 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
 	if (cURL)
 	{
 		char *cName = name.ToNewCString();
-		nsresult rv = AddBookmark(aContainer, cURL, cName, addDate, lastVisitDate, lastModifiedDate);
+		char *cShortcutURL = shortcut.ToNewCString();
+		nsresult rv = AddBookmark(aContainer, cURL, cName, addDate,
+			lastVisitDate, lastModifiedDate, cShortcutURL);
 		delete [] cURL;
-		if (cName)	delete [] cName;
+		if (cName)		delete [] cName;
+		if (cShortcutURL)	delete [] cShortcutURL;
 	}
 	return(NS_OK);
 }
@@ -395,7 +410,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
     // Now create the bookmark
 nsresult
 BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
-		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate)
+		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate, const char *shortcutURL)
 {
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
@@ -412,7 +427,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		return rv;
 	}
 
-	if (nsnull != optionalTitle)
+	if ((nsnull != optionalTitle) && (*optionalTitle != '\0'))
 	{
 		nsCOMPtr<nsIRDFLiteral> literal;
 		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(optionalTitle), getter_AddRefs(literal))))
@@ -436,6 +451,26 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	AssertTime(bookmark, kNC_BookmarkAddDate, addDate);
 	AssertTime(bookmark, kWEB_LastVisitDate, lastVisitDate);
 	AssertTime(bookmark, kWEB_LastModifiedDate, lastModifiedDate);
+
+	if ((nsnull != shortcutURL) && (*shortcutURL != '\0'))
+	{
+		nsCOMPtr<nsIRDFLiteral> shortcutLiteral;
+		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(shortcutURL),
+			getter_AddRefs(shortcutLiteral))))
+		{
+			NS_ERROR("unable to get literal for bookmark shortcut URL");
+			return(rv);
+		}
+		if (rv != NS_RDF_NO_VALUE)
+		{
+			if (NS_FAILED(rv = mDataSource->Assert(bookmark, kNC_ShortcutURL,
+				shortcutLiteral, PR_TRUE)))
+			{
+				NS_ERROR("unable to set bookmark shortcut URL");
+				return(rv);
+			}
+		}
+	}
 
 	return(NS_OK);
 }
@@ -613,6 +648,7 @@ class BookmarkDataSourceImpl : public nsIRDFBookmarkDataSource {
 private:
     // pseudo-constants
     static nsIRDFResource* kNC_URL;
+    static nsIRDFResource* kNC_ShortcutURL;
     static nsIRDFResource* kNC_BookmarksRoot;
     static nsIRDFResource* kNC_IEFavoritesRoot;
     static nsIRDFResource* kNC_Bookmark;
@@ -637,12 +673,41 @@ public:
     // nsIRDFBookmarkDataSource
     NS_IMETHOD AddBookmark(const char *uri, const char *optionalTitle)
     {
-    	printf("Add bookmark reached in RDF Bookmark datasource.\n");
-
     	// XXX for the moment, just add it as a child of BookmarksRoot
 	BookmarkParser parser;
 	parser.Init(nsnull, NS_STATIC_CAST(nsIRDFDataSource *, this));
-	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, uri, optionalTitle, 0L, 0L, 0L);
+	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, uri, optionalTitle,
+					0L, 0L, 0L, nsnull);
+    	return(rv);
+    }
+
+    NS_IMETHOD FindBookmarkShortcut(const char *userInput, char **shortcutURL)
+    {
+    	nsresult	rv = NS_RDF_NO_VALUE;
+    	if (nsnull != shortcutURL)
+    	{
+    		*shortcutURL = nsnull;
+    		nsCOMPtr<nsIRDFLiteral> literalTarget;
+    		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(userInput),
+    			getter_AddRefs(literalTarget))))
+    		{
+    		}
+    		else if (rv != NS_RDF_NO_VALUE)
+    		{
+    			nsCOMPtr<nsIRDFResource> source;
+    			if (NS_FAILED(rv = GetSource(kNC_ShortcutURL, literalTarget,
+    				PR_TRUE, getter_AddRefs(source))))
+    			{
+    			}
+    			else if (rv != NS_RDF_NO_VALUE)
+    			{
+    				nsXPIDLCString	uri;
+    				source->GetValue(getter_Copies(uri));
+    				nsAutoString	url(uri);
+    				*shortcutURL = url.ToNewCString();
+    			}
+    		}
+    	}
     	return(rv);
     }
 
@@ -735,6 +800,7 @@ public:
 };
 
 nsIRDFResource	*BookmarkDataSourceImpl::kNC_URL;
+nsIRDFResource	*BookmarkDataSourceImpl::kNC_ShortcutURL;
 nsIRDFResource	*BookmarkDataSourceImpl::kNC_BookmarksRoot;
 nsIRDFResource	*BookmarkDataSourceImpl::kNC_IEFavoritesRoot;
 nsIRDFResource	*BookmarkDataSourceImpl::kNC_Bookmark;
@@ -759,6 +825,7 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 						(nsISupports**) &gRDFService);
 
 		gRDFService->GetResource(kURINC_URL,             &kNC_URL);
+		gRDFService->GetResource(kURINC_ShortcutURL,     &kNC_ShortcutURL);
 		gRDFService->GetResource(kURINC_Bookmark,        &kNC_Bookmark);
 		gRDFService->GetResource(kURINC_BookmarksRoot,   &kNC_BookmarksRoot);
 		gRDFService->GetResource(kURINC_IEFavoritesRoot, &kNC_IEFavoritesRoot);
@@ -779,6 +846,7 @@ BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 		gRDFService = nsnull;
 
 		NS_RELEASE(kNC_URL);
+		NS_RELEASE(kNC_ShortcutURL);
 		NS_RELEASE(kNC_Bookmark);
 		NS_RELEASE(kNC_BookmarksRoot);
 		NS_RELEASE(kNC_IEFavoritesRoot);

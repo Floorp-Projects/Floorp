@@ -6,6 +6,7 @@ interface RDFCore : BaseAppCore
 
         void RDFCore();
 
-        void doSort(in Node node, in DOMString sortResource, in DOMString sortDirection);
-        void addBookmark(in DOMString url, in DOMString optionalTitle);
+        void            doSort(in Node node, in DOMString sortResource, in DOMString sortDirection);
+        void            addBookmark(in DOMString url, in DOMString optionalTitle);
+        DOMString       findBookmarkShortcut(in DOMString userInput);
   };
