@@ -1181,6 +1181,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   if (NS_FAILED(rv)) return rv;
   if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
 
+  // handle transferable hooks
+  PRBool doInsert = PR_TRUE;
+  DoInsertionHook(aDropEvent, trans, &doInsert);
+  if (!doInsert)
+    return NS_OK;
+
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
   if (NS_FAILED(rv)) return rv;
