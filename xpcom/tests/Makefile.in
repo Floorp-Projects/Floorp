@@ -89,7 +89,6 @@ LIBS		+= \
 		-lmozutil \
 		$(NETLIB_LIBS) \
 		-lpref \
-		-lsecfree \
 		-lmozjs \
 		-lxp \
 		-lxpcom \

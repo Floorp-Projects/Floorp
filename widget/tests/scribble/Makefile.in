@@ -53,7 +53,6 @@ endif
 
 LIBS		= \
 		-lpref \
-		-lsecfree \
 		-lmozutil \
 		-limg \
 		-lxpcom \
@@ -63,7 +62,6 @@ LIBS		= \
 		-lraptorgfx \
 		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		$(TIMER_LIBS) \
-		-lraptorhtmlpars \
 		-ljsurl \
 		-ljsdom \
 		$(NET_LIBS) \

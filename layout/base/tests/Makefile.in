@@ -46,7 +46,6 @@ LIBS		+= \
 		-lnetwork \
 		$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
 		-lpref \
-		-lsecfree \
 		-lraptorgfx \
 		-limg \
 		-lmozutil \
@@ -57,7 +56,6 @@ LIBS		+= \
 		-lxpcom \
 		-lmozreg \
 		-lxp \
-		-lraptorhtmlpars \
 		-ljsurl \
 		-ljsdom \
 		$(ZLIB_LIBS) \

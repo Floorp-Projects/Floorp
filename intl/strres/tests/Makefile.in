@@ -58,7 +58,6 @@ endif
 
 LIBS		= \
 		-lpref \
-		-lsecfree \
 		-lmozjs \
 		-limg \
 		-lmozutil \

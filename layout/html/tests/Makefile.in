@@ -67,13 +67,11 @@ LIBS		= \
 		-limg \
 		-lmozutil \
 		-lpref \
-		-lsecfree \
 		-lmozjs \
 		-ljsdom \
 		-lraptorgfx \
 		-lxpcom \
 		-lxp \
-		-lraptorhtmlpars \
 		-ljsurl \
 		$(TIMER_LIBS) \
 		$(TK_LIBS) \
