@@ -215,7 +215,7 @@ nsresult DataStruct::ReadCache(char** aData, PRUint32* aDataLen)
     NS_RELEASE(cacheFile);
 
     // make sure we got all the data ok
-    if (NS_OK == rv && *aDataLen == (PRInt32)fileSize) {
+    if (NS_OK == rv && *aDataLen == (PRUint32)fileSize) {
       *aDataLen = fileSize;
       *aData    = data;
       return NS_OK;
