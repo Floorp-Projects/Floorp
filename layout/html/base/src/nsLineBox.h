@@ -192,6 +192,7 @@ public:
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
   nsVoidArray* mFloaters;
   nsLineBox* mNext;
+  nscoord mMaxElementWidth;  // width part of max-element-size
 };
 
 //----------------------------------------------------------------------
