@@ -3,15 +3,13 @@
 #include "prlog.h"
 #include "javaDOMGlobals.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsIServiceManager.h"
 
 #include "nsIJavaDOM.h"
-#include "nsJavaDOMCID.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-
-static NS_DEFINE_IID(kJavaDOMFactoryCID, NS_JAVADOMFACTORY_CID);
-static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
+static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 
 /*
  * Class:     org_mozilla_dom_DOMAccessorImpl
@@ -24,12 +22,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
   PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
 	 ("DOMAccessor::register: registering %x\n", jthis));
 
-  nsIDocumentLoader* docLoaderService = nsnull;
-  nsISupports* javaDOM = nsnull;
+  nsresult rv = NS_OK; 
+  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
+  NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &rv);
 
-  nsresult rv = nsServiceManager::GetService(kJavaDOMFactoryCID,
-					     kIJavaDOMIID,
-					     (nsISupports**) &javaDOM);
   if (NS_FAILED(rv) || !javaDOM) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
@@ -56,12 +52,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
   PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
 	 ("DOMAccessor::unregister: unregistering %x\n", jthis));
 
-  nsIDocumentLoader* docLoaderService = nsnull;
-  nsISupports* javaDOM = nsnull;
+  nsresult rv = NS_OK;
 
-  nsresult rv = nsServiceManager::GetService(kJavaDOMFactoryCID,
-					     kIJavaDOMIID,
-					     (nsISupports**) &javaDOM);
+  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
+  NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &rv);
   if (NS_FAILED(rv) || !javaDOM) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DOMAccessor::unregister: GetService(JavaDOM) failed %x\n", 

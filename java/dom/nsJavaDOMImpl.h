@@ -21,56 +21,29 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 				 const char* aCommand);
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			       nsIChannel* channel, 
 			       nsresult aStatus,
-#else
-			       nsIURI* aURL, 
-			       PRInt32 aStatus,
-#endif
 			       nsIDocumentLoaderObserver* aObserver);
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			    nsIChannel* channel, 
-#else
-			    nsIURI* aURL, 
-			    const char* aContentType, 
-#endif
                             nsIContentViewer* aViewer);
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
 			       nsIChannel* channel, 
-#else
-			       nsIURI* aURL, 
-#endif
 			       PRUint32 aProgress, 
                                PRUint32 aProgressMax);
 
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			     nsIChannel* channel, 
-#else
-			     nsIURI* aURL, 
-#endif
 			     nsString& aMsg);
 
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			  nsIChannel* channel, 
 			  nsresult aStatus);
-#else
-			  nsIURI* aURL, 
-			  PRInt32 aStatus);
-#endif
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-#ifdef NECKO
 				      nsIChannel* channel, 
-#else
-				      nsIURI* aURL, 
-#endif
 				      const char *aContentType,
 				      const char *aCommand);
 
@@ -78,17 +51,16 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   static JavaVM*	jvm;
   static JNIEnv*	env;
 
-  static jclass		factoryClass;
+  static jclass		domAccessorClass;
   static jclass		documentClass;
   static jclass		listenerClass;
   static jclass		gcClass;
 
-  static jobject	factory;
   static jobject	docListener;
 
   static jfieldID	documentPtrFID;
 
-  static jmethodID	getListenerMID;
+  static jmethodID	getInstanceMID;
   static jmethodID	startURLLoadMID;
   static jmethodID	endURLLoadMID;
   static jmethodID	progressURLLoadMID;

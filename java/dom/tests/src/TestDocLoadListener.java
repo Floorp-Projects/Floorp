@@ -19,7 +19,7 @@
  Contributor(s): 
 */
 
-package org.mozilla.dom;
+package org.mozilla.dom.tests;
 
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
@@ -33,9 +33,11 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class DOMFactory implements DocumentLoadListener {
+import org.mozilla.dom.DocumentLoadListener;
 
-  private static final boolean debug = false;
+public class TestDocLoadListener implements DocumentLoadListener {
+
+  private static final boolean debug = true;
 
   public DocumentLoadListener getDocumentLoadListener() {
     return this;
@@ -54,11 +56,8 @@ public class DOMFactory implements DocumentLoadListener {
 			 url.toString() + " " +
 			 Integer.toHexString(status));
 
-    if (url.endsWith(".xul") ||
-	url.endsWith(".js") || 
-	url.endsWith(".css") || 
-	url.startsWith("file:")) return;
-
+    if (!(url.endsWith(".xml") || url.endsWith(".html"))) return;
+ 
     if (doc == null) return;
     Element element = doc.getDocumentElement();
     if (element == null) return;

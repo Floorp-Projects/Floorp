@@ -28,17 +28,16 @@ IS_COMPONENT=1
 LIBRARY_NAME=libjavadom
 
 CPPSRCS= \
-	nsJavaDOMFactory.cpp \
 	nsJavaDOMImpl.cpp \
+	nsJavaDOMModule.cpp \
  $(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsJavaDOMFactory.obj \
 	.\$(OBJDIR)\nsJavaDOMImpl.obj \
+	.\$(OBJDIR)\nsJavaDOMModule.obj \
  $(NULL)
 
 EXPORTS = \
-	nsJavaDOMCID.h \
 	nsIJavaDOM.h 
 
 LINCS= \

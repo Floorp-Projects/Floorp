@@ -22,12 +22,12 @@
 #include "prenv.h"
 #include "nsISupportsUtils.h"
 #include "nsIURL.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMDocument.h"
+#include "nsIWebShell.h"
 #include "nsJavaDOMImpl.h"
 
 #if defined(DEBUG)
@@ -81,17 +81,16 @@ NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
 JavaVM* nsJavaDOMImpl::jvm = NULL;
 JNIEnv* nsJavaDOMImpl::env = NULL;
 
-jclass nsJavaDOMImpl::factoryClass = NULL;
+jclass nsJavaDOMImpl::domAccessorClass = NULL;
 jclass nsJavaDOMImpl::documentClass = NULL;
 jclass nsJavaDOMImpl::listenerClass = NULL;
 jclass nsJavaDOMImpl::gcClass = NULL;
 
-jobject nsJavaDOMImpl::factory = NULL;
 jobject nsJavaDOMImpl::docListener = NULL;
 
 jfieldID nsJavaDOMImpl::documentPtrFID = NULL;
 
-jmethodID nsJavaDOMImpl::getListenerMID = NULL;
+jmethodID nsJavaDOMImpl::getInstanceMID = NULL;
 jmethodID nsJavaDOMImpl::startURLLoadMID = NULL;
 jmethodID nsJavaDOMImpl::endURLLoadMID = NULL;
 jmethodID nsJavaDOMImpl::progressURLLoadMID = NULL;
@@ -149,24 +148,19 @@ nsJavaDOMImpl::nsJavaDOMImpl()
 			   "()V");
   if (!gcMID) return;
 
-  factoryClass = env->FindClass("org/mozilla/dom/DOMFactory");
-  if (!factoryClass) return;
-  factoryClass = (jclass) env->NewGlobalRef(factoryClass);
-  if (!factoryClass) return;
+  domAccessorClass = env->FindClass("org/mozilla/dom/DOMAccessorImpl");
+  if (!domAccessorClass) return;
+  domAccessorClass = (jclass) env->NewGlobalRef(domAccessorClass);
+  if (!domAccessorClass) return;
 
-  factory = env->AllocObject(factoryClass);
-  if (!factory) return;
-  factory = (jclass) env->NewGlobalRef(factory);
-  if (!factory) return;
-
-  getListenerMID = 
-    env->GetMethodID(factoryClass, 
-		     "getDocumentLoadListener",
-		     "()Lorg/mozilla/dom/DocumentLoadListener;");
-  if (!getListenerMID) return;
+  getInstanceMID = 
+    env->GetStaticMethodID(domAccessorClass, 
+			   "getInstance",
+			   "()Lorg/mozilla/dom/DOMAccessor;");
+  if (!getInstanceMID) return;
 
   docListener = 
-    env->CallObjectMethod(factory, getListenerMID);
+    env->CallStaticObjectMethod(domAccessorClass, getInstanceMID);
   if (!docListener) return;
   docListener = (jclass) env->NewGlobalRef(docListener);
   if (!docListener) return;
@@ -244,13 +238,13 @@ PRBool nsJavaDOMImpl::Cleanup()
 
 nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 {
-  nsIContentViewerContainer* container = nsnull;
+  nsIWebShell* container = nsnull;
   nsIContentViewer* contentv = nsnull;
   nsIDocumentViewer* docv = nsnull;
   nsIDocument* document = nsnull;
   nsIDOMDocument* domDoc = nsnull;
 
-  nsresult rv = loader->GetContainer(&container);
+  nsresult rv = loader->GetContainer((nsISupports**)&container);
   if (NS_SUCCEEDED(rv) && container)
     rv = container->GetContentViewer(&contentv);
 
@@ -313,24 +307,14 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
 					       nsIChannel* channel, 
 					       nsresult aStatus,
-#else
-					       nsIURI* aURL, 
-					       PRInt32 aStatus,
-#endif
 					       nsIDocumentLoaderObserver* aObserver)
 {
   char* urlSpec = (char*) "";
-#ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
-#else
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-#endif
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
@@ -350,34 +334,19 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
 					    nsIChannel* channel, 
-#else
-					    nsIURI* aURL, 
-					    const char* aContentType, 
-#endif
 					    nsIContentViewer* aViewer)
 {
   char* urlSpec = (char*) "";
-#ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
-#else
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-#endif
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
   char* contentType = (char*) "";
-#ifdef NECKO
   if (channel)
       channel->GetContentType(&contentType);
-#else
-  if (aContentType)
-    contentType = aContentType;
-#endif
   jstring jContentType = env->NewStringUTF(contentType);
   if (!jContentType) return NS_ERROR_FAILURE;
 
@@ -397,23 +366,14 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
 					       nsIChannel* channel, 
-#else
-					       nsIURI* aURL, 
-#endif
 					       PRUint32 aProgress, 
 					       PRUint32 aProgressMax)
 {
   char* urlSpec = (char*) "";
-#ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
-#else
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-#endif
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
@@ -434,22 +394,13 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 					     nsIChannel* channel, 
-#else
-					     nsIURI* aURL, 
-#endif
 					     nsString& aMsg)
 {
   char* urlSpec = (char*) "";
-#ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
-#else
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-#endif
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
@@ -473,23 +424,13 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 					  nsIChannel* channel, 
 					  nsresult aStatus)
-#else
-					  nsIURI* aURL, 
-					  PRInt32 aStatus)
-#endif
 {
   char* urlSpec = (char*) "";
-#ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
-#else
-  if (aURL)
-    aURL->GetSpec(&urlSpec);
-#endif
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
@@ -513,11 +454,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::HandleUnknownContentType(nsIDocumentLoader* loader,
-#ifdef NECKO
 						      nsIChannel* channel, 
-#else
-						      nsIURI* aURL, 
-#endif
 						      const char *aContentType,
 						      const char *aCommand)
 {
@@ -672,3 +609,17 @@ static const char* describe_type(int type)
   return "ERROR";
 }
 #endif
+
+nsresult NS_NewJavaDOM(nsIJavaDOM** aJavaDOM)
+{
+  if (! aJavaDOM)
+    return NS_ERROR_NULL_POINTER;
+
+  *aJavaDOM = new nsJavaDOMImpl();
+  if (! *aJavaDOM)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aJavaDOM);
+
+  return NS_OK;
+}

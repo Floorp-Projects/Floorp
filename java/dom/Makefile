@@ -31,7 +31,7 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 	nsJavaDOMImpl.cpp \
-	nsJavaDOMFactory.cpp 
+	nsJavaDOMModule.cpp
 
 include $(topsrcdir)/config/config.mk
 
@@ -46,7 +46,6 @@ DSO_LDOPTS	+= \
 	-ljvm -lhpi
 
 EXPORTS 	= \
-	nsJavaDOMCID.h \
 	nsIJavaDOM.h 
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -61,7 +61,6 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
 
     private static native void initialize();
 
-
     public Event createEvent(String type) throws DOMException {
         throw new UnsupportedOperationException();
     }
@@ -87,5 +86,5 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
 
     public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
         throw new UnsupportedOperationException();
-    }  
+    }
 }

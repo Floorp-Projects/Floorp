@@ -34,6 +34,9 @@ class nsIURI;
 #define NS_IJAVADOM_IID \
   {0x9cc0ca50, 0x0e31, 0x11d3, \
     { 0x8a, 0x61, 0x00, 0x04, 0xac, 0x56, 0xc4, 0xa5 }}
+#define NS_JAVADOM_CID \
+  {0xd6b2e820, 0x9113, 0x11d3, \
+    { 0x9c, 0x11, 0x0, 0x10, 0x5a , 0xe3, 0x80 , 0x1e }}
 
 class nsIJavaDOM : public nsIDocumentLoaderObserver {
  public: 
@@ -45,58 +48,33 @@ class nsIJavaDOM : public nsIDocumentLoaderObserver {
 				 const char* aCommand) = 0;
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			       nsIChannel* channel, 
 			       nsresult aStatus,
-#else
-			       nsIURI* aURL, 
-			       PRInt32 aStatus,
-#endif
 			       nsIDocumentLoaderObserver* aObserver) = 0;
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			    nsIChannel* channel, 
-#else
-			    nsIURI* aURL, 
-			    const char* aContentType, 
-#endif
                             nsIContentViewer* aViewer) = 0;  
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
 			       nsIChannel* channel, 
-#else
-			       nsIURI* aURL, 
-#endif
 			       PRUint32 aProgress, 
                                PRUint32 aProgressMax) = 0;
 
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			     nsIChannel* channel, 
-#else
-			     nsIURI* aURL, 
-#endif
 			     nsString& aMsg) = 0;
 
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			  nsIChannel* channel, 
 			  nsresult aStatus) = 0;
-#else
-			  nsIURI* aURL, 
-			  PRInt32 aStatus) = 0;
-#endif
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-#ifdef NECKO
 				      nsIChannel* channel, 
-#else
-				      nsIURI* aURL, 
-#endif
 				      const char *aContentType,
 				      const char *aCommand) = 0;
 };
+extern nsresult
+NS_NewJavaDOM(nsIJavaDOM** aJavaDOM);
 
 #endif /* __nsIJavaDOM_h__ */

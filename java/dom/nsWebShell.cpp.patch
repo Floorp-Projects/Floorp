@@ -1,38 +1,28 @@
 Index: nsWebShell.cpp
 ===================================================================
 RCS file: /cvsroot/mozilla/webshell/src/nsWebShell.cpp,v
-retrieving revision 1.260
-diff -r1.260 nsWebShell.cpp
-70a71,75
+retrieving revision 1.308
+diff -r1.308 nsWebShell.cpp
+70a71,74
 > #ifdef JAVA_DOM
 > #include "nsIJavaDOM.h"
-> #include "nsJavaDOMCID.h"
 > #endif // JAVA_DOM
 > 
-554a560,564
+554a559,563
 > #ifdef JAVA_DOM
-> static NS_DEFINE_IID(kJavaDOMFactoryCID, NS_JAVADOMFACTORY_CID);
+> static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 > static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 > #endif // JAVA_DOM
 > 
-566a577
+566a576
 > 
-999a1011,1028
+958a969,977
 > #ifdef JAVA_DOM
->     nsISupports* javaDOM = nsnull;
->     nsresult jrv = nsServiceManager::GetService(kJavaDOMFactoryCID,
->                                                 kIJavaDOMIID,
->                                                 (nsISupports**) &javaDOM);
->     if (NS_FAILED(jrv) || !javaDOM) {
->       fprintf(stderr, 
->               "nsWebShell::Init: GetService of JavaDOM failed (error %x)\n", 
->               jrv);
->     } else {
->       jrv = docLoaderService->AddObserver((nsIDocumentLoaderObserver*)javaDOM);
->       if (NS_FAILED(jrv)) {
->         fprintf(stderr, 
->                 "nsWebShell::Init: AddObserver of JavaDOM failed (error %x)\n", 
->                 jrv);
->       }
->     }
+>      nsresult jrv = NS_OK;
+>      NS_WITH_SERVICE(nsISupports, javaDOM, kJavaDOMCID, &jrv);
+>      if (NS_FAILED(jrv) || !javaDOM) {
+>        fprintf(stderr, 
+>                "nsWebShell::Init: GetService of JavaDOM failed (error %x)\n", 
+>                jrv);
+>      }
 > #endif // JAVA_DOM

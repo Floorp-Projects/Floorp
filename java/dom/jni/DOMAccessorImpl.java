@@ -28,13 +28,13 @@ import org.w3c.dom.Document;
 
 public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 
-    private DOMAccessor instance = null;
+    private static DOMAccessor instance = null;
     private Vector documentLoadListeners = new Vector();
 
     public static native void register();
     public static native void unregister();
 
-    public synchronized DOMAccessor getInstance() {
+    public static synchronized DOMAccessor getInstance() {
 	if (instance == null) {
 	    instance = new DOMAccessorImpl();
 	}

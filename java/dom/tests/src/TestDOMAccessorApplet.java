@@ -19,17 +19,23 @@
  Contributor(s): 
 */
 
-package org.mozilla.dom;
+package org.mozilla.dom.tests;
 
-public interface DOMAccessor {
-    public void addDocumentLoadListener(DocumentLoadListener listener);
-    public void removeDocumentLoadListener(DocumentLoadListener listener);
+import java.applet.Applet;
+import org.mozilla.dom.DOMAccessor;
+import org.mozilla.dom.DOMAccessorImpl;
+import org.mozilla.dom.tests.TestDocLoadListener;
 
-    /**
-     * The getInstance method is available, it is not declared because
-     * it is a static method and the Java Language Spec does not allow
-     * us to declare a static method in an interface. 
-     * 
-     * public static synchronized DOMAccessor getInstance();
-     */
+public class TestDOMAccessorApplet extends java.applet.Applet
+{
+    private DOMAccessor accessor;
+
+    public void init()
+    {
+        accessor = DOMAccessorImpl.getInstance();
+	accessor.addDocumentLoadListener(new TestDocLoadListener());
+	System.out.println("inited......");
+	System.out.println("accsessor: " + accessor);
+    }
 }
+
