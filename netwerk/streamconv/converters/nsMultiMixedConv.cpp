@@ -841,7 +841,8 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                     rv = httpChannel->SetResponseHeader(headerStr, headerVal);
                     if (NS_FAILED(rv)) return rv;
                 }
-            } else if (headerStr.EqualsIgnoreCase("content-range")) {
+            } else if (headerStr.EqualsIgnoreCase("content-range") || 
+                       headerStr.EqualsIgnoreCase("range") ) {
                 // something like: Content-range: bytes 7000-7999/8000
                 char* tmpPtr;
 
