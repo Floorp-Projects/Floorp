@@ -9,6 +9,7 @@ libgtkmozilla_la_SOURCES = \
 			GtkMozillaContainer.cpp \
 			GtkMozillaInputStream.h \
 			GtkMozillaInputStream.cpp \
+			nsNewTimer.cpp \
 			nsSetupRegistry.cpp
 
 MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
@@ -17,11 +18,8 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
 NULL = 
 NSPR_LIBS       = -lplds3 -lplc3 -lnspr3 -lpthread
 
-TIMER_LIBS = -ltimer_s
-
 BASE_LIBS =          \
         -lmozjs \
-		$(TIMER_LIBS) \
         -lxpcom      \
         -lmozutil \
         $(NULL)
@@ -54,5 +52,3 @@ INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
 CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\" -DNECKO -fno-rtti -fno-exceptions
 
 libgtkmozilla_la_LIBADD = $(MOZILLA_LIBS) @GTK_LIBS@
-
-

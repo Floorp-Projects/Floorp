@@ -82,7 +82,7 @@ VERSION = @VERSION@
 
 lib_LTLIBRARIES = libgtkmozilla.la
 include_HEADERS = gtkmozilla.h
-libgtkmozilla_la_SOURCES =  			gtkmozilla.cpp 			gtkmozilla.h 			GtkMozillaContainer.h 			GtkMozillaContainer.cpp 			GtkMozillaInputStream.h 			GtkMozillaInputStream.cpp 			nsSetupRegistry.cpp
+libgtkmozilla_la_SOURCES =  			gtkmozilla.cpp 			gtkmozilla.h 			GtkMozillaContainer.h 			GtkMozillaContainer.cpp 			GtkMozillaInputStream.h 			GtkMozillaInputStream.cpp 			nsNewTimer.cpp 			nsSetupRegistry.cpp
 
 
 MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
@@ -91,9 +91,7 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
 NULL = 
 NSPR_LIBS = -lplds3 -lplc3 -lnspr3 -lpthread
 
-TIMER_LIBS = -ltimer_s
-
-BASE_LIBS =          -lmozjs 		$(TIMER_LIBS)         -lxpcom              -lmozutil         $(NULL)
+BASE_LIBS =          -lmozjs         -lxpcom              -lmozutil         $(NULL)
 
 
 GECKO_LIBS =  		-lraptorgfx 		$(NULL)
@@ -128,7 +126,7 @@ LIBS = @LIBS@
 libgtkmozilla_la_LDFLAGS = 
 libgtkmozilla_la_DEPENDENCIES = 
 libgtkmozilla_la_OBJECTS =  gtkmozilla.lo GtkMozillaContainer.lo \
-GtkMozillaInputStream.lo nsSetupRegistry.lo
+GtkMozillaInputStream.lo nsNewTimer.lo nsSetupRegistry.lo
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -149,7 +147,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/GtkMozillaContainer.P .deps/GtkMozillaInputStream.P \
-.deps/gtkmozilla.P .deps/nsSetupRegistry.P
+.deps/gtkmozilla.P .deps/nsNewTimer.P .deps/nsSetupRegistry.P
 SOURCES = $(libgtkmozilla_la_SOURCES)
 OBJECTS = $(libgtkmozilla_la_OBJECTS)
 
