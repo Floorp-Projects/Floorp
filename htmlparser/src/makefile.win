@@ -32,7 +32,8 @@ CPPSRCS=nsHTMLContentSink.cpp \
 
 EXPORTS=nshtmlpars.h nsIContentSink.h nsIHTMLContentSink.h \
     nsHTMLTokens.h nsIParserNode.h nsIParser.h nsToken.h  \
-    nsIDTDDebug.h nsIParserFilter.h
+    nsIDTDDebug.h nsIParserFilter.h \
+    CNavDTD.h COtherDTD.h nsIDTD.h
 
 CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
     .\$(OBJDIR)\CNavDTD.obj \

@@ -50,7 +50,7 @@
  */
 class NS_BASE nsDequeFunctor{
 public:
-  virtual void operator()(void* anObject)=0;
+  virtual void* operator()(void* anObject)=0;
 };
 
 
@@ -157,7 +157,7 @@ friend class nsDequeIterator;
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const nsDeque& ForEach(nsDequeFunctor& aFunctor) const;
+  const void* ForEach(nsDequeFunctor& aFunctor) const;
 
   /**
    * Perform automated selftest on the deque
@@ -346,7 +346,7 @@ public:
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const nsDequeIterator& ForEach(nsDequeFunctor& aFunctor) const;
+  const void* ForEach(nsDequeFunctor& aFunctor) const;
   
   protected:
         PRInt32         mIndex;

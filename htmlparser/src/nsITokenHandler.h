@@ -35,6 +35,7 @@ class CITokenHandler {
 public:
                           
   virtual PRInt32 operator()(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual PRInt32 GetTokenType(void)=0;
 
 };
 

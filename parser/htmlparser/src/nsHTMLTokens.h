@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -75,22 +76,24 @@ enum eHTMLTags
   eHTMLTag_link,        eHTMLTag_listing,     eHTMLTag_map,       eHTMLTag_marquee,
   eHTMLTag_math,        eHTMLTag_menu,        eHTMLTag_meta,      eHTMLTag_newline,
   eHTMLTag_nobr,
-  eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //74
+  eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //
   eHTMLTag_note,        eHTMLTag_object,      eHTMLTag_ol,
   eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
-  eHTMLTag_pre,         eHTMLTag_quotation,   eHTMLTag_samp,      eHTMLTag_script,      
+  eHTMLTag_pre,         eHTMLTag_quotation,   
+
+  eHTMLTag_s,           eHTMLTag_samp,        eHTMLTag_script,      
   eHTMLTag_select,      eHTMLTag_server,      eHTMLTag_small,     
   eHTMLTag_spacer,      eHTMLTag_span,        eHTMLTag_spell,
-  eHTMLTag_strong,      eHTMLTag_style,       eHTMLTag_strike,    eHTMLTag_sub,       
-  eHTMLTag_sup,           
-  eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        //98
-  
-  eHTMLTag_text,  //used for plain text; this is not really a tag.  
-  eHTMLTag_textarea,  //100
+  eHTMLTag_strike,      eHTMLTag_strong,      eHTMLTag_style,       
+  eHTMLTag_sub,         eHTMLTag_sup,           
+
+  eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        //
+  eHTMLTag_text,      //used for plain text; this is not really a tag.  
+  eHTMLTag_textarea,  //
   
   eHTMLTag_tfoot,   
   eHTMLTag_th,          eHTMLTag_thead,       eHTMLTag_title,     eHTMLTag_tr,
-  eHTMLTag_tt,          eHTMLTag_monofont,    eHTMLTag_u,         eHTMLTag_ul,          
+  eHTMLTag_tt,          eHTMLTag_u,           eHTMLTag_ul,          
   eHTMLTag_var,         eHTMLTag_wbr,         eHTMLTag_whitespace,
   eHTMLTag_xmp,         
 
@@ -121,9 +124,9 @@ enum eHTMLAttributes {
 
 PRInt32         ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner);
 PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner& aScanner);
-PRInt32         FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
 eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 const char*     GetTagName(PRInt32 aTag);
+//PRInt32         FindEntityIndex(nsString& aString,PRInt32 aCount=-1);
 
 
 /**
@@ -219,7 +222,8 @@ class CEntityToken : public CHTMLToken {
     virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
-    static  PRInt32     FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
+    static  PRInt32     FindEntityIndex(nsString& aString);
+    static  PRInt32     FindEntityIndexMax(const char* aBuffer,PRInt32 aCount=-1);
     static  PRBool      VerifyEntityTable(void);
     static  PRInt32     ReduceEntities(nsString& aString);
     virtual  void       DebugDumpSource(ostream& out);

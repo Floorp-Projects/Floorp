@@ -40,6 +40,7 @@
 #include "nsScanner.h"
 #include "nsParserTypes.h"
 #include "nsVoidArray.h"
+#include "nsTokenHandler.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -61,6 +62,7 @@ static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
+static const char* kHTMLTextContentType = "text/html";
 
 static nsAutoString gEmpty;
 
@@ -78,7 +80,8 @@ static char  gStyleTags[]={
   eHTMLTag_a,       eHTMLTag_bold,    eHTMLTag_big,
   eHTMLTag_blink,   eHTMLTag_cite,    eHTMLTag_em, 
   eHTMLTag_font,    eHTMLTag_italic,  eHTMLTag_kbd,     
-  eHTMLTag_small,   eHTMLTag_spell,   eHTMLTag_strike,  
+  eHTMLTag_s,       eHTMLTag_small,   
+  eHTMLTag_spell,   eHTMLTag_strike,  
   eHTMLTag_strong,  eHTMLTag_sub,     eHTMLTag_sup,     
   eHTMLTag_tt,      eHTMLTag_u,       eHTMLTag_var,     
   0};
@@ -215,9 +218,10 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
 
 class CNavTokenDeallocator: public nsDequeFunctor{
 public:
-  virtual void operator()(void* anObject) {
+  virtual void* operator()(void* anObject) {
     CToken* aToken = (CToken*)anObject;
     delete aToken;
+    return 0;
   }
 };
 
@@ -276,6 +280,20 @@ void CNavDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
 	if (mDTDDebug)
 		NS_ADDREF(mDTDDebug);
 }
+
+/**
+ * This method gets called by the parser to determine if this DTD can handle 
+ * the requested process for the requested content type.
+ *
+ * @update	gess6/24/98
+ * @param 
+ * @return  TRUE if the DTD can handle the process for this type; FALSE otherwise.
+ */
+PRBool CNavDTD::IsCapableOf(eProcessType aProcessType, nsString& aContentType,PRInt32 aVersion){
+  PRBool result=aContentType.Equals(kHTMLTextContentType);
+  return result;
+}
+
 
 /**
  * 
@@ -337,10 +355,10 @@ PRInt32 CNavDTD::HandleToken(CToken* aToken){
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-    CTokenHandler*  aHandler=GetTokenHandler(theType);
+    CITokenHandler* theHandler=GetTokenHandler(theType);
 
-    if(aHandler) {
-      result=(*aHandler)(theToken,this);
+    if(theHandler) {
+      result=(*theHandler)(theToken,this);
       if (mDTDDebug)
          mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
@@ -365,10 +383,10 @@ PRInt32 CNavDTD::HandleToken(CToken* aToken){
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode) {
+PRInt32 CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  eHTMLTags parentTag=(eHTMLTags)GetTopNode();
+  eHTMLTags parentTag=GetTopNode();
   PRInt32   result=kNoError;
   PRBool    contains=CanContain(parentTag,aChildTag);
 
@@ -487,30 +505,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          {
-            PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
-            nsCParserNode theNode((CHTMLToken*)aToken);
-            if (kNotFound == pos) {
-              // We're in the HEAD
-              result=OpenHead(theNode);
-              if(kNoError==result) {
-                mParser->CollectSkippedContent(attrNode,theCount);
-                if(kNoError==result) {
-                  result=AddLeaf(attrNode);
-                  if(kNoError==result)
-                    result=CloseHead(theNode);
-                }
-              }
-            }
-            else {
-              // We're in the BODY
-              mParser->CollectSkippedContent(attrNode,theCount);
-              if(kNoError==result) {
-                result=AddLeaf(attrNode);
-              }
-            }
-            break;
-          }
+          result=HandleScriptToken(st); break;
 
         case eHTMLTag_head:
           break; //ignore head tags...
@@ -570,7 +565,7 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
 
 /*
   if(0!=strchr(gStyleTags,tokenTagType)){
-    eHTMLTags topTag=(eHTMLTags)GetTopNode();
+    eHTMLTags topTag=GetTopNode();
     if(0!=strchr(gStyleTags,topTag)){
       tokenTagType=topTag;
     }
@@ -704,10 +699,32 @@ PRInt32 CNavDTD::HandleAttributeToken(CToken* aToken) {
  */
 PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
+  PRInt32 result=kNoError;
 
+  PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
   nsCParserNode theNode((CHTMLToken*)aToken);
-  PRInt32       theCount=0;
-  PRInt32       result=mParser->CollectSkippedContent(theNode,theCount);
+  nsCParserNode attrNode((CHTMLToken*)aToken);
+  PRInt32 attrCount=aToken->GetAttributeCount();
+
+  if (kNotFound == pos) {
+    // We're in the HEAD
+    result=OpenHead(theNode);
+    if(kNoError==result) {
+      mParser->CollectSkippedContent(attrNode,attrCount);
+      if(kNoError==result) {
+        result=AddLeaf(attrNode);
+        if(kNoError==result)
+          result=CloseHead(theNode);
+      }
+    }
+  }
+  else {
+    // We're in the BODY
+    mParser->CollectSkippedContent(attrNode,attrCount);
+    if(kNoError==result) {
+      result=AddLeaf(attrNode);
+    }
+  }
 
   return result;
 }
@@ -753,8 +770,8 @@ void CNavDTD::DeleteTokenHandlers(void) {
  *  @param   aTagType type of tag to be handled
  *  @return  valid tag handler (if found) or null
  */
-CTokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
-  CTokenHandler* result=0;
+CITokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
+  CITokenHandler* result=0;
   if((aType>0) && (aType<eToken_last)) {
     result=mTokenHandlers[aType];
   } 
@@ -771,13 +788,13 @@ CTokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
  *  @param   
  *  @return  
  */
-CTokenHandler* CNavDTD::AddTokenHandler(CTokenHandler* aHandler) {
+CITokenHandler* CNavDTD::AddTokenHandler(CITokenHandler* aHandler) {
   NS_ASSERTION(0!=aHandler,"Error: Null handler");
   
   if(aHandler)  {
     eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
     if(type<eToken_last) {
-      CTokenHandler* old=mTokenHandlers[type];
+      CITokenHandler* old=mTokenHandlers[type];
       mTokenHandlers[type]=aHandler;
     }
     else {
@@ -836,8 +853,8 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
 }
 
 /**
- *  This method is called to determine whether or not a tag
- *  of one type can contain a tag of another type.
+ *  This method is called to determine whether or not a 
+ *  form-type tag can contain a tag of another form-type tag.
  *  
  *  @update  gess 4/8/98
  *  @param   aParent -- tag enum of parent container
@@ -845,7 +862,18 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const {
-  PRBool result=(mParser) ? HasOpenContainer(eHTMLTag_form) : PR_FALSE;
+  PRBool result=PR_FALSE;
+
+  if(mParser && HasOpenContainer(eHTMLTag_form)) {
+    eHTMLTags topTag=GetTopNode();
+    switch(aChild) {
+      case eHTMLTag_option:
+        result=PRBool(eHTMLTag_select==topTag); break;
+      default:
+        result=PR_TRUE;
+        break;
+    } //switch
+  }//if
   return result;
 }
 
@@ -880,7 +908,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_noframes,  eHTMLTag_noscript,
     eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
-    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,
+    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_samp,      eHTMLTag_script,
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
     
@@ -901,7 +930,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_object,    eHTMLTag_paragraph, 
-    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,    
+    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
     eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
@@ -925,7 +955,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         
     eHTMLTag_noframes,
     eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_paragraph, eHTMLTag_pre,
-    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_small,
+    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_samp,      eHTMLTag_small,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
     eHTMLTag_td,        eHTMLTag_text,
     
@@ -944,9 +975,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
   }
 
   switch((eHTMLTags)aParent) {
+
     case eHTMLTag_address:
-      result=PRBool(0!=strchr(gTagSet2,aChild));
-      break;
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_applet:
       {
@@ -957,7 +988,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
           eHTMLTag_em,      eHTMLTag_font,      eHTMLTag_italic,    eHTMLTag_iframe,
           eHTMLTag_img,     eHTMLTag_input,     eHTMLTag_kbd,       eHTMLTag_label,
           eHTMLTag_map,     eHTMLTag_object,    eHTMLTag_param,     eHTMLTag_quotation,
-          eHTMLTag_samp,    eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+          eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_script,    
+          eHTMLTag_select,  eHTMLTag_small,
           eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,    eHTMLTag_sub,
           eHTMLTag_sup,     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,
           eHTMLTag_var,0};
@@ -1288,6 +1320,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_input:        case eHTMLTag_isindex:
     case eHTMLTag_label:        case eHTMLTag_legend:
     case eHTMLTag_select:       case eHTMLTag_textarea:
+    case eHTMLTag_option:
       if(PR_FALSE==HasOpenContainer(eHTMLTag_form))
         result=PR_TRUE; 
       break;
@@ -1379,7 +1412,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     default:
-      if(IsCompatibleStyleTag(aChild,(eHTMLTags)GetTopNode()))
+      if(IsCompatibleStyleTag(aChild,GetTopNode()))
         result=PR_FALSE;
       else result=(!HasOpenContainer(aChild));
       break;
@@ -1587,33 +1620,6 @@ PRBool CNavDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTa
  */
 PRInt32 CNavDTD::DidOpenContainer(eHTMLTags aTag,PRBool /*anExplicitOpen*/){
   PRInt32   result=0;
-  
-  switch (aTag) {
-
-    case eHTMLTag_a:
-    case eHTMLTag_bold:
-    case eHTMLTag_big:
-    case eHTMLTag_blink:
-    case eHTMLTag_cite:
-    case eHTMLTag_em:
-    case eHTMLTag_font:
-    case eHTMLTag_italic:
-    case eHTMLTag_kbd:
-    case eHTMLTag_small:
-    case eHTMLTag_spell:
-    case eHTMLTag_strike:
-    case eHTMLTag_strong:
-    case eHTMLTag_sub:
-    case eHTMLTag_sup:
-    case eHTMLTag_tt:
-    case eHTMLTag_u:
-    case eHTMLTag_var:
-      break;
-
-    default:
-      break;
-  }
-
   return result;
 }
 
@@ -1704,7 +1710,7 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
   if(0==strchr(gWhitespaceTags,aTag)){
     PRInt32 pos=0;
 
-    eHTMLTags parentTag=(eHTMLTags)GetTopNode();
+    eHTMLTags parentTag=GetTopNode();
     if(CanContainStyles(parentTag)) {
       for(pos=0;pos<mStyleStackPos;pos++) {
         eHTMLTags theTag=(eHTMLTags)(int)mStyleStack[pos]; 
@@ -1832,7 +1838,7 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
 
   PRInt32 result=kNoError;
-  eHTMLTags topTag=(eHTMLTags)CNavDTD::GetTopNode();
+  eHTMLTags topTag=GetTopNode();
 
   if(eHTMLTag_html!=topTag) {
     
@@ -2126,7 +2132,7 @@ PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
     return CloseContainersTo(pos,aTag,aUpdateStyles);
   }
 
-  eHTMLTags theTopTag=(eHTMLTags)GetTopNode();
+  eHTMLTags theTopTag=GetTopNode();
   if(IsCompatibleStyleTag(aTag,theTopTag)) {
     //if you're here, it's because we're trying to close one style tag,
     //but a different one is actually open. Because this is NAV4x
@@ -2263,13 +2269,13 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  */
 PRInt32 CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
   PRInt32   result=kNoError;
-  eHTMLTags topTag=(eHTMLTags)GetTopNode();
+  eHTMLTags topTag=GetTopNode();
 
   while( (topTag!=kNotFound) && 
          (PR_FALSE==CanContain(topTag,aChildTag)) &&
          (PR_FALSE==CanContainIndirect(topTag,aChildTag))) {
     CloseTopmostContainer();
-    topTag=(eHTMLTags)GetTopNode();
+    topTag=GetTopNode();
   }
   return result;
 }
@@ -2297,6 +2303,7 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
     case eHTMLTag_font:
     case eHTMLTag_italic:
     case eHTMLTag_kbd:
+    case eHTMLTag_s:
     case eHTMLTag_small:
     case eHTMLTag_spell:
     case eHTMLTag_strike:
@@ -2346,6 +2353,7 @@ PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTa
       case eHTMLTag_kbd:
       case eHTMLTag_small:
       case eHTMLTag_spell:
+      case eHTMLTag_s:
       case eHTMLTag_strike:
       case eHTMLTag_strong:
       case eHTMLTag_sub:

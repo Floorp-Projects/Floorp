@@ -45,8 +45,8 @@ static const char* kNullScanner = "Error: Scanner is null.";
 const PRInt32 kMAXNAMELEN=10;
 struct StrToUnicodeStruct
 {
-  char    fName[kMAXNAMELEN+1];
-  PRInt32 fValue;
+  char    mName[kMAXNAMELEN+1];
+  PRInt32 mValue;
 };
 
 
@@ -96,8 +96,9 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
 
 
 struct HTMLTagEntry {
-  char      fName[12];
-  eHTMLTags  fTagID;
+  char      mName[12];
+  eHTMLTags mTagID;
+  PRInt16   mUnused;
 };
 
   // KEEP THIS LIST SORTED!
@@ -106,103 +107,103 @@ struct HTMLTagEntry {
   // the binary search code above will break! 
 HTMLTagEntry gHTMLTagTable[] =
 {
-  {"!!UNKNOWN",   eHTMLTag_unknown},
-  {"!DOCTYPE",    eHTMLTag_doctype},      {"A",          eHTMLTag_a},
-  {"ACRONYM",     eHTMLTag_acronym},      {"ADDRESS",   eHTMLTag_address},
-  {"APPLET",      eHTMLTag_applet},       {"AREA",      eHTMLTag_area},
+  {"!!UNKNOWN",   eHTMLTag_unknown,0},
+  {"!DOCTYPE",    eHTMLTag_doctype,0},      {"A",         eHTMLTag_a,0},
+  {"ACRONYM",     eHTMLTag_acronym,0},      {"ADDRESS",   eHTMLTag_address,0},
+  {"APPLET",      eHTMLTag_applet,0},       {"AREA",      eHTMLTag_area,0},
 
-  {"B",           eHTMLTag_bold},         {"BASE",       eHTMLTag_base},
-  {"BASEFONT",    eHTMLTag_basefont},     {"BDO",       eHTMLTag_bdo},
-  {"BIG",         eHTMLTag_big},          {"BLINK",     eHTMLTag_blink},
-  {"BLOCKQUOTE",  eHTMLTag_blockquote},   {"BODY",      eHTMLTag_body},
-  {"BR",          eHTMLTag_br},           {"BUTTON",    eHTMLTag_button},
+  {"B",           eHTMLTag_bold,0},         {"BASE",      eHTMLTag_base,0},
+  {"BASEFONT",    eHTMLTag_basefont,0},     {"BDO",       eHTMLTag_bdo,0},
+  {"BIG",         eHTMLTag_big,0},          {"BLINK",     eHTMLTag_blink,0},
+  {"BLOCKQUOTE",  eHTMLTag_blockquote,0},   {"BODY",      eHTMLTag_body,0},
+  {"BR",          eHTMLTag_br,0},           {"BUTTON",    eHTMLTag_button,0},
 
-  {"CAPTION",     eHTMLTag_caption},      {"CENTER",    eHTMLTag_center},
-  {"CERTIFICATE", eHTMLTag_certificate},
-  {"CITE",        eHTMLTag_cite},         {"CODE",      eHTMLTag_code},
-  {"COL",         eHTMLTag_col},          {"COLGROUP",  eHTMLTag_colgroup},
-  {"COMMENT",     eHTMLTag_comment},
+  {"CAPTION",     eHTMLTag_caption,0},      {"CENTER",    eHTMLTag_center,0},
+  {"CERTIFICATE", eHTMLTag_certificate,0},
+  {"CITE",        eHTMLTag_cite,0},         {"CODE",      eHTMLTag_code,0},
+  {"COL",         eHTMLTag_col,0},          {"COLGROUP",  eHTMLTag_colgroup,0},
+  {"COMMENT",     eHTMLTag_comment,0},
 
-  {"DD",          eHTMLTag_dd},           {"DEL",       eHTMLTag_del},
-  {"DFN",         eHTMLTag_dfn},          {"DIR",       eHTMLTag_dir},
-  {"DIV",         eHTMLTag_div},          {"DL",         eHTMLTag_dl},
-  {"DT",          eHTMLTag_dt},
+  {"DD",          eHTMLTag_dd,0},           {"DEL",       eHTMLTag_del,0},
+  {"DFN",         eHTMLTag_dfn,0},          {"DIR",       eHTMLTag_dir,0},
+  {"DIV",         eHTMLTag_div,0},          {"DL",        eHTMLTag_dl,0},
+  {"DT",          eHTMLTag_dt,0},
 
-  {"EM",          eHTMLTag_em},           {"EMBED",     eHTMLTag_embed},
-  {"ENTITY",      eHTMLTag_entity}, //a pseudo tag
+  {"EM",          eHTMLTag_em,0},           {"EMBED",     eHTMLTag_embed,0},
+  {"ENTITY",      eHTMLTag_entity,0}, //a pseudo tag
 
-  {"FIELDSET",    eHTMLTag_fieldset},     {"FONT",       eHTMLTag_font},
-  {"FOOTER",      eHTMLTag_footer},       {"FORM",       eHTMLTag_form},
-  {"FRAME",       eHTMLTag_frame},        {"FRAMESET",   eHTMLTag_frameset},     
+  {"FIELDSET",    eHTMLTag_fieldset,0},     {"FONT",      eHTMLTag_font,0},
+  {"FOOTER",      eHTMLTag_footer,0},       {"FORM",      eHTMLTag_form,0},
+  {"FRAME",       eHTMLTag_frame,0},        {"FRAMESET",  eHTMLTag_frameset,0},     
 
-  {"H1",          eHTMLTag_h1},           {"H2",        eHTMLTag_h2},
-  {"H3",          eHTMLTag_h3},           {"H4",        eHTMLTag_h4},
-  {"H5",          eHTMLTag_h5},           {"H6",        eHTMLTag_h6},
-  {"HEAD",        eHTMLTag_head},         {"HEADER",    eHTMLTag_header},
-  {"HR",          eHTMLTag_hr},           {"HTML",      eHTMLTag_html},
+  {"H1",          eHTMLTag_h1,0},           {"H2",        eHTMLTag_h2,0},
+  {"H3",          eHTMLTag_h3,0},           {"H4",        eHTMLTag_h4,0},
+  {"H5",          eHTMLTag_h5,0},           {"H6",        eHTMLTag_h6,0},
+  {"HEAD",        eHTMLTag_head,0},         {"HEADER",    eHTMLTag_header,0},
+  {"HR",          eHTMLTag_hr,0},           {"HTML",      eHTMLTag_html,0},
   
-  {"I",           eHTMLTag_italic},       {"IFRAME",    eHTMLTag_iframe}, 
-  {"ILAYER",      eHTMLTag_ilayer},       {"IMG",       eHTMLTag_img},          
-  {"INPUT",       eHTMLTag_input},        {"INS",       eHTMLTag_ins},          
-  {"ISINDEX",     eHTMLTag_isindex},      
+  {"I",           eHTMLTag_italic,0},       {"IFRAME",    eHTMLTag_iframe,0}, 
+  {"ILAYER",      eHTMLTag_ilayer,0},       {"IMG",       eHTMLTag_img,0},          
+  {"INPUT",       eHTMLTag_input,0},        {"INS",       eHTMLTag_ins,0},          
+  {"ISINDEX",     eHTMLTag_isindex,0},      
 
-  {"KBD",         eHTMLTag_kbd},          {"KEYGEN",    eHTMLTag_keygen},         
+  {"KBD",         eHTMLTag_kbd,0},          {"KEYGEN",    eHTMLTag_keygen,0},         
 
-  {"LABEL",       eHTMLTag_label},        {"LAYER",     eHTMLTag_layer},        
-  {"LEGEND",      eHTMLTag_legend},       {"LI",        eHTMLTag_listitem},     
-  {"LINK",        eHTMLTag_link},         {"LISTING",   eHTMLTag_listing},      
+  {"LABEL",       eHTMLTag_label,0},        {"LAYER",     eHTMLTag_layer,0},        
+  {"LEGEND",      eHTMLTag_legend,0},       {"LI",        eHTMLTag_listitem,0},     
+  {"LINK",        eHTMLTag_link,0},         {"LISTING",   eHTMLTag_listing,0},      
 
-  {"MAP",         eHTMLTag_map},          {"MARQUEE",   eHTMLTag_marquee},        
-  {"MATH",        eHTMLTag_math},
-  {"MENU",        eHTMLTag_menu},         {"META",      eHTMLTag_meta},         
+  {"MAP",         eHTMLTag_map,0},          {"MARQUEE",   eHTMLTag_marquee,0},        
+  {"MATH",        eHTMLTag_math,0},
+  {"MENU",        eHTMLTag_menu,0},         {"META",      eHTMLTag_meta,0},         
 
-  {"NEWLINE",     eHTMLTag_newline},      {"NOBR",      eHTMLTag_nobr},       
+  {"NEWLINE",     eHTMLTag_newline,0},      {"NOBR",      eHTMLTag_nobr,0},       
 
-  {"NOEMBED",     eHTMLTag_noembed},      {"NOFRAMES",  eHTMLTag_noframes},     
-  {"NOLAYER",     eHTMLTag_nolayer},      {"NOSCRIPT",  eHTMLTag_noscript},
-  {"NOTE",        eHTMLTag_note},
+  {"NOEMBED",     eHTMLTag_noembed,0},      {"NOFRAMES",  eHTMLTag_noframes,0},     
+  {"NOLAYER",     eHTMLTag_nolayer,0},      {"NOSCRIPT",  eHTMLTag_noscript,0},
+  {"NOTE",        eHTMLTag_note,0},
 
-  {"OBJECT",      eHTMLTag_object},       {"OL",        eHTMLTag_ol},           
-  {"OPTION",      eHTMLTag_option},       
+  {"OBJECT",      eHTMLTag_object,0},       {"OL",        eHTMLTag_ol,0},           
+  {"OPTION",      eHTMLTag_option,0},       
 
-  {"P",           eHTMLTag_paragraph},    {"PARAM",     eHTMLTag_param},
-  {"PLAINTEXT",   eHTMLTag_plaintext},
+  {"P",           eHTMLTag_paragraph,0},    {"PARAM",     eHTMLTag_param,0},
+  {"PLAINTEXT",   eHTMLTag_plaintext,0},
 
-  {"PRE",         eHTMLTag_pre},
+  {"PRE",         eHTMLTag_pre,0},
 
-  {"Q",           eHTMLTag_quotation},
+  {"Q",           eHTMLTag_quotation,0},
 
-  {"S",           eHTMLTag_strike},       {"SAMP",      eHTMLTag_samp},         
-  {"SCRIPT",      eHTMLTag_script},       {"SELECT",    eHTMLTag_select},       
-  {"SERVER",      eHTMLTag_server},       {"SMALL",     eHTMLTag_small},
-  {"SPACER",      eHTMLTag_spacer},
-  {"SPAN",        eHTMLTag_span},         {"SPELL",     eHTMLTag_spell},       
-  {"STRIKE",      eHTMLTag_strike},       
-  {"STRONG",      eHTMLTag_strong},       {"STYLE",     eHTMLTag_style},        
-  {"SUB",         eHTMLTag_sub},          {"SUP",       eHTMLTag_sup},
+  {"S",           eHTMLTag_s,0},            {"SAMP",      eHTMLTag_samp,0},         
+  {"SCRIPT",      eHTMLTag_script,0},       {"SELECT",    eHTMLTag_select,0},       
+  {"SERVER",      eHTMLTag_server,0},       {"SMALL",     eHTMLTag_small,0},
+  {"SPACER",      eHTMLTag_spacer,0},
+  {"SPAN",        eHTMLTag_span,0},         {"SPELL",     eHTMLTag_spell,0},       
+  {"STRIKE",      eHTMLTag_strike,0},       
+  {"STRONG",      eHTMLTag_strong,0},       {"STYLE",     eHTMLTag_style,0},        
+  {"SUB",         eHTMLTag_sub,0},          {"SUP",       eHTMLTag_sup,0},
 
-  {"TABLE",       eHTMLTag_table},        {"TBODY",     eHTMLTag_tbody},    
-  {"TD",          eHTMLTag_td},           
+  {"TABLE",       eHTMLTag_table,0},        {"TBODY",     eHTMLTag_tbody,0},    
+  {"TD",          eHTMLTag_td,0},           
   
-  {"TEXT",        eHTMLTag_text},
+  {"TEXT",        eHTMLTag_text,0},
 
-  {"TEXTAREA",    eHTMLTag_textarea},     
-  {"TFOOT",       eHTMLTag_tfoot},        {"TH",         eHTMLTag_th},           
-  {"THEAD",       eHTMLTag_thead},        {"TITLE",      eHTMLTag_title},        
-  {"TR",          eHTMLTag_tr},           {"TT",        eHTMLTag_tt},
+  {"TEXTAREA",    eHTMLTag_textarea,0},     
+  {"TFOOT",       eHTMLTag_tfoot,0},        {"TH",        eHTMLTag_th,0},           
+  {"THEAD",       eHTMLTag_thead,0},        {"TITLE",     eHTMLTag_title,0},        
+  {"TR",          eHTMLTag_tr,0},           {"TT",        eHTMLTag_tt,0},
 
-  {"U",           eHTMLTag_u},            {"UL",        eHTMLTag_ul},
-  {"USERDEF",     eHTMLTag_userdefined},     
-  {"VAR",         eHTMLTag_var},          {"WBR",       eHTMLTag_wbr},
-  {"WS",          eHTMLTag_whitespace},       
+  {"U",           eHTMLTag_u,0},            {"UL",        eHTMLTag_ul,0},
+  {"VAR",         eHTMLTag_var,0},          {"WBR",       eHTMLTag_wbr,0},
+  {"WS",          eHTMLTag_whitespace,0},   
+  
+  {"X-USERDEF",   eHTMLTag_userdefined,0},  //make sure this is always last!
 
 };
 
-
 struct HTMLAttrEntry
 {
-  char            fName[11];
-  eHTMLAttributes  fAttrID;
+  char            mName[11];
+  eHTMLAttributes mAttrID;
 };
 
 HTMLAttrEntry gHTMLAttributeTable[] =
@@ -1073,21 +1074,20 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
       aString.Append(PRUnichar(index));
   }
   else {
-    char* cp = mTextValue.ToNewCString();
-    index=FindEntityIndex(cp);
+    index=FindEntityIndex(mTextValue);
     if(kNotFound!=index) {
-      PRUnichar ch=gStrToUnicodeTable[index].fValue;
+      PRUnichar ch=gStrToUnicodeTable[index].mValue;
       aString=ch;
     } 
     else {
 #ifdef GESS_MACHINE
-      index=TranslateExtendedEntity(cp,aString);
+      index=TranslateExtendedEntity(mTextValue,aString);
 #endif
     }
-    delete cp;
   }
   return index;
 }
+
  
 
 /*
@@ -1102,7 +1102,7 @@ PRBool CEntityToken::VerifyEntityTable(){
   PRInt32 i,j;
   for(i=1;i<count-1;i++)
   {
-    j=strcmp(gStrToUnicodeTable[i-1].fName,gStrToUnicodeTable[i].fName);
+    j=strcmp(gStrToUnicodeTable[i-1].mName,gStrToUnicodeTable[i].mName);
     if(j>0)
       return PR_FALSE;
   }
@@ -1119,23 +1119,19 @@ PRBool CEntityToken::VerifyEntityTable(){
  *  @param   aBuflen -- optional string length
  *  @return  integer offset of string in table, or kNotFound
  */
-PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
+PRInt32 CEntityToken::FindEntityIndex(nsString& aString) {
   PRInt32  result=kNotFound;
   PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
   PRInt32  low=0; 
   PRInt32  high=cnt-1;
   PRInt32  middle=kNotFound;
-  
-  if(kNotFound==aBufLen) {
-    aBufLen=strlen(aBuffer);
-  }
-  
-  if (aBuffer && aBufLen && cnt) {
+    
+  if(cnt) {
     while(low<=high)
     {
       middle=(PRInt32)(low+high)/2;
-//      result=strncmp(aBuffer,gStrToUnicodeTable[middle].fName,aBufLen);
-      result=strcmp(aBuffer,gStrToUnicodeTable[middle].fName);
+      result=aString.Compare(gStrToUnicodeTable[middle].mName);
+//      result=strcmp(aBuffer,gStrToUnicodeTable[middle].mName);
       if (result==0) {
         return middle;
       }
@@ -1143,6 +1139,46 @@ PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
         high=middle-1;
       }
       else low=middle+1; 
+    }
+  }
+  return kNotFound;
+}
+
+
+/*
+ *  This method is used to convert from a given string (char*)
+ *  into a entity index (offset within entity table).
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aBuffer -- string to be converted
+ *  @param   aBuflen -- optional string length
+ *  @return  integer offset of string in table, or kNotFound
+ */
+PRInt32 CEntityToken::FindEntityIndexMax(const char* aBuffer,PRInt32 aBufLen) {
+  PRInt32  result=kNotFound;
+  PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
+  PRInt32  low=0; 
+  PRInt32  high=cnt-1;
+  PRInt32  middle=kNotFound;
+  
+  if(aBuffer) {
+    if(-1==aBufLen) {
+      aBufLen=strlen(aBuffer);
+    }
+  
+    if(aBufLen && cnt) {
+      while(low<=high)
+      {
+        middle=(PRInt32)(low+high)/2;
+        result=strcmp(aBuffer,gStrToUnicodeTable[middle].mName);
+        if (result==0) {
+          return middle;
+        }
+        if (result<0) {
+          high=middle-1;
+        }
+        else low=middle+1; 
+      }
     }
   }
   return kNotFound;
@@ -1171,9 +1207,9 @@ PRInt32 CEntityToken::ReduceEntities(nsString& aString) {
         if(kNotFound==endpos) 
           cnt=aString.Length()-1-amppos;
         else cnt=endpos-amppos;
-        PRInt32 index=FindEntityIndex((const char*)&aString[amppos+1],cnt);
+        PRInt32 index=FindEntityIndexMax((const char*)&aString[amppos+1],cnt);
         if(kNotFound!=index) {
-          aString[amppos]=gStrToUnicodeTable[index].fValue;
+          aString[amppos]=gStrToUnicodeTable[index].mValue;
           aString.Cut(amppos+1,cnt+(endpos!=kNotFound));
         }
         else offset=amppos+1;
@@ -1316,17 +1352,17 @@ public:
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
     {
-      j=strcmp(gHTMLTagTable[i-1].fName,gHTMLTagTable[i].fName);
+      j=strcmp(gHTMLTagTable[i-1].mName,gHTMLTagTable[i].mName);
       if(j>0) {
-#ifdef VERBOSE_DEBUG
-        cout << "Tag Table is out of order at " << i << "!" << endl;
-#endif
-        return;
+        cout << "Tag Table names are out of order at " << i << "!" << endl;
+      }
+      if(gHTMLTagTable[i-1].mTagID>=gHTMLTagTable[i].mTagID) {
+        cout << "Tag table ID's are out of order at " << i << "!" << endl;;
       }
     }
-    return;
   }
 };
+
 
 
 /*
@@ -1347,9 +1383,9 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
   
   while(low<=high){
     middle=(PRInt32)(low+high)/2;
-    result=aString.Compare(gHTMLTagTable[middle].fName, PR_TRUE);
+    result=aString.Compare(gHTMLTagTable[middle].mName, PR_TRUE);
     if (result==0)
-      return gHTMLTagTable[middle].fTagID; 
+      return gHTMLTagTable[middle].mTagID; 
     if (result<0)
       high=middle-1; 
     else low=middle+1; 
@@ -1373,9 +1409,9 @@ const char* GetTagName(PRInt32 aTag) {
   
   while(low<=high) {
     middle=(PRInt32)(low+high)/2;
-    if(aTag==gHTMLTagTable[middle].fTagID)
-      return gHTMLTagTable[middle].fName;
-    if(aTag<gHTMLTagTable[middle].fTagID)
+    if(aTag==gHTMLTagTable[middle].mTagID)
+      return gHTMLTagTable[middle].mName;
+    if(aTag<gHTMLTagTable[middle].mTagID)
       high=middle-1; 
     else low=middle+1; 
   }
@@ -1399,7 +1435,7 @@ public:
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
     {
-      j=strcmp(gHTMLAttributeTable[i-1].fName,gHTMLAttributeTable[i].fName);
+      j=strcmp(gHTMLAttributeTable[i-1].mName,gHTMLAttributeTable[i].mName);
       if(j>0) {
 #ifdef VERBOSE_DEBUG
         cout << "Attribute table is out of order at " << j << "!" << endl;

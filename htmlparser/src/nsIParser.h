@@ -21,7 +21,8 @@
 
 #include "nshtmlpars.h"
 #include "nsISupports.h"
-
+#include "nsIStreamListener.h"
+#include "nsIDTD.h"
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
@@ -33,7 +34,6 @@ class nsIStreamObserver;
 class nsString;
 class CToken;
 class nsIURL;
-class nsIDTD;
 class nsIDTDDebug;
 
 /**
@@ -45,11 +45,11 @@ class nsIDTDDebug;
 class nsIParser : public nsISupports {
   public:
 
+    virtual void RegisterDTD(nsIDTD* aDTD)=0;
+
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
-    virtual void SetDTD(nsIDTD* aDTD)=0;
-
-    virtual nsIDTD* GetDTD(void)=0;
+    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer)=0;
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -65,13 +65,22 @@ class nsIParser : public nsISupports {
                                nsIStreamObserver* aListener = nsnull,
                                nsIDTDDebug * aDTDDebug = 0) = 0;
 
-    virtual PRInt32 Parse(nsIURL* aURL,
-                          nsIStreamObserver* aListener = nsnull,
-						  nsIDTDDebug * aDTDDebug = 0) = 0;
-
+    /******************************************************************************************
+     *  Parse methods always begin with an input source, and perform conversions 
+     *  until you wind up with HTML in your actual content model.
+     ******************************************************************************************/
+    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,nsIDTDDebug * aDTDDebug = 0) = 0;
     virtual PRInt32 Parse(const char* aFilename)=0;
-
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
+
+    /******************************************************************************************
+     *  Convert methods start input source (of known or unknown form), and perform conversions 
+     *  until you wind up with a <i>stream</i> in your target form.
+     *  The internal content model is never effected.
+     ******************************************************************************************/
+    virtual PRInt32 Convert(nsIURL* aURL,char* aSourceForm,char* aTargetForm,nsIStreamListener* aListener) = 0;
+    virtual PRInt32 Convert(const char* aFilename,char* aSourceForm,char* aTargetForm)=0;
+    virtual PRInt32 Convert(nsString& anHTMLString,char* aSourceForm,char* aTargetForm,PRBool appendTokens)=0;
 
     virtual PRInt32 ResumeParse(void)=0;
 

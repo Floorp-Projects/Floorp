@@ -34,6 +34,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIWebWidget.h"
+#include "CNavDTD.h"
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -119,6 +120,17 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
       rv = parser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
 
       if (NS_OK == rv) {
+
+        //The following lines were added by Rick.
+        //These perform "dynamic" DTD registration, allowing
+        //the caller total control over process, and decoupling
+        //parser from any given grammar.
+
+        nsIDTD* theDTD=0;
+        NS_NewNavHTMLDTD(&theDTD);
+        parser->RegisterDTD(theDTD);
+        parser->RegisterDTD(theDTD);
+
         parser->SetContentSink(sink);
         parser->BeginParse(aURL);
       }

@@ -233,6 +233,15 @@ class CScanner {
        */
       PRInt32 IncrementalAppend(const char* aBuffer,PRInt32 aSize);
 
+      /**
+       *  
+       *  
+       *  @update  gess 5/12/98
+       *  @param   
+       *  @return  
+       */
+      nsString& GetBuffer(void);
+
       static void SelfTest();
 
   protected:
