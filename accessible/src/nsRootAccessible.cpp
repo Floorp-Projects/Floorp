@@ -48,6 +48,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
 #include "nsReadableUtils.h"
 #include "nsILink.h"
 #include "nsHTMLFormControlAccessible.h"
@@ -68,12 +69,19 @@
 #include "nsIServiceManager.h"
 #include "nsHTMLSelectListAccessible.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIWebProgress.h"
+#include "nsCURILoader.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) 
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
 NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
@@ -86,7 +94,8 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsAccessible);
 // construction 
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,aShell), 
-  nsDocAccessibleMixin(aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+  nsDocAccessibleMixin(aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  mBusy(eBusyStateUninitialized)
 {
   mListener = nsnull;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
@@ -104,7 +113,7 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull
 nsRootAccessible::~nsRootAccessible()
 {
   nsLayoutAtoms::ReleaseAtoms();
-  RemoveAccessibleEventListener(mListener);
+  RemoveAccessibleEventListener();
 }
 
   /* attribute wstring accName; */
@@ -174,81 +183,128 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   */
 
   *aAccRole = ROLE_PANE;
-  return NS_OK;  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRootAccessible::GetAccState(PRUint32 *aAccState)
 {
-  return nsDocAccessibleMixin::GetAccState(aAccState);
+  *aAccState = STATE_FOCUSABLE;
+  if (mBusy == eBusyStateLoading)
+    *aAccState |= STATE_BUSY;
+  return NS_OK;
 }
-
 
 NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAWritableString& aAccValue)
 {
   return GetURL(aAccValue);
 }
 
+void nsRootAccessible::Notify(nsITimer *timer)
+{
+  // Short timer is finished 
+  if (mBusy != eBusyStateDone) {
+    mBusy = eBusyStateDone;
+    if (mListener)
+      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this);
+  }
+}
+
+NS_IMETHODIMP nsRootAccessible::StartDocReadyTimer()
+{
+  nsresult rv;
+  if (!mTimer)
+    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    const PRUint32 kUpdateTimerDelay = 1;
+    rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
+  }
+
+  return rv;
+}
+
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
 NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
 {
-  if (!mListener)
-  {
-    // add an event listener to the document
-    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-    if (!shell)
-      return NS_ERROR_FAILURE;
+  if (mListener)
+    return NS_OK;
 
-    nsCOMPtr<nsIDocument> document;
-    shell->GetDocument(getter_AddRefs(document));
+  mListener =  aListener;
 
-    // use AddEventListener from the nsIDOMEventTarget interface
-    nsCOMPtr<nsIDOMEventTarget> target;
-    if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventTarget), getter_AddRefs(target))) && target)
-    {
-      nsresult rv = NS_OK;
-      // we're a DOMEventListener now!!
-      nsCOMPtr<nsIDOMEventListener> listener;
-      rv = this->QueryInterface( NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener) );
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to QI");
-      // capture DOM focus events 
-      rv = target->AddEventListener( NS_LITERAL_STRING("focus") , listener, PR_TRUE );
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // capture Form change events 
-      rv = target->AddEventListener( NS_LITERAL_STRING("change") , listener, PR_TRUE );
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add ourself as a CheckboxStateChange listener ( custom event fired in nsHTMLInputElement.cpp )
-      rv = target->AddEventListener( NS_LITERAL_STRING("CheckboxStateChange") , listener, PR_TRUE );
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add ourself as a RadiobuttonStateChange listener ( custom event fired in nsHTMLInputElement.cpp )
-      rv = target->AddEventListener( NS_LITERAL_STRING("RadiobuttonStateChange") , listener, PR_TRUE );
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-    }
+  // add an event listener to the document
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> document;
+  shell->GetDocument(getter_AddRefs(document));
+  if (!document)
+    return NS_ERROR_FAILURE;
+
+  // use AddEventListener from the nsIDOMEventTarget interface
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(document));
+  if (target) { 
+    // capture DOM focus events 
+    nsresult rv = target->AddEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+    rv = target->AddEventListener(NS_LITERAL_STRING("blur"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
+    // capture Form change events 
+    rv = target->AddEventListener(NS_LITERAL_STRING("change"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+    // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
+    rv = target->AddEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+    // add ourself as a RadiobuttonStateChange listener (custom event fired in nsHTMLInputElement.cpp)
+    rv = target->AddEventListener(NS_LITERAL_STRING("RadiobuttonStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
+    // Extremely short timer, after which we announce that pane is finished loading
+    // By waiting until after this short time, we know that the 3rd party accessibility software 
+    // has received it's accessible, and can handle events on it.
+    StartDocReadyTimer(); 
   }
 
-  // create a weak reference to the listener
-  mListener =  aListener;
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
+
+  if (presShell) {
+    nsCOMPtr<nsIPresContext> context; 
+    presShell->GetPresContext(getter_AddRefs(context));
+    if (context) {
+      nsCOMPtr<nsISupports> container;
+      context->GetContainer(getter_AddRefs(container));
+      if (container) {
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+        if (docShell) {
+          nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+          if (webProgress) {
+            webProgress->AddProgressListener(this);
+          }
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }
 
-/* void removeAccessibleEventListener (in nsIAccessibleEventListener aListener); */
-NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener(nsIAccessibleEventListener *aListener)
+/* void removeAccessibleEventListener (); */
+NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
 {
-  if (mListener)
-  {
-     nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-     nsCOMPtr<nsIDocument> document;
-     if (!shell)
-       return NS_OK;
-
-     shell->GetDocument(getter_AddRefs(document));
-
-     nsCOMPtr<nsIDOMEventReceiver> erP;
-     if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
-     {
-        nsresult rv = erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *, this), NS_GET_IID(nsIDOMFocusListener));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-     }
+  if (mListener) {
+    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+    nsCOMPtr<nsIDocument> document;
+    if (shell) {
+      shell->GetDocument(getter_AddRefs(document));
+      nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(document));
+      if (eventReceiver) {
+        nsresult rv = eventReceiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *, this), NS_GET_IID(nsIDOMFocusListener));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to unregister listener");
+        rv = eventReceiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFormListener *, this), NS_GET_IID(nsIDOMFormListener));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to unregister listener");
+      }
+    }
   }
 
   mListener = nsnull;
@@ -278,13 +334,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIAccessible> accessible;
 
     if (NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
-      if ( eventType.EqualsIgnoreCase("focus") ) {
+      if (eventType.EqualsIgnoreCase("focus")) {
         if (mCurrentFocus != targetNode) {
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
           mCurrentFocus = targetNode;
         }
       }
-      else if ( eventType.EqualsIgnoreCase("change") ) {
+      else if (eventType.EqualsIgnoreCase("change")) {
         if (optionTargetNode) {   // Set to current option only for HTML selects
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SELECTION, accessible);
           if (mCurrentFocus != optionTargetNode &&
@@ -296,12 +352,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         else 
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
       }
-      else if ( eventType.EqualsIgnoreCase("CheckboxStateChange") ) {
+      else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
-      }
-      else if ( eventType.EqualsIgnoreCase("RadiobuttonStateChange") ) {
+      else if (eventType.EqualsIgnoreCase("RadiobuttonStateChange")) 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
-      }
     }
   }
   return NS_OK;
@@ -381,6 +435,49 @@ NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
   return nsDocAccessibleMixin::GetDocument(doc);
 }
 
+NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+  if (!mListener)
+    return NS_ERROR_FAILURE;
+
+  if (mBusy != eBusyStateLoading && (aStateFlags & STATE_START)) {
+    mBusy = eBusyStateLoading; 
+    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this);
+  }
+
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP nsRootAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
+  PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, nsIURI *location)
+{
+  // Load has been verified, it will occur, about to commence
+  return NS_OK;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP nsRootAccessible::OnStatusChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP nsRootAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRInt32 state)
+{
+  return NS_OK;
+}
 
 nsDocAccessibleMixin::nsDocAccessibleMixin(nsIDocument *aDoc):mDocument(aDoc)
 {
@@ -418,11 +515,7 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAWritableString& aTitle)
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAWritableString& aMimeType)
 {
-  nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(mDocument));
-  if (domnsDocument) {
-    return domnsDocument->GetContentType(aMimeType);
-  }
-  return NS_ERROR_FAILURE;
+  return mDocument->GetContentType(aMimeType);
 }
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAWritableString& aDocType)
@@ -452,7 +545,6 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, n
   return NS_ERROR_FAILURE;
 }
 
-
 NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
 {
   *doc = mDocument;
@@ -463,35 +555,4 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetAccState(PRUint32 *aAccState)
-{
-  // Screen readers need to know when the document is finished loading (STATE_BUSY flag)
-  // We do it this way, rather than via nsIWebProgressListener, because
-  // if accessibility was turned on after a document already finished loading, 
-  // we would get no state changes from nsIWebProgressListener.
-  // The GetBusyFlags method, however, always has the current busy state information for us.
 
-  *aAccState = 0;
-  if (mDocument) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocument->GetShellAt(0, getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIPresContext> context; 
-      presShell->GetPresContext(getter_AddRefs(context));
-      if (context) {
-        nsCOMPtr<nsISupports> container;
-        context->GetContainer(getter_AddRefs(container));
-        if (container) {
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-          if (docShell) {
-            PRUint32 busyFlags;
-            docShell->GetBusyFlags(&busyFlags);
-            if (busyFlags != nsIDocShell::BUSY_FLAGS_NONE)
-              *aAccState = nsIAccessible::STATE_BUSY;
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
-}

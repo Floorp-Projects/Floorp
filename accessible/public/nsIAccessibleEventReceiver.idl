@@ -28,5 +28,5 @@
 interface nsIAccessibleEventReceiver : nsISupports
 {
   void addAccessibleEventListener(in nsIAccessibleEventListener aListener);
-  void removeAccessibleEventListener(in nsIAccessibleEventListener aListener);
+  void removeAccessibleEventListener();
 };
