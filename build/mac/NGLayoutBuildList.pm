@@ -662,7 +662,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
-	# BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
+	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
     BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
