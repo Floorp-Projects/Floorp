@@ -78,6 +78,9 @@
 #define VIEWER_RL_BASE          41000
 
 #define VIEWER_TOP100           40300
+
+#define VIEWER_TREEVIEW			40900
+
 /* Debug Robot dialog setup */
 
 #define IDD_DEBUGROBOT          101
