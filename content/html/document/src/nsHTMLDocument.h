@@ -244,7 +244,7 @@ protected:
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
 
-  nsIDOMNode * mBodyContent;
+  nsCOMPtr<nsIDOMNode> mBodyContent;
 
   /*
    * Bug 13871: Frameset spoofing - find out if document.domain was set

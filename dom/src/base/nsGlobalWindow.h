@@ -201,6 +201,9 @@ protected:
   virtual ~GlobalWindowImpl();
   void CleanUp();
 
+  // Get the parent, returns null if this is a toplevel window
+  void GetParentInternal(nsIDOMWindowInternal **parent);
+
   // Window Control Functions
   NS_IMETHOD OpenInternal(const nsAReadableString& aUrl,
                           const nsAReadableString& aName,
