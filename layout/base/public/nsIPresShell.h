@@ -141,7 +141,7 @@ public:
 
   NS_IMETHOD EnterReflowLock() = 0;
 
-  NS_IMETHOD ExitReflowLock() = 0;
+  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow) = 0;
 
   // Make shell be a document observer
   NS_IMETHOD BeginObservingDocument() = 0;
@@ -349,6 +349,13 @@ public:
    */
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState) = 0;
+
+  /** 
+   * Get/Set the status that indicates whether the presshell knows about a 
+   * pending reflow event
+   */
+  NS_IMETHOD GetReflowEventStatus(PRBool* aPending) = 0;
+  NS_IMETHOD SetReflowEventStatus(PRBool aPending) = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
