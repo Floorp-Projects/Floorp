@@ -34,6 +34,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 class ViewedMessageBase implements ViewedMessage, IThreadable, ISortable {
@@ -222,6 +223,11 @@ class ViewedMessageBase implements ViewedMessage, IThreadable, ISortable {
 
   public ViewedMessage getNext() {
     return fSibling;
+  }
+
+  public Iterator iterator()
+  {
+    return new EnumerationIterator(children());
   }
 
   int getMessageCount() {

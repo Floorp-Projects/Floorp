@@ -76,6 +76,12 @@ class BerkeleyMessage extends MessageBase {
     parseMozillaStatus(h);
   }
 
+  // Copied from above, but handlers message numbers correctly.
+  BerkeleyMessage(BerkeleyFolder f, int num, InternetHeaders h) {
+    super(f, num, h);
+    parseMozillaStatus(h);
+  }
+
   BerkeleyMessage(BerkeleyFolder f,
                   long date,
                   long flags,
@@ -85,6 +91,19 @@ class BerkeleyMessage extends MessageBase {
                   ByteBuf id,
                   ByteBuf refs[]) {
     super(f, date, flags, author, recipient, subj, id, refs);
+  }
+
+  // Copied from above, but handlers message numbers correctly.
+  BerkeleyMessage(BerkeleyFolder f,
+                  int num,
+                  long date,
+                  long flags,
+                  ByteBuf author,
+                  ByteBuf recipient,
+                  ByteBuf subj,
+                  ByteBuf id,
+                  ByteBuf refs[]) {
+    super(f, num, date, flags, author, recipient, subj, id, refs);
   }
 
   BerkeleyMessage(BerkeleyFolder f,
@@ -98,6 +117,20 @@ class BerkeleyMessage extends MessageBase {
     super(f, date, flags, author, recipient, subj, id, refs);
   }
 
+  // Copied from above, but handlers message numbers correctly.
+  BerkeleyMessage(BerkeleyFolder f,
+                  int num,
+                  long date,
+                  long flags,
+                  ByteBuf author,
+                  ByteBuf recipient,
+                  ByteBuf subj,
+                  MessageID id,
+                  MessageID refs[]) {
+    super(f, num, date, flags, author, recipient, subj, id, refs);
+  }
+
+  public void setMessageNumber(int i) {super.setMessageNumber(i);}
 
   protected void parseMozillaStatus(InternetHeaders h) {
     int xms = 0;

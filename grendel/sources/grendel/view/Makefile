@@ -22,6 +22,7 @@
 TOPDIR=../../..
 SRCS=					\
 	DummyThreadable.java		\
+	EnumerationIterator.java	\
 	FolderView.java			\
 	FolderViewBase.java		\
 	FolderViewFactory.java		\

@@ -903,7 +903,7 @@ class BerkeleyFolder extends FolderBase implements FilenameFilter {
     // the new message, and let any observers know that this message has
     // been added to the folder.
     //
-    BerkeleyMessage newmessage = new BerkeleyMessage(this, headers);
+		BerkeleyMessage newmessage = new BerkeleyMessage(this, mailSummaryFile.totalMessageCount(), headers);
 
     // Add this message to the list of messages in this folder, *if* this
     // folder knows what messages are in it.  If we haven't yet parsed

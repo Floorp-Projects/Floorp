@@ -94,7 +94,8 @@ abstract class FolderBase extends Folder implements FolderExtra {
   void noticeInitialMessage(Message m) {
     fMessages.addElement(m);
 // #### How the hell are we supposed to do this?
-//    m.setMessageNumber(fMessages.size() - 1);
+    BerkeleyMessage bm=(BerkeleyMessage)m;
+    bm.setMessageNumber(fMessages.size() - 1);
   }
 
   ByteStringTable getStringTable() {

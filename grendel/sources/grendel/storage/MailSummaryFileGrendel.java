@@ -221,6 +221,7 @@ class MailSummaryFileGrendel extends MailSummaryFile {
           flags = BerkeleyMessage.mozillaFlagsToInternalFlags(flags);
           BerkeleyMessage m =
             new BerkeleyMessage(folder,
+                                i,
                                 date * 1000L,
                                 flags,
                                 string_table[(int) author],

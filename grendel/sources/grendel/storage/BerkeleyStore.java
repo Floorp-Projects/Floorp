@@ -56,11 +56,13 @@ import javax.mail.event.StoreEvent;
 
 public class BerkeleyStore extends Store {
   protected Folder defaultFolder;
-  private String Dir;
+  private String Dir="boards";
 
   public BerkeleyStore(Session s, URLName u) {
     super(s, u);
-    Dir = u.getFile();
+    if(u.getFile()!=null)
+      Dir = u.getFile();
+    System.out.println("Attempting to make a BerkeleyStore with "+u+" "+Dir);
   }
 
   public void connect(String host,
@@ -81,7 +83,6 @@ public class BerkeleyStore extends Store {
     defaultFolder = null;
   }
 
-
   public Folder getDefaultFolder() {
     if (defaultFolder == null) {
       defaultFolder = new BerkeleyFolder(this, new File(Dir));
@@ -90,6 +91,7 @@ public class BerkeleyStore extends Store {
   }
 
   public Folder getFolder(String name) throws MessagingException{
+System.out.println("BerkeleyStore.getFolder("+name+")");
     return getDefaultFolder().getFolder(name);
   }
 

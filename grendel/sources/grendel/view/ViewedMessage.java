@@ -25,6 +25,7 @@
 package grendel.view;
 
 import javax.mail.Message;
+import java.util.Iterator;
 
 /** This is a message in a MessageSetView.  It represents a message, and also
     knows where it is in relationship with other messages in the same view. */
@@ -48,6 +49,10 @@ public interface ViewedMessage {
   /** Returns the next message.  This is the next message that has the same
       parent as this message.*/
   public ViewedMessage getNext();
+
+  /** Returns an Interator as a more convenient method to access child
+      elements  rather than calling getNext() repeatedly. */
+  public Iterator iterator();
 
   /** This should return true of dummy messages, false otherwise.
       It is legal to pass dummy messages in with the list returned by

@@ -28,9 +28,7 @@ import calypso.util.NetworkDate;
 import calypso.util.Assert;
 import calypso.util.ByteBuf;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
@@ -180,8 +178,20 @@ abstract class MessageBase extends MessageReadOnly implements MessageExtra {
     this.folder = f;
   }
 
+  // New constructor copied from above but sets msgnum correctly.
+  MessageBase(FolderBase f, int num) {
+    super(f, num);
+    this.folder = f;
+  }
+
   MessageBase(FolderBase f, InternetHeaders h) {
     this(f);
+    initialize(f, h);
+  }
+
+  // New constructor copied from above but sets msgnum correctly.
+  MessageBase(FolderBase f, int num, InternetHeaders h) {
+    this(f, num);
     initialize(f, h);
   }
 
@@ -222,6 +232,45 @@ abstract class MessageBase extends MessageReadOnly implements MessageExtra {
     }
   }
 
+  // New constructor copied from above but sets msgnum correctly.
+  MessageBase(FolderBase f,
+              int num,
+              long date,
+              long flags,
+              ByteBuf author,
+              ByteBuf recipient,
+              ByteBuf subj,
+              ByteBuf id,
+              ByteBuf refs[]) {
+    this(f, num);
+    ByteStringTable string_table = f.getStringTable();
+    MessageIDTable id_table = f.getMessageIDTable();
+
+    if (id == null || id.length() == 0) {
+      // #### In previous versions, we did this by getting the MD5 hash
+      // #### of the whole header block.  We should do that here too...
+      if (id == null) id = new ByteBuf();
+      id.append(grendel.util.MessageIDGenerator.generate("missing-id"));
+    }
+
+    this.folder = f;
+    this.flags = flags;
+    this.sentDate = date;
+    this.author_name = string_table.intern(author);
+    this.recipient_name = string_table.intern(recipient);
+    this.subject = string_table.intern(subj);
+    this.message_id = id_table.intern(id);
+
+    if (refs == null || refs.length == 0)
+      this.references = null;
+    else {
+      int L = refs.length;
+      references = new int[L];
+      for (int i = 0; i < L; i++)
+        references[i] = id_table.intern(refs[i]);
+    }
+  }
+
   MessageBase(FolderBase f,
               long date,
               long flags,
@@ -231,6 +280,47 @@ abstract class MessageBase extends MessageReadOnly implements MessageExtra {
               MessageID id,
               MessageID refs[]) {
     this(f);
+    ByteStringTable string_table = f.getStringTable();
+    MessageIDTable id_table = f.getMessageIDTable();
+
+    if (id != null) {
+      this.message_id = id_table.intern(id);
+    } else {
+      // #### In previous versions, we did this by getting the MD5 hash
+      // #### of the whole header block.  We should do that here too...
+      ByteBuf b =
+        new ByteBuf(grendel.util.MessageIDGenerator.generate("missing-id"));
+      this.message_id = id_table.intern(b);
+    }
+
+    this.folder = f;
+    this.flags = flags;
+    this.sentDate = date;
+    this.author_name = string_table.intern(author);
+    this.recipient_name = string_table.intern(recipient);
+    this.subject = string_table.intern(subj);
+
+    if (refs == null || refs.length == 0)
+      this.references = null;
+    else {
+      int L = refs.length;
+      references = new int[L];
+      for (int i = 0; i < L; i++)
+        references[i] = id_table.intern(refs[i]);
+    }
+  }
+
+  // New constructor copied from above but sets msgnum correctly.
+  MessageBase(FolderBase f,
+              int num,
+              long date,
+              long flags,
+              ByteBuf author,
+              ByteBuf recipient,
+              ByteBuf subj,
+              MessageID id,
+              MessageID refs[]) {
+    this(f, num);
     ByteStringTable string_table = f.getStringTable();
     MessageIDTable id_table = f.getMessageIDTable();
 
@@ -715,7 +805,19 @@ abstract class MessageBase extends MessageReadOnly implements MessageExtra {
   }
 
   public Object getContent() {
-    return null;
+try
+{
+    StringBuffer buff=new StringBuffer();
+    Reader r=new InputStreamReader(getInputStream());
+    char[] b = new char[1024];
+    while(r.read(b)!=-1)
+    {
+      buff.append(b);
+    }
+    r.close();
+    return buff.toString();
+}
+catch(Exception e) {e.printStackTrace(); return null;}
   }
 
 
@@ -724,7 +826,11 @@ abstract class MessageBase extends MessageReadOnly implements MessageExtra {
     Subclasses might want to redefine just this, or they might want to
     redefine all the routines below that use this. */
   protected InternetHeaders getHeadersObj() throws MessagingException {
-    return new InternetHeaders(getInputStreamWithHeaders());
+    InputStream is=getInputStreamWithHeaders();
+    InternetHeaders ih=new InternetHeaders(is);
+    try { is.close(); } catch(Exception e) {e.printStackTrace();}
+    return ih;
+//    return new InternetHeaders(getInputStreamWithHeaders());
   }
 
 }
