@@ -289,27 +289,34 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
 
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
-  nsIMathMLFrame* mathMLFrame = nsnull;
-  nsresult res = aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (NS_SUCCEEDED(res) && mathMLFrame) {
-    nsPresentationData parentData;
-    mathMLFrame->GetPresentationData(parentData);
-
-    mPresentationData.mstyle = parentData.mstyle;
-    mPresentationData.scriptLevel = parentData.scriptLevel;
-    if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-    else
-      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-  }
-  else {
-    // see if our parent has 'display: block'
-    // XXX should we restrict this to the top level <math> parent ?
-    const nsStyleDisplay* display;
-    aParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-    if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+  nsIFrame* parent = aParent;
+  while (parent) {
+    nsIMathMLFrame* mathMLFrame;
+    parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+    	nsPresentationData parentData;
+      mathMLFrame->GetPresentationData(parentData);
+      mPresentationData.mstyle = parentData.mstyle;
+      mPresentationData.scriptLevel = parentData.scriptLevel;
+      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
+      break;
     }
+    // stop if we reach the root <math> tag
+    nsCOMPtr<nsIAtom> parentTag;
+    nsCOMPtr<nsIContent> parentContent;
+    parent->GetContent(getter_AddRefs(parentContent));
+    parentContent->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag.get() == nsMathMLAtoms::math) {
+      const nsStyleDisplay* display;
+      parent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
+      break;
+    }
+    parent->GetParent(&parent);
   }
 
   // see if the displaystyle attribute is there and let it override what we inherited
@@ -403,7 +410,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
 
     nscoord axisHeight;
-    nsMathMLContainerFrame::GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+    GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
 
     aDesiredSize.ascent = aDesiredSize.height/2 + axisHeight;
     aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
@@ -471,18 +478,29 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
   // to increment with other values, it will do so in its SetInitialChildList() method.
   nsIFrame* parent = aParent;
   while (parent) {
-    nsIMathMLFrame* mathMLFrame = nsnull;
-    nsresult res = parent->QueryInterface(
-      NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(res) && mathMLFrame) {
+    nsIMathMLFrame* mathMLFrame;
+    parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
     	nsPresentationData parentData;
       mathMLFrame->GetPresentationData(parentData);
       mPresentationData.mstyle = parentData.mstyle;
       mPresentationData.scriptLevel = parentData.scriptLevel;
-      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
+      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
         mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      else
-        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+      }
+      break;
+    }
+    // stop if we reach the root <math> tag
+    nsCOMPtr<nsIAtom> parentTag;
+    nsCOMPtr<nsIContent> parentContent;
+    parent->GetContent(getter_AddRefs(parentContent));
+    parentContent->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag.get() == nsMathMLAtoms::math) {
+      const nsStyleDisplay* display;
+      parent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
       break;
     }
     parent->GetParent(&parent);

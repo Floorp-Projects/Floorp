@@ -222,18 +222,18 @@ nsMathMLmactionFrame::GetSelectedFrame()
   // if the selected child is an embellished operator,
   // we become embellished as well
   mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-  mEmbellishData.firstChild = nsnull;
+  mEmbellishData.next = nsnull;
   mEmbellishData.core = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   if (mSelectedFrame) {
-    nsIMathMLFrame* mathMLFrame = nsnull;
-    rv = mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(rv) && mathMLFrame) {
+    nsIMathMLFrame* mathMLFrame;
+    mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
       nsEmbellishData embellishData;
       mathMLFrame->GetEmbellishData(embellishData);
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.firstChild) {
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-        mEmbellishData.firstChild = mSelectedFrame; // yes!
+        mEmbellishData.next = mSelectedFrame; // yes!
         mEmbellishData.core = embellishData.core;
         mEmbellishData.direction = embellishData.direction;
       }
@@ -277,8 +277,7 @@ nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
     pt.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
     return childFrame->GetFrameForPoint(aPresContext, pt, aWhichLayer, aFrame);
   }
-  else
-    return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
 //  Only paint the selected child...

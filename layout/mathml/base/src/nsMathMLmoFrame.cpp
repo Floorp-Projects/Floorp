@@ -204,9 +204,8 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (firstChild) {
     mEmbellishData.direction = mMathMLChar.GetStretchDirection();
     mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    // IMPORTANT: these two NULL tell us the core <mo> of the embellished hierarchy.
-    mEmbellishData.firstChild = nsnull; 
-    mEmbellishData.core = nsnull;
+    mEmbellishData.next = nsnull; 
+    mEmbellishData.core = this;
 
     // there are two extra things that we need to record so that if our
     // parent is <mover>, <munder>, or <munderover>, they will treat us properly:

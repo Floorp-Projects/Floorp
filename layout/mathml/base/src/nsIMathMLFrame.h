@@ -298,7 +298,7 @@ struct nsPresentationData {
 // struct used by an embellished container to keep track of its embellished child
 struct nsEmbellishData {
   PRUint32  flags;
-  nsIFrame* firstChild; // handy pointer on our embellished child 
+  nsIFrame* next; // handy pointer on our embellished child to descend the hierarchy
   nsIFrame* core; // pointer on the mo frame at the core of the embellished hierarchy
   nsStretchDirection direction;
   nscoord leftSpace, rightSpace;
@@ -306,7 +306,7 @@ struct nsEmbellishData {
   nsEmbellishData()
   {
     flags = 0;
-    firstChild = nsnull;
+    next = nsnull;
     core = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     leftSpace = rightSpace = 0;

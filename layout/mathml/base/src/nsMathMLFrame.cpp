@@ -59,8 +59,8 @@ nsMathMLFrame::IsEmbellishOperator(nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "null arg");
   if (!aFrame) return PR_FALSE;
   nsIMathMLFrame* mathMLFrame;
-  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (NS_FAILED(rv) || !mathMLFrame) return PR_FALSE;
+  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (!mathMLFrame) return PR_FALSE;
   nsEmbellishData embellishData;
   mathMLFrame->GetEmbellishData(embellishData);
   return NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags);
@@ -120,8 +120,8 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
 
       if (mstyleParent) {
         nsIMathMLFrame* mathMLFrame;
-        rv = mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (mathMLFrame) {
           mathMLFrame->GetPresentationData(mstyleParentData);
         }
       }
@@ -140,6 +140,15 @@ nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
 {
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
+#ifdef NS_DEBUG
+  const nsFont* myFont;
+  aFontMetrics->GetFont(myFont);
+  nsCOMPtr<nsIFontMetrics> currFontMetrics;
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
+  const nsFont* currFont;
+  currFontMetrics->GetFont(currFont);
+  NS_ASSERTION(currFont->Equals(*myFont), "unexpected state");
+#endif
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
   PRUnichar overBar = 0x00AF;
@@ -173,6 +182,15 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
 {
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
+#ifdef NS_DEBUG
+  const nsFont* myFont;
+  aFontMetrics->GetFont(myFont);
+  nsCOMPtr<nsIFontMetrics> currFontMetrics;
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
+  const nsFont* currFont;
+  currFontMetrics->GetFont(currFont);
+  NS_ASSERTION(currFont->Equals(*myFont), "unexpected state");
+#endif
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
   PRUnichar minus = '-';
