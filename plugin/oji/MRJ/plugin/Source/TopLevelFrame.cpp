@@ -35,6 +35,18 @@
 #include "LocalPort.h"
 
 #include "nsIPluginManager2.h"
+#include "nsIEventHandler.h"
+
+#if !defined(MRJPLUGIN_4X)
+#define USE_ALT_WINDOW_HANDLING
+#endif
+
+#ifdef USE_ALT_WINDOW_HANDLING
+#include "AltWindowHandling.h"
+#endif
+
+#include "nsIEventHandler.h"
+#include "AltWindowHandling.h"
 
 extern nsIPluginManager2* thePluginManager2;
 
@@ -112,16 +124,24 @@ void TopLevelFrame::showHide(Boolean visible)
 {
 	if (mWindow != NULL && visible != IsWindowVisible(mWindow)) {
 		if (visible) {
+#if !defined(USE_ALT_WINDOW_HANDLING)		
 			// Have to notify the browser that this window exists, so that it will receive events.
 			thePluginManager2->RegisterWindow(mHandler, mWindow);
 			// the plugin manager takes care of showing the window.
 			// ::ShowWindow(mWindow);
 			// ::SelectWindow(mWindow);
+#else
+            AltRegisterWindow(mHandler, mWindow);
+#endif
 		} else {
-			// the plugin manager takes care of hiding the window.
-			// ::HideWindow(mWindow);
-			// Let the browser know it doesn't have to send events anymore.
-			thePluginManager2->UnregisterWindow(mHandler, mWindow);
+#if defined(USE_ALT_WINDOW_HANDLING)		
+            AltUnregisterWindow(mHandler, mWindow);
+#else
+ 			// the plugin manager takes care of hiding the window.
+ 			// ::HideWindow(mWindow);
+ 			// Let the browser know it doesn't have to send events anymore.
+ 			thePluginManager2->UnregisterWindow(mHandler, mWindow);
+#endif
 			activate(false);
 		}
 		

@@ -1191,6 +1191,15 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>:</ACCESSPATH>
+                    <PATH>:Source:AltWindowHandling.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1386,6 +1395,13 @@
                     <PATHROOT>CodeWarrior</PATHROOT>
                     <ACCESSPATH>:MacOS Support:</ACCESSPATH>
                     <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>:</ACCESSPATH>
+                    <PATH>:Source:AltWindowHandling.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -5392,6 +5408,14 @@
                 <PATHROOT>Project</PATHROOT>
                 <ACCESSPATH>:</ACCESSPATH>
                 <PATH>:Source:MRJFrame.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>MRJPlugin</TARGETNAME>
+                <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHROOT>Project</PATHROOT>
+                <ACCESSPATH>:</ACCESSPATH>
+                <PATH>:Source:AltWindowHandling.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>

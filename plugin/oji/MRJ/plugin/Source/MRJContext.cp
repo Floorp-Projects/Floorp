@@ -113,11 +113,13 @@ MRJContext::~MRJContext()
 		mViewer = NULL;
 	}
 
-#if 0
-	// hack:  see if this allows the applet viewer to terminate gracefully.
-	for (int i = 0; i < 100; i++)
-		::JMIdle(mSessionRef, kDefaultJMTime);
-#endif
+    // hack:  see if this allows the applet viewer to terminate gracefully.
+    // Re-enable.  Else if opened a new window thru Java and then quit browser,
+    // get "SP_WARN: Yow! Invalid canvas->visRgn:0000000" in 'MRJSubPorts'
+    // several times while applet viewer is closing
+
+    for (int i = 0; i < 100; i++)
+        ::JMIdle(mSessionRef, kDefaultJMTime);
 
 	if (mContext != NULL) {
 		// hack:  release any frames that we still see in the AWT context, before tossing it.
