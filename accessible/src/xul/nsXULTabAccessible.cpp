@@ -179,7 +179,7 @@ nsXULTabAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 
 nsXULTabsAccessible::
   nsXULTabsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULSelectableAccessible(aContent, aShell)
+  XULSelectControlAccessible(aContent, aShell)
 {
 }
 
