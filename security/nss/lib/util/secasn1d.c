@@ -35,8 +35,15 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.20 2003/04/26 01:40:49 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.21 2003/04/26 02:15:50 nelsonb%netscape.com Exp $
  */
+
+/* #define DEBUG_ASN1D_STATES 1 */
+
+#ifdef DEBUG_ASN1D_STATES
+#include <stdio.h>
+#define PR_Assert sec_asn1d_Assert
+#endif
 
 #include "secasn1.h"
 #include "secerr.h"
@@ -72,7 +79,7 @@ typedef enum {
 } sec_asn1d_parse_place;
 
 #ifdef DEBUG_ASN1D_STATES
-static const char *place_names[] = {
+static const char * const place_names[] = {
     "beforeIdentifier",
     "duringIdentifier",
     "afterIdentifier",
@@ -101,6 +108,114 @@ static const char *place_names[] = {
     "afterChoice",
     "notInUse"
 };
+
+static const char * const class_names[] = {
+    "UNIVERSAL",
+    "APPLICATION",
+    "CONTEXT_SPECIFIC",
+    "PRIVATE"
+};
+
+static const char * const method_names[] = { "PRIMITIVE", "CONSTRUCTED" };
+
+static const char * const type_names[] = {
+    "END_OF_CONTENTS",
+    "BOOLEAN",
+    "INTEGER",
+    "BIT_STRING",
+    "OCTET_STRING",
+    "NULL",
+    "OBJECT_ID",
+    "OBJECT_DESCRIPTOR",
+    "(type 08)",
+    "REAL",
+    "ENUMERATED",
+    "EMBEDDED",
+    "UTF8_STRING",
+    "(type 0d)",
+    "(type 0e)",
+    "(type 0f)",
+    "SEQUENCE",
+    "SET",
+    "NUMERIC_STRING",
+    "PRINTABLE_STRING",
+    "T61_STRING",
+    "VIDEOTEXT_STRING",
+    "IA5_STRING",
+    "UTC_TIME",
+    "GENERALIZED_TIME",
+    "GRAPHIC_STRING",
+    "VISIBLE_STRING",
+    "GENERAL_STRING",
+    "UNIVERSAL_STRING",
+    "(type 1d)",
+    "BMP_STRING",
+    "HIGH_TAG_VALUE"
+};
+
+static const char * const flag_names[] = { /* flags, right to left */
+    "OPTIONAL",
+    "EXPLICIT",
+    "ANY",
+    "INLINE",
+    "POINTER",
+    "GROUP",
+    "DYNAMIC",
+    "SKIP",
+    "INNER",
+    "SAVE",
+    "",            /* decoder ignores "MAY_STREAM", */
+    "SKIP_REST",
+    "CHOICE",
+    "NO_STREAM",
+    "DEBUG_BREAK",
+    "unknown 08",
+    "unknown 10",
+    "unknown 20",
+    "unknown 40",
+    "unknown 80"
+};
+
+static int /* bool */
+formatKind(unsigned long kind, char * buf)
+{
+    int i;
+    unsigned long k = kind & SEC_ASN1_TAGNUM_MASK;
+    unsigned long notag = kind & (SEC_ASN1_CHOICE | SEC_ASN1_POINTER |
+        SEC_ASN1_INLINE | SEC_ASN1_ANY | SEC_ASN1_SAVE);
+
+    buf[0] = 0;
+    if ((kind & SEC_ASN1_CLASS_MASK) != SEC_ASN1_UNIVERSAL) {
+        sprintf(buf, " %s", class_names[(kind & SEC_ASN1_CLASS_MASK) >> 6] );
+        buf += strlen(buf);
+    }
+    if (kind & SEC_ASN1_METHOD_MASK) {
+        sprintf(buf, " %s", method_names[1]);
+        buf += strlen(buf);
+    }
+    if ((kind & SEC_ASN1_CLASS_MASK) == SEC_ASN1_UNIVERSAL) {
+        if (k || !notag) {
+            sprintf(buf, " %s", type_names[k] );
+            if ((k == SEC_ASN1_SET || k == SEC_ASN1_SEQUENCE) &&
+                (kind & SEC_ASN1_GROUP)) {
+                buf += strlen(buf);
+                sprintf(buf, "_OF");
+            }
+        }
+    } else {
+        sprintf(buf, " [%d]", k);
+    }
+    buf += strlen(buf);
+
+    for (k = kind >> 8, i = 0; k; k >>= 1, ++i) {
+        if (k & 1) {
+            sprintf(buf, " %s", flag_names[i]);
+            buf += strlen(buf);
+        }
+    }
+    return notag != 0;
+}
+
 #endif /* DEBUG_ASN1D_STATES */
 
 typedef enum {
@@ -616,6 +731,13 @@ sec_asn1d_parse_identifier (sec_asn1d_state *state,
     }
 
     byte = (unsigned char) *buf;
+#ifdef DEBUG_ASN1D_STATES
+    {
+        char kindBuf[256];
+        formatKind(byte, kindBuf);
+        printf("Found tag %02x %s\n", byte, kindBuf);
+    }
+#endif
     tag_number = byte & SEC_ASN1_TAGNUM_MASK;
 
     if (IS_HIGH_TAG_NUMBER (tag_number)) {
@@ -821,6 +943,12 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
     PRArenaPool *poolp;
     unsigned long alloc_len;
 
+#ifdef DEBUG_ASN1D_STATES
+    {
+        printf("Found Length %d %s\n", state->contents_length,
+               state->indefinite ? "indefinite" : "");
+    }
+#endif
 
     /*
      * XXX I cannot decide if this allocation should exclude the case
@@ -2310,29 +2438,42 @@ SEC_ASN1DecodeInteger(SECItem *src, unsigned long *value)
 
 #ifdef DEBUG_ASN1D_STATES
 static void
-dump_states
-(
-  SEC_ASN1DecoderContext *cx
-)
+dump_states(SEC_ASN1DecoderContext *cx)
 {
-  sec_asn1d_state *state;
+    sec_asn1d_state *state;
+    char kindBuf[256];
 
-  for( state = cx->current; state->parent; state = state->parent ) {
-    ;
-  }
-
-  for( ; state; state = state->child ) {
-    int i;
-    for( i = 0; i < state->depth; i++ ) {
-      printf("  ");
+    for (state = cx->current; state->parent; state = state->parent) {
+        ;
     }
 
-    printf("%s: template[0]->kind = 0x%02x, expect tag number = 0x%02x\n",
-           (state == cx->current) ? "STATE" : "State",
-           state->theTemplate->kind, state->expect_tag_number);
-  }
+    for (; state; state = state->child) {
+        int i;
+        for (i = 0; i < state->depth; i++) {
+            printf("  ");
+        }
 
-  return;
+        i = formatKind(state->theTemplate->kind, kindBuf);
+        printf("%s: tmpl %08x, kind%s",
+               (state == cx->current) ? "STATE" : "State",
+               state->theTemplate,
+               kindBuf);
+        printf(" %s", (state->place >= 0 && state->place <= notInUse)
+                       ? place_names[ state->place ]
+                       : "(undefined)");
+        if (!i)
+            printf(", expect 0x%02x",
+                   state->expect_tag_number | state->expect_tag_modifiers);
+
+        printf("%s%s%s %d\n",
+               state->indefinite    ? ", indef"   : "",
+               state->missing       ? ", miss"    : "",
+               state->endofcontents ? ", EOC"     : "",
+               state->pending
+               );
+    }
+
+    return;
 }
 #endif /* DEBUG_ASN1D_STATES */
 
@@ -2353,10 +2494,11 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 	what = SEC_ASN1_Contents;
 	consumed = 0;
 #ifdef DEBUG_ASN1D_STATES
-        printf("\nPLACE = %s, next byte = 0x%02x\n",
+        printf("\nPLACE = %s, next byte = 0x%02x, %08x[%d]\n",
                (state->place >= 0 && state->place <= notInUse) ?
                place_names[ state->place ] : "(undefined)",
-               (unsigned int)((unsigned char *)buf)[ consumed ]);
+               (unsigned int)((unsigned char *)buf)[ consumed ],
+               buf, consumed);
         dump_states(cx);
 #endif /* DEBUG_ASN1D_STATES */
 	switch (state->place) {
@@ -2698,6 +2840,13 @@ SEC_ASN1DecodeItem (PRArenaPool *poolp, void *dest,
 			   (char *) item->data, item->len);
 }
 
+#ifdef DEBUG_ASN1D_STATES
+void sec_asn1d_Assert(const char *s, const char *file, PRIntn ln)
+{
+    printf("Assertion failed, \"%s\", file %s, line %d\n", s, file, ln);
+    fflush(stdout);
+}
+#endif
 
 /*
  * Generic templates for individual/simple items and pointers to
