@@ -388,7 +388,7 @@ _IMGCB_DestroyPixmap(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap* pi
 
 JMC_PUBLIC_API(void)
 _IMGCB_DisplayPixmap(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap* image, IL_Pixmap* mask,
-	jint x, jint y, jint x_offset, jint y_offset, jint width, jint height)
+	jint x, jint y, jint x_offset, jint y_offset, jint width, jint height, jint req_w, jint req_h)
 {
 	MWContext *		context = (MWContext *) a;
 	NS_PixMap *		fe_pixmap;
