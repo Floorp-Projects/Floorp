@@ -224,7 +224,7 @@ protected:
    * @param   aChild child this child's next-in-flow
    * @return  PR_TRUE if successful and PR_FALSE otherwise
    */
-  PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild);
+  PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
 
   /** create the inner table frame (nsTableFrame)
     * handles initial creation as well as creation of continuing frames

@@ -1761,9 +1761,9 @@ void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
   fflush(fd);
   fclose(fd);*/
 
-
+  PRInt32 i;
   nsIPresShell * shell = aPresContext.GetShell();
-  for (PRInt32 i=0;i<fTrackerRemoveListMax;i++) {
+  for (i=0;i<fTrackerRemoveListMax;i++) {
     ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(fTrackerContentArrayRemoveList[i]));
     if (gSelectionDebug) printf("ForceDrawFrame (remove) content 0x%X\n", fTrackerContentArrayRemoveList[i]);
   }

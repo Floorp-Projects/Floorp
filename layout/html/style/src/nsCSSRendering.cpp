@@ -653,6 +653,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  const nsStyleSpacing& aStyle,
                                  PRIntn aSkipSides)
 {
+  PRIntn cnt;
   nsMargin border;
   aStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
@@ -666,7 +667,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   outside.Deflate(border);
 
   //see if any sides are dotted or dashed
-  for (PRIntn cnt = 0; cnt < 4; cnt++) {
+  for (cnt = 0; cnt < 4; cnt++) {
     if ((aStyle.mBorderStyle[cnt] == NS_STYLE_BORDER_STYLE_DOTTED) ||
         (aStyle.mBorderStyle[cnt] == NS_STYLE_BORDER_STYLE_DASHED)) {
       break;
