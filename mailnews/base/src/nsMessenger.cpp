@@ -97,6 +97,7 @@
 #include "nsMsgCompFieldsFact.h"
 #include "nsMsgI18N.h"
 #include "nsNeckoUtil.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -146,6 +147,7 @@ public:
     nsCOMPtr<nsIOutputStream> m_outputStream;
     char *m_dataBuffer;
     nsCOMPtr<nsIChannel> m_channel;
+    nsXPIDLCString m_templateUri;
 };
 
 
@@ -526,7 +528,7 @@ done:
 
 
 NS_IMETHODIMP
-nsMessenger::SaveAs(const char* url, PRBool asFile)
+nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
 {
 	nsresult rv = NS_OK;
     nsIMsgMessageService* messageService = nsnull;
@@ -641,33 +643,31 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
           { 
               // ** save as Template
               PRBool needDummyHeader = PR_TRUE;
-              char * templateUri = nsnull;
-              NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-              if (NS_FAILED(rv)) goto done;
-              prefs->CopyCharPref("mail.default_templates_uri", &templateUri);
-              if (!templateUri || !*templateUri) 
-                  return NS_ERROR_FAILURE;
-              needDummyHeader =
-                  PL_strcasestr(templateUri, "mailbox") != nsnull;
-              nsCRT::free(templateUri);
               nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
+
               if (aListener)
               {
-                  rv = aListener->QueryInterface(
-                      nsCOMTypeInfo<nsIUrlListener>::GetIID(),
-                      getter_AddRefs(urlListener));
-                  if (NS_FAILED(rv))
-                  {
-                      delete aListener;
-                      return rv;
-                  }
-                  NS_ADDREF(aListener); 
-                  // nsUrlListenerManager uses nsVoidArray
-                  // to keep trach of all listeners we have
-                  // to manually add refs ourself
-                  messageService->SaveMessageToDisk(url, aSpec, 
-                                                    needDummyHeader,
-                                                    urlListener, nsnull);
+                if (identity)
+                  rv = identity->GetStationaryFolder(
+                    getter_Copies(aListener->m_templateUri));
+                if (NS_FAILED(rv)) return rv;
+                needDummyHeader =
+                  PL_strcasestr(aListener->m_templateUri, "mailbox") != nsnull;
+                rv = aListener->QueryInterface(
+                  nsCOMTypeInfo<nsIUrlListener>::GetIID(),
+                  getter_AddRefs(urlListener));
+                if (NS_FAILED(rv))
+                {
+                  delete aListener;
+                  return rv;
+                }
+                NS_ADDREF(aListener); 
+                // nsUrlListenerManager uses nsVoidArray
+                // to keep trach of all listeners we have
+                // to manually add refs ourself
+                messageService->SaveMessageToDisk(url, aSpec, 
+                                                  needDummyHeader,
+                                                  urlListener, nsnull);
               }
           }
         }
@@ -1455,7 +1455,6 @@ NS_IMETHODIMP
 nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
-  char *templateUri = nsnull;
 
   if (m_fileSpec)
   {
@@ -1464,16 +1463,10 @@ nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
     if (NS_FAILED(rv)) goto done;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;
-    prefs->CopyCharPref("mail.default_templates_uri", &templateUri);
-    if (!templateUri || !*templateUri) 
-    {
-      rv = NS_ERROR_FAILURE;
-      goto done;
-    }
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;
     nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(templateUri, getter_AddRefs(res));
+    rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
     if (NS_FAILED(rv)) goto done;
     nsCOMPtr<nsIMsgFolder> templateFolder;
     templateFolder = do_QueryInterface(res, &rv);
@@ -1495,7 +1488,6 @@ done:
       Release(); // no more work to be done; kill ourself
     }
   }
-  PR_FREEIF(templateUri);
   return rv;
 }
 

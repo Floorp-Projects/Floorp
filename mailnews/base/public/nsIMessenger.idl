@@ -26,6 +26,7 @@
 #include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIMsgWindow.idl"
+#include "nsIMsgIdentity.idl"
 
 %{C++
 #include "nsIDOMWindow.h"
@@ -79,7 +80,7 @@ interface nsIMessenger : nsISupports {
 	void SendUnsentMessages();
 	void LoadFirstDraft();
 	void SetDocumentCharset(in wstring characterSet);
-    void saveAs(in string url, in boolean asFile);
+    void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity);
     void openAttachment(in string url, in string displayName, in string messageUri);
 };
 
