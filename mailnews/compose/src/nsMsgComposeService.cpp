@@ -166,7 +166,7 @@ nsresult nsMsgComposeService::Init()
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = observerService->AddObserver(this, "quit-application", PR_TRUE);
+    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
@@ -324,7 +324,7 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
 NS_IMETHODIMP
 nsMsgComposeService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  if (!nsCRT::strcmp(aTopic,"profile-do-change") || !nsCRT::strcmp(aTopic,"quit-application"))
+  if (!strcmp(aTopic,"profile-do-change") || !strcmp(aTopic,NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
     DeleteCachedWindows();
     return NS_OK;
@@ -427,10 +427,10 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
           nsCAutoString group;
           nsCAutoString host;
         
-          PRInt32 slashpos = newsURI.FindChar('/');
+          PRInt32 slashpos = newsURI.RFindChar('/');
           if (slashpos > 0 )
           {
-            // uri is "host/group"
+            // uri is "[s]news://host[:port]/group"
             newsURI.Left(host, slashpos);
             newsURI.Right(group, newsURI.Length() - slashpos - 1);
           }
