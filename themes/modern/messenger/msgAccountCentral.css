@@ -30,38 +30,86 @@
   background-color: #FFFFFF;
 }
 
+separator {
+  height: 5px;
+}
+
+separator.thin {
+  height: 15px;
+}
+
+/* ::::: rows ::::: */
+
 #acctCentralHeaderRow {
-  margin: 5px 5px 5px 5px;
-  background-color: lightgrey;
-  font-size: 20px;
+  padding: 10px 0px 10px 10px;
+  font-size: 180%;
   font-weight: bold;
   text-align: left;
 }
 
 .acctCentralRow {
-  margin-left: 20px;
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#row-iconic");
+  margin-left: 10px;
+  font-size: 125%;
+}
+
+.row-iconic-icon {
+  list-style-image: inherit;
+  margin-right: 10px;
 }
 
 .acctCentralRowTitleBox {
-  background-color: #ABCDEF;
-}
-
-.acctCentralTitleRow {
-  margin-left: 10px;
-  font-size: 15px;
+  background-color: #C7D0D9;
+  font-size: 150%;
   font-weight: bold;
 }
 
-.acctCentralText {
-  font-size: 15px;
-}
+/* ::::: links ::::: */
 
 .acctCentralLinkText {
-  color: #0000FF;
+  cursor: pointer;
+  color: #212731;
   text-decoration: underline;
 }
 
 .acctCentralLinkText:hover {
-  cursor: pointer;
+  color: #39598E;
 }
 
+.acctCentralLinkText:hover:active {
+  color: #000000;
+}
+
+/* ::::: row icons ::::: */
+
+#ReadMessages {
+  list-style-image: url("chrome://messenger/skin/icons/acct-read.gif");
+}
+
+#ComposeMessage {
+  list-style-image: url("chrome://messenger/skin/icons/acct-compose.gif");
+}
+
+#SubscribeNewsgroups {
+  list-style-image: url("chrome://messenger/skin/icons/acct-subscribe.gif");
+}
+
+#SearchMessages {
+  list-style-image: url("chrome://messenger/skin/icons/acct-search.gif");
+}
+
+#AccountSettings {
+  list-style-image: url("chrome://messenger/skin/icons/acct-prefs.gif");
+}
+
+#CreateAccount {
+  list-style-image: url("chrome://messenger/skin/icons/acct-newaccount.gif");
+}
+
+#CreateFilters {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.gif");
+}
+
+#OfflineSettings {
+  list-style-image: url("chrome://messenger/skin/icons/acct-prefs.gif");
+}

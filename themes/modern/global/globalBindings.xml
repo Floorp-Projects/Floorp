@@ -257,6 +257,15 @@
   	</content>
   </binding>
 
+  <binding id="row-iconic" extends="xul:row">
+    <content autostretch="never">
+      <xul:hbox autostretch="never">
+        <xul:image class="row-iconic-icon"/>
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+
   <binding id="autostretch-never" extends="xul:box">
     <content autostretch="never"/>
   </binding>
