@@ -120,8 +120,13 @@ nsPoint *pointlist;
   aSurface->FillRect(0,0,rect.width,rect.height);
 
   aSurface->SetColor(NS_RGB(255, 0, 0));
-  aSurface->DrawString("GFX - Pixel coverage test\0",150,30);
-  aSurface->DrawString("(Use (u, d, r, l) keys to scroll the window contents)\0",150,50);
+ 
+  nsAutoString strText6(NS_LITERAL_STRING("GFX - Pixel coverage test"));
+  aSurface->DrawString(strText6,150,30);
+  nsAutoString strText5(NS_LITERAL_STRING("(Use (u, d, r, l) keys to scroll the window contents)"));
+  aSurface->DrawString(strText5,150,50);
+
+
             
   aSurface->Translate(gOffsetX, gOffsetY);
 
@@ -146,7 +151,10 @@ nsPoint *pointlist;
                      pixelLoc(10,p2t, oy), 
                      pixelLoc(12,p2t, ox), 
                      pixelLoc(10, p2t, oy));
-  aSurface->DrawString("DrawLine - There should be a one pixel gap where the red and black lines meet\0",ox + 30, oy);
+
+   nsAutoString strText4(NS_LITERAL_STRING("DrawLine - There should be a one pixel gap where the red and black lines meet"));
+   aSurface->DrawString(strText4, ox + 30, oy);
+
 
   oy += yspacing;
 
@@ -172,7 +180,10 @@ nsPoint *pointlist;
   pointlist[4].y = pixelLoc(1, p2t, oy);
 
   aSurface->DrawPolyline(pointlist,5);
-  aSurface->DrawString("DrawPolyline - There should be a one pixel gap in the rectangle\0", ox + 30, oy);
+
+  nsAutoString strText3(NS_LITERAL_STRING("DrawPolyline - There should be a one pixel gap in the rectangle"));
+  aSurface->DrawString(strText3, ox + 30, oy);
+
   delete [] pointlist;
 
   oy += yspacing;
@@ -195,7 +206,10 @@ nsPoint *pointlist;
                      pixelLoc(10, p2t,  0));
 
 
-  aSurface->DrawString("FillRect - The red line should be at the right edge under the rectangle\0", ox + 30, oy);
+  nsAutoString strText2(NS_LITERAL_STRING("FillRect - The red line should be at the right edge under the rectangle"));
+  aSurface->DrawString(strText2, ox + 30, oy);
+
+
 
   oy += yspacing; 
 
@@ -216,10 +230,11 @@ nsPoint *pointlist;
                      pixelLoc(10, p2t,  0));
 
 
-  aSurface->DrawString("DrawRect - The red line should be at the right edge under the rectangle\0", ox + 30, oy);
+  nsAutoString strText1(NS_LITERAL_STRING("DrawRect - The red line should be at the right edge under the rectangle"));
+  aSurface->DrawString(strText1, ox + 30, oy);
+
   oy += yspacing;
 
- 
 
  /*
 #ifdef WINDOWSBROKEN
@@ -335,10 +350,22 @@ nsresult CoverageTest(int *argc, char **argv)
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
+    static NS_DEFINE_CID(kScreenManagerCID, NS_SCREENMANAGER_CID);
+    static NS_DEFINE_IID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID); 
+    static NS_DEFINE_IID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID); 
+    static NS_DEFINE_IID(kCFontMetricsCID, NS_FONT_METRICS_CID); 
+    static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID); 
+    static NS_DEFINE_IID(kCTimerCID, NS_TIMER_CID);
+    static NS_DEFINE_IID(kCTimerManagerCID, NS_TIMERMANAGER_CID);
+    nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "@mozilla.org/gfx/screenmanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "@mozilla.org/gfx/image;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+#ifdef XP_PC
+  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
 
     nsresult  res;
 
@@ -383,7 +410,10 @@ nsresult CoverageTest(int *argc, char **argv)
     gWindow->Create((nsIWidget*) nsnull, rect, HandleEvent, 
                    (nsIDeviceContext *) nsnull,
                    appShell);
-    gWindow->SetTitle("Pixel coverage test");
+
+    nsAutoString strTitle(NS_LITERAL_STRING("Pixel coverage test"));
+    gWindow->SetTitle(strTitle);
+
 
     //
     // Create Device Context based on main window
