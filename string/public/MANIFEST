@@ -32,5 +32,4 @@ nsPrintfCString.h
 nsPrivateSharableString.h
 nsReadableUtils.h
 nsSharedBufferList.h
-nsSharedString.h
 nsSlidingString.h
