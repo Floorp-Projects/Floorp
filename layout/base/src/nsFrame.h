@@ -47,7 +47,7 @@ public:
   NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent);
 
   NS_IMETHOD  GetStyleContext(nsIPresContext* aContext, nsIStyleContext*& aStyleContext);
-  NS_IMETHOD  SetStyleContext(nsIStyleContext* aContext);
+  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext, nsIStyleContext* aContext);
 
   // Get the style struct associated with this frame
   NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct);
@@ -171,7 +171,7 @@ public:
 
 protected:
   // Style post processing hook
-  NS_METHOD DidSetStyleContext(void);
+  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
   // Selection Methods
   NS_METHOD HandlePress(nsIPresContext& aPresContext,

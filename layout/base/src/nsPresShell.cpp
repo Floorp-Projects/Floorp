@@ -346,7 +346,7 @@ void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
           // set root frame's style context
           nsIStyleContext* rootContext = mPresContext->ResolveStyleContextFor(root, nsnull);
-          mRootFrame->SetStyleContext(rootContext);
+          mRootFrame->SetStyleContext(mPresContext,rootContext);
           NS_RELEASE(rootContext);
 
           // Bind root frame to root view (and root window)

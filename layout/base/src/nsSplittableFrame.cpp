@@ -65,7 +65,7 @@ NS_METHOD nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   // Resolve style for the continuing frame and set its style context.
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContinuingFrame->SetStyleContext(styleContext);
+  aContinuingFrame->SetStyleContext(aPresContext,styleContext);
   NS_RELEASE(styleContext);
 
   return NS_OK;
