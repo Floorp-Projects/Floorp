@@ -27,12 +27,14 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_CONTENT = \
+	$(srcdir)/PrefsWindow.dtd \
 	$(srcdir)/pref-advanced.dtd \
 	$(srcdir)/pref-appearance.dtd \
 	$(srcdir)/pref-applications.dtd \
 	$(srcdir)/pref-cache.dtd \
 	$(srcdir)/pref-colors.dtd \
 	$(srcdir)/pref-composer.dtd \
+	$(srcdir)/pref-debug.dtd \
 	$(srcdir)/pref-download.dtd \
 	$(srcdir)/pref-fonts.dtd \
 	$(srcdir)/pref-languages.dtd \
@@ -41,8 +43,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/pref-proxies.dtd \
 	$(srcdir)/pref-publish.dtd \
 	$(srcdir)/pref-smart_browsing.dtd \
-  $(srcdir)/pref-smartupdate.dtd \
-	$(srcdir)/PrefsWindow.dtd \
+	$(srcdir)/pref-smartupdate.dtd \
 	$(srcdir)/preftree.dtd \
 	$(NULL)
 

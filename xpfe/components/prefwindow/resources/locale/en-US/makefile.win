@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) pref-colors.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-composer.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-download.dtd  $(DIST)\bin\chrome\pref\locale\en-US
+	$(MAKE_INSTALL) pref-debug.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-fonts.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-languages.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\pref\locale\en-US

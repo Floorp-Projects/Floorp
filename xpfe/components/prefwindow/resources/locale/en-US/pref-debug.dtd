@@ -1,0 +1,15 @@
+<!-- extracted from content/pref-debug.xul -->
+
+<!ENTITY window.title "Debug">
+
+<!ENTITY lHeader "Debug">
+<!ENTITY rHeader "Layout and Rendering debugging preferences">
+
+<!-- Debug: Turn on gfx-rendered widgets -->
+<!ENTITY widgetRendering.label "Debug: Widget rendering">
+<!ENTITY nativeWidgets.label "native">
+<!ENTITY partialGfxWidgets.label "partial-gfx">
+<!ENTITY gfxWidgets.label "gfx">
+
+<!-- Debug: Flash Invalidate() areas -->
+<!ENTITY widgetFlashing.label "Flash Invalidate() Areas">

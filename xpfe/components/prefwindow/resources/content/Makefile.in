@@ -27,12 +27,16 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_CONTENT = \
+	$(srcdir)/PrefsWindow.html \
+	$(srcdir)/PrefsWindow.js \
+	$(srcdir)/PrefsWindow.xul \
 	$(srcdir)/pref-advanced.xul \
 	$(srcdir)/pref-appearance.xul \
 	$(srcdir)/pref-applications.xul \
 	$(srcdir)/pref-cache.xul \
 	$(srcdir)/pref-colors.xul \
 	$(srcdir)/pref-composer.xul \
+	$(srcdir)/pref-debug.xul \
 	$(srcdir)/pref-download.xul \
 	$(srcdir)/pref-fonts.xul \
 	$(srcdir)/pref-languages.xul \
@@ -43,9 +47,6 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/pref-select.html \
 	$(srcdir)/pref-smart_browsing.xul \
 	$(srcdir)/pref-smartupdate.xul \
-	$(srcdir)/PrefsWindow.html \
-	$(srcdir)/PrefsWindow.js \
-	$(srcdir)/PrefsWindow.xul \
 	$(srcdir)/preftree.xul \
 	$(NULL)
 
