@@ -2279,8 +2279,12 @@ var FullScreen =
         if (!aShow) {
           gToolbarMode = els[i].getAttribute("mode");
           gIconSize = els[i].getAttribute("iconsize");
-          els[i].setAttribute("mode", "icons");
-          els[i].setAttribute("iconsize", "small");
+          // It's okay to display full screen in text mode.
+          // Otherwise we'll switch to small icons.
+          if (gToolbarMode != "text") {
+            els[i].setAttribute("mode", "icons");
+            els[i].setAttribute("iconsize", "small");
+          }
         }
         else {
           els[i].setAttribute("mode", gToolbarMode);
@@ -2299,6 +2303,17 @@ var FullScreen =
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
+    
+    var toolbox = document.getElementById("navigator-toolbox");
+    if (!aShow && gToolbarMode != "text") {
+      toolbox.setAttribute("mode", "icons");
+      toolbox.setAttribute("iconsize", "small");
+    }
+    else if (aShow) {
+      toolbox.setAttribute("mode", gToolbarMode);
+      toolbox.setAttribute("iconsize", gIconSize);
+    }
+      
   }
 };
 
