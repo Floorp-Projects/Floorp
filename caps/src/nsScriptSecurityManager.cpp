@@ -392,6 +392,7 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
         nsresult rv = IsCapabilityEnabled(capability, &capabilityEnabled);
         if (NS_FAILED(rv) || !capabilityEnabled)
             return NS_ERROR_DOM_SECURITY_ERR;
+        return NS_OK;
       }
       default:
         // Default is no access
@@ -1110,6 +1111,28 @@ static char *domPropNames[] = {
     NS_DOM_PROP_NAMES
 };
 
+struct nsDomainEntry {
+    nsDomainEntry(const char *anOrigin, const char *aPolicy, 
+                  int aPolicyLength) 
+        : mNext(nsnull), mOrigin(anOrigin), mPolicy(aPolicy, aPolicyLength)
+    { }
+    PRBool Matches(const char *anOrigin) {
+        int len = nsCRT::strlen(anOrigin);
+        int thisLen = mOrigin.Length();
+        if (len < thisLen)
+            return PR_FALSE;
+        if (mOrigin != (anOrigin + (len - thisLen)))
+            return PR_FALSE;
+        if (len == thisLen)
+            return PR_TRUE;
+        char charBefore = anOrigin[len-thisLen-1];
+        return (charBefore == '.' || charBefore == ':' || charBefore == '/');
+    }
+    nsDomainEntry *mNext;
+    nsCString mOrigin;
+    nsCString mPolicy;
+};
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal, 
@@ -1135,8 +1158,26 @@ nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal,
                 return rv;
             nsCString *policy = nsnull;
             if (mOriginToPolicyMap) {
-                nsStringKey key(origin);
-                policy = (nsCString *) mOriginToPolicyMap->Get(&key);
+                const char *s = origin;
+                const char *nextToLastDot = nsnull;
+                const char *lastDot = nsnull;
+                const char *p = s;
+                while (*p) {
+                    if (*p == '.') {
+                        nextToLastDot = lastDot;
+                        lastDot = p;
+                    }
+                    p++;
+                }
+                nsStringKey key(nextToLastDot ? nextToLastDot+1 : s);
+                nsDomainEntry *de = (nsDomainEntry *) mOriginToPolicyMap->Get(&key);
+                while (de) {
+                    if (de->Matches(s)) {
+                        policy = &de->mPolicy;
+                        break;
+                    }
+                    de = de->mNext;
+                }
             }
             if (policy)
                 result += *policy;
@@ -1172,8 +1213,12 @@ findDomProp(const char *propName, int n)
 PR_STATIC_CALLBACK(PRBool)
 DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
-    nsCString* entry = (nsCString*) aData;
-    delete entry;
+    nsDomainEntry *entry = (nsDomainEntry *) aData;
+    do {
+        nsDomainEntry *next = entry->mNext;
+        delete entry;
+        entry = next;
+    } while (entry);
     return PR_TRUE;
 }
 
@@ -1217,17 +1262,45 @@ nsScriptSecurityManager::enumeratePolicyCallback(const char *prefName,
                 return;
             char *q=s;
             char *r=s;
+            char *lastDot = nsnull;
+            char *nextToLastDot = nsnull;
             PRBool working = PR_TRUE;
             while (working) {
                 if (*r == ' ' || *r == '\0') {
                     working = (*r != '\0');
                     *r = '\0';
-                    nsStringKey key(q);
-                    nsCString *value = new nsCString(policyName, policyLength);
+                    nsStringKey key(nextToLastDot ? nextToLastDot+1 : q);
+                    nsDomainEntry *value = new nsDomainEntry(q, policyName, 
+                                                             policyLength);
                     if (!value)
                         break;
-                    mgr->mOriginToPolicyMap->Put(&key, value);
+                    nsDomainEntry *de = (nsDomainEntry *) 
+                        mgr->mOriginToPolicyMap->Get(&key);
+                    if (!de) {
+                        mgr->mOriginToPolicyMap->Put(&key, value);
+                    } else {
+                        if (de->Matches(q)) {
+                            value->mNext = de;
+                            mgr->mOriginToPolicyMap->Put(&key, value);
+                        } else {
+                            while (de->mNext) {
+                                if (de->mNext->Matches(q)) {
+                                    value->mNext = de->mNext;
+                                    de->mNext = value;
+                                    break;
+                                }
+                                de = de->mNext;
+                            }
+                            if (!de->mNext) {
+                                de->mNext = value;
+                            }
+                        }
+                    }
                     q = r + 1;
+                    lastDot = nextToLastDot = nsnull;
+                } else if (*r == '.') {
+                    nextToLastDot = lastDot;
+                    lastDot = r;
                 }
                 r++;
             }
