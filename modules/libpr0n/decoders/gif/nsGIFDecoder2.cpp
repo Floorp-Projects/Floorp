@@ -305,15 +305,15 @@ int EndImageFrame(
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   
-  decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
   // We actually have the timeout information before we get the lzw encoded image
   // data, at least according to the spec, but we delay in setting the timeout for
   // the image until here to help ensure that we have the whole image frame decoded before
   // we go off and try to display another frame.
-
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
-
-  if (decoder->mObserver) {
+    
+  if (decoder->mObserver && decoder->mImageFrame) {
+    decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
+  
     PRInt32 remainingRows = decoder->mCurrentRow-decoder->mLastFlushedRow;
     if (remainingRows) {
       PRInt32 width;
