@@ -16,14 +16,12 @@
 # Reserved.
 
 
-DEPTH	= ..\..\..
-LIBRARY_SUFFIX=$(MOZ_BITS)
-MAKE_OBJ_TYPE=DLL
-MAKE_OBJ_TYPE = DLL
-DLLNAME = rdf
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+DEPTH	= ..\..
 MODULE=rdf 
-REQUIRES=nspr rdf xpcom netlib
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME=rdf
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 C_OBJS=.\$(OBJDIR)\vocab.obj \
        .\$(OBJDIR)\core.obj \
@@ -32,17 +30,19 @@ C_OBJS=.\$(OBJDIR)\vocab.obj \
        .\$(OBJDIR)\rdfparse.obj \
        .\$(OBJDIR)\bmk2rdf.obj \
        .\$(OBJDIR)\columns.obj \
-       .\$(OBJDIR)\ht.obj \
-	.\$(OBJDIR)\netglue.obj \
        .\$(OBJDIR)\rdfht.obj \
+       .\$(OBJDIR)\ht.obj \
        $(NULL)
 
 CPP_OBJS=\
 	.\$(OBJDIR)\comwrap.obj \
+	.\$(OBJDIR)\netglue.obj \
 	$(NULL)
 
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
+ $(DIST)\lib\raptorbase.lib     \
+ $(DIST)\lib\netlib.lib     \
  $(DIST)\lib\libplc21.lib    \
  $(LIBNSPR)  
 

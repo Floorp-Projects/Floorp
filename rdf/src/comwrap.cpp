@@ -138,7 +138,7 @@ public:
   rdfCursorWrapper(RDF_Cursor c);
   virtual ~rdfCursorWrapper();
 
-  /*   NS_METHOD HasElements(PRBool& hasElements); */
+  NS_METHOD HasElements(PRBool& hasElements);
 
   NS_METHOD Next(RDF_NodeStruct& n);
 
@@ -529,6 +529,14 @@ rdfCursorWrapper::rdfCursorWrapper(RDF_Cursor c) : mCursor(c)
 rdfCursorWrapper::~rdfCursorWrapper() 
 { 
   RDF_DisposeCursor( mCursor ); 
+}
+
+NS_METHOD 
+rdfCursorWrapper::HasElements(PRBool& hasElements)
+{
+  // XXX
+  PR_ASSERT( PR_FALSE );
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD

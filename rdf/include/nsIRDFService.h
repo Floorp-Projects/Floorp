@@ -48,8 +48,6 @@ class nsIRDFDataBase;
 class nsIRDFService : public nsISupports {
 public:
 
-  NS_IMETHOD Initialize();
-
 #ifdef RDF_NOT_IMPLEMENTED
   NS_IMETHOD RegisterHandler(RDF_String url_selector, const nsCID& clsid) = 0;
 
