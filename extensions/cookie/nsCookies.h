@@ -42,12 +42,6 @@
 #include "nsString.h"
 #include "nsCookie.h"
 
-#ifdef _IMPL_NS_COOKIE
-#define NS_COOKIE NS_EXPORT
-#else
-#define NS_COOKIE NS_IMPORT
-#endif
-
 #include "nsIIOService.h"
 #include "nsIURI.h"
 
