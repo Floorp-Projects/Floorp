@@ -639,7 +639,6 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 
 NS_METHOD nsBaseWidget::AddMenuListener(nsIMenuListener * aListener)
 {
-  NS_PRECONDITION(mMenuListener == nsnull, "Null menu listener");
   NS_IF_RELEASE(mMenuListener);
   NS_IF_ADDREF(aListener);
   mMenuListener = aListener;
