@@ -554,7 +554,7 @@ AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
 AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
 	[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
 AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
-	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
+	[MISSING_X="$MISSING_X -lXmu"], $X_PRE_LIBS $XLIBS $XT_LIBS)
 LDFLAGS="$_SAVE_LDFLAGS"
 
 dnl Check for toolkit libs
