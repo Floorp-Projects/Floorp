@@ -419,8 +419,10 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   Ok, this animation SHOULD be used.  It is different
   from the ballooning outward animation used by default.
   
+  Causes NT to screw up.
+  XXX Need to query for the OS (95 vs. 98 vs. NT) and only enable for 98
     - Dave
-  */
+  
 #define TPM_VERPOSANIMATION 0x1000L
 #define TPM_VERNEGANIMATION 0x2000L
 #define TPM_HORPOSANIMATION 0x0800L
@@ -468,7 +470,7 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
       alignFlags |= TPM_HORPOSANIMATION;
     }
   }
-
+*/
   PRInt32 identifier = ::TrackPopupMenu(
 	  mMenu, 
 	  alignFlags, 
