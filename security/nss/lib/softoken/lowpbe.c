@@ -470,15 +470,19 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 
     PORT_Memset(D.data, (char)bitGenPurpose, D.len);
     if (SLen) {
-	PORT_Memcpy(S, salt->data,  salt->len);
-	if (salt->len != SLen) {
-	    PORT_Memcpy(S+salt->len, salt->data, SLen-(salt->len));
+	unsigned int z = 0;
+	while (z < SLen) {
+	    int amount = (z + salt->len > SLen) ? SLen - z : salt->len;
+	    PORT_Memcpy(S, salt->data, amount);
+	    z += salt->len;
 	}
     } 
     if (PLen) {
-	PORT_Memcpy(P, salt->data,  salt->len);
-	if (salt->len != PLen) {
-	    PORT_Memcpy(P+salt->len, salt->data,  PLen-salt->len);
+	unsigned int z = 0;
+	while (z < PLen) {
+	    int amount = (z + pwitem->len > PLen) ? PLen - z : pwitem->len;
+	    PORT_Memcpy(P, pwitem->data, amount);
+	    z += pwitem->len;
 	}
     } 
 
