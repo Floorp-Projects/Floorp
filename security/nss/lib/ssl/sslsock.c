@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.7 2001/01/05 01:38:26 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.8 2001/01/13 01:52:58 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -78,7 +78,7 @@ static cipherPolicy ssl_ciphers[] = {	   /*   Export           France   */
  {  0,					    SSL_NOT_ALLOWED, SSL_NOT_ALLOWED }
 };
 
-static const sslSocketOps ssl_default_ops = {	/* No SSL, No Socks. */
+static const sslSocketOps ssl_default_ops = {	/* No SSL. */
     ssl_DefConnect,
     NULL,
     ssl_DefBind,
@@ -93,22 +93,7 @@ static const sslSocketOps ssl_default_ops = {	/* No SSL, No Socks. */
     ssl_DefGetsockname
 };
 
-static const sslSocketOps ssl_socks_ops = {	/* No SSL, has socks. */
-    ssl_SocksConnect,
-    ssl_SocksAccept,
-    ssl_SocksBind,
-    ssl_SocksListen,
-    ssl_DefShutdown,
-    ssl_DefClose,
-    ssl_SocksRecv,
-    ssl_SocksSend,
-    ssl_SocksRead,
-    ssl_SocksWrite,
-    ssl_DefGetpeername,
-    ssl_SocksGetsockname
-};
-
-static const sslSocketOps ssl_secure_ops = {	/* SSL, no socks. */
+static const sslSocketOps ssl_secure_ops = {	/* SSL. */
     ssl_SecureConnect,
     NULL,
     ssl_DefBind,
@@ -121,21 +106,6 @@ static const sslSocketOps ssl_secure_ops = {	/* SSL, no socks. */
     ssl_SecureWrite,
     ssl_DefGetpeername,
     ssl_DefGetsockname
-};
-
-static const sslSocketOps ssl_secure_socks_ops = { /* Both SSL and Socks. */
-    ssl_SecureSocksConnect,
-    ssl_SecureSocksAccept,
-    ssl_SocksBind,
-    ssl_SocksListen,
-    ssl_SecureShutdown,
-    ssl_SecureClose,
-    ssl_SecureRecv,
-    ssl_SecureSend,
-    ssl_SecureRead,
-    ssl_SecureWrite,
-    ssl_DefGetpeername,
-    ssl_SocksGetsockname
 };
 
 /*
@@ -219,7 +189,7 @@ ssl_DupSocket(sslSocket *os)
 
     ss = ssl_NewSocket();
     if (ss) {
-	ss->useSocks           = os->useSocks;
+	ss->useSocks           = PR_FALSE;
 	ss->useSecurity        = os->useSecurity;
 	ss->requestCertificate = os->requestCertificate;
 	ss->requireCertificate = os->requireCertificate;
@@ -236,8 +206,6 @@ ssl_DupSocket(sslSocket *os)
 	ss->url                = !os->url    ? NULL : PORT_Strdup(os->url);
 
 	ss->ops      = os->ops;
-	ss->peer     = os->peer;
-	ss->port     = os->port;
 	ss->rTimeout = os->rTimeout;
 	ss->wTimeout = os->wTimeout;
 	ss->cTimeout = os->cTimeout;
@@ -301,13 +269,6 @@ ssl_DupSocket(sslSocket *os)
 		goto losage;
 	    }
 	}
-	if (ss->useSocks) {
-	    /* Create security data */
-	    rv = ssl_CopySocksInfo(ss, os);
-	    if (rv != SECSuccess) {
-		goto losage;
-	    }
-	}
     }
     return ss;
 
@@ -349,7 +310,6 @@ ssl_FreeSocket(sslSocket *ss)
 #endif
 
     /* Free up socket */
-    ssl_DestroySocksInfo(fs->socks);
     ssl_DestroySecurityInfo(fs->sec);
     ssl3_DestroySSL3Info(fs->ssl3);
     PORT_Free(fs->saveBuf.buf);
@@ -431,11 +391,7 @@ ssl_FreeSocket(sslSocket *ss)
 static void
 ssl_ChooseOps(sslSocket *ss)
 {
-    if (ss->useSocks)  {
-    	ss->ops = ss->useSecurity ? &ssl_secure_socks_ops : &ssl_socks_ops ;
-    } else {
-    	ss->ops = ss->useSecurity ? &ssl_secure_ops       : &ssl_default_ops;
-    }
+    ss->ops = ss->useSecurity ? &ssl_secure_ops       : &ssl_default_ops;
 }
 
 /* Called from SSL_Enable (immediately below) */
@@ -444,12 +400,6 @@ PrepareSocket(sslSocket *ss)
 {
     SECStatus     rv = SECSuccess;
 
-    if (ss->useSocks) {
-	rv = ssl_CreateSocksInfo(ss);
-	if (rv != SECSuccess) {
-	    return rv;
-	}
-    }
     if (ss->useSecurity) {
 	rv = ssl_CreateSecurityInfo(ss);
 	if (rv != SECSuccess) {
@@ -484,8 +434,12 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 
     switch (which) {
       case SSL_SOCKS:
-	ss->useSocks = on;
+	ss->useSocks = PR_FALSE;
 	rv = PrepareSocket(ss);
+	if (on) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    rv = SECFailure;
+	}
 	break;
 
       case SSL_SECURITY:
@@ -604,7 +558,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     ssl_GetSSL3HandshakeLock(ss);
 
     switch (which) {
-    case SSL_SOCKS:               on = ss->useSocks;           break;
+    case SSL_SOCKS:               on = PR_FALSE;               break;
     case SSL_SECURITY:            on = ss->useSecurity;        break;
     case SSL_REQUEST_CERTIFICATE: on = ss->requestCertificate; break;
     case SSL_REQUIRE_CERTIFICATE: on = ss->requireCertificate; break;
@@ -642,7 +596,7 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     }
 
     switch (which) {
-    case SSL_SOCKS:               on = ssl_defaults.useSocks;           break;
+    case SSL_SOCKS:               on = PR_FALSE;                        break;
     case SSL_SECURITY:            on = ssl_defaults.useSecurity;        break;
     case SSL_REQUEST_CERTIFICATE: on = ssl_defaults.requestCertificate; break;
     case SSL_REQUIRE_CERTIFICATE: on = ssl_defaults.requireCertificate; break;
@@ -677,7 +631,11 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 {
     switch (which) {
       case SSL_SOCKS:
-	ssl_defaults.useSocks = on;
+	ssl_defaults.useSocks = PR_FALSE;
+	if (on) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return SECFailure;
+	}
 	break;
 
       case SSL_SECURITY:
@@ -1253,7 +1211,6 @@ ssl_GetPeerName(PRFileDesc *fd, PRNetAddr *addr)
 }
 
 /*
-** XXX this code doesn't work properly inside a Socks server.
 */
 SECStatus
 ssl_GetPeerInfo(sslSocket *ss)
@@ -1267,20 +1224,6 @@ ssl_GetPeerInfo(sslSocket *ss)
 
     osfd = ss->fd->lower;
     ci   = &ss->sec->ci;
-
-    /* If ssl_SocksConnect() has previously recorded the peer's IP & port,
-     * use that.
-     */
-    if ((ss->port != 0) &&
-	((ss->peer.pr_s6_addr32[0] != 0) || (ss->peer.pr_s6_addr32[1] != 0) ||
-	 (ss->peer.pr_s6_addr32[2] != 0) || (ss->peer.pr_s6_addr32[3] != 0))) {
-	/* SOCKS code has already recorded the peer's IP addr and port.
-	 * (NOT the proxy's addr and port) in ss->peer & port.
-	 */
-	ci->peer = ss->peer;
-	ci->port = ss->port;
-	return SECSuccess;
-    }
 
     PORT_Memset(&sin, 0, sizeof(sin));
     rv = osfd->methods->getpeername(osfd, &sin);
@@ -1343,11 +1286,11 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *out_flags)
     }
 
     if ((ret_flags & PR_POLL_WRITE) && 
-        ( (ss->useSocks && ss->handshake) || 
-	  (ss->useSecurity && !ss->connected && 
+        ss->useSecurity && 
+	!ss->connected && 
 	   /* XXX There needs to be a better test than the following. */
 	   /* Don't check ss->securityHandshake. */
-	   (ss->handshake || ss->nextHandshake)))) {
+	(ss->handshake || ss->nextHandshake)) {
     	/* The user is trying to write, but the handshake is blocked waiting
 	 * to read, so tell NSPR NOT to poll on write.
 	 */
@@ -1780,7 +1723,7 @@ ssl_NewSocket(void)
 	int i;
  
 	ss->useSecurity        = ssl_defaults.useSecurity;
-	ss->useSocks           = ssl_defaults.useSocks;
+	ss->useSocks           = PR_FALSE;
 	ss->requestCertificate = ssl_defaults.requestCertificate;
 	ss->requireCertificate = ssl_defaults.requireCertificate;
 	ss->handshakeAsClient  = ssl_defaults.handshakeAsClient;
@@ -1791,8 +1734,6 @@ ssl_NewSocket(void)
 	ss->fdx                = ssl_defaults.fdx;
 	ss->v2CompatibleHello  = ssl_defaults.v2CompatibleHello;
 	ss->detectRollBack     = ssl_defaults.detectRollBack;
-	memset(&ss->peer, 0, sizeof(ss->peer));
-	ss->port               = 0;
 	ss->noCache            = ssl_defaults.noCache;
 	ss->peerID             = NULL;
 	ss->rTimeout	       = PR_INTERVAL_NO_TIMEOUT;
