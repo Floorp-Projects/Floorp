@@ -459,7 +459,7 @@ public class Codegen extends Interpreter
          // load 'args'
         cfw.add(ByteCode.ALOAD_0);
         cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org/mozilla/javascript/ScriptRuntime",
+                      "org/mozilla/javascript/optimizer/OptRuntime",
                       "main",
                       "(Lorg/mozilla/javascript/Script;[Ljava/lang/String;)V");
         cfw.add(ByteCode.RETURN);

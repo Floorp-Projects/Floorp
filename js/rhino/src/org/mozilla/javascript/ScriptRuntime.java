@@ -2092,7 +2092,7 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
-    private static ScriptableObject getGlobal(Context cx) {
+    public static ScriptableObject getGlobal(Context cx) {
         final String GLOBAL_CLASS = "org.mozilla.javascript.tools.shell.Global";
         Class globalClass = Kit.classOrNull(GLOBAL_CLASS);
         if (globalClass != null) {
@@ -2112,26 +2112,6 @@ public class ScriptRuntime {
             }
         }
         return new ImporterTopLevel(cx);
-    }
-
-    public static void main(Script script, String[] args)
-        throws JavaScriptException
-    {
-        Context cx = Context.enter();
-        try {
-            ScriptableObject global = getGlobal(cx);
-
-            // get the command line arguments and define "arguments"
-            // array in the top-level object
-            Object[] argsCopy = new Object[args.length];
-            System.arraycopy(args, 0, argsCopy, 0, args.length);
-            Scriptable argsObj = cx.newArray(global, argsCopy);
-            global.defineProperty("arguments", argsObj,
-                                  ScriptableObject.DONTENUM);
-            script.exec(cx, global);
-        } finally {
-            Context.exit();
-        }
     }
 
     public static void initScript(Context cx, final Scriptable scope,
@@ -2166,17 +2146,6 @@ public class ScriptRuntime {
                 }
             }
         }
-    }
-
-    public static Scriptable runScript(Script script) {
-        Context cx = Context.enter();
-        ScriptableObject global = getGlobal(cx);
-        try {
-            script.exec(cx, global);
-        } finally {
-            Context.exit();
-        }
-        return global;
     }
 
     public static Scriptable initVarObj(Context cx, Scriptable scope,

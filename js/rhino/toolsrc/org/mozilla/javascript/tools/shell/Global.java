@@ -922,7 +922,7 @@ public class Global extends ImporterTopLevel {
 }
 
 
-class Runner implements Runnable {
+class Runner implements Runnable, ContextAction {
 
     Runner(Scriptable scope, Function func, Object[] args) {
         this.scope = scope;
@@ -935,16 +935,17 @@ class Runner implements Runnable {
         s = script;
     }
 
-    public void run() {
-        Context cx = Main.enterContext();
-        try {
-            if (f != null)
-                f.call(cx, scope, scope, args);
-            else
-                s.exec(cx, scope);
-        } finally {
-            Context.exit();
-        }
+    public void run()
+    {
+        Main.withContext(this);
+    }
+
+    public Object run(Context cx)
+    {
+        if (f != null)
+            return f.call(cx, scope, scope, args);
+        else
+            return s.exec(cx, scope);
     }
 
     private Scriptable scope;

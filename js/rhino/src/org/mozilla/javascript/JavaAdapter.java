@@ -85,7 +85,7 @@ public final class JavaAdapter
         {
             Scriptable scope = function.getParentScope();
             Scriptable thisObj = scope;
-            return contextFactory.call(this, scope, thisObj, args);
+            return Context.call(contextFactory, this, scope, thisObj, args);
         }
 
         public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -604,15 +604,16 @@ public final class JavaAdapter
 
     public static ContextFactory currentFactory()
     {
-        return Context.getContext().factory();
+        return Context.getContext().getFactory();
     }
 
     /**
      * Utility method which dynamically binds a Context to the current thread,
      * if none already exists.
      */
-    public static Object callMethod(Scriptable scope, Scriptable thisObj,
-                                    Function f, Object[] args, long argsToWrap,
+    public static Object callMethod(Scriptable scope, final Scriptable thisObj,
+                                    final Function f, final Object[] args,
+                                    final long argsToWrap,
                                     ContextFactory factory)
     {
         if (f == null) {
@@ -620,16 +621,21 @@ public final class JavaAdapter
             return Undefined.instance;
         }
         scope = ScriptableObject.getTopLevelScope(scope);
+        if (argsToWrap == 0) {
+            return Context.call(factory, f, scope, thisObj, args);
+        }
+
         Context cx = Context.getCurrentContext();
         if (cx != null) {
             return doCall(cx, scope, thisObj, f, args, argsToWrap);
         } else {
-            cx = Context.enter(factory.newContext());
-            try {
-                return doCall(cx, scope, thisObj, f, args, argsToWrap);
-            } finally {
-                Context.exit();
-            }
+            final Scriptable finalScope = scope;
+            return factory.call(new ContextAction() {
+                public Object run(Context cx)
+                {
+                    return doCall(cx, finalScope, thisObj, f, args, argsToWrap);
+                }
+            });
         }
     }
 
@@ -648,6 +654,18 @@ public final class JavaAdapter
             }
         }
         return f.call(cx, scope, thisObj, args);
+    }
+
+    public static Scriptable runScript(final Script script)
+    {
+        return (Scriptable)Context.call(new ContextAction() {
+            public Object run(Context cx)
+            {
+                ScriptableObject global = ScriptRuntime.getGlobal(cx);
+                script.exec(cx, global);
+                return global;
+            }
+        });
     }
 
     private static void generateCtor(ClassFileWriter cfw, String adapterName,
@@ -736,7 +754,7 @@ public final class JavaAdapter
 
         // Run script and save resulting scope
         cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org/mozilla/javascript/ScriptRuntime",
+                      "org/mozilla/javascript/JavaAdapter",
                       "runScript",
                       "(Lorg/mozilla/javascript/Script;"
                       +")Lorg/mozilla/javascript/Scriptable;");

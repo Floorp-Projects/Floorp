@@ -83,62 +83,76 @@ public class Main {
     /**
      *  Execute the given arguments, but don't System.exit at the end.
      */
-    public static int exec(String args[]) {
+    public static int exec(final String origArgs[]) {
 
-        for (int i=0; i < args.length; i++) {
-            String arg = args[i];
+        for (int i=0; i < origArgs.length; i++) {
+            String arg = origArgs[i];
             if (arg.equals("-sealedlib")) {
                 sealedStdLib = true;
                 break;
             }
         }
 
-        Context cx = enterContext();
-        // Create the top-level scope object.
-        global = getGlobal();
-        errorReporter = new ToolErrorReporter(false, global.getErr());
-        cx.setErrorReporter(errorReporter);
+        withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                // Create the top-level scope object.
+                global = getGlobal();
+                errorReporter = new ToolErrorReporter(false, global.getErr());
+                cx.setErrorReporter(errorReporter);
 
-        args = processOptions(cx, args);
+                String[] args = processOptions(cx, origArgs);
 
-        if (processStdin)
-            fileList.addElement(null);
+                if (processStdin)
+                    fileList.addElement(null);
 
-        // define "arguments" array in the top-level object:
-        // need to allocate new array since newArray requires instances
-        // of exactly Object[], not ObjectSubclass[]
-        Object[] array = new Object[args.length];
-        System.arraycopy(args, 0, array, 0, args.length);
-        Scriptable argsObj = cx.newArray(global, array);
-        global.defineProperty("arguments", argsObj,
-                              ScriptableObject.DONTENUM);
+                // define "arguments" array in the top-level object:
+                // need to allocate new array since newArray requires instances
+                // of exactly Object[], not ObjectSubclass[]
+                Object[] array = new Object[args.length];
+                System.arraycopy(args, 0, array, 0, args.length);
+                Scriptable argsObj = cx.newArray(global, array);
+                global.defineProperty("arguments", argsObj,
+                                      ScriptableObject.DONTENUM);
 
-        for (int i=0; i < fileList.size(); i++) {
-            processSource(cx, (String) fileList.elementAt(i));
-        }
+                for (int i=0; i < fileList.size(); i++) {
+                    processSource(cx, (String) fileList.elementAt(i));
+                }
 
-        cx.exit();
+                return null;
+            }
+        });
+
         return exitCode;
     }
 
     public static Global getGlobal() {
         if (global == null) {
-            try {
-                global = new Global(enterContext());
-            }
-            finally {
-                Context.exit();
-            }
+            withContext(new ContextAction() {
+                public Object run(Context cx)
+                {
+                    global = new Global(cx);
+                    return global;
+                }
+            });
         }
         return global;
     }
 
-    static Context enterContext() {
-        Context cx = new Context();
-        if (securityImpl != null) {
-            cx.setSecurityController(securityImpl);
+    static Object withContext(final ContextAction action) {
+        ContextAction wrap;
+        if (securityImpl == null) {
+            wrap = action;
+        } else {
+            wrap = new ContextAction() {
+                public Object run(Context cx)
+                {
+                    cx.setSecurityController(securityImpl);
+                    return action.run(cx);
+                }
+            };
         }
-        return Context.enter(cx);
+        return Context.call(action);
     }
 
     /**

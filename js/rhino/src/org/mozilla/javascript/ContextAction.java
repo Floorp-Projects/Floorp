@@ -13,7 +13,8 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is a factory class for Context creation.
+ * The Original Code is an interface abstraction for code requiring Context
+ * instances.
  *
  * The Initial Developer of the Original Code is
  * RUnit Software AS.
@@ -40,53 +41,20 @@
 
 package org.mozilla.javascript;
 
-public class ContextFactory
+/**
+ * Interface to represent arbitrary action that requires to have Context
+ * object associated with the current thread for its execution.
+ */
+public interface ContextAction
 {
     /**
-     * Create new {@link Context} instance to be associated with the current
-     * thread.
-     * This is a callback method used by Rhino to create {@link Context}
-     * instance when it is necessary to associate one with the current
-     * execution thread. <tt>newContext()</tt> is allowed to call
-     * {@link Context#seal(Object)} on the result to prevent
-     * {@link Context} changes by hostile scripts or applets.
-     * <p>
-     * The method must call {@link Context#Context(ContextFactory)}
-     * constructor using <tt>this</tt> as ContextFactory argument
-     * when creating Context instances or its subclasses.
+     * Execute action using the supplied Context instance.
+     * When Rhino runtime calls the method, <tt>cx</tt> will be associated
+     * with the current thread as active context.
      *
-     */
-    protected Context newContext()
-    {
-        return new Context(this);
-    }
-
-    /**
-     * Perform cleanup action for {@link Context} instance.
-     * Rhino runtime calls the method to notify that {@link Context}
-     * instance created with {@link #newContext()}
-     * is no longer associated with the current thread.
-     */
-    protected void onContextExit(Context cx)
-    {
-    }
-
-    /**
-     * Call {@link ContextAction#run(Context cx)}
-     * using the {@link Context} instance associated with the current thread.
-     * If no Context is associated with the thread, then
-     * {@link #newContext()} will be called to construct
-     * new Context instance. The instance will be temporary associated
-     * with the thread during call to {@link ContextAction#run(Context)}.
-     *
+     * @see Context#call(ContextAction)
      * @see ContextFactory#call(ContextAction)
-     * @see Context#call(ContextFactory factory, Callable callable,
-     *                   Scriptable scope, Scriptable thisObj,
-     *                   Object[] args)
      */
-    public final Object call(ContextAction action)
-    {
-        return Context.call(this, action);
-    }
+    public Object run(Context cx);
 }
 

@@ -706,31 +706,38 @@ class Dim {
 
     /* end Debugger interface */
 
-    void compileScript(String url, String text)
+    private Object withContext(ContextAction action)
     {
-        Context cx = Context.enter();
-        try {
-            cx.compileString(text, url, 1, null);
-        } finally {
-            Context.exit();
-        }
+        return Context.call(action);
     }
 
-    void evalScript(String url, String text)
+    void compileScript(final String url, final String text)
     {
-        Context cx = Context.enter();
-        try {
-            Scriptable scope = null;
-            if (scopeProvider != null) {
-                scope = scopeProvider.getScope();
+        withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                cx.compileString(text, url, 1, null);
+                return null;
             }
-            if (scope == null) {
-                scope = new ImporterTopLevel(cx);
+        });
+    }
+
+    void evalScript(final String url, final String text)
+    {
+        withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                Scriptable scope = null;
+                if (scopeProvider != null) {
+                    scope = scopeProvider.getScope();
+                }
+                if (scope == null) {
+                    scope = new ImporterTopLevel(cx);
+                }
+                cx.evaluateString(scope, text, url, 1, null);
+                return null;
             }
-            cx.evaluateString(scope, text, url, 1, null);
-        } finally {
-            Context.exit();
-        }
+        });
     }
 
     void contextSwitch (int frameIndex) {
@@ -887,14 +894,19 @@ class Dim {
         }
     }
 
-    boolean stringIsCompilableUnit(String expr) {
-        Context cx = Context.enter();
-        boolean result = cx.stringIsCompilableUnit(expr);
-        cx.exit();
-        return result;
+    boolean stringIsCompilableUnit(final String expr)
+    {
+        Boolean result = (Boolean)withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                return cx.stringIsCompilableUnit(expr)
+                    ? Boolean.TRUE : Boolean.FALSE;
+            }
+        });
+        return result.booleanValue();
     }
 
-    String objectToString(Object object)
+    String objectToString(final Object object)
     {
         if (object == Undefined.instance) {
             return "undefined";
@@ -905,12 +917,13 @@ class Dim {
         if (object instanceof NativeCall) {
             return "[object Call]";
         }
-        Context cx = Context.enter();
-        try {
-            return Context.toString(object);
-        } finally {
-            Context.exit();
-        }
+        String result = (String)withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                return Context.toString(object);
+            }
+        });
+        return result;
     }
 
     Object getObjectProperty(Object object, Object id)
@@ -946,18 +959,17 @@ class Dim {
         if (!(object instanceof Scriptable) || object == Undefined.instance) {
             return Context.emptyArgs;
         }
-        Scriptable scriptable = (Scriptable)object;
-        Object[] ids;
-        Context cx = Context.enter();
-        try {
-            if (scriptable instanceof DebuggableObject) {
-                ids = ((DebuggableObject)scriptable).getAllIds();
-            } else {
-                ids = scriptable.getIds();
+        final Scriptable scriptable = (Scriptable)object;
+        Object[] ids = (Object[])withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                if (scriptable instanceof DebuggableObject) {
+                    return ((DebuggableObject)scriptable).getAllIds();
+                } else {
+                    return scriptable.getIds();
+                }
             }
-        } finally {
-            Context.exit();
-        }
+        });
         Scriptable proto = scriptable.getPrototype();
         Scriptable parent = scriptable.getParentScope();
         int extra = 0;
