@@ -526,7 +526,7 @@ static void DumpArbitraryHelp()
         if (NS_FAILED(rv) || entryString.IsEmpty()) break;
 
         nsXPIDLCString contractidString;
-        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS
+        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
                                       entryString.get(), 
                                       getter_Copies(contractidString));
         if (NS_FAILED(rv) || !((const char *)contractidString)) break;
