@@ -6,8 +6,18 @@ function PageSetup() {}
 function PrintPreview() {}
 function Print() {}
 function Close() {}
-function Exit() {}
-function CharacterSet() {}
+function Exit()
+{
+  dump("\nExit from XUL\n");
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    dump("\nAppcore isn't null in Exit\n");
+    appCore.SetWindow(window);
+    appCore.exit();
+  }
+}
+
+function CharacterSet(){}
 function SetDocumentCharacterSet(aCharset)
 {
   var appCore = XPAppCoresManager.Find("MsgAppCore");  

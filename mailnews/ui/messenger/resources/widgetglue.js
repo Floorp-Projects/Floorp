@@ -85,6 +85,14 @@ function MsgForwardAsQuoted()
   ComposeMessageWithType(4);
 }
 
+function MsgCopyMessage(destFolder)
+{
+    uri = destFolder.getAttribute('id');
+
+	dump(uri);
+
+}
+
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
@@ -160,7 +168,6 @@ function MsgGoBack() {}
 function MsgGoForward() {}
 function MsgEditMessageAsNew() {}
 function MsgMoveMessage() {}
-function MsgCopyMessage() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 function MsgMarkMsgAsRead() {}

@@ -188,11 +188,10 @@
       </menu>
       <menuitem name="Edit Message as New" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="Move Message">
-        <menuitem name="Folder" onclick="MsgMoveMessage();"/>
+      <menu name="Move Message" datasources="rdf:mailnews" id="mailbox:/" open="true">
       </menu>
-      <menu name="Copy Message">
-        <menuitem name="Folder" onclick="MsgCopyMessage();"/>
+      <menu name="Copy Message" datasources="rdf:mailnews" id="mailbox:/" open="true"
+			onclick="MsgCopyMessage(event.target)">
       </menu>
       <separator/>
       <menuitem name="Add Sender to Address Book" onclick="MsgAddSenderToAddressBook();"/>
