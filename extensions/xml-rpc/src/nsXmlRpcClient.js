@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.29 $
+ *  Version: $Revision: 1.30 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.29 2002/12/04 07:26:02 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.30 2002/12/04 07:59:57 samuel%sieb.net Exp $
  */
 
 /*
@@ -90,7 +90,7 @@ nsXmlRpcClient.prototype = {
         // Note that we don't care what the scheme is otherwise.
         // Should we care? POST works only on http and https..
         if (!oURL.scheme) oURL.scheme = 'http';
-        if (oURL.scheme != 'http')
+        if ((oURL.scheme != 'http') && (oURL.scheme != 'https'))
             throw Components.Exception('Only HTTP is supported');
 
         this._serverUrl = oURL;
