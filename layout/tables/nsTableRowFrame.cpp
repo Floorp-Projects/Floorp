@@ -732,7 +732,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
   PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
   nscoord availWidth = 0;
-  for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
+  for (PRInt32 numColSpan = 0; numColSpan < cellColSpan; numColSpan++)
   {
     availWidth += aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
     if (0<numColSpan)
@@ -780,6 +780,9 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
   // Place the child after taking into account it's margin and attributes
+  // XXX We need to ask the table (or the table layout strategy) if the column
+  // widths have changed. If so we just bail and return a status indicating
+  // what happened and let the table reflow all the table cells...
   nscoord specifiedHeight = 0;
   nscoord cellHeight = desiredSize.height;
   nsIStyleContextPtr kidSC;
