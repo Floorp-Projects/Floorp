@@ -266,6 +266,7 @@ NS_IMETHODIMP nsExtProtocolChannel::Resume()
 nsExternalProtocolHandler::nsExternalProtocolHandler()
 {
 	m_schemeName = "default";
+	m_extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
 }
 
 
@@ -278,6 +279,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsExternalProtocolHandler)
 NS_INTERFACE_MAP_BEGIN(nsExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsIProtocolHandler)
+   NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -308,8 +310,8 @@ PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
   {
     nsCAutoString scheme;
     aURI->GetScheme(scheme);
-    nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    extProtService->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
+    if (m_extProtService)
+      m_extProtService->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   }
 
   return haveHandler;
@@ -360,4 +362,17 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
   }
 
   return NS_ERROR_UNKNOWN_PROTOCOL;
+}
+
+///////////////////////////////////////////////////////////////////////
+// External protocol handler interface implementation
+//////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACString& aScheme, PRBool *_retval)
+{
+  if (m_extProtService)
+    return m_extProtService->ExternalProtocolHandlerExists(PromiseFlatCString(aScheme).get(), _retval);
+
+  // In case we don't have external protocol service.
+  *_retval = PR_FALSE;
+  return NS_OK;
 }

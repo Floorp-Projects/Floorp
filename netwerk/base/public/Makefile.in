@@ -87,6 +87,7 @@ XPIDLSRCS	= \
 		nsICachingChannel.idl \
 		nsIByteRangeRequest.idl \
 		nsIMultiPartChannel.idl \
+		nsIExternalProtocolHandler.idl \
 		$(NULL)
 
 EXPORTS		= \

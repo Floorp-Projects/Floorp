@@ -22,19 +22,21 @@
 #ifndef nsExternalProtocolHandler_h___
 #define nsExternalProtocolHandler_h___
 
-#include "nsIProtocolHandler.h"
+#include "nsIExternalProtocolHandler.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
+#include "nsIExternalProtocolService.h"
 
 class nsIURI;
 
 // protocol handlers need to support weak references if we want the netlib nsIOService to cache them.
-class nsExternalProtocolHandler : public nsIProtocolHandler, public nsSupportsWeakReference
+class nsExternalProtocolHandler : public nsIExternalProtocolHandler, public nsSupportsWeakReference
 {
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIPROTOCOLHANDLER
+	NS_DECL_NSIEXTERNALPROTOCOLHANDLER
 
 	nsExternalProtocolHandler();
 	virtual ~nsExternalProtocolHandler();
@@ -43,6 +45,7 @@ protected:
   // helper function
   PRBool HaveProtocolHandler(nsIURI * aURI);
 	nsCString	m_schemeName;
+  nsCOMPtr<nsIExternalProtocolService> m_extProtService;
 };
 
 
