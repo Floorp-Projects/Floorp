@@ -2946,94 +2946,79 @@ ResDef(XP_MOREINFO_JAVA_PRIV_STRINGS, (SEC_DIALOG_STRING_BASE + 350), "\
 /* 0 is cert name, 1 risk, 2 targets, 3 view cert button
  */
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS, (SEC_DIALOG_STRING_BASE + 351), "\
-<table BORDER=0><tr><td VALIGN=top><font SIZE=2><b>Danger \
-<SPACER TYPE=horizontal SIZE=7></B><br></td> \
+<form><table BORDER=0><font SIZE=3> \
+JavaScript or a Java applet from \042<b>%0%</b>\042 is requesting additional \
+privileges.<br><br><br><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS_1, (SEC_DIALOG_STRING_BASE + 352), "\
-<td \042100%%\042><font SIZE=2>A Java applet or JavaScript script from \
-<b>%0%</b> is requesting unusual access to your computer or network. \
+Granting the following is <b>%1% risk</b>:<br><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS_2, (SEC_DIALOG_STRING_BASE + 353), "\
-You should not grant this access unless you trust that vendor or \
-distributor.</td></tr><tr><td valign=top colspan=2><center> \
-<input type=\042submit\042 name=\042button\042 value=\042%3%\042></input> \
+<center><select multiple name=target size=4> %2%</select></center><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS_3, (SEC_DIALOG_STRING_BASE + 354), "\
-</center><spacer type=vertical size=20></td></tr> \
-<tr><td></td><td><font size=2>The access requested is <b>%1%</b> \
-and consists of:</td></tr> \
+<div align=right> \
+<input type=\042submit\042 name=\042detailsbutton\042 value=\042%details%\042> \
+</input></div><br><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS_4, (SEC_DIALOG_STRING_BASE + 355), "\
-<tr><td coldspan=2><center><table> \
-<td><select multiple name=target size=4>%2%</select></td> \
-<td><input type=\042submit\042 name=\042button\042 value=\042%moreinfo%\042> \
-</input></td></table></center></td></tr></table> \
+<input type=checkbox name=remember>Remember this decision<br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_CERT_PRIV_STRINGS_5, (SEC_DIALOG_STRING_BASE + 356), "\
-<br>Do you wish to grant the requested access? \
-<br><spacer type=horizontal size=5><input type=radio name=perm value=yes> \
-Yes, grant this access to all applets and scripts from <b>%0%</b> for this \
-session %-cont-%")
-
-ResDef(XP_SIGNED_CERT_PRIV_STRINGS_6, (SEC_DIALOG_STRING_BASE + 357), "\
-<br><spacer type=horizontal size=5><input type=radio name=perm \
-value=no checked> No, deny this access (This may mean the applet \
-or script cannot work properly) \
+<br> \
+<div align=right> \
+<input type=\042button\042 value=\042%certificate%\042 width=80 \
+onclick=\042parent.clicker(this,window.parent)\042>&nbsp;&nbsp;\
+<input type=\042button\042 value=\042%grant%\042 width=80 \
+onclick=\042parent.clicker(this,window.parent)\042>&nbsp;&nbsp;\
 %-cont-%")
 
-ResDef(XP_SIGNED_CERT_PRIV_STRINGS_7, (SEC_DIALOG_STRING_BASE + 358), "\
-<br><input type=checkbox name=remember> \
-Remember this decision for all applets and scripts from <b>%0%</b><br>\
-</td></table>")
+ResDef(XP_SIGNED_CERT_PRIV_STRINGS_6, (SEC_DIALOG_STRING_BASE + 357), "\
+<input type=\042button\042 value=\042%deny%\042 width=80 \
+onclick=\042parent.clicker(this,window.parent)\042></div> \
+<br></table></form>")
 
 /* 0 is cert name, 1 risk, 2 targets.
  */
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS, (SEC_DIALOG_STRING_BASE + 359), "\
-<table BORDER=0><tr><td VALIGN=top><font SIZE=2><b>Danger \
-<SPACER TYPE=horizontal SIZE=7></B><br></td> \
+<form><table BORDER=0><font SIZE=3> \
+JavaScript or a Java applet from \042<b>%0%</b>\042 is requesting additional \
+privileges.  It is <b>not digitally signed</b>.<br><br><br><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_1, (SEC_DIALOG_STRING_BASE + 360), "\
-<td \042100%%\042><font SIZE=2>A Java applet or JavaScript script on the \
-server \042<b>%0%</b>\042 is requesting unusual access to your computer \
-or network. %-cont-%")
+Granting the following is <b>%1% risk</b>:<br><br> \
+%-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_2, (SEC_DIALOG_STRING_BASE + 361), "\
-It is <b>not digitally signed</b>. Be aware that it may have been \
-tampered with and may cause harm to your computer. </td></tr> \
-<tr><td></td><td><font size=2>The access requested is <b>%1%</b> \
-and consists of:</td></tr> \
+<center><select multiple name=target size=4> %2%</select></center><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_3, (SEC_DIALOG_STRING_BASE + 362), "\
-<tr><td coldspan=2><center><table> \
-<td><select multiple name=target size=4>%2%</select></td> \
-<td><input type=\042submit\042 name=\042button\042 value=\042%moreinfo%\042> \
-</input></td></table></center></td></tr></table> \
+<div align=right> \
+<input type=\042submit\042 name=\042detailsbutton\042 value=\042%details%\042> \
+</input></div><br><br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_4, (SEC_DIALOG_STRING_BASE + 363), "\
-<br>Do you wish to grant the requested access? \
-<br><spacer type=horizontal size=5><input type=radio name=perm value=yes> \
-Yes, grant this access to all applets and scripts on the \042<b>%0%</b>\042 \
-server for this session \
+<input type=checkbox name=remember>Remember this decision<br> \
 %-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_5, (SEC_DIALOG_STRING_BASE + 364), "\
-<br><spacer type=horizontal size=5><input type=radio name=perm \
-value=no checked> No, deny this access (This may mean the applet \
-or script cannot work properly) \
+<br> \
+<div align=right><input type=\042button\042 value=\042%grant%\042 width=80 \
+onclick=\042parent.clicker(this,window.parent)\042>&nbsp;&nbsp;\
+<input type=\042button\042 value=\042%deny%\042 width=80 \
+onclick=\042parent.clicker(this,window.parent)\042></div> \
 %-cont-%")
 
 ResDef(XP_SIGNED_APPLET_PRIV_STRINGS_6, (SEC_DIALOG_STRING_BASE + 365), "\
-<br><input type=checkbox name=remember> \
-Remember this decision for all applets and scripts on the \042<b>%0%</b>\042 \
-server <br></td></table>")
+<br></table></form>")
 
 ResDef(XP_DIALOG_NEW_MODULE, (SEC_DIALOG_STRING_BASE + 366), "\
 <b>Security Module Name:</b> <input name=\042name\042><br>\
@@ -3833,6 +3818,18 @@ certificate.<br> %-cont-%")
 ResDef(XP_EDIT_PCERT_STRINGS_4, (SEC_DIALOG_STRING_BASE + 538), "\
 <input type=radio name=dirtrust value=yes %2%>Trust this \
 certificate even though it does not have a trusted issuer.")
+
+ResDef(XP_SEC_DETAILS, (SEC_DIALOG_STRING_BASE + 539), "\
+Details")
+
+ResDef(XP_SEC_GRANT, (SEC_DIALOG_STRING_BASE + 540), "\
+Grant")
+
+ResDef(XP_SEC_DENY, (SEC_DIALOG_STRING_BASE + 541), "\
+Deny")
+
+ResDef(XP_SEC_CERTIFICATE, (SEC_DIALOG_STRING_BASE + 542), "\
+Certificate")
 
 
 /*
