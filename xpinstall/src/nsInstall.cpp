@@ -29,6 +29,9 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
+#include "nsRepository.h"
+#include "nsIServiceManager.h"
+
 #include "nsVector.h"
 #include "nsHashtable.h"
 #include "nsFileSpec.h"
@@ -64,54 +67,41 @@
 #define FILESEP ":"
 #else
 #define FILESEP "/"
-#endif 
+#endif
 
 
-
-nsInstallInfo::nsInstallInfo(const nsString& fromURL)
+nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& localFile, long flags)
 {
-    nsInstallInfo(fromURL, "", "");
+    mError              =  0;        // Set error to zero
+    
+    mMultipleTrigger    = PR_FALSE;  // This is not a Multiple trigger
+    
+    mFlags              = flags;
+    mLocalFiles         = new nsVector();
+    mFromURLs           = new nsVector();
+    
+    nsString *tempString;
+
+    tempString = new nsString(fromURL);
+    mFromURLs->Add((void*) tempString);
+
+    tempString = new nsString(localFile);
+    mLocalFiles->Add((void*) tempString);
+
 }
 
-nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& arguments)
+nsInstallInfo::nsInstallInfo(nsVector* fromURL, nsVector* localFiles, long flags)
 {
-    nsInstallInfo(fromURL, arguments, "");
-}
+    mError              =  0;        // Set error to zero
 
-nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& arguments, const nsString& flags)
-{
-
-    mUIEventQueue       = nsnull;
-
-    mFromURL            = new nsString(fromURL);
-    mArguments          = new nsString(arguments);
-    mFlags              = new nsString(flags);
-    mLocalFile          = new nsString();
+    mMultipleTrigger    = PR_TRUE;   // This is a Multiple trigger
     
-    mInstalled          = PR_FALSE;
     
-    mMultipleTrigger    = PR_FALSE;
-    mFromURLs           = nsnull;
-    mLocalFiles         = nsnull;
-    
-    MakeTempFile(fromURL, *mLocalFile);
-}
+    mFlags              = flags;
+    mLocalFiles         = new nsVector();
 
-nsInstallInfo::nsInstallInfo(nsVector* fromURL, const nsString& arguments, const nsString& flags)
-{
-    mMultipleTrigger = PR_TRUE;
-
-    mFromURLs        = fromURL;
-    mLocalFiles      = new nsVector();   
-    mArguments       = new nsString(arguments);
-    mFlags           = new nsString(flags);
-
-    mInstalled       = PR_FALSE;
-    mMultipleTrigger = PR_FALSE;
-    
-    // The following are not to be used with the Multiple Trigger 
-    mLocalFile  = nsnull;
-    mFromURL    = nsnull;
+    mFromURLs           = fromURL;
+    mLocalFiles         = localFiles;
 
 }
 
@@ -134,94 +124,45 @@ nsInstallInfo::DeleteVector(nsVector* vector)
     }
 }
 
+
 nsInstallInfo::~nsInstallInfo()
 {
-    if (mMultipleTrigger)
-    {
-        DeleteVector(mFromURLs);
-        DeleteVector(mLocalFiles);
-    }
-    else
-    {
-        
-        if (mLocalFile)
-            delete mLocalFile;
-        
-        delete mFromURL;
-    }
-
-    delete mArguments;
-    delete mFlags;
-}
-
-void
-nsInstallInfo::MakeTempFile(nsString aURL, nsString& tempFileString)
-{
-    // Checking to see if the url is local
-
-    if (aURL.Compare(nsString("file://").GetUnicode(), false, 7) == 0)
-    {       
-        tempFileString.SetString( nsNSPRPath(nsFileURL(aURL)) );
-    }
-    else
-    {
-       nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    
-        PRInt32 result = aURL.RFind('/');
-        if (result != -1)
-        {            
-            nsString jarName;
-            aURL.Right(jarName, (aURL.Length() - result) );        
-            tempFile += jarName;
-        }
-        else
-        {   
-            tempFile += "xpinstall.jar";
-        }
-
-        tempFile.MakeUnique();
-
-        tempFileString.SetString( nsNSPRPath( nsFilePath(tempFile) ) );
-    }
+    DeleteVector(mFromURLs);
+    DeleteVector(mLocalFiles);
 }
 
 nsString& 
 nsInstallInfo::GetFromURL(PRUint32 index)
 {
-    if (mMultipleTrigger)
-    {
-        nsString* element = (nsString*)mFromURLs->Get(index);
-        return *element;
-    }
-    else
-    {
-        return *mFromURL;
-    }
+    nsString* element = (nsString*)mFromURLs->Get(index);
+    return *element;
 }
 
 nsString& 
 nsInstallInfo::GetLocalFile(PRUint32 index)
 {
-    if (mMultipleTrigger)
-    {
-        nsString* element = (nsString*)mLocalFiles->Get(index);
-        return *element;
-    }
-    else
-    {
-        return *mLocalFile;
-    }
+    nsString* element = (nsString*)mLocalFiles->Get(index);
+    return *element;
 }
 
-nsString& 
-nsInstallInfo::GetArguments()
+void 
+nsInstallInfo::GetArguments(nsString& args, PRUint32 index)
 {
-    return *mArguments;
+    nsString aURL = GetFromURL(index);
+
+    PRInt32 result = aURL.RFind('?');
+    if (result != -1)
+    {            
+        aURL.Right(args, (aURL.Length() - result - 1) );  
+        return;
+    }
+    
+    args = "";
 }
 
-nsString& nsInstallInfo::GetFlags()
+long nsInstallInfo::GetFlags()
 {
-    return *mFlags;
+    return mFlags;
 }
 
 
@@ -230,6 +171,11 @@ nsInstallInfo::IsMultipleTrigger()
 {
     return mMultipleTrigger;
 }
+
+
+static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
+static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
+
 
 nsInstall::nsInstall()
 {
@@ -245,16 +191,24 @@ nsInstall::nsInstall()
     mJarFileLocation    = "";
     mInstallArguments   = "";
 
-    mLogStream          = nsnull;
+    nsISoftwareUpdate *su;
+    nsresult rv = nsComponentManager::CreateInstance(  kSoftwareUpdateCID, 
+                                                       nsnull,
+                                                       kISoftwareUpdateIID,
+                                                       (void**) &su);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        su->GetTopLevelNotifier(&mNotifier);
+    }
+
+    su->Release();
 }
 
 nsInstall::~nsInstall()
 {
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
-
-    if (mLogStream != nsnull)
-        delete mLogStream;
 }
 
 
@@ -305,13 +259,9 @@ nsInstall::GetRegPackageName(nsString& aRegPackageName)
 PRInt32    
 nsInstall::AbortInstall()
 {
-    if (mLogStream)
-    {
-        nsString time;
-        GetTime(time);
-        *mLogStream << "     Aborted Installation at " << nsAutoCString(time) << nsEndl << nsEndl;
-    }
-    
+    if (mNotifier)
+        mNotifier->InstallAborted();
+
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
     {
@@ -2143,9 +2093,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     
         char *objString = ie->toString();
         
-        if (mLogStream != nsnull)
-            *mLogStream << "     " << objString << nsEndl;
-        
+        if (mNotifier)
+            mNotifier->InstallFinalization(objString, i , mInstalledFiles->GetSize());
+
         delete [] objString;
     
         ie->Complete();
@@ -2156,19 +2106,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             *aReturn = SaveError( result );
             return NS_OK;
         }
-
-        //SetProgressDialogThermo(++count);
     }
 
-    if (mLogStream)
-    {
-        nsString time;
-        GetTime(time);
-
-        *mLogStream << nsEndl;
-        *mLogStream << "     Finished Installation  " << nsAutoCString(time) << nsEndl << nsEndl;
-    }
-
+   
     *aReturn = NS_OK;
     return NS_OK;
 }
@@ -2589,26 +2529,9 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
     {
         mRegistryPackageName = ""; // Reset!
     }
-    
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
-    
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    // XXX because PR_APPEND is broken
-    if (mLogStream == nsnull)
-        return NS_OK;
 
-    mLogStream->seek(logFile.GetFileSize());
-    
-    nsString time;
-    GetTime(time);
-    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsAutoCString(mUIName) << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsEndl;
-    *mLogStream << "     Starting Installation at " << nsAutoCString(time) << nsEndl;   
-    *mLogStream << nsEndl;
+    if (mNotifier)
+            mNotifier->InstallStarted(nsAutoCString(mUIName));
 
     return NS_OK;
 }
@@ -2676,25 +2599,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
         mRegistryPackageName = ""; // Reset!
     }
     
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
-    
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    // XXX because PR_APPEND is broken
-    if (mLogStream == nsnull)
-        return NS_OK;
-
-    mLogStream->seek(logFile.GetFileSize());
-    
-    nsString time;
-    GetTime(time);
-    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsAutoCString(mUIName) << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsEndl;
-    *mLogStream << "     Starting Installation at " << nsAutoCString(time) << nsEndl;   
-    *mLogStream << nsEndl;
+    if (mNotifier)
+            mNotifier->InstallStarted(nsAutoCString(mUIName));
 
     return NS_OK;
 }
@@ -2760,25 +2666,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
         mRegistryPackageName = ""; // Reset!
     }
     
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
-    
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    // XXX because PR_APPEND is broken
-    if (mLogStream == nsnull)
-        return NS_OK;
-
-    mLogStream->seek(logFile.GetFileSize());
-    
-    nsString time;
-    GetTime(time);
-    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsAutoCString(mUIName) << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsEndl;
-    *mLogStream << "     Starting Installation at " << nsAutoCString(time) << nsEndl;   
-    *mLogStream << nsEndl;
+    if (mNotifier)
+            mNotifier->InstallStarted(nsAutoCString(mUIName));
 
     return NS_OK;
 }
@@ -2846,25 +2735,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
         mRegistryPackageName = ""; // Reset!
     }
     
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
-    
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    // XXX because PR_APPEND is broken
-    if (mLogStream == nsnull)
-        return NS_OK;
-
-    mLogStream->seek(logFile.GetFileSize());
-    
-    nsString time;
-    GetTime(time);
-    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsAutoCString(mUIName) << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsEndl;
-    *mLogStream << "     Starting Installation at " << nsAutoCString(time) << nsEndl;   
-    *mLogStream << nsEndl;
+    if (mNotifier)
+            mNotifier->InstallStarted(nsAutoCString(mUIName));
 
     return NS_OK;
 }
@@ -2947,8 +2819,11 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     char *objString = ob->toString();
 
     // flash current item
-    //SetProgressDialogItem( objString );
-    
+
+    if (mNotifier)
+        if ( mNotifier->ItemScheduled(objString) != 0 )
+            mUserCancelled = PR_TRUE;
+
     delete [] objString;
     
     // do any unpacking or other set-up
@@ -2974,16 +2849,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
   return nsInstall::SUCCESS;
 }
 
-void 
-nsInstall::GetTime(nsString &aString)
-{
-    PRExplodedTime et;
-    char line[256];
-    PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &et);
-    PR_FormatTimeUSEnglish(line, sizeof(line), "%m/%d/%Y %H:%M:%S", &et);
-    aString.SetString(line);
-}
-    
+
 /**
  * SanityCheck
  *
@@ -3198,8 +3064,6 @@ nsInstall::CleanUp(void)
     }
     
     mRegistryPackageName = ""; // used to see if StartInstall() has been called
-
-    //CloseProgressDialog();
 }
 
 

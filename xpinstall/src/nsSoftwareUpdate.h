@@ -15,37 +15,44 @@ class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 
+#include "nsIXPInstallProgressNotifier.h"
+#include "nsTopProgressNotifier.h"
+
 class nsSoftwareUpdate: public nsISoftwareUpdate
 {
     public:
         static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstall_CID; return iid; }
 
         nsSoftwareUpdate();
-        ~nsSoftwareUpdate();
+        virtual ~nsSoftwareUpdate();
         
         static nsSoftwareUpdate *GetInstance();
         
         NS_DECL_ISUPPORTS
 
-            NS_IMETHOD InstallJar(nsInstallInfo *installInfo);
-            NS_IMETHOD InstallJar(const nsString& fromURL, 
-                                  const nsString& flags, 
-                                  const nsString& args);  
+            
+            NS_IMETHOD InstallJar(const nsString& fromURL,
+                                  const nsString& localFile, 
+                                  long flags);  
 
+            NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier);
             
-            
-            NS_IMETHOD RunNextInstall();
+            NS_IMETHOD InstallPending(void);
+
             NS_IMETHOD InstallJarCallBack();
+            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier);
 
 
     private:
         nsresult Startup();
         nsresult Shutdown();
         
+        nsresult RunNextInstall();
         nsresult DeleteScheduledNodes();
         
         PRBool            mInstalling;
         nsVector*         mJarInstallQueue;
+        nsTopProgressNotifier   *mTopLevelObserver;
 
         static nsSoftwareUpdate* mInstance;
         
@@ -58,7 +65,7 @@ class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
 {
     public:
         nsSoftwareUpdateNameSet();
-        ~nsSoftwareUpdateNameSet();
+        virtual ~nsSoftwareUpdateNameSet();
 
         NS_DECL_ISUPPORTS
             NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);

@@ -49,6 +49,8 @@ CPPSRCS = \
     nsJSInstallTriggerGlobal.cpp\
     nsSoftwareUpdateRun.cpp     \
     nsSoftwareUpdateStream.cpp  \
+    nsTopProgressNotifier.cpp   \
+    nsLoggingProgressNotifier   \
     ScheduledTasks.cpp          \
     $(NULL)
 

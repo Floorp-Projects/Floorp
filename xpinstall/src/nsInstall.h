@@ -44,48 +44,41 @@
 #include "nsInstallObject.h"
 #include "nsInstallVersion.h"
 
+#include "nsIXPInstallProgressNotifier.h"
+
+
 class nsInstallInfo
 {
   public:
-    nsInstallInfo(const nsString& fromURL);
-    nsInstallInfo(const nsString& fromURL, const nsString& arguments);
-    nsInstallInfo(const nsString& fromURL, const nsString& arguments, const nsString& flags);
     
-    nsInstallInfo(nsVector* fromURL, const nsString& arguments, const nsString& flags);
-    ~nsInstallInfo();
+    nsInstallInfo(const nsString& fromURL, const nsString& localFile, long flags);
+
+    nsInstallInfo(nsVector* fromURL, nsVector* localFiles, long flags);
+    
+    virtual ~nsInstallInfo();
 
     nsString& GetFromURL(PRUint32 index = 0);
     
     nsString& GetLocalFile(PRUint32 index = 0);
 
-    nsString& GetArguments();
-    nsString& GetFlags();
+    void GetArguments(nsString& args, PRUint32 index = 0);
+    
+    long GetFlags();
     
     PRBool    IsMultipleTrigger();
-  
-    PLEventQueue* GetUIEventQueue(void) const { return mUIEventQueue; }
-    void          SetUIEventQueue(PLEventQueue* queue) { mUIEventQueue = queue; }
     
   private:
     
-    void DeleteVector(nsVector* vector);
-    void MakeTempFile(nsString aURL, nsString& tempFileString);
-
-    nsString *mLocalFile;
-    nsString *mFromURL;
-    nsString *mArguments;
-    nsString *mFlags;
     
+    PRBool    mMultipleTrigger;
+    nsresult  mError;
 
-    PRBool  mInstalled;
-    PRBool  mMultipleTrigger;
+    long       mFlags;
+    nsVector  *mFromURLs;
+    nsVector  *mLocalFiles;
 
-    nsVector *mFromURLs;
-    nsVector *mLocalFiles;
-
-    PLEventQueue *mUIEventQueue;  // this should be moved to private and have accessors
+    void DeleteVector(nsVector* vector);    
 };
-
 
 
 
@@ -139,9 +132,10 @@ class nsInstall
 
 
         nsInstall();
-        ~nsInstall();
+        virtual ~nsInstall();
         
-        PRInt32    SetScriptObject(void* aScriptObject);
+        PRInt32      SetScriptObject(void* aScriptObject);
+
         
         PRInt32    SaveWinRegPrototype(void* aScriptObject);
         PRInt32    SaveWinProfilePrototype(void* aScriptObject);
@@ -227,7 +221,7 @@ class nsInstall
         nsVector*           mInstalledFiles;        
         nsHashtable*        mPatchList;
         
-        nsOutputFileStream  *mLogStream;       
+        nsIXPInstallProgressNotifier *mNotifier;
         
         PRInt32             mLastError;
 

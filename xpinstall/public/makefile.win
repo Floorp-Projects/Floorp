@@ -29,7 +29,8 @@ DEFINES=-D_IMPL_NS_DOM
 EXPORTS=    nsIDOMInstallTriggerGlobal.h \
 			nsIDOMInstallVersion.h       \
             nsSoftwareUpdateIIDs.h       \
-			nsISoftwareUpdate.h
+			nsISoftwareUpdate.h          \
+            nsIXPInstallProgressNotifier.h
 
 MODULE=xpinstall 
 
