@@ -357,7 +357,7 @@ if ($action eq 'list') {
         }
         $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
         print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
+        print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s", html_quote($user), "$e</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
         if ($candelete) {
             print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
@@ -748,6 +748,14 @@ if ($action eq 'update') {
     SendSQL("SELECT userid FROM profiles
              WHERE login_name=" . SqlQuote($userold));
     my ($thisuserid) = FetchSQLData();
+
+    my $emailregexp = Param("emailregexp");
+    unless ($user =~ m/$emailregexp/) {
+        print "The user name entered must be a valid e-mail address. Please press\n";
+        print "<b>Back</b> and try again.\n";
+        PutTrailer($localtrailer);
+        exit;
+    }
 
     my @grpadd = ();
     my @grpdel = ();
