@@ -45,6 +45,7 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
+#include "nsSupportsArray.h"
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
@@ -61,10 +62,7 @@ nsConsoleService::nsConsoleService()
     // prefs errs...
     mBufferSize = 250;
 
-    // XXX deal with below three by detecting null mLock in factory?
-    nsresult rv;
-    rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
-                                 (void**)getter_AddRefs(mListeners));
+    // XXX deal with these two allocations by detecting null mLock in factory?
     mMessages = (nsIConsoleMessage **)
         nsMemory::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
 
@@ -86,22 +84,27 @@ nsConsoleService::~nsConsoleService()
     }
 
 #ifdef DEBUG_mccabe
-    {
-        PRUint32 listenerCount;
-        nsresult rv;
-        rv = mListeners->Count(&listenerCount);
-        if (listenerCount != 0) {
-            fprintf(stderr, 
-                "WARNING - %d console error listeners still registered!\n"
-                "More calls to nsIConsoleService::UnregisterListener needed.\n",
-                listenerCount);
-        }
+    if (mListeners.Count() != 0) {
+        fprintf(stderr, 
+            "WARNING - %d console error listeners still registered!\n"
+            "More calls to nsIConsoleService::UnregisterListener needed.\n",
+            mListeners.Count());
     }
+    
 #endif
 
     nsMemory::Free(mMessages);
     if (mLock)
         PR_DestroyLock(mLock);
+}
+
+static PRBool PR_CALLBACK snapshot_enum_func(nsHashKey *key, void *data, void* closure)
+{
+    nsISupportsArray *array = (nsISupportsArray *)closure;
+
+    // Copy each element into the temporary nsSupportsArray...
+    array->AppendElement((nsISupports*)data);
+    return PR_TRUE;
 }
 
 // nsIConsoleService methods
@@ -136,7 +139,11 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
             mFull = PR_TRUE;
         }
 
-        listenersSnapshot.AppendElements(mListeners);
+        /*
+         * Copy the listeners into the snapshot array - in case a listener
+         * is removed during an Observe(...) notification...
+         */
+        mListeners.Enumerate(snapshot_enum_func, &listenersSnapshot);
     }
     if (retiredMessage != nsnull)
         NS_RELEASE(retiredMessage);
@@ -264,35 +271,28 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
 
     {
         nsAutoLock lock(mLock);
-        
-        // ignore rv for now, as a comment says it returns prbool instead of
-        // nsresult.
-        // Any need to check for multiply registered listeners?
-        mListeners->AppendElement(proxiedListener);
+        nsISupportsKey key(listener);
+
+        /*
+         * Put the proxy event listener into a hashtable using the *real* 
+         * listener as the key.
+         *
+         * This is necessary because proxy objects do *not* maintain
+         * nsISupports identity.  Therefore, since GetProxyForListener(...)
+         * can return different proxies for the same object (see bug #85831)
+         * we need to use the real object as the unique key...
+         */
+        mListeners.Put(&key, proxiedListener);
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
-    nsresult rv;
+    nsAutoLock lock(mLock);
 
-    nsCOMPtr<nsIConsoleListener> proxiedListener;
-    rv = GetProxyForListener(listener, getter_AddRefs(proxiedListener));
-    if (NS_FAILED(rv))
-        return rv;
-
-    {
-        nsAutoLock lock(mLock);
-
-        // ignore rv below for now, as a comment says it returns
-        // prbool instead of nsresult.
-
-        // Solaris needs the nsISupports cast to avoid confusion with
-        // another nsSupportsArray::RemoveElement overloading.
-        mListeners->RemoveElement((const nsISupports *)proxiedListener);
-
-    }
+    nsISupportsKey key(listener);
+    mListeners.Remove(&key);
     return NS_OK;
 }
 
