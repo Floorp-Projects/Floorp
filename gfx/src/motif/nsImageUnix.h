@@ -35,11 +35,10 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetHeight()         { return mWidth; }
+  virtual PRInt32     GetHeight()         { return mHeight; }
   virtual PRInt32     GetWidth()          { return mDepth; }
   virtual PRUint8*    GetBits()           { return nsnull; }
   virtual void*       GetBitInfo()        { return nsnull; }
-
   virtual PRInt32     GetLineStride()     {return 0; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -55,9 +54,8 @@ public:
   virtual PRInt32     GetAlphaXLoc() {return 0;}
   virtual PRInt32     GetAlphaYLoc() {return 0;}
   virtual PRInt32     GetAlphaLineStride(){ return 0; }
-  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
-  
-  virtual nsIImage*   DuplicateImage();
+  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
+  virtual nsIImage*   DuplicateImage() {return(nsnull);}
 
   /** 
     * Return the image size of the Device Independent Bitmap(DIB).
@@ -77,27 +75,21 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
-
   PRBool  SetAlphaMask(nsIImage *aTheMask);
-
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
-
-  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
-
-  void MoveAlphaMask(PRInt32 aX, PRInt32 aY){}
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {}
+  virtual PRInt32 GetAlphaLevel() {return(0);}
 
 private:
   void CreateImage(nsIDeviceContext * aDeviceContext);
 
 private:
-  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
-
   PRInt32 mWidth;
-  PRInt32 mDepth;
   PRInt32 mHeight;
-  nsMaskRequirements mMaskReq;
-
-  XImage * mImage ;
+  PRInt32 mDepth;       // bits per pixel
+  PRInt32 mRowBytes;
+  Pixmap  mThePixMap;
+  PRUint8 mImageBits;
+  XImage  *mImage ;
 
 };
 
