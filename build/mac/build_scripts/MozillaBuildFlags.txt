@@ -63,6 +63,7 @@ p3p             0
 jsdebugger      0
 moz_logging     1      MOZ_LOGGING
 chatzilla       1
+content_packs   1
 xml_rpc         1
 cview           1
 help            1
