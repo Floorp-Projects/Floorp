@@ -134,6 +134,7 @@ sub Checkout()
 		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH) || die "checkout failure";
 		#//$session->checkout("mozilla/modules/plugin",$PLUGIN_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/modules/plugin") || die "checkout failure";
+	 $session->checkout("mozilla/modules/oji") || die "checkout failure";
 	}
 	if ($main::pull{xpcom})
 	{
@@ -243,6 +244,9 @@ sub BuildDist()
     [":mozilla:modules:plugin:nglsrc:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:public:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:src:MANIFEST", "$distdirectory:plugin:"],
+    [":mozilla:modules:oji:src:MANIFEST", "$distdirectory:oji:"],
+    [":mozilla:modules:oji:public:MANIFEST", "$distdirectory:oji:"],
+
 # IS THIS STILL NEEDED
 #LAYERS
 	[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
@@ -374,6 +378,8 @@ sub BuildCommonProjects()
 	#//BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
 
 	BuildProject(":mozilla:network:macbuild:network.mcp",		"NetworkModular$D.o");
+
+	# BuildProject(":mozilla:modules:oji:macbuild:oji.mcp",					"oji$D.o");
 
 }
 
