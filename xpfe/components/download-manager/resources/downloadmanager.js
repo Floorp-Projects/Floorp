@@ -105,7 +105,7 @@ function openPropertiesDialog()
 function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
-  if (gDownloadView.selectedItems.length)
+  if (gDownloadView.getRowCount() && gDownloadView.selectedItems.length)
     gStatusBar.label = gDownloadView.selectedItems[0].id;
   else
     gStatusBar.label = "";
@@ -139,15 +139,13 @@ var downloadViewController = {
     var isDownloading = gDownloadManager.getDownload(gDownloadView.selectedItems[0].id);
     switch (aCommand) {
     case "cmd_openfile":
-      if (getFileForItem(gDownloadView.selectedItems[0]).isExecutable())
+      if (!isDownloading && getFileForItem(gDownloadView.selectedItems[0]).isExecutable())
         return false;
 
     case "cmd_showinshell":
-      if (selectionCount != 1)
-        return false;
       // some apps like kazaa/morpheus let you "preview" in-progress downloads because
       // that's possible for movies and music. for now, just disable indiscriminately.
-      return !isDownloading && getFileForItem(gDownloadView.selectedItems[0]).exists();
+      return selectionCount == 1;
     case "cmd_properties":
       return selectionCount == 1 && isDownloading;
     case "cmd_pause":
@@ -163,24 +161,24 @@ var downloadViewController = {
     case "cmd_selectAll":
       return gDownloadViewChildren.childNodes.length != selectionCount;
     default:
+      return false;
     }
   },
   
   doCommand: function dVC_doCommand (aCommand)
   {
     var selection = gDownloadView.selectedItems;
-    var i;
+    var i, file;
     switch (aCommand) {
     case "cmd_properties":
       openPropertiesDialog();
       break;
     case "cmd_openfile":
-      var file = getFileForItem(selection[0]);
+      file = getFileForItem(selection[0]);
       file.launch();
       break;
     case "cmd_showinshell":
-      var localFile = getFileForItem(selection[0]);
-      var file = localFile.QueryInterface(Components.interfaces.nsIFile);
+      file = getFileForItem(selection[0]).QueryInterface(Components.interfaces.nsIFile);
       
       // on unix, open a browser window rooted at the parent
       if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
@@ -200,6 +198,7 @@ var downloadViewController = {
       // XXX we should probably prompt the user
       for (i = 0; i < selection.length; ++i)
         gDownloadManager.cancelDownload(selection[i].id);
+      window.updateCommands("tree-select");
       break;
     case "cmd_remove":
       for (i = 0; i < selection.length; ++i)

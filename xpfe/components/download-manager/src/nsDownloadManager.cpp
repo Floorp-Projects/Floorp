@@ -419,7 +419,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   nsCOMPtr<nsIRDFResource> urlResource;
   gRDFService->GetResource(spec.get(), getter_AddRefs(urlResource));
-  rv = mDataSource->Assert(downloadRes, gNC_URL, urlResource, PR_TRUE);
+  mDataSource->GetTarget(downloadRes, gNC_URL, PR_TRUE, getter_AddRefs(node));
+  if (node)
+    rv = mDataSource->Change(downloadRes, gNC_URL, node, urlResource);
+  else
+    rv = mDataSource->Assert(downloadRes, gNC_URL, urlResource, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
@@ -437,7 +441,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
  
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   gRDFService->GetLiteral(displayName.get(), getter_AddRefs(nameLiteral));
-  rv = mDataSource->Assert(downloadRes, gNC_Name, nameLiteral, PR_TRUE);
+  mDataSource->GetTarget(downloadRes, gNC_Name, PR_TRUE, getter_AddRefs(node));
+  if (node)
+    rv = mDataSource->Change(downloadRes, gNC_Name, node, nameLiteral);
+  else
+    rv = mDataSource->Assert(downloadRes, gNC_Name, nameLiteral, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
@@ -460,7 +468,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   // Assert download state information (NOTSTARTED, since it's just now being added)
   nsCOMPtr<nsIRDFInt> intLiteral;
   gRDFService->GetIntLiteral(NOTSTARTED, getter_AddRefs(intLiteral));
-  rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
+  mDataSource->GetTarget(downloadRes, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(node));
+  if (node)
+    rv = mDataSource->Change(downloadRes, gNC_ProgressPercent, node, intLiteral);
+  else
+    rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
@@ -549,6 +561,8 @@ nsDownloadManager::CancelDownload(const char* aPersistentDescriptor)
     rv = observer->Observe(download, "oncancel", nsnull);
     if (NS_FAILED(rv)) return rv;
   }
+  
+  DownloadEnded(aPersistentDescriptor, nsnull);
   
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
@@ -1005,12 +1019,15 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
   if (aStateFlags & STATE_STOP) {
-    if ((mDownloadState == DOWNLOADING && mPercentComplete == 100) || mDownloadState == NOTSTARTED)
+    if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
       mDownloadState = FINISHED;
+      mCurrBytes = mMaxBytes;
+      mPercentComplete = 100;
 
-    char* persistentDescriptor;
-    mTarget->GetPersistentDescriptor(&persistentDescriptor);
-    mDownloadManager->DownloadEnded(persistentDescriptor, nsnull);
+      char* persistentDescriptor;
+      mTarget->GetPersistentDescriptor(&persistentDescriptor);
+      mDownloadManager->DownloadEnded(persistentDescriptor, nsnull);
+    }
 
     // break the cycle we created in AddDownload
     if (mPersist)
