@@ -141,7 +141,6 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 			        NS_ENSURE_SUCCESS(rv,rv);
           }
         }
-        else return rv;
       }
     }
 
