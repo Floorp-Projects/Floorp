@@ -35,7 +35,6 @@
 #include "nsIBufferInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
-#include "nsICommonDialogs.h"
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -57,7 +56,6 @@ static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
@@ -196,7 +194,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
 
               //Now get which button was pressed from the ParamBlock
               PRInt32 buttonPressed = 0;
-              ioParamBlock->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed );
+              ioParamBlock->GetInt( 0, &buttonPressed );
               OKtoInstall = buttonPressed ? PR_FALSE : PR_TRUE;
             }
           }
@@ -424,10 +422,16 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
 
     nsXPITriggerItem *triggerItem;
     nsString moduleName, URL;
-    PRInt32 offset = 0;
+    PRInt32 offset = 0, numberOfDialogTreeElements = 0;
     PRUint32 i=0, paramIndex=0;
 
-    ioParamBlock->SetInt(nsICommonDialogs::eNumberButtons,2); //set the Ok and Cancel buttons
+    //Must multiply the number of triggers by 2 because
+    //the dialog contains the name and url as 2 separate elements
+    numberOfDialogTreeElements = (mTriggers->Size() * 2);     
+    ioParamBlock->SetNumberStrings(numberOfDialogTreeElements);
+
+    ioParamBlock->SetInt(0,2); //set the Ok and Cancel buttons
+    ioParamBlock->SetInt(1,numberOfDialogTreeElements);
 
     for (i=0; i < mTriggers->Size(); i++)
     {
