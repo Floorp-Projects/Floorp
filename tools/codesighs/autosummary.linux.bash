@@ -83,6 +83,16 @@ fi
 #   Be sure to modify the grep command below as well.
 #
 EXCLUDE_PATTERN_01="test"
+EXCLUDE_PATTERN_02="tsv"
+
+EXCLUDE_NAMES="-not -name viewer"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name spacetrace"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name xpidl"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name bloadblame"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name leakstats"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name codesighs"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name htmlrobot"
+EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name DumpColors"
 
 
 #
@@ -104,14 +114,14 @@ mkdir -p $TMPDIR
 #   Find all relevant files.
 #
 ALLFILES="$TMPDIR/allfiles.list"
-find ./mozilla/dist/bin -not -type d > $ALLFILES
+find ./mozilla/dist/bin -not -type d $EXCLUDE_NAMES > $ALLFILES
 
 
 #
 #   Reduce the files to a revelant set.
 #
 THEFILES="$TMPDIR/files.list"
-grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES > $THEFILES
+grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFILES
 
 
 #
