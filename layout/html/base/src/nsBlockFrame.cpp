@@ -2711,9 +2711,7 @@ PlaceFrameView(nsIPresContext* aPresContext,
                nsIFrame*       aFrame)
 {
   if (aFrame->HasView())
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame,
-                      aFrame->GetView(),
-                      aFrame->GetOverflowAreaProperty(aPresContext));
+    nsContainerFrame::PositionFrameView(aPresContext, aFrame);
 
   nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
@@ -4292,18 +4290,6 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
                             nsLineBox* aLine,
                             nscoord aMaxElementWidth)
 {
-  // If it's inline elements, then make sure the views are correctly
-  // positioned and sized
-  if (aLine->IsInline()) {
-    nsIFrame* frame = aLine->mFirstChild;
-    for (PRInt32 i = 0; (i < aLine->GetChildCount() && frame); i++) {
-       ::PlaceFrameView(aState.mPresContext, frame);
-       frame = frame->GetNextSibling();
-      NS_ASSERTION(frame || (i+1) == aLine->GetChildCount(),
-        "Child count bigger than the number of linked frames!!!");
-    }
-  }
-
   // Update max-element-width
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
     aState.UpdateMaxElementWidth(aMaxElementWidth);
