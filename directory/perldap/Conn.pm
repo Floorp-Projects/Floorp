@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.9 1998/07/30 10:08:00 leif Exp $
+# $Id: Conn.pm,v 1.10 1998/07/30 22:12:02 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -43,12 +43,12 @@ sub new
   my $self = {};
   my $ref;
 
-  $ref = ref($_[0]);
-  if (ref $_[0] eq "HASH")
+  $ref = ref($_[$[]);
+  if (ref $_[$[] eq "HASH")
     {
       my $hash;
 
-      $hash = $_[0];
+      $hash = $_[$[];
       $self->{host} = $hash->{host};
       $self->{port} = $hash->{port};
       $self->{binddn} = $hash->{bind};
@@ -316,7 +316,7 @@ sub close
   $ret = ldap_unbind_s($self->{ld}) if defined($self->{ld});
   undef $self->{ld};
 
-  return (!$ret);
+  return ($ret == LDAP_SUCCESS);
 }
 
 
@@ -338,7 +338,7 @@ sub delete
     }
   $ret = ldap_delete_s($self->{ld}, $dn) if ($dn ne "");
 
-  return (!$ret)
+  return ($ret == LDAP_SUCCESS)
 }
 
 
@@ -365,7 +365,34 @@ sub add
       $ret = ldap_add_s($self->{ld}, $entry->{dn}, %ent) if $gotcha;
     }
 
-  return (!$ret);
+  return ($ret == LDAP_SUCCESS);
+}
+
+
+#############################################################################
+# Modify the RDN, and update the entry accordingly
+#
+sub modifyRDN
+{
+  my ($self, $rdn, $del) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
+  my (@vals);
+  my $ret = 1;
+
+  $del = 1 if ($del eq "");
+
+  @vals = ldap_explode_dn(lc $self->{dn}, 0);
+  if ($vals[$[] ne $rdn)
+    {
+      $ret = ldap_modrdn2_s($self->{ld}, $self->{dn}, $rdn, $del);
+      if ($ret == LDAP_SUCCESS)
+	{
+	  shift(@vals);
+	  unshift(@vals, ($rdn));
+	  $ld->{dn} = join(@vals);
+	}
+    }
+
+  return ($ret == LDAP_SUCCESS);
 }
 
 
@@ -446,7 +473,7 @@ sub update
   $ret = ldap_modify($self->{ld}, $entry->{dn}, \%mod)
     if ($#arr >= $[);
 
-  return (!$ret);
+  return ($ret == LDAP_SUCCESS);
 }
 
 
