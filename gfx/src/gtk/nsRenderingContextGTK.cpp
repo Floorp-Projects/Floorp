@@ -156,6 +156,7 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
   NS_IF_ADDREF(mContext);
 
   mSurface = (nsDrawingSurfaceGTK *) aSurface;
+  NS_ADDREF(mSurface);
 
   return (CommonInit());
 }
@@ -200,9 +201,9 @@ NS_IMETHODIMP nsRenderingContextGTK::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP nsRenderingContextGTK::UnlockDrawingSurface(void)
 {
   PRBool  clipstate;
+  PopState(clipstate);
 
   mSurface->Unlock();
-  PopState(clipstate);
   
   return NS_OK;
 }
@@ -556,8 +557,6 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
-  GdkPixmap *pixmap;
-
   if (nsnull == mSurface) {
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
@@ -570,10 +569,8 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
 
   if (surf)
   {
-    if (nsnull != aBounds)
-      surf->Init(mSurface->GetGC(), aBounds->width, aBounds->height, aSurfFlags);
-    else
-      surf->Init(mSurface->GetGC(), 0, 0, aSurfFlags);
+    NS_ADDREF(surf);
+    surf->Init(mSurface->GetGC(), aBounds->width, aBounds->height, aSurfFlags);
   }
 
   aSurface = (nsDrawingSurface)surf;
@@ -596,8 +593,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
@@ -621,8 +616,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
 
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (i = 0; i < aNumPoints; i++)
@@ -703,8 +696,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -725,8 +716,6 @@ NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt3
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -752,8 +741,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -780,8 +767,6 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -811,8 +796,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -844,8 +827,6 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -958,8 +939,6 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
   if (0 != aLength) {
     g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
 
     nscoord x = aX;
@@ -1039,8 +1018,6 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
   if (0 != aLength) {
     g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
 
     nscoord x = aX;
@@ -1166,8 +1143,6 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   g_return_val_if_fail(aSrcSurf != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetDrawable() != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mSurface->GetGC() != NULL, NS_ERROR_FAILURE);
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
