@@ -158,7 +158,9 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*       aPresContext,
 {
   nsTableRowFrame* copyRowFrame = GetFirstRow();
   nsTableRowFrame* originalRowFrame = aHeaderFooterFrame->GetFirstRow();
+  AddStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
   while (copyRowFrame && originalRowFrame) {
+    copyRowFrame->AddStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
     int rowIndex = originalRowFrame->GetRowIndex();
     copyRowFrame->SetRowIndex(rowIndex);
 
