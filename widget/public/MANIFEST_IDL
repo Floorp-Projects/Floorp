@@ -17,3 +17,4 @@ nsIClipboardOwner.idl
 nsIRollupListener.idl
 nsIBaseWindow.idl
 nsIDragTracker.idl
+nsIFullScreen.idl
