@@ -46,7 +46,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
-#include "nsHTMLTokens.h"  // for eHTMLTags
+#include "nsHTMLTags.h"
 #include "nsISaveAsCharset.h"
 #include "nsIEntityConverter.h"
 #include "nsIURI.h"

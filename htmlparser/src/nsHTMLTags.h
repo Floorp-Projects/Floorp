@@ -62,4 +62,6 @@ public:
   static const char* GetCStringValue(nsHTMLTag aEnum);
 };
 
+#define eHTMLTags nsHTMLTag
+
 #endif /* nsHTMLTags_h___ */
