@@ -80,6 +80,9 @@ if (defined $::FORM{'bug_id'}) {
         print "<tr><th>$product</th></tr>";
         while (MoreSQLData()) {
             my ($id, $count, $summary, $status) = (FetchSQLData());
+            if (!defined $status) {
+                next;
+            }
             my $opened = ($status eq "NEW" || $status eq "ASSIGNED" ||
                           $status eq "REOPENED");
             my $strike = $opened ? "" : "<strike>";
