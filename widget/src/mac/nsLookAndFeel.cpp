@@ -169,7 +169,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x9c,0x9c,0x9c);
         break;
     case eColor_threedface:
-        aColor = NS_RGB(0xde,0xde,0xde);
+        aColor = NS_RGB(0xaa,0xaa,0xaa);
         break;
     case eColor_threedhighlight:
         aColor = NS_RGB(0xa0,0xa0,0xa0);
@@ -179,9 +179,11 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_menu:
     case eColor_infobackground:
-    case eColor_window:
     case eColor_windowframe:
         aColor = NS_RGB(0xde,0xde,0xde);
+        break;
+    case eColor_window:
+        aColor = NS_RGB(0xff,0xff,0xff);
         break;
 
     default:

@@ -276,15 +276,21 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
         break;
 
     //---------
-    // Fonts
+    // CSS System Fonts
+    //
+    //   Important: don't chage the code below, or make sure to preserve
+    //   some compatibility with MacIE5 - developers will appreciate.
+    //   Run the testcase in bug 3371 in quirks mode and strict mode.
     //---------
-    case eSystemAttr_Font_Caption: 		// css2
+        // css2
+    case eSystemAttr_Font_Caption:
     case eSystemAttr_Font_Icon: 
     case eSystemAttr_Font_Menu: 
     case eSystemAttr_Font_MessageBox: 
     case eSystemAttr_Font_SmallCaption: 
     case eSystemAttr_Font_StatusBar: 
-		case eSystemAttr_Font_Window:			// css3
+        // css3
+		case eSystemAttr_Font_Window:
 		case eSystemAttr_Font_Document:
 		case eSystemAttr_Font_Workspace:
 		case eSystemAttr_Font_Desktop:
@@ -294,46 +300,72 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
 		case eSystemAttr_Font_PullDownMenu:
 		case eSystemAttr_Font_List:
 		case eSystemAttr_Font_Field:
-    case eSystemAttr_Font_Tooltips:		// moz
+        // moz
+    case eSystemAttr_Font_Tooltips:
 		case eSystemAttr_Font_Widget:
+      float  dev2app;
+      GetDevUnitsToAppUnits(dev2app);
+
       aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
       aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
       aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
-			if (HasAppearanceManager())
-			{
-				ThemeFontID fontID;
-				switch (anID)
-				{
-					case eSystemAttr_Font_List:
-	    		case eSystemAttr_Font_Icon:
-	    			fontID = kThemeViewsFont;
-	    			break;
-	    		default:
-	    			fontID = kThemeSmallSystemFont;
-	    			break;
-				}
-				Str255 fontName;
-				SInt16 fontSize;
-				Style fontStyle;
-				::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
-				fontName[fontName[0]+1] = 0;
-	      aInfo->mFont->name.AssignWithConversion( (char*)&fontName[1] );
-	      aInfo->mFont->size = fontSize;
-	      if (fontStyle & bold)
-	      	aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
-	      if (fontStyle & italic)
-	      	aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
-	      if (fontStyle & underline)
-	      	aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
-			}
-			else
-			{
-	      aInfo->mFont->name.AssignWithConversion( "geneva" );
-	      aInfo->mFont->size = 9;
-			}
-			float  dev2app;
-			GetDevUnitsToAppUnits(dev2app);
-      aInfo->mFont->size = NSToCoordRound(float(aInfo->mFont->size) * dev2app);
+
+      if (anID == eSystemAttr_Font_Window ||
+          anID == eSystemAttr_Font_Document ||
+          anID == eSystemAttr_Font_Button ||
+          anID == eSystemAttr_Font_PullDownMenu ||
+          anID == eSystemAttr_Font_List ||
+          anID == eSystemAttr_Font_Field) {
+            aInfo->mFont->name.AssignWithConversion( "sans-serif" );
+            aInfo->mFont->size = NSToCoordRound(aInfo->mFont->size * 0.875f); // quick hack
+      }
+      else if (HasAppearanceManager())
+      {
+        ThemeFontID fontID = kThemeViewsFont;
+        switch (anID)
+        {
+              // css2
+          case eSystemAttr_Font_Caption:       fontID = kThemeSystemFont;         break;
+          case eSystemAttr_Font_Icon:          fontID = kThemeViewsFont;          break;
+          case eSystemAttr_Font_Menu:          fontID = kThemeSystemFont;         break;
+          case eSystemAttr_Font_MessageBox:    fontID = kThemeSmallSystemFont;    break;
+          case eSystemAttr_Font_SmallCaption:  fontID = kThemeSmallEmphasizedSystemFont;  break;
+          case eSystemAttr_Font_StatusBar:     fontID = kThemeSmallSystemFont;    break;
+              // css3
+          //case eSystemAttr_Font_Window:      = 'sans-serif'
+          //case eSystemAttr_Font_Document:    = 'sans-serif'
+          case eSystemAttr_Font_Workspace:     fontID = kThemeViewsFont;          break;
+          case eSystemAttr_Font_Desktop:       fontID = kThemeViewsFont;          break;
+          case eSystemAttr_Font_Info:          fontID = kThemeViewsFont;          break;
+          case eSystemAttr_Font_Dialog:        fontID = kThemeSystemFont;         break;
+          //case eSystemAttr_Font_Button:      = 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
+          //case eSystemAttr_Font_PullDownMenu:= 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
+          //case eSystemAttr_Font_List:        = 'sans-serif'
+          //case eSystemAttr_Font_Field:       = 'sans-serif'
+              // moz
+          case eSystemAttr_Font_Tooltips:      fontID = kThemeSmallSystemFont;    break;
+          case eSystemAttr_Font_Widget:        fontID = kThemeSmallSystemFont;    break;
+        }
+
+        Str255 fontName;
+        SInt16 fontSize;
+        Style fontStyle;
+        ::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
+        fontName[fontName[0]+1] = 0;
+        aInfo->mFont->name.AssignWithConversion( (char*)&fontName[1] );
+        aInfo->mFont->size = NSToCoordRound(float(fontSize) * dev2app);
+
+        if (fontStyle & bold)
+          aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
+        if (fontStyle & italic)
+          aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
+        if (fontStyle & underline)
+          aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+      }
+      else
+      {
+        aInfo->mFont->name.AssignWithConversion( "geneva" );
+      }
       break;
 
   } // switch 
