@@ -37,19 +37,25 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
+<!DOCTYPE dialog 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         id="calendar-import-outlook-fieldswindow"
-        title="Map Outlook CSV fields"
+        title="&calendar.importoutlook.dialog.title;"
         onload="loadOutlookImportDialog()"
         buttons="accept,cancel"
         ondialogaccept="return onOKCommand();"
         ondialogcancel="return onCancelCommand();">
-
+  
   <script type="application/x-javascript" src="chrome://calendar/content/outlookImportDialog.js"/>
-
+  
   <vbox>
-    <label value="Please map the following concepts to their Outlook CSV counterparts:"/>
+    <label value="&calendar.importoutlook.mapconcepts.label;"/>
     <spacer height="15"/>
     <hbox>
       <spacer flex="1"/>
@@ -57,7 +63,7 @@
         <rows>
           <row align="center">
             <hbox pack="end">
-              <label value="Subject"/>
+              <label value="&calendar.importoutlook.outlooksubject.label;"/>
             </hbox>
             <menulist id="title-list">
               <menupopup id="title-menupopup">
@@ -67,7 +73,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Start date"/>
+              <label value="&calendar.importoutlook.outlookstartdate.label;"/>
             </hbox>
             <menulist id="startdate-list">
               <menupopup id="startdate-menupopup">
@@ -77,7 +83,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Start time"/>
+              <label value="&calendar.importoutlook.outlookstarttime.label;"/>
             </hbox>
             <menulist id="starttime-list">
               <menupopup id="starttime-menupopup">
@@ -87,7 +93,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="End date"/>
+              <label value="&calendar.importoutlook.outlookenddate.label;"/>
             </hbox>
             <menulist id="enddate-list">
               <menupopup id="enddate-menupopup">
@@ -97,7 +103,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="End time"/>
+              <label value="&calendar.importoutlook.outlookendtime.label;"/>
             </hbox>
             <menulist id="endtime-list">
               <menupopup id="endtime-menupopup">
@@ -107,7 +113,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Location"/>
+              <label value="&calendar.importoutlook.outlooklocation.label;"/>
             </hbox>
             <menulist id="location-list">
               <menupopup id="location-menupopup">
@@ -117,7 +123,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Description"/>
+              <label value="&calendar.importoutlook.outlookdescription.label;"/>
             </hbox>
             <menulist id="description-list">
               <menupopup id="description-menupopup">
@@ -127,7 +133,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="All-day event"/>
+              <label value="&calendar.importoutlook.outlookallday.label;"/>
             </hbox>
             <menulist id="allday-list">
               <menupopup id="allday-menupopup">
@@ -137,7 +143,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Private"/>
+              <label value="&calendar.importoutlook.outlookprivate.label;"/>
             </hbox>
             <menulist id="private-list">
               <menupopup id="private-menupopup">
@@ -147,7 +153,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Alarm on/off"/>
+              <label value="&calendar.importoutlook.outlookalarm.label;"/>
             </hbox>
             <menulist id="alarm-list">
               <menupopup id="alarm-menupopup">
@@ -157,7 +163,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Alarm date"/>
+              <label value="&calendar.importoutlook.outlookalarmdate.label;"/>
             </hbox>
             <menulist id="alarmdate-list">
               <menupopup id="alarmdate-menupopup">
@@ -167,7 +173,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Alarm time"/>
+              <label value="&calendar.importoutlook.outlookalarmtime.label;"/>
             </hbox>
             <menulist id="alarmtime-list">
               <menupopup id="alarmtime-menupopup">
@@ -177,7 +183,7 @@
           </row>
           <row align="center">
             <hbox pack="end">
-              <label value="Categories"/>
+              <label value="&calendar.importoutlook.outlookcategories.label;"/>
             </hbox>
             <menulist id="categories-list">
               <menupopup id="categories-menupopup">
@@ -202,8 +208,8 @@
           </hbox>
           <menulist id="bool-list">
             <menupopup>
-              <menuitem label="False" value="0"/>
-              <menuitem label="True" value="1"/>
+              <menuitem label="&calendar.importoutlook.false.label;" value="0"/>
+              <menuitem label="&calendar.importoutlook.true.label;" value="1"/>
             </menupopup>
           </menulist>
         </row>

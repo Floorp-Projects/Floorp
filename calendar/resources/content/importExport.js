@@ -97,26 +97,8 @@ function convertToUnicode(aCharset, aSrc )
  * shows a file dialog, reads the selected file(s) and tries to parse events from it.
  */
 
-// FIX ME: duplicate management is only used for outlookCSV import
-
-// FIX ME: importDuplicatesDialog should be shown when we know there are dups,
-// possibly instead of the "duplicateImport"-alert near the end.
-
 function loadEventsFromFile()
 {
-
-  var dupResult = { cancelled: false, discard: true, prompt: false };
-
-  openDialog("chrome://calendar/content/importDuplicatesDialog.xul", "caDuplicates", "chrome,modal,centerscreen", dupResult );
-  if (dupResult.cancelled == true)
-    return false;
-
-//   dump("*******************\n");
-//   dump("cancelled: " + dupResult.cancelled + "\n");
-//   dump("discard:   " + dupResult.discard + "\n");
-//   dump("prompt:    " + dupResult.prompt + "\n");
-//   dump("*******************\n");
-
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
@@ -129,7 +111,7 @@ function loadEventsFromFile()
   fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
   fp.show();
   var filesToAppend = fp.files;
-
+  
   if (filesToAppend && filesToAppend.hasMoreElements()) 
   {
       var calendarEventArray = new Array();
@@ -138,85 +120,81 @@ function loadEventsFromFile()
       var aDataStream;
       var i;
       var tempEventArray;
-
+      var date = new Date();
+      
       while (filesToAppend.hasMoreElements())
       {
-          currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
-          aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
-
-          switch (fp.filterIndex) {
-          case 0 : // ics
-          case 3 : // vcs
-            tempEventArray = parseIcalData( aDataStream );
-            for (i=0; i < tempEventArray.length; i++)
-              calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
-            break;
-          case 1 : // xcs
-            tempEventArray = parseXCSData( aDataStream );
-            for (i=0; i < tempEventArray.length; i++)
-              calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
-            break;
-          case 2: // csv
-            var ret = parseOutlookCSVData( aDataStream );
-            for (i=0; i < ret.calendarEventArray.length; i++)
-               calendarEventArray[calendarEventArray.length]  = ret.calendarEventArray[i];
-            for (i=0; i < ret.calendarDuplicateArray.length; i++)
-              duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
-            break;
+        currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+        aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
+        
+        switch (fp.filterIndex) {
+        case 0 : // ics
+        case 3 : // vcs
+          tempEventArray = parseIcalData( aDataStream );
+          break;
+        case 1 : // xcs
+          tempEventArray = parseXCSData( aDataStream );
+          break;
+        case 2: // csv
+          var tempEventArray = parseOutlookCSVData( aDataStream );
+          break;
+        default:
+          tempEventArray = null;
+          break;
+        }
+        if( tempEventArray ) {
+          for( i = 0; i < tempEventArray.length; i++ ) {
+            
+            date.setTime( tempEventArray[i].start.getTime() );
+            if( entryExists( date, tempEventArray[i].title ) )
+              duplicateEventArray[duplicateEventArray.length] = tempEventArray[i];
+            else
+              calendarEventArray[calendarEventArray.length] = tempEventArray[i];
           }
-      }
-
-      // If there are no events to import, let the user know
-      //
-      if (calendarEventArray.length == 0 && (duplicateEventArray.length == 0 || dupResult.discard == true) ) {
-        alert( gCalendarBundle.getString( "noEventsToImport" ) );
-        return false;
+        }
       }
       
-      // Show a dialog with option to import events with or without dialogs
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
       promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
       var result = {value:0}; 
-
+      var importText = gCalendarBundle.getFormattedString( "aboutToImport", [calendarEventArray.length]);
+      var dupeText = gCalendarBundle.getFormattedString( "aboutToImportDupes", [duplicateEventArray.length]);
+      var importAllStr = gCalendarBundle.getString( "importAll" );
+      var promptStr = gCalendarBundle.getString( "promptForEach" );
+      var discardAllStr = gCalendarBundle.getString( "discardAll" );
+      var flags = ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 ) + 
+                  ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 ) + 
+                  ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 );
+      
+      // Ask user what to import (all / prompt each / none)
       if (calendarEventArray.length > 0) {
-
-        var buttonPressed =      
-          promptService.confirmEx(window, 
-                                  "Import", gCalendarBundle.getFormattedString( "aboutToImport", [calendarEventArray.length]), 
-                                  (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
-                                  (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
-                                  (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
-                                  null,null,null,null, result); 
-
-        if(buttonPressed == 0) // YES
-        { 
-            addEventsToCalendar( calendarEventArray );
-        }
-        else if(buttonPressed == 1) // NO
-        { 
+        var buttonPressed = promptService.confirmEx( window, "Import", importText, flags,
+                                                     importAllStr, discardAllStr, promptStr,
+                                                     null, result );
+        
+        if(buttonPressed == 0) // Import all
             addEventsToCalendar( calendarEventArray, true );
-        } 
-        else if(buttonPressed == 2) // CANCEL
-        { 
-            return false; 
-        } 
+        else if(buttonPressed == 2) // prompt
+            addEventsToCalendar( calendarEventArray );
+        //else if(buttonPressed == 1) // discard all
       }
-
-
-      // Depending on how the user chose to deal with duplicates,
-      // either add them blindly, or prompt then for each.
-      //
+      
+      // Ask user what to do with duplicates
       if (duplicateEventArray.length > 0) {
-
-        if (dupResult.discard == false) {
-
-          if (dupResult.prompt)
-            alert(gCalendarBundle.getString( "duplicateImport" ));
-
-          addEventsToCalendar( duplicateEventArray, !dupResult.prompt );
-        }
-
+        var buttonPressed = promptService.confirmEx( window, "Import duplicates", dupeText, flags,
+                                                     importAllStr, discardAllStr, promptStr,
+                                                     null, result );
+        if(buttonPressed == 0) // Import all
+          addEventsToCalendar( duplicateEventArray, true );
+        else if(buttonPressed == 2) // Prompt for each
+          addEventsToCalendar( duplicateEventArray ); 
+        //else if(buttonPressed == 1) // Discard all
       }
+      
+      // If there were no events to import, let the user know
+      //
+      if (calendarEventArray.length == 0 && duplicateEventArray.length == 0 )
+        alert( gCalendarBundle.getString( "noEventsToImport" ) );
   }
   return true;
 }
@@ -542,11 +520,12 @@ function parseOutlookCSVData( outlookCsvStr ) {
         eventFields = eventRegExp( outlookCsvStr );
         if( eventFields != null ) {
           do {
+            eventFields[0] ="";
             //strip quotation marks
             for( var i=1; i < eventFields.length; i++ )
               if( eventFields[i].length > 0 )
                 eventFields[i] = eventFields[i].slice( 1, -1 );
-   
+            
             // At this point eventFields contains following fields. Position
             // of fields is in args.[fieldname]Index.
             //    subject, start date, start time, end date, end time,
@@ -589,11 +568,8 @@ function parseOutlookCSVData( outlookCsvStr ) {
                 calendarEvent.privateEvent = ( eventFields[args.privateIndex] != args.boolStr );
               }
               
-              //save the event into either return array
-              if( entryExists( sDate, calendarEvent.title ) )
-                dupArray[dupArray.length] = calendarEvent;
-              else
-                eventArray[eventArray.length] = calendarEvent;
+              //save the event into return array
+              eventArray[eventArray.length] = calendarEvent;
             }
             //get next events fields
             eventFields = eventRegExp( outlookCsvStr );
@@ -602,7 +578,7 @@ function parseOutlookCSVData( outlookCsvStr ) {
       }
     }
   }
-  return { calendarEventArray: eventArray, calendarDuplicateArray: dupArray };
+  return eventArray;
 }
 
 /**** parseIcalData
