@@ -39,6 +39,7 @@
 
 class nsToolkit;
 class nsMacMessageSink;
+struct PLEventQueue;
 
 //================================================
 
@@ -52,6 +53,7 @@ private:
 	PRBool					mInBackground;
 	nsToolkit*				mToolkit;
 	nsMacMessageSink*       mMessageSink;
+	PLEventQueue*			mEventQueue;
 
 	// CLASS METHODS
 		    	    
