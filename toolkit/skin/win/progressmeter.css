@@ -52,7 +52,7 @@ progressmeter {
   -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   background-color: -moz-Dialog;
-  min-width: 96px;
+  min-width: 128px;
   min-height: 15px;
 }
 
@@ -81,4 +81,5 @@ progressmeter[mode="undetermined"] {
   -moz-border-right-colors: ThreeDShadow -moz-Dialog;
   -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
   -moz-border-left-colors: ThreeDHighlight -moz-Dialog;
+  min-width: 96px;
 }
