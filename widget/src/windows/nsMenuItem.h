@@ -26,6 +26,7 @@
 
 #include "nsIMenuItem.h"
 class nsIMenu;
+class nsIPopUpMenu;
 
 /**
  * Native Win32 MenuItem wrapper
@@ -40,35 +41,20 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD   Create(nsIWidget *aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD   Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
+
+  NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand) ;
+  NS_IMETHOD Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand) ;
 
   // nsIMenuBar Methods
-  NS_IMETHOD SetLabel(const nsString &aText);
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetMenu(nsIMenu * aMenu);
-  NS_IMETHOD SetCommand(PRUint32 aCommand);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetNativeData(void*& aData);
 
 
 protected:
   nsString   mLabel;
-  nsIMenu  * mMenu;
   PRUint32   mCommand;
+  nsIMenu  * mMenu;
 };
 
 #endif // nsMenuItem_h__

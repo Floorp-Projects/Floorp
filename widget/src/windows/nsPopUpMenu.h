@@ -29,33 +29,16 @@
  * Native Win32 button wrapper
  */
 
-class nsPopUpMenu :  public nsWindow,
-                     public nsIPopUpMenu
+class nsPopUpMenu : public nsIPopUpMenu
 {
 
 public:
   nsPopUpMenu();
   virtual ~nsPopUpMenu();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS
   
-  NS_IMETHOD   Create(nsIWidget *aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD   Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD Create(nsIWidget * aParent);
 
   // nsIPopUpMenu Methods
   NS_IMETHOD AddItem(const nsString &aText);
@@ -70,15 +53,13 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD ShowMenu(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD  GetNativeData(void*& aData);
-
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
+  NS_IMETHOD GetNativeData(void*& aData);
 
 protected:
-  PRUint32 mNumMenuItems;
-  nsIWidget * mPopUpParent;
+
+  PRUint32    mNumMenuItems;
+
+  nsIWidget * mParent;
   HMENU       mMenu;
 };
 

@@ -25,37 +25,23 @@
 
 #include "nsIMenuBar.h"
 
+class nsIWidget;
+
 /**
  * Native Win32 button wrapper
  */
 
-class nsMenuBar :  public nsWindow,
-                   public nsIMenuBar
+class nsMenuBar : public nsIMenuBar
 {
 
 public:
   nsMenuBar();
   virtual ~nsMenuBar();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS
+
   
-  NS_IMETHOD   Create(nsIWidget *aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD   Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell = nsnull,
-                         nsIToolkit *aToolkit = nsnull,
-                         nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD Create(nsIWidget * aParent);
 
   // nsIMenuBar Methods
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
@@ -66,13 +52,12 @@ public:
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
 
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
-
 protected:
-  PRUint32 mNumMenus;
-  HMENU    mMenu;
+  PRUint32    mNumMenus;
+  HMENU       mMenu;
+  nsIWidget * mParent;
+
+  PRBool      mIsMenuBarAdded;
 
 };
 

@@ -28,6 +28,7 @@
   { 0x8d, 0xbb, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
 
 class nsIMenu;
+class nsIPopUpMenu;
 
 /**
  * MenuItem widget
@@ -37,10 +38,16 @@ class nsIMenuItem : public nsISupports {
   public:
  
    /**
-    * Set the MenuItem label
+    * Creates the MenuItem
     *
     */
-    NS_IMETHOD SetLabel(const nsString &aText) = 0;
+    NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand) = 0;
+    
+   /**
+    * Creates the MenuItem
+    *
+    */
+    NS_IMETHOD Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand) = 0;
     
    /**
     * Get the MenuItem label
@@ -48,19 +55,6 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD GetLabel(nsString &aText) = 0;
 
-
-   /**
-    * Get the MenuItem label
-    *
-    */
-    NS_IMETHOD SetMenu(nsIMenu * aMenu) = 0;
-
-   /**
-    * Sets the MenuItem Command identifier
-    *
-    */
-    NS_IMETHOD SetCommand(PRUint32 aCommand) = 0;
-    
    /**
     * Gets the MenuItem Command identifier
     *

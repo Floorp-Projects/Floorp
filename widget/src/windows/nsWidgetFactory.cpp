@@ -220,10 +220,10 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)(nsWindow*)new nsLabel();
     }
     else if (mClassID.Equals(kCMenuBar)) {
-        inst = (nsISupports*)(nsWindow*)new nsMenuBar();
+        inst = (nsISupports*)new nsMenuBar();
     }
     else if (mClassID.Equals(kCMenu)) {
-        inst = (nsISupports*)(nsWindow*)new nsMenu();
+        inst = (nsISupports*)new nsMenu();
     }
     else if (mClassID.Equals(kCMenuItem)) {
         inst = (nsISupports*)new nsMenuItem();
@@ -244,7 +244,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)(nsIToolbarItemHolder *) new nsToolbarItemHolder();
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
-        inst = (nsISupports*)(nsWindow*)new nsPopUpMenu();
+        inst = (nsISupports*)new nsPopUpMenu();
     }/* */
   
     if (inst == NULL) {  
