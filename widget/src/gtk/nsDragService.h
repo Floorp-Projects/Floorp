@@ -59,6 +59,9 @@ public:
   NS_IMETHOD SetLastContext  (GtkWidget          *aWidget,
                               GdkDragContext     *aContext,
                               guint               aTime);
+  NS_IMETHOD UpdateDragStatus(GtkWidget          *aWidget,
+                              GdkDragContext     *aContext,
+                              guint               aTime);
   NS_IMETHOD SetDataReceived (GtkWidget          *aWidget,
                               GdkDragContext     *context,
                               gint                x,
@@ -72,6 +75,7 @@ public:
                               guint               info,
                               guint32             time,
                               gpointer            data);
+  NS_IMETHOD SetTimeCallback (nsIDragSessionGTKTimeCB aCallback);
 
   //  END PUBLIC API
 
@@ -103,6 +107,9 @@ private:
   void SetDataItems(nsISupportsArray *anArray);
   // get the data for a particular flavor
   NS_METHOD GetNativeDragData(GdkAtom aFlavor);
+  // this is a callback to get the time for the last event that
+  // happened
+  nsIDragSessionGTKTimeCB mTimeCB;
 };
 
 #endif // nsDragService_h__

@@ -191,9 +191,14 @@ public:
   PRBool   OnText(nsTextEvent &aEvent)       { return OnInput(aEvent); };
   PRBool   OnComposition(nsCompositionEvent &aEvent) { return OnInput(aEvent); };
   PRBool   OnInput(nsInputEvent &aEvent);
+
+  // the event handling code needs to let us know the time of the last event
+  static void SetLastEventTime(guint32 aTime);
+  static void GetLastEventTime(guint32 *aTime);
 protected:
 
   virtual void UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
+  virtual void UpdateDragStatus(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
 
   virtual void InitCallbacks(char * aName = nsnull);
 
@@ -453,6 +458,9 @@ protected:
 
   nsITimer* mICSpotTimer;
   static void ICSpotCallback(nsITimer* aTimer, void* aClosure);
+  // this is the last time that an event happened.  we keep this
+  // around so that we can synth drag events properly
+  static guint32 sLastEventTime;
 public:
   nsresult KillICSpotTimer();
   nsresult PrimeICSpotTimer();
@@ -467,6 +475,9 @@ private:
   // this will keep track of whether or not the gdk handler
   // is installed yet
   static PRBool mGDKHandlerInstalled;
+  // this will keep track of whether or not we've told the drag
+  // service how to call back into us to get the last event time
+  static PRBool mTimeCBSet;
 
   //
   // Keep track of the last widget being "dragged"

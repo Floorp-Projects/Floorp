@@ -27,6 +27,8 @@
 
 #include <gtk/gtk.h>
 
+typedef void (*nsIDragSessionGTKTimeCB)(guint32 *aTime);
+
 #define NS_IDRAGSESSIONGTK_IID \
 { 0xa6b49c42, 0x1dd1, 0x11b2, { 0xb2, 0xdf, 0xc1, 0xd6, 0x1d, 0x67, 0x45, 0xcf } };
 
@@ -37,19 +39,23 @@ class nsIDragSessionGTK : public nsISupports {
   NS_IMETHOD SetLastContext  (GtkWidget      *aWidget,
                               GdkDragContext *aContext,
                               guint           aTime) = 0;
+  NS_IMETHOD UpdateDragStatus(GtkWidget      *aWidget,
+                              GdkDragContext *aContext,
+                              guint           aTime) = 0;
   NS_IMETHOD SetDataReceived (GtkWidget         *aWidget,
                               GdkDragContext    *context,
                               gint               x,
                               gint               y,
                               GtkSelectionData  *selection_data,
                               guint              info,
-                              guint32            time) = 0;
+                              guint32            aTime) = 0;
   NS_IMETHOD DataGetSignal   (GtkWidget        *widget,
                               GdkDragContext   *context,
                               GtkSelectionData *selection_data,
                               guint             info,
-                              guint32           time,
+                              guint32           aTime,
                               gpointer          data) = 0;
+  NS_IMETHOD SetTimeCallback (nsIDragSessionGTKTimeCB aCallback) = 0;
 
 };
 
