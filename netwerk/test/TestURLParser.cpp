@@ -1,3 +1,4 @@
+#include "TestCommon.h"
 #include <stdio.h>
 #include "nsIURLParser.h"
 #include "nsCOMPtr.h"
@@ -87,6 +88,9 @@ parse_path(nsIURLParser *urlParser, char *path, PRInt32 pathLen)
 int
 main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     if (argc < 2) {
         printf("usage: TestURLParser [-std|-noauth|-auth] <url>\n");
         return -1;

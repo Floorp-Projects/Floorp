@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include <stdio.h>
 #ifdef WIN32 
 #include <windows.h>
@@ -240,6 +241,9 @@ Consumer::Validate(nsIRequest* request, nsISupports *aContext) {
 nsresult StartLoad(const char *);
 
 int main(int argc, char *argv[]) {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv = NS_OK;
     PRBool cmdLineURL = PR_FALSE;
 

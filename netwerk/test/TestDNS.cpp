@@ -34,6 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsIServiceManager.h"
@@ -88,6 +89,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(myDNSListener, nsIDNSListener)
 
 int main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     int sleepLen = 10; // default: 10 seconds
 
     if (argc == 1) {

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "TestCommon.h"
 #include "nsNetUtil.h"
 #include "nsEventQueueUtils.h"
 #include "prlog.h"
@@ -42,6 +43,9 @@ MyStreamLoaderObserver::OnStreamComplete(nsIStreamLoader *loader,
 
 int main(int argc, char **argv)
 {
+  if (test_common_init(&argc, &argv) != 0)
+    return -1;
+
   if (argc < 2) {
     printf("usage: %s <url>\n", argv[0]);
     return -1;

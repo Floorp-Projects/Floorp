@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include "nsXPCOM.h"
 #include "nsString.h"
 #include "nsIEventQueueService.h"
@@ -63,6 +64,9 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 int
 main(int argc, char* argv[])
 {
+  if (test_common_init(&argc, &argv) != 0)
+    return -1;
+
   nsresult ret;
 
 

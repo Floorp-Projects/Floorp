@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include <stdlib.h>
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -144,6 +145,9 @@ MakeServer(PRInt32 port)
 int
 main(int argc, char* argv[])
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv= (nsresult)-1;
     if (argc < 2) {
         printf("usage: %s <port>\n", argv[0]);

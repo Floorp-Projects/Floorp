@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIURI.h"
@@ -61,6 +62,9 @@
 int
 main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv;
     char buf[256];
 

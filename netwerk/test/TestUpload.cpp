@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #ifdef WIN32 
 #include <windows.h>
 #endif
@@ -133,6 +134,9 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
 int
 main(int argc, char* argv[])
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv;
 
     if (argc < 2) {
