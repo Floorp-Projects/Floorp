@@ -18,9 +18,10 @@
 #ifndef MacWindow_h__
 #define MacWindow_h__
 
+#include <memory>	// for auto_ptr
+
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
-#include "memory"	// for auto_ptr
 
 class nsMacEventHandler;
 
