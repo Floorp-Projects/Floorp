@@ -216,7 +216,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 
   if (err != ZIP_OK)
     outFile->Delete(PR_FALSE);
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX)
   else
   {
     char *path;
