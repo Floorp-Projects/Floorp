@@ -996,9 +996,16 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       nsresult hostResult = aURL->GetHost(getter_Copies(host));
       if (NS_SUCCEEDED(hostResult) && host)
       {      
-      CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
-      nsCAutoString hostStr(buf);
-      PRInt32 dotLoc = hostStr.FindChar('.');
+        CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
+        nsCAutoString hostStr(buf);
+        PRInt32 dotLoc = hostStr.FindChar('.');
+
+        nsXPIDLCString scheme;
+        aURL->GetScheme(getter_Copies(scheme));
+
+        PRUint32 schemeLen = PL_strlen((const char*)scheme);
+        CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
+        nsCAutoString schemeStr(schemeBuf);
 
 
       if(aStatus == NS_ERROR_UNKNOWN_HOST ||
@@ -1008,6 +1015,21 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          PRBool keywordsEnabled = PR_FALSE;
          NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
             NS_ERROR_FAILURE);
+         
+         // we should only perform a keyword search under the following conditions:
+         // (1) the url scheme is http (or https)
+         // (2) the url does not have a protocol scheme
+         // If we don't enforce such a policy, then we end up doing keyword searchs on urls
+         // we don't intend like imap, file, mailbox, etc. This could lead to a security
+         // problem where we send data to the keyword server that we shouldn't be. 
+         // Someone needs to clean up keywords in general so we can determine on a per url basis
+         // if we want keywords enabled...this is just a bandaid...
+         static const char httpSchemeName[] = "http";
+
+         if (schemeStr.IsEmpty()  || !schemeStr.Find(httpSchemeName) )
+           keywordsEnabled = PR_TRUE; // keep keywors enabled for this url
+         else
+           keywordsEnabled = PR_FALSE; // all other cases, disable keywords for this url.
 
          if(keywordsEnabled && (-1 == dotLoc))
             {
@@ -1023,13 +1045,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          {
          // Try our www.*.com trick.
          nsCAutoString retryHost;
-         nsXPIDLCString scheme;
-         NS_ENSURE_SUCCESS(aURL->GetScheme(getter_Copies(scheme)), 
-            NS_ERROR_FAILURE);
 
-         PRUint32 schemeLen = PL_strlen((const char*)scheme);
-         CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
-         nsCAutoString schemeStr(schemeBuf);
 
          if(schemeStr.Find("http") == 0)
             {
