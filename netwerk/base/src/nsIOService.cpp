@@ -358,13 +358,7 @@ nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **r
                    && gScheme[i][len] == '\0')
                 : (!nsCRT::strcasecmp(scheme, gScheme[i])))
         {
-            nsCOMPtr<nsIProtocolHandler> temp = do_QueryReferent(mWeakHandler[i]);
-            if (temp)
-            {
-                *result = temp.get();
-                NS_ADDREF(*result);
-                return NS_OK;
-            }
+            return CallQueryReferent(mWeakHandler[i].get(), result);
         }
     }
     return NS_ERROR_FAILURE;
@@ -489,6 +483,8 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
+    // If XPCOM shutdown has started, mProxyService could be null.
+    NS_ENSURE_TRUE(mProxyService, NS_ERROR_NOT_AVAILABLE);
     NS_TIMELINE_MARK_URI("nsIOService::NewChannelFromURI(%s)", aURI);
 
     nsCAutoString scheme;
@@ -727,6 +723,9 @@ nsIOService::Observe(nsISupports *subject,
         (void)SetOffline(PR_TRUE);
         if (mFileTransportService)
             (void)mFileTransportService->Shutdown();
+
+        // Break circular reference.
+        mProxyService = nsnull;
     }
     return NS_OK;
 }
