@@ -184,7 +184,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
       *aDecision = mAllowPlugins ? nsIContentPolicy::ACCEPT :
                                    nsIContentPolicy::REJECT_TYPE;
   }
-  else if (aContentType == nsIContentPolicy::TYPE_IMAGE)
+  else 
   {
     PRBool isFtp = PR_FALSE;
     rv = aContentLocation->SchemeIs("ftp", &isFtp);
