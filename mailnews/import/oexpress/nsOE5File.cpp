@@ -305,20 +305,36 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
     if (ReadBytes( inFile, block, pIndex[i], 16) && (block[0] == pIndex[i]) &&
         (block[2] < kMailboxBufferSize) && (ReadBytes( inFile, pBuffer, kDontSeek, block[2])))
     {
-			// write out the from separator.
-      if (!IsFromLine( pBuffer, block[2]))
-      {
-				rv = pDestination->Write( m_pFromLineSep, sepLen, &written);
-				// FIXME: Do I need to check the return value of written???
-				if (NS_FAILED( rv))
-					break;
-			}
-
       // block[2] contains the chars in the buffer (ie, buf content size).
       // block[3] contains offset to the next block of data (0 means no more data).
       size = block[2];
       pStart = pBuffer;
       pEnd = pStart + size;
+
+			// write out the from separator.
+      if (IsFromLine( pBuffer, size))
+      {
+        char *pChar = pStart;
+        while ((pChar < pEnd) && (*pChar != nsCRT::CR) && (*(pChar+1) != nsCRT::LF))
+          pChar++;
+
+        if (pChar < pEnd)
+        {
+          // Get the "From " line so write it out.
+          rv = pDestination->Write(pStart, pChar-pStart+2, &written);
+          NS_ENSURE_SUCCESS(rv,rv);
+          // Now buffer starts from the 2nd line.
+          pStart = pChar + 2;
+        }
+      }
+      else
+      {
+        // Write out the default from line since there is none in the msg.
+				rv = pDestination->Write( m_pFromLineSep, sepLen, &written);
+				// FIXME: Do I need to check the return value of written???
+				if (NS_FAILED( rv))
+					break;
+			}
 
       do 
       {
