@@ -39,12 +39,9 @@ package org.mozilla.xpcom;
 
 public final class GeckoEmbed {
 
-  public static native void NS_InitEmbedding(nsILocalFile aMozBinDirectory, nsISupports aAppFileLocProvider);
-  public static native void NS_TermEmbedding();
-  public static native nsILocalFile NS_NewLocalFile(String aPath, boolean followLinks);
-  public static native nsIComponentManager NS_GetComponentManager();
-  public static native nsIServiceManager NS_GetServiceManager();
-
-  public static native nsISimpleEnumerator NS_NewSingletonEnumerator(nsISupports aSingleton);
-  public static native nsIMutableArray NS_NewArray();
+  public static native void initEmbedding(nsILocalFile aMozBinDirectory, nsISupports aAppFileLocProvider);
+  public static native void termEmbedding();
+  public static native nsILocalFile newLocalFile(String aPath, boolean followLinks);
+  public static native nsIComponentManager getComponentManager();
+  public static native nsIServiceManager getServiceManager();
 }

@@ -70,6 +70,17 @@ public final class XPCOM {
 
   /*  Utility functions */
 
+  // Generic QueryInterface implementation
+  public static nsISupports queryInterface(nsISupports aObject, String aIID)
+  {
+    Class[] interfaces = aObject.getClass().getInterfaces();
+    for (int i = 0; i < interfaces.length; i++ ) {
+      if (aIID.equals(XPCOM.getInterfaceIID(interfaces[i])))
+        return aObject;
+    }
+    return null;
+  }
+
   // Given an interface, this will construct the name of the IID field (such as
   // NS_ISUPPORTS_IID) and return its value.
   public static String getInterfaceIID(Class aInterface)
