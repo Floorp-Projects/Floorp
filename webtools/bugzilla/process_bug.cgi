@@ -358,27 +358,29 @@ SWITCH: for ($::FORM{'knob'}) {
             CheckFormFieldDefined(\%::FORM,'dup_id');
         }
         my $num = trim($::FORM{'dup_id'});
-        if ($num !~ /^[0-9]*$/) {
+        SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
+        $num = FetchOneColumn();
+        if (!$num) {
             print "You must specify a bug number of which this bug is a\n";
             print "duplicate.  The bug has not been changed.\n";
             PutFooter();
             exit;
         }
-        if (defined($::FORM{'id'}) && $::FORM{'dup_id'} == $::FORM{'id'}) {
+        if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
             print "Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             PutFooter();
             exit;
         }
-        AppendComment($::FORM{'dup_id'}, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $::FORM{'dup_id'} ***";
+        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
 
-        print "<TABLE BORDER=1><TD><H2>Notation added to bug $::FORM{'dup_id'}</H2>\n";
-        system("./processmail $::FORM{'dup_id'} $::FORM{'who'}");
-        print "<TD><A HREF=\"show_bug.cgi?id=$::FORM{'dup_id'}\">Go To BUG# $::FORM{'dup_id'}</A></TABLE>\n";
+        print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
+        system("./processmail $num $::FORM{'who'}");
+        print "<TD><A HREF=\"show_bug.cgi?id=$num\">Go To BUG# $num</A></TABLE>\n";
 
         last SWITCH;
     };
