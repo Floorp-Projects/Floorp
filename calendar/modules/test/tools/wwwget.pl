@@ -22,8 +22,11 @@
 # reads the information. There are several flags that can be used to 
 # control what is done with the output.
 #
+# Usage:
+#   wwwget <host> <path>
+#
 # Example:
-#   wwwget http://www.netscape.com/
+#   wwwget www.infoseek.com /index.html
 
 
 # Steve Mansour
