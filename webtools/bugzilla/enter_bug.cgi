@@ -76,10 +76,10 @@ if (!defined $product) {
 
    if ( ! Param('useclassification') ) {
       # just pick the default one
-      $::FORM{'classification'}=(keys %::classdesc)[0];
+      $cgi->param(-name => 'classification', -value => (keys %::classdesc)[0]);
    }
 
-   if (!defined $::FORM{'classification'}) {
+   if (!$cgi->param('classification')) {
        my %classdesc;
        my %classifications;
     
@@ -97,7 +97,7 @@ if (!defined $product) {
            $vars->{'classifications'} = \%classifications;
 
            $vars->{'target'} = "enter_bug.cgi";
-           $vars->{'format'} = $::FORM{'format'};
+           $vars->{'format'} = $cgi->param('format');
            
            $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
 
@@ -106,15 +106,14 @@ if (!defined $product) {
              || ThrowTemplateError($template->error());
            exit;        
        }
-       $::FORM{'classification'} = (keys %classdesc)[0];
-       $::MFORM{'classification'} = [$::FORM{'classification'}];
+       $cgi->param(-name => 'classification', -value => (keys %classdesc)[0]);
    }
 
     my %products;
     foreach my $p (@enterable_products) {
         if (CanEnterProduct($p)) {
-            if (IsInClassification($::FORM{'classification'},$p) ||
-                $::FORM{'classification'} eq "__all") {
+            if (IsInClassification(scalar $cgi->param('classification'),$p) ||
+                $cgi->param('classification') eq "__all") {
                 $products{$p} = $::proddesc{$p};
             }
         }
@@ -129,11 +128,11 @@ if (!defined $product) {
         if ( ! Param('useclassification') ) {
             @{$classifications{"all"}} = keys %products;
         }
-        elsif ($::FORM{'classification'} eq "__all") {
+        elsif ($cgi->param('classification') eq "__all") {
             %classifications = %::classifications;
         } else {
-            $classifications{$::FORM{'classification'}} =
-                $::classifications{$::FORM{'classification'}};
+            $classifications{$cgi->param('classification')} =
+                $::classifications{$cgi->param('classification')};
         }
         $vars->{'proddesc'} = \%products;
         $vars->{'classifications'} = \%classifications;
