@@ -61,6 +61,9 @@
 #include "nsIStringBundle.h"
 #include "nsIScriptSecurityManager.h"
 
+#include "nsITransport.h"
+#include "nsISocketTransport.h"
+
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #if defined(PR_LOGGING)
@@ -97,13 +100,14 @@ static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENTVIEWERCONTAINER_II
 struct nsRequestInfo : public PLDHashEntryHdr
 {
   nsRequestInfo(const void *key)
-    : mKey(key), mCurrentProgress(0), mMaxProgress(0)
+    : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(PR_FALSE)
   {
   }
 
   const void* mKey; // Must be first for the pldhash stubs to work
   PRInt32 mCurrentProgress;
   PRInt32 mMaxProgress;
+  PRBool mUploading;
 };
 
 
@@ -1006,7 +1010,8 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctx
   //
   info = GetRequestInfo(aRequest);
   if (info) {
-    if ((0 == info->mCurrentProgress) && (0 == info->mMaxProgress)) {
+    // suppress sending STATE_TRANSFERRING if this is upload progress (see bug 240053)
+    if (!info->mUploading && (0 == info->mCurrentProgress) && (0 == info->mMaxProgress)) {
       //
       // This is the first progress notification for the entry.  If
       // (aMaxProgress > 0) then the content-length of the data is known,
@@ -1078,6 +1083,25 @@ NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
   // Fire progress notifications out to any registered nsIWebProgressListeners
   //
   if (aStatus) {
+    // Remember the current status for this request
+    nsRequestInfo *info;
+    info = GetRequestInfo(aRequest);
+    if (info) {
+      PRBool uploading = (aStatus == nsITransport::STATUS_WRITING ||
+                          aStatus == nsISocketTransport::STATUS_SENDING_TO);
+      // If switching from uploading to downloading (or vice versa), then we
+      // need to reset our progress counts.  This is designed with HTTP form
+      // submission in mind, where an upload is performed followed by download
+      // of possibly several documents.
+      if (info->mUploading != uploading) {
+        mCurrentSelfProgress  = mMaxSelfProgress  = 0;
+        mCurrentTotalProgress = mMaxTotalProgress = 0;
+        info->mUploading = uploading;
+        info->mCurrentProgress = 0;
+        info->mMaxProgress = 0;
+      }
+    }
+    
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
