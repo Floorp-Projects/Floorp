@@ -457,13 +457,17 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
-    aDesiredSize.width = NSIntPixelsToTwips(300, p2t);
+    aDesiredSize.width = PR_MIN(PR_MAX(NSIntPixelsToTwips(300, p2t),
+                                       aReflowState.mComputedMinWidth),
+                                aReflowState.mComputedMaxWidth);
   }
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
     aDesiredSize.height = aReflowState.mComputedHeight;
   }
   else {
-    aDesiredSize.height = NSIntPixelsToTwips(150, p2t);
+    aDesiredSize.height = PR_MIN(PR_MAX(NSIntPixelsToTwips(150, p2t),
+                                        aReflowState.mComputedMinHeight),
+                                 aReflowState.mComputedMaxHeight);
   }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
