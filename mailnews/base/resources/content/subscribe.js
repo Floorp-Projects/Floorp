@@ -358,19 +358,21 @@ function ReverseStateFromRow(row)
 }
 
 function SetSubscribeState(state)
-{
+    
+{   var i, name;
   try {
     if (InSearchMode()) {
         // if we are in "search" mode, we need to iterate over the
         // outliner selection, and set the state for all elements
         // in the selection
+        
         var outlinerSelection = gSearchView.selection; 
-        for (var i=0;i<outlinerSelection.getRangeCount();i++) {
+        for (i=0;i<outlinerSelection.getRangeCount();i++) {
           var start = new Object;
           var end = new Object;
           outlinerSelection.getRangeAt(i,start,end);
           for (var k=start.value;k<=end.value;k++) {
-            var name = gSearchView.getCellText(k,"nameCol");
+            name = gSearchView.getCellText(k,"nameCol");
             // we need to escape the name because
             // some news servers have newsgroups with non ASCII names
             // we need to escape those name before calling SetState()
@@ -383,9 +385,9 @@ function SetSubscribeState(state)
     else {
       // we are in the "normal" mode
       var groupList = gSubscribeTree.selectedItems;
-      for (var i=0;i<groupList.length;i++) {
+      for (i=0;i<groupList.length;i++) {
         var group = groupList[i];
-        var name = group.getAttribute('name');
+        name = group.getAttribute('name');
         SetState(name,state);
       }
     }
