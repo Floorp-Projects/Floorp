@@ -359,6 +359,12 @@ function showIncompatibleError(aDS)
   var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
 
+  var vendorSub = "";
+  try {
+    vendorSub = gPref.getCharPref("general.useragent.vendorSub");
+  }
+  catch (e) {}
+
   var message;
   var metadata = {};
   getItemMetadata(aDS, metadata);
@@ -374,16 +380,17 @@ function showIncompatibleError(aDS)
     // If the min target app version and the max target app version are the same, don't show
     // a message like, "Foo is only compatible with Firefox versions 0.7 to 0.7", rather just
     // show, "Foo is only compatible with Firefox 0.7"
-    params = [metadata.name, metadata.version, brandShortName, metadata.name, 
-              metadata.version, brandShortName, metadata.minAppVersion];
-    message = extensionStrings.formatStringFromName("incompatibleMessageSingleAppVersion", 
+    params = [metadata.name, metadata.version, brandShortName, vendorSub, 
+              metadata.name, metadata.version, brandShortName, 
+              metadata.minAppVersion];
+    message = extensionStrings.formatStringFromName("incompatibleMsgSingleAppVersion", 
                                                     params, params.length);
   }
   else {
-    params = [metadata.name, metadata.version, brandShortName, metadata.name, 
-              metadata.version, brandShortName, metadata.minAppVersion, 
-              metadata.maxAppVersion];
-    message = extensionStrings.formatStringFromName("incompatibleMessage", params, params.length);
+    params = [metadata.name, metadata.version, brandShortName, vendorSub, 
+              metadata.name, metadata.version, brandShortName, 
+              metadata.minAppVersion, metadata.maxAppVersion];
+    message = extensionStrings.formatStringFromName("incompatibleMsg", params, params.length);
   }
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                      .getService(Components.interfaces.nsIPromptService);
@@ -454,8 +461,15 @@ function showOldThemeError(aDS)
     themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
   }
   
-  params = [themeName, "", brandShortName, themeName, "", brandShortName, appVersion];
-  var message = extensionStrings.formatStringFromName("incompatibleMessageSingleAppVersion",
+  var vendorSub = "";
+  try {
+    vendorSub = gPref.getCharPref("general.useragent.vendorSub");
+  }
+  catch (e) { }
+
+  params = [themeName, "", brandShortName, vendorSub, themeName, "", 
+            brandShortName, appVersion];
+  var message = extensionStrings.formatStringFromName("incompatibleMsgSingleAppVersion",
                                                       params, params.length);
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                      .getService(Components.interfaces.nsIPromptService);
