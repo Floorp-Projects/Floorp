@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.24 2003/03/26 00:31:13 wtc%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.25 2003/03/27 03:07:47 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -1164,6 +1164,7 @@ SSL_ShutdownServerSessionIDCacheInstance(cacheDesc *cache)
     /* if single process, close down, clean up.
     ** if multi-process, TBD.
     */
+    return SECSuccess;
 }
 
 SECStatus
