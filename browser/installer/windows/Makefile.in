@@ -46,7 +46,7 @@ CONFIG_DIR=$(shell cygpath -a $(srcdir))
 OBJ_DIR=$(shell cygpath -a $(DEPTH))
 SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
-installer:
+installer: firefox.manifest
 	cd $(topsrcdir)/toolkit/mozapps/installer && perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)"
 
 include $(topsrcdir)/config/rules.mk
@@ -58,3 +58,8 @@ ifndef MOZ_USE_OFFICIAL_BRANDING
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 endif
 
+# Create a manifest for use with codesighs, by stripping "bin/" off of the
+# beginning of lines in the packages file.
+
+firefox.manifest: packages-static
+	grep "^bin/" $^ | sed "s?^bin/??" > $@
