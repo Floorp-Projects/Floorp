@@ -1266,27 +1266,41 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
 	mClipView->GetDimensions(&clipSize.width, &clipSize.height);
 
+	// Clamp aX
+
+	if ((aX + clipSize.width) > mSizeX)
+		aX = mSizeX - clipSize.width;
+
+	if (aX < 0)
+		aX = 0;
+
+	// Clamp aY
+
+	if ((aY + clipSize.height) > mSizeY)
+		aY = mSizeY - clipSize.height;
+
+	if (aY < 0)
+		aY = 0;
+
+	aX = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
+	aY = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
+
+	// do nothing if the we aren't scrolling.
+	if (aX == mOffsetX && aY == mOffsetY)
+		return NS_OK;
+
 	mVScrollBarView->GetWidget(widget);
 
 	if (nsnull != widget) {
 		nsIScrollbar* scrollv = nsnull;
 		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
-			// Clamp aY
-
-			if ((aY + clipSize.height) > mSizeY)
-				aY = mSizeY - clipSize.height;
-
-			if (aY < 0)
-				aY = 0;
-
 			// Move the scrollbar's thumb
 
 			PRUint32  oldpos = mOffsetY;
-			PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
 
-			scrollv->SetPosition(newpos);
+			scrollv->SetPosition(aY);
 
-			dy = NSTwipsToIntPixels((oldpos - newpos), t2p);
+			dy = NSTwipsToIntPixels((oldpos - aY), t2p);
 
 			NS_RELEASE(scrollv);
 		}
@@ -1299,22 +1313,13 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 	if (nsnull != widget) {
 		nsIScrollbar* scrollh = nsnull;
 		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
-			// Clamp aX
-
-			if ((aX + clipSize.width) > mSizeX)
-				aX = mSizeX - clipSize.width;
-
-			if (aX < 0)
-				aX = 0;
-
 			// Move the scrollbar's thumb
 
 			PRUint32  oldpos = mOffsetX;
-			PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
 
-			scrollh->SetPosition(newpos);
+			scrollh->SetPosition(aX);
 
-			dx = NSTwipsToIntPixels((oldpos - newpos), t2p);
+			dx = NSTwipsToIntPixels((oldpos - aX), t2p);
 
 			NS_RELEASE(scrollh);
 		}
