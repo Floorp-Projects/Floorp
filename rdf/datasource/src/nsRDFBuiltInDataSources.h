@@ -36,12 +36,6 @@ class nsIRDFDataSource;
 // in nsFileSystemDataSource.cpp
 nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
 
-// in nsSearchDataSource.cpp
-nsresult NS_NewRDFSearchDataSource(nsIRDFDataSource** result);
-
-// in nsFindDataSource.cpp
-nsresult NS_NewRDFFindDataSource(nsIRDFDataSource** result);
-
 // in nsFTPDataSource.cpp
 nsresult NS_NewRDFFTPDataSource(nsIRDFDataSource** result);
 
