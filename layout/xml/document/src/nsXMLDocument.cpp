@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -236,7 +237,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 		 nsICharsetAlias* calias = nsnull;
 		 rv = nsServiceManager::GetService(
 							kCharsetAliasCID,
-							nsICharsetAlias::GetIID(),
+							NS_GET_IID(nsICharsetAlias),
 							(nsISupports**) &calias);
 		 if(NS_SUCCEEDED(rv) && (nsnull != calias) )
 		 {

@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -142,7 +143,7 @@ XXX The winner is the outermost in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       if (NS_SUCCEEDED(rv) && aMathMLFrame) {
         aMathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
@@ -154,12 +155,12 @@ XXX The winner is the outermost in conflicting settings like these:
 
   // see if the overscriptFrame is <mo> or an embellished operator
   if (overscriptFrame) {
-    rv = overscriptFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&overscriptMathMLFrame);
+    rv = overscriptFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&overscriptMathMLFrame);
     if (NS_SUCCEEDED(rv) && overscriptMathMLFrame) {
       overscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the overscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
         if (NS_SUCCEEDED(rv) && aMathMLFrame) {
           aMathMLFrame->GetEmbellishData(embellishData);
           // if we have the accent attribute, tell the core to behave as 
@@ -269,7 +270,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
         if (IsEmbellishOperator(childFrame)) {
           // treated as if embellishments were not there...
           nsIMathMLFrame* aMathMLFrame = nsnull;
-          nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+          nsresult rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
           NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
           if (NS_SUCCEEDED(rv) && aMathMLFrame) {
             nsRect rect;

@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -276,7 +277,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
     // Stretch ...
     // Only directed at frames that implement the nsIMathMLFrame interface
     nsIMathMLFrame* aMathMLFrame;
-    rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     if (NS_SUCCEEDED(rv) && aMathMLFrame) {
       nsIRenderingContext& renderingContext = *aReflowState.rendContext;
       aMathMLFrame->Stretch(aPresContext, renderingContext, 

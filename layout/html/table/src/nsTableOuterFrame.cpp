@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
@@ -128,7 +129,7 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsITableLayout::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsITableLayout))) 
   { // note there is no addref here, frames are not addref'd
     *aInstancePtr = (void*)(nsITableLayout*)this;
     return NS_OK;
@@ -1191,7 +1192,7 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
 {
   if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
   nsITableLayout *inner;
-  nsresult result = mInnerTableFrame->QueryInterface(nsITableLayout::GetIID(), (void **)&inner);
+  nsresult result = mInnerTableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&inner);
   if (NS_SUCCEEDED(result) && inner)
   {
     return (inner->GetCellDataAt(aRowIndex, aColIndex, aCell,
@@ -1206,7 +1207,7 @@ NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColC
 {
   if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
   nsITableLayout *inner;
-  nsresult result = mInnerTableFrame->QueryInterface(nsITableLayout::GetIID(), (void **)&inner);
+  nsresult result = mInnerTableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&inner);
   if (NS_SUCCEEDED(result) && inner)
   {
     return (inner->GetTableSize(aRowCount, aColCount));

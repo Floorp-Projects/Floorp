@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIScriptObjectOwner.h"
@@ -308,13 +309,13 @@ if (NS_SUCCEEDED(rv)) {
 		rv = NS_GetObjectFramePluginInstance(frame, pluginInstance);
 		if ((rv == NS_OK) && (nsnull != pluginInstance)) {
 			nsIJVMPluginInstance* javaPluginInstance = nsnull;
-			if (pluginInstance->QueryInterface(nsIJVMPluginInstance::GetIID(), (void**)&javaPluginInstance) == NS_OK) {
+			if (pluginInstance->QueryInterface(NS_GET_IID(nsIJVMPluginInstance), (void**)&javaPluginInstance) == NS_OK) {
 				jobject appletObject = nsnull;
 				rv = javaPluginInstance->GetJavaObject(&appletObject);
 				if (NS_OK == rv) {
 					nsILiveConnectManager* manager = NULL;
 					rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-					                                  nsILiveConnectManager::GetIID(),
+					                                  NS_GET_IID(nsILiveConnectManager),
 					                                  (nsISupports **)&manager);
 					if (rv == NS_OK) {
 						rv = manager->WrapJavaObject(context, appletObject, &wrappedAppletObject);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "plstr.h"
 
@@ -710,7 +711,7 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIScriptObjectPrincipal::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectPrincipal))) {
     nsIScriptObjectPrincipal* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -734,19 +735,19 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDiskDocument::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDiskDocument))) {
     nsIDiskDocument* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
     nsISupportsWeakReference* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIDocument* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;
@@ -834,7 +835,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   nsCOMPtr<nsISupports> owner;
   aChannel->GetOwner(getter_AddRefs(owner));
   if (owner)
-    owner->QueryInterface(nsIPrincipal::GetIID(), (void**)&mPrincipal);
+    owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
 
   mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
   // there was an assertion here that aLoadGroup was not null.  This is no longer valid
@@ -2835,7 +2836,7 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
         // Make a content iterator over the selection:
         nsCOMPtr<nsIContentIterator> iter;
         result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                          nsIContentIterator::GetIID(), 
+                                                          NS_GET_IID(nsIContentIterator), 
                                                           getter_AddRefs(iter));
         if ((NS_SUCCEEDED(result)) && iter)
         {

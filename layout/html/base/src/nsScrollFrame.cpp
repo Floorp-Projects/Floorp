@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -623,7 +624,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
     nsresult rv = NS_OK;
     nsIScrollableView *scrollableView = 0;
     
-    rv = view->QueryInterface(nsIScrollableView::GetIID(), (void **)&scrollableView);
+    rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
 
     if (NS_SUCCEEDED(rv) && scrollableView) {
       nsScrollPreference scrollPref = nsScrollPreference_kAuto;

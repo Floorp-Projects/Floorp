@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Utility that converts file encoded in one charset codepage to
@@ -76,7 +77,7 @@ int main(int argc, const char** argv)
   }
 
   // Get the charset alias manager
-  res = nsServiceManager::GetService(NS_CHARSETALIAS_PROGID, nsICharsetAlias::GetIID(),
+  res = nsServiceManager::GetService(NS_CHARSETALIAS_PROGID, NS_GET_IID(nsICharsetAlias),
                                      (nsISupports**) &aliasmgr);
   if (NS_FAILED(res))
   {

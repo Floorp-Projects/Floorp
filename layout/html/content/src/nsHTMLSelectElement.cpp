@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLSelectElement.h"
@@ -664,7 +665,7 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
   nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
       nsIPresContext* presContext;
       nsGenericHTMLElement::GetPresContext(this, &presContext);
@@ -693,7 +694,7 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
   nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
       // We can't get our index if we've already been replaced in the OptionList.
       // If we couldn't get our index, pass -1, remove all options and recreate
@@ -723,7 +724,7 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
   nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame,PR_FALSE);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
       result = selectFrame->DoneAddingContent(mIsDoneAddingContent);
     }

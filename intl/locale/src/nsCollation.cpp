@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -46,7 +47,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
   nsICollation *inst;
   nsresult res;
   
-  res = nsComponentManager::CreateInstance(kCollationCID, NULL, nsICollation::GetIID(), (void**) &inst);
+  res = nsComponentManager::CreateInstance(kCollationCID, NULL, NS_GET_IID(nsICollation), (void**) &inst);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -214,7 +215,7 @@ nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsStr
   nsresult res;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+                                     NS_GET_IID(nsICharsetConverterManager), 
                                      (nsISupports**)&ccm);
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeEncoder* encoder = nsnull;

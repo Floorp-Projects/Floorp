@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -551,7 +552,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
       result = theEnum->CurrentItem(&inst);
       if (NS_SUCCEEDED(result) && inst) {
-        result = inst->QueryInterface(nsIFormSubmitObserver::GetIID(),(void**)&formSubmitObserver);
+        result = inst->QueryInterface(NS_GET_IID(nsIFormSubmitObserver),(void**)&formSubmitObserver);
         if (NS_SUCCEEDED(result) && formSubmitObserver) {
           formSubmitObserver->Notify(mContent);
         }
@@ -800,7 +801,7 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
   rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
-                                    nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+                                    NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoder(&charset, encoder);

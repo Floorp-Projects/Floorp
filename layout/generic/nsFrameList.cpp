@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsFrameList.h"
 #ifdef NS_DEBUG
@@ -360,7 +361,7 @@ nsFrameList::List(nsIPresContext* aPresContext, FILE* out) const
   while (nsnull != frame) {
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->List(aPresContext, out, 1);
     }
     frame->GetNextSibling(&frame);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 //
@@ -394,7 +395,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
 
   // if it does ask it for its BoxSize and we are done
   nsIBox* ibox = nsnull;
-  if (NS_SUCCEEDED(aFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
+  if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
      // add in the border, padding, width, min, max
      GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
@@ -888,7 +889,7 @@ nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame, PRBool 
       // Trees have to collapse their scrollbars manually, since you can't
       // get to the scrollbar via the normal frame list.
       nsISelfScrollingFrame* treeFrame;
-      if (NS_SUCCEEDED(frame->QueryInterface(nsISelfScrollingFrame::GetIID(), (void**)&treeFrame)) && treeFrame) {
+      if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsISelfScrollingFrame), (void**)&treeFrame)) && treeFrame) {
         // Tell the tree frame to collapse its scrollbar.
         treeFrame->CollapseScrollbar(aPresContext, hide);
       }
@@ -1739,7 +1740,7 @@ nsBoxFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflow
         info->Clear();
         // can't use nsCOMPtr on non-refcounted things like frames
         nsIBox* ibox = nsnull;
-        if (NS_SUCCEEDED(info->frame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+        if (NS_SUCCEEDED(info->frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
             ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         else 
             incrementalChild = frame;

@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *  Michael Lowe <michael.lowe@bigfoot.com>
+ *   Michael Lowe <michael.lowe@bigfoot.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsXULAtoms.h"
@@ -722,7 +723,7 @@ nsMenuFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflo
     // In order for the child box to know what it needs to reflow, we need
     // to call its Dirty method...
     nsIBox* ibox;
-    if (NS_SUCCEEDED(popup->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+    if (NS_SUCCEEDED(popup->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
       ibox->Dirty(aPresContext, aReflowState, incrementalChild);
     else
       incrementalChild = frame;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsToolbarItemFrame.h"
@@ -120,15 +121,15 @@ nsToolbarItemFrame::HandleEvent(nsIPresContext* aPresContext,
 /* // Start Drag
   nsIDragService* dragService; 
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                             nsIDragService::GetIID(), 
+                                             NS_GET_IID(nsIDragService), 
                                              (nsISupports **)&dragService); 
   if (NS_OK == rv) { 
     nsCOMPtr<nsITransferable> trans; 
     rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), getter_AddRefs(trans)); 
+                                              NS_GET_IID(nsITransferable), getter_AddRefs(trans)); 
     nsCOMPtr<nsITransferable> trans2; 
     rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), getter_AddRefs(trans2)); 
+                                              NS_GET_IID(nsITransferable), getter_AddRefs(trans2)); 
     if ( trans && trans2 ) {
       nsString textPlainFlavor ( "text/plain" );
       trans->AddDataFlavor(&textPlainFlavor);

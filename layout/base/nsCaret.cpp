@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -81,7 +82,7 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 	mPresShell = inPresShell;		// the presshell owns us, so no addref
 	
   nsILookAndFeel* touchyFeely;
-  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, nsILookAndFeel::GetIID(), (void**)&touchyFeely)))
+  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&touchyFeely)))
   {
     PRInt32	tempInt;
     

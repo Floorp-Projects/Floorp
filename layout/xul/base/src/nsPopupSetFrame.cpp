@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsXULAtoms.h"
@@ -291,7 +292,7 @@ nsPopupSetFrame::Dirty(nsIPresContext* aPresContext,  const nsHTMLReflowState& a
     // to call its Dirty method...
     nsIFrame* ignore;
     nsIBox* ibox;
-    if (NS_SUCCEEDED(popup->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+    if (NS_SUCCEEDED(popup->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
       ibox->Dirty(aPresContext, aReflowState, ignore);
   }
 

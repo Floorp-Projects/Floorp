@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIServiceManager.h"
@@ -71,7 +72,7 @@ private:
   nsString mStringOut;   
 };
 
-NS_IMPL_ISUPPORTS(nsScriptableDateFormat, nsIScriptableDateFormat::GetIID());
+NS_IMPL_ISUPPORTS(nsScriptableDateFormat, NS_GET_IID(nsIScriptableDateFormat));
 
 NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             const PRUnichar *locale, 
@@ -101,7 +102,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
     if (NS_SUCCEEDED(rv) && aLocale) {
       nsIDateTimeFormat *aDateTimeFormat;
     	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-                                              nsIDateTimeFormat::GetIID(), (void **) &aDateTimeFormat);
+                                              NS_GET_IID(nsIDateTimeFormat), (void **) &aDateTimeFormat);
       if (NS_SUCCEEDED(rv) && aDateTimeFormat) {
         struct tm tmTime;
         time_t  timetTime;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIHTMLContentSink.h"
@@ -1043,7 +1044,7 @@ NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(nsIElementFactory::GetIID(),
+  return it->QueryInterface(NS_GET_IID(nsIElementFactory),
                             (void**)aInstancePtrResult);
 }
 
@@ -3058,7 +3059,7 @@ HTMLContentSink::StartLayout()
   // frameset document, disable the scroll bars on the views.
   char* ref = nsnull;           // init in case mDocumentURI is not a url
   nsIURL* url;
-  nsresult rv = mDocumentURI->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  nsresult rv = mDocumentURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
     rv = url->GetRef(&ref);
     NS_RELEASE(url);
@@ -3777,7 +3778,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
               }
 
               nsIRefreshURI *reefer = nsnull;
-              rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
+              rv = mWebShell->QueryInterface(NS_GET_IID(nsIRefreshURI), (void**)&reefer);
               if (NS_FAILED(rv)) {
                   NS_RELEASE(uri);
                   return rv;

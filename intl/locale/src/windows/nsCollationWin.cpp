@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -121,7 +122,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset;
     res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);

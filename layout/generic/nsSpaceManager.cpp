@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsSpaceManager.h"
 #include "nsPoint.h"
@@ -920,7 +921,7 @@ nsSpaceManager::List(FILE* out)
   if (mFrame) {
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(mFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
       fprintf(out, " frame=");
       fputs(tmp, out);
@@ -940,7 +941,7 @@ nsSpaceManager::List(FILE* out)
       if (1 == band->mNumFrames) {
         nsIFrameDebug*  frameDebug;
 
-        if (NS_SUCCEEDED(band->mFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        if (NS_SUCCEEDED(band->mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->GetFrameName(tmp);
           fprintf(out, " frame=");
           fputs(tmp, out);
@@ -956,7 +957,7 @@ nsSpaceManager::List(FILE* out)
           if (frame) {
             nsIFrameDebug*  frameDebug;
 
-            if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+            if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
               frameDebug->GetFrameName(tmp);
               fputs(tmp, out);
               fprintf(out, "@%p ", frame);

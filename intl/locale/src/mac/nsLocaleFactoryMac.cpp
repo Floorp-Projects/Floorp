@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -96,7 +97,7 @@ nsresult nsLocaleMacFactory::CreateInstance(nsISupports *aOuter,
   else if (aIID.Equals(kIDateTimeFormatIID)) {
      NS_NEWXPCOM(inst, nsDateTimeFormatMac);
   }
-  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+  else if (aIID.Equals(NS_GET_IID(nsIScriptableDateFormat))) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else if (mClassID.Equals(kScriptableDateFormatCID)) {

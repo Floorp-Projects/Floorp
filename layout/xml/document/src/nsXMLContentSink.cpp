@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
@@ -1588,7 +1589,7 @@ nsXMLContentSink::StartLayout()
   // frameset document, disable the scroll bars on the views.
   char* ref = nsnull;
   nsIURL* url;
-  nsresult rv = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  nsresult rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
     rv = url->GetRef(&ref);
     NS_RELEASE(url);

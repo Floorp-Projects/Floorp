@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */ 
 #define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
@@ -467,7 +468,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           nsICharsetAlias* calias = nsnull;
           rv = nsServiceManager::GetService(
                                             kCharsetAliasCID,
-                                            nsICharsetAlias::GetIID(),
+                                            NS_GET_IID(nsICharsetAlias),
                                             (nsISupports**) &calias);
           if(NS_SUCCEEDED(rv) && (nsnull != calias) )
           {
@@ -668,7 +669,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
       if(NS_SUCCEEDED( rv_detect = 
             nsComponentManager::CreateInstance(g_detector_progid, nsnull,
-                           nsICharsetDetector::GetIID(), (void**)&cdet)))
+                           NS_GET_IID(nsICharsetDetector), (void**)&cdet)))
       {
         if(NS_SUCCEEDED( rv_detect = 
             nsComponentManager::CreateInstance(
@@ -678,11 +679,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           if(cdetflt && 
                 NS_SUCCEEDED( rv_detect=
                      cdetflt->QueryInterface(
-                        nsICharsetDetectionAdaptor::GetIID(),(void**) &adp)))
+                        NS_GET_IID(nsICharsetDetectionAdaptor),(void**) &adp)))
           {
             if( NS_SUCCEEDED( rv_detect=
                      webShell->QueryInterface(
-                        nsIWebShellServices::GetIID(),(void**) &wss)))
+                        NS_GET_IID(nsIWebShellServices),(void**) &wss)))
             {
               rv_detect = adp->Init(wss, cdet, aCommand);
             }

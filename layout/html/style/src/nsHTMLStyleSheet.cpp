@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsINameSpaceManager.h"
 #include "nsIHTMLStyleSheet.h"
@@ -579,7 +580,7 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIStyleRuleProcessor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
     *aInstancePtrResult = (void*) ((nsIStyleRuleProcessor*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -627,7 +628,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
   nsIStyledContent* styledContent;
-  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
     PRInt32 nameSpace;
     styledContent->GetNameSpaceID(nameSpace);
     if (kNameSpaceID_HTML == nameSpace) {
@@ -660,7 +661,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   nsAutoString absURLSpec;
                   nsresult rv;
                   nsIURI *baseUri = nsnull;
-                  rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+                  rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
                   if (NS_FAILED(rv)) return 0;
 
                   rv = NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
@@ -750,7 +751,7 @@ HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
 
   if (mActiveRule || mLinkRule || mVisitedRule) { // do we have any rules dependent on state?
     nsIStyledContent* styledContent;
-    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+    if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
       PRInt32 nameSpace;
       styledContent->GetNameSpaceID(nameSpace);
       if (kNameSpaceID_HTML == nameSpace) {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -151,7 +152,7 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(nsIScrollbarListener::GetIID())) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIScrollbarListener))) {                                         
     *aInstancePtr = (void*)(nsIScrollbarListener*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

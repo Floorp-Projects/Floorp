@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #ifndef nsFrame_h___
 #define nsFrame_h___
@@ -357,7 +358,7 @@ public:
     nsAutoString tmp;
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
     fputs(tmp, out);

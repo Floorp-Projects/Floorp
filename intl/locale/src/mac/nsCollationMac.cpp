@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCollationMac.h"
@@ -168,7 +169,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     short scriptcode, langcode, regioncode;
     nsCOMPtr <nsIMacLocale> macLocale;
     res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
-                                             nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+                                             NS_GET_IID(nsIMacLocale), getter_AddRefs(macLocale));
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
         m_scriptcode = scriptcode;
@@ -177,7 +178,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset;
     res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);

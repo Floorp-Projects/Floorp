@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
@@ -164,15 +165,15 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIFormControlFrame>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIListControlFrame>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIListControlFrame))) {
     *aInstancePtr = (void *)((nsIListControlFrame*)this);
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISelectControlFrame>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
     *aInstancePtr = (void *)((nsISelectControlFrame*)this);
     return NS_OK;
   }
@@ -209,7 +210,7 @@ nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount)
     // note: both optgroup and option elements can have DOM child
     // option elements have text nodes as COM child, but they don't have too
     nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup;
-    child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptGroupElement>::GetIID(),(void**) &optGroup);
+    child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptGroupElement),(void**) &optGroup);
     if (optGroup) {
       aCount++;
 
@@ -237,7 +238,7 @@ nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount)
     } else {
       // don't query interface againa if it was an optgroup
       nsCOMPtr<nsIDOMHTMLOptionElement> option;
-      child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) &option);
+      child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),(void**) &option);
       if (option) {
         aCount++;
         nsIFrame * frame;
@@ -564,7 +565,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       GetSizeAttribute(&numRows);
       if (numRows == kNoSizeSpecified) {
         nsIDOMNode* node;
-        nsresult rv = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMNode>::GetIID(),(void**) &node);
+        nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIDOMNode),(void**) &node);
         if (node && NS_SUCCEEDED(rv)) {
           numRows = 0;
           CountAllChild(node, numRows);
@@ -677,7 +678,7 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
   PRBool result = PR_FALSE;
  
   nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
-  if (NS_SUCCEEDED(aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),(void**) getter_AddRefs(optElem)))) {      
     if (optElem != nsnull) {
       result = PR_TRUE;
     }
@@ -1183,7 +1184,7 @@ nsresult
 nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
   nsresult rv = NS_OK;
   nsIDOMHTMLSelectElement* selectElement;
-  rv = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),(void**) &selectElement);
+  rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),(void**) &selectElement);
   if (mContent && NS_SUCCEEDED(rv)) {
     rv = selectElement->GetSize(aSize);
     NS_RELEASE(selectElement);
@@ -1271,7 +1272,7 @@ nsListControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aSel
 {
   if (!aSelect) {
     nsIDOMHTMLSelectElement* selectElement = nsnull;
-    nsresult result = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+    nsresult result = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                (void**)&selectElement);
     if (NS_SUCCEEDED(result) && selectElement) {
       result = selectElement->GetMultiple(aMultiple);
@@ -1292,7 +1293,7 @@ nsIDOMHTMLSelectElement*
 nsListControlFrame::GetSelect(nsIContent * aContent)
 {
   nsIDOMHTMLSelectElement* selectElement = nsnull;
-  nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+  nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                              (void**)&selectElement);
   if (NS_SUCCEEDED(result) && selectElement) {
     return selectElement;
@@ -1312,7 +1313,7 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection, PRInt3
   nsIContent *             content       = nsnull;
   nsIDOMHTMLOptionElement* optionElement = GetOption(*aCollection, aIndex);
   if (nsnull != optionElement) {
-    optionElement->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(),(void**) &content);
+    optionElement->QueryInterface(NS_GET_IID(nsIContent),(void**) &content);
     NS_RELEASE(optionElement);
   }
  
@@ -1370,7 +1371,7 @@ nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aIndex)
   if (NS_SUCCEEDED(aCollection.Item(aIndex, &node))) {
     if (nsnull != node) {
       nsIDOMHTMLOptionElement* option = nsnull;
-      node->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(), (void**)&option);
+      node->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option);
       NS_RELEASE(node);
       return option;
     }
@@ -1617,7 +1618,7 @@ nsListControlFrame::GetName(nsString* aResult)
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
     nsIHTMLContent* formControl = nsnull;
-    result = mContent->QueryInterface(nsCOMTypeInfo<nsIHTMLContent>::GetIID(),(void**)&formControl);
+    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
     if (NS_SUCCEEDED(result) && formControl) {
       nsHTMLValue value;
       result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
@@ -1729,7 +1730,7 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 {
   nsresult rv = NS_OK;
   if (nsnull != aComboboxFrame) {
-    rv = aComboboxFrame->QueryInterface(nsCOMTypeInfo<nsIComboboxControlFrame>::GetIID(),(void**) &mComboboxFrame); 
+    rv = aComboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void**) &mComboboxFrame); 
   }
   return rv;
 }
@@ -2720,7 +2721,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
   nsIView * scrollView;
   GetView(mPresContext, &scrollView);
   nsIScrollableView * scrollableView = nsnull;
-  nsresult rv = scrollView->QueryInterface(nsIScrollableView::GetIID(), (void**)&scrollableView);
+  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
 
   // if null is passed in we scroll to 0,0
   if (nsnull == aOptElement) {

@@ -55,7 +55,11 @@ nsRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsNativeFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-
+/*
+ * FIXME: this ::GetIID() method has no meaning in life and should be
+ * removed.
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ */
 const nsIID&
 nsRadioControlFrame::GetIID()
 {

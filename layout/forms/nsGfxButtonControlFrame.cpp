@@ -127,6 +127,11 @@ nsGfxButtonControlFrame::IsSubmit(PRInt32 type)
   }
 }
                               
+/*
+ * FIXME: this ::GetIID() method has no meaning in life and should be
+ * removed.
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ */
 const nsIID&
 nsGfxButtonControlFrame::GetIID()
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsSelectsAreaFrame.h"
 #include "nsCOMPtr.h"
@@ -62,7 +63,7 @@ nsSelectsAreaFrame::IsOptionElement(nsIContent* aContent)
   PRBool result = PR_FALSE;
  
   nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
-  if (NS_SUCCEEDED(aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),(void**) getter_AddRefs(optElem)))) {      
     if (optElem != nsnull) {
       result = PR_TRUE;
     }

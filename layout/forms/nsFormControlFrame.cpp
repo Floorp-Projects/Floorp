@@ -369,6 +369,11 @@ nsFormControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
   }
 }
 
+/*
+ * FIXME: this ::GetIID() method has no meaning in life and should be
+ * removed.
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ */
 const nsIID&
 nsFormControlFrame::GetIID()
 {

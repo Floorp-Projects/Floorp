@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsICSSStyleSheet.h"
@@ -1227,12 +1228,12 @@ CSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
   nsICSSStyleRuleProcessor*  cssProcessor = nsnull;
 
   if (aPrevProcessor) {
-    result = aPrevProcessor->QueryInterface(nsICSSStyleRuleProcessor::GetIID(), (void**)&cssProcessor);
+    result = aPrevProcessor->QueryInterface(NS_GET_IID(nsICSSStyleRuleProcessor), (void**)&cssProcessor);
   }
   if (! cssProcessor) {
     CSSRuleProcessor* processor = new CSSRuleProcessor();
     if (processor) {
-      result = processor->QueryInterface(nsICSSStyleRuleProcessor::GetIID(), (void**)&cssProcessor);
+      result = processor->QueryInterface(NS_GET_IID(nsICSSStyleRuleProcessor), (void**)&cssProcessor);
       if (NS_FAILED(result)) {
         delete processor;
         cssProcessor = nsnull;
@@ -2159,12 +2160,12 @@ CSSRuleProcessor::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   }
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(nsICSSStyleRuleProcessor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsICSSStyleRuleProcessor))) {
     *aInstancePtrResult = (void*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIStyleRuleProcessor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
     *aInstancePtrResult = (void*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2347,7 +2348,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
       result = PR_FALSE;
       nsIStyledContent* styledContent;
-      if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+      if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
         nsIAtom* contentID;
         styledContent->GetID(contentID);
         if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
@@ -2424,7 +2425,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                 }
                 if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
                   nsITextContent* text = nsnull;
-                  if (NS_SUCCEEDED(firstChild->QueryInterface(nsITextContent::GetIID(), (void**)&text))) {
+                  if (NS_SUCCEEDED(firstChild->QueryInterface(NS_GET_IID(nsITextContent), (void**)&text))) {
                     PRBool  isWhite;
                     text->IsOnlyWhitespace(&isWhite);
                     NS_RELEASE(text);
@@ -2516,7 +2517,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     nsAutoString absURLSpec;
                     nsresult rv;
                     nsIURI *baseUri = nsnull;
-                    rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+                    rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
                     if (NS_FAILED(rv)) return PR_FALSE;
 
                     NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
@@ -2683,7 +2684,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
     nsAutoVoidArray classArray;
 
     nsIStyledContent* styledContent;
-    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+    if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
       styledContent->GetID(idAtom);
       styledContent->GetClasses(classArray);
       NS_RELEASE(styledContent);

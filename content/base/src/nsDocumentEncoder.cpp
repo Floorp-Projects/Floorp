@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIDocumentEncoder.h"
@@ -125,7 +126,7 @@ nsresult nsTextEncoder::QueryInterface(REFNSIID aIID,
 
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(nsIDocumentEncoder::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDocumentEncoder))) {
     *aInstancePtr = (void *)(nsIDocumentEncoder*)this;   
   }
 

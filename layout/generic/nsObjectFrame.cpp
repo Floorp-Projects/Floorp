@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -1495,35 +1496,35 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(nsIPluginInstanceOwner::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIPluginInstanceOwner)))
   {
     *aInstancePtrResult = (void *)((nsIPluginInstanceOwner *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIPluginTagInfo::GetIID()) || aIID.Equals(nsIPluginTagInfo2::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIPluginTagInfo)) || aIID.Equals(NS_GET_IID(nsIPluginTagInfo2)))
   {
     *aInstancePtrResult = (void *)((nsIPluginTagInfo2 *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIJVMPluginTagInfo::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIJVMPluginTagInfo)))
   {
     *aInstancePtrResult = (void *)((nsIJVMPluginTagInfo *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIEventListener::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIEventListener)))
   {
     *aInstancePtrResult = (void *)((nsIEventListener *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsITimerCallback::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsITimerCallback)))
   {
     *aInstancePtrResult = (void *)((nsITimerCallback *)this);
     AddRef();
@@ -1679,7 +1680,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 
     if (nsnull != cont)
     {
-      rv = cont->QueryInterface(nsIDOMElement::GetIID(), (void **)result);
+      rv = cont->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)result);
       NS_RELEASE(cont);
     }
   }

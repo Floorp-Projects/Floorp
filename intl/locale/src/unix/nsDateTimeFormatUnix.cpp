@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <locale.h>
@@ -93,14 +94,14 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPosixLocale> posixLocale;
     res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, 
-                                             nsIPosixLocale::GetIID(), getter_AddRefs(posixLocale));
+                                             NS_GET_IID(nsIPosixLocale), getter_AddRefs(posixLocale));
     if (NS_SUCCEEDED(res)) {
       res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale, kPlatformLocaleLength+1);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset;
     res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);

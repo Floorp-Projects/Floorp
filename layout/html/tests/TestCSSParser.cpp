@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <stdio.h>
 #include "nsICSSParser.h"
@@ -150,7 +151,7 @@ int main(int argc, char** argv)
       rv = service->NewURI(urlName, nsnull, &uri);
       if (NS_FAILED(rv)) return -1;
 
-      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+      rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
       NS_RELEASE(uri);
       if (NS_OK != rv) {
         printf("invalid URL: '%s'\n", urlName);

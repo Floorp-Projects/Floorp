@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
@@ -181,7 +182,7 @@ nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsITableLayout::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsITableLayout))) 
   { // note there is no addref here, frames are not addref'd
     *aInstancePtr = (void*)(nsITableLayout*)this;
     return NS_OK;
@@ -4519,7 +4520,7 @@ TEST_IF_SELECTED:
   result = cellFrame->GetContent(getter_AddRefs(content));  
   if (NS_SUCCEEDED(result) && content)
   {
-    content->QueryInterface(nsIDOMElement::GetIID(), (void**)(&aCell));
+    content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)(&aCell));
   }   
                                          
   return result;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 //
@@ -224,7 +225,7 @@ nsToolbarFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
         inputList->Item(i, getter_AddRefs(node));
         receiver = do_QueryInterface(node);
         if ( receiver )
-          receiver->AddEventListenerByIID(new nsTEMPDragGestureEater, nsIDOMDragListener::GetIID());
+          receiver->AddEventListenerByIID(new nsTEMPDragGestureEater, NS_GET_IID(nsIDOMDragListener));
         // yes, i know this will leak. That's ok, i don't care because this code will go away
       }   
     }

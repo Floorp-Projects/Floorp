@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
@@ -1018,7 +1019,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 
         // Have the child frame list
         nsIFrameDebug*  frameDebug;
-        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->List(aPresContext, out, aIndent + 1);
         }
         kid->GetNextSibling(&kid);

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -82,7 +82,7 @@ nsLocaleDllFactory::nsLocaleDllFactory( const nsCID &aClass)
    mClassID = aClass;
 }
 
-NS_IMPL_ISUPPORTS(nsLocaleDllFactory,nsIFactory::GetIID())
+NS_IMPL_ISUPPORTS(nsLocaleDllFactory,NS_GET_IID(nsIFactory))
 
 nsresult nsLocaleDllFactory::CreateInstance( nsISupports *aOuter,
                                              const nsIID &aIID,
@@ -139,7 +139,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory( nsISupports *aServiceMgr,
    {
       fact = new nsLocaleDllFactory( aClass);
 
-      rc = fact->QueryInterface( nsIFactory::GetIID(), (void**)aFactory);
+      rc = fact->QueryInterface( NS_GET_IID(nsIFactory), (void**)aFactory);
    }
 
    if( NS_FAILED(rc))
