@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.251 $ ';
+$::UtilsVersion = '$Revision: 1.252 $ ';
 
 package TinderUtils;
 
@@ -320,6 +320,11 @@ sub SetupEnv {
 
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
     $objdir = "$topsrcdir/${Settings::ObjDir}";
+
+    if ($Settings::ReleaseBuild) {
+        $ENV{BUILD_OFFICIAL}   = 1;
+        $ENV{MOZILLA_OFFICIAL} = 1;
+    }
 
     if ($Settings::ObjDir ne '') {
         $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
