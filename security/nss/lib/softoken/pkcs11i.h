@@ -107,13 +107,35 @@
 #define ATTRIBUTE_HASH_SIZE 32
 #define SESSION_OBJECT_HASH_SIZE 32
 #define TOKEN_OBJECT_HASH_SIZE 1024
-#define SESSION_HASH_SIZE 512
+#define SESSION_HASH_SIZE 1024
 #define MAX_OBJECT_LIST_SIZE 800  /* how many objects to keep on the free list
 				   * before we start freeing them */
 #endif
 #define MAX_KEY_LEN 256
 
-
+/*
+ * LOG2_BUCKETS_PER_SESSION_LOCK must be a prime number.
+ * With SESSION_HASH_SIZE=1024, LOG2 can be 9, 5, 1, or 0.
+ * With SESSION_HASH_SIZE=4096, LOG2 can be 11, 9, 5, 1, or 0.
+ *
+ * HASH_SIZE   LOG2_BUCKETS_PER   BUCKETS_PER_LOCK  NUMBER_OF_BUCKETS
+ * 1024        9                  512               2
+ * 1024        5                  32                32
+ * 1024        1                  2                 512
+ * 1024        0                  1                 1024
+ * 4096        11                 2048              2
+ * 4096        9                  512               8
+ * 4096        5                  32                128
+ * 4096        1                  2                 2048
+ * 4096        0                  1                 4096
+ */
+#define LOG2_BUCKETS_PER_SESSION_LOCK 1
+#define BUCKETS_PER_SESSION_LOCK (1 << (LOG2_BUCKETS_PER_SESSION_LOCK))
+#define NUMBER_OF_SESSION_LOCKS (SESSION_HASH_SIZE/BUCKETS_PER_SESSION_LOCK)
+/* NOSPREAD sessionID to hash table index macro has been slower. */
+#if 0
+#define NOSPREAD
+#endif
 
 #ifdef PKCS11_USE_THREADS
 #define PK11_USE_THREADS(x) x
@@ -304,7 +326,6 @@ struct PK11SessionStr {
     PK11Session        *prev;
     CK_SESSION_HANDLE	handle;
     int			refCount;
-    PZLock 		*refLock;
     PZLock		*objectLock;
     int			objectIDCount;
     CK_SESSION_INFO	info;
@@ -323,7 +344,8 @@ struct PK11SessionStr {
  */
 struct PK11SlotStr {
     CK_SLOT_ID		slotID;
-    PZLock		*sessionLock;
+    PZLock		*slotLock;
+    PZLock		*sessionLock[NUMBER_OF_SESSION_LOCKS];
     PZLock		*objectLock;
     SECItem		*password;
     PRBool		hasTokens;
@@ -427,6 +449,18 @@ struct PK11SSLMACInfoStr {
 	   else (head)[pk11_hash(id,hash_size)] = ((element)->next); \
 	(element)->next = NULL; \
 	(element)->prev = NULL; \
+
+/* sessionID (handle) is used to determine session lock bucket */
+#ifdef NOSPREAD
+/* NOSPREAD:	(ID>>L2LPB) & (perbucket-1) */
+#define PK11_SESSION_LOCK(slot,handle) \
+    ((slot)->sessionLock[((handle) >> LOG2_BUCKETS_PER_SESSION_LOCK) \
+        & (NUMBER_OF_SESSION_LOCKS-1)])
+#else
+/* SPREAD:	ID & (perbucket-1) */
+#define PK11_SESSION_LOCK(slot,handle) \
+    ((slot)->sessionLock[(handle) & (NUMBER_OF_SESSION_LOCKS-1)])
+#endif
 
 /* expand an attribute & secitem structures out */
 #define pk11_attr_expand(ap) (ap)->type,(ap)->pValue,(ap)->ulValueLen
