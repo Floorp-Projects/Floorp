@@ -125,7 +125,13 @@ if (!$win32) {
     RecursiveStrip(cwd());
 }
 
-if(system("zip -r $inDestPath/$inComponentName.xpi *"))
+$compressionFlags = "";
+if ($ENV{MOZ_INSTALLER_USE_7ZIP}) 
+{
+  $compressionFlags = "-0";
+}
+
+if(system("zip -r $compressionFlags $inDestPath/$inComponentName.xpi *"))
 {
   chdir("$saveCwdir");
   die "\n Error: zip -r $inDestPath/$inComponentName.xpi *\n";

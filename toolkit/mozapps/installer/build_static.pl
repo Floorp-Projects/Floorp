@@ -147,41 +147,45 @@ sub ParseInstallerCfg
 
     while ($line = <fpInstallCfg>)
     {
-	($prop, $value) = ($line =~ m/(\w*)\s+=\s+(.*)\n/);
+      chop $line if (substr($line, -1, 1) eq "\r");
+      ($prop, $value) = ($line =~ m/(\w*)\s+=\s+(.*)\r\n/);
 
-	if ($prop eq "VersionLanguage") {
-	    $ENV{WIZ_versionLanguage} = $value;
-	}
-	elsif ($prop eq "NameCompany") {
-	    $ENV{WIZ_nameCompany} = $value;
-	}
-	elsif ($prop eq "NameProduct") {
-	    $ENV{WIZ_nameProduct} = $value;
-	}
-	elsif ($prop eq "NameProductInternal") {
-	    $ENV{WIZ_nameProductInternal} = $value;
-	}
-	elsif ($prop eq "VersionProduct") {
-	    $ENV{WIZ_versionProduct} = $value;
-	}
-	elsif ($prop eq "FileInstallerEXE") {
-	    $ENV{WIZ_fileInstallerExe} = $value;
-	}
-	elsif ($prop eq "FileUninstall") {
-	    $ENV{WIZ_fileUninstall} = $value;
-	}
-	elsif ($prop eq "FileUninstallZIP") {
-	    $ENV{WIZ_fileUninstallZip} = $value;
-	}
-	elsif ($prop eq "FileMainEXE") {
-	    $ENV{WIZ_fileMainExe} = $value;
-	}
-	elsif ($prop eq "FileInstallerNETRoot") {
-	    $ENV{WIZ_fileNetStubRootName} = $value;
-	}
-	elsif ($prop eq "ComponentList") {
-	    $ENV{WIZ_componentList} = $value;
-	}
+      if ($prop eq "VersionLanguage") {
+        $ENV{WIZ_versionLanguage} = $value;
+      }
+      elsif ($prop eq "NameCompany") {
+        $ENV{WIZ_nameCompany} = $value;
+      }
+      elsif ($prop eq "NameProduct") {
+        $ENV{WIZ_nameProduct} = $value;
+      }
+      elsif ($prop eq "NameProductInternal") {
+        $ENV{WIZ_nameProductInternal} = $value;
+      }
+      elsif ($prop eq "VersionProduct") {
+        $ENV{WIZ_versionProduct} = $value;
+      }
+      elsif ($prop eq "FileInstallerEXE") {
+        $ENV{WIZ_fileInstallerExe} = $value;
+      }
+      elsif ($prop eq "FileUninstall") {
+        $ENV{WIZ_fileUninstall} = $value;
+      }
+      elsif ($prop eq "FileUninstallZIP") {
+        $ENV{WIZ_fileUninstallZip} = $value;
+      }
+      elsif ($prop eq "FileMainEXE") {
+        $ENV{WIZ_fileMainExe} = $value;
+      }
+      elsif ($prop eq "FileInstallerNETRoot") {
+        $ENV{WIZ_fileNetStubRootName} = $value;
+      }
+      elsif ($prop eq "ComponentList") {
+        $ENV{WIZ_componentList} = $value;
+      }
+      elsif ($prop eq "7ZipSFXModule") {
+        $ENV{WIZ_sfxModule} = $value;
+      }
     }
 
     close(fpInstallCfg);
@@ -257,6 +261,7 @@ sub GetVersion
     $distWinPathName = "dist";
 
     $fileMozilla = "$depthPath/$distWinPathName/bin/$ENV{WIZ_fileMainExe}";
+    
   # verify the existance of file
   if(!(-e "$fileMozilla"))
   {
