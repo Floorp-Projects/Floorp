@@ -126,7 +126,8 @@ sub do_static {
   my @pages = ( ['index.html', 'do_tinderbox'],
                 ['flash.rdf',  'do_flash'],
                 ['panel.html', 'do_panel'],
-                ['stats.hdml', 'do_hdml'] );
+                ['stats.hdml', 'do_hdml'],
+                ['status.vxml', 'do_vxml'] );
   
   $rel_path = '../';
   while (($key, $value) = each %images) {
