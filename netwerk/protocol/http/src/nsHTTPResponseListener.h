@@ -87,8 +87,6 @@ protected:
     nsIHTTPChannel*     m_pConnection;
     nsIStreamListener*  m_pConsumer;
     PRUint32            m_ReadLength; // Already read
-    char*               m_PartHeader; // used between calls of OnDataAvailable
-    PRUint32            m_PartHeaderLen;
 
     nsString            m_HeaderBuffer;
 };

@@ -46,8 +46,6 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_pResponse(nsnull),
     m_pConsumer(nsnull),
     m_ReadLength(0),
-    m_PartHeader(nsnull),
-    m_PartHeaderLen(0),
     m_bHeadersDone(PR_FALSE),
     m_HeaderBuffer(eOneByte)
 {
@@ -59,11 +57,6 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     NS_IF_RELEASE(m_pConnection);
     NS_IF_RELEASE(m_pResponse);
     NS_IF_RELEASE(m_pConsumer);
-    if (m_PartHeader)
-    {
-        delete m_PartHeader;
-        m_PartHeader = 0;
-    }
 }
 
 NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsIStreamListener::GetIID());
@@ -85,7 +78,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     if (!m_pResponse)
     {
         // why do I need the connection in the constructor... get rid.. TODO
-        m_pResponse = new nsHTTPResponse (m_pConnection, i_pStream);
+        m_pResponse = new nsHTTPResponse (i_pStream);
         if (!m_pResponse)
         {
             NS_ERROR("Failed to create the response object!");
@@ -168,14 +161,21 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
     nsresult rv;
     //printf("nsHTTPResponseListener::OnStopBinding...\n");
     //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
-    // Should I save this as a member variable? yes... todo
 
     NS_ASSERTION(m_pConsumer, "No Stream Listener!");
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
         // XXX: This is the wrong context being passed out to the consumer
         rv = m_pConsumer->OnStopBinding(i_pContext, i_Status, i_pMsg);
-    } 
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    // The Consumer is no longer needed...
+    NS_IF_RELEASE(m_pConsumer);
+
+    // The HTTPChannel is no longer needed...
+    NS_IF_RELEASE(m_pConnection);
 
     return rv;
 }

@@ -512,6 +512,7 @@ nsHTTPChannel::Open(void)
 
         m_State = HS_WAITING_FOR_RESPONSE;
         m_bConnected = PR_TRUE;
+        NS_RELEASE(stream);
         NS_RELEASE(temp);
     }
     else
