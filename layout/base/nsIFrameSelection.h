@@ -117,8 +117,9 @@ public:
   /** Init will initialize the frame selector with the necessary focus tracker to 
    *  be used by most of the methods
    *  @param aTracker is the parameter to be used for most of the other calls for callbacks ect
+   *  @param aLimiter limits the selection to nodes with aLimiter parents
    */
-  NS_IMETHOD Init(nsIFocusTracker *aTracker) = 0;
+  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) = 0;
 
   /** ShutDown will be called when the owner of the frame selection is shutting down
    *  this should be the time to release all member variable interfaces. all methods

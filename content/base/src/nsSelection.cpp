@@ -252,7 +252,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN nsIFrameSelection interfaces*/
-  NS_IMETHOD Init(nsIFocusTracker *aTracker);
+  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter);
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
@@ -354,9 +354,10 @@ private:
   
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
   
+  nsIContent *mLimiter;     //limit selection navigation to a child of this node.
   nsIFocusTracker *mTracker;
-  PRBool mMouseDownState; //for drag purposes
-  PRInt8 mDisplaySelection; //for visual display purposes.
+  PRBool mMouseDownState;   //for drag purposes
+  PRInt16 mDisplaySelection; //for visual display purposes.
   PRInt32 mDesiredX;
   PRBool mDesiredXSet;
   enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
@@ -750,6 +751,7 @@ nsSelection::nsSelection()
   mBatching = 0;
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
+  mLimiter = nsnull; //no default limiter.
     
   if (sInstanceCount <= 0)
   {
@@ -1223,11 +1225,12 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
 
 
 NS_IMETHODIMP
-nsSelection::Init(nsIFocusTracker *aTracker)
+nsSelection::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
 {
   mTracker = aTracker;
   mMouseDownState = PR_FALSE;
   mDesiredXSet = PR_FALSE;
+  mLimiter = aLimiter;
   return NS_OK;
 }
 
@@ -1507,6 +1510,8 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, 
                        PRBool aMultipleSelection, PRBool aHint) 
 {
+  if (!aNewFocus)
+    return NS_ERROR_INVALID_ARG;
   InvalidateDesiredX();
   
   mHint = HINT(aHint);
@@ -1588,6 +1593,17 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
   if (GetBatching())
     return NS_ERROR_FAILURE;
   STATUS_CHECK_RETURN_MACRO();
+
+  if (mLimiter )
+  {
+    nsCOMPtr<nsIContent> parent;
+    nsresult rv = aNewFocus->GetParent(*getter_AddRefs(parent));
+    if (NS_FAILED(rv))
+      return rv;
+    if (mLimiter != parent.get())
+      return NS_ERROR_FAILURE; //not in the right content. mLimiter said so
+  }
+
   //HACKHACKHACK
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
@@ -1791,7 +1807,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
       else
         childIndex = aOffset;
     }
-
+    
     nsCOMPtr<nsIContent> childNode;
 
     result = theNode->ChildAt(childIndex, *getter_AddRefs(childNode));
