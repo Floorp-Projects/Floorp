@@ -218,7 +218,7 @@ nsInstallFile::RegisterInVersionRegistry()
     int rc;
     char* tempCString;
 
-    char *final_file  = nsFilePath(*mFinalFile);  // FIX: mac?  What should we be passing to the version registry???
+    char *final_file  = (char*)mFinalFile->GetCString();  // FIX: mac?  What should we be passing to the version registry: native of unix???
     char *vr_name     = mVersionRegistryName->ToNewCString();
       
     nsString regPackageName;

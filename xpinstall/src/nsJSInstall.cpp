@@ -1030,7 +1030,7 @@ Install(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Install class initialization
 //
 
-PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, char* jarfile, char* args)
+PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, const char* args)
 {
   JSContext *jscontext  = (JSContext *)aContext->GetNativeContext();
   JSObject *global      = JS_GetGlobalObject(jscontext);

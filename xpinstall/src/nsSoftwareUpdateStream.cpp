@@ -16,11 +16,14 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsSoftwareUpdate.h"
-#include "nsSoftwareUpdateStream.h"
 
+#include "nsSoftwareUpdateStream.h"
 #include "nscore.h"
+#include "nsFileSpec.h"
+#include "nsVector.h"
+
 #include "nsISupports.h"
+#include "nsIComponentManager.h"
 
 #include "nsIURL.h"
 #include "nsINetlibURL.h"
@@ -28,52 +31,46 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 
+#include "nsISoftwareUpdate.h"
+#include "nsSoftwareUpdateIIDs.h"
 
 
-nsresult
-DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString)
-{
-    long            result=0;
-    nsIURL          *pURL;
-    char*            locationCString;
-
-    nsSoftwareUpdateListener *aListener;
-
-    ////////////////////////////
-    // Create the URL object...
-    ////////////////////////////
-
-    pURL = NULL;
-
-    result = NS_NewURL(&pURL, aUrlString);
-
-    if (result != NS_OK) 
-    {
-        return result;
-    }
-    
-    aListener = new nsSoftwareUpdateListener();
-    
-    
-    locationCString = aSaveLocationString.ToNewCString();
-    aListener->SetListenerInfo(locationCString);
-    delete [] locationCString;
-
-    result = NS_OpenURL(pURL, aListener);
-
-    return result;
-}
+static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
+static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
-nsSoftwareUpdateListener::nsSoftwareUpdateListener()
+nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
 {
     NS_INIT_REFCNT();
+    
+    mInstallInfo = nextInstall;
+    mOutFileDesc = PR_Open(nsAutoCString(nextInstall->GetLocalFile()),  PR_CREATE_FILE | PR_RDWR, 0644);
+    
+    if(mOutFileDesc == NULL)
+    {
+        mResult = -1;
+    };
+
+    mResult = nsComponentManager::CreateInstance(  kSoftwareUpdateCID, 
+                                                   nsnull,
+                                                   kISoftwareUpdateIID,
+                                                   (void**) &mSoftwareUpdate);
+    
+    if (mResult != NS_OK)
+        return;
+
+    nsIURL  *pURL  = nsnull;
+    mResult = NS_NewURL(&pURL, nextInstall->GetFromURL());
+
+    if (mResult != NS_OK)
+        return;
+ 
+    mResult = NS_OpenURL(pURL, this);
 }
 
 nsSoftwareUpdateListener::~nsSoftwareUpdateListener()
 {    
-    if (mOutFileDesc != NULL)
-        PR_Close(mOutFileDesc);
+    mSoftwareUpdate->Release();
 }
 
 
@@ -112,29 +109,26 @@ nsSoftwareUpdateListener::OnStopBinding(nsIURL* aURL,
                                         nsresult status,
                                         const PRUnichar* aMsg)
 {
-    nsresult        result = NS_OK;
-
     switch( status ) 
     {
 
         case NS_BINDING_SUCCEEDED:
-                /* Extract the Installer Script from the jar */
-
-                /* Open the script up */
-            
                 PR_Close(mOutFileDesc);
+                // Add to the XPInstall Queue
+                mSoftwareUpdate->InstallJar(mInstallInfo);
             break;
 
         case NS_BINDING_FAILED:
         case NS_BINDING_ABORTED:
-                PR_Close(mOutFileDesc);
+            mResult = status;
+            PR_Close(mOutFileDesc);
             break;
 
         default:
-            result = NS_ERROR_ILLEGAL_VALUE;
+            mResult = NS_ERROR_ILLEGAL_VALUE;
     }
 
-    return result;
+    return mResult;
 }
 
 #define BUF_SIZE 1024
@@ -162,18 +156,4 @@ nsSoftwareUpdateListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
     } while (len > 0 && err == NS_OK);
 
     return 0;
-}
-
-NS_IMETHODIMP
-nsSoftwareUpdateListener::SetListenerInfo(char* fileName)
-{
-    mOutFileDesc = PR_Open(fileName,  PR_CREATE_FILE | PR_RDWR, 0644);
-    
-    if(mOutFileDesc == NULL)
-    {
-        return -1;
-    };
-
-
-    return NS_OK;
 }

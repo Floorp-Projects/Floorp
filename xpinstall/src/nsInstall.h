@@ -16,6 +16,44 @@
 #include "nsInstallObject.h"
 #include "nsInstallVersion.h"
 
+class nsInstallInfo
+{
+  public:
+    nsInstallInfo(const nsString& fromURL);
+    nsInstallInfo(const nsString& fromURL, const nsString& arguments);
+    nsInstallInfo(const nsString& fromURL, const nsString& arguments, const nsString& flags);
+    
+    nsInstallInfo(nsVector* fromURL, const nsString& arguments, const nsString& flags);
+    ~nsInstallInfo();
+
+    nsString& GetFromURL(PRUint32 index = 0);
+    
+    nsString& GetLocalFile(PRUint32 index = 0);
+
+    nsString& GetArguments();
+    nsString& GetFlags();
+    
+    PRBool    IsMultipleTrigger();
+  
+  
+  private:
+    DeleteVector(nsVector* vector);
+    MakeTempFile(nsString aURL, nsString& tempFileString);
+
+    nsString *mLocalFile;
+    nsString *mFromURL;
+    nsString *mArguments;
+    nsString *mFlags;
+
+    PRBool  mMultipleTrigger;
+
+    nsVector *mFromURLs;
+    nsVector *mLocalFiles;
+};
+
+
+
+
 class nsInstall
 {
     public:
@@ -98,10 +136,10 @@ class nsInstall
         void       GetPatch(nsHashKey *aKey, nsFileSpec* fileName);
         
         void       GetJarFileLocation(char** aFile);
-        void       SetJarFileLocation(char* aFile);
+        void       SetJarFileLocation(const char* aFile);
 
         void       GetInstallArguments(char** args);
-        void       SetInstallArguments(char* args);
+        void       SetInstallArguments(const char* args);
 
 
     private:

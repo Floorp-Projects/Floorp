@@ -215,7 +215,7 @@ PRInt32 nsInstallPatch::Complete()
             char* tempVersion = tempVersionString.ToNewCString();
 
             err = VR_Install( tempRegName, 
-                              nsFilePath(*mTargetFile), 
+                              (char*)mTargetFile->GetCString(), 
                               tempVersion, 
                               PR_FALSE );
             

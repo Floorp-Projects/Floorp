@@ -9,6 +9,9 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsVector.h"
+
+class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 
@@ -24,9 +27,15 @@ class nsSoftwareUpdate: public nsISoftwareUpdate
 
             NS_IMETHOD Startup();
             NS_IMETHOD Shutdown();
-            NS_IMETHOD InstallJar(const nsString& jarFile, const nsString& args);
-    
+            NS_IMETHOD InstallJar(nsInstallInfo *installInfo);
+            NS_IMETHOD InstallJar(const nsString& fromURL, 
+                                  const nsString& flags, 
+                                  const nsString& args);  
+
+
+
     private:
+        nsresult UpdateInstallJarQueue();
         nsresult DeleteScheduledNodes();
 };
 

@@ -23,12 +23,12 @@
 #include "nsIFactory.h"
 #include "nsString.h"
 
+class nsInstallInfo;
 
+#define NS_ISOFTWAREUPDATE_IID                  \
+{ 0x18c2f992, 0xb09f, 0x11d2,                   \
+{0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}} 
 
-//FIX NEED REAL IID
-#define NS_ISOFTWAREUPDATE_IID \
- { 0x8648c1e0, 0x938b, 0x11d2, \
-  { 0xb0, 0xdd, 0x0, 0x80, 0x5f, 0x8a, 0x88, 0x99 }} 
 
 class nsISoftwareUpdate : public nsISupports 
 {
@@ -36,10 +36,15 @@ class nsISoftwareUpdate : public nsISupports
         static const nsIID& IID() { static nsIID iid = NS_ISOFTWAREUPDATE_IID; return iid; }
 
             NS_IMETHOD Startup() = 0;
+            
             NS_IMETHOD Shutdown()= 0;
-            NS_IMETHOD InstallJar(const nsString& jarFile, const nsString& args) = 0;
+            
+            NS_IMETHOD InstallJar(nsInstallInfo *installInfo) = 0;
 
-  
+            NS_IMETHOD InstallJar(const nsString& fromURL, 
+                                  const nsString& flags, 
+                                  const nsString& args) = 0;  
+            
 };
 
 

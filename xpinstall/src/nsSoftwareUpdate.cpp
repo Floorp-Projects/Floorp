@@ -21,40 +21,32 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-
-#include "pratom.h"
-
 #include "nsRepository.h"
 
-#include "VerReg.h"
 
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
+#include "pratom.h"
+#include "nsVector.h"
+#include "VerReg.h"
+#include "nsSpecialSystemDirectory.h"
+
+#include "nsInstall.h"
+#include "nsSoftwareUpdateIIDs.h"
+#include "nsSoftwareUpdate.h"
+#include "nsSoftwareUpdateStream.h"
+#include "nsSoftwareUpdateRun.h"
+#include "nsInstallTrigger.h"
+#include "nsInstallVersion.h"
+
 
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
-
-/* Network */
-#include "net.h"
-
-#include "nsSoftwareUpdateIIDs.h"
-#include "nsSoftwareUpdate.h"
-#include "nsSoftwareUpdateStream.h"
-#include "nsSoftwareUpdateRun.h"
-
-#include "nsInstall.h"
-
-#include "nsIDOMInstallTriggerGlobal.h"
-#include "nsInstallTrigger.h"
-
-#include "nsIDOMInstallVersion.h"
-#include "nsInstallVersion.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -76,61 +68,52 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-static PRInt32 gInstanceCnt = 0;
-static PRInt32 gLockCnt     = 0;
+static PRInt32  gLockCnt     = 0;
+
+static PRInt32  gStarted     = 0;
+static PRInt32  gInstalling  = 0;
+static PRInt32  gDownloading = 0;
+
+static nsVector* gJarInstallQueue  = nsnull;
+static nsVector* gJarDownloadQueue = nsnull;
 
 
 
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
-        NS_INIT_REFCNT();
-}
+    NS_INIT_ISUPPORTS();
+    
+    if (gStarted == 0)
+        Startup();
+    
+    PR_AtomicIncrement(&gStarted);
 
+}
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
+    PR_AtomicDecrement(&gStarted);
+
+    if (gStarted == 0)
+        Shutdown();
 }
 
-NS_IMETHODIMP 
-nsSoftwareUpdate::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
+NS_IMPL_ISUPPORTS(nsSoftwareUpdate,NS_ISOFTWAREUPDATE_IID)
 
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kISoftwareUpdate_IID) )
-    {
-        *aInstancePtr = (void*)(nsISoftwareUpdate*)this;
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*)(nsISupports*)this;
-        AddRef();
-        return NS_OK;
-    }
-
-     return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsSoftwareUpdate)
-NS_IMPL_RELEASE(nsSoftwareUpdate)
 
 NS_IMETHODIMP
 nsSoftwareUpdate::Startup()
 {
     /***************************************/
+    /* Create us a queue                   */
+    /***************************************/
+   
+    gJarInstallQueue = new nsVector();
+
+    /***************************************/
     /* Add us to the Javascript Name Space */
     /***************************************/
    
-    //   FIX:  Only add the Trigger Object to the JS NameSpace.  Then when before we run
-    //         the InstallScript, add our other objects to just that env.
-
     nsIScriptNameSetRegistry *scriptNameSet;
     nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
                                                    kIScriptNameSetRegistryIID,
@@ -150,16 +133,27 @@ nsSoftwareUpdate::Startup()
     /***************************************/
     /* Startup the Version Registry        */
     /***************************************/
-    //FIX  we need an api that will get us this data
     
-    VR_SetRegDirectory("C:\\temp\\");
+    nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    VR_SetRegDirectory(appDir.GetCString());
+ 
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
 
     /***************************************/
     /* Stupid Hack to test js env*/
     /***************************************/
-
-    InstallJar(nsString("c:\\temp\\test.jar"), "");
+    // FIX:  HACK HACK HACK!
+#if 1    
+    nsSpecialSystemDirectory jarFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    jarFile += "test.jar";
+    if (jarFile.Exists())
+    {
+        InstallJar(nsString(nsFileURL(jarFile).GetAsString()), "", "");
+    }
+#endif    
+    /***************************************/
+    /* Preform Scheduled Tasks             */
+    /***************************************/
 
     DeleteScheduledNodes();
     
@@ -170,27 +164,89 @@ nsSoftwareUpdate::Startup()
 NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
+    if (gJarInstallQueue != nsnull)
+    {
+        PRUint32 i=0;
+        for (; i < gJarInstallQueue->GetSize(); i++) 
+        {
+            nsInstallInfo* element = (nsInstallInfo*)gJarInstallQueue->Get(i);
+            delete element;
+        }
+
+        gJarInstallQueue->RemoveAll();
+        delete (gJarInstallQueue);
+        gJarInstallQueue = nsnull;
+    }
+
     NR_ShutdownRegistry();
     return NS_OK;
 }
 
-// We will need to have a overloaded function for multiple jarfile triggers.
-
 NS_IMETHODIMP
-nsSoftwareUpdate::InstallJar(const nsString& jarFile, const nsString& args)
+nsSoftwareUpdate::InstallJar(  const nsString& fromURL, 
+                               const nsString& flags, 
+                               const nsString& args)
 {
-    // FIX: Display some UI indicating that we are going to start an install.
-
-
-    char* tempJarFileName = jarFile.ToNewCString();
-
-    PRInt32 result = Install(tempJarFileName, nsnull);
-
-    delete [] tempJarFileName;
-
-    return result;
+    nsInstallInfo *installInfo = new nsInstallInfo(fromURL, flags, args);
+    InstallJar(installInfo);
+    
+    return NS_OK;
 }
 
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
+{
+    gJarInstallQueue->Add( installInfo );
+    UpdateInstallJarQueue();
+
+    return NS_OK;
+}
+
+
+nsresult
+nsSoftwareUpdate::UpdateInstallJarQueue()
+{
+    if (gInstalling == 0)
+    {
+        gInstalling++;
+        
+        if (gJarInstallQueue->GetSize() <= 0)
+        {
+            gInstalling--;
+            return 0;
+        }
+        nsInstallInfo *nextInstall = (nsInstallInfo*)gJarInstallQueue->Get(0);
+        
+        if (nextInstall == nsnull)
+        {
+            gInstalling--;
+            return 0;
+        }
+        
+        if (nextInstall->IsMultipleTrigger() == PR_FALSE)
+        {
+            Install( nextInstall );
+          
+            delete nextInstall;
+            gJarInstallQueue->Remove(0);
+        
+            gInstalling--;
+
+            // We are done with install the last jar, let see if there are any more.
+            UpdateInstallJarQueue();  // FIX: Maybe we should do this different to avoid blowing our stack?
+
+            return 0;
+        }
+        else
+        {
+            // FIX: we have a multiple trigger!
+        }
+    }
+
+    return 0;
+}
 
 nsresult
 nsSoftwareUpdate::DeleteScheduledNodes()
@@ -201,69 +257,18 @@ nsSoftwareUpdate::DeleteScheduledNodes()
 /////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////
-static PRInt32 gSoftwareUpdateInstanceCnt = 0;
 static PRInt32 gSoftwareUpdateLock        = 0;
 
 nsSoftwareUpdateFactory::nsSoftwareUpdateFactory(void)
 {
-    mRefCnt=0;
-    PR_AtomicIncrement(&gSoftwareUpdateInstanceCnt);
+    NS_INIT_ISUPPORTS();
 }
 
 nsSoftwareUpdateFactory::~nsSoftwareUpdateFactory(void)
 {
-    PR_AtomicDecrement(&gSoftwareUpdateInstanceCnt);
 }
 
-NS_IMETHODIMP 
-nsSoftwareUpdateFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    AddRef();
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsSoftwareUpdateFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP
-nsSoftwareUpdateFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
+NS_IMPL_ISUPPORTS(nsSoftwareUpdateFactory,NS_IFACTORY_IID)
 
 NS_IMETHODIMP
 nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -365,7 +370,7 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 extern "C" NS_EXPORT PRBool
 NSCanUnload(nsISupports* serviceMgr)
 {
-    return PRBool (gInstanceCnt == 0 && gLockCnt == 0);
+    return PRBool (gStarted == 0 && gLockCnt == 0);
 }
 
 extern "C" NS_EXPORT nsresult

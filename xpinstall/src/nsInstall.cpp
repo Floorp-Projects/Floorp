@@ -54,6 +54,166 @@
 
 
 
+nsInstallInfo::nsInstallInfo(const nsString& fromURL)
+{
+    nsInstallInfo(fromURL, "", "");
+}
+
+nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& arguments)
+{
+    nsInstallInfo(fromURL, arguments, "");
+}
+
+nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& arguments, const nsString& flags)
+{
+
+    mFromURL            = new nsString(fromURL);
+    mArguments          = new nsString(arguments);
+    mFlags              = new nsString(flags);
+    mLocalFile          = new nsString();
+
+    mMultipleTrigger    = PR_FALSE;
+    mFromURLs           = nsnull;
+    mLocalFiles         = nsnull;
+
+    MakeTempFile(fromURL, *mLocalFile);
+}
+
+nsInstallInfo::nsInstallInfo(nsVector* fromURL, const nsString& arguments, const nsString& flags)
+{
+    mMultipleTrigger = PR_TRUE;
+
+    mFromURLs        = fromURL;
+    mLocalFiles      = new nsVector();   
+    mArguments       = new nsString(arguments);
+    mFlags           = new nsString(flags);
+
+    mMultipleTrigger = PR_FALSE;
+    
+    // The following are not to be used with the Multiple Trigger 
+    mLocalFile  = nsnull;
+    mFromURL    = nsnull;
+
+}
+
+
+nsInstallInfo::DeleteVector(nsVector* vector)
+{
+    if (vector != nsnull)
+    {
+        PRUint32 i=0;
+        for (; i < vector->GetSize(); i++) 
+        {
+            nsString* element = (nsString*)vector->Get(i);
+            if (element != nsnull)
+                delete element;
+        }
+
+        vector->RemoveAll();
+        delete (vector);
+        vector = nsnull;
+    }
+}
+
+nsInstallInfo::~nsInstallInfo()
+{
+    if (mMultipleTrigger)
+    {
+        DeleteVector(mFromURLs);
+        DeleteVector(mLocalFiles);
+    }
+    else
+    {
+        
+        if (mLocalFile)
+            delete mLocalFile;
+        
+        delete mFromURL;
+    }
+
+    delete mArguments;
+    delete mFlags;
+}
+
+nsInstallInfo::MakeTempFile(nsString aURL, nsString& tempFileString)
+{
+    // Checking to see if the url is local is a hack.  I should see if 
+    // netlib could do this for me: given a url, give me path on the users
+    // if it is local otherwise return null to indicate that I need to 
+    // create a tempfile.
+    if (aURL.Compare(nsString("file://"), false, 7) == 0)
+    {       
+        tempFileString = nsFileSpec(nsFileURL(aURL)).GetCString();
+    }
+    else
+    {
+       nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    
+        PRInt32 result = aURL.RFind('/');
+        if (result != -1)
+        {            
+            nsString jarName;
+            aURL.Right(jarName, (aURL.Length() - result) );        
+            tempFile += jarName;
+        }
+        else
+        {   
+            tempFile += "xpinstall.jar";
+        }
+
+        tempFile.MakeUnique();
+
+        tempFileString = nsString(tempFile.GetCString());
+    }
+}
+
+nsString& 
+nsInstallInfo::GetFromURL(PRUint32 index)
+{
+    if (mMultipleTrigger)
+    {
+        nsString* element = (nsString*)mFromURLs->Get(index);
+        return *element;
+    }
+    else
+    {
+        return *mFromURL;
+    }
+}
+
+nsString& 
+nsInstallInfo::GetLocalFile(PRUint32 index)
+{
+    if (mMultipleTrigger)
+    {
+        nsString* element = (nsString*)mLocalFiles->Get(index);
+        return *element;
+    }
+    else
+    {
+        return *mLocalFile;
+    }
+}
+
+nsString& 
+nsInstallInfo::GetArguments()
+{
+    return *mArguments;
+}
+
+nsString& nsInstallInfo::GetFlags()
+{
+    return *mFlags;
+}
+
+
+PRBool
+nsInstallInfo::IsMultipleTrigger()
+{
+    return mMultipleTrigger;
+}
+
+
 nsInstall::nsInstall()
 {
     mScriptObject           = nsnull;           // this is the jsobject for our context
@@ -64,12 +224,18 @@ nsInstall::nsInstall()
 
     mUninstallPackage = PR_FALSE;
     mRegisterPackage  = PR_FALSE;
+
+    mJarFileLocation = nsnull;
+    mInstallArguments = nsnull;
 }
 
 nsInstall::~nsInstall()
 {
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
+
+    PR_FREEIF( mJarFileLocation );
+    PR_FREEIF( mInstallArguments );
 }
 
 
@@ -1103,9 +1269,11 @@ nsInstall::GetJarFileLocation(char** aFile)
 }
 
 void       
-nsInstall::SetJarFileLocation(char* aFile)
+nsInstall::SetJarFileLocation(const char* aFile)
 {
-    mJarFileLocation = aFile;
+    PR_FREEIF(mJarFileLocation);
+    mJarFileLocation = (char*) malloc( strlen(aFile) + 1 );
+    strncpy(mJarFileLocation, aFile, strlen(aFile) + 1 );
 }
 
 void       
@@ -1115,9 +1283,11 @@ nsInstall::GetInstallArguments(char** args)
 }
 
 void       
-nsInstall::SetInstallArguments(char* args)
+nsInstall::SetInstallArguments(const char* args)
 {
-    mInstallArguments = args;
+    PR_FREEIF(mInstallArguments);
+    mInstallArguments = (char*) malloc( strlen(args) + 1 );
+    strncpy(mInstallArguments, args, strlen(args) + 1);
 }
 
 
@@ -1147,8 +1317,8 @@ PRInt32
 nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName)
 {
     PRInt32 result;
-    nsFilePath*  extractFileHere = nsnull;
-    
+    nsFileSpec *extractHereSpec;
+
     nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
         
     if (aSuggestedName == nsnull || aSuggestedName->Exists() )
@@ -1170,30 +1340,29 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
          
         // Create a temporary file to extract to.
         tempFile.MakeUnique();
-   
-        extractFileHere = new nsFilePath(tempFile);
+        
+        extractHereSpec = new nsFileSpec(tempFile);
     }
     else
     {
         // extract to the final destination.
-    	extractFileHere = new nsFilePath(*aSuggestedName);
+        extractHereSpec = new nsFileSpec(*aSuggestedName);
     }
 
-    // Return the filepath that we extracted to:
-
-    nsFileSpec *fileSpec = new nsFileSpec(*extractFileHere);
-
     // FIX:  We will overwrite what is in the way.  is this something that we want to do?  
-    fileSpec->Delete(PR_FALSE);
+    extractHereSpec->Delete(PR_FALSE);
 
-    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), (*extractFileHere) );
+    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), extractHereSpec->GetCString() );
     
     if (result == 0)
-        *aRealName = fileSpec;
-	
-	if (extractFileHere != nsnull)
-    	delete extractFileHere;
-
+    {
+        *aRealName = extractHereSpec;
+    }
+    else
+    {
+        if (extractHereSpec != nsnull)
+            delete extractHereSpec;
+    }
     return result;
 }
 
