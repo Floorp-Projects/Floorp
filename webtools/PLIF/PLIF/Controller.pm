@@ -94,7 +94,9 @@ sub removeObject {
     foreach my $object (@_) {
         foreach my $index (0..$#{$self->objects}) {
             if ($self->objects->[$index] == $object) {
-                delete($self->objects->[$index]);
+                # XXX for 5.6.1, use this: delete($self->objects->[$index]);
+                # won't work in early perls though, so instead:
+                $self->objects->[$index] = undef;
             }
         }
     }
