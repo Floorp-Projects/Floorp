@@ -34,6 +34,7 @@
 
 # Options
 #  STAND_ALONE:    compile outside Mozilla/NSPR environment
+#  USE_NCURSES:    use NCURSES (for stand-alone mode only)
 #  DEBUG:          debug option
 #  NO_WORKAROUND:  disables workarounds to expose bugs
 #  USE_GTK_WIDGETS use GTK widget library
@@ -60,7 +61,7 @@ DEFINES    += -DLINUX -DHAVE_WCSSTR
 endif
 
 ifeq ($(OS_CONFIG),SunOS5)
-DEFINES    += -DSOLARIS -DHAVE_WCSWCS
+DEFINES    += -DSOLARIS
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
@@ -70,7 +71,11 @@ endif
 #
 # Netscape Portable Runtime options
 #
-ifndef STAND_ALONE
+ifdef STAND_ALONE
+ifdef USE_NCURSES
+DEFINES        += -DUSE_NCURSES
+endif
+else
 # Use NSPR base
 USE_NSPR_BASE   = 1
 endif

@@ -50,13 +50,17 @@ endif
 DEBUG = 1
 
 # Program
-SIMPLE_PROGRAMS = lterm ptytest testunistr
+SIMPLE_PROGRAMS = lterm ptytest unitest utf8conv
 
 # Defines
 DEFINES =
 
 # Libraries to be linked
+ifdef USE_NCURSES
 LIBS = -lncurses -lxmlterm -lpthread
+else
+LIBS = -lxmlterm -lpthread
+endif
 
 include $(topsrcdir)/config/config.mk
 

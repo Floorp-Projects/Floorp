@@ -1,9 +1,9 @@
-/* testunistr.c: Test driver for Unicode strings module unistring.c */
+/* utf8conv.c: Test driver for UTF8 conversions in unistring.c */
 
 /* public declarations */
 #include "unistring.h"
 
-#include "assert.h"
+#include <assert.h>
 
 int main(int argc, char *argv[])
 {

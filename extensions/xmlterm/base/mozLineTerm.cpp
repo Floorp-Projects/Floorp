@@ -46,7 +46,7 @@
 #define MAXCOL 4096            // Maximum columns in line buffer
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kPrefServiceCID,     NS_PREF_CID);
+static NS_DEFINE_CID(kPrefServiceCID,   NS_PREF_CID);
 
 static NS_DEFINE_IID(kILineTermIID,     MOZILINETERM_IID);
 static NS_DEFINE_IID(kILineTermAuxIID,  MOZILINETERMAUX_IID);
@@ -381,13 +381,19 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   nsCAutoString initCStr (initInput);
   XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.GetBuffer()));
 
+  // List of prompt delimiters
+  static const PRInt32 PROMPT_DELIMS = 5;
+  UNICHAR prompt_regexp[PROMPT_DELIMS+1];
+  ucscopy(prompt_regexp, "#$%>?", PROMPT_DELIMS+1);
+  PR_ASSERT(ucslen(prompt_regexp) == PROMPT_DELIMS);
+
   if (anObserver != nsnull) {
     result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
-                        L"#$%>?", options,
+                        prompt_regexp, options,
                         processType, mozLineTerm::Callback, (void *) this);
   } else {
     result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
-                        L"#$%>?", options,
+                        prompt_regexp, options,
                         processType, NULL, NULL);
   }
 

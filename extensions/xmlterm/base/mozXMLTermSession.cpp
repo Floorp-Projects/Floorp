@@ -2802,7 +2802,7 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
       PRInt32 cursorCol = 0;
       lineTermAux->GetCursorColumn(&cursorCol);
       textOffset = cursorCol - mOutputTextOffset;
-      if (textOffset > text.Length())
+      if (textOffset > (PRInt32)text.Length())
         textOffset = text.Length();
     }
     result = selection->Collapse(mOutputTextNode, textOffset);
@@ -3340,7 +3340,7 @@ NS_IMETHODIMP mozXMLTermSession::PositionScreenCursor(PRInt32 aRow,
 
     XMLT_LOG(mozXMLTermSession::GetScreenText,60,("prevCols=%d\n",prevCols));
 
-    if (prevCols+text.Length() >= aCol) {
+    if (prevCols+(PRInt32)text.Length() >= aCol) {
       // Determine offset in current text element
       textOffset = aCol - prevCols;
       textNode = childNode;
