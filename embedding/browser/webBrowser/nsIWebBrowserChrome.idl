@@ -59,18 +59,42 @@ interface nsIWebBrowserChrome : nsISupports
 	attribute nsIWebBrowser webBrowser;
 
 	/*
+		Definitions for the chrome masks
+	*/
+	const unsigned long defaultChrome		= 0x00000001;
+	const unsigned long windowBordersOn		= 0x00000002;
+	const unsigned long windowCloseOn		= 0x00000004;
+	const unsigned long windowResizeOn		= 0x00000008;
+	const unsigned long menuBarOn				= 0x00000010;
+	const unsigned long toolBarOn				= 0x00000020;
+	const unsigned long locationBarOn		= 0x00000040;
+	const unsigned long statusBarOn			= 0x00000080;
+	const unsigned long personalToolBarOn	= 0x00000100;
+	const unsigned long scrollbarsOn			= 0x00000200;
+	const unsigned long titlebarOn			= 0x00000400;
+	const unsigned long extraChromeOn		= 0x00000800;
+	const unsigned long dependent				= 0x10000000;
+	const unsigned long modal					= 0x20000000;
+	const unsigned long openAsDialog			= 0x40000000;
+	const unsigned long openAsChrome			= 0x80000000;
+	const unsigned long allChrome				= 0x00000ffe;
+
+	/*
+		The chrome mask for this browser chrome
+	*/
+	attribute unsigned long chromeMask;
+
+	/*
 		Tells the implementer of this interface to create a new webBrowserChrome
 		object for it.  Typically this means the implemetor will create a new 
 		top level window that is represented by nsIWebBrowserChrome.  This
 		most often will be called when for instance there is a need for a new
 		JS window, etc.  Soon after this new object is returned, the webBrowser
-		attribute will be set with the new widget to instantiate in this 
+		attribute will checked, if one does not exist, one will be created and
+		setWebBrowser will be called with the new widget to instantiate in this 
 		new window.	
 	*/
 	void getNewBrowserChrome(out nsIWebBrowserChrome webBrowserChrome);
 
-	void findNamedWebBrowser(out nsIWebBrowserChrome webBrowserChrome);
-
-	/*	XXX Figure these out....
-	void OnFocusAvailable();  */
+	void findNamedBrowserChrome(in wstring aName, out nsIWebBrowserChrome webBrowserChrome);
 };
