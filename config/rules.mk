@@ -940,7 +940,7 @@ endif
 #############################################################################
 ifdef COMPILER_DEPEND
 depend::
-	@echo Warning: No need to run \"$(MAKE) depend\" with \"--enable-md\". 2>&1
+	@echo "$(MAKE): Skipping depend. Using compiler-based depend instead (--enable-md)." 2>&1
 else
 $(MKDEPENDENCIES)::
 	touch $(MKDEPENDENCIES)
