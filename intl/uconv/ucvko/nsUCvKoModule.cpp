@@ -335,14 +335,14 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
   for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
     {
-       PL_strcpy(name, DECODER_NAME_BASE);
+       PL_strcpy(name, ENCODER_NAME_BASE);
        PL_strcat(name, g_FactoryData[i].mCharsetDest);
-       PL_strcpy(progid, NS_UNICODEDECODER_PROGID_BASE);
+       PL_strcpy(progid, NS_UNICODEENCODER_PROGID_BASE);
        PL_strcat(progid, g_FactoryData[i].mCharsetDest);
     } else {
-       PL_strcpy(name, ENCODER_NAME_BASE);
+       PL_strcpy(name, DECODER_NAME_BASE);
        PL_strcat(name, g_FactoryData[i].mCharsetSrc);
-       PL_strcpy(progid, NS_UNICODEENCODER_PROGID_BASE);
+       PL_strcpy(progid, NS_UNICODEDECODER_PROGID_BASE);
        PL_strcat(progid, g_FactoryData[i].mCharsetSrc);
     }
     // register component
