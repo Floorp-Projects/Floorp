@@ -35,11 +35,12 @@ EX_LIBS = \
 	$(DIST)/bin/libftpurl.so \
 	$(DIST)/bin/libgophurl.so \
 	$(DIST)/bin/libremoturl.so \
- 	$(DIST)/bin/libhttpurl.so \
+	$(DIST)/bin/libhttpurl.so \
 	$(DIST)/bin/libnetcache.so \
 	$(DIST)/bin/libmimetype.so \
 	$(DIST)/bin/libnetwork.so \
-	$(DIST)/bin/libnetlib.so  \
+	$(DIST)/bin/libnetlib.so \
+	$(DIST)/bin/libnetutil.so \
         $(DIST)/bin/libreg.so	\
 	$(DIST)/bin/libxpcom.so	\
 	$(DIST)/bin/libpwcac.so \

@@ -25,6 +25,7 @@
 #include "mkparse.h"
 #include "xp_time.h"
 #include "mkfsort.h"
+#include "prtime.h"
 
 extern int MK_OUT_OF_MEMORY;
 
@@ -558,15 +559,14 @@ MODULE_PRIVATE time_t
 NET_ParseDate(char *date_string)
 {
 #ifndef USE_OLD_TIME_FUNC
-	time_t date;
+	PRTime date;
 
     TRACEMSG(("Parsing date string: %s\n",date_string));
 
-	/* try using XP_ParseTimeString instead
+	/* try using PR_ParseTimeString instead
 	 */
-	date = XP_ParseTimeString(date_string, TRUE);
-
-	if(date)
+	
+	if(PR_ParseTimeString(date_string, TRUE, &date))
 	  {
 		TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
 		TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
@@ -576,7 +576,7 @@ NET_ParseDate(char *date_string)
 		TRACEMSG(("Could not parse date"));
 	  }
 
-	return(date);
+	return((time_t) date);
 
 #else
     struct tm time_info;         /* Points to static tm structure */
@@ -1662,7 +1662,11 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 				break;
 
 			case LAST_MODIFIED_TOKEN:
-				file_struct->date = XP_ParseTimeString(token, TRUE);
+                {
+                    PRTime prtime;
+				    PR_ParseTimeString(token, TRUE, &prtime);
+                    file_struct->date = (time_t) prtime;
+                }
 				break;
 
 			case CONTENT_TYPE_TOKEN:

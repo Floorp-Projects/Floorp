@@ -45,7 +45,7 @@
 #define WANT_ENUM_STRING_IDS
 #include "allxpstr.h"
 #undef WANT_ENUM_STRING_IDS
-#include "xp_reg.h"
+#include "mkreg.h"
 
 #ifndef NSPR20
 #if defined(XP_UNIX) || defined(XP_WIN32)
@@ -1606,8 +1606,8 @@ proxy_regExpMatch(JSContext *mc, JSObject *obj, unsigned int argc,
 	const char *url = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 	const char *pat = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
 
-	if (url && pat && XP_RegExpValid((char *) pat) &&       /* XXX */
-	    !XP_RegExpMatch((char *) url, (char *) pat, TRUE)) {/* XXX */
+	if (url && pat && NET_RegExpValid((char *) pat) &&       /* XXX */
+	    !NET_RegExpMatch((char *) url, (char *) pat, TRUE)) {/* XXX */
 	    *rval = JSVAL_TRUE;
 	    return JS_TRUE;
 	}

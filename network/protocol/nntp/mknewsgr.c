@@ -18,7 +18,7 @@
 #include "mkutils.h"
 #include "mknewsgr.h"
 #include "msgcom.h"
-#include "xp_reg.h"
+#include "mkreg.h"
 #include "xp_qsort.h"
 
 #define DYN_ARRAY_INIT_SIZE 2
@@ -579,7 +579,7 @@ int net_NumberOfGroupsInLevel(SubgroupList *SGptr,
 
 TRACEMSG(("Comparing %s and %s", large_buffer, search_string));
 
-			if(!XP_RegExpSearch(large_buffer, search_string))
+			if(!NET_RegExpSearch(large_buffer, search_string))
             	num_at_this_level++;
 		  }
 
@@ -633,7 +633,7 @@ int net_recursiveDisplayNewsgroups(MWContext *context,
             	    PR_snprintf(large_buffer, BUFFER_SIZE, "%.400s", NGptr->name);
 			  }
 
-            if(!XP_RegExpSearch(large_buffer, search_string))
+            if(!NET_RegExpSearch(large_buffer, search_string))
 				display_this_one = TRUE;	
 			else
 		        display_this_one=FALSE;

@@ -136,6 +136,7 @@ LINCS=-I$(PUBLIC)\jtools	\
     -I$(PUBLIC)\httpurl		\
     -I$(PUBLIC)\cnetinit	\
     -I$(PUBLIC)\mimetype	\
+    -I$(PUBLIC)\network		\
     -I$(PUBLIC)\security 
 #!endif
 
