@@ -175,14 +175,17 @@ NS_IMETHODIMP nsFindAndReplace::Find(const PRUnichar *aFindText, PRBool *aDidFin
     return result;  
   
   // find out where we started
-  result = GetCurrentBlockIndex(mTsDoc, &mStartBlockIndex);
-  if (NS_FAILED(result))
-    return result;
+  if (mWrapFind)
+  {
+    result = GetCurrentBlockIndex(mTsDoc, &mStartBlockIndex);
+    if (NS_FAILED(result))
+      return result;
 
-  // and set the starting position again (hopefully, in future we won't have to do this)
-  result = SetupDocForFind(mTsDoc, &mStartSelOffset);
-  if (NS_FAILED(result))
-    return result;  
+    // and set the starting position again (hopefully, in future we won't have to do this)
+    result = SetupDocForFind(mTsDoc, &mStartSelOffset);
+    if (NS_FAILED(result))
+      return result;  
+  }
 
   mCurrentBlockIndex = mStartBlockIndex;
   mCurrentSelOffset  = mStartSelOffset;
@@ -211,6 +214,7 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
     return NS_OK;
 
   nsAutoString findStr(aFindText);
+  PRUint32 findStrLength = findStr.Length();
   if (!mCaseSensitive)
     findStr.ToLowerCase();
 
@@ -219,20 +223,24 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
     return result;  
   
   // find out where we started
-  result = GetCurrentBlockIndex(mTsDoc, &mStartBlockIndex);
-  if (NS_FAILED(result))
-    return result;
+  if (mWrapFind)
+  {
+    result = GetCurrentBlockIndex(mTsDoc, &mStartBlockIndex);
+    if (NS_FAILED(result))
+      return result;
 
-  // and set the starting position again (hopefully, in future we won't have to do this)
-  result = SetupDocForReplace(mTsDoc, findStr, &mStartSelOffset);
-  if (NS_FAILED(result))
-    return result;  
+    // and set the starting position again (hopefully, in future we won't have to do this)
+    result = SetupDocForReplace(mTsDoc, findStr, &mStartSelOffset);
+    if (NS_FAILED(result))
+      return result;  
+  }
 
   mCurrentBlockIndex = mStartBlockIndex;
   mCurrentSelOffset  = mStartSelOffset;
   mWrappedOnce = PR_FALSE;
 
   nsAutoString replaceStr(aReplaceText);
+  PRUint32 replaceStrLength = replaceStr.Length();
   PRBool didReplace = PR_FALSE;
 
   // Keep looping until DoFind() fails to find another instance
@@ -248,7 +256,25 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
     if (!*aDidFind || (didReplace && !aAllOccurrences))
       break;
 
-    if (replaceStr.Length() == 0)
+
+    if (mWrapFind)
+    {
+      // If we are wrapping, and we replace any part of
+      // the starting block before mStartSelOffset, we
+      // need to make sure that we adjust mStartSelOffset
+      // so that after we've wrapped and get to the starting
+      // block again, we know where to stop.
+
+      if (mCurrentBlockIndex == mStartBlockIndex &&
+          mCurrentSelOffset < mStartSelOffset)
+      {
+        mStartSelOffset += replaceStrLength - findStrLength;
+        if (mStartSelOffset < 0)
+          mStartSelOffset = 0;
+      }
+    }
+
+    if (replaceStrLength == 0)
       result = mTsDoc->DeleteSelection();
     else
     {
@@ -261,7 +287,7 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
       // call DoFind() again.
 
       if (!mFindBackwards)
-        mCurrentSelOffset += replaceStr.Length();
+        mCurrentSelOffset += replaceStrLength;
     }
 
     if (NS_FAILED(result))
@@ -435,15 +461,22 @@ nsFindAndReplace::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *o
 {
   PRInt32  blockIndex = 0;
   PRBool   isDone = PR_FALSE;
+  nsresult result = NS_OK;
 
-  while (NS_SUCCEEDED(aDoc->IsDone(&isDone)) && !isDone)
+  do
   {
     aDoc->PrevBlock();
-    blockIndex ++;
-  }
+
+    result = aDoc->IsDone(&isDone);
+
+    if (!isDone)
+      blockIndex ++;
+
+  } while (NS_SUCCEEDED(result) && !isDone);
   
   *outBlockIndex = blockIndex;
-  return NS_OK;
+
+  return result;
 }
 
 nsresult
@@ -664,9 +697,30 @@ nsFindAndReplace::DoFind(nsITextServicesDocument *aTxtDoc, const nsString &aFind
   
       if (!mCaseSensitive)
         str.ToLowerCase();
-          
+      
+      if (mWrapFind && mWrappedOnce &&
+          mCurrentBlockIndex == mStartBlockIndex && mCurrentSelOffset != -1)
+      {
+        if (( mFindBackwards && (mCurrentSelOffset <= mStartSelOffset)) ||
+            (!mFindBackwards && (mCurrentSelOffset >= mStartSelOffset)))
+        {
+          done = PR_TRUE;
+          break;
+        }
+      }
+
       PRInt32 foundOffset = FindInString(str, aFindString, mCurrentSelOffset, mFindBackwards);
   
+      if (mWrapFind && mWrappedOnce && (mCurrentBlockIndex == mStartBlockIndex))
+      {
+        if ((mFindBackwards && ((foundOffset + aFindString.Length()) <= mStartSelOffset)) ||
+            (!mFindBackwards && (foundOffset >= mStartSelOffset)))
+        {
+          done = PR_TRUE;
+          break;
+        }
+      }
+
       if (foundOffset != -1)
       {
         mCurrentSelOffset = foundOffset;  // reset for next call to DoFind().
