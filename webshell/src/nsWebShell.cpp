@@ -446,8 +446,6 @@ protected:
                         const char* aContentType,
                         const char* aCommand,
                         nsIStreamListener** aResult);
-  float mZoom;
-
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
   static PRUint32          mPluginInitCnt;
@@ -3767,49 +3765,12 @@ NS_IMETHODIMP nsWebShell::SetLoadCookie(nsISupports * aLoadCookie)
 
 NS_IMETHODIMP nsWebShell::GetZoom(float* aZoom)
 {
-  *aZoom = mZoom;
-  return NS_OK;
+  return nsDocShell::GetZoom(aZoom);
 }
 
 NS_IMETHODIMP nsWebShell::SetZoom(float aZoom)
 {
-  mZoom = aZoom;
-
-  if (mDeviceContext)
-    mDeviceContext->SetZoom(mZoom);
-
-  if (mContentViewer) {
-    nsIDocumentViewer* docv = nsnull;
-    mContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-    if (nsnull != docv) {
-      nsIPresContext* cx = nsnull;
-      docv->GetPresContext(cx);
-      if (nsnull != cx) {
-        nsIPresShell  *shell = nsnull;
-        cx->GetShell(&shell);
-        if (nsnull != shell) {
-          nsIViewManager  *vm = nsnull;
-          shell->GetViewManager(&vm);
-          if (nsnull != vm) {
-            nsIView *rootview = nsnull;
-            nsIScrollableView *sv = nsnull;
-            vm->GetRootScrollableView(&sv);
-            if (nsnull != sv)
-              sv->ComputeScrollOffsets();
-            vm->GetRootView(rootview);
-            if (nsnull != rootview)
-              vm->UpdateView(rootview, 0);
-              NS_RELEASE(vm);
-          }
-          NS_RELEASE(shell);
-        }
-        NS_RELEASE(cx);
-      }
-      NS_RELEASE(docv);
-    }
-  }
-
-  return NS_OK;
+  return nsDocShell::SetZoom(aZoom);
 }
 
 NS_IMETHODIMP 
