@@ -35,6 +35,7 @@ HRESULT     ProcessMoveFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu);
 HRESULT     ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     ProcessCreateDirectory(DWORD dwTiming, char *szSectionPrefix);
+HRESULT     ProcessCreateCustomFiles(DWORD dwTiming);
 HRESULT     FileDelete(LPSTR szDestination);
 HRESULT     ProcessDeleteFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs);

@@ -6585,6 +6585,19 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     /* parse for the "c:\Program Files" directory */
     GetWinReg(HKEY_LOCAL_MACHINE, szWRMSCurrentVersion, "ProgramFilesDir", szVariable, dwVariableSize);
   }
+  else if(lstrcmpi(szVariable, "PROGRAMFILESPATH") == 0)
+  {
+    /* parse for the "\Program Files" directory -- NOTE does not include the drive letter */
+    GetWinReg(HKEY_LOCAL_MACHINE, szWRMSCurrentVersion, "ProgramFilesDir", szBuf, sizeof(szBuf));
+    lstrcpy(szVariable, szBuf+2);
+  }
+  else if(lstrcmpi(szVariable, "INSTALLDRIVE") == 0)
+  {
+    /* parse for "C:" */
+    szVariable[0] = sgProduct.szPath[0];
+    szVariable[1] = sgProduct.szPath[1];
+    szVariable[2] = '\0';
+  }
   else if(lstrcmpi(szVariable, "COMMONFILESDIR") == 0)
   {
     /* parse for the "c:\Program Files\Common Files" directory */
