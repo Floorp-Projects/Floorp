@@ -21,9 +21,6 @@
 #include "nsDBFolderInfo.h"
 #include "nsLocalFolderSummarySpec.h"
 
-#include "nsRDFCID.h"
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 nsImapMailDatabase::nsImapMailDatabase()
 {
 }
@@ -151,9 +148,9 @@ void	nsImapMailDatabase::UpdateFolderFlag(nsMsgHdr * /* msgHdr */, PRBool /* bSe
 {
 }
 
-
+/*
 nsresult
-nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result, PRBool getKeyFromHeader)
+nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgHdr* *result)
 {
     nsresult rv;
 
@@ -185,16 +182,18 @@ nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey k
     rv = rdf->GetResource(msgURI, &res);
     PR_smprintf_free(msgURI);
     if (NS_FAILED(rv)) return rv;
-    
+   
 	nsMsgHdr* msgHdr = (nsMsgHdr*)res;
-	if (res)
+	nsMsgHdr* msgHdr = new nsMsgHdr();
+	if (msgHdr)
 	{
 		msgHdr->Init(this, hdrRow);
 		msgHdr->SetMessageKey(key);
 	}
     *result = msgHdr;
   
-    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+    //nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
-    return rv;
+    return NS_OK;
 }
+*/

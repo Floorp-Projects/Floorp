@@ -69,13 +69,12 @@ public:
     NS_IMETHOD				SetSummaryValid(PRBool valid);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
-    virtual nsresult        CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader);
 #ifdef DEBUG	// strictly for testing purposes
 	virtual	nsresult		PrePopulate();
 #endif
 protected:
-	virtual PRBool			SetHdrFlag(nsIMessage *, PRBool bSet, MsgFlags flag);
-	virtual void			UpdateFolderFlag(nsIMessage *msgHdr, PRBool bSet, 
+	virtual PRBool			SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+	virtual void			UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);
 

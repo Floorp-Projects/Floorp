@@ -155,7 +155,7 @@ NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::AddChild(nsIMessage *child, PRBool threadInThread)
+NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, PRBool threadInThread)
 {
 	nsresult ret = NS_OK;
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMessage *child, PRBool threadInThread)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMessage **result)
+NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMessage **result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMessage **result)
+NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
 
@@ -187,7 +187,7 @@ NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMessage **result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMessage **result)
+NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
 	nsIMdbRow* resultRow;
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMessage **result)
 	if (resultRow->GetOid(m_mdbDB->GetEnv(), &outOid) == NS_OK)
 		key = outOid.mOid_Id;
 
-	ret = m_mdbDB->CreateMsgHdr(resultRow, m_mdbDB->m_dbName, key, result, PR_TRUE);
+	ret = m_mdbDB->CreateMsgHdr(resultRow, key, result);
 	if (NS_FAILED(ret)) 
 		return ret;
 	return ret;
@@ -257,7 +257,7 @@ public:
     NS_IMETHOD IsDone(void);
 
     // nsMsgThreadEnumerator methods:
-    typedef nsresult (*nsMsgThreadEnumeratorFilter)(nsIMessage* hdr, void* closure);
+    typedef nsresult (*nsMsgThreadEnumeratorFilter)(nsIMsgDBHdr* hdr, void* closure);
 
     nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
                       nsMsgThreadEnumeratorFilter filter, void* closure);
@@ -265,7 +265,7 @@ public:
 
 protected:
 	nsIMdbTableRowCursor*       mRowCursor;
-    nsIMessage*                 mResultHdr;
+    nsIMsgDBHdr*                 mResultHdr;
 	nsMsgThread*				mThread;
 	nsMsgKey					mCurKey;
 	PRInt32						mChildIndex;
@@ -337,7 +337,7 @@ NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
 	if (!mResultHdr) 
 	{
         mDone = PR_TRUE;
-		return NS_RDF_CURSOR_EMPTY;
+		return NS_ERROR_FAILURE;
     }
     if (NS_FAILED(rv)) 
 	{

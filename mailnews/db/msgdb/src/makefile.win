@@ -52,8 +52,6 @@ EXPORTS=	\
 LINCS=-I$(PUBLIC)\xpcom \
 	 -I$(PUBLIC)\mailnews \
 	 -I$(PUBLIC)\raptor \
-	 -I$(PUBLIC)\rdf \
-	 -I$(PUBLIC)\rdfutil \
 	 -I$(PUBLIC)\mime \
 	 -I$(PUBLIC)\locale \
 	 -I$(PUBLIC)\pref \

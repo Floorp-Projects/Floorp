@@ -40,11 +40,10 @@ public:
   NS_IMETHOD				Close(PRBool forceCommit);
   NS_IMETHOD				ForceClosed();
   NS_IMETHOD				Commit(nsMsgDBCommitType commitType);
-  virtual nsresult          CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader = PR_FALSE);
   virtual PRUint32          GetCurVersion();
   
   // methods to get and set docsets for ids.
-  NS_IMETHOD				MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
+  NS_IMETHOD				MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                         nsIDBChangeListener *instigator = NULL);
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
   virtual PRBool			IsArticleOffline(nsMsgKey key);

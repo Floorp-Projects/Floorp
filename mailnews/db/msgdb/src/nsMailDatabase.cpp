@@ -24,8 +24,6 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsFileSpec.h"
 
-#include "nsRDFCID.h"
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMailDatabase::nsMailDatabase()
     : m_reparse(PR_FALSE), m_folderSpec(nsnull), m_folderStream(nsnull)
@@ -185,7 +183,7 @@ nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeLis
 
 
 // Helper routine - lowest level of flag setting
-PRBool nsMailDatabase::SetHdrFlag(nsIMessage *msgHdr, PRBool bSet, MsgFlags flag)
+PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
 {
 	nsIOFileStream *fileStream = NULL;
 	PRBool		ret = PR_FALSE;
@@ -221,7 +219,7 @@ int msg_UnHex(char C)
 // and we don't want to open and close the file every time through.
 // As an experiment, try caching the fid in the db as m_folderFile.
 // If this is set, use it but don't return *pFid.
-void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet, 
+void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet, 
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
 	static char buf[30];
@@ -518,55 +516,10 @@ PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 	return gThreadWithoutRe;
 }
 
-nsresult
-nsMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result, PRBool getKeyFromHeader)
-{
-    nsresult rv;
-
-	nsIRDFService *rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID, 
-                                      nsIRDFService::GetIID(), 
-                                      (nsISupports**)&rdf);
-
-    if (NS_FAILED(rv)) return rv;
-
-	char* msgURI;
-
-	//Need to remove ".msf".
-	nsFileSpec folderPath = path;
-	char* leafName = folderPath.GetLeafName();
-	nsString folderName(leafName);
-	PL_strfree(leafName);
-	if(folderName.Find(".msf") != -1)
-	{
-		nsString realFolderName;
-		folderName.Left(realFolderName, folderName.Length() - 4);
-		folderPath.SetLeafName((const nsString)realFolderName);
-	}
-
-	rv = nsBuildLocalMessageURI(folderPath, key, &msgURI);
-    if (NS_FAILED(rv)) return rv;
-
-
-    nsIRDFResource* res;
-    rv = rdf->GetResource(msgURI, &res);
-    PR_smprintf_free(msgURI);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsMsgHdr* msgHdr = (nsMsgHdr*)res;
-    msgHdr->Init(this, hdrRow);
-    msgHdr->SetMessageKey(key);
-    *result = msgHdr;
-  
-    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
-    return rv;
-}
-
 #ifdef DEBUG	// strictly for testing purposes
 nsresult nsMailDatabase::PrePopulate()
 {
-	nsIMessage	*msg;
+	nsIMsgDBHdr	*msg;
 	nsMsgHdr	*newHdr = NULL;
 	PRTime resultTime, intermediateResult, microSecondsPerSecond;
 	resultTime = PR_Now();

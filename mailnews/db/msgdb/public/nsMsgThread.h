@@ -25,7 +25,7 @@
 #include "mdb.h"
 
 class nsIMdbTable;
-class nsIMessage;
+class nsIMsgDBHdr;
 class nsMsgDatabase;
 
 class nsMsgThread : public nsIMsgThread {
@@ -42,10 +42,10 @@ public:
     NS_IMETHOD		SetFlags(PRUint32 flags);
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
 	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
-	NS_IMETHOD		AddChild(nsIMessage *child, PRBool threadInThread);
-	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMessage **result);
-	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMessage **result);
-	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMessage **result);
+	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, PRBool threadInThread);
+	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMsgDBHdr **result);
+	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result);
+	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result);
 	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
 	NS_IMETHOD		RemoveChild(nsMsgKey msgKey);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);

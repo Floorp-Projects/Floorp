@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 #include "MailNewsTypes.h"
 
-class nsIMessage;
+class nsIMsgDBHdr;
 class nsIDBChangeListener;
 class nsIEnumerator;
 class nsThreadMessageHdr;       // XXX where's the public interface to this?
@@ -83,25 +83,26 @@ public:
 
   NS_IMETHOD GetDBFolderInfo(nsIDBFolderInfo **result) = 0;
   // get a message header for the given key. Caller must release()!
-  NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMessage **msg) = 0;
+  NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **msg) = 0;
   // create a new message header from a hdrStruct. Caller must release resulting header,
   // after adding any extra properties they want.
   NS_IMETHOD CreateNewHdrAndAddToDB(PRBool *newThread,
                                     nsMsgHdrStruct *hdrStruct,
-                                    nsIMessage **newHdr,
+                                    nsIMsgDBHdr **newHdr,
                                     PRBool notify) = 0;
 
   // Must call AddNewHdrToDB after creating. The idea is that you create
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
-  NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMessage **newHdr) = 0;
+  NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **newHdr) = 0;
 
-  NS_IMETHOD AddNewHdrToDB(nsIMessage *newHdr, PRBool notify) = 0;
-  // extract info from an nsIMessage into a nsMsgHdrStruct
-  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMessage *msgHdr, 
+  NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify) = 0;
+  // extract info from an nsIMsgDBHdr into a nsMsgHdrStruct
+  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMsgDBHdr *msgHdr, 
                                          nsMsgHdrStruct *hdrStruct) = 0;
 
-  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr) = 0;
+  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr) = 0;
+
 #if HAVE_INT_ENUMERATORS
   NS_IMETHOD EnumerateKeys(nsIEnumerator* *outputKeys) = 0;
 #else
@@ -112,7 +113,7 @@ public:
 
   // helpers for user command functions like delete, mark read, etc.
 
-  NS_IMETHOD MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
+  NS_IMETHOD MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                          nsIDBChangeListener *instigator) = 0;
 
   // MDN support
@@ -158,10 +159,10 @@ public:
   NS_IMETHOD DeleteMessage(nsMsgKey key, 
                            nsIDBChangeListener *instigator,
                            PRBool commit) = 0;
-  NS_IMETHOD DeleteHeader(nsIMessage *msgHdr, nsIDBChangeListener *instigator,
+  NS_IMETHOD DeleteHeader(nsIMsgDBHdr *msgHdr, nsIDBChangeListener *instigator,
                           PRBool commit, PRBool notify) = 0;
 
-  NS_IMETHOD UndoDelete(nsIMessage *msgHdr) = 0;
+  NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr) = 0;
 
   NS_IMETHOD MarkLater(nsMsgKey key, time_t *until) = 0;
   NS_IMETHOD MarkMarked(nsMsgKey key, PRBool mark,
@@ -191,7 +192,7 @@ public:
 
   // thread interfaces.
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result) = 0;
-  NS_IMETHOD GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result) = 0;
+  NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) = 0;
 };
 
 #endif // nsIMsgDatabase_h__

@@ -66,24 +66,23 @@ public:
   // In 4.x, it was mainly used to remove corrupted databases.
   NS_IMETHOD ForceClosed(void);
   // get a message header for the given key. Caller must release()!
-  NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMessage **msg);
+  NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **msg);
   // create a new message header from a hdrStruct. Caller must release resulting header,
   // after adding any extra properties they want.
   NS_IMETHOD CreateNewHdrAndAddToDB(PRBool *newThread,
                                     nsMsgHdrStruct *hdrStruct,
-                                    nsIMessage **newHdr,
+                                    nsIMsgDBHdr **newHdr,
                                     PRBool notify);
   // Must call AddNewHdrToDB after creating. The idea is that you create
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
-  NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMessage **newHdr);
+  NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **newHdr);
+  virtual nsresult  CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
 
-  virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader) = 0;
-
-  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr);
-  NS_IMETHOD AddNewHdrToDB(nsIMessage *newHdr, PRBool notify);
-  // extract info from an nsIMessage into a nsMsgHdrStruct
-  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMessage *msgHdr, 
+  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr);
+  NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
+  // extract info from an nsIMsgDBHdr into a nsMsgHdrStruct
+  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMsgDBHdr *msgHdr, 
                                          nsMsgHdrStruct *hdrStruct);
 
 #if HAVE_INT_ENUMERATORS
@@ -100,7 +99,7 @@ public:
 
   // helpers for user command functions like delete, mark read, etc.
 
-  NS_IMETHOD MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
+  NS_IMETHOD MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                          nsIDBChangeListener *instigator);
 
   // MDN support
@@ -146,10 +145,10 @@ public:
   NS_IMETHOD DeleteMessage(nsMsgKey key, 
                            nsIDBChangeListener *instigator,
                            PRBool commit);
-  NS_IMETHOD DeleteHeader(nsIMessage *msgHdr, nsIDBChangeListener *instigator,
+  NS_IMETHOD DeleteHeader(nsIMsgDBHdr *msgHdr, nsIDBChangeListener *instigator,
                           PRBool commit, PRBool notify);
 
-  NS_IMETHOD UndoDelete(nsIMessage *msgHdr);
+  NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr);
 
   NS_IMETHOD MarkLater(nsMsgKey key, time_t *until);
   NS_IMETHOD MarkMarked(nsMsgKey key, PRBool mark,
@@ -178,13 +177,13 @@ public:
   NS_IMETHOD ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
 
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
-  NS_IMETHOD GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result) ;
+  NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) ;
   //////////////////////////////////////////////////////////////////////////////
   // nsMsgDatabase methods:
 	nsMsgDatabase();
 	virtual ~nsMsgDatabase();
 
-    NS_IMETHOD IsHeaderRead(nsIMessage *hdr, PRBool *pRead);
+    NS_IMETHOD IsHeaderRead(nsIMsgDBHdr *hdr, PRBool *pRead);
 
 	static nsIMdbFactory	*GetMDBFactory();
 	NS_IMETHOD				GetDBFolderInfo(nsIDBFolderInfo **result);
@@ -216,7 +215,7 @@ public:
 	static void		DumpCache();
     virtual nsresult DumpContents();
 			nsresult DumpThread(nsMsgKey threadId);
-	nsresult DumpMsgChildren(nsIMessage *msgHdr);
+	nsresult DumpMsgChildren(nsIMsgDBHdr *msgHdr);
 #endif
 
 	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
@@ -258,10 +257,10 @@ protected:
 	// Flag handling routines
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator = NULL);
-	virtual PRBool	SetHdrFlag(nsIMessage *, PRBool bSet, MsgFlags flag);
-	virtual PRUint32 GetStatusFlags(nsIMessage *msgHdr);
+	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr);
 	// helper function which doesn't involve thread object
-    NS_IMETHOD MarkHdrReadInDB(nsIMessage *msgHdr, PRBool bRead,
+    NS_IMETHOD MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                nsIDBChangeListener *instigator);
 
 	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);

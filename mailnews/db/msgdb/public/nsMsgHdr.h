@@ -19,8 +19,7 @@
 #ifndef _nsMsgHdr_H
 #define _nsMsgHdr_H
 
-#include "nsIMessage.h"
-#include "nsRDFResource.h"
+#include "nsIMsgHdr.h"
 #include "nsString2.h"
 #include "MailNewsTypes.h"
 #include "xp.h"
@@ -29,12 +28,12 @@
 class nsMsgDatabase;
 class nsString2;
 
-class nsMsgHdr : public nsRDFResource, public nsIMessage {
+class nsMsgHdr : public nsIMsgDBHdr {
 public:
 
 	friend class nsMsgDatabase;
     ////////////////////////////////////////////////////////////////////////////
-    // nsIMessage methods:
+    // nsIMsghdr methods:
     NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
     NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr);
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
@@ -88,14 +87,12 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
-	nsMsgHdr();
     virtual				~nsMsgHdr();
 
     void				Init();
-	void				Init(nsMsgDatabase *db, nsIMdbRow *dbRow);
 	virtual nsresult	InitCachedValues();
 
-    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_ISUPPORTS
 
     nsIMdbRow		*GetMDBRow() {return m_mdbRow;}
 protected:

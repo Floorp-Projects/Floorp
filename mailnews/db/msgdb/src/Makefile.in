@@ -45,7 +45,6 @@ EXTRA_DSO_LDOPTS = \
 	-lxpcom		\
 	-lreg		\
 	-lraptorbase	\
-	-lrdfutil_s	\
 	-lmork		\
 	-lmsgbaseutil	\
 	$(NULL)

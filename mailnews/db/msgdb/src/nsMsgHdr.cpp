@@ -26,10 +26,9 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgHdr, nsRDFResource, nsIMessage)
+NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
-    : nsRDFResource()
 {
     NS_INIT_REFCNT();
 	m_mdb = db;
@@ -37,6 +36,7 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 		m_mdb->AddRef();
 	Init();
 	m_mdbRow = dbRow;
+	InitCachedValues();
 }
 
 
@@ -52,24 +52,6 @@ void nsMsgHdr::Init()
 	m_mdbRow = NULL;
 	m_numReferences = 0;
 	m_threadId = nsMsgKey_None;
-
-}
-
-//The next two functions are temporary changes until we remove RDF from nsMsgHdr
-nsMsgHdr::nsMsgHdr()
-    : nsRDFResource()
-{
-    NS_INIT_REFCNT();
-	Init();
-}
-
-void nsMsgHdr::Init(nsMsgDatabase *db, nsIMdbRow *dbRow)
-{
-	m_mdb = db;
-	if(m_mdb)
-		m_mdb->AddRef();
-	m_mdbRow = dbRow;
-	InitCachedValues();
 }
 
 nsresult nsMsgHdr::InitCachedValues()

@@ -20,8 +20,6 @@
 #include "nsNewsDatabase.h"
 #include "nsNewsSummarySpec.h"
 
-#include "nsRDFCID.h"
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsNewsDatabase::nsNewsDatabase()
 {
@@ -105,7 +103,7 @@ PRUint32 nsNewsDatabase::GetCurVersion()
 }
 
 // methods to get and set docsets for ids.
-NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
+NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator)
 {
     nsresult		err = NS_OK;
@@ -246,12 +244,11 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
   return PR_TRUE;
 }
 
+/*
 nsresult
-nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
-							PRBool getKeyFromHeader)
+nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
 {
   nsresult rv;
-
 #ifdef DEBUG
   printf("nsNewsDatabase::CreateMsgHdr()\n");
 #endif
@@ -286,11 +283,14 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, 
   if (NS_FAILED(rv)) return rv;
   
   nsMsgHdr* msgHdr = (nsMsgHdr*)res;
+  
+  nsMsgHdr* msgHdr = new nsMsgHdr();
   msgHdr->Init(this, hdrRow);
   msgHdr->SetMessageKey(key);
   *result = msgHdr;
   
-  nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+//  nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
   
-  return rv;
+  return NS_OK;
 }
+*/
