@@ -19,40 +19,25 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 
-DIRS=util functions
-
-LIBRARY_NAME=transformix_xslt
+LIBRARY_NAME=transformix_xslt_functions
 MODULE=transformix
 REQUIRES=xpcom raptor
 
-DEFINES=-DMOZILLA
-
 CPPSRCS=					\
-	Names.cpp				\
-	Numbering.cpp				\
-	OutputFormat.cpp			\
-	ProcessorState.cpp			\
-	VariableBinding.cpp			\
-	XSLTProcessor.cpp			\
+	GenerateIDFunctionCall.cpp		\
 	$(NULL)
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\Names.obj			\
-	.\$(OBJDIR)\Numbering.obj		\
-	.\$(OBJDIR)\OutputFormat.obj		\
-	.\$(OBJDIR)\ProcessorState.obj		\
-	.\$(OBJDIR)\VariableBinding.obj		\
-	.\$(OBJDIR)\XSLTProcessor.obj		\
+CPP_OBJS=						\
+	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
 	$(NULL)
 
-EXPORTS = 					\
-	XSLTProcessor.h				\
+EXPORTS =	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
-      -I..\base -I ..\xml -I ..\xml\util -I .\util -I ..\net -I..\xml\parser -I.\functions
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
+      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util
 
 LCFLAGS = \
         $(LCFLAGS) \

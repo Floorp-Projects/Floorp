@@ -45,20 +45,21 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I..\source\xml\dom -I..\source\xml\util \
+LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\source\xslt\functions \
+      -I..\source\xml\dom -I..\source\xml\dom\mozImpl -I..\source\xml\util \
       -I..\source\xpath -I..\source\xslt\util -I..\source\xml -I..\source\xslt \
       -I..\source\base -I..\source\net -I..\source\xml\parser
       
 # These are the libraries we need to link with to create the dll
 LLIBS=												\
- $(DIST)\lib\xpcom.lib                              \
- $(DIST)\lib\transformix_base.lib					\
- $(DIST)\lib\transformix_xml.lib					\
+ $(DIST)\lib\xpcom.lib					\
+ $(DIST)\lib\transformix_base.lib			\
+ $(DIST)\lib\transformix_xml.lib			\
  $(DIST)\lib\transformix_xml_dom_mozImpl.lib		\
- $(DIST)\lib\transformix_xsl.lib					\
- $(DIST)\lib\transformix_xsl_expr.lib				\
- $(DIST)\lib\transformix_xsl_util.lib
+ $(DIST)\lib\transformix_xslt.lib			\
+ $(DIST)\lib\transformix_xpath.lib			\
+ $(DIST)\lib\transformix_xslt_util.lib			\
+ $(DIST)\lib\transformix_xslt_functions.lib			
 
 include <$(DEPTH)\config\rules.mak>
 

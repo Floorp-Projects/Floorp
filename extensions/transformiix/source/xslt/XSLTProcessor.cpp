@@ -35,7 +35,7 @@
  * Nathan Pride, npride@wavo.com
  *    -- fixed a document base issue
  *
- * $Id: XSLTProcessor.cpp,v 1.9 2000/04/20 22:10:03 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.10 2000/04/21 02:20:26 nisheeth%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -48,7 +48,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2000/04/20 22:10:03 $
+ * @version $Revision: 1.10 $ $Date: 2000/04/21 02:20:26 $
 **/
 
 /**
@@ -920,7 +920,7 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    String name;
+                    DOMString name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     Attr* newAttr = 0;
                     //-- check name validity
@@ -1042,7 +1042,7 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    String name;
+                    DOMString name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     Element* element = 0;
                     //-- check name validity
@@ -1169,7 +1169,7 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    String name;
+                    DOMString name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     //-- check name validity
                     if ( !XMLUtils::isValidQName(name)) {
@@ -1309,7 +1309,7 @@ void XSLTProcessor::processAction
                         Attr* attr = (Attr*) nonXSLAtts.get(i);
                         Attr* newAttr = resultDoc->createAttribute(attr->getName());
                         //-- process Attribute Value Templates
-                        String value;
+                        DOMString value;
                         processAttrValueTemplate(attr->getValue(), value, node, ps);
                         newAttr->setValue(value);
                         ps->addToResultTree(newAttr);
