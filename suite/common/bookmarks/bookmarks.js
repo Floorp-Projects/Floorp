@@ -70,6 +70,13 @@ function OpenURL(event, node)
 
 function DoSingleClick(event, node)
 {
+	var type = node.parentNode.parentNode.getAttribute('type');
+	if (type == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+	{
+		// don't allow inline editing of separators
+		return(false);
+	}
+
 	gEditNode = node;
 	
 	// edit node if we don't get a double-click in less than 1/2 second
