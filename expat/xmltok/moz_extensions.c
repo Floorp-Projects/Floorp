@@ -83,15 +83,15 @@ int MOZ_XMLCheckQName(const char* ptr, const char* end, int ns_aware,
     case BT_COLON:
       if (ns_aware) {
         if (*colon != 0 || nmstrt || ptr + 2 == end) {
-          // We already encountered a colon or this is the first or the last
-          // character so the QName is malformed.
+          /* We already encountered a colon or this is the first or the last
+             character so the QName is malformed. */
           result |= MOZ_EXPAT_MALFORMED;
         }
         *colon = ptr;
         nmstrt = 1;
       }
       else if (nmstrt) {
-        // This is the first character so the QName is malformed.
+        /* This is the first character so the QName is malformed. */
         result |= MOZ_EXPAT_MALFORMED;
         nmstrt = 0;
       }
@@ -99,8 +99,8 @@ int MOZ_XMLCheckQName(const char* ptr, const char* end, int ns_aware,
     case BT_NONASCII:
       if (nmstrt) {
         if (!IS_NMSTRT_CHAR_MINBPC(ptr)) {
-          // If this is a valid name character the QName is malformed,
-          // otherwise it contains an invalid character.
+          /* If this is a valid name character the QName is malformed, 
+             otherwise it contains an invalid character. */
           result |= IS_NAME_CHAR_MINBPC(ptr) ? MOZ_EXPAT_MALFORMED :
                                                MOZ_EXPAT_INVALID_CHARACTER;
         }
