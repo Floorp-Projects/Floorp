@@ -68,9 +68,8 @@
 
 #ifdef ClientWallet
 #include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
 #include "nsFileLocations.h"
-static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -329,20 +328,11 @@ nsBrowserAppCore::Stop()
 //#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
 
 nsresult ProfileDirectory(nsFileSpec& dirSpec) {
-  nsresult rv;
-  nsIFileLocator* locator = nsnull;
-  rv = nsServiceManager::GetService
-    (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!locator) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = locator->GetFileLocation
-     (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
-  nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-  return rv;
+  nsIFileSpec* spec = NS_LocateFileOrDirectory(
+  						nsSpecialFileSpec::App_UserProfileDirectory50);
+  if (!spec)
+  	return NS_ERROR_FAILURE;
+  return spec->GetFileSpec(&dirSpec);
 }
 
 PRInt32

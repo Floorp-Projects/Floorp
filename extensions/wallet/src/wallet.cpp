@@ -41,6 +41,7 @@
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
 #include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
 #include "nsFileLocations.h"
 #include "xp_mem.h"
 #include "prmem.h"
@@ -684,20 +685,12 @@ Wallet_BadKey() {
 }
 
 PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
-  nsresult rv;
-  nsIFileLocator* locator = nsnull;
-  rv = nsServiceManager::GetService
-    (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!locator) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = locator->GetFileLocation
-     (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
-  nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-  return rv;
+
+  nsIFileSpec* spec = NS_LocateFileOrDirectory(
+  							nsSpecialFileSpec::App_UserProfileDirectory50);
+  if (!spec)
+  	return NS_ERROR_FAILURE;
+  return spec->GetFileSpec(&dirSpec);
 }
 
 /* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
