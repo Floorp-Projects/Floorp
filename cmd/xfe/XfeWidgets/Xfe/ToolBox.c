@@ -47,6 +47,7 @@
 #define DIRECTION_NONE		0
 #define DIRECTION_DOWN		1
 #define DIRECTION_UP		-1
+#define FAR_AWAY		-1000
 
 #define CHECK_RANGE(tp,i) \
 ( ( (i) >= 0 ) && ( i < (tp) -> item_count ) )
@@ -603,7 +604,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 
 	/* Composite Part */
 	{
-		XtInheritGeometryManager,				/* geometry_manager		*/
+		_XfeLiberalGeometryManager,				/* geometry_manager		*/
 		XtInheritChangeManaged,					/* change_managed		*/
 		XtInheritInsertChild,					/* insert_child			*/
 		XtInheritDeleteChild,					/* delete_child			*/
@@ -897,21 +898,23 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 
 	for (i = 0; i < tp->item_count; i++)
 	{
+		Widget item = tp->items[i];
+
 		/* Shown */
-		if (_XfeChildIsShown(tp->items[i]))
+		if (_XfeChildIsShown(item))
 		{
 			/* Open */
-			if (_XfeToolBoxChildOpen(tp->items[i]))
+			if (_XfeToolBoxChildOpen(item))
 			{
-				*height += (_XfeHeight(tp->items[i]) + tp->vertical_spacing);
+				int dy = _XfeHeight(item) + tp->vertical_spacing;
+
+				*height += dy;
 			}
 			/* Closed */
 			else
 			{
-				total_tab_width += (_XfeHeight(tp->items[i]) + 
-									tp->horizontal_spacing);
-
-				total_tab_height = _XfePreferredHeight(tp->closed_tabs[i]);
+				total_tab_width += (_XfeHeight(item) + tp->horizontal_spacing);
+				total_tab_height = _XfeHeight(tp->closed_tabs[i]);
 			}
 		}
 	}
@@ -963,13 +966,13 @@ LayoutComponents(Widget w)
 									
 									y,
 
-									_XfePreferredWidth(tp->opened_tabs[i]),
+									_XfeWidth(tp->opened_tabs[i]),
 									
 									_XfeHeight(tp->items[i]));
 				
 				y += (_XfeHeight(tp->items[i]) + tp->vertical_spacing);
 
-				_XfeMoveWidget(tp->closed_tabs[i],-1000,-1000);
+				_XfeMoveWidget(tp->closed_tabs[i],FAR_AWAY,FAR_AWAY);
 			}
 			/* Closed */
 			else
@@ -982,22 +985,22 @@ LayoutComponents(Widget w)
 									
 									_XfeHeight(w) - 
 									_XfemOffsetBottom(w) -
-									_XfePreferredHeight(tp->closed_tabs[i]),
+									_XfeHeight(tp->closed_tabs[i]),
 									
 									width,
 								
-									_XfePreferredHeight(tp->closed_tabs[i]));
+									_XfeHeight(tp->closed_tabs[i]));
 				
 				x += width;
 
-				_XfeMoveWidget(tp->opened_tabs[i],-1000,-1000);
+				_XfeMoveWidget(tp->opened_tabs[i],FAR_AWAY,FAR_AWAY);
 			}
 		}
 		/* Item is unmanaged */
 		else
 		{
-			_XfeMoveWidget(tp->closed_tabs[i],-1000,-1000);
-			_XfeMoveWidget(tp->opened_tabs[i],-1000,-1000);
+			_XfeMoveWidget(tp->closed_tabs[i],FAR_AWAY,FAR_AWAY);
+			_XfeMoveWidget(tp->opened_tabs[i],FAR_AWAY,FAR_AWAY);
 		}
 	}
 }
@@ -1019,28 +1022,31 @@ LayoutChildren(Widget w)
 			if (_XfeChildIsShown(item))
 			{
 				/* Open */
-				if (_XfeToolBoxChildOpen(tp->items[i]))
+				if (_XfeToolBoxChildOpen(item))
 				{
+					int width;
+					int height;
+
+					width = _XfemRectWidth(w) - _XfeWidth(tp->opened_tabs[i]);
+					height = _XfeHeight(item);
+
 					_XfeConfigureWidget(item,
 										
 										_XfemRectX(w) + 
-										_XfePreferredWidth(tp->opened_tabs[i]),
+										_XfeWidth(tp->opened_tabs[i]),
 										
 										y,
 										
-										_XfemRectWidth(w) - 
-										_XfePreferredWidth(tp->opened_tabs[i]),
+										width,
 										
-										_XfeHeight(item));
+										height);
 						   
 					y += (_XfeHeight(item) + tp->vertical_spacing);
-
-					XtVaSetValues(item,XmNmappedWhenManaged,True,NULL);
 				}
 				/* Closed */
 				else
 				{
-					XtVaSetValues(item,XmNmappedWhenManaged,False,NULL);
+					_XfeMoveWidget(item,FAR_AWAY,FAR_AWAY);
 				}
 			}
 		}
@@ -1223,10 +1229,10 @@ ActiveItemCount(Widget w)
 
 	for (i = 0; i < tp->item_count; i++)
 	{
-		Widget child = tp->items[i];
+		Widget item = tp->items[i];
 
 		/* Shown and open */
-		if (_XfeChildIsShown(child) && _XfeToolBoxChildOpen(tp->items[i]))
+		if (_XfeChildIsShown(item) && _XfeToolBoxChildOpen(item))
 		{
 			managed_item_count++;
 		}
@@ -1725,7 +1731,7 @@ MaxItemY(Widget item)
 	/* Include the closed tab button height if any are active */
 	if (ActiveItemCount(w) < tp->item_count)
 	{
-		max_y -= _XfePreferredHeight(tp->closed_tabs[tp->item_count - 1]);
+		max_y -= _XfeHeight(tp->closed_tabs[tp->item_count - 1]);
 	}
 
 	max_y -= _XfeHeight(item);
