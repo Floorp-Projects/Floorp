@@ -1096,6 +1096,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
     mZips(16),
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheLookups(0),
+    mZipCacheHits(0),
+    mZipCacheFlushes(0),
+#endif
     mFreeCount(0)
 {
   NS_INIT_REFCNT();
@@ -1126,6 +1131,12 @@ nsZipReaderCache::~nsZipReaderCache()
   if (mLock)
     PR_DestroyLock(mLock);
   mZips.Enumerate(DropZipReaderCache, nsnull);
+
+#ifdef ZIP_CACHE_HIT_RATE
+  printf("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d\n",
+         mZipCacheHits, mZipCacheLookups, (float)mZipCacheHits / mZipCacheLookups,
+         mZipCacheFlushes);
+#endif
 }
 
 NS_METHOD
@@ -1149,6 +1160,10 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   nsresult rv;
   nsAutoLock lock(mLock);
 
+#ifdef ZIP_CACHE_HIT_RATE
+  mZipCacheLookups++;
+#endif
+
   nsXPIDLCString path;
   rv = zipFile->GetPath(getter_Copies(path));
   if (NS_FAILED(rv)) return rv;
@@ -1156,6 +1171,9 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   nsCStringKey key(path);
   nsJAR* zip = (nsJAR*)mZips.Get(&key); // AddRefs
   if (zip) {
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheHits++;
+#endif
     if (zip->GetReleaseTime() != PR_INTERVAL_NO_TIMEOUT) {
       // this was an otherwise-free entry, so decrement our free counter
       NS_ASSERTION(mFreeCount > 0, "mFreeCount screwed up");
@@ -1222,6 +1240,10 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
     mZips.Enumerate(FindOldestZip, &oldest);
   }
   NS_ASSERTION(oldest, "wacked");
+
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheFlushes++;
+#endif
 
   // remove from hashtable
   nsCOMPtr<nsIFile> zipFile;

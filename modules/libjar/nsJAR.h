@@ -171,7 +171,9 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsZipCacheEntry;
+#ifdef DEBUG_warren
+#define ZIP_CACHE_HIT_RATE
+#endif
 
 class nsZipReaderCache : public nsIZipReaderCache
 {
@@ -192,6 +194,13 @@ protected:
   PRInt32               mCacheSize;
   nsSupportsHashtable   mZips;
   PRUint32              mFreeCount;
+
+#ifdef ZIP_CACHE_HIT_RATE
+  PRUint32              mZipCacheLookups;
+  PRUint32              mZipCacheHits;
+  PRUint32              mZipCacheFlushes;
+#endif
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
