@@ -130,11 +130,14 @@ function doSort(sortColName)
 
   <menubar>
     <menu value="&fileMenu.label;">
+	  <menupopup>
       <menuitem value="&newWinCmd.label;" onaction="HistoryNewWindow();"/>
       <menuseparator/>
       <menuitem value="&closeCmd.label;"/>
+	  </menupopup>
     </menu>
     <menu value="&editMenu.label;">
+	  <menupopup>
       <menuitem value="&undoCmd.label;"/>
       <menuitem value="&redoCmd.label;"/>
       <menuseparator/>
@@ -146,6 +149,7 @@ function doSort(sortColName)
       <menuseparator/>
       <menuitem value="&findHisCmd.label;"/>
       <menuitem value="&findAgainCmd.label;"/>
+	  </menupopup>
     </menu>
   </menubar>
 
