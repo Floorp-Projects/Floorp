@@ -382,24 +382,27 @@ then
         export XSUNTRANSPORT XSUNSMESIZE
 fi
 
-echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
-echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-if [ -n "$LD_LIBRARYN32_PATH" ]
+if [ "$moz_debug" ]
 then
-	echo "LD_LIBRARYN32_PATH=$LD_LIBRARYN32_PATH"
+  echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
+  echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+  if [ -n "$LD_LIBRARYN32_PATH" ]
+  then
+  	echo "LD_LIBRARYN32_PATH=$LD_LIBRARYN32_PATH"
+  fi
+  if [ -n "$LD_LIBRARYN64_PATH" ]
+  then
+  	echo "LD_LIBRARYN64_PATH=$LD_LIBRARYN64_PATH"
+  fi
+  echo "     LIBRARY_PATH=$LIBRARY_PATH"
+  echo "       SHLIB_PATH=$SHLIB_PATH"
+  echo "          LIBPATH=$LIBPATH"
+  echo "       ADDON_PATH=$ADDON_PATH"
+  echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
+  echo "      MOZ_TOOLKIT=$MOZ_TOOLKIT"
+  echo "        moz_debug=$moz_debug"
+  echo "     moz_debugger=$moz_debugger"
 fi
-if [ -n "$LD_LIBRARYN64_PATH" ]
-then
-	echo "LD_LIBRARYN64_PATH=$LD_LIBRARYN64_PATH"
-fi
-echo "     LIBRARY_PATH=$LIBRARY_PATH"
-echo "       SHLIB_PATH=$SHLIB_PATH"
-echo "          LIBPATH=$LIBPATH"
-echo "       ADDON_PATH=$ADDON_PATH"
-echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
-echo "      MOZ_TOOLKIT=$MOZ_TOOLKIT"
-echo "        moz_debug=$moz_debug"
-echo "     moz_debugger=$moz_debugger"
 #
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 export SHLIB_PATH LIBPATH LIBRARY_PATH ADDON_PATH

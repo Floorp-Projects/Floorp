@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.10 2001/01/23 15:34:56 cls%seawood.org Exp $
+## $Id: mozilla,v 1.11 2001/11/03 05:05:47 seawood%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -66,5 +66,8 @@ do
 done
 
 eval "set -- $moreargs"
-echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+if [ $debugging = 1 ]
+then
+  echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+fi
 exec $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
