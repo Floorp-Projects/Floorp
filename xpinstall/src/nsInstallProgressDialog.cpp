@@ -26,6 +26,7 @@
 
 #include "nsInstallProgressDialog.h"
 
+#include "nsIAppShellComponentImpl.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "nsIDOMWindow.h"
