@@ -16,15 +16,15 @@
  * Reserved.
  */
 #include "nsPlaceholderFrame.h"
+#include "nsCSSLayout.h"
+#include "nsLineLayout.h"
+#include "nsHTMLIIDs.h"
+
 #include "nsIContent.h"
 #include "nsIFloaterContainer.h"
-#include "nsBodyFrame.h"
-#include "nsIStyleContext.h"
-#include "nsCSSLayout.h"
-#include "nsIView.h"
-#include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsBlockFrame.h"
+#include "nsIRenderingContext.h"
+#include "nsIStyleContext.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
