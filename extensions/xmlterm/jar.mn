@@ -1,0 +1,15 @@
+packages/xmlterm.jar:
+	xmlterm/content/xmlterm.xul            (xul/content/xmlterm.xul)
+	xmlterm/content/XMLTermOverlay.xul     (xul/contentXMLTermOverlay.xul)
+	xmlterm/content/XMLTermChrome.js       (xul/contentXMLTermChrome.js)
+	xmlterm/content/XMLTermCommands.js     (xul/contentXMLTermCommands.js)
+	xmlterm/content/XMLTermOverlay.js      (xul/contentXMLTermOverlay.js)
+	xmlterm/content/xmlterm.html           (xul/content/xmlterm.html)
+	xmlterm/content/xmltermAbout.html      (xul/content/xmltermAbout.html)
+	xmlterm/content/xmltermTips.html       (xul/content/xmltermTips.html)
+
+	xmlterm/skin/xmlterm.css               (xul/skin/xmlterm.css)
+	xmlterm/skin/xmltpage.css              (xul/skin/xmltpage.css)
+	xmlterm/skin/wheel.gif                 (xul/skin/wheel.gif)
+
+	manifest.rdf                           (xul/manifest.rdf)
