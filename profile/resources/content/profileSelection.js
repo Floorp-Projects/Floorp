@@ -220,7 +220,6 @@ function onStart()
     }
 
     profile.startApprunner(profilename);
-    ExitApp();
   }
   catch (ex) {
     //var stringA = gProfileManagerBundle.getString(failProfileStartA);
@@ -236,21 +235,11 @@ function onExit()
 {
   try {
     profile.forgetCurrentProfile();
+    window.close();
   }
   catch (ex) {
     dump("Failed to forget current profile.\n");
   }
-  ExitApp();
-}
-
-// function : <profileSelection.js>::ExitApp();
-// purpose  : halts startup process forcefully
-function ExitApp()
-{
-  // Need to call this to stop the event loop
-  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
-  appShell.Quit();
 }
 
 function foo()

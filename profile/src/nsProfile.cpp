@@ -75,6 +75,7 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWindowMediator.h"
+#include "nsIWindowWatcher.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -111,6 +112,11 @@
 #else /* the rest */
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #endif 
+
+const char* kWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+const char* kDialogParamBlockContractID = "@mozilla.org/embedcomp/dialogparam;1";
+
+const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
 
 // we want everyone to have the debugging info to the console for now
 // to help track down profile manager problems
@@ -468,24 +474,24 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     if (profileURLStr.Length() != 0)
     {
         if (!canInteract) return NS_ERROR_PROFILE_REQUIRES_INTERACTION;
-        
-        NS_WITH_SERVICE(nsIAppShellService, profAppShell, kAppShellServiceCID, &rv);
+
+        nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(kWindowWatcherContractID, &rv));
         if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
+ 
+        // We need to send a param to OpenWindow if the window is to be considered
+        // a dialog. It needs to be for script security reasons. This param block
+        // will be made use of soon. See bug 66833.
+        nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
         if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIXULWindow> profWindow;
-        rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
-                                                PR_TRUE, PR_TRUE, CHROME_STYLE,
-                                                NS_SIZETOCONTENT,           // width 
-                                                NS_SIZETOCONTENT,           // height
-                                                getter_AddRefs(profWindow));
-
+       
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = windowWatcher->OpenWindow(nsnull,
+                                       profileURLStr.get(),
+                                       "_blank",
+                                       kDefaultOpenWindowParams,
+                                       ioParamBlock,
+                                       getter_AddRefs(newWindow));
         if (NS_FAILED(rv)) return rv;
-
-        // Start an event loop for the modal dialog
-        rv = profAppShell->Run();
     }
 
     PRBool confirmAutomigration = PR_FALSE;

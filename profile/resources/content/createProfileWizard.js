@@ -76,7 +76,7 @@ function onCancel()
     catch (ex) {
       dump("failed to forget current profile.\n");
     }
-    ExitApp();
+    window.close();
   }
 }
 
@@ -126,12 +126,11 @@ function onFinish()
 
     if( window.opener ) {
       window.opener.CreateProfile(profName, profDir);
-      window.close();
     }
     else {
       profile.startApprunner(profName);
-      ExitApp();
     }
+    window.close();
   }
   else
     return;
@@ -201,15 +200,3 @@ function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
   }
 }
 
-/** void ExitApp( void ) ;
- *  - purpose: quits the application properly and finally, stops event loop
- *  - in:  nothing
- *  - out: nothing
- **/               
-function ExitApp()
-{
-  // Need to call this to stop the event loop
-  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
-  appShell.Quit();
-}
