@@ -271,6 +271,7 @@ SetUpBlend()
 {
 void              *bits1,*bits2;
 nsresult          rv;
+nsIDeviceContext  *dx;
 
   static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
   static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
@@ -291,7 +292,8 @@ nsresult          rv;
     gDobits = (HBITMAP)::SelectObject(gDestdc, gDestbits);
 
     rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
-    gImageblender->Init(gSrcdc,gDestdc);
+    //gImageblender->Init(gSrcdc,gDestdc);
+    gImageblender->Init(dx);
   }
 }
 
@@ -325,7 +327,7 @@ BITMAP              srcinfo;
 LPBITMAPINFOHEADER  srcbinfo;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
-  dstdc = (HDC)aBlender->GetDstDS();
+  //dstdc = (HDC)aBlender->GetDstDS();
 
   aBlender->RestoreImage(dstdc);
 
@@ -519,11 +521,11 @@ LPBITMAPINFOHEADER  srcbinfo;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
 
-  srcdc = (HDC)aBlender->GetSrcDS();
-  dstdc = (HDC)aBlender->GetDstDS();
+  //srcdc = (HDC)aBlender->GetSrcDS();
+  //dstdc = (HDC)aBlender->GetDstDS();
 
-  result = aBlender->Blend(aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);
-
+  //result = aBlender->Blend(aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);gSrcdc
+  result = aBlender->Blend(aSX,aSY,aWidth,aHeight,srcdc,dstdc,0, 0,aBlendAmount,aBuff);
   if(result == NS_OK)
     {
     // this takes the Destination DC and copies the information into aImage

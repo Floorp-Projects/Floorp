@@ -33,25 +33,19 @@ nsBlender :: nsBlender()
 
 }
 
-/** --------------------------------------------------------------------------
-* Initialize a nsBlender object, or re-initialize if it is re-used
-* @update dc - 10/29/98
-* @param aSrc -- source drawing surface
-* @param aDst -- destination drawing surface
-* @result NS_OK if everything initialized
-*/
-nsBlender :: ~nsBlender()
+nsBlender::~nsBlender() 
 {
 
 
 }
+
 
 NS_IMPL_ISUPPORTS(nsBlender, kIBlenderIID);
 
 //------------------------------------------------------------
 
 nsresult
-nsBlender::Init(nsDrawingSurface aSrc, nsDrawingSurface aDst)
+nsBlender::Init(nsIDeviceContext *aTheDevCon)
 {
   return NS_OK;
 }
@@ -508,7 +502,7 @@ extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *di
  * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
 {
 PRUint32   r,g,b,r1,g1,b1,i;
 PRUint8   *d1,*d2,*s1,*s2;
@@ -516,26 +510,48 @@ PRInt32   x,y,val1,val2,numlines,xinc,yinc;;
 PRUint8   *mapptr,*invermap;
 PRUint32  *distbuffer;
 PRUint32  quantlevel,tnum,num,shiftnum;
+NI_RGB    *map;
 
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
   val1 = 255-val2;
 
-  // calculate the inverse map
-  mapptr = aColorMap->Index;       
+  // build a colormap we can use to get an inverse map
+  map = aColorMap->cmap.map+10;
+  mapptr = new PRUint8[256*3];
+  invermap = mapptr;
+  for(i=0;i<216;i++){
+    *invermap=map->red;
+    invermap++;
+    *invermap=map->green;
+    invermap++;
+    *invermap=map->blue;
+    invermap++;
+    map++;
+  }
+  for(i=216;i<256;i++){
+    *invermap=255;
+    invermap++;
+    *invermap=255;
+    invermap++;
+    *invermap=255;
+    invermap++;
+  }
+
   quantlevel = aBlendQuality+2;
-  shiftnum = (8-quantlevel)+8;
-  tnum = 2;
+  quantlevel = 4;                   // 4  
+  shiftnum = (8-quantlevel)+8;      // 12
+  tnum = 2;                         // 2
   for(i=1;i<quantlevel;i++)
-    tnum = 2*tnum;
+    tnum = 2*tnum;                  // 2, 4, 8, tnum = 16 
 
-  num = tnum;
+  num = tnum;                       // num = 16
   for(i=1;i<3;i++)
-    num = num*tnum;
+    num = num*tnum;                 // 256, 4096
 
-  distbuffer = new PRUint32[num];
-  invermap  = new PRUint8[num*3];
-  inv_colormap(256,mapptr,quantlevel,distbuffer,invermap );
+  distbuffer = new PRUint32[num];   // new PRUint[4096]
+  invermap  = new PRUint8[num*3];   // new PRUint8[12288]
+  inv_colormap(256,mapptr,quantlevel,distbuffer,invermap );  // 216,mapptr[],4,distbuffer[4096],invermap[12288])
 
   // now go thru the image and blend (remember, its bottom upwards)
   s1 = aSImage;
@@ -551,24 +567,27 @@ PRUint32  quantlevel,tnum,num,shiftnum;
 
     for(x = 0; x < aNumbytes; x++){
       i = (*d2);
-      r = aColorMap->Index[(3 * i) + 2];
-      g = aColorMap->Index[(3 * i) + 1];
-      b = aColorMap->Index[(3 * i)];
+      r = mapptr[(3 * i) + 2];
+      g = mapptr[(3 * i) + 1];
+      b = mapptr[(3 * i)];
 
       i =(*s2);
-      r1 = aColorMap->Index[(3 * i) + 2];
-      g1 = aColorMap->Index[(3 * i) + 1];
-      b1 = aColorMap->Index[(3 * i)];
+      r1 = mapptr[(3 * i) + 2];
+      g1 = mapptr[(3 * i) + 1];
+      b1 = mapptr[(3 * i)];
 
-      r = ((r*val1)+(r1*val2))>>shiftnum;
+      //r = ((r*val1)+(r1*val2))>>shiftnum;
+      r=r>>quantlevel;
       if(r>tnum)
         r = tnum;
 
-      g = ((g*val1)+(g1*val2))>>shiftnum;
+      //g = ((g*val1)+(g1*val2))>>shiftnum;
+      g=g>>quantlevel;
       if(g>tnum)
         g = tnum;
 
-      b = ((b*val1)+(b1*val2))>>shiftnum;
+      //b = ((b*val1)+(b1*val2))>>shiftnum;
+      b=b>>quantlevel;
       if(b>tnum)
         b = tnum;
 
@@ -608,7 +627,7 @@ static PRInt32 blueloop( PRInt32 );
  * @update dc - 10/29/98
  * @param colors -- Number of colors
  * @param aCMap -- The color map
- * @param aBits -- The bits to make the color map from
+ * @param aBits -- Resolution in bits for the inverse map
  * @param dist_buf -- a buffer to hold the temporary colors in while we calculate the map
  * @param aRGBMap -- the map to put the inverse colors into for the color table
  * @return VOID
