@@ -613,6 +613,40 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsIURI> uri;
+  if (aChannel) {
+
+    aChannel->GetOriginalURI(getter_AddRefs(uri));
+
+    PRBool isChrome = PR_FALSE;
+    PRBool isRes = PR_FALSE;
+    (void)uri->SchemeIs("chrome", &isChrome);
+    (void)uri->SchemeIs("resource", &isRes);
+
+    if (!isChrome && !isRes)
+      aChannel->GetURI(getter_AddRefs(uri));
+  }
+
+  rv = ResetToURI(uri, aLoadGroup);
+
+  if (aChannel) {
+    nsCOMPtr<nsISupports> owner;
+    aChannel->GetOwner(getter_AddRefs(owner));
+    if (owner)
+      owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+  }
+
+  if (NS_SUCCEEDED(rv))
+    rv = NS_NewNameSpaceManager(&mNameSpaceManager);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
+{
+  nsresult rv = NS_OK;
+
   mDocumentTitle.Truncate();
 
   NS_IF_RELEASE(mDocumentURL);
@@ -661,33 +695,12 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   mStyleSheets.Clear();
 
   NS_IF_RELEASE(mListenerManager);
-
   NS_IF_RELEASE(mNameSpaceManager);
 
   mDOMStyleSheets = nsnull; // Release the stylesheets list.
 
-
-  if (aChannel) {
-
-      nsCOMPtr<nsIURI> uri;
-      (void) aChannel->GetOriginalURI(getter_AddRefs(uri));
-
-      PRBool isChrome = PR_FALSE;
-      PRBool isRes = PR_FALSE;
-      (void)uri->SchemeIs("chrome", &isChrome);
-      (void)uri->SchemeIs("resource", &isRes);
-
-      if (isChrome || isRes)
-            (void)aChannel->GetOriginalURI(&mDocumentURL);
-      else
-            (void)aChannel->GetURI(&mDocumentURL);
-
-    nsCOMPtr<nsISupports> owner;
-    aChannel->GetOwner(getter_AddRefs(owner));
-    if (owner)
-      owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
-  }
-
+  mDocumentURL = aURI;
+  NS_IF_ADDREF(mDocumentURL);
   mDocumentBaseURL = mDocumentURL;
 
   if (aLoadGroup) {
@@ -788,6 +801,7 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return rv;
+    NS_WARN_IF_FALSE(mDocumentURL, "no URL!");
     if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
                                                              &mPrincipal)))
         return rv;
