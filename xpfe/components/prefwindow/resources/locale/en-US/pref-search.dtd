@@ -14,3 +14,4 @@
 
 <!--LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
 <!ENTITY  defaultengine.label "(Default)">
+<!ENTITY  searchResults.label "Search Results">
