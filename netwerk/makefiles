@@ -28,6 +28,7 @@ netwerk/streamconv/Makefile
 netwerk/streamconv/public/Makefile
 netwerk/streamconv/src/Makefile
 netwerk/test/Makefile
+netwerk/testserver/Makefile
 netwerk/util/Makefile
 netwerk/util/public/Makefile
 netwerk/util/src/Makefile
