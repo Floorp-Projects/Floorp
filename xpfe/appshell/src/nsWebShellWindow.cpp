@@ -1548,8 +1548,9 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    // Note: null nsIStreamObserver means this window won't be able to answer FE_callback-type
    // questions from netlib.  Observers are generally appcores.  We'll have to supply
    // a generic browser appcore here someday.
+   nsAutoString controllerID("43147b80-8a39-11d2-9938-0080c7cb1081"); // time for this hack to die, or what?
    rv = Initialize(nsnull, aAppShell, urlObj,
-       nsAutoString("43147b80-8a39-11d2-9938-0080c7cb1081"), // time for this hack to die, or what?
+       controllerID,
        nsnull, nsnull, aBounds.width, aBounds.height);
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);
