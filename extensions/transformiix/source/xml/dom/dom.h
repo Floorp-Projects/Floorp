@@ -23,8 +23,6 @@
 
 #ifdef TX_EXE
 #include "standalone/dom.h"
-#else
-#include "mozImpl/mozilladom.h"
 #endif
 
 #endif

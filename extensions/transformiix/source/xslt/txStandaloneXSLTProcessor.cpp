@@ -43,7 +43,6 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "txHTMLOutput.h"
-#include "txSingleNodeContext.h"
 #include "txTextOutput.h"
 #include "txUnknownHandler.h"
 #include "txURIUtils.h"
@@ -127,13 +126,13 @@ nsresult
 txStandaloneXSLTProcessor::transform(nsACString& aXMLPath, ostream& aOut,
                                      ErrorObserver& aErr)
 {
-    Document* xmlDoc = parsePath(aXMLPath, aErr);
+    txXPathNode* xmlDoc = parsePath(aXMLPath, aErr);
     if (!xmlDoc) {
         return NS_ERROR_FAILURE;
     }
 
     // transform
-    nsresult rv = transform(xmlDoc, aOut, aErr);
+    nsresult rv = transform(*xmlDoc, aOut, aErr);
 
     delete xmlDoc;
 
@@ -149,7 +148,7 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
                                      nsACString& aXSLPath, ostream& aOut,
                                      ErrorObserver& aErr)
 {
-    Document* xmlDoc = parsePath(aXMLPath, aErr);
+    txXPathNode* xmlDoc = parsePath(aXMLPath, aErr);
     if (!xmlDoc) {
         return NS_ERROR_FAILURE;
     }
@@ -162,7 +161,7 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
         return rv;
     }
     // transform
-    rv = transform(xmlDoc, style, aOut, aErr);
+    rv = transform(*xmlDoc, style, aOut, aErr);
 
     delete xmlDoc;
 
@@ -175,24 +174,24 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
  * or an error is returned.
  */
 nsresult
-txStandaloneXSLTProcessor::transform(Document* aXMLDoc, ostream& aOut,
+txStandaloneXSLTProcessor::transform(txXPathNode& aXMLDoc, ostream& aOut,
                                      ErrorObserver& aErr)
 {
-    if (!aXMLDoc) {
-        return NS_ERROR_INVALID_POINTER;
-    }
+    Document* xmlDoc;
+    nsresult rv = txXPathNativeNode::getDocument(aXMLDoc, &xmlDoc);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // get stylesheet path
     nsAutoString stylePath, basePath;
-    aXMLDoc->getBaseURI(basePath);
-    getHrefFromStylesheetPI(*aXMLDoc, stylePath);
+    xmlDoc->getBaseURI(basePath);
+    getHrefFromStylesheetPI(*xmlDoc, stylePath);
     txParsedURL base, ref, resolved;
     base.init(basePath);
     ref.init(stylePath);
     base.resolve(ref, resolved);
 
     nsRefPtr<txStylesheet> style;
-    nsresult rv = TX_CompileStylesheetPath(resolved, getter_AddRefs(style));
+    rv = TX_CompileStylesheetPath(resolved, getter_AddRefs(style));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // transform
@@ -206,7 +205,7 @@ txStandaloneXSLTProcessor::transform(Document* aXMLDoc, ostream& aOut,
  * and prints the results to the given ostream argument
  */
 nsresult
-txStandaloneXSLTProcessor::transform(Document* aSource,
+txStandaloneXSLTProcessor::transform(txXPathNode& aSource,
                                      txStylesheet* aStylesheet,
                                      ostream& aOut, ErrorObserver& aErr)
 {
@@ -356,7 +355,7 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(const nsAFlatString& aData,
   }
 }
 
-Document*
+txXPathNode*
 txStandaloneXSLTProcessor::parsePath(const nsACString& aPath, ErrorObserver& aErr)
 {
     NS_ConvertASCIItoUCS2 path(aPath);
@@ -367,7 +366,7 @@ txStandaloneXSLTProcessor::parsePath(const nsACString& aPath, ErrorObserver& aEr
         return 0;
     }
     // parse source
-    Document* xmlDoc;
+    txXPathNode* xmlDoc;
     nsAutoString errors;
     nsresult rv = txParseFromStream(xmlInput, path, errors, &xmlDoc);
     xmlInput.close();

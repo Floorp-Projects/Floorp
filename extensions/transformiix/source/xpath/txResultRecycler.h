@@ -45,7 +45,7 @@
 class txAExprResult;
 class StringResult;
 class txNodeSet;
-class Node;
+class txXPathNode;
 class NumberResult;
 class BooleanResult;
 
@@ -82,8 +82,8 @@ public:
     nsresult getStringResult(const nsAString& aValue, txAExprResult** aResult);
     nsresult getNodeSet(txNodeSet** aResult);
     nsresult getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult);
-    nsresult getNodeSet(Node* aNode, txAExprResult** aResult);
-    nsresult getNodeSet(Node* aNode, txNodeSet** aResult);
+    nsresult getNodeSet(const txXPathNode& aNode, txAExprResult** aResult);
+    nsresult getNodeSet(const txXPathNode& aNode, txNodeSet** aResult);
     nsresult getNumberResult(double aValue, txAExprResult** aResult);
 
     /**

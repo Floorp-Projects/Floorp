@@ -278,84 +278,82 @@ txComment::execute(txExecutionState& aEs)
 }
 
 nsresult
-txCopyBase::copyNode(Node* aNode, txExecutionState& aEs)
+txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
 {
-    NS_ASSERTION(aNode, "missing node to copy");
-    switch (aNode->getNodeType()) {
-        case Node::ATTRIBUTE_NODE:
+    switch (txXPathNodeUtils::getNodeType(aNode)) {
+        case txXPathNodeType::ATTRIBUTE_NODE:
         {
             nsAutoString nodeName, nodeValue;
-            aNode->getNodeName(nodeName);
-            aNode->getNodeValue(nodeValue);
+            txXPathNodeUtils::getNodeName(aNode, nodeName);
+            txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
             aEs.mResultHandler->attribute(nodeName,
-                                          aNode->getNamespaceID(),
+                                          txXPathNodeUtils::getNamespaceID(aNode),
                                           nodeValue);
             break;
         }
-        case Node::COMMENT_NODE:
+        case txXPathNodeType::COMMENT_NODE:
         {
             nsAutoString nodeValue;
-            aNode->getNodeValue(nodeValue);
+            txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
             aEs.mResultHandler->comment(nodeValue);
             break;
         }
-        case Node::DOCUMENT_NODE:
-        case Node::DOCUMENT_FRAGMENT_NODE:
+        case txXPathNodeType::DOCUMENT_NODE:
+        case txXPathNodeType::DOCUMENT_FRAGMENT_NODE:
         {
             // Copy children
-            Node* child = aNode->getFirstChild();
-            while (child) {
-                copyNode(child, aEs);
-                child = child->getNextSibling();
+            txXPathTreeWalker walker(aNode);
+            PRBool hasChild = walker.moveToFirstChild();
+            while (hasChild) {
+                copyNode(walker.getCurrentPosition(), aEs);
+                hasChild = walker.moveToNextSibling();
             }
             break;
         }
-        case Node::ELEMENT_NODE:
+        case txXPathNodeType::ELEMENT_NODE:
         {
-            Element* element = NS_STATIC_CAST(Element*, aNode);
             nsAutoString name;
-            element->getNodeName(name);
-            PRInt32 nsID = element->getNamespaceID();
+            txXPathNodeUtils::getNodeName(aNode, name);
+            PRInt32 nsID = txXPathNodeUtils::getNamespaceID(aNode);
             aEs.mResultHandler->startElement(name, nsID);
 
             // Copy attributes
-            NamedNodeMap* attList = element->getAttributes();
-            if (attList) {
-                PRUint32 i = 0;
-                for (i = 0; i < attList->getLength(); i++) {
-                    Attr* attr = NS_STATIC_CAST(Attr*, attList->item(i));
+            txXPathTreeWalker walker(aNode);
+            if (walker.moveToFirstAttribute()) {
+                do {
                     nsAutoString nodeName, nodeValue;
-                    attr->getNodeName(nodeName);
-                    attr->getNodeValue(nodeValue);
+                    walker.getNodeName(nodeName);
+                    walker.appendNodeValue(nodeValue);
                     aEs.mResultHandler->attribute(nodeName,
-                                                  attr->getNamespaceID(),
+                                                  walker.getNamespaceID(),
                                                   nodeValue);
-                }
+                } while (walker.moveToNextAttribute());
+                walker.moveToParent();
             }
 
             // Copy children
-            Node* child = element->getFirstChild();
-            while (child) {
-                copyNode(child, aEs);
-                child = child->getNextSibling();
+            PRBool hasChild = walker.moveToFirstChild();
+            while (hasChild) {
+                copyNode(walker.getCurrentPosition(), aEs);
+                hasChild = walker.moveToNextSibling();
             }
 
             aEs.mResultHandler->endElement(name, nsID);
             break;
         }
-        case Node::PROCESSING_INSTRUCTION_NODE:
+        case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
         {
             nsAutoString target, data;
-            aNode->getNodeName(target);
-            aNode->getNodeValue(data);
+            txXPathNodeUtils::getNodeName(aNode, target);
+            txXPathNodeUtils::appendNodeValue(aNode, data);
             aEs.mResultHandler->processingInstruction(target, data);
             break;
         }
-        case Node::TEXT_NODE:
-        case Node::CDATA_SECTION_NODE:
+        case txXPathNodeType::TEXT_NODE:
+        case txXPathNodeType::CDATA_SECTION_NODE:
         {
             nsAutoString nodeValue;
-            aNode->getNodeValue(nodeValue);
+            txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
             aEs.mResultHandler->characters(nodeValue, PR_FALSE);
             break;
         }
@@ -373,10 +371,10 @@ nsresult
 txCopy::execute(txExecutionState& aEs)
 {
     nsresult rv = NS_OK;
-    Node* node = aEs.getEvalContext()->getContextNode();
+    const txXPathNode& node = aEs.getEvalContext()->getContextNode();
 
-    switch (node->getNodeType()) {
-        case Node::DOCUMENT_NODE:
+    switch (txXPathNodeUtils::getNodeType(node)) {
+        case txXPathNodeType::DOCUMENT_NODE:
         {
             // "close" current element to ensure that no attributes are added
             aEs.mResultHandler->characters(NS_LITERAL_STRING(""), PR_FALSE);
@@ -389,11 +387,11 @@ txCopy::execute(txExecutionState& aEs)
 
             break;
         }
-        case Node::ELEMENT_NODE:
+        case txXPathNodeType::ELEMENT_NODE:
         {
             nsAutoString nodeName;
-            node->getNodeName(nodeName);
-            PRInt32 nsID = node->getNamespaceID();
+            txXPathNodeUtils::getNodeName(node, nodeName);
+            PRInt32 nsID = txXPathNodeUtils::getNamespaceID(node);
 
             aEs.mResultHandler->startElement(nodeName, nsID);
             // XXX copy namespace nodes once we have them

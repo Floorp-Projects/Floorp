@@ -57,7 +57,6 @@
 #include "txExecutionState.h"
 #include "txMozillaTextOutput.h"
 #include "txMozillaXMLOutput.h"
-#include "txSingleNodeContext.h"
 #include "txURIUtils.h"
 #include "XMLUtils.h"
 #include "txUnknownHandler.h"
@@ -290,24 +289,27 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     nsresult rv = TX_CompileStylesheet(aStyleDOM, getter_AddRefs(mStylesheet));
     NS_ENSURE_SUCCESS(rv, rv);
-    // Create wrapper for the source document.
+
     mSource = aSourceDOM;
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(mSource);
+
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSourceDOM));
+    if (!sourceNode) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ENSURE_TRUE(sourceDOMDocument, NS_ERROR_FAILURE);
-    Document sourceDocument(sourceDOMDocument);
-    Node* sourceNode = sourceDocument.createWrapper(mSource);
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
+    aSourceDOM->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
+    if (!sourceDOMDocument) {
+        sourceDOMDocument = do_QueryInterface(aSourceDOM);
+    }
 
     txExecutionState es(mStylesheet);
+
     txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, aOutputDoc,
                                          nsnull);
     es.mOutputHandlerFactory = &handlerFactory;
 
-    es.init(sourceNode, &mVariables);
+    es.init(*sourceNode, &mVariables);
 
     // Process root of XML source document
     rv = txXSLTProcessor::execute(es);
@@ -348,16 +350,16 @@ txMozillaXSLTProcessor::DoTransform()
     NS_ENSURE_TRUE(mStylesheet, NS_ERROR_UNEXPECTED);
     NS_ASSERTION(mObserver, "no observer");
 
-    // Create wrapper for the source document.
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(mSource));
+    if (!sourceNode) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
     mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
     if (!sourceDOMDocument) {
         sourceDOMDocument = do_QueryInterface(mSource);
     }
-    NS_ENSURE_TRUE(sourceDOMDocument, NS_ERROR_FAILURE);
-    Document sourceDocument(sourceDOMDocument);
-    Node* sourceNode = sourceDocument.createWrapper(mSource);
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
 
     txExecutionState es(mStylesheet);
 
@@ -367,7 +369,7 @@ txMozillaXSLTProcessor::DoTransform()
                                          mObserver);
     es.mOutputHandlerFactory = &handlerFactory;
 
-    es.init(sourceNode, &mVariables);
+    es.init(*sourceNode, &mVariables);
 
     // Process root of XML source document
     nsresult rv = txXSLTProcessor::execute(es);
@@ -437,16 +439,16 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     nsresult rv = ensureStylesheet();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Create wrapper for the source document.
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSource));
+    if (!sourceNode) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
     aSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
     if (!sourceDOMDocument) {
         sourceDOMDocument = do_QueryInterface(aSource);
     }
-    NS_ENSURE_TRUE(sourceDOMDocument, NS_ERROR_FAILURE);
-    Document sourceDocument(sourceDOMDocument);
-    Node* sourceNode = sourceDocument.createWrapper(aSource);
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
 
     txExecutionState es(mStylesheet);
 
@@ -456,7 +458,7 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
                                          nsnull);
     es.mOutputHandlerFactory = &handlerFactory;
 
-    es.init(sourceNode, &mVariables);
+    es.init(*sourceNode, &mVariables);
 
     // Process root of XML source document
     rv = txXSLTProcessor::execute(es);
@@ -490,16 +492,10 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     nsresult rv = ensureStylesheet();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Create wrapper for the source document.
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    aSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(aSource);
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSource));
+    if (!sourceNode) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ENSURE_TRUE(sourceDOMDocument, NS_ERROR_FAILURE);
-    Document sourceDocument(sourceDOMDocument);
-    Node* sourceNode = sourceDocument.createWrapper(aSource);
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
 
     txExecutionState es(mStylesheet);
 
@@ -510,7 +506,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     txToFragmentHandlerFactory handlerFactory(*aResult);
     es.mOutputHandlerFactory = &handlerFactory;
 
-    es.init(sourceNode, &mVariables);
+    es.init(*sourceNode, &mVariables);
 
     // Process root of XML source document
     rv = txXSLTProcessor::execute(es);

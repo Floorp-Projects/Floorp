@@ -76,11 +76,11 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../xpath/txForwardContext.$(OBJ_SUFFIX) \
   ../xpath/txNodeSetContext.$(OBJ_SUFFIX) \
   ../xpath/txResultRecycler.$(OBJ_SUFFIX) \
+  ../xpath/txStandaloneXPathTreeWalker.$(OBJ_SUFFIX) \
   ../xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../xpath/VariableRefExpr.$(OBJ_SUFFIX) \
   ../xml/XMLUtils.$(OBJ_SUFFIX) \
-  ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../xml/parser/txXMLParser.$(OBJ_SUFFIX) \
   ../xslt/txBufferingHandler.$(OBJ_SUFFIX) \
   ../xslt/txExecutionState.$(OBJ_SUFFIX) \

@@ -122,7 +122,7 @@ public:
      * @param aErr    error observer
      * @result NS_OK if transformation was successful
      */
-    nsresult transform(Document* aXMLDoc, ostream& aOut, ErrorObserver& aErr);
+    nsresult transform(txXPathNode& aXMLDoc, ostream& aOut, ErrorObserver& aErr);
 
     /**
      * Transform a XML document with the given stylesheet.
@@ -133,7 +133,7 @@ public:
      * @param aErr     error observer
      * @result NS_OK if transformation was successful
      */
-    nsresult transform(Document* aXMLDoc, txStylesheet* aXSLNode,
+    nsresult transform(txXPathNode& aXMLDoc, txStylesheet* aXSLNode,
                        ostream& aOut, ErrorObserver& aErr);
 
 protected:
@@ -160,7 +160,7 @@ protected:
      * @param aErr  ErrorObserver
      * @result Document XML Document, or null on error
      */
-    static Document* parsePath(const nsACString& aPath, ErrorObserver& aErr);
+    static txXPathNode* parsePath(const nsACString& aPath, ErrorObserver& aErr);
 };
 
 #endif

@@ -36,6 +36,7 @@ REQUIRES +=	  dom \
 		  widget \
 		  locale \
 		  unicharutil \
+		  necko \
 		  $(NULL)
 endif
 

@@ -35,12 +35,13 @@ REQUIRES += 	  dom \
 		  content \
 		  widget \
 		  unicharutil \
+		  necko \
 		  $(NULL)
 endif
 
 DIRS            = dom parser
 
-CPPSRCS	= XMLDOMUtils.cpp XMLUtils.cpp
+CPPSRCS	= XMLUtils.cpp
 
 include $(topsrcdir)/config/rules.mk
 

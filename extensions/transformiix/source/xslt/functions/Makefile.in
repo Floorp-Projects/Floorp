@@ -35,6 +35,7 @@ REQUIRES +=	  dom \
 		  content \
 		  widget \
 		  unicharutil \
+		  necko \
 		  $(NULL)
 endif
 

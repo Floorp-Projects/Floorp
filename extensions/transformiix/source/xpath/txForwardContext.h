@@ -41,12 +41,14 @@
 
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
-#include "txNodeSet.h"
+
+class txNodeSet;
 
 class txForwardContext : public txIEvalContext
 {
 public:
-    txForwardContext(txIMatchContext* aContext, Node* aContextNode,
+    txForwardContext(txIMatchContext* aContext,
+                     const txXPathNode& aContextNode,
                      txNodeSet* aContextNodeSet)
         : mInner(aContext),
           mContextNode(aContextNode),
@@ -59,7 +61,7 @@ public:
 
 private:
     txIMatchContext* mInner;
-    Node* mContextNode;
+    const txXPathNode& mContextNode;
     nsRefPtr<txNodeSet> mContextSet;
 };
 
