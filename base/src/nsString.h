@@ -648,6 +648,7 @@ virtual PRInt32 Compare(const PRUnichar *aString,PRBool aIgnoreCase=PR_FALSE,PRI
 PRBool  operator==(const nsString &aString) const;
 PRBool  operator==(const char *aString) const;
 PRBool  operator==(const PRUnichar* aString) const;
+PRBool  operator==(PRUnichar* aString) const;
 
 /**
  * These methods perform a !compare of a given string type to this 

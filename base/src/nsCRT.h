@@ -86,6 +86,10 @@ public:
     return PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
   }
 
+  static PRInt32 strncmp(const char* s1, const char* s2, PRInt32 aMaxLen) {
+    return PRInt32(PL_strncmp(s1,s2,aMaxLen));
+  }
+  
   static char* strdup(const char* str) {
     return PL_strdup(str);
   }

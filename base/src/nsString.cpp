@@ -1775,6 +1775,7 @@ PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aL
 PRBool nsString::operator==(const nsString &S) const {return Equals(S);}      
 PRBool nsString::operator==(const char *s) const {return Equals(s);}
 PRBool nsString::operator==(const PRUnichar *s) const {return Equals(s);}
+PRBool nsString::operator==(PRUnichar *s) const {return Equals(s);}
 PRBool nsString::operator!=(const nsString &S) const {return PRBool(Compare(S)!=0);}
 PRBool nsString::operator!=(const char *s) const {return PRBool(Compare(s)!=0);}
 PRBool nsString::operator!=(const PRUnichar *s) const {return PRBool(Compare(s)!=0);}
