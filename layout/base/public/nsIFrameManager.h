@@ -38,9 +38,10 @@ class nsStyleChangeList;
 // Calback function used to destroy the value associated with a
 // given property. used by RemoveFrameProperty()
 typedef void 
-(*FMPropertyDtorFunc)(nsIFrame* aFrame,
-                      nsIAtom*  aPropertyName,
-                      void*     aPropertyValue);
+(*FMPropertyDtorFunc)(nsIPresContext* aPresContext,
+                      nsIFrame*       aFrame,
+                      nsIAtom*        aPropertyName,
+                      void*           aPropertyValue);
 
 // Option flags for GetFrameProperty() member function
 #define NS_IFRAME_MGR_REMOVE_PROPERTY 0x0001
