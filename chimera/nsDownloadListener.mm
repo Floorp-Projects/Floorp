@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
+#import "NSString+Utils.h"
+
 #include "nsDownloadListener.h"
 
 #include "nsIWebProgress.h"
