@@ -139,7 +139,7 @@ TestConsumer::TestConsumer(nsITransport * transport)
 void TestConsumer::LoadURL(nsIURL * urlToLoad)
 {
 	// give the transport layer the url to load
-	m_transport->LoadURL(urlToLoad);
+	m_transport->Open(urlToLoad);
 	m_runningURL = PR_TRUE;
 	m_waitingForData = PR_TRUE;
 
