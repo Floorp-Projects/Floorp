@@ -69,7 +69,9 @@ NPError NS_PluginInitialize()
   
   NPN_GetValue(NULL, NPNVserviceManager, &sm);
 
-  // Mozilla returns nsIServiceManagerObsolete which can be queried for nsIServiceManager
+  // Mozilla returns nsIServiceManager so we can use it directly, doing QI on
+  // nsISupports here can still be more appropriate in case something is changed 
+  // in the future so we don't need to do casting of any sort.
   if(sm) {
     sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
     NS_RELEASE(sm);
