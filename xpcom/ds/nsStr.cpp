@@ -39,96 +39,8 @@ static const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 //static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
-//----------------------------------------------------------------------------------------
-//  The following is a memory agent who knows how to recycled (pool) freed memory...
-//----------------------------------------------------------------------------------------
-
-/**************************************************************
-  Define the char* (pooled) deallocator class...
- **************************************************************/
-
-/*
-class nsBufferDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    char* aCString= (char*)anObject;
-    delete [] aCString;
-    return 0;
-  }
-};
-
-class nsPoolingMemoryAgent : public nsMemoryAgent{
-public:
-  nsPoolingMemoryAgent()  {
-    memset(mPools,0,sizeof(mPools));
-  }
-
-  virtual ~nsPoolingMemoryAgent() {
-    nsBufferDeallocator theDeallocator;
-    int i=0;
-    for(i=0;i<10;i++){
-      if(mPools[i]){
-        mPools[i]->ForEach(theDeallocator); //now delete the buffers
-      }
-      delete mPools[i];
-      mPools[i]=0;
-    }
-  }
-
-  virtual PRBool Alloc(nsStr& aDest,PRUint32 aCount) {
-    
-    //we're given the acount value in charunits; we have to scale up by the charsize.
-    int       theShift=4;
-    PRUint32  theNewCapacity=eDefaultSize;
-    while(theNewCapacity<aCount){ 
-      theNewCapacity<<=1;
-      theShift++;
-    } 
-    
-    aDest.mCapacity=theNewCapacity++;
-    theShift=(theShift<<aDest.mCharSize)-4;
-    if((theShift<12) && (mPools[theShift])){
-      aDest.mStr=(char*)mPools[theShift]->Pop();
-    }
-    if(!aDest.mStr) {
-      //we're given the acount value in charunits; we have to scale up by the charsize.
-      size_t theSize=(theNewCapacity<<aDest.mCharSize);
-      aDest.mStr=new char[theSize];    
-    }
-    aDest.mOwnsBuffer=1;
-    return PRBool(aDest.mStr!=0);
-    
-  }
-
-  virtual PRBool Free(nsStr& aDest){
-    if(aDest.mStr){
-      if(aDest.mOwnsBuffer){
-        int theShift=1;
-        unsigned int theValue=1;
-        while((theValue<<=1)<aDest.mCapacity){ 
-          theShift++;
-        }
-        theShift-=4;
-        if(theShift<12){
-          if(!mPools[theShift]){
-            mPools[theShift]=new nsDeque(0);
-          }
-          mPools[theShift]->Push(aDest.mStr);
-        }
-        else delete [] aDest.mStr; //it's too big. Just delete it.
-      }
-      aDest.mStr=0;
-      aDest.mOwnsBuffer=0;
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-  nsDeque* mPools[16]; 
-};
-
-*/
-
 static char* gCommonEmptyBuffer=0;
+
 /**
  * 
  * @update	gess10/30/98
@@ -188,7 +100,6 @@ void nsStr::Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 a
  * @return
  */
 nsIMemoryAgent* GetDefaultAgent(void){
-//  static nsPoolingMemoryAgent gDefaultAgent;
   static nsMemoryAgent gDefaultAgent;
   return (nsIMemoryAgent*)&gDefaultAgent;
 }

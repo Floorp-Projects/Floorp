@@ -38,6 +38,23 @@
 
  ***********************************************************************/
 
+/***********************************************************************
+  GENERAL STRING ISSUES:
+
+    1. nsStrings and nsAutoString are always null terminated. 
+    2. If you try to set a null char (via SetChar()) a new length is set
+    3. nsCStrings can be upsampled into nsString without data loss
+    4. Char searching is faster than string searching. Use char interfaces
+       if your needs will allow it.
+    5. It's easy to use the stack for nsAutostring buffer storage (fast too!).
+       See the CBufDescriptor class in this file.
+    6. It's ONLY ok to provide non-null-terminated buffers to Append() and Insert()
+       provided you specify a 0<n value for the optional count argument.
+    7. Downsampling from nsString to nsCString is lossy -- avoid it if possible!
+    8. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to Recycle().
+
+ ***********************************************************************/
+
 
 #ifndef _nsStr
 #define _nsStr
@@ -53,7 +70,8 @@ enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kRadix16        (16)
 #define kAutoDetect     (100)
 #define kRadixUnknown   (kAutoDetect+1)
-const PRInt32 kNotFound = -1;
+const   PRInt32 kDefaultStringSize = 32;
+const   PRInt32 kNotFound = -1;
 
 
 class nsIMemoryAgent;
@@ -62,7 +80,7 @@ class nsIMemoryAgent;
 
 class NS_COM CBufDescriptor {
 public:
-  CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(char* aString,     PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
   CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
 
   char*     mBuffer;
@@ -274,6 +292,13 @@ inline void AddNullTerminator(nsStr& aDest) {
 }
 
 /**
+ * Return the given buffer to the heap manager. Calls allocator::Free()
+ * @return string length
+ */
+inline void Recycle( char* aBuffer) { nsAllocator::Free(aBuffer); }
+inline void Recycle( PRUnichar* aBuffer) { nsAllocator::Free(aBuffer); }
+
+/**
 * This method is used to access a given char in the given string
 *
 * @update	gess 01/04/99
@@ -298,18 +323,19 @@ public:
 };
 
 class nsMemoryAgent : public nsIMemoryAgent {
-protected:
-  enum eDelta{eDefaultSize=16};
 public:
 
   virtual PRBool Alloc(nsStr& aDest,PRUint32 aCount) {
-    
+
+    static int mAllocCount=0;
+    mAllocCount++;
+
     //we're given the acount value in charunits; now scale up to next multiple.
-  	PRUint32	theNewCapacity=eDefaultSize;
+  	PRUint32	theNewCapacity=kDefaultStringSize;
     while(theNewCapacity<aCount){ 
 		  theNewCapacity<<=1;
     }
-	  
+
     aDest.mCapacity=theNewCapacity++;
     PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
     aDest.mStr = (char*)nsAllocator::Alloc(theSize);
