@@ -96,7 +96,11 @@ nsTimerXlib::Init(PRUint32 aDelay)
   // get the cuurent time
   gettimeofday(&Now, NULL);
   mFireTime.tv_sec = Now.tv_sec + (aDelay / 1000);
-  mFireTime.tv_usec = Now.tv_usec + (aDelay * 1000);
+  mFireTime.tv_usec = Now.tv_usec + ((aDelay%1000) * 1000);
+  if (mFireTime.tv_usec >= 1000000) {
+    mFireTime.tv_sec++;
+    mFireTime.tv_usec -= 1000000;
+  }
   //printf("fire set to %ld / %ld\n",
   //mFireTime.tv_sec, mFireTime.tv_usec);
   // set the next pointer to nothing.
