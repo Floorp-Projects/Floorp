@@ -88,16 +88,11 @@ nsresult nsImageGTK :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
   mImageBits = (PRUint8*) new PRUint8[mSizeImage];
   if (aMaskRequirements == nsMaskRequirements_kNeeds1Bit)
     {
-      mAlphaBits = (PRUint8*) new PRUint8[mSizeImage];
-//      mAlphaRowBytes = (aWidth + 7) / 8;
-      mAlphaRowBytes = aWidth >> 5;
-      if (mAlphaRowBytes & 0x1F)
-        mAlphaRowBytes++;
-      mAlphaRowBytes <<= 2;
+      mAlphaRowBytes = (aWidth + 7) / 8;
       mAlphaDepth = 1;
 
       // 32-bit align each row
-      //      mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
+      mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
       mAlphaBits = new unsigned char[mAlphaRowBytes * aHeight];
       mAlphaWidth = aWidth;
@@ -303,7 +298,7 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
          low to high address in memory. */
       x_image->byte_order = MSBFirst;
 #if defined(IS_LITTLE_ENDIAN)
-      // no, it's still MSB
+      // no, it's still MSB XXX check on this!!
       //      x_image->byte_order = LSBFirst;
 #elif defined (IS_BIG_ENDIAN)
       x_image->byte_order = MSBFirst;
@@ -321,24 +316,19 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
       XFreeGC(dpy, gc);
       gdk_gc_set_clip_mask(drawing->gc, mAlphaPixmap);
       gdk_gc_set_clip_origin(drawing->gc, aX, aY);
-      gdk_flush();
     }
   moz_gdk_draw_bgr_image (drawing->drawable,
                           drawing->gc,
                           aX, aY, aWidth, aHeight,
                           GDK_RGB_DITHER_MAX,
                           mImageBits, mRowBytes);
-  gdk_flush();
-#if 0
   if (mAlphaBits != nsnull)
     {
       gdk_gc_set_clip_origin(drawing->gc, 0, 0);
       gdk_gc_set_clip_mask(drawing->gc, NULL);
-      gdk_flush();
       x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
       XDestroyImage(x_image);
     }
-#endif
   return NS_OK;
 }
 
