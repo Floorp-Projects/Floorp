@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,9 +18,6 @@
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -75,17 +72,16 @@
 #include "nsIFile.h"
 #include "nsEscape.h"
 
-#ifdef	XP_WIN
+#ifdef  XP_WIN
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
-
 #include "windef.h"
 #include "winbase.h"
 #endif
 
-#ifdef	XP_BEOS
+#ifdef  XP_BEOS
 #include <File.h>
 #include <NodeInfo.h>
 #endif
@@ -96,13 +92,14 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
-#ifdef	XP_WIN
+#ifdef  XP_WIN
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 #endif
 
 #define NS_MOZICON_SCHEME           "moz-icon:"
 
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
+static const char kFileProtocol[]         = "file://";
 
 
 
@@ -114,52 +111,51 @@ private:
     static PRInt32 gRefCnt;
 
     // pseudo-constants
-    static nsIRDFResource		*kNC_FileSystemRoot;
-    static nsIRDFResource		*kNC_Child;
-    static nsIRDFResource		*kNC_Name;
-    static nsIRDFResource		*kNC_URL;
-    static nsIRDFResource		*kNC_Icon;
-    static nsIRDFResource		*kNC_Length;
-    static nsIRDFResource		*kNC_IsDirectory;
-    static nsIRDFResource		*kWEB_LastMod;
-    static nsIRDFResource		*kNC_FileSystemObject;
-    static nsIRDFResource		*kNC_pulse;
-    static nsIRDFResource		*kRDF_InstanceOf;
-    static nsIRDFResource		*kRDF_type;
+    static nsIRDFResource       *kNC_FileSystemRoot;
+    static nsIRDFResource       *kNC_Child;
+    static nsIRDFResource       *kNC_Name;
+    static nsIRDFResource       *kNC_URL;
+    static nsIRDFResource       *kNC_Icon;
+    static nsIRDFResource       *kNC_Length;
+    static nsIRDFResource       *kNC_IsDirectory;
+    static nsIRDFResource       *kWEB_LastMod;
+    static nsIRDFResource       *kNC_FileSystemObject;
+    static nsIRDFResource       *kNC_pulse;
+    static nsIRDFResource       *kRDF_InstanceOf;
+    static nsIRDFResource       *kRDF_type;
 
 #ifdef USE_NC_EXTENSION
-    static nsIRDFResource		*kNC_extension;
+    static nsIRDFResource       *kNC_extension;
 #endif
 
-#ifdef	XP_WIN
-    static nsIRDFResource		*kNC_IEFavoriteObject;
-    static nsIRDFResource		*kNC_IEFavoriteFolder;
-    static char			*ieFavoritesDir;
-    nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
+#ifdef  XP_WIN
+    static nsIRDFResource       *kNC_IEFavoriteObject;
+    static nsIRDFResource       *kNC_IEFavoriteFolder;
+    static char                 *ieFavoritesDir;
+    nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
 #endif
 
-#ifdef	XP_BEOS
-    static nsIRDFResource		*kNC_NetPositiveObject;
-    static char			*netPositiveDir;
+#ifdef  XP_BEOS
+    static nsIRDFResource       *kNC_NetPositiveObject;
+    static char                 *netPositiveDir;
 #endif
 
-    static nsIRDFLiteral		*kLiteralTrue;
-    static nsIRDFLiteral		*kLiteralFalse;
+    static nsIRDFLiteral        *kLiteralTrue;
+    static nsIRDFLiteral        *kLiteralFalse;
 
 public:
 
     NS_DECL_ISUPPORTS
 
     FileSystemDataSource(void);
-    virtual		~FileSystemDataSource(void);
+    virtual     ~FileSystemDataSource(void);
 
     // nsIRDFDataSource methods
     NS_DECL_NSIRDFDATASOURCE
 
     // helper methods
-    static PRBool isFileURI(nsIRDFResource* aResource);
-    static PRBool isDirURI(nsIRDFResource* aSource);
-
+    static PRBool   isFileURI(nsIRDFResource* aResource);
+    static PRBool   isDirURI(nsIRDFResource* aSource);
     static nsresult GetVolumeList(nsISimpleEnumerator **aResult);
     static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
     static nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
@@ -171,12 +167,12 @@ public:
     static nsresult GetExtension(nsIRDFResource *source, nsIRDFLiteral** aResult);
 #endif
 
-#ifdef	XP_WIN
+#ifdef  XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
     static nsresult getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
 #endif
 
-#ifdef	XP_BEOS
+#ifdef  XP_BEOS
     static nsresult getNetPositiveURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
 #endif
 
@@ -184,66 +180,62 @@ public:
 
 
 
-static	nsIRDFService		*gRDFService = nsnull;
-static	FileSystemDataSource	*gFileSystemDataSource = nsnull;
+static  nsIRDFService         *gRDFService = nsnull;
+static  FileSystemDataSource  *gFileSystemDataSource = nsnull;
 
 PRInt32 FileSystemDataSource::gRefCnt;
 
-nsIRDFResource		*FileSystemDataSource::kNC_FileSystemRoot;
-nsIRDFResource		*FileSystemDataSource::kNC_Child;
-nsIRDFResource		*FileSystemDataSource::kNC_Name;
-nsIRDFResource		*FileSystemDataSource::kNC_URL;
-nsIRDFResource		*FileSystemDataSource::kNC_Icon;
-nsIRDFResource		*FileSystemDataSource::kNC_Length;
-nsIRDFResource		*FileSystemDataSource::kNC_IsDirectory;
-nsIRDFResource		*FileSystemDataSource::kWEB_LastMod;
-nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
-nsIRDFResource		*FileSystemDataSource::kNC_pulse;
-nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
-nsIRDFResource		*FileSystemDataSource::kRDF_type;
+nsIRDFResource      *FileSystemDataSource::kNC_FileSystemRoot;
+nsIRDFResource      *FileSystemDataSource::kNC_Child;
+nsIRDFResource      *FileSystemDataSource::kNC_Name;
+nsIRDFResource      *FileSystemDataSource::kNC_URL;
+nsIRDFResource      *FileSystemDataSource::kNC_Icon;
+nsIRDFResource      *FileSystemDataSource::kNC_Length;
+nsIRDFResource      *FileSystemDataSource::kNC_IsDirectory;
+nsIRDFResource      *FileSystemDataSource::kWEB_LastMod;
+nsIRDFResource      *FileSystemDataSource::kNC_FileSystemObject;
+nsIRDFResource      *FileSystemDataSource::kNC_pulse;
+nsIRDFResource      *FileSystemDataSource::kRDF_InstanceOf;
+nsIRDFResource      *FileSystemDataSource::kRDF_type;
+nsIRDFLiteral       *FileSystemDataSource::kLiteralTrue;
+nsIRDFLiteral       *FileSystemDataSource::kLiteralFalse;
 
 #ifdef USE_NC_EXTENSION
-nsIRDFResource          *FileSystemDataSource::kNC_extension;
+nsIRDFResource      *FileSystemDataSource::kNC_extension;
 #endif
 
-#ifdef	XP_WIN
-nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteObject;
-nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteFolder;
-char			*FileSystemDataSource::ieFavoritesDir;
+#ifdef  XP_WIN
+nsIRDFResource      *FileSystemDataSource::kNC_IEFavoriteObject;
+nsIRDFResource      *FileSystemDataSource::kNC_IEFavoriteFolder;
+char                *FileSystemDataSource::ieFavoritesDir;
 #endif
 
-#ifdef	XP_BEOS
-nsIRDFResource		*FileSystemDataSource::kNC_NetPositiveObject;
-char			*FileSystemDataSource::netPositiveDir;
+#ifdef  XP_BEOS
+nsIRDFResource      *FileSystemDataSource::kNC_NetPositiveObject;
+char                *FileSystemDataSource::netPositiveDir;
 #endif
-
-nsIRDFLiteral		*FileSystemDataSource::kLiteralTrue;
-nsIRDFLiteral		*FileSystemDataSource::kLiteralFalse;
-
-
-
-
-static const char	kFileProtocol[] = "file://";
 
 
 
 PRBool
 FileSystemDataSource::isFileURI(nsIRDFResource *r)
 {
-	PRBool		isFileURIFlag = PR_FALSE;
-	const char	*uri = nsnull;
-	
-	r->GetValueConst(&uri);
-	if ((uri) && (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1)))
-	{
-		// XXX HACK HACK HACK
-		if (!strchr(uri, '#'))
-		{
-			isFileURIFlag = PR_TRUE;
-		}
-	}
-	return(isFileURIFlag);
+    PRBool      isFileURIFlag = PR_FALSE;
+    const char  *uri = nsnull;
+    
+    r->GetValueConst(&uri);
+    if ((uri) && (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1)))
+    {
+        // XXX HACK HACK HACK
+        if (!strchr(uri, '#'))
+        {
+            isFileURIFlag = PR_TRUE;
+        }
+    }
+    return(isFileURIFlag);
 }
+
+
 
 PRBool
 FileSystemDataSource::isDirURI(nsIRDFResource* source)
@@ -264,87 +256,83 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
     rv = aDir->IsDirectory(&isDirFlag);
     if (NS_FAILED(rv)) return(PR_FALSE);
 
+#ifdef  XP_MAC
+    // Hide directory structure of packages under Mac OS 9/X
+    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aDir);
+    if (aMacFile)
+    {
+        PRBool isPackageFlag = PR_FALSE;
+        rv = aMacFile->IsPackage(&isPackageFlag);
+        if (NS_SUCCEEDED(rv) && (isPackageFlag == PR_TRUE))
+        {
+            isDirFlag = PR_FALSE;
+        }
+    }
+#endif
+
     return(isDirFlag);
 }
 
 
+
 FileSystemDataSource::FileSystemDataSource(void)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 
-	if (gRefCnt++ == 0)
-	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-					   NS_GET_IID(nsIRDFService),
-					   (nsISupports**) &gRDFService);
+    if (gRefCnt++ == 0)
+    {
+        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                       NS_GET_IID(nsIRDFService),
+                       (nsISupports**) &gRDFService);
 
-		PR_ASSERT(NS_SUCCEEDED(rv));
+        PR_ASSERT(NS_SUCCEEDED(rv));
 
-#ifdef	XP_WIN
-		nsSpecialSystemDirectory	ieFavoritesFolder(nsSpecialSystemDirectory::Win_Favorites);
-		nsFileURL			ieFavoritesURLSpec(ieFavoritesFolder);
-		const char			*ieFavoritesURI = ieFavoritesURLSpec.GetAsString();
-		if (ieFavoritesURI)
-		{
-			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
-		}
-		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
-		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder", &kNC_IEFavoriteFolder);
-/*
-		nsCOMPtr<nsIPlatformCharset> platformCharset = 
-		         do_GetService(kPlatformCharsetCID, &rv);
-		if (NS_SUCCEEDED(rv) && (platformCharset))
-		{
-			nsAutoString	defaultCharset;
-			if (NS_SUCCEEDED(rv = platformCharset->GetCharset(kPlatformCharsetSel_4xBookmarkFile,
-				defaultCharset)))
-				{
-					// found the default platform charset
-					// now try and get a decoder from it to Unicode
-					nsCOMPtr<nsICharsetConverterManager> charsetConv = 
-					         do_GetService(kCharsetConverterManagerCID, &rv);
-					if (NS_SUCCEEDED(rv) && (charsetConv))
-					{
-						rv = charsetConv->GetUnicodeDecoder(&defaultCharset,
-							getter_AddRefs(mUnicodeDecoder));
-					}
-				}
-		}
-*/
+#ifdef  XP_WIN
+        nsSpecialSystemDirectory    ieFavoritesFolder(nsSpecialSystemDirectory::Win_Favorites);
+        nsFileURL                   ieFavoritesURLSpec(ieFavoritesFolder);
+        const char                  *ieFavoritesURI = ieFavoritesURLSpec.GetAsString();
+
+        if (ieFavoritesURI)
+        {
+            ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
+        }
+        gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
+        gRDFService->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder", &kNC_IEFavoriteFolder);
 #endif
 
 #ifdef XP_BEOS
-		nsSpecialSystemDirectory	netPositiveFolder(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
-		nsFileURL			netPositiveURLSpec(netPositiveFolder);
-		netPositiveURLSpec += "NetPositive/Bookmarks/";
-		const char			*netPositiveURI = netPositiveURLSpec.GetAsString();
-		if (netPositiveURI)
-		{
-			netPositiveDir = nsCRT::strdup(netPositiveURI);
-		}
+        nsSpecialSystemDirectory    netPositiveFolder(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
+        nsFileURL                   netPositiveURLSpec(netPositiveFolder);
+
+        netPositiveURLSpec += "NetPositive/Bookmarks/";
+        const char          *netPositiveURI = netPositiveURLSpec.GetAsString();
+        if (netPositiveURI)
+        {
+            netPositiveDir = nsCRT::strdup(netPositiveURI);
+        }
 #endif
 
-		gRDFService->GetResource(kURINC_FileSystemRoot,                &kNC_FileSystemRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "Icon",             &kNC_Icon);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "IsDirectory", &kNC_IsDirectory);
-		gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "pulse",            &kNC_pulse);
+        gRDFService->GetResource(kURINC_FileSystemRoot,                &kNC_FileSystemRoot);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "Icon",             &kNC_Icon);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "IsDirectory",      &kNC_IsDirectory);
+        gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
+        gRDFService->GetResource(NC_NAMESPACE_URI  "pulse",            &kNC_pulse);
 
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",       &kRDF_InstanceOf);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
+        gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",       &kRDF_InstanceOf);
+        gRDFService->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
 
 #ifdef USE_NC_EXTENSION
-		gRDFService->GetResource(NC_NAMESPACE_URI "extension",        &kNC_extension);
+        gRDFService->GetResource(NC_NAMESPACE_URI "extension",         &kNC_extension);
 #endif
-		gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kLiteralTrue);
-		gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(), &kLiteralFalse);
-		gFileSystemDataSource = this;
-	}
+        gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(),       &kLiteralTrue);
+        gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(),      &kLiteralFalse);
+        gFileSystemDataSource = this;
+    }
 }
 
 
@@ -370,23 +358,23 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
 
-#ifdef	XP_WIN
-	NS_RELEASE(kNC_IEFavoriteObject);
-	NS_RELEASE(kNC_IEFavoriteFolder);
+#ifdef  XP_WIN
+        NS_RELEASE(kNC_IEFavoriteObject);
+        NS_RELEASE(kNC_IEFavoriteFolder);
 
         if (ieFavoritesDir)
         {
-        	nsCRT::free(ieFavoritesDir);
-        	ieFavoritesDir = nsnull;
+            nsCRT::free(ieFavoritesDir);
+            ieFavoritesDir = nsnull;
         }
 #endif
 
 #ifdef USE_NC_EXTENSION
-	NS_RELEASE(kNC_extension);
+        NS_RELEASE(kNC_extension);
 #endif
 
-	NS_RELEASE(kLiteralTrue);
-	NS_RELEASE(kLiteralFalse);
+        NS_RELEASE(kLiteralTrue);
+        NS_RELEASE(kLiteralFalse);
 
         gFileSystemDataSource = nsnull;
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -410,7 +398,7 @@ FileSystemDataSource::GetURI(char **uri)
     if ((*uri = nsCRT::strdup("rdf:files")) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -434,7 +422,7 @@ FileSystemDataSource::GetSource(nsIRDFResource* property,
         return NS_ERROR_NULL_POINTER;
 
     *source = nsnull;
-	return NS_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 }
 
 
@@ -445,8 +433,8 @@ FileSystemDataSource::GetSources(nsIRDFResource *property,
                                  PRBool tv,
                                  nsISimpleEnumerator **sources /* out */)
 {
-//	NS_NOTYETIMPLEMENTED("write me");
-	return NS_ERROR_NOT_IMPLEMENTED;
+//  NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -457,308 +445,308 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
                                 PRBool tv,
                                 nsIRDFNode **target /* out */)
 {
-	NS_PRECONDITION(source != nsnull, "null ptr");
-	if (! source)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(property != nsnull, "null ptr");
-	if (! property)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(target != nsnull, "null ptr");
-	if (! target)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
 
-	*target = nsnull;
+    *target = nsnull;
 
-	nsresult		rv = NS_RDF_NO_VALUE;
+    nsresult        rv = NS_RDF_NO_VALUE;
 
-	// we only have positive assertions in the file system data source.
-	if (! tv)
-		return NS_RDF_NO_VALUE;
+    // we only have positive assertions in the file system data source.
+    if (! tv)
+        return NS_RDF_NO_VALUE;
 
-	if (source == kNC_FileSystemRoot)
-	{
-		if (property == kNC_pulse)
-		{
-			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
-			*target = pulseLiteral;
-			return NS_OK;
-		}
-	}
-	else if (isFileURI(source))
-	{
-		if (property == kNC_Name)
-		{
-			nsCOMPtr<nsIRDFLiteral> name;
-			rv = GetName(source, getter_AddRefs(name));
-			if (NS_FAILED(rv)) return(rv);
-			if (!name)	rv = NS_RDF_NO_VALUE;
-			if (rv == NS_RDF_NO_VALUE)	return(rv);
-			return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
-		else if (property == kNC_URL)
-		{
-			nsCOMPtr<nsIRDFLiteral> url;
-			rv = GetURL(source, nsnull, getter_AddRefs(url));
-			if (NS_FAILED(rv)) return(rv);
-			if (!url)	rv = NS_RDF_NO_VALUE;
-			if (rv == NS_RDF_NO_VALUE)	return(rv);
+    if (source == kNC_FileSystemRoot)
+    {
+        if (property == kNC_pulse)
+        {
+            nsIRDFLiteral   *pulseLiteral;
+            gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
+            *target = pulseLiteral;
+            return NS_OK;
+        }
+    }
+    else if (isFileURI(source))
+    {
+        if (property == kNC_Name)
+        {
+            nsCOMPtr<nsIRDFLiteral> name;
+            rv = GetName(source, getter_AddRefs(name));
+            if (NS_FAILED(rv)) return(rv);
+            if (!name)  rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE)  return(rv);
+            return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
+        else if (property == kNC_URL)
+        {
+            nsCOMPtr<nsIRDFLiteral> url;
+            rv = GetURL(source, nsnull, getter_AddRefs(url));
+            if (NS_FAILED(rv)) return(rv);
+            if (!url)   rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE)  return(rv);
 
-			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
-		else if (property == kNC_Icon)
-		{
-			nsCOMPtr<nsIRDFLiteral> url;
-			PRBool isFavorite = PR_FALSE;
-			rv = GetURL(source, &isFavorite, getter_AddRefs(url));
-			if (NS_FAILED(rv)) return(rv);
-			if (isFavorite || !url)	rv = NS_RDF_NO_VALUE;
-			if (rv == NS_RDF_NO_VALUE)	return(rv);
-			
-			const PRUnichar *uni = nsnull;
-			url->GetValueConst(&uni);
-			if (!uni)   return(NS_RDF_NO_VALUE);
-			nsAutoString    urlStr;
-			urlStr.Assign(NS_LITERAL_STRING(NS_MOZICON_SCHEME).get());
-			urlStr.Append(uni);
+            return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
+        else if (property == kNC_Icon)
+        {
+            nsCOMPtr<nsIRDFLiteral> url;
+            PRBool isFavorite = PR_FALSE;
+            rv = GetURL(source, &isFavorite, getter_AddRefs(url));
+            if (NS_FAILED(rv)) return(rv);
+            if (isFavorite || !url) rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE)  return(rv);
+            
+            const PRUnichar *uni = nsnull;
+            url->GetValueConst(&uni);
+            if (!uni)   return(NS_RDF_NO_VALUE);
+            nsAutoString    urlStr;
+            urlStr.Assign(NS_LITERAL_STRING(NS_MOZICON_SCHEME).get());
+            urlStr.Append(uni);
 
-			rv = gRDFService->GetLiteral(urlStr.get(), getter_AddRefs(url));
-			if (NS_FAILED(rv) || !url)    return(NS_RDF_NO_VALUE);
-			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
-		else if (property == kNC_Length)
-		{
-		    nsCOMPtr<nsIRDFInt> fileSize;
-		    rv = GetFileSize(source, getter_AddRefs(fileSize));
-			if (NS_FAILED(rv)) return(rv);
-			if (!fileSize)	rv = NS_RDF_NO_VALUE;
-			if (rv == NS_RDF_NO_VALUE)	return(rv);
+            rv = gRDFService->GetLiteral(urlStr.get(), getter_AddRefs(url));
+            if (NS_FAILED(rv) || !url)    return(NS_RDF_NO_VALUE);
+            return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
+        else if (property == kNC_Length)
+        {
+            nsCOMPtr<nsIRDFInt> fileSize;
+            rv = GetFileSize(source, getter_AddRefs(fileSize));
+            if (NS_FAILED(rv)) return(rv);
+            if (!fileSize)  rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE)  return(rv);
 
-			return fileSize->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
-		else  if (property == kNC_IsDirectory)
-		{
-			*target = (isDirURI(source)) ? kLiteralTrue : kLiteralFalse;
-			NS_ADDREF(*target);
-			return NS_OK;
-		}
-		else if (property == kWEB_LastMod)
-		{
-		    nsCOMPtr<nsIRDFDate> lastMod;
-		    rv = GetLastMod(source, getter_AddRefs(lastMod));
-			if (NS_FAILED(rv)) return(rv);
-			if (!lastMod)	rv = NS_RDF_NO_VALUE;
-			if (rv == NS_RDF_NO_VALUE)	return(rv);
+            return fileSize->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
+        else  if (property == kNC_IsDirectory)
+        {
+            *target = (isDirURI(source)) ? kLiteralTrue : kLiteralFalse;
+            NS_ADDREF(*target);
+            return NS_OK;
+        }
+        else if (property == kWEB_LastMod)
+        {
+            nsCOMPtr<nsIRDFDate> lastMod;
+            rv = GetLastMod(source, getter_AddRefs(lastMod));
+            if (NS_FAILED(rv)) return(rv);
+            if (!lastMod)   rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE)  return(rv);
 
-			return lastMod->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
-		else if (property == kRDF_type)
-		{
-			const char	*type;
-			rv = kNC_FileSystemObject->GetValueConst(&type);
-			if (NS_FAILED(rv)) return(rv);
+            return lastMod->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
+        else if (property == kRDF_type)
+        {
+            const char  *type;
+            rv = kNC_FileSystemObject->GetValueConst(&type);
+            if (NS_FAILED(rv)) return(rv);
 
-#ifdef	XP_WIN
-			// under Windows, if its an IE favorite, return that type
-			if (ieFavoritesDir)
-			{
-				const char		*uri;
-				rv = source->GetValueConst(&uri);
-				if (NS_FAILED(rv)) return(rv);
+#ifdef  XP_WIN
+            // under Windows, if its an IE favorite, return that type
+            if (ieFavoritesDir)
+            {
+                const char      *uri;
+                rv = source->GetValueConst(&uri);
+                if (NS_FAILED(rv)) return(rv);
 
-				nsAutoString		theURI;
-				theURI.AssignWithConversion(uri);
+                nsAutoString        theURI;
+                theURI.AssignWithConversion(uri);
 
-				if (theURI.Find(ieFavoritesDir) == 0)
-				{
-					if (theURI[theURI.Length() - 1] == '/')
-					{
-						rv = kNC_IEFavoriteFolder->GetValueConst(&type);
-					}
-					else
-					{
-						rv = kNC_IEFavoriteObject->GetValueConst(&type);
-					}
-					if (NS_FAILED(rv)) return(rv);
-				}
-			}
+                if (theURI.Find(ieFavoritesDir) == 0)
+                {
+                    if (theURI[theURI.Length() - 1] == '/')
+                    {
+                        rv = kNC_IEFavoriteFolder->GetValueConst(&type);
+                    }
+                    else
+                    {
+                        rv = kNC_IEFavoriteObject->GetValueConst(&type);
+                    }
+                    if (NS_FAILED(rv)) return(rv);
+                }
+            }
 #endif
 
-			nsAutoString	url;
-			url.AssignWithConversion(type);
-			nsCOMPtr<nsIRDFLiteral> literal;
-			gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
-			rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-			return(rv);
-		}
-		else if (property == kNC_pulse)
-		{
-			nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), getter_AddRefs(pulseLiteral));
-			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-			return(rv);
-		}
-		else if (property == kNC_Child)
-		{
-			// Oh this is evil. Somebody kill me now.
-			nsCOMPtr<nsISimpleEnumerator> children;
-			rv = GetFolderList(source, PR_FALSE, PR_TRUE, getter_AddRefs(children));
-			if (NS_FAILED(rv)) return(rv);
+            nsAutoString    url;
+            url.AssignWithConversion(type);
+            nsCOMPtr<nsIRDFLiteral> literal;
+            gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
+            rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+            return(rv);
+        }
+        else if (property == kNC_pulse)
+        {
+            nsCOMPtr<nsIRDFLiteral> pulseLiteral;
+            gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), getter_AddRefs(pulseLiteral));
+            rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+            return(rv);
+        }
+        else if (property == kNC_Child)
+        {
+            // Oh this is evil. Somebody kill me now.
+            nsCOMPtr<nsISimpleEnumerator> children;
+            rv = GetFolderList(source, PR_FALSE, PR_TRUE, getter_AddRefs(children));
+            if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE)) return(rv);
 
-			PRBool hasMore;
-			rv = children->HasMoreElements(&hasMore);
-			if (NS_FAILED(rv)) return(rv);
+            PRBool hasMore;
+            rv = children->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return(rv);
 
-			if (hasMore)
-			{
-				nsCOMPtr<nsISupports> isupports;
-				rv = children->GetNext(getter_AddRefs(isupports));
-				if (NS_FAILED(rv)) return(rv);
+            if (hasMore)
+            {
+                nsCOMPtr<nsISupports> isupports;
+                rv = children->GetNext(getter_AddRefs(isupports));
+                if (NS_FAILED(rv)) return(rv);
 
-				return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-			}
-		}
+                return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+            }
+        }
 #ifdef USE_NC_EXTENSION
-		else if (property == kNC_extension)
-		{
-		    nsCOMPtr<nsIRDFLiteral> extension;
-		    rv = GetExtension(source, getter_AddRefs(extension));
-		    if (!extension)    rv = NS_RDF_NO_VALUE;
-		    if (rv == NS_RDF_NO_VALUE) return(rv);
-		    return extension->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-		}
+        else if (property == kNC_extension)
+        {
+            nsCOMPtr<nsIRDFLiteral> extension;
+            rv = GetExtension(source, getter_AddRefs(extension));
+            if (!extension)    rv = NS_RDF_NO_VALUE;
+            if (rv == NS_RDF_NO_VALUE) return(rv);
+            return extension->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+        }
 #endif
-	}
+    }
 
-	return(NS_RDF_NO_VALUE);
+    return(NS_RDF_NO_VALUE);
 }
 
 
 
 NS_IMETHODIMP
 FileSystemDataSource::GetTargets(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsISimpleEnumerator **targets /* out */)
+                nsIRDFResource *property,
+                PRBool tv,
+                nsISimpleEnumerator **targets /* out */)
 {
-	NS_PRECONDITION(source != nsnull, "null ptr");
-	if (! source)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(property != nsnull, "null ptr");
-	if (! property)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(targets != nsnull, "null ptr");
-	if (! targets)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(targets != nsnull, "null ptr");
+    if (! targets)
+        return NS_ERROR_NULL_POINTER;
 
     *targets = nsnull;
 
-	// we only have positive assertions in the file system data source.
-	if (! tv)
-		return NS_RDF_NO_VALUE;
+    // we only have positive assertions in the file system data source.
+    if (! tv)
+        return NS_RDF_NO_VALUE;
 
-	nsresult rv;
+    nsresult rv;
 
-	if (source == kNC_FileSystemRoot)
-	{
-		if (property == kNC_Child)
-		{
-			return GetVolumeList(targets);
-		}
-		else if (property == kNC_pulse)
-		{
-			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
-			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
-			NS_RELEASE(pulseLiteral);
+    if (source == kNC_FileSystemRoot)
+    {
+        if (property == kNC_Child)
+        {
+            return GetVolumeList(targets);
+        }
+        else if (property == kNC_pulse)
+        {
+            nsIRDFLiteral   *pulseLiteral;
+            gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
+            NS_RELEASE(pulseLiteral);
 
-			if (! result)
-				return NS_ERROR_OUT_OF_MEMORY;
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			NS_ADDREF(result);
-			*targets = result;
-			return NS_OK;
-		}
-	}
-	else if (isFileURI(source))
-	{
-		if (property == kNC_Child)
-		{
-			return GetFolderList(source, PR_FALSE, PR_FALSE, targets);
-		}
-		else if (property == kNC_Name)
-		{
-			nsCOMPtr<nsIRDFLiteral> name;
-			rv = GetName(source, getter_AddRefs(name));
-			if (NS_FAILED(rv)) return rv;
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
+        }
+    }
+    else if (isFileURI(source))
+    {
+        if (property == kNC_Child)
+        {
+            return GetFolderList(source, PR_FALSE, PR_FALSE, targets);
+        }
+        else if (property == kNC_Name)
+        {
+            nsCOMPtr<nsIRDFLiteral> name;
+            rv = GetName(source, getter_AddRefs(name));
+            if (NS_FAILED(rv)) return rv;
 
-			nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
-			if (! result)
-				return NS_ERROR_OUT_OF_MEMORY;
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			NS_ADDREF(result);
-			*targets = result;
-			return NS_OK;
-		}
-		else if (property == kNC_URL)
-		{
-			nsCOMPtr<nsIRDFLiteral> url;
-			rv = GetURL(source, nsnull, getter_AddRefs(url));
-			if (NS_FAILED(rv)) return rv;
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
+        }
+        else if (property == kNC_URL)
+        {
+            nsCOMPtr<nsIRDFLiteral> url;
+            rv = GetURL(source, nsnull, getter_AddRefs(url));
+            if (NS_FAILED(rv)) return rv;
 
-			nsISimpleEnumerator* result = new nsSingletonEnumerator(url);
-			if (! result)
-				return NS_ERROR_OUT_OF_MEMORY;
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(url);
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			NS_ADDREF(result);
-			*targets = result;
-			return NS_OK;
-		}
-		else if (property == kRDF_type)
-		{
-			const	char	*uri = nsnull;
-			rv = kNC_FileSystemObject->GetValueConst( &uri );
-			if (NS_FAILED(rv)) return rv;
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
+        }
+        else if (property == kRDF_type)
+        {
+            const char      *uri = nsnull;
+            rv = kNC_FileSystemObject->GetValueConst( &uri );
+            if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url;
-			url.AssignWithConversion(uri);
+            nsAutoString    url;
+            url.AssignWithConversion(uri);
 
-			nsCOMPtr<nsIRDFLiteral>	literal;
-			rv = gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
-			if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIRDFLiteral> literal;
+            rv = gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
+            if (NS_FAILED(rv)) return rv;
 
-			nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
 
-			if (! result)
-				return NS_ERROR_OUT_OF_MEMORY;
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			NS_ADDREF(result);
-			*targets = result;
-			return NS_OK;
-		}
-		else if (property == kNC_pulse)
-		{
-			nsCOMPtr<nsIRDFLiteral>	pulseLiteral;
-			rv = gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(),
-				getter_AddRefs(pulseLiteral));
-			if (NS_FAILED(rv)) return rv;
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
+        }
+        else if (property == kNC_pulse)
+        {
+            nsCOMPtr<nsIRDFLiteral> pulseLiteral;
+            rv = gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(),
+                getter_AddRefs(pulseLiteral));
+            if (NS_FAILED(rv)) return rv;
 
-			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
 
-			if (! result)
-				return NS_ERROR_OUT_OF_MEMORY;
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			NS_ADDREF(result);
-			*targets = result;
-			return NS_OK;
-		}
-	}
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
+        }
+    }
 
-	return NS_NewEmptyEnumerator(targets);
+    return NS_NewEmptyEnumerator(targets);
 }
 
 
@@ -769,7 +757,7 @@ FileSystemDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-	return NS_RDF_ASSERTION_REJECTED;
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -779,29 +767,29 @@ FileSystemDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-	return NS_RDF_ASSERTION_REJECTED;
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
 
 NS_IMETHODIMP
 FileSystemDataSource::Change(nsIRDFResource* aSource,
-							 nsIRDFResource* aProperty,
-							 nsIRDFNode* aOldTarget,
-							 nsIRDFNode* aNewTarget)
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aOldTarget,
+                             nsIRDFNode* aNewTarget)
 {
-	return NS_RDF_ASSERTION_REJECTED;
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
 
 NS_IMETHODIMP
 FileSystemDataSource::Move(nsIRDFResource* aOldSource,
-						   nsIRDFResource* aNewSource,
-						   nsIRDFResource* aProperty,
-						   nsIRDFNode* aTarget)
+                           nsIRDFResource* aNewSource,
+                           nsIRDFResource* aProperty,
+                           nsIRDFNode* aTarget)
 {
-	return NS_RDF_ASSERTION_REJECTED;
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -813,70 +801,79 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
-	NS_PRECONDITION(source != nsnull, "null ptr");
-	if (! source)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(property != nsnull, "null ptr");
-	if (! property)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(target != nsnull, "null ptr");
-	if (! target)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
-	if (! hasAssertion)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
+    if (! hasAssertion)
+        return NS_ERROR_NULL_POINTER;
 
-	// we only have positive assertions in the file system data source.
-	*hasAssertion = PR_FALSE;
+    // we only have positive assertions in the file system data source.
+    *hasAssertion = PR_FALSE;
 
-	if (! tv) {
-		return NS_OK;
-	}
+    if (! tv) {
+        return NS_OK;
+    }
 
-	if ((source == kNC_FileSystemRoot) || isFileURI(source))
-	{
-		if (property == kRDF_type)
-		{
-			nsCOMPtr<nsIRDFResource> resource( do_QueryInterface(target) );
-			if (resource.get() == kRDF_type) {
-				*hasAssertion = PR_TRUE;
-			}
-		}
+    if ((source == kNC_FileSystemRoot) || isFileURI(source))
+    {
+        if (property == kRDF_type)
+        {
+            nsCOMPtr<nsIRDFResource> resource( do_QueryInterface(target) );
+            if (resource.get() == kRDF_type)
+            {
+                *hasAssertion = PR_TRUE;
+            }
+        }
 #ifdef USE_NC_EXTENSION
-		else if (property == kNC_extension)
-		{
-			// Cheat just a little here by making dirs always match
-			if (isDirURI(source))
-				*hasAssertion = PR_TRUE;
-			else {
-				nsCOMPtr<nsIRDFLiteral> extension;
-				GetExtension(source, getter_AddRefs(extension));
-				if (extension.get() == target) {
-					*hasAssertion = PR_TRUE;
-				}
-			}
-		}
+        else if (property == kNC_extension)
+        {
+            // Cheat just a little here by making dirs always match
+            if (isDirURI(source))
+            {
+                *hasAssertion = PR_TRUE;
+            }
+            else
+            {
+                nsCOMPtr<nsIRDFLiteral> extension;
+                GetExtension(source, getter_AddRefs(extension));
+                if (extension.get() == target)
+                {
+                    *hasAssertion = PR_TRUE;
+                }
+            }
+        }
 #endif
-		else if (property == kNC_IsDirectory)
-		{
-			PRBool isDir = isDirURI(source);
-			PRBool isEqual = PR_FALSE;
-			target->EqualsNode(kLiteralTrue, &isEqual);
-			if (isEqual)
-				*hasAssertion = isDir;
-			else {
-				target->EqualsNode(kLiteralFalse, &isEqual);
-				if (isEqual)
-					*hasAssertion = !isDir;
-			}
-		}
-	}
+        else if (property == kNC_IsDirectory)
+        {
+            PRBool isDir = isDirURI(source);
+            PRBool isEqual = PR_FALSE;
+            target->EqualsNode(kLiteralTrue, &isEqual);
+            if (isEqual)
+            {
+                *hasAssertion = isDir;
+            }
+            else
+            {
+                target->EqualsNode(kLiteralFalse, &isEqual);
+                if (isEqual)
+                    *hasAssertion = !isDir;
+            }
+        }
+    }
 
-	return NS_OK;
+    return NS_OK;
 }
+
 
 
 NS_IMETHODIMP 
@@ -885,105 +882,111 @@ FileSystemDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+
 NS_IMETHODIMP 
 FileSystemDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
 {
-	*result = PR_FALSE;
+    *result = PR_FALSE;
 
     if (aSource == kNC_FileSystemRoot)
     {
-		*result = (aArc == kNC_Child || aArc == kNC_pulse);
+        *result = (aArc == kNC_Child || aArc == kNC_pulse);
     }
     else if (isFileURI(aSource))
     {
-		if (aArc == kNC_pulse)
-		{
-	    	*result = PR_TRUE;
-		}
-		else if (isDirURI(aSource))
-		{
-#ifdef	XP_WIN
-	    	*result = isValidFolder(aSource);
+        if (aArc == kNC_pulse)
+        {
+            *result = PR_TRUE;
+        }
+        else if (isDirURI(aSource))
+        {
+#ifdef  XP_WIN
+            *result = isValidFolder(aSource);
 #else
-		    *result = PR_TRUE;
+            *result = PR_TRUE;
 #endif
-		}
-    	else if (aArc == kNC_pulse || aArc == kNC_Name || aArc == kNC_Icon ||
-    	         aArc == kNC_URL || aArc == kNC_Length || aArc == kWEB_LastMod ||
-    	         aArc == kNC_FileSystemObject || aArc == kRDF_InstanceOf ||
-    	         aArc == kRDF_type)
-    	{
-    	    *result = PR_TRUE;
-    	}
+        }
+        else if (aArc == kNC_pulse || aArc == kNC_Name || aArc == kNC_Icon ||
+                 aArc == kNC_URL || aArc == kNC_Length || aArc == kWEB_LastMod ||
+                 aArc == kNC_FileSystemObject || aArc == kRDF_InstanceOf ||
+                 aArc == kRDF_type)
+        {
+            *result = PR_TRUE;
+        }
     }
     return NS_OK;
 }
+
 
 
 NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsISimpleEnumerator ** labels /* out */)
 {
-//	NS_NOTYETIMPLEMENTED("write me");
-	return NS_ERROR_NOT_IMPLEMENTED;
+//  NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 
 NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
-				   nsISimpleEnumerator **labels /* out */)
+                   nsISimpleEnumerator **labels /* out */)
 {
     NS_PRECONDITION(source != nsnull, "null ptr");
     if (! source)
-	return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
 
     NS_PRECONDITION(labels != nsnull, "null ptr");
     if (! labels)
-	return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
 
-    if (source == kNC_FileSystemRoot) {
-	nsCOMPtr<nsISupportsArray> array;
-	rv = NS_NewISupportsArray(getter_AddRefs(array));
-	if (NS_FAILED(rv)) return rv;
+    if (source == kNC_FileSystemRoot)
+    {
+        nsCOMPtr<nsISupportsArray> array;
+        rv = NS_NewISupportsArray(getter_AddRefs(array));
+        if (NS_FAILED(rv)) return rv;
 
-	array->AppendElement(kNC_Child);
-	array->AppendElement(kNC_pulse);
+        array->AppendElement(kNC_Child);
+        array->AppendElement(kNC_pulse);
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-	if (! result)
-	    return NS_ERROR_OUT_OF_MEMORY;
+        nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+        if (! result)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-	NS_ADDREF(result);
-	*labels = result;
-	return NS_OK;
+        NS_ADDREF(result);
+        *labels = result;
+        return NS_OK;
     }
-    else if (isFileURI(source)) {
-	nsCOMPtr<nsISupportsArray> array;
-	rv = NS_NewISupportsArray(getter_AddRefs(array));
-	if (NS_FAILED(rv)) return rv;
+    else if (isFileURI(source))
+    {
+        nsCOMPtr<nsISupportsArray> array;
+        rv = NS_NewISupportsArray(getter_AddRefs(array));
+        if (NS_FAILED(rv)) return rv;
 
-	if (isDirURI(source)) {
-#ifdef	XP_WIN
-	    if (isValidFolder(source) == PR_TRUE)
-	    {
-		array->AppendElement(kNC_Child);
-	    }
+        if (isDirURI(source))
+        {
+#ifdef  XP_WIN
+            if (isValidFolder(source) == PR_TRUE)
+            {
+                array->AppendElement(kNC_Child);
+            }
 #else
-	    array->AppendElement(kNC_Child);
+            array->AppendElement(kNC_Child);
 #endif
-	    array->AppendElement(kNC_pulse);
-	}
+            array->AppendElement(kNC_pulse);
+        }
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-	if (! result)
-	    return NS_ERROR_OUT_OF_MEMORY;
+        nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+        if (! result)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-	NS_ADDREF(result);
-	*labels = result;
-	return NS_OK;
+        NS_ADDREF(result);
+        *labels = result;
+        return NS_OK;
     }
 
     return NS_NewEmptyEnumerator(labels);
@@ -994,8 +997,8 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 FileSystemDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-	NS_NOTYETIMPLEMENTED("sorry!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("sorry!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1007,14 +1010,14 @@ FileSystemDataSource::AddObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (! mObservers)
-	{
-		nsresult rv;
-		rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-		if (NS_FAILED(rv)) return rv;
-	}
-	mObservers->AppendElement(n);
-	return NS_OK;
+    if (! mObservers)
+    {
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
+    }
+    mObservers->AppendElement(n);
+    return NS_OK;
 }
 
 
@@ -1026,11 +1029,11 @@ FileSystemDataSource::RemoveObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (! mObservers)
-		return NS_OK;
+    if (! mObservers)
+        return NS_OK;
 
-	mObservers->RemoveElement(n);
-	return NS_OK;
+    mObservers->RemoveElement(n);
+    return NS_OK;
 }
 
 
@@ -1039,8 +1042,8 @@ NS_IMETHODIMP
 FileSystemDataSource::GetAllCommands(nsIRDFResource* source,
                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1049,7 +1052,7 @@ NS_IMETHODIMP
 FileSystemDataSource::GetAllCmds(nsIRDFResource* source,
                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-	return(NS_NewEmptyEnumerator(commands));
+    return(NS_NewEmptyEnumerator(commands));
 }
 
 
@@ -1060,7 +1063,7 @@ FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSo
                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                        PRBool* aResult)
 {
-	return(NS_ERROR_NOT_IMPLEMENTED);
+    return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -1070,7 +1073,7 @@ FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-	return(NS_ERROR_NOT_IMPLEMENTED);
+    return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -1078,20 +1081,20 @@ FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 nsresult
 NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
+    if (!result)
+        return NS_ERROR_NULL_POINTER;
 
-	// only one file system data source
-	if (nsnull == gFileSystemDataSource)
-	{
-		if ((gFileSystemDataSource = new FileSystemDataSource()) == nsnull)
-		{
-			return NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
-	NS_ADDREF(gFileSystemDataSource);
-	*result = gFileSystemDataSource;
-	return NS_OK;
+    // only one file system data source
+    if (nsnull == gFileSystemDataSource)
+    {
+        if ((gFileSystemDataSource = new FileSystemDataSource()) == nsnull)
+        {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    NS_ADDREF(gFileSystemDataSource);
+    *result = gFileSystemDataSource;
+    return NS_OK;
 }
 
 
@@ -1099,153 +1102,153 @@ NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)
 nsresult
 FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 {
-	nsresult rv;
-	nsCOMPtr<nsISupportsArray> volumes;
+    nsresult rv;
+    nsCOMPtr<nsISupportsArray> volumes;
 
-	rv = NS_NewISupportsArray(getter_AddRefs(volumes));
-	if (NS_FAILED(rv)) return rv;
+    rv = NS_NewISupportsArray(getter_AddRefs(volumes));
+    if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFResource> vol;
+    nsCOMPtr<nsIRDFResource> vol;
 
-#ifdef	XP_MAC
-	StrFileName     fname;
-	HParamBlockRec	pb;
-	for (int16 volNum = 1; ; volNum++)
-	{
-		pb.volumeParam.ioCompletion = NULL;
-		pb.volumeParam.ioVolIndex = volNum;
-		pb.volumeParam.ioNamePtr = (StringPtr)fname;
-		if (PBHGetVInfo(&pb,FALSE) != noErr)
-			break;
-		nsFileSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
-		rv = gRDFService->GetResource(nsFileURL(fss).GetAsString(), getter_AddRefs(vol));
-		if (NS_FAILED(rv)) return rv;
+#ifdef  XP_MAC
+    StrFileName     fname;
+    HParamBlockRec  pb;
+    for (int16 volNum = 1; ; volNum++)
+    {
+        pb.volumeParam.ioCompletion = NULL;
+        pb.volumeParam.ioVolIndex = volNum;
+        pb.volumeParam.ioNamePtr = (StringPtr)fname;
+        if (PBHGetVInfo(&pb,FALSE) != noErr)
+            break;
+        nsFileSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
+        rv = gRDFService->GetResource(nsFileURL(fss).GetAsString(), getter_AddRefs(vol));
+        if (NS_FAILED(rv)) return rv;
 
-		volumes->AppendElement(vol);
-	}
+        volumes->AppendElement(vol);
+    }
 #endif
 
-#ifdef	XP_WIN
-	PRInt32			driveType;
-	char			drive[32];
-	PRInt32			volNum;
-	char			*url;
+#ifdef  XP_WIN
+    PRInt32         driveType;
+    char            drive[32];
+    PRInt32         volNum;
+    char            *url;
 
-	for (volNum = 0; volNum < 26; volNum++)
-	{
-		sprintf(drive, "%c:\\", volNum + 'A');
-		driveType = GetDriveType(drive);
-		if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
-		{
-			if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
-			{
-				rv = gRDFService->GetResource(url, getter_AddRefs(vol));
-				PR_Free(url);
+    for (volNum = 0; volNum < 26; volNum++)
+    {
+        sprintf(drive, "%c:\\", volNum + 'A');
+        driveType = GetDriveType(drive);
+        if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
+        {
+            if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
+            {
+                rv = gRDFService->GetResource(url, getter_AddRefs(vol));
+                PR_Free(url);
 
-				if (NS_FAILED(rv)) return rv;
-				volumes->AppendElement(vol);
-			}
-		}
-	}
+                if (NS_FAILED(rv)) return rv;
+                volumes->AppendElement(vol);
+            }
+        }
+    }
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-	gRDFService->GetResource("file:///", getter_AddRefs(vol));
-	volumes->AppendElement(vol);
+    gRDFService->GetResource("file:///", getter_AddRefs(vol));
+    volumes->AppendElement(vol);
 #endif
 
 #ifdef XP_OS2
-	ULONG ulDriveNo = 0;
-	ULONG ulDriveMap = 0;
-	char *url;
+    ULONG ulDriveNo = 0;
+    ULONG ulDriveMap = 0;
+    char *url;
 
-	rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
-	if (NS_FAILED(rv))
-	    return rv;
+    rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
+    if (NS_FAILED(rv))
+        return rv;
 
-	for (int volNum = 0; volNum < 26; volNum++)
-	{
-	    if (((ulDriveMap << (31 - volNum)) >> 31))
-	    {
-		if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
-		{
-		    rv = gRDFService->GetResource(url, getter_AddRefs(vol));
-		    PR_Free(url);
+    for (int volNum = 0; volNum < 26; volNum++)
+    {
+        if (((ulDriveMap << (31 - volNum)) >> 31))
+        {
+            if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
+            {
+                rv = gRDFService->GetResource(url, getter_AddRefs(vol));
+                PR_Free(url);
 
-		    if (NS_FAILED(rv)) return rv;
-		    volumes->AppendElement(vol);
-		}
-	    }
+                if (NS_FAILED(rv)) return rv;
+                volumes->AppendElement(vol);
+            }
+        }
 
-	}
+    }
 #endif
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(volumes);
-	if (! result)
-		return NS_ERROR_OUT_OF_MEMORY;
+    nsISimpleEnumerator* result = new nsArrayEnumerator(volumes);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-	NS_ADDREF(result);
-	*aResult = result;
+    NS_ADDREF(result);
+    *aResult = result;
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
 
-#ifdef	XP_WIN
+#ifdef  XP_WIN
 PRBool
 FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 {
-	PRBool	isValid = PR_TRUE;
-	if (!ieFavoritesDir)	return(isValid);
+    PRBool  isValid = PR_TRUE;
+    if (!ieFavoritesDir)    return(isValid);
 
-	nsresult		rv;
-	const char		*uri;
-	rv = source->GetValueConst(&uri);
-	if (NS_FAILED(rv)) return(isValid);
+    nsresult        rv;
+    const char      *uri;
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return(isValid);
 
-	PRBool			isIEFavorite = PR_FALSE;
-	nsAutoString		theURI; theURI.AssignWithConversion(uri);
-	if (theURI.Find(ieFavoritesDir) == 0)
-	{
-		isValid = PR_FALSE;
+    PRBool          isIEFavorite = PR_FALSE;
+    nsAutoString        theURI; theURI.AssignWithConversion(uri);
+    if (theURI.Find(ieFavoritesDir) == 0)
+    {
+        isValid = PR_FALSE;
 
-		nsCOMPtr<nsISimpleEnumerator>	folderEnum;
-		if (NS_SUCCEEDED(rv = GetFolderList(source, PR_TRUE, PR_FALSE, getter_AddRefs(folderEnum))))
-		{
-			PRBool		hasAny = PR_FALSE, hasMore;
-			while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
-					(hasMore == PR_TRUE))
-			{
-				hasAny = PR_TRUE;
+        nsCOMPtr<nsISimpleEnumerator>   folderEnum;
+        if (NS_SUCCEEDED(rv = GetFolderList(source, PR_TRUE, PR_FALSE, getter_AddRefs(folderEnum))))
+        {
+            PRBool      hasAny = PR_FALSE, hasMore;
+            while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
+                    (hasMore == PR_TRUE))
+            {
+                hasAny = PR_TRUE;
 
-				nsCOMPtr<nsISupports>		isupports;
-				if (NS_FAILED(rv = folderEnum->GetNext(getter_AddRefs(isupports))))
-					break;
-				nsCOMPtr<nsIRDFResource>	res = do_QueryInterface(isupports);
-				if (!res)	break;
+                nsCOMPtr<nsISupports>       isupports;
+                if (NS_FAILED(rv = folderEnum->GetNext(getter_AddRefs(isupports))))
+                    break;
+                nsCOMPtr<nsIRDFResource>    res = do_QueryInterface(isupports);
+                if (!res)   break;
 
-				nsCOMPtr<nsIRDFLiteral>		nameLiteral;
-				if (NS_FAILED(rv = GetName(res, getter_AddRefs(nameLiteral))))
-					break;
-				
-				const PRUnichar			*uniName;
-				if (NS_FAILED(rv = nameLiteral->GetValueConst(&uniName)))
-					break;
-				nsAutoString			name(uniName);
+                nsCOMPtr<nsIRDFLiteral>     nameLiteral;
+                if (NS_FAILED(rv = GetName(res, getter_AddRefs(nameLiteral))))
+                    break;
+                
+                const PRUnichar         *uniName;
+                if (NS_FAILED(rv = nameLiteral->GetValueConst(&uniName)))
+                    break;
+                nsAutoString            name(uniName);
 
-				// An empty folder, or a folder that contains just "desktop.ini",
-				// is considered to be a IE Favorite; otherwise, its a folder
-				if (!name.EqualsIgnoreCase("desktop.ini"))
-				{
-					isValid = PR_TRUE;
-					break;
-				}
-			}
-			if (hasAny == PR_FALSE)	isValid = PR_TRUE;
-		}
-	}
-	return(isValid);
+                // An empty folder, or a folder that contains just "desktop.ini",
+                // is considered to be a IE Favorite; otherwise, its a folder
+                if (!name.EqualsIgnoreCase("desktop.ini"))
+                {
+                    isValid = PR_TRUE;
+                    break;
+                }
+            }
+            if (hasAny == PR_FALSE) isValid = PR_TRUE;
+        }
+    }
+    return(isValid);
 }
 #endif
 
@@ -1253,124 +1256,133 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 
 nsresult
 FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
-				PRBool onlyFirst, nsISimpleEnumerator** aResult)
+                PRBool onlyFirst, nsISimpleEnumerator** aResult)
 {
-	nsresult	                rv;
-	nsCOMPtr<nsISupportsArray>  nameArray;
+    if (!isDirURI(source))
+        return(NS_RDF_NO_VALUE);
 
-	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
-	if (NS_FAILED(rv)) return rv;
+    nsresult                    rv;
+    nsCOMPtr<nsISupportsArray>  nameArray;
 
-	const char		*parentURI = nsnull;
-	rv = source->GetValueConst(&parentURI);
-	if (NS_FAILED(rv)) return(rv);
-	if (!parentURI)	return(NS_ERROR_UNEXPECTED);
+    rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
+    if (NS_FAILED(rv))
+        return(rv);
+
+    const char      *parentURI = nsnull;
+    rv = source->GetValueConst(&parentURI);
+    if (NS_FAILED(rv))
+        return(rv);
+    if (!parentURI)
+        return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
     if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), parentURI)))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
-    if (!fileURL)   return(PR_FALSE);
+    if (!fileURL)
+        return(PR_FALSE);
 
-	nsCOMPtr<nsIFile>	aDir;
+    nsCOMPtr<nsIFile>   aDir;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aDir))))
-		return(rv);
+        return(rv);
 
     // ensure that we DO NOT resolve aliases
     nsCOMPtr<nsILocalFile>  aDirLocal = do_QueryInterface(aDir);
     if (aDirLocal)
-    {
         aDirLocal->SetFollowLinks(PR_FALSE);
-    }
 
-	nsCOMPtr<nsISimpleEnumerator>	dirContents;
-	if (NS_FAILED(rv = aDir->GetDirectoryEntries(getter_AddRefs(dirContents))))
-		return(rv);
-	if (!dirContents)	return(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsISimpleEnumerator>   dirContents;
+    if (NS_FAILED(rv = aDir->GetDirectoryEntries(getter_AddRefs(dirContents))))
+        return(rv);
+    if (!dirContents)
+        return(NS_ERROR_UNEXPECTED);
 
-	PRBool			hasMore;
-	while(NS_SUCCEEDED(rv = dirContents->HasMoreElements(&hasMore)) &&
-		(hasMore == PR_TRUE))
-	{
-		nsCOMPtr<nsISupports>	isupports;
-		if (NS_FAILED(rv = dirContents->GetNext(getter_AddRefs(isupports))))
-			break;
+    PRBool          hasMore;
+    while(NS_SUCCEEDED(rv = dirContents->HasMoreElements(&hasMore)) &&
+        (hasMore == PR_TRUE))
+    {
+        nsCOMPtr<nsISupports>   isupports;
+        if (NS_FAILED(rv = dirContents->GetNext(getter_AddRefs(isupports))))
+            break;
 
-		nsCOMPtr<nsIFile>	aFile = do_QueryInterface(isupports);
-		if (!aFile)	break;
+        nsCOMPtr<nsIFile>   aFile = do_QueryInterface(isupports);
+        if (!aFile)
+            break;
 
-		if (allowHidden == PR_FALSE)
-		{
-			PRBool			hiddenFlag = PR_FALSE;
-			if (NS_FAILED(rv = aFile->IsHidden(&hiddenFlag)))
-				break;
-			if (hiddenFlag == PR_TRUE)	continue;
-		}
-
-		// XXX We should use nsIFile::GetUnicodeLeafName().
-		// But currently mozilla's xpcom/io is not unicode normalization.
-		// And URI cannot use UTF-8 (On RFC2396, URI should use UTF-8)
-		// So, we uses nsIFile::GetLeafName() for performance...
- 
-		char            *leafStr = nsnull;
-		if (NS_FAILED(rv = aFile->GetLeafName(&leafStr)))
-		    break;
-		if (!leafStr)   continue;
-  
-		nsCAutoString           fullURI;
-		fullURI.Assign(parentURI);
-		if (fullURI.Last() != '/')
+        if (allowHidden == PR_FALSE)
         {
-		    fullURI.Append('/');
+            PRBool          hiddenFlag = PR_FALSE;
+            if (NS_FAILED(rv = aFile->IsHidden(&hiddenFlag)))
+                break;
+            if (hiddenFlag == PR_TRUE)
+                continue;
+        }
+
+        // XXX We should use nsIFile::GetUnicodeLeafName().
+        // But currently mozilla's xpcom/io is not unicode normalization.
+        // And URI cannot use UTF-8 (On RFC2396, URI should use UTF-8)
+        // So, we uses nsIFile::GetLeafName() for performance...
+ 
+        char            *leafStr = nsnull;
+        if (NS_FAILED(rv = aFile->GetLeafName(&leafStr)))
+            break;
+        if (!leafStr)
+            continue;
+  
+        nsCAutoString           fullURI;
+        fullURI.Assign(parentURI);
+        if (fullURI.Last() != '/')
+        {
+            fullURI.Append('/');
         }
 
         char    *escLeafStr = nsEscape(leafStr, url_Path);
-		Recycle(leafStr);
-		leafStr = nsnull;
+        Recycle(leafStr);
+        leafStr = nsnull;
 
-        if (!escLeafStr)    continue;
+        if (!escLeafStr)
+            continue;
   
-		nsCAutoString           leaf(escLeafStr);
-		Recycle(escLeafStr);
-		escLeafStr = nsnull;
+        nsCAutoString           leaf(escLeafStr);
+        Recycle(escLeafStr);
+        escLeafStr = nsnull;
 
         // using nsEscape() [above] doesn't escape slashes, so do that by hand
-		PRInt32			aOffset;
-		while ((aOffset = leaf.FindChar('/')) >= 0)
-		{
-			leaf.Cut((PRUint32)aOffset, 1);
-			leaf.Insert("%2F", (PRUint32)aOffset);
-		}
+        PRInt32         aOffset;
+        while ((aOffset = leaf.FindChar('/')) >= 0)
+        {
+            leaf.Cut((PRUint32)aOffset, 1);
+            leaf.Insert("%2F", (PRUint32)aOffset);
+        }
 
-		// append the encoded name
-		fullURI.Append(leaf);
+        // append the encoded name
+        fullURI.Append(leaf);
 
-		PRBool			dirFlag = PR_FALSE;
-		rv = aFile->IsDirectory(&dirFlag);
-		if (NS_SUCCEEDED(rv) && (dirFlag == PR_TRUE))
-		{
-			// XXX hmmm, causes problems getting name,
-			// so comment it out for the short term
-//			fullURI.Append(PRUnichar('/'));
-		}
+        PRBool          dirFlag = PR_FALSE;
+        rv = aFile->IsDirectory(&dirFlag);
+        if (NS_SUCCEEDED(rv) && (dirFlag == PR_TRUE))
+        {
+            fullURI.Append('/');
+        }
 
-		nsCOMPtr<nsIRDFResource>	fileRes;
-		gRDFService->GetResource(fullURI.get(), getter_AddRefs(fileRes));
+        nsCOMPtr<nsIRDFResource>    fileRes;
+        gRDFService->GetResource(fullURI.get(), getter_AddRefs(fileRes));
 
-		nameArray->AppendElement(fileRes);
+        nameArray->AppendElement(fileRes);
 
-		if (onlyFirst == PR_TRUE)	break;
-	}
+        if (onlyFirst == PR_TRUE)
+            break;
+    }
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(nameArray);
-	if (! result)
-		return NS_ERROR_OUT_OF_MEMORY;
+    nsISimpleEnumerator* result = new nsArrayEnumerator(nameArray);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-	NS_ADDREF(result);
-	*aResult = result;
+    NS_ADDREF(result);
+    *aResult = result;
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -1380,45 +1392,47 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
 {
     *aResult = nsnull;
 
-	nsresult		rv;
-	const char		*uri = nsnull;
+    nsresult        rv;
+    const char      *uri = nsnull;
 
-	rv = source->GetValueConst(&uri);
-	if (NS_FAILED(rv)) return(rv);
-	if (!uri)	return(NS_ERROR_UNEXPECTED);
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return(rv);
+    if (!uri)
+        return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
     if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
-    if (!fileURL)   return(PR_FALSE);
+    if (!fileURL)
+        return(PR_FALSE);
 
-	nsCOMPtr<nsIFile>	aFile;
+    nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
-		return(rv);
-	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+        return(rv);
+    if (!aFile)
+        return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
     nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
     if (aFileLocal)
-    {
         aFileLocal->SetFollowLinks(PR_FALSE);
-    }
 
     PRInt64 lastModDate;
     if (NS_FAILED(rv = aFile->GetLastModifiedTime(&lastModDate)))
         return(rv);
 
     // convert from milliseconds to seconds
-	PRTime		temp64, thousand;
-	LL_I2L(thousand, PR_MSEC_PER_SEC);
-	LL_MUL(temp64, lastModDate, thousand);
+    PRTime      temp64, thousand;
+    LL_I2L(thousand, PR_MSEC_PER_SEC);
+    LL_MUL(temp64, lastModDate, thousand);
 
-	gRDFService->GetDateLiteral(temp64, aResult);
+    gRDFService->GetDateLiteral(temp64, aResult);
 
     return(NS_OK);
 }
+
 
 
 nsresult
@@ -1426,31 +1440,33 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 {
     *aResult = nsnull;
 
-	nsresult		rv;
-	const char		*uri = nsnull;
+    nsresult        rv;
+    const char      *uri = nsnull;
 
-	rv = source->GetValueConst(&uri);
-	if (NS_FAILED(rv)) return(rv);
-	if (!uri)	return(NS_ERROR_UNEXPECTED);
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv))
+        return(rv);
+    if (!uri)
+        return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
     if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
-    if (!fileURL)   return(PR_FALSE);
+    if (!fileURL)
+        return(PR_FALSE);
 
-	nsCOMPtr<nsIFile>	aFile;
+    nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
-		return(rv);
-	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+        return(rv);
+    if (!aFile)
+        return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
     nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
     if (aFileLocal)
-    {
         aFileLocal->SetFollowLinks(PR_FALSE);
-    }
 
     // don't do anything with directories
     PRBool  isDir = PR_FALSE;
@@ -1463,7 +1479,8 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 #ifdef  XP_MAC
     // on Mac, get total file size (data + resource fork)
     nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
-    if (!aMacFile)  return(NS_ERROR_UNEXPECTED);
+    if (!aMacFile)
+        return(NS_ERROR_UNEXPECTED);
     if (NS_FAILED(rv = aMacFile->GetFileSizeWithResFork(&aFileSize64)))
         return(rv);
 #else
@@ -1473,9 +1490,9 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 
     // convert 64bits to 32bits
     PRInt32     aFileSize32 = 0;
-	LL_L2I(aFileSize32, aFileSize64);
+    LL_L2I(aFileSize32, aFileSize64);
 
-	gRDFService->GetIntLiteral(aFileSize32, aResult);
+    gRDFService->GetIntLiteral(aFileSize32, aResult);
 
     return(NS_OK);
 }
@@ -1485,102 +1502,124 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 nsresult
 FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 {
-	nsresult		rv;
-	const char		*uri = nsnull;
+    nsresult        rv;
+    const char      *uri = nsnull;
 
-	rv = source->GetValueConst(&uri);
-	if (NS_FAILED(rv)) return(rv);
-	if (!uri)	return(NS_ERROR_UNEXPECTED);
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv))
+        return(rv);
+    if (!uri)
+        return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
     if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
-    if (!fileURL)   return(PR_FALSE);
+    if (!fileURL)
+        return(PR_FALSE);
 
-	nsCOMPtr<nsIFile>	aFile;
+    nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
-		return(rv);
-	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+        return(rv);
+    if (!aFile)
+        return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
     nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
     if (aFileLocal)
-    {
         aFileLocal->SetFollowLinks(PR_FALSE);
+
+    PRUnichar       *nameUni = nsnull;
+    if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&nameUni)))
+        return(rv);
+    if (!nameUni)
+        return(NS_ERROR_UNEXPECTED);
+
+    nsAutoString        name(nameUni);
+    Recycle(nameUni);
+    nameUni = nsnull;
+
+#ifdef  XP_MAC
+    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
+    if (aMacFile)
+    {
+        PRBool isPackageFlag = PR_FALSE;
+        rv = aMacFile->IsPackage(&isPackageFlag);
+        if (NS_SUCCEEDED(rv) && (isPackageFlag == PR_TRUE))
+        {
+            // mungle package names under Mac OS 9/X
+            PRUint32 len = name.Length();
+            if (name.RFind(".app", PR_TRUE) == len - 4)
+            {
+                name.SetLength(len-4);
+            }
+        }
     }
-
-	PRUnichar		*nameUni = nsnull;
-	if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&nameUni)))
-		return(rv);
-	if (!nameUni)		return(NS_ERROR_UNEXPECTED);
-
-	nsAutoString		name(nameUni);
-	Recycle(nameUni);
-	nameUni = nsnull;
-
-#ifdef	XP_WIN
-
-	// special hack for IE favorites under Windows; strip off the
-	// trailing ".url" or ".lnk" at the end of IE favorites names
-	PRInt32			nameLen = name.Length();
-	nsAutoString		theURI; theURI.AssignWithConversion(uri);
-	if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
-	{
-		nsAutoString	extension;
-		name.Right(extension, 4);
-		if (extension.EqualsIgnoreCase(".url") ||
-		    extension.EqualsIgnoreCase(".lnk"))
-		{
-			name.Truncate(nameLen - 4);
-		}
-	}
 #endif
 
-#ifdef	XP_BEOS
-	// under BEOS, try and get the "META:title" attribute (if its a file)
-	nsAutoString		theURI; theURI.AssignWithConversion(uri);
-	if (theURI.Find(netPositiveDir) == 0)
-	{
-		nsFileURL		url(uri);
-		nsFilePath		path(url);
-		nsFileSpec		spec(path);
-//		if (spec.IsFile() && (!spec.IsHidden()))
-		if (spec.IsFile() || spec.IsDirectory())
-		{
-			const char	*nativeURI = spec.GetNativePathCString();
-			rv = NS_ERROR_FAILURE;
-			if (nativeURI)
-			{
-				BFile	bf(nativeURI, B_READ_ONLY);
-				if (bf.InitCheck() == B_OK)
-				{
-					char		beNameAttr[4096];
-					ssize_t		len;
-
-					if ((len = bf.ReadAttr("META:title", B_STRING_TYPE,
-						0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
-					{
-						beNameAttr[len] = '\0';
-						name = NS_ConvertUTF8toUCS2(beNameAttr);
-						rv = NS_OK;
-					}
-				}
-			}
-			if (NS_OK != rv)
-			{
-				name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
-				rv = NS_OK;
-			}
-		}
-	}
+#ifdef  XP_WIN
+    // special hack for IE favorites under Windows; strip off the
+    // trailing ".url" or ".lnk" at the end of IE favorites names
+    PRInt32         nameLen = name.Length();
+    nsAutoString        theURI; theURI.AssignWithConversion(uri);
+    if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
+    {
+        nsAutoString    extension;
+        name.Right(extension, 4);
+        if (extension.EqualsIgnoreCase(".url") ||
+            extension.EqualsIgnoreCase(".lnk"))
+        {
+            name.Truncate(nameLen - 4);
+        }
+    }
 #endif
 
-	gRDFService->GetLiteral(name.get(), aResult);
+#ifdef  XP_BEOS
+    // under BEOS, try and get the "META:title" attribute (if its a file)
+    nsAutoString        theURI; theURI.AssignWithConversion(uri);
+    if (theURI.Find(netPositiveDir) == 0)
+    {
+        nsFileURL       url(uri);
+        nsFilePath      path(url);
+        nsFileSpec      spec(path);
+//      if (spec.IsFile() && (!spec.IsHidden()))
+        if (spec.IsFile() || spec.IsDirectory())
+        {
+            const char  *nativeURI = spec.GetNativePathCString();
+            rv = NS_ERROR_FAILURE;
+            if (nativeURI)
+            {
+                BFile   bf(nativeURI, B_READ_ONLY);
+                if (bf.InitCheck() == B_OK)
+                {
+                    char        beNameAttr[4096];
+                    ssize_t     len;
 
-	return NS_OK;
+                    if ((len = bf.ReadAttr("META:title", B_STRING_TYPE,
+                        0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
+                    {
+                        beNameAttr[len] = '\0';
+                        name = NS_ConvertUTF8toUCS2(beNameAttr);
+                        rv = NS_OK;
+                    }
+                }
+            }
+            if (NS_OK != rv)
+            {
+                name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
+                rv = NS_OK;
+            }
+        }
+    }
+#endif
+
+    gRDFService->GetLiteral(name.get(), aResult);
+
+    return NS_OK;
 }
+
+
 
 #ifdef USE_NC_EXTENSION
 nsresult
@@ -1588,91 +1627,99 @@ FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResu
 {
     nsCOMPtr<nsIRDFLiteral> name;
     nsresult rv = GetName(source, getter_AddRefs(name));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     const PRUnichar* unicodeLeafName;
     rv = name->GetValueConst(&unicodeLeafName);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     nsAutoString filename(unicodeLeafName);
     PRInt32 lastDot = filename.RFindChar('.');
-    if (lastDot == -1) {
+    if (lastDot == -1)
+    {
         gRDFService->GetLiteral(NS_LITERAL_STRING("").get(), aResult);
-    } else {
-      nsAutoString extension;
-      filename.Right(extension, (filename.Length() - lastDot));
-      gRDFService->GetLiteral(extension.get(), aResult);
+    }
+    else
+    {
+        nsAutoString extension;
+        filename.Right(extension, (filename.Length() - lastDot));
+        gRDFService->GetLiteral(extension.get(), aResult);
     }
 
     return NS_OK;
 }
 #endif
 
-#ifdef	XP_WIN
+
+
+#ifdef  XP_WIN
 nsresult
 FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral)
 {
-	nsresult		rv = NS_OK;
+    nsresult        rv = NS_OK;
 
-	*urlLiteral = nsnull;
+    *urlLiteral = nsnull;
 
-	nsFileURL		url(aFileURL);
-	nsFileSpec		uri(url);
-	if (uri.IsDirectory())
-	{
-		if (isValidFolder(source))
-			return(NS_RDF_NO_VALUE);
-		uri += "desktop.ini";
-	}
-	else if (aFileURL.Length() > 4)
-	{
-		nsAutoString	extension;
-		aFileURL.Right(extension, 4);
-		if (!extension.EqualsIgnoreCase(".url"))
-		{
-			return(NS_RDF_NO_VALUE);
-		}
-	}
+    nsFileURL       url(aFileURL);
+    nsFileSpec      uri(url);
+    if (uri.IsDirectory())
+    {
+        if (isValidFolder(source))
+            return(NS_RDF_NO_VALUE);
+        uri += "desktop.ini";
+    }
+    else if (aFileURL.Length() > 4)
+    {
+        nsAutoString    extension;
 
-	nsInputFileStream	stream(uri);
+        aFileURL.Right(extension, 4);
+        if (!extension.EqualsIgnoreCase(".url"))
+        {
+            return(NS_RDF_NO_VALUE);
+        }
+    }
 
-	if (!stream.is_open())
-		return(NS_RDF_NO_VALUE);
+    nsInputFileStream   stream(uri);
 
-	char		buffer[256];
-	nsAutoString	line;
-	while(NS_SUCCEEDED(rv) && (!stream.eof()) && (!stream.failed()))
-	{
-		PRBool	untruncated = stream.readline(buffer, sizeof(buffer));
+    if (!stream.is_open())
+        return(NS_RDF_NO_VALUE);
 
-		if (stream.failed())
-		{
-			rv = NS_ERROR_FAILURE;
-			break;
-		}
+    char        buffer[256];
+    nsAutoString    line;
+    while(NS_SUCCEEDED(rv) && (!stream.eof()) && (!stream.failed()))
+    {
+        PRBool  untruncated = stream.readline(buffer, sizeof(buffer));
 
-		line.AppendWithConversion(buffer);
+        if (stream.failed())
+        {
+            rv = NS_ERROR_FAILURE;
+            break;
+        }
 
-		if (untruncated || stream.eof())
-		{
-			if (line.Find("URL=", PR_TRUE) == 0)
-			{
-				line.Cut(0, 4);
-				rv = gRDFService->GetLiteral(line.get(), urlLiteral);
-				break;
-			}
-			else if (line.Find("CDFURL=", PR_TRUE) == 0)
-			{
-				line.Cut(0, 7);
-				rv = gRDFService->GetLiteral(line.get(), urlLiteral);
-				break;
-			}
-			line.Truncate();
-		}
+        line.AppendWithConversion(buffer);
 
-	}
+        if (untruncated || stream.eof())
+        {
+            if (line.Find("URL=", PR_TRUE) == 0)
+            {
+                line.Cut(0, 4);
+                rv = gRDFService->GetLiteral(line.get(), urlLiteral);
+                break;
+            }
+            else if (line.Find("CDFURL=", PR_TRUE) == 0)
+            {
+                line.Cut(0, 7);
+                rv = gRDFService->GetLiteral(line.get(), urlLiteral);
+                break;
+            }
+            line.Truncate();
+        }
 
-	return(rv);
+    }
+
+    return(rv);
 }
 #endif
 
@@ -1683,86 +1730,89 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
 {
     if (isFavorite) *isFavorite = PR_FALSE;
 
-	nsresult		rv;
-	const char		*uri;
-	rv = source->GetValueConst(&uri);
-	if (NS_FAILED(rv)) return(rv);
-	nsAutoString		url;
-	url.AssignWithConversion(uri);
+    nsresult        rv;
+    const char      *uri;
 
-#ifdef	XP_WIN
-	// under Windows, if its an IE favorite, munge the URL
-	if (ieFavoritesDir)
-	{
-		if (url.Find(ieFavoritesDir) == 0)
-		{
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv))
+        return(rv);
+
+    nsAutoString        url;
+    url.AssignWithConversion(uri);
+
+#ifdef  XP_WIN
+    // under Windows, if its an IE favorite, munge the URL
+    if (ieFavoritesDir)
+    {
+        if (url.Find(ieFavoritesDir) == 0)
+        {
             if (isFavorite) *isFavorite = PR_TRUE;
-			rv = getIEFavoriteURL(source, url, aResult);
-			return(rv);
-		}
-	}
+            rv = getIEFavoriteURL(source, url, aResult);
+            return(rv);
+        }
+    }
 #endif
 
-#ifdef	XP_BEOS
-	// under BEOS, try and get the "META:url" attribute
-	if (netPositiveDir)
-	{
-		if (url.Find(netPositiveDir) == 0)
-		{
+#ifdef  XP_BEOS
+    // under BEOS, try and get the "META:url" attribute
+    if (netPositiveDir)
+    {
+        if (url.Find(netPositiveDir) == 0)
+        {
             if (isFavorite) *isFavorite = PR_TRUE;
-			rv = getNetPositiveURL(source, url, aResult);
-			return(rv);
-		}
-	}
+            rv = getNetPositiveURL(source, url, aResult);
+            return(rv);
+        }
+    }
 #endif
 
-	// if we fall through to here, its not any type of bookmark
-	// stored in the platform native file system, so just set the URL
+    // if we fall through to here, its not any type of bookmark
+    // stored in the platform native file system, so just set the URL
 
-	gRDFService->GetLiteral(url.get(), aResult);
+    gRDFService->GetLiteral(url.get(), aResult);
 
-	return(NS_OK);
+    return(NS_OK);
 }
 
 
 
-#ifdef	XP_BEOS
+#ifdef  XP_BEOS
 
 nsresult
 FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral)
 {
-	nsresult		rv = NS_RDF_NO_VALUE;
+    nsresult        rv = NS_RDF_NO_VALUE;
 
-	*urlLiteral = nsnull;
+    *urlLiteral = nsnull;
 
-	nsFileURL		url(aFileURL);
-	nsFilePath		path(url);
-	nsFileSpec		uri(path);
-//	if (uri.IsFile() && (!uri.IsHidden()))
-	if (uri.IsFile())
-	{
-		const char	*nativeURI = uri.GetNativePathCString();
-		if (nativeURI)
-		{
-			BFile	bf(nativeURI, B_READ_ONLY);
-			if (bf.InitCheck() == B_OK)
-			{
-				char		beURLattr[4096];
-				ssize_t		len;
+    nsFileURL       url(aFileURL);
+    nsFilePath      path(url);
+    nsFileSpec      uri(path);
+//  if (uri.IsFile() && (!uri.IsHidden()))
+    if (uri.IsFile())
+    {
+        const char  *nativeURI = uri.GetNativePathCString();
+        if (nativeURI)
+        {
+            BFile   bf(nativeURI, B_READ_ONLY);
+            if (bf.InitCheck() == B_OK)
+            {
+                char        beURLattr[4096];
+                ssize_t     len;
 
-				if ((len = bf.ReadAttr("META:url", B_STRING_TYPE,
-					0, beURLattr, sizeof(beURLattr)-1)) > 0)
-				{
-					beURLattr[len] = '\0';
-					nsAutoString	bookmarkURL;
+                if ((len = bf.ReadAttr("META:url", B_STRING_TYPE,
+                    0, beURLattr, sizeof(beURLattr)-1)) > 0)
+                {
+                    beURLattr[len] = '\0';
+                    nsAutoString    bookmarkURL;
                                         bookmarkURL.AssignWithConversion(beURLattr);
-					rv = gRDFService->GetLiteral(bookmarkURL.get(),
-						urlLiteral);
-				}
-			}
-		}
-	}
-	return(rv);
+                    rv = gRDFService->GetLiteral(bookmarkURL.get(),
+                        urlLiteral);
+                }
+            }
+        }
+    }
+    return(rv);
 }
 
 #endif
