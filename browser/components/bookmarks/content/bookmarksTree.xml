@@ -327,7 +327,7 @@
           selection.parent     = [];
           selection.isExpanded = [];
           var rangeCount = this.treeBoxObject.selection.getRangeCount();
-          // workaround for bug 1715ns47: if rowCount==0, rangeCount==1
+          // workaround for bug 171547: if rowCount==0, rangeCount==1
           if (this.treeBuilder.rowCount > 0)
           for (var k = 0; k < rangeCount; ++k) {
             var rangeMin = {};
@@ -426,9 +426,8 @@
           case "cmd_bm_newbookmark":
           case "cmd_bm_newfolder":
           case "cmd_bm_newseparator":
-          // [Category 2 bis] - Temporary hack 
-          case "cmd_undo":
-          case "cmd_redo":
+          case "cmd_undo": //XXXpch: doesn't work for insert
+          case "cmd_redo": //XXXpch: doesn't work for remove
             // All items inserted will be selected. The implementation of this model
             // is left to |preUpdateTreeSelection|, called when an insert transaction is
             // executed, and |updateTreeSelection| called here. 
@@ -438,14 +437,11 @@
           case "cmd_bm_copy":
           case "cmd_bm_properties":
           case "cmd_bm_rename":
-          case "cmd_bm_setnewbookmarkfolder":
           case "cmd_bm_setpersonaltoolbarfolder":
-          case "cmd_bm_setnewsearchfolder":
           case "cmd_bm_export":
           default:
             // The selection is unchanged.
-            newRanges = oldRanges;
-            break;
+            return;
           }
           
           var newSelection = this.treeBoxObject.view.selection;
@@ -455,19 +451,17 @@
       </method>
 
       <field name="_itemToBeToggled">  []</field>
-      <field name="_parentToBeToggled">[]</field>
+      // keep track of the items that we will select
+      // because we can not select rows during a batch.
       <method name="preUpdateTreeSelection">
         <parameter name="aTxn"/>
+        <parameter name="aDo"/>
         <body><![CDATA[
           aTxn = aTxn.wrappedJSObject;
           var type = aTxn.type;
           // Skip transactions that aggregates nested "insert" or "remove" transactions.
-          if (type != "insert" && type != "remove")
-            return;
-          for (var i=0; i<aTxn.item.length; ++i) {
-            this._itemToBeToggled  .push(aTxn.item  [i]);
-            this._parentToBeToggled.push(aTxn.parent[i]);
-          }
+          if ((type == "insert") && aDo || (type == "remove") && !aDo)
+            this._itemToBeToggled = aTxn.item;
         ]]></body>
       </method>
 
@@ -520,14 +514,15 @@
             this._selection = this.getTreeSelection();
           }
           var selection = this._selection;
-          
-          if (selection.isContainer[0]) {
-            if (this.clickCount == 1 && !modifKey) {
-              this.treeBoxObject.view.toggleOpenState(row);
-              if (selection.protocol[0] != "file")
-                return;
-            }
-          }
+
+          //XXXpch: broken since we have single ID...
+          //if (selection.isContainer[0]) {
+          //  if (this.clickCount == 1 && !modifKey) {
+          //    this.treeBoxObject.view.toggleOpenState(row);
+          //    if (selection.protocol[0] != "file")
+          //      return;
+          //  }
+          //}
           var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
         ]]></body>
@@ -596,6 +591,7 @@
           var selection = this.mOuter._selection;
           var target    = this.mOuter._target;
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          this.mOuter._itemToBeToggled = [];
           
           switch (aCommand) {
           case "cmd_bm_selectAll":
@@ -606,15 +602,7 @@
             break;
           default:
             this.mOuter.saveSelection();
-            // Notify the datasource that we're about to begin a batch operation
-            //BMDS.beginUpdateBatch();
             BookmarksController.doCommand(aCommand, selection, target);
-            //BMDS.endUpdateBatch();
-            //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
-            //this.mOuter.treeBoxObject.selection.currentIndex=-1;
-            // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
-            // if the first visible row is not 0
-            //this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
             this.mOuter.restoreSelection(aCommand);
           }
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
@@ -681,23 +669,20 @@
           else {
             target = this.mOuter.getTreeTarget(rItem, rParent, orientation);
           }
-          //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          this.mOuter._itemToBeToggled = [];
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
 
           if (dragSession.dragAction & kCopyAction)
-            BookmarksUtils.insertSelection("drag", selection, target);
+            BookmarksUtils.insertAndCheckSelection("drag", selection, target);
           else
-            BookmarksUtils.moveSelection  ("drag", selection, target);
-          //this.mOuter.treeBoxObject.selection.currentIndex=-1;
-          // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
-          // if the first visible row is not 0
-          //this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-          this.mOuter.updateTreeSelection();
+            BookmarksUtils.moveAndCheckSelection  ("drag", selection, target);
+          if (this.mOuter._itemToBeToggled.length > 0)
+            this.mOuter.updateTreeSelection();
           // use of a timer to speedup
           var This = this.mOuter;
           setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
-          //dump("6:"+(Date.now()-date)+"\n")
+          //dump("DND time:"+(Date.now()-date)+"\n")
         },
 
         onToggleOpenState: function (aRow)
@@ -737,8 +722,9 @@
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
           var displayValue;
           if (kStatusBar && selection.length == 1) {
-            var protocol = selection.protocol[0];
-            if (selection.isContainer[0] && protocol != "find" && protocol != "file") {
+            //protocol broken since we have unique ID...
+            //var protocol = selection.protocol[0];
+            if (selection.isContainer[0]) {// && protocol != "find" && protocol != "file") {
               RDFC.Init(this.mOuter.db, selection.item[0]);
               var count = RDFC.GetCount();
               displayValue = BookmarksUtils.getLocaleString("status_foldercount", String(count));
@@ -767,33 +753,18 @@
 
         mOuter: this,
 
-        willDo: function (aTxmgr, aTxn) {
-          this.mOuter._itemToBeToggled   = [];
-          this.mOuter._parentToBeToggled = [];
+        willDo: function (aTxmgr, aTxn) {},
+        didDo : function (aTxmgr, aTxn) {
+          this.mOuter.preUpdateTreeSelection(aTxn, true);
         },
-
-        didDo: function (aTxmgr, aTxn) {
-          this.mOuter.preUpdateTreeSelection(aTxn);
+        willUndo: function (aTxmgr, aTxn) {},
+        didUndo : function (aTxmgr, aTxn) {
+          this.mOuter.preUpdateTreeSelection(aTxn, false);
         },
-
-        willUndo: function (aTxmgr, aTxn) {
-          this.mOuter._itemToBeToggled   = [];
-          this.mOuter._parentToBeToggled = [];
+        willRedo: function (aTxmgr, aTxn) {},
+        didRedo : function (aTxmgr, aTxn) {
+          this.mOuter.preUpdateTreeSelection(aTxn, true);
         },
-
-        didUndo: function (aTxmgr, aTxn) {
-          this.mOuter.preUpdateTreeSelection(aTxn);
-        },
-
-        willRedo: function (aTxmgr, aTxn) {
-          this.mOuter._itemToBeToggled   = [];
-          this.mOuter._parentToBeToggled = [];
-        },
-
-        didRedo: function (aTxmgr, aTxn) {
-          this.mOuter.preUpdateTreeSelection(aTxn);
-        },
-
         didMerge       : function (aTxmgr, aTxn) {},
         didBeginBatch  : function (aTxmgr, aTxn) {},
         didEndBatch    : function (aTxmgr, aTxn) {},

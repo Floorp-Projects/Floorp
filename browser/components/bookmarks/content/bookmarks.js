@@ -398,7 +398,7 @@ var BookmarksCommand = {
   cutBookmark: function (aSelection)
   {
     this.copyBookmark(aSelection);
-    BookmarksUtils.removeSelection("cut", aSelection);
+    BookmarksUtils.removeAndCheckSelection("cut", aSelection);
   },
 
   copyBookmark: function (aSelection)
@@ -489,12 +489,12 @@ var BookmarksCommand = {
    
     var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
-    BookmarksUtils.insertSelection("paste", selection, aTarget);
+    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget);
   },
   
   deleteBookmark: function (aSelection)
   {
-    BookmarksUtils.removeSelection("delete", aSelection);
+    BookmarksUtils.removeAndCheckSelection("delete", aSelection);
   },
 
   moveBookmark: function (aSelection)
@@ -662,14 +662,7 @@ var BookmarksCommand = {
   createNewResource: function(aResource, aTarget, aTxnType)
   {
     var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
-    // XXXpch: ugly ugly ugly temporary hack, getsynthesizeType says a bookmark
-    // is not a bookmark when it's not a child of sth.
-    if (aTxnType == "newbookmark") {
-      selection.type[0] = "Bookmark";
-      selection.isImmutable[0] = false;
-      selection.containsImmutable = false;
-    }
-    var ok        = BookmarksUtils.insertSelection(aTxnType, selection, aTarget);
+    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget);
     if (ok) {
       var propWin = this.openBookmarkProperties(selection);
       
@@ -723,13 +716,9 @@ var BookmarksCommand = {
       transaction.item   .push(rChild);
       transaction.parent .push(rTarget);
       transaction.index  .push(index);
-      transaction.isValid.push(true);
     }
-    var isCancelled = !BookmarksUtils.any(transaction.isValid);
-    if (!isCancelled) {
-      BMSVC.transactionManager.doTransaction(transaction);
-      BookmarksUtils.flushDataSource();
-    }    
+    BMSVC.transactionManager.doTransaction(transaction);
+    BookmarksUtils.flushDataSource();
   },
 
   exportBookmarks: function ()
@@ -1009,20 +998,6 @@ var BookmarksUtils = {
   DROP_ON    : Components.interfaces.nsITreeView.inDropOn,
   DROP_AFTER : Components.interfaces.nsITreeView.inDropAfter,
 
-  any: function (aArray)
-  {
-    for (var i=0; i<aArray.length; ++i)
-      if (aArray[i]) return true;
-    return false;
-  },
-
-  all: function (aArray)
-  {
-    for (var i=0; i<aArray.length; ++i)
-      if (!aArray[i]) return false;
-    return true;
-  },
-
   _bundle        : null,
   _brandShortName: null,
 
@@ -1097,7 +1072,7 @@ var BookmarksUtils = {
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns the container of a given container
-  getParentOfContainer: function(aChild)
+  getParentOfResource: function(aChild)
   {
     var arcsIn = BMDS.ArcLabelsIn(aChild);
     var containerArc;
@@ -1119,13 +1094,10 @@ var BookmarksUtils = {
       return;
 
     aSelection.type        = new Array(aSelection.length);
-    aSelection.protocol    = new Array(aSelection.length);
     aSelection.isContainer = new Array(aSelection.length);
-    aSelection.isImmutable = new Array(aSelection.length);
-    aSelection.isValid     = new Array(aSelection.length);
     aSelection.containsPTF = false;
     aSelection.containsImmutable = false;
-    var index, item, parent, type, protocol, isContainer, isImmutable, isValid;
+    var index, item, parent, type, protocol, isContainer, isImmutable;
     for (var i=0; i<aSelection.length; ++i) {
       item        = aSelection.item[i];
       parent      = aSelection.parent[i];
@@ -1133,12 +1105,14 @@ var BookmarksUtils = {
       protocol    = item.Value.split(":")[0];
       isContainer = RDFCU.IsContainer(BMDS, item) ||
                     protocol == "find" || protocol == "file";
-      isValid     = true;
       isImmutable = false;
       if (item.Value == "NC:BookmarksRoot") {
         isImmutable = true;
       }
-      else if (type != "Bookmark" && type != "BookmarkSeparator" && 
+      else if (type != "" && // XXXpch: ugly ugly ugly temporary hack, 
+                             // getsynthesizeType says a bookmark is not a
+                             // bookmark when it's not a child of sth.
+               type != "Bookmark" && type != "BookmarkSeparator" && 
                type != "Folder"   && type != "PersonalToolbarFolder")
         isImmutable = true;
       else if (parent) {
@@ -1150,37 +1124,20 @@ var BookmarksUtils = {
         aSelection.containsImmutable = true;
 
       aSelection.type       [i] = type;
-      aSelection.protocol   [i] = protocol;
       aSelection.isContainer[i] = isContainer;
-      aSelection.isImmutable[i] = isImmutable;
-      aSelection.isValid    [i] = isValid;
     }
     if (this.isContainerChildOrSelf(RDF.GetResource("NC:PersonalToolbarFolder"), aSelection))
       aSelection.containsPTF = true;
   },
 
-  isSelectionValidForInsertion: function (aSelection, aTarget, aAction)
+  isSelectionValidForInsertion: function (aSelection, aTarget)
   {
-    if (!BookmarksUtils.isValidTargetContainer(aTarget.parent, aSelection)) {
-      var isValid = new Array(aSelection.length);
-      for (var i=0; i<aSelection.length; ++i)
-        isValid[i] = false;
-      return isValid;
-    }
-    return aSelection.isValid;
+    return BookmarksUtils.isValidTargetContainer(aTarget.parent, aSelection)
   },
 
   isSelectionValidForDeletion: function (aSelection)
   {
-    var isValid = new Array(aSelection.length);
-    for (i=0; i<aSelection.length; ++i) {
-      if (!aSelection.isValid[i] || aSelection.isImmutable[i] || 
-          !aSelection.parent [i])
-        isValid[i] = false;
-      else
-        isValid[i] = true;
-    }
-    return isValid;
+    return !aSelection.containsImmutable;
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1193,7 +1150,7 @@ var BookmarksUtils = {
         if (aSelection.isContainer[i] && aSelection.item[i] == folder)
           return true;
       }
-      folder = BookmarksUtils.getParentOfContainer(folder);
+      folder = BookmarksUtils.getParentOfResource(folder);
       if (!folder)
         return false; // sanity check
     } while (folder.Value != "NC:BookmarksRoot")
@@ -1229,86 +1186,83 @@ var BookmarksUtils = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
+  removeAndCheckSelection: function (aAction, aSelection)
+  {
+    isValid = BookmarksUtils.isSelectionValidForDeletion(aSelection);
+    if (!isValid) {
+      SOUND.beep();
+      return false;
+    }
+    this.removeSelection(aAction, aSelection, aTarget);
+    BookmarksUtils.flushDataSource();
+    return true;
+  },
+
   removeSelection: function (aAction, aSelection)
   {
-    var transaction     = new BookmarkRemoveTransaction(aAction);
-    transaction.item    = new Array(aSelection.length);
-    transaction.parent  = new Array(aSelection.length);
-    transaction.index   = new Array(aSelection.length);
-    transaction.isValid = BookmarksUtils.isSelectionValidForDeletion(aSelection);
+    var transaction    = new BookmarkRemoveTransaction(aAction);
+    transaction.item   = [];
+    transaction.parent = [];
+    transaction.index  = [];
     for (var i = 0; i < aSelection.length; ++i) {
-      transaction.item  [i] = aSelection.item  [i];
-      transaction.parent[i] = aSelection.parent[i];
-      if (transaction.isValid[i]) {
+      if (aSelection.parent[i]) {
         RDFC.Init(BMDS, aSelection.parent[i]);
-        transaction.index[i]  = RDFC.IndexOf(aSelection.item[i]);
+        transaction.item  .push(aSelection.item[i]);
+        transaction.parent.push(aSelection.parent[i]);
+        transaction.index .push(RDFC.IndexOf(aSelection.item[i]));
       }
     }
-    if (aAction != "move" && !BookmarksUtils.all(transaction.isValid))
-      SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid);
-    if (!isCancelled) {
-      BMSVC.transactionManager.doTransaction(transaction);
-      if (aAction != "move")
-        BookmarksUtils.flushDataSource();
-    }
-    return !isCancelled;
+    BMSVC.transactionManager.doTransaction(transaction);
+    return true;
   },
-      // If the current bookmark is the IE Favorites folder, we have a little
-      // extra work to do - set the pref |browser.bookmarks.import_system_favorites|
-      // to ensure that we don't re-import next time. 
-      //if (aSelection[count].getAttribute("type") == (NC_NS + "IEFavoriteFolder")) {
-      //  const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
-      //  const kPrefSvcIID = Components.interfaces.nsIPrefBranch;
-      //  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-      //  kPrefSvc.setBoolPref("browser.bookmarks.import_system_favorites", false);
-      //}
         
+  insertAndCheckSelection: function (aAction, aSelection, aTarget)
+  {
+    isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
+    if (!isValid) {
+      SOUND.beep();
+      return false;
+    }
+    this.insertSelection(aAction, aSelection, aTarget);
+    BookmarksUtils.flushDataSource();
+    return true;
+  },
+
   insertSelection: function (aAction, aSelection, aTarget)
   {
-    var transaction     = new BookmarkInsertTransaction(aAction);
-    transaction.item    = new Array(aSelection.length);
-    transaction.parent  = new Array(aSelection.length);
-    transaction.index   = new Array(aSelection.length);
-    if (aAction != "move")
-      transaction.isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget, aAction);
-    else // isValid has already been determined in moveSelection
-      transaction.isValid = aSelection.isValid;
+    var transaction    = new BookmarkInsertTransaction(aAction);
+    transaction.item   = new Array(aSelection.length);
+    transaction.parent = new Array(aSelection.length);
+    transaction.index  = new Array(aSelection.length);
     var index = aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
-      
-      if (transaction.isValid[i]) {
-        if (BMSVC.isBookmarkedResource(rSource))
-          rSource = BMSVC.cloneResource(rSource);
-        transaction.item  [i] = rSource;
-        transaction.parent[i] = aTarget.parent;
-        transaction.index [i] = index++;
-      } else {
-        transaction.item  [i] = rSource;
-        transaction.parent[i] = aSelection.parent[i];
-      } 
+      if (BMSVC.isBookmarkedResource(rSource))
+        rSource = BMSVC.cloneResource(rSource);
+      transaction.item  [i] = rSource;
+      transaction.parent[i] = aTarget.parent;
+      transaction.index [i] = index++;
     }
-    if (!BookmarksUtils.all(transaction.isValid))
+    BMSVC.transactionManager.doTransaction(transaction);
+  },
+
+  moveAndCheckSelection: function (aAction, aSelection, aTarget)
+  {
+    var isValid = BookmarksUtils.isSelectionValidForDeletion(aSelection) &&
+                  BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
+    if (!isValid) {
       SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid);
-    if (!isCancelled) {
-      BMSVC.transactionManager.doTransaction(transaction);
-      BookmarksUtils.flushDataSource();
+      return false;
     }
-    return !isCancelled;
+    this.moveSelection(aAction, aSelection, aTarget);
+    BookmarksUtils.flushDataSource();
+    return true;
   },
 
   moveSelection: function (aAction, aSelection, aTarget)
   {
-    aSelection.isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget, "move");
-    var transaction = new BookmarkMoveTransaction(aAction, aSelection, aTarget);
-    var isCancelled = !BookmarksUtils.any(transaction.isValid);
-    if (!isCancelled) {
-      BMSVC.transactionManager.doTransaction(transaction);
-    } else
-      SOUND.beep();
-    return !isCancelled;
+    var txn = new BookmarkMoveTransaction(aAction, aSelection, aTarget);
+    BMSVC.transactionManager.doTransaction(txn);
   }, 
 
   getXferDataFromSelection: function (aSelection)
@@ -1457,7 +1411,7 @@ function BookmarkTransaction()
 }
 
 BookmarkTransaction.prototype = {
-  BATCH_LIMIT : 8,
+  BATCH_LIMIT : 4,
   RDFC        : null,
   BMDS        : null,
 
@@ -1489,7 +1443,6 @@ function BookmarkInsertTransaction (aAction)
   this.item    = null;
   this.parent  = null;
   this.index   = null;
-  this.isValid = null;
 }
 
 BookmarkInsertTransaction.prototype =
@@ -1502,10 +1455,8 @@ BookmarkInsertTransaction.prototype =
   {
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
-      if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
-      }
+      this.RDFC.Init(this.BMDS, this.parent[i]);
+      this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
     }
     this.endUpdateBatch();
   },
@@ -1516,10 +1467,8 @@ BookmarkInsertTransaction.prototype =
     // XXXvarga Can't use |RDFC| here because it's being "reused" elsewhere.
     var container = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
     for (var i=this.item.length-1; i>=0; i--) {
-      if (this.isValid[i]) {
-        container.Init(this.BMDS, this.parent[i]);
-        container.RemoveElementAt(this.index[i], true);
-      }
+      container.Init(this.BMDS, this.parent[i]);
+      container.RemoveElementAt(this.index[i], true);
     }
     this.endUpdateBatch();
   },
@@ -1538,7 +1487,6 @@ function BookmarkRemoveTransaction (aAction)
   this.item    = null;
   this.parent  = null;
   this.index   = null;
-  this.isValid = null;
 }
 
 BookmarkRemoveTransaction.prototype =
@@ -1551,10 +1499,8 @@ BookmarkRemoveTransaction.prototype =
   {
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
-      if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.RemoveElementAt(this.index[i], false);
-      }
+      this.RDFC.Init(this.BMDS, this.parent[i]);
+      this.RDFC.RemoveElementAt(this.index[i], false);
     }
     this.endUpdateBatch();
   },
@@ -1563,10 +1509,8 @@ BookmarkRemoveTransaction.prototype =
   {
     this.beginUpdateBatch();
     for (var i=this.item.length-1; i>=0; i--) {
-      if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.InsertElementAt(this.item[i], this.index[i], false);
-      }
+      this.RDFC.Init(this.BMDS, this.parent[i]);
+      this.RDFC.InsertElementAt(this.item[i], this.index[i], false);
     }
     this.endUpdateBatch();
   },
@@ -1584,7 +1528,6 @@ function BookmarkMoveTransaction (aAction, aSelection, aTarget)
   this.action    = aAction;
   this.selection = aSelection;
   this.target    = aTarget;
-  this.isValid   = aSelection.isValid;
 }
 
 BookmarkMoveTransaction.prototype =
@@ -1627,7 +1570,6 @@ function BookmarkImportTransaction (aAction)
   this.item    = [];
   this.parent  = [];
   this.index   = [];
-  this.isValid = [];
 }
 
 BookmarkImportTransaction.prototype =
@@ -1644,10 +1586,8 @@ BookmarkImportTransaction.prototype =
   {
     this.beginUpdateBatch();
     for (var i=this.item.length-1; i>=0; i--) {
-      if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.RemoveElementAt(this.index[i], true);
-      }
+      this.RDFC.Init(this.BMDS, this.parent[i]);
+      this.RDFC.RemoveElementAt(this.index[i], true);
     }
     this.endUpdateBatch();
   },
@@ -1656,10 +1596,8 @@ BookmarkImportTransaction.prototype =
   {
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
-      if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
-      }
+      this.RDFC.Init(this.BMDS, this.parent[i]);
+      this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
     }
     this.endUpdateBatch();
   }
@@ -1786,8 +1724,7 @@ function dumpTXN(aTxn)
   dump(aTxn.type+", "+aTxn.action+"\n");
   if (aTxn.type == "insert" || aTxn.type == "remove") {
     for (var i=0; i<aTxn.item.length; ++i) {
-      if (aTxn.isValid[i])
-        dump(i+": "+aTxn.item[i].Value+" in "+BookmarksUtils.getProperty(aTxn.parent[i], NC_NS+"Name")+", i:"+aTxn.index[i]+"\n");
+      dump(i+": "+aTxn.item[i].Value+" in "+BookmarksUtils.getProperty(aTxn.parent[i], NC_NS+"Name")+", i:"+aTxn.index[i]+"\n");
     }
   }
 }
