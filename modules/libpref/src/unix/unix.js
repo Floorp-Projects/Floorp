@@ -42,6 +42,7 @@ pref("mailnews.reply_with_extra_lines", 0);
 pref("browser.startup.default_window", 0);
 pref("security.warn_accept_cookie", false);
 pref("editor.disable_spell_checker", false);
+pref("editor.dont_lock_spell_files", true);
 
 // Instead of "delay_images"
 pref("browser.autoload_images", true);
