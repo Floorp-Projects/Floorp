@@ -35,20 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
+/*
+ * nsISeekableStream
+ *
+ * Note that a stream might not implement all methods (e.g., a readonly stream 
+ * won't implement setEOF)
+ * 
+ * @status UNDER_REVIEW
+ */
+
 #include "nsISupports.idl"
-#include "nsrootidl.idl"
 
 [scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsISeekableStream : nsISupports
 {
-    // NB: these must correspond to PRSeekWhence values.
+    /* 
+     * Sets the stream pointer to the value of the 'offset' parameter 
+     */
     const PRInt32 NS_SEEK_SET = 0;
-    const PRInt32 NS_SEEK_CUR = 1;
-    const PRInt32 NS_SEEK_END = 2;
-    
-    void seek(in PRInt32 whence, in PRInt32 offset);
-    PRUint32 tell();
 
-    // truncate stream to the current offset
+    /*  
+     * Sets the stream pointer to its current location plus the value 
+     * of the offset parameter. 
+     */
+    const PRInt32 NS_SEEK_CUR = 1;
+
+    /* 
+     * Sets the stream pointer to the size of the stream plus the value 
+     * of the offset parameter. 
+     */
+    const PRInt32 NS_SEEK_END = 2;
+
+    /**
+     *  seek
+     *
+     *  This method moves the stream offset of the steam implementing this
+     *  interface.
+     *
+     *   @param whence specifies how to interpret the 'offset' parameter in
+     *                 setting the stream offset associated with the implementing
+     *                 stream.
+     *     
+     *   @param offset specifies a value, in bytes, that is used in conjunction
+     *                 with the 'whence' parameter to set the stream offset of the 
+     *                 implementing stream.  A negative value causes seeking in 
+     *                 the reverse direction.
+     */
+    void seek(in long whence, in long offset);
+
+    /**
+     *  tell
+     *
+     *  This method reports the current offset, in bytes, from the start of the 
+     *  stream. 
+     */
+    long tell();
+
+
+    /**
+     *  setEOF
+     *
+     *  This method truncates the stream at the current offset.
+     */
     void setEOF();
 };
