@@ -65,6 +65,8 @@
 #include "nsIPrompt.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
+#include "nsIDragDropOverride.h"
+
 
 static const char sWindowWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
@@ -825,10 +827,11 @@ nsDocShellTreeOwner :: AddChromeListeners ( )
     if ( mChromeDragHandler ) {
       nsCOMPtr<nsIDOMEventReceiver> rcvr;
       GetEventReceiver(mWebBrowser, getter_AddRefs(rcvr));
-      //nsCOMPtr<nsIDOMWebNavigation> webNav (do_QueryInterface(mWebBrowser));
+      nsCOMPtr<nsIOverrideDragSource> srcOverride ( do_QueryInterface(mWebBrowserChrome) );
+      nsCOMPtr<nsIOverrideDropSite> siteOverride ( do_QueryInterface(mWebBrowserChrome) );
       nsCOMPtr<nsIDOMEventTarget> rcvrTarget(do_QueryInterface(rcvr));
       mChromeDragHandler->HookupTo(rcvrTarget, NS_STATIC_CAST(nsIWebNavigation*, mWebBrowser),
-                                    nsnull, nsnull);
+                                    srcOverride, siteOverride);
     }
   }
 
