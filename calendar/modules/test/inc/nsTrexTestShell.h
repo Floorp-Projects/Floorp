@@ -35,6 +35,7 @@
 #include "nsITextAreaWidget.h"
 #include "nspr.h"
 #include "jsapi.h"
+#include "nsIStreamListener.h"
 
 #define TCP_MESG_SIZE                     1024
 #define TCP_SERVER_PORT                   666
@@ -47,8 +48,10 @@ typedef struct buffer {
     char    data[TCP_MESG_SIZE * 2];
 } buffer;
 
+class nsIURL;
 
-class nsTrexTestShell : public nsITrexTestShell 
+class nsTrexTestShell : public nsITrexTestShell,
+                        public nsIStreamListener 
 {
 public:
   nsTrexTestShell();
@@ -69,11 +72,16 @@ public:
   NS_IMETHOD GetWebViewerContainer(nsIWebViewerContainer ** aWebViewerContainer) ;
   NS_IMETHOD StartCommandServer();
   NS_IMETHOD SendCommand(nsString& aCommand);
+  NS_IMETHOD ExecuteJS();
 
 private:
   NS_METHOD RegisterFactories();
   NS_IMETHOD SendJS(nsString& aCommand);
+  NS_IMETHOD LoadScript(nsString& aScript);
   NS_IMETHOD ReceiveCommand(nsString& aCommand, nsString& aReply);
+  NS_METHOD ParseCommandLine();
+  NS_IMETHOD LoadUI();
+  NS_IMETHOD InitNetwork();
 
 private:
   nsIShellInstance * mShellInstance ;
@@ -92,10 +100,27 @@ private:
   PRMonitor *   mClientMon;
   PRNetAddr     mClientAddr;
   nsString      mCommand;
-  JSRuntime *	  mJSRuntime ;
-  JSContext *		mJSContext;
+  JSRuntime *   mJSRuntime ;
+  JSContext *   mJSContext;
   JSObject *    mJSGlobal;
-  JSObject *		mJSZuluObject;
+  JSObject *    mJSZuluObject;
+  nsString      mScript;
+  nsIURL *      mURL;
+  nsIStreamListener * mListener;
+  nsString      mJSData;
+  PRBool        mQuiet;
+  PRBool        mVerbose;
+  PRBool        mStdOut;
+
+  // nsIStreamListener interfaces
+public:
+  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRInt32 aLength)  ;
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
+
 
 };
 

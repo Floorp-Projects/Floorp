@@ -46,7 +46,7 @@
 #include "nscalcids.h"
 #include "capi.h"
 #include "nsICapi.h"
-
+#include "nsxpfcstrings.h"
 #include "nsCoreCIID.h"
 #include "nsLayer.h"
 #include "nsLayerCollection.h"
@@ -1055,13 +1055,12 @@ extern "C" int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
 
 /* mozilla/include/xp_trace.h */
 
+#if defined(NS_DEBUG)
 extern "C" void XP_Trace( const char *, ... ) 
 { 
   printf("XP_Trace not implemented, stubbed in CalendarShell.cpp\n"); 
-
-
 } 
-
+#endif
 
 // XXX: Move Me. This code was in the CommandCanvas, but is really
 //      independent of any UI
@@ -1073,7 +1072,7 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
    * Extract the CanvasName, method and params out
    */
 
-  nsString name, method, param;
+  nsString target, name, method, param;
 
   aCommand.Trim(" \r\n\t");
 
@@ -1081,7 +1080,16 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
 
   if (offset == kNotFound)
     return NS_OK;
-    
+
+  aCommand.Left(target,offset);
+  aCommand.Cut(0,offset);
+  aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+
+  offset = aCommand.Find(' ');
+
+  if (offset == kNotFound)
+    return NS_OK;
+  
   aCommand.Left(name,offset);
   aCommand.Cut(0,offset);
   aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
@@ -1105,59 +1113,64 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
    * Fint the canvas by this name
    */
 
-  nsIXPFCCanvas * root = nsnull;
-  nsIXPFCCanvas * canvas = nsnull;
+  if (target.EqualsIgnoreCase(XPFC_STRING_PANEL))
+  {
+    nsIXPFCCanvas * root = nsnull;
+    nsIXPFCCanvas * canvas = nsnull;
   
-  gXPFCToolkit->GetRootCanvas(&root);
+    gXPFCToolkit->GetRootCanvas(&root);
   
-  canvas = root->CanvasFromName(name);
+    canvas = root->CanvasFromName(name);
 
-  NS_RELEASE(root);
+    NS_RELEASE(root);
 
-  if (canvas == nsnull)
-    return NS_OK;
+    if (canvas == nsnull)
+      return NS_OK;
 
-  /*
-   * Send this command directly to the the canvas.
-   */
+    /*
+     * Send this command directly to the the canvas.
+     */
 
-  static NS_DEFINE_IID(kCXPFCMethodInvokerCommandCID, NS_XPFC_METHODINVOKER_COMMAND_CID);
-  static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
-  static NS_DEFINE_IID(kCXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
-  static NS_DEFINE_IID(kCXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
+    static NS_DEFINE_IID(kCXPFCMethodInvokerCommandCID, NS_XPFC_METHODINVOKER_COMMAND_CID);
+    static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+    static NS_DEFINE_IID(kCXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
+    static NS_DEFINE_IID(kCXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
 
-  nsXPFCMethodInvokerCommand * command;
+    nsXPFCMethodInvokerCommand * command;
 
-  nsresult res = nsRepository::CreateInstance(kCXPFCMethodInvokerCommandCID, 
-                                              nsnull, 
-                                              kXPFCCommandIID, 
-                                              (void **)&command);
+    nsresult res = nsRepository::CreateInstance(kCXPFCMethodInvokerCommandCID, 
+                                                nsnull, 
+                                                kXPFCCommandIID, 
+                                                (void **)&command);
 
-  if (NS_OK != res)
-    return res ;
+    if (NS_OK != res)
+      return res ;
 
-  command->Init();
+    command->Init();
 
-  command->mMethod = method;
-  command->mParams = param;
+    command->mMethod = method;
+    command->mParams = param;
 
-  /*
-   * Pass this Command onto the Observer interface of the target canvas directly.
-   * There is no need to go through the ObserverManager since we have the
-   * necessary info
-   */
+    /*
+     * Pass this Command onto the Observer interface of the target canvas directly.
+     * There is no need to go through the ObserverManager since we have the
+     * necessary info
+     */
 
-  nsIXPFCObserver * observer = nsnull;
-  nsIXPFCSubject * subject = nsnull;
+    nsIXPFCObserver * observer = nsnull;
+    nsIXPFCSubject * subject = nsnull;
 
-  res = canvas->QueryInterface(kCXPFCObserverIID, (void **)&observer);
-  if (res == NS_OK)
-    observer->Update(subject,command);
+    res = canvas->QueryInterface(kCXPFCObserverIID, (void **)&observer);
+    if (res == NS_OK)
+      observer->Update(subject,command);
 
-  aReply = command->mReply;
+    aReply = command->mReply;
 
-  NS_IF_RELEASE(command);
-  NS_IF_RELEASE(observer);
+    NS_IF_RELEASE(command);
+    NS_IF_RELEASE(observer);
+  } else {
+    aReply = "ERROR: target class unknown\n";
+  }
   
   return NS_OK;  
 }

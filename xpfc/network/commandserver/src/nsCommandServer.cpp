@@ -47,6 +47,7 @@ nsCommandServer :: nsCommandServer()
 
 nsCommandServer :: ~nsCommandServer()
 {
+  ExitThread();
   NS_IF_RELEASE(mApplicationShell);
 }
 
@@ -161,7 +162,7 @@ nsresult nsCommandServer :: RunThread()
    * the communication
    */
 
-  for (i = 0; i < (NUM_TCP_CLIENTS * NUM_TCP_CONNECTIONS_PER_CLIENT); i++) 
+  while(mNumThreads)//for (i = 0; i < (NUM_TCP_CLIENTS * NUM_TCP_CONNECTIONS_PER_CLIENT); i++) 
   {   
     newsockfd = PR_Accept(sockfd, &netaddr, PR_INTERVAL_NO_TIMEOUT);
 
@@ -193,7 +194,9 @@ static void PR_CALLBACK CommandServerThread(void * arg)
 
   command_server->RunThread();
 
+#if 0
   command_server->ExitThread();
+#endif
 
 }
 
@@ -282,7 +285,7 @@ nsresult nsCommandServer :: ExitThread()
   --(*mExitCounter);
   PR_Notify(mExitMon);
   PR_ExitMonitor(mExitMon);
-
+  mNumThreads--;
   return NS_OK;
 }
 

@@ -14,6 +14,7 @@ EXPORTS = \
     nsxpfcstrings.h \
     nsxpfc.h \
     nsxpfcFactory.h \
+	nsXPFCError.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

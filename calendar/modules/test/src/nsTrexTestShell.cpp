@@ -32,21 +32,12 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nspr.h"
-
-#define HEIGHT 30
-
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-nsITrexTestShell * gShell = nsnull;
-
-nsEventStatus PR_CALLBACK HandleEventTextField(nsGUIEvent *aEvent);
-
-// All Applications must specify this *special* application CID
-// to their own unique IID.
-nsIID kIXPCOMApplicationShellCID = NS_TREXTEST_SHELL_CID ; 
+#include "plgetopt.h"
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
+#include "nsIInputStream.h"
+#include "nsCRT.h"
+#include "jsapi.h"
 
 #ifdef NS_UNIX
 #include "Xm/Xm.h"
@@ -54,31 +45,89 @@ nsIID kIXPCOMApplicationShellCID = NS_TREXTEST_SHELL_CID ;
 #include "Xm/Frame.h"
 #include "Xm/XmStrDefs.h"
 #include "Xm/DrawingA.h"
-
-extern XtAppContext app_context;
-extern Widget topLevel;
 #endif
 
-
-#include "nsCRT.h"
-static void PR_CALLBACK TrexTestClientThread(void *arg);
-
-
-#include "jsapi.h"
-void PR_CALLBACK ZuluErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-PR_STATIC_CALLBACK(JSBool) Zulu(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+/*
+ * Enums
+ */
 
 enum Zulu_slots {
   ZULU_ZULU = -1,
   ZULU_ALIVE = -2
 };
 
+/*
+ * Macros
+ */
+
+#define HEIGHT 30
+
+/*
+ * Local Consts
+ */
+
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
+
+/*
+ * External refs
+ */
+
+#ifdef NS_UNIX
+extern XtAppContext app_context;
+extern Widget topLevel;
+#endif
+
+/*
+ * Local Globals
+ */
+
+nsITrexTestShell * gShell = nsnull;
+nsIID kIXPCOMApplicationShellCID = NS_TREXTEST_SHELL_CID ; 
+static PRFileDesc *output = nsnull;
+static PRFileDesc *fd_stdout = nsnull;
+
+/*
+ * Forward Declarations
+ */
+
+nsEventStatus PR_CALLBACK HandleEventTextField(nsGUIEvent *aEvent);
+static void PR_CALLBACK TrexTestClientThread(void *arg);
+static void PR_CALLBACK JSThread(void *arg);
+void PR_CALLBACK ZuluErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+PR_STATIC_CALLBACK(JSBool) Zulu(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
+
+/*
+ * Useage
+ */
+
+static nsresult Usage(void)
+{
+  PR_fprintf(output, "\nzulutest [-q] [-d] [-o] [-v] [-s <filename>]\n");
+  PR_fprintf(output, "  -d\t\tdebug mode\n");
+  PR_fprintf(output, "  -q\t\tquiet mode, no interactive UI\n");
+  PR_fprintf(output, "  -o\t\tredirect output to stdout\n");
+  PR_fprintf(output, "  -v\t\tverbose output\n");
+  PR_fprintf(output, "  -s <filename>\tlaunch command script \t(implies -c)\n");
+  return 1; 
+} 
+
+
+/*
+ * GetZuluProperty
+ */
 
 PR_STATIC_CALLBACK(JSBool) GetZuluProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsTrexTestShell * a = (nsTrexTestShell*)JS_GetPrivate(cx, obj);
 
-  // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
     return JS_TRUE;
   }
@@ -103,32 +152,44 @@ PR_STATIC_CALLBACK(JSBool) GetZuluProperty(JSContext *cx, JSObject *obj, jsval i
 
 }
 
+/*
+ * SetZuluProperty
+ */
+
 PR_STATIC_CALLBACK(JSBool) SetZuluProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   return PR_TRUE;
 }
 
+/*
+ * FinalizeZulu
+ */
+
 PR_STATIC_CALLBACK(void) FinalizeZulu(JSContext *cx, JSObject *obj)
 {
 }
+
+/*
+ * EnumerateZulu
+ */
 
 PR_STATIC_CALLBACK(JSBool) EnumerateZulu(JSContext *cx, JSObject *obj)
 {
   return JS_TRUE;
 }
 
+/*
+ * ResolveZulu
+ */
+
 PR_STATIC_CALLBACK(JSBool) ResolveZulu(JSContext *cx, JSObject *obj, jsval id)
 {
   return JS_TRUE;
 }
 
-
-PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx, 
-                                       JSObject *obj, 
-                                       uintN argc, 
-                                       jsval *argv, 
-                                       jsval *rval);
-
+/*
+ * JS Zulu class prototype
+ */
 
 JSClass ZuluClass = 
 {
@@ -199,23 +260,34 @@ nsTrexTestShell::nsTrexTestShell()
   mJSZuluObject = nsnull;
 
   Zulu(nsnull,nsnull,0,nsnull,nsnull);
+
+  mScript = "";
+  mURL = nsnull;
+  mListener = nsnull;
+  mJSData = "";
+
+  mQuiet = PR_FALSE;
+  mVerbose = PR_FALSE;
+  mStdOut = PR_FALSE;
+
 }
+
+/*
+ * nsTrexTestShell dtor
+ */
 
 nsTrexTestShell::~nsTrexTestShell()
 {
-	if (mJSContext) JS_DestroyContext(mJSContext);
-	if (mJSRuntime) JS_Finish(mJSRuntime);                      
-
-	mJSContext = NULL;
-	mJSRuntime = NULL;
 
   NS_IF_RELEASE(mInput);
   NS_IF_RELEASE(mDisplay);
+  NS_IF_RELEASE(mURL);
+  NS_IF_RELEASE(mListener);
 }
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
-
+/*
+ * nsISupports stuff
+ */
 
 nsresult nsTrexTestShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
@@ -232,6 +304,9 @@ nsresult nsTrexTestShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(kIAppShellIID)) {  //do nsIContentSink base class...
     *aInstancePtr = (nsIAppShell*)(this);                                        
   }
+  else if(aIID.Equals(kIStreamListenerIID)) {  //do nsIContentSink base class...
+    *aInstancePtr = (nsIStreamListener*)(this);                                        
+  }  
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -242,6 +317,10 @@ nsresult nsTrexTestShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_IMPL_ADDREF(nsTrexTestShell)
 NS_IMPL_RELEASE(nsTrexTestShell)
+
+/*
+ * Init
+ */
 
 nsresult nsTrexTestShell::Init()
 {
@@ -256,6 +335,103 @@ nsresult nsTrexTestShell::Init()
 
   if (NS_OK != res)
     return res ;
+
+  /*
+   * Parse the command line
+   */
+
+  res = ParseCommandLine();
+
+  if (NS_OK != res)
+    return res;
+
+  /*
+   * Load UI if not in quiet mode
+   */
+
+  if (PR_FALSE == mQuiet)
+    LoadUI();
+
+  /*
+   * Get the basic networking stuff
+   */
+
+  InitNetwork();
+
+  /*
+   * Load a Script if it was specified on the command line
+   */
+
+
+  LoadScript(mScript);
+
+  return res ;
+}
+
+
+nsresult nsTrexTestShell::Create(int* argc, char ** argv)
+{
+  return NS_OK;
+}
+
+nsresult nsTrexTestShell::InitNetwork()
+{
+  mClientMon = PR_NewMonitor();
+  PR_EnterMonitor(mClientMon);
+
+  PRFileDesc * sockfd = nsnull;
+  PRNetAddr netaddr;
+  PRInt32 i = 0;
+
+  sockfd = PR_NewTCPSocket();
+
+  if (sockfd == nsnull)
+    return NS_OK;
+
+  nsCRT::memset(&netaddr, 0 , sizeof(netaddr));
+
+  netaddr.inet.family = PR_AF_INET;
+  netaddr.inet.port   = PR_htons(TCP_SERVER_PORT);
+  netaddr.inet.ip     = PR_htonl(PR_INADDR_ANY);
+
+  while (PR_Bind(sockfd, &netaddr) < 0) 
+  {
+    if (PR_GetError() == PR_ADDRESS_IN_USE_ERROR) 
+    {
+      netaddr.inet.port += 2;
+      if (i++ < SERVER_MAX_BIND_COUNT)
+        continue;
+    }
+    PR_Close(sockfd);
+    return NS_OK;
+  }
+
+  if (PR_Listen(sockfd, 32) < 0) 
+  {
+    PR_Close(sockfd);
+    return NS_OK;
+  }
+
+  if (PR_GetSockName(sockfd, &netaddr) < 0) 
+  {
+    PR_Close(sockfd);
+    return NS_OK;
+  }
+
+  mClientAddr.inet.family = netaddr.inet.family;
+  mClientAddr.inet.port   = netaddr.inet.port;
+  mClientAddr.inet.ip     = netaddr.inet.ip;
+
+  PR_Close(sockfd);
+
+  PR_ExitMonitor(mClientMon);
+
+  return NS_OK;
+}
+
+nsresult nsTrexTestShell::LoadUI()
+{
+  nsresult res = NS_OK;
 
   nsRect aRect(100,100,800, 600) ;
 
@@ -272,7 +448,7 @@ nsresult nsTrexTestShell::Init()
    * create the 2 widgets
    */
 
-    static NS_DEFINE_IID(kInsTextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+  static NS_DEFINE_IID(kInsTextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 
   nsRepository::CreateInstance(kCTextAreaCID, 
                                nsnull, 
@@ -336,91 +512,9 @@ nsresult nsTrexTestShell::Init()
 
   mShellInstance->ShowApplicationWindow(PR_TRUE) ;
 
-
-  mClientMon = PR_NewMonitor();
-  PR_EnterMonitor(mClientMon);
-
-  PRFileDesc * sockfd = nsnull;
-  PRNetAddr netaddr;
-  PRInt32 i = 0;
-
-  sockfd = PR_NewTCPSocket();
-
-  if (sockfd == nsnull)
-    return NS_OK;
-
-  nsCRT::memset(&netaddr, 0 , sizeof(netaddr));
-
-  netaddr.inet.family = PR_AF_INET;
-  netaddr.inet.port   = PR_htons(TCP_SERVER_PORT);
-  netaddr.inet.ip     = PR_htonl(PR_INADDR_ANY);
-
-  while (PR_Bind(sockfd, &netaddr) < 0) 
-  {
-    if (PR_GetError() == PR_ADDRESS_IN_USE_ERROR) 
-    {
-      netaddr.inet.port += 2;
-      if (i++ < SERVER_MAX_BIND_COUNT)
-        continue;
-    }
-    PR_Close(sockfd);
-    return NS_OK;
-  }
-
-  if (PR_Listen(sockfd, 32) < 0) 
-  {
-    PR_Close(sockfd);
-    return NS_OK;
-  }
-
-  if (PR_GetSockName(sockfd, &netaddr) < 0) 
-  {
-    PR_Close(sockfd);
-    return NS_OK;
-  }
-
-  mClientAddr.inet.family = netaddr.inet.family;
-  mClientAddr.inet.port   = netaddr.inet.port;
-  mClientAddr.inet.ip     = netaddr.inet.ip;
-
-  PR_Close(sockfd);
-
-  // Kick off JS - Later on, we need to look at the DOM
-	mJSRuntime = JS_Init((uint32) 0xffffffffL);
-
-  if (nsnull != mJSRuntime) 
-	  mJSContext = JS_NewContext(mJSRuntime, 8192);
-
-  mJSGlobal = JS_NewObject(mJSContext, &ZuluClass, nsnull, nsnull);
-
-  if (nsnull != mJSGlobal) 
-  {
-    JS_SetPrivate(mJSContext, mJSGlobal, this);
-
-    JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
-    JS_DefineFunctions(mJSContext, mJSGlobal,  ZuluMethods);
-
-    //JS_AddNamedRoot(mJSContext, aSlot, "zulu_object");
-
-    JS_InitStandardClasses(mJSContext, mJSGlobal);
-    JS_SetGlobalObject(mJSContext, mJSGlobal);
-
-    // Init our Zulu object here!
-    //JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
-    //JS_DefineFunctions(mJSContext, mJSGlobal, ZuluMethods);
-
-    JS_SetErrorReporter(mJSContext, ZuluErrorReporter); 
-
-  }
-
-  return res ;
-}
-
-
-nsresult nsTrexTestShell::Create(int* argc, char ** argv)
-{
   return NS_OK;
 }
+
 nsresult nsTrexTestShell::Exit()
 {
   return NS_OK;
@@ -480,24 +574,130 @@ nsresult nsTrexTestShell::GetWebViewerContainer(nsIWebViewerContainer ** aWebVie
   return NS_OK;
 }
 
+nsresult nsTrexTestShell::LoadScript(nsString& aScript)
+{
+  /*
+   * aScript represents a URL to load.  Let's use Netlib to grab the
+   * script and pass the contents off to JS
+   */
+
+  if (mScript.Length() == 0)
+    return NS_OK;
+
+  /*
+   * Create a URL
+   */
+
+  nsresult res = NS_OK;
+  
+  if (PR_TRUE == mStdOut)
+  {
+    char * c = mScript.ToNewCString();
+    PR_fprintf(fd_stdout, "STATUS: Loading JS URL %s\n",c);
+    delete c;
+  }
+
+  res = NS_NewURL(&mURL, mScript);
+
+  if (NS_OK == res)
+  {
+    res = QueryInterface(kIStreamListenerIID, (void **) &mListener);
+
+    if (NS_OK == res)
+      mURL->Open(mListener);
+  }
+
+  return res;
+}
+
 nsresult nsTrexTestShell::SendJS(nsString& aCommand)
 {
-  nsIWidget * iw = nsnull;
-  nsresult res = mInput->QueryInterface(kIWidgetIID, (void**)&iw);
-  nsIWidget * dw = nsnull;
-  res = mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
+  nsresult res = NS_OK;
 
-  mInput->RemoveText();
-  iw->Invalidate(PR_TRUE);
-  nsString string("COMMAND: ");
-  PRUint32 length;
-  mDisplay->InsertText(string,0x7fffffff,0x7fffffff,length);
+  if (PR_FALSE == mQuiet)
+  {
+    nsIWidget * iw = nsnull;
+    res = mInput->QueryInterface(kIWidgetIID, (void**)&iw);
+    nsIWidget * dw = nsnull;
+    res = mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
+
+    mInput->RemoveText();
+    iw->Invalidate(PR_TRUE);
+    nsString string("COMMAND: ");
+    PRUint32 length;
+    mDisplay->InsertText(string,0x7fffffff,0x7fffffff,length);
+    NS_RELEASE(iw);
+    NS_RELEASE(dw);
+  }
+  
+  if (PR_TRUE == mStdOut) 
+    PR_fprintf(fd_stdout, "STATUS: Creating JS Thread to Execute Code\n");
+
   mCommand.Truncate(0);
   aCommand.Copy(mCommand);
 
   mClientAddr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
 
+  /*
+   * Launch JS on a separate thread so the UI will be responsive
+   */
+
+
+  PRThread *t;
+
+  t = PR_CreateThread(PR_USER_THREAD,
+                      JSThread, 
+                      (void *) this,
+                      PR_PRIORITY_NORMAL,
+                      PR_LOCAL_THREAD,
+                      PR_UNJOINABLE_THREAD,
+                      0);
+
+#if 0
+  mNumThreads++;
+
+  PR_EnterMonitor(mClientMon);
+
+  while (mNumThreads) {
+      PR_Wait(mClientMon, PR_INTERVAL_NO_TIMEOUT);
+  }
+
+  PR_ExitMonitor(mClientMon);
+#endif
+
+  return NS_OK;
+}
+
+nsresult nsTrexTestShell::ExecuteJS()
+{
   jsval rval;
+
+  // Kick off JS - Later on, we need to look at the DOM
+  mJSRuntime = JS_Init((uint32) 0xffffffffL);
+
+  if (nsnull != mJSRuntime) 
+	  mJSContext = JS_NewContext(mJSRuntime, 8192);
+
+  mJSGlobal = JS_NewObject(mJSContext, &ZuluClass, nsnull, nsnull);
+
+  if (nsnull != mJSGlobal) 
+  {
+    JS_SetPrivate(mJSContext, mJSGlobal, this);
+
+    JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
+    JS_DefineFunctions(mJSContext, mJSGlobal,  ZuluMethods);
+
+    JS_InitStandardClasses(mJSContext, mJSGlobal);
+    JS_SetGlobalObject(mJSContext, mJSGlobal);
+
+    // Init our Zulu object here!
+    //JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
+    //JS_DefineFunctions(mJSContext, mJSGlobal, ZuluMethods);
+
+    JS_SetErrorReporter(mJSContext, ZuluErrorReporter); 
+
+  }
+
 
   JS_EvaluateUCScriptForPrincipals(mJSContext, 
                                    JS_GetGlobalObject(mJSContext),
@@ -508,32 +708,43 @@ nsresult nsTrexTestShell::SendJS(nsString& aCommand)
                                    0,
                                    &rval);
 
-  while (mNumThreads) {
-      PR_Wait(mClientMon, PR_INTERVAL_NO_TIMEOUT);
-  }
 
-  PR_ExitMonitor(mClientMon);
+  if (mJSContext) JS_DestroyContext(mJSContext);
+  if (mJSRuntime) JS_Finish(mJSRuntime);                      
 
-  NS_RELEASE(iw);
-  NS_RELEASE(dw);
+  mJSContext = NULL;
+  mJSRuntime = NULL;
 
-  ReceiveCommand(mCommand,mCommand);
-
-
+  if (PR_TRUE == mStdOut) 
+    PR_fprintf(fd_stdout, "STATUS: Exiting JS Thread\n");
+  
   return NS_OK;
 }
 
 nsresult nsTrexTestShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
 {
-  PRUint32 length;
-  mDisplay->InsertText(aReply,0x7fffffff,0x7fffffff,length);
-  mDisplay->InsertText("\r\n",0x7fffffff,0x7fffffff,length);
+  if (PR_FALSE == mQuiet)
+  {
+    PRUint32 length;
+    mDisplay->InsertText(aReply,0x7fffffff,0x7fffffff,length);
+    mDisplay->InsertText("\r\n",0x7fffffff,0x7fffffff,length);
 
-  nsIWidget * dw = nsnull;
+    nsIWidget * dw = nsnull;
 
-  mDisplay->QueryInterface(kIWidgetIID,(void**)&dw);
+    mDisplay->QueryInterface(kIWidgetIID,(void**)&dw);
 
-  dw->Invalidate(PR_TRUE);
+    dw->Invalidate(PR_TRUE);
+
+    NS_RELEASE(dw);
+  }
+
+  if (PR_TRUE == mStdOut) 
+  {
+    char * c = aReply.ToNewCString();
+    PR_fprintf(fd_stdout, "ReceiveCommand: %s\n",c);
+    delete c;
+  }
+
 
   return NS_OK;
 }
@@ -592,22 +803,25 @@ nsEventStatus nsTrexTestShell::HandleEvent(nsGUIEvent *aEvent)
 
         case NS_SIZE:
         {
-          nsRect * rect = ((nsSizeEvent*)aEvent)->windowSize;
 
-          rect->x = 0;
-          rect->y = 0;
+          if (PR_FALSE == mQuiet)
+          {
+            nsRect * rect = ((nsSizeEvent*)aEvent)->windowSize;
 
-          nsIWidget * iw = nsnull;
-          mInput->QueryInterface(kIWidgetIID, (void**)&iw);
-          nsIWidget * dw = nsnull;
-          mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
+            rect->x = 0;
+            rect->y = 0;
 
-          dw->Resize(rect->x,rect->y,rect->width,rect->height-HEIGHT,PR_TRUE);
-          iw->Resize(rect->x,rect->height-HEIGHT,rect->width,HEIGHT,PR_TRUE);
+            nsIWidget * iw = nsnull;
+            mInput->QueryInterface(kIWidgetIID, (void**)&iw);
+            nsIWidget * dw = nsnull;
+            mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
 
-          NS_RELEASE(iw);
-          NS_RELEASE(dw);
+            dw->Resize(rect->x,rect->y,rect->width,rect->height-HEIGHT,PR_TRUE);
+            iw->Resize(rect->x,rect->height-HEIGHT,rect->width,HEIGHT,PR_TRUE);
 
+            NS_RELEASE(iw);
+            NS_RELEASE(dw);
+          }
           return nsEventStatus_eConsumeNoDefault;
         }
         break ;
@@ -637,6 +851,14 @@ static void PR_CALLBACK TrexTestClientThread(void *arg)
   app->RunThread();
 
   app->ExitThread();
+
+}
+
+static void PR_CALLBACK JSThread(void *arg)
+{
+  nsTrexTestShell * app = (nsTrexTestShell *) arg;
+
+  app->ExecuteJS();
 
 }
 
@@ -780,7 +1002,12 @@ PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx,
 nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
 {
   /*
-   * Launch a thread to deal with this
+   * We no longer launch a separate thread for dealing 
+   * with Zulu Specific commands.  The reason is simply that
+   * future commands may depend upon return paramaters on 
+   * this command. Since the JS thread is what calls this 
+   * API, the JS code being executed will wait until return
+   * of the calling function.
    */
 
   PRThread *t;
@@ -791,6 +1018,16 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
 
   mCommand = aCommand;
 
+  if (PR_TRUE == mStdOut) 
+  {
+    char * c = mCommand.ToNewCString();
+    PR_fprintf(fd_stdout, "SendCommand: %s\n",c);
+    delete c;
+  }
+
+  RunThread();
+
+#if 0
   t = PR_CreateThread(PR_USER_THREAD,
                       TrexTestClientThread, 
                       (void *) this,
@@ -800,11 +1037,103 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
                       0);
 
   mNumThreads++;
+#endif
 
+  /*
+   * XXX: we've actually gotten the response back from SendCommand
+   */
+
+  ReceiveCommand(mCommand,mCommand);
 
   return NS_OK;
 }
 
 
 
+
+
+nsresult nsTrexTestShell::ParseCommandLine()
+{
+  PLOptStatus os;
+  PLOptState *opt;
+  
+  output = PR_GetSpecialFD(PR_StandardError);
+
+  mShellInstance->GetCommandLineOptions(&opt,"hoqvdl:s:");
+
+	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+  {
+    if (PL_OPT_BAD == os) 
+      continue;
+
+    switch (opt->option)
+    {    
+      case 'd':  
+      break;
+
+      case 'q':  
+        mQuiet = PR_TRUE;
+      break;
+
+      case 'o':  
+        mStdOut = PR_TRUE;
+        fd_stdout = PR_GetSpecialFD(PR_StandardOutput);
+      break;
+
+      case 'v':  
+        mVerbose = PR_TRUE;
+      break;
+      
+      case 's':
+      {
+        mScript = opt->value;
+      }
+      break;
+      
+      case 'h':  /* confused */
+      default:
+        return Usage();
+    }
+  }
+  return NS_OK;
+}
+
+
+nsresult nsTrexTestShell::GetBindInfo(nsIURL* aURL)
+{
+  return NS_OK;
+}
+nsresult nsTrexTestShell::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRInt32 aLength)
+{
+  PRInt32 count;
+  char * buffer = (char *)PR_Malloc(sizeof(char) * (aLength+1));
+
+  aIStream->Read(buffer, 0, aLength, &count);
+
+  buffer[aLength] = '\0';
+
+  mJSData += buffer;
+
+  PR_Free(buffer);
+
+  return NS_OK;
+}
+nsresult nsTrexTestShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
+{
+  mJSData = "";
+  return NS_OK;
+}
+nsresult nsTrexTestShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+nsresult nsTrexTestShell::OnStatus(nsIURL* aURL, const nsString &aMsg)
+{
+  return NS_OK;
+}
+nsresult nsTrexTestShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
+{
+  SendJS(mJSData);
+  return NS_OK;
+}
 

@@ -43,6 +43,7 @@
 #include "nspr.h"
 #include "nsViewsCID.h"
 #include "nsIViewManager.h"
+#include "nsXPFCError.h"
 
 #define DEFAULT_WIDTH  100
 #define DEFAULT_HEIGHT 100
@@ -1959,7 +1960,9 @@ nsEventStatus nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
   if (NS_OK == res)
   {
 
-    if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETBACKGROUNDCOLOR))
+    if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETBACKGROUNDCOLOR)
+     || methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETFOREGROUNDCOLOR)
+     || methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETBORDERCOLOR))
     {
       nscolor color;
 
@@ -1967,18 +1970,44 @@ nsEventStatus nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
 
       NS_HexToRGB(ccolor, &color);
       
-      SetBackgroundColor(color);
+      if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETBACKGROUNDCOLOR))
+        SetBackgroundColor(color);
+      else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETFOREGROUNDCOLOR))
+        SetForegroundColor(color);
+      else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_SETBORDERCOLOR))
+        SetBorderColor(color);
 
       delete ccolor;
-    }
-    else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETBACKGROUNDCOLOR))
-    {
-      nsString reply_string("ABGR = ");
 
-      reply_string.Append(GetBackgroundColor(),16);
+      NSRESULT_TO_NSTRING(NS_OK,methodinvoker_command->mReply);
+    }
+    else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETBACKGROUNDCOLOR)
+          || methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETFOREGROUNDCOLOR)
+          || methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETBORDERCOLOR))
+    {
+      nscolor color;
+      
+      if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETBACKGROUNDCOLOR))
+        color = GetBackgroundColor();
+      else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETFOREGROUNDCOLOR))
+        color = GetForegroundColor();
+      else if (methodinvoker_command->mMethod.EqualsIgnoreCase(XPFC_STRING_GETBORDERCOLOR))
+        color = GetBorderColor();
+
+      nsString reply_string("#");
+
+      nscolor r = NS_GET_R(color);
+      nscolor g = NS_GET_G(color);
+      nscolor b = NS_GET_B(color);
+
+      reply_string.Append(r,16);
+      if (0 == r) reply_string.Append(r,16);
+      reply_string.Append(g,16);
+      if (0 == g) reply_string.Append(g,16);
+      reply_string.Append(b,16);
+      if (0 == b) reply_string.Append(b,16);
 
       methodinvoker_command->mReply = reply_string;
-
     }
 
     NS_RELEASE(methodinvoker_command);

@@ -7,23 +7,12 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../../../..
 
-DIRS_LIBS = js
-
-EXPORTS = \
-	$(NULL)
-
-PRIVATE_EXPORTS = \
-	$(NULL)
+GDEPTH = ../../../../..
 
 MODULE = trex
 
-CPPSRCS = \
-	nsTrexTestShell.cpp \
-	nsTrexTestShellFactory.cpp \
-	$(NULL)
+REQUIRES = raptor
 
-
-REQUIRES = xpcom raptor julian nls netlib pref js xpfc trex
-
+libs::
+	$(INSTALL) zulutest.js $(DIST)/bin/res/js
