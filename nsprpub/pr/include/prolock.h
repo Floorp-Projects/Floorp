@@ -159,7 +159,7 @@ NSPR_API(void)
 ** 
 ** INPUTS: lock: a pointer to a PROrderedLock
 ** 
-** OUTPUTS: The lock is held or the fucntion asserts.
+** OUTPUTS: The lock is held or the function asserts.
 ** 
 ** RETURNS: void
 ** 
