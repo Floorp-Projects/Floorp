@@ -116,7 +116,6 @@ org.mozilla.dom.test.NodeImpl_cloneNode_boolean_1
 org.mozilla.dom.test.NodeImpl_equals_Object_0
 org.mozilla.dom.test.NodeImpl_equals_Object_1
 org.mozilla.dom.test.NodeImpl_equals_Object_2
-org.mozilla.dom.test.NodeImpl_equals_Object_3
 org.mozilla.dom.test.NodeImpl_getAttributes
 org.mozilla.dom.test.NodeImpl_getChildNodes
 org.mozilla.dom.test.NodeImpl_getFirstChild

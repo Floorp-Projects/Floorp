@@ -1,6 +1,6 @@
-BW_TESTDIR=
+BW_TESTDIR=/opt/mozilla/java/dom/tests/src
 BW_TESTFILE=BWTestClass.lst
-BW_LOGDIR=
+BW_LOGDIR=/opt/mozilla/java/dom/tests/src/log
 BW_LOGFILE=BWTest.log
 BW_THREADMODE=S
 BW_HTMLTEST=file:
