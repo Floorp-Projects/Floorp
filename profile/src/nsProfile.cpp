@@ -152,7 +152,6 @@ nsProfile::nsProfile()
   mCount = 0;
   mNumProfiles = 0; 
   mNumOldProfiles = 0;
-  mRenameCurrProfile = PR_FALSE;
 
   NS_INIT_REFCNT();
 }
@@ -959,15 +958,10 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 					if (NS_SUCCEEDED(rv) && profileDirString)
                         {
                             rv = m_reg->SetString(newKey, REGISTRY_DIRECTORY_STRING, profileDirString);
+			    if (NS_FAILED(rv)) return rv;
                             
-                            CreateUserDirectories(tmpDir);
-                            
-                            if (NS_FAILED(rv))
-                                {
-#if defined(DEBUG_profile)
-                                    printf("Couldn't set directory property.\n" );
-#endif
-                                }
+                            rv = CreateUserDirectories(tmpDir);
+			    if (NS_FAILED(rv)) return rv;
                             
                             // A 5.0 profile needs no migration.
                             // Hence setting migrated flag to REGISTRY_YES_STRING
@@ -997,12 +991,11 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
     
     rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, profileName);
     
-    if (NS_FAILED(rv))
-        {
 #if defined(DEBUG_profile)
+    if (NS_FAILED(rv)) {
             printf("Couldn't set CurrentProfile name.\n" );
+    }
 #endif
-        }
     return rv;
 }
 
@@ -1029,7 +1022,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* n
     
 	if (!nativeProfileDir || !*nativeProfileDir)
     {
-		// They didn't type a directory path...
+		// They didn't specify a directory path...
 	    nsCOMPtr <nsIFileSpec> defaultRoot;
         rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(defaultRoot));
         
@@ -1042,6 +1035,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* n
 
         // append profile name
         dirSpec += profileName;
+	dirSpec.MakeUnique();
 	}
     else {
         dirSpec = nativeProfileDir;
@@ -1085,8 +1079,9 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* n
 }
 
 // Create required user directories like ImapMail, Mail, News, Cache etc.
-void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
+nsresult nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
 {
+	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : CreateUserDirectories\n");
@@ -1126,14 +1121,16 @@ void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
     {
 		tmpDir.CreateDirectory();
     }
+
+    return rv;
 }
 
 
 // Delete all user directories associated with the a profile
 // A FileSpec of the profile's directory is taken as input param
-// Probably we should take profile name as param....?
-void nsProfile::DeleteUserDirectories(const nsFileSpec& profileDir)
+nsresult nsProfile::DeleteUserDirectories(const nsFileSpec& profileDir)
 {
+	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : DeleteUserDirectories\n");
@@ -1143,77 +1140,51 @@ void nsProfile::DeleteUserDirectories(const nsFileSpec& profileDir)
 	{
 		profileDir.Delete(PR_TRUE);
 	}
+	
+	return rv;
 }
 
 // Rename a old profile to new profile.
-// Need to add ProfileExists() routine to avoid the illegal rename operation
 // Copies all the keys from old profile to new profile.
 // Deletes the old profile from the registry
 NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 {
-
 	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : Renaming profile %s to %s \n", oldName, newName);
 #endif
 
-	rv = ProfileExists(newName);
-
+    PRBool exists;
+	rv = ProfileExists(newName, &exists);
+    if (NS_FAILED(rv)) return rv;
+    
 	// That profile already exists...
-	if (NS_SUCCEEDED(rv))
-	{
+	if (exists) {
 #if defined(DEBUG_profile)  
 		printf("ProfileManager : Rename Operation failed : Profile exists. Provide a different new name for profile.\n");
 #endif
 		return NS_ERROR_FAILURE;
 	}
 
-
-	char *currProfile = nsnull;
-
-	GetCurrentProfile(&currProfile);
-
-	// If renaming the current profile set the mRenameCurrProfile flag to true
-	// By default the flag is set to false.
-	if (currProfile)
-	{
-		if (PL_strcmp(oldName, currProfile) == 0)
-		{
-			mRenameCurrProfile = PR_TRUE;
-	
-#if defined(DEBUG_profile)
-				printf("ProfileManager : Renaming the current profile\n");
-#endif
-		}
-	}
-
 	// Copy reg keys
-	CopyRegKey(oldName, newName);
+	rv = CopyRegKey(oldName, newName);
+    if (NS_FAILED(rv)) return rv;
+ 
+    // CloneProfile will remove the newName profile from the registry if it fails
+    rv = CloneProfile(newName);
+    if (NS_FAILED(rv)) {
+    	rv = DeleteProfile(newName, PR_FALSE);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete the aborted profile in rename");
+	return NS_ERROR_FAILURE;
+    }
 
-	// Delete old profile entry
-		DeleteProfile(oldName, REGISTRY_FALSE_STRING);
-
-
-	// If we renamed current profile, the new profile will be the current profile
-	if (mRenameCurrProfile)
-	{
-		rv = m_reg->OpenDefault();
-
-		if (NS_SUCCEEDED(rv))
-		{
-			nsRegistryKey profileRootKey;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = m_reg->SetString(profileRootKey, REGISTRY_CURRENT_PROFILE_STRING, newName);
-			}
-		}
-		mRenameCurrProfile = PR_FALSE;
-	}
-    PR_FREEIF(currProfile);
+    // Delete old profile entry
+    rv = DeleteProfile(oldName, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+ 
+    rv = ForgetCurrentProfile();
+    if (NS_FAILED(rv)) return rv;
    	return rv;
 }
 
@@ -1311,72 +1282,43 @@ NS_IMETHODIMP nsProfile::ForgetCurrentProfile()
 // Delete a profile from the registry
 // Not deleting the directories on the harddisk yet.
 // 4.x kind of confirmation need to be implemented yet
-NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canDeleteFiles)
+NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, PRBool canDeleteFiles)
 {
     nsresult rv = NS_OK;
  
 #if defined(DEBUG_profile)
-    printf("ProfileManager : DeleteProfile\n");
+    printf("ProfileManager : DeleteProfile(%s,%s)\n", profileName, canDeleteFiles?"true":"false");
 #endif
     
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
-    
-	nsFileSpec profileDirSpec;
-	GetProfileDir(profileName, &profileDirSpec);
-
     
     nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     if (NS_FAILED(rv)) return rv;
 
-    // Remove the subtree from the registry.
-    rv = m_reg->RemoveSubtree(key, profileName);
-    if (NS_FAILED(rv)) return rv;
-    
 #if defined(DEBUG_profile) 
     printf("DeleteProfile : deleted profile -> %s <-\n", profileName);
 #endif
-	
-    // May need to delete directories, but not so directly.
-    // DeleteUserDirectories(profileDirSpec);
-    
-    // Take care of the current profile, if the profile 
-    // just deleted was a current profile.
-    if (!mRenameCurrProfile)
-		{
-			char *oldCurrProfile = nsnull;
-			char *newCurrProfile = nsnull;
-            
-			GetCurrentProfile(&oldCurrProfile);
-            
-			if (PL_strcmp(profileName, oldCurrProfile) == 0)
-                {
-                    GetFirstProfile(&newCurrProfile);
-                    
-#if defined(DEBUG_profile) 
-					printf("DeleteProfile : Old Current profile -> %s <-\n", oldCurrProfile);
-					printf("DeleteProfile : New Current profile -> %s <-\n", newCurrProfile);
-#endif
-                    
-                    rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, newCurrProfile);
-                    
-                    if (NS_FAILED(rv)) 
-                        {
-#if defined(DEBUG_profile) 
-                            printf("Did not take nsnull successfully\n");
-#endif
-                        }
-                }
-            PR_FREEIF(oldCurrProfile);
-        }
 
+    rv = ForgetCurrentProfile();
+    if (NS_FAILED(rv)) return rv;
+    
     // If user asks for it, delete profile directory
-	if (PL_strcmp(canDeleteFiles, REGISTRY_TRUE_STRING) == 0)
-        {
-            DeleteUserDirectories(profileDirSpec);
-        }
+    if (canDeleteFiles) {
+        nsFileSpec profileDirSpec;
+        
+        rv = GetProfileDir(profileName, &profileDirSpec);
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = DeleteUserDirectories(profileDirSpec);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Remove the subtree from the registry.
+    rv = m_reg->RemoveSubtree(key, profileName);
+    if (NS_FAILED(rv)) return rv;
     
     return rv;
 }
@@ -1388,7 +1330,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 // Need to change this lotic to have True/False to represent the 
 // migration state.
 // Names are stored in the global array mProfiles[].
-void nsProfile::GetAllProfiles()
+nsresult nsProfile::GetAllProfiles()
 {
 	nsresult rv = NS_OK;
 
@@ -1397,7 +1339,7 @@ void nsProfile::GetAllProfiles()
 #endif
 
     rv = OpenRegistry();
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return rv;
     
 	PRInt32 idx = 0;
 
@@ -1481,6 +1423,8 @@ void nsProfile::GetAllProfiles()
 					mNumProfiles = idx;
 				}
         }
+
+	return NS_OK;
 }
 
 
@@ -1492,13 +1436,15 @@ void nsProfile::GetAllProfiles()
 // call to get the names all profiles.
 NS_IMETHODIMP nsProfile::GetProfileList(char **profileListStr)
 {
-    nsCAutoString profileList("");
+	nsresult rv;
+	nsCAutoString profileList("");
     
 #if defined(DEBUG_profile)
 	printf("Inside GetProfileList routine.\n" );
 #endif
 
-	GetAllProfiles();
+	rv = GetAllProfiles();
+	if (NS_FAILED(rv)) return rv;
 
 	for (PRInt32 i=0; i < mNumProfiles; i++)
 	{
@@ -1514,17 +1460,17 @@ NS_IMETHODIMP nsProfile::GetProfileList(char **profileListStr)
 }
 
 
-// Start Communicator with a profile of user's choice
+// launch the application with a profile of user's choice
 // Prefs and FileLocation services are used here.
 // FileLocation service to make ir forget about the global profile dir it had.
 // Prefs service to kick off the startup to start the app with new profile's prefs.
-NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
+NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
 {
 
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    printf("ProfileManager : Start AppRunner\n");
+    printf("ProfileManager : StartApprunner\n");
 #endif
 
     rv = OpenRegistry();
@@ -1564,7 +1510,9 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 	if (NS_FAILED(rv)) return rv;
 
     rv = CloseRegistry();
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 
@@ -2123,7 +2071,7 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 	return rv;
 }
 
-NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
+NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName, PRBool *exists)
 {
 	nsresult rv = NS_OK;
 
@@ -2133,21 +2081,20 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
     nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    if (NS_FAILED(rv)) return rv;
     
-    if (NS_SUCCEEDED(rv))
-        {
-            nsRegistryKey newKey;
+    nsRegistryKey newKey;
             
-            // Get handle to <profileName> passed
-            rv = m_reg->GetSubtree(key, profileName, &newKey);			
-        }
-    else
-        {
-#if defined(DEBUG_profile)
-            printf("Registry : Couldn't get Profiles subtree.\n");
-#endif
-        }
-	return rv;
+    // Get handle to <profileName> passed
+    rv = m_reg->GetSubtree(key, profileName, &newKey);
+    if (NS_FAILED(rv)) {
+        *exists = PR_FALSE;
+    }
+    else {
+        *exists = PR_TRUE;
+    }
+
+	return NS_OK;
 }
 
 
@@ -2266,7 +2213,6 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 #if defined(DEBUG_profile)
     printf("ProfileManager : CloneProfile\n");
 #endif
-
 	nsFileSpec currProfileDir;
 	nsFileSpec newProfileDir;
 
@@ -2285,7 +2231,20 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 
 		//Append profile name to form a directory name
 	    	dirSpec->GetFileSpec(&newProfileDir);
+
+		// TODO:
+		// hash profileName  (will MakeUnique do that for us?)
+		// don't allow special characters (like ..)
+		// make acceptable length (will MakeUnique do that for us?)
 		newProfileDir += newProfile;
+		newProfileDir.MakeUnique();
+
+		if (newProfileDir.Exists()) {
+#ifdef DEBUG_profile
+			printf("directory already exists\n");
+#endif
+			return NS_ERROR_FAILURE;
+		}
 
 		currProfileDir.RecursiveCopy(newProfileDir);
 		

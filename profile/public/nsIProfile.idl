@@ -59,16 +59,18 @@ interface nsIProfile : nsISupports {
     [noscript] void setProfileDir(in string profileName,
                                   in nsFileSpecRef profileDir);
 
+    boolean profileExists(in string profileName);
+    
     void migrateProfileInfo();
 
     void createNewProfile(in string profileName, in string nativeProfileDir);
     void renameProfile(in string oldName, in string newName);
 
-    void deleteProfile(in string name, in string canDeleteFiles);
+    void deleteProfile(in string name, in boolean canDeleteFiles);
 
     string getProfileList();
 
-    void startCommunicator(in string profileName);
+    void startApprunner(in string profileName);
 
     void migrateProfile(in string profileName);
 

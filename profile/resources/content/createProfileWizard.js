@@ -115,7 +115,7 @@ function SetButtons()
 	else {
     var finishLabel = bundle.GetStringFromName("finishButtonLabel");
     nextButton.setAttribute("value",finishLabel);
-    nextButton.setAttribute("onclick","Finish(opener)");
+    nextButton.setAttribute("onclick","onFinish(opener)");
 	}
 
 	prevTag = testMap[currentPageTag].previous;
@@ -208,7 +208,7 @@ function Startup()
 	//dump("Doing Startup...\n");
 }
 
-function Finish(opener)
+function onFinish(opener)
 {
   // lets check if we're at final stage using null
   if(testMap[currentPageTag].next)
@@ -255,8 +255,12 @@ function processCreateProfileData()
 			alert("You need to enter a profile name.");
 			return false;
                 }
+		if (profile.profileExists(profName))	{
+			alert("That profile name already exists.");
+			return false;
+		}
 		profile.createNewProfile(profName, profDir);
-		profile.startCommunicator(profName);
+		profile.startApprunner(profName);
 		return true;
 	}
 	catch (ex) {

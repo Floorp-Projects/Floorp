@@ -75,7 +75,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 				<html:br></html:br>
 			</box>
 			<box align="horizontal">
-				<titledbutton id="start" disabled="true" value="&startCmd.label;"  onclick="StartCommunicator();" />
+				<titledbutton id="start" disabled="true" value="&startCmd.label;"  onclick="onStart();" />
 				<titledbutton value="&exitCmd.label;"  onclick="onExit();" />
 			</box>
 		</box>

@@ -69,7 +69,7 @@ function RenameProfile(w)
 	this.location.href = "chrome://profile/content/profileManager.xul";
 }
 
-function DeleteProfile(deleteFilesFlag)
+function DeleteProfile(deleteFiles)
 {
 	deleteButton = document.getElementById("delete");
 	if (deleteButton.getAttribute("disabled") == "true") {
@@ -86,7 +86,7 @@ function DeleteProfile(deleteFilesFlag)
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
 	try {
-		profile.deleteProfile(name, deleteFilesFlag);
+		profile.deleteProfile(name, deleteFiles);
 	}
 	catch (ex) {
 		alert("Sorry, failed to delete profile.");
@@ -96,7 +96,7 @@ function DeleteProfile(deleteFilesFlag)
 	this.location.href = "chrome://profile/content/profileManager.xul";
 }
 
-function StartCommunicator()
+function onStart()
 {
 	//dump("************Inside Start Communicator prof\n");
 	startButton = document.getElementById("start");
@@ -118,8 +118,13 @@ function StartCommunicator()
 	}
 
 	//dump("************name: "+name+"\n");
-	profile.startCommunicator(name);
-	ExitApp();
+	try {
+		profile.startApprunner(name);
+		ExitApp();
+	}
+	catch (ex) {
+		alert("Failed to start communicator with the " + name + " profile.");
+	}
 }
 
 function onExit()
