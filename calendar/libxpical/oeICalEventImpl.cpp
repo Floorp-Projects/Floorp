@@ -1373,6 +1373,9 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                 break;
             case RECUR_WEEKLY:{
                 recur.freq = ICAL_WEEKLY_RECURRENCE;
+                if( m_recurweekdays == 0 ) {
+                    m_recurweekdays = 1 << (icaltime_day_of_week( m_start->m_datetime )-1);
+                }
                 short weekdaymask = m_recurweekdays;
                 int k=0;
 //                bool weekdaymatchesstartdate=false;
