@@ -40,6 +40,9 @@
 #include "nsIScrollableView.h"
 
 #include "nsIEventStateManager.h"
+// Get onChange to target Select not Option
+#include "nsIDOMNode.h"
+#include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
@@ -47,6 +50,8 @@ static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID,      NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIFrameIID,                 NS_IFRAME_IID);
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID, NS_IANONYMOUS_CONTENT_CREATOR_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,               NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID,       NS_IPRIVATEDOMEVENT_IID);
 
 // Drop down list event management.
 // The combo box uses the following strategy for managing the
@@ -1044,9 +1049,30 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
     event.eventStructType = NS_GUI_EVENT;
     event.widget = nsnull;
     event.message = NS_FORM_CHANGE;
+    event.flags = NS_EVENT_FLAG_NONE;
 
-     // Have the content handle the event.
-    mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+     // Here we create our own DOM event and set the target to the Select
+     // We'll pass this DOM event in, in hopes that the target is used.
+    nsIDOMEvent* DOMEvent = nsnull;
+    nsresult res = NS_NewDOMUIEvent(&DOMEvent, *mPresContext, &event);
+    if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
+      nsIDOMNode* node = nsnull;
+      res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+      if (NS_SUCCEEDED(res) && node) {
+	nsIPrivateDOMEvent* pDOMEvent = nsnull;
+        res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
+        if (NS_SUCCEEDED(res) && pDOMEvent) {
+          pDOMEvent->SetTarget(node);
+	  NS_RELEASE(pDOMEvent);
+
+           // Have the content handle the event.
+          mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status); 
+        }
+	NS_RELEASE(node);
+      }
+      NS_RELEASE(DOMEvent);
+    }
+     
      // Now have the frame handle the event
     nsIFrame* frame = nsnull;
     nsIFrame* dropdownFrame = GetDropdownFrame();
