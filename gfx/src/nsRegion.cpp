@@ -20,6 +20,7 @@
 
 #include "prlock.h"
 #include "nsRegion.h"
+#include "nsISupportsImpl.h"
 
 
 #define MIN_INT32 (-PR_INT32 (0x7FFFFFFF) - 1)
@@ -38,11 +39,26 @@ class RgnRectMemoryAllocator
   nsRegion::RgnRect*  mFreeListHead;
   PRUint32  mFreeEntries;
   void*     mChunkListHead;
+#if 0
   PRLock*   mLock;
 
+  void InitLock()    { mLock = PR_NewLock(); }
+  void DestroyLock() { PR_DestroyLock(mLock); }
+  void Lock ()       { PR_Lock(mLock); }
+  void Unlock ()     { PR_Unlock(mLock); }
+#elsif defined(DEBUG)
+  NS_DECL_OWNINGTHREAD
 
-  void Lock ()   { PR_Lock   (mLock); }
-  void Unlock () { PR_Unlock (mLock); }
+  void InitLock()    { NS_IMPL_OWNINGTHREAD }
+  void DestroyLock() { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
+  void Lock ()       { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
+  void Unlock ()     { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
+#else
+  void InitLock()    { }
+  void DestroyLock() { }
+  void Lock ()       { }
+  void Unlock ()     { }
+#endif
 
   void* AllocChunk (PRUint32 aEntries, void* aNextChunk, nsRegion::RgnRect* aTailDest)
   {
@@ -75,7 +91,7 @@ public:
 
 RgnRectMemoryAllocator::RgnRectMemoryAllocator (PRUint32 aNumOfEntries)
 {
-  mLock = PR_NewLock ();
+  InitLock();
   mChunkListHead = AllocChunk (aNumOfEntries, nsnull, nsnull);
   mFreeEntries   = aNumOfEntries;
   mFreeListHead  = ChunkHead (mChunkListHead);
@@ -90,7 +106,7 @@ RgnRectMemoryAllocator::~RgnRectMemoryAllocator ()
     FreeChunk (tmp);
   }
 
-  PR_DestroyLock (mLock);
+  DestroyLock();
 }
 
 nsRegion::RgnRect* RgnRectMemoryAllocator::Alloc ()
