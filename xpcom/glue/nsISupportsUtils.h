@@ -833,6 +833,8 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     delete (_ptr);                                                         \
   PR_END_MACRO
 
+
+
 /**
  * Macro for adding a reference to an interface.
  * @param _ptr The interface pointer.
@@ -849,14 +851,49 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 #define NS_ADDREF_THIS() \
   NS_LOG_ADDREF_CALL(this, AddRef(), __FILE__, __LINE__)
 
+
+
+
+template <class T>
+inline
+nsrefcnt
+ns_if_addref( T* expr )
+    // Making this a |inline| |template| allows |expr| to be evaluated only once,
+    //  yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
+    // Note that |NS_ADDREF()| already has this property in the non-logging case.
+  {
+    return expr ? expr->AddRef() : 0;
+  }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+
 /**
  * Macro for adding a reference to an interface that checks for NULL.
- * @param _ptr The interface pointer.
+ * @param _expr The interface pointer.
  */
-#define NS_IF_ADDREF(_ptr)                                                 \
-  ((0 != (_ptr))                                                           \
-   ? NS_LOG_ADDREF_CALL((_ptr), (_ptr)->AddRef(), __FILE__, __LINE__)      \
+#define NS_IF_ADDREF(_expr)                                                 \
+  ((0 != (_expr))                                                           \
+   ? NS_LOG_ADDREF_CALL((_expr), ns_if_addref(_expr), __FILE__, __LINE__)   \
    : 0)
+
+#else
+
+#define NS_IF_ADDREF(_expr) ns_if_addref(_expr)
+
+#endif
+
+/*
+ * Given these declarations, it explicitly OK and (in the non-logging build) efficient
+ * to end a `getter' with:
+ *
+ *    NS_IF_ADDREF(*result = mThing);
+ *
+ * even if |mThing| is an |nsCOMPtr|.  If |mThing| is an |nsCOMPtr|, however, it is still
+ * _illegal_ to say |NS_IF_ADDREF(mThing)|.
+ */
+
+
+
 
 /**
  * Macro for releasing a reference to an interface.
