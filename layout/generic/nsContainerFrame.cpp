@@ -30,6 +30,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLContainerFrame.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -499,6 +500,11 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
     // then remove the copy of this routine that doesn't do this from
     // nsInlineFrame.
     nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
+    // When pushing and pulling frames we need to check for whether any
+    // views need to be reparented.
+    for (nsIFrame* f = aFromChild; f; f->GetNextSibling(&f)) {
+      nsHTMLContainerFrame::ReparentFrameView(f, this, mNextInFlow);
+    }
     nextInFlow->mFrames.InsertFrames(mNextInFlow, nsnull, aFromChild);
   }
   else {
@@ -526,6 +532,11 @@ nsContainerFrame::MoveOverflowToChildList()
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
       NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented.
+      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+      }
       mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
       result = PR_TRUE;
     }
