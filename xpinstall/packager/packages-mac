@@ -67,6 +67,7 @@ viewer:Essential Files:libimg.shlb
 viewer:Essential Files:libutil.shlb 
 viewer:Essential Files:RaptorShell.shlb 
 viewer:Essential Files:widget.shlb 
+viewer:Essential Files:XPICleanup
 
 viewer:Essential Files:NSSckbi.shlb
 
@@ -275,6 +276,7 @@ viewer:res:rdf:stock.gif
 viewer:res:rdf:unread.gif
 viewer:res:rdf:xpidl-test-1.xul
 viewer:res:samples:*
+viewer:res:cmessage.txt
 ; the line above will skip aliases to subdirectories; let's list them explicitly
 viewer:res:samples:sampleimages
 viewer:res:builtin:htmlBindings.xml

@@ -63,6 +63,8 @@ bin\mozilla.exe
 bin\mozctl.dll
 bin\mozctlx.dll
 bin\regxpcom.exe
+bin\xpicleanup.exe
+bin\res\cmessage.txt
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
