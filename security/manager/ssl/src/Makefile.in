@@ -92,7 +92,6 @@ REQUIRES	= nspr \
 		  content \
 		  pippki \
 		  xpconnect \
-		  timer \
 		  jar \
 		  unicharutil \
                   pipboot \

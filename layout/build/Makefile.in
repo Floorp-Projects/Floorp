@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  locale \
-		  timer \
 		  necko \
 		  $(NULL)
 

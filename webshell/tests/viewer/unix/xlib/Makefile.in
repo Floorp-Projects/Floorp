@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  util \
 		  locale \
-		  timer \
 		  gfx2 \
 		  $(NULL)
 

@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  uriloader \
-		  timer \
 		  webshell \
 		  widget \
 		  pref \

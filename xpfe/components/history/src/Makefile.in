@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  intl \
-		  timer \
 		  $(NULL)
 
 CPPSRCS		= nsGlobalHistory.cpp  \

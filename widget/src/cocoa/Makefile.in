@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
           pref \
           appshell \
           intl \
-          timer \
           mimetype \
 		  $(NULL)
 
@@ -99,14 +98,12 @@ EXTRA_DSO_LDOPTS += \
                 $(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
-                -ltimer_mac \
                 $(NULL)
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(topsrcdir)/gfx/src/mac \
 	-I$(srcdir)/../xpwidgets \
-	-I$(topsrcdir)/widget/timer/src/mac \
 	-I/System/Library/Frameworks/Carbon.Framework/Headers \
 	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
 	$(NULL)

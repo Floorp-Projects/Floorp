@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  xul \
 		  xuldoc \
 		  xultmpl \
-		  timer \
 		  $(NULL)
 
 CPPSRCS		= \

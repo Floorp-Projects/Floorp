@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  locale \
-		  timer \
 		  pref \
 		  necko \
 		  $(NULL)

@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  xpconnect \
 		  locale \
-		  timer \
 		  lwbrk \
 		  pref \
 		  xuldoc \

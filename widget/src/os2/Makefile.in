@@ -32,7 +32,6 @@ REQUIRES	= gfx \
 		  xpcom \
 		  string \
 		  dom \
-		  timer \
 		  necko \
 		  uconv \
 		  intl \
@@ -76,7 +75,6 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)timeros2_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  pref \
 		  dom \
-		  timer \
 		  uconv \
 		  necko \
 		  xremoteservice \
