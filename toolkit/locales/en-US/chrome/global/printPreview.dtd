@@ -64,3 +64,8 @@
 <!ENTITY Custom.label         "Custom...">
 <!ENTITY ShrinkToFit.label    "Shrink To Fit">
 <!ENTITY customPrompt.title   "Custom Scale...">
+
+<!ENTITY homearrow.tooltip    "First page">
+<!ENTITY endarrow.tooltip     "Last page">
+<!ENTITY rightarrow.tooltip   "Next page">
+<!ENTITY leftarrow.tooltip    "Previous page">
