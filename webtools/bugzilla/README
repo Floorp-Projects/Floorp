@@ -395,5 +395,8 @@ Appendix C. History
    This document was originally adapted from the Bonsai installation
 instructions by Terry Weissman <terry@mozilla.org>.
 
-   The February 25, 1999 re-write was done by Ry4an Brase
-<ry4an@ry4an.org>, with some edits by Terry Weissman.
+   The February 25, 1999 re-write of this page was done by Ry4an Brase
+<ry4an@ry4an.org>, with some edits by Terry Weissman.  (But don't send
+bug reports to Ry4an!  Report them using bugzilla, at
+http://bugzilla.mozilla.org/enter_bug.cgi, project Webtools, component
+Bugzilla.)
