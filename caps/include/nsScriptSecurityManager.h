@@ -390,6 +390,12 @@ private:
     InitPrincipals(PRUint32 prefCount, const char** prefNames,
                    nsISecurityPref* securityPref);
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    // While this header is included outside of caps, this class isn't 
+    // referenced so this should be fine.
+    nsresult
+    CheckComponentPermissions(JSContext *cx, const nsCID &aCID);
+#endif
 #ifdef DEBUG_mstoltz
     void
     PrintPolicyDB();
@@ -419,6 +425,10 @@ private:
     nsCOMPtr<nsIThreadJSContextStack> mJSContextStack;
     PRBool mNameSetRegistered;
     PRBool mPolicyPrefsChanged;
+#ifdef XPC_IDISPATCH_SUPPORT    
+    PRBool mXPCDefaultGrantAll;
+    static const char* sXPCDefaultGrantAllName;
+#endif
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/

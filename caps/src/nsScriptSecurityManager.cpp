@@ -2374,12 +2374,78 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     return rv;
 }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+nsresult
+nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
+                                                   const nsCID &aCID)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> subjectPrincipal;
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(subjectPrincipal))))
+        return NS_ERROR_FAILURE;
+
+    // Reformat the CID string so it's suitable for prefs
+    nsXPIDLCString cidTemp;
+    cidTemp.Adopt(aCID.ToString());
+    nsCAutoString cid(NS_LITERAL_CSTRING("CID") +
+                      Substring(cidTemp, 1, cidTemp.Length() - 2));
+    cid.ReplaceChar('-','_');
+    ToUpperCase(cid);
+
+#ifdef DEBUG_mstoltz
+    printf("### CheckComponentPermissions(ClassID.%s) ",cid.get());
+#endif
+
+    //-- Initialize policies if necessary
+    if (mPolicyPrefsChanged)
+    {
+        rv = InitPolicies();
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    //-- Look up the policy for this class
+    ClassPolicy* cpolicy = nsnull;
+    rv = GetClassPolicy(subjectPrincipal, "ClassID", &cpolicy);
+    if (NS_FAILED(rv))
+        return rv;
+    jsval cidVal = STRING_TO_JSVAL(::JS_InternString(cx, cid.get()));
+    // While this isn't a property we'll treat it as such, ussing ACCESS_CALL_METHOD
+    SecurityLevel securityLevel = GetPropertyPolicy(cidVal, cpolicy,
+        nsIXPCSecurityManager::ACCESS_CALL_METHOD);
+
+    // If there's no policy stored, use the "security.classID.allowByDefault" pref 
+    if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
+        securityLevel.level = mXPCDefaultGrantAll ? SCRIPT_SECURITY_ALL_ACCESS :
+                                                    SCRIPT_SECURITY_NO_ACCESS;
+
+    if (securityLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
+    {
+#ifdef DEBUG_mstoltz
+        printf(" GRANTED.\n");
+#endif
+        return NS_OK;
+    }
+
+#ifdef DEBUG_mstoltz
+    printf(" DENIED.\n");
+#endif
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+}
+#endif
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
                                            const nsCID &aCID)
 {
     nsresult rv = CheckXPCPermissions(nsnull, nsnull);
     if (NS_FAILED(rv))
+#ifdef XPC_IDISPATCH_SUPPORT
+    {
+        rv = CheckComponentPermissions(cx, aCID);
+    }
+    if (NS_FAILED(rv))
+#endif
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
@@ -2495,7 +2561,11 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
     const char *message = messageStr.get();
 
     static const char jsPrefix[] = "javascript.";
-    if(PL_strncmp(message, jsPrefix, sizeof(jsPrefix)-1) == 0)
+    if((PL_strncmp(message, jsPrefix, sizeof(jsPrefix)-1) == 0)
+#ifdef XPC_IDISPATCH_SUPPORT
+        || (PL_strcmp(message, sXPCDefaultGrantAllName) == 0)
+#endif
+        )
         JSEnabledPrefChanged(mSecurityPref);
     if(PL_strncmp(message, sPolicyPrefix.get(), sPolicyPrefix.Length()) == 0)
         mPolicyPrefsChanged = PR_TRUE; // This will force re-initialization of the pref table
@@ -2528,7 +2598,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsWritingPrefs(PR_FALSE),
       mNameSetRegistered(PR_FALSE),
       mPolicyPrefsChanged(PR_TRUE)
-
+#ifdef XPC_IDISPATCH_SUPPORT
+      ,mXPCDefaultGrantAll(PR_FALSE)
+#endif
 {
     NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
 }
@@ -3046,7 +3118,10 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
 
 const char* nsScriptSecurityManager::sJSEnabledPrefName = "javascript.enabled";
 const char* nsScriptSecurityManager::sJSMailEnabledPrefName = "javascript.allow.mailnews";
-
+#ifdef XPC_IDISPATCH_SUPPORT
+const char* nsScriptSecurityManager::sXPCDefaultGrantAllName =
+                "security.classID.allowByDefault";
+#endif
 inline void
 nsScriptSecurityManager::JSEnabledPrefChanged(nsISecurityPref* aSecurityPref)
 {
@@ -3059,6 +3134,12 @@ nsScriptSecurityManager::JSEnabledPrefChanged(nsISecurityPref* aSecurityPref)
                                                      &mIsMailJavaScriptEnabled)))
         // Default to enabled.
         mIsMailJavaScriptEnabled = PR_TRUE;
+#ifdef XPC_IDISPATCH_SUPPORT
+    if (NS_FAILED(mSecurityPref->SecurityGetBoolPref(sXPCDefaultGrantAllName,
+                                                     &mXPCDefaultGrantAll)))
+        // Default to disabled.
+        mXPCDefaultGrantAll = PR_FALSE;
+#endif
 }
 
 nsresult
@@ -3079,6 +3160,9 @@ nsScriptSecurityManager::InitPrefs()
     // set observer callbacks in case the value of the prefs change
     prefBranchInternal->AddObserver(sJSEnabledPrefName, this, PR_FALSE);
     prefBranchInternal->AddObserver(sJSMailEnabledPrefName, this, PR_FALSE);
+#ifdef XPC_IDISPATCH_SUPPORT
+    prefBranchInternal->AddObserver(sXPCDefaultGrantAllName, this, PR_FALSE);
+#endif
     PRUint32 prefCount;
     char** prefNames;
 
