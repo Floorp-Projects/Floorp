@@ -40,15 +40,12 @@ include <$(DEPTH)\config\config.mak>
 #//
 #//------------------------------------------------------------------------
 #DIRS=libi18n layout libstyle liblayer libmocha
-DIRS=   libi18n htmldlgs libparse layout libstyle
+DIRS=   libi18n htmldlgs libparse layout libstyle mailto
 
 !ifdef MOZ_MAIL_NEWS
 DIRS= $(DIRS) libaddr
 !endif
 
-!ifdef MOZ_ENDER_MIME
-DIRS= $(DIRS) mailto
-!endif
 
 #//------------------------------------------------------------------------
 #//
