@@ -49,6 +49,7 @@
 #include "nsAuthEngine.h"
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
+#include "nsIScriptSecurityManager.h"
 
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
@@ -1254,6 +1255,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
           this, newURLSpec));
   nsAllocator::Free(newURLSpec);
 #endif /* PR_LOGGING */
+
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = securityManager->CheckLoadURI(mOriginalURI, newURI);
+  if (NS_FAILED(rv)) return rv;
 
   rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mCallbacks,
                                mLoadAttributes, mOriginalURI, 

@@ -3663,7 +3663,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                   // go past the '=' sign
                   loc = result.Find("=", PR_TRUE, loc);
                   if (loc > -1) {
-                      loc++; // leading/trailign spaces get trimmed in url creating code.
+                      loc++; // leading/trailing spaces get trimmed in url creating code.
                       result.Mid(uriAttribStr, loc, result.Length() - loc);
                       uriCStr = uriAttribStr.GetUnicode();
                   }
@@ -3671,6 +3671,12 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
               nsIURI *uri = nsnull;
               rv = NS_NewURI(&uri, uriCStr, baseURI);
+              if (loc > -1 && NS_SUCCEEDED(rv)) {
+                  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                  if (NS_SUCCEEDED(rv))
+                      rv = securityManager->CheckLoadURI(baseURI, uri);
+              }
               NS_RELEASE(baseURI);
               if (NS_FAILED(rv)) return rv;
 
