@@ -101,6 +101,68 @@ extern int  NET_PollSockets();
 
 //----------------------------------------------------------------------
 
+struct OnLinkClickEvent : public PLEvent {
+  OnLinkClickEvent(DocObserver* aHandler, const nsString& aURLSpec,
+                   const nsString& aTargetSpec, nsIPostData* aPostData = 0);
+  ~OnLinkClickEvent();
+
+  void HandleEvent();
+
+  DocObserver* mHandler;
+  nsString*    mURLSpec;
+  nsString*    mTargetSpec;
+  nsIPostData *mPostData;
+};
+
+static void PR_CALLBACK HandleEvent(OnLinkClickEvent* aEvent)
+{
+  aEvent->HandleEvent();
+}
+
+static void PR_CALLBACK DestroyEvent(OnLinkClickEvent* aEvent)
+{
+  delete aEvent;
+}
+
+OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
+                                   const nsString& aURLSpec,
+                                   const nsString& aTargetSpec,
+                                   nsIPostData* aPostData)
+{
+  mHandler = aHandler;
+  NS_ADDREF(aHandler);
+  mURLSpec = new nsString(aURLSpec);
+  mTargetSpec = new nsString(aTargetSpec);
+  mPostData = nsnull;
+  if (aPostData) {
+    NS_NewPostData(aPostData, &mPostData);
+  }
+
+  PL_InitEvent(this, nsnull,
+               (PLHandleEventProc) ::HandleEvent,
+               (PLDestroyEventProc) ::DestroyEvent);
+
+#ifdef XP_PC
+  PLEventQueue* eventQueue = PL_GetMainEventQueue();
+#endif
+  PL_PostEvent(eventQueue, this);
+}
+
+OnLinkClickEvent::~OnLinkClickEvent()
+{
+  NS_IF_RELEASE(mHandler);
+  if (nsnull != mURLSpec) delete mURLSpec;
+  if (nsnull != mTargetSpec) delete mTargetSpec;
+  if (nsnull != mPostData) delete mPostData;
+}
+
+void OnLinkClickEvent::HandleEvent()
+{
+  mHandler->HandleLinkClickEvent(*mURLSpec, *mTargetSpec, mPostData);
+}
+
+//----------------------------------------------------------------------
+
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -196,6 +258,79 @@ DocObserver::LoadURL(const char* aURL)
   mWebWidget->LoadURL(aURL, (nsIStreamListener*) this);
 }
 
+NS_IMETHODIMP
+DocObserver::Init(nsIWebWidget* aWidget)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::GetWebWidget(nsIWebWidget** aResult)
+{
+  NS_IF_ADDREF(mWebWidget);
+  *aResult = mWebWidget;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::OnLinkClick(nsIFrame* aFrame, 
+                         const nsString& aURLSpec,
+                         const nsString& aTargetSpec,
+                         nsIPostData* aPostData)
+{
+  new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
+  return NS_OK;
+}
+
+void
+DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
+                                  const nsString& aTargetSpec,
+                                  nsIPostData* aPostData)
+{
+  if (nsnull != mWebWidget) {
+    mWebWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
+  }
+}
+
+NS_IMETHODIMP
+DocObserver::OnOverLink(nsIFrame* aFrame, 
+                        const nsString& aURLSpec,
+                        const nsString& aTargetSpec)
+{
+  if (!aURLSpec.Equals(mOverURL) || !aTargetSpec.Equals(mOverTarget)) {
+fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOverTarget, stdout); fputs("'\n", stdout); 
+    fputs("Over link '", stdout);
+    fputs(aURLSpec, stdout);
+    fputs("' '", stdout);
+    fputs(aTargetSpec, stdout);
+    fputs("'\n", stdout);
+    mOverURL = aURLSpec;
+    mOverTarget = aTargetSpec;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
+{
+  aState = eLinkState_Unvisited;
+#ifdef NS_DEBUG
+  if (aURLSpec.Equals("http://visited/")) {
+    aState = eLinkState_Visited;
+  }
+  else if (aURLSpec.Equals("http://out-of-date/")) {
+    aState = eLinkState_OutOfDate;
+  }
+  else if (aURLSpec.Equals("http://active/")) {
+    aState = eLinkState_Active;
+  }
+  else if (aURLSpec.Equals("http://hover/")) {
+    aState = eLinkState_Hover;
+  }
+#endif
+  return NS_OK;
+}
+
 static DocObserver* NewObserver(nsIWebWidget* ww)
 {
   nsISupports* oldContainer;
@@ -204,6 +339,7 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
     if (nsnull == oldContainer) {
       DocObserver* it = new DocObserver(ww);
       NS_ADDREF(it);
+      ww->SetLinkHandler((nsILinkHandler*) it);
       ww->SetContainer((nsIDocumentObserver*) it);
       return it;
     }
@@ -213,6 +349,8 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
   }
   return nsnull;
 }
+
+//----------------------------------------------------------------------
 
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
@@ -827,6 +965,7 @@ void nsViewer::Destroy(WindowData* aWinData)
 {
   if (nsnull != aWinData) {
     if (nsnull != aWinData->ww) {
+      aWinData->ww->SetLinkHandler(nsnull);
       aWinData->ww->SetContainer(nsnull); // release the doc observer
       NS_RELEASE(aWinData->ww);
     }

@@ -21,6 +21,7 @@
 #include "nsIWebWidget.h"
 #include "nsIDocumentObserver.h"
 #include "nsIStreamListener.h"
+#include "nsILinkHandler.h"
 #include "nsDocLoader.h"
 #include "nsIAppShell.h"
 #include "nsString.h"
@@ -29,7 +30,10 @@
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
 
-class DocObserver : public nsIDocumentObserver, nsIStreamListener {
+class DocObserver : public nsIDocumentObserver,
+                    public nsIStreamListener,
+                    public nsILinkHandler
+{
 public:
   DocObserver(nsIWebWidget* aWebWidget) {
     NS_INIT_REFCNT();
@@ -70,7 +74,23 @@ public:
   NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
   NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
 
+  // nsILinkHandler
+  NS_IMETHOD Init(nsIWebWidget* aWidget);
+  NS_IMETHOD GetWebWidget(nsIWebWidget** aResult);
+  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
+                         const nsString& aURLSpec,
+                         const nsString& aTargetSpec,
+                         nsIPostData* aPostData = 0);
+  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
+                        const nsString& aURLSpec,
+                        const nsString& aTargetSpec);
+  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
+
+  // DocObserver
   void LoadURL(const char* aURL);
+  void HandleLinkClickEvent(const nsString& aURLSpec,
+                            const nsString& aTargetSpec,
+                            nsIPostData* aPostDat = 0);
 
 protected:
   ~DocObserver() {
@@ -79,6 +99,8 @@ protected:
 
   nsIWebWidget* mWebWidget;
   nsString mURL;
+  nsString mOverURL;
+  nsString mOverTarget;
 };
 
 struct WindowData {
