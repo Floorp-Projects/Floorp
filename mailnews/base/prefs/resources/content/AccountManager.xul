@@ -4,6 +4,7 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 <dialog id="accountManager" 
+        windowtype="mailnews:accountmanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&accountManagerTitle.label;"
         style="&accountManager.size;"

@@ -231,15 +231,24 @@ function msgOpenAccountWizard()
 // 'am-addressing.xul','am-advanced.xul', 'am-smtp.xul'
 function MsgAccountManager(selectPage)
 {
-    var server;
-    try {
-        var folderURI = GetSelectedFolderURI();
-        server = GetServer(folderURI);
-    } catch (ex) { /* functions might not be defined */}
-    
-    window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,centerscreen,modal,titlebar",
-                      { server: server, selectPage: selectPage });
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].
+                            getService(Components.interfaces.nsIWindowMediator);
+
+    var existingAccountManager = windowManager.getMostRecentWindow("mailnews:accountmanager");
+
+    if (existingAccountManager)
+        existingAccountManager.focus();
+    else {
+        var server;
+        try {
+            var folderURI = GetSelectedFolderURI();
+            server = GetServer(folderURI);
+        } catch (ex) { /* functions might not be defined */}
+        
+        window.openDialog("chrome://messenger/content/AccountManager.xul",
+                          "AccountManager", "chrome,centerscreen,modal,titlebar",
+                          { server: server, selectPage: selectPage });
+    }
 }
 
 function loadInboxForNewAccount() 
