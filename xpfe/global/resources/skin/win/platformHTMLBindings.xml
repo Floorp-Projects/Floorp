@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<bindings id="htmlBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ 
+  <binding name="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
+    <handlers>
+    </handlers>
+  </binding>
+
+</bindings>
