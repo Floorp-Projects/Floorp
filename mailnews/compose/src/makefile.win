@@ -78,6 +78,7 @@ LINCS=								\
 			-I$(PUBLIC)\appcores	\
 			-I$(PUBLIC)\mime                \
 			-I$(PUBLIC)\uconv               \
+            -I$(PUBLIC)\xpfe\components     \
             $(NULL)
 
 LCFLAGS = \

@@ -19,66 +19,28 @@
 #include "nsComposer.h"
 #include "nsComposerNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
+#include "nsIAppShellComponent.h"
 
 #include "nsDOMCID.h"
 
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
-class nsComposerBootstrap : public nsIAppShellService {
+class nsComposerBootstrap : public nsIAppShellComponent {
   
 public:
   nsComposerBootstrap(nsIServiceManager *serviceManager);
   virtual ~nsComposerBootstrap();
   
   NS_DECL_ISUPPORTS
-  
-  // nsIAppShellService 
-  // Initialize() is the only one we care about
-  NS_IMETHOD Initialize();
+
+  NS_DECL_IAPPSHELLCOMPONENT
 
 private:
   nsIServiceManager *mServiceManager;
 
-  
-private:
-  NS_IMETHOD Run(void) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD GetNativeEvent(void *& aEvent,
-                            nsIWebShellWindow* aWidget,
-                            PRBool &aIsInWindow,
-                            PRBool &aIsMouseEvent)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  
-  NS_IMETHOD DispatchNativeEvent(void * aEvent)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD Shutdown(void)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
-                                  PRBool aShowWindow,
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
-                                  nsIXULWindowCallbacks *aCallbacks,
-                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
-                                  PRBool aShowWindow,
-                                  nsIWebShellWindow*& aResult,
-                                  nsIStreamObserver* anObserver,
-                                  nsIXULWindowCallbacks *aCallbacks,
-                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  
-  NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
-    { return NS_ERROR_NOT_IMPLEMENTED; }
-
 };
 
-NS_IMPL_ISUPPORTS(nsComposerBootstrap, nsIAppShellService::GetIID())
+NS_IMPL_ISUPPORTS(nsComposerBootstrap, nsIAppShellComponent::GetIID())
 
 nsComposerBootstrap::nsComposerBootstrap(nsIServiceManager *serviceManager)
   : mServiceManager(serviceManager)
@@ -95,7 +57,8 @@ nsComposerBootstrap::~nsComposerBootstrap()
 }
 
 nsresult
-nsComposerBootstrap::Initialize()
+nsComposerBootstrap::Initialize(nsIAppShellService*,
+                                nsICmdLineService*)
 {
   nsresult rv;
 
