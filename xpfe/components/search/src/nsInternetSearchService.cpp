@@ -1469,8 +1469,6 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 		}
 	}
 
-//crap
-
 	PRUint32	count;
 	if (NS_FAILED(rv = array->Count(&count)))	return(rv);
 	for (PRUint32 loop=0; loop<count; loop++)
