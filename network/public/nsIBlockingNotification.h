@@ -36,7 +36,7 @@ class nsIBlockingNotification : public nsISupports
 {
 public:
   NS_IMETHOD IsBlocked(nsIURL *aUrl, PRBool *aResult) = 0;
-  NS_IMETHOD Resume(nsIURL *aUrl) = 0;
+  NS_IMETHOD Resume(nsIURL *aUrl, void *aExtraInfo) = 0;
 };
 
 
@@ -54,7 +54,7 @@ public:
                     nsIURL *aUrl,
                     PRThread *aThread,
                     PRInt32 aCode,
-                    nsISupports *aExtraInfo) = 0;
+                    void  *aExtraInfo) = 0;
 
   NS_IMETHOD CancelNotify(nsIURL *aUrl) = 0;
 };
