@@ -329,12 +329,14 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 //
 // DoKey
-//
+// 
+// This is called for keydown, keyup, and key repeating events. So we need
+// to be careful not to do things twice.
 //-------------------------------------------------------------------------
 void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
 	char theChar = (char)(anEvent.message & charCodeMask);
-	if (anEvent.modifiers & cmdKey)
+	if ( (anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0) )
 	{
 		// do a menu key command
 		long menuResult = ::MenuKey(theChar);
