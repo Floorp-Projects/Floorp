@@ -2901,7 +2901,7 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
 
     registry->SetStringUTF8(key, kPluginsMimeTypeKey, aMimeTypes[i]);
 
-    if(aMimeDescriptions[i])
+    if(aMimeDescriptions && aMimeDescriptions[i])
       registry->SetBytesUTF8(key, kPluginsMimeDescKey, 
                              nsCRT::strlen(aMimeDescriptions[i]) + 1, 
                              (PRUint8 *)aMimeDescriptions[i]);
@@ -4928,7 +4928,7 @@ AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
       break;
     registry->SetStringUTF8(mimetypeKey, kPluginsMimeTypeKey, tag->mMimeTypeArray[i]);
 
-    if(tag->mMimeDescriptionArray[i])
+    if(tag->mMimeDescriptionArray && tag->mMimeDescriptionArray[i])
       registry->SetBytesUTF8(mimetypeKey, kPluginsMimeDescKey, 
                              nsCRT::strlen(tag->mMimeDescriptionArray[i]) + 1, 
                              (PRUint8 *)tag->mMimeDescriptionArray[i]);
