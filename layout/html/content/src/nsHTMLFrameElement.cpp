@@ -36,7 +36,7 @@ class nsHTMLFrameElement : public nsIDOMHTMLFrameElement,
 {
 public:
   nsHTMLFrameElement(nsIAtom* aTag);
-  ~nsHTMLFrameElement();
+  virtual ~nsHTMLFrameElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

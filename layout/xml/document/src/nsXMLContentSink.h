@@ -53,7 +53,7 @@ typedef struct _XSLStyleSheetState {
 class nsXMLContentSink : public nsIXMLContentSink {
 public:
   nsXMLContentSink();
-  ~nsXMLContentSink();
+  virtual ~nsXMLContentSink();
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURL* aURL,

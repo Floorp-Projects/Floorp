@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "prmem.h"
 
@@ -89,10 +90,10 @@ static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
   mContentRoot(nsnull),
-  mPrefs(nsnull),
-  mAppShell(nsnull),
+  mWindowListener(nsnull),
   mDocIsLoaded(PR_FALSE),
-  mWindowListener(nsnull)
+  mAppShell(nsnull),
+  mPrefs(nsnull)
 {
 }
 
@@ -268,7 +269,8 @@ void nsXPBaseWindow::ForceRefresh()
   nsIPresShell* shell;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
     if (nsnull != vm) {
       nsIView* root;
       vm->GetRootView(root);
@@ -276,7 +278,6 @@ void nsXPBaseWindow::ForceRefresh()
         vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE |
                                                  NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
       }
-      NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
   }
@@ -412,14 +413,14 @@ NS_IMETHODIMP nsXPBaseWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* a
   nsIPresShell* shell;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
       mContentRoot = doc->GetRootContent();
       mDocIsLoaded = PR_TRUE;
       if (nsnull != mWindowListener) {
         mWindowListener->Initialize(this);
       }
-      NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
   }
@@ -512,10 +513,10 @@ NS_IMETHODIMP nsXPBaseWindow::GetDocument(nsIDOMHTMLDocument *& aDocument)
   nsIPresShell *shell = nsnull;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
-      nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID,(void **)&htmlDoc);
-      NS_RELEASE(doc);
+      doc->QueryInterface(kIDOMHTMLDocumentIID,(void **)&htmlDoc);
     }
     NS_RELEASE(shell);
   }
@@ -697,7 +698,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
         nsIPresContext* cx;
         docv->GetPresContext(cx);
         if (nsnull != cx) {
-          shell = cx->GetShell(); // does an add ref
+          cx->GetShell(&shell); // does an add ref
           aPresShell = shell;
           NS_RELEASE(cx);
         }

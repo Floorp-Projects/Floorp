@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsFormFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsFormControlFrame.h"
@@ -523,7 +524,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
     nsAutoString absURLSpec;
     nsAutoString base;
-    nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+    NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
@@ -722,6 +723,7 @@ const char* nsFormFrame::GetFileNameWithinPath(char* aPathName)
 
 // this needs to be provided by a higher level, since navigator might override
 // the temp directory. XXX does not check that parm is big enough
+PRBool
 nsFormFrame::Temp_GetTempDir(char* aTempDirName)
 {
   aTempDirName[0] = 0;
@@ -841,7 +843,7 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
   // write the content-type, boundary to the tmp file
 	char boundary[80];
   sprintf(boundary, "-----------------------------%d%d%d", 
-          boundary, rand(), rand(), rand());
+          rand(), rand(), rand());
   sprintf(buffer, "Content-type: %s; boundary=%s" CRLF, MULTIPART, boundary);
 	PRInt32 len = PR_Write(tmpFile, buffer, PL_strlen(buffer));
   if (len < 0) {
@@ -923,7 +925,7 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
   contentLen += boundaryLen + PL_strlen(END) + crlfLen;
 
   // write the content 
-  sprintf(buffer, "Content-Length: %ld" CRLF CRLF, contentLen);
+  sprintf(buffer, "Content-Length: %d" CRLF CRLF, contentLen);
 	PR_Write(tmpFile, buffer, PL_strlen(buffer));
 
   // write the content passing through all of the form controls a 2nd time
@@ -1280,8 +1282,8 @@ void
 nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
                                nsIFrame* aFrame)
 {
-  nsIPresShell* shell;
-  shell = aPresContext->GetShell();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
     
   nsIReflowCommand* reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
@@ -1290,7 +1292,5 @@ nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
     shell->AppendReflowCommand(reflowCmd);
     NS_RELEASE(reflowCmd);
   }
-
-  NS_RELEASE(shell);
 }
 

@@ -39,7 +39,7 @@ class nsHTMLParagraphElement : public nsIDOMHTMLParagraphElement,
 {
 public:
   nsHTMLParagraphElement();
-  ~nsHTMLParagraphElement();
+  virtual ~nsHTMLParagraphElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

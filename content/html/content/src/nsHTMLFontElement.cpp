@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIDOMHTMLFontElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -39,7 +40,7 @@ class nsHTMLFontElement : public nsIDOMHTMLFontElement,
 {
 public:
   nsHTMLFontElement(nsIAtom* aTag);
-  ~nsHTMLFontElement();
+  virtual ~nsHTMLFontElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -201,14 +202,15 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       parentFont = (const nsStyleFont*)
         parentContext->GetStyleData(eStyleStruct_Font);
     }
-    const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
-    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
+    const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
+    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
 
     // face: string list
     aAttributes->GetAttribute(nsHTMLAtoms::face, value);
     if (value.GetUnit() == eHTMLUnit_String) {
 
-      nsIDeviceContext* dc = aPresContext->GetDeviceContext();
+      nsCOMPtr<nsIDeviceContext> dc;
+      aPresContext->GetDeviceContext(getter_AddRefs(dc));
       if (nsnull != dc) {
         nsAutoString  familyList;
 
@@ -229,7 +231,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
           font->mFixedFont.name= defaultFixedFont.name;
         }
         font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
-        NS_RELEASE(dc);
       }
     }
 
@@ -262,7 +263,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
           }
           size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
           PRInt32 scaler;
-          aPresContext->GetFontScaler(scaler);
+          aPresContext->GetFontScaler(&scaler);
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
           font->mFont.size =
             nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,

@@ -249,14 +249,14 @@ public:
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet);
-  virtual nsIDocument* GetDocument();
-  virtual nsIPresContext* GetPresContext();
-  virtual nsIViewManager* GetViewManager();
-  virtual nsIStyleSet* GetStyleSet();
+  NS_IMETHOD GetDocument(nsIDocument** aResult);
+  NS_IMETHOD GetPresContext(nsIPresContext** aResult);
+  NS_IMETHOD GetViewManager(nsIViewManager** aResult);
+  NS_IMETHOD GetStyleSet(nsIStyleSet** aResult);
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  virtual nsresult GetSelection(nsIDOMSelection **aSelection);
+  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
   NS_IMETHOD BeginObservingDocument();
@@ -264,19 +264,21 @@ public:
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
-  NS_IMETHOD GetRootFrame(nsIFrame*& aFrame) const;
-  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const;
-  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) const;
+  NS_IMETHOD GetRootFrame(nsIFrame** aFrame) const;
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
+                                nsIFrame**  aPrimaryFrame) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
-                                    nsIFrame*& aPlaceholderFrame) const;
+                                    nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame);
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   NS_IMETHOD ProcessReflowCommands();
-  virtual void ClearFrameRefs(nsIFrame*);
-  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
+  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
+                                    nsIRenderingContext** aContext);
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
   NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const;
@@ -301,7 +303,7 @@ public:
   void HandleCantRenderReplacedElementEvent(nsIFrame* aFrame);
 
 protected:
-  ~PresShell();
+  virtual ~PresShell();
 
   nsresult ReconstructFrames(void);
 
@@ -394,16 +396,22 @@ PresShell::PresShell()
 // for debugging only
 nsrefcnt PresShell::AddRef(void)
 {
-  if (gsNoisyRefs) printf("PresShell: AddRef: %x, cnt = %d \n",this, mRefCnt+1);
+  if (gsNoisyRefs) {
+    printf("PresShell: AddRef: %p, cnt = %d \n",this, mRefCnt+1);
+  }
   return ++mRefCnt;
 }
 
 // for debugging only
 nsrefcnt PresShell::Release(void)
 {
-  if (gsNoisyRefs==PR_TRUE) printf("PresShell Release: %x, cnt = %d \n",this, mRefCnt-1);
+  if (gsNoisyRefs) {
+    printf("PresShell Release: %p, cnt = %d \n",this, mRefCnt-1);
+  }
   if (--mRefCnt == 0) {
-    if (gsNoisyRefs==PR_TRUE) printf("PresShell Delete: %x, \n",this);
+    if (gsNoisyRefs) {
+      printf("PresShell Delete: %p, \n",this);
+    }
     delete this;
     return 0;
   }
@@ -558,14 +566,14 @@ PresShell::Init(nsIDocument* aDocument,
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 PresShell::EnterReflowLock()
 {
   ++mReflowLockCount;
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 PresShell::ExitReflowLock()
 {
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
@@ -576,32 +584,52 @@ PresShell::ExitReflowLock()
   return NS_OK;
 }
 
-nsIDocument*
-PresShell::GetDocument()
+NS_IMETHODIMP
+PresShell::GetDocument(nsIDocument** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mDocument;
   NS_IF_ADDREF(mDocument);
-  return mDocument;
+  return NS_OK;
 }
 
-nsIPresContext*
-PresShell::GetPresContext()
+NS_IMETHODIMP
+PresShell::GetPresContext(nsIPresContext** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mPresContext;
   NS_IF_ADDREF(mPresContext);
-  return mPresContext;
+  return NS_OK;
 }
 
-nsIViewManager*
-PresShell::GetViewManager()
+NS_IMETHODIMP
+PresShell::GetViewManager(nsIViewManager** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mViewManager;
   NS_IF_ADDREF(mViewManager);
-  return mViewManager;
+  return NS_OK;
 }
 
-nsIStyleSet*
-PresShell::GetStyleSet()
+NS_IMETHODIMP
+PresShell::GetStyleSet(nsIStyleSet** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mStyleSet;
   NS_IF_ADDREF(mStyleSet);
-  return mStyleSet;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -691,7 +719,7 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PresShell::GetSelection(nsIDOMSelection **aSelection)
 {
   if (!aSelection || !mSelection)
@@ -767,7 +795,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, rcx);
+    CreateRenderingContext(mRootFrame, &rcx);
 
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
                                   eReflowReason_Initial, maxSize, rcx);
@@ -819,7 +847,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, rcx);
+    CreateRenderingContext(mRootFrame, &rcx);
 
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
                                   eReflowReason_Resize, maxSize, rcx);
@@ -893,7 +921,7 @@ PresShell::StyleChangeReflow()
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, rcx);
+    CreateRenderingContext(mRootFrame, &rcx);
 
     // XXX We should be using eReflowReason_StyleChange
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
@@ -918,15 +946,24 @@ PresShell::StyleChangeReflow()
 }
 
 NS_IMETHODIMP
-PresShell::GetRootFrame(nsIFrame*& aFrame) const
+PresShell::GetRootFrame(nsIFrame** aResult) const
 {
-  aFrame = mRootFrame;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mRootFrame;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const
+PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsIFrame*             child;
   nsIPageSequenceFrame* pageSequence;
 
@@ -935,18 +972,19 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const
   mRootFrame->FirstChild(nsnull, &child);
   if (nsnull != child) {
     if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
-      aPageSequenceFrame = pageSequence;
+      *aResult = pageSequence;
       return NS_OK;
     }
   
     child->FirstChild(nsnull, &child);
     if (nsnull != child) {
       if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
-        aPageSequenceFrame = pageSequence;
+        *aResult = pageSequence;
         return NS_OK;
       }
     }
   }
+  *aResult = nsnull;
 
   return NS_ERROR_FAILURE;
 }
@@ -1011,7 +1049,7 @@ PresShell::ProcessReflowCommands()
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
 
-    CreateRenderingContext(mRootFrame, rcx);
+    CreateRenderingContext(mRootFrame, &rcx);
 
     while (0 != mReflowCommands.Count()) {
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
@@ -1069,7 +1107,7 @@ PresShell::ProcessReflowCommands()
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   nsIEventStateManager *manager;
@@ -1083,11 +1121,18 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame == mFocusEventFrame) {
     mFocusEventFrame = nsnull;
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext)
+PresShell::CreateRenderingContext(nsIFrame *aFrame,
+                                  nsIRenderingContext** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsIWidget *widget = nsnull;
   nsIView   *view = nsnull;
   nsPoint   pt;
@@ -1111,16 +1156,19 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aConte
     view->GetParent(view);
   }
 
-  nsIDeviceContext  *dx;
+  nsCOMPtr<nsIDeviceContext> dx;
 
-  dx = mPresContext->GetDeviceContext();
-
-  if (nsnull != view)
-    rv = dx->CreateRenderingContext(view, aContext);
-  else
-    rv = dx->CreateRenderingContext(aContext);
-
-  NS_RELEASE(dx);
+  nsIRenderingContext* result = nsnull;
+  rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
+  if (NS_SUCCEEDED(rv) && (nsnull != dx)) {
+    if (nsnull != view) {
+      rv = dx->CreateRenderingContext(view, result);
+    }
+    else {
+      rv = dx->CreateRenderingContext(result);
+    }
+  }
+  *aResult = result;
 
   return rv;
 }
@@ -1225,7 +1273,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
         nsIFrame* frame;
 
         // Get the primary frame
-        if (NS_SUCCEEDED(GetPrimaryFrameFor(content, frame))) {
+        if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
           if (nsnull != mViewManager) {
             nsIView* viewportView = nsnull;
             mViewManager->GetRootView(viewportView);
@@ -1267,27 +1315,6 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
 
   return rv;
 }
-
-#ifdef NS_DEBUG
-static char*
-ContentTag(nsIContent* aContent, PRIntn aSlot)
-{
-  static char buf0[100], buf1[100], buf2[100];
-  static char* bufs[] = { buf0, buf1, buf2 };
-  char* buf = bufs[aSlot];
-  nsIAtom* atom;
-  aContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    tmp.ToCString(buf, 100);
-  }
-  else {
-    buf[0] = 0;
-  }
-  return buf;
-}
-#endif
 
 NS_IMETHODIMP
 PresShell::ContentChanged(nsIDocument *aDocument,
@@ -1381,7 +1408,7 @@ PresShell::ReconstructFrames(void)
         nsIFrame*   parentFrame;
         
         // Get the frame that corresponds to the document element
-        GetPrimaryFrameFor(rootContent, docElementFrame);
+        GetPrimaryFrameFor(rootContent, &docElementFrame);
         if (nsnull != docElementFrame) {
           docElementFrame->GetParent(&parentFrame);
           
@@ -1461,14 +1488,6 @@ PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
   return NS_OK;
 }
 
-static PRBool
-IsZeroSizedFrame(nsIFrame *aFrame)
-{
-  nsSize size;
-  aFrame->GetSize(size);
-  return ((0 == size.width) && (0 == size.height));
-}
-
 static nsIFrame*
 FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
@@ -1519,11 +1538,17 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-PresShell::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) const
+PresShell::GetPrimaryFrameFor(nsIContent* aContent,
+                              nsIFrame** aResult) const
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   // For the time being do a brute force depth-first search of
   // the frame tree
-  aPrimaryFrame = ::FindFrameWithContent(mRootFrame, aContent);
+  *aResult = ::FindFrameWithContent(mRootFrame, aContent);
   return NS_OK;
 }
 
@@ -1537,7 +1562,7 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
   {
     *aResult = nsnull;
     nsIFrame *primaryFrame=nsnull;
-    result = GetPrimaryFrameFor(aContent, primaryFrame);
+    result = GetPrimaryFrameFor(aContent, &primaryFrame);
     if ((NS_SUCCEEDED(result)) && (nsnull!=primaryFrame))
     {
       result = primaryFrame->QueryInterface(kISupportsIID, (void**)aResult);
@@ -1549,14 +1574,18 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
 
 NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
-                                  nsIFrame*& aPlaceholderFrame) const
+                                  nsIFrame** aResult) const
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
   NS_PRECONDITION(nsnull != aFrame, "no frame");
+  if ((nsnull == aResult) || (nsnull == aFrame)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   if (nsnull == mPlaceholderMap) {
-    aPlaceholderFrame = nsnull;
+    *aResult = nsnull;
   } else {
-    aPlaceholderFrame = (nsIFrame*)mPlaceholderMap->Get(aFrame);
+    *aResult = (nsIFrame*) mPlaceholderMap->Get(aFrame);
   }
 
   return NS_OK;
@@ -1909,18 +1938,20 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a presentation context to view the new frame tree
   nsresult rv;
-  if (mPresContext->IsPaginated()) {
+  PRBool isPaginated = PR_FALSE;
+  mPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
     rv = NS_NewPrintPreviewContext(&cx);
   }
   else {
     rv = NS_NewGalleyContext(&cx);
   }
   NS_ASSERTION(NS_OK == rv, "failed to create presentation context");
-  nsIDeviceContext* dc = mPresContext->GetDeviceContext();
-  nsIPref* prefs; 
-  mPresContext->GetPrefs(prefs);
+  nsCOMPtr<nsIDeviceContext> dc;
+  mPresContext->GetDeviceContext(getter_AddRefs(dc));
+  nsCOMPtr<nsIPref> prefs; 
+  mPresContext->GetPrefs(getter_AddRefs(prefs));
   cx->Init(dc, prefs);
-  NS_IF_RELEASE(prefs);
 
   // Get our scrolling preference
   nsScrollPreference scrolling;
@@ -1941,8 +1972,6 @@ PresShell::VerifyIncrementalReflow()
   if ((NS_OK != rv) || (NS_OK != vm->Init(dc))) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
   }
-
-  NS_RELEASE(dc);
 
   vm->SetViewObserver((nsIViewObserver *)this);
 
@@ -1989,8 +2018,8 @@ PresShell::VerifyIncrementalReflow()
   // compare against our frame tree.
   nsIFrame* root1;
   nsIFrame* root2;
-  GetRootFrame(root1);
-  sh->GetRootFrame(root2);
+  GetRootFrame(&root1);
+  sh->GetRootFrame(&root2);
   CompareTrees(root1, root2);
 
   NS_RELEASE(vm);

@@ -36,7 +36,7 @@ class nsHTMLBaseElement : public nsIDOMHTMLBaseElement,
 {
 public:
   nsHTMLBaseElement(nsIAtom* aTag);
-  ~nsHTMLBaseElement();
+  virtual ~nsHTMLBaseElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -97,7 +97,8 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::legendContentPseudo,
-                                            mStyleContext, &styleContext);
+                                            mStyleContext, PR_FALSE,
+                                            &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 

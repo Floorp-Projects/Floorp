@@ -128,7 +128,7 @@ protected:
   static const char* GetFileNameWithinPath(char* aPathName);
 
   // the following are temporary until nspr and/or netlib provide them
-  static       Temp_GetTempDir(char* aTempDirName);
+  static PRBool Temp_GetTempDir(char* aTempDirName);
   static char* Temp_GenerateTempFileName(PRInt32 aMaxSize, char* aBuffer);
   static void  Temp_GetContentType(char* aPathName, char* aContentType);
 

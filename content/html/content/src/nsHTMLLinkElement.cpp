@@ -36,7 +36,7 @@ class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
 {
 public:
   nsHTMLLinkElement(nsIAtom* aTag);
-  ~nsHTMLLinkElement();
+  virtual ~nsHTMLLinkElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved. 
  */ 
-
+#include "nsCOMPtr.h"
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
@@ -396,7 +396,8 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
   PRInt32 i, n = mPresShells.Count();
   for (i = 0; i < n; i++) {
     nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
-    nsIPresContext* cx = shell->GetPresContext();
+    nsCOMPtr<nsIPresContext> cx;
+    shell->GetPresContext(getter_AddRefs(cx));
     nsISupports* container;
     if (NS_OK == cx->GetContainer(&container)) {
       if (nsnull != container) {
@@ -409,7 +410,6 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
         NS_RELEASE(container);
       }
     }
-    NS_RELEASE(cx);
   }
 
   return NS_OK;
@@ -523,10 +523,10 @@ nsHTMLDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool
     count = mPresShells.Count();
     for (index = 0; index < count; index++) {
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsIStyleSet* set = shell->GetStyleSet();
+      nsCOMPtr<nsIStyleSet> set;
+      shell->GetStyleSet(getter_AddRefs(set));
       if (nsnull != set) {
         set->AddDocStyleSheet(aSheet, this);
-        NS_RELEASE(set);
       }
     }
   }
@@ -1004,7 +1004,7 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
   // extract it from the URL? What about proxy servers, etc.?
   if (nsnull != mDocumentURL) {
     const char* hostName;
-    nsresult rslt = mDocumentURL->GetHost(&hostName);
+    mDocumentURL->GetHost(&hostName);
     aDomain.SetString(hostName);
   } else {
     aDomain.SetLength(0);
@@ -1244,7 +1244,8 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
           // Get the webshell of our primary presentation shell
           nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
           if (nsnull != shell) {
-            nsIPresContext* cx = shell->GetPresContext();
+            nsCOMPtr<nsIPresContext> cx;
+            shell->GetPresContext(getter_AddRefs(cx));
             nsISupports* container;
             if (NS_OK == cx->GetContainer(&container)) {
               if (nsnull != container) {
@@ -1936,7 +1937,6 @@ PRInt32 BlockText::GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
 {
   
   PRInt32 i      = 0;
-  PRInt32 offset = 0;
   PRInt32 endPos = anIndex + aLength;
   while (anIndex > mSubTexts[i]->mOffset+mSubTexts[i]->mLength) {
     i++;
@@ -2286,7 +2286,6 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIDOMNode * aParent,
                                            PRInt32      aStackInx,
                                            nsIDOMNode * aCurrentBlock) 
 {
-  nsIDOMNode * stackParent = mParentStack[aStackInx];
   nsIDOMNode * stackChild  = mChildStack[aStackInx];
 
   PRBool hasChildNode;

@@ -1060,7 +1060,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             }
 
             nsAutoString absURLSpec;
-            nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+            NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
             NS_IF_RELEASE(docURL);
 
             nsIAtom* pseudo = aSelector->mPseudoClassList->mAtom;
@@ -1173,7 +1173,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   PRInt32 matchCount = 0;
 
   nsIAtom* presMedium = nsnull;
-  aPresContext->GetMedium(presMedium);
+  aPresContext->GetMedium(&presMedium);
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
     PRBool mediumOK = PR_FALSE;
@@ -1319,7 +1319,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   PRInt32 matchCount = 0;
 
   nsIAtom* presMedium = nsnull;
-  aPresContext->GetMedium(presMedium);
+  aPresContext->GetMedium(&presMedium);
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
     PRBool mediumOK = PR_FALSE;

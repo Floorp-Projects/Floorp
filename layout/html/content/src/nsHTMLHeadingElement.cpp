@@ -37,7 +37,7 @@ class nsHTMLHeadingElement : public nsIDOMHTMLHeadingElement,
 {
 public:
   nsHTMLHeadingElement(nsIAtom* aTag);
-  ~nsHTMLHeadingElement();
+  virtual ~nsHTMLHeadingElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

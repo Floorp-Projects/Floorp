@@ -450,7 +450,7 @@ nsProgressMeterFrame::PaintBarSolid(nsIPresContext& aPresContext, nsIRenderingCo
 
 	    // figure out a pixel size
 		float p2t;
-		aPresContext.GetScaledPixelsToTwips(p2t);
+		aPresContext.GetScaledPixelsToTwips(&p2t);
 		nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
 		// how many pixel lines will fit?
@@ -540,7 +540,7 @@ nsProgressMeterFrame::PaintBarStripped(nsIPresContext& aPresContext, nsIRenderin
  
  
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   // nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   int stripeWidthInTwips = (int)(stripeWidth * p2t);
@@ -651,7 +651,7 @@ nsProgressMeterFrame::CalcSize(nsIPresContext& aPresContext, int& width, int& he
 {
 	// make sure we convert to twips.
 	float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
 
 	if (mHorizontal) {
 		width = (int)(100 * p2t);
@@ -700,9 +700,12 @@ nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                             nsIContent *      aContent,
                                             nsIStyleContext*  aParentStyle)
 {
-  nsCOMPtr<nsIStyleContext> newStyleContext ( dont_AddRef(aPresContext->ProbePseudoStyleContextFor(aContent,
-                                                                              aNewContentPseudo,
-                                                                              aParentStyle)) );
+  nsIStyleContext* newStyleContext;
+  aPresContext->ProbePseudoStyleContextFor(aContent,
+                                           aNewContentPseudo,
+                                           aParentStyle,
+                                           PR_FALSE,
+                                           &newStyleContext);
   if (newStyleContext != *aCurrentStyle)
     *aCurrentStyle = newStyleContext;
     

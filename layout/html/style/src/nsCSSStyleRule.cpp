@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
@@ -426,7 +427,7 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 protected:
-  ~CSSImportantRule(void);
+  virtual ~CSSImportantRule(void);
 
   nsICSSDeclaration*  mDeclaration;
   nsICSSStyleSheet*   mSheet;
@@ -435,8 +436,8 @@ friend CSSStyleRuleImpl;
 };
 
 CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsICSSDeclaration* aDeclaration)
-  : mSheet(aSheet),
-    mDeclaration(aDeclaration)
+  : mDeclaration(aDeclaration),
+    mSheet(aSheet)
 {
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mDeclaration);
@@ -1022,7 +1023,8 @@ nscoord CalcLength(const nsCSSValue& aValue,
     case eCSSUnit_EN:
       return NSToCoordRound((aValue.GetFloatValue() * (float)aFont->mFont.size) / 2.0f);
     case eCSSUnit_XHeight: {
-      nsIFontMetrics* fm = aPresContext->GetMetricsFor(aFont->mFont);
+      nsIFontMetrics* fm;
+      aPresContext->GetMetricsFor(aFont->mFont, &fm);
       NS_ASSERTION(nsnull != fm, "can't get font metrics");
       nscoord xHeight;
       if (nsnull != fm) {
@@ -1041,8 +1043,11 @@ nscoord CalcLength(const nsCSSValue& aValue,
     }
     case eCSSUnit_Pixel:
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
+
+    default:
+      break;
   }
   return 0;
 }
@@ -1157,12 +1162,13 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
     nsCSSFont*  ourFont;
     if (NS_OK == aDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
       if (nsnull != ourFont) {
-        const nsFont& defaultFont = aPresContext->GetDefaultFont();
-        const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont();
+        const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated();
+        const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated();
 
         // font-family: string list, enum, inherit
         if (eCSSUnit_String == ourFont->mFamily.GetUnit()) {
-          nsIDeviceContext* dc = aPresContext->GetDeviceContext();
+          nsCOMPtr<nsIDeviceContext> dc;
+          aPresContext->GetDeviceContext(getter_AddRefs(dc));
           if (nsnull != dc) {
             nsAutoString  familyList;
 
@@ -1183,7 +1189,6 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               font->mFixedFont.name = defaultFixedFont.name;
             }
             font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
-            NS_RELEASE(dc);
           }
         }
         else if (eCSSUnit_Enumerated == ourFont->mFamily.GetUnit()) {
@@ -1257,7 +1262,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         if (eCSSUnit_Enumerated == ourFont->mSize.GetUnit()) {
           PRInt32 value = ourFont->mSize.GetIntValue();
           PRInt32 scaler;
-          aPresContext->GetFontScaler(scaler);
+          aPresContext->GetFontScaler(&scaler);
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
 
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 

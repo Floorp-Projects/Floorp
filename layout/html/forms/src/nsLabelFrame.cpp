@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
@@ -159,8 +159,6 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 
   aEventStatus = nsEventStatus_eIgnore;
-  nsresult result = NS_OK;
-
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       mControlFrame->SetFocus(PR_TRUE);
@@ -259,7 +257,6 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
   PRBool returnValue = PR_FALSE;
 
   for (PRUint32 formX = 0; formX < numForms; formX++) {
-    nsIContent* iContent = nsnull;
     nsIDOMNode* node = nsnull;
     forms->Item(formX, &node);
     if (nsnull == node) {
@@ -293,7 +290,7 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
             id.Trim(whitespace, PR_TRUE, PR_TRUE);    
             if (id.Equals(forId)) {
               nsIFrame* frame;
-              shell->GetPrimaryFrameFor(htmlContent, frame);
+              shell->GetPrimaryFrameFor(htmlContent, &frame);
               if (nsnull != frame) {
                 nsIFormControlFrame* fcFrame = nsnull;
                 result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
@@ -363,7 +360,8 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo,
-                                            mStyleContext, &styleContext);
+                                            mStyleContext, PR_FALSE,
+                                            &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
@@ -398,9 +396,10 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
     if (!view) {
       nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                     (void **)&view);
-	    nsIPresShell   *presShell = aPresContext.GetShell();     
-	    nsIViewManager *viewMan   = presShell->GetViewManager();  
-      NS_RELEASE(presShell);
+	    nsCOMPtr<nsIPresShell> presShell;
+      aPresContext.GetShell(getter_AddRefs(presShell));
+	    nsCOMPtr<nsIViewManager> viewMan;
+      presShell->GetViewManager(getter_AddRefs(viewMan));
 
       nsIFrame* parWithView;
 	    nsIView *parView;
@@ -411,7 +410,6 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
       result = view->Init(viewMan, boundBox, parView, nsnull);
       viewMan->InsertChild(parView, view, 0);
       SetView(view);
-      NS_RELEASE(viewMan);
     }
     mDidInit = PR_TRUE;
   }

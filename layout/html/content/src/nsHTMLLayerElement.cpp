@@ -39,7 +39,7 @@ class nsHTMLLayerElement : public nsIDOMHTMLElement,/* XXX need layer api */
 {
 public:
   nsHTMLLayerElement(nsIAtom* aTag);
-  ~nsHTMLLayerElement();
+  virtual ~nsHTMLLayerElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -208,7 +208,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   if (nsnull != aAttributes) {
     nsHTMLValue      value;
     float            p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStylePosition* position = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
 

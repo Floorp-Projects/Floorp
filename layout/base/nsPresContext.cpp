@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPref.h"
@@ -190,7 +191,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   nsIFrame*         rootFrame;
   nsIStyleContext*  rootStyleContext;
 
-  mShell->GetRootFrame(rootFrame);
+  mShell->GetRootFrame(&rootFrame);
   if (nsnull != rootFrame) {
     rootFrame->GetStyleContext(&rootStyleContext);
     rootStyleContext->RemapStyle(this);
@@ -239,35 +240,49 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   NS_IF_RELEASE(mBaseURL);
   mShell = aShell;
   if (nsnull != mShell) {
-    nsIDocument*  doc = mShell->GetDocument();
-    NS_ASSERTION(nsnull != doc, "expect document here");
-    if (nsnull != doc) {
-      doc->GetBaseURL(mBaseURL);
-      NS_RELEASE(doc);
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
+      NS_ASSERTION(nsnull != doc, "expect document here");
+      if (nsnull != doc) {
+        doc->GetBaseURL(mBaseURL);
+      }
     }
   }
   return NS_OK;
 }
 
-nsIPresShell*
-nsPresContext::GetShell()
-{
-  NS_IF_ADDREF(mShell);
-  return mShell;
-}
-
 NS_IMETHODIMP
-nsPresContext::GetPrefs(nsIPref*& aPrefs)
+nsPresContext::GetShell(nsIPresShell** aResult)
 {
-  aPrefs = mPrefs;
-  NS_IF_ADDREF(aPrefs);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mShell;
+  NS_IF_ADDREF(mShell);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPresContext::GetCompatibilityMode(nsCompatibility& aMode)
+nsPresContext::GetPrefs(nsIPref** aResult)
 {
-  aMode = mCompatibilityMode;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mPrefs;
+  NS_IF_ADDREF(mPrefs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mCompatibilityMode;
   return NS_OK;
 }
 
@@ -279,95 +294,148 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetBaseURL(nsIURL*& aURL)
+nsPresContext::GetBaseURL(nsIURL** aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mBaseURL;
   NS_IF_ADDREF(mBaseURL);
-  aURL = mBaseURL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
                                       nsIStyleContext* aParentContext,
-                                      nsIStyleContext** aStyleContext,
-                                      PRBool aForceUnique)
+                                      PRBool aForceUnique,
+                                      nsIStyleContext** aResult)
 {
-  nsIStyleContext* result = nsnull;
-
-  nsIStyleSet* set = mShell->GetStyleSet();
-  if (nsnull != set) {
-    result = set->ResolveStyleFor(this, aContent, aParentContext, aForceUnique);
-    NS_RELEASE(set);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  *aStyleContext = result;
-  return nsnull == result ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIStyleContext* result = nsnull;
+  nsCOMPtr<nsIStyleSet> set;
+  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != set) {
+      result = set->ResolveStyleFor(this, aContent, aParentContext,
+                                    aForceUnique);
+      if (nsnull == result) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  *aResult = result;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                             nsIAtom* aPseudoTag,
                                             nsIStyleContext* aParentContext,
-                                            nsIStyleContext** aStyleContext,
-                                            PRBool aForceUnique)
+                                            PRBool aForceUnique,
+                                            nsIStyleContext** aResult)
 {
-  nsIStyleContext* result = nsnull;
-
-  nsIStyleSet* set = mShell->GetStyleSet();
-  if (nsnull != set) {
-    result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag, aParentContext, aForceUnique);
-    NS_RELEASE(set);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  *aStyleContext = result;
-  return nsnull == result ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIStyleContext* result = nsnull;
+  nsCOMPtr<nsIStyleSet> set;
+  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != set) {
+      result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
+                                          aParentContext, aForceUnique);
+      if (nsnull == result) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  *aResult = result;
+  return rv;
 }
 
-nsIStyleContext*
+NS_IMETHODIMP
 nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          PRBool aForceUnique)
+                                          PRBool aForceUnique,
+                                          nsIStyleContext** aResult)
 {
-  nsIStyleContext* result = nsnull;
-
-  nsIStyleSet* set = mShell->GetStyleSet();
-  if (nsnull != set) {
-    result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag, aParentContext, aForceUnique);
-    NS_RELEASE(set);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  return result;
+  nsIStyleContext* result = nsnull;
+  nsCOMPtr<nsIStyleSet> set;
+  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != set) {
+      result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
+                                        aParentContext, aForceUnique);
+    }
+  }
+  *aResult = result;
+  return rv;
 }
 
-nsIFontMetrics*
-nsPresContext::GetMetricsFor(const nsFont& aFont)
+NS_IMETHODIMP
+nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 {
-  if (nsnull != mDeviceContext) {
-    nsIFontMetrics* metrics;
-
-    mDeviceContext->GetMetricsFor(aFont, metrics);
-    return metrics;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return nsnull;
+
+  nsIFontMetrics* metrics = nsnull;
+  if (nsnull != mDeviceContext) {
+    mDeviceContext->GetMetricsFor(aFont, metrics);
+  }
+  *aResult = metrics;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultFont(nsFont& aResult)
+{
+  aResult = mDefaultFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultFixedFont(nsFont& aResult)
+{
+  aResult = mDefaultFixedFont;
+  return NS_OK;
 }
 
 const nsFont&
-nsPresContext::GetDefaultFont(void)
+nsPresContext::GetDefaultFontDeprecated()
 {
   return mDefaultFont;
 }
 
 const nsFont&
-nsPresContext::GetDefaultFixedFont(void)
+nsPresContext::GetDefaultFixedFontDeprecated()
 {
   return mDefaultFixedFont;
 }
 
 NS_IMETHODIMP
-nsPresContext::GetFontScaler(PRInt32& aResult)
+nsPresContext::GetFontScaler(PRInt32* aResult)
 {
-  aResult = mFontScaler;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = mFontScaler;
   return NS_OK;
 }
 
@@ -379,28 +447,38 @@ nsPresContext::SetFontScaler(PRInt32 aScaler)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetDefaultColor(nscolor& aColor)
+nsPresContext::GetDefaultColor(nscolor* aResult)
 {
-  aColor = mDefaultColor;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = mDefaultColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsPresContext::GetDefaultBackgroundColor(nscolor& aColor)
+nsPresContext::GetDefaultBackgroundColor(nscolor* aResult)
 {
-  aColor = mDefaultBackgroundColor;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = mDefaultBackgroundColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultColor(const nscolor& aColor)
+nsPresContext::SetDefaultColor(nscolor aColor)
 {
   mDefaultColor = aColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundColor(const nscolor& aColor)
+nsPresContext::SetDefaultBackgroundColor(nscolor aColor)
 {
   mDefaultBackgroundColor = aColor;
   return NS_OK;
@@ -420,60 +498,84 @@ nsPresContext::SetVisibleArea(const nsRect& r)
   return NS_OK;
 }
 
-float
-nsPresContext::GetPixelsToTwips() const
+NS_IMETHODIMP
+nsPresContext::GetPixelsToTwips(float* aResult) const
 {
-  if (nsnull != mDeviceContext) {
-    float p2t;
-    mDeviceContext->GetDevUnitsToAppUnits(p2t);
-    return p2t;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return 1.0f;
-}
 
-float
-nsPresContext::GetTwipsToPixels() const
-{
+  float p2t = 1.0f;
   if (nsnull != mDeviceContext) {
-    float app2dev;
-    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-    return app2dev;
-  }
-  return 1.0f;
-}
-
-NS_IMETHODIMP nsPresContext :: GetScaledPixelsToTwips(float &aScale) const
-{
-  if (nsnull != mDeviceContext)
-  {
-    float p2t, scale;
     mDeviceContext->GetDevUnitsToAppUnits(p2t);
-    mDeviceContext->GetCanonicalPixelScale(scale);
-    aScale = p2t * scale;
   }
-  else
-    aScale = 1.0f;
-  
+  *aResult = p2t;
   return NS_OK;
 }
 
-nsIDeviceContext*
-nsPresContext::GetDeviceContext() const
+NS_IMETHODIMP
+nsPresContext::GetTwipsToPixels(float* aResult) const
 {
-  NS_IF_ADDREF(mDeviceContext);
-  return mDeviceContext;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  float app2dev = 1.0f;
+  if (nsnull != mDeviceContext) {
+    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  }
+  *aResult = app2dev;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
+nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  float scale = 1.0f;
+  if (nsnull != mDeviceContext)
+  {
+    float p2t;
+    mDeviceContext->GetDevUnitsToAppUnits(p2t);
+    mDeviceContext->GetCanonicalPixelScale(scale);
+    scale = p2t * scale;
+  }
+  *aResult = scale;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mDeviceContext;
+  NS_IF_ADDREF(mDeviceContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetImageGroup(nsIImageGroup** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   if (nsnull == mImageGroup) {
     // Create image group
     nsresult rv = NS_NewImageGroup(&mImageGroup);
     if (NS_OK != rv) {
       return rv;
     }
-
 
     // Initialize the image group
     nsIURLGroup* urlGroup;
@@ -485,7 +587,8 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
       return rv;
     }
   }
-  aGroupResult = mImageGroup;
+
+  *aResult = mImageGroup;
   NS_IF_ADDREF(mImageGroup);
   return NS_OK;
 }
@@ -497,7 +600,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               nsFrameImageLoaderCB aCallBack,
                               PRBool aNeedSizeUpdate,
                               PRBool aNeedErrorNotification,
-                              nsIFrameImageLoader*& aLoaderResult)
+                              nsIFrameImageLoader** aLoaderResult)
 {
   if (mStopped) {
     return NS_OK;
@@ -518,7 +621,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   printf(")\n");
 #endif
 
-  aLoaderResult = nsnull;
+  *aLoaderResult = nsnull;
  
   // Lookup image request in our loaders array. Note that we need
   // to get a loader that is observing the same image and that has
@@ -541,7 +644,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
         PRBool wantSize = 0 != (status & NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED);
         if (aNeedSizeUpdate == wantSize) {
           NS_ADDREF(loader);
-          aLoaderResult = loader;
+          *aLoaderResult = loader;
           return NS_OK;
         }
       }
@@ -551,12 +654,11 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   // Create image group if needed
   nsresult rv;
   if (nsnull == mImageGroup) {
-    nsIImageGroup* group;
-    rv = GetImageGroup(group);
+    nsCOMPtr<nsIImageGroup> group;
+    rv = GetImageGroup(getter_AddRefs(group));
     if (NS_OK != rv) {
       return rv;
     }
-    NS_RELEASE(group);
   }
 
   // We haven't seen that image before. Create a new loader and
@@ -574,9 +676,10 @@ nsPresContext::StartLoadImage(const nsString& aURL,
     NS_RELEASE(loader);
     return rv;
   }
+
   // Return the loader
   NS_ADDREF(loader);
-  aLoaderResult = loader;
+  *aLoaderResult = loader;
   return NS_OK;
 }
 

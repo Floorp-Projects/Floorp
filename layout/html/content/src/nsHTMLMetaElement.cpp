@@ -36,7 +36,7 @@ class nsHTMLMetaElement : public nsIDOMHTMLMetaElement,
 {
 public:
   nsHTMLMetaElement(nsIAtom* aTag);
-  ~nsHTMLMetaElement();
+  virtual ~nsHTMLMetaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

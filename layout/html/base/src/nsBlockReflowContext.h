@@ -29,6 +29,8 @@ class nsLineLayout;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
+#undef SPECULATIVE_TOP_MARGIN
+
 /**
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
@@ -49,12 +51,19 @@ public:
 
   nsresult ReflowBlock(nsIFrame* aFrame,
                        const nsRect& aSpace,
+#ifdef SPECULATIVE_TOP_MARGIN
+                       PRBool aApplyTopMargin,
+                       nscoord aPrevBottomMargin,
+#endif
                        PRBool aIsAdjacentWithTop,
                        nsMargin& aComputedOffsets,
                        nsReflowStatus& aReflowStatus);
 
-  PRBool PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
+  PRBool PlaceBlock(PRBool aForceFit,
+#ifndef SPECULATIVE_TOP_MARGIN
+                    PRBool aApplyTopMargin,
                     nscoord aPrevBottomMargin,
+#endif
                     const nsMargin& aComputedOffsets,
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
@@ -122,6 +131,7 @@ protected:
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
+  nscoord mSpeculativeTopMargin;
   nscoord mTopMargin;
   nscoord mBottomMargin;
   nsSize mMaxElementSize;

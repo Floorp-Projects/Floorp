@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
@@ -69,7 +70,7 @@ class TextFrame;
 class BlinkTimer : public nsITimerCallback {
 public:
   BlinkTimer();
-  ~BlinkTimer();
+  virtual ~BlinkTimer();
 
   NS_DECL_ISUPPORTS
 
@@ -197,7 +198,7 @@ public:
       // Get the normal font
       nsFont plainFont(mFont->mFont);
       plainFont.decorations = NS_FONT_DECORATION_NONE;
-      mNormalFont = aPresContext.GetMetricsFor(plainFont);
+      aPresContext.GetMetricsFor(plainFont, &mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
       mLastFont = mNormalFont;
@@ -206,7 +207,7 @@ public:
       mSmallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
       if (mSmallCaps) {
         plainFont.size = nscoord(0.7 * plainFont.size);
-        mSmallFont = aPresContext.GetMetricsFor(plainFont);
+        aPresContext.GetMetricsFor(plainFont, &mSmallFont);
       }
       else {
         mSmallFont = nsnull;
@@ -505,17 +506,19 @@ TextFrame::ContentChanged(nsIPresContext* aPresContext,
 {
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
-  nsresult          result;
+  nsresult          rv;
                                                 
-  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
-  if (NS_OK == result) {
-    nsIPresShell* shell = aPresContext->GetShell();
-    shell->AppendReflowCommand(cmd);
-    NS_RELEASE(shell);
-    NS_RELEASE(cmd);
+  rv = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+      shell->AppendReflowCommand(cmd);
+      NS_RELEASE(cmd);
+    }
   }
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -580,7 +583,6 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   // offset
   aTX.Init(this, mContentOffset);
 
-  PRInt32 mappingInx = 0;
   PRInt32 strInx = mContentOffset;
 
   // Skip over the leading whitespace
@@ -793,8 +795,10 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                             TextStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
-  nsIPresShell* shell = aPresContext.GetShell();
-  nsIDocument* doc = shell->GetDocument();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
@@ -918,8 +922,6 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   if (ip != indicies) {
     delete [] ip;
   }
-  NS_RELEASE(shell);
-  NS_RELEASE(doc);
 }
 
 void
@@ -1129,8 +1131,10 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
                            TextStyle& aTextStyle,
                            nscoord dx, nscoord dy)
 {
-  nsIPresShell* shell = aPresContext.GetShell();
-  nsIDocument* doc = shell->GetDocument();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
   displaySelection = PR_FALSE;
@@ -1156,8 +1160,10 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   if (mRect.width > mComputedWidth) {
     if (0 != aTextStyle.mNumSpaces) {
       nscoord extra = mRect.width - mComputedWidth;
+#if XXX
       nscoord adjustPerSpace =
         aTextStyle.mExtraSpacePerSpace = extra / aTextStyle.mNumSpaces;
+#endif
       aTextStyle.mRemainingExtraSpace = extra -
         (aTextStyle.mExtraSpacePerSpace * aTextStyle.mNumSpaces);
     }
@@ -1246,8 +1252,6 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   if (ip != indicies) {
     delete [] ip;
   }
-  NS_RELEASE(shell);
-  NS_RELEASE(doc);
 }
 
 void
@@ -1257,8 +1261,10 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                           TextStyle& aTextStyle,
                           nscoord dx, nscoord dy)
 {
-  nsIPresShell* shell = aPresContext.GetShell();
-  nsIDocument* doc = shell->GetDocument();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
@@ -1391,8 +1397,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   if (ip != indicies) {
     delete [] ip;
   }
-  NS_RELEASE(shell);
-  NS_RELEASE(doc);
 }
 
 NS_IMETHODIMP
@@ -1487,9 +1491,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   const nsStyleFont *font = (const nsStyleFont*)
     styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
-  nsIFontMetrics* fm = aCX.GetMetricsFor(font->mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aCX.GetMetricsFor(font->mFont, getter_AddRefs(fm));
   aRendContext->SetFont(fm);
-  PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant;
 
   // Get the renderable form of the text
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
@@ -1531,7 +1535,6 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     }      
   }
 
-  NS_RELEASE(fm);
   if (ip != indicies) {
     delete [] ip;
   }
@@ -1759,7 +1762,6 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
 
   ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   nsresult result(NS_OK);
-  PRInt32 oldPaintPos(ip[aStartOffset]);
   switch (aAmount){
   case eSelectNoAmount : {
           *aResultFrame = this;
@@ -1905,10 +1907,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   nscoord prevMaxWordWidth = 0;
   PRBool endsInWhitespace = PR_FALSE;
   PRBool endsInNewline = PR_FALSE;
-  PRBool firstWord = PR_TRUE;
 
   // Setup text transformer to transform this frames text content
-  nsTextRun* textRun = lineLayout.FindTextRunFor(this);
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsTextTransformer tx(wordBuf, WORD_BUF_SIZE);
   nsresult rv = tx.Init(/**textRun, XXX*/ this, startingOffset);
@@ -1976,7 +1976,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       if (firstLetterOK) {
         // XXX need a lookup function here; plus look ahead using the
         // text-runs
-        if ((bp[0] == '\'') || (bp[0] == '"')) {
+        if ((bp[0] == '\'') || (bp[0] == '\"')) {
           wordLen = 2;
           contentLen = 2;
         }
@@ -2363,7 +2363,6 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
                                     nsITextContent* aText,
                                     PRBool& aStop)
 {
-  nsTextRun* textRun = aLineLayout.FindTextRunFor(aTextFrame);
   PRUnichar buf[TEXT_BUF_SIZE];
   nsTextTransformer tx(buf, TEXT_BUF_SIZE);
   // XXX we need the content-offset of the text frame!!! 0 won't

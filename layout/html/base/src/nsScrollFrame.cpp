@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
@@ -257,10 +258,10 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Get the scrollbar dimensions
   float             sbWidth, sbHeight;
-  nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext.GetDeviceContext(getter_AddRefs(dc));
 
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  NS_RELEASE(dc);
 
   nsMargin  padding;
   nsHTMLReflowState::ComputePaddingFor(this, (const nsHTMLReflowState*)aReflowState.parentReflowState,
@@ -500,8 +501,6 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
     // Only paint the border and background if we're visible
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
-	const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
 
     if (display->mVisible) {
       // Paint our border only (no background)

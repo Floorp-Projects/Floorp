@@ -38,7 +38,7 @@ class nsHTMLWBRElement : public nsIDOMHTMLElement,
 {
 public:
   nsHTMLWBRElement(nsIAtom* aTag);
-  ~nsHTMLWBRElement();
+  virtual ~nsHTMLWBRElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

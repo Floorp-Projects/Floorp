@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
@@ -163,7 +163,7 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
 {
-  printf("nsFramesetFrame destructor %X \n", this);
+  printf("nsFramesetFrame destructor %p \n", this);
   if (mRowSizes) delete [] mRowSizes;
   if (mRowSpecs) delete [] mRowSpecs;
   if (mColSizes) delete [] mColSizes;
@@ -238,7 +238,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
   PRInt32* relative= new PRInt32[aNumSpecs];
 
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   PRInt32 i, j;
  
   // initialize the fixed, percent, relative indices, allocate the fixed sizes and zero the others
@@ -307,7 +307,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
 {
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nsHTMLValue htmlVal;
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
@@ -492,7 +492,7 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   nsHTMLValue value;
   nsAutoString rowsCols;
   nsIHTMLContent* content = nsnull;
-  nsresult result = mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
+  mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(aAttrType, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
@@ -837,9 +837,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     nsIView* view;
     nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                    (void **)&view);
-	  nsIPresShell   *presShell = aPresContext.GetShell();     
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  
-    NS_RELEASE(presShell);
+	  nsCOMPtr<nsIPresShell> presShell;
+    aPresContext.GetShell(getter_AddRefs(presShell));
+	  nsCOMPtr<nsIViewManager> viewMan;
+    presShell->GetViewManager(getter_AddRefs(viewMan));
 
     nsIFrame* parWithView;
 	  nsIView *parView;
@@ -849,7 +850,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     result = view->Init(viewMan, boundBox, parView, nsnull);
     viewMan->InsertChild(parView, view, 0);
     SetView(view);
-    NS_RELEASE(viewMan);
 
     // parse the rows= cols= data
     ParseRowCol(nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
@@ -926,7 +926,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         nsIContent* childCon;
         mContent->ChildAt(childX, childCon);
         nsIHTMLContent* child = nsnull;
-        nsresult result = childCon->QueryInterface(kIHTMLContentIID, (void**)&child);
+        childCon->QueryInterface(kIHTMLContentIID, (void**)&child);
         NS_RELEASE(childCon);
         if (nsnull == child) {
           continue;
@@ -937,7 +937,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           nsIStyleContext* kidSC;
           nsresult         result;
 
-          aPresContext.ResolveStyleContextFor(child, mStyleContext, &kidSC);
+          aPresContext.ResolveStyleContextFor(child, mStyleContext,
+                                              PR_FALSE, &kidSC);
           if (nsHTMLAtoms::frameset == tag) {
             result = NS_NewHTMLFramesetFrame(frame);
             frame->Init(aPresContext, child, this, kidSC);
@@ -982,8 +983,11 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         // XXX the blank frame is using the content of its parent - at some point it should just have null content
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame;
         nsIStyleContext* pseudoStyleContext;
-        aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
-                                                  mStyleContext, &pseudoStyleContext);
+        aPresContext.ResolvePseudoStyleContextFor(mContent,
+                                            nsHTMLAtoms::framesetBlankPseudo,
+                                                  mStyleContext,
+                                                  PR_FALSE,
+                                                  &pseudoStyleContext);
         blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
         NS_RELEASE(pseudoStyleContext);
 
@@ -1022,7 +1026,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
           nsIStyleContext* pseudoStyleContext;
           aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
-                                                    mStyleContext, &pseudoStyleContext);
+                                                    mStyleContext, PR_FALSE,
+                                                    &pseudoStyleContext);
           borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
           NS_RELEASE(pseudoStyleContext);
 
@@ -1048,7 +1053,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
             nsIStyleContext* pseudoStyleContext;
             aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo,
-                                                      mStyleContext, &pseudoStyleContext);
+                                                      mStyleContext,
+                                                      PR_FALSE,
+                                                      &pseudoStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
             NS_RELEASE(pseudoStyleContext);
 
@@ -1201,7 +1208,7 @@ PRBool
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
   nsIFrame* childFrame = nsnull;
-  nsresult result = aChild->QueryInterface(kIFramesetFrameIID, (void**)&childFrame);
+  aChild->QueryInterface(kIFramesetFrameIID, (void**)&childFrame);
   if (childFrame) {
     return PR_TRUE;
   }
@@ -1310,7 +1317,8 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
                                     nsGUIEvent* aEvent)
 {
   if (mMinDrag == 0) {
-    float p2t = aPresContext.GetPixelsToTwips();
+    float p2t;
+    aPresContext.GetPixelsToTwips(&p2t);
     mMinDrag = NSIntPixelsToTwips(2, p2t);  // set min drag and min frame size to 2 pixels
   }
 
@@ -1394,11 +1402,10 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     nsHTMLReflowMetrics metrics(nsnull);
     nsSize size;
     GetSize(size);
-    nsIPresShell        *shell;
+    nsCOMPtr<nsIPresShell> shell;
     nsIRenderingContext *acx;
-    shell = aPresContext.GetShell();
-    shell->CreateRenderingContext(this, acx);
-    NS_RELEASE(shell);
+    aPresContext.GetShell(getter_AddRefs(shell));
+    shell->CreateRenderingContext(this, &acx);
     nsHTMLReflowState state(aPresContext, this, eReflowReason_Initial,
                             size, acx);
     state.reason = eReflowReason_Incremental;
@@ -1458,7 +1465,7 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth, PRBool aVer
 
 nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 {
-printf("nsHTMLFramesetBorderFrame destructor %X \n", this);
+printf("nsHTMLFramesetBorderFrame destructor %p \n", this);
 }
 
 void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext* aPresContext,
@@ -1518,8 +1525,12 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
    NS_RELEASE(lookAndFeel);
   }
 
-  nscoord widthInPixels = NSTwipsToIntPixels(mWidth, aPresContext.GetTwipsToPixels());
-  nscoord pixelWidth    = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  nscoord widthInPixels = NSTwipsToIntPixels(mWidth, t2p);
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
+  nscoord pixelWidth    = NSIntPixelsToTwips(1, p2t);
 
   if (widthInPixels <= 0) {
     return NS_OK;
@@ -1637,7 +1648,7 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
 
 nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 {
-  printf("nsHTMLFramesetBlankFrame destructor %X \n", this);
+  printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
 void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
@@ -1675,7 +1686,8 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
   // XXX FillRect doesn't seem to work
   //aRenderingContext.FillRect (mRect);
 
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   nscoord x0 = 0;
   nscoord y0 = 0;
   nscoord x1 = x0;
@@ -1696,7 +1708,7 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
 NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X BLANK \n", this);
+  fprintf(out, "%p BLANK \n", this);
   return nsLeafFrame::List(out, aIndent);
 }
 

@@ -43,7 +43,8 @@ struct nsStyleFont : public nsStyleStruct {
 
 protected:
   nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
-  ~nsStyleFont(void);
+  nsStyleFont(nsIPresContext& aPresContext);
+  ~nsStyleFont();
 };
 
 struct nsStyleColor : public nsStyleStruct {
@@ -68,7 +69,7 @@ struct nsStyleColor : public nsStyleStruct {
 
 protected:
   nsStyleColor(void);
-  ~nsStyleColor(void);
+  ~nsStyleColor();
 };
 
 struct nsStyleSpacing: public nsStyleStruct {

@@ -30,10 +30,10 @@ public:
   PrintContext();
   ~PrintContext();
 
-  NS_IMETHOD GetMedium(nsIAtom*& aMedium);
-  virtual PRBool IsPaginated();
-  virtual nscoord GetPageWidth();
-  virtual nscoord GetPageHeight();
+  NS_IMETHOD GetMedium(nsIAtom** aMedium);
+  NS_IMETHOD IsPaginated(PRBool* aResult);
+  NS_IMETHOD GetPageWidth(nscoord* aResult);
+  NS_IMETHOD GetPageHeight(nscoord* aResult);
 };
 
 PrintContext::PrintContext()
@@ -45,28 +45,52 @@ PrintContext::~PrintContext()
 }
 
 NS_IMETHODIMP
-PrintContext::GetMedium(nsIAtom*& aMedium)
+PrintContext::GetMedium(nsIAtom** aResult)
 {
-  aMedium = nsLayoutAtoms::print;
-  NS_ADDREF(aMedium);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = nsLayoutAtoms::print;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
-PRBool PrintContext::IsPaginated()
+NS_IMETHODIMP
+PrintContext::IsPaginated(PRBool* aResult)
 {
-  return PR_TRUE;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = PR_TRUE;
+  return NS_OK;
 }
 
-nscoord PrintContext::GetPageWidth()
+NS_IMETHODIMP
+PrintContext::GetPageWidth(nscoord* aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   // XXX assumes a 1/2 margin around all sides
-  return (nscoord) NS_INCHES_TO_TWIPS(7.5);
+  *aResult = (nscoord) NS_INCHES_TO_TWIPS(7.5);
+  return NS_OK;
 }
 
-nscoord PrintContext::GetPageHeight()
+NS_IMETHODIMP
+PrintContext::GetPageHeight(nscoord* aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   // XXX assumes a 1/2 margin around all sides
-  return (nscoord) NS_INCHES_TO_TWIPS(10);
+  *aResult = (nscoord) NS_INCHES_TO_TWIPS(10);
+  return NS_OK;
 }
 
 NS_LAYOUT nsresult

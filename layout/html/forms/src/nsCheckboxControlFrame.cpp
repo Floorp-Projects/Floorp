@@ -171,7 +171,7 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                             nsSize& aDesiredWidgetSize)
 {
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
    aDesiredWidgetSize.width  = GetCheckboxSize(p2t);
    aDesiredWidgetSize.height = aDesiredWidgetSize.width;
@@ -312,7 +312,7 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
 
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
 
   PRBool checked = PR_FALSE;
 
@@ -320,7 +320,7 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
     // XXX: This is very inefficient, but it is necessary in the case of printing.
     // During printing the Paint is called but the actual state of the checkbox
     // is in a frame in presentation shell 0.
-  nsresult result = GetCurrentCheckState(&checked);
+  /*XXXnsresult result = */GetCurrentCheckState(&checked);
   if (PR_TRUE == checked) {
       // Draw check mark
     const nsStyleColor* color = (const nsStyleColor*)

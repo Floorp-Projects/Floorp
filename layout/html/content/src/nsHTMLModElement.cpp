@@ -36,7 +36,7 @@ class nsHTMLModElement : public nsIDOMHTMLModElement,
 {
 public:
   nsHTMLModElement(nsIAtom* aTag);
-  ~nsHTMLModElement();
+  virtual ~nsHTMLModElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

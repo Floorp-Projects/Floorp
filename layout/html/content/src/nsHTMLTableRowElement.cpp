@@ -51,7 +51,7 @@ class nsHTMLTableRowElement : public nsIDOMHTMLTableRowElement,
 {
 public:
   nsHTMLTableRowElement(nsIAtom* aTag);
-  ~nsHTMLTableRowElement();
+  virtual ~nsHTMLTableRowElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -596,7 +596,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::height, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       nsStylePosition* pos = (nsStylePosition*)
         aContext->GetMutableStyleData(eStyleStruct_Position);
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);

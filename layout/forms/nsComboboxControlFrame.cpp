@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsComboboxControlFrame.h"
 #include "nsFormFrame.h"
 #include "nsButtonControlFrame.h"
@@ -308,15 +308,16 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   if (1 == numChildren) {
     nsIAtom * textBlockContentPseudo = NS_NewAtom(":combobox-text");
     aPresContext.ResolvePseudoStyleContextFor(mContent, textBlockContentPseudo,
-                                              mStyleContext, &mBlockTextStyle);
+                                              mStyleContext, PR_FALSE,
+                                              &mBlockTextStyle);
     NS_RELEASE(textBlockContentPseudo);
 
     // XXX This code should move to Init(), someday when the frame construction
     // changes are all done and Init() is always getting called...
-    PRBool disabled = nsFormFrame::GetDisabled(this);
+    /*PRBool disabled = */nsFormFrame::GetDisabled(this);
   }
 
-  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+//  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsHTMLReflowMetrics desiredSize = aDesiredSize;
   ////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////
@@ -359,7 +360,7 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize, charSize;
+  nsSize calcSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
@@ -369,9 +370,10 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
                                                            aReflowState.rendContext);
 
   float sp2t;
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
 
-  aPresContext.GetScaledPixelsToTwips(sp2t);
+  aPresContext.GetScaledPixelsToTwips(&sp2t);
   nscoord onePixel = NSIntPixelsToTwips(1, sp2t);
 
   nscoord scrollbarWidth  = 0;
@@ -402,13 +404,14 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   float scale;
   float sbWidth;
   float sbHeight;
-  nsIDeviceContext * context = aPresContext.GetDeviceContext();
+  nsCOMPtr<nsIDeviceContext> context;
+  aPresContext.GetDeviceContext(getter_AddRefs(context));
   context->GetCanonicalPixelScale(scale);
   context->GetScrollBarDimensions(sbWidth, sbHeight);
   PRInt32 scrollbarScaledWidth  = PRInt32(sbWidth * scale);
-  PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
+//  PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
 
-  nsFont font(aPresContext.GetDefaultFixedFont());
+  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
   SystemAttrStruct sis;
   sis.mFont = &font;
   context->GetSystemAttribute(eSystemAttr_Font_Tooltips, &sis);
@@ -440,8 +443,6 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   mPlaceHolderFrame->SetRect(curRect);
 
   mListFrame->GetRect(frameRect); 
-
-  NS_RELEASE(context);
 
   }
   ////////////////////////////////////////////////////////////////
@@ -479,7 +480,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
     }
     const nsStyleColor*   blkColor   = (const nsStyleColor*)blkStyle->GetStyleData(eStyleStruct_Color);
     const nsStyleSpacing* blkSpacing = (const nsStyleSpacing*)blkStyle->GetStyleData(eStyleStruct_Spacing);
-    const nsStyleFont*    blkFont    = (const nsStyleFont*)blkStyle->GetStyleData(eStyleStruct_Font);
+//    const nsStyleFont*    blkFont    = (const nsStyleFont*)blkStyle->GetStyleData(eStyleStruct_Font);
 
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
@@ -495,7 +496,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
     spacing->CalcBorderFor(this, border);
 
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
     nsRect outside(0, 0, mRect.width, mRect.height);
@@ -523,7 +524,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
     PRInt32 scrollbarScaledWidth  = PRInt32(sbWidth * scale);
     PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
 
-    nsFont font(aPresContext.GetDefaultFixedFont()); 
+    nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
     GetFont(&aPresContext, font);
 
     aRenderingContext.SetFont(myFont->mFont);
@@ -556,7 +557,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
       //NS_RELEASE(sbAtom);
 
       const nsStyleSpacing* arrowSpacing = (const nsStyleSpacing*)mArrowStyle->GetStyleData(eStyleStruct_Spacing);
-      const nsStyleColor*   arrowColor   = (const nsStyleColor*)mArrowStyle->GetStyleData(eStyleStruct_Color);
+//      const nsStyleColor*   arrowColor   = (const nsStyleColor*)mArrowStyle->GetStyleData(eStyleStruct_Color);
 
       nsRect srect(0,0,0,0);//mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
       srect = mButtonRect;
@@ -664,9 +665,12 @@ nsComboboxControlFrame::RefreshStyleContext(nsIPresContext* aPresContext,
                                             nsIStyleContext*  aParentStyle) 
 
 {
-  nsIStyleContext* newStyleContext = aPresContext->ProbePseudoStyleContextFor(aContent,
-                                                                              aNewContentPseudo,
-                                                                              aParentStyle);
+  nsIStyleContext* newStyleContext;
+  aPresContext->ProbePseudoStyleContextFor(aContent,
+                                           aNewContentPseudo,
+                                           aParentStyle,
+                                           PR_FALSE,
+                                           &newStyleContext);
   if (newStyleContext != aCurrentStyle) {
     NS_IF_RELEASE(aCurrentStyle);
     aCurrentStyle = newStyleContext;

@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
@@ -417,7 +417,7 @@ nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDo
     (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing); // cast deliberate
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord shift = (aDown) ? NSIntPixelsToTwips(1, p2t) : -NSIntPixelsToTwips(1, p2t);
   nsStyleCoord styleCoord;
 
@@ -473,8 +473,6 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 
   aEventStatus = nsEventStatus_eIgnore;
-  nsresult result = NS_OK;
-
   nsIView* view;
   GetView(&view);
   if (view) {
@@ -549,7 +547,8 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
-                                            mStyleContext, &styleContext);
+                                            mStyleContext, PR_FALSE,
+                                            &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
@@ -580,7 +579,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
       spacing->CalcBorderFor(this, border);
 
       float p2t;
-      aPresContext.GetScaledPixelsToTwips(p2t);
+      aPresContext.GetScaledPixelsToTwips(&p2t);
       nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
       nsRect outside(0, 0, mRect.width, mRect.height);
@@ -616,9 +615,10 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     GetView(&view);
     if (!view) {
       nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	    nsIPresShell   *presShell = aPresContext.GetShell();     
-	    nsIViewManager *viewMan   = presShell->GetViewManager();  
-      NS_RELEASE(presShell);
+	    nsCOMPtr<nsIPresShell> presShell;
+      aPresContext.GetShell(getter_AddRefs(presShell));
+	    nsCOMPtr<nsIViewManager> viewMan;
+      presShell->GetViewManager(getter_AddRefs(viewMan));
 
       nsIFrame* parWithView;
 	    nsIView *parView;
@@ -634,7 +634,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
       // set the opacity
       viewMan->SetViewOpacity(view, color->mOpacity);
 
-      NS_RELEASE(viewMan);
     }
     mDidInit = PR_TRUE;
   }

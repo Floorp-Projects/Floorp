@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsFrameList.h"
 #include "nsLineLayout.h"
@@ -360,10 +361,10 @@ NS_IMETHODIMP
 nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
-    nsIPresShell *shell = aPresContext.GetShell();
-    if (nsnull != shell) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
       shell->ClearFrameRefs(this);
-      NS_RELEASE(shell);
     }
   }
 
@@ -451,11 +452,13 @@ NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     mStyleContext->GetPseudoType(pseudoTag);
     nsIStyleContext*  newContext;
     if (nsnull != pseudoTag) {
-        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, aParentContext,
-                                                   &newContext);
+        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag,
+                                                   aParentContext,
+                                                   PR_FALSE, &newContext);
     }
     else {
-      aPresContext->ResolveStyleContextFor(mContent, aParentContext, &newContext);
+      aPresContext->ResolveStyleContextFor(mContent, aParentContext,
+                                           PR_FALSE, &newContext);
     }
 
     NS_ASSERTION(nsnull != newContext, "failed to get new style context");
@@ -584,24 +587,25 @@ NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) co
   return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
+PRBool
+nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
 {
   PRBool result = PR_FALSE;
 
-  nsIPresShell *shell = aPresContext.GetShell();
-  if (nsnull != shell) {
-    nsIDocument *doc = shell->GetDocument();
-    if (nsnull != doc) {
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    nsCOMPtr<nsIDocument> doc;
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && (nsnull != doc)) {
       result = doc->GetDisplaySelection();
       if (isOkToTurnOn && !result) {
         doc->SetDisplaySelection(PR_TRUE);
         result = PR_TRUE;
       }
-      NS_RELEASE(doc);
     }
-    NS_RELEASE(shell);
   }
-  
+
   return result;
 }
 
@@ -687,22 +691,24 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
 /**
   * Handles the Mouse Press Event for the frame
  */
-NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext, 
-                               nsGUIEvent*     aEvent,
-                               nsEventStatus&  aEventStatus)
+NS_IMETHODIMP
+nsFrame::HandlePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
 {
-  if (DisplaySelection(aPresContext, PR_TRUE) == PR_FALSE)
-  {
+  if (!DisplaySelection(aPresContext, PR_TRUE)) {
     aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
 
   mDoingSelection = PR_TRUE;
   mDidDrag        = PR_FALSE;
-  nsIPresShell *shell = aPresContext.GetShell();
-  if (shell){
-    nsIRenderingContext * acx;      
-    if (NS_SUCCEEDED(shell->CreateRenderingContext(this, acx))){
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    nsCOMPtr<nsIRenderingContext> acx;      
+    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    if (NS_SUCCEEDED(rv)){
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
@@ -722,9 +728,7 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
         }
         //no release 
       }
-      NS_RELEASE(acx);
     }
-    NS_RELEASE(shell);
   }
 
 #if 0
@@ -910,18 +914,19 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsGUIEvent*     aEvent,
                               nsEventStatus&  aEventStatus)
 {
-  if (DisplaySelection(aPresContext, PR_TRUE) == PR_FALSE)
-  {
+  if (!DisplaySelection(aPresContext, PR_TRUE)) {
     aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
 
   mDoingSelection = PR_TRUE;
   mDidDrag        = PR_FALSE;
-  nsIPresShell *shell = aPresContext.GetShell();
-  if (shell){
-    nsIRenderingContext * acx;      
-    if (NS_SUCCEEDED(shell->CreateRenderingContext(this, acx))){
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    nsCOMPtr<nsIRenderingContext> acx;      
+    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    if (NS_SUCCEEDED(rv)) {
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
@@ -940,9 +945,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
         }
         //no release 
       }
-      NS_RELEASE(acx);
     }
-    NS_RELEASE(shell);
   }
 #if 0
 //DEBUG MJUDGE
@@ -1343,19 +1346,18 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
 {
-  nsIPresShell* shell;
-  shell = aPresContext->GetShell();
-    
-  nsIReflowCommand* reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                        nsIReflowCommand::ContentChanged);
-  if (NS_SUCCEEDED(rv)) {
-    shell->AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::ContentChanged);
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
   }
-
-  NS_RELEASE(shell);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

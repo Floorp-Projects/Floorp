@@ -73,28 +73,28 @@ public:
   /**
    * Get the PresentationShell that this context is bound to.
    */
-  virtual nsIPresShell* GetShell() = 0;
+  NS_IMETHOD GetShell(nsIPresShell** aResult) = 0;
 
   /**
    * Get a reference to the prefs API for this context
    */
-  NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
+  NS_IMETHOD GetPrefs(nsIPref** aPrefsResult) = 0;
 
   /**
    * Access compatibility mode for this context
    */
-  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode) = 0;
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   /** 
    * Get base url for presentation
    */
-  NS_IMETHOD GetBaseURL(nsIURL*& aURL) = 0;
+  NS_IMETHOD GetBaseURL(nsIURL** aURLResult) = 0;
 
   /** 
    * Get medium of presentation
    */
-  NS_IMETHOD GetMedium(nsIAtom*& aMedium) = 0;
+  NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
 
   /**
    * Resolve style for the given piece of content that will be a child
@@ -102,8 +102,8 @@ public:
    */
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
-                                    nsIStyleContext** aStyleContext,
-                                    PRBool aForceUnique = PR_FALSE) = 0;
+                                    PRBool aForceUnique,
+                                    nsIStyleContext** aResult) = 0;
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
@@ -113,8 +113,8 @@ public:
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          nsIStyleContext** aStyleContext,
-                                          PRBool aForceUnique = PR_FALSE) = 0;
+                                          PRBool aForceUnique,
+                                          nsIStyleContext** aResult) = 0;
 
   /**
    * Probe style for a pseudo frame within the given aParentContent & aParentContext.
@@ -122,41 +122,45 @@ public:
    * The tag should be lowercase and inclue the colon.
    * ie: NS_NewAtom(":first-line");
    */
-  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                                                      nsIAtom* aPseudoTag,
-                                                      nsIStyleContext* aParentContext,
-                                                      PRBool aForceUnique = PR_FALSE) = 0;
+  NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                                        nsIAtom* aPseudoTag,
+                                        nsIStyleContext* aParentContext,
+                                        PRBool aForceUnique,
+                                        nsIStyleContext** aResult) = 0;
 
   /**
    * Get the font metrics for a given font.
    */
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont) = 0;
+  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
   /** 
    * Get the default font
    */
-  virtual const nsFont& GetDefaultFont(void) = 0;
+  NS_IMETHOD GetDefaultFont(nsFont& aResult) = 0;
+
+  virtual const nsFont& GetDefaultFontDeprecated() = 0;
 
   /** 
    * Get the default fixed pitch font
    */
-  virtual const nsFont& GetDefaultFixedFont(void) = 0;
+  NS_IMETHOD GetDefaultFixedFont(nsFont& aResult) = 0;
+  virtual const nsFont& GetDefaultFixedFontDeprecated() = 0;
 
   /**
    * Access Nav's magic font scaler value
    */
-  NS_IMETHOD GetFontScaler(PRInt32& aResult) = 0;
+  NS_IMETHOD GetFontScaler(PRInt32* aResult) = 0;
   NS_IMETHOD SetFontScaler(PRInt32 aScaler) = 0;
 
   /** 
    * Get the defualt colors
    */
-  NS_IMETHOD GetDefaultColor(nscolor& aColor) = 0;
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor) = 0;
-  NS_IMETHOD SetDefaultColor(const nscolor& aColor) = 0;
-  NS_IMETHOD SetDefaultBackgroundColor(const nscolor& aColor) = 0;
+  NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
+  NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
+  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
 
-  NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult) = 0;
+  NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult) = 0;
 
   /**
    * Load an image for the target frame. This call can be made
@@ -179,7 +183,7 @@ public:
                             nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
                             PRBool aNeedErrorNotification,
-                            nsIFrameImageLoader*& aLoader) = 0;
+                            nsIFrameImageLoader** aLoaderResult) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.
@@ -212,30 +216,31 @@ public:
    * Return true if this presentation context is a paginated
    * context.
    */
-  virtual PRBool IsPaginated() = 0;
+  NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
 
   /**
    * Return the page width if this is a paginated context.
    */
-  virtual nscoord GetPageWidth() = 0;
+  NS_IMETHOD GetPageWidth(nscoord* aResult) = 0;
 
   /**
    * Return the page height if this is a paginated context
    */
-  virtual nscoord GetPageHeight() = 0;
+  NS_IMETHOD GetPageHeight(nscoord* aResult) = 0;
 
-  virtual float GetPixelsToTwips() const = 0;
-  virtual float GetTwipsToPixels() const = 0;
+  NS_IMETHOD GetPixelsToTwips(float* aResult) const = 0;
+
+  NS_IMETHOD GetTwipsToPixels(float* aResult) const = 0;
 
   //XXX this is probably not an ideal name. MMP
   /** 
    * Do pixels to twips conversion taking into account
    * differing size of a "pixel" from device to device.
    */
-  NS_IMETHOD GetScaledPixelsToTwips(float &aScale) const = 0;
+  NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const = 0;
 
   //be sure to Relase() after you are done with the Get()
-  virtual nsIDeviceContext * GetDeviceContext() const = 0;
+  NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const = 0;
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
 };

@@ -37,7 +37,7 @@ class nsHTMLMapElement : public nsIDOMHTMLMapElement,
 {
 public:
   nsHTMLMapElement(nsIAtom* aTag);
-  ~nsHTMLMapElement();
+  virtual ~nsHTMLMapElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -86,6 +86,7 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -312,6 +313,15 @@ nsInlineFrame::GetFrameName(nsString& aResult) const
 }
 
 NS_IMETHODIMP
+nsInlineFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsHTMLAtoms::inlineFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   mFrames.DeleteFrames(aPresContext);
@@ -406,6 +416,7 @@ nsInlineFrame::CreateAnonymousBlock(nsIPresContext& aPresContext,
     aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                               nsHTMLAtoms::mozAnonymousBlock,
                                               mStyleContext,
+                                              PR_FALSE,
                                               getter_AddRefs(newSC));
     rv = bf->Init(aPresContext, mContent, this, newSC);
     if (NS_FAILED(rv)) {
@@ -438,10 +449,11 @@ nsInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if (nsnull == aFrameList) {
     return NS_OK;
   }
-  nsIPresShell* shell;
-  shell = aPresContext.GetShell();
-  nsresult rv = AppendFrames(aPresContext, *shell, aFrameList, PR_FALSE);
-  NS_RELEASE(shell);
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    rv = AppendFrames(aPresContext, *shell, aFrameList, PR_FALSE);
+  }
   return rv;
 }
 
@@ -1600,7 +1612,11 @@ nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
   nsRect availSpace(x, y, availableWidth, availableHeight);
   PRBool isAdjacentWithTop = PR_FALSE;
   nsMargin computedOffsets;
-  nsresult rv = bc.ReflowBlock(blockFrame, availSpace, isAdjacentWithTop,
+  nsresult rv = bc.ReflowBlock(blockFrame, availSpace,
+#ifdef SPECULATIVE_TOP_MARGIN
+                               PR_FALSE, 0,
+#endif
+                               isAdjacentWithTop,
                                computedOffsets, aStatus);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1613,8 +1629,11 @@ nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
     // Place the block (during placement we might discover that none
     // of it fits)
     nsRect bounds;
-    PRBool anyFit = bc.PlaceBlock(isAdjacentWithTop, PR_FALSE,
-                                  0, computedOffsets,
+    PRBool anyFit = bc.PlaceBlock(isAdjacentWithTop,
+#ifndef SPECULATIVE_TOP_MARGIN
+                                  PR_FALSE, 0,
+#endif
+                                  computedOffsets,
                                   bounds, aMetrics.mCombinedArea);
     if (!anyFit) {
       // None of the block fit

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
@@ -143,7 +144,7 @@ public:
   }
 
   HTMLContentSink();
-  ~HTMLContentSink();
+  virtual ~HTMLContentSink();
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURL* aURL,
@@ -444,30 +445,6 @@ GetAttributeValueAt(const nsIParserNode& aNode,
     }
   }
   ReduceEntities(aResult);
-}
-
-static PRBool
-FindAttribute(const nsIParserNode& aNode,
-              const nsString& aKeyName,
-              nsString& aResult)
-{
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key.EqualsIgnoreCase(aKeyName)) {
-      // Get value and remove mandatory quotes.
-
-      // NOTE: we do <b>not</b> evaluate any script entities here
-      // because to do so would result in double evaluations since
-      // attribute values found here are not stored. The unfortunate
-      // implication is that these attributes cannot support script
-      // entities.
-      GetAttributeValueAt(aNode, i, aResult, nsnull);
-
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
 }
 
 static nsresult
@@ -1005,6 +982,8 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   case eHTMLTag_table:
     mSink->mInMonolithicContainer++;
     break;
+  default:
+    break;
   }
 
   return NS_OK;
@@ -1035,6 +1014,8 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   switch (nodeType) {
   case eHTMLTag_table:
     mSink->mInMonolithicContainer--;
+    break;
+  default:
     break;
   }
 
@@ -1082,6 +1063,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       case eHTMLTag_frame:
       case eHTMLTag_input:
         mSink->AddBaseTagInfo(content);     
+        break;
+      default:
         break;
       }
 
@@ -1476,14 +1459,13 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
     if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
-      if(vm) {
+      nsCOMPtr<nsIViewManager> vm;
+      nsresult rv = shell->GetViewManager(getter_AddRefs(vm));
+      if(NS_SUCCEEDED(rv) && (nsnull != vm)) {
         vm->SetQuality(nsContentQuality(aQualityLevel));
       }
-      NS_RELEASE(vm);
-      NS_RELEASE(shell);
     }
   }
 
@@ -1989,26 +1971,24 @@ HTMLContentSink::StartLayout()
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
     if (nsnull != shell) {
       // Make shell an observer for next time
       shell->BeginObservingDocument();
 
       // Resize-reflow this time
-      nsIPresContext* cx = shell->GetPresContext();
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
       nsRect r;
       cx->GetVisibleArea(r);
       shell->InitialReflow(r.width, r.height);
-      NS_RELEASE(cx);
 
       // Now trigger a refresh
-      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
       if (nsnull != vm) {
         vm->EnableRefresh();
-        NS_RELEASE(vm);
       }
-
-      NS_RELEASE(shell);
     }
   }
 
@@ -2027,9 +2007,10 @@ HTMLContentSink::StartLayout()
     // scroll bars.
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsIPresShell* shell = mDocument->GetShellAt(i);
+      nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
       if (nsnull != shell) {
-        nsIViewManager* vm = shell->GetViewManager();
+        nsCOMPtr<nsIViewManager> vm;
+        shell->GetViewManager(getter_AddRefs(vm));
         if (nsnull != vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
@@ -2044,9 +2025,7 @@ HTMLContentSink::StartLayout()
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }
-          NS_RELEASE(vm);
         }
-        NS_RELEASE(shell);
       }
     }
   }
@@ -2059,12 +2038,13 @@ HTMLContentSink::ScrollToRef()
     // See if the ref content has been reflowed by finding it's frame
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsIPresShell* shell = mDocument->GetShellAt(i);
+      nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
       if (nsnull != shell) {
         nsIFrame* frame;
-        shell->GetPrimaryFrameFor(mRefContent, frame);
+        shell->GetPrimaryFrameFor(mRefContent, &frame);
         if (nsnull != frame) {
-          nsIViewManager* vm = shell->GetViewManager();
+          nsCOMPtr<nsIViewManager> vm;
+          shell->GetViewManager(getter_AddRefs(vm));
           if (nsnull != vm) {
             nsIView* viewportView = nsnull;
             vm->GetRootView(viewportView);
@@ -2102,10 +2082,8 @@ NS_RELEASE(cx);
                 mNotAtRef = PR_FALSE;
               }
             }
-            NS_RELEASE(vm);
           }
         }
-        NS_RELEASE(shell);
       }
     }
   }
@@ -2150,7 +2128,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
   if (nsnull != mCurrentMap) {
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent* area;
-    nsresult rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &area);
+    rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &area);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2167,7 +2145,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 
     // Add AREA object to the current map
     mCurrentMap->AppendChildTo(area, PR_FALSE);
-	NS_RELEASE(area);
+    NS_RELEASE(area);
   }
   return NS_OK;
 }
@@ -2711,8 +2689,8 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       }
   
       PRBool isUndefined;
-      PRBool result = context->EvaluateString(aScript, url, aLineNo, 
-                                              ret, &isUndefined);
+      context->EvaluateString(aScript, url, aLineNo, 
+                              ret, &isUndefined);
       
       NS_IF_RELEASE(docURL);
       

@@ -112,9 +112,12 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                             nsIContent *      aContent,
                                             nsIStyleContext*  aParentStyle)
 {
-  nsCOMPtr<nsIStyleContext> newStyleContext ( dont_AddRef(aPresContext->ProbePseudoStyleContextFor(aContent,
-                                                                              aNewContentPseudo,
-                                                                              aParentStyle)) );
+  nsIStyleContext* newStyleContext;
+  aPresContext->ProbePseudoStyleContextFor(aContent,
+                                           aNewContentPseudo,
+                                           aParentStyle,
+                                           PR_FALSE,
+                                           &newStyleContext);
   if (newStyleContext != *aCurrentStyle)
     *aCurrentStyle = newStyleContext;
     
@@ -279,7 +282,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );   // remember to leave room for the grippy on the right
 

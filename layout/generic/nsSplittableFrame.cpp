@@ -155,10 +155,10 @@ nsSplittableFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
   nsFrame::DumpBaseRegressionData(out, aIndent);
   if (nsnull != mNextInFlow) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-in-flow va=\"%d\"/>\n", PRUptrdiff(mNextInFlow));
+    fprintf(out, "<next-in-flow va=\"%ld\"/>\n", PRUptrdiff(mNextInFlow));
   }
   if (nsnull != mPrevInFlow) {
     IndentBy(out, aIndent);
-    fprintf(out, "<prev-in-flow va=\"%d\"/>\n", PRUptrdiff(mPrevInFlow));
+    fprintf(out, "<prev-in-flow va=\"%ld\"/>\n", PRUptrdiff(mPrevInFlow));
   }
 }

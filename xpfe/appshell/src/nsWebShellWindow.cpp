@@ -503,7 +503,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           }
           xulCmd->AddUINode(node);
           
-          printf("Linking newly created cmd to input [%s]\n", name.ToNewCString); // this leaks
+          printf("Linking newly created cmd to input [%s]\n", name.ToNewCString()); // this leaks
         }
       }
 
@@ -810,22 +810,24 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 {
   nsIPresShell * presShell = aDoc->GetShellAt(0);
   if (presShell) {
-    nsIPresContext * presContext = presShell->GetPresContext();
-    if (presContext) {
+    nsCOMPtr<nsIPresContext> presContext;
+    presShell->GetPresContext(getter_AddRefs(presContext));
+    if (nsnull != presContext) {
       nsRect rect;
       presContext->GetVisibleArea(rect);
       nsIFrame * rootFrame;
       nsSize size;
-      presShell->GetRootFrame(rootFrame);
+      presShell->GetRootFrame(&rootFrame);
       if (rootFrame) {
         rootFrame->GetSize(size);
-        printf("Doc size %d,%d\n", PRInt32((float)size.width*presContext->GetTwipsToPixels()), 
-                                   PRInt32((float)size.height*presContext->GetTwipsToPixels()));
+        float t2p;
+        presContext->GetTwipsToPixels(&t2p);
+        printf("Doc size %d,%d\n", PRInt32((float)size.width*t2p), 
+                                   PRInt32((float)size.height*t2p));
         //return rect.height;
-        return PRInt32((float)rect.height*presContext->GetTwipsToPixels());
+        return PRInt32((float)rect.height*t2p);
         //return PRInt32((float)size.height*presContext->GetTwipsToPixels());
       }
-      NS_RELEASE(presContext);
     }
     NS_RELEASE(presShell);
   }

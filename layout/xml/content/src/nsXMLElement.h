@@ -40,7 +40,7 @@ class nsXMLElement : public nsIDOMElement,
 {
 public:
   nsXMLElement(nsIAtom *aTag);
-  ~nsXMLElement();
+  virtual ~nsXMLElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

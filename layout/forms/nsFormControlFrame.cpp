@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsFormControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
@@ -221,14 +221,13 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 {
   nsresult result = NS_OK;
 
-  nsIDeviceContext* dx = nsnull;
-  dx = aPresContext.GetDeviceContext();
+  nsCOMPtr<nsIDeviceContext> dx;
+  aPresContext.GetDeviceContext(getter_AddRefs(dx));
   PRBool requiresWidget = PR_TRUE;
  
     // Checkto see if the device context supports widgets at all
   if (nsnull != dx) { 
     dx->SupportsNativeWidgets(requiresWidget);
-    NS_RELEASE(dx);
   }
 
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
@@ -242,9 +241,10 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 
   if (!mDidInit) {
     if (PR_TRUE == requiresWidget) {
-	    nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
-  	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
-	    NS_RELEASE(presShell); 
+	    nsCOMPtr<nsIPresShell> presShell;
+      aPresContext.GetShell(getter_AddRefs(presShell));
+  	  nsCOMPtr<nsIViewManager> viewMan;
+      presShell->GetViewManager(getter_AddRefs(viewMan));
       nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
 
       // absolutely positioned controls already have a view but not a widget
@@ -311,7 +311,6 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
         viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
       }
 
-	    NS_IF_RELEASE(viewMan);    
     }
     else {
       PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
@@ -358,7 +357,7 @@ nsFormControlFrame::SetColors(nsIPresContext& aPresContext)
 {
   if (mWidget) {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(mode);
+    aPresContext.GetCompatibilityMode(&mode);
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     if (nsnull != color) {

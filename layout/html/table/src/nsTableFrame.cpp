@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsTableFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
@@ -219,6 +220,9 @@ void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType,
         mColIndexes[eColWidthType_Proportional][mColCounts[eColWidthType_Proportional]] = aColumnIndex;
         mColCounts[eColWidthType_Proportional]++;
         break;
+
+      default:
+        break;
     }
   }
 }
@@ -250,6 +254,9 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
     case eStyleUnit_Proportional:
       aOutNumColumns = mColCounts[eColWidthType_Proportional];
       aOutColumnIndexes = mColIndexes[eColWidthType_Proportional];
+      break;
+
+    default:
       break;
   }
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("CIC GetColumnsByType: found %d of type %d\n", aOutNumColumns, aType);
@@ -290,7 +297,8 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext)
 {
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   mDefaultCellSpacingX = NSIntPixelsToTwips(2, p2t);
   mDefaultCellSpacingY = NSIntPixelsToTwips(2, p2t);
   mDefaultCellPadding = NSIntPixelsToTwips(1, p2t);
@@ -724,6 +732,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
                                                  nsHTMLAtoms::tableColGroupPseudo,
                                                  mStyleContext,
+                                                 PR_FALSE,
                                                  &colGroupStyleContext);        // colGroupStyleContext: REFCNT++
       // Create a col group frame
       nsIFrame* newFrame;
@@ -758,8 +767,8 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
                                                  nsHTMLAtoms::tableColPseudo,
                                                  lastColGroupStyle,
-                                                 &colStyleContext,
-                                                 PR_TRUE);             // colStyleContext: REFCNT++
+                                                 PR_TRUE,
+                                                 &colStyleContext);             // colStyleContext: REFCNT++
       NS_NewTableColFrame(colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
                      colStyleContext);
@@ -1377,8 +1386,10 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
   // now give half the computed border to the table segment, and half to the cell
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the table border
-  float t2p = aPresContext.GetTwipsToPixels();
-  float p2t = aPresContext.GetPixelsToTwips();
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
   nscoord widthToAdd = 0;
   border->mWidth = widthAsPixels/2;
@@ -1502,8 +1513,10 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   // (the 2 cells, or the cell and the table)
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right cell border
-  float t2p = aPresContext.GetTwipsToPixels();
-  float p2t = aPresContext.GetPixelsToTwips();
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
   nscoord widthToAdd = 0;
   border.mWidth = widthAsPixels/2;
@@ -1589,8 +1602,10 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   // now give half the computed border to the table segment, and half to the cell
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right border
-  float t2p = aPresContext.GetTwipsToPixels();
-  float p2t = aPresContext.GetPixelsToTwips();
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
   nscoord widthToAdd = 0;
   border->mWidth = widthAsPixels/2;
@@ -1719,8 +1734,10 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   // (the 2 cells, or the cell and the table)
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right cell border
-  float t2p = aPresContext.GetTwipsToPixels();
-  float p2t = aPresContext.GetPixelsToTwips();
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
   nscoord widthToAdd = 0;
   border.mWidth = widthAsPixels/2;
@@ -3845,9 +3862,9 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   // account for scroll bars. XXX needs optimization/caching
   if (mHasScrollableRowGroup) {
     float sbWidth, sbHeight;
-    nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+    nsCOMPtr<nsIDeviceContext> dc;
+    aPresContext.GetDeviceContext(getter_AddRefs(dc));
     dc->GetScrollBarDimensions(sbWidth, sbHeight);
-    NS_RELEASE(dc);
     tableSize.width += NSToCoordRound(sbWidth);
   }
   SetRect(tableSize);
@@ -4437,7 +4454,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       // Resolve style for the child
       nsIStyleContext* kidStyleContext;
       aPresContext.ResolveStyleContextFor(content, aStyleContext,
-                                          &kidStyleContext);     // kidStyleContext: REFCNT++
+                                          PR_FALSE, &kidStyleContext);     // kidStyleContext: REFCNT++
 
       nsIFrame* duplicateFrame;
       NS_NewTableRowGroupFrame(duplicateFrame);
@@ -5092,6 +5109,7 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
     break;
 
     case eStyleUnit_Percent:
+    {
       // set aSpecifiedTableWidth to be the given percent of the parent.
       // first, get the effective parent width (parent width - insets)
       nscoord parentWidth = nsTableFrame::GetTableContainerWidth(aReflowState);
@@ -5116,6 +5134,10 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
                  aTableFrame, aSpecifiedTableWidth, parentWidth);
       }
       result = PR_FALSE;
+    }
+    break;
+
+    default:
       break;
     }
   }

@@ -37,7 +37,7 @@ class nsHTMLLIElement : public nsIDOMHTMLLIElement,
 {
 public:
   nsHTMLLIElement(nsIAtom* aTag);
-  ~nsHTMLLIElement();
+  virtual ~nsHTMLLIElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

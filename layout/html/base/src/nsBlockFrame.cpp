@@ -484,10 +484,12 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   if (oldContext != mStyleContext) {
     // Re-resolve the :first-line pseudo style context
     if (nsnull == mPrevInFlow) {
-      nsIStyleContext* newFirstLineStyle =
-        aPresContext->ProbePseudoStyleContextFor(mContent,
-                                                 nsHTMLAtoms::firstLinePseudo,
-                                                 mStyleContext);
+      nsIStyleContext* newFirstLineStyle;
+      aPresContext->ProbePseudoStyleContextFor(mContent,
+                                               nsHTMLAtoms::firstLinePseudo,
+                                               mStyleContext,
+                                               PR_FALSE,
+                                               &newFirstLineStyle);
       if (newFirstLineStyle != mFirstLineStyle) {
         NS_IF_RELEASE(mFirstLineStyle);
         mFirstLineStyle = newFirstLineStyle;
@@ -497,12 +499,14 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
 
       // Re-resolve the :first-letter pseudo style context
-      nsIStyleContext* newFirstLetterStyle =
-        aPresContext->ProbePseudoStyleContextFor(mContent,
-                                                 nsHTMLAtoms::firstLetterPseudo,
-                                                 (nsnull != mFirstLineStyle
-                                                  ? mFirstLineStyle
-                                                  : mStyleContext));
+      nsIStyleContext* newFirstLetterStyle;
+      aPresContext->ProbePseudoStyleContextFor(mContent,
+                                               nsHTMLAtoms::firstLetterPseudo,
+                                               (nsnull != mFirstLineStyle
+                                                ? mFirstLineStyle
+                                                : mStyleContext),
+                                               PR_FALSE,
+                                               &newFirstLetterStyle);
       if (newFirstLetterStyle != mFirstLetterStyle) {
         NS_IF_RELEASE(mFirstLetterStyle);
         mFirstLetterStyle = newFirstLetterStyle;
@@ -661,6 +665,15 @@ NS_IMETHODIMP
 nsBlockFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Block", aResult);
+}
+
+NS_IMETHODIMP
+nsBlockFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsHTMLAtoms::blockFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -901,6 +914,9 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // Now reflow...
   rv = ReflowDirtyLines(state);
   aStatus = state.mReflowStatus;
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    printf("XXX: block is not complete\n");
+  }
 
   // XXX get rid of this!
   BuildFloaterList();
@@ -1135,7 +1151,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
   }
 #if XXX
 ListTag(stdout);
-printf(": => carried=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
+printf(": => carried=%d,%d\n", aMetrics.carriedOutTopMargin, aMetrics.carriedOutBottomMargin);
 #endif
 }
 
@@ -1306,7 +1322,7 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
   }
 
   // Recompute running margin value (aState.mPrevBottomMargin). Also
-  // recover the aState.mCarriedOutTopMargin, when appropriate.
+  // recover the aState.carriedOutTopMargin, when appropriate.
   nscoord topMargin, bottomMargin;
   nsBlockReflowContext::CollapseMargins(childMargins,
                                         aLine->GetCarriedOutTopMargin(),
@@ -1447,7 +1463,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nscoord oldHeight = line->mBounds.height;
 
       // Reflow the dirty line
-      rv = ReflowLine(aState, line, keepGoing);
+      rv = ReflowLine(aState, line, &keepGoing);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1538,7 +1554,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
     while (nsnull != line) {
-      rv = ReflowLine(aState, line, keepGoing);
+      rv = ReflowLine(aState, line, &keepGoing);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1572,7 +1588,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
 void
 nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
-                          nsLineBox* aLine)
+                         nsLineBox* aLine)
 {
   NS_PRECONDITION(0 == aLine->ChildCount(), "can't delete !empty line");
   if (0 == aLine->ChildCount()) {
@@ -1610,7 +1626,7 @@ nsBlockFrame::WillReflowLine(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                           nsLineBox* aLine,
-                          PRBool& aKeepGoing)
+                          PRBool* aKeepReflowGoing)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("nsBlockFrame::ReflowLine: line=%p", aLine));
@@ -1632,7 +1648,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       return rv;
     }
     if (nsnull == frame) {
-      aKeepGoing = PR_FALSE;
+      *aKeepReflowGoing = PR_FALSE;
       return rv;
     }
   }
@@ -1652,13 +1668,13 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         (0 != aState.lineLayout->GetPlacedFrames())) {
       // Blocks are not allowed on the same line as anything else
       aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      aKeepGoing = PR_FALSE;
+      *aKeepReflowGoing = PR_FALSE;
     }
     else {
       // Notify observers that we are about to reflow the line
       WillReflowLine(aState, aLine);
 
-      rv = ReflowBlockFrame(aState, aLine, aKeepGoing);
+      rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1692,8 +1708,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     PRInt32 i;
     nsIFrame* frame = aLine->mFirstChild;
     for (i = 0; i < aLine->ChildCount(); i++) {
-      rv = ReflowInlineFrame(aState, aLine, frame,
-                             keepLineGoing, aKeepGoing);
+      rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1726,8 +1741,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       if (nsnull == frame) {
         break;
       }
-      rv = ReflowInlineFrame(aState, aLine, frame, keepLineGoing,
-                             aKeepGoing);
+      rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1736,7 +1750,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // If we are propogating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
-      rv = PlaceLine(aState, aLine, aKeepGoing);
+      rv = PlaceLine(aState, aLine, aKeepReflowGoing);
     }
   }
 
@@ -2044,6 +2058,8 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
 }
 #endif
 
+// XXX This should be a no-op when there is no first-line/letter style
+// in force!
 void
 nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
                               nsLineBox* aLine,
@@ -2100,20 +2116,12 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
   }
 }
 
-void
-nsBlockFrame::DidReflowFrame(nsBlockReflowState& aState,
-                              nsLineBox* aLine,
-                              nsIFrame* aFrame,
-                              nsReflowStatus aStatus)
-{
-}
-
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
-                                nsLineBox* aLine,
-                                PRBool& aKeepReflowGoing)
+                               nsLineBox* aLine,
+                               PRBool* aKeepReflowGoing)
 {
-  NS_PRECONDITION(aKeepReflowGoing, "bad caller");
+  NS_PRECONDITION(*aKeepReflowGoing, "bad caller");
   NS_PRECONDITION(0 == aState.mLineLayout->GetPlacedFrames(),
                   "non-empty line with a block");
 
@@ -2242,12 +2250,16 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   WillReflowFrame(aState, aLine, frame);
   nsReflowStatus frameReflowStatus;
   nsMargin computedOffsets;
-  rv = brc.ReflowBlock(frame, availSpace, aState.IsAdjacentWithTop(),
+  PRBool applyTopMargin = aState.ShouldApplyTopMargin();
+  rv = brc.ReflowBlock(frame, availSpace,
+#ifdef SPECULATIVE_TOP_MARGIN
+                       applyTopMargin, aState.mPrevBottomMargin,
+#endif
+                       aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  DidReflowFrame(aState, aLine, frame, frameReflowStatus);
   aState.mPrevChild = frame;
 
 #if defined(REFLOW_STATUS_COVERAGE)
@@ -2257,7 +2269,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
     // None of the child block fits.
     PushLines(aState);
-    aKeepReflowGoing = PR_FALSE;
+    *aKeepReflowGoing = PR_FALSE;
     aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
   }
   else {
@@ -2265,11 +2277,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
     // Try to place the child block
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
-    PRBool applyTopMargin = aState.ShouldApplyTopMargin();
-    aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, applyTopMargin,
-                                      aState.mPrevBottomMargin, computedOffsets,
-                                      aLine->mBounds, aLine->mCombinedArea);
-    if (aKeepReflowGoing) {
+    *aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop,
+#ifndef SPECULATIVE_TOP_MARGIN
+                                       applyTopMargin,
+                                       aState.mPrevBottomMargin,
+#endif
+                                       computedOffsets,
+                                       aLine->mBounds, aLine->mCombinedArea);
+    if (*aKeepReflowGoing) {
       // Some of the child block fit
 
       // Set carry out top margin value when margin is not being applied
@@ -2326,7 +2341,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         aState.mPrevLine = aLine;
         PushLines(aState);
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
-        aKeepReflowGoing = PR_FALSE;
+        *aKeepReflowGoing = PR_FALSE;
 
         // The bottom margin for a block is only applied on the last
         // flow block. Since we just continued the child block frame,
@@ -2344,7 +2359,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // Notify anyone who cares that the line has been placed
       DidPlaceLine(aState, aLine,
                    applyTopMargin ? brc.GetCollapsedTopMargin() : 0,
-                   brc.GetCollapsedBottomMargin(), aKeepReflowGoing);
+                   brc.GetCollapsedBottomMargin(), *aKeepReflowGoing);
     }
     else {
       // None of the block fits. Determine the correct reflow status.
@@ -2375,12 +2390,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
-                                 nsLineBox* aLine,
-                                 nsIFrame* aFrame,
-                                 PRBool& aKeepLineGoing,
-                                 PRBool& aKeepReflowGoing)
+                                nsLineBox* aLine,
+                                nsIFrame* aFrame,
+                                PRBool* aKeepLineGoing)
 {
-  NS_PRECONDITION(aKeepLineGoing && aKeepReflowGoing, "bad caller");
+  NS_PRECONDITION(*aKeepLineGoing, "bad caller");
 
   // Send pre-reflow notification
   WillReflowFrame(aState, aLine, aFrame);
@@ -2402,7 +2416,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 #endif
 
   // Send post-reflow notification
-  DidReflowFrame(aState, aLine, aFrame, frameReflowStatus);
   aState.mPrevChild = aFrame;
 
   // Process the child frames reflow status. There are 5 cases:
@@ -2414,7 +2427,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (NS_INLINE_IS_BREAK(frameReflowStatus)) {
     // Always abort the line reflow (because a line break is the
     // minimal amount of break we do).
-    aKeepLineGoing = PR_FALSE;
+    *aKeepLineGoing = PR_FALSE;
 
     // XXX what should aLine->mBreakType be set to in all these cases?
     PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
@@ -2424,9 +2437,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // Break-before cases.
       if (aFrame == aLine->mFirstChild) {
+        NS_NOTREACHED("can't get here, can we?");
+#if 0
         // All break-before's that occur at the first child on a
         // line stop the overall reflow.
-        aKeepReflowGoing = PR_FALSE;
         if (mLines == aLine) {
           // If it's our first child on our first line then propogate
           // outward the break-before reflow status unmodified.
@@ -2444,6 +2458,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
           aState.mReflowStatus = NS_FRAME_NOT_COMPLETE | NS_INLINE_BREAK |
             NS_INLINE_BREAK_AFTER | NS_INLINE_MAKE_BREAK_TYPE(breakType);
         }
+#endif
       }
       else {
         // It's not the first child on this line so go ahead and split
@@ -2638,7 +2653,7 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine)
 nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                          nsLineBox* aLine,
-                         PRBool& aKeepReflowGoing)
+                         PRBool* aKeepReflowGoing)
 {
   nsresult rv = NS_OK;
 
@@ -2673,7 +2688,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       if ((NS_OK == rv) && (nsnull != brSC)) {
         const nsStyleFont* font = (const nsStyleFont*)
           brSC->GetStyleData(eStyleStruct_Font);
-        nsIFontMetrics* fm = px.GetMetricsFor(font->mFont);
+        nsIFontMetrics* fm = nsnull;
+        px.GetMetricsFor(font->mFont, &fm);
         if (nsnull != fm) {
           fm->GetHeight(lineBottomMargin);
           NS_RELEASE(fm);
@@ -2726,11 +2742,11 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
 
     // Stop reflow and whack the reflow status if reflow hasn't
     // already been stopped.
-    if (aKeepReflowGoing) {
+    if (*aKeepReflowGoing) {
       NS_ASSERTION(NS_FRAME_COMPLETE == aState.mReflowStatus,
                    "lost reflow status");
       aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
-      aKeepReflowGoing = PR_FALSE;
+      *aKeepReflowGoing = PR_FALSE;
     }
     return rv;
   }
@@ -2765,7 +2781,7 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
   }
 
   // Notify anyone who cares that the line has been placed
-  DidPlaceLine(aState, aLine, topMargin, bottomMargin, aKeepReflowGoing);
+  DidPlaceLine(aState, aLine, topMargin, bottomMargin, *aKeepReflowGoing);
 
   return rv;
 }
@@ -4364,7 +4380,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
     aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                nsHTMLAtoms::bulletPseudo, mStyleContext, &kidSC);
+                nsHTMLAtoms::bulletPseudo, mStyleContext, PR_FALSE, &kidSC);
 
     // Create bullet frame
     mBullet = new nsBulletFrame;
@@ -4386,14 +4402,15 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Lookup up the two pseudo style contexts
   if (nsnull == mPrevInFlow) {
-    mFirstLineStyle = aPresContext.
+    aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo,
-                                 mStyleContext);
-    mFirstLetterStyle = aPresContext.
+                                 mStyleContext, PR_FALSE, &mFirstLineStyle);
+    aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLetterPseudo,
                                  (nsnull != mFirstLineStyle
                                   ? mFirstLineStyle
-                                  : mStyleContext));
+                                  : mStyleContext),
+                                 PR_FALSE, &mFirstLetterStyle);
 #ifdef NOISY_FIRST_LETTER
     if (nsnull != mFirstLetterStyle) {
       printf("block(%d)@%p: first-letter style found\n",
@@ -4836,3 +4853,26 @@ nsAnonymousBlockFrame::RemoveFramesFrom(nsIFrame* aFrame)
     }
   }
 }
+
+#if 0
+nscoord
+nsBlockFrame::ComputeCollapsedTopMargin(const nsHTMLReflowState& aReflowState)
+{
+  nscoord myTopMargin = aReflowState.computedMargin.top;
+  nsLineBox* line = mLines;
+  if (nsnull != line) {
+    if (line->IsEmptyLine()) {
+      line = line->mNext;
+      if (nsnull == line) {
+        return myTopMargin;
+      }
+    }
+    if (1 == line->ChildCount()) {
+      nsHTMLReflowState rs();
+      nscoord topMargin = line->mFirstChild->ComputeCollapsedTopMargin(rs);
+      return nsBlockReflowContext::MaxMargin(topMargin, myTopMargin);
+    }
+  }
+  return myTopMargin;
+}
+#endif

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLIIDs.h"
@@ -170,10 +171,10 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
     if (NS_SUCCEEDED(kidView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
       // Get the scrollbar dimensions
       float             sbWidth, sbHeight;
-      nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+      nsCOMPtr<nsIDeviceContext> dc;
+      aPresContext.GetDeviceContext(getter_AddRefs(dc));
 
       dc->GetScrollBarDimensions(sbWidth, sbHeight);
-      NS_RELEASE(dc);
       
       // See if the scrollbars are visible
       PRBool  vertSBVisible, horzSBVisible;

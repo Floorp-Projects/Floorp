@@ -453,7 +453,8 @@ PRBool RectArea::IsInside(nscoord x, nscoord y)
 void RectArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 4) {
-    float p2t = aCX.GetPixelsToTwips();
+    float p2t;
+    aCX.GetPixelsToTwips(&p2t);
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -561,7 +562,8 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y)
 void PolyArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 6) {
-    float p2t = aCX.GetPixelsToTwips();
+    float p2t;
+    aCX.GetPixelsToTwips(&p2t);
     nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
     for (PRInt32 i = 2; i < mNumCoords; i += 2) {
@@ -629,7 +631,8 @@ PRBool CircleArea::IsInside(nscoord x, nscoord y)
 void CircleArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 3) {
-    float p2t = aCX.GetPixelsToTwips();
+    float p2t;
+    aCX.GetPixelsToTwips(&p2t);
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);

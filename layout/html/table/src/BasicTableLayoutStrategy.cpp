@@ -2502,6 +2502,9 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
   case eStyleUnit_Proportional:
     if (0==colPosition->mWidth.GetIntValue())
       result=PR_TRUE;
+
+  default:
+    break;
   }
 
   return result;

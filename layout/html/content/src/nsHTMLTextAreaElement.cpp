@@ -48,7 +48,7 @@ class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
 {
 public:
   nsHTMLTextAreaElement(nsIAtom* aTag);
-  ~nsHTMLTextAreaElement();
+  virtual ~nsHTMLTextAreaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -146,7 +146,6 @@ nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 NS_IMETHODIMP
 nsHTMLTextAreaElement::AddRef(void)
 {
-  PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
 

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLParts.h"
 #include "nsIFrame.h"
@@ -73,7 +74,9 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          nsIFrame*  aChildFrame,
                                          nsIAtom*   aAttribute)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mAttribute(aAttribute), mPrevSiblingFrame(nsnull), mListName(nsnull)
+    mPrevSiblingFrame(nsnull),
+    mAttribute(aAttribute),
+    mListName(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   if (nsnull!=mAttribute)
@@ -140,12 +143,12 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
   nsIFrame* root = (nsIFrame*)mPath[mPath.Count() - 1];
 
 #ifdef NS_DEBUG
-  nsIPresShell* shell = aPresContext.GetShell();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
   if (nsnull != shell) {
     nsIFrame* rootFrame;
-    shell->GetRootFrame(rootFrame);
+    shell->GetRootFrame(&rootFrame);
     NS_ASSERTION(rootFrame == root, "bad root frame");
-    NS_RELEASE(shell);
   }
 #endif
 

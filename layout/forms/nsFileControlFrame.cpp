@@ -232,7 +232,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
 
     if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);
-      nsresult result = htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
       nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
       childFrame->SetRect(rect);
@@ -388,21 +388,24 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-    // Since the file control has a mTextFrame which does not live in the content model
-    // it is necessary to get the current text value from the nsFileControlFrame through the
-    // content model, then explicitly ask the test frame to draw it.
-    // The mTextFrame's Paint method will still be called, but it will not render the current
-    // contents because it will not be possible for the content associated with the mTextFrame to
-    // get a handle to it frame in the presentation shell 0.
+  // Since the file control has a mTextFrame which does not live in
+  // the content model it is necessary to get the current text value
+  // from the nsFileControlFrame through the content model, then
+  // explicitly ask the test frame to draw it.  The mTextFrame's Paint
+  // method will still be called, but it will not render the current
+  // contents because it will not be possible for the content
+  // associated with the mTextFrame to get a handle to it frame in the
+  // presentation shell 0.
  
-  //  mTextFrame->Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-    mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect, nsAutoString("Browse"));
-    if (eFramePaintLayer_Content == aWhichLayer) {
-      nsString text;
-      if (NS_SUCCEEDED(nsFormControlHelper::GetValue(mContent, &text))) {
-        mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
-      }
+  nsAutoString browse("Browse");
+  mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect,
+                            browse);
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    nsString text;
+    if (NS_SUCCEEDED(nsFormControlHelper::GetValue(mContent, &text))) {
+      mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }

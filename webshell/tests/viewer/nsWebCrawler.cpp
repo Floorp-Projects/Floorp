@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsWebCrawler.h"
 #include "nsViewerApp.h"
 #include "nsIWebShell.h"
@@ -260,13 +261,12 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
   // Make sure the document bits make it to the screen at least once
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIViewManager* vm;
-    vm = shell->GetViewManager();
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
     if (nsnull != vm) {
       nsIView* rootView;
       vm->GetRootView(rootView);
       vm->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
-      NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
   }
@@ -275,7 +275,7 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
     nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
       nsIFrame* root;
-      shell->GetRootFrame(root);
+      shell->GetRootFrame(&root);
       if (nsnull != root) {
         if (mOutputDir.Length() > 0)
         {
@@ -391,6 +391,11 @@ nsWebCrawler::AddURL(const nsString& aURL)
 {
   nsString* s = new nsString(aURL);
   mPendingURLs.AppendElement(s);
+  if (mVerbose) {
+    printf("WebCrawler: adding '");
+    fputs(aURL, stdout);
+    printf("'\n");
+  }
 }
 
 void
@@ -732,7 +737,7 @@ nsWebCrawler::GetPresShell()
         nsIPresContext* cx;
         docv->GetPresContext(cx);
         if (nsnull != cx) {
-          shell = cx->GetShell();
+          cx->GetShell(&shell);
           NS_RELEASE(cx);
         }
         NS_RELEASE(docv);

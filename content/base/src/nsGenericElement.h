@@ -56,7 +56,7 @@ class nsChildContentList : public nsGenericDOMNodeList
 {
 public:
   nsChildContentList(nsIContent *aContent);
-  ~nsChildContentList() {}  
+  virtual ~nsChildContentList();
 
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
@@ -84,6 +84,9 @@ typedef struct {
 class nsGenericElement : public nsIJSScriptObject {
 public:
   nsGenericElement();
+#if 1
+  virtual       // XXX temporary until vidur fixes this up
+#endif
   ~nsGenericElement();
 
   void Init(nsIContent* aOuterContentObject, nsIAtom* aTag);

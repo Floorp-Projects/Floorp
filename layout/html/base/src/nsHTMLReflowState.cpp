@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsFrameReflowState.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -381,10 +382,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     
     // Get the placeholder frame
     nsIFrame*     placeholderFrame;
-    nsIPresShell* presShell = aPresContext.GetShell();
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext.GetShell(getter_AddRefs(presShell));
 
-    presShell->GetPlaceholderFrameFor(frame, placeholderFrame);
-    NS_RELEASE(presShell);
+    presShell->GetPlaceholderFrameFor(frame, &placeholderFrame);
     NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
     if (nsnull != placeholderFrame) {
       placeholderFrame->GetOrigin(placeholderOffset);
@@ -604,8 +605,8 @@ void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
   const nsStylePosition* pos;
-  nsresult result = frame->GetStyleData(eStyleStruct_Position,
-                                        (const nsStyleStruct*&)pos);
+  frame->GetStyleData(eStyleStruct_Position,
+                      (const nsStyleStruct*&)pos);
 
   // If this is the root frame then set the computed width and
   // height equal to the available space

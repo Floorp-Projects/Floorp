@@ -44,7 +44,7 @@ class nsHTMLLabelElement : public nsIDOMHTMLLabelElement,
 {
 public:
   nsHTMLLabelElement(nsIAtom* aTag);
-  ~nsHTMLLabelElement();
+  virtual ~nsHTMLLabelElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

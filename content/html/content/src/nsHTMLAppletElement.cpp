@@ -36,7 +36,7 @@ class nsHTMLAppletElement : public nsIDOMHTMLAppletElement,
 {
 public:
   nsHTMLAppletElement(nsIAtom* aTag);
-  ~nsHTMLAppletElement();
+  virtual ~nsHTMLAppletElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

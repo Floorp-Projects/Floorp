@@ -36,7 +36,7 @@ class nsHTMLQuoteElement : public nsIDOMHTMLQuoteElement,
 {
 public:
   nsHTMLQuoteElement(nsIAtom* aTag);
-  ~nsHTMLQuoteElement();
+  virtual ~nsHTMLQuoteElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -61,7 +61,7 @@ public:
 
 protected:
   nsFrameImageLoader();
-  ~nsFrameImageLoader();
+  virtual ~nsFrameImageLoader();
 
   void DamageRepairFrame(const nsRect* aDamageRect);
 

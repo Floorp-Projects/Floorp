@@ -1143,10 +1143,10 @@ XULDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
         count = mPresShells.Count();
         for (index = 0; index < count; index++) {
             nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[index]);
-            nsIStyleSet* set = shell->GetStyleSet();
+            nsCOMPtr<nsIStyleSet> set;
+            shell->GetStyleSet(getter_AddRefs(set));
             if (nsnull != set) {
                 set->AddDocStyleSheet(aSheet, this);
-                NS_RELEASE(set);
             }
         }
 
@@ -1172,7 +1172,8 @@ XULDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
         PRInt32 index;
         for (index = 0; index < count; index++) {
             nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-            nsIStyleSet* set = shell->GetStyleSet();
+            nsCOMPtr<nsIStyleSet> set;
+            shell->GetStyleSet(getter_AddRefs(set));
             if (nsnull != set) {
                 if (aDisabled) {
                     set->RemoveDocStyleSheet(aSheet);
@@ -1180,7 +1181,6 @@ XULDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                 else {
                     set->AddDocStyleSheet(aSheet, this);  // put it first
                 }
-                NS_RELEASE(set);
             }
         }
     }  
@@ -2141,17 +2141,17 @@ XULDocumentImpl::StartLayout(void)
             continue;
 
         // Resize-reflow this time
-        nsIPresContext* cx = shell->GetPresContext();
+        nsCOMPtr<nsIPresContext> cx;
+        shell->GetPresContext(getter_AddRefs(cx));
         nsRect r;
         cx->GetVisibleArea(r);
         shell->InitialReflow(r.width, r.height);
-        NS_RELEASE(cx);
 
         // Now trigger a refresh
-        nsIViewManager* vm = shell->GetViewManager();
+        nsCOMPtr<nsIViewManager> vm;
+        shell->GetViewManager(getter_AddRefs(vm));
         if (nsnull != vm) {
             vm->EnableRefresh();
-            NS_RELEASE(vm);
         }
 
         // Start observing the document _after_ we do the initial

@@ -46,7 +46,7 @@ class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
 {
 public:
   nsHTMLAnchorElement(nsIAtom* aTag);
-  ~nsHTMLAnchorElement();
+  virtual ~nsHTMLAnchorElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

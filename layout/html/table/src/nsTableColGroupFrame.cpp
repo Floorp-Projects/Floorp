@@ -90,7 +90,8 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
         // Set its style context
         nsCOMPtr<nsIStyleContext> colStyleContext;
         aPresContext.ResolveStyleContextFor(col, mStyleContext,
-                                            getter_AddRefs(colStyleContext), PR_TRUE);
+                                            PR_TRUE,
+                                            getter_AddRefs(colStyleContext));
         colFrame->Init(aPresContext, col, this, colStyleContext);
         colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 

@@ -39,7 +39,7 @@ class nsHTMLSpacerElement : public nsIDOMHTMLElement,
 {
 public:
   nsHTMLSpacerElement(nsIAtom* aTag);
-  ~nsHTMLSpacerElement();
+  virtual ~nsHTMLSpacerElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

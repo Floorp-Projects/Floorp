@@ -58,15 +58,16 @@ public:
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet) = 0;
 
-  virtual nsIDocument* GetDocument() = 0;
+  NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
 
-  virtual nsIPresContext* GetPresContext() = 0;
+  NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;
 
-  virtual nsIViewManager * GetViewManager() = 0;
+  NS_IMETHOD GetViewManager(nsIViewManager** aResult) = 0;
 
-  virtual nsIStyleSet* GetStyleSet() = 0;
+  NS_IMETHOD GetStyleSet(nsIStyleSet** aResult) = 0;
 
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
+
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
 
   /**
@@ -75,10 +76,13 @@ public:
    */
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
 
-  /** GetSelection will return the selection in the presentation shell.
-   *  @param aSelection will hold the return value
+  /**
+   * GetSelection will return the selection that the presentation
+   *  shell may implement.
+   *
+   * @param aSelection will hold the return value
    */
-  virtual nsresult GetSelection(nsIDOMSelection **aSelection) = 0;
+  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection) = 0;
 
   NS_IMETHOD EnterReflowLock() = 0;
 
@@ -110,13 +114,13 @@ public:
    */
   NS_IMETHOD StyleChangeReflow() = 0;
 
-  NS_IMETHOD GetRootFrame(nsIFrame*& aFrame) const = 0;
+  NS_IMETHOD GetRootFrame(nsIFrame** aFrame) const = 0;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns NULL if not a paginated view.
    */
-  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const = 0;
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const = 0;
 
   /**
    * Returns the primary frame associated with the content object.
@@ -132,7 +136,7 @@ public:
    * placeholder frame.
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame*&  aPrimaryFrame) const = 0;
+                                nsIFrame**  aPrimaryFrame) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.
@@ -151,7 +155,7 @@ public:
    * where the frame would be if it were part of the flow
    */
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
-                                    nsIFrame*& aPlaceholderFrame) const = 0;
+                                    nsIFrame** aPlaceholderFrame) const = 0;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame) = 0;
 
@@ -159,12 +163,14 @@ public:
 
   NS_IMETHOD ProcessReflowCommands() = 0;
 
-  virtual void ClearFrameRefs(nsIFrame* aFrame) = 0;
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
+
   /**
    * Given a frame, cough up a rendering context suitable for use with
    * the frame.
    */
-  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
+                                    nsIRenderingContext** aContext) = 0;
 
   // Notification that we were unable to render a replaced element.
   // Called when the replaced element can not be rendered, and we should

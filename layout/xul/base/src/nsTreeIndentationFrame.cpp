@@ -108,7 +108,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
  
   if (0 != width) {
       aMetrics.width = NSIntPixelsToTwips(width, p2t);

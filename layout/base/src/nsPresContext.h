@@ -41,52 +41,59 @@ public:
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs);
   NS_IMETHOD Stop(void);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
-  virtual nsIPresShell* GetShell();
-  NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
-  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
+  NS_IMETHOD GetShell(nsIPresShell** aResult);
+  NS_IMETHOD GetPrefs(nsIPref** aPrefsResult);
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
-  NS_IMETHOD GetBaseURL(nsIURL*& aURL);
+  NS_IMETHOD GetBaseURL(nsIURL** aURLResult);
+  NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
-                                    nsIStyleContext** aStyleContext,
-                                    PRBool aForceUnique = PR_FALSE);
+                                    PRBool aForceUnique,
+                                    nsIStyleContext** aResult);
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          nsIStyleContext** aStyleContext,
-                                          PRBool aForceUnique = PR_FALSE);
-  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                                                      nsIAtom* aPseudoTag,
-                                                      nsIStyleContext* aParentContext,
-                                                      PRBool aForceUnique = PR_FALSE);
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
-  virtual const nsFont& GetDefaultFont(void);
-  virtual const nsFont& GetDefaultFixedFont(void);
-  NS_IMETHOD GetFontScaler(PRInt32& aResult);
+                                          PRBool aForceUnique,
+                                          nsIStyleContext** aResult);
+  NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                                        nsIAtom* aPseudoTag,
+                                        nsIStyleContext* aParentContext,
+                                        PRBool aForceUnique,
+                                        nsIStyleContext** aResult);
+  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
+  NS_IMETHOD GetDefaultFont(nsFont& aResult);
+  virtual const nsFont& GetDefaultFontDeprecated();
+  NS_IMETHOD GetDefaultFixedFont(nsFont& aResult);
+  virtual const nsFont& GetDefaultFixedFontDeprecated();
+  NS_IMETHOD GetFontScaler(PRInt32* aResult);
   NS_IMETHOD SetFontScaler(PRInt32 aScaler);
-  NS_IMETHOD GetDefaultColor(nscolor& aColor);
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor);
-  NS_IMETHOD SetDefaultColor(const nscolor& aColor);
-  NS_IMETHOD SetDefaultBackgroundColor(const nscolor& aColor);
-  NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
+  NS_IMETHOD GetDefaultColor(nscolor* aColor);
+  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
+  NS_IMETHOD SetDefaultColor(nscolor aColor);
+  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
+  NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult);
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
                             nsIFrame* aTargetFrame,
                             nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
                             PRBool aNeedErrorNotification,
-                            nsIFrameImageLoader*& aLoader);
+                            nsIFrameImageLoader** aLoaderResult);
   NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aResult);
-  NS_IMETHOD SetLinkHandler(nsILinkHandler* aHander);
+  NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
   NS_IMETHOD GetVisibleArea(nsRect& aResult);
   NS_IMETHOD SetVisibleArea(const nsRect& r);
-  virtual float GetPixelsToTwips() const;
-  virtual float GetTwipsToPixels() const;
-  NS_IMETHOD GetScaledPixelsToTwips(float &aScale) const;
-  virtual nsIDeviceContext* GetDeviceContext() const;
+  NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
+  NS_IMETHOD GetPageWidth(nscoord* aResult) = 0;
+  NS_IMETHOD GetPageHeight(nscoord* aResult) = 0;
+  NS_IMETHOD GetPixelsToTwips(float* aResult) const;
+  NS_IMETHOD GetTwipsToPixels(float* aResult) const;
+  NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
+  NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
 
 protected:

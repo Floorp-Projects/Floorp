@@ -213,7 +213,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
 
     // Convert the rect from pixels to twips
-    mPresContext->GetScaledPixelsToTwips(p2t);
+    mPresContext->GetScaledPixelsToTwips(&p2t);
     changeRect = (const nsRect*)aParam3;
     damageRect.x = NSIntPixelsToTwips(changeRect->x, p2t);
     damageRect.y = NSIntPixelsToTwips(changeRect->y, p2t);
@@ -260,6 +260,9 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // Treat this like an error
     NotifyError(aImageRequest, nsImageError_kNoData);
     break;
+
+  default:
+    break;
   }
 }
 
@@ -283,32 +286,12 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
   }
 }
 
-static PRBool gXXXInstalledColorMap;
-
 void
 nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
 {
   PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
          ("nsFrameImageLoader::DamageRepairFrame frame=%p status=%x",
           mTargetFrame, mImageLoadStatus));
-
-#if 0
-  // XXX I #if 0'd this per troy's instruction... MMP
-  // XXX this should be done somewhere else, like when the window
-  // is created or something???
-  // XXX maybe there should be a seperate notification service for
-  // colormap events?
-  nsIWidget* window;
-  mTargetFrame->GetWindow(window);
-  if (!gXXXInstalledColorMap && mImage) {
-    nsColorMap* cmap = mImage->GetColorMap();
-    if ((nsnull != cmap) && (cmap->NumColors > 0)) {
-      window->SetColorMap(cmap);
-    }
-    gXXXInstalledColorMap = PR_TRUE;
-  }
-  NS_RELEASE(window);
-#endif
 
   // Determine damaged area and tell view manager to redraw it
   nsPoint offset;

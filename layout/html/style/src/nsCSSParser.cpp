@@ -104,7 +104,7 @@ class CSSParserImpl : public nsICSSParser {
 public:
   CSSParserImpl();
   CSSParserImpl(nsICSSStyleSheet* aSheet);
-  ~CSSParserImpl();
+  virtual ~CSSParserImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -897,8 +897,6 @@ void CSSParserImpl::SkipRuleSet(PRInt32& aErrorCode)
 
 PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
 {
-  nsCSSToken* tk = &mToken;
-
   // First get the list of selectors for the rule
   SelectorList* slist = nsnull;
   if (! ParseSelectorList(aErrorCode, slist)) {

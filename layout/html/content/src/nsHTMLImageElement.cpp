@@ -41,7 +41,7 @@ class nsHTMLImageElement : public nsIDOMHTMLImageElement,
 {
 public:
   nsHTMLImageElement(nsIAtom* aTag);
-  ~nsHTMLImageElement();
+  virtual ~nsHTMLImageElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -246,7 +246,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:

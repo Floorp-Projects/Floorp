@@ -18,6 +18,7 @@
  */
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsISupports.h"
@@ -345,8 +346,10 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
             mWindow->GetBounds(bounds);
             nscoord width = bounds.width;
             nscoord height = bounds.height;
-            width = NSIntPixelsToTwips(width, mPresContext->GetPixelsToTwips());
-            height = NSIntPixelsToTwips(height, mPresContext->GetPixelsToTwips());
+            float p2t;
+            mPresContext->GetPixelsToTwips(&p2t);
+            width = NSIntPixelsToTwips(width, p2t);
+            height = NSIntPixelsToTwips(height, p2t);
             mViewManager->DisableRefresh();
             mViewManager->SetWindowDimensions(width, height);
 
@@ -355,7 +358,6 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
                 mPresShell->BeginObservingDocument();
 
                 // Resize-reflow this time
-                nsRect r;
                 mPresShell->InitialReflow(width, height);
 
                 // Now trigger a refresh
@@ -482,13 +484,13 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
   if (nsnull != factory)
   {
     nsIDeviceContextSpec *devspec = nsnull;
-    nsIDeviceContext *dx = nsnull;
+    nsCOMPtr<nsIDeviceContext> dx;
     nsIDeviceContext *newdx = nsnull;
 
     factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
 
     if (nsnull != devspec) {
-      dx = mPresContext->GetDeviceContext();
+      mPresContext->GetDeviceContext(getter_AddRefs(dx));
 
       if (NS_OK == dx->GetDeviceContextFor(devspec, newdx))
       {
@@ -506,7 +508,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         newdx->GetDeviceSurfaceDimensions(width, height);
 
         NS_NewPrintContext(&cx);
-        mPresContext->GetPrefs(prefs);
+        mPresContext->GetPrefs(&prefs);
         cx->Init(newdx, prefs);
 
         CreateStyleSet(mDocument, &ss);
@@ -553,7 +555,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         nsIPageSequenceFrame* pageSequence;
         nsPrintOptions        options;
 
-        ps->GetPageSequenceFrame(pageSequence);
+        ps->GetPageSequenceFrame(&pageSequence);
         NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
         pageSequence->Print(*cx, options, nsnull);
         newdx->EndDocument();
@@ -565,7 +567,6 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         NS_IF_RELEASE(prefs); // XXX why is the prefs null??
       }
 
-      NS_RELEASE(dx);
     }
     NS_RELEASE(factory);
   }
@@ -618,16 +619,17 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
                                       kIViewManagerIID, 
                                       (void **)&mViewManager);
 
-    nsIDeviceContext  *dx = mPresContext->GetDeviceContext();
+    nsCOMPtr<nsIDeviceContext> dx;
+    mPresContext->GetDeviceContext(getter_AddRefs(dx));
 
     if ((NS_OK != rv) || (NS_OK != mViewManager->Init(dx))) {
       return rv;
     }
 
-    NS_IF_RELEASE(dx);
-
     nsRect tbounds = aBounds;
-    tbounds *= mPresContext->GetPixelsToTwips();
+    float p2t;
+    mPresContext->GetPixelsToTwips(&p2t);
+    tbounds *= p2t;
 
     // Create a child window of the parent that is our "root view/window"
     // Create a view

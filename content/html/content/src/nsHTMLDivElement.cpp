@@ -39,7 +39,7 @@ class nsHTMLDivElement : public nsIDOMHTMLDivElement,
 {
 public:
   nsHTMLDivElement(nsIAtom* aTag);
-  ~nsHTMLDivElement();
+  virtual ~nsHTMLDivElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

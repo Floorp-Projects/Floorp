@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIFormManager.h"
@@ -54,7 +55,7 @@ class nsHTMLFormElement : public nsIDOMHTMLFormElement,
 {
 public:
   nsHTMLFormElement(nsIAtom* aTag);
-  ~nsHTMLFormElement();
+  virtual ~nsHTMLFormElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -209,19 +210,18 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsHTMLFormElement::AddRef(void)                                
 { 
-nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
-  PRInt32 refCnt = mRefCnt;  // debugging 
+  nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
   return ++mRefCnt;                                          
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::Release()
 {
-nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
+  nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
   PRUint32 numChildren;
   GetElementCount(&numChildren);
-  if ((int)mRefCnt == numChildren) {
+  if (mRefCnt == nsrefcnt(numChildren)) {
     mRefCnt = 0;
     delete this; 
     return 0;
@@ -277,19 +277,19 @@ nsHTMLFormElement::Submit()
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
-      shell->GetPrimaryFrameFor(this, frame);
+      shell->GetPrimaryFrameFor(this, &frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
         nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
         if ((NS_OK == result) && formMan) {
-          nsIPresContext *context = shell->GetPresContext();
+          nsCOMPtr<nsIPresContext> context;
+          shell->GetPresContext(getter_AddRefs(context));
           if (nsnull != context) {
             // XXX We're currently passing in null for the frame.
             // It works for now, but might not always
             // be correct. In the future, we might not need the 
             // frame to be passed to the link handler.
             result = formMan->OnSubmit(context, nsnull);
-            NS_RELEASE(context);
           }
         }
       }
@@ -311,7 +311,7 @@ nsHTMLFormElement::Reset()
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
-      shell->GetPrimaryFrameFor(this, frame);
+      shell->GetPrimaryFrameFor(this, &frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
         nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);

@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
@@ -229,14 +229,13 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
     if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
       if(vm) {
         vm->SetQuality(nsContentQuality(aQualityLevel));
       }
-      NS_RELEASE(vm);
-      NS_RELEASE(shell);
     }
   }
 
@@ -300,7 +299,7 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 
   // Strip quotes if present
   PRUnichar first = aResult.First();
-  if ((first == '"') || (first == '\'')) {
+  if ((first == '\"') || (first == '\'')) {
     if (aResult.Last() == first) {
       aResult.Cut(0, 1);
       PRInt32 pos = aResult.Length() - 1;
@@ -456,7 +455,6 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
   nsAutoString k, uri, prefix;
   PRInt32 ac = aNode.GetAttributeCount();
   PRInt32 offset;
-  nsresult result = NS_OK;
   nsINameSpace* nameSpace = nsnull;
 
   if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
@@ -1316,17 +1314,17 @@ nsXMLContentSink::StartLayout()
       shell->BeginObservingDocument();
 
       // Resize-reflow this time
-      nsIPresContext* cx = shell->GetPresContext();
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
       nsRect r;
       cx->GetVisibleArea(r);
       shell->InitialReflow(r.width, r.height);
-      NS_RELEASE(cx);
 
       // Now trigger a refresh
-      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
       if (nsnull != vm) {
         vm->EnableRefresh();
-        NS_RELEASE(vm);
       }
 
       NS_RELEASE(shell);
@@ -1356,7 +1354,8 @@ nsXMLContentSink::StartLayout()
     for (i = 0; i < ns; i++) {
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
-        nsIViewManager* vm = shell->GetViewManager();
+        nsCOMPtr<nsIViewManager>vm;
+        shell->GetViewManager(getter_AddRefs(vm));
         if (nsnull != vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
@@ -1371,7 +1370,6 @@ nsXMLContentSink::StartLayout()
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }
-          NS_RELEASE(vm);
         }
         NS_RELEASE(shell);
       }

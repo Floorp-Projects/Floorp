@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
- 
+#include "nsCOMPtr.h" 
 #include "nsSimplePageSequence.h"
 #include "nsPageFrame.h"
 #include "nsIPresContext.h"
@@ -59,7 +59,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
-  nsSize  pageSize(aPresContext.GetPageWidth(), aPresContext.GetPageHeight());
+  nsSize  pageSize;
+  aPresContext.GetPageWidth(&pageSize.width);
+  aPresContext.GetPageHeight(&pageSize.height);
   PRInt32 extra = aReflowState.availableWidth - 2 * PAGE_SPACING_TWIPS - pageSize.width;
 
   // Note: nscoord is an unsigned type so don't combine these
@@ -224,7 +226,8 @@ nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
     // XXX Paint a one-pixel border around the page so it's easy to see where
     // each page begins and ends when we're in print preview mode
     nsRect  pageBounds;
-    float   p2t = aPresContext.GetPixelsToTwips();
+    float   p2t;
+    aPresContext.GetPixelsToTwips(&p2t);
 
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aFrame->GetRect(pageBounds);
@@ -268,11 +271,13 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
   }
 
   // Begin printing of the document
-  nsIDeviceContext* dc = aPresContext.GetDeviceContext();
-  nsIPresShell*     presShell = aPresContext.GetShell();
-  nsIViewManager*   vm = presShell->GetViewManager();
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext.GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIViewManager>   vm;
+  presShell->GetViewManager(getter_AddRefs(vm));
   nsresult          rv = NS_OK;
-  NS_RELEASE(presShell);
 
   // Print each specified page
   PRInt32 pageNum = 1;
@@ -341,8 +346,6 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
     pageNum++;
   }
 
-  NS_RELEASE(vm);
-  NS_RELEASE(dc);
   return rv;
 }
 

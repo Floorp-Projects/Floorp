@@ -37,7 +37,7 @@ class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
 {
 public:
   nsHTMLTitleElement(nsIAtom* aTag);
-  ~nsHTMLTitleElement();
+  virtual ~nsHTMLTitleElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

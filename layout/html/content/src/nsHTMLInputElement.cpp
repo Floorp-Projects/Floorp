@@ -61,7 +61,7 @@ class nsHTMLInputElement : public nsIDOMHTMLInputElement,
 {
 public:
   nsHTMLInputElement(nsIAtom* aTag);
-  ~nsHTMLInputElement();
+  virtual ~nsHTMLInputElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -181,7 +181,6 @@ nsHTMLInputElement::~nsHTMLInputElement()
     mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
-  //nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
 }
 
 // nsISupports
@@ -189,8 +188,6 @@ nsHTMLInputElement::~nsHTMLInputElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLInputElement::AddRef(void)
 {
-  //nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
-  PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
 
@@ -215,7 +212,6 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()
 {
-  //nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
 	if (mRefCnt <= 0) {
     delete this;                                       
@@ -571,7 +567,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       case NS_FORM_INPUT_RADIO: 
       {
         float p2t;
-        aPresContext->GetScaledPixelsToTwips(p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         nscoord pad = NSIntPixelsToTwips(3, p2t);
 
         // add left and right padding around the radio button via css
@@ -587,7 +583,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         // add bottom padding if backward mode
         // XXX why isn't this working?
         nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(mode);
+        aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
           if (eStyleUnit_Null == spacing->mMargin.GetBottomUnit()) {
             nsStyleCoord bottom(pad);

@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsGenericHTMLElement.h"
-
+#include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
@@ -1272,16 +1272,18 @@ nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
 {
   aResult.Truncate(0);
   switch (aValue.GetUnit()) {
-  case eHTMLUnit_Integer:
-    aResult.Append(aValue.GetIntValue(), 10);
-    return PR_TRUE;
-  case eHTMLUnit_Pixel:
-    aResult.Append(aValue.GetPixelValue(), 10);
-    return PR_TRUE;
-  case eHTMLUnit_Percent:
-    aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
-    aResult.Append('%');
-    return PR_TRUE;
+    case eHTMLUnit_Integer:
+      aResult.Append(aValue.GetIntValue(), 10);
+      return PR_TRUE;
+    case eHTMLUnit_Pixel:
+      aResult.Append(aValue.GetPixelValue(), 10);
+      return PR_TRUE;
+    case eHTMLUnit_Percent:
+      aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
+      aResult.Append('%');
+      return PR_TRUE;
+    default:
+      break;
   }
   return PR_FALSE;
 }
@@ -1306,6 +1308,8 @@ nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aV
     aResult.Append(aValue.GetIntValue(), 10);
     aResult.Append('*');
     return PR_TRUE;
+  default:
+    break;
   }
   return PR_FALSE;
 }
@@ -1423,7 +1427,7 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
       nsIPresShell* presShell = doc->GetShellAt(0);
       if (nsnull != presShell) {
         nsIFrame *frame = nsnull;
-        presShell->GetPrimaryFrameFor(aContent, frame);
+        presShell->GetPrimaryFrameFor(aContent, &frame);
         if (nsnull != frame) {
           res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
         }
@@ -1663,7 +1667,7 @@ nsGenericHTMLElement::MapImageAttributesInto(nsIHTMLAttributes* aAttributes,
     nsHTMLValue value;
 
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
@@ -1736,7 +1740,7 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(nsIHTMLAttributes* aAttributes,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -1778,7 +1782,7 @@ nsGenericHTMLElement::MapImageBorderAttributesInto(nsIHTMLAttributes* aAttribute
     }
 
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
 
     // Fixup border-padding sums: subtract out the old size and then
@@ -1835,17 +1839,17 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
       value.GetStringValue(spec);
       if (spec.Length() > 0) {
         // Resolve url to an absolute url
-        nsIURL* docURL = nsnull;
-        aPresContext->GetBaseURL(docURL);
+        nsCOMPtr<nsIURL> docURL;
+        aPresContext->GetBaseURL(getter_AddRefs(docURL));
 
         nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
-        NS_IF_RELEASE(docURL);
-
-        nsStyleColor* color = (nsStyleColor*)
-          aContext->GetMutableStyleData(eStyleStruct_Color);
-        color->mBackgroundImage = absURLSpec;
-        color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-        color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+        if (NS_SUCCEEDED(rv)) {
+          nsStyleColor* color = (nsStyleColor*)
+            aContext->GetMutableStyleData(eStyleStruct_Color);
+          color->mBackgroundImage = absURLSpec;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+          color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+        }
       }
     }
   }
@@ -2431,7 +2435,7 @@ nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) con
       aConverter.AddHTMLAttribute(name,value);
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -2568,7 +2572,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    PRBool rv = mChildren.RemoveElementAt(aIndex);
+    mChildren.RemoveElementAt(aIndex);
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     if (aNotify) {
       if (nsnull != doc) {

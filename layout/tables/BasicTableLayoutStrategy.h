@@ -54,8 +54,8 @@ static const PRInt32 kUninitialized=-1;
 
 inline SpanInfo::SpanInfo(PRInt32 aColIndex, PRInt32 aSpan, 
                           nscoord aMinWidth, nscoord aDesiredWidth)
-  : initialColIndex(aColIndex),
-    initialColSpan(aSpan)
+  : initialColSpan(aSpan),
+    initialColIndex(aColIndex)
 {
   span = aSpan;
   cellMinWidth = aMinWidth;

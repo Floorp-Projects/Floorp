@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlHelper.h"
 #include "nsFormControlFrame.h"
@@ -259,7 +260,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   nscoord scrollbarHeight = 0;
   GetScrollBarDimensions(aPresContext, scrollbarWidth, scrollbarHeight);
 
-  nsFont font(aPresContext.GetDefaultFixedFont());
+  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
   GetFont(&aPresContext, font);
 
   nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
@@ -278,7 +279,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, desiredLineSize);
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord lineEndPadding = NSIntPixelsToTwips(10, p2t);//GetHorizontalInsidePadding(aPresContext, p2t, 0, 0);
   aDesiredSize.width += lineEndPadding;
 
@@ -289,7 +290,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   nsIHTMLReflow*      htmlReflow;
   if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(aPresContext);
-    nsresult result = htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   }
 
@@ -321,7 +322,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
 
     if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);
-      nsresult result = htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
       //??nsRect rect(offset.x, offset.y, desiredLineSize.width+lineEndPadding, desiredLineSize.height);
       nsRect rect(offset.x, offset.y, insideWidth, desiredLineSize.height);
@@ -360,7 +361,6 @@ nsListControlFrame::GetOptionFromChild(nsIFrame* aParentFrame)
 {
 
   nsIFrame* kid;
-  nsIFrame * frame = nsnull;
 
   aParentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
@@ -839,8 +839,8 @@ nsListControlFrame::GetScrollBarDimensions(nsIPresContext& aPresContext,
   aWidth  = 0;
   aHeight = 0;
   float   scale;
-  nsIDeviceContext* dx = nsnull;
-  dx = aPresContext.GetDeviceContext();
+  nsCOMPtr<nsIDeviceContext> dx;
+  aPresContext.GetDeviceContext(getter_AddRefs(dx));
   if (nsnull != dx) { 
     float sbWidth;
     float sbHeight;
@@ -848,7 +848,6 @@ nsListControlFrame::GetScrollBarDimensions(nsIPresContext& aPresContext,
     dx->GetScrollBarDimensions(sbWidth, sbHeight);
     aWidth  = PRInt32(sbWidth * scale);
     aHeight = PRInt32(sbHeight * scale);
-    NS_RELEASE(dx);
   } //else {
     //aWidth  = 19 * sp2t;
     //aHeight = scrollbarWidth;
@@ -934,7 +933,7 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize, charSize;
+  nsSize calcSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
@@ -944,9 +943,9 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                                            aReflowState.rendContext);
 
   float sp2t;
-  float p2t = aPresContext->GetPixelsToTwips();
-
-  aPresContext->GetScaledPixelsToTwips(sp2t);
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&sp2t);
 
   //nscoord scrollbarWidth  = 0;
   //nscoord scrollbarHeight = 0;
@@ -1127,10 +1126,9 @@ nsIDOMHTMLOptionElement*
 nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRUint32 aIndex)
 {
   nsIDOMNode* node = nsnull;
-  PRBool status = PR_FALSE;
   if ((NS_OK == aCollection.Item(aIndex, &node)) && node) {
     nsIDOMHTMLOptionElement* option = nsnull;
-    nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+    node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
     NS_RELEASE(node);
     return option;
   }

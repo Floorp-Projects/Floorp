@@ -224,9 +224,12 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 	}
 
 	// Ok, try out the hack of doing frame reconstruction
-	nsCOMPtr<nsIPresShell> pShell ( dont_AddRef(aPresContext.GetShell()) );
-	nsCOMPtr<nsIStyleSet> pStyleSet ( dont_AddRef(pShell->GetStyleSet()) );
-	nsCOMPtr<nsIDocument> pDocument ( dont_AddRef(pShell->GetDocument()) );
+	nsCOMPtr<nsIPresShell> pShell;
+  aPresContext.GetShell(getter_AddRefs(pShell));
+	nsCOMPtr<nsIStyleSet> pStyleSet;
+  pShell->GetStyleSet(getter_AddRefs(pStyleSet));
+	nsCOMPtr<nsIDocument> pDocument;
+  pShell->GetDocument(getter_AddRefs(pDocument));
 	nsCOMPtr<nsIContent> pRoot ( dont_AddRef(pDocument->GetRootContent()) );
 	
 	if (pRoot) {
@@ -234,7 +237,7 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 		nsIFrame*   parentFrame;
     
 		// Get the frame that corresponds to the document element
-		pShell->GetPrimaryFrameFor(pRoot, docElementFrame);
+		pShell->GetPrimaryFrameFor(pRoot, &docElementFrame);
 		if (nsnull != docElementFrame) {
 		  docElementFrame->GetParent(&parentFrame);
       
