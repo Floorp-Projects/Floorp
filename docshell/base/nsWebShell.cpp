@@ -1029,11 +1029,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           // before we could read any data from it
           errorStr = "netReset";
           break;
-        case NS_BINDING_ABORTED:
-          break;
-        default:
-          errorStr = "unknownError";
-          break;
       }
       if (errorStr) {
         nsCOMPtr<nsIPrompt> prompter;
