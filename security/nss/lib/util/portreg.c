@@ -46,7 +46,7 @@
 
 
 static int 
-_valid_subexp(char *exp, char stop) 
+_valid_subexp(const char *exp, char stop) 
 {
     register int x,y,t;
     int nsc,np,tld;
@@ -116,7 +116,7 @@ _valid_subexp(char *exp, char stop)
 }
 
 int 
-PORT_RegExpValid(char *exp) 
+PORT_RegExpValid(const char *exp) 
 {
     int x;
 
@@ -132,10 +132,10 @@ PORT_RegExpValid(char *exp)
 #define NOMATCH 1
 #define ABORTED -1
 
-static int _shexp_match(char *str, char *exp, PRBool case_insensitive);
+static int _shexp_match(const char *str, const char *exp, PRBool case_insensitive);
 
 static int 
-_handle_union(char *str, char *exp, PRBool case_insensitive) 
+_handle_union(const char *str, const char *exp, PRBool case_insensitive) 
 {
     char *e2 = (char *) PORT_Alloc(sizeof(char)*strlen(exp));
     register int t,p2,p1 = 1;
@@ -165,7 +165,7 @@ _handle_union(char *str, char *exp, PRBool case_insensitive)
 
 
 static int 
-_shexp_match(char *str, char *exp, PRBool case_insensitive) 
+_shexp_match(const char *str, const char *exp, PRBool case_insensitive) 
 {
     register int x,y;
     int ret,neg;
@@ -237,16 +237,16 @@ _shexp_match(char *str, char *exp, PRBool case_insensitive)
               case '\\':
                 ++y;
               default:
-				if(case_insensitive)
-				  {
+		if(case_insensitive)
+		  {
                     if(toupper(str[x]) != toupper(exp[y]))
                         ret = NOMATCH;
-				  }
-				else
-				  {
+		  }
+		else
+		  {
                     if(str[x] != exp[y])
                         ret = NOMATCH;
-				  }
+		  }
                 break;
             }
         }
@@ -256,8 +256,8 @@ _shexp_match(char *str, char *exp, PRBool case_insensitive)
     return (ret ? ret : (str[x] ? NOMATCH : MATCH));
 }
 
-int 
-PORT_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
+static int 
+port_RegExpMatch(const char *str, const char *xp, PRBool case_insensitive) {
     register int x;
     char *exp = 0;
 
@@ -288,7 +288,7 @@ PORT_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
 /* ------------------------------ shexp_cmp ------------------------------- */
 
 int 
-PORT_RegExpSearch(char *str, char *exp)
+PORT_RegExpSearch(const char *str, const char *exp)
 {
     switch(PORT_RegExpValid(exp)) 
 	  {
@@ -297,12 +297,12 @@ PORT_RegExpSearch(char *str, char *exp)
         case NON_SXP:
             return (strcmp(exp,str) ? 1 : 0);
         default:
-            return PORT_RegExpMatch(str, exp, PR_FALSE);
+            return port_RegExpMatch(str, exp, PR_FALSE);
       }
 }
 
 int
-PORT_RegExpCaseSearch(char *str, char *exp)
+PORT_RegExpCaseSearch(const char *str, const char *exp)
 {
     switch(PORT_RegExpValid(exp))
       {
@@ -311,7 +311,7 @@ PORT_RegExpCaseSearch(char *str, char *exp)
         case NON_SXP:
             return (strcmp(exp,str) ? 1 : 0);
         default:
-            return PORT_RegExpMatch(str, exp, PR_TRUE);
+            return port_RegExpMatch(str, exp, PR_TRUE);
       }
 }
 
