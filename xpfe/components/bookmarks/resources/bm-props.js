@@ -20,13 +20,10 @@
  * Contributor(s): 
  */
 
-/*
-
-  Script for the bookmarks properties window
-
-*/
-
 var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
+
+// string bundle
+var bundle = null;
 
 // XXX MAKE SURE that the "url" field is LAST!
 // This is important for what happens if/when the URL itself is changed.
@@ -55,6 +52,9 @@ var bookmark_url = '';
 
 function Init()
 {
+  // initialise the string bundle.
+  bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+  
   bookmark_url = window.arguments[0];
 
   // Initialize the properties panel by copying the values from the
@@ -288,7 +288,7 @@ function Commit()
 		var duration = document.getElementById("duration").value;
 		if (duration == "")
 		{
-			alert("Please enter a duration.");
+			alert( bundle.GetStringFromName("pleaseEnterADuration") );
 			return(false);
 		}
 
