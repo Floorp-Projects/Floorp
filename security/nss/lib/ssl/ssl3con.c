@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.13 2001/01/13 02:05:07 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.14 2001/01/13 02:32:39 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -3666,13 +3666,13 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ** know SSL 3.x.
     */
     if (MSB(version) != MSB(SSL_LIBRARY_VERSION_3_0)) {
-    	desc = handshake_failure;
+    	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version : handshake_failure;
 	goto alert_loser;
     }
 
     rv = ssl3_NegotiateVersion(ss, version);
     if (rv != SECSuccess) {
-    	desc    = handshake_failure;
+    	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version : handshake_failure;
 	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
 	goto alert_loser;
     }
@@ -4559,11 +4559,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ss->clientHelloVersion = version = (SSL3ProtocolVersion)tmp;
     rv = ssl3_NegotiateVersion(ss, version);
     if (rv != SECSuccess) {
-	/* We can't do the usual isTLS test here, because the negotiated
-	** version is definitely not 3.1.  So the question is, are we 
-	** willing/able to do TLS here on our side? 
-	*/
-    	desc = ss->enableTLS ? protocol_version : handshake_failure;
+    	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version : handshake_failure;
 	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
 	goto alert_loser;
     }
@@ -4985,12 +4981,10 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length)
 
     rv = ssl3_NegotiateVersion(ss, version);
     if (rv != SECSuccess) {
-    	desc = ss->enableTLS ? protocol_version : handshake_failure;
+	/* send back which ever alert client will understand. */
+    	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version : handshake_failure;
 	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
-	/* It's not appropriate to send back SSL3/TLS alert records in 
-	** response to an SSL2 client hello, unless the version is 
-	** succesfully negotiated to 3.0 or greater, so just goto loser. */
-	goto loser;	/* alert_loser */
+	goto alert_loser;
     }
 
     /* if we get a non-zero SID, just ignore it. */
