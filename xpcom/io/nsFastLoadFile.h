@@ -86,7 +86,7 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
  * confused for NSFastLoadIDs and NSFastLoadOIDs.  To help catch bugs where
  * reader and writer code fail to match, we XOR unlikely 32-bit numbers with
  * NSFastLoad*IDs when storing and fetching.  The following unlikely values are
- * irrational numbers ((1-sqrt(5))/2, sqrt(2)-1) represented in fixed point.
+ * irrational numbers ((sqrt(5)-1)/2, sqrt(2)-1) represented in fixed point.
  *
  * The reader XORs, converts the ID to an index, and bounds-checks all array
  * accesses that use the index.  Array access code asserts that the index is in
