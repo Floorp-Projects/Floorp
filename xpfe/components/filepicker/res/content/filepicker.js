@@ -453,7 +453,7 @@ function onFileSelected(file) {
     }
   }
 
-  okButton.disabled = true;
+  okButton.disabled = (textField.value != "");
 }
 
 function onTextFieldFocus() {
