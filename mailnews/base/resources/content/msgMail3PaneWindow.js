@@ -717,16 +717,7 @@ function OnLoadFolderPane()
 
     SortFolderPane("folderNameCol");
 
-    //Add folderDataSource and accountManagerDataSource to folderPane
-    accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    var database = GetFolderDatasource();
-
-    database.AddDataSource(accountManagerDataSource);
-    database.AddDataSource(folderDataSource);
     var folderOutliner = GetFolderOutliner();
-    folderOutliner.outlinerBoxObject.outlinerBody.setAttribute("ref", "msgaccounts:/");
-
     var folderOutlinerBuilder = folderOutliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     folderOutlinerBuilder.addObserver(folderObserver);
     folderOutliner.addEventListener("click",FolderPaneOnClick,true);

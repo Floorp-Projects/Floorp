@@ -37,7 +37,8 @@
             flex="1"
             seltype="single">
     <outlinerbody flex="1"
-                  datasources="rdf:null"
+                  datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                  ref="msgaccounts:/"
                   statedatasource="rdf:mailnewsfolders"
                   ondraggesture="return BeginDragFolderOutliner(event);"
                   onselect="FolderPaneSelectionChange();">
