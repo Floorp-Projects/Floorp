@@ -473,6 +473,14 @@ endif
 # nspr/java runtime(?):
 DEFINES		+= -DDEVELOPER_DEBUG
 
+#
+# For the standalone image lib
+#
+
+ifdef STANDALONE_IMAGE_LIB
+DEFINES		+= -DSTANDALONE_IMAGE_LIB
+endif
+
 ######################################################################
 
 GARBAGE		= $(DEPENDENCIES) core $(wildcard core.[0-9]*)
