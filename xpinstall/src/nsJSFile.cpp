@@ -521,10 +521,12 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-  if(NS_OK != nativeThis->FileOpFileExecute(*folder, b1, blocking, &nativeRet))
-  {
+  jsrefcount saveDepth;
+  saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+  nsresult rv = nativeThis->FileOpFileExecute(*folder, b1, blocking, &nativeRet);
+  JS_ResumeRequest(cx, saveDepth);
+  if(NS_FAILED(rv)) 
      return JS_TRUE;
-  }
 
   *rval = INT_TO_JSVAL(nativeRet);
 
