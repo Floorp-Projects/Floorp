@@ -273,7 +273,7 @@ else {
 					} else {
 						if(($key == $_GET['count']) || ($key == 'host_hostname' && $_GET['count'] == 'host_id')){
 							if ($key == 'host_hostname' && $_GET['count'] == 'host_id'){
-								$subquery = 'host_hostname='.$row['host_hostname'];
+								$subquery = 'host_hostname='.$query->fields['host_hostname'];
 							}
 							else {
 								$subquery = $_GET['count'].'='.$query->fields[$key];
