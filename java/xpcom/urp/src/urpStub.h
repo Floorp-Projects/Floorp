@@ -30,7 +30,7 @@
 
 class urpStub : public bcIStub {
  public:
-    urpStub();
+    urpStub(char* cStr);
     virtual ~urpStub();
     virtual void Dispatch(bcICall *call) ;
  private:

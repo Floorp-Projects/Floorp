@@ -29,9 +29,9 @@
 
 #include "urpManager.h"
 
-urpStub::urpStub() {
+urpStub::urpStub(char* conStr) {
   transport = new urpConnector();
-  PRStatus status = transport->Open("socket,host=shiva,port=2009");
+  PRStatus status = transport->Open(conStr);
   if(status != NS_OK) {
      fprintf(stderr,"Error in opening of remote server on client side\n");
      exit(-1);
