@@ -647,7 +647,7 @@ menu_stream_cb     (GtkMenuItem *menuitem, TestGtkBrowser *browser)
   const char *data;
   const char *data2;
   data = "<html>Hi";
-  data2 = " there</html>\n";
+  data2 = " <a href='foo.html'>there</a></html>\n";
   g_print("stream_clicked_cb\n");
   gtk_moz_embed_open_stream(GTK_MOZ_EMBED(browser->mozEmbed),
 			    "file://", "text/html");

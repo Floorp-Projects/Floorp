@@ -60,7 +60,6 @@ class EmbedProgress;
 class EmbedWindow;
 class EmbedContentListener;
 class EmbedEventListener;
-class EmbedStream;
 
 class nsPIDOMWindow;
 class nsIDirectoryServiceProvider;
@@ -96,7 +95,7 @@ class EmbedPrivate {
   static void SetDirectoryServiceProvider (nsIDirectoryServiceProvider * appFileLocProvider);
 
   nsresult OpenStream         (const char *aBaseURI, const char *aContentType);
-  nsresult AppendToStream     (const char *aData, PRInt32 aLen);
+  nsresult AppendToStream     (const PRUint8 *aData, PRUint32 aLen);
   nsresult CloseStream        (void);
 
   // This function will find the specific EmbedPrivate object for a
@@ -139,8 +138,6 @@ class EmbedPrivate {
   nsCOMPtr<nsISupports>          mContentListenerGuard;
   EmbedEventListener            *mEventListener;
   nsCOMPtr<nsISupports>          mEventListenerGuard;
-  EmbedStream                   *mStream;
-  nsCOMPtr<nsISupports>          mStreamGuard;
 
   nsCOMPtr<nsIWebNavigation>     mNavigation;
   nsCOMPtr<nsISHistory>          mSessionHistory;
