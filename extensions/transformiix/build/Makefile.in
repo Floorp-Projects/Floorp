@@ -59,7 +59,6 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/NamedMap.$(OBJ_SUFFIX) \
   ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../source/base/Stack.$(OBJ_SUFFIX) \
-  ../source/base/Tokenizer.$(OBJ_SUFFIX) \
   ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../source/base/txURIUtils.$(OBJ_SUFFIX) \
