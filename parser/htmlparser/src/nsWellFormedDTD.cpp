@@ -841,6 +841,30 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
 
 
 /**
+ *  This method causes all tokens to be dispatched to the given tag handler.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object to receive subsequent tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CWellFormedDTD::CaptureTokenPump(nsITagHandler* aHandler) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
+ *  This method releases the token-pump capture obtained in CaptureTokenPump()
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object that received tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CWellFormedDTD::ReleaseTokenPump(nsITagHandler* aHandler){
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
  * 
  * @update	gess8/4/98
  * @param 

@@ -129,6 +129,24 @@ class CWellFormedDTD : public nsIDTD {
     NS_IMETHOD HandleToken(CToken* aToken);
 
     /**
+     *  This method causes all tokens to be dispatched to the given tag handler.
+     *
+     *  @update  gess 3/25/98
+  	 *  @param   aHandler -- object to receive subsequent tokens...
+	   *  @return	 error code (usually 0)
+     */
+    NS_IMETHOD CaptureTokenPump(nsITagHandler* aHandler);
+
+    /**
+     *  This method releases the token-pump capture obtained in CaptureTokenPump()
+     *
+     *  @update  gess 3/25/98
+  	 *  @param   aHandler -- object that received tokens...
+	   *  @return	 error code (usually 0)
+     */
+    NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
+
+    /**
      * 
      *  
      *  @update  gess 3/25/98
