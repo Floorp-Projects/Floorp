@@ -20,6 +20,7 @@
  */
 
 #include "nsWindow.h"
+#include "nsToolkit.h"
 
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
@@ -29,6 +30,7 @@ nsWindow::nsWindow()
   mContainer       = nsnull;
   mDrawingarea     = nsnull;
   mIsTopLevel      = PR_FALSE;
+  mWindowType      = eWindowType_child;
 }
 
 nsWindow::~nsWindow()
@@ -292,11 +294,8 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
   case NS_NATIVE_WINDOW:
-    return mDrawingarea->inner_window;
-    break;
-
   case NS_NATIVE_WIDGET:
-    return mDrawingarea;
+    return mDrawingarea->inner_window;
     break;
 
   case NS_NATIVE_PLUGIN_PORT:
@@ -309,8 +308,8 @@ nsWindow::GetNativeData(PRUint32 aDataType)
     break;
 
   case NS_NATIVE_GRAPHIC:
-    NS_WARNING("nsWindow::GetNativeData native graphic not support yet\n");
-    return nsnull;
+    NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
+    return (void *)NS_STATIC_CAST(nsToolkit *, mToolkit)->GetSharedGC();
     break;
 
   default:
@@ -412,6 +411,17 @@ nsWindow::ConvertToDeviceCoordinates(nscoord &aX,
 				     nscoord &aY)
 {
 }
+
+NS_IMETHODIMP
+nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
+{
+  if (nsnull != aWidgetInitData) {
+    mWindowType = aWidgetInitData->mWindowType;
+    mBorderStyle = aWidgetInitData->mBorderStyle;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
   
 NS_IMETHODIMP
 nsWindow::CaptureMouse(PRBool aCapture)
@@ -473,18 +483,24 @@ nsWindow::CommonCreate(nsIWidget        *aParent,
   MozContainer   *parentContainer = nsnull;
   GtkWindow      *topLevelParent = nsnull;
   if (aParent || aNativeParent) {
+    GdkWindow *parentWindow;
     // get the drawing area and the container from the parent
     if (aParent)
-      parentArea = MOZ_DRAWINGAREA(aParent->GetNativeData(NS_NATIVE_WINDOW));
+      parentWindow = (GdkWindow *)aParent->GetNativeData(NS_NATIVE_WINDOW);
     else
-      parentArea = MOZ_DRAWINGAREA(aNativeParent);
+      parentWindow = GDK_WINDOW(aNativeParent);
+
+    // find the mozarea on that window
+    gpointer user_data = nsnull;
+    user_data = g_object_get_data(G_OBJECT(parentWindow), "mozdrawingarea");
+    parentArea = MOZ_DRAWINGAREA(user_data);
 
     NS_ASSERTION(parentArea, "no drawingarea for parent widget!\n");
     if (!parentArea)
       return NS_ERROR_FAILURE;
 
     // get the user data for the widget - it should be a container
-    gpointer user_data = nsnull;
+    user_data = nsnull;
     gdk_window_get_user_data(parentArea->inner_window, &user_data);
     NS_ASSERTION(user_data, "no user data for parentArea\n");
     if (!user_data)
@@ -547,8 +563,24 @@ nsWindow::CommonCreate(nsIWidget        *aParent,
 		    this);
   g_object_set_data(G_OBJECT(mDrawingarea->inner_window), "nsWindow",
 		    this);
-  g_object_set_data(G_OBJECT(mContainer), "nsWindow",
-		    this);
+
+  g_object_set_data(G_OBJECT(mDrawingarea->clip_window), "mozdrawingarea",
+		    mDrawingarea);
+  g_object_set_data(G_OBJECT(mDrawingarea->inner_window), "mozdrawingarea",
+		    mDrawingarea);
+
+  if (mContainer)
+    g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
 
   return NS_OK;
+}
+
+// nsChildWindow class
+
+nsChildWindow::nsChildWindow()
+{
+}
+
+nsChildWindow::~nsChildWindow()
+{
 }

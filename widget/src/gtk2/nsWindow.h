@@ -19,6 +19,8 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
+#ifndef __nsWindow_h__
+
 #include <nsBaseWidget.h>
 
 #include "mozcontainer.h"
@@ -108,6 +110,7 @@ class nsWindow : public nsBaseWidget {
   NS_IMETHOD         EnableDragDrop(PRBool aEnable);
   virtual void       ConvertToDeviceCoordinates(nscoord &aX,
 						nscoord &aY);
+  NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
   NS_IMETHOD         CaptureMouse(PRBool aCapture);
   NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
 					 PRBool           aDoCapture,
@@ -136,3 +139,11 @@ class nsWindow : public nsBaseWidget {
 
   nsCOMPtr<nsIWidget> mParent;
 };
+
+class nsChildWindow : public nsWindow {
+ public:
+  nsChildWindow();
+  ~nsChildWindow();
+};
+
+#endif /* __nsWindow_h__ */

@@ -23,9 +23,14 @@
 #include "nsWidgetsCID.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#ifdef IBMBIDI
+#include "nsBidiKeyboard.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
 static nsModuleComponentInfo components[] =
 {
@@ -33,10 +38,20 @@ static nsModuleComponentInfo components[] =
     NS_WINDOW_CID,
     "@mozilla.org/widget/window/gtk2;1",
     nsWindowConstructor },
+  { "Gtk2 Child Window",
+    NS_CHILD_CID,
+    "@mozilla.org/widgets/child_window/gtk;1",
+    nsChildWindowConstructor },
   { "Gtk2 AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/gtk2;1",
     nsAppShellConstructor },
+#ifdef IBMBIDI
+  { "Gtk2 Bidi Keyboard",
+    NS_BIDIKEYBOARD_CID,
+    "@mozilla.org/widget/bidikeyboard;1",
+    nsBidiKeyboardConstructor },
+#endif /* IBMBIDI */
 };
 
 PR_STATIC_CALLBACK(void)
