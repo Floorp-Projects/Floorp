@@ -54,6 +54,8 @@ public:
 
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
+  NS_IMETHOD GetDocumentLength(PRInt32 *aCount);
+
 
 //============================================================================
 // Methods that are duplicates of nsEditor -- exposed here for convenience
@@ -273,6 +275,13 @@ protected:
                                   PRInt32     aStartOffset,
                                   PRInt32     aEndOffset,
                                   nsIDOMSelection *aSelection);
+
+  /** returns the absolute position of the end points of aSelection
+    * in the document as a text stream.
+    */
+  nsresult GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                                   PRInt32 &aStartOffset, 
+                                   PRInt32 &aEndOffset);
   
 
   TypeInState *GetTypeInState(); 

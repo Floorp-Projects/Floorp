@@ -2817,3 +2817,120 @@ nsTextEditor::StopLogging()
   return nsEditor::StopLogging();
 }
 
+
+NS_IMETHODIMP
+nsTextEditor::GetDocumentLength(PRInt32 *aCount)                                              
+{
+  if (!aCount) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  // initialize out params
+  *aCount = 0;
+  
+  nsCOMPtr<nsIDOMSelection> sel;
+  GetSelection(getter_AddRefs(sel));
+  if ((NS_SUCCEEDED(result)) && sel)
+  {
+    nsAutoSelectionReset selectionResetter(sel);
+    result = SelectAll();
+    if (NS_SUCCEEDED(result))
+    {
+      PRInt32 start, end;
+      result = GetTextSelectionOffsets(sel, start, end);
+      if (NS_SUCCEEDED(result))
+      {
+        NS_ASSERTION(0==start, "GetTextSelectionOffsets failed to set start correctly.");
+        NS_ASSERTION(0<=end, "GetTextSelectionOffsets failed to set end correctly.");
+        if (0<=end) {
+          *aCount = end;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
+// the two should use common code, or even just be one method
+nsresult nsTextEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                                               PRInt32 &aStartOffset, 
+                                               PRInt32 &aEndOffset)
+{
+  nsresult result;
+  // initialize out params
+  aStartOffset = 0; // default to first char in selection
+  aEndOffset = -1;  // default to total length of text in selection
+
+  nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
+  PRInt32 startOffset, endOffset;
+  aSelection->GetAnchorNode(getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(&startOffset);
+  aSelection->GetFocusNode(getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(&endOffset);
+
+  nsCOMPtr<nsIEnumerator> enumerator;
+  enumerator = do_QueryInterface(aSelection);
+  if (enumerator)
+  {
+    // don't use "result" in this block
+    enumerator->First(); 
+    nsISupports *currentItem;
+    nsresult findParentResult = enumerator->CurrentItem(&currentItem);
+    if ((NS_SUCCEEDED(findParentResult)) && (nsnull!=currentItem))
+    {
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      range->GetCommonParent(getter_AddRefs(parentNode));
+    }
+    else parentNode = do_QueryInterface(startNode);
+  }
+
+  nsCOMPtr<nsIContentIterator> iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              nsIContentIterator::GetIID(), 
+                                              getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    PRUint32 totalLength=0;
+    nsCOMPtr<nsIDOMCharacterData>textNode;
+    nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(parentNode);
+    iter->Init(blockParentContent);
+    // loop through the content iterator for each content node
+    nsCOMPtr<nsIContent> content;
+    result = iter->CurrentNode(getter_AddRefs(content));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      textNode = do_QueryInterface(content);
+      if (textNode)
+      {
+        nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
+        if (!currentNode) {return NS_ERROR_NO_INTERFACE;}
+        if (PR_TRUE==IsEditable(currentNode))
+        {
+          if (currentNode.get() == startNode.get())
+          {
+            aStartOffset = totalLength + startOffset;
+          }
+          if (currentNode.get() == endNode.get())
+          {
+            aEndOffset = totalLength + endOffset;
+            break;
+          }
+          PRUint32 length;
+          textNode->GetLength(&length);
+          totalLength += length;
+        }
+      }
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(content));
+    }
+    if (-1==aEndOffset) {
+      aEndOffset = totalLength;
+    }
+  }
+  return result;
+}
+
+
+
+
+
+

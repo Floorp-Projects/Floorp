@@ -243,7 +243,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     // if len(doc) is at or over max, cancel the insert
     // if l(doc) + l(input) > max, set aOutString to subset of inString so length = max
     PRInt32 docLength;
-    result = GetLengthOfDocumentInCharacters(docLength);
+    result = mEditor->GetDocumentLength(&docLength);
     if (NS_SUCCEEDED(result))
     {
       if (docLength >= aMaxLength) 
@@ -272,7 +272,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   {
     // manage the password buffer
     PRInt32 start, end;
-    result = GetTextSelectionOffsets(aSelection, start, end);
+    result = mEditor->GetTextSelectionOffsets(aSelection, start, end);
     NS_ASSERTION((NS_SUCCEEDED(result)), "getTextSelectionOffsets failed!");
     mPasswordText.Insert(inString, start);
 
@@ -346,7 +346,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
       {
         PRUint32 length;
         anchorAsText->GetLength(&length);
-        if (length==offset)
+        if (length==(PRUint32)offset)
         {
           // newTextNode will be the left node
           result = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
@@ -626,7 +626,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
   {
     // manage the password buffer
     PRInt32 start, end;
-    GetTextSelectionOffsets(aSelection, start, end);
+    mEditor->GetTextSelectionOffsets(aSelection, start, end);
     if (end==start)
     { // collapsed selection
       if (nsIEditor::eDeleteLeft==aCollapsedAction && 0<start) { // del back
@@ -925,116 +925,3 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   return result;
 }
-
-nsresult nsTextEditRules::GetLengthOfDocumentInCharacters(PRInt32 &aCount)                                              
-{
-  nsresult result;
-  // initialize out params
-  aCount = 0;
-  
-  nsCOMPtr<nsIDOMSelection> sel;
-  mEditor->GetSelection(getter_AddRefs(sel));
-  if ((NS_SUCCEEDED(result)) && sel)
-  {
-    nsAutoSelectionReset selectionResetter(sel);
-    result = mEditor->SelectAll();
-    if (NS_SUCCEEDED(result))
-    {
-      PRInt32 start, end;
-      result = GetTextSelectionOffsets(sel, start, end);
-      if (NS_SUCCEEDED(result))
-      {
-        NS_ASSERTION(0==start, "GetTextSelectionOffsets failed to set start correctly.");
-        NS_ASSERTION(0<=end, "GetTextSelectionOffsets failed to set end correctly.");
-        if (0<=end) {
-          aCount = end;
-        }
-      }
-    }
-  }
-  return result;
-}
-
-// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
-// the two should use common code, or even just be one method
-nsresult nsTextEditRules::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
-                                                  PRInt32 &aStartOffset, 
-                                                  PRInt32 &aEndOffset)
-{
-  nsresult result;
-  // initialize out params
-  aStartOffset = 0; // default to first char in selection
-  aEndOffset = -1;  // default to total length of text in selection
-
-  nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
-  PRInt32 startOffset, endOffset;
-  aSelection->GetAnchorNode(getter_AddRefs(startNode));
-  aSelection->GetAnchorOffset(&startOffset);
-  aSelection->GetFocusNode(getter_AddRefs(endNode));
-  aSelection->GetFocusOffset(&endOffset);
-
-  nsCOMPtr<nsIEnumerator> enumerator;
-  enumerator = do_QueryInterface(aSelection);
-  if (enumerator)
-  {
-    // don't use "result" in this block
-    enumerator->First(); 
-    nsISupports *currentItem;
-    nsresult findParentResult = enumerator->CurrentItem(&currentItem);
-    if ((NS_SUCCEEDED(findParentResult)) && (nsnull!=currentItem))
-    {
-      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-      range->GetCommonParent(getter_AddRefs(parentNode));
-    }
-    else parentNode = do_QueryInterface(startNode);
-  }
-
-  nsCOMPtr<nsIContentIterator> iter;
-  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
-                                              getter_AddRefs(iter));
-  if ((NS_SUCCEEDED(result)) && iter)
-  {
-    PRUint32 totalLength=0;
-    nsCOMPtr<nsIDOMCharacterData>textNode;
-    nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(parentNode);
-    iter->Init(blockParentContent);
-    // loop through the content iterator for each content node
-    nsCOMPtr<nsIContent> content;
-    result = iter->CurrentNode(getter_AddRefs(content));
-    while (NS_COMFALSE == iter->IsDone())
-    {
-      textNode = do_QueryInterface(content);
-      if (textNode)
-      {
-        nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
-        if (!currentNode) {return NS_ERROR_NO_INTERFACE;}
-        if (PR_TRUE==mEditor->IsEditable(currentNode))
-        {
-          if (currentNode.get() == startNode.get())
-          {
-            aStartOffset = totalLength + startOffset;
-          }
-          if (currentNode.get() == endNode.get())
-          {
-            aEndOffset = totalLength + endOffset;
-            break;
-          }
-          PRUint32 length;
-          textNode->GetLength(&length);
-          totalLength += length;
-        }
-      }
-      iter->Next();
-      iter->CurrentNode(getter_AddRefs(content));
-    }
-    if (-1==aEndOffset) {
-      aEndOffset = totalLength;
-    }
-  }
-  return result;
-}
-
-
-
-

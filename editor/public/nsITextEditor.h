@@ -76,6 +76,9 @@ public:
   /** set the edit flags for this editor.  May be called at any time. */
   NS_IMETHOD SetFlags(PRUint32 aFlags)=0;
 
+  /** get the length of the document in characters */
+  NS_IMETHOD GetDocumentLength(PRInt32 *aCount)=0;
+
   /**
    * SetTextProperties() sets the aggregate properties on the current selection
    *
