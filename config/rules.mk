@@ -333,7 +333,7 @@ ifdef SHARED_LIBRARY
 endif
 	+$(LOOP_OVER_DIRS)
 
-install::
+install:: $(PROGRAM) $(SIMPLE_PROGRAMS)
 ifdef MAPS
 	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
 endif
