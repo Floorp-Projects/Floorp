@@ -570,6 +570,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportPipe(PRInt32 osfd)
         (void) _PR_MD_CLOSE_FILE(osfd);
     } else {
         _PR_MD_INIT_FD_INHERITABLE(fd, PR_TRUE);
+#ifdef WINNT
+        fd->secret->md.sync_file_io = PR_TRUE;
+#endif
     }
 
     return fd;
