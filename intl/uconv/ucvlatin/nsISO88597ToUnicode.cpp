@@ -17,31 +17,27 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
 #include "nsISO88597ToUnicode.h"
-#include "nsUCvLatinDll.h"
 
-static PRUint16 gMappingTable[] = {
+//----------------------------------------------------------------------
+// Global functions and data [declaration]
+
+static PRUint16 g_ISO88597MappingTable[] = {
 #include "8859-7.ut"
 };
 
-static PRBool gFastTableInit = PR_FALSE;
-static PRUnichar gFastTable [256] ;
+static PRInt16 g_ISO88597ShiftTable[] =  {
+  0, u1ByteCharset ,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
 
 //----------------------------------------------------------------------
 // Class nsISO88597ToUnicode [implementation]
 
-NS_IMPL_ISUPPORTS(nsISO88597ToUnicode, kIUnicodeDecoderIID);
-
 nsISO88597ToUnicode::nsISO88597ToUnicode() 
+: nsTableDecoderSupport((uShiftTable*) &g_ISO88597ShiftTable, 
+                        (uMappingTable*) &g_ISO88597MappingTable)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsISO88597ToUnicode::~nsISO88597ToUnicode() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsISO88597ToUnicode::CreateInstance(nsISupports ** aResult) 
@@ -50,22 +46,15 @@ nsresult nsISO88597ToUnicode::CreateInstance(nsISupports ** aResult)
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-uMappingTable* nsISO88597ToUnicode::GetMappingTable() 
-{
-  return (uMappingTable*) &gMappingTable;
-}
+//----------------------------------------------------------------------
+// Subclassing of nsTableDecoderSupport class [implementation]
 
-PRUnichar * nsISO88597ToUnicode::GetFastTable() 
+NS_IMETHODIMP nsISO88597ToUnicode::Length(const char * aSrc, 
+                                          PRInt32 aSrcOffset, 
+                                          PRInt32 aSrcLength, 
+                                          PRInt32 * aDestLength)
 {
-  return gFastTable;
-}
-
-PRBool nsISO88597ToUnicode::GetFastTableInitState() 
-{
-  return gFastTableInit;
-}
-
-void nsISO88597ToUnicode::SetFastTableInit() 
-{
-  gFastTableInit = PR_TRUE;
+  // we are a single byte to Unicode converter, so...
+  *aDestLength = aSrcLength;
+  return NS_OK_UDEC_EXACTLENGTH;
 }

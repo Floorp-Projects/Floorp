@@ -20,15 +20,19 @@
 #ifndef nsISO88597ToUnicode_h___
 #define nsISO88597ToUnicode_h___
 
-#include "ns1ByteToUnicodeBase.h"
+#include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsISO88597ToUnicode [declaration]
 
-class nsISO88597ToUnicode : public ns1ByteToUnicodeBase
+/**
+ * A character set converter from ISO-8859-7 to Unicode.
+ *
+ * @created         23/Mar/1998
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsISO88597ToUnicode : public nsTableDecoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
@@ -37,21 +41,18 @@ public:
   nsISO88597ToUnicode();
 
   /**
-   * Class destructor.
-   */
-  virtual ~nsISO88597ToUnicode();
-
-  /**
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
-  virtual uMappingTable* GetMappingTable();
-  virtual PRUnichar* GetFastTable();
-  virtual PRBool GetFastTableInitState();
-  virtual void SetFastTableInit();
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
 
 };
 
-#endif 
+#endif /* nsISO88597ToUnicode_h___ */
