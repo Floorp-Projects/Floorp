@@ -190,12 +190,12 @@ namespace ICG {
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
 
-        typedef enum {Var, Property, Slot, Static, Name} LValueKind;
+        typedef enum {Var, Property, Slot, Static, Constructor, Name} LValueKind;
 
         LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex);
-        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, RegisterList *args);
+        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
-        ICodeModule *genFunction(FunctionStmtNode *f);
+        ICodeModule *genFunction(FunctionStmtNode *f, bool isConstructor, JSClass *superClass);
     
     public:
 
@@ -241,9 +241,11 @@ namespace ICG {
         
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList args);
-        TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList args);
-        TypedRegister staticCall(JSClass *c, const StringAtom &name, RegisterList args);
+        TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList *args);
+        TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList *args);
+        TypedRegister staticCall(JSClass *c, const StringAtom &name, RegisterList *args);
+        void constructorCall(JSClass *c, const StringAtom &name, TypedRegister thisArg, RegisterList *args);
+        void constructorCall(JSClass *c, const String &name, TypedRegister thisArg, RegisterList *args);
 
         void move(TypedRegister destination, TypedRegister source);
         TypedRegister logicalNot(TypedRegister source);
@@ -251,14 +253,15 @@ namespace ICG {
         
         TypedRegister loadBoolean(bool value);
         TypedRegister loadImmediate(double value);
-        TypedRegister loadString(String &value);
+        TypedRegister loadString(const String &value);
         TypedRegister loadString(const StringAtom &name);
                 
-        TypedRegister newObject();
+        TypedRegister newObject(RegisterList *args);
         TypedRegister newArray();
         TypedRegister newFunction(ICodeModule *icm);
-        TypedRegister newClass(const StringAtom &name);
+        TypedRegister newClass(JSClass *clazz);
         
+        TypedRegister super();
         TypedRegister loadName(const StringAtom &name);
         void saveName(const StringAtom &name, TypedRegister value);
         TypedRegister nameXcr(const StringAtom &name, ICodeOp op);

@@ -108,6 +108,12 @@ $ops{"LOAD_NAME"} =
    rem    => "dest, name",
    params => [ ("TypedRegister", "const StringAtom*" ) ]
   };
+$ops{"SUPER"} =
+  {
+   super  => "Instruction_1",
+   rem    => "dest",
+   params => [ ("TypedRegister" ) ]
+  };
 $ops{"SAVE_NAME"} =
   {
    super  => "Instruction_2",
@@ -123,8 +129,8 @@ $ops{"NEW_OBJECT"} =
 $ops{"NEW_CLASS"} =
   {
    super  => "Instruction_2",
-   rem    => "dest, class name",
-   params => [ ("TypedRegister", "const StringAtom*") ]
+   rem    => "dest, class",
+   params => [ ("TypedRegister", "JSClass*") ]
   };
 $ops{"NEW_FUNCTION"} =
   {
@@ -277,19 +283,25 @@ $ops{"CALL"} =
   {
    super  => "Instruction_4",
    rem    => "result, target, name, args",
-   params => [ ("TypedRegister" , "TypedRegister", "const StringAtom*", "RegisterList") ]
+   params => [ ("TypedRegister", "TypedRegister", "const StringAtom*", "RegisterList") ]
   };
 $ops{"STATIC_CALL"} =
   {
    super  => "Instruction_4",
    rem    => "result, target class, index, args",
-   params => [ ("TypedRegister" , "JSClass*", "uint32", "RegisterList") ]
+   params => [ ("TypedRegister", "JSClass*", "uint32", "RegisterList") ]
   };
 $ops{"METHOD_CALL"} =
   {
    super  => "Instruction_4",
    rem    => "result, target base, target value, args",
-   params => [ ("TypedRegister" , "TypedRegister" , "TypedRegister", "RegisterList") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "RegisterList") ]
+  };
+$ops{"CONSTRUCTOR_CALL"} =
+  {
+   super  => "Instruction_4",
+   rem    => "target class, index, this, args",
+   params => [ ("JSClass*", "uint32", "TypedRegister", "RegisterList") ]
   };
 $ops{"THROW"} =
   {

@@ -17,6 +17,7 @@
         COMPARE_LE, /* dest, source1, source2 */
         COMPARE_LT, /* dest, source1, source2 */
         COMPARE_NE, /* dest, source1, source2 */
+        CONSTRUCTOR_CALL, /* target class, index, this, args */
         DEBUGGER, /* drop to the debugger */
         DELETE_PROP, /* dest, object, prop name */
         DIVIDE, /* dest, source1, source2 */
@@ -37,7 +38,7 @@
         NAME_XCR, /* dest, name, value */
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
-        NEW_CLASS, /* dest, class name */
+        NEW_CLASS, /* dest, class */
         NEW_FUNCTION, /* dest, ICodeModule */
         NEW_OBJECT, /* dest */
         NOP, /* do nothing and like it */
@@ -62,6 +63,7 @@
         STRICT_EQ, /* dest, source1, source2 */
         STRICT_NE, /* dest, source1, source2 */
         SUBTRACT, /* dest, source1, source2 */
+        SUPER, /* dest */
         TEST, /* dest, source */
         THROW, /* exception value */
         TRYIN, /* catch target, finally target */
@@ -217,6 +219,22 @@
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_NE, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+    };
+
+    class ConstructorCall : public Instruction_4<JSClass*, uint32, TypedRegister, RegisterList> {
+    public:
+        /* target class, index, this, args */
+        ConstructorCall (JSClass* aOp1, uint32 aOp2, TypedRegister aOp3, RegisterList aOp4) :
+            Instruction_4<JSClass*, uint32, TypedRegister, RegisterList>
+            (CONSTRUCTOR_CALL, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[CONSTRUCTOR_CALL] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << "R" << mOp3.first << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp3.first << '=' << registers[mOp3.first] << ", " << ArgList(mOp4, registers);
+            return f;
+        }
     };
 
     class Debugger : public Instruction {
@@ -516,14 +534,14 @@
         }
     };
 
-    class NewClass : public Instruction_2<TypedRegister, const StringAtom*> {
+    class NewClass : public Instruction_2<TypedRegister, JSClass*> {
     public:
-        /* dest, class name */
-        NewClass (TypedRegister aOp1, const StringAtom* aOp2) :
-            Instruction_2<TypedRegister, const StringAtom*>
+        /* dest, class */
+        NewClass (TypedRegister aOp1, JSClass* aOp2) :
+            Instruction_2<TypedRegister, JSClass*>
             (NEW_CLASS, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_CLASS] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
+            f << opcodeNames[NEW_CLASS] << "\t" << "R" << mOp1.first << ", " << mOp2->getName();
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -864,6 +882,22 @@
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class Super : public Instruction_1<TypedRegister> {
+    public:
+        /* dest */
+        Super (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
+            (SUPER, aOp1) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[SUPER] << "\t" << "R" << mOp1.first;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            return f;
+        }
+    };
+
     class Test : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
@@ -994,74 +1028,76 @@
 #else
 
     char *opcodeNames[] = {
-        "ADD           ",
-        "AND           ",
-        "BITNOT        ",
-        "BRANCH        ",
-        "BRANCH_FALSE  ",
-        "BRANCH_TRUE   ",
-        "CALL          ",
-        "COMPARE_EQ    ",
-        "COMPARE_GE    ",
-        "COMPARE_GT    ",
-        "COMPARE_IN    ",
-        "COMPARE_LE    ",
-        "COMPARE_LT    ",
-        "COMPARE_NE    ",
-        "DEBUGGER      ",
-        "DELETE_PROP   ",
-        "DIVIDE        ",
-        "ELEM_XCR      ",
-        "GET_ELEMENT   ",
-        "GET_PROP      ",
-        "GET_SLOT      ",
-        "GET_STATIC    ",
-        "INSTANCEOF    ",
-        "JSR           ",
-        "LOAD_BOOLEAN  ",
-        "LOAD_IMMEDIATE",
-        "LOAD_NAME     ",
-        "LOAD_STRING   ",
-        "METHOD_CALL   ",
-        "MOVE          ",
-        "MULTIPLY      ",
-        "NAME_XCR      ",
-        "NEGATE        ",
-        "NEW_ARRAY     ",
-        "NEW_CLASS     ",
-        "NEW_FUNCTION  ",
-        "NEW_OBJECT    ",
-        "NOP           ",
-        "NOT           ",
-        "OR            ",
-        "POSATE        ",
-        "PROP_XCR      ",
-        "REMAINDER     ",
-        "RETURN        ",
-        "RETURN_VOID   ",
-        "RTS           ",
-        "SAVE_NAME     ",
-        "SET_ELEMENT   ",
-        "SET_PROP      ",
-        "SET_SLOT      ",
-        "SET_STATIC    ",
-        "SHIFTLEFT     ",
-        "SHIFTRIGHT    ",
-        "SLOT_XCR      ",
-        "STATIC_CALL   ",
-        "STATIC_XCR    ",
-        "STRICT_EQ     ",
-        "STRICT_NE     ",
-        "SUBTRACT      ",
-        "TEST          ",
-        "THROW         ",
-        "TRYIN         ",
-        "TRYOUT        ",
-        "USHIFTRIGHT   ",
-        "VAR_XCR       ",
-        "WITHIN        ",
-        "WITHOUT       ",
-        "XOR           ",
+        "ADD             ",
+        "AND             ",
+        "BITNOT          ",
+        "BRANCH          ",
+        "BRANCH_FALSE    ",
+        "BRANCH_TRUE     ",
+        "CALL            ",
+        "COMPARE_EQ      ",
+        "COMPARE_GE      ",
+        "COMPARE_GT      ",
+        "COMPARE_IN      ",
+        "COMPARE_LE      ",
+        "COMPARE_LT      ",
+        "COMPARE_NE      ",
+        "CONSTRUCTOR_CALL",
+        "DEBUGGER        ",
+        "DELETE_PROP     ",
+        "DIVIDE          ",
+        "ELEM_XCR        ",
+        "GET_ELEMENT     ",
+        "GET_PROP        ",
+        "GET_SLOT        ",
+        "GET_STATIC      ",
+        "INSTANCEOF      ",
+        "JSR             ",
+        "LOAD_BOOLEAN    ",
+        "LOAD_IMMEDIATE  ",
+        "LOAD_NAME       ",
+        "LOAD_STRING     ",
+        "METHOD_CALL     ",
+        "MOVE            ",
+        "MULTIPLY        ",
+        "NAME_XCR        ",
+        "NEGATE          ",
+        "NEW_ARRAY       ",
+        "NEW_CLASS       ",
+        "NEW_FUNCTION    ",
+        "NEW_OBJECT      ",
+        "NOP             ",
+        "NOT             ",
+        "OR              ",
+        "POSATE          ",
+        "PROP_XCR        ",
+        "REMAINDER       ",
+        "RETURN          ",
+        "RETURN_VOID     ",
+        "RTS             ",
+        "SAVE_NAME       ",
+        "SET_ELEMENT     ",
+        "SET_PROP        ",
+        "SET_SLOT        ",
+        "SET_STATIC      ",
+        "SHIFTLEFT       ",
+        "SHIFTRIGHT      ",
+        "SLOT_XCR        ",
+        "STATIC_CALL     ",
+        "STATIC_XCR      ",
+        "STRICT_EQ       ",
+        "STRICT_NE       ",
+        "SUBTRACT        ",
+        "SUPER           ",
+        "TEST            ",
+        "THROW           ",
+        "TRYIN           ",
+        "TRYOUT          ",
+        "USHIFTRIGHT     ",
+        "VAR_XCR         ",
+        "WITHIN          ",
+        "WITHOUT         ",
+        "XOR             ",
     };
 
 #endif

@@ -193,7 +193,7 @@ namespace VM {
         Operand3 mOp3;
         Operand4 mOp4;
     };
-    
+        
     /********************************************************************/
 
     /* Instruction groups */
