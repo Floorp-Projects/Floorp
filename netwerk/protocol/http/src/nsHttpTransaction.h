@@ -71,6 +71,9 @@ public:
     // will drop any reference to the response headers after this call.
     nsHttpResponseHead *TakeResponseHead();
 
+    // Called to get security info from the connection.
+    nsresult GetSecurityInfo(nsISupports **);
+
     // Called to write data to the socket until return NS_BASE_STREAM_CLOSED
     nsresult OnDataWritable(nsIOutputStream *);
 

@@ -122,6 +122,14 @@ nsHttpTransaction::TakeResponseHead()
     return head;
 }
 
+nsresult
+nsHttpTransaction::GetSecurityInfo(nsISupports **result)
+{
+    if (mConnection)
+        mConnection->GetSecurityInfo(result);
+    return NS_OK;
+}
+
 // called on the socket transport thread
 nsresult
 nsHttpTransaction::OnDataWritable(nsIOutputStream *os)
