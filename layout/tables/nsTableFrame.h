@@ -776,6 +776,7 @@ public: /* ----- Cell Map public methods ----- */
 
   /** returns the number of columns in this table after redundant columns have been removed 
     */
+  virtual PRInt32 GetEffectiveColCount();
   virtual PRInt32 GetColCount();
 
   /** return the column frame at colIndex.

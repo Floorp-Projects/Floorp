@@ -453,14 +453,29 @@ PRInt32 nsTableFrame::GetRowCount () const
   return rowCount;
 }
 
-/* return the effective col count */
+/* return the col count including dead cols */
 PRInt32 nsTableFrame::GetColCount ()
 {
   PRInt32 colCount = 0;
   nsTableCellMap* cellMap = GetCellMap();
   NS_ASSERTION(nsnull != cellMap, "GetColCount null cellmap");
-  if (nsnull != cellMap)
+  if (nsnull != cellMap) {
     colCount = cellMap->GetColCount();
+  }
+  return colCount;
+}
+
+/* return the effective col count */
+PRInt32 nsTableFrame::GetEffectiveColCount ()
+{
+  PRInt32 colCount = GetColCount();
+  // don't count cols at the end that don't have originating cells
+  for (PRInt32 colX = colCount - 1; colX >= 0; colX--) {
+    if (GetNumCellsOriginatingInCol(colX) <= 0) { 
+      colCount--;
+    }
+    else break;
+  }
   return colCount;
 }
 

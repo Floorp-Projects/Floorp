@@ -109,11 +109,9 @@ protected:
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
     * spanning multiple columns. 
-    * @param aWidthIndex  - the width to calculate (see nsTableColFrame.h for enums)
-    * @param aCellFrame   - the frame of the cell with a colspan
-    * @param aColIndex    - the column index of the cell in the table
-    * @param aColSpan     - the colspan of the cell
+    * @param aReflowState - the reflow state of the table
     * @param aConsiderPct - if true, consider columns that have pct widths and are spanned by the cell
+    * @param aPixelToTwips- the number of twips in a pixel.
     */
   void ComputeNonPctColspanWidths(const nsHTMLReflowState& aReflowState,
                                   PRBool                   aConsiderPct,
@@ -121,17 +119,21 @@ protected:
 
   /** 
     * main helper for above. For min width calculations, it can get called up to
-    * 3 times, 1st to let constrained (fix or pct) cols reach their limit, 2nd 
-    * to let auto cols reach their limit and 3rd to spread any remainder among 
+    * 3 times, 1st to let constrained pct cols reach their limit, 2nd 
+    * to let fix cols reach their limit and 3rd to spread any remainder among 
     * auto cols. If there are no auto cols then only constrained cols are considered.
-    * @param aCellWidth   - the width of the cell
-    * @param aLimitType   - value indicating which type of width is being targeted 
-    *                       to reach a limit
-    * @return             - true if the computation completed, false otherwise
+    * @param aWidthIndex  - the width to calculate (see nsTableColFrame.h for enums)
+    * @param aCellFrame   - the frame of the cell with a colspan
+    * @param aCellWidth   - the width of the cell with a colspan
+    * @param aColIndex    - the column index of the cell in the table
+    * @param aColSpan     - the colspan of the cell
+    * @param aLimitType   - the type of limit (ie. pct, fix, none).
+    * @param aPixelToTwips- the number of twips in a pixel.
+    * @return             - true if all of aCellWidth was allocated, false otherwise
     */
   PRBool ComputeNonPctColspanWidths(PRInt32           aWidthIndex,
                                     nsTableCellFrame* aCellFrame,
-                                    nscoord           aCellWidth,
+                                    PRInt32           aCellWidth,
                                     PRInt32           aColIndex,
                                     PRInt32           aColSpan,
                                     PRInt32&          aLimitType,
@@ -147,14 +149,12 @@ protected:
   void CalculateTotals(PRInt32& aCellSpacing,
                        PRInt32* aTotalCounts,
                        PRInt32* aTotalWidths,
-                       PRInt32* aTotalAvailWidths,
                        PRInt32* aMinWidths,
                        PRInt32& a0ProportionalCount);
 
   void AllocateFully(nscoord& aTotalAllocated,
                      PRInt32* aAllocTypes,
-                     PRInt32  aWidthType,
-                     PRBool   aMarkAllocated = PR_TRUE);
+                     PRInt32  aWidthType);
 
   void AllocateConstrained(PRInt32  aAvailWidth,
                            PRInt32  aWidthType,
@@ -164,7 +164,10 @@ protected:
 
   void AllocateUnconstrained(PRInt32  aAllocAmount,
                              PRInt32* aAllocTypes,
-                             PRBool   aSkip0Proportional,
+                             PRBool   aExcludePct,
+                             PRBool   aExcludeFix,
+                             PRBool   aExcludePro,
+                             PRBool   aExclude0Pro,
                              float    aPixelToTwips);
 
   /** return true if the colIndex is in the list of colIndexes */

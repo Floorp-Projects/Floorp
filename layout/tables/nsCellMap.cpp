@@ -1369,6 +1369,8 @@ nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
     delete row;
   }
   delete [] origRows;
+  // remove any unused cols
+  aMap.RemoveUnusedCols(aMap.GetColCount());
 }
 
 void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
