@@ -344,11 +344,6 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 }
 
 
-#define FPKLUDGE
-#ifdef FPKLUDGE
-#include <float.h>
-#endif
-
 NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
@@ -369,10 +364,6 @@ CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, 
 	{
 		nProgress = nProgressMax; // Progress complete
 	}
-
-#ifdef FPKLUDGE
-	_fpreset();
-#endif
 
 	m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
 	m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
