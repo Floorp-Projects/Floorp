@@ -973,7 +973,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
             else return kEOF;
           }
         }
-#if 0
         if(mParser) {
           nsAutoString      charsetValue;
           nsCharsetSource   charsetSource;
@@ -985,7 +984,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,
                                    kViewSourceCommand,charsetValue,charsetSource);
         }
-#endif
         if(NS_SUCCEEDED(result)) {
 
           WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
