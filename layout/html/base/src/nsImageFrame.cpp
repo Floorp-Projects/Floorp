@@ -100,6 +100,7 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent,
                                    aContext, aPrevInFlow);
 
+#if 0
   // See if we have a SRC attribute
   PRBool sourcePresent = PR_FALSE;
   nsAutoString src;
@@ -115,27 +116,29 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
       sourcePresent = PR_TRUE;
     }
   }
+#else
+  nsAutoString src;
+  mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+#endif
 
   // Set the image loader's source URL and base URL
-  if (sourcePresent) {
-    nsIURL* baseURL = nsnull;
-    nsIHTMLContent* htmlContent;
-    rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (NS_SUCCEEDED(rv)) {
-      htmlContent->GetBaseURL(baseURL);
-      NS_RELEASE(htmlContent);
-    }
-    else {
-      nsIDocument* doc;
-      rv = mContent->GetDocument(doc);
-      if (NS_SUCCEEDED(rv)) {
-        doc->GetBaseURL(baseURL);
-        NS_RELEASE(doc);
-      }
-    }
-    mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
-    NS_IF_RELEASE(baseURL);
+  nsIURL* baseURL = nsnull;
+  nsIHTMLContent* htmlContent;
+  rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+  if (NS_SUCCEEDED(rv)) {
+    htmlContent->GetBaseURL(baseURL);
+    NS_RELEASE(htmlContent);
   }
+  else {
+    nsIDocument* doc;
+    rv = mContent->GetDocument(doc);
+    if (NS_SUCCEEDED(rv)) {
+      doc->GetBaseURL(baseURL);
+      NS_RELEASE(doc);
+    }
+  }
+  mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
+  NS_IF_RELEASE(baseURL);
 
   return rv;
 }
@@ -186,7 +189,16 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  mImageLoader.GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
+  if (mImageLoader.GetDesiredSize(aPresContext, &aReflowState, aDesiredSize)) {
+    // We have our "final" desired size. Cancel any pending
+    // incremental reflows aimed at this frame.
+    nsIPresShell* shell;
+    aPresContext->GetShell(&shell);
+    if (shell) {
+      shell->CancelReflowCommand(this);
+      NS_RELEASE(shell);
+    }
+  }
 }
 
 void
@@ -429,7 +441,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible) {
+  if (disp->mVisible && mRect.width && mRect.height) {
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
       aRenderingContext.PushState();
       SetClipRect(aRenderingContext);
