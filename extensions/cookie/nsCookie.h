@@ -54,7 +54,7 @@ extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList, PRInt3
 extern void COOKIE_CookieViewerReturn(nsAutoString results);
 extern COOKIE_BehaviorEnum COOKIE_GetBehaviorPref();
 extern void Image_Block(nsString imageURL);
-extern void Permission_Add(nsString imageURL, PRBool permission, PRInt32 type);
+extern void Permission_Add(nsString& imageURL, PRBool permission, PRInt32 type);
 extern nsresult Image_CheckForPermission
   (char * hostname, char * firstHostname, PRBool &permission);
 #endif /* COOKIES_H */
