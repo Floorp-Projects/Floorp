@@ -97,7 +97,7 @@ if [ -f $db_dir/update.log ]
   ERROR=`grep "server aborted" $db_dir/update.log`
   if [ "$ERROR"  != "" ]
     then
-    echo $ERROR | /usr/bin/mail -s "lxr: cvs server aborted" root
+    echo $ERROR | /usr/bin/mail -s "lxr: $1 aborted" root
     exit
     fi
   fi
