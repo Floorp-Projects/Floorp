@@ -37,6 +37,7 @@
 
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
+#include "nsINetService.h"
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
@@ -47,6 +48,7 @@
 #define PREF_DLL   "xppref32.dll"
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define DOM_DLL    "jsdom.dll"
+#define NETLIB_DLL "netlib.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -59,6 +61,7 @@
 #define PREF_DLL   "libpref.so"
 #define PARSER_DLL "libraptorhtmlpars.so"
 #define DOM_DLL    "libjsdom.so"
+#define NETLIB_DLL "netlib.so"
 #endif
 #endif
 
@@ -94,6 +97,7 @@ static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 
 extern "C" void
@@ -130,4 +134,5 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 }

@@ -637,8 +637,8 @@ nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURL* aURL)
 }
 #endif /* XP_WIN */
 
-
-static nsNetlibService *gNetlibService = nsnull;
+// This is global so it can be accessed by the NetFactory (nsNetFactory.cpp)
+nsNetlibService *gNetlibService = nsnull;
 
 //
 // Class to manage static initialization of the Netlib DLL...

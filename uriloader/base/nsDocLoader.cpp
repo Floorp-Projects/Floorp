@@ -71,8 +71,7 @@ NS_DEFINE_IID(kIDocumentLoadInfoIID,      NS_IDOCUMENTLOADINFO_IID);
 NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 NS_DEFINE_IID(kHTTPURLIID,          NS_IHTTPURL_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-
+NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 /* 
  * The nsDocumentBindInfo contains the state required when a single document

@@ -72,6 +72,7 @@ OBJS=                                   \
 	    .\$(OBJDIR)\nsNetIDs.obj	    \
         .\$(OBJDIR)\nsNetFile.obj       \
         .\$(OBJDIR)\nsLoadAttribs.obj   \
+        .\$(OBJDIR)\nsNetFactory.obj    \
         $(NULL)
 
 #//------------------------------------------------------------------------

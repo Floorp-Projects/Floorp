@@ -18,6 +18,7 @@
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
+#include "nsIServiceManager.h"
 #include "nsIHttpUrl.h"     /* NS_NewHttpUrl(...) */
 #include "nsString.h"
 #include <stdlib.h>
@@ -614,11 +615,14 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
   return NS_OK;
 }
 
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
 nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
 {
   nsresult rv;
   nsIInputStream* in = nsnull;
-  nsINetService *inet;
+  nsINetService *inet = nsnull;
 
   // XXX: Rewrite the resource: URL into a file: URL
   if (PL_strcmp(mProtocol, "resource") == 0) {
@@ -629,7 +633,12 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
     PR_Free(fileName);
   } 
 
-  rv = NS_NewINetService(&inet, nsnull);
+    nsINetService *service;
+
+    rv = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&inet);
+
   if (NS_OK == rv) {
     rv = inet->OpenBlockingStream(this, NULL, &in);
   }
@@ -653,7 +662,9 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
     PR_Free(fileName);
   } 
 
-  rv = NS_NewINetService(&inet, nsnull);
+  rv = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&inet);
   if (NS_OK == rv) {
     rv = inet->OpenStream(this, aListener);
   }

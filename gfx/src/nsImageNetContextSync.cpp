@@ -27,9 +27,12 @@
 #include "plstr.h"
 #include "il_strm.h"
 #include "nsINetService.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 class ImageNetContextSyncImpl : public ilINetContext {
 public:
@@ -158,8 +161,11 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
   // Get a network service interface which we'll use to create a stream
   nsINetService *service;
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-  if (NS_SUCCEEDED(NS_NewINetService(&service, nsnull))) {
+  if (NS_SUCCEEDED(res)) {
     nsIInputStream* stream = nsnull;
 
     // Initiate a synchronous URL load
