@@ -22,8 +22,7 @@ LIBRARY_NAME = raptorbasewidget_s
 REQUIRES=xpcom gfxwin raptor dom js netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
-CPPSRCS =nsXULCommand.cpp     \
-	nsBaseWidget.cpp      \
+CPPSRCS =nsBaseWidget.cpp      \
 	nsMenuButton.cpp        \
 	nsToolbarItemHolder.cpp           \
 	nsToolbarManager.cpp       \
@@ -41,8 +40,7 @@ CPPSRCS =nsXULCommand.cpp     \
 
 MODULE=raptor 
 
-OBJS= \ 
-    .\$(OBJDIR)\nsBaseWidget.obj  \
+OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsToolbarItemHolder.obj  \
 	.\$(OBJDIR)\nsToolbarManager.obj  \
