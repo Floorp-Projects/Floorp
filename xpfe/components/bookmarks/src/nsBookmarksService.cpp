@@ -18,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert John Churchill    <rjc@netscape.com>
+ *   Chris Waterson           <waterson@netscape.com>
+ *   Pierre Phaneuf           <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -777,6 +779,11 @@ BookmarkParser::Unescape(nsString &text)
 		text.Cut(offset, 5);
 		text.Insert(PRUnichar('&'), offset);
 	}
+	while ((offset = text.Find("&quot;", PR_TRUE)) > 0)
+	{
+		text.Cut(offset, 6);
+		text.Insert(PRUnichar('\"'), offset);
+	}
 	return(NS_OK);
 }
 
@@ -883,12 +890,12 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 	aLine.Mid(url, start, end - start);
 
 	{
-		// Now do properly replace %22's (this is what 4.5 did, anyway...)
+		// Now do properly replace %22's; this is particularly important for javascript: URLs
 		static const char kEscape22[] = "%22";
 		PRInt32 offset;
 		while ((offset = url.Find(kEscape22)) >= 0)
 		{
-			url.SetCharAt(' ',offset);
+			url.SetCharAt('\"',offset);
 			url.Cut(offset + 1, sizeof(kEscape22) - 2);
 		}
 	}
@@ -2332,7 +2339,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new time");
 
-			mDirty = PR_TRUE;
+//			mDirty = PR_TRUE;
 		}
 		else
 		{
@@ -2658,7 +2665,7 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 					NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to Unassert changed status");
 				}
 
-				mDirty = PR_TRUE;
+//				mDirty = PR_TRUE;
 			}
 		}
 	}
@@ -3867,8 +3874,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					strm << " " << kIDEquals;
 					const char	*id = nsnull;
 					rv = child->GetValueConst(&id);
-					if (NS_SUCCEEDED(rv) && (id)) {
-						strm << (const char*) id;
+					if (NS_SUCCEEDED(rv) && (id))
+					{
+						strm << (const char *) id;
 					}
 					strm << "\"";
 
@@ -3900,9 +3908,25 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						}
 						else
 						{
-							strm << "<DT><A HREF=\"";
 							// output URL
-							strm << url;
+							strm << "<DT><A HREF=\"";
+
+							// Now do properly replace %22's; this is particularly important for javascript: URLs
+							static const char kEscape22[] = "%22";
+							PRInt32 offset;
+							while ((offset = uri.FindChar(PRUnichar('\"'))) >= 0)
+							{
+								uri.Cut(offset, 1);
+								uri.Insert(kEscape22, offset);
+							}
+							char	*escapedID = uri.ToNewUTF8String();
+							if (escapedID)
+							{
+								strm << (const char *) escapedID;
+								nsCRT::free(escapedID);
+								escapedID = nsnull;
+							}
+
 							strm << "\"";
 								
 							// output ADD_DATE
