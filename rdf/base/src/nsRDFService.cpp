@@ -142,6 +142,7 @@ LiteralImpl::LiteralImpl(const PRUnichar* s)
 
     NS_INIT_REFCNT();
     gRDFService->RegisterLiteral(this);
+    NS_ADDREF(gRDFService);
 }
 
 LiteralImpl::~LiteralImpl()
@@ -153,6 +154,12 @@ LiteralImpl::~LiteralImpl()
 #endif
 
     gRDFService->UnregisterLiteral(this);
+
+    // Use NS_RELEASE2() here, because we want to decrease the
+    // refcount, but not null out the gRDFService pointer (which is
+    // what a vanilla NS_RELEASE() would do).
+    nsrefcnt refcnt;
+    NS_RELEASE2(gRDFService, refcnt);
 }
 
 NS_IMPL_ADDREF(LiteralImpl);
@@ -955,9 +962,8 @@ RDFServiceImpl::UnregisterResource(nsIRDFResource* aResource)
         return NS_ERROR_UNEXPECTED;
 
     PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
-    NS_ASSERTION(*hep != nsnull, "resource wasn't registered");
-    if (! *hep)
-        return NS_ERROR_FAILURE;
+    if (!hep || !*hep)
+        return NS_OK;
 
 #ifndef REUSE_RESOURCE_URI_AS_KEY
     PL_strfree((char*) (*hep)->key);
@@ -1075,12 +1081,6 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
             NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, aURI));
 
         if (cached) {
-            nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(cached);
-            if (remote) {
-                rv = remote->Refresh(PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-            }
-
             NS_ADDREF(cached);
             *aDataSource = cached;
             return NS_OK;
@@ -1246,9 +1246,8 @@ RDFServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
     if (NS_FAILED(rv)) return rv;
 
     PLHashEntry** hep = PL_HashTableRawLookup(mLiterals, (*mLiterals->keyHash)(value), value);
-    NS_ASSERTION(*hep != nsnull, "literal wasn't registered");
-    if (! *hep)
-        return NS_ERROR_FAILURE;
+    if (!hep || !*hep)
+        return NS_OK;
 
 #ifndef REUSE_LITERAL_VALUE_AS_KEY
     nsAllocator::Free((void*) (*hep)->key);
