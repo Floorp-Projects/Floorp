@@ -365,8 +365,16 @@ NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		case NS_FONT_VARIANT_SMALL_CAPS: 						break;
 	}
 #endif
-	if (aFont->weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
-		textFace |= bold;
+	PRInt32 offset = aFont->weight % 100;
+	PRInt32 baseWeight = aFont->weight / 100;
+	NS_ASSERTION((offset < 10) || (offset > 90), "Invalid bolder or lighter value");
+	if (offset == 0) {
+		if (aFont->weight >= NS_FONT_WEIGHT_BOLD)
+			textFace |= bold;
+	} else {
+		if (offset < 10)
+			textFace |= bold;
+	}
 
 	if ( aFont->decorations & NS_FONT_DECORATION_UNDERLINE )
 		textFace |= underline;
