@@ -56,7 +56,10 @@ nsVariant::~nsVariant()
 {
     switch (mType) {
       case nsVariantType_voidPtr:
-        delete (void *)mValue;
+        /* XXX: Per comments from Warren, commenting this out.
+	   This code isn't done (or used), and is a violation
+	   of ANSI C++ to boot. -- Bruce */
+        /* delete (void *)mValue; */
         break;
       case nsVariantType_charPtr:
         nsCRT::free(mValue.mUnion._charPtr);
