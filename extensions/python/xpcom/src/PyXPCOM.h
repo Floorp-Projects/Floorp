@@ -424,7 +424,7 @@ private:
 class PYXPCOM_EXPORT PyXPCOM_GatewayWeakReference : public nsIWeakReference {
 public:
 	PyXPCOM_GatewayWeakReference(PyG_Base *base);
-	~PyXPCOM_GatewayWeakReference();
+	virtual ~PyXPCOM_GatewayWeakReference();
 	NS_DECL_ISUPPORTS
     NS_DECL_NSIWEAKREFERENCE;
 	PyG_Base *m_pBase; // NO REF COUNT!!!
