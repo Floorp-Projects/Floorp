@@ -85,7 +85,8 @@
 #define NS_STYLE_USER_SELECT_ALL        4
 #define NS_STYLE_USER_SELECT_TOGGLE     5
 #define NS_STYLE_USER_SELECT_TRI_STATE  6
-#define NS_STYLE_USER_SELECT_AUTO			  7
+#define NS_STYLE_USER_SELECT_AUTO       7 // internal value - please use nsFrame::IsSelectable()
+#define NS_STYLE_USER_SELECT_MOZ_ALL    8 // force selection of all children - bug 48096
 
 // user-input
 #define NS_STYLE_USER_INPUT_NONE      0

@@ -932,46 +932,64 @@ nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame
 NS_IMETHODIMP
 nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 {
-  if (!aSelectable) return NS_ERROR_NULL_POINTER;
-  // we'll allow aSelectStyle to be NULL and just not return info.
-  
-  nsresult result     = NS_OK;
-  PRBool  selectable  = PR_TRUE; // defaults to true
-  PRUint8 selectStyle = NS_STYLE_USER_SELECT_AUTO;
-  nsIFrame* frame     = (nsIFrame*)this;
+  if (!aSelectable && !aSelectStyle)
+    return NS_ERROR_NULL_POINTER;
 
-  // Checks style to see if we can be selected.
   // Like 'visibility', we must check all the parents: if a parent
   // is not selectable, none of its children is selectable.
-  while (frame && NS_SUCCEEDED(result))
-  {
+  //
+  // The -moz-all value acts similarly: if a frame has 'user-select:-moz-all',
+  // all its children are selectable, even those with 'user-select:none'.
+  //
+  // As a result, if 'none' and '-moz-all' are not present in the frame hierarchy,
+  // aSelectStyle returns the first style that is not AUTO. If these values
+  // are present in the frame hierarchy, aSelectStyle returns the style of the
+  // topmost parent that has either 'none' or '-moz-all'.
+  //
+  // For instance, if the frame hierarchy is:
+  //    AUTO     -> _MOZ_ALL -> NONE -> TEXT,     the returned value is _MOZ_ALL
+  //    TEXT     -> NONE     -> AUTO -> _MOZ_ALL, the returned value is NONE
+  //    _MOZ_ALL -> TEXT     -> AUTO -> AUTO,     the returned value is _MOZ_ALL
+  //    AUTO     -> CELL     -> TEXT -> AUTO,     the returned value is TEXT
+  //
+  nsresult result      = NS_OK;
+  PRUint8 selectStyle  = NS_STYLE_USER_SELECT_AUTO;
+  nsIFrame* frame      = (nsIFrame*)this;
+
+  while (frame && NS_SUCCEEDED(result)) {
     const nsStyleUserInterface* userinterface;
     frame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-    if (userinterface)
-    {
-      if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-        selectable = PR_FALSE;
-        break; // if a frame is not selectable, stop looking
-      } else 
-      {        // otherwise return the first style which is not 'auto'
-        if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
+    if (userinterface) {
+      switch (userinterface->mUserSelect) {
+        case NS_STYLE_USER_SELECT_NONE:
+        case NS_STYLE_USER_SELECT_MOZ_ALL:
+          // override the previous values
           selectStyle = userinterface->mUserSelect;
-        }
+          break;
+
+        default:
+          // otherwise return the first value which is not 'auto'
+          if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
+            selectStyle = userinterface->mUserSelect;
+          }
+          break;
       }
     }
     result = frame->GetParent(&frame);
   }
 
-  if (selectable) {
-    if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
-      selectStyle = NS_STYLE_USER_SELECT_TEXT;
-    }
-  } else {
-    selectStyle = NS_STYLE_USER_SELECT_NONE;
-  }
+  // convert internal values to standard values
+  if (selectStyle == NS_STYLE_USER_SELECT_AUTO)
+    selectStyle = NS_STYLE_USER_SELECT_TEXT;
+  else
+  if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
+    selectStyle = NS_STYLE_USER_SELECT_ALL;
 
-  *aSelectable  = selectable;
-  if (aSelectStyle) *aSelectStyle = selectStyle;
+  // return stuff
+  if (aSelectable)
+    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
+  if (aSelectStyle)
+    *aSelectStyle = selectStyle;
 
   return NS_OK;
 }

@@ -39,6 +39,7 @@
  ******/
 
 
+CSS_KEY(_moz_all)
 CSS_KEY(_moz_bg_inset)
 CSS_KEY(_moz_bg_outset)
 CSS_KEY(_moz_center)
