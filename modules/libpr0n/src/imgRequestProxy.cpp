@@ -90,7 +90,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   if (mCanceled)
     return NS_ERROR_FAILURE;
 
-  LOG_SCOPE("imgRequestProxy::Cancel");
+  LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
   mCanceled = PR_TRUE;
   nsresult rv = NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);

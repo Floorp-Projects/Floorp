@@ -34,7 +34,19 @@
 
 #include "gfxIImageContainerObserver.h"
 
+
+#include "ImageLogging.h"
+
+
 NS_IMPL_ISUPPORTS2(nsJPEGDecoder, imgIDecoder, nsIOutputStream)
+
+
+#if defined(PR_LOGGING)
+PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
+#else
+#define gJPEGlog
+#endif
+
 
 
 void PR_CALLBACK init_source (j_decompress_ptr jd);
@@ -73,6 +85,8 @@ nsJPEGDecoder::nsJPEGDecoder()
   
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
   mRGBPadRow = nsnull;
+
+  mCompletedPasses = 0;
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
@@ -161,14 +175,8 @@ NS_IMETHODIMP nsJPEGDecoder::GetRequest(imgIRequest * *aRequest)
 /* void close (); */
 NS_IMETHODIMP nsJPEGDecoder::Close()
 {
-
-  // XXX this should flush the data out
-
-
-  // XXX progressive? ;)
-  // not really progressive according to the state machine... -saari
-  OutputScanlines(mInfo.output_height);
-
+  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+         ("[this=%p] nsJPEGDecoder::Close\n", this));
 
   /* Step 8: Release JPEG decompression object */
 
@@ -181,7 +189,13 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
 /* void flush (); */
 NS_IMETHODIMP nsJPEGDecoder::Flush()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+         ("[this=%p] nsJPEGDecoder::Flush\n", this));
+
+  PRUint32 ret;
+  this->WriteFrom(nsnull, 0, &ret);
+
+  return NS_OK;
 }
 
 /* unsigned long write (in string buf, in unsigned long count); */
@@ -193,6 +207,8 @@ NS_IMETHODIMP nsJPEGDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_r
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
+  LOG_SCOPE_WITH_PARAM(gJPEGlog, "nsJPEGDecoder::WriteFrom", "count", count);
+
   /* We use our private extension JPEG error handler.
    * Note that this struct must live as long as the main JPEG parameter
    * struct, to avoid dangling-pointer problems.
@@ -203,9 +219,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mOutStream->WriteFrom(inStr, count, _retval);
     mDataLen += *_retval;
   }
-  
-  
-
 
   /* Register new buffer contents with data source manager. */
 
@@ -215,6 +228,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   switch (mState) {
   case JPEG_HEADER:
   {
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_HEADER case");
+
     /* Step 3: read file parameters with jpeg_read_header() */
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED)
       return NS_OK; /* I/O suspension */
@@ -268,7 +283,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mState = JPEG_START_DECOMPRESS;
   }
   case JPEG_START_DECOMPRESS:
-
+  {
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_START_DECOMPRESS case");
     /* Step 4: set parameters for decompression */
 
     /* FIXME -- Should reset dct_method and dither mode
@@ -289,8 +305,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       return NS_OK; /* I/O suspension */
 
     mState = JPEG_DECOMPRESS_PROGRESSIVE;
-
+  }
   case JPEG_DECOMPRESS_PROGRESSIVE:
+  {
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_PROGRESSIVE case");
+
     do {
       status = jpeg_consume_input(&mInfo);
     } while (!((status == JPEG_SUSPENDED) ||
@@ -303,16 +322,28 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
         break;
       case JPEG_SUSPENDED:
       default:
+        PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+               ("[this=%p] nsJPEGDecoder::WriteFrom -- suspending\n", this));
+
         return NS_OK;
     }
-
+  }
   case JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT:
+  {
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT case");
+
+    // XXX progressive? ;)
+    // not really progressive according to the state machine... -saari
     jpeg_start_output(&mInfo, mInfo.input_scan_number);
     OutputScanlines(-1);
     jpeg_finish_output(&mInfo);
     mState = JPEG_DONE;
+  }
 
   case JPEG_DONE:
+  {
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_DONE case");
+
     /* Step 7: Finish decompression */
 
     if (jpeg_finish_decompress(&mInfo) == FALSE)
@@ -322,8 +353,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     /* we're done dude */
     break;
-
+  }
   case JPEG_SINK_NON_JPEG_TRAILER:
+    PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+           ("[this=%p] nsJPEGDecoder::WriteFrom -- entering JPEG_SINK_NON_JPEG_TRAILER case\n", this));
+
     break;
   }
 
@@ -370,8 +404,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 int
 nsJPEGDecoder::OutputScanlines(int num_scanlines)
 {
-  int input_exhausted;
-  int pass;
+  int input_exhausted = PR_FALSE;
+  int pass = 0;
   
 #ifdef DEBUG
   PRUintn start_scanline = mInfo.output_scanline;
@@ -678,12 +712,22 @@ fill_input_buffer (j_decompress_ptr jd)
     if (src->decoder->mBytesToSkip > src->decoder->mDataLen){
       src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
                                             src->decoder->mDataLen, &_retval);
+
+      src->decoder->mBytesToSkip -= _retval;
+      src->decoder->mDataLen -= _retval;
+
+      if (src->decoder->mDataLen > 0)
+        return PR_FALSE;
+
     } else {
       src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
                                             src->decoder->mBytesToSkip, &_retval);
+
+      src->decoder->mBytesToSkip -= _retval;
+      src->decoder->mDataLen -= _retval;
+
     }
-    src->decoder->mBytesToSkip -= _retval;
-    src->decoder->mDataLen -= _retval;
+
   }
 
   if (src->decoder->mDataLen != 0) {

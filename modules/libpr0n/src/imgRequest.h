@@ -67,6 +67,8 @@ public:
   nsresult AddObserver(imgIDecoderObserver *observer);
   nsresult RemoveObserver(imgIDecoderObserver *observer, nsresult status);
 
+  PRBool RemoveFromCache();
+
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_IMGIDECODEROBSERVER

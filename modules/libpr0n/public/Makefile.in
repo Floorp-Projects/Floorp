@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imglib2
 
+EXPORTS		= ImageLogging.h
+
 XPIDLSRCS	= imgIDecoder.idl         \
 		imgIDecoderObserver.idl	\
 		imgILoader.idl          \
