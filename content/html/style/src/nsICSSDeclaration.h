@@ -38,7 +38,6 @@
 #ifndef nsICSSDeclaration_h___
 #define nsICSSDeclaration_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include <stdio.h>
@@ -472,7 +471,7 @@ public:
 #endif
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSDeclaration(nsICSSDeclaration** aInstancePtrResult);
 
 #endif /* nsICSSDeclaration_h___ */

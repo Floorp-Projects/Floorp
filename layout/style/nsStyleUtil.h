@@ -38,7 +38,6 @@
 #ifndef nsStyleUtil_h___
 #define nsStyleUtil_h___
 
-#include "nslayout.h"
 #include "nsCoord.h"
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h" // for nsLinkState

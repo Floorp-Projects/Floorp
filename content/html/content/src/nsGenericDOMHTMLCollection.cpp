@@ -35,7 +35,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nslayout.h"
 #include "nsGenericDOMHTMLCollection.h"
 #include "nsIDOMClassInfo.h"
 #include "nsContentUtils.h"

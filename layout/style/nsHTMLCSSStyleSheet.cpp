@@ -661,7 +661,7 @@ HTMLCSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
 }
 
 // XXX For backwards compatibility and convenience
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURI* aURL,
                           nsIDocument* aDocument)
 {
@@ -679,7 +679,7 @@ NS_HTML nsresult
   return NS_OK;
 }
 
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

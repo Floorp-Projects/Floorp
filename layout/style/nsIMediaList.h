@@ -44,12 +44,12 @@ public:
   NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch); \
   NS_IMETHOD DropReference(void);
 
-extern NS_HTML nsresult 
+extern NS_EXPORT nsresult 
 NS_NewMediaList(const nsAReadableString& aMediaText, nsIMediaList** aInstancePtrResult);
 
-extern NS_HTML nsresult 
+extern NS_EXPORT nsresult 
 NS_NewMediaList(nsIMediaList** aInstancePtrResult);
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
 NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet, nsIMediaList** aInstancePtrResult);
 #endif /* nsICSSLoader_h___ */

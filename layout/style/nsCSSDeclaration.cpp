@@ -4872,7 +4872,7 @@ CSSDeclarationImpl::Clone(nsICSSDeclaration*& aClone) const
 }
 
 
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewCSSDeclaration(nsICSSDeclaration** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

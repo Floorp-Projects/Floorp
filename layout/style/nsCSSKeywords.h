@@ -38,8 +38,6 @@
 #ifndef nsCSSKeywords_h___
 #define nsCSSKeywords_h___
 
-#include "nslayout.h"
-
 class nsString;
 class nsCString;
 
@@ -59,7 +57,7 @@ enum nsCSSKeyword {
 #undef CSS_KEY
 
 
-class NS_LAYOUT nsCSSKeywords {
+class nsCSSKeywords {
 public:
   static void AddRefTable(void);
   static void ReleaseTable(void);

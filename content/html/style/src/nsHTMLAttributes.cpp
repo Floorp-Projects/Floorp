@@ -1575,7 +1575,7 @@ void HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
 }
 #endif
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

@@ -38,7 +38,6 @@
 #ifndef nsICSSStyleSheet_h___
 #define nsICSSStyleSheet_h___
 
-#include "nslayout.h"
 #include "nsIStyleSheet.h"
 #include "nsString.h"
 
@@ -94,10 +93,10 @@ public:
 };
 
 // XXX for backwards compatibility and convenience
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL);
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsICSSStyleSheet_h___ */

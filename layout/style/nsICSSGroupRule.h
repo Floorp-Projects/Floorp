@@ -38,7 +38,6 @@
 #ifndef nsICSSGroupRule_h___
 #define nsICSSGroupRule_h___
 
-#include "nslayout.h"
 #include "nsICSSRule.h"
 #include "nsISupportsArray.h"
 

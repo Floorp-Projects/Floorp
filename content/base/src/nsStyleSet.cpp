@@ -1379,7 +1379,7 @@ void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt3
 #endif
 
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

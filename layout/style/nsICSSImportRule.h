@@ -38,7 +38,6 @@
 #ifndef nsICSSImportRule_h___
 #define nsICSSImportRule_h___
 
-#include "nslayout.h"
 #include "nsICSSRule.h"
 #include "nsString.h"
 
@@ -62,7 +61,7 @@ public:
   NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
                       const nsString& aURLSpec,
                       const nsString& aMedia);

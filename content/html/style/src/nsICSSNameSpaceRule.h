@@ -38,7 +38,6 @@
 #ifndef nsICSSNameSpaceRule_h___
 #define nsICSSNameSpaceRule_h___
 
-#include "nslayout.h"
 #include "nsICSSRule.h"
 //#include "nsString.h"
 
@@ -60,7 +59,7 @@ public:
   NS_IMETHOD  SetURLSpec(const nsString& aURLSpec) = 0;
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult, 
                          nsIAtom* aPrefix, const nsString& aURLSpec);
 

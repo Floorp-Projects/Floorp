@@ -38,7 +38,6 @@
 #ifndef nsCSS1Parser_h___
 #define nsCSS1Parser_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsAWritableString.h"
 class nsIStyleRule;
@@ -128,7 +127,7 @@ public:
 #define NS_CSS_PARSER_DROP_DECLARATION \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSParser(nsICSSParser** aInstancePtrResult);
 
 #endif /* nsCSS1Parser_h___ */

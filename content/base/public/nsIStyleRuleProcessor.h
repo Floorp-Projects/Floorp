@@ -40,7 +40,6 @@
 
 #include <stdio.h>
 
-#include "nslayout.h"
 #include "nsISupports.h"
 
 class nsISizeOfHandler;

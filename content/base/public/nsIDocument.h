@@ -38,7 +38,6 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsAWritableString.h"
@@ -372,19 +371,19 @@ public:
 
 
 // XXX These belong somewhere else
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
 
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
 
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                           nsIDocument* aOwnerDocument);
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                      const nsAReadableString& aNamespaceURI, 
                      const nsAReadableString& aQualifiedName, 
@@ -395,7 +394,7 @@ extern NS_LAYOUT nsresult
 //       instance and is freed when the instance is destroyed...
 //
 #if 0
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
    NS_NewPostData(PRBool aIsFile, char *aData, nsIPostData** aInstancePtrResult);
 #endif
 

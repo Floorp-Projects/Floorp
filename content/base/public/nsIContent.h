@@ -39,7 +39,6 @@
 #define nsIContent_h___
 
 #include <stdio.h>
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsAWritableString.h"

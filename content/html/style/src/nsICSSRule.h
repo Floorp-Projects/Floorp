@@ -38,7 +38,6 @@
 #ifndef nsICSSRule_h___
 #define nsICSSRule_h___
 
-#include "nslayout.h"
 #include "nsIStyleRule.h"
 
 class nsICSSStyleSheet;

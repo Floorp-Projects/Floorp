@@ -201,7 +201,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 // ==================================================================
 // =
 // ==================================================================
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsHTMLDocument* doc = new nsHTMLDocument();
