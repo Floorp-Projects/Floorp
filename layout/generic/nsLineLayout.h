@@ -23,6 +23,7 @@
 #include "nsSize.h"
 
 class nsIPresContext;
+class nsISpaceManager;
 class nsBlockFrame;
 struct nsBlockReflowState;
 
@@ -34,10 +35,11 @@ struct nsLineData {
   ~nsLineData();
 
   nsIFrame* GetLastChild();
-  nsresult Verify() const;
+  nsresult Verify(PRBool aFinalCheck = PR_TRUE) const;
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   void UnlinkLine();
   PRIntn GetLineNumber() const;
+  void MoveLineBy(nscoord dx, nscoord dy);
 
   nsLineData* mNextLine;
   nsLineData* mPrevLine;
@@ -47,6 +49,8 @@ struct nsLineData {
   PRInt32 mLastContentOffset;
   nsRect mBounds;
   PRPackedBool mLastContentIsComplete;
+  PRPackedBool mHasBullet;
+  PRPackedBool mIsBlock;
 };
 
 //----------------------------------------------------------------------
@@ -64,12 +68,12 @@ struct nsLineLayoutReflowData {
 };
 
 struct nsLineLayout {
-  nsLineLayout();
+  nsLineLayout(nsBlockReflowState& aState);
   ~nsLineLayout();
 
-  nsresult Initialize(nsBlockReflowState& aState,
-                      nsLineData* aLine,
-                      const nsRect& aAvailSpace);
+  nsresult Initialize(nsBlockReflowState& aState, nsLineData* aLine);
+
+  void SetReflowSpace(nsRect& aAvailableSpaceRect);
 
   /**
    * <h2>Rules of order</h2>
@@ -101,6 +105,7 @@ struct nsLineLayout {
 
   // The block behind the line
   nsBlockFrame* mBlock;
+  nsISpaceManager* mSpaceManager;
   PRBool mBlockIsPseudo;
   nsIContent* mBlockContent;
   PRInt32 mKidIndex;
@@ -116,17 +121,23 @@ struct nsLineLayout {
   // width remains and the maximum element size so far.
   nsLineLayoutReflowData mReflowData;
 
+  // This is set by the block code when it updates the available
+  // reflow area when a floater is placed.
+  PRBool mReflowDataChanged;
+
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
   nscoord mY;
   nscoord mLineHeight;
-  nscoord mAvailHeight;
+  nscoord mMaxWidth;
+  nscoord mMaxHeight;
   nsSize* mMaxElementSizePointer;
   nscoord mX0;
 
   nscoord* mAscents;
   nscoord mAscentBuf[20];
   nscoord mMaxAscents;
+  nscoord mAscentNum;
 
   // The current type of reflow in progress. Normally, this value is
   // set to NS_LINE_LAYOUT_NORMAL_REFLOW. However, in the special case
@@ -158,8 +169,11 @@ struct nsLineLayout {
   nsLineLayoutReflowData mWordStartReflowData;
 
   PRBool mSkipLeadingWhiteSpace;
+  PRInt32 mColumn;
 
 protected:
+
+  nsresult AddAscent(nscoord aAscent);
 
   nsresult WordBreakReflow();
 
@@ -189,7 +203,9 @@ protected:
 #define NS_LINE_LAYOUT_REFLOW_TYPE_WORD_WRAP 1
 
 // Value's for nsLineLayout.mReflowResult
-#define NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE 0
+#define NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE   0
+#define NS_LINE_LAYOUT_REFLOW_RESULT_AWARE       1
+#define NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER 2
 
 // Return value's from nsLineLayout reflow methods
 #define NS_LINE_LAYOUT_COMPLETE                  0
