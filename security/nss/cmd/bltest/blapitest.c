@@ -300,6 +300,7 @@ typedef struct
 	unsigned int rounds;    /* RC5 only */
 	unsigned int wordsize;  /* RC5 only */
 	unsigned int rsapubexp; /* RSA only */
+	unsigned int repetitions; /* performance tests only */
 } blapitestInfo;
 
 /* Macros for performance timing. */
@@ -311,7 +312,7 @@ typedef struct
 	if (info->performance) { \
 		time2 = (PRIntervalTime)(PR_IntervalNow() - time1); \
 		time1 = PR_IntervalToMilliseconds(time2); \
-		printf("%s %d bytes: %.2f ms\n", mode, bytes, ((float)(time1))/100); \
+		printf("%s %d bytes: %.2f ms\n", mode, bytes, ((float)(time1))/info->repetitions); \
 	}
 
 /************************
@@ -326,7 +327,7 @@ des_common(DESContext *descx, blapitestInfo *info)
 	SECStatus rv;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	maxsize = info->in.len;
 	info->out.data = (unsigned char *)PORT_ZAlloc(maxsize);
 	if (info->encrypt) {
@@ -485,7 +486,7 @@ rc2_ecb_test(blapitestInfo *info)
 	RC2Context *rc2cx;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, NULL, 
@@ -523,7 +524,7 @@ rc2_cbc_test(blapitestInfo *info)
 	RC2Context *rc2cx;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
@@ -572,7 +573,7 @@ rc4_test(blapitestInfo *info)
 	RC4Context *rc4cx;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc4cx = RC4_CreateContext(info->key.data, info->key.len);
@@ -619,7 +620,7 @@ rc5_ecb_test(blapitestInfo *info)
 	RC5Context *rc5cx;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
@@ -663,7 +664,7 @@ rc5_cbc_test(blapitestInfo *info)
 	RC5Context *rc5cx;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
@@ -708,7 +709,7 @@ rsa_test(blapitestInfo *info)
 	SECStatus rv;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	if (info->key.len > 0) {
 		key = rsakey_from_filedata(&info->key);
@@ -736,7 +737,7 @@ rsa_test(blapitestInfo *info)
 		CHECKERROR(rv, __LINE__);
 	} else {
 		TIMESTART();
-		for (i=0; i<100; i++)
+		for (i=info->repetitions; i>0; i--)
 			rv = RSA_PrivateKeyOp(key, info->out.data, info->in.data);
 		TIMEFINISH("RSA DECRYPT", info->in.len);
 		CHECKERROR(rv, __LINE__);
@@ -754,7 +755,7 @@ dsa_test(blapitestInfo *info)
 	SECStatus rv;
 	PRIntervalTime time1, time2;
 	int i, numiter;
-	numiter = (info->performance) ? 100 : 1 ;
+	numiter = info->repetitions;
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	if (info->key.len > 0) {
 		key = dsakey_from_filedata(&info->key);
@@ -824,16 +825,16 @@ md5_perf_test(blapitestInfo *info)
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = 16;
+	info->out.len = MD5_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	time1 = PR_Now();
-	for (i=0; i<100; i++) {
+	for (i=info->repetitions; i>0; i--) {
 		MD5_HashBuf(info->out.data, info->in.data, info->in.len);
 	}
 	time2 = PR_Now();
 	LL_SUB(time1, time2, time1);
 	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "MD5 hash %d bytes: %d\n", info->in.len, tdiff / 100);
+	PR_fprintf(PR_STDOUT, "MD5 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
 	return rv;
 }
 
@@ -849,7 +850,7 @@ md5_test(blapitestInfo *info)
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = 16;
+	info->out.len = MD5_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	time1 = PR_Now();
 	MD5_HashBuf(info->out.data, info->in.data, info->in.len);
@@ -879,7 +880,7 @@ md5_multi_test(blapitestInfo *info)
 		   "%s:  Failed to create hash context!\n", progName);
 		return SECFailure;
 	}
-	info->out.len = 16;
+	info->out.len = MD5_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	MD5_Begin(md5cx);
 	for (i=0; i<info->bufsize/8; i++) {
@@ -894,8 +895,8 @@ md5_multi_test(blapitestInfo *info)
 		MD5_DestroyContext(foomd5cx, PR_TRUE);
 		PORT_Free(foomd5);
 	}
-	MD5_End(md5cx, info->out.data, &len, 16);
-	if (len != 16)
+	MD5_End(md5cx, info->out.data, &len, MD5_LENGTH);
+	if (len != MD5_LENGTH)
 		PR_fprintf(PR_STDERR, "%s: Bad hash size %d.\n", progName, len);
 	MD5_DestroyContext(md5cx, PR_TRUE);
 	return rv;
@@ -914,19 +915,19 @@ md2_perf_test(blapitestInfo *info)
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = 16;
+	info->out.len = MD2_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	info->in.data[info->in.len] = '\0';
 	time1 = PR_Now();
-	for (i=0; i<100; i++) {
+	for (i=info->repetitions; i>0; i--) {
 		MD2_Begin(cx);
 		MD2_Update(cx, info->in.data, info->in.len);
-		MD2_End(cx, info->out.data, &len, 16);
+		MD2_End(cx, info->out.data, &len, MD2_LENGTH);
 	}
 	time2 = PR_Now();
 	LL_SUB(time1, time2, time1);
 	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "MD2 hash %d bytes: %d\n", info->in.len, tdiff / 100);
+	PR_fprintf(PR_STDOUT, "MD2 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
 	MD2_DestroyContext(cx, PR_TRUE);
 	return rv;
 }
@@ -944,7 +945,7 @@ md2_test(blapitestInfo *info)
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = 16;
+	info->out.len = MD2_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	info->in.data[info->in.len] = '\0';
 	time1 = PR_Now();
@@ -975,7 +976,7 @@ md2_multi_test(blapitestInfo *info)
 		   "%s:  Failed to create hash context!\n", progName);
 		return SECFailure;
 	}
-	info->out.len = 16;
+	info->out.len = MD2_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	MD2_Begin(md2cx);
 	for (i=0; i<info->bufsize/8; i++) {
@@ -990,10 +991,106 @@ md2_multi_test(blapitestInfo *info)
 		MD2_DestroyContext(foomd2cx, PR_TRUE);
 		PORT_Free(foomd2);
 	}
-	MD2_End(md2cx, info->out.data, &len, 16);
-	if (len != 16)
+	MD2_End(md2cx, info->out.data, &len, MD2_LENGTH);
+	if (len != MD2_LENGTH)
 		PR_fprintf(PR_STDERR, "%s: Bad hash size %d.\n", progName, len);
 	MD2_DestroyContext(md2cx, PR_TRUE);
+	return rv;
+}
+
+static SECStatus
+sha1_perf_test(blapitestInfo *info)
+{
+	unsigned int len;
+	SHA1Context *cx = SHA1_NewContext();
+	SECStatus rv = SECSuccess;
+	PRInt64 time1, time2;
+	PRInt32 tdiff;
+	int i;
+	if (info->in.len == 0) {
+		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
+		CHECKERROR(rv, __LINE__);
+	}
+	info->out.len = SHA1_LENGTH;
+	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
+	info->in.data[info->in.len] = '\0';
+	time1 = PR_Now();
+	for (i=info->repetitions; i>0; i--) {
+		SHA1_Begin(cx);
+		SHA1_Update(cx, info->in.data, info->in.len);
+		SHA1_End(cx, info->out.data, &len, SHA1_LENGTH);
+	}
+	time2 = PR_Now();
+	LL_SUB(time1, time2, time1);
+	LL_L2I(tdiff, time1);
+	PR_fprintf(PR_STDOUT, "SHA1 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
+	SHA1_DestroyContext(cx, PR_TRUE);
+	return rv;
+}
+
+static SECStatus
+sha1_test(blapitestInfo *info)
+{
+	SECStatus rv = SECSuccess;
+	PRInt64 time1, time2;
+	PRInt32 tdiff = LL_Zero();
+	int i;
+	unsigned int len;
+	if (info->performance) return sha1_perf_test(info);
+	if (info->in.len == 0) {
+		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
+		CHECKERROR(rv, __LINE__);
+	}
+	info->out.len = SHA1_LENGTH;
+	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
+	info->in.data[info->in.len] = '\0';
+	time1 = PR_Now();
+	SHA1_Hash(info->out.data, info->in.data);
+	time2 = PR_Now();
+	LL_SUB(time1, time2, time1);
+	LL_L2I(tdiff, time1);
+	PR_fprintf(PR_STDOUT, "time to hash: %d\n", tdiff);
+	return rv;
+}
+
+static SECStatus
+sha1_multi_test(blapitestInfo *info)
+{
+	SECStatus rv = SECSuccess;
+	SHA1Context *sha1cx;
+	unsigned int len;
+	SHA1Context *foosha1cx;
+	unsigned char *foosha1;
+	int i;
+	if (info->in.len == 0) {
+		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
+		CHECKERROR(rv, __LINE__);
+	}
+	sha1cx = SHA1_NewContext();
+	if (!sha1cx) {
+		PR_fprintf(PR_STDERR, 
+		   "%s:  Failed to create hash context!\n", progName);
+		return SECFailure;
+	}
+	info->out.len = SHA1_LENGTH;
+	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
+	SHA1_Begin(sha1cx);
+	for (i=0; i<info->bufsize/8; i++) {
+		SHA1_Update(sha1cx, &info->in.data[i*8], 8);
+		len = SHA1_FlattenSize(sha1cx);
+		foosha1 = PORT_Alloc(len);
+		SHA1_Flatten(sha1cx, foosha1);
+		foosha1cx = SHA1_Resurrect(foosha1, NULL);
+		rv = PORT_Memcmp(foosha1cx, sha1cx, len);
+		if (rv != SECSuccess)
+			PR_fprintf(PR_STDERR, "%s:  SHA1_Resurrect failed!\n", progName);
+		SHA1_DestroyContext(foosha1cx, PR_TRUE);
+		PORT_Free(foosha1);
+	}
+	SHA1_End(sha1cx, info->out.data, &len, SHA1_LENGTH);
+	if (len != SHA1_LENGTH)
+		PR_fprintf(PR_STDERR, "%s: Bad hash size %d.\n", progName, len);
+	SHA1_DestroyContext(sha1cx, PR_TRUE);
 	return rv;
 }
 
@@ -1015,7 +1112,9 @@ static blapitestCryptoFn crypto_fns[] =
 	md5_test,
 	md5_multi_test,
 	md2_test,
-	md2_multi_test
+	md2_multi_test,
+	sha1_test,
+	sha1_multi_test
 };
 
 static char *mode_strings[] =
@@ -1034,7 +1133,9 @@ static char *mode_strings[] =
 	"md5",
 	"md5_multi",
 	"md2",
-	"md2_multi"
+	"md2_multi",
+	"sha1",
+	"sha1_multi"
 };
 
 static void
@@ -1081,10 +1182,11 @@ int main(int argc, char **argv)
 	info.wordsize = 4;
 	infile=outfile=keyfile=ivfile=sigfile=seedfile=sigseedfile=NULL;
 	info.performance=encrypt=decrypt=PR_FALSE;
+	info.repetitions = 1;
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 	optstate = 
-	  PL_CreateOptState(argc, argv, "DEFS:ab:e:g:i:o:pk:m:t:r:s:v:w:xyz:");
+	  PL_CreateOptState(argc, argv, "DEFS:ab:e:g:i:o:p:k:m:t:r:s:v:w:xyz:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch (optstate->option) {
 		case 'D':  decrypt = PR_TRUE; break;
@@ -1100,7 +1202,9 @@ int main(int argc, char **argv)
 		case 'm':  cryptofn = get_test_mode(optstate->value); break;
 		case 'o':  outfile = PR_Open(optstate->value, PR_WRONLY|PR_CREATE_FILE,
 		                             00660); break;
-		case 'p':  info.performance = PR_TRUE; break;
+		case 'p':  info.performance = PR_TRUE; 
+			   info.repetitions = PORT_Atoi(optstate->value); 
+			   break;
 		case 'r':  info.rounds = PORT_Atoi(optstate->value); break;
 		case 's':  sigfile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
 		case 't':  sigseedfile=PR_Open(optstate->value, PR_RDONLY, 00440);break;
