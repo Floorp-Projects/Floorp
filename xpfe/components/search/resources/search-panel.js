@@ -670,8 +670,9 @@ function doSearch()
 {
   var navWindow = getNavigatorWindow(true);
   if (navWindow._content)
-    return onNavWindowLoad();
-  navWindow.addEventListener("load", onNavWindowLoad, false);
+    onNavWindowLoad();
+  else
+    navWindow.addEventListener("load", onNavWindowLoad, false);
 }
 
 function onNavWindowLoad() {
