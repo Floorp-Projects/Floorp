@@ -1811,9 +1811,17 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = FALSE; 
     return NPERR_NO_ERROR;
 
-  case NPNVisOfflineBool: 
-    *(NPBool*)result = FALSE; 
+  case NPNVisOfflineBool: {
+    PRBool offline = PR_FALSE;
+    nsCOMPtr<nsIIOService> ioservice = do_GetService(NS_IOSERVICE_CONTRACTID, &res);
+    if (NS_SUCCEEDED(res))
+      res = ioservice->GetOffline(&offline);
+    if (NS_FAILED(rv))
+      return NPERR_GENERIC_ERROR;
+
+    *(NPBool*)result = offline; 
     return NPERR_NO_ERROR;
+  }
 
   case NPNVserviceManager: {
     nsIServiceManager * sm;
