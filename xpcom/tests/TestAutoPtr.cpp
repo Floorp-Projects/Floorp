@@ -23,7 +23,7 @@
 
 #include "nsAutoPtr.h"
 #include <stdio.h>
-#include "nsCom.h"
+#include "nscore.h"
 
 class TestObjectBaseA {
     public:

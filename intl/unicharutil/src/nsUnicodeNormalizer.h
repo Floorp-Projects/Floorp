@@ -38,7 +38,7 @@
 #ifndef nsUnicodeNormalizer_h__
 #define nsUnicodeNormalizer_h__
 
-#include "nsCom.h"
+#include "nscore.h"
 #include "nsISupports.h"
 
 #include "nsIUnicodeNormalizer.h"

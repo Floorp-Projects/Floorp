@@ -40,7 +40,6 @@
 #include "pldhash.h"
 #include "prlock.h"
 #include "nscore.h"
-#include "nsCom.h"
 #include "nsString.h"
 
 class nsIObjectInputStream;

@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 #include "nscore.h"
-#include "nsCom.h"
 #include "plhash.h"
 
 /**

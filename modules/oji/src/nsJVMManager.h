@@ -40,7 +40,7 @@
 
 #include "jvmmgr.h"
 #include "prtypes.h"
-#include "nsCom.h"
+#include "nscore.h"
 #include "jni.h"
 #include "jsdbgapi.h"
 #include "nsError.h"

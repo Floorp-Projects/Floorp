@@ -129,7 +129,6 @@
 #define nsFixedSizeAllocator_h__
 
 #include "nscore.h"
-#include "nsCom.h"
 #include "nsError.h"
 #include "plarena.h"
 

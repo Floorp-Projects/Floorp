@@ -39,7 +39,7 @@
 #ifndef nsCaseConversionImp2_h__
 #define nsCaseConversionImp2_h__
 
-#include "nsCom.h"
+#include "nscore.h"
 #include "nsISupports.h"
 
 #include "nsICaseConversion.h"
