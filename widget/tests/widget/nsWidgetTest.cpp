@@ -1042,12 +1042,11 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
   
       PRUint32 result = fileWidget->Show();
       if (result) {
-        nsString file;
+        nsFileSpec file;
         fileWidget->GetFile(file);
-        char* filestr = file.ToNewCString();
+        const char* filestr = file.GetNativePathCString();
         printf("file widget contents %s\n", filestr);
         statusText->SetText(filestr,actualSize);
-        delete[] filestr;
       }
       else
         statusText->SetText("Cancel selected",actualSize);
