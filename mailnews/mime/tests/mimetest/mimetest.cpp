@@ -29,7 +29,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamConverter2.h"
+#include "nsIStreamConverter.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
@@ -46,6 +46,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgMimeCID.h"
+#include "nsStreamConverter.h"    // test hack
 
 #ifdef XP_PC
 #include <windows.h>
@@ -330,7 +331,12 @@ public:
       mInFile->close();  
     return NS_OK;
   }
-  
+
+  NS_IMETHOD Available(PRUint32 *_retval)
+  {
+    return NS_OK;
+  }
+
   // nsIInputStream interface
   NS_IMETHOD GetLength(PRUint32 *_retval)
   {
@@ -417,6 +423,25 @@ NewURI(nsIURI** aInstancePtrResult, const char *aSpec)
     return NS_OK;
 }
 
+// Utility to create a nsIURL object...
+nsresult 
+NewChannel(nsIChannel **aInstancePtrResult, nsIURI *aURI)
+{  
+  nsresult res;
+
+  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) 
+    return NS_ERROR_FAILURE;
+
+  res = pService->NewChannelFromURI(nsnull, aURI, (nsILoadGroup *)nsnull, 
+                                    (nsIEventSinkGetter *)nsnull, aInstancePtrResult);
+  if (NS_FAILED(res))
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -486,9 +511,9 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
     *opts = save;
 
   // Create a mime parser (nsIStreamConverter)!
-  nsCOMPtr<nsIStreamConverter2> mimeParser;
+  nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsIStreamConverter2::GetIID(), 
+                                          NULL, nsIStreamConverter::GetIID(), 
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {
@@ -537,7 +562,15 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   // Set us as the output stream for HTML data from libmime...
   nsCOMPtr<nsIMimeStreamConverter> mimeStream = do_QueryInterface(mimeParser);
   mimeStream->SetMimeOutputType(outFormat);
-  rv = mimeParser->Init(theURI, out, nsnull);
+
+  nsIChannel    *tChannel = nsnull;
+
+  NewChannel(&tChannel, theURI);
+  mimeParser->AsyncConvertData(nsString2("message/rfc822").GetUnicode(), 
+                               nsString2("text/xul").GetUnicode(),
+                               out, tChannel);
+
+//  rv = mimeParser->Init(theURI, out, nsnull);
   if (NS_FAILED(rv) || !mimeParser)
   {
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
