@@ -43,8 +43,10 @@
 #include "plstr.h"
 
 #ifdef XP_PC
+#if !defined(XP_OS2)
 #include <windows.h>
 #include <direct.h>
+#endif
 #define COMPONENT_REG "component.reg"
 #endif
 
