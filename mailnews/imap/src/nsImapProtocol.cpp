@@ -6535,7 +6535,7 @@ PRBool nsImapProtocol::TryToLogon()
 {
   PRInt32 logonTries = 0;
   PRBool loginSucceeded = PR_FALSE;
-  char * password = nsnull;
+  nsXPIDLCString password;
   char * userName = nsnull;
   nsresult rv = NS_OK;
 
@@ -6544,31 +6544,31 @@ PRBool nsImapProtocol::TryToLogon()
   if (server)
   {
     // we are in the imap thread so *NEVER* try to extract the password with UI
-	// if logon redirection has changed the password, use the cookie as the password
-	if (m_overRideUrlConnectionInfo)
-		password = ToNewCString(m_logonCookie);
-	else
-		rv = server->GetPassword(&password);
+    // if logon redirection has changed the password, use the cookie as the password
+    if (m_overRideUrlConnectionInfo)
+      password.Assign(m_logonCookie);
+    else
+      rv = server->GetPassword(getter_Copies(password));
     rv = server->GetRealUsername(&userName);
-
+    
   }
       
   nsCOMPtr<nsIMsgWindow> aMsgWindow;
 
   do
   {
-    if (userName && (!password || !*password) && m_imapServerSink)
+    if (userName && password.IsEmpty() && m_imapServerSink)
     {
       if (!aMsgWindow)
       {
           rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
           if (NS_FAILED(rv)) return rv;
       }
-      m_imapServerSink->PromptForPassword(&password, aMsgWindow);
+      m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
     }
       PRBool imapPasswordIsNew = PR_FALSE;
 
-      if (userName && password)
+      if (userName)
       {
       PRBool prefBool = PR_TRUE;
 
@@ -6623,7 +6623,6 @@ PRBool nsImapProtocol::TryToLogon()
               {
                 AlertUserEventUsingId(IMAP_LOGIN_FAILED);
                 m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
-                PR_FREEIF(password);
                 m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
                 SendSetBiffIndicatorEvent(m_currentBiffState);
             } // if we didn't receive the death signal...
@@ -6688,7 +6687,6 @@ PRBool nsImapProtocol::TryToLogon()
 
   while (!loginSucceeded && ++logonTries < 4);
 
-  PR_FREEIF(password);
   PR_FREEIF(userName);
   if (!loginSucceeded)
   {
