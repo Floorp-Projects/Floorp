@@ -47,12 +47,15 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
+#include "nsICertificatePrincipal.h"
 
 #include "nss.h"
 #include "pk11func.h"
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
+#include "sechash.h"
+#include "secmime.h"
 #include "ocsp.h"
 extern "C" {
 #include "pkcs11.h"
@@ -527,32 +530,31 @@ nsNSSComponent::DisplaySecurityAdvisor()
 // Functions Implementing nsISignatureVerifier
 //---------------------------------------------
 NS_IMETHODIMP
-nsNSSComponent::HashBegin(PRUint32 alg, PRUint32* id)
+nsNSSComponent::HashBegin(PRUint32 alg, HASHContext** id)
 {
-  return NS_OK; /* not sure what the implications of this are */
+  *id = HASH_Create((HASH_HashType)alg);
+  if (*id) {
+    HASH_Begin(*id);
+    return NS_OK; 
+  } else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP
-nsNSSComponent::HashUpdate(PRUint32 id, const char* buf, PRUint32 buflen)
+nsNSSComponent::HashUpdate(HASHContext* ctx, const char* buf, PRUint32 buflen)
 {
-  return NS_OK; /* not sure what the implications of this are */
+  HASH_Update(ctx, (const unsigned char*)buf, buflen);
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
-nsNSSComponent::HashEnd(PRUint32 id, unsigned char** hash, 
+nsNSSComponent::HashEnd(HASHContext* ctx, unsigned char** hash, 
                         PRUint32* hashLen, PRUint32 maxLen)
 {
-  return NS_OK; /* not sure what the implications of this are */
-}
-
-NS_IMETHODIMP
-nsNSSComponent::CreatePrincipalFromSignature(const char* aRSABuf,
-                                             PRUint32 aRSABufLen,
-                                             nsIPrincipal** aPrincipal)
-{
-  PRInt32 errorCode;
-  return VerifySignature(aRSABuf, aRSABufLen, nsnull, 0, &errorCode,
-                         aPrincipal);
+  HASH_End(ctx, *hash, hashLen, maxLen);
+  HASH_Destroy(ctx);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -564,12 +566,129 @@ nsNSSComponent::GetPassword(char **aRet)
   return NS_OK;
 }
 
+/* Callback functions for decoder. For now, use empty/default functions. */
+static void ContentCallback(void *arg, 
+                                           const char *buf,
+                                           unsigned long len)
+{
+}
+
+static PK11SymKey * GetDecryptKeyCallback(void *arg, 
+                                                 SECAlgorithmID *algid)
+{
+  return nsnull;
+}
+
+static PRBool DecryptionAllowedCallback(SECAlgorithmID *algid,  
+                                               PK11SymKey *bulkkey)
+{
+  return SECMIME_DecryptionAllowed(algid, bulkkey);
+}
+
+static SECItem * GetPasswordKeyCallback(void *arg,
+                                               SECKEYKeyDBHandle *handle)
+{
+  return NULL;
+}
+
 NS_IMETHODIMP
 nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
                                 const char* aPlaintext, PRUint32 aPlaintextLen,
                                 PRInt32* aErrorCode,
                                 nsIPrincipal** aPrincipal)
 {
+  SEC_PKCS7DecoderContext * p7_ctxt = nsnull;
+  SEC_PKCS7ContentInfo * p7_info = nsnull; 
+  unsigned char hash[SHA1_LENGTH]; 
+  PRBool rv;
+
+  if (!aPrincipal || !aErrorCode)
+    return NS_ERROR_NULL_POINTER;
+  *aErrorCode = 0;
+  *aPrincipal = nsnull;
+
+  p7_ctxt = SEC_PKCS7DecoderStart(ContentCallback,
+                        nsnull,
+                        GetPasswordKeyCallback,
+                        nsnull,
+                        GetDecryptKeyCallback,
+                        nsnull,
+                        DecryptionAllowedCallback);
+  if (!p7_ctxt) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (SEC_PKCS7DecoderUpdate(p7_ctxt,aRSABuf, aRSABufLen) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  p7_info = SEC_PKCS7DecoderFinish(p7_ctxt); 
+  if (!p7_info) {
+    return NS_ERROR_FAILURE;
+  }
+
+  //-- If a plaintext was provided, hash it.
+  SECItem digest;
+  digest.data = nsnull;
+  digest.len = 0;
+
+  if (aPlaintext) {
+    HASHContext* hash_ctxt;
+    PRUint32 hashLen = 0;
+
+    hash_ctxt = HASH_Create(HASH_AlgSHA1);
+    HASH_Begin(hash_ctxt);
+    HASH_Update(hash_ctxt,(const unsigned char*)aPlaintext, aPlaintextLen);
+    HASH_End(hash_ctxt, hash, &hashLen, SHA1_LENGTH); 
+    HASH_Destroy(hash_ctxt);
+
+    digest.data = hash;
+    digest.len = SHA1_LENGTH;
+  }
+
+  //-- Verify signature
+  rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner, &digest, HASH_AlgSHA1, PR_TRUE);
+  if (rv != PR_SUCCESS) {
+    *aErrorCode = PR_GetError();
+    return NS_OK;
+  }
+
+  // Get the signing cert //
+  CERTCertificate *cert = p7_info->content.signedData->signerInfos[0]->cert;
+  if (cert) {
+    nsresult rv2;
+    nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
+    if (!mScriptSecurityManager) {
+      mScriptSecurityManager = 
+         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
+      if (NS_FAILED(rv2)) return rv2;
+    }
+    //-- Create a certificate principal with id and organization data
+    PRUnichar* fingerprint;
+    rv2 = pCert->GetSha1Fingerprint(&fingerprint);
+    nsCAutoString fingerprintStr;
+    fingerprintStr.AssignWithConversion(fingerprint);
+    PR_FREEIF(fingerprint);
+    if (NS_FAILED(rv2)) return rv2;
+    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr, aPrincipal);
+    if (NS_FAILED(rv2) || !*aPrincipal) return rv2;
+
+    nsCOMPtr<nsICertificatePrincipal> certPrincipal = do_QueryInterface(*aPrincipal, &rv2);
+    if (NS_FAILED(rv2)) return rv2;
+    PRUnichar* orgName;
+    rv2 = pCert->GetOrganization(&orgName);
+    if (NS_FAILED(rv2)) return rv2;
+    nsCAutoString orgNameStr;
+    orgNameStr.AssignWithConversion(orgName);
+    PR_FREEIF(orgName);
+    rv2 = certPrincipal->SetCommonName(orgNameStr);
+    if (NS_FAILED(rv2)) return rv2;
+  }
+
+  if (p7_info) {
+    SEC_PKCS7DestroyContentInfo(p7_info);
+  }
+
   return NS_OK;
 }
 
