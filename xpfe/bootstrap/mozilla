@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.6 2000/03/16 03:39:46 gagan%netscape.com Exp $
+## $Id: mozilla,v 1.7 2000/06/06 22:57:24 cls%seawood.org Exp $
 ## 
 ## Usage:
 ##
@@ -32,30 +32,17 @@
 #uncomment for debugging
 #set -x
 
-dist_bin=""
-
-# Running from dist/bin
-if [ -d components -a -d res ]
-then
-	dist_bin="./"
-else
-	# Running from source dir
-	if [ -f Makefile.in ]
-	then
-		dist_bin=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`/dist/bin
-	fi
-fi
-
+dist_bin=`dirname $0`
 script_args=""
 moreargs=""
 debugging=0
-MOZILLA_BIN="./mozilla-bin"
+MOZILLA_BIN="mozilla-bin"
 
 while [ $# -gt 0 ]
 do
   case $1 in
     -p | -pure)
-      MOZILLA_BIN="./mozilla-bin.pure"
+      MOZILLA_BIN="mozilla-bin.pure"
       shift
       ;;
     -g | --debug)
@@ -74,5 +61,5 @@ do
   esac
 done
 
-echo $dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}	
-$dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}
+echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN $moreargs ${1+"$@"}	
+$dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN $moreargs ${1+"$@"}
