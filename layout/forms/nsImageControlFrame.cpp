@@ -55,7 +55,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIImage.h"
-#include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"

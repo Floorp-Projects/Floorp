@@ -58,7 +58,6 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
-#include "nsStyleUtil.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"

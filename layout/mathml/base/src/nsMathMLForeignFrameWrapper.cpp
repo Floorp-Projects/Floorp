@@ -38,7 +38,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
-#include "nsStyleUtil.h"
 
 #include "nsMathMLForeignFrameWrapper.h"
 

@@ -44,7 +44,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAttributes.h"
 #include "nsCSSDeclaration.h"

@@ -55,7 +55,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"
 #ifdef ACCESSIBILITY

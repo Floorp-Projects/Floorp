@@ -20,19 +20,14 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "nsFrame.h"
-#include "nsLineLayout.h"
 #include "nsIPresContext.h"
-#include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
-#include "nsStyleUtil.h"
 
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
