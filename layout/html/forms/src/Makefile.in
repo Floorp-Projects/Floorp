@@ -78,5 +78,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../content/src \
+		-I$(srcdir)/../../../xul/base/src \
 		$(NULL)
 
