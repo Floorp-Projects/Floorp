@@ -36,7 +36,7 @@
 
 /* Define this on systems which don't have it (AIX) */
 #ifndef RTLD_LAZY
-#define RTLD_LAZY 1
+#define RTLD_LAZY RTLD_NOW
 #endif
 #endif /* XP_UNIX */
 
@@ -621,7 +621,11 @@ PR_LoadLibrary(const char *name)
 #if defined(USE_DLFCN)
 	void *h = dlopen(name, RTLD_LAZY);
 #elif defined(USE_HPSHL)
-    shl_t h = shl_load(name, BIND_DEFERRED | DYNAMIC_PATH, 0L);
+    /*
+     * Shared libraries built using aCC cannot be dynamically loaded
+     * with BIND_DEFERRED, so we have to use the BIND_IMMEDIATE flag.
+     */
+    shl_t h = shl_load(name, BIND_IMMEDIATE | DYNAMIC_PATH, 0L);
 #else
 #error Configuration error
 #endif
