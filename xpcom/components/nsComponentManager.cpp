@@ -22,6 +22,13 @@
  */
 
 #include <stdlib.h>
+#include "nscore.h"
+#include "nsISupports.h"
+// this after nsISupports, to pick up IID
+// so that xpt stuff doesn't try to define it itself...
+#include "xptinfo.h"
+#include "nsIInterfaceInfoManager.h"
+
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
@@ -1936,6 +1943,17 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         if (NS_FAILED(rv)) 
 	    return rv; // XXX translate error code?
     }
+
+    // Force the InterfaceInfoManager to do its AutoReg first.
+    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+
+    if (!iim)
+        return NS_ERROR_UNEXPECTED;    
+
+    rv = iim->AutoRegisterInterfaces();
+    if (NS_FAILED(rv))
+	return rv;
 
     /* do the native loader first, so we can find other loaders */
     rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
