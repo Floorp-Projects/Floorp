@@ -230,7 +230,20 @@ interface oeIICal : nsISupports
 	void deleteEvent( in string id );
 	oeIICalEvent fetchEvent( in string id );
 //	nsISimpleEnumerator searchBySQL( in string sqlstr );
+
+    /**
+    *
+    *   GetAllEvents
+    *
+    *   DESCRIPTION: Returns a list of all the events in this calendar in an enumerator.
+    *   The events are sorted based on the order of their next occurence if they recur in
+    *   the future or their last occurence in the past otherwise.
+    *   Here's a presentation of the sort criteria using the time axis:
+    *   -----(Last occurence of Event1)---(Last occurence of Event2)----(Now)----(Next occurence of Event3)---->
+    *   (Note that Event1 and Event2 will not recur in the future.)
+    */
 	nsISimpleEnumerator getAllEvents();
+
     /**
      * For all the getEvents* and get*EventForRange methods:
      * Get events for a certain range. items are oeIICalEventDisplay
