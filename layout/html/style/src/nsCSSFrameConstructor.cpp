@@ -124,6 +124,10 @@ NS_NewGrippyFrame ( nsIFrame** aNewFrame );
 
 nsresult
 NS_NewSplitterFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewMenuPopupFrame ( nsIFrame** aNewFrame );
+
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -3036,6 +3040,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(&newFrame);
+    }
+    else if (aTag == nsXULAtoms::xpmenuchildren) {
+      // XXX Will be its own frame that derives from
+      // box.
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewMenuPopupFrame(&newFrame);
     }
 
     // BOX CONSTRUCTION
