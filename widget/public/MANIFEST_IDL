@@ -14,3 +14,4 @@ nsIFormatConverter.idl
 nsIClipboard.idl
 nsIClipboardOwner.idl
 nsIRollupListener.idl
+nsIBaseWindow.idl
