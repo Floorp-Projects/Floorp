@@ -1097,8 +1097,9 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
             inbox.SetCharAt(parentName.CharAt(i), j++);
           if (nsCRT::strcmp(inbox,"INBOX") != 0 )
           {
-            dupFolderPath.ReplaceSubstring(inbox,"INBOX");
-            parentName.ReplaceSubstring(inbox,"INBOX");
+            nsCAutoString INBOX("INBOX");
+            dupFolderPath.ReplaceSubstring(inbox,INBOX);
+            parentName.ReplaceSubstring(inbox,INBOX);
           }
         }
         parentUri.Append('/');
