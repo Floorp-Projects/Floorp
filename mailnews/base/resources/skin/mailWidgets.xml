@@ -221,7 +221,7 @@
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
             if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
-              this.setAttribute("index", "2");
+              this.setAttribute("index", "1");
             else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
               this.setAttribute("index", "2");
             else
@@ -229,6 +229,42 @@
           ]]>
         </setter>
       </property>
+    </interface>
+  </binding>
+  <binding id="searchterm">
+    <interface>
+      <!-- the three tags that make up a term - to use, set the
+           attribute in the XUL to the ID of the term.
+        -->
+      <property name="searchattribute" readonly="true" onget="return document.getElementById(this.getAttribute('searchattribute'));"/>
+
+      <property name="searchoperator" readonly="true" onget="return document.getElementById(this.getAttribute('searchoperator'));"/>
+
+      <property name="searchvalue" readonly="true" onget="return document.getElementById(this.getAttribute('searchvalue'));"/>
+
+      <!-- right now only handles filters - need to abstract termlist -->
+      <method name="initialize">
+        <argument name="filter"/>
+        <argument name="termIndex"/>
+        <body>
+          <![CDATA[
+            var attrib = new Object;
+            var op = new Object;
+            var value = new Object;
+            var booland = new Object;
+            var header = new Object;
+            filter.GetTerm(termIndex, attrib, op, value, booland, header);
+
+            var searchAttribute=this.searchattribute;
+            var searchOperator=this.searchoperator;
+            var searchValue=this.searchvalue;
+
+            if (searchAttribute) searchAttribute.value = attrib.value;
+            if (searchOperator) searchOperator.value = op.value;
+            if (searchValue) searchValue.value = value.value;
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
 </bindings>
