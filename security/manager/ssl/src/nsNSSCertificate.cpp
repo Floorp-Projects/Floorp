@@ -633,17 +633,35 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterGMT(PRUnichar **aNotAfterGMT)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertificate, nsIX509Cert)
 
-nsNSSCertificate::nsNSSCertificate(char *certDER, int derLen) : 
-                                           mPermDelete(PR_FALSE),
-                                           mCertType(nsIX509Cert::UNKNOWN_CERT)
-              
+nsNSSCertificate*
+nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
 {
-  NS_INIT_ISUPPORTS();
-  mCert = CERT_DecodeCertFromPackage(certDER, derLen);
-  if(mCert->dbhandle == nsnull)
+  if (!certDER || !derLen)
+    return nsnull;
+
+  CERTCertificate *aCert = CERT_DecodeCertFromPackage(certDER, derLen);
+  
+  if (!aCert)
+    return nsnull;
+
+  if(aCert->dbhandle == nsnull)
   {
-      mCert->dbhandle = CERT_GetDefaultCertDB();
+    aCert->dbhandle = CERT_GetDefaultCertDB();
   }
+
+  // We don't want the new NSS cert to be dupped, therefore we create our instance
+  // with a NULL pointer first, and set the contained cert later.
+
+  nsNSSCertificate *newObject = new nsNSSCertificate(nsnull);
+  
+  if (!newObject)
+  {
+    CERT_DestroyCertificate(aCert);
+    return nsnull;
+  }
+  
+  newObject->mCert = aCert;
+  return newObject;
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
@@ -654,6 +672,8 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 
   if (cert) 
     mCert = CERT_DupCertificate(cert);
+  else
+    mCert = nsnull;
 }
 
 nsNSSCertificate::~nsNSSCertificate()
@@ -3140,9 +3160,9 @@ nsNSSCertificateDB::ImportCertificates(char * data, PRUint32 length,
   SECItem *currItem;
   for (int i=0; i<certCollection->numcerts; i++) {
      currItem = &certCollection->rawCerts[i];
-     nssCert = new nsNSSCertificate((char*)currItem->data, currItem->len);
+     nssCert = nsNSSCertificate::ConstructFromDER((char*)currItem->data, currItem->len);
      if (!nssCert)
-       return NS_ERROR_OUT_OF_MEMORY;
+       return NS_ERROR_FAILURE;
      x509Cert = do_QueryInterface(nssCert);
      array->AppendElement(x509Cert);
   }
