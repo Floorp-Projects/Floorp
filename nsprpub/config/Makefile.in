@@ -94,14 +94,14 @@ ifeq ($(OS_ARCH), HP-UX)
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),EMX)
-XCFLAGS = $(OS_EXE_CFLAGS)
+XCFLAGS = $(OS_CFLAGS)
 ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
 XLDOPTS = -Zlinker /PM:VIO
 endif
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),PGCC)
-XCFLAGS = $(OS_EXE_CFLAGS)
+XCFLAGS = $(OS_CFLAGS)
 XLDOPTS = -Zlinker /PM:VIO
 endif
 
