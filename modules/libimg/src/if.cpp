@@ -1708,7 +1708,7 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     /* extract host */
     char * host;
     rv = uri->GetHost(&host);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || !host) {
         return PR_TRUE;
     }
 
