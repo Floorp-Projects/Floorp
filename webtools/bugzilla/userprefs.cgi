@@ -285,7 +285,7 @@ sub SaveFooter {
 
 
 sub ShowPermissions {
-    print "You have the following permission bits set on your account:\n";
+    print "<TR><TD>You have the following permission bits set on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
     SendSQL("SELECT description FROM groups " .
@@ -313,7 +313,7 @@ sub ShowPermissions {
             my ($description) = (FetchSQLData());
             print "<LI>$description\n";
         }
-        print "</UL>\n";
+        print "</UL></TD></TR>\n";
     }
 }
         
