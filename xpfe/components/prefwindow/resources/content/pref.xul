@@ -60,6 +60,8 @@
   
   </script>        
         
+  <stringbundle id="bundle_prefutilities"
+               src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-help.js"/>
