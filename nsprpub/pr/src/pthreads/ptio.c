@@ -1048,7 +1048,8 @@ static PRBool pt_solaris_sendfile_cont(pt_Continuation *op, PRInt16 revents)
     op->syserrno = errno;
 
     if (count == -1) {
-        if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN) {
+        if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN
+                && op->syserrno != EINTR) {
             op->result.code = -1;
             return PR_TRUE;
         }
