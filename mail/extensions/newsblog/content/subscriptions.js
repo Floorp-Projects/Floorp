@@ -240,16 +240,9 @@ function doRemove() {
 
     // Remove all assertions about items in the feed from the items database.
     ds = getItemsDS();
-    var items = ds.GetSources(FZ_FEED, feed, true);
-    while (items.hasMoreElements()) {
-        var item = items.getNext();
-        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
-        ds.Unassert(item, FZ_FEED, feed, true);
-        if (ds.hasArcOut(item, FZ_FEED))
-            debug(item.Value + " is from more than one feed; only the reference to this feed removed");
-        else
-            removeAssertions(ds, item);
-    }
+    feed.invalidateItems();
+    feed.removeInvalidItems();
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 }
 
 
