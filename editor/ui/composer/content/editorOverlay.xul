@@ -68,8 +68,9 @@
     <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
     <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
 
-    <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;"  observes="cmd_indent" />
-    <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" observes="cmd_outdent" />
+    <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="EditorSetFontFace('cmd_fontFace', 'tt')" />
+    <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" shift="false" observes="cmd_indent" />
+    <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
 
     <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
     <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
@@ -113,10 +114,8 @@
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
     <command id="cmd_editTable"/>
-    <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"      value="&HTMLSourceCmd.label;"/>
+    <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"      value="&insertHTMLCmd.label;"/>
     <command id="cmd_editHTML"         oncommand="goDoCommand('cmd_editHTML')"        value="&HTMLSourceCmd.label;"/>
-    <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"     value="&insertLineBreakCmd.label;"/>
-    <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"  value="&insertBreakBelowImagesCmd.label;"/>
   </commandset>
   
   <commandset id="composerSaveMenuItems"
@@ -275,12 +274,12 @@
         <!-- Items appended at runtime -->
         <menupopup id="menupopup_RecentFiles"/>
       </menu>
-      <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator />
       <menuitem accesskey="&fileclose.accesskey;"      key="closekb"        observes="cmd_close"/>
       <menuitem accesskey="&filesave.accesskey;"       key="savekb"         observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
-      <menuitem accesskey="&filesaveascharset.accesskey;"                               observes="cmd_saveAsCharset"/>
+      <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
+      <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
       <menuitem id="menu_preview" value="&previewCmd.label;" accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
@@ -312,7 +311,6 @@
       <menuseparator class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" value="&checkSpellingCmd.label;"/>
       <menuseparator id="sep_checkspelling" class="hide-in-IM"/>
-      <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;"            observes="cmd_editHTML"/>
       <menuseparator/>
       <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
     </menupopup>
@@ -329,7 +327,6 @@
       </menupopup>
     </menu>
     <menuitem id="viewSourceMenuitem" accesskey="&HTMLsource.accesskey;" observes="cmd_editHTML"/>
-    <menuitem id="viewParagraphMarks" type="checkbox" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();"/>
     <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
 
   <!-- Insert menu -->
@@ -340,11 +337,8 @@
       <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       value="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       value="&insertHLineCmd.label;"/>
       <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_table"       value="&insertTableCmd.label;"/>
-      <menuitem accesskey="&HTMLsource.accesskey;"       observes="cmd_insertHTML"  key="inserthtmlkb"/>
+      <menuitem accesskey="&insertHTMLCmd.accesskey;"       observes="cmd_insertHTML"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
-      <menuseparator />
-      <menuitem accesskey="&insertlinebreak.accesskey;"  observes="cmd_insertBreak"/>
-      <menuitem accesskey="&insertbreak.accesskey;"      observes="cmd_insertBreakAll"/>
     </menupopup>
   </menu>
     
@@ -355,7 +349,7 @@
           position="1">
       <menupopup oncommand="EditorSetFontFace('cmd_fontFace', event.target.data)">
         <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
-        <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt"/>
+        <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt" key="fontfixedwidthkb"/>
         <menuseparator/>
         <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Arial, Helvetica, sans-serif"/>
         <menuitem value="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       data="Times New Roman, Times, serif"/>
@@ -424,6 +418,7 @@
     </menu>
 
     <!-- Background color submenu. "value" is set in InitFormatMenu() -->
+<!-- this menu to be moved to Table menu
     <menu id="backgroundColorMenu"
          accesskey="&formatbkgdcolormenu.accesskey;"
          position="5">
@@ -440,6 +435,7 @@
        <menuitem value="&colorMagentaCmd.label;"   accesskey="&colormagenta.accesskey;"  oncommand="EditorSetBackgroundColor('magenta')"/>
       </menupopup>
     </menu>
+-->
 
 <!-- Font color submenu
      THIS WORKS ONLY IN Windows/Linux (use arbitrary XUL in submenu)
@@ -468,14 +464,14 @@
     </menu>
 -->
 
-    <menuseparator position="6"/>
+    <menuseparator position="5"/>
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
                 accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-                oncommand="goDoCommand('cmd_removeStyles')" position="7"/>
+                oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
     <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
                 accesskey="&formatremovelinks.accesskey;"
-                oncommand="EditorRemoveLinks()" position="8"/>
-    <menuseparator position="9"/>
+                oncommand="EditorRemoveLinks()" position="7"/>
+    <menuseparator position="8"/>
 
     <!-- Note: the 'Init' menu methods for Heading, Paragraph, and List 
          assume that the id = 'menu_'+tagName (the 'data' value),
@@ -484,7 +480,7 @@
     <!-- Heading Style submenu -->
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
-          position="10" oncreate="InitHeadingMenu()">
+          position="9" oncreate="InitHeadingMenu()">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem id="menu_noHeading" type="radio" value="&noneCmd.label;"     accesskey="&none.accesskey;"     data=""/>
         <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="h1"/>
@@ -499,7 +495,7 @@
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="11" oncreate="InitParagraphMenu()">
+          position="10" oncreate="InitParagraphMenu()">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem id="menu_normal"  type="radio" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
         <menuitem id="menu_p"       type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
@@ -513,7 +509,7 @@
     <!-- List Style submenu -->
     <menu id="listMenu" value="&formatlistMenu.label;"
           accesskey="&formatlistmenu.accesskey;"
-          position="12" oncreate="InitListMenu()">
+          position="11" oncreate="InitListMenu()">
       <menupopup>
         <menuitem id="menu_noList" type="radio" value="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
         <menuitem id="menu_ul"     type="radio" value="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
@@ -524,9 +520,15 @@
         <menuitem id="listProps" value="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
     </menu>
+    <menuseparator position="12"/>
+
+    <menuitem id="increaseIndent" value="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
+                observes="cmd_indent" position="13"/>
+    <menuitem id="decreaseIndent" value="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
+              observes="cmd_outdent"  position="14"/>
 
     <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
-        position="13">
+        position="15">
       <!-- Align submenu -->
       <menupopup oncommand="EditorAlign('cmd_align', event.target.getAttribute('data'))">
         <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
@@ -535,13 +537,7 @@
         <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" data="justify"/>
       </menupopup>
     </menu>
-    <menuseparator position="14"/>
-
-    <menuitem id="increaseIndent" value="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
-                observes="cmd_indent" position="15"/>
-    <menuitem id="decreaseIndent" value="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
-              observes="cmd_outdent"  position="16"/>
-    <menuseparator position="17"/>
+    <menuseparator position="16"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
