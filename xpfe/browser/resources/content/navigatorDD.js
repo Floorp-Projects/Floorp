@@ -209,7 +209,12 @@ var personalToolbarObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      var dropPosition = this.determineDropPosition(aEvent);
+      var dropPosition
+      if (aEvent.target.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder"
+          && aEvent.target.getAttribute("container") == "true")
+        dropPosition = this.DROP_ON;
+      else
+        dropPosition = this.determineDropPosition(aEvent);
 
       // bail if drop target is not a valid bookmark item or folder
       var inner = document.getElementById("innermostBox");
@@ -314,7 +319,10 @@ var personalToolbarObserver = {
             return RDFUtils.getResource(menu.id);
           case "treecell":
             var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
-            return RDFUtils.getResource(treeitem.id);
+            var res = treeitem.getAttribute("ref");
+            if (!res)
+              res = treeitem.id;            
+            return RDFUtils.getResource(res);
         }
       return null;
     },
