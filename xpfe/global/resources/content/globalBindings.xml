@@ -10,7 +10,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding name="texttab">
+  <binding id="texttab">
     <content>
       <xul:image class="tab-leftedge"/>
       <xul:box class="textholder" align="vertical" inherits="value"

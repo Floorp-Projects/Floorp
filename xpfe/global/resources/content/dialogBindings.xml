@@ -5,7 +5,7 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding name="smallheader">
+  <binding id="smallheader">
     <content>
       <xul:toolbar class="decorated header" autostretch="never" flex="1">
         <xul:text class="left" inherits="title:value"/>
@@ -15,7 +15,7 @@
     </content>
   </binding>
 
-  <binding name="largeheader">
+  <binding id="largeheader">
     <content>
       <xul:toolbar class="decorated header" align="horizontal" flex="1">
         <xul:image inherits="src" class="circle"/>
@@ -27,7 +27,7 @@
     </content>
   </binding>
   
-  <binding name="status">
+  <binding id="status">
     <content>
       <xul:toolbar class="standard title" flex="1">
         <xul:text class="statustext" inherits="value"/>

@@ -5,7 +5,7 @@
             xmlns:html="http://www.w3.org/TR/REC-html40"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<binding name="autocomplete" extends="xul:box">
+<binding id="autocomplete" extends="xul:box">
     <content excludes="template,observes,menupopup">
         <xul:box
             onkeydown=" me = this.parentNode;
