@@ -40,21 +40,22 @@ interface nsIWebProgressListener : nsISupports
    * These flags indicate the various states that documents and requests
    * may transition through as they are being loaded.
    */
-   const long flag_start          = 0x00000001;
-   const long flag_redirecting    = 0x00000002;
-   const long flag_transferring   = 0x00000004;
-   const long flag_negotiating    = 0x00000008;
-   const long flag_stop           = 0x00000010;
+   const unsigned long STATE_START          = 0x00000001;
+   const unsigned long STATE_REDIRECTING    = 0x00000002;
+   const unsigned long STATE_TRANSFERRING   = 0x00000004;
+   const unsigned long STATE_NEGOTIATING    = 0x00000008;
+   const unsigned long STATE_STOP           = 0x00000010;
 
    /**
     * Progress type bits.
     * These flags indicate whether the transition is occuring on a document
     * or an individual request within the document.
     */
-   const long flag_is_request     = 0x00010000;
-   const long flag_is_document    = 0x00020000;
-   const long flag_is_network     = 0x00040000;
-   const long flag_is_window      = 0x00080000;
+   const unsigned long STATE_IS_REQUEST     = 0x00010000;
+   const unsigned long STATE_IS_DOCUMENT    = 0x00020000;
+   const unsigned long STATE_IS_NETWORK     = 0x00040000;
+   const unsigned long STATE_IS_WINDOW      = 0x00080000;
+
   /**
    * Notification indicating the state has changed for one of the requests
    * associated with the document loaded.
@@ -70,7 +71,7 @@ interface nsIWebProgressListener : nsISupports
    */
    void onStateChange(in nsIWebProgress aWebProgress,
                       in nsIRequest aRequest,
-                      in long aStateFlags,
+                      in long aStateFlags, // XXX TODO unsigned long
                       in unsigned long aStatus);
 
   /**

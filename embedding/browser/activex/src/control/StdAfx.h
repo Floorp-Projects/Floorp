@@ -66,6 +66,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserSetup.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
@@ -77,7 +78,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMSelection.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIPrompt.h"
 
 #include "nsEditorCID.h"

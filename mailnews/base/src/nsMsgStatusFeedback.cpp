@@ -113,9 +113,9 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
                                    nsresult aStatus)
 {
   nsresult rv;
-  if (aProgressStateFlags & flag_is_network)
+  if (aProgressStateFlags & STATE_IS_NETWORK)
   {
-    if (aProgressStateFlags & flag_start)
+    if (aProgressStateFlags & STATE_START)
     {
       m_lastPercent = 0;
       StartMeteors();
@@ -125,7 +125,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
       if (NS_SUCCEEDED(rv))
         ShowStatusString(loadingDocument);
     }
-    else if (aProgressStateFlags & flag_stop)
+    else if (aProgressStateFlags & STATE_STOP)
     {
       StopMeteors();
       nsXPIDLString documentDone;

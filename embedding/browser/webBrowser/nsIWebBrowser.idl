@@ -22,7 +22,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocShell;
 interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
 interface nsIURIContentListener;
@@ -75,17 +74,11 @@ interface nsIWebBrowser : nsISupports
 	window.  That therefore means that when the topLevelWindow goes away, it 
 	must set topLevelWindow to nsnull.
 	*/
-	attribute nsIWebBrowserChrome topLevelWindow;
+	attribute nsIWebBrowserChrome containerWindow;
 
 	/*
 	URI content listener parent.  This is not refcounted and is assumed to be
 	nulled out by the parent when the parent is going away.
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
-
-
-	/*
-		The root docShell of the browserWindow. 
-	*/
-	readonly attribute nsIDocShell docShell;
 };

@@ -266,7 +266,7 @@ static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCO
 
    nsCOMPtr<nsIXULWindow> newWindow;
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
-                                      PR_TRUE, PR_TRUE, nsIWebBrowserChrome::allChrome,
+                                      PR_TRUE, PR_TRUE, nsIWebBrowserChrome::CHROME_ALL,
                                       width, height,
                                       getter_AddRefs(newWindow));
   return rv;

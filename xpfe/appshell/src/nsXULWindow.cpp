@@ -630,7 +630,7 @@ void nsXULWindow::OnChromeLoaded()
    mChromeLoaded = PR_TRUE;
   
    if(mContentTreeOwner)
-      mContentTreeOwner->ApplyChromeMask();
+      mContentTreeOwner->ApplyChromeFlags();
 
    LoadTitleFromXUL();
    LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
@@ -981,7 +981,7 @@ NS_IMETHODIMP nsXULWindow::GetNewWindow(PRInt32 aChromeFlags,
 {
    NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
 
-   if(aChromeFlags & nsIWebBrowserChrome::openAsChrome)
+   if(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
       return CreateNewChromeWindow(aChromeFlags, aDocShellTreeItem);
    else
       return CreateNewContentWindow(aChromeFlags, aDocShellTreeItem);
@@ -998,7 +998,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    // Just do a normal create of a window and return.
    //XXXTAB remove this when appshell talks in terms of nsIXULWindow
    nsCOMPtr<nsIXULWindow> parent;
-   if(aChromeFlags & nsIWebBrowserChrome::dependent)
+   if(aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
       parent = this;
 
    nsCOMPtr<nsIXULWindow> newWindow;
@@ -1011,7 +1011,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    // XXX Ick, this should be able to go away.....
    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
    if(browserChrome)
-      browserChrome->SetChromeMask(aChromeFlags);
+      browserChrome->SetChromeFlags(aChromeFlags);
 
    nsCOMPtr<nsIDocShell> docShell;
    newWindow->GetDocShell(getter_AddRefs(docShell));
@@ -1072,7 +1072,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
    if(browserChrome)
-      browserChrome->SetChromeMask(aChromeFlags);
+      browserChrome->SetChromeFlags(aChromeFlags);
 
    nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
    NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);

@@ -59,7 +59,7 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
                                         URL,
                                         PR_TRUE, 
                                         PR_TRUE,
-                                        nsIWebBrowserChrome::allChrome, 
+                                        nsIWebBrowserChrome::CHROME_ALL, 
 						                NS_SIZETOCONTENT,           // width 
 						                NS_SIZETOCONTENT,           // height
                                         getter_AddRefs(window));

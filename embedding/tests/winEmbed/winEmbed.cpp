@@ -88,7 +88,7 @@ nsresult OpenWebPage(char* url)
     NS_ADDREF(chrome); // native window will hold the addref.
 
     nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->GetNewBrowser(0, getter_AddRefs(newBrowser));
+    chrome->CreateBrowserWindow(0, getter_AddRefs(newBrowser));
     if (!newBrowser)
         return NS_ERROR_FAILURE;
 
@@ -254,9 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         nsCOMPtr<nsIWebBrowser> wb;
                         chrome->GetWebBrowser(getter_AddRefs(wb));
 
-                        nsCOMPtr <nsIDocShell> rootDocShell;
-                        wb->GetDocShell(getter_AddRefs(rootDocShell));
-
+                        nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(wb);
 
                         nsCOMPtr<nsIContentViewer> pContentViewer;
                         nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
@@ -276,9 +274,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         nsCOMPtr<nsIWebBrowser> wb;
                         chrome->GetWebBrowser(getter_AddRefs(wb));
 
-                        nsCOMPtr <nsIDocShell> rootDocShell;
-                        wb->GetDocShell(getter_AddRefs(rootDocShell));
-
+                        nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(wb);
 
                         nsCOMPtr<nsIContentViewer> pContentViewer;
                         nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
@@ -300,9 +296,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         nsCOMPtr<nsIWebBrowser> wb;
                         chrome->GetWebBrowser(getter_AddRefs(wb));
 
-                        nsCOMPtr <nsIDocShell> rootDocShell;
-                        wb->GetDocShell(getter_AddRefs(rootDocShell));
-
+                        nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(wb);
 
                         nsCOMPtr<nsIContentViewer> pContentViewer;
                         nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));

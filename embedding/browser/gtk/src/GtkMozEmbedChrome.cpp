@@ -318,33 +318,36 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetInterface(const nsIID &aIID, void** aInstanc
 
 // nsIWebBrowserChrome interface
 
-NS_IMETHODIMP GtkMozEmbedChrome::SetJSStatus(const PRUnichar *status)
+NS_IMETHODIMP GtkMozEmbedChrome::SetStatus(PRUint32 aType, const PRUnichar *status)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetJSStatus\n"));
-  nsString jsStatusString(status);
-  mJSStatus = jsStatusString.ToNewCString();
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("js status is %s\n", (const char *)mJSStatus));
-  // let our chrome listener know that the JS message has changed.
-  if (mChromeListener)
-    mChromeListener->Message(GtkEmbedListener::MessageJSStatus, mJSStatus);
-  return NS_OK;
-}
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetStatus\n"));
 
-NS_IMETHODIMP GtkMozEmbedChrome::SetJSDefaultStatus(const PRUnichar *status)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetJSDefaultStatus\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::SetOverLink(const PRUnichar *link)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetOverLink\n"));
-  nsString linkMessageString(link);
-  mLinkMessage = linkMessageString.ToNewCString();
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("message is %s\n", (const char *)mLinkMessage));
-  // notify the chrome listener that the link message has changed
-  if (mChromeListener)
-    mChromeListener->Message(GtkEmbedListener::MessageLink, mLinkMessage);
+  switch (aType)
+    {
+    case STATUS_SCRIPT:
+      {
+	nsString jsStatusString(status);
+	mJSStatus = jsStatusString.ToNewCString();
+	PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("js status is %s\n", (const char *)mJSStatus));
+	// let our chrome listener know that the JS message has changed.
+	if (mChromeListener)
+	  mChromeListener->Message(GtkEmbedListener::MessageJSStatus, mJSStatus);
+      }
+      break;
+    case STATUS_SCRIPT_DEFAULT:
+      // NOT IMPLEMENTED
+      break;
+    case STATUS_LINK:
+      {
+	nsString linkMessageString(status);
+	mLinkMessage = linkMessageString.ToNewCString();
+	PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("message is %s\n", (const char *)mLinkMessage));
+	// notify the chrome listener that the link message has changed
+	if (mChromeListener)
+	  mChromeListener->Message(GtkEmbedListener::MessageLink, mLinkMessage);
+	return NS_OK;
+      }
+    }
   return NS_OK;
 }
 
@@ -370,22 +373,22 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetWebBrowser(nsIWebBrowser * aWebBrowser)
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetChromeMask(PRUint32 *aChromeMask)
+NS_IMETHODIMP GtkMozEmbedChrome::GetChromeFlags(PRUint32 *aChromeFlags)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetChromeMask\n"));
-  NS_ENSURE_ARG_POINTER(aChromeMask);
-  *aChromeMask = mChromeMask;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetChromeFlags\n"));
+  NS_ENSURE_ARG_POINTER(aChromeFlags);
+  *aChromeFlags = mChromeMask;
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::SetChromeMask(PRUint32 aChromeMask)
+NS_IMETHODIMP GtkMozEmbedChrome::SetChromeFlags(PRUint32 aChromeFlags)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetChromeMask\n"));
-  mChromeMask = aChromeMask;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetChromeFlags\n"));
+  mChromeMask = aChromeFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask, 
+NS_IMETHODIMP GtkMozEmbedChrome::CreateBrowserWindow(PRUint32 chromeMask, 
 					       nsIWebBrowser **_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));

@@ -99,6 +99,8 @@ nsDocShell::nsDocShell() :
   mInitialPageLoad(PR_TRUE),
   mAllowPlugins(PR_TRUE),
   mViewMode(viewNormal),
+  mLastViewMode(viewNormal),
+  mRestoreViewMode(PR_FALSE),
   mEODForCurrentDocument (PR_FALSE),
   mUseExternalProtocolHandler (PR_FALSE),
   mParent(nsnull),
@@ -165,19 +167,28 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
-      *aSink = mContentListener;
+   {
+     *aSink = mContentListener;
+   }
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
+   {
       *aSink = mScriptGlobal;
+   }
    else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
-      {
+   {
       NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
          aSink), NS_ERROR_FAILURE);
       return NS_OK;
-      }
+   }
+   else if (aIID.Equals(NS_GET_IID(nsIDOMDocument)) &&
+      NS_SUCCEEDED(EnsureContentViewer()))
+   {
+      mContentViewer->GetDOMDocument((nsIDOMDocument**) aSink);
+   }
    else if(aIID.Equals(NS_GET_IID(nsIPrompt)))
-      {
+   {
         nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mTreeOwner));
         if (prompter)
         {
@@ -204,7 +215,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
        return NS_ERROR_FAILURE;
    }
    else
+   {
       return QueryInterface(aIID, aSink);
+   }
 
    NS_IF_ADDREF(((nsISupports*)*aSink));
    return NS_OK;   
@@ -345,12 +358,6 @@ NS_IMETHODIMP nsDocShell::StopLoad()
    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
-{
-  /* XXX: This method is obsolete and will be removed. */
-  return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP nsDocShell::GetCurrentURI(nsIURI** aURI)
 {
@@ -1444,6 +1451,7 @@ NS_IMETHODIMP nsDocShell::Stop()
    return NS_OK;
 }
 
+/*
 NS_IMETHODIMP nsDocShell::SetDocument(nsIDOMDocument* aDocument,
    const PRUnichar* aContentType)
 {
@@ -1451,6 +1459,7 @@ NS_IMETHODIMP nsDocShell::SetDocument(nsIDOMDocument* aDocument,
    NS_ERROR("Not Yet Implemented");
    return NS_ERROR_FAILURE;
 }
+*/
 
 NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
 {
@@ -1513,6 +1522,7 @@ NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
    }
    return NS_OK;
 }
+
 //*****************************************************************************
 // nsDocShell::nsIBaseWindow
 //*****************************************************************************   
@@ -2439,7 +2449,7 @@ nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
 {
   // Clear the LSHE reference to indicate document loading has finished
   // one way or another.
-  if ((aStateFlags & flag_stop) && (aStateFlags & flag_is_network)) {
+  if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
     LSHE = nsnull;
   }
   return NS_OK;
@@ -2827,6 +2837,29 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    *aURI = nsnull;
    nsAutoString uriString(aStringURI);
    uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
+
+   // XXX nasty hack to check for the view-source: prefix
+   //
+   // The long term way and probably CORRECT way to do this is to write a
+   // protocol handler for the view-source: schema and have that feed back a
+   // content type that the docshell recognizes to mean to use viewSource mode.
+   //
+   const char cViewSource[] = "view-source:";
+   if (uriString.EqualsWithConversion(cViewSource, PR_TRUE, sizeof(cViewSource) - 1))
+   {
+      // Strip the view-source: prefix and set the docshell's view mode
+      nsAutoString newUri;
+      uriString.Mid(newUri, sizeof(cViewSource) - 1, -1);
+      uriString = newUri;
+      mLastViewMode = mViewMode;
+      mViewMode = viewSource;
+      mRestoreViewMode = PR_TRUE;
+   }
+   else if (mRestoreViewMode)
+   {
+      mRestoreViewMode = PR_FALSE;
+      mViewMode = mLastViewMode;
+   }
 
    // Just try to create an URL out of it
    NS_NewURI(aURI, uriString, nsnull);

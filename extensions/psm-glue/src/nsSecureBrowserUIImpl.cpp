@@ -318,8 +318,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 #endif
 
     // A Document is starting to load...
-    if ((aProgressStateFlags & flag_start) && 
-        (aProgressStateFlags & flag_is_network))
+    if ((aProgressStateFlags & STATE_START) && 
+        (aProgressStateFlags & STATE_IS_NETWORK))
     {
         // starting to load a webpage
         PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
@@ -331,8 +331,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     } 
 
     // A document has finished loading    
-    if ((aProgressStateFlags & flag_stop) &&
-        (aProgressStateFlags & flag_is_network) &&
+    if ((aProgressStateFlags & STATE_STOP) &&
+        (aProgressStateFlags & STATE_IS_NETWORK) &&
         mIsSecureDocument)
     {
         if (!mIsDocumentBroken) // and status is okay  FIX
@@ -413,15 +413,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         return NS_OK;
 
     // A URL is starting to load...
-    if ((aProgressStateFlags & flag_start) &&
-        (aProgressStateFlags & flag_is_network))
+    if ((aProgressStateFlags & STATE_START) &&
+        (aProgressStateFlags & STATE_IS_NETWORK))
     {   // check to see if we are going to mix content.
         return CheckMixedContext(loadingURI);
     }
 
     // A URL has finished loading...    
-    if ((aProgressStateFlags & flag_stop) &&
-        (aProgressStateFlags & flag_is_network))
+    if ((aProgressStateFlags & STATE_STOP) &&
+        (aProgressStateFlags & STATE_IS_NETWORK))
     {
         if (1)  // FIX status from the flag...
         {
@@ -671,7 +671,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         return NS_OK;
     }
 
-    PRBool boolpref = PR_TRUE;
+    PRBool boolpref = PR_TRUE;    
 
     // posting to a non https URL.
     mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref);

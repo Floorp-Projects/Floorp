@@ -238,11 +238,11 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIWebBrowser> webBrowser;
    NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
-   mWebBrowserChrome->GetNewBrowser(aChromeFlags, getter_AddRefs(webBrowser));
+   mWebBrowserChrome->CreateBrowserWindow(aChromeFlags, getter_AddRefs(webBrowser));
    NS_ENSURE_TRUE(webBrowser, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIDocShell> docShell;
-   webBrowser->GetDocShell(getter_AddRefs(docShell));
+   nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(webBrowser));
+   nsCOMPtr<nsIDocShell> docShell(do_GetInterface(webBrowserAsReq));
    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(CallQueryInterface(docShell, aDocShellTreeItem),
@@ -750,3 +750,4 @@ nsresult nsDocShellTreeOwner::MouseOut(nsIDOMEvent* aMouseEvent)
 {
 	return NS_OK; 
 }
+

@@ -57,13 +57,13 @@ protected:
    void XULWindow(nsXULWindow* aXULWindow);
    nsXULWindow* XULWindow();
 
-   NS_IMETHOD ApplyChromeMask();
+   NS_IMETHOD ApplyChromeFlags();
 
 protected:
    nsXULWindow*      mXULWindow;
    PRBool            mPrimary;
    PRBool            mContentTitleSetting;
-   PRUint32          mChromeMask;
+   PRUint32          mChromeFlags;
    nsString          mWindowTitleModifier;
    nsString          mTitleSeparator;
    nsString          mTitlePreface;

@@ -260,7 +260,8 @@ protected:
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
    PRInt32                    mViewMode;
-
+   PRInt32                    mLastViewMode;
+   PRBool                     mRestoreViewMode;
    PRInt32                    mChildOffset;  // Offset in the parent's child list.
    // Reference to the SHEntry for this docshell until the page is destroyed.
    // Somebody give me better name

@@ -328,8 +328,8 @@ protected:
 
 	// Mozilla interfaces
 	nsCOMPtr<nsIWebBrowser>	mWebBrowser;
-	nsIBaseWindow		*	mWebBrowserAsWin;
-	nsIDocShell			*	mRootDocShell;
+	nsCOMPtr<nsIBaseWindow> mWebBrowserAsWin;
+	nsCOMPtr<nsIDocShell>   mRootDocShell; // XXX this is going soon
     
 	nsIPref             *   mPrefs;
 	nsIEditor			*	mEditor;
@@ -365,8 +365,6 @@ protected:
 	virtual HRESULT CheckBinDirPath();
     virtual HRESULT SetStartupErrorMessage(UINT nStringID);
 	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
-	virtual HRESULT GetPresShell(nsIPresShell **pPresShell);
-    virtual HRESULT GetEditInterface(nsIContentViewerEdit** aEditInterface);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual HRESULT SetEditorMode(BOOL bEnabled);
 	virtual HRESULT OnEditorCommand(DWORD nCmdID);

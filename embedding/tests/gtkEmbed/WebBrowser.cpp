@@ -87,7 +87,7 @@ WebBrowser::Init(nsNativeWidget widget, nsIWebBrowserChrome* aTopWindow)
     mBaseWindow = do_QueryInterface(mWebBrowser);
     
     mTopWindow = aTopWindow;
-    mWebBrowser->SetTopLevelWindow(aTopWindow);
+    mWebBrowser->SetContainerWindow(aTopWindow);
     
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
     dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
@@ -129,8 +129,7 @@ WebBrowser::Edit(char* url)
     
 	if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr <nsIDocShell> rootDocShell;
-    mWebBrowser->GetDocShell(getter_AddRefs(rootDocShell));
+    nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
     
     nsCOMPtr<nsIDOMWindow> domWindow;
     ConvertDocShellToDOMWindow(rootDocShell, getter_AddRefs(domWindow));
@@ -145,8 +144,7 @@ WebBrowser::Edit(char* url)
 nsresult 
 WebBrowser::Print(void)
 {
-    nsCOMPtr <nsIDocShell> rootDocShell;
-    mWebBrowser->GetDocShell(getter_AddRefs(rootDocShell));
+    nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
 
 
     nsIContentViewer *pContentViewer = nsnull;

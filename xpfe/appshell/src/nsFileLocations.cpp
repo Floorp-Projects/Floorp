@@ -462,7 +462,7 @@ void nsSpecialFileSpec::operator = (Type aType)
             break;
         case App_ChromeDirectory:
             {
-                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::Moz_BinDirectory);
 #ifdef XP_MAC
                 *this += "Chrome";
 #else

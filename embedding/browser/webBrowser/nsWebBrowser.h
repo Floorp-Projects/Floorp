@@ -45,6 +45,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
+#include "nsIWebBrowserSetup.h"
 
 class nsWebBrowserInitInfo
 {
@@ -63,6 +64,7 @@ public:
 class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebNavigation,
                      public nsIWebProgress,
+                     public nsIWebBrowserSetup,
                      public nsIDocShellTreeItem,
                      public nsIBaseWindow,
                      public nsIScrollable, 
@@ -84,6 +86,7 @@ public:
     NS_DECL_NSIWEBBROWSER
     NS_DECL_NSIWEBNAVIGATION
     NS_DECL_NSIWEBPROGRESS
+    NS_DECL_NSIWEBBROWSERSETUP
 
 protected:
     virtual ~nsWebBrowser();

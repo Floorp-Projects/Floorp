@@ -51,6 +51,8 @@ CPP_OBJS=											\
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
+nsDocShell.cpp : nsDocShell.h
+
 install:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
     $(MAKE_INSTALL) appstrings.properties $(DIST)\bin\chrome\locales\en-US\global\locale

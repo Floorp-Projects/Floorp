@@ -479,7 +479,7 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
             mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
         
             // Update the progress status state
-            mProgressStateFlags = nsIWebProgressListener::flag_start;
+            mProgressStateFlags = nsIWebProgressListener::STATE_START;
 
             doStartDocumentLoad();
             FireOnStartDocumentLoad(this, aChannel);
@@ -592,7 +592,7 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       mIsLoadingDocument = PR_FALSE;
 
       // Update the progress status state - the document is done
-      mProgressStateFlags = nsIWebProgressListener::flag_stop;
+      mProgressStateFlags = nsIWebProgressListener::STATE_STOP;
 
       // 
       // New code to break the circular reference between 
@@ -628,15 +628,15 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
           this, (const char *) buffer));
 #endif /* DEBUG */
 
-  // Fire an OnStatus(...) notification flag_net_start.  This indicates
+  // Fire an OnStatus(...) notification STATE_START.  This indicates
   // that the document represented by mDocumentChannel has started to
   // load...
   FireOnStateChange(this,
                     mDocumentChannel,
-                    nsIWebProgressListener::flag_start |
-                    nsIWebProgressListener::flag_is_document |
-                    nsIWebProgressListener::flag_is_request |
-                    nsIWebProgressListener::flag_is_network,
+                    nsIWebProgressListener::STATE_START |
+                    nsIWebProgressListener::STATE_IS_DOCUMENT |
+                    nsIWebProgressListener::STATE_IS_REQUEST |
+                    nsIWebProgressListener::STATE_IS_NETWORK,
                     NS_OK);
 }
 
@@ -654,8 +654,8 @@ void nsDocLoaderImpl::doStartURLLoad(nsIChannel *aChannel)
 
   FireOnStateChange(this,
                     aChannel,
-                    nsIWebProgressListener::flag_start |
-                    nsIWebProgressListener::flag_is_request,
+                    nsIWebProgressListener::STATE_START |
+                    nsIWebProgressListener::STATE_IS_REQUEST,
                     NS_OK);
 }
 
@@ -673,8 +673,8 @@ void nsDocLoaderImpl::doStopURLLoad(nsIChannel *aChannel, nsresult aStatus)
 
   FireOnStateChange(this,
                     aChannel,
-                    nsIWebProgressListener::flag_stop |
-                    nsIWebProgressListener::flag_is_request,
+                    nsIWebProgressListener::STATE_STOP |
+                    nsIWebProgressListener::STATE_IS_REQUEST,
                     aStatus);
 }
 
@@ -697,9 +697,9 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
   //
   FireOnStateChange(this,
                     aChannel,
-                    nsIWebProgressListener::flag_stop |
-                    nsIWebProgressListener::flag_is_document |
-                    nsIWebProgressListener::flag_is_network,
+                    nsIWebProgressListener::STATE_STOP |
+                    nsIWebProgressListener::STATE_IS_DOCUMENT |
+                    nsIWebProgressListener::STATE_IS_NETWORK,
                     aStatus);
 }
 
@@ -956,33 +956,31 @@ nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
   return rv;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::GetProgressStatusFlags(PRInt32 *aProgressStateFlags)
+nsresult nsDocLoaderImpl::GetProgressStatusFlags(PRInt32 *aProgressStateFlags)
 {
   *aProgressStateFlags = mProgressStateFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::GetCurSelfProgress(PRInt32 *aCurSelfProgress)
+nsresult nsDocLoaderImpl::GetCurSelfProgress(PRInt32 *aCurSelfProgress)
 {
   *aCurSelfProgress = mCurrentSelfProgress;
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsDocLoaderImpl::GetMaxSelfProgress(PRInt32 *aMaxSelfProgress)
+nsresult nsDocLoaderImpl::GetMaxSelfProgress(PRInt32 *aMaxSelfProgress)
 {
   *aMaxSelfProgress = mMaxSelfProgress;
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsDocLoaderImpl::GetCurTotalProgress(PRInt32 *aCurTotalProgress)
+nsresult nsDocLoaderImpl::GetCurTotalProgress(PRInt32 *aCurTotalProgress)
 {
   *aCurTotalProgress = mCurrentTotalProgress;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
+nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 {
   PRUint32 count = 0;
   nsresult rv = NS_OK;
@@ -1000,8 +998,8 @@ NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
     docloader = getter_AddRefs(mChildList->ElementAt(i));
     if (docloader)
     {
-      webProgress = do_QueryInterface(docloader);
-      webProgress->GetMaxTotalProgress(&invididualProgress);
+      // Cast is safe since all children are nsDocLoaderImpl too
+      ((nsDocLoaderImpl *) docloader.get())->GetMaxTotalProgress(&invididualProgress);
     }
     if (invididualProgress < 0) // if one of the elements doesn't know it's size
                                 // then none of them do
@@ -1017,8 +1015,6 @@ NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
   } else {
     *aMaxTotalProgress = -1;
   }
-
-
   return NS_OK;
 }
 
@@ -1054,19 +1050,19 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
         info->mMaxProgress = -1;
       }
 
-      // Send a flag_transferring notification for the request.
+      // Send a STATE_TRANSFERRING notification for the request.
       PRInt32 flags;
     
-      flags = nsIWebProgressListener::flag_transferring | 
-              nsIWebProgressListener::flag_is_request;
+      flags = nsIWebProgressListener::STATE_TRANSFERRING | 
+              nsIWebProgressListener::STATE_IS_REQUEST;
       //
-      // Move the WebProgress into the flag_transferring state if necessary...
+      // Move the WebProgress into the STATE_TRANSFERRING state if necessary...
       //
-      if (mProgressStateFlags & nsIWebProgressListener::flag_start) {
-        mProgressStateFlags = nsIWebProgressListener::flag_transferring;
+      if (mProgressStateFlags & nsIWebProgressListener::STATE_START) {
+        mProgressStateFlags = nsIWebProgressListener::STATE_TRANSFERRING;
 
-        // Send flag_transferring for the document too...
-        flags |= nsIWebProgressListener::flag_is_document;
+        // Send STATE_TRANSFERRING for the document too...
+        flags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
       }
 
       FireOnStateChange(this, aChannel, flags, NS_OK);
@@ -1129,7 +1125,7 @@ void nsDocLoaderImpl::ClearInternalProgress()
   mCurrentSelfProgress  = mMaxSelfProgress  = 0;
   mCurrentTotalProgress = mMaxTotalProgress = 0;
 
-  mProgressStateFlags = nsIWebProgressListener::flag_stop;
+  mProgressStateFlags = nsIWebProgressListener::STATE_STOP;
 }
 
 
@@ -1202,16 +1198,16 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
   PRInt32 count;
 
   //
-  // Remove the flag_is_network bit if necessary.
+  // Remove the STATE_IS_NETWORK bit if necessary.
   //
   // The rule is to remove this bit, if the notification has been passed
   // up from a child WebProgress, and the current WebProgress is already
   // active...
   //
   if (mIsLoadingDocument &&
-      (aStateFlags & nsIWebProgressListener::flag_is_network) && 
+      (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) && 
       (this != aProgress)) {
-    aStateFlags &= ~nsIWebProgressListener::flag_is_network;
+    aStateFlags &= ~nsIWebProgressListener::STATE_IS_NETWORK;
   }
 
 #if defined(DEBUG)

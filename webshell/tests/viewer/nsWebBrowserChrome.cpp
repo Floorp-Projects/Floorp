@@ -80,30 +80,21 @@ NS_IMETHODIMP nsWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstan
 //*****************************************************************************
 // nsWebBrowserChrome::nsIWebBrowserChrome
 //*****************************************************************************   
-
-NS_IMETHODIMP nsWebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
+NS_IMETHODIMP nsWebBrowserChrome::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
 {
    NS_ENSURE_STATE(mBrowserWindow->mStatus);
 
-   PRUint32 size;
-   mBrowserWindow->mStatus->SetText(nsAutoString(aStatus), size);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
-{
-   if(!mBrowserWindow->mStatus)
-      return NS_OK;
-
-   PRUint32 size;
-   mBrowserWindow->mStatus->SetText(nsAutoString(aLink), size);
-
+   switch (aStatusType)
+     {
+     case STATUS_SCRIPT:
+     case STATUS_LINK:
+       {
+         NS_ENSURE_STATE(mBrowserWindow->mStatus);
+         PRUint32 size;
+         mBrowserWindow->mStatus->SetText(nsAutoString(aStatus), size);
+       }
+       break;
+     }
    return NS_OK;
 }
 
@@ -119,19 +110,19 @@ NS_IMETHODIMP nsWebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
+NS_IMETHODIMP nsWebBrowserChrome::SetChromeFlags(PRUint32 aChromeFlags)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
+NS_IMETHODIMP nsWebBrowserChrome::GetChromeFlags(PRUint32* aChromeFlags)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowser(PRUint32 aChromeMask, 
+NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask, 
    nsIWebBrowser** aWebBrowser)
 {
    if(mBrowserWindow->mWebCrawler && (mBrowserWindow->mWebCrawler->Crawling() || 
@@ -402,18 +393,18 @@ nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
                                   PRInt32 aProgressStateFlags,
                                   nsresult aStatus)
 {
-  if (aProgressStateFlags & flag_start) {
-    if (aProgressStateFlags & flag_is_network) {
+  if (aProgressStateFlags & STATE_START) {
+    if (aProgressStateFlags & STATE_IS_NETWORK) {
       OnWindowActivityStart();
       OnLoadStart(aRequest);
     }
-    if (aProgressStateFlags & flag_is_request) {
+    if (aProgressStateFlags & STATE_IS_REQUEST) {
       mTotal += 1;
     }
   }
 
-  if (aProgressStateFlags & flag_stop) {
-    if (aProgressStateFlags & flag_is_request) {
+  if (aProgressStateFlags & STATE_STOP) {
+    if (aProgressStateFlags & STATE_IS_REQUEST) {
       mCurrent += 1;
 
       if(mBrowserWindow->mStatus) {
@@ -434,13 +425,13 @@ nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
       }
     }
 
-    if (aProgressStateFlags & flag_is_network) {
+    if (aProgressStateFlags & STATE_IS_NETWORK) {
       OnLoadFinished(aRequest, aProgressStateFlags);
       OnWindowActivityFinished();
     }
   }
 
-  if (aProgressStateFlags & flag_transferring) {
+  if (aProgressStateFlags & STATE_TRANSFERRING) {
     OnStatusTransferring(aRequest);
   }
 

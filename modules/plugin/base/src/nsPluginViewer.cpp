@@ -883,7 +883,7 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
         if(browserChrome)
           {
           nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
-          browserChrome->SetJSStatus(msg.GetUnicode());
+          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.GetUnicode());
           }
         }
       }

@@ -29,7 +29,7 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = webbrwsr
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-LINCS=-I..\webBrowser -I..\setup
+LINCS=-I..\webBrowser
 
 CPP_OBJS=				\
 	.\$(OBJDIR)\nsWebBrowserModule.obj		\
@@ -38,7 +38,6 @@ CPP_OBJS=				\
 # These are the libraries we need to link with to create the dll
 LLIBS =                              \
  $(DIST)\lib\nsWebBrowser_s.lib      \
- $(DIST)\lib\nsWebBrowserSetup_s.lib \
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\gkgfxwin.lib	\
  $(LIBNSPR)

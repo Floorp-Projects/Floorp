@@ -162,6 +162,12 @@ protected:
     nsVoidArray mChannelInfoList;
 
 private:
+    nsresult GetProgressStatusFlags(PRInt32* aProgressStatusFlags);
+    nsresult GetCurSelfProgress(PRInt32* aCurSelfProgress);
+    nsresult GetMaxSelfProgress(PRInt32* aMaxSelfProgress);
+    nsresult GetCurTotalProgress(PRInt32* aCurTotalProgress);
+    nsresult GetMaxTotalProgress(PRInt32* aMaxTotalProgress);
+
     nsresult AddChannelInfo(nsIChannel *aChannel);
     nsChannelInfo *GetChannelInfo(nsIChannel *aChannel);
     nsresult ClearChannelInfoList(void);
