@@ -19,6 +19,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
+#include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIStyleSet.h"
@@ -26,6 +27,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
@@ -114,6 +116,8 @@ public:
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
+
+  NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURL*                aInputURL,
@@ -227,6 +231,8 @@ protected:
   nsCSSScanner* mScanner;
   nsIURL* mURL;
   nsICSSStyleSheet* mSheet;
+  PRInt32 mChildSheetCount;
+  nsICSSLoader* mChildLoader; // not ref counted, it owns us
 
   PRBool mInHead;
 
@@ -255,6 +261,8 @@ CSSParserImpl::CSSParserImpl()
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
   mCaseSensitive = PR_FALSE;
+  mChildSheetCount = 0;
+  mChildLoader = nsnull;
 }
 
 CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
@@ -266,6 +274,7 @@ CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
   mCaseSensitive = PR_FALSE;
+  mChildSheetCount = mSheet->StyleSheetCount();
 }
 
 NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
@@ -296,6 +305,7 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
     NS_IF_RELEASE(mSheet);
     mSheet = aSheet;
     NS_ADDREF(mSheet);
+    mChildSheetCount = mSheet->StyleSheetCount();
   }
 
   return NS_OK;
@@ -305,6 +315,13 @@ NS_IMETHODIMP
 CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
 {
   mCaseSensitive = aCaseSensitive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
+{
+  mChildLoader = aChildLoader;  // not ref counted, it owns us
   return NS_OK;
 }
 
@@ -318,6 +335,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   if (nsnull == mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
+    mChildSheetCount = 0;
   }
 
   PRInt32 errorCode = NS_OK;
@@ -669,148 +687,35 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 }
 
 
-typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
-
-const PRUnichar kNullCh       = PRUnichar('\0');
-const PRUnichar kSingleQuote  = PRUnichar('\'');
-const PRUnichar kDoubleQuote  = PRUnichar('\"');
-const PRUnichar kComma        = PRUnichar(',');
-const PRUnichar kHyphenCh     = PRUnichar('-');
-
-static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
-{
-  PRBool    running = PR_TRUE;
-
-  nsAutoString  stringList(aStringList); // copy to work buffer
-  nsAutoString  subStr;
-
-  stringList.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
-  PRUnichar* end   = start;
-
-  while (running && (kNullCh != *start)) {
-    PRBool  quoted = PR_FALSE;
-
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
-      start++;
-    }
-
-    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
-      PRUnichar quote = *start++;
-      quoted = PR_TRUE;
-      end = start;
-      while (kNullCh != *end) {
-        if (quote == *end) {  // found closing quote
-          *end++ = kNullCh;     // end string here
-          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
-            end++;
-          }
-          break;
-        }
-        end++;
-      }
-    }
-    else {  // non-quoted string or ended
-      end = start;
-
-      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
-        end++;
-      }
-      *end = kNullCh; // end string here
-    }
-
-    // truncate at first non letter, digit or hyphen
-    PRUnichar* test = start;
-    while (test <= end) {
-      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
-          (PR_FALSE == nsString::IsDigit(*test)) && (kHyphenCh != *test)) {
-        *test = kNullCh;
-        break;
-      }
-      test++;
-    }
-    subStr = start;
-
-    if (PR_FALSE == quoted) {
-      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
-    }
-
-    if (0 < subStr.Length()) {
-      running = (*aFunc)(subStr, aData);
-    }
-
-    start = ++end;
-  }
-
-  return running;
-}
-
-static PRBool MediumEnumFunc(const nsString& aSubString, void *aData)
-{
-  nsIAtom*  medium = NS_NewAtom(aSubString);
-  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
-  return PR_TRUE;
-}
-
 PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia)
 {
   PRBool result = PR_FALSE;
 
-  // XXX probably need a way to encode unicode junk for the part of
-  // the url that follows a "?"
-  char* cp = aURLSpec.ToNewCString();
-  nsIURL* url;
-  aErrorCode = NS_NewURL(&url, cp, mURL);
-  delete [] cp;
-  if (NS_FAILED(aErrorCode)) {
-    // import url is bad
-    // XXX log this somewhere for easier web page debugging
-    return PR_FALSE;
-  }
-
-  if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
-
-    nsIInputStream* in;
-    nsresult rv = NS_OpenURL(url, &in);
-    if (rv != NS_OK) {
-      // failure to make connection
-      // XXX log this somewhere for easier web page debugging
+  if (mChildLoader) {
+    // XXX probably need a way to encode unicode junk for the part of
+    // the url that follows a "?"
+    nsIURL* url;
+    nsIURLGroup* urlGroup = nsnull;
+    mURL->GetURLGroup(&urlGroup);
+    if (urlGroup) {
+      aErrorCode = urlGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
+      NS_RELEASE(urlGroup);
     }
     else {
-
-      nsIUnicharInputStream* uin;
-      aErrorCode = NS_NewConverterStream(&uin, nsnull, in);
-      if (NS_FAILED(aErrorCode)) {
-        // XXX no iso-latin-1 converter? out of memory?
-        NS_RELEASE(in);
-      }
-      else {
-
-        NS_RELEASE(in);
-
-        // Create a new parse to parse the import. 
-
-        nsICSSParser* parser;
-        aErrorCode = NS_NewCSSParser(&parser);
-        if (NS_SUCCEEDED(aErrorCode)) {
-          nsICSSStyleSheet* childSheet = nsnull;
-          aErrorCode = parser->Parse(uin, url, childSheet);
-          NS_RELEASE(parser);
-          if (NS_SUCCEEDED(aErrorCode) && (nsnull != childSheet)) {
-            if (0 < aMedia.Length()) {
-              EnumerateString(aMedia, MediumEnumFunc, childSheet);
-            }
-            mSheet->AppendStyleSheet(childSheet);
-            result = PR_TRUE;
-          }
-          NS_IF_RELEASE(childSheet);
-        }
-        NS_RELEASE(uin);
-      }
+      aErrorCode = NS_NewURL(&url, aURLSpec, mURL);
     }
+
+    if (NS_FAILED(aErrorCode)) {
+      // import url is bad
+      // XXX log this somewhere for easier web page debugging
+      return PR_FALSE;
+    }
+
+    if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
+      mChildLoader->LoadChildSheet(mSheet, url, aMedia, mChildSheetCount++);
+    }
+    NS_RELEASE(url);
   }
-  NS_RELEASE(url);
   
   return result;
 }
@@ -995,6 +900,8 @@ static PRBool IsPseudoClass(const nsIAtom* aAtom)
 {
   return PRBool((nsCSSAtoms::activePseudo == aAtom) || 
                 (nsCSSAtoms::disabledPseudo == aAtom) ||
+                (nsCSSAtoms::dragOverPseudo == aAtom) ||
+                (nsCSSAtoms::dragPseudo == aAtom) ||
                 (nsCSSAtoms::enabledPseudo == aAtom) ||
                 (nsCSSAtoms::firstChildPseudo == aAtom) ||
                 (nsCSSAtoms::focusPseudo == aAtom) ||
@@ -2698,7 +2605,7 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
       break;
     }
     PRInt32 bit = xValue.GetIntValue();
-    if (0 == bit) {
+    if (BG_CENTER == bit) {
       // Special hack for center bits: We can have two of them
       mask |= centerBit;
       centerBit <<= 1;
