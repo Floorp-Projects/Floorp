@@ -105,8 +105,14 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
 
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsAString& aProperty) {
-  nsCAutoString theProp; theProp.AssignWithConversion(aProperty);
-  return LookupProperty(theProp);
+  // This is faster than converting and calling
+  // LookupProperty(nsACString&).  The table will do its own
+  // converting and avoid a PromiseFlatCString() call.
+  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  if (gPropertyTable) {
+    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  }  
+  return eCSSProperty_UNKNOWN;
 }
 
 const nsAFlatCString& 
