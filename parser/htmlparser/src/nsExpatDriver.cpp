@@ -52,7 +52,7 @@
 #include "nsTextFormatter.h"
 
 static const PRUint32 kNotInDoctype = PRUint32(-1);
-static const char* kDTDDirectory = "dtd/";
+static const char* kDTDDirectory = "res/dtd/";
 
 /***************************** EXPAT CALL BACKS *******************************/
 
@@ -436,10 +436,9 @@ RemapDTD(const XML_Char* aPublicID, nsAWritableCString& aLocalDTD)
 }
 
 // aDTD is an in/out parameter.  Returns true if the aDTD is a chrome url or if the
-// filename contained within the url exists in the special DTD directory ("dtd"
-// relative to the current process directory).  For the latter case, aDTD is set
-// to the file: url that points to the DTD file found in the local DTD directory
-// AND the old URI is relased.
+// filename contained within the url exists in the special DTD directory.  
+// For the latter case, aDTD is set to the file: url that points to the DTD 
+// file found in the local DTD directory AND the old URI is relased.
 static PRBool
 IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
 {
