@@ -9,10 +9,8 @@
 #
 GDEPTH = ../../../../..
 
-EXPORTS = \
-	$(NULL)
 
-PRIVATE_EXPORTS = \
+EXPORTS = \
 	calendar.h \
 	datefmt.h \
 	gregocal.h \
