@@ -27,7 +27,7 @@
 #include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 /* The definition is nsAddressBook.cpp */

@@ -46,7 +46,7 @@ typedef struct _nsAbRDFNotification {
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
-static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORYRESOURCE_CID); 
+static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Child = nsnull;
@@ -77,7 +77,6 @@ nsAbDirectoryDataSource::nsAbDirectoryDataSource():
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
-
 }
 
 nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
@@ -178,7 +177,6 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTarget(nsIRDFResource* source,
                                                nsIRDFNode** target)
 {
   nsresult rv = NS_RDF_NO_VALUE;
-
   // we only have positive assertions in the mail data source.
   if (! tv)
     return NS_RDF_NO_VALUE;

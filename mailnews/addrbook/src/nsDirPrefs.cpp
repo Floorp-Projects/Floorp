@@ -466,7 +466,7 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 {
@@ -1079,7 +1079,7 @@ PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32
 
 	PRInt32    i, count, num;
 	PRBool     resort = PR_FALSE;
-	DIR_Server *s;
+	DIR_Server *s=nsnull;
 
 	switch (position) {
 	case DIR_POS_APPEND:
@@ -1423,7 +1423,7 @@ PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, PRUint32 flags, 
 
 PRBool DIR_DeregisterNotificationCallback(DIR_NOTIFICATION_FN fn, void *inst_data)
 {
-	DIR_Callback *cb, *cbPrev;
+	DIR_Callback *cb, *cbPrev=nsnull;
 
 	for (cb = dir_CallbackList; cb && cb->fn != fn && cb->data != inst_data; cb = cb->next)
 		cbPrev = cb;

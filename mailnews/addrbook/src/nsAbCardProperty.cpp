@@ -37,7 +37,7 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
