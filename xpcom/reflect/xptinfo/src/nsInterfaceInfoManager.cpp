@@ -347,9 +347,6 @@ nsInterfaceInfoManager::initInterfaceTables()
         spec.ResolveSymlink(wasAlias);
 #endif
         
-        if (! spec.IsFile())
-            continue;
-        
         // See if this is a .xpt file by looking at the filename                
         char*   fileName = spec.GetLeafName();
         int flen = PL_strlen(fileName);
@@ -357,6 +354,9 @@ nsInterfaceInfoManager::initInterfaceTables()
             nsCRT::free(fileName);
             continue;
         }
+        
+        if (! spec.IsFile())
+            continue;
         
         // it's a valid file, read it in.
 #ifdef DEBUG_iim
