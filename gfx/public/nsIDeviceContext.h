@@ -135,6 +135,9 @@ typedef void * nsNativeDeviceContext;
 /* The document was asked to be destroyed while we were preparing printing */
 #define NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+26)
+/* Cannot Print or Print Preview XUL Documents */
+#define NS_ERROR_GFX_PRINTER_NO_XUL \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+27)
 
 
 /**

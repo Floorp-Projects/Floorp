@@ -105,6 +105,7 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIXULDocument.h"  // Temporary code for Bug 136185
 
 #include "nsIChromeRegistry.h"
 
@@ -5891,6 +5892,13 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
   if (mIsDoingPrinting) return NS_ERROR_FAILURE;
 
+  // Temporary code for Bug 136185
+  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+  if (xulDoc) {
+    ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL, PR_FALSE);
+    return NS_OK;
+  }
+
   // Get the webshell for this documentviewer
   nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   // Get the DocShell and see if it is busy
@@ -6262,6 +6270,12 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   gDumpLOFileNameCnt = 0;
 #endif
 
+  // Temporary code for Bug 136185
+  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+  if (xulDoc) {
+    ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL);
+    return NS_OK;
+  }
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -6713,6 +6727,7 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_NO_XUL)   // Temporary code for Bug 136185
 
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
