@@ -370,31 +370,12 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 
             ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
-                /* Suppress error reports from JS_ValueToString(). */
-                older = JS_SetErrorReporter(cx, NULL);
                 str = JS_ValueToString(cx, result);
-                JS_SetErrorReporter(cx, older);
-
                 if (str)
                     fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                 else
                     ok = JS_FALSE;
             }
-#if 0
-#if JS_HAS_ERROR_EXCEPTIONS
-            /*
-             * Require that any time we return failure, an exception has
-             * been set.
-             */
-            JS_ASSERT(ok || JS_IsExceptionPending(cx));
-
-            /*
-             * Also that any time an exception has been set, we've
-             * returned failure.
-             */
-            JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
-#endif /* JS_HAS_ERROR_EXCEPTIONS */
-#endif
             JS_DestroyScript(cx, script);
         }
     } while (!hitEOF);
