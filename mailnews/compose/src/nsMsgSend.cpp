@@ -1557,7 +1557,7 @@ nsMsgComposeAndSend::Init(
   //
   if (sendFileSpec)
   {
-    mTempFileSpec = sendFileSpec;
+	mTempFileSpec = sendFileSpec;
     return NS_OK;
   }
 
@@ -3219,6 +3219,7 @@ nsMsgComposeAndSend::Clear()
     {
       mTempFileSpec->Delete(PR_FALSE);
       delete mTempFileSpec;
+	  mTempFileSpec = nsnull;
     }
 	}
 
