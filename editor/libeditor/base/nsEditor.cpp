@@ -611,6 +611,20 @@ nsEditor::EnableUndo(PRBool aEnable)
 }
 
 
+NS_IMETHODIMP
+nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
+{
+  NS_ENSURE_ARG_POINTER(aTxnManager);
+  
+  *aTxnManager = NULL;
+  if (!mTxnMgr)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aTxnManager = mTxnMgr);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {

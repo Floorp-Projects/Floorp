@@ -40,6 +40,7 @@ class nsIDOMElement;
 class nsIDOMDocument;
 class nsIDOMSelection;
 class nsITransaction;
+class nsITransactionManager;
 class nsIOutputStream;
 class nsIEditActionListener;
 class nsIDocumentStateListener;
@@ -146,6 +147,12 @@ public:
   NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType)=0;
 
   /* ------------ Transaction methods -------------- */
+
+  /** GetTransactionManagerDo() Get the transaction manager
+    *
+    * @return aTxnManager the transaction manager that the editor is using
+    */
+  NS_IMETHOD GetTransactionManager(nsITransactionManager* *aTxnManager)=0;
 
   /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
     * If a transaction manager is present, it is used.  

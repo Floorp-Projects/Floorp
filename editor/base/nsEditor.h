@@ -165,6 +165,7 @@ public:
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);
+  NS_IMETHOD GetTransactionManager(nsITransactionManager* *aTxnManager);
   NS_IMETHOD Do(nsITransaction *aTxn);
   NS_IMETHOD Undo(PRUint32 aCount);
   NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
