@@ -1785,16 +1785,21 @@ wallet_ReadFromURLFieldToSchemaFile
   nsresult rv;
   rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
+    return;
+  }
+  nsInputFileStream strm(dirSpec + filename);
+  if (!strm.is_open()) {
     /* if we failed to download the file, see if an initial version of it exists */
     rv = Wallet_ResourceDirectory(dirSpec);
     if (NS_FAILED(rv)) {
       return;
     }
-  }
-  nsInputFileStream strm(dirSpec + filename);
-  if (!strm.is_open()) {
-    /* file doesn't exist -- that's not an error */
-    return;
+    nsInputFileStream strm2(dirSpec + filename);
+    strm = strm2;
+    if (!strm.is_open()) {
+      /* still not open so give up */
+      return;
+    }
   }
 
   /* make sure the list exists */
