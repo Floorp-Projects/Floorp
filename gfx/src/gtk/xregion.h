@@ -34,6 +34,10 @@ typedef struct {
     short x, y, width, height;
 }RECTANGLE, RectangleRec, *RectanglePtr;
 
+#ifdef TRUE
+#undef TRUE
+#endif
+
 #define TRUE 1
 #ifndef FALSE
 #define FALSE 0
