@@ -73,7 +73,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     nsresult rv;
 
     // set our internal state to reflect the server type
-    nsCString fromMIMEString(aFromType);
+    nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
     const char *from = fromMIMEString.GetBuffer();
     NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
 
@@ -162,7 +162,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
 
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), convertedData);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), convertedData);
     if (NS_FAILED(rv)) return rv;
 
     inputData = do_QueryInterface(inputDataSup, &rv);
@@ -191,7 +191,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     NS_ADDREF(mFinalListener);
 
     // set our internal state to reflect the server type
-    nsCString fromMIMEString(aFromType);
+    nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
     const char *from = fromMIMEString.GetBuffer();
     NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
 
@@ -331,7 +331,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
 
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), indexFormat);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), indexFormat);
     if (NS_FAILED(rv)) return rv;
 
     inputData = do_QueryInterface(inputDataSup, &rv);

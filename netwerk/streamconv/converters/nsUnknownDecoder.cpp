@@ -260,15 +260,15 @@ void nsUnknownDecoder::DetermineContentType()
     // This false match happened all the time...  For example, CGI scripts
     // written in sh or perl that emit HTML.
     //
-    if (str.Equals("#!", PR_FALSE, 2) || 
-        str.Equals("%!", PR_FALSE, 2)) {
+    if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
+        str.EqualsWithConversion("%!", PR_FALSE, 2)) {
       mContentType = TEXT_PLAIN;
     }
     //
     // If the buffer begins with a mailbox delimiter then it is not HTML
     //
-    else if (str.Equals("From ", PR_TRUE, 5) || 
-             str.Equals(">From ", PR_TRUE, 6)) {
+    else if (str.EqualsWithConversion("From ", PR_TRUE, 5) || 
+             str.EqualsWithConversion(">From ", PR_TRUE, 6)) {
       mContentType = TEXT_PLAIN;
     }
     //

@@ -57,13 +57,13 @@ mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
     switch (ch)
     {
     case '<':
-      aStringToAppendTo += "&lt;";
+      aStringToAppendTo.AppendWithConversion("&lt;");
       break;
     case '>':
-      aStringToAppendTo += "&gt;";
+      aStringToAppendTo.AppendWithConversion("&gt;");
       break;
     case '&':
-      aStringToAppendTo += "&amp;";
+      aStringToAppendTo.AppendWithConversion("&amp;");
       break;
     default:
       aStringToAppendTo += ch;
@@ -90,17 +90,17 @@ mozTXTToHTMLConv::EscapeStr(nsString& aInString)
     {
     case '<':
       aInString.Cut(i, 1);
-      aInString.Insert("&lt;", i, 4);
+      aInString.InsertWithConversion("&lt;", i, 4);
       i += 4; // skip past the integers we just added
       break;
     case '>':
       aInString.Cut(i, 1);
-      aInString.Insert("&gt;", i, 4);
+      aInString.InsertWithConversion("&gt;", i, 4);
       i += 4; // skip past the integers we just added
       break;
     case '&':
       aInString.Cut(i, 1);
-      aInString.Insert("&amp;", i, 5);
+      aInString.InsertWithConversion("&amp;", i, 5);
       i += 5; // skip past the integers we just added
       break;
     default:
@@ -154,19 +154,19 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
 {
   if (aInString[pos] == '@')
   {
-    aOutString = "mailto:";
+    aOutString.AssignWithConversion("mailto:");
     aOutString += aInString;
   }
   else if (aInString[pos] == '.')
   {
     if (ItMatchesDelimited(aInString, aInLength, "www.", 4, LT_IGNORE, LT_IGNORE))
     {
-      aOutString = "http://";
+      aOutString.AssignWithConversion("http://");
       aOutString += aInString;
     }
     else if (ItMatchesDelimited(aInString,aInLength, "ftp.", 4, LT_IGNORE, LT_IGNORE))
     { 
-      aOutString = "ftp://";
+      aOutString.AssignWithConversion("ftp://");
       aOutString += aInString;
     }
   }
@@ -374,12 +374,12 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
     //PRUnichar* validURL;
     //uri->ToString(&validURL);
 
-    outputHTML = "<a href=\"";
+    outputHTML.AssignWithConversion("<a href=\"");
     //outputHTML += validURL;
     outputHTML += txtURL;
-    outputHTML += "\">";
+    outputHTML.AppendWithConversion("\">");
     outputHTML += desc;
-    outputHTML += "</a>";
+    outputHTML.AppendWithConversion("</a>");
     //Recycle(validURL);
     return PR_TRUE;
   }
@@ -452,7 +452,7 @@ mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const 
       if (aInString[pos] != ':')
       {
         nsAutoString temp = txtURL;
-        txtURL = "";
+        txtURL.SetLength(0);
         CompleteAbbreviatedURL(temp.GetUnicode(),temp.Length(), pos - start, txtURL);
       }
 
@@ -571,12 +571,12 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     )
   {
     openTags++;
-    aOutString += "<";
-    aOutString += tagHTML;
-    aOutString += ' ';
-    aOutString += attributeHTML;
-    aOutString += '>';
-    aOutString += tagTXT;
+    aOutString.AppendWithConversion("<");
+    aOutString.AppendWithConversion(tagHTML);
+    aOutString.AppendWithConversion(' ');
+    aOutString.AppendWithConversion(attributeHTML);
+    aOutString.AppendWithConversion('>');
+    aOutString.AppendWithConversion(tagTXT);
     return PR_TRUE;
   }
 
@@ -585,10 +585,10 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
        && ItMatchesDelimited(aInString, aInStringLength, tagTXT, aTagTXTLen, LT_ALPHA, LT_DELIMITER))
   {
     openTags--;
-    aOutString += tagTXT;
-    aOutString += "</";
-    aOutString += tagHTML;
-    aOutString += '>';
+    aOutString.AppendWithConversion(tagTXT);
+    aOutString.AppendWithConversion("</");
+    aOutString.AppendWithConversion(tagHTML);
+    aOutString.AppendWithConversion('>');
     return PR_TRUE;
   }
 
@@ -628,13 +628,13 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
   {
     if (col0)
     {
-      outputHTML = tagHTML;
+      outputHTML.AssignWithConversion(tagHTML);
     }
     else
     {
       outputHTML.Truncate();
-      outputHTML += ' ';
-      outputHTML += tagHTML;
+      outputHTML.AppendWithConversion(' ');
+      outputHTML.AppendWithConversion(tagHTML);
     }
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
@@ -706,7 +706,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     if (ItMatchesDelimited(aInString, aInLength, "(c)", 3, LT_IGNORE, LT_DELIMITER))
          // Note: ItMatchesDelimited compares case-insensitive
     {
-      aOutputString.Append("&copy;");
+      aOutputString.AppendWithConversion("&copy;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -714,7 +714,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     if (ItMatchesDelimited(aInString,aInLength,  "(r)", 3, LT_IGNORE, LT_DELIMITER))
          // see above
     {
-      aOutputString.Append("&reg;");
+      aOutputString.AppendWithConversion("&reg;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -724,14 +724,14 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
   {
     if (ItMatchesDelimited(aInString, aInLength, " +/-", 4, LT_IGNORE, LT_IGNORE))
     {
-      aOutputString.Append(" &plusmn;");
+      aOutputString.AppendWithConversion(" &plusmn;");
       glyphTextLen = 4;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
     }
     if (col0 && ItMatchesDelimited(aInString, aInLength, "+/-", 3, LT_IGNORE, LT_IGNORE))
     {
-      aOutputString.Append("&plusmn;");
+      aOutputString.AppendWithConversion("&plusmn;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -765,11 +765,11 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
     outputHTML.Truncate();
     outputHTML += text0;
-    outputHTML += "<sup>";
+    outputHTML.AppendWithConversion("<sup>");
 
     aOutputString.Append(outputHTML);
     aOutputString.Append(&aInString[2], delimPos - 2);
-    aOutputString += "</sup>";
+    aOutputString.AppendWithConversion("</sup>");
 
     glyphTextLen = delimPos /* - 1 + 1 */ ;
     MOZ_TIMER_STOP(mGlyphHitTimer);
