@@ -65,11 +65,14 @@ nsContentList::nsContentList(nsIDocument *aDocument,
 
 nsContentList::nsContentList(nsIDocument *aDocument, 
                              nsContentListMatchFunc aFunc,
-                             void* aData,
+                             const nsString* aData,
                              nsIContent* aRootContent)
 {
   mFunc = aFunc;
-  mData = aData;
+  if (nsnull != aData) {
+    mData = new nsString(*aData);
+    // If this fails, fail silently
+  }
   mMatchAtom = nsnull;
   mRootContent = aRootContent;
   mMatchAll = PR_FALSE;
@@ -100,8 +103,6 @@ nsContentList::~nsContentList()
   
   NS_IF_RELEASE(mMatchAtom);
 
-  // XXX This is absolutely gross, since this is allocated
-  // elsewhere.
   if (nsnull != mData) {
     delete mData;
   }
