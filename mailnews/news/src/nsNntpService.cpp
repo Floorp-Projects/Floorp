@@ -1270,7 +1270,7 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
   	nsCOMPtr<nsIURI> uri;
     nsXPIDLCString serverUri;
     nsXPIDLString newsgroupName;
-    rv = server->GetServerPasswordRealm(getter_Copies(serverUri));
+    rv = server->GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
     aMsgFolder->GetName(getter_Copies(newsgroupName));
     if (NS_FAILED(rv)) return rv;
@@ -1309,7 +1309,7 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 	if (!server) return NS_ERROR_FAILURE;
 
 	nsXPIDLCString serverUri;
-	rv = server->GetServerPasswordRealm(getter_Copies(serverUri));
+	rv = server->GetServerURI(getter_Copies(serverUri));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = ConstructNntpUrl((const char *)serverUri, "", nsMsgKey_None, nsnull, getter_AddRefs(uri));
@@ -1337,7 +1337,7 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer, nsIM
 	if (!server) return NS_ERROR_FAILURE;
 
 	nsXPIDLCString serverUri;
-	rv = server->GetServerPasswordRealm(getter_Copies(serverUri));
+	rv = server->GetServerURI(getter_Copies(serverUri));
 
 	nsCAutoString uriStr;
 	uriStr += (const char *)serverUri;

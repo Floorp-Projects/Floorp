@@ -75,7 +75,7 @@ nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aName)
 
     nsXPIDLCString serverUri;
 
-    rv = mIncomingServer->GetServerPasswordRealm(getter_Copies(serverUri));
+    rv = mIncomingServer->GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString uri;
@@ -157,7 +157,7 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 #endif
 	nsXPIDLCString serverUri;
 
-	rv = mIncomingServer->GetServerPasswordRealm(getter_Copies(serverUri));
+	rv = mIncomingServer->GetServerURI(getter_Copies(serverUri));
 	if (NS_FAILED(rv)) return rv;
 
 	nsCAutoString uri;

@@ -182,7 +182,7 @@ nsMsgIncomingServer::CloseCachedConnections()
 
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
-nsMsgIncomingServer::GetServerPasswordRealm(char* *aResult)
+nsMsgIncomingServer::GetServerURI(char* *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     nsresult rv;
@@ -229,7 +229,7 @@ nsMsgIncomingServer::CreateRootFolder()
 	nsresult rv;
 			  // get the URI from the incoming server
   nsXPIDLCString serverUri;
-  rv = GetServerPasswordRealm(getter_Copies(serverUri));
+  rv = GetServerURI(getter_Copies(serverUri));
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIRDFService, rdf,
@@ -639,7 +639,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 		{
             nsXPIDLString uniPassword;
 			nsXPIDLCString serverUri;
-			rv = GetServerPasswordRealm(getter_Copies(serverUri));
+			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
 			rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, 
                                         NS_ConvertToString(serverUri).GetUnicode(), PR_TRUE,
@@ -677,7 +677,7 @@ nsMsgIncomingServer::StorePassword()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString serverUri;
-    rv = GetServerPasswordRealm(getter_Copies(serverUri));
+    rv = GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString password; password.AssignWithConversion((const char *)pwd);
@@ -694,7 +694,7 @@ nsMsgIncomingServer::ForgetPassword()
 
     
     nsXPIDLCString serverUri;
-    rv = GetServerPasswordRealm(getter_Copies(serverUri));
+    rv = GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
     rv = SetPassword("");

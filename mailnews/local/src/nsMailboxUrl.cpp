@@ -99,7 +99,7 @@ static char *nsMailboxGetURI(const char *nativepath)
         PRInt32 len = PL_strlen(serverPath);
         if (PL_strncasecmp(serverPath, filePath, len) == 0) {
             nsXPIDLCString serverURI;
-            rv = server->GetServerPasswordRealm(getter_Copies(serverURI));
+            rv = server->GetServerURI(getter_Copies(serverURI));
             if (NS_FAILED(rv)) continue;
             
             // the relpath is just past the serverpath

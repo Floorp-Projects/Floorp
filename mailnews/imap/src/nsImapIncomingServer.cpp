@@ -702,7 +702,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     nsCAutoString uri;
 	nsXPIDLCString serverUri;
 
-	GetServerPasswordRealm(getter_Copies(serverUri));
+	GetServerURI(getter_Copies(serverUri));
 
     uri.Assign(serverUri);
 
