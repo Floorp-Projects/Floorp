@@ -31,17 +31,17 @@
 /* <math> - outermost math element                     */
 /*******************************************************/
 
-math, math[mode="inline"] {
-/*  font-style: normal; */
+math {
   font-size: inherit;
+  font-style: normal;
   font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
+}
+
+math[mode="inline"] {
   display: inline;
 }
 
 math[mode="display"] {
-/*  font-style: normal; */
-  font-size: inherit;
-  font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
   display: block;
   text-align: center;
 }
@@ -135,7 +135,7 @@ merror {
 mtable {
   display: table;
   border-spacing: 0.8em 1.0ex; /* horizontal vertical */
-  border-collapse: separate;
+  border-collapse: separate; /* 'collapse' is blocked by bug 49490 */
   margin-left: -0.4em;
   margin-right: -0.8em;
   margin-top: -1.0ex;
@@ -209,23 +209,47 @@ mi {
   font-style: italic;
 }
 
-mstyle[fontstyle="normal"] mi {
+[-moz-math-font-style="normal"] {
   font-style: normal;
 }
 
-:-moz-math-font-style-normal {
-  font-style: normal;
-}
 
 /* change of size induced by changing the scriptlevel */
 
-:-moz-math-font-size-smaller {
-  font-size: smaller;
+[-moz-math-font-size="+1"] {
+  font-size: 71%;
+}
+[-moz-math-font-size="+2"] {
+  font-size: 50%;
+}
+[-moz-math-font-size="+3"] {
+  font-size: 36%;
+}
+[-moz-math-font-size="+4"] {
+  font-size: 25%;
+}
+[-moz-math-font-size="+5"] {
+  font-size: 18%;
+}
+[-moz-math-font-size="scriptminsize"] {
+  font-size: 8pt;
+}
+[-moz-math-font-size="-1"] {
+  font-size: 141%;
+}
+[-moz-math-font-size="-2"] {
+  font-size: 200%;
+}
+[-moz-math-font-size="-3"] {
+  font-size: 283%;
+}
+[-moz-math-font-size="-4"] {
+  font-size: 400%;
+}
+[-moz-math-font-size="-5"] {
+  font-size: 566%;
 }
 
-:-moz-math-font-size-larger {
-  font-size: larger;
-}
 
 /* style used for stretchy symbols */
 
@@ -247,16 +271,6 @@ mstyle[fontstyle="normal"] mi {
 /* They may go away at any time                                           */
 /**************************************************************************/
 
-math {
-/*   font-weight: bold; */
-/*  font-size: 24pt; */
-}
-
-/*
-p {
-  display: block;
-}
-*/
 
 [background="yellow"] {
    background-color: yellow;

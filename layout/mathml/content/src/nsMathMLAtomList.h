@@ -38,11 +38,8 @@
 
  ******/
 
-
-MATHML_ATOM(fontsize_smaller, ":-moz-math-font-size-smaller")
-MATHML_ATOM(fontsize_larger, ":-moz-math-font-size-larger")
-
-MATHML_ATOM(fontstyle_normal, ":-moz-math-font-style-normal")
+MATHML_ATOM(fontsize, "-moz-math-font-size") // different from fontsize_
+MATHML_ATOM(fontstyle, "-moz-math-font-style") // different from fontstyle_
 MATHML_ATOM(fontstyle_stretchy, ":-moz-math-font-style-stretchy")
 MATHML_ATOM(fontstyle_anonymous, ":-moz-math-font-style-anonymous")
 
@@ -103,6 +100,7 @@ MATHML_ATOM(factorial_, "factorial")
 MATHML_ATOM(fence_, "fence")
 MATHML_ATOM(fn_, "fn")
 MATHML_ATOM(fontfamily_, "fontfamily")
+MATHML_ATOM(fontsize_, "fontstyle")
 MATHML_ATOM(fontstyle_, "fontstyle")
 MATHML_ATOM(forall_, "forall")
 MATHML_ATOM(form_, "form")
