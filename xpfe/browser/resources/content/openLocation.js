@@ -24,9 +24,8 @@ var dialog;
 function onLoad() {
 	dialog = new Object;
 	dialog.input     = document.getElementById( "dialog.input" );
-    dialog.ok        = document.getElementById( "dialog.ok" );
-    dialog.cancel    = document.getElementById( "dialog.cancel" );
-    dialog.help      = document.getElementById( "dialog.help" );
+	dialog.ok        = document.getElementById( "ok" );
+	dialog.help      = document.getElementById( "dialog.help" );
 	dialog.newWindow = document.getElementById( "dialog.newWindow" );
 
 	browser = window.arguments[0];
@@ -38,7 +37,8 @@ function onLoad() {
 	//	window.close();
     //    return;
 	}
-	
+	doSetOKCancel(open, 0, 0, 0);
+
 	moveToAlertPosition();
 	/* Give input field the focus. */
 	dialog.input.focus();
@@ -46,12 +46,7 @@ function onLoad() {
 
 function onTyping( key ) {
    // Look for enter key...
-   if ( key == 13 ) {
-      // If ok button not disabled, go for it.
-      if ( !dialog.ok.disabled ) {
-         open();
-      }
-   } else {
+   if ( key != 13 ) {
       // Check for valid input.
       if ( dialog.input.value == "" ) {
          // No input, disable ok button if enabled.
@@ -68,9 +63,9 @@ function onTyping( key ) {
 }
 
 function open() {
-   if ( dialog.ok.disabled || dialog.input.value == "" ) {
-      return;
-   }
+	if ( dialog.ok.disabled || dialog.input.value == "" ) {
+		return false;
+	}
 
 	var url = dialog.input.value;
 
@@ -82,10 +77,5 @@ function open() {
         window.opener.openDialog( "chrome://navigator/content/navigator.xul", null, "all,dialog=no", url );
 	}
 
-	/* Close dialog. */
-	window.close();
-}
-
-function cancel() {
-    window.close();
+	return true;
 }
