@@ -366,6 +366,8 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
     if (NS_SUCCEEDED(rv)) {
       DWORD len = sizeof currValue;
       DWORD result = ::RegQueryValueEx(theKey, settings->valueName, NULL, NULL, (LPBYTE)currValue, &len);
+      // Close the key we opened.
+      ::RegCloseKey(theKey);
       if (REG_FAILED(result) || strcmp(data.get(), currValue) != 0) {
         // Key wasn't set, or was set to something else (something else became the default browser)
         *aIsDefaultBrowser = PR_FALSE;
@@ -469,6 +471,9 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
             aClaimAllTypes, aForAllUsers);
 
+  // Close the key we opened.
+  ::RegCloseKey(backupKey);
+
   // We need to reregister DDE support
   RegisterDDESupport();
 
@@ -501,13 +506,20 @@ nsWindowsShellService::RestoreFileSettings(PRBool aForAllUsers)
         HKEY origKey;
         result = ::RegOpenKeyEx(NULL, origKeyName, 0, KEY_READ, &origKey);
         if (REG_SUCCEEDED(result))
-          result = ::RegSetValueEx(origKey, "", 0, REG_SZ, (LPBYTE)origValue, len);
+        {
+		result = ::RegSetValueEx(origKey, "", 0, REG_SZ, (LPBYTE)origValue, len);
+		// Close the key we opened.
+		::RegCloseKey(origKey);
+        }
       }
     }
     else
       break;
   }
   while (1);
+  
+  // Close the key we opened.
+  ::RegCloseKey(backupKey);
 
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
@@ -583,6 +595,9 @@ nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName,
   if (REG_FAILED(result) || strcmp(buf, aValue) != 0)
     ::RegSetValueEx(theKey, aValueName, 0, REG_SZ, 
                     (LPBYTE)aValue, nsDependentCString(aValue).Length());
+  
+  // Close the key we opened.
+  ::RegClosekey(theKey);
 }
 
 NS_IMETHODIMP
@@ -789,6 +804,8 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
       char *pathCStr = ToNewCString(nativePath);
       ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, pathCStr, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
       nsMemory::Free(pathCStr);
+      // Close the key we opened.
+      ::RegCloseKey(key);
     }
   }
   return rv;
@@ -830,6 +847,9 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
     return NS_OK;
 
+  // Close the key we opened.
+  ::RegCloseKey(theKey);
+
   // Find the "open" command
   clientKey.Append("\\");
   clientKey.Append(buf);
@@ -843,6 +863,9 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
   if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
     return NS_ERROR_FAILURE;
+
+  // Close the key we opened.
+  ::RegCloseKey(theKey);
 
   nsCAutoString path(buf);
 
@@ -921,6 +944,9 @@ nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
     sprintf((char*)rgb, "%u %u %u\0", r, g, b);
     ::RegSetValueEx(key, "Background", 0, REG_SZ, (const unsigned char*)rgb, strlen((char*)rgb));
   }
+  
+  // Close the key we opened.
+  ::RegCloseKey(key);
   return NS_OK;
 }
 
@@ -938,6 +964,9 @@ nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
     if (REG_SUCCEEDED(result)) {
       *aCount = unreadCount;
     }
+
+  // Close the key we opened.
+  ::RegCloseKey(accountKey);
   }
 
   return NS_OK;
@@ -961,6 +990,10 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
       result = ::RegOpenKeyEx(mailKey, subkeyName, 0, KEY_READ, &accountKey);
       if (REG_SUCCEEDED(result)) {
         *aResult = accountKey;
+		
+	 // Close the key we opened.
+        ::RegCloseKey(mailKey);
+	 
         return PR_TRUE;
       }
     }
@@ -969,6 +1002,8 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
   }
   while (1);
 
+  // Close the key we opened.
+  ::RegCloseKey(mailKey);
   return PR_FALSE;
 }
 
