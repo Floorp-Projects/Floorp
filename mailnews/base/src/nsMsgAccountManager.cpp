@@ -1353,7 +1353,6 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
 	nsFileSpec newsDir(profileDir);
-	PRBool dirExists;
 	
 	// turn profileDir into the News dir.
 	newsDir += "News";
@@ -1489,6 +1488,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			return 0;
 		}
 	}
+*/
 
 /*
 	char *str = nsnull;
@@ -1549,8 +1549,6 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	AddAccount(account);
 	
 	// now upgrade all the prefs
-	char *oldstr = nsnull;
-	
 	nsFileSpec profileDir;
 	
 	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
@@ -1570,6 +1568,8 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	server->SetHostName((char *)hostname);
 
 #ifdef SUPPORT_SNEWS
+	char *oldstr = nsnull;
+	
 	// we don't handle nntp servers that accept username / passwords yet
 	char prefName[1024];
 	PR_snprintf(prefName, 1024, "???nntp.server.%s.userName",hostname);
