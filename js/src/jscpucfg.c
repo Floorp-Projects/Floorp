@@ -39,7 +39,7 @@
 #define INT64	long
 #endif
 #else
-#if defined(HPUX) || defined(__QNX__) || defined(SCO) || defined(UNIXWARE)
+#if defined(HPUX) || defined(__QNX__) || defined(_SCO_DS) || defined(UNIXWARE)
 #define INT64	long
 #else
 #define INT64	long long

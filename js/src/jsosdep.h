@@ -72,7 +72,7 @@ JS_END_EXTERN_C
 #elif defined(OSF1)
 #define JS_HAVE_LONG_LONG
 
-#elif defined(SCO)
+#elif defined(_SCO_DS)
 #undef JS_HAVE_LONG_LONG
 
 #elif defined(SOLARIS)
