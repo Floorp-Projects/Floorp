@@ -42,6 +42,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpctools
 LIBRARY_NAME	= xpctools
 SHORT_LIBNAME	= xpctools
+REQUIRES	= xpcom xpconnect js
 
 CPPSRCS		= \
         	nsXPCToolsCompiler.o \
