@@ -5896,7 +5896,7 @@ echo "configure:5896: checking whether ${CC-cc} accepts -pthread" >&5
 	echo 'int main() { return 0; }' | cat > conftest.c
 	${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
 	if test $? -eq 0; then
-		if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`"; then
+		if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" && test -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
 			ac_cv_have_dash_pthread=yes
 			CFLAGS="$CFLAGS -pthread"
 			CXXFLAGS="$CXXFLAGS -pthread"
