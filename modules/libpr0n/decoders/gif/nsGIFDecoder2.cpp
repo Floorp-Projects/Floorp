@@ -72,8 +72,6 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
   mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
   aRequest->SetImage(mImageContainer);
   
-  mImageContainer->StartAnimation();
-
   /* do gif init stuff */
   /* Always decode to 24 bit pixdepth */
   
