@@ -120,7 +120,7 @@ protected:
   nsIRootBox* mRootBox;
   nsIContent* mSourceNode;
   nsCOMPtr<nsIContent> mTargetNode;
-  nsIContent* mCurrentTooltip;
+  nsCOMPtr<nsIContent> mCurrentTooltip;
 
   // a timer for showing the tooltip
   nsCOMPtr<nsITimer> mTooltipTimer;
