@@ -68,42 +68,11 @@ nsNntpService::~nsNntpService()
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
 NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
 
-nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (nsnull == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
- 
-    if (aIID.Equals(NS_GET_IID(nsINntpService)) 
-        || aIID.Equals(NS_GET_IID(nsISupports)) )
-	{
-        *aInstancePtr = (void*) ((nsINntpService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIMsgMessageService)))
-	{
-        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
-	{
-		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID))
-        return NS_OK;
-#endif
- 
-    return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE4(nsNntpService,
+                         nsINntpService,
+                         nsIMsgMessageService,
+                         nsIProtocolHandler,
+                         nsIMsgProtocolInfo) 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
