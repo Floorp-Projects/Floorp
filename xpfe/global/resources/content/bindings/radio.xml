@@ -43,6 +43,25 @@
         </setter>
       </property>
       
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            if (children[i].selected)
+              return i;
+          }
+          return -1;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          this.selectedItem = this._getRadioChildren()[val];
+          return val;
+        ]]>
+        </setter>
+      </property>
+ 
       <property name="selectedItem">
         <getter>
         <![CDATA[
