@@ -2017,17 +2017,22 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
           if (nsnull != (const char *) ref) {
             // Go to the anchor in the current document
             rv = presShell->GoToAnchor(nsAutoString(ref));
+            if (NS_SUCCEEDED(rv)) {
+              // Pass notifications to BrowserAppCore just to be consistent with
+              // regular page loads thro' necko
+              nsCOMPtr<nsIChannel> dummyChannel;
+              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
+              if (NS_FAILED(rv)) return rv;
 
-            // Pass notifications to BrowserAppCore just to be consistent with
-            // regular page loads thro' necko
-            nsCOMPtr<nsIChannel> dummyChannel;
-            rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
-            if (NS_FAILED(rv)) return rv;
+              mProcessedEndDocumentLoad = PR_FALSE;
+              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
 
-            mProcessedEndDocumentLoad = PR_FALSE;
-            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
-
-            return rv;
+              return rv;
+            }
+            //
+            // If the anchor does not exist, just fall down into the code
+            // to load a new document...
+            //
           }
           else if (aType == LOAD_HISTORY)
           {
