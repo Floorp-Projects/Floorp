@@ -348,7 +348,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 	    dsaparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 	    if (dsaparena == NULL) return NULL;
 	    dsaparams = PORT_ArenaZAlloc(dsaparena, sizeof(PQGParams));
-	    if (params == NULL) return NULL;
+	    if (dsaparams == NULL) return NULL;
 	    dsaparams->arena = dsaparena;
 	    SECITEM_AllocItem(dsaparena, &dsaparams->prime, sizeof P);
 	    SECITEM_AllocItem(dsaparena, &dsaparams->subPrime, sizeof Q);
