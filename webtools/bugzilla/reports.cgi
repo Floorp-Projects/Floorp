@@ -51,12 +51,16 @@ $@ && ThrowCodeError("chart_lines_not_installed");
 my $dir = "data/mining";
 my $graph_dir = "graphs";
 
+use Bugzilla;
+
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
-ConnectToDatabase(1);
+ConnectToDatabase();
 quietly_check_login();
 
 GetVersionTable();
+
+Bugzilla->instance->switch_to_shadow_db();
 
 # We only want those products that the user has permissions for.
 my @myproducts;

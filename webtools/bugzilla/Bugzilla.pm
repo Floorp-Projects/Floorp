@@ -25,6 +25,8 @@ package Bugzilla;
 use strict;
 
 use Bugzilla::CGI;
+use Bugzilla::Config;
+use Bugzilla::DB;
 use Bugzilla::Template;
 
 sub create {
@@ -51,6 +53,26 @@ sub instance {
 
 sub template { return $_[0]->{_template}; }
 sub cgi { return $_[0]->{_cgi}; }
+sub dbh { return $_[0]->{_dbh}; }
+
+sub switch_to_shadow_db {
+    my $self = shift;
+
+    if (!$self->{_dbh_shadow}) {
+        if (Param('shadowdb')) {
+            $self->{_dbh_shadow} = Bugzilla::DB::connect_shadow();
+        } else {
+            $self->{_dbh_shadow} = $self->{_dbh_main};
+        }
+    }
+
+    $self->{_dbh} = $self->{_dbh_shadow};
+}
+
+sub switch_to_main_db {
+    my $self = shift;
+    $self->{_dbh} = $self->{_dbh_main};
+}
 
 # PRIVATE methods below here
 
@@ -69,6 +91,9 @@ sub _new_instance {
 # Initialise persistent items
 sub _init_persistent {
     my $self = shift;
+
+    # We're always going to use the main db, so connect now
+    $self->{_dbh} = $self->{_dbh_main} = Bugzilla::DB::connect_main();
 
     # Set up the template
     $self->{_template} = Bugzilla::Template->create();
@@ -96,6 +121,11 @@ sub DESTROY {
     # may need special casing
     # under a persistent environment (ie mod_perl)
     $self->_cleanup;
+
+    # Now clean up the persistent items
+    $self->{_dbh_main}->disconnect if $self->{_dbh_main};
+    $self->{_dbh_shadow}->disconnect if
+      $self->{_dbh_shadow} and Param("shadowdb")
 }
 
 1;
@@ -188,5 +218,17 @@ The current C<Template> object, to be used for output
 The current C<cgi> object. Note that modules should B<not> be using this in
 general. Not all Bugzilla actions are cgi requests. Its useful as a convenience
 method for those scripts/templates which are only use via CGI, though.
+
+=item C<dbh>
+
+The current database handle. See L<DBI>.
+
+=item C<switch_to_shadow_db>
+
+Switch from using the main database to using the shadow database.
+
+=item C<switch_to_main_db>
+
+Change the database object to refer to the main database.
 
 =back

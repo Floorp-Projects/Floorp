@@ -31,6 +31,8 @@ use vars @::legal_product;
 
 require "globals.pl";
 
+use Bugzilla;
+
 # tidy up after graphing module
 if (chdir("graphs")) {
     unlink <./*.gif>;
@@ -38,8 +40,10 @@ if (chdir("graphs")) {
     chdir("..");
 }
 
-ConnectToDatabase(1);
+ConnectToDatabase();
 GetVersionTable();
+
+Bugzilla->instance->switch_to_shadow_db();
 
 my @myproducts;
 push( @myproducts, "-All-", @::legal_product );

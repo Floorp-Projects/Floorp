@@ -35,6 +35,7 @@ use lib qw(.);
 
 use vars qw($cgi $template $vars);
 
+use Bugzilla;
 use Bugzilla::Search;
 
 # Include the Bugzilla CGI and general utility library.
@@ -627,7 +628,7 @@ if ($serverpush) {
 
 # Connect to the shadow database if this installation is using one to improve
 # query performance.
-ReconnectToShadowDatabase();
+Bugzilla->instance->switch_to_shadow_db();
 
 # Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
 # respond to them here to prevent someone DOSing us by reloading a query
@@ -684,11 +685,6 @@ while (my @row = FetchSQLData()) {
     # Add id to list for checking for bug privacy later
     push(@bugidlist, $bug->{'bug_id'});
 }
-
-# Switch back from the shadow database to the regular database so PutFooter()
-# can determine the current user even if the "logincookies" table is corrupted
-# in the shadow database.
-ReconnectToMainDatabase();
 
 # Check for bug privacy and set $bug->{isingroups} = 1 if private 
 # to 1 or more groups

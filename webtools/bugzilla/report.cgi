@@ -28,6 +28,8 @@ require "CGI.pl";
 
 use vars qw($cgi $template $vars);
 
+use Bugzilla;
+
 # Go straight back to query.cgi if we are adding a boolean chart.
 if (grep(/^cmd-/, $cgi->param())) {
     my $params = $cgi->canonicalise_query("format", "ctype");
@@ -44,7 +46,7 @@ GetVersionTable();
 
 confirm_login();
 
-ReconnectToShadowDatabase();
+Bugzilla->instance->switch_to_shadow_db();
 
 my $action = $cgi->param('action') || 'menu';
 

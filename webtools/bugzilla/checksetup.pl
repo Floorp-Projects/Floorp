@@ -222,11 +222,11 @@ my $modules = [
     }, 
     { 
         name => 'DBI', 
-        version => '1.13' 
+        version => '1.32' 
     }, 
     { 
         name => 'DBD::mysql', 
-        version => '1.2209' 
+        version => '2.1010' 
     }, 
     { 
         name => 'File::Spec', 

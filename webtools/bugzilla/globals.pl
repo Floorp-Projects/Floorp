@@ -28,6 +28,7 @@
 
 use strict;
 
+use Bugzilla::DB qw(:DEFAULT :deprecated);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
@@ -97,7 +98,6 @@ $::SIG{PIPE} = 'IGNORE';
 
 $::defaultqueryname = "(Default query)"; # This string not exposed in UI
 $::unconfirmedstate = "UNCONFIRMED";
-$::dbwritesallowed = 1;
 
 #sub die_with_dignity {
 #    my ($err_msg) = @_;
@@ -105,175 +105,6 @@ $::dbwritesallowed = 1;
 #    confess($err_msg);
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
-
-sub ConnectToDatabase {
-    my ($useshadow) = (@_);
-    $::dbwritesallowed = !$useshadow;
-    $useshadow &&= Param("shadowdb");
-    my $connectstring;
-
-    if ($useshadow) {
-        if (defined $::shadow_dbh) {
-            $::db = $::shadow_dbh;
-            return;
-        }
-        $connectstring="DBI:mysql:host=" . Param("shadowdbhost") .
-          ";database=" . Param('shadowdb') . ";port=" . Param("shadowdbport");
-        if (Param("shadowdbsock") ne "") {
-            $connectstring .= ";mysql_socket=" . Param("shadowdbsock");
-        }
-    } else {
-        if (defined $::main_dbh) {
-            $::db = $::main_dbh;
-            return;
-        }
-        $connectstring="DBI:mysql:host=$::db_host;database=$::db_name;port=$::db_port";
-        if ($::db_sock ne "") {
-            $connectstring .= ";mysql_socket=$::db_sock";
-        }
-    }
-    $::db = DBI->connect($connectstring, $::db_user, $::db_pass)
-      || die "Bugzilla is currently broken. Please try again " .
-        "later. If the problem persists, please contact " .
-        Param("maintainer") . ". The error you should quote is: " .
-        $DBI::errstr;
-
-    if ($useshadow) {
-        $::shadow_dbh = $::db;
-    } else {
-        $::main_dbh = $::db;
-    }
-}
-
-sub ReconnectToShadowDatabase {
-    if (Param("shadowdb")) {
-        ConnectToDatabase(1);
-    }
-}
-
-sub ReconnectToMainDatabase {
-    if (Param("shadowdb")) {
-        ConnectToDatabase();
-    }
-}
-
-# This is used to manipulate global state used by SendSQL(),
-# MoreSQLData() and FetchSQLData().  It provides a way to do another
-# SQL query without losing any as-yet-unfetched data from an existing
-# query.  Just push the current global state, do your new query and fetch
-# any data you need from it, then pop the current global state.
-# 
-@::SQLStateStack = ();
-
-sub PushGlobalSQLState() {
-    push @::SQLStateStack, $::currentquery;
-    push @::SQLStateStack, [ @::fetchahead ]; 
-}
-
-sub PopGlobalSQLState() {
-    die ("PopGlobalSQLState: stack underflow") if ( $#::SQLStateStack < 1 );
-    @::fetchahead = @{pop @::SQLStateStack};
-    $::currentquery = pop @::SQLStateStack;
-}
-
-sub SavedSQLStates() {
-    return ($#::SqlStateStack + 1) / 2;
-}
-
-
-my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
-
-sub SqlLog {
-    if ($dosqllog) {
-        my ($str) = (@_);
-        open(SQLLOGFID, ">>data/sqllog") || die "Can't write to data/sqllog";
-        if (flock(SQLLOGFID,2)) { # 2 is magic 'exclusive lock' const.
-
-            # if we're a subquery (ie there's pushed global state around)
-            # indent to indicate the level of subquery-hood
-            #
-            for (my $i = SavedSQLStates() ; $i > 0 ; $i--) {
-                print SQLLOGFID "\t";
-            }
-
-            print SQLLOGFID time2str("%D %H:%M:%S $$", time()) . ": $str\n";
-        }
-        flock(SQLLOGFID,8);     # '8' is magic 'unlock' const.
-        close SQLLOGFID;
-    }
-}
-
-sub SendSQL {
-    my ($str) = (@_);
-
-    # Don't use DBI's taint stuff yet, because:
-    # a) We don't want out vars to be tainted (yet)
-    # b) We want to know who called SendSQL...
-    # Is there a better way to do b?
-    if (is_tainted($str)) {
-        die "Attempted to send tainted string '$str' to the database";
-    }
-
-    my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
-    if ($iswrite && !$::dbwritesallowed) {
-        die "Evil code attempted to write '$str' to the shadow database";
-    }
-
-    # If we are shutdown, we don't want to run queries except in special cases
-    if (Param('shutdownhtml')) {
-        if ($0 =~ m:[\\/]((do)?editparams.cgi)$:) {
-            $::ignorequery = 0;
-        } else {
-            $::ignorequery = 1;
-            return;
-        }
-    }
-    SqlLog($str);
-    $::currentquery = $::db->prepare($str);
-    if (!$::currentquery->execute) {
-        my $errstr = $::db->errstr;
-        # Cut down the error string to a reasonable.size
-        $errstr = substr($errstr, 0, 2000) . ' ... ' . substr($errstr, -2000)
-                if length($errstr) > 4000;
-        die "$str: " . $errstr;
-    }
-    SqlLog("Done");
-}
-
-sub MoreSQLData {
-    # $::ignorequery is set in SendSQL
-    if ($::ignorequery) {
-        return 0;
-    }
-    if (defined @::fetchahead) {
-        return 1;
-    }
-    if (@::fetchahead = $::currentquery->fetchrow_array) {
-        return 1;
-    }
-    return 0;
-}
-
-sub FetchSQLData {
-    # $::ignorequery is set in SendSQL
-    if ($::ignorequery) {
-        return;
-    }
-    if (defined @::fetchahead) {
-        my @result = @::fetchahead;
-        undef @::fetchahead;
-        return @result;
-    }
-    return $::currentquery->fetchrow_array;
-}
-
-
-sub FetchOneColumn {
-    my @row = FetchSQLData();
-    return $row[0];
-}
-
-    
 
 @::default_column_list = ("bug_severity", "priority", "rep_platform", 
                           "assigned_to", "bug_status", "resolution",
@@ -1346,22 +1177,6 @@ sub SplitEnumType {
     }
     return @result;
 }
-
-
-# This routine is largely copied from Mysql.pm.
-
-sub SqlQuote {
-    my ($str) = (@_);
-#     if (!defined $str) {
-#         confess("Undefined passed to SqlQuote");
-#     }
-    $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
-    # If it's been SqlQuote()ed, then it's safe, so we tell -T that.
-    trick_taint($str);
-    return "'$str'";
-}
-
 
 # UserInGroup returns information aboout the current user if no second 
 # parameter is specified

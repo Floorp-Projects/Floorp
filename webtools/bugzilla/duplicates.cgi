@@ -34,6 +34,7 @@ require "CGI.pl";
 
 use vars qw($buffer);
 
+use Bugzilla;
 use Bugzilla::Search;
 use Bugzilla::CGI;
 
@@ -50,10 +51,12 @@ if ($::FORM{'ctype'} && $::FORM{'ctype'} eq "xul") {
 # Use global templatisation variables.
 use vars qw($template $vars);
 
-ConnectToDatabase(1);
+ConnectToDatabase();
 GetVersionTable();
 
 quietly_check_login();
+
+Bugzilla->instance->switch_to_shadow_db();
 
 use vars qw (%FORM $userid @legal_product);
 
