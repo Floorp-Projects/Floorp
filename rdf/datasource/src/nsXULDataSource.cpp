@@ -207,6 +207,11 @@ public:
         return mInner->GetAllCommands(source, commands);
     }
 
+    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands) {
+        return mInner->GetAllCmds(source, commands);
+    }
+
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,

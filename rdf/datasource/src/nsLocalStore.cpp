@@ -149,6 +149,9 @@ public:
     NS_IMETHOD GetAllCommands(nsIRDFResource* aSource,
                               nsIEnumerator/*<nsIRDFResource>*/** aCommands);
 
+    NS_IMETHOD GetAllCmds(nsIRDFResource* aSource,
+                              nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands);
+
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -303,6 +306,15 @@ LocalStoreImpl::GetURI(char* *aURI)
 NS_IMETHODIMP
 LocalStoreImpl::GetAllCommands(nsIRDFResource* aSource,
                                nsIEnumerator/*<nsIRDFResource>*/** aCommands)
+{
+    // XXX Although this is the wrong thing to do, it works. I'll file a
+    // bug to fix it.
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+LocalStoreImpl::GetAllCmds(nsIRDFResource* aSource,
+                               nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands)
 {
     // XXX Although this is the wrong thing to do, it works. I'll file a
     // bug to fix it.

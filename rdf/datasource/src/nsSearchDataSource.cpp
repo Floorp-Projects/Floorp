@@ -201,6 +201,8 @@ friend	class SearchDataSourceCallback;
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
+	NS_IMETHOD	GetAllCmds(nsIRDFResource* source,
+				nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
 
 	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
@@ -659,6 +661,16 @@ SearchDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 NS_IMETHODIMP
 SearchDataSource::GetAllCommands(nsIRDFResource* source,
                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
+SearchDataSource::GetAllCmds(nsIRDFResource* source,
+                                     nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
 	NS_NOTYETIMPLEMENTED("write me!");
 	return NS_ERROR_NOT_IMPLEMENTED;

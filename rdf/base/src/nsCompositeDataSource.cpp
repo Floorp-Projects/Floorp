@@ -139,6 +139,9 @@ public:
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands);
 
+    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
+
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -1123,6 +1126,13 @@ CompositeDataSourceImpl::GetAllCommands(nsIRDFResource* source,
     }
     *result = commands;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
+                                        nsISimpleEnumerator/*<nsIRDFResource>*/** result)
+{
+	return(NS_OK);
 }
 
 NS_IMETHODIMP

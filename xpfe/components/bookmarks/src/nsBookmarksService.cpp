@@ -894,6 +894,9 @@ public:
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands);
 
+    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
+
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -1204,6 +1207,14 @@ nsBookmarksService::Move(nsIRDFResource* aOldSource,
 NS_IMETHODIMP
 nsBookmarksService::GetAllCommands(nsIRDFResource* source,
                                        nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::GetAllCmds(nsIRDFResource* source,
+                                       nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

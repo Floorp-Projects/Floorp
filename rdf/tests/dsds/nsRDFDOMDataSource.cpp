@@ -81,6 +81,9 @@ class nsRDFDOMDataSource : public nsISupports {
   /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
   NS_IMETHOD GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval) = 0;
 
+  /* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
+  NS_IMETHOD GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval) = 0;
+
   /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
   NS_IMETHOD IsCommandEnabled(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments, PRBool *_retval) = 0;
 
