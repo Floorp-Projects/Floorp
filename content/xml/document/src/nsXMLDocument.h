@@ -103,7 +103,7 @@ public:
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
 protected:
-  void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual nsresult Reset(nsIURL* aUrl);
 
 
