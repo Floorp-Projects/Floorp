@@ -23,8 +23,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= \
-		nsCSSProps.cpp \
-		nsCSSKeywords.cpp \
 		nsColorNames.cpp \
 		$(NULL)
 
@@ -34,19 +32,9 @@ GENHASH		= $(PERL) $(GENHASH_PL)
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= nsCSSPropIDs.h nsCSSKeywordIDs.h nsColorNameIDs.h nsColorNamesRGB.cpp $(CPPSRCS)
+GARBAGE		+= nsColorNameIDs.h nsColorNamesRGB.cpp $(CPPSRCS)
 
 export:: $(CPPSRCS)
-
-nsCSSProps.cpp: $(GENHASH_PL) $(GENHASH_INC) CSSProps.txt Makefile
-	@rm -f $@
-	$(GENHASH) "1,2,6,8,12" "-r" nsCSSProps PROP_ CSSProps.txt nsCSSPropIDs.h > $@
-	cp $@ nsCSSPropIDs.h ../html/style/src/.
-
-nsCSSKeywords.cpp: $(GENHASH_PL) $(GENHASH_INC) CSSKeywords.txt Makefile
-	@rm -f $@
-	$(GENHASH) "1,2,3,4,6,8,12" "-r" nsCSSKeywords KEYWORD_ CSSKeywords.txt nsCSSKeywordIDs.h > $@
-	cp $@ nsCSSKeywordIDs.h ../html/style/src/.
 
 nsColorNames.cpp: $(GENHASH_PL) $(GENHASH_INC) nsColorNamesRGB.cpp $(srcdir)/ColorNames.txt Makefile
 	@rm -f $@ cnames
