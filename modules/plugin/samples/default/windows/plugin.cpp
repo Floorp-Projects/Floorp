@@ -87,6 +87,7 @@ CPlugin::CPlugin(HINSTANCE hInst,
   m_hInst(hInst),
   m_hWnd(NULL),
   m_hWndParent(NULL),
+  m_hWndDialog(NULL),
   m_hIcon(NULL),
   m_pNPMIMEType(NULL),
   m_szPageURL(NULL),
@@ -231,6 +232,12 @@ BOOL CPlugin::init(HWND hWndParent)
 void CPlugin::shut()
 {
   dbgOut1("CPlugin::shut()");
+
+  if(m_hWndDialog != NULL)
+  {
+    EndDialog(m_hWndDialog, IDCANCEL);
+    m_hWndDialog = NULL;
+  }
 
   if(m_hWnd != NULL)
   {
