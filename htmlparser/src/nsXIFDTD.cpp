@@ -417,8 +417,8 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
     offset = aBuffer.Find(kXIFCharset);
     if (kNotFound!=offset)
     {
-      PRInt32 start = aBuffer.Find('"',offset);
-      PRInt32 end = aBuffer.Find('"',start+1);
+      PRInt32 start = aBuffer.FindChar('"',PR_FALSE,offset);
+      PRInt32 end = aBuffer.FindChar('"',PR_FALSE,start+1);
 
       if ((start != kNotFound) && (end != kNotFound))
       {
