@@ -57,7 +57,10 @@ nsImageWin :: nsImageWin()
   mColorMap = nsnull;
   mBHead = nsnull;
 
-	CleanUp(PR_TRUE);
+	//CleanUp(PR_TRUE);
+  CleanUpDDB();
+  CleanUpDIB();
+
 }
 
 /** ----------------------------------------------------------------
@@ -66,7 +69,10 @@ nsImageWin :: nsImageWin()
   */
 nsImageWin :: ~nsImageWin()
 {
-	CleanUp(PR_TRUE);
+	//CleanUp(PR_TRUE);
+  CleanUpDDB();
+  CleanUpDIB();
+
 }
 
 NS_IMPL_ISUPPORTS(nsImageWin, kIImageIID);
@@ -78,7 +84,9 @@ NS_IMPL_ISUPPORTS(nsImageWin, kIImageIID);
 nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
 	mHBitmap = nsnull;
-	CleanUp(PR_TRUE);
+	//CleanUp(PR_TRUE);
+  CleanUpDDB();
+  CleanUpDIB();
 
   if (8 == aDepth) {
     mNumPaletteColors = 256;
@@ -315,11 +323,11 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 
   if (TheHDC != NULL){
     if (mSizeImage > 0){
-      mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
-				  256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
+      mHBitmap = ::CreateDIBitmap(TheHDC,mBHead,CBM_INIT,mImageBits,(LPBITMAPINFO)mBHead,
+				          256==mNumPaletteColors?DIB_PAL_COLORS:DIB_RGB_COLORS);
       mIsOptimized = PR_TRUE;
-
-      CleanUp(PR_FALSE);
+      //CleanUp(PR_FALSE);
+      CleanUpDIB();
     }
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
@@ -358,7 +366,7 @@ DWORD   rop;
   // find out if the surface is a printer.
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
   if(canRaster != DT_RASPRINTER){
-    if (mCanOptimize && (nsnull == mHBitmap))
+    if ((PR_TRUE==mCanOptimize) && (nsnull == mHBitmap))
       CreateDDB(aSurface);
   }
 
@@ -479,7 +487,7 @@ DWORD   rop;
   // find out if the surface is a printer.
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
   if(canRaster != DT_RASPRINTER){
-    if (mCanOptimize && (nsnull == mHBitmap))
+    if ((PR_TRUE==mCanOptimize) && (nsnull == mHBitmap))
       CreateDDB(aSurface);
   }
 
@@ -529,19 +537,15 @@ DWORD   rop;
           if( 1==mAlphaDepth){
 	          MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-	          ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,0, 0, 
-                      mAlphaWidth, mAlphaHeight, mAlphaBits,
-			              (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-	           rop = SRCPAINT;
-          }
-          else if( 8==mAlphaDepth){              
+	          ::StretchDIBits(TheHDC,aX,aY,aWidth,aHeight,0,0,mAlphaWidth, mAlphaHeight, mAlphaBits,
+			              (LPBITMAPINFO)&bmi,DIB_RGB_COLORS,SRCAND);
+            rop = SRCPAINT;
+          } else if( 8==mAlphaDepth){              
               ALPHA8BITMAPINFO bmi(mAlphaWidth, mAlphaHeight);
 
-          	  ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-	      	   	  0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
-	     	    	  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-       	       rop = SRCPAINT;
-
+          	  ::StretchDIBits(TheHDC,aX,aY,aWidth,aHeight,0,0,mAlphaWidth,mAlphaHeight,mAlphaBits,
+	     	    	      (LPBITMAPINFO)&bmi,DIB_RGB_COLORS,SRCAND);
+              rop = SRCPAINT;
           }
         }
         // if this is for a printer.. we have to convert it back to a DIB
@@ -580,55 +584,164 @@ DWORD   rop;
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
  */
-PRBool nsImageWin :: DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+PRBool 
+nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 				                        nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                 nscoord aWidth, nscoord aHeight)
 {
-HDC     TheHDC;
-HBRUSH  hBrush,oldBrush;
-BOOL    success;
-DWORD   rop;
-HBITMAP thebits;
+nsRect              destRect,srcRect,tvrect;
+HDC                 TheHDC,offDC,maskDC;
+PRInt32             x,y,width,height;
+HBITMAP             maskBits,tileBits,oldBits,oldMaskBits,theBits; 
 
-  if (nsnull == mHBitmap) {
-    CreateDDB(aSurface);
-  }
-  
+  // create a larger tile from the smaller one
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
   if (NULL == TheHDC){
     return (PR_FALSE);
   }
 
 
+  // can not create a compatible bitmap with an offscreen DC (it will be black and white)
+  // so we will create a screen compatible bitmap and then install this into the offscreen DC
+  tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
+  offDC = ::CreateCompatibleDC(TheHDC);
+  tileBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
+  oldBits =(HBITMAP) ::SelectObject(offDC,tileBits);
+
+
+  if ( 1==mAlphaDepth ) {
+    // larger tile for mask
+    maskDC = ::CreateCompatibleDC(TheHDC);
+    maskBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
+    oldMaskBits = (HBITMAP)::SelectObject(maskDC,maskBits);
+
+    // get the bits into our new tiled mask
+    MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
+	  ::StretchDIBits(maskDC, 0, 0, aWidth, aHeight,0, 0, 
+                    mAlphaWidth, mAlphaHeight, mAlphaBits,(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCCOPY);
+
+    ::BitBlt(maskDC,0,0,aWidth,aHeight,maskDC,0,0,SRCCOPY);
+    srcRect.SetRect(0,0,aWidth,aHeight);
+    BuildTile(maskDC,srcRect,tvrect.width,tvrect.height,SRCCOPY);
+  }
+
+  // put the initial tile of background image into the offscreen
+  if (!IsOptimized() || nsnull==mHBitmap){
+    ::StretchDIBits(offDC, 0, 0, aWidth, aHeight,0, 0, aWidth, aHeight, mImageBits,
+		             (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS:DIB_RGB_COLORS, SRCCOPY);
+  }else{
+    ::BitBlt(offDC,0,0,aWidth,aHeight,TheHDC,0,0,SRCCOPY);
+  }
+
+  srcRect.SetRect(0,0,aWidth,aHeight);
+  BuildTile(offDC,srcRect,tvrect.width,tvrect.height,SRCCOPY);
+
+
+  // now duplicate our tile into the background
+  destRect = srcRect;
+  width = destRect.width;
+  height = destRect.height;
+
+  if ( 1!=mAlphaDepth ) {
+    for(y=aY0;y<aY1;y+=tvrect.height){
+      for(x=aX0;x<aX1;x+=tvrect.width){
+        destRect.x = x;
+        destRect.y = y;
+        ::BitBlt(TheHDC,x,y,width,height,offDC,0,0,SRCCOPY);
+      }
+    } 
+  } else {
+    for(y=aY0;y<aY1;y+=tvrect.height){
+      for(x=aX0;x<aX1;x+=tvrect.width){
+        destRect.x = x;
+        destRect.y = y;
+        ::BitBlt(TheHDC,x,y,width,height,maskDC,0,0,SRCAND);
+        ::BitBlt(TheHDC,x,y,width,height,offDC,0,0,SRCPAINT);
+      }
+    } 
+    ::SelectObject(maskDC,oldMaskBits);
+    ::DeleteObject(theBits);
+    ::DeleteObject(maskBits);
+    ::DeleteObject(maskDC);
+  }
+
+  ::SelectObject(offDC,oldBits);
+  ::DeleteObject(tileBits);
+  ::DeleteObject(offDC);
+
+  return (PR_FALSE);
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+PRBool 
+nsImageWin :: PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+				                        nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                                nscoord aWidth, nscoord aHeight)
+{
+HDC     TheHDC;
+HBRUSH  hBrush,oldBrush;
+BOOL    success,problem=FALSE;
+DWORD   rop;
+HBITMAP theBits;
+POINT   originalPoint;
+
+  
+  if(PR_FALSE==mCanOptimize) {
+    return (PR_FALSE);
+  }
+  
+  if ( nsnull==mHBitmap) {
+    CreateDDB(aSurface);
+  }
+
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+  if (NULL == TheHDC){
+    return (PR_FALSE);
+  }
+
   // default copy mode
   rop = PATCOPY;
+
+
+  // we have to reset the origin here..
+  ::SetBrushOrgEx(TheHDC,aX0,aY0,&originalPoint);
+
   // if there is an alpha layer, lay down the mask first
   if( 1==mAlphaDepth){
     ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
-    thebits = ::CreateBitmap(mAlphaWidth,mAlphaHeight,1,1,NULL);
+    theBits = ::CreateBitmap(mAlphaWidth,mAlphaHeight,1,1,NULL);
     MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-    SetDIBits(TheHDC,thebits,0,mAlphaHeight,mAlphaBits,(LPBITMAPINFO)&bmi,DIB_RGB_COLORS);
-    hBrush = CreatePatternBrush(thebits);
+    SetDIBits(TheHDC,theBits,0,mAlphaHeight,mAlphaBits,(LPBITMAPINFO)&bmi,DIB_RGB_COLORS);
+    hBrush = CreatePatternBrush(theBits);
     oldBrush = (HBRUSH)SelectObject(TheHDC,hBrush);
     success = PatBlt( TheHDC, aX0,aY0,aX1-aX0,aY1-aY0,0xA000C9);
     SelectObject(TheHDC,oldBrush);
     DeleteObject(hBrush);
-    DeleteObject(thebits);
+    DeleteObject(theBits);
     rop = 0xFA0089;
   }
 
   // do a pattern blit
+  if ( mHBitmap == NULL) {
+    problem = TRUE;
+  }
+
   hBrush = CreatePatternBrush(mHBitmap);
   oldBrush = (HBRUSH)SelectObject(TheHDC,hBrush);
   success = PatBlt( TheHDC, aX0,aY0,aX1-aX0,aY1-aY0,rop);
   SelectObject(TheHDC,oldBrush);
   DeleteObject(hBrush);
 
+  ::SetBrushOrgEx(TheHDC,originalPoint.x,originalPoint.y,NULL);
+
   return (PR_TRUE);
 }
 
 /** ----------------------------------------------------------------
- * Create an optimezed bitmap, -- this routine may need to be deleted, not really used now
+ * Create an optimized bitmap, -- this routine may need to be deleted, not really used now
  * @update dc - 11/20/98
  * @param aContext - The device context to use for the optimization
  */
@@ -661,34 +774,14 @@ nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
   return(spanBytes);
 }
 
-/** ----------------------------------------------------------------
- * Clean up the memory associted with this object.  Has two flavors, 
- * one mode is to clean up everything, the other is to clean up only the DIB information
- * @update dc - 11/20/98
- * @param aWidth - The width to calulate the number of bytes from
- * @return Number of bytes for the span
+/** ---------------------------------------------------
+ *  See documentation in nsImageWin.h
+ *	@update 4/05/00 dwc
  */
-void 
-nsImageWin :: CleanUp(PRBool aCleanUpAll)
+void
+nsImageWin::CleanUpDIB()
 {
-	// this only happens when we need to clean up everything
-  if (aCleanUpAll == PR_TRUE){
-	  if (mHBitmap != nsnull) {
-      ::DeleteObject(mHBitmap);
-      mHBitmap = nsnull;
-    }
 
-    if(mBHead){
-      delete[] mBHead;
-      mBHead = nsnull;
-    }
-
-    mCanOptimize = PR_FALSE;
-    mIsOptimized = PR_FALSE;
-  }
-
-  // The following happens whenever Cleanup is called.. this can happen
-  // when the entire object is being deleted, or optimized
   if (mImageBits != nsnull) {
     delete [] mImageBits;
     mImageBits = nsnull;
@@ -704,6 +797,29 @@ nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	mNumPaletteColors = -1;
   mNumBytesPixel = 0;
 	mSizeImage = 0;
+
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsImageWin.h
+ *	@update 4/05/00 dwc
+ */
+void 
+nsImageWin :: CleanUpDDB()
+{
+  if (mHBitmap != nsnull) {
+    ::DeleteObject(mHBitmap);
+    mHBitmap = nsnull;
+  }
+
+  if(mBHead){
+    delete[] mBHead;
+    mBHead = nsnull;
+  }
+
+  mCanOptimize = PR_FALSE;
+  mIsOptimized = PR_FALSE;
+
 }
 
 /** ----------------------------------------------------------------
@@ -865,3 +981,39 @@ nsImageWin::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   mDecodedY2 = y2; 
   return NS_OK;
 }
+
+
+/** ---------------------------------------------------
+ *  A bit blitter to tile images to the background recursively
+ *	@update 4/13/99 dwc
+ *  @param aRC -- Rendering Context to render to
+ *  @param aDS -- Target drawing surface for the rendering context
+ *  @param aSrcRect -- Rectangle we are build with the image
+ *  @param aHeight -- height of the tile
+ *  @param aWidth -- width of the tile
+ */
+void
+nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32  aCopyMode)
+{
+nsRect  destRect;
+int     error;
+  
+  if( aSrcRect.width < aWidth) {
+    // width is less than double so double our source bitmap width
+    destRect = aSrcRect;
+    destRect.x += aSrcRect.width;
+    ::BitBlt(TheHDC,destRect.x,destRect.y,destRect.width,destRect.height,TheHDC,aSrcRect.x,aSrcRect.y,aCopyMode);
+
+    aSrcRect.width*=2;
+    this->BuildTile(TheHDC,aSrcRect,aWidth,aHeight,aCopyMode);
+  } else if (aSrcRect.height < aHeight) {
+    // height is less than double so double our source bitmap height
+    destRect = aSrcRect;
+    destRect.y += aSrcRect.height;
+    ::BitBlt(TheHDC,destRect.x,destRect.y,destRect.width,destRect.height,TheHDC,aSrcRect.x,aSrcRect.y,aCopyMode);
+    aSrcRect.height*=2;
+    this->BuildTile(TheHDC,aSrcRect,aWidth,aHeight,aCopyMode);
+  } 
+}
+
+

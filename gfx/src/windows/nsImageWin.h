@@ -77,6 +77,19 @@ public:
   PRBool  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
 
   /** 
+   * Draw a tiled version of the bitmap, but use the windows specific highly optimized PatBlt
+   * @update - dwc 3/30/00
+   * @param aSurface  the surface to blit to
+   * @param aX The destination horizontal location
+   * @param aY The destination vertical location
+   * @param aWidth The destination width of the pixelmap
+   * @param aHeight The destination height of the pixelmap
+   * @return if TRUE, no errors
+   */
+  PRBool  PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
+
+
+  /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
    */
@@ -120,11 +133,16 @@ public:
 
 private:
   /** 
-   * Clean up the memory used nsImageWin.
-   * @update dc - 10/29/98
-   * @param aCleanUpAll - if True, all the memory used will be released otherwise just clean up the DIB memory
+   * Clean the device Independent bits that could be allocated by this object.
+   * @update dc - 04/05/00
    */
-  void CleanUp(PRBool aCleanUpAll);
+  void CleanUpDIB();
+
+  /** 
+   * Clean the device dependent bits that could be allocated by this object.
+   * @update dc - 04/05/00
+   */
+  void CleanUpDDB();
 
   /** 
    * Create a Device Dependent bitmap from a drawing surface
@@ -154,6 +172,19 @@ private:
    * @param aHeight - height of DIB
    */
   nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight);
+
+
+  
+  /** ---------------------------------------------------
+   *  A bit blitter to tile images to the background recursively
+   *	@update 3/29/00 dwc
+   *  @param aDS -- Target drawing surface for the rendering context
+   *  @param aSrcRect -- Rectangle we are build with the image
+   *  @param aHeight -- height of the tile
+   *  @param aWidth -- width of the tile
+   */
+  void  BuildTile(HDC SrcDestDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aCopyMode);
+
 
 
   /** 

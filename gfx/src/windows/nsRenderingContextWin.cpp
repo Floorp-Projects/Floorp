@@ -2617,17 +2617,20 @@ NS_IMETHODIMP
 nsRenderingContextWin::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
+PRBool didtile = FALSE;
 
-  if ( PR_TRUE==CanTile(aWidth,aHeight)){
-    // convert to pixels
-    mTMatrix->TransformCoord(&aX0,&aY0);
-    mTMatrix->TransformCoord(&aX1,&aY1);
-    mTMatrix->TransformCoord(&aWidth,&aHeight);
+  // convert output platform, but no translation.. just scale
+  mTMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTMatrix->TransformCoord(&aX1,&aY1);
 
-    ((nsImageWin*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
-  } else {
-    // call up to the cross platform implementation
-    nsRenderingContextImpl::DrawTile(aImage,aX0,aY0,aX1,aY1,aWidth,aHeight);
+  if ((PR_FALSE) && (PR_TRUE==CanTile(aWidth,aHeight)) ) {    
+    didtile = ((nsImageWin*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
+  }
+      
+  if (PR_FALSE ==didtile){
+    // rely on the slower tiler supported in nsRenderingContextWin.. don't have 
+    // to use xplatform which is really slow (slowest is the only one that supports transparency
+    didtile = ((nsImageWin*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
   }
 
   return NS_OK;
@@ -2640,24 +2643,30 @@ nsRenderingContextWin::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord
 PRBool 
 nsRenderingContextWin::CanTile(nscoord aWidth,nscoord aHeight)
 {
+PRInt32 canRaster;
 
-  // XXX This may need tweaking for win98
-  if (PR_TRUE == gIsWIN95) {
-    // windows 98
-    if((aWidth<8)&&(aHeight<8)){
-      return PR_TRUE;
-    }else{
-      return PR_FALSE;
+  // find out if the surface is a printer.
+  ((nsDrawingSurfaceWin *)mSurface)->GetTECHNOLOGY(&canRaster);
+  if(canRaster != DT_RASPRINTER){
+    // XXX This may need tweaking for win98
+    if (PR_TRUE == gIsWIN95) {
+      // windows 98
+      if((aWidth<8)&&(aHeight<8)){
+        return PR_TRUE;
+      }else{
+        return PR_FALSE;
+      }
     }
-  }
-  else {
-    // windows NT
-    return PR_TRUE;
+    else {
+      // windows NT
+      return PR_TRUE;
+    }
+  } else {
+    return PR_FALSE;
   }
   
 
 }
-
 
 NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
