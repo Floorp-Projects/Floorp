@@ -81,6 +81,7 @@
   	  <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
   	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
   	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
+        <!-- toolbarseparator align="horizontal" class="line"/ -->
   	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
     </box>
 	 	<box id="taskbarMenuBox" align="horizontal">
