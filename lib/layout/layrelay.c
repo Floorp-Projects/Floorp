@@ -1085,7 +1085,7 @@ static void lo_rl_BeginTableRelayout( MWContext *context, lo_DocState *state, lo
 {
 	lo_PositionTableElement( state, table->table_ele );
 	lo_InitTableRecord( table );
-	lo_SetTableDimensions( state, table, TRUE, TRUE );
+	lo_SetTableDimensions( state, table, state->allow_percent_width, state->allow_percent_height );
 	lo_CalcFixedColWidths( context, state, table );
 	lo_UpdateStateAfterBeginTable( state, table );
 }
