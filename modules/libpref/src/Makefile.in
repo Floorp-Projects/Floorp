@@ -60,6 +60,7 @@ CPPSRCS		= nsPref.cpp \
 			  nsPrefsFactory.cpp	\
 			  nsSafeSaveFile.cpp	\
 			  prefapi.cpp \
+			  prefread.cpp \
 			 $(NULL)
 
 ifdef MOZ_PROFILESHARING
