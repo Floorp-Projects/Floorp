@@ -353,23 +353,21 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   
   // We must be the primary content area to actually set the title, but we
   // still want to hold onto the title in case we become the primary later.
-  if (mWindowController) {
-    NSString* newTitle = nil;
-    if (mOffline) {
-      if (title && ![title isEqualToString:@""])
-          newTitle = [title stringByAppendingString: @" [Working Offline]"];
-      else
-          newTitle = [NSString stringWithString:@"Untitled [Working Offline]"];
-      mTitle = [newTitle retain];
-    }
-    else {
-      if (!title || [title isEqualToString:@""])
-        title = [NSString stringWithString:NSLocalizedString(@"UntitledPageTitle", @"")];
-      mTitle = [title retain];
-    }
-    if ( mIsPrimary )
-      [[mWindowController window] setTitle:mTitle];
+  NSString* newTitle = nil;
+  if (mOffline) {
+    if (title && ![title isEqualToString:@""])
+        newTitle = [title stringByAppendingString: @" [Working Offline]"];
+    else
+        newTitle = [NSString stringWithString:@"Untitled [Working Offline]"];
+    mTitle = [newTitle retain];
   }
+  else {
+    if (!title || [title isEqualToString:@""])
+      title = [NSString stringWithString:NSLocalizedString(@"UntitledPageTitle", @"")];
+    mTitle = [title retain];
+  }
+  if ( mIsPrimary && mWindowController )
+    [[mWindowController window] setTitle:mTitle];
   
   // Always set the tab.
   if (title && ![title isEqualToString:@""])
