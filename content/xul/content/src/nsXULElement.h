@@ -57,7 +57,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIEventListenerManager.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -309,42 +309,6 @@ public:
     nsString                 mValue;
 };
 
-
-////////////////////////////////////////////////////////////////////////
-
-/**
-
-  This class serves as a base for aggregates that will implement a
-  per-element XUL API.
-
- */
-
-class nsXULAggregateElement : public nsISupports
-{
-protected:
-    nsIDOMXULElement* mOuter;
-    nsXULAggregateElement(nsIDOMXULElement* aOuter) : mOuter(aOuter) {}
-    
-public:
-    virtual ~nsXULAggregateElement() {};
-
-    // nsISupports interface. Subclasses should use the
-    // NS_DECL/IMPL_ISUPPORTS_INHERITED macros to implement the
-    // nsISupports interface.
-    NS_IMETHOD_(nsrefcnt) AddRef() {
-        return mOuter->AddRef();
-    }
-
-    NS_IMETHOD_(nsrefcnt) Release() {
-        return mOuter->Release();
-    }
-
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) {
-        return mOuter->QueryInterface(aIID, aResult);
-    }
-};
-
-
 ////////////////////////////////////////////////////////////////////////
 
 /**
@@ -528,7 +492,7 @@ protected:
     static PRBool IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode);
 
     // Helper routine that crawls a parent chain looking for a tree element.
-    NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
+    NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);
 
     nsresult AddPopupListener(nsIAtom* aName);
 
@@ -567,12 +531,6 @@ protected:
          * RDF; see nsIXULContent and nsRDFGenericBuilder.
          */
         PRInt32                             mLazyState;
-
-        /**
-         * An unreferenced bare pointer to an aggregate that can
-         * implement element-specific APIs.
-         */
-        nsXULAggregateElement*              mInnerXULElement;
     };
 
     friend struct Slots;
@@ -630,7 +588,6 @@ protected:
     nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
-    nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
 
     static nsIXBLService *gXBLService;
 };

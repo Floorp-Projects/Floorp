@@ -93,7 +93,7 @@ Contributor(s):
         
         <!-- Address bucket -->
         <vbox id="bucketBox">
-          <tree id="addressBucket" flex="1" multiple="true" 
+          <tree id="addressBucket" flex="1" seltype="multiple"
               ondragover="DragOverBucketPane(event);"
               ondragdrop="DropOnBucketPane(event);"
               onselect="DialogBucketPaneSelectionChanged();">

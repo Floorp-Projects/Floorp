@@ -222,7 +222,7 @@ function ClickOnOtherPanels(event)
 
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
-  current_panels.clearItemSelection();
+  current_panels.clearSelection();
   enable_buttons_for_current_panels();
 
   if (treeitem.getAttribute('container') == 'true') {
@@ -275,7 +275,7 @@ function add_datasource_to_other_panels(link) {
 function SelectChangeForCurrentPanels() {
   // Remove the selection in the available panels list
   var all_panels = document.getElementById('other-panels');
-  all_panels.clearItemSelection();
+  all_panels.clearSelection();
 
   enable_buttons_for_current_panels();
   enable_buttons_for_other_panels();
@@ -370,7 +370,7 @@ function AddPanel()
   // Remove the selection in the other list.
   // Selection will move to "current" list.
   var all_panels = document.getElementById('other-panels');
-  all_panels.clearItemSelection();
+  all_panels.clearSelection();
 
   enable_buttons_for_current_panels();
   enable_buttons_for_other_panels();

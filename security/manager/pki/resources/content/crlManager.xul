@@ -47,7 +47,7 @@
   <description value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
   <tree id="crltree" style="height: 10em;"
-   multiple="false" onclick="EnableCrlActions()" flex="1">
+   seltype="multiple" onclick="EnableCrlActions()" flex="1">
     <treecolgroup>
       <treecol flex="3" width="0"/>
       <splitter class="tree-splitter"/>

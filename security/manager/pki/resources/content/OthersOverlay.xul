@@ -47,7 +47,7 @@
   <vbox id="othersCerts">
     <description>&certmgr.others;</description>
     <separator class="thin"/>
-    <outliner id="email-outliner" multiple="true"
+    <outliner id="email-outliner" seltype="multiple"
               onselect="email_enableButtons()" flex="1">
       <outlinercols>
         <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 

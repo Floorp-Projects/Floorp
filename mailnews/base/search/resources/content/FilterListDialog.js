@@ -234,7 +234,7 @@ function refreshFilterList() {
     if (selectedItems && selectedItems.length >0)
         selection = tree.selectedItems[0].id;
 
-    tree.clearItemSelection();
+    tree.clearSelection();
     tree.setAttribute("ref", tree.getAttribute("ref"));
 
     if (selection) {

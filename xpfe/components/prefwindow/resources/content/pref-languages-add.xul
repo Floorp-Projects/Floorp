@@ -39,7 +39,7 @@
   <description>&languages.customize.available.label;</description>
 
   <tree id="available_languages" flex="1"
-        datasources="rdf:null" multiple="true" ondblclick="HandleDoubleClick(event.target)">
+        datasources="rdf:null" seltype="multiple" ondblclick="HandleDoubleClick(event.target)">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>

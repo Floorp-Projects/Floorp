@@ -1663,9 +1663,18 @@ function setCurrentObject (obj)
 
     /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
+<<<<<<< static.js
+    if (userList) 
+        /* Remove curently selection items before this tree gets rerooted,
+         * because it seems to remember the selections for eternity if not. */
+        userList.clearSelection ();    
+    else
+        dd ("setCurrentObject: could not find element with ID='user-list'");
+=======
     /* Remove curently selection items before this tree gets rerooted,
      * because it seems to remember the selections for eternity if not. */
     userList.clearItemSelection ();    
+>>>>>>> 1.31
 
     if (obj.TYPE == "IRCChannel")
         client.rdf.setTreeRoot ("user-list", obj.getGraphResource());

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *   David Hyatt <hyatt@netscape.com> (original author)
+ *   Joe Hewitt <hewitt@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,29 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
+#include "nsIDOMXULSelectCntrlEl.idl"
 
-  A private interface to the tree element
-
-*/
-
-#ifndef nsIXULTreeContent_h__
-#define nsIXULTreeContent_h__
-
-#include "nsISupports.h"
-
-// {661D1970-5CD2-11d3-BE36-00104BDE6048}
-#define NS_IXULTREECONTENT_IID \
-{ 0x661d1970, 0x5cd2, 0x11d3, { 0xbe, 0x36, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
-
-
-class nsIXULTreeContent : public nsISupports
+[scriptable, uuid(7F435623-BA16-4c44-B4B0-0990946D3D7C)]
+interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
 {
-public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULTREECONTENT_IID; return iid; }
+  attribute DOMString selType;
 
-    NS_IMETHOD FireOnSelectHandler() = 0;
-    NS_IMETHOD CheckSelection(nsIDOMXULElement* aDeletedItem) = 0;
+  attribute nsIDOMXULSelectControlItemElement currentItem;
+  
+  readonly attribute nsIDOMNodeList selectedItems;
+  
+  void addItemToSelection(in nsIDOMXULSelectControlItemElement item);
+  void removeItemFromSelection(in nsIDOMXULSelectControlItemElement item);
+  void toggleItemSelection(in nsIDOMXULSelectControlItemElement item);
+
+  void selectItem(in nsIDOMXULSelectControlItemElement item);
+  void selectItemRange(in nsIDOMXULSelectControlItemElement startItem, in nsIDOMXULSelectControlItemElement item);
+
+  void selectAll();
+  void invertSelection();
+  void clearSelection();
+
+  // XXX - temporary, pending implementation of scriptable, 
+  //       mutable nsIDOMNodeList for selectedItems
+  readonly attribute long selectedCount;
+  nsIDOMXULSelectControlItemElement getSelectedItem(in long index);
 };
-
-#endif // nsIXULTreeContent_h__

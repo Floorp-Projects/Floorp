@@ -34,7 +34,7 @@
   <vbox id="webCerts">
     <description>&certmgr.websites;</description>
     <separator class="thin"/>
-    <outliner id="server-outliner" multiple="true" enableColumnDrag="true"
+    <outliner id="server-outliner" seltype="multiple" enableColumnDrag="true"
               onselect="websites_enableButtons()" flex="1">
       <outlinercols>
         <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 

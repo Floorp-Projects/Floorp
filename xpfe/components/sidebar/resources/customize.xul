@@ -52,7 +52,7 @@
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
         containment="http://home.netscape.com/NC-rdf#panel-list"
-        indent="true" multiple="true"
+        indent="true" seltype="multiple"
         onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)"
   onclick="if (event.detail == 2) { AddPanel(); }"
    >
@@ -116,7 +116,7 @@
       <label value="&sidebar.customize.current.label;"
         crop="right"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-        datasources="rdf:null" flex="1" multiple="true">
+        datasources="rdf:null" flex="1" seltype="multiple">
         <template>
           <rule>
             <conditions>

@@ -45,7 +45,7 @@
         <spacer style="width: 7px;"/>
         <vbox>
           <label value="&treehead.schemaname.label;"/>
-          <tree multiple="true" id="schematree"
+          <tree seltype="multiple" id="schematree"
              style="height: 250px;" onclick="ViewEntries();">
             <treecolgroup>
               <treecol flex="1"/>
@@ -60,7 +60,7 @@
         <spacer style="width: 7px;"/>
         <vbox>
           <label id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
-          <tree multiple="true" id="entrytree" class="inset"
+          <tree seltype="multiple" id="entrytree" class="inset"
             style="height: 113px;" orient="vertical" onclick="ViewSynonyms();">
             <treecolgroup>
               <treecol flex="1"/>
@@ -69,7 +69,7 @@
           </tree>
           <spacer style="height: 7px;"/>
           <label id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
-          <tree multiple="true" id="synonymtree"
+          <tree seltype="multiple" id="synonymtree"
             style="height: 113px;" orient="vertical" onclick="SynonymSelected();">
             <treecolgroup>
               <treecol flex="1"/>

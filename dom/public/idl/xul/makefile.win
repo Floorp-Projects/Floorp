@@ -40,7 +40,7 @@ XPIDLSRCS =					\
 	.\nsIDOMXULPopupElement.idl          \
   	.\nsIDOMXULSelectCntrlEl.idl     \
   	.\nsIDOMXULSelectCntrlItemEl.idl     \
-	.\nsIDOMXULTreeElement.idl		\
+  	.\nsIDOMXULMultSelectCntrlEl.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

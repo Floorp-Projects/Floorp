@@ -46,7 +46,7 @@
   <hbox flex="1">
   
     <vbox flex="1">
-      <tree multiple="true" flex="1" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
+      <tree seltype="multiple" flex="1" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
         <template>
           <treechildren>
             <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
@@ -105,7 +105,7 @@
       <separator class="thin"/>
 
       <hbox flex="1">
-        <tree multiple="true" flex="1" id="engineList" style="height: 0px;"
+        <tree seltype="multiple" flex="1" id="engineList" style="height: 0px;"
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>

@@ -55,7 +55,7 @@
         <description>&HTMLdomaintitle.label;</description>
         <hbox flex="1">
           <tree id="html_domains" flex="1"
-            datasources="rdf:null" multiple="true"
+            datasources="rdf:null" seltype="multiple"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
             <treecolgroup>
               <treecol flex="1"/>
@@ -76,7 +76,7 @@
         <description>&PlainTexttitle.label;</description>
         <hbox flex="1">
           <tree id="plaintext_domains" flex="1"
-            datasources="rdf:null" multiple="true"
+            datasources="rdf:null" seltype="multiple"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
             <treecolgroup>
               <treecol flex="1"/>
