@@ -62,6 +62,8 @@ public:
                                 nsISupportsArray* aTransferables,
                                 nsIScriptableRegion* aRegion,
                                 PRUint32 aActionType);
+  NS_IMETHOD StartDragSession();
+  NS_IMETHOD EndDragSession();
 
     // nsIDragSession
   NS_IMETHOD GetNumDropItems(PRUint32* aNumDropItems);

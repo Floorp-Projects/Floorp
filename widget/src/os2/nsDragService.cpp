@@ -336,6 +336,24 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
   return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
 }
 
+//-------------------------------------------------------------------------
+
+// if the versions of Start & EndDragSession in nsBaseDragService
+// were called (and they shouldn't be), they'd break nsIDragSessionOS2;
+// they're overridden here and turned into no-ops to prevent this
+
+NS_IMETHODIMP nsDragService::StartDragSession()
+{
+  NS_ASSERTION(0, "OS/2 version of StartDragSession() should never be called!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDragService::EndDragSession()
+{
+  NS_ASSERTION(0, "OS/2 version of EndDragSession() should never be called!");
+  return NS_OK;
+}
+
 // --------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDragService::GetNumDropItems(PRUint32 *aNumDropItems)
