@@ -367,7 +367,7 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic)
   int i = 0;
   while( i < nsFontMetricsOS2::gGlobalFontsCount )
   {
-    if( PL_strcmp( gGlobalFonts[i].fontMetrics.szFamilyname, familyname ) == 0 )
+    if( PL_strcasecmp( gGlobalFonts[i].fontMetrics.szFamilyname, familyname ) == 0 )
     {
       font = new FATTRS;
       memset( font, 0, sizeof(FATTRS) );
@@ -489,11 +489,6 @@ static nsFontFamilyName gFamilyNameTable[] =
 #endif
   { "times",           "Times New Roman" },
   { "times roman",     "Times New Roman" },
-  { "times new roman", "Times New Roman" },
-  { "arial",           "Arial" },
-  { "courier",         "Courier" },
-  { "courier new",     "Courier New" },
-  { "warpsans",        "WarpSans" },
 
   { nsnull, nsnull }
 };
@@ -734,7 +729,7 @@ PRBool
 nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
                           PRBool aIsBold, PRBool aIsItalic, char* alias )
 {
-  if( PL_strcmp( aFamilyname, "Tms Rmn" ) == 0 )
+  if( PL_strcasecmp( aFamilyname, "Tms Rmn" ) == 0 )
   {
     if( !aIsBold && !aIsItalic )
       PL_strcpy( alias, "Times New Roman" );
@@ -749,7 +744,7 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
     return PR_TRUE;
   }
 
-  if( PL_strcmp( aFamilyname, "Helv" ) == 0 )
+  if( PL_strcasecmp( aFamilyname, "Helv" ) == 0 )
   {
     if( !aIsBold && !aIsItalic )
       PL_strcpy( alias, "Helvetica" );
@@ -767,7 +762,7 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
    // When printing, substitute vector fonts for these common bitmap fonts
   if( !mDeviceContext->SupportsRasterFonts() )
   {
-    if( PL_strcmp( aFamilyname, "System Proportional" ) == 0 )
+    if( PL_strcasecmp( aFamilyname, "System Proportional" ) == 0 )
     {
       if( !aIsBold && !aIsItalic )
         PL_strcpy( alias, "Helvetica" );
@@ -782,8 +777,8 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
       return PR_TRUE;
     }
 
-    if( PL_strcmp( aFamilyname, "System Monospaced" ) == 0 ||
-        PL_strcmp( aFamilyname, "System VIO" ) == 0 )
+    if( PL_strcasecmp( aFamilyname, "System Monospaced" ) == 0 ||
+        PL_strcasecmp( aFamilyname, "System VIO" ) == 0 )
     {
       if( !aIsBold && !aIsItalic )
         PL_strcpy( alias, "Courier" );
@@ -1071,13 +1066,13 @@ nsresult nsFontMetricsOS2::RealizeFont()
    // and mMacDescent in these cases so that mozilla will properly position the
    // highlight box.
   if( !(fm.fsDefn & FM_DEFN_OUTLINE) &&
-      PL_strcmp("WarpSans", fm.szFamilyname) != 0 )
+      PL_strcasecmp("WarpSans", fm.szFamilyname) != 0 )
   {
     mMaxAscent  = NSToCoordRound((fm.lMaxAscender - 1) * dev2app );
     mMaxDescent = NSToCoordRound((fm.lMaxDescender + 1) * dev2app );
   }
 #else
-  if( PL_strcmp( "WarpSans", fm.szFamilyname ) != 0 )
+  if( PL_strcasecmp( "WarpSans", fm.szFamilyname ) != 0 )
   {
     mMaxAscent  = NSToCoordRound((fm.lMaxAscender - 1) * dev2app );
     mMaxDescent = NSToCoordRound((fm.lMaxDescender + 1) * dev2app );
