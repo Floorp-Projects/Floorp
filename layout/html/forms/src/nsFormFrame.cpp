@@ -661,7 +661,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
       /* The postBuffer is now owned by the IPostData instance */
     }    
-    handler->OnLinkClick(mContent, eLinkVerb_Replace, absURLSpec, target, postData);
+    handler->OnLinkClick(mContent, eLinkVerb_Replace, absURLSpec.GetUnicode(), target.GetUnicode(), postData);
     NS_IF_RELEASE(postData);
     NS_RELEASE(handler);
 
