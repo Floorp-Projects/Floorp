@@ -43,7 +43,7 @@ $enc_full_name = $email;    #this should be url encoded
 print "Content-type: text/html\n\n<HTML>\n";
 print "<base target='_top'>\n";
 
-print "<table border=1 cellspacing=1 cellpadding=3><tr><td>\n";
+print "<table border=2 bgcolor=#ffffff cellspacing=0 cellpadding=3><tr><td>\n";
 print "$email\n";
 print "<SPACER TYPE=VERTICAL SIZE=5>\n";
 
