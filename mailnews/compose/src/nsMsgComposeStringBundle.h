@@ -107,7 +107,7 @@ private:
 
 #define NS_SMTP_PASSWORD_PROMPT_TITLE               12542
 #define NS_SMTP_PASSWORD_PROMPT1                    12543
-#define NS_SMTP_PASSWORD_PROMPT2                    12570
+#define NS_SMTP_PASSWORD_PROMPT2                    12544
 #define NS_SMTP_CONNECTING_TO_SERVER                NS_MSG_GENERATE_SUCCESS(12545)
 
 #define NS_MSG_SENDING_MESSAGE                      NS_MSG_GENERATE_SUCCESS(12550)
