@@ -139,10 +139,11 @@ main ()
   else
      AC_MSG_RESULT(no)
      if test "$GTK_CONFIG" = "no" ; then
-       echo "*** The gtk-config script installed by GTK could not be found"
+       echo "*** The gtk-config script installed by GTK could not be found."
        echo "*** If GTK was installed in PREFIX, make sure PREFIX/bin is in"
        echo "*** your path, or set the GTK_CONFIG environment variable to the"
        echo "*** full path to gtk-config."
+       echo "*** GTK+ is available from ftp://ftp.gtk.org/pub/gtk"
      else
        if test -f conf.gtktest ; then
         :
