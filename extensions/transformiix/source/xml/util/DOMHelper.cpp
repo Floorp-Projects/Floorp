@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.8 2001/04/08 14:35:00 peterv%netscape.com Exp $
+ * $Id: DOMHelper.cpp,v 1.9 2001/04/12 14:12:11 peterv%netscape.com Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/04/08 14:35:00 $
+ * @version $Revision: 1.9 $ $Date: 2001/04/12 14:12:11 $
 **/
 
 #include "DOMHelper.h"
@@ -112,9 +112,19 @@ void DOMHelper::generateId(Node* node, String& dest) {
 Node* DOMHelper::getParentNode(Node* node) {
 
     if (!node) return 0;
+    //XXX Namespace: the parent of a namespace node is the element
     if (node->getNodeType() != Node::ATTRIBUTE_NODE)
         return node->getParentNode();
 
+#ifdef MOZ_XSL
+    // XXX temporary fix for 70979
+    nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(node->getNSObj()));
+    nsCOMPtr<nsIDOMElement> tmpParent;
+
+    if (attr && NS_SUCCEEDED(attr->GetOwnerElement(getter_AddRefs(tmpParent))))
+        return node->getOwnerDocument()->createWrapper(tmpParent);
+    return NULL;
+#else
     TxObjectWrapper* wrapper = 0;
 
     wrapper = (TxObjectWrapper*) parents.get(node);
@@ -125,7 +135,7 @@ Node* DOMHelper::getParentNode(Node* node) {
 
     if (wrapper) return (Node*)wrapper->object;
     return 0;    
-
+#endif
 } //-- getParentNode
 
 
