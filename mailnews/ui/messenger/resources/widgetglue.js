@@ -61,45 +61,82 @@ function MsgDeleteMessage()
 	}
 }
 
-function MsgReplyMessage()
+function ReplyMessageHelper(type)
 {
-	dump("\nMsgReplyMessage from XUL\n");
-    var tree = frames[0].frames[1].document.getElementById('threadTree');
-    if(tree)
-		dump("tree is valid\n")
-    var appCore = new MsgAppCore();
-	if (appCore != null) {
-		appCore.Init("MsgAppCore");
-		appCore.SetWindow(window);
-		dump("\nAppcore isn't null in MsgReplyMessage\n");
-		var nodeList = tree.getElementsByAttribute("selected", "true");
-//        var messageHdr = appCore.GetMessageHeader(tree, NodeList);
-		ReplyMessage(tree, nodeList, appCore);
-	}
+  dump("\nMsgReplyMessage from XUL\n");
+  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  if(tree) {
+    dump("tree is valid\n");
+    var nodeList = tree.getElementsByAttribute("selected", "true");
+    var msgAppCore = XPAppCoresManager.Find("MsgAppCore");
+    if (msgAppCore == null) {
+      dump("ReplyMessageHelper: Creating msgAppCore\n");
+      msgAppCore = new MsgAppCore();
+      msgAppCore.Init("MsgAppCore");
+      msgAppCore.SetWindow(window);
+    }
+    dump("msgAppCore probably found\n");
+    dump("Reply message type ");
+    dump(type);
+    dump("\n");
+    if (msgAppCore && nodeList)
+      ReplyMessage(tree, nodeList, msgAppCore, type);
+  }
 }
 
+function ForwardMessageHelper(type)
+{
+  dump("\nMsgForwardMessage from XUL\n");
+  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  if(tree) {
+    dump("tree is valid\n");
+    var nodeList = tree.getElementsByAttribute("selected", "true");
+    var msgAppCore = XPAppCoresManager.Find("MsgAppCore");
+    if (msgAppCore == null) {
+      dump("ForwardMessageHelper: Creating msgAppCore\n");
+      msgAppCore = new MsgAppCore();
+      msgAppCore.Init("MsgAppCore");
+      msgAppCore.SetWindow(window);
+    }
+    dump("msgAppCore probably found\n");
+    dump("Forward message type ");
+    dump(type);
+    dump("\n");
+    if (msgAppCore && nodeList)
+      ForwardMessage(tree, nodeList, msgAppCore, type);
+  }
+}
+
+function MsgReplyMessage()
+{
+  ReplyMessageHelper(0);
+}
+
+function MsgReplyToAllMessage() 
+{
+  ReplyMessageHelper(1);
+}
 
 function MsgForwardMessage()
 {
-      dump("\nMsgForwardMessage from XUL\n");
-      var tree = frames[0].frames[1].document.getElementById('threadTree');
-      if(tree)
-              dump("tree is valid\n")
-      var appCore = new MsgAppCore();
-      if (appCore != null) {
-              appCore.Init("MsgAppCore");
-              appCore.SetWindow(window);
-              dump("\nAppcore isn't null in MsgForwardMessage\n");
-              var nodeList = tree.getElementsByAttribute("selected", "true");
-//              var messageHdr = appCore.GetMessageHeader(tree, NodeList);
-			  ForwardMessage(tree, nodeList, appCore);
-      }
-  }
+  ForwardMessageHelper(0);
+}
 
-function MsgReplyToAllMessage() {}
-function MsgForwardAsInline() {}
-function MsgForwardAsQuoted() {}
-function MsgForwardAsAttachment() {}
+function MsgForwardAsInline()
+{
+  ForwardMessageHelper(1);
+}
+
+function MsgForwardAsQuoted()
+{
+  ForwardMessageHelper(2);
+}
+
+function MsgForwardAsAttachment()
+{
+  ForwardMessageHelper(0);
+}
+
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}

@@ -49,22 +49,28 @@ function ChangeFolder(folderNode)
 }
 
 
-function ReplyMessage(tree, nodeList, msgAppCore)
+function ReplyMessage(tree, nodeList, msgAppCore, type)
 {
-	var appCore = new ComposeAppCore();
-	if (appCore != null) {
-		dump("Initializing ComposeAppCore and creating a new Message\n");
-		appCore.Init("ComposeAppCore");
-		appCore.ReplyMessage("resource:/res/samples/compose.xul", tree, nodeList, msgAppCore, 0);
-	}
+  if (msgAppCore != null) {
+    var appCore = new ComposeAppCore();
+    if (appCore != null) {
+      dump("Initializing ComposeAppCore and creating a new Message\n");
+      appCore.Init("ComposeAppCore");
+      appCore.ReplyMessage("resource:/res/samples/compose.xul", tree,
+			   nodeList, msgAppCore, type); 
+    }
+  }
 }
 
-function ForwardMessage(tree, nodeList, msgAppCore)
+function ForwardMessage(tree, nodeList, msgAppCore, type)
 {
-	var appCore = new ComposeAppCore();
-	if (appCore != null) {
-		dump("Initializing ComposeAppCore and creating a new Message\n");
-		appCore.Init("ComposeAppCore");
-		appCore.ForwardMessage("resource:/res/samples/compose.xul", tree, nodeList, msgAppCore, 0);
-	}
+  if (msgAppCore != null) {
+    var appCore = new ComposeAppCore();
+    if (appCore != null) {
+      dump("Initializing ComposeAppCore and creating a new Message\n");
+      appCore.Init("ComposeAppCore");
+      appCore.ForwardMessage("resource:/res/samples/compose.xul", tree,
+			     nodeList, msgAppCore, type); 
+    }
+  }
 }
