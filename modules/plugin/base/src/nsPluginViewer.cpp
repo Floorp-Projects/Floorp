@@ -788,7 +788,19 @@ PluginViewerImpl::GetSaveable(PRBool *aSaveable)
 NS_IMETHODIMP
 PluginViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
 {
-  return NS_OK;      // XXX: hey, plug in guys!  implement me!
+  nsPluginPrint npprint;
+  npprint.mode = nsPluginMode_Full;
+  npprint.print.fullPrint.pluginPrinted = PR_FALSE;
+  npprint.print.fullPrint.printOne = PR_FALSE;
+  npprint.print.fullPrint.platformPrint = nsnull;
+
+  NS_ENSURE_TRUE(mOwner,NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPluginInstance> pi;
+  mOwner->GetInstance(*getter_AddRefs(pi));
+  NS_ENSURE_TRUE(pi,NS_ERROR_FAILURE);
+
+  return pi->Print(&npprint);
+
 }
 
 
