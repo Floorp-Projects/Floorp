@@ -22,7 +22,7 @@
 #ifndef __FILECOPY__
 #define __FILECOPY__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

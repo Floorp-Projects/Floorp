@@ -22,7 +22,7 @@
 #ifndef __MOREFILESEXTRAS__
 #define __MOREFILESEXTRAS__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

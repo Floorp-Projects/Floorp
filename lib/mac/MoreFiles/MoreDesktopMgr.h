@@ -26,7 +26,7 @@
 #ifndef __MOREDESKTOPMGR__
 #define __MOREDESKTOPMGR__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

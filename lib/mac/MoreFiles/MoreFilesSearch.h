@@ -30,7 +30,7 @@
 #ifndef __SEARCH__
 #define __SEARCH__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

@@ -28,10 +28,10 @@
  */
 
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Gestalt.h>
 #include <Timer.h>
-#include <Errors.h>
+#include <MacErrors.h>
 #include <Memory.h>
 #include <Files.h>
 #include <TextUtils.h>

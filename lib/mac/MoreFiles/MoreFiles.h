@@ -22,7 +22,7 @@
 #ifndef __MOREFILES__
 #define __MOREFILES__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

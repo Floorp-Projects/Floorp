@@ -19,7 +19,7 @@
 #ifndef __ITERATEDIRECTORY__
 #define __ITERATEDIRECTORY__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

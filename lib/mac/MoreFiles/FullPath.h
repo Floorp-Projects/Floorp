@@ -22,7 +22,7 @@
 #ifndef __FULLPATH__
 #define __FULLPATH__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"

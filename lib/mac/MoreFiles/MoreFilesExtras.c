@@ -24,10 +24,10 @@
  * Netscape.
  */
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Traps.h>
 #include <OSUtils.h>
-#include <Errors.h>
+#include <MacErrors.h>
 #include <Files.h>
 #include <Devices.h>
 #include <Finder.h>

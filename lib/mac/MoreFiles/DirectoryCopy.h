@@ -22,7 +22,7 @@
 #ifndef __DIRECTORYCOPY__
 #define __DIRECTORYCOPY__
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Files.h>
 
 #include "Optimization.h"
