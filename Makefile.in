@@ -319,6 +319,9 @@ endif # MOZ_COMPONENTLIB
 
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_99_dirs  += other-licenses/branding/firefox/content
+endif
 endif
 
 ifdef MOZ_THUNDERBIRD

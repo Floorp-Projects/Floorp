@@ -846,7 +846,10 @@ extensions/typeaheadfind/Makefile
 "
 
 if [ "$MOZ_USE_OFFICIAL_BRANDING" ]; then
-    MAKEFILES_firefox_branding="other-licenses/branding/firefox/Makefile"
+    MAKEFILES_firefox_branding="
+        other-licenses/branding/firefox/Makefile
+        other-licenses/branding/firefox/content/Makefile
+    "
 fi
 
 MAKEFILES_phoenix="
