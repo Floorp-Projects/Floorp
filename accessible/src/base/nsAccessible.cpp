@@ -998,7 +998,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
   }
 
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
-  if (textContent) {     
+  if (textContent) {
     // If it's a text node, but node a comment node, append the text
     nsCOMPtr<nsIDOMComment> commentNode(do_QueryInterface(aContent));
     if (!commentNode) {

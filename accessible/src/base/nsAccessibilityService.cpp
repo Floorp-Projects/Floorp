@@ -751,12 +751,9 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
     // If empty text string, don't include in accessible tree
     // Items with length 0 are already gone, we also need to check for single NBSP's
     // or newlines, both of which indicate an empty text object
-    PRInt32 textLength = 0;
-    textContent->GetTextLength(&textLength);
+    PRInt32 textLength = textContent->TextLength();
     if (textLength == 1) {
-      const nsTextFragment *textFrag;
-      textContent->GetText(&textFrag);
-      PRUnichar theChar = textFrag->CharAt(0);
+      PRUnichar theChar = textContent->Text()->CharAt(0);
       // Check for NBSP (160) or newline
       if (theChar == 160 || theChar=='\n')
         return NS_ERROR_FAILURE;
