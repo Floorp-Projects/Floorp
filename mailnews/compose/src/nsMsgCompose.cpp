@@ -686,9 +686,10 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
       {
         mProgress->OpenProgress(m_window, (const PRUnichar*)msgSubject, deliverMode != nsIMsgSend::nsMsgDeliverNow);
         mProgress->GetPrompter(getter_AddRefs(prompt));
-        mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
       }
     }
+
+    mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
   }
 
   // i'm assuming the compose window is still up at this point...
@@ -2023,6 +2024,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
       return compose->BuildBodyMessageAndSignature();
     }
   }
+  return NS_OK;
 }
 
 nsresult

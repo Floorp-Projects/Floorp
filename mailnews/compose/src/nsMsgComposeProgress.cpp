@@ -36,6 +36,8 @@ nsMsgComposeProgress::nsMsgComposeProgress()
   NS_INIT_ISUPPORTS();
   m_closeProgress = PR_FALSE;
   m_processCanceled = PR_FALSE;
+  m_pendingStateFlags = -1;
+  m_pendingStateValue = 0;
 }
 
 nsMsgComposeProgress::~nsMsgComposeProgress()
@@ -142,7 +144,11 @@ NS_IMETHODIMP nsMsgComposeProgress::RegisterListener(nsIWebProgressListener * li
     if (m_closeProgress || m_processCanceled)
       listener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
     else
+    {
       listener->OnStatusChange(nsnull, nsnull, 0, m_pendingStatus.GetUnicode());
+      if (m_pendingStateFlags != -1)
+        listener->OnStateChange(nsnull, nsnull, m_pendingStateFlags, m_pendingStateValue);
+    }
   }
     
   return NS_OK;
@@ -162,6 +168,9 @@ NS_IMETHODIMP nsMsgComposeProgress::OnStateChange(nsIWebProgress *aWebProgress, 
 {
   nsresult rv = NS_OK;
 
+  m_pendingStateFlags = aStateFlags;
+  m_pendingStateValue = aStatus;
+  
   if (m_listenerList)
   {
     PRUint32 count;

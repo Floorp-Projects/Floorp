@@ -42,6 +42,8 @@ private:
   PRBool                            m_closeProgress;
   PRBool                            m_processCanceled;
   nsString                          m_pendingStatus;
+  PRInt32                           m_pendingStateFlags;
+  PRInt32                           m_pendingStateValue;
   nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
 };
