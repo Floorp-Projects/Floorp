@@ -59,7 +59,7 @@ public class WrapFactory {
      * <LI>null</LI>
      * @param cx the current Context for this thread
      * @param scope the scope of the executing script
-     * @param obj the object to be wrapped
+     * @param obj the object to be wrapped. Note it can be null.
      * @staticType the static type of the object to be wrapped
      * @return the wrapped value.
      */
