@@ -558,8 +558,8 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
 {
   void* result = nsnull;
   
-  // Round size to multiple of 4
-  aSize = PR_ROUNDUP(aSize, 4);
+  // Ensure we have correct alignment for pointers.  Important for Tru64
+  aSize = PR_ROUNDUP(aSize, sizeof(void*));
 
   // Check recyclers first
   if (aSize < gMaxRecycledSize) {
@@ -585,8 +585,8 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
 nsresult
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
-  // Round size to multiple of 4
-  aSize = PR_ROUNDUP(aSize, 4);
+  // Ensure we have correct alignment for pointers.  Important for Tru64
+  aSize = PR_ROUNDUP(aSize, sizeof(void*));
 
   // See if it's a size that we recycle
   if (aSize < gMaxRecycledSize) {
