@@ -315,6 +315,8 @@ void nsNetSupportDialog::Init()
 	mCancelButton = NULL;
 	mCheckValue = NULL;
 	mCheckMsg = NULL;
+  mWebShell = NULL;
+  mWebShellWindow = NULL;
 }
 
 NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
@@ -422,31 +424,33 @@ nsresult nsNetSupportDialog::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
 {
 	nsresult result;
-   	// Create the Application Shell instance...
-   	nsIAppShellService* appShellService = nsnull;
-	if ( !NS_SUCCEEDED( 
-  		result = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID, (nsISupports**)&appShellService) )
-  	 )
-  	{
-  	 	return result;
-  	}  	
+  nsIWebShellWindow *dialogWindow;
+ 	// Create the Application Shell instance...
+  NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &result);
+
+	if ( !NS_SUCCEEDED ( result ) )
+  	return result;
 
 	nsIURL* dialogURL;
  	if (!NS_SUCCEEDED (result = NS_NewURL(&dialogURL, inXULURL ) ) )
- 	{
- 		appShellService->Release();
  		return result;
- 	}
 
- 	appShellService->RunModalDialog( nsnull, dialogURL, mWebShellWindow, nsnull, this, 300, 200);
+ 	appShellService->RunModalDialog( nsnull, dialogURL, dialogWindow, nsnull, this, 300, 200);
 
 	// cleanup
 	if ( mOKButton )
 		RemoveEventListener( mOKButton );
 	if ( mCancelButton )
 		RemoveEventListener( mCancelButton );
-	appShellService->Release();
 	dialogURL->Release();
+
+  // save pointer to window for later access, just in case.  note this is dangerous, since
+  // the window has been closed and partially destroyed at this point.  but here we are.
+  // it seems necessary to first release any old window we may be holding, since this is
+  // a service, and can therefore remain active between actual invocations.
+  NS_IF_RELEASE( mWebShellWindow );
+  mWebShellWindow = dialogWindow; // no need to addref; RunModalDialog did that
+
  	return NS_OK;	
 }
 
@@ -464,7 +468,9 @@ void nsNetSupportDialog::OnOK()
 		GetCheckboxValue( mWebShell, "checkbox", *mCheckValue );
 	// Cleanup
 
-	mWebShellWindow->Close();
+  NS_ASSERTION(mWebShellWindow, "missing webshell window in NetSupportDalog::OnOK");
+  if (mWebShellWindow)
+	  mWebShellWindow->Close();
 }
 
 void nsNetSupportDialog::OnCancel()
@@ -472,7 +478,9 @@ void nsNetSupportDialog::OnCancel()
 	*mReturnValue = kCancelButton;
 	if ( mCheckValue ) 
 		GetCheckboxValue( mWebShell, "checkbox", *mCheckValue ); 
-	mWebShellWindow->Close();
+  NS_ASSERTION(mWebShellWindow, "missing webshell window in NetSupportDalog::OnCancel");
+  if (mWebShellWindow)
+  	mWebShellWindow->Close();
 }
 
 nsresult nsNetSupportDialog::MouseClick(nsIDOMEvent* aMouseEvent)
