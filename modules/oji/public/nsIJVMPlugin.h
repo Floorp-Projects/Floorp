@@ -104,6 +104,15 @@ public:
     NS_IMETHOD_(nsrefcnt)
     ReleaseJNIEnv(JNIEnv* env) = 0;
 
+#ifdef XP_MAC
+	// beard: since only my plugin has implemented this so far, I'll leave it conditional for now.
+	/**
+	 * Gives time to the JVM from the main event loop of the browser. This is
+	 * necessary when there aren't any plugin instances around, but Java threads exist.
+	 */
+	NS_IMETHOD
+	SpendTime(PRUint32 timeMillis) = 0;
+#endif
 };
 
 #define NS_IJVMPLUGIN_IID                            \
