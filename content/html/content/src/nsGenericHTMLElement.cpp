@@ -43,6 +43,7 @@
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
 
+#include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
@@ -1624,6 +1625,9 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
   }
   else if (mTag == nsHTMLAtoms::hr) {
     rv = NS_NewHRFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::img) {
+    rv = NS_NewImageFrame(mContent, aParentFrame, frame);
   }
   else if (mTag == nsHTMLAtoms::object) {
     rv = NS_NewObjectFrame(mContent, aParentFrame, frame);
