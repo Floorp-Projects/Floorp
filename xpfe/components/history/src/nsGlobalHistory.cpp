@@ -53,6 +53,8 @@
 #include "prtime.h"
 #include "rdf.h"
 
+#include "nsIURL.h"
+
 #include "nsInt64.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
@@ -75,9 +77,6 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
-#ifdef DEBUG_sspitzer
-#define DEBUG_LAST_PAGE_VISITED 1
-#endif /* DEBUG_sspitzer */
 
 #define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
@@ -87,6 +86,7 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
+static NS_DEFINE_CID(kStandardUrlCID,       NS_STANDARDURL_CID);
 
 struct matchExpiration_t {
   PRInt64 *expirationDate;
@@ -95,6 +95,13 @@ struct matchExpiration_t {
 
 struct matchUrl_t {
   const char *url;
+};
+
+struct matchHost_t {
+  const char *host;
+  PRBool entireDomain;          // should we delete the entire domain?
+  nsGlobalHistory *history;
+  nsIURL* cachedUrl;
 };
 
 static nsresult
@@ -153,7 +160,7 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
 
 
 PRBool
-nsGlobalHistory::matchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
+nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
 {
   mdb_err err;
   nsresult rv;
@@ -174,7 +181,7 @@ static PRBool
 matchExpirationCallback(nsIMdbRow *row, void *aClosure)
 {
   matchExpiration_t *expires = (matchExpiration_t*)aClosure;
-  return expires->history->matchExpiration(row, expires->expirationDate);
+  return expires->history->MatchExpiration(row, expires->expirationDate);
 }
 
 static PRBool
@@ -183,6 +190,12 @@ matchAllCallback(nsIMdbRow *row, void *aClosure)
   return PR_TRUE;
 }
 
+static PRBool
+matchHostCallback(nsIMdbRow *row, void *aClosure)
+{
+  matchHost_t *hostInfo = (matchHost_t*)aClosure;
+  return hostInfo->history->MatchHost(row, hostInfo);
+}
 //----------------------------------------------------------------------
 
 nsMdbTableEnumerator::nsMdbTableEnumerator()
@@ -686,7 +699,8 @@ nsGlobalHistory::RemovePage(const char *aURL)
 {
   mdb_err err;
   nsresult rv;
-  
+
+  if (!mTable) return NS_ERROR_NOT_INITIALIZED;
   // find the old row, ignore it if we don't have it
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindUrl(aURL, getter_Acquires(row));
@@ -707,6 +721,61 @@ nsGlobalHistory::RemovePage(const char *aURL)
   NotifyUnassert(kNC_HistoryRoot, kNC_child, oldRowResource);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIURL> url =
+    do_CreateInstance(kStandardUrlCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  matchHost_t hostInfo;
+  hostInfo.history = this;
+  hostInfo.entireDomain = aEntireDomain;
+  hostInfo.host = aHost;
+  
+  hostInfo.cachedUrl = url;
+  return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
+}
+
+PRBool
+nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
+                           matchHost_t *hostInfo)
+{
+  mdb_err err;
+  nsresult rv;
+
+  mdbYarn yarn;
+  err = aRow->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
+  if (err != 0) return PR_FALSE;
+
+  // do smart zero-termination
+  nsLiteralCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  rv = hostInfo->cachedUrl->SetSpec(nsPromiseFlatCString(url).get());
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  nsXPIDLCString urlHost;
+  rv = hostInfo->cachedUrl->GetHost(getter_Copies(urlHost));
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  if (PL_strcmp(urlHost, hostInfo->host) == 0)
+    return PR_TRUE;
+
+  // now try for a domain match, if necessary
+  if (hostInfo->entireDomain) {
+    // do a reverse-search to match the end of the string
+    char *domain = PL_strrstr(urlHost, hostInfo->host);
+    
+    // now verify that we're matching EXACTLY the domain, and
+    // not some random string inside the hostname
+    if (domain && (PL_strcmp(domain, hostInfo->host) == 0))
+      return PR_TRUE;
+  }
+  
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -733,6 +802,8 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->GetCount(mEnv, &count);
   if (err != 0) return NS_ERROR_FAILURE;
 
+  // XXX tell RDF observers that we're about to do a batch update
+  
   // Begin the batch.
   int marker;
   err = mTable->StartBatchChangeHint(mEnv, &marker);
@@ -793,6 +864,9 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   // Finish the batch.
   err = mTable->EndBatchChangeHint(mEnv, &marker);
   NS_ASSERTION(err == 0, "error ending batch");
+
+  // XXX tell RDF observers that we're done with the batch
+  
   return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -845,10 +919,6 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 
   rv = prefs->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
 
-#ifdef DEBUG_LAST_PAGE_VISITED
-  printf("XXX saving last page visited as: %s\n", aURL);
-#endif /* DEBUG_LAST_PAGE_VISITED */
-
   return rv;
 }
 
@@ -868,9 +938,6 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
 
   *_retval = nsCRT::strdup((const char *)lastPageVisited);
 
-#ifdef DEBUG_LAST_PAGE_VISITED
-  printf("XXX getting last page visited as: %s\n", (const char *)lastPageVisited);
-#endif /* DEBUG_LAST_PAGE_VISITED */
 
   return NS_OK;
 }

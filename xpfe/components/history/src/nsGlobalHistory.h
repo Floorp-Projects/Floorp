@@ -75,6 +75,8 @@ protected:
 };
 
 typedef PRBool (*rowMatchCallback)(nsIMdbRow *aRow, void *closure);
+
+struct matchHost_t;
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -111,7 +113,8 @@ public:
   virtual ~nsGlobalHistory();
 
   // these must be public so that the callbacks can call them
-  PRBool matchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
+  PRBool MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
+  PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
 
 protected:
 
@@ -165,6 +168,7 @@ protected:
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
 
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableString& aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableCString& aResult);
 
   nsresult FindUrl(const char *aURL, nsIMdbRow **aResult);
   
