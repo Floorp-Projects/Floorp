@@ -16,8 +16,6 @@
 DEPTH=..\..\..
 MODULE=mime
 
-LIBNAME = .\$(OBJDIR)\mime
-DLL = $(LIBNAME).dll
 
 ################################################################################
 ## exports
@@ -25,9 +23,6 @@ DLL = $(LIBNAME).dll
 EXPORTS =              		\
 			nsMsgMimeCID.h  \
 	        $(NULL)
-
-################################################################################
-## library
 
 include <$(DEPTH)/config/rules.mak>
 
