@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.36 2002/11/26 05:58:51 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.37 2002/11/26 07:07:20 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -616,16 +616,16 @@ EncodeDBCertEntry(certDBEntryCert *entry, PRArenaPool *arena, SECItem *dbitem)
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = (unsigned char)( entry->trust.sslFlags >> 8 );
-    buf[1] = (unsigned char)entry->trust.sslFlags;
-    buf[2] = (unsigned char)( entry->trust.emailFlags >> 8 );
-    buf[3] = (unsigned char)entry->trust.emailFlags;
-    buf[4] = (unsigned char)( entry->trust.objectSigningFlags >> 8 );
-    buf[5] = (unsigned char)entry->trust.objectSigningFlags;
-    buf[6] = (unsigned char)( entry->derCert.len >> 8 );
-    buf[7] = (unsigned char)entry->derCert.len;
-    buf[8] = (unsigned char)( nnlen >> 8 );
-    buf[9] = (unsigned char)nnlen;
+    buf[0] = ( entry->trust.sslFlags >> 8 ) & 0xff;
+    buf[1] = entry->trust.sslFlags & 0xff;
+    buf[2] = ( entry->trust.emailFlags >> 8 ) & 0xff;
+    buf[3] = entry->trust.emailFlags & 0xff;
+    buf[4] = ( entry->trust.objectSigningFlags >> 8 ) & 0xff;
+    buf[5] = entry->trust.objectSigningFlags & 0xff;
+    buf[6] = ( entry->derCert.len >> 8 ) & 0xff;
+    buf[7] = entry->derCert.len & 0xff;
+    buf[8] = ( nnlen >> 8 ) & 0xff;
+    buf[9] = nnlen & 0xff;
     
     PORT_Memcpy(&buf[DB_CERT_ENTRY_HEADER_LEN], entry->derCert.data,
 	      entry->derCert.len);
@@ -1118,10 +1118,10 @@ EncodeDBCrlEntry(certDBEntryRevocation *entry, PRArenaPool *arena, SECItem *dbit
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = (unsigned char)( entry->derCrl.len >> 8 );
-    buf[1] = (unsigned char)entry->derCrl.len;
-    buf[2] = (unsigned char)( nnlen >> 8 );
-    buf[3] = (unsigned char)nnlen;
+    buf[0] = ( entry->derCrl.len >> 8 ) & 0xff;
+    buf[1] = entry->derCrl.len & 0xff;
+    buf[2] = ( nnlen >> 8 ) & 0xff;
+    buf[3] = nnlen & 0xff;
     
     PORT_Memcpy(&buf[DB_CRL_ENTRY_HEADER_LEN], entry->derCrl.data,
 	      entry->derCrl.len);
@@ -1426,8 +1426,8 @@ EncodeDBNicknameEntry(certDBEntryNickname *entry, PRArenaPool *arena,
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = (unsigned char)( entry->subjectName.len >> 8 );
-    buf[1] = (unsigned char)entry->subjectName.len;
+    buf[0] = ( entry->subjectName.len >> 8 ) & 0xff;
+    buf[1] = entry->subjectName.len & 0xff;
     
     PORT_Memcpy(&buf[DB_NICKNAME_ENTRY_HEADER_LEN], entry->subjectName.data,
 	      entry->subjectName.len);
@@ -1735,12 +1735,12 @@ EncodeDBSMimeEntry(certDBEntrySMime *entry, PRArenaPool *arena,
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = (unsigned char)( entry->subjectName.len >> 8 );
-    buf[1] = (unsigned char)entry->subjectName.len;
-    buf[2] = (unsigned char)( entry->smimeOptions.len >> 8 );
-    buf[3] = (unsigned char)entry->smimeOptions.len;
-    buf[4] = (unsigned char)( entry->optionsDate.len >> 8 );
-    buf[5] = (unsigned char)entry->optionsDate.len;
+    buf[0] = ( entry->subjectName.len >> 8 ) & 0xff;
+    buf[1] = entry->subjectName.len & 0xff;
+    buf[2] = ( entry->smimeOptions.len >> 8 ) & 0xff;
+    buf[3] = entry->smimeOptions.len & 0xff;
+    buf[4] = ( entry->optionsDate.len >> 8 ) & 0xff;
+    buf[5] = entry->optionsDate.len & 0xff;
 
     /* if no smime options, then there should not be an options date either */
     PORT_Assert( ! ( ( entry->smimeOptions.len == 0 ) &&
@@ -2123,10 +2123,9 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
 	nnlen = PORT_Strlen(entry->nickname) + 1;
     }
     if ( entry->emailAddrs ) {
-	int j;
 	eaddrslen = 2;
-	for (j=0; j < entry->nemailAddrs; j++) {
-	    eaddrslen += PORT_Strlen(entry->emailAddrs[j]) + 1 + 2;
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    eaddrslen += PORT_Strlen(entry->emailAddrs[i]) + 1 + 2;
 	}
     }
 
@@ -2154,10 +2153,10 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = (unsigned char)( ncerts >> 8 );
-    buf[1] = (unsigned char)ncerts;
-    buf[2] = (unsigned char)( nnlen >> 8 );
-    buf[3] = (unsigned char)nnlen;
+    buf[0] = ( ncerts >> 8 ) & 0xff;
+    buf[1] = ncerts & 0xff;
+    buf[2] = ( nnlen >> 8 ) & 0xff;
+    buf[3] = nnlen & 0xff;
     /* v7 email field is NULL in v8 */
     buf[4] = 0;
     buf[5] = 0;
@@ -2169,10 +2168,10 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
 	certKeys = entry->certKeys;
 	keyIDs = entry->keyIDs;
 
-	buf[keyidoff+i*2]   = (unsigned char)( certKeys[i].len >> 8 );
-	buf[keyidoff+1+i*2] = (unsigned char)certKeys[i].len;
-	buf[keyidoff+ncerts*2+i*2]   = (unsigned char)( keyIDs[i].len >> 8 );
-	buf[keyidoff+1+ncerts*2+i*2] = (unsigned char)keyIDs[i].len;
+	buf[keyidoff+i*2] = ( certKeys[i].len >> 8 ) & 0xff;
+	buf[keyidoff+1+i*2] = certKeys[i].len & 0xff;
+	buf[keyidoff+ncerts*2+i*2] = ( keyIDs[i].len >> 8 ) & 0xff;
+	buf[keyidoff+1+ncerts*2+i*2] = keyIDs[i].len & 0xff;
     }
     
     /* temp pointer used to stuff certkeys and keyids into the buffer */
@@ -2191,16 +2190,15 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     }
 
     if (entry->emailAddrs) {
-	int j;
-	tmpbuf[0] =  (unsigned char)(entry->nemailAddrs >> 8);
-	tmpbuf[1] =  (unsigned char)entry->nemailAddrs;
+	tmpbuf[0] =  (entry->nemailAddrs >> 8) & 0xff;
+	tmpbuf[1] =  entry->nemailAddrs  & 0xff;
 	tmpbuf += 2;
-	for (j=0; j < entry->nemailAddrs; j++) {
-	    int nameLen = PORT_Strlen(entry->emailAddrs[j]) + 1;
-	    tmpbuf[0] =  (unsigned char)(nameLen >> 8);
-	    tmpbuf[1] =  (unsigned char)nameLen;
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    int nameLen = PORT_Strlen(entry->emailAddrs[i]) + 1;
+	    tmpbuf[0] =  (nameLen >> 8) & 0xff;
+	    tmpbuf[1] =  nameLen & 0xff;
 	    tmpbuf += 2;
-	    PORT_Memcpy(tmpbuf,entry->emailAddrs[j],nameLen);
+	    PORT_Memcpy(tmpbuf,entry->emailAddrs[i],nameLen);
 	    tmpbuf +=nameLen;
 	}
     }
@@ -2384,7 +2382,6 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 
     end = &dbentry->data[dbentry->len];
     if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
-	int j;
 	/* read in the additional email addresses */
 	entry->nemailAddrs = nemailAddrs;
 	entry->emailAddrs = (char **)
@@ -2393,14 +2390,14 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	for (j=0; j < entry->nemailAddrs; j++) {
+	for (i=0; i < entry->nemailAddrs; i++) {
 	    int nameLen = tmpbuf[0] << 8 | tmpbuf[1];
-	    entry->emailAddrs[j] = PORT_ArenaAlloc(arena,nameLen);
+	    entry->emailAddrs[i] = PORT_ArenaAlloc(arena,nameLen);
 	    if (entry->emailAddrs == NULL) {
 	        PORT_SetError(SEC_ERROR_NO_MEMORY);
 	        goto loser;
 	    }
-	    PORT_Memcpy(entry->emailAddrs[j],&tmpbuf[2],nameLen);
+	    PORT_Memcpy(entry->emailAddrs[i],&tmpbuf[2],nameLen);
 	    tmpbuf += 2 + nameLen;
 	}
     }
@@ -2480,8 +2477,14 @@ NewDBSubjectEntry(SECItem *derSubject, SECItem *certKey,
 	    PORT_Free(emailAddr);
 	    goto loser;
 	}
+	entry->emailAddrs[0] = (char *)PORT_ArenaAlloc(arena, eaddrlen);
 	entry->emailAddrs[0] = PORT_ArenaStrdup(arena,emailAddr);
-	entry->nemailAddrs = entry->emailAddrs[0] != NULL;
+	if (entry->emailAddrs[0]) {
+	    entry->nemailAddrs = 1;
+	} else {
+	    entry->emailAddrs[0] = NULL;
+	}
+	
 	PORT_Free(emailAddr);
     } else {
 	entry->emailAddrs = NULL;
@@ -2663,8 +2666,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 {
     PRBool save = PR_FALSE, delold = PR_FALSE;
     certDBEntrySubject *entry = NULL;
-    int       index = -1;
-    int       i;
+    int index,i;
     SECStatus rv;
    
     if (emailAddr) { 
@@ -2972,10 +2974,9 @@ RemovePermSubjectNode(NSSLOWCERTCertificate *cert)
     } else {
 	/* no entries left, delete the perm entry in the DB */
 	if ( entry->emailAddrs ) {
-	    int j;
 	    /* if the subject had an email record, then delete it too */
-	    for (j=0; j < entry->nemailAddrs; j++) {
-		DeleteDBSMimeEntry(cert->dbhandle, entry->emailAddrs[j]);
+	    for (i=0; i < entry->nemailAddrs; i++) {
+		DeleteDBSMimeEntry(cert->dbhandle, entry->emailAddrs[i]);
 	    }
 	}
 	if ( entry->nickname ) {
@@ -3988,6 +3989,7 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
     SECStatus rv;
     certDBEntryVersion *versionEntry = NULL;
     DB *updatedb = NULL;
+    char *tmpname;
     int status = RDB_FAIL;
 
     if (appName) {
