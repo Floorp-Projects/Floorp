@@ -420,6 +420,11 @@
   </binding>
 
   <binding id="outlinerbody" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+    <implementation>
+      <property name="_lastSelectedRow">
+        -1
+      </property>
+    </implementation>
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
@@ -431,6 +436,9 @@
            var obj = {};
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+           // save off the last selected row
+           this._lastSelectedRow = row.value;
 
            try {
              if (row.value >= b.view.rowCount) return;
@@ -469,6 +477,7 @@
            b.view.toggleOpenState(row.value);
 		   return;
 		 }
+
          var augment = event.ctrlKey || event.metaKey;
          if (event.shiftKey) {
            b.selection.rangedSelect(-1, row.value, augment);
@@ -487,7 +496,10 @@
            var column = document.getElementById(col.value);
            var cycler = column.getAttribute('cycler') == 'true';
 
-           if (!cycler && event.button == 0)
+           // if the last row has changed in between the time we 
+           // mousedown and the time we click, don't fire the select handler.
+           // see bug #92366
+           if (!cycler && this._lastSelectedRow == row.value)
              b.selection.select(row.value);  
          }
       ]]>
