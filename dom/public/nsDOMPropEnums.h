@@ -28,8 +28,7 @@
 #ifndef nsDOMPropEnums_h__
 #define nsDOMPropEnums_h__
 
-// Be sure to keep this list in sync with the list of strings 
-// in mozilla/caps/src/nsScriptSecurityManager.cpp
+// Use genPropNames.pl to keep this list in sync with nsDOMPropNames.h
 
 enum nsDOMProp {
     NS_DOM_PROP_APPCORESMANAGER_ADD,

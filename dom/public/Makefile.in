@@ -46,6 +46,7 @@ EXPORTS		= \
 		nsIDOMNativeObjectRegistry.h \
 		nsDOMCID.h \
 		nsDOMPropEnums.h \
+		nsDOMPropNames.h \
 		nsIScriptGlobalObjectData.h \
 		nsIScriptNameSetRegistry.h \
 		nsIScriptExternalNameSet.h \
