@@ -1089,7 +1089,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const PRUnichar* aString, PRUint3
 	uint8 *utf8str = new uint8 [aLength * 4 + 1];	// max UTF-8 string length
 	uint8 *utf8ptr = utf8str;
 	uint32 utf8str_len;
-	const uint16 *uniptr = aString;
+	const PRUnichar *uniptr = aString;
 	
 	for(PRUint32 i = 0; i < aLength; i++)
 		convert_to_utf8(utf8ptr, uniptr);
@@ -1165,7 +1165,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUin
 	uint8 *utf8str = new uint8 [aLength * 4 + 1];	// max UTF-8 string length
 	uint8 *utf8ptr = utf8str;
   uint32 utf8str_len;
-	const uint16 *uniptr = aString;
+	const PRUnichar *uniptr = aString;
 	for(PRUint32 i = 0; i < aLength; i++)
 		convert_to_utf8(utf8ptr, uniptr);
   *utf8ptr = '\0';
