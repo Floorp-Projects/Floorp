@@ -261,6 +261,7 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       nsDragService* dragservice = (nsDragService*)pdxfer->pditem->ulItemID;
   
       if (pdxfer->usOperation == DO_COPY &&
+          (WinGetKeyState(HWND_DESKTOP, VK_CTRL) & 0x8000) &&
           !strcmp(dragservice->mMimeType, kURLMime)) {
           // QI'ing nsIURL will fail for mailto: and the like
         nsCOMPtr<nsIURL> urlObject(do_QueryInterface(dragservice->mSourceData));
@@ -292,7 +293,8 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
         // the code that uses nsIURI to render a URL object
 
       if (!strcmp(dragservice->mMimeType, kURLMime)) {
-        if (pdxfer->usOperation == DO_COPY) {
+        if (pdxfer->usOperation == DO_COPY &&
+            (WinGetKeyState(HWND_DESKTOP, VK_CTRL) & 0x8000)) {
           nsCOMPtr<nsIURL> urlObject(do_QueryInterface(dragservice->mSourceData));
           if (urlObject)
             rv = dragservice->SaveAsContents(chPath, urlObject);
@@ -739,7 +741,7 @@ NS_IMETHODIMP nsDragService::DragOverMsg(PDRAGINFO pdinfo, MRESULT &mr,
 
     // if we're in a drag, set it up to be dispatched
   if (mDoingDrag) {
-    SetCanDrop(PR_TRUE);
+    SetCanDrop(PR_FALSE);
     switch (pdinfo->usOperation) {
       case DO_COPY:
         SetDragAction(DRAGDROP_ACTION_COPY);
@@ -772,6 +774,7 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
 {
   nsresult  rv = NS_ERROR_FAILURE;
   PRBool    isFQFile = FALSE;
+  PRBool    isAtom = FALSE;
   PDRAGITEM pditem = 0;
 
   if (pdinfo->cditem != 1)
@@ -780,10 +783,13 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
   pditem = DrgQueryDragitemPtr(pdinfo, 0);
 
   if (pditem) {
-    if (DrgVerifyRMF(pditem, "DRM_ATOM", 0) ||
-        DrgVerifyRMF(pditem, "DRM_DTSHARE", 0)) {
+    if (DrgVerifyRMF(pditem, "DRM_ATOM", 0)) {
+      isAtom = TRUE;
       rv = NS_OK;
     }
+    else
+    if (DrgVerifyRMF(pditem, "DRM_DTSHARE", 0))
+      rv = NS_OK;
     else
     if (DrgVerifyRMF(pditem, "DRM_OS2FILE", 0)) {
       rv = NS_OK;
@@ -798,9 +804,12 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
             do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
     if (trans) {
 
+      PRBool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
+      PRBool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);
+
         // if this is a fully-qualified file or the item claims to be
         // a Url, identify it as a Url & also offer it as html
-      if (isFQFile || DrgVerifyType(pditem, "UniformResourceLocator")) {
+      if ((isFQFile && !isAlt) || isUrl) {
         trans->AddDataFlavor(kURLMime);
         trans->AddDataFlavor(kHTMLMime);
       }
@@ -814,6 +823,30 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
       if (transArray) {
         transArray->InsertElementAt(trans, 0);
         mSourceDataItems = transArray;
+
+        // add the dragged data to the transferable if we have easy access
+        // to it (i.e. no need to read a file or request rendering);  for
+        // URLs, we'll skip creating a title until the drop occurs
+        nsXPIDLCString someText;
+        if (isAtom) {
+          if (NS_SUCCEEDED(GetAtom(pditem->ulItemID, getter_Copies(someText))))
+            NativeDataToTransferable( someText.get(), 0, isUrl);
+        }
+        else
+        if (isFQFile && !isAlt &&
+            NS_SUCCEEDED(GetFileName(pditem, getter_Copies(someText)))) {
+          nsCOMPtr<nsILocalFile> file;
+          if (NS_SUCCEEDED(NS_NewNativeLocalFile(someText, PR_TRUE,
+                                                 getter_AddRefs(file)))) {
+            nsCAutoString textStr;
+            NS_GetURLSpecFromFile(file, textStr);
+            if (!textStr.IsEmpty()) {
+              someText.Assign(ToNewCString(textStr));
+              NativeDataToTransferable( someText.get(), 0, TRUE);
+            }
+          }
+        }
+
         mSourceNode = 0;
         mSourceDocument = 0;
         mDoingDrag = TRUE;
