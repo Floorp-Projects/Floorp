@@ -55,6 +55,7 @@ nsXIEngine::~nsXIEngine()
 int     
 EventPumpCB(void)
 {
+    return 0;
 }
 
 int     
