@@ -7472,9 +7472,9 @@ public:
   nsImapCacheStreamListener ();
   virtual ~nsImapCacheStreamListener();
 
-  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aMockChannelToUse);
+  nsresult Init(nsIStreamListener * aStreamListener, nsIImapMockChannel * aMockChannelToUse);
 protected:
-  nsCOMPtr<nsIChannel> mChannelToUse;
+  nsCOMPtr<nsIImapMockChannel> mChannelToUse;
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
@@ -7494,7 +7494,7 @@ nsImapCacheStreamListener::nsImapCacheStreamListener()
 nsImapCacheStreamListener::~nsImapCacheStreamListener()
 {}
 
-nsresult nsImapCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aMockChannelToUse)
+nsresult nsImapCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIImapMockChannel * aMockChannelToUse)
 {
   NS_ENSURE_ARG(aStreamListener);
   NS_ENSURE_ARG(aMockChannelToUse);
@@ -7519,14 +7519,14 @@ nsImapCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCt
 NS_IMETHODIMP
 nsImapCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus)
 {
-  nsCOMPtr<nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
-  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus);
+  nsresult rv = mListener->OnStopRequest(mChannelToUse, aCtxt, aStatus);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-			loadGroup->RemoveRequest(ourRequest, nsnull, aStatus);
+    loadGroup->RemoveRequest(mChannelToUse, nsnull, aStatus);
 
   mListener = nsnull;
+  mChannelToUse->Close();
   mChannelToUse = nsnull;
   return rv;
 }
@@ -7534,8 +7534,7 @@ nsImapCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtx
 NS_IMETHODIMP
 nsImapCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
 {
-  nsCOMPtr<nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
-  return mListener->OnDataAvailable(ourRequest, aCtxt, aInStream, aSourceOffset, aCount);
+  return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapMockChannel)
@@ -7881,7 +7880,7 @@ nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     // if we are going to read from the cache, then create a mock stream listener class and use it
     nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
     NS_ADDREF(cacheListener);
-    cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+    cacheListener->Init(m_channelListener, this);
     rv = pump->AsyncRead(cacheListener, m_channelContext);
     NS_RELEASE(cacheListener);
 
@@ -7982,7 +7981,7 @@ PRBool nsImapMockChannel::ReadFromLocalCache()
 
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
-        cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+        cacheListener->Init(m_channelListener, this);
 
         // create a stream pump that will async read the specified amount of data.
         nsCOMPtr<nsIInputStreamPump> pump;
