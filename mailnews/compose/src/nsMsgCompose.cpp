@@ -52,9 +52,10 @@
 #include "htmldlgs.h"
 #include "hosttbl.h"
 #include "newshost.h"
-#include "xp_qsort.h"
 #include "intl_csi.h"
 */
+
+#include "nsQuickSort.h"
 
 #ifdef UNREADY_CODE
 HJ04305
@@ -319,6 +320,7 @@ MSG_HTMLRecipients::FreeChangedList(char** list)
 
 static void msg_free_attachment_list(struct MSG_AttachmentData *list);
 
+/*JFD
 static void
 msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 {
@@ -339,6 +341,7 @@ msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 	}
 	PR_FREEIF(attachments);
 }
+*/
 
 nsMsgCompose::nsMsgCompose()
 {
@@ -669,13 +672,11 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 	if (fcc && *fcc) {
 		char *q = GetPrefs()->MagicFolderName(MSG_FOLDER_FLAG_QUEUE);
 		if (q && *q && !XP_FILENAMECMP (q, fcc)) {
-			char *buf;
-
 			/* We cannot allow them to use the queued mail folder
 			   as their fcc folder, too.  Tell them why. */
 
-			const char *q = MSG_GetQueueFolderName();
 #ifdef UNREADY_CODE
+			const char *q = MSG_GetQueueFolderName();
 			if (q) {
 				if (!PL_strcasecmp(q,QUEUE_FOLDER_NAME_OLD))
 					buf = PR_smprintf("%s%s", XP_GetString(MK_MSG_WHY_QUEUE_SPECIAL_OLD),
@@ -1608,7 +1609,7 @@ QuotePlainIntoHTML::QuoteLine(char* line, PRUint32 length)
 				EDT_PasteQuote(m_context, "<BR>");
 	}
 		
-	int l = length * 2 + 50;
+	PRUint32 l = length * 2 + 50;
 	if (l > m_outbufsize) {
 		if (l < 512) l = 512;
 		m_outbufsize = l;
@@ -1656,7 +1657,7 @@ nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 	if (m_markup) {
 		func = MyQuoteFunc;
 		closure = new QuotePlainIntoHTML(GetContext());
-		if (!closure) return MK_OUT_OF_MEMORY;
+		if (!closure) return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	MSG_Pane *msgPane = FindPane(m_oldContext, MSG_MESSAGEPANE);
@@ -1719,7 +1720,7 @@ nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 
 	if (quotehtml) {
 		URL_Struct* url = NET_CreateURLStruct(m_quoteUrl, NET_DONT_RELOAD);
-		if (!url) return MK_OUT_OF_MEMORY;
+		if (!url) return NS_ERROR_OUT_OF_MEMORY;
 
 		// This is a hack, really should be url->msg_pane, but this prevents mail
 		// quoting from working at all.  We just need SOME sort of way to give
@@ -2222,8 +2223,8 @@ FAIL:
 		FE_Alert(context, error_message);
 	}
 	else if (status != MK_INTERRUPTED) {
-		char *errmsg;
 #ifdef UNREADY_CODE
+		char *errmsg;
 		errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
 		if (errmsg) {
 			FE_Alert(context, errmsg);
@@ -2897,8 +2898,8 @@ JFD*/
 		{
 			// If we're delivering the mail into the Outbox/queue folder, 
 			// tell the FE the Outbox folder has new counts
-			MSG_FolderInfo *folder = FindFolderOfType (MSG_FOLDER_FLAG_QUEUE);
 /*JFD
+			MSG_FolderInfo *folder = FindFolderOfType (MSG_FOLDER_FLAG_QUEUE);
 			if (folder)
 				folder->SummaryChanged();
 */
@@ -3043,9 +3044,10 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 	HJ74362
 #endif
 
+  /*JFD
 	const char* body = m_fields->GetBody();
 	PRUint32 body_length = PL_strlen(body);
-
+  */
 
 	for (attachment_count = 0;
 		 m_attachData && m_attachData[attachment_count].url;
@@ -3572,7 +3574,7 @@ static MSG_HEADER_SET standard_header_set[] = {
 int 
 nsMsgCompose::RetrieveStandardHeaders(MSG_HeaderEntry ** return_list)
 {
-  int i, total;
+  PRUint32 i, total;
   const char * field;
   MSG_HeaderEntry * list = NULL;
 
@@ -3605,7 +3607,7 @@ nsMsgCompose::RetrieveStandardHeaders(MSG_HeaderEntry ** return_list)
 void 
 nsMsgCompose::ClearComposeHeaders()
 {
-  int i;
+  PRUint32 i;
   for (i = 0; i<TOTAL_HEADERS; i++)
     SetCompHeader(standard_header_set[i],NULL);
 }
@@ -3684,7 +3686,7 @@ static
 #else
 extern "OPTLINK"
 #endif
-int DomainCompare(const void* e1, const void* e2)
+int DomainCompare(const void* e1, const void* e2, void*)
 {
 	return PL_strcmp(*((char**) e1), *((char**) e2));
 }
@@ -3791,7 +3793,7 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
 	}
 	if (changed) {
 		// Now nuke dups.
-		XP_QSORT(domainstrings, num, sizeof(char*), DomainCompare);
+		nsQuickSort(domainstrings, num, sizeof(char*), DomainCompare, NULL);
 		for (i=0 ; i < num-1 ; i++) {
 			while (i < num-1 &&
 				   PL_strcmp(domainstrings[i], domainstrings[i+1]) == 0) {
@@ -3837,7 +3839,7 @@ nsMsgCompose::RecipientDialogDone_s(XPDialogState *state, char **argv,
 */PR_TRUE;/*JFD*/
 }
 
-
+/*JFD
 static void
 Slurp(PRInt32* list, const char* name, char** argv, int argc)
 {
@@ -3848,6 +3850,7 @@ Slurp(PRInt32* list, const char* name, char** argv, int argc)
 	}
 	*list = -1;
 }
+*/
 
 PRBool
 nsMsgCompose::RecipientDialogDone(XPDialogState * /*state*/,
@@ -4003,7 +4006,8 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 	m_htmlrecip = new MSG_HTMLRecipients();
 	if (!m_htmlrecip) return MK_OUT_OF_MEMORY;
 
-	for (int i=0 ; i < sizeof(masks) / sizeof(masks[0]) ; i++) {
+  PRUint32 i;
+	for (i=0 ; i < sizeof(masks) / sizeof(masks[0]) ; i++) {
 		const char* orig = m_fields->GetHeader(masks[i]);
 		if (!orig || !*orig) continue;
 		char* value = NULL;
