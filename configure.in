@@ -4433,56 +4433,56 @@ MOZ_ARG_ENABLE_BOOL(svg,
     MOZ_SVG= )
 if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
+
+  dnl default svg renderer - gdiplus on win32, cairo everywhere else
+  case "$target_os" in
+  msvc*|mks*|cygwin*|mingw*)
+    SVG_DEFAULT_RENDERER=gdiplus
+    ;;
+  *)
+    SVG_DEFAULT_RENDERER=cairo
+    ;;
+  esac
+
+  MOZ_ARG_ENABLE_STRING(svg-renderer,
+  [  --enable-svg-renderer={gdiplus,libart,cairo}],
+  [ SVG_RENDERER=$enableval ],
+  [ SVG_RENDERER=$SVG_DEFAULT_RENDERER])
+
+  case "$SVG_RENDERER" in
+  gdiplus)
+    MOZ_SVG_RENDERER_GDIPLUS=1
+    dnl XXX This is the test we'd like to perform but it isn't working
+    dnl under Windows for some reason:
+    dnl   AC_CHECK_HEADER(Gdiplus.h,,
+    dnl                   AC_MSG_ERROR([Gdiplus.h not found!]))
+    dnl So do this instead:
+    AC_MSG_CHECKING(for Gdiplus.h)
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
+    AC_TRY_COMPILE([#include <windows.h>
+                    #include <unknwn.h>
+                    #include <Gdiplus.h>],,AC_MSG_RESULT(yes),
+                   AC_MSG_ERROR([Building the SVG GDI+ renderer requires an appropriate Microsoft SDK.]))
+    AC_LANG_RESTORE
+    AC_DEFINE(MOZ_SVG_RENDERER_GDIPLUS)
+    ;;
+
+  libart)
+    MOZ_SVG_RENDERER_LIBART=1
+    AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
+    ;;
+
+  cairo)
+    MOZ_SVG_RENDERER_CAIRO=1
+    AC_DEFINE(MOZ_SVG_RENDERER_CAIRO)
+    ;;
+
+  *)
+    AC_MSG_ERROR([unknown svg renderer $SVG_RENDERER])
+    ;;
+  esac
 fi
-
-dnl default svg renderer - gdiplus on win32, cairo everywhere else
-case "$target_os" in
-msvc*|mks*|cygwin*|mingw*)
-  SVG_DEFAULT_RENDERER=gdiplus
-  ;;
-*)
-  SVG_DEFAULT_RENDERER=cairo
-  ;;
-esac
-
-MOZ_ARG_ENABLE_STRING(svg-renderer,
-[  --enable-svg-renderer={gdiplus,libart,cairo}],
-[ SVG_RENDERER=$enableval ],
-[ SVG_RENDERER=$SVG_DEFAULT_RENDERER])
-
-case "$SVG_RENDERER" in
-gdiplus)
-  MOZ_SVG_RENDERER_GDIPLUS=1
-  dnl XXX This is the test we'd like to perform but it isn't working
-  dnl under Windows for some reason:
-  dnl   AC_CHECK_HEADER(Gdiplus.h,,
-  dnl                   AC_MSG_ERROR([Gdiplus.h not found!]))
-  dnl So do this instead:
-  AC_MSG_CHECKING(for Gdiplus.h)
-  AC_LANG_SAVE
-  AC_LANG_CPLUSPLUS
-  AC_TRY_COMPILE([#include <windows.h>
-                  #include <unknwn.h>
-                  #include <Gdiplus.h>],,AC_MSG_RESULT(yes),
-                 AC_MSG_ERROR([Building the SVG GDI+ renderer requires an appropriate Microsoft SDK.]))
-  AC_LANG_RESTORE
-  AC_DEFINE(MOZ_SVG_RENDERER_GDIPLUS)
-  ;;
-
-libart)
-  MOZ_SVG_RENDERER_LIBART=1
-  AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
-  ;;
-
-cairo)
-  MOZ_SVG_RENDERER_CAIRO=1
-  AC_DEFINE(MOZ_SVG_RENDERER_CAIRO)
-  ;;
-
-*)
-  AC_MSG_ERROR([unknown svg renderer $SVG_RENDERER])
-  ;;
-esac
 
 dnl ========================================================
 dnl Transformiix
