@@ -19,9 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
-
-DIRS=win
+DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
