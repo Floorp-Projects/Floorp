@@ -5510,7 +5510,8 @@ void nsImapProtocol::MailboxDiscoveryFinished()
     m_hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(GetImapServerKey(), PR_TRUE);
 
     // notify front end that folder discovery is complete....
-    m_imapServerSink->DiscoveryDone();
+    if (m_imapServerSink)
+        m_imapServerSink->DiscoveryDone();
     }
 }
 
