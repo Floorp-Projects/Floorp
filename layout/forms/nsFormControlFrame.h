@@ -159,8 +159,6 @@ public:
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);
 
-  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
-
   /**
     * Respond to a enter key being pressed
     */

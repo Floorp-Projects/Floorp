@@ -54,7 +54,6 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-#include "nsLayoutAtoms.h"
 
 
 //------------------------------------------------------------
@@ -122,16 +121,6 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessib
   return NS_ERROR_FAILURE;
 }
 #endif
-
-
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::gfxCheckBoxFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
-}
 
 //--------------------------------------------------------------
 NS_IMETHODIMP

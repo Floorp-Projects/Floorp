@@ -569,15 +569,6 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 NS_IMETHODIMP
-nsFileControlFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::fileControlFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
 {
   nsIContent* content;
