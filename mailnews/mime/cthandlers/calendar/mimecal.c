@@ -16,11 +16,13 @@
  * Reserved.
  */
 #include "mimecal.h"
-#include "mimecth.h"
 #include "xp_core.h"
 #include "xp_mem.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "mimexpcom.h"
+#include "mimecth.h"
+#include "mimeobj.h"
 
 static int MimeInlineTextCalendar_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextCalendar_parse_eof (MimeObject *, PRBool);
@@ -54,7 +56,10 @@ MIME_CreateContentTypeHandlerClass(const char *content_type,
   /*
    * Must set the superclass by hand.
    */
-  class->superclass = (MimeObjectClass *)MIME_GetmimeInlineTextClass();
+  if (!COM_GetmimeInlineTextClass())
+    return NULL;
+
+  class->superclass = (MimeObjectClass *)COM_GetmimeInlineTextClass();
   initStruct->force_inline_display = PR_FALSE;
   return class;
 }
@@ -89,7 +94,7 @@ static int
 MimeInlineTextCalendar_parse_begin(MimeObject *obj)
 {
   MimeInlineTextCalendarClass *class;
-  int status = ((MimeObjectClass*)MIME_GetmimeLeafClass())->parse_begin(obj);
+  int status = ((MimeObjectClass*)COM_GetmimeLeafClass())->parse_begin(obj);
   
   if (status < 0) return status;
   
@@ -119,7 +124,7 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
   if (!obj->output_p) return 0;
   if (!obj->options || !obj->options->output_fn) return 0;
   if (!obj->options->write_html_p) {
-    return MIME_MimeObject_write(obj, line, length, TRUE);
+    return COM_MimeObject_write(obj, line, length, TRUE);
   }
   
   if (class->bufferlen + length >= class->buffermax) {
@@ -143,7 +148,7 @@ MimeInlineTextCalendar_parse_eof (MimeObject *obj, PRBool abort_p)
   if (obj->closed_p) return 0;
   
   /* Run parent method first, to flush out any buffered data. */
-  status = ((MimeObjectClass*)MIME_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
+  status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
   if (status < 0) return status;
   
   if (!class->buffer || class->bufferlen == 0) return 0;
@@ -155,7 +160,7 @@ MimeInlineTextCalendar_parse_eof (MimeObject *obj, PRBool abort_p)
   class->buffer = NULL;
   if (status < 0) return status;
   
-  status = MIME_MimeObject_write(obj, html, PL_strlen(html), TRUE);
+  status = COM_MimeObject_write(obj, html, PL_strlen(html), TRUE);
   PR_Free(html);
   if (status < 0) return status;
   
