@@ -40,14 +40,15 @@
 
 #include "domstubs.idl"
 
+interface nsIVariant;
+interface nsIDOMUserDataHandler;
+
+
 [scriptable, uuid(29fb2a18-1dd2-11b2-8dd9-a6fd5d5ad12f)]
 interface nsIDOM3Node : nsISupports
 {
-  readonly attribute DOMString        baseURI;
-  unsigned short     compareDocumentPosition(in nsIDOMNode other);
-  boolean            isSameNode(in nsIDOMNode other);
-  DOMString          lookupNamespacePrefix(in DOMString namespaceURI);
-  DOMString          lookupNamespaceURI(in DOMString prefix);
+  // Introduced in DOM Level 3:
+  readonly attribute DOMString       baseURI;
 
   // DocumentPosition
   const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
@@ -56,4 +57,32 @@ interface nsIDOM3Node : nsISupports
   const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x08;
   const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
   const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
+
+  // Introduced in DOM Level 3:
+  unsigned short     compareDocumentPosition(in nsIDOMNode other)
+                                        raises(DOMException);
+  // Introduced in DOM Level 3:
+           attribute DOMString       textContent;
+                                        // raises(DOMException) on setting
+                                        // raises(DOMException) on retrieval
+
+  // Introduced in DOM Level 3:
+  boolean            isSameNode(in nsIDOMNode other);
+  // Introduced in DOM Level 3:
+  DOMString          lookupPrefix(in DOMString namespaceURI);
+  // Introduced in DOM Level 3:
+  boolean            isDefaultNamespace(in DOMString namespaceURI);
+  // Introduced in DOM Level 3:
+  DOMString          lookupNamespaceURI(in DOMString prefix);
+  // Introduced in DOM Level 3:
+  boolean            isEqualNode(in nsIDOMNode arg);
+  // Introduced in DOM Level 3:
+  nsISupports        getFeature(in DOMString feature, 
+                                in DOMString version);
+  // Introduced in DOM Level 3:
+  nsIVariant         setUserData(in DOMString key, 
+                                 in nsIVariant data, 
+                                 in nsIDOMUserDataHandler handler);
+  // Introduced in DOM Level 3:
+  nsIVariant         getUserData(in DOMString key);
 };

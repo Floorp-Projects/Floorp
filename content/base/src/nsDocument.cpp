@@ -3414,6 +3414,21 @@ nsDocument::GetBaseURI(nsAString &aURI)
 }
 
 NS_IMETHODIMP
+nsDocument::GetTextContent(nsAString &aTextContent)
+{
+  SetDOMStringToNull(aTextContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetTextContent(const nsAString& aTextContent)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
@@ -3500,8 +3515,56 @@ nsDocument::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-nsDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                  nsAString& aPrefix)
+nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::IsEqualNode()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::IsDefaultNamespace(const nsAString& aNamespaceURI,
+                               PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::IsDefaultNamespace()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetFeature(const nsAString& aFeature,
+                       const nsAString& aVersion,
+                       nsISupports** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::GetFeature()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::SetUserData(const nsAString& aKey,
+                        nsIVariant* aData,
+                        nsIDOMUserDataHandler* aHandler,
+                        nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::SetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetUserData(const nsAString& aKey,
+                        nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::GetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
+                         nsAString& aPrefix)
 {
   aPrefix.Truncate();
 

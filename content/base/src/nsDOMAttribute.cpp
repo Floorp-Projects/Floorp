@@ -646,19 +646,82 @@ nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsDOMAttribute::LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                      nsAString& aPrefix) 
+NS_IMETHODIMP
+nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther,
+                            PRBool* aReturn)
 {
-  aPrefix.Truncate();
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
-  if (node)
-    rv = node->LookupNamespacePrefix(aNamespaceURI, aPrefix);
-  return rv;
+  NS_NOTYETIMPLEMENTED("nsDocument::IsEqualNode()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
+nsDOMAttribute::IsDefaultNamespace(const nsAString& aNamespaceURI,
+                                   PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDOMAttribute::IsDefaultNamespace()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetTextContent(nsAString &aTextContent)
+{
+  return GetNodeValue(aTextContent);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
+{
+  return SetNodeValue(aTextContent);
+}
+
+
+NS_IMETHODIMP
+nsDOMAttribute::GetFeature(const nsAString& aFeature,
+                           const nsAString& aVersion,
+                           nsISupports** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::GetFeature()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::SetUserData(const nsAString& aKey,
+                            nsIVariant* aData,
+                            nsIDOMUserDataHandler* aHandler,
+                            nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::SetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetUserData(const nsAString& aKey,
+                            nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocument::GetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::LookupPrefix(const nsAString& aNamespaceURI,
+                             nsAString& aPrefix) 
+{
+  aPrefix.Truncate();
+
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
+  if (node) {
+    return node->LookupPrefix(aNamespaceURI, aPrefix);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {

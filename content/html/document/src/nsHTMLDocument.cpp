@@ -1871,41 +1871,8 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::CompareDocumentPosition(nsIDOMNode* aOther,
-                                        PRUint16* aReturn)
-{
-  return nsDocument::CompareDocumentPosition(aOther, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::IsSameNode(nsIDOMNode* aOther,
-                           PRBool* aReturn)
-{
-  return nsDocument::IsSameNode(aOther, aReturn);
-}
-
-
-NS_IMETHODIMP
-nsHTMLDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                      nsAString& aPrefix)
-{
-  return nsDocument::LookupNamespacePrefix(aNamespaceURI, aPrefix);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI)
-{
-  return nsDocument::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-}
-
-
 //
 // nsIDOMHTMLDocument interface implementation
-//
-// see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-html.html#ID-1006298752
-// for full specification.
 //
 NS_IMETHODIMP
 nsHTMLDocument::GetTitle(nsAString& aTitle)

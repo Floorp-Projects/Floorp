@@ -309,8 +309,8 @@ nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                            nsAString& aPrefix)
+nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
+                                   nsAString& aPrefix)
 {
   aPrefix.Truncate();
 
@@ -318,9 +318,8 @@ nsGenericDOMDataNode::LookupNamespacePrefix(const nsAString& aNamespaceURI,
 
   // DOM Data Node passes the query on to its parent
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
-
   if (node) {
-    return node->LookupNamespacePrefix(aNamespaceURI, aPrefix);
+    return node->LookupPrefix(aNamespaceURI, aPrefix);
   }
 
   return NS_OK;

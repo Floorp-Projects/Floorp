@@ -124,19 +124,7 @@ public:
                                                   aReturn); }
 
   // nsIDOM3Node
-  NS_IMETHOD    GetBaseURI(nsAString& aURI)
-  { aURI.Truncate(); return NS_OK; }
-  NS_IMETHOD    CompareDocumentPosition(nsIDOMNode *aOther,
-                                        PRUint16* aReturn);
-  NS_IMETHOD    IsSameNode(nsIDOMNode *aOther, PRBool* aReturn);
-  NS_IMETHOD    LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                      nsAString& aPrefix) {
-    aPrefix.Truncate(); return NS_OK;
-  }
-  NS_IMETHOD    LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI) {
-    aNamespaceURI.Truncate(); return NS_OK;
-  }
+  NS_DECL_NSIDOM3NODE
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent* aParent)
@@ -387,6 +375,41 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
+nsDocumentFragment::GetBaseURI(nsAString& aURI)
+{
+  aURI.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::LookupPrefix(const nsAString& aNamespaceURI,
+                                 nsAString& aPrefix)
+{
+  aPrefix.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                       nsAString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::IsDefaultNamespace(const nsAString& aNamespaceURI,
+                                       PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocumentFragment::IsDefaultNamespace()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
                                             PRUint16* aReturn)
 {
@@ -452,6 +475,64 @@ nsDocumentFragment::IsSameNode(nsIDOMNode* aOther,
   }
 
   *aReturn = sameNode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocumentFragment::IsEqualNode()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::GetFeature(const nsAString& aFeature,
+                               const nsAString& aVersion,
+                               nsISupports** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocumentFragment::GetFeature()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::SetUserData(const nsAString& aKey,
+                                nsIVariant* aData,
+                                nsIDOMUserDataHandler* aHandler,
+                                nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocumentFragment::SetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::GetUserData(const nsAString& aKey,
+                                nsIVariant** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("nsDocumentFragment::GetUserData()");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::GetTextContent(nsAString &aTextContent)
+{
+  if (mOwnerDocument) {
+    return nsNode3Tearoff::GetTextContent(mOwnerDocument,
+                                          this,
+                                          aTextContent);
+  }
+
+  SetDOMStringToNull(aTextContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::SetTextContent(const nsAString& aTextContent)
+{
   return NS_OK;
 }
 
