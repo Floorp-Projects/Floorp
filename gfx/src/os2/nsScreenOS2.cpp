@@ -23,10 +23,6 @@
 #include "nsScreenOS2.h"
 #include "nsGfxDefs.h"
 
-#define INCL_PM
-#include <os2.h>
-
-
 nsScreenOS2 :: nsScreenOS2 (  )
 {
   NS_INIT_REFCNT();
@@ -74,6 +70,16 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
   *outLeft = 0;
   *outWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
   *outHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
+
+  HWND hwndWarpCenter = WinWindowFromID( HWND_DESKTOP, 0x555 );
+  if (hwndWarpCenter) {
+    SWP swp;
+    WinQueryWindowPos( hwndWarpCenter, &swp );
+    if (swp.y != 0) {
+      /* WarpCenter at top */
+      *outTop += swp.cy;
+    } /* endif */
+  } /* endif */
 
   return NS_OK;
   
