@@ -550,6 +550,8 @@ ServiceImpl::GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource)
     nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
+    // XXX if it's not a named data source, and it looks like it might be
+    // a URL, then try to create a stream data source on the URL.
     if (! ds) {
 		size_t len = strlen(uri);
 		if ((len > 4) && (strcmp(&uri[len-4], ".rdf") == 0)) {
@@ -558,6 +560,8 @@ ServiceImpl::GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource)
                 return NS_ERROR_ILLEGAL_VALUE;
             } else {
                 ds->Init(uri);
+
+                // XXX do we really want to globally register this datasource?
                 RegisterNamedDataSource(uri, ds);
             }
         } else return NS_ERROR_ILLEGAL_VALUE;
