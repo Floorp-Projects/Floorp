@@ -128,6 +128,7 @@ class nsEditorShell :   public nsIEditorShell,
 
 	  /* void InsertText (in wstring textToInsert); */
 	  NS_IMETHOD InsertText(const PRUnichar *textToInsert);
+	  NS_IMETHOD InsertSource(const PRUnichar *sourceToInsert);
     NS_IMETHOD InsertBreak();
 	  NS_IMETHOD InsertLink();
 	  NS_IMETHOD InsertImage();

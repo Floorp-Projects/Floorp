@@ -118,8 +118,8 @@ public:
   NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
 
 // Plain text wrapping control
-  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
-  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
+  NS_IMETHOD GetBodyWrapWidth(PRUint32 *aWrapColumn);
+  NS_IMETHOD SetBodyWrapWidth(PRUint32 aWrapColumn);
 
 // Logging methods
 
@@ -304,6 +304,7 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
+  PRUint32 mWrapColumn;
 
 // friends
 friend class nsTextEditRules;

@@ -84,6 +84,7 @@ interface nsIEditorShell : nsISupports
   
   /* Structure change */
   void InsertText(in wstring textToInsert);
+  void InsertSource(in wstring textToInsert);
   void InsertBreak();
   
   void InsertLink();

@@ -348,8 +348,8 @@ public:
     *    -1 = no wrap at all
     * 
     */
-  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn)=0;
-  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn)=0;
+  NS_IMETHOD GetBodyWrapWidth(PRUint32 *aWrapColumn)=0;
+  NS_IMETHOD SetBodyWrapWidth(PRUint32 aWrapColumn)=0;
 
 // Miscellaneous Methods
   /*

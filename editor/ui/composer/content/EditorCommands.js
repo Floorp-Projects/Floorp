@@ -317,8 +317,15 @@ function EditorGetHTML()
 function EditorInsertText()
 {
   if (window.editorShell) {
-    dump("Inserting text\n");
     window.editorShell.InsertText("Once more into the breach, dear friends.\n");
+  }
+}
+
+function EditorInsertHTML()
+{
+  if (window.editorShell) {
+    window.openDialog("chrome://editordlgs/content/EdInsSrc.xul",
+                      "InsSrcDlg", "chrome", "");
   }
 }
 

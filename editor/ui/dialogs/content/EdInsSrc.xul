@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+
+<xul:window width="320" height="255" title="Insert HTML"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
+    onload = "Startup()">
+
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
+  <script language="JavaScript" src="chrome://editordlgs/content/EdInsSrc.js">
+  </script>
+
+  <xul:broadcaster id="args" value=""/>
+
+  <table>
+    <tr>
+      <td>
+        <fieldset><legend align="left">HTML Source</legend>
+          <p class="smallmargin" id="srcMessage">Enter HTML source to insert:</p>
+          <input type="text" size="60" length="60" id="srcInput"></input>
+<!-- Want to use a textarea, but it doesn't work!
+          <textarea rows=1 cols="50" id="srcInput">
+ -->
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+      <td  align = "right">
+        <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+      </td>
+    </tr>
+  </table>
+</xul:window>

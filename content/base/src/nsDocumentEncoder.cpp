@@ -64,6 +64,7 @@ public:
   NS_IMETHOD SubstituteURL(const nsString& aOriginal,
                            const nsString& aReplacement);
   NS_IMETHOD PrettyPrint(PRBool aYesNO);
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC);
 
 private:
   nsIDocument*      mDocument;
@@ -283,7 +284,13 @@ nsHTMLEncoder::SubstituteURL(const nsString& aOriginal, const nsString& aReplace
 }
               
 NS_IMETHODIMP
-nsHTMLEncoder::PrettyPrint(PRBool aYes)
+nsHTMLEncoder::PrettyPrint(PRBool)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+nsHTMLEncoder::SetWrapColumn(PRUint32)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -319,6 +326,7 @@ public:
   NS_IMETHOD EncodeToString(nsString& aOutputString);
 
   NS_IMETHOD PrettyPrint(PRBool aYesNO);
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC);
 
 private:
   nsIDocument*      mDocument;
@@ -327,6 +335,7 @@ private:
   nsString          mMimeType;
   nsString          mCharset;
   PRBool            mPrettyPrint;
+  PRUint32          mWrapColumn;
 };
 
 
@@ -394,6 +403,13 @@ nsTextEncoder::PrettyPrint(PRBool aYes)
 }
 
 NS_IMETHODIMP
+nsTextEncoder::SetWrapColumn(PRUint32 aWC)
+{
+  mWrapColumn = aWC;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTextEncoder::SetSelection(nsIDOMSelection* aSelection)
 {
   mSelection = aSelection;
@@ -451,7 +467,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
           if (NS_SUCCEEDED(rv))
           {
             parser->RegisterDTD(dtd);
-            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+            parser->Parse(buffer, 0, "text/xif", PR_FALSE,PR_TRUE);           
           }
           NS_IF_RELEASE(dtd);
           NS_IF_RELEASE(sink);
@@ -499,7 +515,8 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
 
-        rv = NS_New_HTMLToTXT_SinkStream(&sink,aStream,charset,mPrettyPrint);
+        rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,
+                                         mWrapColumn, mPrettyPrint);
   
       	if (sink && NS_SUCCEEDED(rv))
         {
