@@ -56,6 +56,7 @@
 #include "nsThread.h"
 
 #include "nsFileSpecImpl.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
@@ -171,6 +172,7 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsICaseConversion *gCaseConv = NULL;
+nsDirectoryService     *gDirectoryService = NULL;
 extern nsIServiceManager* gServiceManager;
 extern PRBool gShuttingDown;
 
@@ -201,8 +203,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     // 2. Create the Component Manager and register with global service manager
     //    It is understood that the component manager can use the global service manager.
     nsComponentManagerImpl *compMgr = NULL;
-    nsDirectoryService     *directoryService = NULL;
-
+    
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         compMgr = new nsComponentManagerImpl();
@@ -212,7 +213,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 
         rv = nsDirectoryService::Create(nsnull, 
                                         NS_GET_IID(nsIProperties), 
-                                        (void**)&directoryService);  // needs to be around for life of product
+                                        (void**)&gDirectoryService);
+        
+        if (NS_FAILED(rv))
+            return rv;
+
         PRBool value;
                         
         if (binDirectory)
@@ -220,9 +225,19 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
             rv = binDirectory->IsDirectory(&value);
 
             if (NS_SUCCEEDED(rv) && value)
-                directoryService->Define("xpcom.currentProcessDirectory", binDirectory);
+                gDirectoryService->Define("xpcom.currentProcessDirectory", binDirectory);
+
+            //Since people are still using the nsSpecialSystemDirectory, we should init it.
+            char* path;
+            binDirectory->GetPath(&path);
+            nsFileSpec spec(path);
+            nsAllocator::Free(path);
+            
+            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
+            
         }
 
+        
         rv = compMgr->Init();
         if (NS_FAILED(rv))
         {
@@ -571,6 +586,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Release the global case converter
     NS_IF_RELEASE(gCaseConv);
+    
+    // Release the directory service
+    NS_IF_RELEASE(gDirectoryService);
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
