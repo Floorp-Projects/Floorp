@@ -161,7 +161,7 @@ nsLoggingProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
         break;
 
     case nsInstall::ABORT_INSTALL:
-        *mLogStream << "     Install script aborted" << nsEndl;
+        *mLogStream << "     Install cancelled by script" << nsEndl;
         break;
 
     case nsInstall::USER_CANCELLED:
