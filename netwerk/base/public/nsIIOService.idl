@@ -55,6 +55,7 @@ interface nsIIOService : nsISupports
     const short url_Param         = (1<<7);
     const short url_Query         = (1<<8);
     const short url_Ref           = (1<<9);
+    const short url_Forced        = (1<<10);
 
     /**
      * Returns a protocol handler for a given URI scheme.

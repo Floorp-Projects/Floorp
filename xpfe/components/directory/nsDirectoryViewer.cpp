@@ -667,8 +667,8 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
       // we found the filename; construct a resource for its entry
       nsAutoString entryuri;
       char* result = nsnull;
-      rv = ioServ->Escape(value.mStr, nsIIOService::url_FileBaseName, 
-                          &result);
+      rv = ioServ->Escape(value.mStr, nsIIOService::url_FileBaseName +
+                          nsIIOService::url_Forced, &result);
       rv = NS_MakeAbsoluteURI(result, realbase, entryuri);
       CRTFREEIF(result);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
