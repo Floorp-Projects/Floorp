@@ -612,6 +612,11 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
   mDTDVerification=aVerifyEnabled;
   mStreamListenerState=eOnStart;  
 
+  {
+    fstream out("c:/temp/out.file",ios::trunc);
+    aSourceBuffer.DebugDump(out);
+  }
+
   nsresult result=NS_OK;
   if(0<aSourceBuffer.Length()){
     CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);

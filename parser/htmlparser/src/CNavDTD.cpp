@@ -720,9 +720,9 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
     //Sick as it sounds, I have to make sure the body has been
     //opened before other tags can be added to the content sink...
-
-  static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head};
-  PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown));
+ 
+  static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map};
+  PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gBodyBlockers)/sizeof(eHTMLTag_unknown));
   if(!theBodyBlocker) {
     if(CanPropagate(eHTMLTag_body,aChildTag)) {
       mHasOpenBody=PR_TRUE;
@@ -1971,8 +1971,10 @@ nsresult CNavDTD::OpenMap(const nsIParserNode& aNode){
   if(mHasOpenMap)
     CloseMap(aNode);
   nsresult result=mSink->OpenMap(aNode);
-  if(NS_OK==result)
+  if(NS_OK==result) {
+    mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
     mHasOpenMap=PR_TRUE;
+  }
   return result;
 }
 
@@ -1989,6 +1991,7 @@ nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
   if(mHasOpenMap) {
     mHasOpenMap=PR_FALSE;
     result=mSink->CloseMap(aNode); 
+    mBodyContext->Pop();
   }
   return result;
 }
