@@ -55,9 +55,12 @@ imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
 
+  // XXX pav
   // it isn't the job of the request proxy to cancel itself.
   // if your object goes away and you want to cancel the load, then do it yourself.
-  // Cancel(NS_ERROR_FAILURE);
+
+  // cancel here for now until i make this work right like the above comment
+  Cancel(NS_ERROR_FAILURE);
 }
 
 
@@ -127,7 +130,12 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
   mCanceled = PR_TRUE;
+
+  NS_ASSERTION(mOwner, "canceling request proxy twice");
+
   nsresult rv = NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
+
+  mOwner = nsnull;
 
   return rv;
 }
@@ -149,18 +157,29 @@ NS_IMETHODIMP imgRequestProxy::Resume()
 /* readonly attribute imgIContainer image; */
 NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
 {
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
   return mOwner->GetImage(aImage);
 }
 
 /* readonly attribute unsigned long imageStatus; */
 NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
 {
+  if (!mOwner) {
+    *aStatus = imgIRequest::STATUS_ERROR;
+    return NS_ERROR_FAILURE;
+  }
+
   return mOwner->GetImageStatus(aStatus);
 }
 
 /* readonly attribute nsIURI URI; */
 NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
 {
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
   return mOwner->GetURI(aURI);
 }
 

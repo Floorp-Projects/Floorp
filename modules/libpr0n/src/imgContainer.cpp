@@ -41,6 +41,7 @@ imgContainer::imgContainer()
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
   mDoneDecoding = PR_FALSE;
   mAnimating = PR_FALSE;
+  mObserver = nsnull;
 }
 
 //******************************************************************************
