@@ -577,6 +577,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLLabelElement(aResult, aAtom);
     SetForm(*aResult, aForm);
     break;
+  case eHTMLTag_layer:
+    rv = NS_NewHTMLLayerElement(aResult, aAtom);
+    break;
   case eHTMLTag_legend:
     rv = NS_NewHTMLLegendElement(aResult, aAtom);
     break;
