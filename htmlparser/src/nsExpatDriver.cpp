@@ -202,6 +202,7 @@ static const nsCatalogData kCatalogTable[] = {
  {"-//W3C//DTD XHTML Basic 1.0//EN",           "xhtml11.dtd", nsnull },
  {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd",  "resource://gre/res/mathml.css" },
  {"-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "mathml.dtd", "resource://gre/res/mathml.css" },
+ {"-//W3C//DTD MathML 2.0//EN",                "mathml.dtd",  "resource://gre/res/mathml.css" },
  {"-//W3C//DTD SVG 20001102//EN",              "svg.dtd",     nsnull },
  {"-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "xhtml11.dtd", nsnull },
  {nsnull, nsnull, nsnull}
