@@ -240,8 +240,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                             \
   NS_ASSERTION(aInstancePtr,                                                  \
                "QueryInterface requires a non-NULL destination!");            \
-  if ( !aInstancePtr )                                                        \
-    return NS_ERROR_NULL_POINTER;                                             \
   nsISupports* foundInterface;
 
 #define NS_IMPL_QUERY_BODY(_interface)                                        \
