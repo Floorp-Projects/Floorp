@@ -26,6 +26,7 @@
 #include "plbase64.h"
 
 #include "nsMemory.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
@@ -33,6 +34,7 @@
 #include "nsISecurityManagerComponent.h"
 #include "nsINetSupportDialogService.h"
 #include "nsProxiedService.h"
+#include "nsINSSDialogs.h"
 
 #include "nsISecretDecoderRing.h"
 #include "nsSDR.h"
@@ -122,8 +124,22 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   slot = PK11_GetInternalKeySlot();
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
-  /* Make sure token is initialized.  FIX THIS: needs UI */
-  if (PK11_NeedUserInit(slot)) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+  /* Make sure token is initialized. */
+  if (PK11_NeedUserInit(slot)) { 
+    nsCOMPtr<nsINSSDialogs> dialogs;
+    PRBool canceled;
+    NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
+
+    rv = getNSSDialogs(getter_AddRefs(dialogs));
+    if (NS_FAILED(rv)) goto loser;
+
+    rv = dialogs->SetPassword(ctx,
+                              tokenName,
+                              &canceled);
+    if (NS_FAILED(rv)) goto loser;
+
+    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+  }
 
   s = PK11_Authenticate(slot, PR_TRUE, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }
@@ -319,4 +335,22 @@ decode(const char *data, unsigned char **result, PRInt32 * _retval)
 
 loser:
     return rv;
+}
+
+static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
+
+nsresult nsSecretDecoderRing::
+getNSSDialogs(nsINSSDialogs* *_result)
+{
+  nsresult rv;
+  nsISupports *result;
+
+  rv = nsServiceManager::GetService(kNSSDialogsContractId, 
+                                    NS_GET_IID(nsINSSDialogs),
+                                    &result);
+  if (NS_FAILED(rv)) return rv;
+
+  *_result = NS_STATIC_CAST(nsINSSDialogs*, result);
+
+  return rv;
 }

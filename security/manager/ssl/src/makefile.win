@@ -19,6 +19,7 @@
 # 
 # Contributor(s):
 #	Javier Delgadillo
+#       Terry Hayes <thayes@netscape.com>
 #
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -80,11 +81,8 @@ OBJS = \
     .\$(OBJDIR)\nsSecureBrowserUIImpl.obj \
     .\$(OBJDIR)\nsTLSSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
+    .\$(OBJDIR)\nsPK11TokenDB.obj \
     $(NULL)
-
-!ifdef USE_NSCERTIFICATEDB
-OBJS = $(OBJS) .\$(OBJDIR)\nsCertificateDB.obj
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 

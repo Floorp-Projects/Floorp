@@ -18,6 +18,8 @@
 # Rights Reserved.
 # 
 # Contributor(s):
+#     Javier Delgadillo <javi@netscape.com>
+#     Terry Hayes     <thayes@netscape.com>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -55,6 +57,7 @@ CPPSRCS = 				\
 	nsSecureBrowserUIImpl.cpp	\
 	nsTLSSocketProvider.cpp		\
 	nsSDR.cpp			\
+	nsPK11TokenDB.cpp		\
 	$(NULL)
 
 REQUIRES = nspr security

@@ -35,17 +35,16 @@
 
 #include "nsSDR.h"
 
-#ifdef USE_NSCERTIFICATEDB
-#include "nsCertificateDB.h"
-#endif
+#include "nsPK11TokenDB.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
-#ifdef USE_NSCERTIFICATEDB
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificateDB)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
+#if 0
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSDialogs)
 #endif
 
 static nsModuleComponentInfo components[] =
@@ -127,21 +126,27 @@ static nsModuleComponentInfo components[] =
     nsSecretDecoderRingConstructor
   },
 
-#ifdef USE_NSCERTIFICATEDB
-  {
-    "Certificate Database",
-    NS_CERTIFICATEDB_CID,
-    NS_CERTIFICATEDB_CONTRACTID,
-    nsCertificateDBConstructor
-  },
-#endif
-
   {
     "Entropy Collector",
     NS_ENTROPYCOLLECTOR_CID,
     NS_ENTROPYCOLLECTOR_CONTRACTID,
     nsNSSComponentConstructor
-  }
+  },
+
+  {
+    "PK11 Token Database",
+    NS_PK11TOKENDB_CID,
+    NS_PK11TOKENDB_CONTRACTID,
+    nsPK11TokenDBConstructor
+  },
+#if 0
+  {
+    "NSS Dialogs",
+    NS_NSSDIALOGS_CID,
+    NS_NSSDIALOGS_CONTRACTID,
+    nsNSSDialogsConstructor
+  },
+#endif
 };
 
 NS_IMPL_NSGETMODULE("NSS", components);
