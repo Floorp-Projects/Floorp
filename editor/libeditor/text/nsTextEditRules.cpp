@@ -469,6 +469,11 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
             res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, &outLeftNode, &outRightNode);
             if (NS_FAILED(res)) return res;
             PRBool bIsEmptyNode;
+            
+            // rememeber parent of selNode now, since we might delete selNode below
+            res = preNode->GetParentNode(getter_AddRefs(selNode));
+            if (NS_FAILED(res)) return res;
+            
             if (outLeftNode)
             {
               res = IsEmptyNode(outLeftNode, &bIsEmptyNode, PR_TRUE, PR_FALSE);
@@ -477,7 +482,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
             }
             if (outRightNode)
             {
-              // HACK alert: consume a br if there s one at front of node
+              // HACK alert: consume a br if there is one at front of node
               nsCOMPtr<nsIDOMNode> firstNode;
               res =  mEditor->GetFirstEditableNode(outRightNode, &firstNode);
               if (firstNode &&  nsHTMLEditUtils::IsBreak(firstNode))
@@ -489,8 +494,6 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
               if (NS_FAILED(res)) return res;
               if (bIsEmptyNode) mEditor->DeleteNode(outRightNode);
             }
-            res = preNode->GetParentNode(getter_AddRefs(selNode));
-            if (NS_FAILED(res)) return res;
             nsCOMPtr<nsIDOMNode> brNode;
             // last ePrevious param causes selection to be set before the break
             res = mEditor->CreateBR(selNode, newOffset, &brNode, nsIEditor::ePrevious);
