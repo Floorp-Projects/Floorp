@@ -375,7 +375,6 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   if (!mWidget)
     return NS_OK; // Will be null durring printing
 
-#ifdef USE_SUPERWIN
   if (bState) {
     gtk_widget_show(mWidget);
     gtk_widget_show(mMozBox);
@@ -384,12 +383,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
     gtk_widget_hide(mMozBox);
     gtk_widget_hide(mWidget);
   }
-#else 
-  if (bState)
-    gtk_widget_show(mWidget);
-  else
-    gtk_widget_hide(mWidget);
-#endif /* USE_SUPERWIN */
+
   mShown = bState;
 
   return NS_OK;
@@ -398,70 +392,6 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-#ifndef USE_SUPERWIN
-#ifdef DEBUG_pavlov
-  printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
-#endif
-  GtkWidget *grabWidget;
-
-  grabWidget = mWidget;
-  // XXX we need a visible widget!!
-
-  if (aDoCapture)
-  {
-#ifdef DEBUG_pavlov
-    printf("grabbing widget\n");
-#endif
-    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
-    if (!GTK_LAYOUT(mWidget)->bin_window)
-    {
-#ifdef DEBUG_pavlov
-      printf("no window for the widget\n");
-#endif
-      //      gtk_widget_show_now(mWidget);
-    }
-    else
-    {
-#ifdef DEBUG_pavlov
-      int ret =
-#endif
-      gdk_pointer_grab (GTK_LAYOUT(mWidget)->bin_window, PR_TRUE,(GdkEventMask)
-                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                         GDK_POINTER_MOTION_MASK),
-                        (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
-#ifdef DEBUG_pavlov
-      printf("pointer grab returned %i\n", ret);
-#endif
-      gdk_cursor_destroy(cursor);
-      SuppressModality(PR_FALSE);
-    }
-  }
-  else
-  {
-#ifdef DEBUG_pavlov
-    printf("ungrabbing widget\n");
-#endif
-    gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    //    gtk_grab_remove(grabWidget);
-  }
-
-  if (aDoCapture) {
-    //    gtk_grab_add(mWidget);
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
-    gRollupConsumeRollupEvent = PR_TRUE;
-    gRollupListener = aListener;
-    NS_ADDREF(aListener);
-    gRollupWidget = this;
-    NS_ADDREF(gRollupWidget);
-  } else {
-    //    gtk_grab_remove(mWidget);
-    NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
-    NS_IF_RELEASE(gRollupWidget);
-  }
-#endif /* USE_SUPERWIN */
   return NS_OK;
 }
 
@@ -509,48 +439,7 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mWidget) 
   {
-    // all hail the nested ifdef
-#ifdef USE_SUPERWIN
     gtk_mozbox_set_position(GTK_MOZBOX(mMozBox), aX, aY);
-#else
-    GtkWidget *    layout = mWidget->parent;
-
-    GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
-    GtkAdjustment* va = gtk_layout_get_vadjustment(GTK_LAYOUT(layout));
-
-    // This correction is needed because the view manager code in
-    // gecko assumes that the implementation of scrolling happens
-    // only in one window (as is the case in win32 and mac).  The
-    // GtkLayout widget uses 2 windows to do arbitrarily long scrolling
-    // (beyond the 16 bit dimension hard limit of X windows)
-    //
-    // The first window is the base.
-    // 
-    // The second window is a clip window (called the bin_window).
-    //
-    // The position of the bin_window is controlled by 2 GtkAdjustment
-    // data structures.
-    // 
-    // What happens is that the view manager computes offsets for 
-    // widgets from the viewport's origin.  
-    //
-    // The GtkLayout widget scrolls the bin_window (which is the true
-    // parent window of the widgets we are trying to Move) from
-    // its own origin.
-    // 
-    // So, the widgets end up being positioned off by the amount of
-    // offset between the viewport's origin, and the position of
-    // the GtkLayout's clip window and hence the correction...
-    //
-    // Simple...
-    PRInt32        x_correction = (PRInt32) ha->value;
-    PRInt32        y_correction = (PRInt32) va->value;
-    
-    gtk_layout_move(GTK_LAYOUT(layout), 
-                    mWidget, 
-                    aX + x_correction, 
-                    aY + y_correction);
-#endif /* USE_SUPERWIN */
   }
 
   return NS_OK;
@@ -1126,74 +1015,48 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   Resize(aRect.width, aRect.height, PR_FALSE);
 
-#ifndef USE_SUPERWIN
-  /* place the widget in its parent if it isn't a toplevel window*/
-  if (mIsToplevel)
-  {
-    if (parentWidget)
-    {
-      // set transient properties
-    }
-  }
-  else
-  {
-    if (parentWidget)
-    {
-      gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-    }
-  }
-#endif /* USE_SUPERWIN */
-
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
-#ifdef USE_SUPERWIN
   if (mWidget) {
-#endif /* USE_SUPERWIN */
 
-  InstallButtonPressSignal(mWidget);
-  InstallButtonReleaseSignal(mWidget);
-
-  InstallMotionNotifySignal(mWidget);
-
-  InstallEnterNotifySignal(mWidget);
-  InstallLeaveNotifySignal(mWidget);
-
-  // Initialize this window instance as a drag target.
-  gtk_drag_dest_set (mWidget,
-                     GTK_DEST_DEFAULT_ALL,
-                     target_table, n_targets - 1, /* no rootwin */
-                     GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
-
-  // Drag & Drop events.
-  InstallDragBeginSignal(mWidget);
-  InstallDragLeaveSignal(mWidget);
-  InstallDragMotionSignal(mWidget);
-  InstallDragDropSignal(mWidget);
-
-
-  // Focus
-  InstallFocusInSignal(mWidget);
-  InstallFocusOutSignal(mWidget);
-
-#ifdef USE_SUPERWIN
+    InstallButtonPressSignal(mWidget);
+    InstallButtonReleaseSignal(mWidget);
+    
+    InstallMotionNotifySignal(mWidget);
+    
+    InstallEnterNotifySignal(mWidget);
+    InstallLeaveNotifySignal(mWidget);
+    
+    // Initialize this window instance as a drag target.
+    gtk_drag_dest_set (mWidget,
+                       GTK_DEST_DEFAULT_ALL,
+                       target_table, n_targets - 1, /* no rootwin */
+                       GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+    
+    // Drag & Drop events.
+    InstallDragBeginSignal(mWidget);
+    InstallDragLeaveSignal(mWidget);
+    InstallDragMotionSignal(mWidget);
+    InstallDragDropSignal(mWidget);
+    
+    
+    // Focus
+    InstallFocusInSignal(mWidget);
+    InstallFocusOutSignal(mWidget);
+    
   }
-#endif /* USE_SUPERWIN */
 
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
 
-#ifdef USE_SUPERWIN
   if (mWidget) {
-#endif /* USE_SUPERWIN */
-  // Add in destroy callback
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "destroy",
-                     GTK_SIGNAL_FUNC(DestroySignal),
-                     this);
-#ifdef USE_SUPERWIN
+    // Add in destroy callback
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+                       "destroy",
+                       GTK_SIGNAL_FUNC(DestroySignal),
+                       this);
   }
-#endif /* USE_SUPERWIN */
 
   return NS_OK;
 }
@@ -2626,20 +2489,9 @@ nsWidget::GetRenderWindow(GtkObject * aGtkWidget)
 {
   GdkWindow * renderWindow = nsnull;
 
-#ifdef USE_SUPERWIN
   if (GDK_IS_SUPERWIN(aGtkWidget)) {
     renderWindow = GDK_SUPERWIN(aGtkWidget)->bin_window;
   }
-#else
-  if (aGtkWidget && GTK_IS_WIDGET(aGtkWidget))
-  {
-    if (GTK_IS_LAYOUT(aGtkWidget)) {
-      renderWindow = GTK_LAYOUT(aGtkWidget)->bin_window;
-    } else {
-      renderWindow = GTK_WIDGET(aGtkWidget)->window;
-    }
-  }
-#endif
 
   return renderWindow;
 }

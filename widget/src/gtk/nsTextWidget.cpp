@@ -64,8 +64,6 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkObject *parentWindow)
   PRBool oldIsReadOnly;
   mWidget = gtk_entry_new();
 
-#ifdef USE_SUPERWIN
-
   if (!GDK_IS_SUPERWIN(parentWindow)) {
     g_print("Damn, brother.  That's not a superwin.\n");
     return NS_ERROR_FAILURE;
@@ -74,8 +72,6 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkObject *parentWindow)
   GdkSuperWin *superwin = GDK_SUPERWIN(parentWindow);
 
   mMozBox = gtk_mozbox_new(superwin->bin_window);
-
-#endif /* USE_SUPERWIN */
 
   // used by nsTextHelper because nsTextArea needs a scrolled_window
   mTextWidget = mWidget;
@@ -110,13 +106,9 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkObject *parentWindow)
                  GDK_LEAVE_NOTIFY_MASK |
                  GDK_POINTER_MOTION_MASK);
 
-#ifdef USE_SUPERWIN
-
   // make sure that we put the scrollbar into the mozbox
 
   gtk_container_add(GTK_CONTAINER(mMozBox), mWidget);
-
-#endif /* USE_SUPERWIN */
 
   return NS_OK;
 }

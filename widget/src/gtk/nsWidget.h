@@ -41,8 +41,6 @@ class nsIToolkit;
 
 #include "gtkmozbox.h"
 
-#define USE_SUPERWIN
-
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
