@@ -37,7 +37,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.6 2004/04/25 15:02:49 gerv%gerv.net Exp $
+ * $Id: p7env.c,v 1.7 2004/10/07 04:12:47 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -168,7 +168,6 @@ main(int argc, char **argv)
     FILE *inFile, *outFile;
     char *certName;
     CERTCertDBHandle *certHandle;
-    CERTCertificate *cert;
     struct recipient *recipients, *rcpt;
     PLOptState *optstate;
     PLOptStatus status;
