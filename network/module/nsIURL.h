@@ -62,6 +62,9 @@ public:
   /** @return ref part of the URL */
   virtual const char* GetRef() const = 0;
 
+  /** @return search part of the URL */
+  virtual const char* GetSearch() const = 0;
+
   /** @return string originally used to construct the URL */
   virtual const char* GetSpec() const = 0;
 
