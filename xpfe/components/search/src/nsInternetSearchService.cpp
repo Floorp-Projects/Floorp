@@ -1860,7 +1860,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
 			char	*uri = getSearchURI(src);
 			if (uri)
 			{
-				rv = bookmarks->AddBookmark(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
+				rv = bookmarks->AddBookmarkImmediately(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 				Recycle(uri);
 			}
 		}
