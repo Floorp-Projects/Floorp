@@ -104,7 +104,8 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
         // Unless subject is executing from file:, return denied 
         nsXPIDLCString scheme;
         if (NS_FAILED(mURI->GetScheme(getter_Copies(scheme))) ||
-            PL_strcmp(scheme, "file") != 0) 
+            PL_strcmp(scheme, "file") != 0 ||
+            PL_strcmp(scheme, "resource") != 0)
         {
             *result = nsIPrincipal::ENABLE_DENIED;
             return NS_OK;
@@ -179,7 +180,9 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
         rv = mURI->GetScheme(&scheme2);
     if (NS_SUCCEEDED(rv) && PL_strcmp(scheme1, scheme2) == 0) {
 
-        if (PL_strcmp(scheme1, "file") == 0) {
+        if (PL_strcmp(scheme1, "file") == 0 ||
+            PL_strcmp(scheme1, "resource") == 0)
+        {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         } else if (PL_strcmp(scheme1, "imap") == 0 ||
