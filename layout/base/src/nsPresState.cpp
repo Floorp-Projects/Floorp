@@ -43,9 +43,8 @@
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsLayoutErrors.h"
 
-// Static IIDs/CIDs. Try to minimize these.
-// None
 
 
 class nsPresState: public nsIPresState
@@ -100,7 +99,8 @@ NS_IMETHODIMP
 nsPresState::GetStateProperty(const nsAString& aName,
                               nsAString& aResult)
 {
-  aResult.SetLength(0);
+  nsresult rv = NS_STATE_PROPERTY_NOT_THERE;
+  aResult.Truncate();
 
   // Retrieve from hashtable.
   if (mPropertyTable) {
@@ -116,10 +116,11 @@ nsPresState::GetStateProperty(const nsAString& aName,
       supportsStr->GetData(data);
 
       CopyUTF8toUTF16(data, aResult);
+      rv = NS_STATE_PROPERTY_EXISTS;
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
