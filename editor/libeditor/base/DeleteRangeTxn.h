@@ -26,7 +26,6 @@
 
 class nsIDOMDocument;
 class nsIDOMRange;
-class nsISupportsArray;
 
 #define DELETE_RANGE_TXN_IID \
 {/* 5ec6b260-ac49-11d2-86d8-000064657374 */ \
@@ -73,19 +72,17 @@ protected:
                                              PRUint32    aStartOffset, 
                                              PRUint32    aEndOffset);
 
-  NS_IMETHOD CreateTxnsToDeleteNodesBetween(nsIDOMNode *aParent, 
-                                                  nsIDOMNode *aFirstChild,
-                                                  nsIDOMNode *aLastChild);
+  NS_IMETHOD CreateTxnsToDeleteNodesBetween();
 
   NS_IMETHOD CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                              PRUint32 aOffset, 
                                              nsIEditor::Direction aDir);
   
-  NS_IMETHOD BuildAncestorList(nsIDOMNode       *aNode, 
-                                     nsISupportsArray *aList);
-
 protected:
   
+  /** p1 in the range */
+  nsCOMPtr<nsIDOMRange> mRange;
+
   /** p1 in the range */
   nsCOMPtr<nsIDOMNode> mStartParent;
 
