@@ -24,6 +24,7 @@ CDlgEditPrefStr::CDlgEditPrefStr(CWnd* pParent /*=NULL*/)
 	m_bLocked = FALSE;
 	m_bValue = FALSE;
 	m_bManage = FALSE;
+	m_bLockable = TRUE;
 	//}}AFX_DATA_INIT
 }
 
@@ -167,5 +168,5 @@ void CDlgEditPrefStr::EnableControls(BOOL bEnable)
 	m_editValue.EnableWindow(bEnable);
 	m_listValue.EnableWindow(bEnable);
 	m_checkValue.EnableWindow(bEnable);
-	m_checkLocked.EnableWindow(bEnable);
+	m_checkLocked.EnableWindow(bEnable && m_bLockable);
 }

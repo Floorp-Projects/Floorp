@@ -165,6 +165,10 @@ void CPrefElement::startElement(const char* name, const char** atts)
     // and a value.
     ASSERT(atts[0] && atts[1] && atts[2] && atts[3] && !atts[4]);
 
+    // If you get this assertion, you have too many <CHOICE> elements inside
+    // a <CHOICES> element. Boost MAX_CHOICES in prefselement.h.
+    ASSERT( m_iChoices < MAX_CHOICES);
+
     int i = 0;
     while(atts[i])
     {

@@ -9,7 +9,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#define MAX_CHOICES 20
+// Number of <CHOICE> elements in a <CHOICES> element.
+#define MAX_CHOICES 80
 
 class CPrefElement 
 {

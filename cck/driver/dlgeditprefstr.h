@@ -37,6 +37,7 @@ public:
 	BOOL	m_bLocked;
 	BOOL	m_bValue;
 	BOOL  m_bManage;
+  BOOL  m_bLockable;
 	//}}AFX_DATA
 
 

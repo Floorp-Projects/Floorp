@@ -724,6 +724,7 @@ void CPrefEditView::EditSelectedPrefsItem()
   dlg.m_strSelectedChoice = pe->GetSelectedChoiceString();
   dlg.m_bChoose = pe->IsChoose();
   dlg.m_bManage = pe->IsManage();
+  dlg.m_bLockable = pe->IsLockable();
 
 
   if (dlg.DoModal() == IDOK)

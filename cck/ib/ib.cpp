@@ -667,7 +667,7 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	else
 	{
 		// Create a plain text prefs with only a comment.
-		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NADK */\n");
+		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NCADM */\n");
 	}
 	
 	// Modify the pref.
@@ -876,7 +876,7 @@ BOOL ModifyUserJS(CString HashedPrefsFile, CString jsSourceFile)
 	else
 	{
 		// Create a plain text prefs with only a comment.
-		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NCADM */\n");
 	}
 	
   // find the block and replace it with the contents of the source file
@@ -1039,7 +1039,7 @@ BOOL MarkCFGVersion(CString HashedPrefsFile, CString versionTxt)
 	else
 	{
 		// Create a plain text prefs with only a comment.
-		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NCADM */\n");
 	}
 	
   // find the block and replace it with the contents of the source file

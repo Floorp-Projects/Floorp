@@ -520,7 +520,7 @@ BEGIN
     BEGIN
         MENUITEM "&Edit Pref",                  ID_EDITPREFITEM
         MENUITEM "&Add Pref",                   ID_ADDPREF
-        MENUITEM "&Delete Pref",                ID_DELPREF
+        MENUITEM "&Delete Pref\tDel",           ID_DELPREF
         MENUITEM SEPARATOR
         MENUITEM "&Find Pref\tCtrl+F",          ID_FINDPREF
         MENUITEM "Find &Next\tF3",              ID_FINDNEXTPREF
