@@ -46,7 +46,11 @@ my @excludedAddresses = ();
 # disable email flag for offline debugging work
 my $enableSendMail = 1;
 
-my @forcecc;
+my %force;
+@{$force{'QAcontact'}} = ();
+@{$force{'Owner'}} = ();
+@{$force{'Reporter'}} = ();
+@{$force{'CClist'}} = ();
 
 sub Lock {
     if ($::lockcount <= 0) {
@@ -548,19 +552,19 @@ sub NewProcessOneBug {
         }
 
     } else {
-    my $count = 0;
-    my @personlist = ($values{'assigned_to'}, $values{'reporter'},
-                      split(/,/, $values{'cc'}),
-                      @voterlist,
-                      @forcecc);
-    if ($values{'qa_contact'}) { push @personlist, $values{'qa_contact'} }
-    for my $person (@personlist) {
-        $count++;
+        my $count = 0;
+        my @personlist = ($values{'assigned_to'}, $values{'reporter'},
+                          split(/,/, $values{'cc'}),
+                          @voterlist,
+                          $force{'CClist'});
+        if ($values{'qa_contact'}) { push @personlist, $values{'qa_contact'} }
+        for my $person (@personlist) {
+            $count++;
 
-        my $match = "^[^@, ]*@[^@, ]*\.[^@, ]*\$";
-        if ($person !~ /$match/) {
-          $person = $person . Param('emailsuffix');
-        }
+            my $match = "^[^@, ]*@[^@, ]*\.[^@, ]*\$";
+            if ($person !~ /$match/) {
+                $person = $person . Param('emailsuffix');
+            }
 
             if ( !defined(NewProcessOnePerson($person, $count, \@headerlist, 
                                               \%values, \%defmailhead, 
@@ -715,6 +719,11 @@ sub filterEmailGroup ($$$) {
     my @emailList = split(/,/,$emailList);
     my @filteredList = ();
     
+
+    # the force list for this email group needs to be checked as well
+    #
+    push @emailList, @{$force{$emailGroup}};
+
     foreach my $person (@emailList) {
         
         my $userid;
@@ -762,46 +771,73 @@ sub filterEmailGroup ($$$) {
             push(@filteredList,$person);
         }
         else {
-            
+
+            # the 255 param is here, because without a third param, 
+            # split will trim any trailing null fields, which causes perl 
+            # to eject lots of warnings.  any suitably large number would 
+            # do.
+                
+            my %userFlags = split(/~/, $userFlagString, 255);
+
             # The default condition is to send each person email.
             # If we match the email attribute with the user flag, and
             # they do not want email, then remove them from the list.
-            
-            push(@filteredList,$person);
-            
+
+            push(@filteredList,$person);            
+
             foreach my $attribute (@emailAttributes) {
 
                 my $matchName = 'email' . $emailGroup . $attribute;
-
-                # the 255 param is here, because without a third param, 
-                # split will trim any trailing null fields, which causes perl 
-                # to eject lots of warnings.  any suitably large number would 
-                # do.
-                
-                my %userFlags = split(/~/, $userFlagString, 255);
                 
                 while ((my $flagName, my $flagValue) = each %userFlags) {
                     
-                    if ($flagName !~ /$emailGroup/) { next; }
+                    if ($flagName !~ /$emailGroup/) { 
+                        next; 
+                    }
 
-                                        if ( $flagName eq $matchName 
-                                             && $flagValue ne 'on') {
-                                            pop(@filteredList);
-                                        }
+                    if ( $flagName eq $matchName  && $flagValue ne 'on') {
+                        pop(@filteredList);
+                    }
 
                 } # for each userFlag
 
             } # for each email attribute
 
+            # check to see if the person was removed from this email 
+            # group.
+
+            if ( grep ($_ eq $person, @{$force{$emailGroup}} ) ) {
+
+                # if so, see if they want mail about that
+                #
+                if ( $userFlags{'email' . $emailGroup . 'Removeme'} eq 'on' ) {
+
+                    # we definitely want mail sent to this person, since
+                    # inclusion on a mail takes precedence over the previous
+                    # exclusion
+
+                    # have they been filtered for some other reason?
+                    #
+                    if (@filteredList == $lastCount) {
+                        
+                        # if so, put them back
+                        #
+                        push (@filteredList, $person);
+                    }
+                }
+            }
+
         } # if $userFlagString is valid
 
-        # If email was not sent to the person, then put on excluded
-        # addresses list.
+        # has the person been moved off the filtered list?
+        #
+        if (@filteredList == $lastCount ) {
 
-        if (@filteredList == $lastCount) {
+            # mark them as excluded
+            #
             push (@excludedAddresses,$person);
-        }
-
+        } 
+            
     } # for each person
 
     return @filteredList;
@@ -980,7 +1016,8 @@ sub ProcessOneBug {
         foreach my $v (split(/,/, "$::bug{'cclist'},$::bug{'voterlist'}")) {
             push @combinedcc, $v;
         }
-        push (@combinedcc, (@forcecc));
+        push (@combinedcc, (@{$force{'CClist'}}, @{$force{'QAcontact'}}, 
+                            @{$force{'Reporter'}}, @{$force{'Owner'}}));
         my $cclist = fixaddresses("cc", \@combinedcc);
         my $logstr = "Bug $i $verb";
         if ($tolist ne "" || $cclist ne "") {
@@ -1094,12 +1131,25 @@ if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
 if ($#ARGV >= 0 && $ARGV[0] eq "-forcecc") {
     shift(@ARGV);
     foreach my $i (split(/,/, shift(@ARGV))) {
-        push(@forcecc, trim($i));
+        push(@{$force{'CClist'}}, trim($i));
     }
 }
 
+if ($#ARGV >= 0 && $ARGV[0] eq "-forceowner") {
+    shift(@ARGV);
+    @{$force{'Owner'}} = (trim(shift(@ARGV)));
+}
+
+if ($#ARGV >= 0 && $ARGV[0] eq "-forceqacontact") {
+    shift(@ARGV);
+    @{$force{'QAcontact'}} = (trim(shift(@ARGV)));
+}
+
 if (($#ARGV < 0) || ($#ARGV > 1)) {
-    print "Usage error: processmail {bugid} {nametoexclude}\nOr: processmail regenerate\n";
+    print "Usage:\n processmail {bugid} {nametoexclude} " . 
+      "[-forcecc list,of,users]\n             [-forceowner name] " .
+      "[-forceqacontact name]\nor\n processmail regenerate\nor\n" .
+      " processmail rescanall\n";
     exit;
 }
 

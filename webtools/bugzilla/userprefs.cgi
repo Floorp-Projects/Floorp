@@ -49,6 +49,7 @@ my @emailGroups = (
         );
 
 my @emailFlags = (
+        'Removeme',     'If I am removed from that capacity',
         'Comments',     'New Comments',
         'Attachments',  'New Attachments',
         'Status',       'Priority, status, severity, and milestone changes',
@@ -60,6 +61,7 @@ my @emailFlags = (
 
 my $defaultEmailFlagString =
 
+        'emailOwnerRemoveme~'        . 'on~' .
         'emailOwnerComments~'        . 'on~' .
         'emailOwnerAttachments~'     . 'on~' .
         'emailOwnerStatus~'          . 'on~' .
@@ -68,6 +70,7 @@ my $defaultEmailFlagString =
         'emailOwnerCC~'              . 'on~' .
         'emailOwnerOther~'           . 'on~' .
 
+        'emailReporterRemoveme~'     . 'on~' .
         'emailReporterComments~'     . 'on~' .
         'emailReporterAttachments~'  . 'on~' .
         'emailReporterStatus~'       . 'on~' .
@@ -76,6 +79,7 @@ my $defaultEmailFlagString =
         'emailReporterCC~'           . 'on~' .
         'emailReporterOther~'        . 'on~' .
 
+        'emailQAcontactRemoveme~'    . 'on~' .
         'emailQAcontactComments~'    . 'on~' .
         'emailQAcontactAttachments~' . 'on~' .
         'emailQAcontactStatus~'      . 'on~' .
@@ -84,6 +88,7 @@ my $defaultEmailFlagString =
         'emailQAcontactCC~'          . 'on~' .
         'emailQAcontactOther~'       . 'on~' .
 
+        'emailCClistRemoveme~'       . 'on~' .
         'emailCClistComments~'       . 'on~' .
         'emailCClistAttachments~'    . 'on~' .
         'emailCClistStatus~'         . 'on~' .

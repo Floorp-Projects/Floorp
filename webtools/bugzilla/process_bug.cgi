@@ -398,6 +398,7 @@ ConnectToDatabase();
 my $formCcSet = new RelationSet;
 my $origCcSet = new RelationSet;
 my $origCcString;
+my $removedCcString = "";
 
 # We make sure to check out the CC list before we actually start touching any
 # bugs.  mergeFromString() ultimately searches the database using a quoted
@@ -409,6 +410,11 @@ if (defined $::FORM{'newcc'} && defined $::FORM{'id'}) {
     $formCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
     $origCcString = $origCcSet->toString();  # cache a copy of the string vers
     if ((exists $::FORM{'removecc'}) && (exists $::FORM{'cc'})) {
+
+      # save off the folks removed from the CC list so they can be given to 
+      # the processmaill command line so they can be sent mail about it.
+      #
+      $removedCcString = join (',', @{$::MFORM{'cc'}});
       $formCcSet->removeItemsInArray(@{$::MFORM{'cc'}});
     }
     $formCcSet->mergeFromString($::FORM{'newcc'});
@@ -896,6 +902,12 @@ The changes made were:
     #
     my @newvalues = SnapShotBug($id);
 
+    # for passing to processmail to ensure that when someone is removed
+    # from one of these fields, they get notified of that fact (if desired)
+    #
+    my $origOwner = "";
+    my $origQaContact = "";
+
     foreach my $c (@::log_columns) {
         my $col = $c;           # We modify it, don't want to modify array
                                 # values in place.
@@ -908,13 +920,24 @@ The changes made were:
             $new = "";
         }
         if ($old ne $new) {
-            if ($col eq 'assigned_to' || $col eq 'qa_contact') {
+
+            # save off the old value for passing to processmail so the old
+            # owner can be notified
+            #
+            if ($col eq 'assigned_to') {
                 $old = ($old) ? DBID_to_name($old) : "";
                 $new = ($new) ? DBID_to_name($new) : "";
-                $origCcString .= ",$old"; # make sure to send mail to people
-                                          # if they are going to no longer get
-                                          # updates about this bug.
+                $origOwner = $old;
             }
+
+            # ditto for the old qa contact
+            #
+            if ($col eq 'qa_contact') {
+                $old = ($old) ? DBID_to_name($old) : "";
+                $new = ($new) ? DBID_to_name($new) : "";
+                $origQaContact = $old;
+            }
+
             if ($col eq 'product') {
                 RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
@@ -930,7 +953,20 @@ The changes made were:
     
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
-    system("./processmail", "-forcecc", $origCcString, $id, $::FORM{'who'});
+
+    my @ARGLIST = ("./processmail");
+    if ( $removedCcString ne "" ) {
+        push @ARGLIST, ("-forcecc", $removedCcString);
+    }
+    if ( $origOwner ne "" ) {
+        push @ARGLIST, ("-forceowner", $origOwner);
+    }
+    if ( $origQaContact ne "") { 
+        push @ARGLIST, ( "-forceqacontact", $origQaContact);
+    }
+    push @ARGLIST, ($id, $::FORM{'who'});
+    system @ARGLIST;
+
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
     foreach my $k (keys(%dependencychanged)) {
