@@ -1143,7 +1143,14 @@ function DoCommandClose()
 
 function DoCommandPrint()
 {
-  goDoCommand("cmd_print");
+  if (gMsgCompose)
+  {
+    var editorShell = gMsgCompose.editorShell;
+    if (editorShell)
+      try {
+        editorShell.Print();
+      } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
+  }
 }
 
 function DoCommandPreferences()
