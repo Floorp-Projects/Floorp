@@ -950,8 +950,9 @@ NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint
 //------------------------------------------------------------------------
 
 void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth)
+                                         nscoord aX, nscoord aY,
+                                         nscoord aWidth,
+                                         const nscoord* aSpacing)
 {
 	PRInt32 x = aX;
 	PRInt32 y = aY;
@@ -1008,7 +1009,8 @@ void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
 //------------------------------------------------------------------------
 
 void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+                                         nscoord aX, nscoord aY, nscoord aWidth,
+                                         const nscoord* aSpacing)
 {
 	nsString nsStr;
 	nsStr.SetString(aString, aLength);
@@ -1020,10 +1022,11 @@ void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLen
 //------------------------------------------------------------------------
 
 void nsRenderingContextMac :: DrawString(const nsString& aString,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+                                         nscoord aX, nscoord aY, nscoord aWidth,
+                                         const nscoord* aSpacing)
 {
 	char* cStr = aString.ToNewCString();
-		DrawString(cStr, aString.Length(), aX, aY, aWidth);
+		DrawString(cStr, aString.Length(), aX, aY, aWidth, aSpacing);
 	delete[] cStr;
 }
 

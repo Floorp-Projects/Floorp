@@ -1453,18 +1453,34 @@ nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
     return NS_ERROR_FAILURE;
 }
 
-void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
+void
+nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
-                                    nscoord aWidth)
+                                    nscoord aWidth,
+                                    const nscoord* aSpacing)
 {
 	PRInt32	x = aX;
   PRInt32 y = aY;
 
   SetupFontAndColor();
 
+  INT dxMem[500];
+  INT* dx0;
+  if (nsnull != aSpacing) {
+    dx0 = dxMem;
+    if (aLength > 500) {
+      dx0 = new INT[aLength];
+    }
+    mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
+  }
+
 	mTMatrix->TransformCoord(&x, &y);
 
-  ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, NULL);
+  ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
+
+  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
+    delete [] dx0;
+  }
 
   if (nsnull != mFontMetrics)
   {
@@ -1480,17 +1496,33 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
   }
 }
 
-void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+void
+nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY, nscoord aWidth,
+                                    const nscoord* aSpacing)
 {
   PRInt32 x = aX;
   PRInt32 y = aY;
 
   SetupFontAndColor();
 
+  INT dxMem[500];
+  INT* dx0;
+  if (nsnull != aSpacing) {
+    dx0 = dxMem;
+    if (aLength > 500) {
+      dx0 = new INT[aLength];
+    }
+    mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
+  }
+
 	mTMatrix->TransformCoord(&x, &y);
 
-  ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
+  ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
+
+  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
+    delete [] dx0;
+  }
 
   if (nsnull != mFontMetrics)
   {
@@ -1506,10 +1538,12 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
   }
 }
 
-void nsRenderingContextWin :: DrawString(const nsString& aString,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+void
+nsRenderingContextWin :: DrawString(const nsString& aString,
+                                    nscoord aX, nscoord aY, nscoord aWidth,
+                                    const nscoord* aSpacing)
 {
-  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth);
+  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
 }
 
 void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

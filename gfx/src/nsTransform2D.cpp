@@ -295,6 +295,44 @@ void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY)
   }
 }
 
+inline PRIntn NSToIntNFloor(float aValue)
+{
+  return ((0.0f <= aValue) ? PRIntn(aValue) : PRIntn(aValue - CEIL_CONST_FLOAT));
+}
+
+void nsTransform2D :: ScaleXCoords(const nscoord* aSrc,
+                                   PRUint32 aNumCoords,
+                                   PRIntn* aDst)
+{
+
+  if (type != MG_2DIDENTITY)
+  {
+    const nscoord* end = aSrc + aNumCoords;
+    float scale = m00;
+    while (aSrc < end) {
+      nscoord c = *aSrc++;
+      *aDst++ = NSToIntNFloor(c * scale);
+    }
+  }
+}
+
+void nsTransform2D :: ScaleYCoords(const nscoord* aSrc,
+                                   PRUint32 aNumCoords,
+                                   PRIntn* aDst)
+{
+
+  if (type != MG_2DIDENTITY)
+  {
+    const nscoord* end = aSrc + aNumCoords;
+    float scale = m11;
+    while (aSrc < end) {
+      nscoord c = *aSrc++;
+      *aDst++ = NSToIntNFloor(c * scale);
+    }
+  }
+}
+  
+
 void nsTransform2D :: Transform(float *ptX, float *ptY)
 {
   float x, y;
