@@ -69,8 +69,6 @@ skins/classic.jar:
     communicator/skin/sidebar/sidebar-close.gif                  (communicator/sidebar/sidebar-close.gif)
     communicator/skin/sidebar/sidebar-open-hover.gif             (communicator/sidebar/sidebar-open-hover.gif)
     communicator/skin/sidebar/sidebar-open.gif                   (communicator/sidebar/sidebar-open.gif)
-    communicator/skin/wallet/WalletEditor.css                    (communicator/wallet/WalletEditor.css)
-    communicator/skin/wallet/wallet.css                          (communicator/wallet/wallet.css)
     communicator/skin/xpinstall/xpinstall.css                    (communicator/xpinstall/xpinstall.css)
     editor/skin/EdImageMap.css                                   (editor/EdImageMap.css)
     editor/skin/EdImageMapPage.css                               (editor/EdImageMapPage.css)
