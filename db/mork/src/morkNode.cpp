@@ -343,6 +343,30 @@ morkNode::CloseNode(morkEnv* ev) // called by CloseMorkNode();
 
 
 extern void // utility method very similar to morkNode::SlotStrongNode():
+nsIMdbCompare_SlotStrongCompare(nsIMdbCompare* self, morkEnv* ev,
+  nsIMdbCompare** ioSlot)
+  // If *ioSlot is non-nil, that compare is released by CutStrongRef() and
+  // then zeroed out.  Then if self is non-nil, this is acquired by
+  // calling AddStrongRef(), and if the return value shows success,
+  // then self is put into slot *ioSlot.  Note self can be nil, so we take
+  // expression 'nsIMdbCompare_SlotStrongCompare(0, ev, &slot)'.
+{
+  nsIMdbEnv* menv = ev->AsMdbEnv();
+  nsIMdbCompare* compare = *ioSlot;
+  if ( self != compare )
+  {
+    if ( compare )
+    {
+      *ioSlot = 0;
+      compare->CutStrongRef(menv);
+    }
+    if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+      *ioSlot = self;
+  }
+}
+
+
+extern void // utility method very similar to morkNode::SlotStrongNode():
 nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot)
   // If *ioSlot is non-nil, that file is released by CutStrongRef() and
   // then zeroed out.  Then if self is non-nil, this is acquired by
@@ -352,13 +376,16 @@ nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot)
 {
   nsIMdbEnv* menv = ev->AsMdbEnv();
   nsIMdbFile* file = *ioSlot;
-  if ( file )
+  if ( self != file )
   {
-    *ioSlot = 0;
-    file->CutStrongRef(menv);
+    if ( file )
+    {
+      *ioSlot = 0;
+      file->CutStrongRef(menv);
+    }
+    if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+      *ioSlot = self;
   }
-  if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
-    *ioSlot = self;
 }
   
 void // utility method very similar to morkNode::SlotStrongNode():
@@ -371,13 +398,16 @@ nsIMdbHeap_SlotStrongHeap(nsIMdbHeap* self, morkEnv* ev, nsIMdbHeap** ioSlot)
 {
   nsIMdbEnv* menv = ev->AsMdbEnv();
   nsIMdbHeap* heap = *ioSlot;
-  if ( heap )
+  if ( self != heap )
   {
-    *ioSlot = 0;
-    heap->CutStrongRef(menv);
+    if ( heap )
+    {
+      *ioSlot = 0;
+      heap->CutStrongRef(menv);
+    }
+    if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+      *ioSlot = self;
   }
-  if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
-    *ioSlot = self;
 }
 
 /*public static*/ void

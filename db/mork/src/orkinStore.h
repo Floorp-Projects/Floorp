@@ -163,6 +163,10 @@ public: // type identification
     nsIMdbEnv* ev, // context
     mdbYarn* outFilePath, // name of file holding port content
     mdbYarn* outFormatVersion); // file format description
+
+  virtual mdb_err GetPortFile(
+    nsIMdbEnv* ev, // context
+    nsIMdbFile** acqFile); // acquire file used by port or store
   // } ----- end filepath methods -----
 
   // { ----- begin export methods -----
@@ -178,7 +182,8 @@ public: // type identification
 
   virtual mdb_err ExportToFormat( // export content in given specific format
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to receive exported content
+    // const char* inFilePath, // the file to receive exported content
+    nsIMdbFile* ioFile, // destination abstract file interface
     const char* inFormatVersion, // file format description
     nsIMdbThumb** acqThumb); // acquire thumb for incremental export
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -421,6 +426,13 @@ public: // type identification
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // scope for rows (or zero for all?)
     nsIMdbPort* ioPort, // the port with content to add to store
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental import
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the import will be finished.
+
+  virtual mdb_err ImportFile( // import content from port
+    nsIMdbEnv* ev, // context
+    nsIMdbFile* ioFile, // the file with content to add to store
     nsIMdbThumb** acqThumb); // acquire thumb for incremental import
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the import will be finished.

@@ -66,7 +66,7 @@ morkStream::~morkStream() // assert CloseStream() executed earlier
 /*public non-poly*/
 morkStream::morkStream(morkEnv* ev, const morkUsage& inUsage,
   nsIMdbHeap* ioHeap,
-  morkFile* ioContentFile, mork_size inBufSize, mork_bool inFrozen)
+  nsIMdbFile* ioContentFile, mork_size inBufSize, mork_bool inFrozen)
 : morkFile(ev, inUsage, ioHeap, ioHeap)
 , mStream_At( 0 )
 , mStream_ReadEnd( 0 )
@@ -89,12 +89,10 @@ morkStream::morkStream(morkEnv* ev, const morkUsage& inUsage,
     
     if ( ioContentFile && ioHeap )
     {
-      if ( ioContentFile->FileFrozen() ) // forced to be readonly?
-        inFrozen = morkBool_kTrue; // override the input value
+      // if ( ioContentFile->FileFrozen() ) // forced to be readonly?
+      //   inFrozen = morkBool_kTrue; // override the input value
         
-      mork_pos fileEnd = ioContentFile->Length(ev);
-
-      morkFile::SlotStrongFile(ioContentFile, ev, &mStream_ContentFile);
+      nsIMdbFile_SlotStrongFile(ioContentFile, ev, &mStream_ContentFile);
       if ( ev->Good() )
       {
         mork_u1* buf = 0;
@@ -138,7 +136,7 @@ morkStream::CloseStream(morkEnv* ev) // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
-      morkFile::SlotStrongFile((morkFile*) 0, ev, &mStream_ContentFile);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mStream_ContentFile);
       nsIMdbHeap* heap = mFile_SlotHeap;
       mork_u1* buf = mStream_Buf;
       mStream_Buf = 0;
@@ -401,7 +399,7 @@ morkStream::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
 {
   MORK_USED_1(ioHeap);
   morkFile* outFile = 0;
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
     // figure out how this interacts with buffering and mStream_WriteEnd:
@@ -417,31 +415,35 @@ morkStream::Length(morkEnv* ev) const // eof
 {
   mork_pos outPos = 0;
   
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
-    mork_pos contentEof = file->Length(ev);
-    
-    if ( mStream_WriteEnd ) // this stream supports writing?
+    mork_pos contentEof = 0;
+    nsIMdbEnv* menv = ev->AsMdbEnv();
+    file->Eof(menv, &contentEof);
+    if ( ev->Good() )
     {
-      // the local buffer might have buffered content past content eof
-      if ( ev->Good() ) // no error happened during Length() above?
+      if ( mStream_WriteEnd ) // this stream supports writing?
       {
-        mork_u1* at = mStream_At;
-        mork_u1* buf = mStream_Buf;
-        if ( at >= buf ) // expected cursor order?
+        // the local buffer might have buffered content past content eof
+        if ( ev->Good() ) // no error happened during Length() above?
         {
-          mork_pos localContent = mStream_BufPos + (at - buf);
-          if ( localContent > contentEof ) // buffered past eof?
-            contentEof = localContent; // return new logical eof
+          mork_u1* at = mStream_At;
+          mork_u1* buf = mStream_Buf;
+          if ( at >= buf ) // expected cursor order?
+          {
+            mork_pos localContent = mStream_BufPos + (at - buf);
+            if ( localContent > contentEof ) // buffered past eof?
+              contentEof = localContent; // return new logical eof
 
-          outPos = contentEof;
+            outPos = contentEof;
+          }
+          else this->NewBadCursorOrderError(ev);
         }
-        else this->NewBadCursorOrderError(ev);
       }
+      else
+        outPos = contentEof; // frozen files get length from content file
     }
-    else
-      outPos = contentEof; // frozen files get length from content file
   }
   else this->NewFileDownError(ev);
 
@@ -471,7 +473,7 @@ morkStream::Tell(morkEnv* ev) const
 {
   mork_pos outPos = 0;
   
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
     mork_u1* buf = mStream_Buf;
@@ -512,7 +514,7 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
 
   mork_pos outActual = 0;
 
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
     mork_u1* end = mStream_ReadEnd; // byte after last buffered byte
@@ -558,21 +560,24 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
               
               mStream_At = mStream_ReadEnd = buf; // empty buffer
               
-              file->Seek(ev, mStream_BufPos); // set file pos
-              if ( ev->Good() ) // no seek error?
+              // file->Seek(ev, mStream_BufPos); // set file pos
+              // if ( ev->Good() ) // no seek error?
+              // {
+              // }
+              
+              mork_num actual = 0;
+              nsIMdbEnv* menv = ev->AsMdbEnv();
+              file->Get(menv, sink, inSize, mStream_BufPos, &actual);
+              if ( ev->Good() ) // no read error?
               {
-                mork_num actual = file->Read(ev, sink, inSize);
-                if ( ev->Good() ) // no read error?
+                if ( actual )
                 {
-                  if ( actual )
-                  {
-                    outActual += actual;
-                    mStream_BufPos += actual;
-                    mStream_HitEof = morkBool_kFalse;
-                  }
-                  else if ( !outActual )
-                    mStream_HitEof = morkBool_kTrue;
+                  outActual += actual;
+                  mStream_BufPos += actual;
+                  mStream_HitEof = morkBool_kFalse;
                 }
+                else if ( !outActual )
+                  mStream_HitEof = morkBool_kTrue;
               }
             }
           }
@@ -596,7 +601,7 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
 {
   mork_pos outPos = 0;
 
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenOrClosingNode() && this->FileActive() && file )
   {
     mork_u1* at = mStream_At;             // current position in buffer
@@ -615,7 +620,9 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
         {
           if ( mStream_BufPos != inPos ) // need to change pos?
           {
-            mork_pos eof = file->Length(ev);
+            mork_pos eof = 0;
+            nsIMdbEnv* menv = ev->AsMdbEnv();
+            file->Eof(menv, &eof);
             if ( ev->Good() ) // no errors getting length?
             {
               if ( inPos <= eof ) // acceptable new position?
@@ -634,7 +641,9 @@ morkStream::Seek(morkEnv* ev, mork_pos inPos)
     {
       if ( at >= buf && at <= readEnd ) // expected cursor order?
       {
-        mork_pos eof = file->Length(ev);
+        mork_pos eof = 0;
+        nsIMdbEnv* menv = ev->AsMdbEnv();
+        file->Eof(menv, &eof);
         if ( ev->Good() ) // no errors getting length?
         {
           if ( inPos <= eof ) // acceptable new position?
@@ -662,7 +671,7 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
 {
   mork_num outActual = 0;
 
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenActiveAndMutableFile() && file )
   {
     mork_u1* end = mStream_WriteEnd; // byte after last buffered byte
@@ -725,17 +734,18 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
                 }
                 else // directly to content file instead
                 {
-                  file->Seek(ev, mStream_BufPos); // set pos
-                    
-                  if ( ev->Good() ) // no seek error?
+                  // file->Seek(ev, mStream_BufPos); // set pos
+                  // if ( ev->Good() ) // no seek error?
+                  // {
+                  // }
+
+                  nsIMdbEnv* menv = ev->AsMdbEnv();
+                  mork_num actual = 0;
+                  file->Put(menv, source, inSize, mStream_BufPos, &actual);
+                  if ( ev->Good() ) // no write error?
                   {
-                    mork_num actual =
-                      file->Write(ev, source, inSize);
-                    if ( ev->Good() ) // no write error?
-                    {
-                      outActual += actual;
-                      mStream_BufPos += actual;
-                    }
+                    outActual += actual;
+                    mStream_BufPos += actual;
                   }
                 }
               }
@@ -759,12 +769,13 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
 /*public virtual*/ void       
 morkStream::Flush(morkEnv* ev)
 {
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenOrClosingNode() && this->FileActive() && file )
   {
     if ( mStream_Dirty )
       this->spill_buf(ev);
-    file->Flush(ev);
+
+    file->Flush(ev->AsMdbEnv());
   }
   else this->NewFileDownError(ev);
 }
@@ -777,7 +788,7 @@ morkStream::fill_getc(morkEnv* ev)
 {
   int c = EOF;
   
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
   {
     mork_u1* buf = mStream_Buf;
@@ -789,25 +800,28 @@ morkStream::fill_getc(morkEnv* ev)
       
     if ( ev->Good() ) // no errors yet?
     {
-      file->Seek(ev, mStream_BufPos); // set file pos
-      if ( ev->Good() ) // no seek error?
+      // file->Seek(ev, mStream_BufPos); // set file pos
+      // if ( ev->Good() ) // no seek error?
+      // {
+      // }
+
+      nsIMdbEnv* menv = ev->AsMdbEnv();
+      mork_num actual = 0;
+      file->Get(menv, buf, mStream_BufSize, mStream_BufPos, &actual);
+      if ( ev->Good() ) // no read errors?
       {
-        mork_num actual = file->Read(ev, buf, mStream_BufSize);
-        if ( ev->Good() ) // no read errors?
+        if ( actual > mStream_BufSize ) // more than asked for??
+          actual = mStream_BufSize;
+        
+        mStream_At = buf;
+        mStream_ReadEnd = buf + actual;
+        if ( actual ) // any bytes actually read?
         {
-          if ( actual > mStream_BufSize ) // more than asked for??
-            actual = mStream_BufSize;
-          
-          mStream_At = buf;
-          mStream_ReadEnd = buf + actual;
-          if ( actual ) // any bytes actually read?
-          {
-            c = *mStream_At++; // return first byte from buffer
-            mStream_HitEof = morkBool_kFalse;
-          }
-          else
-            mStream_HitEof = morkBool_kTrue;
+          c = *mStream_At++; // return first byte from buffer
+          mStream_HitEof = morkBool_kFalse;
         }
+        else
+          mStream_HitEof = morkBool_kTrue;
       }
     }
   }
@@ -827,7 +841,7 @@ morkStream::spill_putc(morkEnv* ev, int c)
 void
 morkStream::spill_buf(morkEnv* ev) // spill/flush from buffer to file
 {
-  morkFile* file = mStream_ContentFile;
+  nsIMdbFile* file = mStream_ContentFile;
   if ( this->IsOpenOrClosingNode() && this->FileActive() && file )
   {
     mork_u1* buf = mStream_Buf;
@@ -847,16 +861,19 @@ morkStream::spill_buf(morkEnv* ev) // spill/flush from buffer to file
           }
           if ( ev->Good() )
           {
-            file->Seek(ev, mStream_BufPos);
+            // file->Seek(ev, mStream_BufPos);
+            // if ( ev->Good() )
+            // {
+            // }
+            nsIMdbEnv* menv = ev->AsMdbEnv();
+            mork_num actual = 0;
+            
+            file->Put(menv, buf, count, mStream_BufPos, &actual);
             if ( ev->Good() )
             {
-              file->Write(ev, buf, count);
-              if ( ev->Good() )
-              {
-                mStream_BufPos += count; // past bytes written
-                mStream_At = buf; // reset buffer cursor
-                mStream_Dirty = morkBool_kFalse;
-              }
+              mStream_BufPos += actual; // past bytes written
+              mStream_At = buf; // reset buffer cursor
+              mStream_Dirty = morkBool_kFalse;
             }
           }
         }

@@ -142,7 +142,8 @@ orkinCell::CanUseCell(nsIMdbEnv* mev, mork_bool inMutable,
   if ( ev )
   {
     morkCellObject* cellObj = (morkCellObject*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kCell);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kCell,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( cellObj )
     {
       if ( cellObj->IsCellObject() )

@@ -81,12 +81,20 @@ public: // dynamic type identification
 public: // typing
   static void NonTableRowCursorTypeError(morkEnv* ev);
 
+public: // handle attachment
+  orkinTableRowCursor* AcquireTableRowCursorHandle(morkEnv* ev);
+
+public: // oid only iteration
+  mdb_pos NextRowOid(morkEnv* ev, mdbOid* outOid);
+
 public: // other table row cursor methods
 
-  orkinTableRowCursor* AcquireTableRowCursorHandle(morkEnv* ev);
+  virtual mork_bool CanHaveDupRowMembers(morkEnv* ev);
+  virtual mork_count GetMemberCount(morkEnv* ev);
+
+  virtual orkinTableRowCursor* AcquireUniqueRowCursorHandle(morkEnv* ev);
   
-  mdb_pos NextRowOid(morkEnv* ev, mdbOid* outOid);
-  morkRow* NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
+  virtual morkRow* NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakTableRowCursor(morkTableRowCursor* me,

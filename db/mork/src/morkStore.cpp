@@ -56,9 +56,9 @@
 #include "morkNodeMap.h"
 #endif
 
-#ifndef _MORKFILE_
-#include "morkFile.h"
-#endif
+// #ifndef _MORKFILE_
+// #include "morkFile.h"
+// #endif
 
 #ifndef _MORKBUILDER_
 #include "morkBuilder.h"
@@ -246,9 +246,13 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
-      morkFile* file = mStore_File;
-      if ( file && file->IsOpenNode() )
-        file->CloseMorkNode(ev);
+      // morkFile* file = mStore_File;
+      // if ( file && file->IsOpenNode() )
+      //   file->CloseMorkNode(ev);
+
+      nsIMdbFile* file = mStore_File;
+      if ( file )
+        file->CloseMdbObject(ev->AsMdbEnv());
 
       morkAtomSpace::SlotStrongAtomSpace((morkAtomSpace*) 0, ev,
         &mStore_OidAtomSpace);
@@ -259,7 +263,11 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
       mStore_RowSpaces.CloseMorkNode(ev);
       mStore_AtomSpaces.CloseMorkNode(ev);
       morkBuilder::SlotStrongBuilder((morkBuilder*) 0, ev, &mStore_Builder);
-      morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
+      
+      // morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev,
+        &mStore_File);
+      
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_InStream);
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_OutStream);
 
@@ -277,10 +285,27 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
 
+
+mork_bool morkStore::DoPreferLargeOverCompressCommit(morkEnv* ev)
+  // true when mStore_CanWriteIncremental && store has file large enough 
+{
+  nsIMdbFile* file = mStore_File;
+  nsIMdbEnv* menv = ev->AsMdbEnv();
+  if ( file && mStore_CanWriteIncremental )
+  {
+    mdb_pos fileEof = 0;
+    file->Eof(ev->AsMdbEnv(), &fileEof);
+    if ( ev->Good() && fileEof > 128 )
+      return morkBool_kTrue;
+  }
+  return morkBool_kFalse;
+}
+
 mork_percent morkStore::PercentOfStoreWasted(morkEnv* ev)
 {
   mork_percent outPercent = 0;
-  morkFile* file = mStore_File;
+  nsIMdbFile* file = mStore_File;
+  nsIMdbEnv* menv = ev->AsMdbEnv();
   
   if ( file )
   {
@@ -291,7 +316,8 @@ mork_percent morkStore::PercentOfStoreWasted(morkEnv* ev)
       if ( firstPos < 512 && secondPos > firstPos )
         firstPos = secondPos; // better approximation of first commit
         
-      mork_pos fileLength = file->Length(ev); // end of file
+      mork_pos fileLength = 0;
+      file->Eof(ev->AsMdbEnv(), &fileLength); // end of file
       if ( ev->Good() && fileLength > firstPos )
       {
         mork_size groupContent = fileLength - firstPos;
@@ -501,7 +527,7 @@ morkStream* morkStore::LazyGetInStream(morkEnv* ev)
 {
   if ( !mStore_InStream )
   {
-    morkFile* file = mStore_File;
+    nsIMdbFile* file = mStore_File;
     if ( file )
     {
       morkStream* stream = new(*mPort_Heap, ev) 
@@ -523,7 +549,7 @@ morkStream* morkStore::LazyGetOutStream(morkEnv* ev)
 {
   if ( !mStore_OutStream )
   {
-    morkFile* file = mStore_File;
+    nsIMdbFile* file = mStore_File;
     if ( file )
     {
       morkStream* stream = new(*mPort_Heap, ev) 
@@ -643,43 +669,38 @@ morkStore::CannotAutoAssignAtomIdentityError(morkEnv* ev)
 
 mork_bool
 morkStore::OpenStoreFile(morkEnv* ev, mork_bool inFrozen,
-    const char* inFilePath, const mdbOpenPolicy* inOpenPolicy)
+    // const char* inFilePath,
+    nsIMdbFile* ioFile, // db abstract file interface
+    const mdbOpenPolicy* inOpenPolicy)
 {
-  MORK_USED_1(inOpenPolicy);
-  morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
-  if ( ev->Good() )
-  {
-    morkFile* file = morkFile::OpenOldFile(ev, mPort_Heap,
-      inFilePath, inFrozen);
-    if ( file )
-    {
-      if ( ev->Good() )
-        morkFile::SlotStrongFile(file, ev, &mStore_File);
-      else
-        file->CutStrongRef(ev);
-    }
-  }
+  MORK_USED_2(inOpenPolicy,inFrozen);
+  nsIMdbFile_SlotStrongFile(ioFile, ev, &mStore_File);
+  
+  // if ( ev->Good() )
+  // {
+  //   morkFile* file = morkFile::OpenOldFile(ev, mPort_Heap,
+  //     inFilePath, inFrozen);
+  //   if ( ioFile )
+  //   {
+  //     if ( ev->Good() )
+  //       morkFile::SlotStrongFile(file, ev, &mStore_File);
+  //     else
+  //       file->CutStrongRef(ev);
+  //       
+  //   }
+  // }
   return ev->Good();
 }
 
 mork_bool
 morkStore::CreateStoreFile(morkEnv* ev,
-    const char* inFilePath, const mdbOpenPolicy* inOpenPolicy)
+    // const char* inFilePath,
+    nsIMdbFile* ioFile, // db abstract file interface
+    const mdbOpenPolicy* inOpenPolicy)
 {
   MORK_USED_1(inOpenPolicy);
-  morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
-  if ( ev->Good() )
-  {
-    morkFile* file = morkFile::CreateNewFile(ev, mPort_Heap,
-      inFilePath);
-    if ( file )
-    {
-      if ( ev->Good() )
-        morkFile::SlotStrongFile(file, ev, &mStore_File);
-      else
-        file->CutStrongRef(ev);
-    }
-  }
+  nsIMdbFile_SlotStrongFile(ioFile, ev, &mStore_File);
+  
   return ev->Good();
 }
 

@@ -83,7 +83,7 @@ protected: // protected morkStream members
   mork_u1*    mStream_ReadEnd;  // null or one byte past last readable byte
   mork_u1*    mStream_WriteEnd; // null or mStream_Buf + mStream_BufSize
 
-  morkFile*   mStream_ContentFile;  // where content is read and written
+  nsIMdbFile* mStream_ContentFile;  // where content is read and written
 
   mork_u1*    mStream_Buf;      // dynamically allocated memory to buffer io
   mork_size   mStream_BufSize;  // requested buf size (fixed by min and max)
@@ -98,7 +98,7 @@ public: // morkNode virtual methods
   
 public: // morkStream construction & destruction
   morkStream(morkEnv* ev, const morkUsage& inUsage, nsIMdbHeap* ioHeap,
-      morkFile* ioContentFile, mork_size inBufSize, mork_bool inFrozen);
+      nsIMdbFile* ioContentFile, mork_size inBufSize, mork_bool inFrozen);
   void CloseStream(morkEnv* ev); // called by CloseMorkNode();
 
 private: // copying is not allowed
@@ -172,7 +172,7 @@ public: // public non-poly morkStream methods
   void NewCantWriteSourceError(morkEnv* ev) const;
   void NewPosBeyondEofError(morkEnv* ev) const;
       
-  morkFile*  GetStreamContentFile() const { return mStream_ContentFile; }
+  nsIMdbFile* GetStreamContentFile() const { return mStream_ContentFile; }
   mork_size   GetStreamBufferSize() const { return mStream_BufSize; }
   
   mork_size  PutIndent(morkEnv* ev, mork_count inDepth);

@@ -93,7 +93,9 @@ public: // utilities:
     
   morkEnv* GetInternalFactoryEnv(mdb_err* outErr);
   
-  mork_bool CanOpenMorkTextFile(morkEnv* ev, const mdbYarn* inFirst512Bytes);
+  mork_bool CanOpenMorkTextFile(morkEnv* ev,
+    // const mdbYarn* inFirst512Bytes,
+    nsIMdbFile* ioFile);
 
 public: // type identification
   mork_bool IsOrkinFactory() const
@@ -142,7 +144,8 @@ public:
 
   // { ----- begin file methods -----
   virtual mdb_err OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
-    const char* inFilePath, mdb_bool inFrozen, nsIMdbFile** acqFile);
+    const char* inFilePath,
+    mdb_bool inFrozen, nsIMdbFile** acqFile);
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
   // (and write if not frozen) the file known by inFilePath.  The file
   // returned should be open and ready for use, and presumably positioned
@@ -151,7 +154,8 @@ public:
   // other portions or Mork source code don't want to know how it's done.
 
   virtual mdb_err CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
-    const char* inFilePath, nsIMdbFile** acqFile);
+    const char* inFilePath,
+    nsIMdbFile** acqFile);
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
   // (and write if not frozen) the file known by inFilePath.  The file
   // returned should be created and ready for use, and presumably positioned
@@ -169,6 +173,10 @@ public:
   virtual mdb_err MakeHeap(nsIMdbEnv* ev, nsIMdbHeap** acqHeap); // new heap
   // } ----- end heap methods -----
 
+  // { ----- begin compare methods -----
+  virtual mdb_err MakeCompare(nsIMdbEnv* ev, nsIMdbCompare** acqCompare); // ASCII
+  // } ----- end compare methods -----
+
   // { ----- begin row methods -----
   virtual mdb_err MakeRow(nsIMdbEnv* ev, nsIMdbHeap* ioHeap, nsIMdbRow** acqRow); // new row
   // ioHeap can be nil, causing the heap associated with ev to be used
@@ -177,15 +185,17 @@ public:
   // { ----- begin port methods -----
   virtual mdb_err CanOpenFilePort(
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to investigate
-    const mdbYarn* inFirst512Bytes,
+    // const char* inFilePath, // the file to investigate
+    // const mdbYarn* inFirst512Bytes,
+    nsIMdbFile* ioFile, // db abstract file interface
     mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion); // informal file format description
     
   virtual mdb_err OpenFilePort(
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // the file to open for readonly import
+    // const char* inFilePath, // the file to open for readonly import
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbThumb** acqThumb); // acquire thumb for incremental port open
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -200,8 +210,9 @@ public:
   // { ----- begin store methods -----
   virtual mdb_err CanOpenFileStore(
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to investigate
-    const mdbYarn* inFirst512Bytes,
+    // const char* inFilePath, // the file to investigate
+    // const mdbYarn* inFirst512Bytes,
+    nsIMdbFile* ioFile, // db abstract file interface
     mdb_bool* outCanOpenAsStore, // whether OpenFileStore() might succeed
     mdb_bool* outCanOpenAsPort, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion); // informal file format description
@@ -209,7 +220,8 @@ public:
   virtual mdb_err OpenFileStore( // open an existing database
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // the file to open for general db usage
+    // const char* inFilePath, // the file to open for general db usage
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbThumb** acqThumb); // acquire thumb for incremental store open
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -224,7 +236,8 @@ public:
   virtual mdb_err CreateNewFileStore( // create a new db with minimal content
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // name of file which should not yet exist
+    // const char* inFilePath, // name of file which should not yet exist
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbStore** acqStore); // acquire new db store object
   // } ----- end store methods -----

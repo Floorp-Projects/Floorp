@@ -109,7 +109,8 @@ orkinTableRowCursor::CanUseTableRowCursor(nsIMdbEnv* mev,
   if ( ev )
   {
     morkTableRowCursor* self = (morkTableRowCursor*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kTableRowCursor);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kTableRowCursor,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsTableRowCursor() )
@@ -235,8 +236,7 @@ orkinTableRowCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
   if ( ev )
   {
     morkTableRowCursor* cursor = (morkTableRowCursor*) mHandle_Object;
-    morkTable* table = cursor->mTableRowCursor_Table;
-    count = table->mTable_RowArray.mArray_Fill;
+    count = cursor->GetMemberCount(ev);
     outErr = ev->AsErr();
   }
   if ( outCount )
@@ -303,7 +303,8 @@ orkinTableRowCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkTableRowCursor* cursor = (morkTableRowCursor*) mHandle_Object;
+    cursor->mCursor_DoFailOnSeedOutOfSync = inFail;
     outErr = ev->AsErr();
   }
   return outErr;
@@ -318,7 +319,8 @@ orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkTableRowCursor* cursor = (morkTableRowCursor*) mHandle_Object;
+    fail = cursor->mCursor_DoFailOnSeedOutOfSync;
     outErr = ev->AsErr();
   }
   if ( outFail )
@@ -333,20 +335,6 @@ orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 // { ===== begin nsIMdbTableRowCursor methods =====
 
 // { ----- begin attribute methods -----
-/*virtual*/ mdb_err
-orkinTableRowCursor::SetTable(nsIMdbEnv* mev, nsIMdbTable* ioTable)
-{
-  MORK_USED_1(ioTable);
-  mdb_err outErr = 0;
-  morkEnv* ev =
-    this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    ev->StubMethodOnlyError();
-    outErr = ev->AsErr();
-  }
-  return outErr;
-}
 
 /*virtual*/ mdb_err
 orkinTableRowCursor::GetTable(nsIMdbEnv* mev, nsIMdbTable** acqTable)
@@ -428,67 +416,71 @@ orkinTableRowCursor::NextRow( // get row cells from table for cells already in r
 }
 // } ----- end row iteration methods -----
 
-// { ----- begin copy iteration methods -----
+
+// { ----- begin duplicate row removal methods -----
 /*virtual*/ mdb_err
-orkinTableRowCursor::NextRowCopy( // put row cells into sink only when already in sink
-  nsIMdbEnv* mev, // context
-  nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-  mdbOid* outOid, // out row oid
-  mdb_pos* outRowPos)
+orkinTableRowCursor::CanHaveDupRowMembers(nsIMdbEnv* mev, // cursor might hold dups?
+  mdb_bool* outCanHaveDups)
 {
-  MORK_USED_1(ioSinkRow);
-  mdbOid oid;
-  oid.mOid_Scope = 0;
-  oid.mOid_Id = (mork_id) -1;
-  mdb_pos rowPos = -1;
   mdb_err outErr = 0;
+  mdb_bool canHaveDups = mdbBool_kFalse;
+  
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( outOid )
-    {
-      ev->StubMethodOnlyError();
-    }
-    else
-      ev->NilPointerError();
+    morkTableRowCursor* cursor = (morkTableRowCursor*) mHandle_Object;
+    canHaveDups = cursor->CanHaveDupRowMembers(ev);
     outErr = ev->AsErr();
   }
-  if ( outRowPos )
-    *outRowPos = rowPos;
-  if ( outOid )
-    *outOid = oid;
+  if ( outCanHaveDups )
+    *outCanHaveDups = canHaveDups;
   return outErr;
 }
-
+  
 /*virtual*/ mdb_err
-orkinTableRowCursor::NextRowCopyAll( // put all row cells into sink, adding to sink
+orkinTableRowCursor::MakeUniqueCursor( // clone cursor, removing duplicate rows
   nsIMdbEnv* mev, // context
-  nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-  mdbOid* outOid, // out row oid
-  mdb_pos* outRowPos)
+  nsIMdbTableRowCursor** acqCursor)    // acquire clone with no dups
+  // Note that MakeUniqueCursor() is never necessary for a cursor which was
+  // created by table method nsIMdbTable::GetTableRowCursor(), because a table
+  // never contains the same row as a member more than once.  However, a cursor
+  // created by table method nsIMdbTable::FindRowMatches() might contain the
+  // same row more than once, because the same row can generate a hit by more
+  // than one column with a matching string prefix.  Note this method can
+  // return the very same cursor instance with just an incremented refcount,
+  // when the original cursor could not contain any duplicate rows (calling
+  // CanHaveDupRowMembers() shows this case on a false return).  Otherwise
+  // this method returns a different cursor instance.  Callers should not use
+  // this MakeUniqueCursor() method lightly, because it tends to defeat the
+  // purpose of lazy programming techniques, since it can force creation of
+  // an explicit row collection in a new cursor's representation, in order to
+  // inspect the row membership and remove any duplicates; this can have big
+  // impact if a collection holds tens of thousands of rows or more, when
+  // the original cursor with dups simply referenced rows indirectly by row
+  // position ranges, without using an explicit row set representation.
+  // Callers are encouraged to use nsIMdbCursor::GetCount() to determine
+  // whether the row collection is very large (tens of thousands), and to
+  // delay calling MakeUniqueCursor() when possible, until a user interface
+  // element actually demands the creation of an explicit set representation.
 {
-  MORK_USED_1(ioSinkRow);
-  mdbOid oid;
-  oid.mOid_Scope = 0;
-  oid.mOid_Id = (mork_id) -1;
-  mdb_pos rowPos = -1;
   mdb_err outErr = 0;
+  nsIMdbTableRowCursor* outCursor = 0;
+  
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    if ( this->Handle_AddStrongRef(mev) == 0 )
+      outCursor = this;
+      
     outErr = ev->AsErr();
   }
-  if ( outRowPos )
-    *outRowPos = rowPos;
-  if ( outOid )
-    *outOid = oid;
+  if ( acqCursor )
+    *acqCursor = outCursor;
   return outErr;
-}  // nonzero if child, and a row child
-
-// } ----- end copy iteration methods -----
+}
+// } ----- end duplicate row removal methods -----
 
 // } ===== end nsIMdbTableRowCursor methods =====
 

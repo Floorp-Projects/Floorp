@@ -150,7 +150,6 @@ public: // type identification
 // { ===== begin nsIMdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable); // sets pos to -1
   virtual mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
   // } ----- end attribute methods -----
 
@@ -168,19 +167,35 @@ public: // type identification
     mdb_pos* outRowPos);    // zero-based position of the row in table
   // } ----- end row iteration methods -----
 
-  // { ----- begin copy iteration methods -----
-  virtual mdb_err NextRowCopy( // put row cells into sink only when already in sink
+  // { ----- begin duplicate row removal methods -----
+  virtual mdb_err CanHaveDupRowMembers(nsIMdbEnv* ev, // cursor might hold dups?
+    mdb_bool* outCanHaveDups);
+    
+  virtual mdb_err MakeUniqueCursor( // clone cursor, removing duplicate rows
     nsIMdbEnv* ev, // context
-    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-    mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos);    // zero-based position of the row in table
-
-  virtual mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
-    nsIMdbEnv* ev, // context
-    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-    mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos);    // zero-based position of the row in table
-  // } ----- end copy iteration methods -----
+    nsIMdbTableRowCursor** acqCursor);    // acquire clone with no dups
+    // Note that MakeUniqueCursor() is never necessary for a cursor which was
+    // created by table method nsIMdbTable::GetTableRowCursor(), because a table
+    // never contains the same row as a member more than once.  However, a cursor
+    // created by table method nsIMdbTable::FindRowMatches() might contain the
+    // same row more than once, because the same row can generate a hit by more
+    // than one column with a matching string prefix.  Note this method can
+    // return the very same cursor instance with just an incremented refcount,
+    // when the original cursor could not contain any duplicate rows (calling
+    // CanHaveDupRowMembers() shows this case on a false return).  Otherwise
+    // this method returns a different cursor instance.  Callers should not use
+    // this MakeUniqueCursor() method lightly, because it tends to defeat the
+    // purpose of lazy programming techniques, since it can force creation of
+    // an explicit row collection in a new cursor's representation, in order to
+    // inspect the row membership and remove any duplicates; this can have big
+    // impact if a collection holds tens of thousands of rows or more, when
+    // the original cursor with dups simply referenced rows indirectly by row
+    // position ranges, without using an explicit row set representation.
+    // Callers are encouraged to use nsIMdbCursor::GetCount() to determine
+    // whether the row collection is very large (tens of thousands), and to
+    // delay calling MakeUniqueCursor() when possible, until a user interface
+    // element actually demands the creation of an explicit set representation.
+  // } ----- end duplicate row removal methods -----
 
 // } ===== end nsIMdbTableRowCursor methods =====
 };
