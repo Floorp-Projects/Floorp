@@ -143,6 +143,8 @@ public:
 
     NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
+    NS_IMETHOD              Flash();
+
     // nsIKBStateControl interface 
 
     NS_IMETHOD ResetInputState();

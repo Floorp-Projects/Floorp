@@ -98,6 +98,7 @@ public:
   NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
 #endif
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
+  NS_IMETHOD              Flash();
   virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
   virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 
