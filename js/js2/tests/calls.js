@@ -28,6 +28,13 @@ function f11(a, b, c, ...) { return a + b + c; }
 
 function f12(a, b, c, ...d) { return a + b + c + d[0]; }
 
+function f13(a, b, c, ...d) { return a + b + c + d[0] + d[1]; }
+
+
+function f14(| a, b, c) { return a + b - c; }
+
+function f15(| a, b = 2, c) { return a + b - c; }
+
 
 count = 0;
 
@@ -71,7 +78,16 @@ verify( f10(1), 2);
 verify( f10(1, b:2), 3);
 
 verify( f11(1, 2, 3), 6);
-verify( f11(1, 2, 3, 4), 6);
 
-verify( f12(1, 2, 3), 6);
 verify( f12(1, 2, 3, 4), 10);
+verify( f12(1, 2, 3, 4, 5), 10);
+
+verify( f13(1, 2, 3, 4, 5), 15);
+verify( f13(1, 2, 3, 4, 5, 6), 15);
+
+verify( f14(a:4, b:2, c:3), 3);
+verify( f14(c:3, b:2, a:4), 3);
+verify( f14(b:2, a:4, c:3), 3);
+
+verify( f14(a:4, c:3), 3);
+
