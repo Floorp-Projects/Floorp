@@ -12,3 +12,4 @@
 <!ENTITY deleteCmd.label "Delete">
 <!ENTITY startCmd.label "Start">
 <!ENTITY closeCmd.label "Close">
+<!ENTITY windowtitle.label "Profiles and Migration">
