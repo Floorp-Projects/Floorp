@@ -4,3 +4,7 @@ tasksOverlay.dtd
 commonDialog.dtd
 charsetOverlay.dtd
 charsetDetectorsOverlay.dtd
+wizardManager.properties
+wizardOverlay.dtd
+
+
