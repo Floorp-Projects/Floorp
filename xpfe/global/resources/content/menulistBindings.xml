@@ -103,11 +103,8 @@
               var curr = this.firstChild;
               while (curr && curr.localName != 'menupopup')
                 curr = curr.nextSibling;
-              if (!curr)
-                return -1;
-              if (curr.childNodes.length <= val)
-                return -1;
-              this.selectedItem = curr.childNodes[val];
+              if (curr && val < curr.childNodes.length)
+                this.selectedItem = curr.childNodes[val];
             }
             return val;    
           ]]>
