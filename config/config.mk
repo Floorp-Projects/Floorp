@@ -658,9 +658,7 @@ else
 MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
 ifndef COMPILER_DEPEND
-ifneq ($(OS_ARCH),OS2)
 MKDEPEND_BUILTIN = $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
-endif
 endif
 endif
 
