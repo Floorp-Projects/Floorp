@@ -699,6 +699,7 @@ var dragStartObserver =
     var data = new TransferData();
     data.addDataForFlavour("text/toolbarwrapper-id/"+documentId, item.firstChild.id);
     aXferData.data.push(data);
+    aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE;
   }
 }
 
