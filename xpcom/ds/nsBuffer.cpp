@@ -506,7 +506,7 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
 {
     nsresult rv = NS_OK;
 
-    PR_CEnterMonitor(this);
+    nsAutoCMonitor mon(this);
     *writeCount = 0;
 
     if (mReaderClosed) {
@@ -567,8 +567,6 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
         }
     }
 done:
-    PR_CExitMonitor(this);
-
     if (mObserver && *writeCount) {
         mObserver->OnWrite(this, *writeCount);
     }

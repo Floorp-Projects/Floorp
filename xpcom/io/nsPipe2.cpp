@@ -355,9 +355,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             if (*readCount > 0 || NS_FAILED(rv))
                 goto done;      // don't Fill if we've got something
             if (pipe->mObserver) {
-                PR_CExitMonitor(pipe);
+                mon.Exit();     // XXXbe avoid deadlock better
                 rv = pipe->mObserver->OnEmpty(pipe);
-                PR_CEnterMonitor(pipe);
+                mon.Enter();
                 if (NS_FAILED(rv)) goto done;
             }
             rv = Fill();
@@ -396,9 +396,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             pipe->mReadLimit = nsnull;
             PRBool empty = pipe->mBuffer.DeleteFirstSegment();
             if (empty && pipe->mObserver) {
-                PR_CExitMonitor(pipe);
+                mon.Exit();     // XXXbe avoid deadlock better
                 rv = pipe->mObserver->OnEmpty(pipe);
-                PR_CEnterMonitor(pipe);
+                mon.Enter();
                 if (NS_FAILED(rv))
                     goto done;
             }
@@ -609,9 +609,9 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 goto done;
             if (writeBufLen == 0) {
                 if (pipe->mObserver && *writeCount == 0) {
-                    PR_CExitMonitor(pipe);
+                    mon.Exit();     // XXXbe avoid deadlock better
                     rv = pipe->mObserver->OnFull(pipe);
-                    PR_CEnterMonitor(pipe);
+                    mon.Enter();
                     if (NS_FAILED(rv)) goto done;
                 }
                 rv = Flush();

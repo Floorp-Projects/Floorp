@@ -435,7 +435,7 @@ nsPageMgr::FinalizePages()
     PR_ASSERT(ok);
     mMemoryBase = NULL;
     mPageCount = 0;
-    PR_DestroyMonitor(mMonitor);
+    nsAutoMonitor::DestroyMonitor(mMonitor);
     mMonitor = NULL;
 
 #elif defined(XP_MAC)
@@ -510,7 +510,7 @@ nsPageMgr::Init(nsPageCount minPages, nsPageCount maxPages)
 {
     PRStatus status;
     
-    mMonitor = PR_NewMonitor();
+    mMonitor = nsAutoMonitor::NewMonitor("PageMgr");
     if (mMonitor == NULL)
         return PR_FAILURE;
 
