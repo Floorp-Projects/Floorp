@@ -16,6 +16,9 @@
 
 DEPTH=..\..
 IGNORE_MANIFEST=1
-DIRS=public src tests tools xptinfo xptcall
+
+# Don't recur into xptinfo and xptcall, because they may require xpidl,
+# which hasn't been built yet.  They'll be called from the xpcom makefile.
+DIRS=public src tests tools
 
 include <$(DEPTH)\config\rules.mak>
