@@ -730,15 +730,22 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
 
   // Output the error to the console  
   if (error) {
-    char* temp;          
-    PR_fprintf(PR_STDOUT, "XML Error in file '%s', ",(temp = mFilename.ToNewCString()));
-    Recycle(temp);
-    PR_fprintf(PR_STDOUT, "Line Number: %s, ", error->lineNumber);
-    PR_fprintf(PR_STDOUT, "Col Number: %s, ", error->colNumber);
-    PR_fprintf(PR_STDOUT, "Description: %s\n",(temp = error->description.ToNewCString()));
-    Recycle(temp);
-    PR_fprintf(PR_STDOUT, "Source Line: %s\n",(temp = error->sourceLine.ToNewCString()));
-    Recycle(temp);
+    nsCAutoString temp;
+
+    temp.AssignWithConversion(mFilename);
+
+    PR_fprintf(PR_STDOUT, "XML Error in file '%s', ", temp.get());
+
+    PR_fprintf(PR_STDOUT, "Line Number: %d, ", error->lineNumber);
+    PR_fprintf(PR_STDOUT, "Col Number: %d, ", error->colNumber);
+
+    temp.AssignWithConversion(error->description);
+
+    PR_fprintf(PR_STDOUT, "Description: %s\n", temp.get());
+
+    temp.AssignWithConversion(error->sourceLine);
+
+    PR_fprintf(PR_STDOUT, "Source Line: %s\n", temp.get());
   }
 
   return result;
