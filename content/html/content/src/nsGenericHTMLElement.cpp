@@ -425,9 +425,9 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 
     if (NS_SUCCEEDED(result)) {
       nsHTMLValue val;
-      result = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
+      nsresult rv = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
 
-      if (result == NS_CONTENT_ATTR_HAS_VALUE &&
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
           val.GetUnit() == eHTMLUnit_ISupports) {
         nsCOMPtr<nsISupports> supports(dont_AddRef(val.GetISupportsValue()));
         nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
@@ -3265,7 +3265,7 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
   nsresult result = nsGenericHTMLElement::CopyInnerTo(aSrcContent,
                                                       aDst,
                                                       aDeep);
-  if (NS_OK != result) {
+  if (NS_FAILED(result)) {
     return result;
   }
 
