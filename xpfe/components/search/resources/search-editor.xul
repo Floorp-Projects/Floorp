@@ -38,6 +38,7 @@
         width="540" height="340" x="20" y="20" persist="width height x y"
         windowtype="internetsearch:editor"
         onload="doLoad()" onunload="doUnload()"
+        buttons="accept"
         ondialogaccept="return Commit();">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
