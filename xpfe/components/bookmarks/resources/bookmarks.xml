@@ -1589,8 +1589,14 @@
             parentURI = this.rdf.GetResource("NC:BookmarksRoot").Value;
           else
             parentURI = this.treeBuilder.getResourceAtIndex(parentIndex).Value;
+            
+          var rv = { newBookmark: null };
           openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, parentURI, null, "newBookmark");
+                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, parentURI, null, "newBookmark", rv);
+          if (rv.newBookmark) {
+            var ind = this.treeBuilder.getIndexOfResource(rv.newBookmark);
+            this.treeBoxObject.selection.select(ind);
+          }
         ]]></body>
       </method>
       <method name="fileBookmark">

@@ -253,7 +253,10 @@ function onOK()
       }
     } else {
       url = getNormalizedURL(gFld_URL.value);
-      kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+      var newBookmark = kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+      if (window.arguments[4] == "newBookmark") {
+        window.arguments[5].newBookmark = newBookmark;
+      }
     }
   }
 }
