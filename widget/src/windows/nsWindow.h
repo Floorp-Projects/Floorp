@@ -103,6 +103,7 @@ public:
     NS_IMETHOD              SetFont(const nsFont &aFont);
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
     NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
