@@ -12,7 +12,7 @@
             <xul:popupset ignorekeys="true"
 				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
 			>
-                <xul:popup id="ac_menupopup">
+                <xul:popup id="ac_menupopup" oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false'">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
@@ -89,31 +89,35 @@
                     result.defaultItemIndex = 0;
                 
                 var inputElement = me.anonymousContent[0].firstChild;
-                var item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
                 
                 //Time to build the new edit field value
                 //First, check if the search string correspond to the current value of the field, else ignore it
                 if (result.searchString != inputElement.value)
                     return;
 
-                var match = item.value.toLowerCase();
-                var entry = inputElement.value.toLowerCase();
+                var item = null;
+				if (result.defaultItemIndex != -1)
+				{
+					item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
+					var match = item.value.toLowerCase();
+					var entry = inputElement.value.toLowerCase();
                 
-                if (entry != match)
-                {
-                    if (match.substring(0, entry.length) == entry)
-                    {
-                        inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
-                        inputElement.setSelectionRange(entry.length, match.length);
-                        me.noDirectMatch = false;
-                    }
-                    else
-                    {
-                        inputElement.value = inputElement.value + " >> " + item.value;
-                        inputElement.setSelectionRange(entry.length, inputElement.value.length);
-                        me.noDirectMatch = true;
-                    }
-                }
+					if (entry != match)
+					{
+						if (match.substring(0, entry.length) == entry)
+						{
+							inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
+							inputElement.setSelectionRange(entry.length, match.length);
+							me.noDirectMatch = false;
+						}
+						else
+						{
+							inputElement.value = inputElement.value + " >> " + item.value;
+							inputElement.setSelectionRange(entry.length, inputElement.value.length);
+							me.noDirectMatch = true;
+						}
+					}
+				}
                 
                 //Now, build the popup content
 				if (me.displayMenu == "false")
@@ -131,11 +135,14 @@
 //                    dump("  match=" + item.value + "\n");
                 }
                 popupset.replaceChild(popupElement, popupset.firstChild);
+				if (result.defaultItemIndex != -1)
+				{
 //TODO: Select the default item
 //                popupset.selectedItem = result.defaultItemIndex;
+				}
 				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
-                popupset.firstChild.openPopup(me.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
-dump("OPEN POPUP\n");
+				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
+					popupset.firstChild.openPopup(me.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
             },
 
             param: this
@@ -219,11 +226,8 @@ dump("OPEN POPUP\n");
 
 			closePopupMenu: function(me) {
 				popup = document.getElementById("ac_menupopup");
-				if (popup /*&& popup.getAttribute("menuactive") == "true"*/) //TODO: need to now if menu is open or not
-				{
-dump("CLOSE POPUP\n");
+				if (popup && me.menuOpen == "true")
 					popup.closePopup();
-				}
 			},
 
 			cleanupInputField: function(me) {
@@ -274,19 +278,6 @@ dump("CLOSE POPUP\n");
 				}
 			},
 
-			processKeyUp: function(me, event) {
-				if (me.disableAutocomplete == "true")
-					return;
-
-				switch (event.keyCode)
-				{
-					case 8: /*vk_back*/
-					case 46: /*vk_delete*/
-						me.privatefunc.closePopupMenu(me);
-						break;
-				}
-			},
-
 			processKeyPress: function(me, event) {
 				if (me.disableAutocomplete == "true")
 					return;
@@ -299,12 +290,16 @@ dump("CLOSE POPUP\n");
 				}
 
 				var popup = document.getElementById("ac_menupopup");
-				//TODO: need to now if menu is open or not
-// 				if (popup && popup.getAttribute("menuactive") != "true")
-//					popup = null;
+ 				if (popup && me.menuOpen != "true")
+					popup = null;
 
 				switch (event.keyCode)
 				{
+					case 8: /*vk_back*/
+					case 46: /*vk_delete*/
+						me.privatefunc.closePopupMenu(me);
+						return;
+
 					case 13 /*vk_return*/:
 						me.privatefunc.finishAutoComplete(me, event);
 						return;
@@ -320,6 +315,12 @@ dump("CLOSE POPUP\n");
 
 					case 37 /*vk_left*/:
 					case 39 /*vk_right*/:
+						if (popup)
+						{
+							me.privatefunc.closePopupMenu(me);
+							event.preventDefault();
+							event.preventBubble();
+						}
 						me.privatefunc.cleanupInputField(me);
 						break;
 
@@ -349,7 +350,6 @@ dump("CLOSE POPUP\n");
 		<handler type="click" value="this.privatefunc.cleanupInputField(this); //TODO: try to catch menu click here"/>
 		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
-        <handler type="keyup" value="this.privatefunc.processKeyUp(this, event);"/>
         <handler type="focus" value="dump('FOCUS\n'); this.needToAutocomplete = false;"/>
         <handler type="blur" value="
 			dump('BLURR\n');
