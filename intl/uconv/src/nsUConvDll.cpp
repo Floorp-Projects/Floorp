@@ -20,8 +20,6 @@
 #include "nsRepository.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCharsetConverterManager.h"
-#include "nsIPlatformCharset.h"
-#include "nsPlatformCharsetFactory.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -56,9 +54,6 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 
     return res;
   }
-  if (aCID.Equals(kPlatformCharsetCID)) {
-    *aFactory = NEW_PLATFORMCHARSETFACTORY();
-  }
 
   return NS_NOINTERFACE;
 }
@@ -69,8 +64,6 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 
   res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, path, 
       PR_TRUE, PR_TRUE);
-  res = nsRepository::RegisterFactory(kPlatformCharsetCID, path, 
-      PR_TRUE, PR_TRUE);
   return res;
 }
 
@@ -79,6 +72,5 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
   nsresult res;
 
   res = nsRepository::UnregisterFactory(kCharsetConverterManagerCID, path);
-  res = nsRepository::UnregisterFactory(kPlatformCharsetCID, path);
   return res;
 }
