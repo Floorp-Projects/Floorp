@@ -430,10 +430,10 @@ nsHTMLValue::EnumValueToString(EnumTable* aTable,
  *   or proportional (n*)
  */
 PRBool
-nsHTMLValue::ParseIntValue(const nsAString& aString,
-                           nsHTMLUnit aDefaultUnit,
-                           PRBool aCanBePercent,
-                           PRBool aCanBeProportional)
+nsHTMLValue::ParseSpecialIntValue(const nsAString& aString,
+                                  nsHTMLUnit aDefaultUnit,
+                                  PRBool aCanBePercent,
+                                  PRBool aCanBeProportional)
 {
   nsAutoString tmp(aString);
   PRInt32 ec;

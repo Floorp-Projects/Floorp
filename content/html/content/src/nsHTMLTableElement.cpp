@@ -971,7 +971,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   /* attributes that resolve to pixels, with min=0 */
   if (aAttribute == nsHTMLAtoms::cellspacing ||
       aAttribute == nsHTMLAtoms::cellpadding) {
-    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -998,14 +998,14 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
       // treat 0 width as auto
       nsHTMLUnit unit = aResult.GetUnit();
       if ((eHTMLUnit_Pixel == unit) && (0 == aResult.GetPixelValue())) {
