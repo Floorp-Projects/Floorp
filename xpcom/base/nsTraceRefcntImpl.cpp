@@ -223,7 +223,7 @@ public:
     BloatEntry* entry = (BloatEntry*)he->value;
     GatherArgs* ga = (GatherArgs*) arg;
     if (arg && entry && ga->func) {
-      PRBool stop = (*ga->func)(entry->mClassName, entry->mClassSize,
+      PRBool stop = (*ga->func)(entry->mClassName, (PRUint32)entry->mClassSize,
                                 &entry->mNewStats, &entry->mAllStats,
                                 ga->closure);
       if (stop) {
@@ -274,8 +274,8 @@ public:
         stddevObjs != 0) {
       fprintf(out, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
               i+1, mClassName,
-              mClassSize,
-              (stats->mCreates - stats->mDestroys) * mClassSize,
+              (PRInt32)mClassSize,
+              (PRInt32)((stats->mCreates - stats->mDestroys) * mClassSize),
               stats->mCreates,
               (stats->mCreates - stats->mDestroys),
               meanObjs,
@@ -290,7 +290,7 @@ public:
 
 protected:
   const char*   mClassName;
-  PRUint32      mClassSize;
+  double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
   nsTraceRefcntStats mNewStats;
   nsTraceRefcntStats mAllStats;
 };
