@@ -4455,7 +4455,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     // This is a Window 98/2000 only message
     case WM_IME_REQUEST:
-      result = OnIMERequest(wParam, lParam, aRetValue);
+      result = OnIMERequest(wParam, lParam, aRetValue, nsToolkit::mIsNT);
       break;
 
     case WM_IME_SELECT:
