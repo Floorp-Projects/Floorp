@@ -54,7 +54,8 @@
 # and commit this file on that tag.
 #MOZ_CO_TAG = <tag>
 NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
-PSM_CO_TAG = SECURITY_CLIENT_BRANCH
+PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
+NSS_CO_TAG = NSS_CLIENT_TAG
 LDAPCSDK_CO_TAG = LDAPCSDK_40_BRANCH
 BUILD_MODULES = all
 
@@ -180,12 +181,22 @@ endif
 ####################################
 # CVS defines for PSM
 #
-PSM_CO_MODULE= mozilla/security
-PSM_CO_FLAGS := -P
+PSM_CO_MODULE= mozilla/security/psm mozilla/security/Makefile.in
+PSM_CO_FLAGS := -P -A
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
 endif
 CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(PSM_CO_MODULE)
+
+####################################
+# CVS defines for NSS
+#
+NSS_CO_MODULE= mozilla/security/nss mozilla/security/coreconf
+NSS_CO_FLAGS := -P
+ifdef NSS_CO_TAG
+   NSS_CO_FLAGS := $(NSS_CO_FLAGS) -r $(NSS_CO_TAG)
+endif
+CVSCO_NSS = cvs $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSS_CO_MODULE)
 
 ####################################
 # CVS defines for NSPR
@@ -220,6 +231,7 @@ ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
 endif
 ifeq (,$(filter security, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
   CVSCO_PSM :=
+  CVSCO_NSS :=
 endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
   CVSCO_LDAPCSDK :=
@@ -285,6 +297,7 @@ real_checkout:
 	  if test -f $$failed; then false; else true; fi; }; \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_PSM) && \
+	cvs_co $(CVSCO_NSS) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
