@@ -34,11 +34,8 @@
 
 
 /**
- * This interface is used to save documents to disk (and other
- * output devices, like network streams one day).
- * 
- * It should be implemented by classes that need to save
- * documents, like the editor and browser windows.
+ * This interface is used to associate a document with a disk file,
+ * and to save to that file.
  * 
  */
 
@@ -75,15 +72,17 @@ public:
     *														referenced internally.
     * @param inSaveFileType			Mime type to save (text/plain or text/html)
     * @param inSaveCharset			Charset to save the document in. If this is an empty
-    *    												string, or "UCS2", then the doc will be saved as Unicode.
+    *    												string, or "UCS2", then the doc will be saved in the document's default charset.
     * @param inSaveFlags        Flags (see nsIDocumentEncoder).  If unsure, use 0.
+    * @param inWrapColumn       Wrap column, assuming that flags specify wrapping.
     */
   NS_IMETHOD SaveFile(			nsFileSpec*			inFileSpec,
   													PRBool 					inReplaceExisting,
   													PRBool					inSaveCopy,
   													const nsString&	inSaveFileType,
   													const nsString&	inSaveCharset,
-                            PRUint32        inSaveFlags)=0;
+                            PRUint32        inSaveFlags,
+                            PRUint32        inWrapColumn)=0;
   
   /** Return a file spec for the file. If the file has not been saved yet,
     * and thus has no fileSpec, this will return NS_ERROR_NOT_INITIALIZED.

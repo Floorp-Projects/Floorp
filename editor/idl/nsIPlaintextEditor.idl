@@ -46,9 +46,8 @@ interface nsIPlaintextEditor : nsISupports
     * Special values:
     *    0 = wrap to window width
     *   -1 = no wrap at all
-    * 
     */
-  attribute long bodyWrapWidth;
+  attribute long wrapWidth;
 
   /** 
    * EditorKeyPress consumes a keyevent.

@@ -50,7 +50,7 @@ interface nsISelectionPrivate : nsISupports
 		void		       endBatchChanges();
 		
 		nsIEnumerator  getEnumerator();
-    wstring        toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapCount);
+    wstring        toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
 		void		       addSelectionListener(in nsISelectionListener newListener);
 		void		       removeSelectionListener(in nsISelectionListener listenerToRemove);
 

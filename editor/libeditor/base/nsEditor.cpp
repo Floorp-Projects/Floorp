@@ -1583,6 +1583,24 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   return rv;
 }
 
+//
+// Get an appropriate wrap width for saving this document.
+// This class just uses a pref; subclasses are expected to
+// override if they know more about the document.
+//
+NS_IMETHODIMP
+nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
+{
+  NS_ENSURE_ARG_POINTER(aWrapColumn);
+  *aWrapColumn = 72;
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+    (void) prefs->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
                    PRBool aSaveCopy, const nsString& aFormat)
@@ -1613,10 +1631,11 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
       flags |= nsIDocumentEncoder::OutputFormatted;
   }
 
+  PRInt32 wrapColumn = 72;
+  GetWrapWidth(&wrapColumn);
   nsAutoString useDocCharset;
-
   rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                          aFormat, useDocCharset, flags);
+                         aFormat, useDocCharset, flags, wrapColumn);
   if (NS_SUCCEEDED(rv))
     DoAfterDocumentSave();
 
@@ -2328,10 +2347,11 @@ NS_IMETHODIMP nsEditor::OutputToString(nsAWritableString& aOutputString,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
-                                       const nsString& aFormatType,
-                                       const nsString* aCharsetOverride,
-                                       PRUint32 aFlags)
+NS_IMETHODIMP
+nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
+                         const nsAReadableString& aFormatType,
+                         const nsAReadableString* aCharsetOverride,
+                         PRUint32 aFlags)
 {
   // these should be implemented by derived classes.
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -325,7 +325,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
             PR_TRUE, /* save as a copy */
             contentType,
             charType,
-            0);
+            0, 72);
     }
 
     OnEndDownload();

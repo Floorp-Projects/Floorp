@@ -3351,7 +3351,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     PRBool wrapToContainerWidth = PR_TRUE;
     if (PR_TRUE==IsSingleLineTextControl())
     { // no wrapping for single line text controls
-      result = mailEditor->SetBodyWrapWidth(-1);
+      result = mailEditor->SetWrapWidth(-1);
       wrapToContainerWidth = PR_FALSE;
     }
     else
@@ -3362,25 +3362,25 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
       {
         if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off)
         {
-          result = mailEditor->SetBodyWrapWidth(-1);
+          result = mailEditor->SetWrapWidth(-1);
           wrapToContainerWidth = PR_FALSE;
         }
         if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
         {
           PRInt32 widthInCharacters = GetWidthInCharacters();
-          result = mailEditor->SetBodyWrapWidth(widthInCharacters);
+          result = mailEditor->SetWrapWidth(widthInCharacters);
           wrapToContainerWidth = PR_FALSE;
         }
       } else {
-        result = mailEditor->SetBodyWrapWidth(-1);
+        result = mailEditor->SetWrapWidth(-1);
         wrapToContainerWidth = PR_FALSE;
       }
     }
     if (PR_TRUE==wrapToContainerWidth)
     { // if we didn't set wrapping explicitly, turn on default wrapping here
-      result = mailEditor->SetBodyWrapWidth(0);
+      result = mailEditor->SetWrapWidth(0);
     }
-    NS_ASSERTION((NS_SUCCEEDED(result)), "error setting body wrap width");
+    NS_ASSERTION((NS_SUCCEEDED(result)), "error setting wrap width");
     if (NS_FAILED(result)) { return result; }
   }
 
