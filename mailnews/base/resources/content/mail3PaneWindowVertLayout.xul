@@ -150,7 +150,7 @@ Rights Reserved.
       </splitter>
       <!-- msg header view -->
       <box id="messagepanebox" orient="vertical" flex="4" persist="collapsed height" class="window-focusborder" focusring="false">
-        <toolbox id="msgHeaderView"/>
+        <box id="msgHeaderView"/>
     
         <!-- message view -->
         <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
