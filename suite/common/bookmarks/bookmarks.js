@@ -207,7 +207,81 @@ function fillContextMenu(name)
 
 function doContextCmd(cmdName)
 {
-	dump("doContextCmd: cmd='" + cmdName + "'\n");
+	dump("doContextCmd start: cmd='" + cmdName + "'\n");
+
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)	return(false);
+	var db = treeNode.database;
+	if (!db)	return(false);
+	
+	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+	if (!compositeDB)	return(false);
+
+	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (!isupports)	return(false);
+	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!rdf)	return(false);
+
+	// need a resource for the command
+	var cmdResource = rdf.GetResource(cmdName);
+	if (!cmdResource)		return(false);
+	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
+	if (!cmdResource)		return(false);
+
+	var select_list = treeNode.getElementsByAttribute("selected", "true");
+	if (select_list.length < 1)	return(false);
+	
+	dump("# of Nodes selected: " + select_list.length + "\n\n");
+
+	// build up selection nsISupportsArray
+	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	if (!selectionInstance)
+	{
+		dump("unable to create selectionInstance.\n");
+		return(false);
+	}
+	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+	if (!selectionArray)
+	{
+		dump("unable to QI to selectionArray.\n");
+		return(false);
+	}
+
+	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	{
+		var node = select_list[nodeIndex];
+		if (!node)	break;
+		var id = node.getAttribute("id");
+		if (!id)	break;
+
+		dump("id: " + id + "\n");
+
+		var rdfNode = rdf.GetResource(id);
+		if (!rdfNode)	break;
+
+		selectionArray.AppendElement(rdfNode);
+	}
+
+	// build up arguments nsISupportsArray
+	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	if (!argumentsInstance)
+	{
+		dump("unable to create argumentsInstance.\n");
+		return(false);
+	}
+
+	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+	if (!argumentsArray)
+	{
+		dump("unable to QI to argumentsArray.\n");
+		return(false);
+	}
+
+
+	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+
+
+	dump("doContextCmd ends: cmd='" + cmdName + "'\n");
 
 	return(true);
 }
