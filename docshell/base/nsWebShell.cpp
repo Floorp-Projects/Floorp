@@ -22,6 +22,8 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContextOwner.h"
 #include "nsRepository.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
@@ -61,7 +63,8 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
 
 class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
-                   public nsILinkHandler
+                   public nsILinkHandler,
+                   public nsIScriptContextOwner
 {
 public:
   nsWebShell();
@@ -129,6 +132,10 @@ public:
                         const nsString& aTargetSpec);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
+  // nsIScriptContextOwner
+  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
+  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
+
   // nsWebShell
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
@@ -141,6 +148,9 @@ public:
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
 protected:
+  nsIScriptGlobalObject *mScriptGlobal;
+  nsIScriptContext* mScriptContext;
+
   nsIWebShellContainer* mContainer;
   nsIContentViewer* mContentViewer;
   nsIDeviceContext* mDeviceContext;
@@ -176,6 +186,7 @@ static NS_DEFINE_IID(kIContentViewerContainerIID,
 static NS_DEFINE_IID(kIDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -241,6 +252,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kIScriptContextOwnerIID)) {
+    *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShell*)this;
     AddRef();
@@ -258,6 +274,11 @@ nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
 
   if (aIID.Equals(kILinkHandlerIID)) {
     *aInstancePtr = (void*) ((nsILinkHandler*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptContextOwnerIID)) {
+    *aInstancePtr = (void*) ((nsIScriptContextOwner*)this);
     AddRef();
     return NS_OK;
   }
@@ -906,6 +927,40 @@ nsWebShell:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
     aState = eLinkState_Hover;
   }
 #endif
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsresult 
+nsWebShell::GetScriptContext(nsIScriptContext** aContext)
+{
+  NS_PRECONDITION(nsnull != aContext, "null arg");
+  nsresult res = NS_OK;
+
+  if (nsnull == mScriptGlobal) {
+    res = NS_NewScriptGlobalObject(&mScriptGlobal);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
+    if (NS_OK != res) {
+      return res;
+    }
+  }
+
+  *aContext = mScriptContext;
+  NS_ADDREF(mScriptContext);
+
+  return res;
+}
+
+nsresult 
+nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
+{
+  // XXX Is this right? Why are we passing in a context?
+  NS_IF_RELEASE(aContext);
   return NS_OK;
 }
 
