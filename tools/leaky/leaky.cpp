@@ -51,7 +51,6 @@ leaky::leaky()
   logFile = NULL;
   progFile = NULL;
 
-  sortByFrequency = FALSE;
   dumpLeaks = FALSE;
   dumpGraph = FALSE;
   dumpHTML = FALSE;
@@ -109,7 +108,7 @@ void leaky::initialize(int argc, char** argv)
 
   int arg;
   int errflg = 0;
-  while ((arg = getopt(argc, argv, "adEe:fgh:i:r:Rs:tqx")) != -1) {
+  while ((arg = getopt(argc, argv, "adEe:gh:i:r:Rs:tqx")) != -1) {
     switch (arg) {
       case '?':
 	errflg++;
@@ -129,9 +128,6 @@ void leaky::initialize(int argc, char** argv)
 	break;
       case 'e':
 	exclusions.add(optarg);
-	break;
-      case 'f':
-	sortByFrequency = TRUE;
 	break;
       case 'g':
 	dumpGraph = TRUE;

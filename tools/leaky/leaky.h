@@ -85,7 +85,6 @@ struct leaky {
   char*  logFile;
   char*  progFile;
 
-  int   sortByFrequency;
   int   dumpLeaks;
   int   dumpGraph;
   int   dumpHTML;
