@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.34 $ 
-# $Date: 2002/04/26 23:44:55 $ 
+# $Revision: 1.35 $ 
+# $Date: 2002/04/26 23:49:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -483,7 +483,7 @@ $out .=<<EOF;
               <tr><td align=center><TT>L</TT></td>
                   <td>= Show Full Build Log</td></tr>
               <tr><td align=center><TT>C</TT></td>
-                  <td>= Show Previous Build Checkins</td></tr>
+                  <td>= Show Builds new Contents</td></tr>
               <tr><td align=center><TT>B</TT></td>
                   <td>= Get Binaries</td></tr>
               <tr><td align=center><TT>Lk:XXX</TT></td>
