@@ -288,6 +288,7 @@ nsComponentsDlg::Show(int aDirection)
 
         // 2nd row: a CList with a check box for each row (short desc)
         GtkWidget *list = NULL;
+        GtkWidget *scrollwin = NULL;
         GtkStyle *style = NULL;
         GdkBitmap *ch_mask = NULL;
         GdkPixmap *checked = NULL;
@@ -297,6 +298,10 @@ nsComponentsDlg::Show(int aDirection)
         nsComponent *currComp = sCustomST->GetComponents()->GetHead();
         GtkWidget *descLongTable = NULL;
         GtkWidget *frame = NULL;
+
+        scrollwin = gtk_scrolled_window_new(NULL, NULL);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrollwin),
+            GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 
         list = gtk_clist_new(2);
         gtk_clist_set_selection_mode(GTK_CLIST(list), GTK_SELECTION_BROWSE);
@@ -337,10 +342,12 @@ nsComponentsDlg::Show(int aDirection)
 
         gtk_signal_connect(GTK_OBJECT(list), "select_row",
                            GTK_SIGNAL_FUNC(RowSelected), NULL);
+        gtk_container_add(GTK_CONTAINER(scrollwin), list);
         gtk_widget_show(list);
+        gtk_widget_show(scrollwin);
 
         hbox = gtk_hbox_new(FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), list, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), scrollwin, TRUE, TRUE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 2, 3,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
