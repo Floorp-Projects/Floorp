@@ -99,7 +99,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 
 #define WEB_TRACE_CALLS        0x1
 #define WEB_TRACE_HISTORY      0x2
-
+#define OLD_HISTORY 1
 
 #define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
@@ -2808,7 +2808,15 @@ nsWebShell::ReloadDocument(const char* aCharset,
     char* url = s->ToNewCString();
     if(url) {
 #ifdef  OLD_HISTORY
-      mHistoryIndex--;
+		/* Don't just decrement the index, remove the element too.
+		 * Just decrementing the index, causes some kind of corruption
+		 * in mHistory and crash in LoadURL(). The element anyway
+		 * gets appended back in LoadURL();
+		 */
+		if (mHistoryIndex >= 0) {
+			mHistory.RemoveElementAt(mHistoryIndex);
+            mHistoryIndex--;
+		}
 #endif  /* OLD_HISTORY */
       /* When using nsISessionHistory, the refresh callback should
        * probably call LoadURL with PR_FALSE as the third argument.
@@ -3706,22 +3714,6 @@ nsWebShell::CancelRefreshURLTimers(void)
  */
 nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 {
-
-#if OLD_HISTORY 
-  nsString* historyURL = (nsString*) mHistory.ElementAt(mHistoryIndex);
-  const char* spec;
-  aURL->GetSpec(&spec);
-  nsString* newURL = (nsString*) new nsString(spec);
-
-  if (newURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
-    // Replace the top most history entry with the new url
-    if (nsnull != historyURL) {
-      delete historyURL;
-    }
-    mHistory.ReplaceElementAt(newURL, mHistoryIndex);
-  } else
-    delete newURL;
-#endif  /* OLD_HISTORY */
 
   const PRUnichar * url=nsnull;
   PRInt32     curIndex=0;
