@@ -1145,20 +1145,20 @@ nsNNTPArticleSet::test_decoder (const char *string)
 #define FROB(N,PUSHP)									\
   i = N;												\
   if (!(s = set->Output())) abort ();					\
-  printf ("%3lu: %-58s %c %3lu =\n", set->m_length, s,	\
-		  (PUSHP ? '+' : '-'), i);						\
+  printf ("%3lu: %-58s %c %3lu =\n", (unsigned long)set->m_length, s,	\
+		  (PUSHP ? '+' : '-'), (unsigned long)i);						\
   delete [] s;											\
   if (PUSHP												\
 	  ? set->Add(i) < 0									\
 	  : set->Remove(i) < 0)								\
 	abort ();											\
   if (! (s = set->Output())) abort ();					\
-  printf ("%3lu: %-58s optimized =\n", set->m_length, s);	\
-  PR_Free (s);											\
+  printf ("%3lu: %-58s optimized =\n", (unsigned long)set->m_length, s);	\
+  delete [] (s);											\
 
 #define END()							   \
   if (!(s = set->Output())) abort ();	   \
-  printf ("%3lu: %s\n\n", set->m_length, s); \
+  printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
   delete [] s;							   \
   delete set;							   \
 
@@ -1254,7 +1254,7 @@ nsNNTPArticleSet::test_adder (void)
   i = N;														\
   j = M;														\
   if (!(s = set->Output())) abort ();							\
-  printf ("%3lu: %-58s + %3lu-%3lu =\n", set->m_length, s, i, j);	\
+  printf ("%3lu: %-58s + %3lu-%3lu =\n", (unsigned long)set->m_length, s, (unsigned long)i, (unsigned long)j);	\
   delete [] s;													\
   switch (set->AddRange(i, j)) {								\
   case 0:														\
@@ -1266,13 +1266,13 @@ nsNNTPArticleSet::test_adder (void)
 	abort();													\
   }																\
   if (!(s = set->Output())) abort ();							\
-  printf ("%3lu: %-58s\n", set->m_length, s);						\
-  PR_Free (s);													\
+  printf ("%3lu: %-58s\n", (unsigned long)set->m_length, s);						\
+  delete [] s;													\
 
 
 #define END()							   \
   if (!(s = set->Output())) abort ();	   \
-  printf ("%3lu: %s\n\n", set->m_length, s); \
+  printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
   delete [] s;							   \
   delete set;
 

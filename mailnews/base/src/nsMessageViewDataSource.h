@@ -162,7 +162,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator, PRUint32 showStatus);
-	~nsMessageViewMessageEnumerator();
+	virtual ~nsMessageViewMessageEnumerator();
 
 	//nsIEnumerator interface	
 	/** First will reset the list. will return NS_FAILED if no items
@@ -203,7 +203,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator);
-	~nsMessageViewThreadEnumerator();
+	virtual ~nsMessageViewThreadEnumerator();
 
 	//nsIEnumerator interface	
 	/** First will reset the list. will return NS_FAILED if no items
