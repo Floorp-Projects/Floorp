@@ -89,14 +89,12 @@ il_mng_closestream(mng_handle handle)
 
 static mng_bool
 il_mng_readdata(mng_handle handle, mng_ptr buf,
-                mng_uint32 size, mng_uint32 *read)
+                mng_uint32 size, mng_uint32 *stored)
 {
-//  dprintf((stderr, "=== readdata(%d)\n", size));
-
   EXTRACT_STRUCTS;
 
   if (imng_p->bytesBuffered >= size) {
-    int32 endChunk = (MOZ_MNG_BUFSIZE-imng_p->writeStart);
+    PRUint32 endChunk = (MOZ_MNG_BUFSIZE-imng_p->writeStart);
 
     memcpy(buf, imng_p->writeBuffer+imng_p->writeStart,
            PR_MIN(endChunk, size));
@@ -108,12 +106,12 @@ il_mng_readdata(mng_handle handle, mng_ptr buf,
     imng_p->writeStart = (imng_p->writeStart+size) % MOZ_MNG_BUFSIZE;
     imng_p->bytesNeeded = 0;
 
-    *read = size;
+    *stored = size;
     return MNG_TRUE;
   } else {
     imng_p->bytesNeeded = size;
 
-    *read = 0;
+    *stored = 0;
     return MNG_FALSE;
   }
 }
@@ -121,8 +119,6 @@ il_mng_readdata(mng_handle handle, mng_ptr buf,
 static mng_bool
 il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
 {
-  dprintf((stderr, "=== processheader(%d %d)\n", width, height));
-  
   EXTRACT_STRUCTS;
 
   imng_p->width = width;
@@ -172,7 +168,7 @@ il_mng_refresh(mng_handle handle,
 
   EXTRACT_STRUCTS;
 
-  for (int y=top; y<top+height; y++) {
+  for (mng_uint32 y=top; y<top+height; y++) {
     memcpy(imng_p->rowbuf, 
            imng_p->image+y*CHANNELS*imng_p->width,
            CHANNELS*imng_p->width);
@@ -226,7 +222,6 @@ il_mng_settimer(mng_handle handle, mng_uint32 msec)
 static mng_ptr
 il_mng_alloc(mng_size_t size)
 {
-//  dprintf((stderr, "=== malloc(%d)\n", size));
   void *ptr = nsMemory::Alloc(size);
   memset(ptr, 0, size);
   return ptr;
@@ -235,7 +230,6 @@ il_mng_alloc(mng_size_t size)
 static void
 il_mng_free(mng_ptr ptr, mng_size_t size)
 {
-//  dprintf((stderr, "=== free(%d)\n", size));
   nsMemory::Free(ptr);
 }
 
@@ -245,7 +239,6 @@ il_mng_free(mng_ptr ptr, mng_size_t size)
 
 MNGDecoder::MNGDecoder(il_container* aContainer)
 {
-  dprintf((stderr, "MNG::MNGDecoder()\n"));
   NS_INIT_REFCNT();
   ilContainer = aContainer;
 }
@@ -253,7 +246,6 @@ MNGDecoder::MNGDecoder(il_container* aContainer)
 
 MNGDecoder::~MNGDecoder(void)
 {
-  dprintf((stderr, "MNG::~MNGDecoder()\n"));
 }
 
 
@@ -263,8 +255,6 @@ NS_IMPL_ISUPPORTS1(MNGDecoder, nsIImgDecoder)
 NS_METHOD
 MNGDecoder::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  dprintf((stderr, "MNG::Create()\n"));
-
   nsresult rv;
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
@@ -293,9 +283,6 @@ MNGDecoder::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 MNGDecoder::ImgDInit()
 {
-  dprintf((stderr, "MNG::ImgDInit()\n"));
-  int ret;
-
   if( ilContainer != NULL ) {
     imng_structp imng_p;
     imng_p = (imng_structp) nsMemory::Alloc(sizeof(imng_struct));
@@ -364,9 +351,7 @@ MNGDecoder::ImgDInit()
     mng_setcb_memalloc(imng_p->handle, il_mng_alloc);
     mng_setcb_memfree(imng_p->handle, il_mng_free);
 
-    dprintf((stderr, "starting mng_readdisplay...\n"));
-    mng_retcode ret = mng_readdisplay(imng_p->handle);
-    dprintf((stderr, "readdisplay() return was %d\n", ret));
+    mng_readdisplay(imng_p->handle);
   }
   return NS_OK;
 }
@@ -395,7 +380,7 @@ MNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
   if (ilContainer != NULL) {
     imng_structp imng_p = (imng_structp)ilContainer->ds;
     
-    if (len>MOZ_MNG_BUFSIZE-imng_p->bytesBuffered) {
+    if (PRUint32(len)>MOZ_MNG_BUFSIZE-imng_p->bytesBuffered) {
       fprintf(stderr, "MNG too large - abort, abort!\n");
       fprintf(stderr, " http://bugzilla.mozilla.org/show_bug.cgi?id=41831\n");
       return NS_ERROR_FAILURE;
@@ -411,10 +396,7 @@ MNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 
     if (imng_p->bytesNeeded && 
         (imng_p->bytesBuffered >= imng_p->bytesNeeded)) {
-      dprintf((stderr, "\tresuming read...\n"));
-      mng_retcode ret = mng_read_resume(imng_p->handle);
-      
-      dprintf((stderr, "\tread_resume() return was %d\n", ret));
+      mng_read_resume(imng_p->handle);
     }
   }
   return NS_OK;
@@ -424,8 +406,6 @@ MNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 NS_IMETHODIMP 
 MNGDecoder::ImgDComplete()
 {
-  dprintf((stderr, "MNG::ImgDComplete()\n"));
-
   return NS_OK;
 }
 
@@ -433,9 +413,6 @@ MNGDecoder::ImgDComplete()
 NS_IMETHODIMP 
 MNGDecoder::ImgDAbort()
 {
-  dprintf((stderr, "MNG::ImgDAbort()\n"));
-  int ret;
-
   if( ilContainer != NULL ) {
     imng_structp imng_p = (imng_structp)ilContainer->ds;
 
@@ -456,3 +433,4 @@ MNGDecoder::ImgDAbort()
   }
   return NS_OK;
 }
+

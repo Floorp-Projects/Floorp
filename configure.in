@@ -3375,9 +3375,6 @@ MOZ_MNG=1
 MOZ_ARG_DISABLE_BOOL(mng,
 [  --disable-mng            Disable MNG ],
   MOZ_MNG= )
-if test "$MOZ_MNG"; then
-  AC_DEFINE(MOZ_MNG)
-fi
 
 dnl
 dnl --enable xsl
