@@ -38,7 +38,7 @@ EXPORTS=    nsSmtpUrl.h \
             nsMsgAttachmentHandler.h \
 			      nsMsgComposeService.h \
 			      nsMsgComposeParams.h \
-			      nsMsgComposeProgress.h \
+			      nsMsgComposeProgressParams.h \
 			      nsMsgComposeContentHandler.h \
 			      nsMsgCompose.h \
 			      nsMsgCompFields.h \
