@@ -66,6 +66,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPrompt.h"
@@ -1324,35 +1325,13 @@ NS_IMETHODIMP GlobalWindowImpl::SizeToContent()
    if(docShellParent)
       return NS_ERROR_FAILURE;
 
-   nsCOMPtr<nsIPresShell> presShell;
-   mDocShell->GetPresShell(getter_AddRefs(presShell));
-   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+    NS_ENSURE_TRUE(markupViewer, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(markupViewer->SizeToContent(), NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
-      NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIPresContext> presContext;
-   presShell->GetPresContext(getter_AddRefs(presContext));
-   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-
-   nsRect  shellArea;
-   PRInt32 width, height;
-   float   pixelScale;
-
-   // so how big is it?
-   presContext->GetVisibleArea(shellArea);
-   presContext->GetTwipsToPixels(&pixelScale);
-   width = PRInt32((float)shellArea.width*pixelScale);
-   height = PRInt32((float)shellArea.height*pixelScale);
-
-   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
-   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
-      NS_ERROR_FAILURE);
-
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetAttention()
@@ -2444,16 +2423,19 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    PRBool present = PR_FALSE;
    PRInt32 temp;
+   PRBool sizeSpecified = PR_FALSE;
 
    if((temp = WinHasOption(aFeatures, "width", &present)) || present)
       {
       chromeCX = temp;
       sizeChrome = PR_TRUE;
+      sizeSpecified = PR_TRUE;
       }
    else if((temp = WinHasOption(aFeatures, "outerWidth", &present)) || present)
       {
       chromeCX = temp;
       sizeChrome = PR_TRUE;
+      sizeSpecified = PR_TRUE;
       }
 
    present = PR_FALSE;
@@ -2462,20 +2444,28 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
       {
       chromeCY = temp;
       sizeChrome = PR_TRUE;
+      sizeSpecified = PR_TRUE;
       }
    else if((temp = WinHasOption(aFeatures, "outerHeight", &present)) || present)
       {
       chromeCY = temp;
       sizeChrome = PR_TRUE;
+      sizeSpecified = PR_TRUE;
       }
 
    // We haven't switched to chrome sizing so we need to get the content area
    if(!sizeChrome)
       {
       if((temp = WinHasOption(aFeatures, "innerWidth", &present)) || present)
+         {
          contentCX = temp;
+         sizeSpecified = PR_TRUE;
+         }
       if((temp = WinHasOption(aFeatures, "innerHeight", &present)) || present)
+         {
          contentCY = temp;
+         sizeSpecified = PR_TRUE;
+         }
       }
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -2485,8 +2475,11 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    if(sizeChrome)
       {
-      treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX, chromeCY,
-         PR_FALSE);
+      if(sizeSpecified)
+         treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX, 
+            chromeCY, PR_FALSE);
+      else
+         treeOwnerAsWin->SetPosition(chromeX, chromeY);
       }
    else
       {
@@ -2538,6 +2531,8 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
 
 PRInt32 GlobalWindowImpl::WinHasOption(char *options, char *name, PRBool* aPresenceFlag)
 {
+   if(!options)
+      return 0;
    char *comma, *equal;
    PRInt32 found = 0;
 
