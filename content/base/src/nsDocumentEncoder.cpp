@@ -588,7 +588,8 @@ static PRBool IsTextNode(nsIDOMNode *aNode)
   if (!aNode) return PR_FALSE;
   PRUint16 nodeType;
   aNode->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::TEXT_NODE)
+  if (nodeType == nsIDOMNode::TEXT_NODE ||
+      nodeType == nsIDOMNode::CDATA_SECTION_NODE)
     return PR_TRUE;
   return PR_FALSE;
 }
