@@ -333,7 +333,18 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to insert
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+
+
+  /**
+   * Helper routines for StrInsert1into1, etc
+   */
+  static PRInt32 GetSegmentLength(const nsStr& aSource,
+                                  PRUint32 aSrcOffset, PRInt32 aCount);
+  static void AppendForInsert(nsStr& aDest, PRUint32 aDestOffset, const nsStr& aSource, PRUint32 aSrcOffset, PRInt32 theLength);
 
  /**
   * This method deletes chars from the given str. 
@@ -345,7 +356,13 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to delete
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+  static void Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+  static void Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+
+  /**
+   * helper routines for Delete1, Delete2
+   */
+  static PRInt32 GetDeleteLength(const nsStr& aDest, PRUint32 aDestOffset, PRUint32 aCount);
 
  /**
   * This method is used to truncate the given string.
@@ -381,7 +398,8 @@ struct NS_COM nsStr {
    * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
    * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
    */
-  static void CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+  static void CompressSet1(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+  static void CompressSet2(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
 
   /**
    * This method removes all occurances of chars in given set from aDest 
@@ -393,7 +411,8 @@ struct NS_COM nsStr {
    * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
    * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
    */
-  static void StripChars(nsStr& aDest,const char* aSet);
+  static void StripChars1(nsStr& aDest,const char* aSet);
+  static void StripChars2(nsStr& aDest,const char* aSet);
 
   /**
    * This method compares the data bewteen two nsStr's 

@@ -299,7 +299,7 @@ nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
  */
 void
 nsString::StripChars(const char* aSet){
-  nsStr::StripChars(*this,aSet);
+  nsStr::StripChars2(*this,aSet);
 }
 
 
@@ -413,14 +413,14 @@ nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
         if(aNewValue.mLength<aTarget.mLength) {
           //Since target is longer than newValue, we should delete a few chars first, then overwrite.
           PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
-          nsStr::Delete(*this,theIndex,theDelLen);
+          nsStr::Delete2(*this,theIndex,theDelLen);
           nsStr::Overwrite(*this,aNewValue,theIndex);
         }
         else {
           //this is the worst case: the newvalue is larger than the substr it's replacing
           //so we have to insert some characters...
           PRInt32 theInsLen=aNewValue.mLength-aTarget.mLength;
-          StrInsert(*this,theIndex,aNewValue,0,theInsLen);
+          StrInsert2into2(*this,theIndex,aNewValue,0,theInsLen);
           nsStr::Overwrite(*this,aNewValue,theIndex);
           theIndex += aNewValue.mLength;
         }
@@ -484,7 +484,7 @@ void
 nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
   if(aSet){
     ReplaceChar(aSet,aChar);
-    nsStr::CompressSet(*this,aSet,aEliminateLeading,aEliminateTrailing);
+    nsStr::CompressSet2(*this,aSet,aEliminateLeading,aEliminateTrailing);
   }
 }
 
@@ -847,7 +847,7 @@ void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt
     else aCount=temp.mLength=nsCRT::strlen(aCString);
 
     if(0<aCount){
-      StrInsert(*this,anOffset,temp,0,aCount);
+      StrInsert1into2(*this,anOffset,temp,0,aCount);
     }
   }
 }
