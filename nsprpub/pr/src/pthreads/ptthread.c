@@ -828,11 +828,27 @@ void _PR_InitThreads(
 #endif
 
 #if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
+#if defined(FREEBSD)
+    {
+    pthread_attr_t attr;
+    int policy;
+    /* get the min and max priorities of the default policy */
+    pthread_attr_init(&attr);
+    pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+    pthread_attr_getschedpolicy(&attr, &policy);
+    pt_book.minPrio = sched_get_priority_min(policy);
+    PR_ASSERT(-1 != pt_book.minPrio);
+    pt_book.maxPrio = sched_get_priority_max(policy);
+    PR_ASSERT(-1 != pt_book.maxPrio);
+    pthread_attr_destroy(&attr);
+    }
+#else
     /*
     ** These might be function evaluations
     */
     pt_book.minPrio = PT_PRIO_MIN;
     pt_book.maxPrio = PT_PRIO_MAX;
+#endif
 #endif
     
     PR_ASSERT(NULL == pt_book.ml);
