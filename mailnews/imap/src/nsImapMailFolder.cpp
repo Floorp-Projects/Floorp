@@ -5776,6 +5776,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
   nsCOMPtr <nsIDBFolderInfo> srcDbFolderInfo;
   srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(srcDbFolderInfo), getter_AddRefs(sourceMailDB));
   PRBool deleteToTrash = PR_FALSE;
+  PRBool deleteImmediately = PR_FALSE;
   PRUint32 srcCount;
   messages->Count(&srcCount);
   nsCOMPtr<nsIImapIncomingServer> imapServer;
@@ -5786,6 +5787,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
     nsMsgImapDeleteModel deleteModel;
     imapServer->GetDeleteModel(&deleteModel);
     deleteToTrash = (deleteModel == nsMsgImapDeleteModels::MoveToTrash);
+    deleteImmediately = (deleteModel == nsMsgImapDeleteModels::DeleteNoTrash);
   }	
   if (sourceMailDB)
   {
@@ -6014,7 +6016,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
                if (txnMgr)
                  txnMgr->DoTransaction(undoMsgTxn);
              }
-            if (deleteToTrash)
+            if (deleteToTrash || deleteImmediately)
               sourceMailDB->DeleteMessage(msgKey, nsnull, PR_FALSE);
             else
               sourceMailDB->MarkImapDeleted(msgKey,PR_TRUE,nsnull); // offline delete
