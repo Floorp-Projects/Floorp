@@ -70,25 +70,11 @@ static void Check(const char* s1, const char* s2, PRIntn n)
   const PRUnichar* us1 = t1.get();
   const PRUnichar* us2 = t2.get();
 
-  PRIntn u = nsCRT::strcmp(us1, s2);
-  PRIntn u_n = nsCRT::strncmp(us1, s2, n);
-  PRIntn u_case = nsCRT::strcasecmp(us1, s2);
-  PRIntn u_case_n = nsCRT::strncasecmp(us1, s2, n);
-
   PRIntn u2 = nsCRT::strcmp(us1, us2);
   PRIntn u2_n = nsCRT::strncmp(us1, us2, n);
-PRIntn u2_case = nsCRT::strcasecmp(us1, us2);
-  PRIntn u2_case_n = nsCRT::strncasecmp(us1, us2, n);
-
-  NS_ASSERTION(sign(clib) == sign(u), "strcmp");
-  NS_ASSERTION(sign(clib_n) == sign(u_n), "strncmp");
-  NS_ASSERTION(sign(clib_case) == sign(u_case), "strcasecmp");
-  NS_ASSERTION(sign(clib_case_n) == sign(u_case_n), "strncasecmp");
 
   NS_ASSERTION(sign(clib) == sign(u2), "strcmp");
   NS_ASSERTION(sign(clib_n) == sign(u2_n), "strncmp");
-  NS_ASSERTION(sign(clib_case) == sign(u2_case), "strcasecmp");
-  NS_ASSERTION(sign(clib_case_n) == sign(u2_case_n), "strncasecmp");
 }
 
 struct Test {
