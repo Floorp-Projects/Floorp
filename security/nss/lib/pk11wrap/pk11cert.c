@@ -3255,7 +3255,7 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
     }
 
     crv = PK11_GETTAB(slot)->
-                        C_CreateObject(rwsession,attrs,tsize,&crlh);
+                        C_CreateObject(rwsession,theTemplate,tsize,&crlh);
     if (crv != CKR_OK) {
         PORT_SetError( PK11_MapError(crv) );
     }
