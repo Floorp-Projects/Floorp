@@ -107,7 +107,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 			else mIsHeader = PR_FALSE;
 
 			// Get the table frame.
-			pRowGroupFrame->GetParent((nsIFrame**)mTreeFrame);
+			pRowGroupFrame->GetParent((nsIFrame**) &mTreeFrame);
 		}
   }
 
