@@ -62,12 +62,8 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIFormControl.h"
 #include "nsISelectionPrivate.h"
-#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLHtmlElement.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -96,14 +92,11 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
-#include "imgIContainer.h"
-#include "imgIRequest.h"
-#include "gfxIImageFrame.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIDocumentEncoder.h"
 #include "nsRange.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsEscape.h"
+#include "nsContentUtils.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -136,10 +129,9 @@ private:
   nsresult ConvertStringsToTransferable(nsITransferable** outTrans);
   static nsresult GetDraggableSelectionData(nsISelection* inSelection, nsIDOMNode* inRealTargetNode, 
                                             nsIDOMNode **outImageOrLinkNode, PRBool* outDragSelectedText);
-  static void FindParentLinkNode(nsIDOMNode* inNode, nsIDOMNode** outParent);
+  static already_AddRefed<nsIDOMNode> FindParentLinkNode(nsIDOMNode* inNode);
   static void GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL);
   static void GetNodeString(nsIDOMNode* inNode, nsAString & outNodeString);
-  static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);
   static void GetSelectedLink(nsISelection* inSelection, nsIDOMNode **outLinkNode);
@@ -856,79 +848,25 @@ mFlavorDataProvider(inFlavorDataProvider)
 //
 // FindParentLinkNode
 //
-// Finds the parent with the given link tag starting at |inNode|. If it gets 
-// up to <body> or <html> or the top document w/out finding it, we
-// stop looking and |outParent| will be null.
+// Finds the parent with the given link tag starting at |inNode|. If
+// it gets up to the root without finding it, we stop looking and
+// return null.
 //
-void
-nsTransferableFactory::FindParentLinkNode(nsIDOMNode* inNode, 
-                                          nsIDOMNode** outParent)
+already_AddRefed<nsIDOMNode>
+nsTransferableFactory::FindParentLinkNode(nsIDOMNode* inNode)
 {
-  if ( !inNode || !outParent )
-    return;
-  *outParent = nsnull;
-  nsCOMPtr<nsIDOMNode> node(inNode);      // to make refcounting easier
-  
-  PRUint16 nodeType = 0;
-  inNode->GetNodeType(&nodeType);
-  if ( nodeType == nsIDOMNode::TEXT_NODE )
-    inNode->GetParentNode(getter_AddRefs(node));
-  
-  static NS_NAMED_LITERAL_STRING(document, "#document");
-  static NS_NAMED_LITERAL_STRING(simple, "simple");
+  nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
+  if (!content) {
+    // That must have been the document node; nothing else to do here;
+    return nsnull;
+  }
 
-  while ( node ) {
-    // (X)HTML body or html?
-    node->GetNodeType(&nodeType);
-    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
-      // body?
-      nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(node));
-      if (body) {
-        return;
-      }
-
-      // html?
-      nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(node));
-      if (html) {
-        return;
-      }
+  for ( ; content; content = content->GetParent()) {
+    if (nsContentUtils::IsDraggableLink(content)) {
+      nsIDOMNode* node = nsnull;
+      CallQueryInterface(content, &node);
+      return node;
     }
-
-    // Other document root?
-    nsAutoString localName;
-    node->GetLocalName(localName);
-    if ( localName.IsEmpty() )
-      return;
-    if ( localName.Equals(document, nsCaseInsensitiveStringComparator()) )
-      return; // XXX Check if #document always lower case
-
-    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
-      PRBool found = PR_FALSE;
-      nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(node));
-      if (a) {
-        found = PR_TRUE;
-      } else {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-        NS_WARN_IF_FALSE(content, "DOM node is not content?");
-        if (!content)
-          return;
-        nsAutoString value;
-        content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-        if (value.Equals(simple)) {
-          found = PR_TRUE;
-        }
-      }
-      if (found) {
-        *outParent = node;
-        NS_ADDREF(*outParent);
-        return;
-      }
-    }
-    
-    // keep going, up to parent
-    nsIDOMNode* temp;
-    node->GetParentNode(&temp);
-    node = dont_AddRef(temp);
   }
 }
 
@@ -943,47 +881,20 @@ void
 nsTransferableFactory::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
 {
   outURL.Truncate();
-
-  // a?
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(inNode));
-  if ( anchor ) {
-    anchor->GetHref(outURL);
-    if ( outURL.IsEmpty() )
-     anchor->GetName(outURL);
-  } else {
-    // area?
-    nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(inNode));
-    if ( area ) {
-      area->GetHref(outURL);
-      if ( outURL.IsEmpty() ) {
-        nsCOMPtr<nsIDOMHTMLElement> e(do_QueryInterface(inNode));
-        e->GetId(outURL);
-      }
-    } else {
-      // Try XLink next...
-      nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
-      nsAutoString value;
-      content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-      if (value.EqualsLiteral("simple")) {
-        content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
-        if (!value.IsEmpty()) {
-          nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
-          if (baseURI) {
-            nsCAutoString absoluteSpec;
-            baseURI->Resolve(NS_ConvertUCS2toUTF8(value), absoluteSpec);
-            CopyUTF8toUTF16(absoluteSpec, outURL);
-          }
-        }
-      } else {
-        // ... or just get the ID
-        nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(inNode));
-        nsCOMPtr<nsIAtom> id;
-        if (xml && NS_SUCCEEDED(xml->GetID(getter_AddRefs(id))) && id) {
-          id->ToString(outURL);
-        }
-      }
-    }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
+  if (!content) {
+    // Not a link
+    return;
   }
+
+  nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(content);
+  if (!linkURI) {
+    return;
+  }
+  
+  nsCAutoString spec;
+  linkURI->GetSpec(spec);
+  CopyUTF8toUTF16(spec, outURL);
 }
 
 
@@ -1090,15 +1001,18 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
 
       // only drag form elements by using the alt key,
       // otherwise buttons and select widgets are hard to use
+
+      // Note that while <object> elements implement nsIFormControl, we should
+      // really allow dragging them if they happen to be images.
       nsCOMPtr<nsIFormControl> form(do_QueryInterface(target));
-      if (form && !isAltKeyDown)
+      if (form && !isAltKeyDown && form->GetType() != NS_FORM_OBJECT)
         return NS_OK;
 
       draggedNode = do_QueryInterface(target);
     }
 
     nsCOMPtr<nsIDOMHTMLAreaElement>   area;   // client-side image map
-    nsCOMPtr<nsIDOMHTMLImageElement>  image;
+    nsCOMPtr<nsIImageLoadingContent>  image;
     nsCOMPtr<nsIDOMHTMLAnchorElement> link;
 
     {
@@ -1137,7 +1051,7 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
 
           // if the alt key is down, don't start a drag if we're in an anchor because
           // we want to do selection.
-          FindParentLinkNode(draggedNode, getter_AddRefs(parentLink));
+          parentLink = FindParentLinkNode(draggedNode);
           if (parentLink && isAltKeyDown)
             return NS_OK;
 
@@ -1173,8 +1087,19 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         mIsAnchor = PR_TRUE;
         // grab the href as the url, use alt text as the title of the area if it's there.
         // the drag data is the image tag and src attribute.
-        image->GetSrc(mUrlString);
-        image->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
+        nsCOMPtr<nsIURI> imageURI;
+        image->GetCurrentURI(getter_AddRefs(imageURI));
+        if (imageURI) {
+          nsCAutoString spec;
+          imageURI->GetSpec(spec);
+          CopyUTF8toUTF16(spec, mUrlString);
+        }
+        nsCOMPtr<nsIDOMElement> imageElement(do_QueryInterface(image));
+        // XXXbz Shouldn't we use the "title" attr for title?  Using
+        // "alt" seems very wrong....
+        if (imageElement) {
+          imageElement->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
+        }
         if (mTitleString.IsEmpty())
           mTitleString = mUrlString;
 
@@ -1182,7 +1107,7 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         mImageSourceString = mUrlString;
 
         // also grab the image data
-        GetImageFromDOMNode(draggedNode, getter_AddRefs(mImage));
+        mImage = nsContentUtils::GetImageFromContent(image);
 
         if (parentLink)
         {
@@ -1411,11 +1336,8 @@ nsresult nsTransferableFactory::GetDraggableSelectionData(nsISelection* inSelect
                 selStartContent->GetChildAt(childOffset);
               // if we find an image, we'll fall into the node-dragging code,
               // rather the the selection-dragging code
-              nsCOMPtr<nsIDOMHTMLImageElement> selectedImage =
-                do_QueryInterface(childContent);
-              if (selectedImage)
-              {
-                CallQueryInterface(selectedImage, outImageOrLinkNode);    // addrefs
+              if (nsContentUtils::IsDraggableImage(childContent)) {
+                CallQueryInterface(childContent, outImageOrLinkNode);    // addrefs
                 return NS_OK;
               }
             }
@@ -1450,10 +1372,9 @@ void nsTransferableFactory::GetSelectedLink(nsISelection* inSelection,
 
   if (selectionStart == selectionEnd)
   {
-    nsCOMPtr<nsIDOMNode> link;
-    FindParentLinkNode(selectionStart, getter_AddRefs(link));
+    nsCOMPtr<nsIDOMNode> link = FindParentLinkNode(selectionStart);
     if (link)
-      NS_IF_ADDREF(*outLinkNode = link);
+      link.swap(*outLinkNode);
 
     return;
   }
@@ -1534,12 +1455,10 @@ void nsTransferableFactory::GetSelectedLink(nsISelection* inSelection,
 
   // see if the leading & trailing nodes are part of the
   // same anchor - if so, return the anchor node
-  nsCOMPtr<nsIDOMNode> link;
-  FindParentLinkNode(selectionStart, getter_AddRefs(link));
+  nsCOMPtr<nsIDOMNode> link = FindParentLinkNode(selectionStart);
   if (link)
   {
-    nsCOMPtr<nsIDOMNode> link2;
-    FindParentLinkNode(selectionEnd, getter_AddRefs(link2));
+    nsCOMPtr<nsIDOMNode> link2 = FindParentLinkNode(selectionEnd);
     if (link == link2)
       NS_IF_ADDREF(*outLinkNode = link);
   }
@@ -1618,50 +1537,3 @@ nsTransferableFactory::SerializeNodeOrSelection(serializationMode inMode, PRUint
     return encoder->EncodeToStringWithContext(outResultString, outContext, outInfo);
   } 
 }
-
-//
-// GetImage
-//
-// Given a dom node that's an image, finds the nsIImage associated with it.
-//
-nsresult
-nsTransferableFactory::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage)
-{
-  NS_ENSURE_ARG_POINTER(outImage);
-  *outImage = nsnull;
-
-  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(inNode));
-  if (!content) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<imgIRequest> imgRequest;
-  content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                      getter_AddRefs(imgRequest));
-  if (!imgRequest) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  nsCOMPtr<imgIContainer> imgContainer;
-  imgRequest->GetImage(getter_AddRefs(imgContainer));
-
-  if (!imgContainer) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-    
-  nsCOMPtr<gfxIImageFrame> imgFrame;
-  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
-
-  if (!imgFrame) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
-
-  if (!ir) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  return CallGetInterface(ir.get(), outImage);
-}
-

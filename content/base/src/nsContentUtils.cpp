@@ -89,7 +89,14 @@
 #include "nsLayoutAtoms.h"
 #include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
+#include "imgIContainer.h"
 #include "imgILoader.h"
+#include "nsIImage.h"
+#include "gfxIImageFrame.h"
+#include "nsIImageLoadingContent.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsILink.h"
 #include "nsILoadGroup.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMString.h"
@@ -1700,6 +1707,119 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                                nsnull,               /* cache key */
                                nsnull,               /* existing request*/
                                aRequest);
+}
+
+// static
+already_AddRefed<nsIImage>
+nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent)
+{
+  NS_ENSURE_TRUE(aContent, nsnull);
+  
+  nsCOMPtr<imgIRequest> imgRequest;
+  aContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                      getter_AddRefs(imgRequest));
+  if (!imgRequest) {
+    return nsnull;
+  }
+  
+  nsCOMPtr<imgIContainer> imgContainer;
+  imgRequest->GetImage(getter_AddRefs(imgContainer));
+
+  if (!imgContainer) {
+    return nsnull;
+  }
+    
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
+
+  if (!imgFrame) {
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
+
+  if (!ir) {
+    return nsnull;
+  }
+
+  nsIImage* image = nsnull;
+  CallGetInterface(ir.get(), &image);
+  return image;
+}
+
+// static
+PRBool
+nsContentUtils::IsDraggableImage(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "Must have content node to test");
+
+  nsCOMPtr<nsIImageLoadingContent> imageContent(do_QueryInterface(aContent));
+  if (!imageContent) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<imgIRequest> imgRequest;
+  imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                           getter_AddRefs(imgRequest));
+
+  // XXXbz It may be draggable even if the request resulted in an error.  Why?
+  // Not sure; that's what the old nsContentAreaDragDrop/nsFrame code did.
+  return imgRequest != nsnull;  
+}
+
+// static
+PRBool
+nsContentUtils::IsDraggableLink(nsIContent* aContent) {
+  nsCOMPtr<nsIURI> linkURI = GetLinkURI(aContent);
+
+  // Does it have a URI?  If not, it's not draggable
+  return linkURI != nsnull;
+}
+
+// static
+already_AddRefed<nsIURI>
+nsContentUtils::GetLinkURI(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "Must have content node to work with");
+
+  nsCOMPtr<nsILink> link(do_QueryInterface(aContent));
+  if (link) {
+    nsIURI* uri = nsnull;
+    link->GetHrefURI(&uri);
+    if (uri) {
+      return uri;
+    }
+  }
+
+  // It could still be an XLink
+  return GetXLinkURI(aContent);
+}
+
+// static
+already_AddRefed<nsIURI>
+nsContentUtils::GetXLinkURI(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "Must have content node to work with");
+
+  nsAutoString value;
+  aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+  if (value.EqualsLiteral("simple")) {
+    // Check that we have a URI
+    aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
+
+    if (!value.IsEmpty()) {
+      //  Resolve it relative to aContent's base URI.
+      nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
+
+      nsIURI* uri = nsnull;
+      nsContentUtils::NewURIWithDocumentCharset(&uri, value,
+                                                aContent->GetDocument(),
+                                                baseURI);
+      return uri;
+    }
+  }
+
+  return nsnull;
 }
 
 // static

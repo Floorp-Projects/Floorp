@@ -520,6 +520,10 @@ nsFrame::Init(nsIPresContext*  aPresContext,
   NS_IF_ADDREF(mContent);
   mParent = aParent;
 
+  if (mContent) {
+    mContent->SetMayHaveFrame(PR_TRUE);
+  }
+
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
     nsFrameState state = aPrevInFlow->GetStateBits();
@@ -1274,9 +1278,9 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (!shell)
     return NS_ERROR_FAILURE;
 
-  // if we are in Navigator and the click is in a link, we don't want to start
-  // selection because we don't want to interfere with a potential drag of said
-  // link and steal all its glory.
+  // if we are in Navigator and the click is in a draggable node, we don't want
+  // to start selection because we don't want to interfere with a potential
+  // drag of said node and steal all its glory.
   PRInt16 isEditor = 0;
   shell->GetSelectionFlags ( &isEditor );
   //weaaak. only the editor can display frame selction not just text and images
@@ -1284,64 +1288,26 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
   if (!isEditor && !keyEvent->isAlt) {
-    static NS_NAMED_LITERAL_STRING(simple, "simple");
     
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
-       // are we a link with an href? If so, bail out now!
-       nsAutoString href;
-       // a?
-       nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(content));
-       if (a) {
-         a->GetHref(href);
-       } else {
-         // area?
-        nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(content));
-         if (area) {
-           area->GetHref(href);
-         } else {
-           // img?
-           nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(content));
-           if (img) {
-             img->GetSrc(href);
-           } else {
-            // input (image type) ?
-            nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
-            if (inputElement) {
-              nsAutoString type;
-              rv = inputElement->GetType(type);
-              if (NS_SUCCEEDED(rv) &&
-                  type.LowerCaseEqualsLiteral("image"))
-                inputElement->GetSrc(href);
-            } else {
-              // XLink ?
-              nsAutoString value;
-              content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-              if (value.Equals(simple))
-                content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, href);
-            }
-           }
-         }
-       }
-       // Fix for bug #53326: Make sure we bail only
-       // in the presence of an href with a value!
-       if ( !href.IsEmpty() ) {
-         // coordinate stuff is the fix for bug #55921
-         nsIView *dummyView = 0;
-         nsRect frameRect = mRect;
-         nsPoint offsetPoint;
+      if ( nsContentUtils::ContentIsDraggable(content) ) {
+        // coordinate stuff is the fix for bug #55921
+        nsIView *dummyView = 0;
+        nsRect frameRect = mRect;
+        nsPoint offsetPoint;
 
-         GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
+        GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
 
-         frameRect.x = offsetPoint.x;
-         frameRect.y = offsetPoint.y;
+        frameRect.x = offsetPoint.x;
+        frameRect.y = offsetPoint.y;
 
-         if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
-             frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
-           return NS_OK;
-       }
-    } // if browser, not editor
-  }
+        if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
+            frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
+          return NS_OK;
+      }
+    }
+  } // if browser, not editor
 
   // check whether style allows selection
   // if not, don't tell selection the mouse event even occurred.  
