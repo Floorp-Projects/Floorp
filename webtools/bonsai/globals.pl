@@ -1418,7 +1418,8 @@ sub canonpath {
 
     return "" if (!defined($path) || $path eq "");
     foreach my $dir (split('/', $path)) {
-        if ($dir eq "\.\.") {
+        if ($dir eq '.') {
+        } elsif ($dir eq '..') {
             pop @list;
         } else {
             push @list, $dir;
