@@ -24,6 +24,15 @@
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
 
+#if defined(XP_PC) || defined(XP_UNIX)
+//
+// Both Windows and Unix support PR_PollableEvents which are used to break
+// the socket transport thread out of calls to PR_Poll(...) when new
+// file descriptors must be added to the poll list...
+//
+#define USE_POLLABLE_EVENT
+#endif
+
 // Forward declarations...
 class nsSocketTransport;
 
@@ -62,7 +71,9 @@ public:
 
 protected:
   nsIThread*  mThread;
+#ifdef USE_POLLABLE_EVENT
   PRFileDesc* mThreadEvent;
+#endif /* USE_POLLABLE_EVENT */
   PRLock*     mThreadLock;
   PRBool      mThreadRunning;
 
