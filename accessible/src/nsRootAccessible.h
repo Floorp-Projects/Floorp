@@ -29,7 +29,7 @@ class nsRootAccessible : public nsAccessible
 {
   
 	public:
-		nsRootAccessible(nsIPresShell* aShell);
+		nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame = nsnull);
 		virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
@@ -39,7 +39,8 @@ class nsRootAccessible : public nsAccessible
 
 protected:
   virtual nsIFrame* GetFrame();
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIPresShell* aShell);
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIWeakReference* aShell);
+ /// nsIFrame* mFrame;
 };
 
 

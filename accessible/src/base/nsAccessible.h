@@ -44,16 +44,17 @@ class nsAccessible : public nsIAccessible
   //NS_IMETHOD AccGetWidget(nsIWidget**);
 
 	public:
-		nsAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
+		nsAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
 		virtual ~nsAccessible();
 
 protected:
   virtual nsIFrame* GetFrame();
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAtom* GetListName() { return nsnull; }
 
   nsCOMPtr<nsIContent> mContent;
-  nsWeakPtr mPresShell;
+  nsCOMPtr<nsIWeakReference> mPresShell;
   nsCOMPtr<nsIAccessible> mAccessible;
 };
 
@@ -61,10 +62,10 @@ protected:
 class nsHTMLBlockAccessible : public nsAccessible
 {
 public:
-   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
+   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
    NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
 protected:
-   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIPresShell* aShell);
+   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIWeakReference* aShell);
 };
 
 #endif  
