@@ -70,6 +70,8 @@ function chooseProfileFolder( aRootFolder )
       fp.init(window, bundle.GetStringFromName("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
       fp.setFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
+      // later change to 
+      // aRootFolder = fp.file.unicodePath;
       aRootFolder = fp.file.path;
     }
     catch(e) {
@@ -96,19 +98,28 @@ function clearFolderDisplay()
 
 function updateProfileName()
 {
+  const nsILocalFile = Components.interfaces.nsILocalFile; 
+  const nsILocalFile_PROGID = "component://mozilla/file/local";
+
   var profileName = document.getElementById( "ProfileName" );
   var folderDisplayElement = document.getElementById( "ProfileDir" );
   var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
   try {
-    var fileSpec = Components.classes["component://netscape/filespec"].createInstance();
-    if ( fileSpec )
-      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
-    if ( fileSpec )
-      fileSpec.nativePath = rootFolder;
-    fileSpec.appendRelativeUnixPath( profileName.value );
+
+    var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile); 
+    if ( sfile ) {
+      // later change to 
+      // sfile.initWithUnicodePath(rootFolder);
+      sfile.initWithPath(rootFolder);
+    }
+    // later change to 
+    // sfile.appendUnicode(profileName.value);
+    sfile.append(profileName.value);
     
     clearFolderDisplay();
-    var value = document.createTextNode( fileSpec.nativePath );
+    // later change to 
+    // var value = document.createTextNode( sfile.unicodePath );
+    var value = document.createTextNode( sfile.path );
     folderDisplayElement.appendChild( value );
   }
   catch(e) {
@@ -127,6 +138,8 @@ function setDisplayToDefaultFolder()
       fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
     if ( fileSpec )
       profileDisplay.setAttribute("rootFolder", fileSpec.nativePath );
+
+
   }
   catch(e) {
   }
