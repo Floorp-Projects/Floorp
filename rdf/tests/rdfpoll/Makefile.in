@@ -25,38 +25,12 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= rdfpoll
 CPPSRCS		= rdfpoll.cpp
 
-BASE_LIBS	= \
-		-lmozjs \
-		-lxpcom \
-		$(NULL)
-
-ifndef NECKO
-NETLIB_LIBS	= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lhttpurl \
-		-lremoturl \
-		-lsockstuburl \
-		-lmimetype \
-		-lnetcache \
-		-lnetcnvts \
-		-lnetlib \
-		-lnetwork \
-		-lpwcac \
-		$(NULL)
-else
-NETLIB_LIBS	= \
-		-lneckoutil_s \
-		$(NULL)
-endif
-
 LIBS		= \
-		$(NETLIB_LIBS) \
+		-lneckoutil_s \
 		$(MOZ_TIMER_LIBS) \
 		$(IMGLIB_LIBS) \
-		$(BASE_LIBS) \
+		-lmozjs \
+		-lxpcom \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

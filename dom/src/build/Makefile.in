@@ -41,6 +41,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libjsdomrange_s.a \
 		$(DIST)/lib/libjsdomhtml_s.a \
 		$(DIST)/lib/libjsdomcss_s.a \
+		$(DIST)/lib/libneckoutil_s.a \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -49,10 +50,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
 		$(NULL)
-
-ifdef NECKO
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libneckoutil_s.a
-endif
 
 include $(topsrcdir)/config/rules.mk
 

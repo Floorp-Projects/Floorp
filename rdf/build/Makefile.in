@@ -43,11 +43,8 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/librdfcontent_s.a \
 		$(DIST)/lib/librdfdatasource_s.a \
 		$(DIST)/lib/librdfutil_s.a \
+		$(DIST)/lib/libneckoutil_s.a \
 		$(NULL)
-
-ifdef NECKO
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libneckoutil_s.a
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \

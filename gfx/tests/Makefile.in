@@ -22,8 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#DIRS		= btest
-
 CPPSRCS		= \
 		DumpColors.cpp \
 		TestColorNames.cpp \
@@ -31,26 +29,6 @@ CPPSRCS		= \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
-
-include $(topsrcdir)/config/config.mk
-
-ifndef NECKO
-NET_LIBS	= \
-		-lnetlib \
-		-lhttpurl \
-		-lgophurl \
-		-labouturl \
-		-lremoturl \
-		-lfileurl \
-		-lftpurl \
-		-lnetwork \
-		-lsockstuburl \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetcache \
-		-lpwcac \
-		$(NULL)
-endif
 
 LIBS		= \
 		-lraptorgfx \
