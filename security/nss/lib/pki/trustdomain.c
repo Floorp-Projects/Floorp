@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.18 $ $Date: 2001/11/29 19:34:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.19 $ $Date: 2001/11/29 22:05:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -889,6 +889,7 @@ NSSTrustDomain_TraverseCertificates
     NSSToken *token;
     nssList *certList;
     nssTokenCertSearch search;
+    certList = nssList_Create(NULL, PR_FALSE);
     (void *)nssTrustDomain_GetCertsFromCache(td, certList);
     /* set the search criteria */
     search.callback = callback;
