@@ -130,7 +130,7 @@
                 <label id="extension" crop="right"/>
               </row>
               <row align="center">
-                <label value="&handle;"/>
+                <label value="&handle;" control="handler"/>
                 <textbox id="handler" readonly="true" flex="1"/>
               </row>
             </rows>
