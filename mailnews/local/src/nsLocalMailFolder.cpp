@@ -252,8 +252,6 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
       child->GetName(getter_Copies(folderName));  //try to get it from cache/db
       if (folderName.IsEmpty())
         child->SetPrettyName(currentFolderNameStr.get());
-      else
-        child->SetPrettyName(folderName.get());
     }
   }
 	return rv;
