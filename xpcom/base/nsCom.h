@@ -48,7 +48,7 @@
 #if defined(XP_PC)
 
 #define NS_EXPORT _declspec(dllexport)
-#define NS_EXPORT_(type) _declspec(dllexport) type __stdcall
+#define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
 
 #define NS_IMETHOD_(type) virtual type __stdcall
 #define NS_IMETHOD virtual nsresult __stdcall
