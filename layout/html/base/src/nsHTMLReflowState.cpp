@@ -41,6 +41,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
                                      nsReflowReason       aReason,
                                      nsIRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace)
+  : mReflowDepth(0)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
 
@@ -64,6 +65,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
                                      nsIReflowCommand&    aReflowCommand,
                                      nsIRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace)
+  : mReflowDepth(0)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
 
@@ -88,6 +90,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
                                      nsReflowReason           aReason)
+  : mReflowDepth(aParentReflowState.mReflowDepth + 1)
 {
   parentReflowState = &aParentReflowState;
   frame = aFrame;
@@ -112,6 +115,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace)
+  : mReflowDepth(aParentReflowState.mReflowDepth + 1)
 {
   parentReflowState = &aParentReflowState;
   frame = aFrame;
