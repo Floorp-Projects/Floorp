@@ -150,7 +150,7 @@ nsClipboard::~nsClipboard()
   gtk_object_remove_data(GTK_OBJECT(sWidget), "cb");
 
   if (sWidget) {
-    gtk_widget_destroy(sWidget);
+    gtk_widget_unref(sWidget);
     sWidget = nsnull;
   }
 }
