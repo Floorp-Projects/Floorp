@@ -629,6 +629,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
             }
         }
     }
+	VR_Close();
     return NS_OK;
 }
 
