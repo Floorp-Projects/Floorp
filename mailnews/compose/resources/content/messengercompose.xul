@@ -69,7 +69,7 @@
 <commandset id="composeCommands">
   <commandset id="msgComposeCommandUpdate"
     commandupdater="true"
-    events="create, focus,tree-select"
+    events="focus"
     oncommandupdate="CommandUpdate_MsgCompose()"
   />
 
@@ -87,33 +87,41 @@
   <commandset id="composerListMenuItems"/>
   <commandset id="tasksCommands"/>
   <command id="cmd_quit"/>
+  <!-- File Menu -->
+  <command id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
+  <command id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
+  <command id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
+  <command id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
+  <command id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
+  <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
+  <command id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
+  <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
+  <command id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
+  <command id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
+  <command id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
+<!--NYI <command id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
+  <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
+
+  <!-- Edit Menu -->
+  <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
+  <!--command id="cmd_find"/-->
+  <!--command id="cmd_findNext"/-->
+  <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
+
+  <!-- View Menu -->
+  <command id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
+  <command id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
+  
+  <!-- Options Menu -->
+  <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
+  <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
+  <!-- command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
+  <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
+
 </commandset>
 
 <broadcasterset id="composeBroadcasters">
-  <!-- File Menu -->
-  <broadcaster id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
-  <broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
-  <broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
-  <broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
-  <broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
-  <broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
-  <broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
-  <broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
-  <broadcaster id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
-  <broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
-  <broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
-<!--NYI <broadcaster id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
-  <broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
 
-  <!-- Edit Menu -->
-  <!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
-  <!--broadcaster id="cmd_find"/-->
-  <!--broadcaster id="cmd_findNext"/-->
-  <broadcaster id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
-
-  <!-- View Menu -->
-  <broadcaster id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
-  <broadcaster id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
   
   <!-- Insert Menu -->
   <broadcaster id="cmd_insert"/>
@@ -174,12 +182,6 @@
   <!--broadcaster id="cmd_tableJoinCells"/-->
   <!--broadcaster id="cmd_tableSplitCell"/-->
   <!--broadcaster id="cmd_editTable"/-->
-  
-  <!-- Options Menu -->
-  <broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
-  <broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
-  <!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
-  <broadcaster id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
 
   <broadcaster id="Editor:Throbber" busy="false"/>
 </broadcasterset>
@@ -196,10 +198,10 @@
   <!-- File Menu -->
   <key id="key_newNavigator"/>
   <key id="key_close"/>
-  <key id="key_save"  key="&saveCmd.key;" observes="cmd_saveDefault" modifiers="accel"/>
-  <!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
-  <!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
-  <key id="key_print"  key="&printCmd.key;" observes="cmd_print" modifiers="accel"/>
+  <key id="key_save"  key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
+  <!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" command="cmd_sendNow"/ -->
+  <!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" command="cmd_sendLater"/ -->
+  <key id="key_print"  key="&printCmd.key;" command="cmd_print" modifiers="accel"/>
   <key id="key_quit"/>
   
   <!-- Edit Menu -->
@@ -228,7 +230,7 @@
   <key id="increasefontsizekb"/>
 
   <!-- Options Menu -->
-  <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
+  <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
   <key id="key_checkspelling"  key="&checkSpellingCmd.key;" observes="cmd_spelling"  modifiers="accel"/>
   
 </keyset>
@@ -249,25 +251,25 @@
               <menuitem id="menu_newEditor"/>
             </menupopup>
           </menu>
-          <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
-          <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
+          <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+          <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
           <menuseparator/>
           <menuitem id="menu_close"/>
-          <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" observes="cmd_saveDefault"/>
+          <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" command="cmd_saveDefault"/>
           <menu label="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
             <menupopup>
-              <menuitem label="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
+              <menuitem label="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" command="cmd_saveAsFile"/>
               <menuseparator/>
-              <menuitem label="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
-              <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
+              <menuitem label="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" command="cmd_saveAsDraft"/>
+              <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" command="cmd_saveAsTemplate"/>
             </menupopup>
           </menu>
           <menuseparator/>
-          <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
-          <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+          <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" command="cmd_sendNow"/>
+          <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" command="cmd_sendLater"/>
           <menuseparator/>
-<!--NYI          <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" observes="cmd_printSetup"/>   -->
-          <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" observes="cmd_print"/>
+<!--NYI          <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>   -->
+          <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
           <menuseparator/>
         </menupopup>
       </menu>
@@ -288,7 +290,7 @@
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
           <menuitem label="&replaceCmd.label;" observes="cmd_replace"/>
           <menuseparator/>
-          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
+          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
         </menupopup>
       </menu>
@@ -299,13 +301,13 @@
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
                         label="&showComposeToolbarCmd.label;"
-                        observes="cmd_showComposeToolbar"
+                        command="cmd_showComposeToolbar"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"
                         type="checkbox"
                         label="&showFormatToolbarCmd.label;"
-                        observes="cmd_showFormatToolbar"
+                        command="cmd_showFormatToolbar"
                         accesskey="&showFormatToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showTaskbar"
@@ -330,12 +332,12 @@
   
       <menu label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
         <menupopup> 
-          <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+          <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-          <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->  
-          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
+          <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" command="cmd_quoteMessage"/-->  
+          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
-          <menu label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" observes="cmd_outputFormat">
+          <menu label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
             <menupopup>
               <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="1" checked="true"/>
               <menuitem type="radio" name="output_format" label="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="2"/>
@@ -411,7 +413,7 @@
        <button class="button-toolbar-2 top" 
                id="button-send" label="&sendButton.label;"
                tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
-               observes="cmd_sendButton"
+               command="cmd_sendButton"
                now_label="&sendButton.label;"
                now_tooltiptext="&sendButton.tooltip;"
                later_label="&sendLaterCmd.label;"
@@ -421,11 +423,11 @@
        <button class="button-toolbar-2 top" 
                id="button-address" label="&addressButton.label;" 
                tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
-               observes="cmd_selectAddress"/>
+               command="cmd_selectAddress"/>
        <button class="button-toolbar-2 top" 
                id="button-attach" label="&attachButton.label;" 
                tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
-               observes="cmd_attachFile"/>
+               command="cmd_attachFile"/>
        <button class="button-toolbar-2 top" 
                id="spellingButton" label="&spellingButton.label;" 
                observes="cmd_spelling"/>
@@ -433,7 +435,7 @@
        <button class="button-toolbar-2 top" 
                id="button-save" label="&saveButton.label;" 
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
-               observes="cmd_saveDefault"/>
+               command="cmd_saveDefault"/>
        <spring flex="1"/>
        <box id="throbber-box" autostretch="never">
          <button id="navigator-throbber" 

@@ -443,31 +443,31 @@ function CommandUpdate_MsgCompose()
   try {
 
   //File Menu
-  goUpdateCommand("cmd_attachFile");
-  goUpdateCommand("cmd_attachPage");
-  goUpdateCommand("cmd_close");
-  goUpdateCommand("cmd_saveDefault");
-  goUpdateCommand("cmd_saveAsFile");
-  goUpdateCommand("cmd_saveAsDraft");
-  goUpdateCommand("cmd_saveAsTemplate");
-  goUpdateCommand("cmd_sendButton");
-  goUpdateCommand("cmd_sendNow");
-  goUpdateCommand("cmd_sendLater");
+//  goUpdateCommand("cmd_attachFile");
+//  goUpdateCommand("cmd_attachPage");
+//  goUpdateCommand("cmd_close");
+//  goUpdateCommand("cmd_saveDefault");
+//  goUpdateCommand("cmd_saveAsFile");
+//  goUpdateCommand("cmd_saveAsDraft");
+//  goUpdateCommand("cmd_saveAsTemplate");
+//  goUpdateCommand("cmd_sendButton");
+//  goUpdateCommand("cmd_sendNow");
+//  goUpdateCommand("cmd_sendLater");
 //  goUpdateCommand("cmd_printSetup");
-  goUpdateCommand("cmd_print");
-  goUpdateCommand("cmd_quit");
+//  goUpdateCommand("cmd_print");
+//  goUpdateCommand("cmd_quit");
 
   //Edit Menu
   goUpdateCommand("cmd_pasteQuote");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
   goUpdateCommand("cmd_replace");
-  goUpdateCommand("cmd_account");
+//  goUpdateCommand("cmd_account");
   goUpdateCommand("cmd_preferences");
 
   //View Menu
-  goUpdateCommand("cmd_showComposeToolbar");
-  goUpdateCommand("cmd_showFormatToolbar");
+//  goUpdateCommand("cmd_showComposeToolbar");
+//  goUpdateCommand("cmd_showFormatToolbar");
 
   //Insert Menu
   if (msgCompose && msgCompose.composeHTML)
@@ -534,11 +534,11 @@ function CommandUpdate_MsgCompose()
   }
 
   //Options Menu
-  goUpdateCommand("cmd_selectAddress");
+//  goUpdateCommand("cmd_selectAddress");
   goUpdateCommand("cmd_spelling");
-  goUpdateCommand("cmd_outputFormat");
+//  goUpdateCommand("cmd_outputFormat");
 //  goUpdateCommand("cmd_quoteMessage");
-  goUpdateCommand("cmd_rewrap");
+//  goUpdateCommand("cmd_rewrap");
 
   } catch(e) {}
 }
