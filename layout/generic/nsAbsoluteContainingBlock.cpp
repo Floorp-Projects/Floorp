@@ -169,8 +169,6 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
     if (isAbsoluteChild) {
       nsIReflowCommand::ReflowType  type;
-      nsIFrame*                     newFrames;
-      PRInt32                       numFrames = 0;
 
       // Get the type of reflow command
       aReflowState.reflowCommand->GetType(type);
@@ -187,7 +185,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
         if (frameState & NS_FRAME_IS_DIRTY) {
           nsReflowStatus  status;
           ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                              newFrames, PR_TRUE, status);
+                              f, PR_TRUE, status);
         }
       }
 
@@ -263,8 +261,21 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     rv = htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
     // Because we don't know the size of a replaced element until after we reflow
-    // it 'auto' margins must be computed now
+    // it 'auto' margins must be computed now, and we need to take into account
+    // min-max information
     if (NS_FRAME_IS_REPLACED(kidReflowState.mFrameType)) {
+      // Factor in any minimum and maximum size information
+      if (kidDesiredSize.width > kidReflowState.mComputedMaxWidth) {
+        kidDesiredSize.width = kidReflowState.mComputedMaxWidth;
+      } else if (kidDesiredSize.width < kidReflowState.mComputedMinWidth) {
+        kidDesiredSize.width = kidReflowState.mComputedMinWidth;
+      }
+      if (kidDesiredSize.height > kidReflowState.mComputedMaxHeight) {
+        kidDesiredSize.height = kidReflowState.mComputedMaxHeight;
+      } else if (kidDesiredSize.height < kidReflowState.mComputedMinHeight) {
+        kidDesiredSize.height = kidReflowState.mComputedMinHeight;
+      }
+
       // Get the containing block width/height
       nscoord containingBlockWidth, containingBlockHeight;
       kidReflowState.ComputeContainingBlockRectangle(&aReflowState,
