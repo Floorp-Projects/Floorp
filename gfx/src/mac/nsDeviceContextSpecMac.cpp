@@ -63,6 +63,7 @@ nsresult  theResult = NS_ERROR_FAILURE;
 THPrint		prtRec;
 GrafPtr		oldport;
 
+#if !TARGET_CARBON
 	::GetPort(&oldport);
 	
 	// open the printing manager
@@ -85,6 +86,7 @@ GrafPtr		oldport;
 			}
 		}
 	}
+#endif
   return theResult;
 }
 
@@ -98,7 +100,9 @@ PRBool	isPMOpen;
 
 	this->PrintManagerOpen(&isPMOpen);
 	if(isPMOpen){
+#if !TARGET_CARBON
 		::PrClose();
+#endif
 	}
 	
 	return NS_OK;
