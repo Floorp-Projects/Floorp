@@ -1182,6 +1182,7 @@ mime_insert_micro_headers(char            **body,
 
 }
 
+// body has to be encoded in UTF-8
 static void 
 mime_insert_forwarded_message_headers(char            **body, 
                                       MimeHeaders     *headers,
@@ -1193,20 +1194,6 @@ mime_insert_forwarded_message_headers(char            **body,
 
   PRInt32     show_headers = 0;
   nsresult    res;
-  
-  if (*body)
-  {
-    // convert body from mail charset to UTF-8
-    char *utf8 = NULL;
-    nsAutoString ucs2;
-    if (NS_SUCCEEDED(ConvertToUnicode(mailcharset, *body, ucs2))) {
-      utf8 = ToNewUTF8String(ucs2);
-      if (NULL != utf8) {
-        PR_Free(*body);
-        *body = utf8;
-      }
-    }
-  }
 
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (NS_SUCCEEDED(res) && prefs)
@@ -1470,6 +1457,29 @@ mime_parse_stream_complete (nsMIMESession *stream)
             inputFile.read(body, bodyLen);
         
           inputFile.close();
+
+          // Convert the body to UTF-8
+          char *mimeCharset = nsnull;
+          // Get a charset from the header if no override is set.
+          if (!charsetOverride)
+            mimeCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", nsnull, nsnull);
+          // If no charset is specified in the header then use the default.
+          char *bodyCharset = mimeCharset ? mimeCharset : mdd->mailcharset;
+          if (bodyCharset)
+          {
+            nsAutoString tempUnicodeString;
+            if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
+            {
+              char *newBody = ToNewUTF8String(tempUnicodeString);
+              if (newBody) 
+              {
+                PR_Free(body);
+                body = newBody;
+                bodyLen = strlen(newBody);
+              }
+            }
+          }
+          PR_FREEIF(mimeCharset);
         }
       }
 
@@ -1517,31 +1527,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
       }
       // setting the charset while we are creating the composition fields
       //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
-      
-      // Ok, if we are here, then we should look at the charset and convert
-      // to UTF-8...
-      //
-      if (!forward_inline && body)
-      {
-        char *mimeCharset = nsnull;
-        // Get a charset from the header if no override is set.
-        if (!charsetOverride)
-          mimeCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
-        // If no charset is specified in the header then use the default.
-        char *bodyCharset = mimeCharset ? mimeCharset : mdd->mailcharset;
-        if (bodyCharset)
-        {
-          // Now do conversion to Unicode for output
-          nsAutoString tempUnicodeString;
-          if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
-            fields->SetBody(tempUnicodeString.get());
-          else
-            fields->SetBody(NS_ConvertASCIItoUCS2(body).get());
-          PR_Free(body);
-          body = nsnull;
-          PR_FREEIF(mimeCharset);
-        }
-      }
 
       // convert from UTF-8 to UCS2
       if (body)
