@@ -776,6 +776,42 @@ nsresult testUTF8Decoder()
   }
 }
 
+/**
+ * Test the M-UTF-7 decoder.
+ */
+nsresult testMUTF7Decoder()
+{
+  char * testName = "T107";
+  printf("\n[%s] Unicode <- MUTF7\n", testName);
+
+  // create converter
+  CREATE_DECODER("x-imap4-modified-utf7");
+
+  // test data
+  char src[] = {"\x50\x51\x52\x53&AAAAAAAA-&-&AAA-"};
+  PRUnichar exp[] = {0x0050,0x0051,0x0052,0x0053,0x0000,0x0000,0x0000,'&',0x0000};
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 //----------------------------------------------------------------------
 // Encoders testing functions
 
@@ -939,6 +975,43 @@ nsresult testISO2022JPEncoder()
   }
 }
 
+/**
+ * Test the M-UTF-7 encoder.
+ */
+nsresult testMUTF7Encoder()
+{
+  char * testName = "T205";
+  printf("\n[%s] Unicode -> MUTF-7\n", testName);
+
+  // create converter
+  CREATE_ENCODER("x-imap4-modified-utf7");
+  enc->SetOutputErrorBehavior(enc->kOnError_Replace, NULL, 0x00cc);
+
+  // test data
+  PRUnichar src[] = {0x0050,0x0051,0x0052,0x0053,0x0000,0x0000,0x0000,'&',0x0000};
+  char exp[] = {"\x50\x51\x52\x53&AAAAAAAA-&-&AAA-"};
+
+  // test converter - easy test
+  res = testEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetEncoder(enc, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // release converter
+  NS_RELEASE(enc);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 nsresult  testPlatformCharset()
 {
   nsIPlatformCharset * cinfo;
@@ -984,12 +1057,14 @@ nsresult testAll()
   testISO88597Decoder();
   testSJISDecoder();
   testUTF8Decoder();
+  testMUTF7Decoder();
 
   // test encoders
   testLatin1Encoder();
   testSJISEncoder();
   testEUCJPEncoder();
   testISO2022JPEncoder();
+  testMUTF7Encoder();
 
   // return
   return NS_OK;
