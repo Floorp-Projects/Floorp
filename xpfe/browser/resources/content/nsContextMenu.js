@@ -317,7 +317,7 @@ nsContextMenu.prototype = {
         }
     
         // Bubble out, looking for link.
-        var elem = this.target;
+        elem = this.target;
         while ( elem && !this.onLink ) {
             // Test for element types of interest.
             if ( elem.nodeType == 1 && 
@@ -697,7 +697,7 @@ nsContextMenu.prototype = {
           var data = this.createInstance( "component://netscape/supports-wstring",
                                           "nsISupportsWString" );
           if ( data ) {
-            data.data = text ;
+            data.data = text;
             transferable.setTransferData( "text/unicode", data, text.length * 2 );
             // Put on clipboard.
             clipboard.setData( transferable, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
@@ -712,11 +712,11 @@ nsContextMenu.prototype = {
         if ( clipboard && transferableForSelection ) {
           transferableForSelection.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
-          var data = this.createInstance( "component://netscape/supports-wstring",
+          var selectionData = this.createInstance( "component://netscape/supports-wstring",
                                           "nsISupportsWString" );
-          if ( data ) {
-            data.data = text ;
-            transferableForSelection.setTransferData( "text/unicode", data, text.length * 2 );
+          if ( selectionData ) {
+            selectionData.data = text;
+            transferableForSelection.setTransferData( "text/unicode", selectionData, text.length * 2 );
             // Put on clipboard.
             clipboard.setData( transferableForSelection, null, 
                                Components.interfaces.nsIClipboard.kSelectionClipboard );

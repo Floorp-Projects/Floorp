@@ -23,6 +23,7 @@
  */
 
 var pref = null;
+var gURLBar = null;
 var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
 var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
@@ -218,6 +219,7 @@ nsXULBrowserWindow.prototype =
     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
       return this;
     throw Components.results.NS_NOINTERFACE;
+    return null;        // quiet warnings
   },
   setJSStatus : function(status)
   {
@@ -592,6 +594,8 @@ function gotoHistoryIndex( aEvent )
 	      else if (id == "menuitem-forward")
 	        BrowserForward();
       }
+      
+      return false;
   }
 
 function BrowserBack()
@@ -647,6 +651,8 @@ function BrowserHome()
 
 function OpenBookmarkURL(node, datasources)
   {
+    // what is the meaning of the return value from this function?
+    
     if (node.getAttribute('container') == "true") {
       return false;
     }
@@ -678,17 +684,26 @@ function OpenBookmarkURL(node, datasources)
 	// Check if we have a browser window
 	if ( window._content == null )
 	{
-		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
+		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+		return true;
 	}
 	else
 	{
   	  //window._content.location.href = url;
 	  if (appCore)
+	  {
 	     appCore.loadUrl(url);
+	     return true;
+	  }
 	  else
+	  {
 	     dump("BrowserAppCore is not initialised\n");
-    	RefreshUrlbar();
+	     return false;
+	  }
+      RefreshUrlbar();
   	}
+  	
+  	return false;
   }
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
@@ -1147,8 +1162,8 @@ function BrowserChangeTextSize(newSize)
       	if (aOffset > 0)
       	{
       	  var cmd = text.substr(0, aOffset);
-      	  var text = text.substr(aOffset+1);
-          var shortcutURL = bmks.FindShortcut(cmd);
+      	  text = text.substr(aOffset+1);
+          shortcutURL = bmks.FindShortcut(cmd);
           if ((shortcutURL) && (shortcutURL != "") && (text != ""))
           {
             aOffset = shortcutURL.indexOf("%s");
@@ -1192,7 +1207,7 @@ function BrowserChangeTextSize(newSize)
                    .classes["component://netscape/widget/transferable"]
                      .createInstance( Components.interfaces.nsITransferable );
     if ( !clipboard || !trans )
-      return;
+      return null;
 
     trans.addDataFlavor( "text/unicode" );
     clipboard.getData(trans, clipboard.kSelectionClipboard);
@@ -1424,8 +1439,8 @@ function TileWindow()
 	var yOffset = screen.availRight;
 	do
 	{
-		var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-		if ( currentWindow.screenX == screenX && currentWindow.screenY == screenY )
+		var thisWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
+		if ( (thisWindow.screenX == screenX) && (thisWindow.screenY == screenY) )
 		{
 			alreadyThere = true;
 			break;
@@ -1437,13 +1452,15 @@ function TileWindow()
 		enumerator = windowManagerInterface.getEnumerator( null );
 		do
 		{
-			var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-			if ( currentWindow.screenX == screenX+xOffset*xShift+yOffset*xShift   && currentWindow.screenY == screenY+yShift*xOffset && window != currentWindow )
+			var thatWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
+			if ( (thatWindow.screenX == screenX+xOffset*xShift+yOffset*xShift) &&
+			     (thatWindow.screenY == screenY+yShift*xOffset) &&
+			     (window != thatWindow) )
 			{
 				xOffset++;
 				if ( (screenY+outerHeight  < screen.availHeight) && (screenY+outerHeight+yShift*xOffset > screen.availHeight ) )
 				{
-					dump(" increment yOffset");
+					// dump(" increment yOffset");
 					yOffset++;
 					xOffset = 0;
 				}
@@ -1454,11 +1471,12 @@ function TileWindow()
 	
 	if ( xOffset > 0 || yOffset >0 )
 	{
-		dump( "offsets:"+xOffset+" "+yOffset+"\n");
-		dump("Move by ("+ xOffset*xShift + yOffset*xShift +","+ yShift*xOffset +")\n");
+		// dump( "offsets:"+xOffset+" "+yOffset+"\n");
+		// dump("Move by ("+ xOffset*xShift + yOffset*xShift +","+ yShift*xOffset +")\n");
 		moveBy( xOffset*xShift + yOffset*xShift, yShift*xOffset );
 	}
 }
+
 // Make sure that a window fits fully on the screen. Will move to preserve size, and then shrink to fit
 function FitToScreen()
 {
@@ -1584,7 +1602,7 @@ var consoleListener = {
     },
 
   // whether or not an error alert is being displayed
-  isShowingError: false,
+  isShowingError: false
     
 };
 

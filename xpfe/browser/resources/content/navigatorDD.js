@@ -51,7 +51,7 @@ var RDFUtils = {
     {
       aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
       return aResource ? target.Value : null;
-    },
+    }
 };
 
 function isBookmark(aURI)
@@ -89,7 +89,7 @@ var personalToolbarObserver = {
         
       var personalToolbar = document.getElementById("PersonalToolbar");
       if (aEvent.target == personalToolbar)
-        return;
+        return null;
         
       var childWithDatabase = document.getElementById("innermostBox");
       var uri = aEvent.target.id;
@@ -163,7 +163,8 @@ var personalToolbarObserver = {
       default:
         rdfContainer.InsertElementAt(elementRes, dropIndex+1, true);
         break;
-      }  
+      }
+      return true;
     },
   
   mCurrentDragOverButton: null,
@@ -220,6 +221,8 @@ var personalToolbarObserver = {
             }
             break;
         }
+        
+       return true;
     },
 
   getSupportedFlavours: function ()
@@ -257,8 +260,10 @@ var personalToolbarObserver = {
           if (aEvent.clientY > overButtonBoxObject.y && 
               aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height) 
             return 0;
-        }              
-    },
+        }
+        
+      return 0;
+    }
 }; 
 
 var contentAreaDNDObserver = {
@@ -364,8 +369,8 @@ var contentAreaDNDObserver = {
 
   onDrop: function (aEvent, aData, aDragSession)
     {
-      var aData = aData.length ? aData[0] : aData;
-      var url = retrieveURLFromData(aData);
+      var data = aData.length ? aData[0] : aData;
+      var url = retrieveURLFromData(data);
       if (url.length == 0)
         return;
       // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
@@ -402,7 +407,7 @@ var contentAreaDNDObserver = {
         aNode = aNode.parentNode;
       }
       return null;
-    },
+    }
 };
 
 //
@@ -431,8 +436,8 @@ var proxyIconDNDObserver = {
 var homeButtonObserver = {
   onDrop: function (aEvent, aData, aDragSession)
     {
-      var aData = aData.length ? aData[0] : aData;
-      var url = retrieveURLFromData(aData);
+      var data = aData.length ? aData[0] : aData;
+      var url = retrieveURLFromData(data);
       var showDialog = nsPreferences.getBoolPref("browser.homepage.enable_home_button_drop", false);
       var setHomepage;
       if (showDialog)
@@ -501,7 +506,7 @@ var homeButtonObserver = {
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
-    },  
+    }
 };
 
 function retrieveURLFromData (aData)

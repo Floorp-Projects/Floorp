@@ -766,6 +766,7 @@ function TriStateColumnSort(column_name)
         }
     }
     sort_column(column, direction);
+    return true;
 }
 
 function sort_column(column, direction)
@@ -948,26 +949,26 @@ function fillContextMenu(name)
 */
 
     var lastWasSep = false;
-    for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
+    for (var commandIndex = 0; commandIndex < cmdArray.length; commandIndex++)
     {
-        var cmd = cmdArray[cmdIndex];
+        var cmd = cmdArray[commandIndex];
         if (!cmd) continue;
         var cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
         if (!cmdResource) break;
 
-    // handle separators
-    if (cmdResource == separatorResource)
-    {
-        if (lastWasSep != true)
+        // handle separators
+        if (cmdResource == separatorResource)
         {
-            lastWasSep = true;
-                var menuItem = document.createElement("menuseparator");
-                popupNode.appendChild(menuItem);
+            if (lastWasSep != true)
+            {
+                lastWasSep = true;
+                    var menuItem = document.createElement("menuseparator");
+                    popupNode.appendChild(menuItem);
+            }
+            continue;
         }
-        continue;
-    }
-
-    lastWasSep = false;
+    
+        lastWasSep = false;
 
         var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, 
                                                 true);
@@ -980,12 +981,12 @@ function fillContextMenu(name)
         debug("Command #" + cmdIndex + ": id='" + cmdResource.Value +
               "'  name='" + cmdName + "'");
 
-        var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("value", cmdName);
-        popupNode.appendChild(menuItem);
+        var newMenuItem = document.createElement("menuitem");
+        newMenuItem.setAttribute("value", cmdName);
+        popupNode.appendChild(newMenuItem);
         // Work around bug #26402 by setting "oncommand" attribute
         // AFTER appending menuitem
-        menuItem.setAttribute("oncommand",
+        newMenuItem.setAttribute("oncommand",
                               "return doContextCmd('"+cmdResource.Value+"');");
     }
 
@@ -1024,12 +1025,12 @@ function fillContextMenu(name)
 
             // And then add a "Properties" menu items
             var propMenuName = get_localized_string("BookmarkProperties");
-            var menuItem = document.createElement("menuitem");
-            menuItem.setAttribute("value", propMenuName);
-            popupNode.appendChild(menuItem);
+            var aMenuItem = document.createElement("menuitem");
+            aMenuItem.setAttribute("value", propMenuName);
+            popupNode.appendChild(aMenuItem);
             // Work around bug # 26402 by setting "oncommand" attribute
             // AFTER appending menuitem
-            menuItem.setAttribute("oncommand", "return BookmarkProperties();");
+            aMenuItem.setAttribute("oncommand", "return BookmarkProperties();");
         }
     }
 
@@ -1049,12 +1050,16 @@ function doContextCmd(cmdName)
 
     var nameVal = "";
     var urlVal = "";
-
+    var promptStr;
+    
+    var picker_uri;
+    var filePicker;
+    
     if (cmdName == NC_NS + "command?cmd=newbookmark")
     {
         while (true)
         {
-            var promptStr = get_localized_string("NewBookmarkURLPrompt");
+            promptStr = get_localized_string("NewBookmarkURLPrompt");
             urlVal = prompt(promptStr, "");
             if (!urlVal || urlVal=="") return false;
             
@@ -1070,7 +1075,7 @@ function doContextCmd(cmdName)
     }
     else if (cmdName == NC_NS + "command?cmd=newfolder")
     {
-        var promptStr = get_localized_string("NewFolderNamePrompt");
+        promptStr = get_localized_string("NewFolderNamePrompt");
         nameVal = prompt(promptStr, "");
         if (!nameVal || nameVal=="") return false;
     }
@@ -1086,11 +1091,11 @@ function doContextCmd(cmdName)
     {
         try
         {
-            var picker_uri = "component://mozilla/filepicker";
-            var filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
+            picker_uri = "component://mozilla/filepicker";
+            filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
-            var promptStr = get_localized_string("SelectImport");
+            promptStr = get_localized_string("SelectImport");
             filePicker.init(window, promptStr, nsIFilePicker.modeOpen);
             filePicker.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
             if (filePicker.show() != nsIFilePicker.returnCancel)
@@ -1109,11 +1114,11 @@ function doContextCmd(cmdName)
     {
         try
         {
-            var picker_uri = "component://mozilla/filepicker";
-            var filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
+            picker_uri = "component://mozilla/filepicker";
+            filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
-            var promptStr = get_localized_string("EnterExport");
+            promptStr = get_localized_string("EnterExport");
             filePicker.init(window, promptStr, nsIFilePicker.modeSave);
             filePicker.defaultString = "bookmarks.html";
             filePicker.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
@@ -1173,13 +1178,16 @@ function doContextCmd(cmdName)
     var select_list = treeNode.selectedItems;
     debug("# of Nodes selected: " + select_list.length);
 
+    var uri;
+    var rdfNode;
+    
     if (select_list.length < 1)
     {
         // if nothing is selected, default to using the "ref"
         // on the root of the tree
-        var uri = treeNode.getAttribute("ref");
+        uri = treeNode.getAttribute("ref");
         if (!uri || uri=="") return false;
-        var rdfNode = rdf.GetResource(uri);
+        rdfNode = rdf.GetResource(uri);
         // add node into selection array
         if (rdfNode)
         {
@@ -1206,14 +1214,14 @@ function doContextCmd(cmdName)
     {
         var node = select_list[nodeIndex];
         if (!node) break;
-        var uri = node.getAttribute("ref");
+        uri = node.getAttribute("ref");
         if ((uri) || (uri == ""))
         {
             uri = node.getAttribute("id");
         }
         if (!uri) return false;
 
-        var rdfNode = rdf.GetResource(uri);
+        rdfNode = rdf.GetResource(uri);
         if (!rdfNode) break;
 
         // add node into selection array
@@ -1238,17 +1246,17 @@ function doContextCmd(cmdName)
 
         if ((nameVal) && (nameVal != ""))
         {
-            var nameLiteral = rdf.GetLiteral(nameVal);
-            if (!nameLiteral) return false;
+            var nameLiteral2 = rdf.GetLiteral(nameVal);
+            if (!nameLiteral2) return false;
             argumentsArray.AppendElement(nameArc);
-            argumentsArray.AppendElement(nameLiteral);
+            argumentsArray.AppendElement(nameLiteral2);
         }
         if ((urlVal) && (urlVal != ""))
         {
-            var urlLiteral = rdf.GetLiteral(urlVal);
-            if (!urlLiteral) return false;
+            var urlLiteral2 = rdf.GetLiteral(urlVal);
+            if (!urlLiteral2) return false;
             argumentsArray.AppendElement(urlArc);
-            argumentsArray.AppendElement(urlLiteral);
+            argumentsArray.AppendElement(urlLiteral2);
         }
     }
 

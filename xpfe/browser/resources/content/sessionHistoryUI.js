@@ -47,31 +47,35 @@ function FillHistoryMenu( aParent, aMenu )
                     deleteHistoryItems( aParent );
                     var count = shistory.count;
                     var index = shistory.index;
+                    var end;
+                    var j;
+                    var entry;
+                    
                     switch (aMenu)
                       {
                         case "back":
-                          var end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-                          for ( var j = index - 1; j >= end; j--) 
+                          end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
+                          for ( j = index - 1; j >= end; j--) 
                             {
-                              var entry = shistory.getEntryAtIndex(j, false);
+                              entry = shistory.getEntryAtIndex(j, false);
                               if (entry) 
                                 createMenuItem( aParent, j, entry.title );
                             }
                           break;
                         case "forward":
-                          var end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
-                          for ( var j = index + 1; j < end; j++)
+                          end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
+                          for ( j = index + 1; j < end; j++)
                             {
-                              var entry = shistory.getEntryAtIndex(j, false);
+                              entry = shistory.getEntryAtIndex(j, false);
                               if (entry)
                                 createMenuItem( aParent, j, entry.title );
                             }
                           break;
                         case "go":
-                          var end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
-                          for( var j = count - 1; j >= end; j-- )
+                          end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
+                          for( j = count - 1; j >= end; j-- )
                             {
-                              var entry = shistory.getEntryAtIndex(j, false);
+                              entry = shistory.getEntryAtIndex(j, false);
                               if (entry)
                                 createCheckboxMenuItem( aParent, j, entry.title, j==index );
                             }
