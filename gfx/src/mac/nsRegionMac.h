@@ -50,6 +50,31 @@ extern nsNativeRegionPool sNativeRegionPool;
 
 //------------------------------------------------------------------------
 
+class StRegionFromPool 
+{
+public:
+	StRegionFromPool()
+	{
+		mRegionH = sNativeRegionPool.GetNewRegion();
+	}
+	
+	~StRegionFromPool()
+	{
+		if ( mRegionH )
+			sNativeRegionPool.ReleaseRegion(mRegionH);
+	}
+
+	operator RgnHandle() const
+	{
+		return mRegionH;
+	}
+
+	private:
+		RgnHandle mRegionH;
+};
+
+//------------------------------------------------------------------------
+
 class nsRegionMac : public nsIRegion
 {
 public:
