@@ -483,6 +483,7 @@ nsMsgAccountManager::isUnique(nsIMsgIncomingServer *server)
   if (NS_FAILED(rv)) return rv;
 
   rv = server->GetType(getter_Copies(type));
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgIncomingServer> dupeServer;
   rv = FindServer(username, hostname, type, getter_AddRefs(dupeServer));
@@ -1238,11 +1239,21 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 
 	rv = srcIdentity->GetEmail(getter_Copies(oldstr)); 
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetEmail(NS_CONST_CAST(char*,(const char*)oldstr));
+	if (!oldstr) {
+		destIdentity->SetEmail("");
+	}
+	else {
+		destIdentity->SetEmail(NS_CONST_CAST(char*,(const char*)oldstr));
+	}
 
 	rv = srcIdentity->GetReplyTo(getter_Copies(oldstr)); 
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetReplyTo(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	if (!oldstr) {
+		destIdentity->SetReplyTo("");
+	}
+	else {
+		destIdentity->SetReplyTo(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	}
 
 	rv = srcIdentity->GetComposeHtml(&oldbool); 
 	if (NS_FAILED(rv)) return rv;
@@ -1250,17 +1261,38 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 
 	rv = srcIdentity->GetFullName(getter_Copies(oldstr)); 
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetFullName(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	if (!oldstr) {
+		destIdentity->SetFullName("");
+	}
+	else {
+		destIdentity->SetFullName(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	}
 	
 	rv = srcIdentity->GetOrganization(getter_Copies(oldstr)); 
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetOrganization(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	if (!oldstr) {
+		destIdentity->SetOrganization("");
+	}
+	else {
+		destIdentity->SetOrganization(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	}
 	rv = srcIdentity->GetSmtpHostname(getter_Copies(oldstr));
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetSmtpHostname(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	if (!oldstr) {
+		destIdentity->SetSmtpHostname("");
+	}
+	else {
+		destIdentity->SetSmtpHostname(NS_CONST_CAST(char*,(const char*)oldstr));
+	}
+
 	rv = srcIdentity->GetSmtpUsername(getter_Copies(oldstr));
 	if (NS_FAILED(rv)) return rv;
-	destIdentity->SetSmtpUsername(NS_CONST_CAST(char*,(const char*)oldstr));
+	if (!oldstr) {
+		destIdentity->SetSmtpUsername("");
+	}
+	else {
+		destIdentity->SetSmtpUsername(NS_CONST_CAST(char*,(const char*)oldstr));
+	}
 
 	return rv;
 }
@@ -1861,20 +1893,28 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
   rv = server->GetHostName(getter_Copies(thisHostname));
   if (NS_FAILED(rv)) return PR_TRUE;
 
-  nsXPIDLCString username;
-  rv = server->GetUsername(getter_Copies(username));
+  nsXPIDLCString thisUsername;
+  rv = server->GetUsername(getter_Copies(thisUsername));
   if (NS_FAILED(rv)) return PR_TRUE;
-  if (!username) username.Copy("");
+ 
   
   nsXPIDLCString thisType;
   rv = server->GetType(getter_Copies(thisType));
   if (NS_FAILED(rv)) return PR_TRUE;
-  
+ 
   if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
-      PL_strcmp(entry->username, username)==0 &&
       PL_strcmp(entry->type, thisType)==0) {
-    entry->server = server;
-    return PR_FALSE;            // stop on first find
+        // if we aren't looking for a username, don't compare.  we have a match
+  	if (PL_strcmp(entry->username,"")==0) {
+		entry->server = server;
+		return PR_FALSE;            // stop on first find 
+        }
+        else {
+      		if (PL_strcmp(entry->username, thisUsername)==0) {
+		   entry->server = server;
+		   return PR_FALSE;            // stop on first find 
+		}
+	}
   }
 
   return PR_TRUE;
