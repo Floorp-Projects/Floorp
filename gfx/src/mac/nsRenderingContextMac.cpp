@@ -119,7 +119,8 @@ void GraphicState::Init(GrafPtr aPort)
 
 	// init from grafPort (usually an offscreen port)
 	RgnHandle	rgn = ::NewRgn();
-  ::RectRgn(rgn, &aPort->portRect);
+	if (rgn)
+	  ::RectRgn(rgn, &aPort->portRect);
 
   mMainRegion			= rgn;
   mClipRegion			= DuplicateRgn(rgn);
@@ -545,8 +546,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   ::SetRect(&macSrcRect,
   		x,
   		y,
-  		dstRect.width,
-  		dstRect.height);
+  		x + dstRect.width,
+  		y + dstRect.height);
 
   ::SetRect(&macDstRect, 
 	    dstRect.x, 
@@ -726,36 +727,46 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRectInPixels(const nsRect& aRect, 
 	Rect macRect;
 	::SetRect(&macRect, aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height);
 
-	RgnHandle rectRgn = ::NewRgn();
-	::RectRgn(rectRgn, &macRect);
-
 	RgnHandle clipRgn = mGS->mClipRegion;
-	if (clipRgn == nsnull)
-		clipRgn = ::NewRgn();
-
-	switch (aCombine)
+	if (!clipRgn)
 	{
-	  case nsClipCombine_kIntersect:
-	  	::SectRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
-
-	  case nsClipCombine_kUnion:
-	  	::UnionRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
-
-	  case nsClipCombine_kSubtract:
-	  	::DiffRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
-
-	  case nsClipCombine_kReplace:
-	  	::CopyRgn(rectRgn, clipRgn);
-	  	break;
+		clipRgn = ::NewRgn();
+		if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;
 	}
-	::DisposeRgn(rectRgn);
 
-	StartDraw();
-		::SetClip(clipRgn);
-	EndDraw();
+	if (aCombine == nsClipCombine_kReplace)
+	{
+		StartDraw();
+			::RectRgn(clipRgn, &macRect);
+			::SetClip(clipRgn);
+		EndDraw();
+	}
+	else
+	{
+		RgnHandle rectRgn = ::NewRgn();
+		if (!rectRgn) return NS_ERROR_OUT_OF_MEMORY;
+		::RectRgn(rectRgn, &macRect);
+
+		switch (aCombine)
+		{
+		  case nsClipCombine_kIntersect:
+		  	::SectRgn(clipRgn, rectRgn, clipRgn);
+		  	break;
+
+		  case nsClipCombine_kUnion:
+		  	::UnionRgn(clipRgn, rectRgn, clipRgn);
+		  	break;
+
+		  case nsClipCombine_kSubtract:
+		  	::DiffRgn(clipRgn, rectRgn, clipRgn);
+		  	break;
+		}
+		::DisposeRgn(rectRgn);
+
+		StartDraw();
+			::SetClip(clipRgn);
+		EndDraw();
+	}
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
@@ -803,8 +814,11 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 	aRegion.GetNativeRegion(regionH);
 
 	RgnHandle clipRgn = mGS->mClipRegion;
-	if (clipRgn == nsnull)
+	if (!clipRgn)
+	{
 		clipRgn = ::NewRgn();
+		if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;
+	}
 
 	switch (aCombine)
 	{
