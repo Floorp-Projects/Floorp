@@ -51,6 +51,7 @@ bin\README.txt
 
 ; [Components]
 bin\components\alerts.xpt
+bin\AccessibleMarshal.dll
 bin\components\accessibility.xpt
 bin\components\accessibility-msaa.xpt
 bin\components\appshell.xpt
