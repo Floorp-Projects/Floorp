@@ -106,7 +106,6 @@ CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult
     return rv;              
 }
 
-#if defined(XP_PC) || defined(XP_UNIX)
 static NS_IMETHODIMP
 CreateNewUnknownDecoderFactory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -133,7 +132,6 @@ CreateNewUnknownDecoderFactory(nsISupports *aOuter, REFNSIID aIID, void **aResul
 
   return rv;
 }
-#endif
 
 // The list of components we register
 static nsModuleComponentInfo components[] =
@@ -161,13 +159,11 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
       CreateNewTXTToHTMLConvFactory
     },
-#if defined(XP_PC) || defined(XP_UNIX)
     { "Unknown Content-Type Decoder",
       NS_UNKNOWNDECODER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type?to=*/*",
       CreateNewUnknownDecoderFactory
     },
-#endif
 };
 
 NS_IMPL_NSGETMODULE("nsConvModule", components);
