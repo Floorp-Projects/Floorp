@@ -52,7 +52,6 @@
 #include "jsapi.h"
 #include "jshash.h"
 #include "jsprf.h"
-#include "jslong.h"
 #include "jsinterp.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
