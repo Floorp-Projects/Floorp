@@ -49,7 +49,7 @@ Components {
   margin-left: .5in;
   border: dotted 1px black;
 }
-*[xml:link]:hover {
+:link:hover {
   background-color: blue;
   color: white;
   cursor: pointer;

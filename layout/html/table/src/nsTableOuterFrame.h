@@ -126,7 +126,7 @@ protected:
     * or if the table style attributes or parent max height/width have
     * changed.
     */
-  PRBool NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize);
+  PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
 
   /** position the child frame
     * @param  aReflowState      the state of the reflow process

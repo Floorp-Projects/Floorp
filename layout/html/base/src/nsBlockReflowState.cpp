@@ -1189,11 +1189,6 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       printf(": reflow=incremental type=%d\n", type);
 #endif
       switch (type) {
-      case nsIReflowCommand::FrameAppended:
-      case nsIReflowCommand::FrameInserted:
-      case nsIReflowCommand::FrameRemoved:
-        NS_NOTREACHED("invalid reflow command");
-        break;
       case nsIReflowCommand::StyleChanged:
         rv = PrepareStyleChangedReflow(state);
         break;

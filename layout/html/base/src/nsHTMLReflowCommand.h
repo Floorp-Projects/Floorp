@@ -38,15 +38,6 @@ public:
                       nsIFrame*  aChildFrame = nsnull,
                       nsIAtom*   aAttribute = nsnull);
 
-  /**
-   * Construct an HTML reflow command of type FrameInserted, with target
-   * frame aTargetFrame, and with the specified child and previous sibling
-   * frames.
-   */
-  nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
-                      nsIFrame*  aChildFrame,
-                      nsIFrame*  aPrevSiblingFrame);
-
   virtual ~nsHTMLReflowCommand();
 
   // nsISupports

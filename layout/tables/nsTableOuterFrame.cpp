@@ -337,11 +337,11 @@ NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelecte
   return result;
 }
 
-PRBool nsTableOuterFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
+PRBool nsTableOuterFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 {
   PRBool result=PR_TRUE;
   if (nsnull != mInnerTableFrame) {
-    result = ((nsTableFrame *)mInnerTableFrame)->NeedsReflow(aReflowState, aMaxSize);
+    result = ((nsTableFrame *)mInnerTableFrame)->NeedsReflow(aReflowState);
   }
   return result;
 }

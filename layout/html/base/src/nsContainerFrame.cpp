@@ -604,36 +604,6 @@ nsContainerFrame::MoveOverflowToChildList()
   return result;
 }
 
-nsresult
-nsContainerFrame::AddFrame(const nsHTMLReflowState& aReflowState,
-                           nsIFrame *               aAddedFrame)
-{
-  nsresult rv=NS_OK;
-  nsIReflowCommand::ReflowType type;
-  aReflowState.reflowCommand->GetType(type);
-
-  // we have a generic frame that gets inserted but doesn't effect
-  // reflow hook it up then ignore it
-  if (nsIReflowCommand::FrameAppended == type) {
-    // Append aAddedFrame to the list of frames
-    mFrames.AppendFrame(nsnull, aAddedFrame);
-  }
-  else if (nsIReflowCommand::FrameInserted == type)  {
-    // Insert aAddedFrame into the list of frames
-    nsIFrame *prevSibling=nsnull;
-    rv = aReflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
-    if (NS_SUCCEEDED(rv)) {
-      mFrames.InsertFrame(nsnull, prevSibling, aAddedFrame);
-    }
-  }
-  else
-  {
-    NS_ASSERTION(PR_FALSE, "bad reflow type");
-    rv = NS_ERROR_UNEXPECTED;
-  }
-  return rv;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 

@@ -48,25 +48,6 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
   return cmd->QueryInterface(kIReflowCommandIID, (void**)aInstancePtrResult);
 }
 
-nsresult
-NS_NewHTMLReflowCommand(nsIReflowCommand** aInstancePtrResult,
-                        nsIFrame*          aTargetFrame,
-                        nsIFrame*          aChildFrame,
-                        nsIFrame*          aPrevSiblingFrame)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLReflowCommand* cmd = new nsHTMLReflowCommand(aTargetFrame, aChildFrame,
-                                                     aPrevSiblingFrame);
-  if (nsnull == cmd) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return cmd->QueryInterface(kIReflowCommandIID, (void**)aInstancePtrResult);
-}
-
 // Construct a reflow command given a target frame, reflow command type,
 // and optional child frame
 nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
@@ -81,16 +62,6 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   if (nsnull!=mAttribute)
     NS_ADDREF(mAttribute);
-  NS_INIT_REFCNT();
-}
-
-nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
-                                         nsIFrame*  aChildFrame,
-                                         nsIFrame*  aPrevSiblingFrame)
-  : mType(FrameInserted), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mPrevSiblingFrame(aPrevSiblingFrame), mAttribute(nsnull), mListName(nsnull)
-{
-  NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   NS_INIT_REFCNT();
 }
 
