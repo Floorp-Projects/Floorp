@@ -30,9 +30,5 @@ XPIDLSRCS=      \
         .\nsIXULTemplateBuilder.idl       \
         $(NULL)
 
-EXPORTS	= \
-        .\nsIRDFContentModelBuilder.h     \
-	$(NULL)
-
 include <$(DEPTH)/config/rules.mak>
 

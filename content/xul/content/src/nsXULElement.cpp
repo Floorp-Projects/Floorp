@@ -91,7 +91,6 @@
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
@@ -3543,13 +3542,8 @@ nsXULElement::EnsureContentsGenerated(void) const
             if (xulele) {
                 nsCOMPtr<nsIXULTemplateBuilder> builder;
                 xulele->GetBuilder(getter_AddRefs(builder));
-                if (builder) {
-                    nsCOMPtr<nsIRDFContentModelBuilder> contentBuilder =
-                        do_QueryInterface(builder);
-
-                    if (contentBuilder)
-                        return contentBuilder->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
-                }
+                if (builder)
+                    return builder->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
             }
 
             nsCOMPtr<nsIContent> parent;

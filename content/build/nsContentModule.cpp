@@ -114,7 +114,6 @@ class nsIDocumentLoaderFactory;
 
 
 #ifdef MOZ_XUL
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIXULContentSink.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
@@ -125,6 +124,12 @@ class nsIDocumentLoaderFactory;
 #include "nsXULAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
+
+extern NS_IMETHODIMP
+NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+extern NS_IMETHODIMP
+NS_NewXULOutlinerBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
 #ifdef MOZ_SVG

@@ -95,6 +95,8 @@ public:
     NS_IMETHOD GetRoot(nsIDOMElement** aResult);
     NS_IMETHOD GetDatabase(nsIRDFCompositeDataSource** aResult);
     NS_IMETHOD Rebuild() = 0; // must be implemented by subclasses
+    NS_IMETHOD Init(nsIContent* aElement);
+    NS_IMETHOD CreateContents(nsIContent* aElement);
 
     // nsISecurityCheckedComponent
     NS_DECL_NSISECURITYCHECKEDCOMPONENT

@@ -79,7 +79,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h" 
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIRDFNode.h"
@@ -269,6 +268,20 @@ NS_IMETHODIMP
 nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 {
     NS_IF_ADDREF(*aResult = mDB.get());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::Init(nsIContent* aElement)
+{
+    NS_PRECONDITION(aElement, "null ptr");
+    mRoot = aElement;
+    return LoadDataSources();
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::CreateContents(nsIContent* aElement)
+{
     return NS_OK;
 }
 

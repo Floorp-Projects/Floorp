@@ -52,7 +52,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
