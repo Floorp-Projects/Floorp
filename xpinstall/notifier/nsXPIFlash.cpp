@@ -601,7 +601,8 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
                     PRUnichar* versionCString;
                     version->GetValue(&versionCString);
                     nsString versionString(versionCString);
-                    
+					nsAllocator::Free(versionCString);
+					nsAllocator::Free(regkeyCString);
 
                     // check to see if this software title should be "flashed"
                     if (IsNewerOrUninstalled(nsAutoCString(regKeyString), nsAutoCString(versionString)))
