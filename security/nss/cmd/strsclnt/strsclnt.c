@@ -112,6 +112,7 @@ static int certsTested;
 static int MakeCertOK;
 static int NoReuse;
 static PRBool NoDelay;
+static PRBool QuitOnTimeout = PR_FALSE;
 
 static SSL3Statistics * ssl3stats;
 
@@ -139,10 +140,11 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n rsa_nickname] [-p port] [-d dbdir] [-c connections]\n"
-	"          [-DNv] [-f fortezza_nickname] [-2 filename]\n"
+	"          [-DNvq] [-f fortezza_nickname] [-2 filename]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
 	"       -D means no TCP delays\n"
+	"       -q means quit when server gone (timeout rather than retry forever)\n"
 	"       -N means no session reuse\n",
 	progName);
     exit(1);
@@ -690,6 +692,11 @@ retry:
 	        max_threads = connections - 1;
 		fprintf(stderr,"max_threads set down to %d\n", max_threads);
 	    }
+            if (QuitOnTimeout && sleepInterval > 40000) {
+                fprintf(stderr,
+	            "strsclnt: Client timed out waiting for connection to server.\n");
+                exit(1);
+            }
 	    PR_Sleep(PR_MillisecondsToInterval(sleepInterval));
 	    sleepInterval <<= 1;
 	    goto retry;
@@ -949,7 +956,7 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:C:DNc:d:f:n:op:t:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:C:DNc:d:f:n:op:t:vqw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
@@ -972,6 +979,8 @@ main(int argc, char **argv)
 	case 'o': MakeCertOK = 1; break;
 
 	case 'p': port = PORT_Atoi(optstate->value); break;
+
+	case 'q': QuitOnTimeout = PR_TRUE; break;
 
 	case 't':
 	    tmpInt = PORT_Atoi(optstate->value);
