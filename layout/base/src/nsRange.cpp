@@ -393,13 +393,13 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     aStartOffset = aEndOffset;
   }
   
-  if (mStartParent != aStartN)
+  if (mStartParent.get() != aStartN)
   {
     if (mStartParent) // if it had a former start node, take it off it's list
     {
       RemoveFromListOf(mStartParent);
     }
-    mStartParent = aStartN;
+    mStartParent = do_QueryInterface(aStartN);
     if (mStartParent) // if it has a new start node, put it on it's list
     {
       AddToListOf(mStartParent);
@@ -407,13 +407,13 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   }
   mStartOffset = aStartOffset;
 
-  if (mEndParent != aEndN)
+  if (mEndParent.get() != aEndN)
   {
     if (mEndParent) // if it had a former end node, take it off it's list
     {
       RemoveFromListOf(mEndParent);
     }
-    mEndParent = aEndN;
+    mEndParent = do_QueryInterface(aEndN);
     if (mEndParent) // if it has a new end node, put it on it's list
     {
       AddToListOf(mEndParent);
@@ -546,7 +546,7 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
     return NS_ERROR_NOT_INITIALIZED;
   
   // check common case first
-  if ((aParent == mStartParent) && (aParent == mEndParent))
+  if ((aParent == mStartParent.get()) && (aParent == mEndParent.get()))
   {
     if (aOffset<mStartOffset)
     {
@@ -563,12 +563,12 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
   }
   
   // more common cases
-  if ((aParent == mStartParent) && (aOffset == mStartOffset)) 
+  if ((aParent == mStartParent.get()) && (aOffset == mStartOffset)) 
   {
     *aResult = 0;
     return NS_OK;
   }
-  if ((aParent == mEndParent) && (aOffset == mEndOffset)) 
+  if ((aParent == mEndParent.get()) && (aOffset == mEndOffset)) 
   {
     *aResult = 0;
     return NS_OK;
@@ -829,7 +829,7 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
 nsresult nsRange::ContentOwnsUs(nsIDOMNode* domNode)
 {
   NS_PRECONDITION(domNode, "null pointer");
-  if ((mStartParent != domNode) && (mEndParent != domNode))
+  if ((mStartParent.get() != domNode) && (mEndParent.get() != domNode))
   {
     NS_NOTREACHED("nsRange::ContentOwnsUs");
     return NS_ERROR_UNEXPECTED;
@@ -1364,8 +1364,8 @@ nsRange::CloneSibsAndParents(nsIDOMNode* aParentNode, PRInt32 nodeOffset,
   res = tmpNode->GetParentNode(getter_AddRefs(parentNode));
   if (NS_SUCCEEDED(res))
   {
-    PRInt32 index = IndexOf(parentNode);
-    return CloneSibsAndParents(parentNode, index, parentClone,
+    PRInt32 indx = IndexOf(parentNode);
+    return CloneSibsAndParents(parentNode, indx, parentClone,
                                commonParent, docfrag, leftP);
   }
 
