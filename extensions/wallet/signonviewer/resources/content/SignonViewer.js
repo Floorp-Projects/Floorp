@@ -229,7 +229,7 @@ var signonsTreeView = {
       rv = signons[row].host;
     } else if (column.id=="userCol") {
       rv = signons[row].user;
-    } else if (column=="passwordCol") {
+    } else if (column.id=="passwordCol") {
       rv = signons[row].password;
     }
     return rv;
