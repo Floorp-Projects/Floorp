@@ -51,8 +51,8 @@
         <body>
         <![CDATA[
           if (aTopic == "Update:Ended") {
-            var updates = Components.classes["@mozilla.org/updates/background-update-service;1"]
-                                    .getService(Components.interfaces.nsIBackgroundUpdateService);
+            var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                    .getService(Components.interfaces.nsIUpdateService);
             this.severity     = updates.updateSeverity;
             this.updateCount  = updates.updateCount;
             
@@ -105,9 +105,10 @@
       <method name="showUpdates">
         <body>
         <![CDATA[
-          var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                            .getService(Components.interfaces.nsIExtensionManager);
-          em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
+          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                  .getService(Components.interfaces.nsIUpdateService);
+          updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
+                                  Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER);
         ]]>
         </body>
       </method>

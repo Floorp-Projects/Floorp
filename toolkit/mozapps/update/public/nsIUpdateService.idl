@@ -38,20 +38,6 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
-interface nsIBackgroundUpdateService : nsISupports
-{
-  void checkForUpdates();
-  void checkForUpdatesNow();
-
-  readonly attribute long updateCount;
-  readonly attribute unsigned short updateSeverity;
-
-  readonly attribute wstring appUpdateDescription;
-  readonly attribute wstring appUpdateURL;
-};
-
-
 [scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
 interface nsIUpdateItem : nsISupports
 {
@@ -62,11 +48,11 @@ interface nsIUpdateItem : nsISupports
   readonly attribute wstring  updateURL;
   readonly attribute wstring  iconURL;
 
-  const unsigned short TYPE_ANY         = 0x00;
-  const unsigned short TYPE_APP         = 0x01;
-  const unsigned short TYPE_EXTENSION   = 0x02;
-  const unsigned short TYPE_THEME       = 0x04;
-  const unsigned short TYPE_LOCALE      = 0x08;
+  const unsigned short TYPE_ANY         = 0x01;
+  const unsigned short TYPE_APP         = 0x02;
+  const unsigned short TYPE_EXTENSION   = 0x04;
+  const unsigned short TYPE_THEME       = 0x08;
+  const unsigned short TYPE_LOCALE      = 0x10;
 
   readonly attribute long     type;
 
@@ -75,5 +61,29 @@ interface nsIUpdateItem : nsISupports
             in long aType);
 
   readonly attribute wstring objectSource;
+};
+
+[scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
+interface nsIUpdateService : nsISupports
+{
+  void watchForUpdates();
+
+  const unsigned short SOURCE_EVENT_USER        = 0x01;
+  const unsigned short SOURCE_EVENT_BACKGROUND  = 0x02;
+
+  void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+                       in unsigned long aItemCount,
+                       in unsigned short aUpdateTypes, 
+                       in unsigned short aSourceEvent);
+  void checkForUpdatesInternal([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+                               in unsigned long aItemCount,
+                               in unsigned short aUpdateTypes);
+
+  readonly attribute long updateCount;
+  readonly attribute unsigned short updateSeverity;
+
+  readonly attribute string appUpdateVersion;
+  readonly attribute wstring appUpdateDescription;
+  readonly attribute wstring appUpdateURL;
 };
 

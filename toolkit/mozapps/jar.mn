@@ -48,6 +48,7 @@ classic.jar:
   skin/classic/mozapps/extensions/viewWatermark.png         (extensions/skin/viewWatermark.png)
   skin/classic/mozapps/update/update.css                    (update/skin/update.css)
   skin/classic/mozapps/update/warning.gif                   (update/skin/warning.gif)
++ skin/classic/mozapps/update/icon32.png                    (update/skin/icon32.png)
   skin/classic/mozapps/shared/richview.xml                  (shared/skin/richview.xml)
   skin/classic/mozapps/shared/richview.css                  (shared/skin/richview.css)
   skin/classic/mozapps/shared/viewFader.png                 (shared/skin/viewFader.png)

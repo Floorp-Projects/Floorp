@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE        = update
 XPIDL_MODULE  = update
 
-XPIDLSRCS = nsIBackgroundUpdateService.idl
+XPIDLSRCS = nsIUpdateService.idl
 
 include $(topsrcdir)/config/rules.mk
 

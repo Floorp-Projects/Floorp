@@ -368,8 +368,10 @@ var gExtensionsViewController = {
     { 
       var id = stripPrefix(gExtensionsView.selected.id);
       var items = gExtensionManager.getItemList(id, nsIUpdateItem.TYPE_EXTENSION, { });
-      gExtensionManager.update(items, items.length, 
-                               Components.interfaces.nsIUpdateItem.UPDATE_TYPE_USERINVOKED);
+      var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                              .getService(Components.interfaces.nsIUpdateService);
+      updates.checkForUpdates(items, items.length, nsIUpdateItem.TYPE_EXTENSION, 
+                              Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER);
     },
 
     cmd_uninstall: function ()
