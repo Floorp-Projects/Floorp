@@ -148,9 +148,9 @@ pref("mail.addr_book.displayName.lastnamefirst", "chrome://messenger/locale/mess
 pref("mail.addr_book.show_phonetic_fields", "chrome://messenger/locale/messenger.properties");
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
-// you can specify one, option header
+// you can specify multiple, option headers
 // this will show up in the address picker in the compose window
-// examples: "X-Face" or "Approved"
+// examples: "X-Face" or "Approved,X-No-Archive"
 pref("mail.compose.other.header",	    "");
 pref("mail.fcc_folder",                     "");
 pref("mail.encrypt_outgoing_mail",          false);
@@ -310,6 +310,12 @@ pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 pref("mail.identity.default.auto_quote", true);
 pref("mail.identity.default.reply_on_top", 0); // 0=bottom 1=top 2=select
+
+// Headers to always add to outgoing mail
+// examples: "header1,header2"
+// pref("mail.identity.id1.headers", "header1");
+// user_pref("mail.identity.id1.header.header1", "X-Mozilla-Rocks: True")
+pref("mail.identity.default.headers", "");
 
 // by default, only collect addresses the user sends to (outgoing)
 // incoming is all spam anyways
