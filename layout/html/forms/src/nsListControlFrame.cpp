@@ -3435,14 +3435,17 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
       PRInt32 oldIndex;
       PRInt32 curIndex = mSelectedIndex;
       if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        mSelectedIndex    = curIndex;
-        mOldSelectedIndex = oldIndex;
-        if (kNothingSelected != mSelectedIndex) {
-          if (mOldSelectedIndex != mSelectedIndex) {
-            if (mOldSelectedIndex != kNothingSelected) {
-              SetContentSelected(mOldSelectedIndex, PR_FALSE);
+        PRBool optionIsDisabled = PR_FALSE;
+        if (NS_SUCCEEDED(IsTargetOptionDisabled(optionIsDisabled)) && !optionIsDisabled) {
+          mSelectedIndex    = curIndex;
+          mOldSelectedIndex = oldIndex;
+          if (kNothingSelected != mSelectedIndex) {
+            if (mOldSelectedIndex != mSelectedIndex) {
+              if (mOldSelectedIndex != kNothingSelected) {
+                SetContentSelected(mOldSelectedIndex, PR_FALSE);
+              }
+              SetContentSelected(mSelectedIndex, PR_TRUE);
             }
-            SetContentSelected(mSelectedIndex, PR_TRUE);
           }
         }
       }
