@@ -1288,7 +1288,7 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell)
 {
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;
-  mNotifyOnInput = PR_FALSE;
+  mNotifyOnInput = PR_TRUE;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mScrollableView = nsnull;
@@ -2055,7 +2055,6 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, this, PR_TRUE);
-    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
   nsresult rv = nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -2146,9 +2145,6 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
   nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
-
-  if (mState & NS_FRAME_FIRST_REFLOW)
-    mNotifyOnInput = PR_TRUE; //its ok to notify now. all has been prepared.
 
   nsReflowStatus status;
   nsresult rv = ReflowStandard(presContext, aSize, *reflowState, status);
@@ -3096,9 +3092,14 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
 
       // Since this code does not handle user-generated changes to the text,
       // make sure we don't fire oninput when the editor notifies us.
-      // Note: mNotifyOnInput must be reset before we return.
-      PRBool oldNotify = mNotifyOnInput;
-      mNotifyOnInput = PR_FALSE;
+      // (mNotifyOnInput must be reset before we return).
+
+      // To protect against a reentrant call to SetValue, we check whether
+      // another SetValue is already happening for this frame.  If it is,
+      // we must wait until we unwind to re-enable oninput events.
+      PRBool outerTransaction = mNotifyOnInput;
+      if (outerTransaction)
+        mNotifyOnInput = PR_FALSE;
 
       // get the flags, remove readonly and disabled, set the value,
       // restore flags
@@ -3119,7 +3120,8 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       if (selPriv)
         selPriv->EndBatchChanges();
 
-      mNotifyOnInput = oldNotify;
+      if (outerTransaction)
+        mNotifyOnInput = PR_TRUE;
     }
 
     if (mScrollableView)
