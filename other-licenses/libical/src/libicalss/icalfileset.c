@@ -3,7 +3,7 @@
   FILE: icalfileset.c
   CREATOR: eric 23 December 1999
   
-  $Id: icalfileset.c,v 1.9 2002/11/06 21:22:43 mostafah%oeone.com Exp $
+  $Id: icalfileset.c,v 1.10 2004/04/29 17:18:25 mkaply%us.ibm.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -388,6 +388,7 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
     
     impl->changed = 0;    
 
+#ifndef XP_OS2
 #ifndef XP_MAC
 #ifndef WIN32
     if(ftruncate(impl->fd,write_size) < 0){
@@ -399,6 +400,14 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
 #else
     // XXX THIS IS BROKEN ON MAC, NEED REPLACEMENT FOR ftruncate()
 #endif    
+    /* On OS/2, the file can be larger than what you are told is written */
+    /* Because of line endings (0x0A 0x0D). Unfortunately, we chouldn't */
+    /* Just take the WIN32 path, because the chsize is crashing OS/2. */
+    /* We're looking into the crash. */
+    if(ftruncate(impl->fd,tell(impl->fd)) < 0){
+	return ICAL_FILE_ERROR;
+    }
+#endif
     return ICAL_NO_ERROR;
     
 } 
