@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.5 1998/07/29 08:27:00 leif Exp $
+# $Id: Makefile.PL,v 1.6 1998/07/31 21:18:29 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -83,6 +83,16 @@ if ($osname =~ /mswin/i)
    }
 }
 
+$v3_def = "-DLDAPV3";
+
+if ($osname =~ /mswin/i)
+{
+   $myextlib = "$lib_ldap\\$ldap_lib.lib";
+} else {
+   $myextlib = "";
+}
+
+
 WriteMakefile(
 	'NAME'		=> 	'Mozilla::LDAP::API',
 	'VERSION_FROM'	=> 	'API.pm',
@@ -92,5 +102,6 @@ WriteMakefile(
 	'INC'		=> 	"",
 	)),
 	'LIBS'		=> 	["-L$lib_ldap -l$ldap_lib"],
-	'DEFINE'	=> 	"$ssl_def",
+	'MYEXTLIB'	=>	$myextlib,
+	'DEFINE'	=> 	"$v3_def $ssl_def",
 );

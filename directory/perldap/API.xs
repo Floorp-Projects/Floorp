@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.6 1998/07/29 03:30:26 leif Exp $
+ * $Id: API.xs,v 1.7 1998/07/31 21:18:28 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -94,11 +94,11 @@ char ** avref2charptrptr(SV *avref)
       return NULL;
    }
 
-   New(1,tmp_cpp,avref_arraylen+2,char *);
+   Newz(1,tmp_cpp,avref_arraylen+2,char *);
    for (ix_av = 0;ix_av <= avref_arraylen;ix_av++)
    {
       current_val = av_fetch((AV *)SvRV(avref),ix_av,0);
-      tmp_cpp[ix_av] = SvPV(*current_val,na);
+      tmp_cpp[ix_av] = strdup(SvPV(*current_val,na));
    }
    tmp_cpp[ix_av] = NULL;
 
@@ -119,11 +119,11 @@ struct berval ** avref2berptrptr(SV *avref)
       return NULL;
    }
 
-   New(1,tmp_ber,avref_arraylen+2,struct berval *);
+   Newz(1,tmp_ber,avref_arraylen+2,struct berval *);
    for (ix_av = 0;ix_av <= avref_arraylen;ix_av++)
    {
       current_val = av_fetch((AV *)SvRV(avref),ix_av,0);
-      tmp_ber[ix_av]->bv_val = (char *)SvPV(*current_val,na);
+      tmp_ber[ix_av]->bv_val = strdup(SvPV(*current_val,na));
       tmp_ber[ix_av]->bv_len = na;
    }
    tmp_ber[ix_av] = NULL;
@@ -190,7 +190,7 @@ LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
 
    if (ldap_current_attribute == NULL)
       return(NULL);
-   New(1,ldap_current_mod,1,LDAPMod);
+   Newz(1,ldap_current_mod,1,LDAPMod);
    ldap_current_mod->mod_type = ldap_current_attribute;
    if (SvROK(ldap_value_ref))
    {
@@ -246,7 +246,6 @@ LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
       else
          ldap_current_mod->mod_op = LDAP_MOD_REPLACE;
       ldap_current_mod->mod_values = avref2charptrptr(ldap_value_ref);
-		 /*av2modvals((AV *)SvRV(ldap_value_ref),0); */
       if (ldap_current_mod->mod_values == NULL)
       {
          ldap_current_mod->mod_op = LDAP_MOD_DELETE;
@@ -272,7 +271,7 @@ LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
             ldap_current_mod->mod_op = LDAP_MOD_REPLACE;
          }
          New(1,ldap_current_mod->mod_values,2,char *);
-         ldap_current_mod->mod_values[0] = SvPV(ldap_value_ref,na);
+         ldap_current_mod->mod_values[0] = strdup(SvPV(ldap_value_ref,na));
          ldap_current_mod->mod_values[1] = NULL;
       }
    }
@@ -297,26 +296,22 @@ LDAPMod ** hash2mod(SV *ldap_change_ref,int ldap_add_func,const char *func)
    HV *ldap_change;
 
    if (!SvROK(ldap_change_ref) || SvTYPE(SvRV(ldap_change_ref)) != SVt_PVHV)
-      croak("Net::LDAPapi::%s needs Hash reference as argument 3.",func);
+      croak("Mozilla::LDAP::API::%s needs Hash reference as argument 3.",func);
 
    ldap_change = (HV *)SvRV(ldap_change_ref);
 
+   Newz(1,ldapmod,1+HvKEYS(ldap_change),LDAPMod *);
    hv_iterinit(ldap_change);
    while((ldap_change_element = hv_iternext(ldap_change)) != NULL)
    {
-      ldap_current_attribute = hv_iterkey(ldap_change_element,&keylen);
+      ldap_current_attribute = strdup(hv_iterkey(ldap_change_element,&keylen));
       ldap_current_value_sv = hv_iterval(ldap_change,ldap_change_element);
       ldap_current_mod = parse1mod(ldap_current_value_sv,
         ldap_current_attribute,ldap_add_func,0);
       while (ldap_current_mod != NULL)
       {
          ldap_attribute_count++;
-         (ldapmod
-           ? Renew(ldapmod,1+ldap_attribute_count,LDAPMod *)
-           : New(1,ldapmod,1+ldap_attribute_count,LDAPMod *));
-         /* New(1,ldapmod[ldap_attribute_count -1],sizeof(LDAPMod),LDAPMod); */
          ldapmod[ldap_attribute_count-1] = (LDAPMod *)ldap_current_mod;
-         /* ,ldapmod[ldap_attribute_count-1], sizeof(LDAPMod),LDAPMod *); */
          ldap_current_mod = parse1mod(ldap_current_value_sv,
            ldap_current_attribute,ldap_add_func,1);
 
@@ -324,6 +319,18 @@ LDAPMod ** hash2mod(SV *ldap_change_ref,int ldap_add_func,const char *func)
    }
    ldapmod[ldap_attribute_count] = NULL;
    return ldapmod;
+}
+
+/* StrCaseCmp - Replacement for strcasecmp, since it doesn't exist on many
+   systems, including NT...  */
+
+int StrCaseCmp(const char *s, const char *t)
+{
+   while (*s && *t && toupper(*s) == toupper(*t))
+   {
+      s++; t++;
+   }
+   return(toupper(*s) - toupper(*t));
 }
 
 /* internal_rebind_proc - Wrapper to call a PERL rebind process             */
@@ -377,6 +384,8 @@ ldap_abandon(ld,msgid)
 	LDAP *		ld
 	int		msgid
 
+#ifdef LDAPV3
+
 int
 ldap_abandon_ext(ld,msgid,serverctrls,clientctrls)
 	LDAP *		ld
@@ -384,13 +393,17 @@ ldap_abandon_ext(ld,msgid,serverctrls,clientctrls)
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
 
+#endif
+
 int
 ldap_add(ld,dn,attrs)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	attrs = hash2mod($arg,1,"$func_name");
-#	CLEANUP:
-#	ldap_mods_free(attrs,0);
+	CLEANUP:
+	ldap_mods_free(attrs,1);
+
+#ifdef LDAPV3
 
 int
 ldap_add_ext(ld,dn,attrs,serverctrls,clientctrls,msgidp)
@@ -403,8 +416,8 @@ ldap_add_ext(ld,dn,attrs,serverctrls,clientctrls,msgidp)
 	OUTPUT:
 	RETVAL
 	msgidp
-#	CLEANUP:
-#	ldap_mods_free(attrs,0);
+	CLEANUP:
+	ldap_mods_free(attrs,1);
 
 int
 ldap_add_ext_s(ld,dn,attrs,serverctrls,clientctrls)
@@ -413,14 +426,18 @@ ldap_add_ext_s(ld,dn,attrs,serverctrls,clientctrls)
 	LDAPMod **	attrs = hash2mod($arg,1,"$func_name");
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
-#	CLEANUP:
-#	ldap_mods_free(attrs,0);
+	CLEANUP:
+	ldap_mods_free(attrs,1);
+
+#endif
 
 int
 ldap_add_s(ld,dn,attrs)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	attrs = hash2mod($arg,1,"$func_name");
+	CLEANUP:
+	ldap_mods_free(attrs,1);
 
 void
 ldap_ber_free(ber,freebuf)
@@ -433,6 +450,8 @@ ldap_compare(ld,dn,attr,value)
 	const char *	dn
 	const char *	attr
 	const char *	value
+
+#ifdef LDAPV3
 
 int
 ldap_compare_ext(ld,dn,attr,bvalue,serverctrls,clientctrls,msgidp)
@@ -456,6 +475,8 @@ ldap_compare_ext_s(ld,dn,attr,bvalue,serverctrls,clientctrls)
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
 
+#endif
+
 int
 ldap_compare_s(ld,dn,attr,value)
 	LDAP *		ld
@@ -463,9 +484,13 @@ ldap_compare_s(ld,dn,attr,value)
 	const char *	attr
 	const char *	value
 
+#ifdef LDAPV3
+
 void
 ldap_control_free(ctrl)
 	LDAPControl *	ctrl
+
+#endif
 
 #ifdef CONTROLS_COUNT_WORKS
 int
@@ -474,14 +499,20 @@ ldap_controls_count(ctrls)
 
 #endif
 
+#ifdef LDAPV3
+
 void
 ldap_controls_free(ctrls)
 	LDAPControl **	ctrls
+
+#endif
 
 int
 ldap_count_entries(ld,result)
 	LDAP *		ld
 	LDAPMessage *	result
+
+#ifdef LDAPV3
 
 int
 ldap_count_messages(ld,result)
@@ -493,6 +524,8 @@ ldap_count_references(ld,result)
 	LDAP *		ld
 	LDAPMessage *	result
 
+#endif
+
 int
 ldap_create_filter(buf,buflen,pattern,prefix,suffix,attr,value,valwords)
 	char *		buf
@@ -503,6 +536,10 @@ ldap_create_filter(buf,buflen,pattern,prefix,suffix,attr,value,valwords)
 	char *		attr
 	char *		value
 	char **		valwords
+	CLEANUP:
+	ldap_value_free(valwords);
+
+#ifdef LDAPV3
 
 int
 ldap_create_persistentsearch_control(ld,changetypes,changesonly,return_echg_ctrls,ctrl_iscritical,ctrlp)
@@ -543,10 +580,14 @@ ldap_create_virtuallist_control(ld,ldvlistp,ctrlp)
 	RETVAL
 	ctrlp
 
+#endif
+
 int
 ldap_delete(ld,dn)
 	LDAP *		ld
 	const char *	dn
+
+#ifdef LDAPV3
 
 int
 ldap_delete_ext(ld,dn,serverctrls,clientctrls,msgidp)
@@ -565,6 +606,8 @@ ldap_delete_ext_s(ld,dn,serverctrls,clientctrls)
 	const char *	dn
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
+
+#endif
 
 int
 ldap_delete_s(ld,dn)
@@ -599,6 +642,8 @@ ldap_explode_rdn(dn,notypes)
 	   RET_CPP(MOZLDAP_VAL);
 	}
 
+#ifdef LDAPV3
+
 int
 ldap_extended_operation(ld,requestoid,requestdata,serverctrls,clientctrls,msgidp)
 	LDAP *		ld
@@ -624,6 +669,10 @@ ldap_extended_operation_s(ld,requestoid,requestdata,serverctrls,clientctrls,reto
 	RETVAL
 	retoidp
 	retdatap
+	CLEANUP:
+	ldap_value_free_len(retdatap);
+
+#endif
 
 char *
 ldap_first_attribute(ld,entry,ber)
@@ -642,6 +691,8 @@ ldap_first_entry(ld,chain)
 	LDAP *		ld
 	LDAPMessage *	chain
 
+#ifdef LDAPV3
+
 LDAPMessage *
 ldap_first_message(ld,res)
 	LDAP *		ld
@@ -652,13 +703,19 @@ ldap_first_reference(ld,res)
 	LDAP *		ld
 	LDAPMessage *	res
 
+#endif
+
 void
 ldap_free_friendlymap(map)
 	FriendlyMap *	map
 
+#ifdef LDAPV3
+
 void
 ldap_free_sort_keylist(sortKeyList)
 	LDAPsortkey **	sortKeyList
+
+#endif
 
 void
 ldap_free_urldesc(ludp)
@@ -677,6 +734,8 @@ ldap_get_dn(ld,entry)
 	CLEANUP:
 	ldap_memfree(RETVAL);
 
+#ifdef LDAPV3
+
 int
 ldap_get_entry_controls(ld,entry,serverctrlsp)
 	LDAP *		ld
@@ -685,6 +744,8 @@ ldap_get_entry_controls(ld,entry,serverctrlsp)
 	OUTPUT:
 	RETVAL
 	serverctrlsp
+
+#endif
 
 void
 ldap_getfilter_free(lfdp)
@@ -695,6 +756,8 @@ ldap_getfirstfilter(lfdp,tagpat,value)
 	LDAPFiltDesc *	lfdp
 	char *		tagpat
 	char *		value	
+
+#ifdef LDAPV3
 
 void
 ldap_get_lang_values(ld,entry,target,type)
@@ -721,11 +784,30 @@ ldap_get_lang_values_len(ld,entry,target,type)
 	   RET_BVPP(MOZLDAP_VAL);
 	}
 
+#endif
+
 int
 ldap_get_lderrno(ld,m,s)
 	LDAP *		ld
-	char *		&m = NO_INIT
-	char *		&s = NO_INIT
+	SV *		m = NO_INIT
+	SV *		s = NO_INIT
+	CODE:
+	{
+	   char *mm,*ss;
+	   RETVAL = ldap_get_lderrno(ld,&mm,&ss);
+	   if (mm == NULL)
+	   {
+	      m = &sv_undef;
+	   } else {
+	      m = sv_2mortal(newSVpv(mm,strlen(mm)));
+	   }
+	   if (ss == NULL)
+	   {
+	      s = &sv_undef;
+	   } else {
+	      s = sv_2mortal(newSVpv(ss,strlen(ss)));
+	   }
+	}
 	OUTPUT:
 	RETVAL
 	m
@@ -784,6 +866,8 @@ int
 ldap_is_ldap_url(url)
 	char *		url
 
+#ifdef LDAPV3
+
 void
 ldap_memcache_destroy(cache)
 	LDAPMemCache *	cache
@@ -813,6 +897,8 @@ ldap_memcache_init(ttl,size,baseDNs,cachep)
 	OUTPUT:
 	RETVAL
 	cachep
+	CLEANUP:
+	ldap_value_free(baseDNs);
 
 int
 ldap_memcache_set(ld,cache)
@@ -823,6 +909,8 @@ void
 ldap_memcache_update(cache)
 	LDAPMemCache *	cache
 
+#endif
+
 void
 ldap_memfree(p)
 	void *		p
@@ -832,8 +920,10 @@ ldap_modify(ld,dn,mods)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	mods = hash2mod($arg,0,"$func_name");
-#	CLEANUP:
-#	ldap_mods_free(mods,0);
+	CLEANUP:
+	ldap_mods_free(mods,1);
+
+#ifdef LDAPV3
 
 int
 ldap_modify_ext(ld,dn,mods,serverctrls,clientctrls,msgidp)
@@ -846,8 +936,8 @@ ldap_modify_ext(ld,dn,mods,serverctrls,clientctrls,msgidp)
 	OUTPUT:
 	RETVAL
 	msgidp
-#	CLEANUP:
-#	ldap_mods_free(mods,0);
+	CLEANUP:
+	ldap_mods_free(mods,1);
 
 int
 ldap_modify_ext_s(ld,dn,mods,serverctrls,clientctrls)
@@ -856,14 +946,18 @@ ldap_modify_ext_s(ld,dn,mods,serverctrls,clientctrls)
 	LDAPMod **	mods = hash2mod($arg,0,"$func_name");
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
-#	CLEANUP:
-#	ldap_mods_free(mods,0);
+	CLEANUP:
+	ldap_mods_free(mods,1);
+
+#endif
 
 int
 ldap_modify_s(ld,dn,mods)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	mods = hash2mod($arg,0,"$func_name");
+	CLEANUP:
+	ldap_mods_free(mods,1);
 
 int
 ldap_modrdn(ld,dn,newrdn)
@@ -915,11 +1009,13 @@ ldap_multisort_entries(ld,chain,attr)
 	char **		attr
 	CODE:
 	{
-	   RETVAL = ldap_multisort_entries(ld,&chain,attr,strcasecmp);
+	   RETVAL = ldap_multisort_entries(ld,&chain,attr,StrCaseCmp);
 	}
 	OUTPUT:
 	RETVAL
 	chain
+	CLEANUP:
+	ldap_value_free(attr);
 
 char *
 ldap_next_attribute(ld,entry,ber)
@@ -936,6 +1032,8 @@ LDAPMessage *
 ldap_next_entry(ld,entry)
 	LDAP *		ld
 	LDAPMessage *	entry
+
+#ifdef LDAPV3
 
 LDAPMessage *
 ldap_next_message(ld,msg)
@@ -1037,10 +1135,14 @@ ldap_parse_virtuallist_control(ld,ctrls,target_posp,list_sizep,errcodep)
 	list_sizep
 	errcodep
 
+#endif
+
 void
 ldap_perror(ld,s)
 	LDAP *		ld
 	const char *	s
+
+#ifdef LDAPV3
 
 int
 ldap_rename(ld,dn,newrdn,newparent,deleteoldrdn,serverctrls,clientctrls,msgidp)
@@ -1066,6 +1168,8 @@ ldap_rename_s(ld,dn,newrdn,newparent,deleteoldrdn,serverctrls,clientctrls)
 	LDAPControl **	serverctrls
 	LDAPControl **	clientctrls
 
+#endif
+
 int
 ldap_result(ld,msgid,all,timeout,result)
 	LDAP *		ld
@@ -1082,6 +1186,8 @@ ldap_result2error(ld,r,freeit)
 	LDAP *		ld
 	LDAPMessage *	r
 	int		freeit
+
+#ifdef LDAPV3
 
 int
 ldap_sasl_bind(ld,dn,mechanism,cred,serverctrls,clientctrls,msgidp)
@@ -1109,6 +1215,8 @@ ldap_sasl_bind_s(ld,dn,mechanism,cred,serverctrls,clientctrls,servercredp)
 	RETVAL
 	servercredp
 
+#endif
+
 int
 ldap_search(ld,base,scope,filter,attrs,attrsonly)
 	LDAP *		ld
@@ -1117,6 +1225,10 @@ ldap_search(ld,base,scope,filter,attrs,attrsonly)
 	const char *	filter
 	char **		attrs
 	int		attrsonly
+	CLEANUP:
+	ldap_value_free(attrs);
+
+#ifdef LDAPV3
 
 int
 ldap_search_ext(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,timeoutp,sizelimit,msgidp)
@@ -1134,6 +1246,8 @@ ldap_search_ext(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,tim
 	OUTPUT:
 	RETVAL
 	msgidp
+	CLEANUP:
+	ldap_value_free(attrs);
 
 int
 ldap_search_ext_s(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,timeoutp,sizelimit,res)
@@ -1151,6 +1265,10 @@ ldap_search_ext_s(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,t
 	OUTPUT:
 	RETVAL
 	res
+	CLEANUP:
+	ldap_value_free(attrs);
+
+#endif
 
 int
 ldap_search_s(ld,base,scope,filter,attrs,attrsonly,res)
@@ -1164,6 +1282,8 @@ ldap_search_s(ld,base,scope,filter,attrs,attrsonly,res)
 	OUTPUT:
 	RETVAL
 	res
+	CLEANUP:
+	ldap_value_free(attrs);
 
 int
 ldap_search_st(ld,base,scope,filter,attrs,attrsonly,timeout,res)
@@ -1178,6 +1298,8 @@ ldap_search_st(ld,base,scope,filter,attrs,attrsonly,timeout,res)
 	OUTPUT:
 	RETVAL
 	res
+	CLEANUP:
+	ldap_value_free(attrs);
 	
 int
 ldap_set_filter_additions(lfdp,prefix,suffix)
@@ -1235,7 +1357,7 @@ ldap_sort_entries(ld,chain,attr)
 	char *		attr
 	CODE:
 	{
-	   RETVAL = ldap_sort_entries(ld,&chain,attr,strcasecmp);
+	   RETVAL = ldap_sort_entries(ld,&chain,attr,StrCaseCmp);
 	}
 	OUTPUT:
 	RETVAL
