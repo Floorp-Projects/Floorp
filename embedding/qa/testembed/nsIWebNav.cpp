@@ -76,11 +76,11 @@ CNsIWebNav::~CNsIWebNav()
 
 // Url table for web navigation
 NavElement UrlTable[] = {
-   {"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"http://www.intel.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
-   {"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
+   {"ftp://ftp.mozilla.org/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
    {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
 };
 
