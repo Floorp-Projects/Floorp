@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef __nsProxiedServiceManager_h_
@@ -40,7 +41,7 @@
 //          return;
 //      nsIMyService pIProxiedObject = NULL;
 //      rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
-//                                                              nsIMyService::GetIID(), 
+//                                                              NS_GET_IID(nsIMyService), 
 //                                                              pIMyService, PROXY_SYNC,
 //                                                              (void**)&pIProxiedObject);
 //      pIProxiedObject->DoIt(...);  // Executed on same thread as pIProxyQueue
@@ -63,7 +64,7 @@
 // static member functions from nsServiceManager.
 
 #define NS_WITH_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
-    nsProxiedService _serv##var(cid, T::GetIID(), Q, rvAddr);           \
+    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, rvAddr);           \
     T* var = (T*)(nsISupports*)_serv##var;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,7 @@ class nsProxiedService
     nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
                      nsIEventQueue* pIProxyQueue, nsresult*rv)
     {
-       static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+       static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
        *rv = nsServiceManager::GetService(aClass, 
