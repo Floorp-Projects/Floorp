@@ -79,7 +79,7 @@ GECKO_VERSION=`echo $(MOZILLA_VERSION) | sed 's|\(^[0-9]*\.[0-9]*\).*|\1|'`
 
 libs:: $(CONTENT)
 	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/content/$(APPNAME)
-	echo 'content,profile,url,resource://app/chrome/content/simple/' > $(DIST)/bin/apps/$(APPNAME)/chrome/installed-chrome.txt
+	echo 'content simple content/simple/' > $(DIST)/bin/apps/$(APPNAME)/chrome/simple.manifest
 
 libs:: $(ICONS)
 	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/icons/default
