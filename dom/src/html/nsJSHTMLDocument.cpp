@@ -642,6 +642,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
       if (NS_OK == b->NamedItem(name, &prop)) {
+        NS_RELEASE(b);
         if (NULL != prop) {
           // get the js object
           if (prop != nsnull) {
@@ -661,7 +662,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = JSVAL_NULL;
           }
         }
-        NS_RELEASE(b);
+        else {
+          nsIJSScriptObject *object;
+          if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+            PRBool rval;
+            rval =  object->GetProperty(cx, id, vp);
+            NS_RELEASE(object);
+            return rval;
+          }
+        }
       }
       else {
         NS_RELEASE(b);

@@ -132,6 +132,15 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = JSVAL_NULL;
           }
       }
+      else {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->GetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
+      }
     }
     else {
       return JS_FALSE;

@@ -315,6 +315,15 @@ static const char *kPropFuncNamedItemStr =
 "      if (NULL != prop) {\n"
 "%s"
 "      }\n"
+"      else {\n"
+"        nsIJSScriptObject *object;\n"
+"        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
+"          PRBool rval;\n"
+"          rval =  object->%sProperty(cx, id, vp);\n"
+"          NS_RELEASE(object);\n"
+"          return rval;\n"
+"        }\n"
+"      }\n"
 "    }\n"
 "    else {\n"
 "      return JS_FALSE;\n"
@@ -337,10 +346,19 @@ static const char *kPropFuncNamedItemNonPrimaryStr =
 "\n"
 "    if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
 "      if (NS_OK == b->NamedItem(name, %sprop)) {\n"
+"        NS_RELEASE(b);\n"
 "        if (NULL != prop) {\n"
 "%s"
 "        }\n"
-"        NS_RELEASE(b);\n"
+"        else {\n"
+"          nsIJSScriptObject *object;\n"
+"          if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
+"            PRBool rval;\n"
+"            rval =  object->%sProperty(cx, id, vp);\n"
+"            NS_RELEASE(object);\n"
+"            return rval;\n"
+"          }\n"
+"        }\n"
 "      }\n"
 "      else {\n"
 "        NS_RELEASE(b);\n"
@@ -601,13 +619,13 @@ JSStubGen::GeneratePropGetter(ofstream *file,
   else if (JSSTUBGEN_NAMED_ITEM == aType) {
     sprintf(buf, kPropFuncNamedItemStr, attr_type,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
-            case_str);
+            case_str, "Get");
   }
   else if (JSSTUBGEN_NAMED_ITEM_NONPRIMARY == aType) {
     sprintf(buf, kPropFuncNamedItemNonPrimaryStr, attr_type,
             aInterface.GetName(), aInterface.GetName(),
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
-            case_str, aInterface.GetName());
+            case_str, "Get", aInterface.GetName());
   }
 
   *file << buf;
