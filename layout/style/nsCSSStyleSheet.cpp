@@ -3814,9 +3814,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
         if (data.mCompatMode == eCompatibility_NavQuirks &&
-            // global selector:
-            !aSelector->mTag && !aSelector->mClassList &&
-            !aSelector->mIDList && !aSelector->mAttrList &&
+            // global selector (but don't check .class):
+            !aSelector->mTag && !aSelector->mIDList && !aSelector->mAttrList &&
             // :hover or :active
             (nsCSSPseudoClasses::active == pseudoClass->mAtom ||
              nsCSSPseudoClasses::hover == pseudoClass->mAtom) &&
