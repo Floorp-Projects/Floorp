@@ -2262,7 +2262,6 @@ var FullScreen =
   toggle: function()
   {
     // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
-    this.showXULChrome("menubar", window.fullScreen);
     this.showXULChrome("toolbar", window.fullScreen);
     this.showXULChrome("statusbar", window.fullScreen);
   },
@@ -2304,6 +2303,7 @@ var FullScreen =
     for (i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
     
+    // XXXBlake
     var toolbox = document.getElementById("navigator-toolbox");
     if (!aShow && gToolbarMode != "text") {
       toolbox.setAttribute("mode", "icons");
@@ -2313,7 +2313,6 @@ var FullScreen =
       toolbox.setAttribute("mode", gToolbarMode);
       toolbox.setAttribute("iconsize", gIconSize);
     }
-      
   }
 };
 
