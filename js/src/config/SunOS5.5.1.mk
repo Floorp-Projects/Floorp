@@ -16,47 +16,7 @@
 #
 
 #
-# Config stuff for SunOS5.5
+# Config stuff for SunOS5.5.1
 #
 
-AS = as
-ifndef NS_USE_NATIVE
-CC = gcc
-CCC = g++
-CFLAGS +=  -Wall -Wno-format
-else
-CC = cc
-CCC = CC
-endif
-
-RANLIB = echo
-
-#.c.o:
-#	$(CC) -c -MD $*.d $(CFLAGS) $<
-
-CPU_ARCH = sparc
-GFX_ARCH = x
-
-OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -DSOLARIS
-OS_LIBS = -lsocket -lnsl -ldl
-
-ASFLAGS	        += -P -L -K PIC -D_ASM -D__STDC__=0
-
-HAVE_PURIFY = 1
-
-NOSUCHFILE = /solaris-rm-f-sucks
-
-ifeq ($(OS_CPUARCH),sun4u)	# ultra sparc?
-ifeq ($(CC),gcc)		# using gcc?
-ifndef JS_NO_ULTRA		# do we want ultra?
-ifdef JS_THREADSAFE		# only in thread-safe mode
-DEFINES 	+= -DULTRA_SPARC
-DEFINES         += -Wa,-xarch=v8plus,-DULTRA_SPARC
-else
-ASFLAGS         += -xarch=v8plus -DULTRA_SPARC
-endif
-endif
-endif
-endif
-
-MKSHLIB = $(LD) -G
+include $(DEPTH)/config/SunOS5.5.mk
