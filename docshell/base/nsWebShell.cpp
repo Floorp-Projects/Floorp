@@ -194,6 +194,7 @@ public:
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
+  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
 
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
@@ -1410,6 +1411,12 @@ nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
+{
+  //XXX Move focus to next child, or if on last child, call focus available on next container
+  return NS_OK;
+}
 //----------------------------------------------------------------------
 
 // WebShell link handling

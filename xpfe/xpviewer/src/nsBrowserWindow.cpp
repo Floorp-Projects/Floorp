@@ -2400,6 +2400,11 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
+{
+  return NS_OK;
+}
 
 //----------------------------------------
 

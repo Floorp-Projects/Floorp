@@ -33,6 +33,7 @@ public:
 	NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
 	NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
+  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
