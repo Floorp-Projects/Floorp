@@ -111,43 +111,6 @@ SOURCE=..\..\..\..\Tools\Burg\fe.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Tools\Burg\gram.y
-
-!IF  "$(CFG)" == "Burg - Win32 Release"
-
-# Begin Custom Build - Performing Custom-Build Setup
-InputPath=..\..\..\..\Tools\Burg\gram.y
-
-BuildCmds= \
-	$(NSTOOLS)\bin\yacc -l -b y.tab -d $(InputPath)
-
-"y.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"y.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Burg - Win32 Debug"
-
-# Begin Custom Build - Performing Custom-Build Setup
-InputPath=..\..\..\..\Tools\Burg\gram.y
-
-BuildCmds= \
-	..\..\..\..\Tools\bin\bison -l -d $(InputPath)
-
-"y.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"y.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Tools\Burg\item.c
 # End Source File
 # Begin Source File
@@ -212,11 +175,7 @@ SOURCE=..\..\..\..\Tools\Burg\trim.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\y.tab.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\y.tab.h
+SOURCE=..\..\..\..\Tools\Burg\y.tab.c
 # End Source File
 # Begin Source File
 
