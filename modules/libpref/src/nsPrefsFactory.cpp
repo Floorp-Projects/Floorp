@@ -23,6 +23,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsPrefService.h"
+#include "nsPrefBranch.h"
 #include "nsIPref.h"
 
 // remove this when nsPref goes away
@@ -30,6 +31,7 @@ extern "C" nsresult nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void *
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -41,6 +43,13 @@ static nsModuleComponentInfo components[] =
     nsPrefServiceConstructor
   },
 
+  {
+    NS_PREFLOCALIZEDSTRING_CLASSNAME, 
+    NS_PREFLOCALIZEDSTRING_CID,
+    NS_PREFLOCALIZEDSTRING_CONTRACTID, 
+    nsPrefLocalizedStringConstructor
+  },
+
   { // remove this when nsPref goes away
     NS_PREF_CLASSNAME, 
     NS_PREF_CID,
@@ -50,3 +59,4 @@ static nsModuleComponentInfo components[] =
 };
 
 NS_IMPL_NSGETMODULE("nsPrefModule", components);
+

@@ -22,6 +22,8 @@
  */
 
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 
@@ -29,22 +31,24 @@ class nsIFile;
 
 class nsPrefService : public nsIPrefService,
                       public nsIObserver,
-                      public nsIPrefBranch
+                      public nsIPrefBranch,
+                      public nsIPrefBranchInternal
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
+  NS_DECL_NSIPREFBRANCHINTERNAL
   NS_DECL_NSIOBSERVER
 
   nsPrefService();
   virtual ~nsPrefService();
 
-  NS_METHOD Init();
+  nsresult Init();
                            
 protected:
-  NS_METHOD useDefaultPrefFile();
-  NS_METHOD useUserPrefFile();
+  nsresult useDefaultPrefFile();
+  nsresult useUserPrefFile();
 
 private:
     nsCOMPtr<nsIPrefBranch> mRootBranch;

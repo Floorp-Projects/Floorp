@@ -31,7 +31,8 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 
-class nsPrefBranch : public nsIPrefBranchInternal
+class nsPrefBranch : public nsIPrefBranch,
+                     public nsIPrefBranchInternal
 {
 public:
   NS_DECL_ISUPPORTS
@@ -58,7 +59,8 @@ private:
 };
 
 
-class nsPrefLocalizedString : public nsIPrefLocalizedString
+class nsPrefLocalizedString : public nsIPrefLocalizedString,
+                              public nsISupportsWString
 {
 public:
   nsPrefLocalizedString();
@@ -66,6 +68,9 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_FORWARD_NSISUPPORTSWSTRING(mUnicodeString->)
+  NS_FORWARD_NSISUPPORTSPRIMITIVE(mUnicodeString->)
+
+  nsresult Init();
 
 private:
   nsCOMPtr<nsISupportsWString> mUnicodeString;

@@ -22,11 +22,11 @@
  * Brian Nesse <bnesse@netscape.com>
  */
 
-#include "nsIPrefBranch.idl"
+#include "nsISupports.idl"
 #include "nsIObserver.idl"
 
 [scriptable, uuid(24ef9578-1dd2-11b2-b439-fcc3d2b4fa20)]
-interface nsIPrefBranchInternal : nsIPrefBranch
+interface nsIPrefBranchInternal : nsISupports
 {
   /*
    * Listeners
