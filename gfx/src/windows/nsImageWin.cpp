@@ -170,9 +170,11 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
     if (mNumPalleteColors == 0)
     {
       PRInt32 x, y, span = CalcBytesSpan(mBHead->biWidth), idx;
-      PRUint8 *pixels = mImageBits + aUpdateRect->y * span + aUpdateRect->x * 3;
+      PRUint8 *pixels = mImageBits + 
+		                (mBHead->biHeight - aUpdateRect->y - aUpdateRect->height) * span + 
+		                aUpdateRect->x * 3;
       PRUint8 *gamma = aContext->GetGammaTable();
-      
+
       for (y = 0; y < aUpdateRect->height; y++)
       {
         for (x = 0, idx = 0; x < aUpdateRect->width; x++)
@@ -187,6 +189,7 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 
         pixels += span;
       }
+
     }
   }
 }
