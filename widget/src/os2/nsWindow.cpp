@@ -1688,133 +1688,132 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
   HPOINTER newPointer = NULLHANDLE;
 
-  switch(aCursor) {
-  case eCursor_select:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_TEXT, FALSE);
-    break;
-    
-  case eCursor_wait:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_WAIT, FALSE);
-    break;
-
-  case eCursor_hyperlink:
-    newPointer = gPtrArray[IDC_SELECTANCHOR-IDC_BASE];
-    break;
-
-  case eCursor_standard:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ARROW, FALSE);
-    break;
-
-  case eCursor_n_resize:
-  case eCursor_s_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
-    break;
-
-  case eCursor_w_resize:
-  case eCursor_e_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
-    break;
-
-  case eCursor_nw_resize:
-  case eCursor_se_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
-    break;
-
-  case eCursor_ne_resize:
-  case eCursor_sw_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
-    break;
-
-  case eCursor_crosshair:
-    newPointer = gPtrArray[IDC_CROSS-IDC_BASE];
-    break;
-             
-  case eCursor_move:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_MOVE, FALSE);
-    break;
-
-  case eCursor_help:
-    newPointer = gPtrArray[IDC_HELP-IDC_BASE];
-    break;
-
-  case eCursor_copy: // CSS3
-    newPointer = gPtrArray[IDC_COPY-IDC_BASE];
-    break;
-
-  case eCursor_alias:
-    newPointer = gPtrArray[IDC_ALIAS-IDC_BASE];
-    break;
-
-  case eCursor_cell:
-    newPointer = gPtrArray[IDC_CELL-IDC_BASE];
-    break;
-
-  case eCursor_grab:
-    newPointer = gPtrArray[IDC_GRAB-IDC_BASE];
-    break;
-
-  case eCursor_grabbing:
-    newPointer = gPtrArray[IDC_GRABBING-IDC_BASE];
-    break;
-
-  case eCursor_spinning:
-    newPointer = gPtrArray[IDC_ARROWWAIT-IDC_BASE];
-    break;
-
-  case eCursor_context_menu:
-    // XXX: No suitable cursor, needs implementing
-    break;
-
-  case eCursor_zoom_in:
-    newPointer = gPtrArray[IDC_ZOOMIN-IDC_BASE];
-    break;
-
-  case eCursor_zoom_out:
-    newPointer = gPtrArray[IDC_ZOOMOUT-IDC_BASE];
-    break;
-
-  case eCursor_not_allowed:
-  case eCursor_no_drop:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ILLEGAL, FALSE);
-    break;
-
-  case eCursor_col_resize:
-    // XXX not 100% appropriate perhaps
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
-    break;
-
-  case eCursor_row_resize:
-    // XXX not 100% appropriate perhaps
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
-    break;
-
-  case eCursor_vertical_text:
-    // XXX: No suitable cursor, needs implementing
-    break;
-
-  case eCursor_all_scroll:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZE, FALSE);
-    break;
-
-  case eCursor_nesw_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
-    break;
-
-  case eCursor_nwse_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
-    break;
-
-  case eCursor_ns_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
-    break;
-
-  case eCursor_ew_resize:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
-    break;
-
-  default:
-    NS_ASSERTION(0, "Invalid cursor type");
-    break;
+  switch (aCursor) {
+    case eCursor_select:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_TEXT, FALSE);
+      break;
+      
+    case eCursor_wait:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_WAIT, FALSE);
+      break;
+  
+    case eCursor_hyperlink:
+      newPointer = gPtrArray[IDC_SELECTANCHOR-IDC_BASE];
+      break;
+  
+    case eCursor_standard:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ARROW, FALSE);
+      break;
+  
+    case eCursor_n_resize:
+    case eCursor_s_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
+      break;
+  
+    case eCursor_w_resize:
+    case eCursor_e_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
+      break;
+  
+    case eCursor_nw_resize:
+    case eCursor_se_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
+      break;
+  
+    case eCursor_ne_resize:
+    case eCursor_sw_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
+      break;
+  
+    case eCursor_crosshair:
+      newPointer = gPtrArray[IDC_CROSS-IDC_BASE];
+      break;
+               
+    case eCursor_move:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_MOVE, FALSE);
+      break;
+  
+    case eCursor_help:
+      newPointer = gPtrArray[IDC_HELP-IDC_BASE];
+      break;
+  
+    case eCursor_copy: // CSS3
+      newPointer = gPtrArray[IDC_COPY-IDC_BASE];
+      break;
+  
+    case eCursor_alias:
+      newPointer = gPtrArray[IDC_ALIAS-IDC_BASE];
+      break;
+  
+    case eCursor_cell:
+      newPointer = gPtrArray[IDC_CELL-IDC_BASE];
+      break;
+  
+    case eCursor_grab:
+      newPointer = gPtrArray[IDC_GRAB-IDC_BASE];
+      break;
+  
+    case eCursor_grabbing:
+      newPointer = gPtrArray[IDC_GRABBING-IDC_BASE];
+      break;
+  
+    case eCursor_spinning:
+      newPointer = gPtrArray[IDC_ARROWWAIT-IDC_BASE];
+      break;
+  
+    case eCursor_context_menu:
+      // XXX this CSS3 cursor needs to be implemented
+      break;
+  
+    case eCursor_zoom_in:
+      newPointer = gPtrArray[IDC_ZOOMIN-IDC_BASE];
+      break;
+  
+    case eCursor_zoom_out:
+      newPointer = gPtrArray[IDC_ZOOMOUT-IDC_BASE];
+      break;
+  
+    case eCursor_not_allowed:
+    case eCursor_no_drop:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ILLEGAL, FALSE);
+      break;
+  
+    case eCursor_col_resize:
+      newPointer = gPtrArray[IDC_COLRESIZE-IDC_BASE];
+      break;
+  
+    case eCursor_row_resize:
+      newPointer = gPtrArray[IDC_ROWRESIZE-IDC_BASE];
+      break;
+  
+    case eCursor_vertical_text:
+      newPointer = gPtrArray[IDC_VERTICALTEXT-IDC_BASE];
+      break;
+  
+    case eCursor_all_scroll:
+      // XXX not 100% appropriate perhaps
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_MOVE, FALSE);
+      break;
+  
+    case eCursor_nesw_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
+      break;
+  
+    case eCursor_nwse_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
+      break;
+  
+    case eCursor_ns_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
+      break;
+  
+    case eCursor_ew_resize:
+      newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
+      break;
+  
+    default:
+      NS_ASSERTION(0, "Invalid cursor type");
+      break;
   }
 
   if (newPointer) {
