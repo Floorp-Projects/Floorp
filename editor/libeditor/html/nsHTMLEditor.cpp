@@ -1952,6 +1952,78 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   return BeginningOfDocument();
 }
 
+void
+nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
+                                     nsCOMPtr<nsIDOMNode> *insertParentNode,
+                                     PRInt32 *insertOffset)
+{
+  /*
+    This function will either correct the position passed in,
+    or leave the position unchanged.
+
+    When the (first) item to insert is a block level element, 
+    and our insertion position is after the last visible item in a line, 
+    i.e. the insertion position is just before a visible line break <br>, 
+    we want to skip to the position just after the line break (see bug 68767)
+
+    However, our logic to detect whether we should skip or not
+    needs to be more clever.
+    We must not skip when the caret appears to be positioned at the beginning
+    of a block, in that case skipping the <br> would not insert the <br>
+    at the caret position, but after the current empty line.
+     
+    So we have several cases to test:
+     
+    1) We only ever want to skip, if the next visible thing after the current position is a break
+     
+    2) We do not want to skip if there is no previous visible thing at all
+       That is detected if the call to PriorVisibleNode gives us an offset of zero.
+       Because PriorVisibleNode always positions after the prior node, we would
+       see an offset > 0, if there were a prior node.
+     
+    3) We do not want to skip, if both the next and the previous visible things are breaks.
+    
+    4) We do not want to skip if the previous visible thing is in a different block
+       than the insertion position.
+  */
+
+  if (!IsBlockNode(firstNodeToInsert))
+    return;
+
+  nsWSRunObject wsObj(this, *insertParentNode, *insertOffset);
+  nsCOMPtr<nsIDOMNode> nextVisNode;
+  nsCOMPtr<nsIDOMNode> prevVisNode;
+  PRInt32 nextVisOffset=0;
+  PRInt16 nextVisType=0;
+  PRInt32 prevVisOffset=0;
+  PRInt16 prevVisType=0;
+
+  wsObj.NextVisibleNode(*insertParentNode, *insertOffset, address_of(nextVisNode), &nextVisOffset, &nextVisType);
+  if (!nextVisNode)
+    return;
+
+  if (! (nextVisType & nsWSRunObject::eBreak))
+    return;
+
+  wsObj.PriorVisibleNode(*insertParentNode, *insertOffset, address_of(prevVisNode), &prevVisOffset, &prevVisType);
+  if (!prevVisNode)
+    return;
+
+  if (prevVisType & nsWSRunObject::eBreak)
+    return;
+
+  if (prevVisType & nsWSRunObject::eThisBlock)
+    return;
+
+  nsCOMPtr<nsIDOMNode> brNode;
+  PRInt32 brOffset=0;
+
+  GetNodeLocation(nextVisNode, address_of(brNode), &brOffset);
+
+  *insertParentNode = brNode;
+  *insertOffset = brOffset + 1;
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
@@ -2019,6 +2091,9 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       printf(" Offset: %d\n", offsetForInsert);
       }
 #endif
+
+      // Adjust position based on the node we are going to insert.
+      NormalizeEOLInsertPosition(node, address_of(parentSelectedNode), &offsetForInsert);
 
       res = InsertNodeAtPoint(node, address_of(parentSelectedNode), &offsetForInsert, PR_FALSE);
       NS_ENSURE_SUCCESS(res, res);

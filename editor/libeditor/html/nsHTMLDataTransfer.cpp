@@ -434,7 +434,10 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
     res = GetStartNodeAndOffset(selection, address_of(parentNode), &offsetOfNewNode);
     if (!parentNode) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
-    
+
+    // Adjust position based on the first node we are going to insert.
+    NormalizeEOLInsertPosition(nodeList[0], address_of(parentNode), &offsetOfNewNode);
+
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
