@@ -104,6 +104,7 @@ public:
                             nsIAtom* aOffsetParentTag,
                             nsIContent** aOffsetParent);
 
+
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
@@ -113,6 +114,8 @@ public:
   nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
                                     nsIAtom*& aPrefix);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                        PRBool aNotify);
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
@@ -460,6 +463,8 @@ public:
   nsresult SetForm(nsIForm* aForm);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                           PRBool aNotify);
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+                          PRBool aNotify);
   nsresult SetAttribute(const nsString& aName, const nsString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
@@ -477,6 +482,8 @@ public:
 
   nsresult SetForm(nsIForm* aForm);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                          PRBool aNotify);
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
                           PRBool aNotify);
   nsresult SetAttribute(const nsString& aName, const nsString& aValue)
   {

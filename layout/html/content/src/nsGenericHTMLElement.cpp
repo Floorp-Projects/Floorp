@@ -1304,6 +1304,24 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   return result;
 }
 
+nsresult
+nsGenericHTMLElement::SetAttribute(nsINodeInfo* aNodeInfo,
+                                   const nsString& aValue,
+                                   PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsCOMPtr<nsIAtom> atom;
+  PRInt32 nsid;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+  aNodeInfo->GetNamespaceID(nsid);
+
+  // We still rely on the old way of setting the attribute.
+
+  return SetAttribute(nsid, atom, aValue, aNotify);
+}
+
 static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
 {
   PRInt32 hint = NS_STYLE_HINT_NONE;
@@ -3414,6 +3432,24 @@ nsGenericHTMLContainerFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* a
   return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
 }
 
+nsresult
+nsGenericHTMLContainerFormElement::SetAttribute(nsINodeInfo* aNodeInfo,
+                                                const nsString& aValue,
+                                                PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsCOMPtr<nsIAtom> atom;
+  PRInt32 nsid;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+  aNodeInfo->GetNamespaceID(nsid);
+
+  // We still rely on the old way of setting the attribute.
+
+  return SetAttribute(nsid, atom, aValue, aNotify);
+}
+
 //----------------------------------------------------------------------
 
 nsGenericHTMLLeafFormElement::nsGenericHTMLLeafFormElement()
@@ -3444,6 +3480,24 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     mForm->AddElementToTable(control, aValue);
 
   return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+}
+
+nsresult
+nsGenericHTMLLeafFormElement::SetAttribute(nsINodeInfo* aNodeInfo,
+                                           const nsString& aValue,
+                                           PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsCOMPtr<nsIAtom> atom;
+  PRInt32 nsid;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+  aNodeInfo->GetNamespaceID(nsid);
+
+  // We still rely on the old way of setting the attribute.
+
+  return SetAttribute(nsid, atom, aValue, aNotify);
 }
 
 //----------------------------------------------------------------------

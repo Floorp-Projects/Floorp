@@ -127,6 +127,8 @@ public:
 
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify) {  return NS_OK; }
+  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+                          PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName) const {

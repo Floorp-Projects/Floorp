@@ -216,8 +216,8 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
 NS_IMETHODIMP 
 nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-			                     const nsString& aValue,
-			                     PRBool aNotify)
+                           const nsString& aValue,
+                           PRBool aNotify)
 {
   if ((kNameSpaceID_XLink == aNameSpaceID) &&
       (kTypeAtom == aName)) { 
@@ -238,6 +238,23 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+}
+
+NS_IMETHODIMP 
+nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+                           PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsCOMPtr<nsIAtom> atom;
+  PRInt32 nsid;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+  aNodeInfo->GetNamespaceID(nsid);
+
+  // We still rely on the old way of setting the attribute.
+
+  return SetAttribute(nsid, atom, aValue, aNotify);
 }
 
 static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPresContext)

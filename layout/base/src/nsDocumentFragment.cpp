@@ -164,6 +164,10 @@ public:
                           const nsString& aValue,
                           PRBool aNotify)
     { return NS_OK; }
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsString& aValue,
+                          PRBool aNotify)
+    { return NS_OK; }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                           nsString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }

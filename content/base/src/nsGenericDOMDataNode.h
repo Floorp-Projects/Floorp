@@ -173,6 +173,10 @@ struct nsGenericDOMDataNode {
                         PRBool aNotify) {
     return NS_OK;
   }
+  nsresult SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+                        PRBool aNotify) {
+    return NS_OK;
+  }
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) {
     return NS_OK;
   }
@@ -489,6 +493,10 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,       \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);     \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \

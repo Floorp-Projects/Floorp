@@ -125,6 +125,10 @@ public:
                           const nsString& aValue, PRBool aNotify) {        
     return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          
   }                                                                        
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
+  }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
                           nsString& aResult) const {                       
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);                  
