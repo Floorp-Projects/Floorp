@@ -9960,11 +9960,9 @@ fi
 
 
 
-mkdir -p lib modules modules/security build build/package
-
 . ${srcdir}/allmakefiles.sh
 echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
-eval `cat conftest.sh`
+. conftest.sh
 rm conftest.sh
 
 trap '' 1 2 15
