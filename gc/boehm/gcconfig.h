@@ -661,7 +661,7 @@
 #   endif
 #   ifdef LINUX
 #	define OS_TYPE "LINUX"
-#	define STACKBOTTOM ((ptr_t)0xc0000000)
+#	define STACKBOTTOM ((ptr_t)0xbffffb44) /* address of argv */
 	/* Appears to be 0xe0000000 for at least one 2.1.91 kernel.	*/
 	/* Probably needs to be more flexible, but I don't yet 		*/
 	/* fully understand how flexible.				*/

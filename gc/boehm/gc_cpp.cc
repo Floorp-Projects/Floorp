@@ -26,11 +26,15 @@ Authors: John R. Ellis and Jesse Hull
 
 #include "gc_cpp.h"
 
-void* operator new( size_t size ) {
-    return GC_MALLOC_UNCOLLECTABLE( size );}
+void* operator new( size_t size )
+{
+    return GC_MALLOC( size );
+}
   
-void operator delete( void* obj ) {
-    GC_FREE( obj );}
+void operator delete( void* obj )
+{
+    GC_FREE( obj );
+}
   
 #ifdef _MSC_VER
 // This new operator is used by VC++ in case of Debug builds !
@@ -49,11 +53,15 @@ void* operator new( size_t size,
 
 #ifdef OPERATOR_NEW_ARRAY
 
-void* operator new[]( size_t size ) {
-    return GC_MALLOC_UNCOLLECTABLE( size );}
+void* operator new[]( size_t size )
+{
+    return GC_MALLOC( size );
+}
   
-void operator delete[]( void* obj ) {
-    GC_FREE( obj );}
+void operator delete[]( void* obj )
+{
+    GC_FREE( obj );
+}
 
 #endif /* OPERATOR_NEW_ARRAY */
 

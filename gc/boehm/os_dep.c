@@ -1862,6 +1862,7 @@ word len;
     	      ((ptr_t)end_block - (ptr_t)start_block) + HBLKSIZE);
 }
 
+#if 0
 #ifndef MSWIN32
 /* Replacement for UNIX system call.	 */
 /* Other calls that write to the heap	 */
@@ -1902,6 +1903,8 @@ word len;
     return(result);
 }
 #endif /* !MSWIN32 */
+#endif
+
 
 /*ARGSUSED*/
 GC_bool GC_page_was_ever_dirty(h)
@@ -2392,3 +2395,86 @@ void GC_save_callers(struct callinfo info[NFRAMES])
 #endif
 
 #endif /* POWERPC && MACOS */
+
+#if defined(SAVE_CALL_CHAIN) && defined(LINUX)
+
+#include <setjmp.h>
+
+#include "call_tree.h"
+
+typedef struct stack_frame stack_frame;
+
+#if defined(__i386) 
+struct stack_frame {
+  stack_frame* next;
+  void* pc;
+};
+
+static stack_frame* getStackFrame()
+{
+  jmp_buf jb;
+  stack_frame* currentFrame;
+  setjmp(jb);
+  currentFrame = (stack_frame*)(jb[0].__jmpbuf[JB_BP]);
+  currentFrame = currentFrame->next;
+  return currentFrame;
+}
+#endif /* __i386 */
+
+static call_tree* find_tree(stack_frame* frame)
+{
+  /* primordial root of the call tree. */
+  static call_tree root = { 0, 0, 0, 0 };
+
+  long pc = (long)frame->pc;
+
+  if ((pc < 0x08000000) || (pc > 0x7fffffff) || (frame->next < frame)) {
+    return &root;
+  } else {
+    call_tree* parent = find_tree(frame->next);
+    call_tree** link = &parent->children;
+    call_tree* tree = *link;
+    while (tree != NULL) {
+      if (tree->pc == frame->pc)
+	break;
+      link = &tree->siblings;
+      tree = *link;
+    }
+    if (tree == NULL) {
+      /* no tree exists for this frame, so we create one. */
+      tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
+      if (tree != NULL) {
+	tree->pc = frame->pc;
+	tree->parent = parent;
+	tree->siblings = parent->children;
+	parent->children = tree;
+	tree->children = NULL;
+      }
+    } else {
+      if (parent->children != tree) {
+	/* splay tree to front of list. */
+	*link = tree->siblings;
+	tree->siblings = parent->children;
+	parent->children = tree;
+      }
+    }
+    return tree;
+  }
+}
+
+void GC_save_callers(struct callinfo info[NFRAMES]) 
+{
+  stack_frame* currentFrame;
+  call_tree* currentTree;
+	
+  currentFrame = getStackFrame();	// GC_save_callers's frame.
+  currentFrame = currentFrame->next;	// GC_debug_malloc's frame.
+  currentFrame = currentFrame->next;	// GC_debug_malloc's caller's frame.
+	
+  currentTree = find_tree(currentFrame);
+	
+  info[0].ci_pc = (word) currentTree;
+}
+
+#endif /* defined(SAVE_CALL_CHAIN) && defined(LINUX) */
+

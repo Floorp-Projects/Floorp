@@ -437,7 +437,7 @@ void GC_mark_from_mark_stack()
 # define SPLIT_RANGE_WORDS 128  /* Must be power of 2.		*/
 
   GC_objects_are_marked = TRUE;
-# ifdef OS2 /* Use untweaked version to circumvent compiler problem */
+# if defined(OS2) /* Use untweaked version to circumvent compiler problem */
   while (GC_mark_stack_top_reg >= GC_mark_stack_reg && credit >= 0) {
 # else
   while ((((ptr_t)GC_mark_stack_top_reg - (ptr_t)GC_mark_stack_reg) | credit)

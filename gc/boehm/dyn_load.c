@@ -260,7 +260,76 @@ void GC_register_dynamic_libraries()
 # endif /* !USE_PROC ... */
 # endif /* SUNOS */
 
-#if defined(LINUX) && defined(__ELF__) || defined(SCO_ELF)
+#if defined(LINUX) && defined(USE_PROC)
+
+#include <fcntl.h>
+#include <unistd.h>
+#define BUFSIZE 32000
+
+/* Register all possible root segments using kernel proces info read
+   from /proc. This adds every read/write piece of the virtual address
+   space to the root set, so it does more than register dynamic
+   libraries */
+void GC_register_dynamic_libraries()
+{
+  int mapfile;
+  char *fname = "/proc/self/maps";
+  unsigned int start, end, offset, inode;
+  char perms[10], path[512];
+  static char buffer[BUFSIZE];
+  int e;
+  
+
+  GC_printf0("[[register mmap data start.]]\n");
+  memset(buffer,0,BUFSIZE);
+  mapfile = open(fname, O_RDONLY);	/* Don't use fopen - it mallocs */
+  offset = 0;
+  do {
+    e = read(mapfile, buffer + offset, BUFSIZE - offset - 1);
+    offset = offset + e;
+  } while (e > 0);
+
+  if (offset >= (BUFSIZE - 1)) {
+    ABORT("map buffer too small\n");
+  } else {
+    int result, count;
+
+    char *next = buffer;
+    
+    close(mapfile);
+    buffer[offset] = '\0';
+    do {
+      result = sscanf(next,
+		      "%x-%x %s %x %*s %d %n",
+		      &start, &end, perms, &offset, &inode, &count);
+      next = next + count;
+      if (result > 0) {
+	char *c = strstr(perms, "rw");
+	int isroot = (c != 0);
+	/* GC_printf6("%8x-%8x %s %8x device %8d %d",
+	   start, end, perms, offset, inode, isroot); */
+	if (inode != 0) {
+	  result = sscanf(next, "%s\n%n", path, &count);
+	  next = next + count;
+	} else {
+	  strcpy(path, "mmap zero"); /* dumb... */
+	}
+	GC_printf3("[[registering roots %8x-%8x for mmap: %s]]\n",
+		   start, end, path);
+	if (isroot) {
+	  GC_add_roots_inner((char *)start, (char *)end, TRUE);
+	}
+      }
+    } while (result > 0);
+  }
+  GC_printf0("[[register mmap data finish.]]\n");
+}
+#endif
+
+
+#if defined(LINUX) && !defined(USE_PROC)
+
+/* This code shouldn't be used anymore - the /proc version is more complete */
 
 /* Dynamic loading code for Linux running ELF. Somewhat tested on
  * Linux/x86, untested but hopefully should work on Linux/Alpha. 
@@ -311,6 +380,8 @@ void GC_register_dynamic_libraries()
   struct link_map *lm = GC_FirstDLOpenedLinkMap();
   
 
+  GC_printf0("[[register dynamic libraries start.]]\n");
+
   for (lm = GC_FirstDLOpenedLinkMap();
        lm != (struct link_map *) 0;  lm = lm->l_next)
     {
@@ -320,6 +391,8 @@ void GC_register_dynamic_libraries()
         char * start;
         register int i;
         
+	GC_printf1("[[registering roots for library: %s]]\n", lm->l_name);
+
 	e = (ElfW(Ehdr) *) lm->l_addr;
         p = ((ElfW(Phdr) *)(((char *)(e)) + e->e_phoff));
         offset = ((unsigned long)(lm->l_addr));
@@ -336,7 +409,12 @@ void GC_register_dynamic_libraries()
               break;
           }
 	}
+
+	/* as a hack, register the link_map itself as a root. */
+	GC_add_roots_inner(lm, lm + 1, TRUE);
     }
+
+  GC_printf0("[[register dynamic libraries finish.]]\n");
 }
 
 #endif

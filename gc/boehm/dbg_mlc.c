@@ -408,6 +408,10 @@ GC_PTR p;
     register GC_PTR base = GC_base(p);
     register ptr_t clobbered;
     
+    /* ignore free(NULL) */
+    if (p == 0)
+      return;
+
     if (base == 0) {
         GC_err_printf1("Attempt to free invalid pointer %lx\n",
         	       (unsigned long)p);

@@ -441,6 +441,7 @@ void GC_print_callers (/* struct callinfo info[NFRAMES] */);
 #    define UNLOCK() mutex_unlock(&GC_allocate_ml);
 #  endif
 #  ifdef LINUX_THREADS
+#error "DADDY?"
 #    include <pthread.h>
 #    ifdef __i386__
        inline static int GC_test_and_set(volatile unsigned int *addr) {

@@ -14,6 +14,8 @@
 /* Boehm, February 7, 1996 4:32 pm PST */
  
 #include <stdio.h>
+#include <signal.h>
+
 #include "gc_priv.h"
 
 extern ptr_t GC_clear_stack();	/* in misc.c, behaves like identity */
@@ -354,7 +356,7 @@ int obj_kind;
     size_t lb;
 # endif
   {
-    return(GC_realloc(p, lb));
+    return(GC_REALLOC(p, lb));
   }
 # endif /* REDIRECT_MALLOC */
 
@@ -429,7 +431,16 @@ int obj_kind;
 #   endif
   {
 #   ifndef IGNORE_FREE
-      GC_free(p);
+      GC_FREE(p);
 #   endif
   }
 # endif  /* REDIRECT_MALLOC */
+
+/* fake __mmap() */
+
+__ptr_t
+__mmap (__ptr_t addr, size_t len, int prot, int flags, int fd, off_t offset)
+{
+  raise(SIGINT);
+  return NULL;
+}

@@ -858,7 +858,35 @@ void GC_print_callers(struct callinfo info[NFRAMES])
     }
 }
 
-#endif /* NFRAMES > 1 */
+#endif /* NFRAMES > 2 */
+
+#elif defined(LINUX)
+
+#define __USE_GNU
+#include <dlfcn.h>
+#include "call_tree.h"
+
+void GC_print_callers(struct callinfo info[NFRAMES])
+{
+  register int i;
+  call_tree* current_tree;
+  Dl_info dlinfo;
+  /* static char symbol_name[1024], unmangled_name[1024], file_name[256]; */
+    
+  current_tree = (call_tree*)(info[0].ci_pc);
+    
+  GC_err_printf0("Callers at location:\n");
+  while (current_tree && current_tree->pc) {
+    if (dladdr(current_tree->pc, &dlinfo) >= 0) {
+      GC_err_printf4("%s[%s,0x%08X,0x%08X]\n", dlinfo.dli_sname, dlinfo.dli_fname, current_tree->pc, dlinfo.dli_saddr);
+    } else {
+      /* pc2name((word)current_tree->pc, symbol_name, sizeof(symbol_name));  */
+      /* MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name)); */
+      GC_err_printf2("%s(%08X)\n", "(unknown)", current_tree->pc);
+    }
+    current_tree = current_tree->parent;
+  }
+}
 
 #else
 

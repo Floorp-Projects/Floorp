@@ -271,6 +271,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     rv = servMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
     
+#ifdef GC_LEAK_DETECTOR
+  rv = NS_InitLeakDetector();
+    if (NS_FAILED(rv)) return rv;
+#endif
+
     // 3. Register the global services with the component manager so that
     //    clients can create new objects.
 
@@ -304,11 +309,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
       if ( NS_FAILED(rv) )
         return rv;
     }
-
-#ifdef GC_LEAK_DETECTOR
-  rv = NS_InitLeakDetector();
-    if (NS_FAILED(rv)) return rv;
-#endif
 
     rv = RegisterGenericFactory(compMgr, kMemoryCID,
                                 NS_MEMORY_CLASSNAME,

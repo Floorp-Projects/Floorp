@@ -109,36 +109,36 @@ register word sz;
 		   - WORDS_TO_BYTES(sz));
 
     /* go through all words in block */
-	while( p <= plim )  {
-	    if( mark_bit_from_hdr(hhdr, word_no) ) {
-			p += sz;
-	    } else {
-			FOUND_FREE(hbp, word_no);
-			INCR_WORDS(sz);
+    while( p <= plim )  {
+      if( mark_bit_from_hdr(hhdr, word_no) ) {
+	p += sz;
+      } else {
+	FOUND_FREE(hbp, word_no);
+	INCR_WORDS(sz);
 #if !defined(FIND_LEAK) || 1
-			if (GC_root_size) {
-				/* object is available - put on list */
-			    obj_link(p) = list;
-			    list = ((ptr_t)p);
-				/* Clear object, advance p to next object in the process */
-			    q = p + sz;
-	            p++; /* Skip link field */
-	            while (p < q) {
-					*p++ = 0;
-			    }
-			} else {
-				/* roots gone, just advance. */
-				p += sz;
-			}
-#else
-			/* let leaks accumulate. */
-			p += sz;
-#endif
-	    }
-	    word_no += sz;
+	if (GC_root_size) {
+	  /* object is available - put on list */
+	  obj_link(p) = list;
+	  list = ((ptr_t)p);
+	  /* Clear object, advance p to next object in the process */
+	  q = p + sz;
+	  p++; /* Skip link field */
+	  while (p < q) {
+	    *p++ = 0;
+	  }
+	} else {
+	  /* roots gone, just advance. */
+	  p += sz;
 	}
+#else
+	/* let leaks accumulate. */
+	p += sz;
+#endif
+      }
+      word_no += sz;
+    }
 #   ifdef GATHERSTATS
-	GC_mem_found += n_words_found;
+    GC_mem_found += n_words_found;
 #   endif
     return(list);
 }

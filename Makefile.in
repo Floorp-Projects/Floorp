@@ -55,12 +55,12 @@ DIRS += 			\
   $(NULL)
 endif
 
-DIRS	+= $(NSPRPUB_DIR)
-
 # boehm needs to be built before XPCOM
 ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
+
+DIRS	+= $(NSPRPUB_DIR)
 
 DIRS		+= dbm modules/libreg js xpcom js/src/xpconnect
 
