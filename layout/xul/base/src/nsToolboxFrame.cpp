@@ -213,7 +213,9 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
   if (NS_OK == reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), nsIDOMDragListener::GetIID())) {
+#ifdef DEBUG_rods
     printf("Toolbar registered as Drag Listener\n");
+#endif
   }
 
   return rv;
