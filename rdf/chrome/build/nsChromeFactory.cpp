@@ -186,7 +186,7 @@ struct Components {
 // The list of components we register
 static Components gComponents[] = {
     { "Chrome Registry", &kChromeRegistryCID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "chrome", },
+      "component://netscape/chrome", },
     { "Chrome Protocol Handler", &kChromeProtocolHandlerCID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "chrome", },
 };
