@@ -84,7 +84,7 @@ static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
 static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
-NS_NAMED_LITERAL_CSTRING(kCookiesP3PString_Default, "drdraaaa");
+static const char kCookiesP3PString_Default[] = "drdraaaa";
 #endif
 static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
@@ -253,7 +253,7 @@ nsCookiePrefObserver::Observe(nsISupports *aSubject,
     // check for a malformed string
     if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
       // reassign to default string
-      mCookiesP3PString = kCookiesP3PString_Default;
+      mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
     }
 
 #endif
@@ -381,7 +381,7 @@ nsCookiePrefObserver::ReadPrefs()
   // check for a malformed string
   if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
     // reassign to default string
-    mCookiesP3PString = kCookiesP3PString_Default;
+    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
     rv2 = rv;
   }
 
@@ -420,6 +420,11 @@ PRIVATE PRLogModuleInfo *gCookieLog = PR_NewLogModule("cookie");
 
 void
 cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason) {
+  // if logging isn't enabled, return now to save cycles
+  if (!PR_LOG_TEST(gCookieLog, PR_LOG_WARNING)) {
+    return;
+  }
+
   nsCAutoString spec;
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
@@ -443,6 +448,11 @@ cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString
 
 void
 cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, cookie_CookieStruct *aCookie) {
+  // if logging isn't enabled, return now to save cycles
+  if (!PR_LOG_TEST(gCookieLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
   nsCAutoString spec;
   aHostURI->GetAsciiSpec(spec);
 
@@ -465,7 +475,7 @@ cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", aCookie->isDomain ? "domain" : "host", aCookie->host.get()));
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", aCookie->path.get()));
 
-    PR_ExplodeTime(nsInt64(aCookie->expires) * nsInt64((PRInt64) PR_USEC_PER_SEC), PR_GMTParameters, &explodedTime);
+    PR_ExplodeTime(nsInt64(aCookie->expires) * USEC_PER_SEC, PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
 
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("expires: %s",
@@ -1325,7 +1335,7 @@ COOKIE_GetCookie(nsIURI *aHostURI,
   ToLowerCase(hostFromURI);
 
   // initialize variables used in the list traversal
-  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  nsInt64 currentTime = NOW_IN_SECONDS;
   cookie_CookieStruct *cookieInList;
   // initialize string for return data
   nsCAutoString cookieData;
@@ -1580,7 +1590,7 @@ cookie_GetExpiry(const nsAFlatCString &maxageAttribute,
 
     // parse expiry time
     if (PR_ParseTimeString(expiresAttribute.get(), PR_TRUE, &tempExpires) == PR_SUCCESS) {
-      expires = nsTime(tempExpires) / PR_USEC_PER_SEC;
+      expires = nsInt64(tempExpires) / USEC_PER_SEC;
     } else {
       goto session_cookie;
     }
@@ -1673,7 +1683,7 @@ cookie_SetCookieInternal(nsIURI             *aHostURI,
   // for logging purposes
   const char *cookieHeader = aCookieHeader.get();
 
-  nsInt64 expiryTime, currentTime = nsTime() / PR_USEC_PER_SEC;
+  nsInt64 expiryTime, currentTime = NOW_IN_SECONDS;
   PRBool isSession, foundCookie;
 
   nsCOMPtr<nsICookie> thisCookie;
@@ -1759,7 +1769,7 @@ cookie_SetCookieInternal(nsIURI             *aHostURI,
   }
 
   // add the cookie to the list
-  rv = COOKIE_Add(cookie, nsTime() / PR_USEC_PER_SEC, aHostURI, cookieHeader);
+  rv = COOKIE_Add(cookie, NOW_IN_SECONDS, aHostURI, cookieHeader);
   if (NS_FAILED(rv)) {
     // no need to log a failure here, Add() does it for us
     goto failure;
@@ -1821,9 +1831,9 @@ COOKIE_SetCookie(nsIURI         *aHostURI,
   nsInt64 serverTime;
   PRTime tempServerTime;
   if (aServerTime && PR_ParseTimeString(aServerTime, PR_TRUE, &tempServerTime) == PR_SUCCESS) {
-    serverTime = nsTime(tempServerTime) / PR_USEC_PER_SEC;
+    serverTime = nsInt64(tempServerTime) / USEC_PER_SEC;
   } else {
-    serverTime = nsTime() / PR_USEC_PER_SEC;
+    serverTime = NOW_IN_SECONDS;
   }
 
   // switch to a nice string type now, and process each cookie in the header
@@ -1927,7 +1937,7 @@ COOKIE_Write()
    *         most-recently used come first; least-recently-used come last.
    */
   cookie_CookieStruct *cookieInList;
-  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  nsInt64 currentTime = NOW_IN_SECONDS;
   PRInt32 count = sortedCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sortedCookieList.ElementAt(i));
@@ -1997,7 +2007,7 @@ COOKIE_Read()
 
   static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
 
-  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  nsInt64 currentTime = NOW_IN_SECONDS;
   // we use lastAccessedCounter to keep cookies in recently-used order,
   // so we start by initializing to currentTime (somewhat arbitrary)
   nsInt64 lastAccessedCounter = currentTime;
