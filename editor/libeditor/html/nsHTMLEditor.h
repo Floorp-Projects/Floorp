@@ -563,7 +563,8 @@ protected:
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
   nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
-                       PRBool aListOrCellNotEmpty = PR_FALSE);
+                       PRBool aListOrCellNotEmpty = PR_FALSE,
+                       PRBool aSafeToAskFrames = PR_FALSE);
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 

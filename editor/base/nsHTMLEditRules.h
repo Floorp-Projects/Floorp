@@ -164,7 +164,7 @@ protected:
   nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode);
   nsresult PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList);
 
-  nsresult AdjustSpecialBreaks();
+  nsresult AdjustSpecialBreaks(PRBool aSafeToAskFrames = PR_FALSE);
   nsresult AdjustWhitespace(nsIDOMSelection *aSelection);
   nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction);
   nsresult FindNearSelectableNode(nsIDOMNode *aSelNode, 

@@ -138,7 +138,7 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
     mDocChangeRange->SelectNode(bodyNode);
     res = ReplaceNewlines(mDocChangeRange);
     if (NS_FAILED(res)) return res;
-    res = AdjustSpecialBreaks();
+    res = AdjustSpecialBreaks(PR_TRUE);
     if (NS_FAILED(res)) return res;
   }
   
@@ -4198,7 +4198,7 @@ nsHTMLEditRules::GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode>
 
 
 nsresult 
-nsHTMLEditRules::AdjustSpecialBreaks()
+nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
 {
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
@@ -4231,7 +4231,7 @@ nsHTMLEditRules::AdjustSpecialBreaks()
     if (!node) return NS_ERROR_FAILURE;
     
     PRBool bIsEmptyNode;
-    res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_FALSE);
+    res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_FALSE, aSafeToAskFrames);
     if (NS_FAILED(res)) return res;
     if (bIsEmptyNode
         && (nsHTMLEditUtils::IsListItem(node) || mEditor->IsTableCell(node)))
