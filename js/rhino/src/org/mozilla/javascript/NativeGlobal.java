@@ -731,6 +731,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     // str.length()
                     buf = new char[length];
                     str.getChars(0, k, buf, 0);
+                    bufTop = k;
                 }
                 int start = k;
                 if (k + 3 > length)
