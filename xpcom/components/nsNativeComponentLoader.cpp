@@ -651,14 +651,6 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
     return res;
 }
 
-static const PRUnichar sNativeComponentReg[] = {'R','e','g','i','s','t','e','r',
-    'i','n','g',' ','n', 'a', 't', 'i', 'v', 'e', ' ', 'c', 'o', 'm', 'p', 'o',
-    'n', 'e', 'n', 't',':',' ', 0};
-
-static const PRUnichar sNativeComponentUnreg[] = {'U','n','r','e','g','i','s','t','e','r',
-    'i','n','g',' ','n', 'a', 't', 'i', 'v', 'e', ' ', 'c', 'o', 'm', 'p', 'o',
-    'n', 'e', 'n', 't',':',' ', 0};
-
 nsresult
 nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
                                                  nsIFile *component,
@@ -675,15 +667,14 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-	if (NS_SUCCEEDED(rv))
-	{
-	    nsAutoString topic;	//	This is quite ineficient, but is how it is
-				    //	done in every other example.
-	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-	    (void) observerService->Notify(mgr, topic.GetUnicode(), sNativeComponentUnreg);
-	}
+      nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+      rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+      if (NS_SUCCEEDED(rv))
+      {
+        (void) observerService->Notify(mgr,
+            NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+            NS_ConvertASCIItoUCS2("Unregistering native component").GetUnicode());
+      }
     }
 
     nsDll *dll = NULL;
@@ -752,19 +743,15 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);
     if (localFileMac)
     {
-    OSType    type;
-    OSType    creator;
-    rv = localFileMac->GetFileTypeAndCreator(&type, &creator);
-    if (NS_SUCCEEDED(rv))
-    {
-    // on Mac, Mozilla shared libraries are of type 'shlb'
-    // Note: we don't check the creator (which for Mozilla is 'MOZZ')
-    // so that 3rd party shared libraries will be noticed!
-    if (type == 'shlb')
-    {
-                validExtension = PR_TRUE;
-    }
-    }
+      OSType    type, creator;
+      rv = localFileMac->GetFileTypeAndCreator(&type, &creator);
+      if (NS_SUCCEEDED(rv))
+      {
+        // on Mac, Mozilla shared libraries are of type 'shlb'
+        // Note: we don't check the creator (which for Mozilla is 'MOZZ')
+        // so that 3rd party shared libraries will be noticed!
+        validExtension = (type == 'shlb');
+      }
     }
 
 #else
@@ -836,15 +823,29 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-            nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-            rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-            if (NS_SUCCEEDED(rv))
+          nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+          rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+          if (NS_SUCCEEDED(rv))
+          {
+            // this string can't come from a string bundle, because we don't have string
+            // bundles yet.
+            NS_ConvertASCIItoUCS2 statusMsg("Registering native component ");            
+            NS_ConvertASCIItoUCS2 fileName("(no name)");
+            
+            // get the file name
+            nsCOMPtr<nsIFile> dllSpec;
+            if (NS_SUCCEEDED(dll->GetDllSpec(getter_AddRefs(dllSpec))) && dllSpec)
             {
-                nsAutoString topic;	//	This is quite ineficient, but is how it is
-					//	done in every other example.
-                topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-                (void) observerService->Notify(mgr, topic.GetUnicode(), sNativeComponentReg);
+              nsXPIDLCString leafName;
+              dllSpec->GetLeafName(getter_Copies(leafName));
+              fileName.AssignWithConversion(leafName);
             }
+            statusMsg.Append(fileName);
+            
+            (void) observerService->Notify(mgr,
+                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+                statusMsg.GetUnicode());
+          }
         }
 
         if (dll->IsLoaded())
