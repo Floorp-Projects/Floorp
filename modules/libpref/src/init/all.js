@@ -285,8 +285,7 @@ pref("print.print_edge_bottom", 0); // 1/100 of an inch
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
 
-pref("capability.policy.default_policynames", "mailnews allowclipboard");
-pref("capability.policy.policynames", "");
+pref("capability.policy.default_policynames", "mailnews");
 
 pref("capability.policy.default.DOMException.code", "allAccess");
 pref("capability.policy.default.DOMException.message", "allAccess");
@@ -447,9 +446,6 @@ pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
 // Clipboard
 pref("capability.policy.default.Clipboard.cutcopy", "noAccess");
 pref("capability.policy.default.Clipboard.paste", "noAccess");
-pref("capability.policy.allowclipboard.sites", "http://www.mozilla.org");
-pref("capability.policy.allowclipboard.Clipboard.cutcopy", "allAccess");
-pref("capability.policy.allowclipboard.Clipboard.paste", "allAccess");
 
 // Scripts & Windows prefs
 pref("browser.block.target_new_window",     false);
