@@ -113,6 +113,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	                      nsWidgetInitData *aInitData,
 	                      nsNativeWidget aNativeParent)
 {
+	short	bottomPinDelta = 0;			// # of pixels to subtract to pin window bottom
+	
 	// build the main native window
 	if (aNativeParent == nsnull)
 	{
@@ -140,7 +142,24 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			goAwayFlag = true;
 			::OffsetRect(&wRect, kWindowMarginWidth, kWindowTitleBarHeight + ::LMGetMBarHeight());
 		}
+		
+		
+		// HACK!!!!! This really should be part of the window manager
+		// Make sure window bottom of window doesn't exceed max monitor size
+		RgnHandle	theGrayRegion = GetGrayRgn();
+		Rect		tempRect;
+		SetRect(&tempRect,
+				(**theGrayRegion).rgnBBox.left,
+				(**theGrayRegion).rgnBBox.top,
+				(**theGrayRegion).rgnBBox.right,
+				(**theGrayRegion).rgnBBox.bottom);
 
+		if (wRect.bottom > tempRect.bottom)
+		{
+			bottomPinDelta = wRect.bottom - tempRect.bottom;
+			wRect.bottom -= bottomPinDelta;
+		}
+		
 		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (GrafPort*)-1, goAwayFlag, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
 	}
@@ -164,7 +183,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	}
 
 	// reset the coordinates to (0,0) because it's the top level widget
-	nsRect bounds(0, 0, aRect.width, aRect.height);
+	// and adjust for any adjustment required to requested window bottom
+	nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
 	// init base class
 	nsWindow::StandardCreate(aParent, bounds, aHandleEventFunction, 
