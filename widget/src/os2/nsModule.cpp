@@ -38,6 +38,8 @@
 #include "resource.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 // Module-level data & utility functions:
 //       * unicode keycode & string conversion
@@ -117,6 +119,13 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    for (int i=0;i<=16;i++ ) {
      hptrArray[i] = ::WinLoadPointer(HWND_DESKTOP, gModuleHandle, IDC_BASE+i);
    }
+  nsresult rv;
+
+  bIsTrackPoint = PR_FALSE;
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && prefs)
+     prefs->GetBoolPref("os2.trackpoint", &bIsTrackPoint);
 }
 
 nsWidgetModuleData::~nsWidgetModuleData()
