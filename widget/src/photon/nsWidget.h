@@ -128,6 +128,8 @@ public:
 
   // the following are nsWindow specific, and just stubbed here
   NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
+ 
   NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
   // *could* be done on a widget, but that would be silly wouldn't it?
