@@ -379,6 +379,9 @@ NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult
   if (nsnull == mAttrStyleSheet) {
     return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
   }
+  else {
+    NS_ADDREF(mAttrStyleSheet);
+  }
   return NS_OK;
 }
 
