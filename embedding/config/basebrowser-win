@@ -134,7 +134,7 @@ components\profile.dll
 components\profile.xpt
 
 ; profile sharing - optional
-mozipcd.exe
+mozilla-ipcd.exe
 ipc\modules\lockmodule.dll
 ipc\modules\transmgr.dll
 components\ipcdc.dll

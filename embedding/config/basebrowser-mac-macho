@@ -144,7 +144,7 @@ components/mozreg.xpt
 ; profile sharing - optional
 ipc/modules/liblockmodule.dylib
 ipc/modules/libtransmgr.dylib
-mozipcd
+mozilla-ipcd
 components/libipcdc.dylib
 
 ; wallet
