@@ -25,7 +25,7 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
-//#include "nsButton.h"
+#include "nsButton.h"
 //#include "nsScrollbar.h"
 //#include "nsCheckButton.h"
 //#include "nsRadioButton.h"
@@ -142,33 +142,36 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     	{
       inst = new nsWindow(aOuter);
     	}
-	 	else 
-	    if (aIID.Equals(kIWidget)) 
-	    	{
-	     	inst = new nsWindow(aOuter);
-	    	}
-	    else
-				if (mClassID.Equals(kCAppShellCID)) 
-					{
-					nsAppShell *appInst = new nsAppShell();
-					if (appInst == NULL) 
-						{  
-						return NS_ERROR_OUT_OF_MEMORY;  
-						}  
-					nsresult res = appInst->QueryInterface(aIID, aResult);
-					if (res != NS_OK) 
-						{
-						delete appInst;
-						}
-					return res;
-					}
-    
+	 	else if (aIID.Equals(kIWidget)) 
+    	{
+     	inst = new nsWindow(aOuter);
+    	}
+    else if (mClassID.Equals(kCAppShellCID)) 
+			{
+			nsAppShell *appInst = new nsAppShell();
+			if (appInst == NULL) 
+				{  
+				return NS_ERROR_OUT_OF_MEMORY;  
+				}  
+			nsresult res = appInst->QueryInterface(aIID, aResult);
+			if (res != NS_OK) 
+				{
+				delete appInst;
+				}
+			return res;
+			}
+    else if ( mClassID.Equals(kCButtonCID)) {
+        inst = new nsButton(aOuter);
+    }
+    else if (aIID.Equals(kIWidget)) {
+        inst = new nsWindow(aOuter);
+    }
+    else if (mClassID.Equals(kCChild)) {
+        inst = new ChildWindow(aOuter);
+    }
 #ifdef NOTNOW
     else if ( mClassID.Equals(kCCheckButtonCID)) {
         inst = new nsCheckButton(aOuter);
-    }
-    else if ( mClassID.Equals(kCButtonCID)) {
-        inst = new nsButton(aOuter);
     }
     else if (mClassID.Equals(kCVertScrollbarCID)) {
         inst = new nsScrollbar(aOuter, PR_TRUE);
@@ -197,12 +200,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCFileWidgetCID)) {
         inst = new nsFileWidget(aOuter);
-    }
-    else if (aIID.Equals(kIWidget)) {
-        inst = new nsWindow(aOuter);
-    }
-    else if (mClassID.Equals(kCChild)) {
-        inst = new ChildWindow(aOuter);
     }
     else if (mClassID.Equals(kCLookAndFeelCID)) {
         nsLookAndFeel *laf = new nsLookAndFeel(aOuter);
