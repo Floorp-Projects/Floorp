@@ -371,16 +371,16 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 			aInputStream->Read(startOfLine + m_numBytesInBuffer,
                                numBytesToCopy, &numBytesCopied);
             m_numBytesInBuffer += numBytesCopied;
-			m_dataBuffer[m_startPos + m_numBytesInBuffer] = '\0';
+            m_dataBuffer[m_startPos+m_numBytesInBuffer] = '\0';
             PRUint32 i,j=0;
-            for (i=0;i < m_numBytesInBuffer;i++)  //strip nulls
+            for (i=0;i <m_numBytesInBuffer;i++)  //strip nulls
             {
-               if (m_dataBuffer[i])
-                  m_dataBuffer[j++] = m_dataBuffer[i];
+               if (startOfLine[i])
+                  startOfLine[j++] = startOfLine[i];
             } 
             if (i != j)
             {
-              m_dataBuffer[j] = '\0';
+              startOfLine[j] = '\0';
               m_numBytesInBuffer = j;
             }
 		}
