@@ -345,7 +345,7 @@ Contributor(s): ______________________________________. -->
       <menuitem name="&openCmd.label;" onclick="BrowserOpenWindow();"/>
       <separator />
       <menuitem name="&sendPageCmd.label;" onclick="BrowserReload();"/>
-	   <menuitem name="&editPageCmd.label;" onclick="BrowserEditPage(window.frames[0].frames[1].location.href);" />
+	   <menuitem name="&editPageCmd.label;" onclick="BrowserEditPage(window.content.location.href);" />
 	   <separator />
       <menu name="&offlineMenu.label;">
 	      <menuitem name="&offlineGoOfflineCmd.label;" onclick="BrowserReload();"/>
@@ -531,7 +531,7 @@ Contributor(s): ______________________________________. -->
 		</rule>
 	</template>
 
-		<menuitem name="&addCurPageCmd.label;" onclick="BrowserAddBookmark(window.frames[0].frames[1].location.href,window.frames[0].frames[1].document.title);"/>
+		<menuitem name="&addCurPageCmd.label;" onclick="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
 		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
@@ -555,7 +555,7 @@ Contributor(s): ______________________________________. -->
     </menu>
     
      <menu name="&helpMenuCmd.label;">
-      <menuitem name="&helpContentsCmd.label;" onclick="window.frames[0].frames[1].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
+      <menuitem name="&helpContentsCmd.label;" onclick="window.content.location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
       <separator />
       <menuitem name="&howTutorialCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&helpChannelCmd.label;" onclick="BrowserReload();" />
@@ -563,80 +563,80 @@ Contributor(s): ______________________________________. -->
       <menuitem name="&softwareUpdatesCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&technicalSupportCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&releaseNotesCmd.label;" 
-	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+	            onclick="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
       
       <separator />
       <menuitem name="&aboutCommunicatorCmd.label;" 
-	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+	            onclick="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
     </menu>
 
     // Menu for testing.
     <menu name="&debugMenu.label;">
 
 <menu name="&debugMenu.label;"> // XPToolkit tests.
-        <menuitem name="&debugQA.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-        <menuitem name="&debugQABug.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/smoketests/'"/>
-        <menuitem name="&debugQAKnowBug.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+        <menuitem name="&debugQA.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+        <menuitem name="&debugQABug.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+        <menuitem name="&debugQAKnowBug.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
         </menu>
 
 
       <menu name="&debugVerCmd.label;"> // Build verification sites.
-        <menuitem name="&ver1Cmd.label;"   onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
-        <menuitem name="&ver2Cmd.label;"     onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
-        <menuitem name="&ver3Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
-        <menuitem name="&ver4Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.excite.com'"/>
-        <menuitem name="&ver5Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.microsoft.com'"/>
-        <menuitem name="&ver6Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.city.net'"/>
-        <menuitem name="&ver7Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.mirabilis.com'"/>
-        <menuitem name="&ver8Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.pathfinder.com/welcome'"/>
-        <menuitem name="&ver9Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-        <menuitem name="&ver10Cmd.label;"          onclick="window.frames[0].frames[1].location.href='http://www.cnn.com'"/>
-        <menuitem name="&ver11Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.usatoday.com'"/>
-        <menuitem name="&ver12Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.disney.go.com'"/>
-        <menuitem name="&ver13Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.hotwired.com'"/>
-        <menuitem name="&ver14Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.hotbot.com'"/>
+        <menuitem name="&ver1Cmd.label;"   onclick="window.content.location.href='http://www.mozilla.org'"/>
+        <menuitem name="&ver2Cmd.label;"     onclick="window.content.location.href='http://www.yahoo.com'"/>
+        <menuitem name="&ver3Cmd.label;"  onclick="window.content.location.href='http://www.netscape.com'"/>
+        <menuitem name="&ver4Cmd.label;"    onclick="window.content.location.href='http://www.excite.com'"/>
+        <menuitem name="&ver5Cmd.label;" onclick="window.content.location.href='http://www.microsoft.com'"/>
+        <menuitem name="&ver6Cmd.label;"  onclick="window.content.location.href='http://www.city.net'"/>
+        <menuitem name="&ver7Cmd.label;" onclick="window.content.location.href='http://www.mirabilis.com'"/>
+        <menuitem name="&ver8Cmd.label;" onclick="window.content.location.href='http://www.pathfinder.com/welcome'"/>
+        <menuitem name="&ver9Cmd.label;" onclick="window.content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+        <menuitem name="&ver10Cmd.label;"          onclick="window.content.location.href='http://www.cnn.com'"/>
+        <menuitem name="&ver11Cmd.label;" onclick="window.content.location.href='http://www.usatoday.com'"/>
+        <menuitem name="&ver12Cmd.label;"    onclick="window.content.location.href='http://www.disney.go.com'"/>
+        <menuitem name="&ver13Cmd.label;"  onclick="window.content.location.href='http://www.hotwired.com'"/>
+        <menuitem name="&ver14Cmd.label;"    onclick="window.content.location.href='http://www.hotbot.com'"/>
 	    <separator />
-        <menuitem name="&ver15Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
-        <menuitem name="&ver16Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="&ver17Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
-        <menuitem name="&ver18Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.abcnews.com'"/>
-        <menuitem name="&ver19Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
-        <menuitem name="&ver20Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="&ver21Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
-        <menuitem name="&ver22Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-        <menuitem name="&ver23Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="&ver24Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
-        <menuitem name="&ver25Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
+        <menuitem name="&ver15Cmd.label;"  onclick="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
+        <menuitem name="&ver16Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="&ver17Cmd.label;" onclick="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
+        <menuitem name="&ver18Cmd.label;" onclick="window.content.location.href='http://www.abcnews.com'"/>
+        <menuitem name="&ver19Cmd.label;" onclick="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
+        <menuitem name="&ver20Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&ver21Cmd.label;" onclick="window.content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+        <menuitem name="&ver22Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem name="&ver23Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&ver24Cmd.label;" onclick="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
+        <menuitem name="&ver25Cmd.label;" onclick="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
       </menu>
 
 	  <menu name="&viewDemoMenu.label;">  // Viewer tests.
-        <menuitem name="&demo0Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
-        <menuitem name="&demo1Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
-        <menuitem name="&demo2Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="&demo3Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
-        <menuitem name="&demo4Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
-        <menuitem name="&demo5Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
-        <menuitem name="&demo6Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="&demo7Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
-        <menuitem name="&demo8Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
-        <menuitem name="&demo9Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
-        <menuitem name="&demo10Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
-        <menuitem name="&demo11Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
-        <menuitem name="&demo12Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
-        <menuitem name="&demo13Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-        <menuitem name="&demo14Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
-        <menuitem name="&demo15Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
-        <menuitem name="&demo16Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test16.html'"/>
+        <menuitem name="&demo0Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="&demo1Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="&demo2Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&demo3Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="&demo4Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="&demo5Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="&demo6Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="&demo7Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="&demo8Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="&demo9Cmd.label;"  onclick="window.content.location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="&demo10Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="&demo11Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="&demo12Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="&demo13Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem name="&demo14Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test14.html'"/>
+        <menuitem name="&demo15Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test15.html'"/>
+        <menuitem name="&demo16Cmd.label;" onclick="window.content.location.href='resource:/res/samples/test16.html'"/>
       </menu>
 
       <menu name="&xptkMenu.label;"> // XPToolkit tests.
-        <menuitem name="&xptk1Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/checkboxTest.xul'"/>
-        <menuitem name="&xptk2Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem name="&xptk3Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
-        <menuitem name="&xptk4Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexsimplemaster.xul'"/>
-        <menuitem name="&xptk5Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexanimmaster.xul'"/>
-        <menuitem name="&xptk6Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/tab.xul'"/>
-        <menuitem name="&xptk7Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/beeptest.html'"/>
+        <menuitem name="&xptk1Cmd.label;" onclick="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
+        <menuitem name="&xptk2Cmd.label;" onclick="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem name="&xptk3Cmd.label;" onclick="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem name="&xptk4Cmd.label;" onclick="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
+        <menuitem name="&xptk5Cmd.label;" onclick="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
+        <menuitem name="&xptk6Cmd.label;" onclick="window.content.location.href='resource:/res/samples/tab.xul'"/>
+        <menuitem name="&xptk7Cmd.label;" onclick="window.content.location.href='resource:/res/samples/beeptest.html'"/>
       </menu>
 
     </menu>
@@ -654,10 +654,11 @@ Contributor(s): ______________________________________. -->
 				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
 
-        // Right now only regular reload is supported. 
-        // When the functionality is available, look for 
-        // 'Shift' key pressed state and pass on appropriate
-        // reload type
+       <!-- Right now only regular reload is supported. 
+         When the functionality is available, look for 
+        'Shift' key pressed state and pass on appropriate
+         reload type. (The shift functionality is available. There's a shiftDown field
+		 in the event object.) -->
 	      <titledbutton id="reload-button" align="bottom" value="&reloadButton.label;" 
 				  onclick="BrowserReallyReload(0)">
 				  <observes element="canReload" attribute="disabled" onChange="BrowserSetReload()" />
@@ -683,7 +684,7 @@ Contributor(s): ______________________________________. -->
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 
-          <titledbutton id="Throbber" onclick="window.frames[0].frames[1].location.href='&throbber.url;'">
+          <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
 	</toolbar>
@@ -702,7 +703,7 @@ Contributor(s): ______________________________________. -->
         	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
-			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
+			onclick="window.content.location.href='http://home.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>

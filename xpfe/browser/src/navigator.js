@@ -57,9 +57,9 @@
   }
 
   function tryToSetContentWindow() {
-    if ( window.frames[0].frames[1] ) {
+    if ( window.content ) {
         dump("Setting content window\n");
-        appCore.setContentWindow( window.frames[0].frames[1] );
+        appCore.setContentWindow( window.content );
         // Have browser app core load appropriate initial page.
 
         if ( !explicitURL ) {
@@ -119,14 +119,14 @@
 	service += "?AlisSourceLang=" + src;
 	service += "&AlisTargetLang=" + dest;
 	service += "&AlisMTEngine=SSI";
-	service += "&AlisTargetURI=" + window.frames[0].frames[1].location.href;
-	window.frames[0].frames[1].location.href = service;
+	service += "&AlisTargetURI=" + window.content.location.href;
+	window.content.location.href = service;
   }
 
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
-    document.getElementById('urlbar').value = window.frames[0].frames[1].location.href;
+    document.getElementById('urlbar').value = window.content.location.href;
   }
 
 
@@ -384,7 +384,7 @@
 
   function BrowserHome()
   {
-   window.frames[0].frames[1].home();
+   window.content.home();
    RefreshUrlbar();
   }
 
@@ -400,7 +400,7 @@
       return false;
     }
 
-    window.frames[0].frames[1].location.href = url;
+    window.content.location.href = url;
     RefreshUrlbar();
   }
 
@@ -571,7 +571,7 @@
   {
     if (appCore != null) {
       appCore.SetDocumentCharset(aCharset);
-      window.frames[0].frames[1].location.reload();
+      window.content.location.reload();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -666,7 +666,7 @@
   {
     if (appCore != null) {
       dump("Wallet Safe Fillin\n");
-      appCore.walletPreview(window, window.frames[0].frames[1]);
+      appCore.walletPreview(window, window.content);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -687,7 +687,7 @@
   {
     if (appCore != null) {
       dump("Wallet Quick Fillin\n");
-      appCore.walletQuickFillin(window.frames[0].frames[1]);
+      appCore.walletQuickFillin(window.content);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -725,32 +725,12 @@
 
   function OpenMessenger()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://messenger/content/",
-                             window);
-    }
+	window.open("chrome://messenger/content/", "_new", "chrome");
   }
 
   function OpenAddressbook()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://addressbook/content/",
-                             window);
-    }
+	window.open("chrome://addressbook/content/", "_new", "chrome");
   }
 
   function MsgNewMessage()
@@ -787,7 +767,7 @@
       }
     }
     if (toolkitCore) {
-      var url = window.frames[0].frames[1].location;
+      var url = window.content.location;
       dump("Opening view of source for" + url + "\n");
       toolkitCore.ShowWindowWithArgs("resource:/res/samples/viewSource.xul", window, url);
     }
