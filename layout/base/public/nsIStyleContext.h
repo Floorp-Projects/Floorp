@@ -175,11 +175,15 @@ struct nsStyleTable: public nsStyleStruct {
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
+  PRUint8       mBorderCollapse;// [inherited]    XXX: inherit not implemented
+  nsStyleCoord  mBorderSpacingX;// [inherited]    XXX: inherit not implemented
+  nsStyleCoord  mBorderSpacingY;// [inherited]    XXX: inherit not implemented
   nsStyleCoord  mCellPadding;   // [reset] 
-  nsStyleCoord  mCellSpacing;   // [reset] 
+  PRUint8       mCaptionSide;   // [inherited]    XXX: inherit not implemented
+  PRUint8       mEmptyCells;    // [inherited]    XXX: inherit not implemented
   PRInt32       mCols;          // [reset] an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
-  nsStyleCoord  mSpanWidth;     // [reset] the amount of width this col gets from a spanning cell, if any
   PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup or col
+  nsStyleCoord  mSpanWidth;     // [reset] the amount of width this col gets from a spanning cell, if any
 
 protected:
   nsStyleTable(void);

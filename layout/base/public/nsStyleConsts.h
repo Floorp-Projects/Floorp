@@ -409,6 +409,12 @@
 #define NS_STYLE_TABLE_EMPTY_CELLS_HIDE         0
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW         1
 
+#define NS_STYLE_TABLE_BORDER_COLLAPSE_SEPARATE 0
+#define NS_STYLE_TABLE_BORDER_COLLAPSE_COLLAPSE 1
+
+// CAPTION_SIDE uses NS_SIDE_*
+
+
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0
 #define NS_STYLE_CELL_SCOPE_COL                 1
