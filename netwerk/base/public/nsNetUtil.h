@@ -954,7 +954,6 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *aCallbacks,
                               const nsIID            &aIID,
                               void                  **aResult)
 {
-    NS_PRECONDITION(aChannel, "null channel");
     *aResult = nsnull;
 
     if (aCallbacks)
