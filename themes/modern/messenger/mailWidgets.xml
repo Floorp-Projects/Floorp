@@ -4,6 +4,42 @@
             xmlns="http://www.mozilla.org/xbl"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <!-- Message Pane Widgets -->
+  <binding id="mail-emailaddress" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+      	<xul:box inherits="orient" autostretch="never" flex="1">
+          <xul:box orient="vertical" autostretch="never" flex="1">
+            <xul:text class="emailDisplayButton" popup="emailAddressPopup" inherits="value,accesskey,crop"/>
+          </xul:box>
+          <xul:image class="emailDisplayImage" inherits="src"/>
+        </xul:box>
+    </content>
+    
+    <interface>  
+      <method name="setTextAttribute">
+        <argument name="attributeName"/>
+        <argument name="attributeValue"/>
+        <body>
+          <![CDATA[            
+            var textNode = this.anonymousContent[0].firstChild.firstChild;
+            textNode.setAttribute(attributeName, attributeValue);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getTextAttribute">
+        <argument name="attributeName"/>
+        <argument name="attributeValue"/>
+        <body>
+          <![CDATA[            
+            var textNode = this.anonymousContent[0].firstChild.firstChild;
+            return textNode.getAttribute(attributeName, attributeValue);
+          ]]>
+        </body>
+      </method>
+    </interface>
+  </binding>
+
   <binding id="search-menulist-abstract" extends="xul:box">
     <content>
       <xul:menulist inherits="flex" oncommand="this.parentNode.onSelect(event)">
