@@ -3405,7 +3405,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   
   cookieString.AssignWithConversion((const char *) inCookieBuffer,(PRInt32) inCookieSize);
   
-  rv = cookieService->SetCookieString(uriIn, cookieString);
+  rv = cookieService->SetCookieString(uriIn, nsnull, cookieString); // needs an nsHTMLDocument parameter
   
   return rv;
 }

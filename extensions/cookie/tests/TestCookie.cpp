@@ -43,7 +43,7 @@ void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* 
     nsString cookie;
     cookie.AssignWithConversion(aCookieString);
     printf("setting cookie for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->SetCookieString(uri, cookie);
+    nsresult rv = cookieService->SetCookieString(uri, nsnull, cookie);
     if (NS_FAILED(rv)) {
         printf("NOT-SET\n");
     } else {

@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIURL.h"
 #include "nsString.h"
+#include "nsIDocument.h"
 
 // {AB397774-12D3-11d3-8AD1-00105A1B8860}
 #define NS_COOKIESERVICE_CID \
@@ -71,7 +72,7 @@ public:
    * @param aCookie The string to set
    * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
    */
-  NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie)=0;
+  NS_IMETHOD SetCookieString(nsIURI *aURL, nsIDocument* aDoc, const nsString& aCookie)=0;
 
   /*
    * Set the cookie string and expires associated with the URL

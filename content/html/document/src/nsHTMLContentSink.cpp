@@ -4359,7 +4359,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
                 if (NS_FAILED(rv)) return rv;
 
-                rv = cookieServ->SetCookieString(baseURI, result);
+                rv = cookieServ->SetCookieString(baseURI, nsnull, result); // need to add nsHTMLDocument parameter
                 if (NS_FAILED(rv)) return rv;
             } // END set-cookie
 
