@@ -302,19 +302,15 @@ nsresult nsPop3IncomingServer::GetInbox(nsIMsgWindow *msgWindow, nsIMsgFolder **
   nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(*inbox, &rv);
   if (NS_SUCCEEDED(rv) && localInbox)
   {
-    PRBool valid = PR_FALSE;
     nsCOMPtr <nsIMsgDatabase> db;
     rv = (*inbox)->GetMsgDatabase(msgWindow, getter_AddRefs(db));
-    if (NS_SUCCEEDED(rv) && db)
+    if (NS_FAILED(rv))
     {
-      rv = db->GetSummaryValid(&valid);
-      if (!valid)
-      {
-        (*inbox)->SetMsgDatabase(nsnull);
-        (void) localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
-        (*inbox)->GetMsgDatabase(msgWindow, getter_AddRefs(db));
-        return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-      }
+      (*inbox)->SetMsgDatabase(nsnull);
+      (void) localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+      // this will cause a reparse of the mail folder.
+      localInbox->GetDatabaseWithReparse(nsnull, msgWindow, getter_AddRefs(db));
+      return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
     }
   }
   return rv;
@@ -631,6 +627,18 @@ nsresult nsPop3GetMailChainer::GetNewMailForServers(nsISupportsArray *servers, n
   m_folderToDownloadTo = folderToDownloadTo;
   m_downloadingMsgWindow = msgWindow;
   m_listener = listener;
+  nsCOMPtr <nsIMsgDatabase> destFolderDB;
+
+  nsresult rv = folderToDownloadTo->GetMsgDatabase(msgWindow, getter_AddRefs(destFolderDB));
+  if (NS_FAILED(rv) || !destFolderDB)
+  {
+    nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(folderToDownloadTo);
+    if (localFolder)
+    {
+      localFolder->GetDatabaseWithReparse(this, msgWindow, getter_AddRefs(destFolderDB));
+      return NS_OK;
+    }
+  }
   return RunNextGetNewMail();
 }
 

@@ -338,30 +338,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
   return rv;
 }
 
-//we treat failure as null db returned
-NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatabase)
+// this won't force a reparse of the folder if the db is invalid.
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                              nsIMsgDatabase** aMsgDatabase)
 {
-  nsresult rv=NS_OK;
-  NS_ENSURE_ARG(aDatabase);
-  if (!mDatabase)
-  {
-    nsCOMPtr <nsIFileSpec> destIFolderSpec;
-    rv = GetPath(getter_AddRefs(destIFolderSpec));
-    
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && msgDBService)
-    {
-      rv = msgDBService->OpenFolderDB(this, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mDatabase));
-      if (mDatabase && NS_SUCCEEDED(rv))
-        mDatabase->AddListener(this);
-    }
-  }
-  *aDatabase = mDatabase;
-  NS_IF_ADDREF(*aDatabase);
-  return rv;
+  return GetDatabaseWOReparse(aMsgDatabase);
 }
+
 
 NS_IMETHODIMP
 nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
@@ -477,12 +461,55 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
   return rv;
 }
 
-
-//Makes sure the database is open and exists.  If the database is valid then
-//returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
+  return GetDatabaseWOReparse(getter_AddRefs(mDatabase));
+}
+
+//we treat failure as null db returned
+NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatabase)
+{
+  nsresult rv=NS_OK;
+  if (m_parsingFolder)
+    return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+
+  NS_ENSURE_ARG(aDatabase);
+  if (!mDatabase)
+  {
+    nsCOMPtr <nsIFileSpec> destIFolderSpec;
+    rv = GetPath(getter_AddRefs(destIFolderSpec));
+    
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && msgDBService)
+    {
+      rv = msgDBService->OpenFolderDB(this, PR_FALSE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(mDatabase));
+      if (mDatabase && NS_SUCCEEDED(rv))
+        mDatabase->AddListener(this);
+    }
+  }
+  *aDatabase = mDatabase;
+  NS_IF_ADDREF(*aDatabase);
+  return rv;
+}
+
+
+// Makes sure the database is open and exists.  If the database is out of date,
+// then this call will run an async url to reparse the folder. The passed in 
+// url listener will get called when the url is done.
+NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWithReparse(nsIUrlListener *aReparseUrlListener, nsIMsgWindow *aMsgWindow, 
+                                                nsIMsgDatabase **aMsgDatabase)
+{
   nsresult rv = NS_OK;
+  // if we're already reparsing, just remember the listener so we can notify it
+  // when we've finished.
+  if (m_parsingFolder)
+  {
+    NS_ASSERTION(!mReparseListener, "can't have an existing listener");
+    mReparseListener = aReparseUrlListener;
+    return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+  }
   if (!mDatabase)
   {
     nsCOMPtr<nsIFileSpec> pathSpec;
@@ -548,7 +575,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
       if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       {
-        if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
+        if(NS_FAILED(rv = ParseFolder(aMsgWindow, (aReparseUrlListener) ? aReparseUrlListener : this)))
         {
           if (rv == NS_MSG_FOLDER_BUSY)
           {
@@ -568,6 +595,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
       }
     }
   }
+  NS_IF_ADDREF(*aMsgDatabase = mDatabase);
   return rv;
 }
 
@@ -616,7 +644,7 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
   //If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
   //changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
   if(!mDatabase)
-    rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
+    rv = GetDatabaseWithReparse(this, aWindow, getter_AddRefs(mDatabase)); 
   else
   {
     PRBool valid;
@@ -644,7 +672,7 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
-  nsresult rv = GetDatabase(aMsgWindow);
+  nsresult rv = GetDatabaseWOReparse(getter_AddRefs(mDatabase));
 
   if(NS_SUCCEEDED(rv))
     return mDatabase->EnumerateMessages(result);
@@ -1450,7 +1478,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
   }
   else
   {   
-      rv = GetDatabase(msgWindow);
+      rv = GetDatabaseWOReparse(getter_AddRefs(mDatabase));
       if(NS_SUCCEEDED(rv))
       {
           nsCOMPtr<nsISupports> msgSupport;
@@ -1497,7 +1525,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
     return NS_ERROR_FAILURE; // already has a  copy in progress
   
   // get mDatabase set, so we can use it to add new hdrs to this db.
-  // calling GetDatabaseWOReparse will set mDatabase - we use the comptr
+  // calling GetDatabase will set mDatabase - we use the comptr
   // here to avoid doubling the refcnt on mDatabase. We don't care if this
   // fails - we just want to give it a chance. It will definitely fail in
   // nsLocalMailFolder::EndCopy because we will have written data to the folder
@@ -1888,6 +1916,12 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   srcFolder->GetName(getter_Copies(folderName));
   nsAutoString safeFolderName(folderName);
   NS_MsgHashIfNecessary(safeFolderName);
+  nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder);
+  nsCOMPtr <nsIMsgDatabase> srcDB;
+  if (localFolder)
+    localFolder->GetDatabaseWOReparse(getter_AddRefs(srcDB));
+  PRBool summaryValid = (srcDB != nsnull);
+  srcDB = nsnull;
   srcFolder->ForceDBClosed();   
   
   nsCOMPtr<nsIFileSpec> oldPathSpec;
@@ -1926,6 +1960,25 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   rv = summarySpec.CopyToDir(newPath);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  // linux and mac are not good about maintaining the file stamp when copying folders
+  // around. So if the source folder db is good, set the dest db as good too.
+  nsCOMPtr <nsIMsgDatabase> destDB;
+  if (summaryValid)
+  {
+    nsCAutoString folderLeafName;
+    folderLeafName.Adopt(path.GetLeafName());
+    newPath += folderLeafName.get();
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && msgDBService)
+    {
+      nsCOMPtr <nsIFileSpec> dbFileSpec;
+      NS_NewFileSpecWithSpec(newPath, getter_AddRefs(dbFileSpec));
+      rv = msgDBService->OpenMailDBFromFileSpec(dbFileSpec, PR_FALSE, PR_TRUE, getter_AddRefs(destDB));
+      if ((NS_SUCCEEDED(rv) || rv == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE) && destDB)
+        destDB->SetSummaryValid(PR_TRUE);
+//      destDB->Close(PR_TRUE);
+    }
+  }
   rv = AddSubfolder(safeFolderName, getter_AddRefs(newMsgFolder));  
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2103,7 +2156,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
   {
     PRBool valid = PR_FALSE;
     nsCOMPtr <nsIMsgDatabase> db;
-    rv = inbox->GetMsgDatabase(aWindow, getter_AddRefs(db));
+    // this will kick off a reparse if the db is out of date.
+    rv = localInbox->GetDatabaseWithReparse(nsnull, aWindow, getter_AddRefs(db));
     if (NS_SUCCEEDED(rv) && db)
     {
       rv = db->GetSummaryValid(&valid);
@@ -3191,6 +3245,11 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     }
   }
 
+  if (m_parsingFolder && mReparseListener)
+  {
+    mReparseListener->OnStopRunningUrl(aUrl, aExitCode);
+    mReparseListener = nsnull;
+  }
   m_parsingFolder = PR_FALSE;
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }

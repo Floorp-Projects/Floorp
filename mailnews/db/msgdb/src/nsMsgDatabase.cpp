@@ -115,7 +115,7 @@ nsMsgDBService::~nsMsgDBService()
 {
 }
 
-NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate, PRBool aUpgrading, nsIMsgDatabase **_retval)
+NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase **_retval)
 {
   NS_ENSURE_ARG(aFolder);
   *_retval = nsMsgDatabase::FindInCache(aFolder);
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
   nsCOMPtr <nsIFileSpec> folderPath;
   rv = aFolder->GetPath(getter_AddRefs(folderPath));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = msgDB->Open(folderPath, aCreate, aUpgrading);
+  rv = msgDB->Open(folderPath, aCreate, aLeaveInvalidDB);
   if (NS_FAILED(rv) && (rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING 
     && rv != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || !aCreate))
     return rv;
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aUpgrading, nsIMsgDatabase** pMessageDB)
+NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase** pMessageDB)
 {
   nsFileSpec  folderName;
   
@@ -184,7 +184,7 @@ NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, P
   nsresult rv;
   nsCOMPtr <nsIMsgDatabase> msgDB = do_CreateInstance(NS_MAILBOXDB_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = msgDB->Open(aFolderName, aCreate, aUpgrading);
+  rv = msgDB->Open(aFolderName, aCreate, aLeaveInvalidDB);
   NS_IF_ADDREF(*pMessageDB = msgDB);
   if (aCreate && msgDB && rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
     rv = NS_OK;
@@ -1055,10 +1055,10 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 #endif /* XP_MAC */
 
 
-// caller passes in upgrading==PR_TRUE if they want back a db even if the db is out of date.
+// caller passes in leaveInvalidDB==PR_TRUE if they want back a db even if the db is out of date.
 // If so, they'll extract out the interesting info from the db, close it, delete it, and
 // then try to open the db again, prior to reparsing.
-NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aUpgrading)
+NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aLeaveInvalidDB)
 {
   PRBool summaryFileExists;
   PRBool newFile = PR_FALSE;
@@ -1075,7 +1075,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
 #if defined(DEBUG_bienvenu)
   printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
     (const char*)folderName, aCreate ? "TRUE":"FALSE",
-    this, aUpgrading ? "TRUE":"FALSE", (const char*)folderName);
+    this, aLeaveInvalidDB ? "TRUE":"FALSE", (const char*)folderName);
 #endif
   // if the old summary doesn't exist, we're creating a new one.
   if ((!summarySpec.Exists() || !summarySpec.GetFileSize()) && aCreate)
@@ -1113,7 +1113,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
         err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
       NS_RELEASE(folderInfo);
     }
-    if (NS_FAILED(err) && !aUpgrading)
+    if (NS_FAILED(err) && !aLeaveInvalidDB)
       deleteInvalidDB = PR_TRUE;
   }
   else
@@ -1134,11 +1134,11 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
   {
     // if we couldn't open file, or we have a blank one, and we're supposed 
     // to upgrade, updgrade it.
-    if (newFile && !aUpgrading)	// caller is upgrading, and we have empty summary file,
+    if (newFile && !aLeaveInvalidDB)	// caller is upgrading, and we have empty summary file,
     {					// leave db around and open so caller can upgrade it.
       err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
     }
-    else if (err != NS_OK)
+    else if (err != NS_OK && err != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
     {
       Close(PR_FALSE);
       summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.

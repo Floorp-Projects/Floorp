@@ -138,6 +138,8 @@ public:
 
   // nsIMsgFolder methods:
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+  NS_IMETHODIMP GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                              nsIMsgDatabase** aMsgDatabase);
 
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
   NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
@@ -199,7 +201,6 @@ protected:
   nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
 
   nsresult CreateSubFolders(nsFileSpec &path);
-  nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
   nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
   nsresult WriteStartOfNewMessage();
   nsresult IsChildOfTrash(PRBool *result);
@@ -208,6 +209,7 @@ protected:
 
   nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
                    PRBool deleteStorage, PRBool commit);
+  nsresult GetDatabase(nsIMsgWindow *msgWindow);
 
   // copy message helper
   nsresult DisplayMoveCopyStatusMsg();
@@ -235,6 +237,7 @@ protected:
   PRPackedBool mCheckForNewMessagesAfterParsing;
   PRPackedBool m_parsingFolder;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
+  nsCOMPtr<nsIUrlListener> mReparseListener;
   PRInt32 mNumFilterClassifyRequests;
   nsMsgKeyArray mSpamKeysToMove;
   nsCString mSpamFolderURI;

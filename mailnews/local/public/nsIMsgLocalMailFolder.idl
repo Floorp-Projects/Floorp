@@ -57,7 +57,7 @@ struct nsLocalFolderScanState;
 
 %}
 
-[scriptable, uuid(b8e26003-f2bb-4239-ba47-d597ab6e3671)]
+[scriptable, uuid(94bf4be7-4af2-462b-a7cc-c4298c335829)]
 interface nsIMsgLocalMailFolder : nsISupports {
   /**
    * set the default flags on the subfolders of this folder, such as
@@ -67,7 +67,17 @@ interface nsIMsgLocalMailFolder : nsISupports {
    * like MSG_FOLDER_FLAG_INBOX | MSG_FOLDER_FLAG_DRAFTS | etc
    */
   void setFlagsOnDefaultMailboxes(in unsigned long flags);
+
+  /* 
+   * This will return null if the db is out of date
+   */
   nsIMsgDatabase getDatabaseWOReparse();
+
+  /*
+   * This will kick off a url to reparse the db if it's out of date.
+   * If aReparseUrlListener isn ull, folder will use itself as the listener
+   */
+  nsIMsgDatabase getDatabaseWithReparse(in nsIUrlListener aReparseUrlListener, in nsIMsgWindow aMsgWindow);
   void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
   void copyFolderLocal(in nsIMsgFolder srcFolder, in boolean isMove, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
   void copyAllSubFolders(in nsIMsgFolder srcFolder, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
