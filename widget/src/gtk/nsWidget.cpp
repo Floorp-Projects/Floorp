@@ -162,8 +162,8 @@ nsresult nsWidget::UpdateICSpot()
    return NS_OK;
 }
 
-nsIRollupListener *nsWidget::gRollupListener = nsnull;
-nsIWidget         *nsWidget::gRollupWidget = nsnull;
+nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
+nsCOMPtr<nsIWidget>         nsWidget::gRollupWidget;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 
@@ -1880,11 +1880,6 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseEvent event;
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
-
-#if defined(DEBUG_pavlov) || defined(DEBUG_blizzard)
-  printf("button press for %p bounds are %d %d %d %d\n", this,
-         mBounds.x, mBounds.y, mBounds.height, mBounds.width);
-#endif
 
   if (gRollupWidget && gRollupListener)
   {
