@@ -179,6 +179,7 @@ void GlobalWindowImpl::CleanUp()
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   mOpener = nsnull;             // Forces Release
+  mControllers = nsnull;        // Forces Release
   if (--gRefCnt == 0) {
     NS_IF_RELEASE(gEntropyCollector);
   }
@@ -426,6 +427,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       mContext->RemoveReference(&mScriptObject, mScriptObject);
     }
     mContext = nsnull;          // force release now
+    mControllers = nsnull;      // force release now
   }
   mDocShell = aDocShell;        // Weak Reference
 

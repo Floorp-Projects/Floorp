@@ -235,6 +235,12 @@ protected:
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
 
 protected:
+  // When adding new member variables, be careful not to create cycles
+  // through JavaScript.  If there is any chance that a member variable
+  // could own objects that are implemented in JavaScript, then those
+  // objects will keep the global object (this object) alive.  To prevent
+  // these cycles, ownership of such members must be released in
+  // |CleanUp| and |SetDocShell|.
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMDocument>      mDocument;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
