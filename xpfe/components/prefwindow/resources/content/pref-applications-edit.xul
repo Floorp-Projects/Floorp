@@ -29,12 +29,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications-edit.dtd">
 
-<window id="pickAppHandler"
-        class="dialog" style="width: 30em; -moz-user-focus: ignore;"
-        orient="vertical"
+<dialog id="pickAppHandler"
+        style="width: 30em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&editType.label;"
-        onload="Startup();">
+        onload="Startup();"
+        ondialogaccept="return onAccept();">
     <stringbundle id="bundle_prefApplications"
                   src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
@@ -53,9 +53,7 @@
     var gOldExtensions   = null;
     
     function Startup()
-    {
-      doSetOKCancel(onOK);
-      
+    {     
       gContentType      = document.getElementById("contentType");
       gExtensionLabel   = document.getElementById("extension");
       gMIMEField        = document.getElementById("mimeType");
@@ -178,7 +176,7 @@
         gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
     }
 
-    function onOK()
+    function onAccept()
     {
       getDS();
       // figure out if this mime type already exists. 
@@ -272,16 +270,13 @@
       }
     
       window.opener.gUpdateTypeRV = true;
-      window.close();  
+      return true;
     }
   ]]>
   </script>
-  
-  <keyset id="dialogKeys"/>
-  
   <hbox align="center">
     <image id="contentTypeImage"/>
-    <text class="label" id="contentType" crop="right"/>
+    <label id="contentType" crop="right"/>
   </hbox>
   
   <separator class="thin"/>
@@ -298,12 +293,12 @@
     
     <rows>
       <row align="center">
-        <text class="label" value="&extension.label;"/>
-        <text class="label" id="extension"/>
+        <label value="&extension.label;"/>
+        <label id="extension"/>
       </row>
       <row align="center">
-        <text class="label" value="&mimetype.label;" accesskey="&mimetype.accesskey;"
-              for="mimeType"/>
+        <label value="&mimetype.label;" accesskey="&mimetype.accesskey;"
+               control="mimeType"/>
         <textbox id="mimeType" flex="1"/>
       </row>
     </rows>
@@ -311,21 +306,17 @@
   
   <separator class="thin"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&handledby.label;"/>
     
-    <radiogroup id="handler" orient="vertical">
-      <vbox align="start">
+    <radiogroup id="handler">
 <!-- Turn this off since we can't make it work yet
-        <radio value="4" group="handler" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
+        <radio value="4" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
 -->
-        <radio value="1" group="handler" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
-      </vbox>
+        <radio value="1" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
       <hbox align="center">
-        <radio value="2" group="handler" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
+        <radio value="2" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
         <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
-      </hbox>
-      <hbox align="center" pack="end">
         <button label="&browse.label;" accesskey="&browse.accesskey;"
                 oncommand="chooseApp();"/>
       </hbox>
@@ -335,11 +326,6 @@
 
   <hbox align="center">
     <checkbox id="askBeforeOpen" label="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
-  </hbox>
-  
-  <separator/>
-  
-  <hbox id="okCancelButtonsRight"/>
-  
-</window>
+  </hbox>  
+</dialog>
         

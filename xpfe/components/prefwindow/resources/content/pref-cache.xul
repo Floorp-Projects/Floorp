@@ -24,9 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cache.dtd" >
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');">
 
   <script type="application/x-javascript">
@@ -41,10 +39,10 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&cacheTitle.label;"/>
     
-    <html>&cachePara;</html>
+    <description>&cachePara;</description>
 
     <separator class="thin"/>
     
@@ -57,47 +55,45 @@
       
       <rows>
         <row align="center">
-          <text class="label" value="&memCache.label;" accesskey="&memCache.accesskey;" for="browserCacheMemoryCache"/>
+          <label value="&memCache.label;" accesskey="&memCache.accesskey;" control="browserCacheMemoryCache"/>
           <hbox align="center">
-            <textbox id="browserCacheMemoryCache" size="8" pref="true" preftype="int"
-                       prefstring="browser.cache.memory.capacity" prefattribute="value"/>
-            <text class="label" value="&kbytes;"/>
+            <textbox id="browserCacheMemoryCache" size="8" preftype="int"
+                       prefstring="browser.cache.memory.capacity"/>
+            <label value="&kbytes;"/>
           </hbox>
-          <button class="dialog" label="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
+          <button label="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
                   oncommand="prefClearMemCache();"
-                  id="clearMemCache" pref="true" preftype="bool"
-                  prefstring="pref.advanced.cache.disable_button.clear_memory" prefattribute="disabled"/>
+                  id="clearMemCache"
+                  prefstring="pref.advanced.cache.disable_button.clear_memory"/>
         </row>
         <row align="center">
-          <text class="label" value="&diskCache.label;" accesskey="&diskCache.accesskey;" for="browserCacheDiskCache"/>
+          <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
           <hbox align="center">
-            <textbox id="browserCacheDiskCache" size="8" pref="true" preftype="int"
+            <textbox id="browserCacheDiskCache" size="8" preftype="int"
                        prefstring="browser.cache.disk.capacity" prefattribute="value"/>
-            <text class="label" value="&kbytes;"/>
+            <label value="&kbytes;"/>
           </hbox>
-          <button class="dialog" label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
+          <button label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
                   oncommand="prefClearDiskCache();"
-                  id="clearDiskCache" pref="true" preftype="bool"
-                  prefstring="pref.advanced.cache.disable_button.clear_disk" prefattribute="disabled"/>
+                  id="clearDiskCache"
+                  prefstring="pref.advanced.cache.disable_button.clear_disk"/>
         </row>
       </rows>
     </grid>
 
     <separator class="thin"/>
     
-    <html>&docCache;</html>
+    <description>&docCache;</description>
     <vbox align="start" class="indent">
-      <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" align="start"
-                  pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
-                  prefattribute="value">
-        <radio group="browserCacheCheckDocFrequency" value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
-        <radio group="browserCacheCheckDocFrequency" value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
-        <radio group="browserCacheCheckDocFrequency" value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
-        <radio group="browserCacheCheckDocFrequency" value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
+      <radiogroup id="browserCacheCheckDocFrequency"
+                  prefstring="browser.cache.check_doc_frequency">
+        <radio value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
+        <radio value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
+        <radio value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
+        <radio value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
       </radiogroup>
     </vbox>
 
   </groupbox>
-
 </page>
 

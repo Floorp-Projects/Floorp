@@ -23,10 +23,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
-<page id="langPanel"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="Init();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
@@ -51,15 +48,15 @@
       description="&languages.customize.rHeader;    
     -->
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption label="&langtitle.label;"/>
 
-    <html>&languages.customize.prefLangDescript;</html>
+    <description>&languages.customize.prefLangDescript;</description>
 
-    <html>&languages.customize.active.label;</html>
+    <description>&languages.customize.active.label;</description>
     <hbox flex="1">
-      <tree class="inset" id="active_languages" flex="1" style="width: 0px; height: 0px;"
-            pref="true" preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
+      <tree id="active_languages" flex="1" style="width: 0px; height: 0px;"
+            preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
             datasources="rdf:null" multiple="true" onselect="SelectLanguage();">
         <treecolgroup>
           <treecol flex="1"/>
@@ -70,33 +67,29 @@
         <button oncommand="MoveUp();" id="up" class="up" disabled="true"
                 label="&languages.customize.moveUp.label;"
                 accesskey="&languages.customize.moveUp.accesskey;"
-                pref="true" preftype="bool"
-                prefstring="pref.browser.language.disable_button.up" prefattribute="disabled"/>
+                prefstring="pref.browser.language.disable_button.up"/>
         <button oncommand="MoveDown();" id="down" class="down" disabled="true"
                 label="&languages.customize.moveDown.label;"
                 accesskey="&languages.customize.moveDown.accesskey;"
-                pref="true" preftype="bool"
-                prefstring="pref.browser.language.disable_button.down" prefattribute="disabled"/>
+                prefstring="pref.browser.language.disable_button.down"/>
         <spacer flex="1"/>
-        <button class="dialog" id="add"
+        <button id="add"
                 label="&languages.customize.addButton.label;"
                 oncommand="AddLanguage();"
-                pref="true" preftype="bool"
-                prefstring="pref.browser.language.disable_button.add" prefattribute="disabled"/>
-        <button class="dialog" id="remove" disabled="true"
+                prefstring="pref.browser.language.disable_button.add"/>
+        <button id="remove" disabled="true"
                 label="&languages.customize.deleteButton.label;"
                 oncommand="RemoveActiveLanguage();"
-                pref="true" preftype="bool"
-                prefstring="pref.browser.language.disable_button.remove" prefattribute="disabled"/>
+                prefstring="pref.browser.language.disable_button.remove"/>
       </vbox>
     </hbox>
   </groupbox>
-  <groupbox orient="vertical" align="start">
+  <groupbox align="start">
     <caption label="&languages.customize.Charset.grouplabel;"/>
-    <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
+    <label value="&languages.customize.DefaultCharset.label;" control="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-        pref="true" preftype="localizedstring" prefstring="intl.charset.default"
-        prefattribute="value" wsm_attributes="value">
+        prefstring="intl.charset.default"
+        wsm_attributes="value">
         <template>
           <menupopup>
             <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>

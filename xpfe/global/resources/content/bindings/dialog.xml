@@ -118,6 +118,9 @@
         <parameter name="aButtons"/>
         <body>
         <![CDATA[
+          if (!aButtons)
+            aButtons = "accept,cancel";
+
           // expect a comma or space delimitd list of dlgtype values to be shown
           var list = aButtons.split(",");
           if (list.length == 1)

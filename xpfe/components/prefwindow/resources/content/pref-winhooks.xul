@@ -34,9 +34,7 @@
 %prefWinhooksDTD;
 ]>
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');">
 
     <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
@@ -44,8 +42,8 @@
     <hbox class="box-smallheader" title="&title.label;"/>
 
     <!-- File types -->
-    <text class="label" value="&files.text;"/>
-    <tree class="inset indent" style="width: 0px; height: 0px;" flex="2">
+    <label value="&files.text;"/>
+    <tree class="indent" style="width: 0px; height: 0px;" flex="2">
         <treechildren flex="1">
             <treeitem>
                 <treerow>
@@ -95,7 +93,7 @@
     <separator/>
 
     <!-- Internet Shortcuts -->
-    <text class="label" value="&shortcuts.text;"/>
+    <label value="&shortcuts.text;"/>
     <tree class="inset indent" style="width: 0px; height: 0px;" flex="2">
         <treechildren flex="1">
             <treeitem>
@@ -142,7 +140,6 @@
     <hbox align="center">
         <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>     
     </hbox>
-    <spacer flex="1"/>
-    
+    <spacer flex="1"/>   
 </page>
 

@@ -31,9 +31,7 @@
 <!ENTITY % prefAppearanceDTD SYSTEM "chrome://communicator/locale/pref/pref-appearance.dtd" >
 %prefAppearanceDTD;
 ]>
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel(panel);">
 
   <script type="application/x-javascript">
@@ -79,48 +77,35 @@
           
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox id="generalStartupPreferences" orient="vertical" align="start">
+  <groupbox id="generalStartupPreferences" align="start">
     <caption label="&onStartLegend.label;"/>
     <!-- XXX remove when navigator overlays.rdf works -->
-    <checkbox id="generalStartupBrowser" wsm_persist="true"
+    <checkbox id="generalStartupBrowser"
               label="&navCheck.label;" accesskey="&navCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="general.startup.browser"
-              prefattribute="checked"/>
+              prefstring="general.startup.browser"/>
     <!-- XXX -->
   </groupbox>
   
-  <groupbox id="toolbarStyleBox" orient="vertical" style="display: none;">
-    <caption label="&showToolsLegend.label;"/>
-    <radiogroup id="toolbarStyle" orient="vertical" align="start"
-                pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
-                prefattribute="value" wsm_persist="true">
-      <radio group="toolbarStyle" value="2" label="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
-      <radio group="toolbarStyle" value="0" label="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
-      <radio group="toolbarStyle" value="1" label="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
-    </radiogroup>
-  </groupbox>
-
   <vbox class="box-padded" align="start">
     <separator class="thin" />
 
     <checkbox id="showHideTooltips" label="&showHideTooltips.label;"
-              accesskey="&showHideTooltips.accesskey;" pref="true"
-              preftype="bool" prefstring="browser.chrome.toolbar_tips"
-              prefattribute="checked"/>
+              accesskey="&showHideTooltips.accesskey;"
+              prefstring="browser.chrome.toolbar_tips"/>
     
     <separator/>
 
-    <html>&languageList.txt.label;</html>
+    <description>&languageList.txt.label;</description>
 
     <separator class="thin" />
 
-    <text class="label" value="&languageList.label;" for="languageList"/>
+    <label value="&languageList.label;" control="languageList"/>
 
     <separator class="thin" />
 
-    <menulist id="languageList" class="small-margin" 
-              pref="true" preftype="localizedstring" 
-              prefstring="general.useragent.locale" prefattribute="value" 
+    <menulist id="languageList"
+              preftype="localizedstring" 
+              prefstring="general.useragent.locale" 
               wsm_attributes="value"
               datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
               sortResource="http://www.mozilla.org/rdf/chrome#name"
@@ -137,7 +122,6 @@
           </rule>
         </template>
     </menulist>       
-  </vbox>
-  
+  </vbox> 
 </page>
 

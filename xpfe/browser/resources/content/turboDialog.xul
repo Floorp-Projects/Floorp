@@ -34,11 +34,9 @@
   %brandDTD;
 ]>
 
-<window id="turboDialog"
+<dialog id="turboDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&exitWarningTitle.label;"
-        class="dialog"
-        orient="vertical"
         onload="document.getElementById('okButton').focus();"
         onunload="SetTurboPref();">
   <script type="application/x-javascript">
@@ -56,8 +54,6 @@
     ]]>
   </script>
 
-  <keyset id="dialogKeys"/>
-
   <hbox flex="1">
     <hbox align="start" valign="top">
       <image class="message-icon"/>
@@ -65,7 +61,7 @@
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
       <!-- text -->
-      <html flex="1">&exitWarningMsg.label;</html>
+      <description flex="1">&exitWarningMsg.label;</description>
       <vbox flex="1" style="max-width: 36em;"/>
       <separator/>
       <hbox>

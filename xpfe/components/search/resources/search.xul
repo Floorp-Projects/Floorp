@@ -5,8 +5,7 @@
 
 <window id="search-window" title="&window.title.label;"
     class="dialog" windowtype="search:window"
-  width="500" height="400" x="20" y="20" persist="width height x y" orient="vertical"
-  xmlns:html="http://www.w3.org/1999/xhtml"
+  width="500" height="400" x="20" y="20" persist="width height x y"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="loadPage(window.arguments[0], window.arguments[1])" onunload="doUnload()" >
@@ -41,6 +40,6 @@
     <tabpanels/>
   </tabbox> 
 
-  <html:iframe src="about:blank" height="150" width="100%" style="height: 150; width: 100%;" id="content" />
-  <html:iframe src="about:blank" height="100%" width="100%" style="height: 100%; width: 100%;" flex="100%" id="results" />
+  <iframe src="about:blank" height="150" width="100%" style="height: 150; width: 100%;" id="content" />
+  <iframe src="about:blank" height="100%" width="100%" style="height: 100%; width: 100%;" flex="100%" id="results" />
 </window>

@@ -27,10 +27,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      orient="vertical"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
 
   <stringbundle id="bundle_prefApplications"
@@ -40,12 +38,12 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption label="&descript;"/>
-    <text class="label" value="&fileTypes.label;"/>
+    <label value="&fileTypes.label;"/>
     <hbox flex="1">
       <vbox flex="1">
-        <tree id="appTree" class="inset" flex="1"
+        <tree id="appTree" flex="1"
               datasources="rdf:null" ref="urn:mimetypes"
               onselect="selectApplication();">
           <treecolgroup>
@@ -87,16 +85,16 @@
             </columns>
             <rows>
               <row>
-                <text class="label" value="&exten;"/>
-                <text class="label" id="extension"/>
+                <label value="&exten;"/>
+                <label id="extension"/>
               </row>
               <row>
-                <text class="label" value="&mimeType;"/>
-                <text class="label" id="mimeType"/>
+                <label value="&mimeType;"/>
+                <label id="mimeType"/>
               </row>
               <row>
-                <text class="label" value="&handle;"/>
-                <text class="label" id="handler"/>
+                <label value="&handle;"/>
+                <label id="handler"/>
               </row>
             </rows>
           </grid>
@@ -106,26 +104,23 @@
         <button id="newTypeButton" 
                 label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
                 oncommand="newType();"
-                pref="true" preftype="bool"
-                prefstring="pref.application.disable_button.new_type" prefattribute="disabled"/>
+                prefstring="pref.application.disable_button.new_type"/>
         <button id="editButton" 
                 label="&editButton.label;" accesskey="&editButton.accesskey;" 
                 oncommand="editType();"
-                pref="true" preftype="bool"
-                prefstring="pref.application.disable_button.edit" prefattribute="disabled"/>
+                prefstring="pref.application.disable_button.edit"/>
         <button id="removeButton" 
                 label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
                 oncommand="removeType();"
-                pref="true" preftype="bool"
-                prefstring="pref.application.disable_button.remove" prefattribute="disabled"/>
+                prefstring="pref.application.disable_button.remove"/>
       </vbox>
     </hbox>
   </groupbox>
   <groupbox flex="1">
     <caption label="&fileOpening.label;"/>
-    <html flex="1">&resetText.label;</html>
+    <description flex="1">&resetText.label;</description>
     <separator orient="vertical"/>
-    <hbox align="center">
+    <hbox pack="end">
       <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
     </hbox>
   </groupbox>

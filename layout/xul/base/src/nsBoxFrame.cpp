@@ -764,33 +764,17 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 
   if (!content)
      return PR_FALSE;
-
-  PRBool autostretchSet = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::autostretch, value))
-  {
-      if (value.EqualsIgnoreCase("never")) {
-         aStretch = PR_FALSE;
-         autostretchSet = PR_TRUE;
-         return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("always")) {
-         aStretch = PR_TRUE;
-         autostretchSet = PR_TRUE;
-         return PR_TRUE;
-      }
+  
+  // Check the align attribute.
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+    aStretch = value.EqualsIgnoreCase("stretch");
+    return PR_TRUE;
   }
 
-  if (!autostretchSet) {
-    // Check the align attribute.
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-      aStretch = value.EqualsIgnoreCase("stretch");
-      return PR_TRUE;
-    }
-
-    // Check the CSS box-align property.
-    const nsStyleXUL* boxInfo;
-    GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
-    aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
-  }
+  // Check the CSS box-align property.
+  const nsStyleXUL* boxInfo;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+  aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
 
   return PR_TRUE;
 }
@@ -1331,8 +1315,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::orient ||
         aAttribute == nsXULAtoms::pack ||
         aAttribute == nsXULAtoms::dir ||
-        aAttribute == nsXULAtoms::equalsize ||
-        aAttribute == nsXULAtoms::autostretch) {
+        aAttribute == nsXULAtoms::equalsize) {
 
        if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::dir || 
            aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || 

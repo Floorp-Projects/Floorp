@@ -10,9 +10,9 @@
       <xul:vbox flex="1" class="button-image-middle" inherits="disabled" align="center">
         <xul:spacer flex="1" class="button-top-spacer"/>
         <xul:box flex="1">
-          <xul:html class="button-text-box" flex="1">
+          <xul:description class="button-text-box" flex="1">
             <children/>
-          </xul:html>
+          </xul:description>
         </xul:box>
         <xul:spacer flex="1" class="button-bottom-spacer"/>
       </xul:vbox>

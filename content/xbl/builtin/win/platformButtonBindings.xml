@@ -7,10 +7,10 @@
   <binding id="button" extends="xul:button">
     <content>
       <xul:box class="button-box-1" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1">
-          <xul:html class="button-box-text" flex="1" autostretch="never">
+        <xul:box class="button-box-2" align="center" flex="1">
+          <xul:description class="button-box-text" flex="1">
             <children/>
-          </xul:html>
+          </xul:description>
         </xul:box>
       </xul:box>
     </content>
@@ -19,9 +19,9 @@
   <binding id="inputButton" extends="xul:button">
     <content>
       <xul:box class="button-box-1" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1">
-          <xul:box class="button-box-text" flex="1" autostretch="never">
-            <xul:text inherits="value" value="Submit Query"/>
+        <xul:box class="button-box-2" align="center" flex="1">
+          <xul:box class="button-box-text" flex="1" align="center">
+            <xul:label inherits="value" value="Submit Query"/>
           </xul:box>
         </xul:box>
       </xul:box>

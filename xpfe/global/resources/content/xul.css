@@ -37,7 +37,7 @@ broadcasterset, broadcaster, observes,
 keyset, key, 
 template, rule, conditions, action, 
 bindings, binding, content, member, triple {
-	display: none;
+  display: none;
 }
 
 /********** focus rules **********/
@@ -74,6 +74,7 @@ radiogroup {
 window, 
 page {
   overflow: hidden;
+  -moz-box-orient: vertical;
 }
 
 /******** box *******/
@@ -157,6 +158,7 @@ checkbox {
 radiogroup {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radiogroup");
   -moz-box-orient: vertical;
+  -moz-box-align: start;
 }
 
 radio {
@@ -177,6 +179,7 @@ caption {
 .groupbox-body {
   -moz-box-pack: inherit;
   -moz-box-align: inherit;
+  -moz-box-orient: vertical;
 }
 
 /******* toolbar *******/
@@ -425,7 +428,6 @@ outlinercol.outliner-columnpicker {
 
 outlinercol[hidden="true"] {
   visibility: collapse;
-  display: -moz-box;
 }
 
 /********** deck & stack *********/
@@ -482,13 +484,11 @@ progressmeter {
 
 /********** label **********/
 
-/* XXXdwh <text>, <html> and <spring> are deprecated. */
-
-text, spring, spacer {
+spacer {
   display: inline;
 }
 
-label, description, html {
+label, description {
   display: block;
 }
 
@@ -502,10 +502,6 @@ label {
 
 label[control] {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
-}
-
-text[for] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-for");
 }
 
 /********** textbox **********/
@@ -665,6 +661,12 @@ resourcebundle {
 
 dialog {
   -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialog");
+  -moz-box-orient: vertical;
+}
+
+/********* page ************/
+
+page {
   -moz-box-orient: vertical;
 }
 

@@ -29,25 +29,20 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/findBookmark.dtd">
 
-<window id="findBookmarkWindow" style="width: 36em;"
+<dialog id="findBookmarkWindow" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&findBookmark.title;" 
-        orient="vertical" class="dialog"
-        onload="Startup();">
-
-  <keyset id="dialogKeys"/>
+        onload="Startup();"
+        ondialogaccept="return find();">
 
   <stringbundle id="bookmarksBundle" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/findBookmark.js"/>
 
-  <text class="label" value="&search.for.label;"/>
+  <label value="&search.for.label;"/>
   <hbox align="center">
     <menulist id="matchList" class="menulist-toolbar">
       <menupopup>
@@ -70,10 +65,5 @@
     <textbox id="searchField" flex="1"
              oninput="doEnabling();" onkeypress="if (event.keyCode == 13) find();"/>
   </hbox>
-
-  <separator/>
-
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>
 

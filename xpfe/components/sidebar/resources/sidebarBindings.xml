@@ -2,7 +2,6 @@
 
 <bindings id="globalBindings"
   xmlns="http://www.mozilla.org/xbl"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="texttab">
@@ -10,7 +9,7 @@
       <xul:image class="box-texttab-left"/>
       <xul:vbox class="box-texttab-text-container" inherits="value" flex="1">
         <xul:spacer flex="1"/>
-        <xul:text class="box-texttab-text" inherits="value=label" crop="right"/>
+        <xul:label class="box-texttab-text" inherits="value=label" crop="right"/>
         <xul:spacer flex="1"/>
       </xul:vbox>
       <xul:image class="box-texttab-right"/>
@@ -20,7 +19,7 @@
 
   <binding id="sidebar-header-box" extends="xul:box">
     <content align="center">
-      <xul:text class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
+      <xul:label class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
       <xul:box>
         <children/>
       </xul:box>

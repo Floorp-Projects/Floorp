@@ -24,18 +24,12 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://global-platform/locale/printdialog.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="printDialog"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"
-  onunload="onUnload();"
+  onaccept="return onAccept();"
   title="&printDialog.title;"
-  debug="false"
-  class="dialog"
-  orient="vertical"
   persist="screenX screenY"
   screenX="24" screenY="24">
 
@@ -45,95 +39,95 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
     <columns><column/><column flex="1"/></columns>
     <rows>
       <row>
-        <text class="label" value="&printTo.label;" flex ="1"/>
+        <label value="&printTo.label;" flex ="1"/>
           <radiogroup id="destGroup" orient="horizontal">
-            <radio group = "destGroup" id = "printerRadio" label = "&printerRadio.label;"
+            <radio id = "printerRadio" label = "&printerRadio.label;"
                 oncommand = "doPrintToFile( false );"/>
-            <radio group = "destGroup" id = "fileRadio" label = "&fileRadio.label;"
+            <radio id = "fileRadio" label = "&fileRadio.label;"
                 oncommand = "doPrintToFile( true );"/>
           </radiogroup>
       </row>
       <row>
-        <text id="cmdLabel" class="label" value="&cmdInput.label;" flex ="1"/>
+        <label id="cmdLabel" value="&cmdInput.label;" flex ="1"/>
         <textbox id="cmdInput" flex ="1"/>
       </row>
       <row align="baseline">
-        <text id="fileLabel" class="label" value="&fileInput.label;"/>
+        <label id="fileLabel" value="&fileInput.label;"/>
         <hbox>
           <textbox id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" label = "&chooseButton.label;" oncommand = "onChooseFile()"/>
         </hbox>
       </row>
       <row>
-        <text class="label" value="&reverseGroup.label;" flex ="1"/>
+        <label value="&reverseGroup.label;" flex ="1"/>
         <radiogroup id="reverseGroup" orient="horizontal">
-          <radio group = "reverseGroup" id = "firstRadio" label = "&firstRadio.label;" />
-          <radio group = "reverseGroup" id = "lastRadio" label = "&lastRadio.label;" />
+          <radio id = "firstRadio" label = "&firstRadio.label;" />
+          <radio id = "lastRadio" label = "&lastRadio.label;" />
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&colorGroup.label;" flex ="1"/>
+        <label value="&colorGroup.label;" flex ="1"/>
         <radiogroup id="colorGroup" orient="horizontal">
-          <radio group = "colorGroup" id = "grayRadio" label = "&grayRadio.label;" />
-          <radio group = "colorGroup" id = "colorRadio" label = "&colorRadio.label;"/>
+          <radio id = "grayRadio" label = "&grayRadio.label;" />
+          <radio id = "colorRadio" label = "&colorRadio.label;"/>
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&paperGroup.label;" flex ="1"/>
-        <radiogroup id="paperGroup" orient="vertical">
-          <radio group = "paperGroup" id = "letterRadio" label = "&letterRadio.label;"/>
-          <radio group = "paperGroup" id = "legalRadio" label = "&legalRadio.label;"/>
-          <radio group = "paperGroup" id = "exectiveRadio" label = "&exectiveRadio.label;"/>
-          <radio group = "paperGroup" id = "a4Radio" label = "&a4Radio.label;" />
-          <radio group = "paperGroup" id = "a3Radio" label = "&a3Radio.label;" />
+        <label value="&paperGroup.label;" flex ="1"/>
+        <radiogroup id="paperGroup" >
+          <radio id = "letterRadio" label = "&letterRadio.label;"/>
+          <radio id = "legalRadio" label = "&legalRadio.label;"/>
+          <radio id = "exectiveRadio" label = "&exectiveRadio.label;"/>
+          <radio id = "a4Radio" label = "&a4Radio.label;" />
+          <radio id = "a3Radio" label = "&a3Radio.label;" />
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&orientationGroup.label;" flex ="1"/>
+        <label value="&orientationGroup.label;" flex ="1"/>
         <radiogroup id="orientationGroup" orient="horizontal">
-          <radio group = "orientationGroup" id = "portraitRadio" label = "&portraitRadio.label;" />
-          <radio group = "orientationGroup" id = "landscapeRadio" label = "&landscapeRadio.label;"/>
+          <radio id = "portraitRadio" label = "&portraitRadio.label;" />
+          <radio id = "landscapeRadio" label = "&landscapeRadio.label;"/>
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&printrangeGroup.label;" flex ="1"/>
-        <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(0);"/>
+        <label value="&printrangeGroup.label;" flex ="1"/>
+        <radiogroup id="printrangeGroup">
+          <radio id = "allpagesRadio" label = "&allpagesRadio.label;" oncommand = "doPrintRange(0);"/>
           <hbox align="center">
-            <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(1);"/>
-            <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
+            <radio id = "rangeRadio" label = "&rangeRadio.label;" oncommand = "doPrintRange(1);"/>
+            <label id = "frompageLabel" control = "frompageInput" value = "&frompageInput.label;" />
             <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-            <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
+            <label id = "topageLabel" control = "topageInput" value = "&topageInput.label;" />
             <textbox id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
           <radio group = "printrangeGroup" id = "selectionRadio" label = "&selectionRadio.label;" onclick = "doPrintRange(2);"/>
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
-        <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "aslaidoutRadio" label = "&aslaidoutRadio.label;" />
-          <radio group = "printrangeGroup" id = "selectedframeRadio" label = "&selectedframeRadio.label;" />
-          <radio group = "printrangeGroup" id = "eachframesepRadio" label = "&eachframesepRadio.label;" />
+        <label value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
+        <radiogroup id="printrangeGroup">
+          <radio id = "aslaidoutRadio" label = "&aslaidoutRadio.label;" />
+          <radio id = "selectedframeRadio" label = "&selectedframeRadio.label;" />
+          <radio id = "eachframesepRadio" label = "&eachframesepRadio.label;" />
         </radiogroup>
       </row>
       <row>
-        <text class="label" value="&marginInput.label;" flex ="1"/>
+        <label value="&marginInput.label;" flex ="1"/>
         <hbox>
           <hbox align="center">
-            <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
+            <label id = "topLabel" control = "topInput" value = "&topInput.label;" />
             <textbox id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
           <hbox align="center">
-            <text class = "label" id = "bottomLabel" for = "bottomInput" value = "&bottomInput.label;" />
+            <label id = "bottomLabel" control = "bottomInput" value = "&bottomInput.label;" />
             <textbox id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
           <hbox align="center">
-            <text class = "label" id = "leftLabel" for = "leftInput" value = "&leftInput.label;" />
+            <label id = "leftLabel" control = "leftInput" value = "&leftInput.label;" />
             <textbox id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
           <hbox align="center">
-            <text class = "label" id = "rightLabel" for = "rightInput" value = "&rightInput.label;" />
+            <label id = "rightLabel" control = "rightInput" value = "&rightInput.label;" />
             <textbox id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
         </hbox>
@@ -142,15 +136,8 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
   </grid>
 
   <!-- used to store the print -->
-  <foo style="display:none;" id="printButton" label="&printButton.label;"/>
+  <data style="display:none;" id="printButton" label="&printButton.label;"/>
 
   <!-- used to store the print -->
-  <foo style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
-
-  <separator/>
-
-  <!-- Places to overlay common dialog buttons and keyset -->
-  <hbox id="okCancelButtons"/>
-  <keyset id="keyset"/>
-
+  <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
 </window>

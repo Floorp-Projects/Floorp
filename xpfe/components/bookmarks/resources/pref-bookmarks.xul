@@ -30,9 +30,7 @@
 %prefBookmarkDTD;
 ]>
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/bookmarks/pref-bookmarks.xul');">
 
   <script type="application/x-javascript">
@@ -85,21 +83,21 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&filingBookmarks.label;"/>
-    <html flex="1">&autoFile.label;</html>
+    <description flex="1">&autoFile.label;</description>
     <hbox align="center">
       <checkbox id="enableAutoFile" label="&enableAutoFile.label;"
-                pref="true" preftype="bool" prefstring="browser.bookmarks.add_without_dialog"
+                preftype="bool" prefstring="browser.bookmarks.add_without_dialog"
                 prefattribute="checked"/>
     </hbox>
     <separator/>
-    <html flex="1">&defaultFolder.label;</html>
+    <description flex="1">&defaultFolder.label;</description>
     <hbox align="center">
       <textbox readonly="true" id="defaultFolder" crop="right" flex="1"/>
       <button label="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
               oncommand="chooseDefaultFolder();"
-              id="browser.bookmarks.choosefolder" pref="true" preftype="bool"
+              id="browser.bookmarks.choosefolder" preftype="bool"
               prefstring="pref.browser.homepage.disable_button.choose_folder" prefattribute="disabled"/>
     </hbox>
   </groupbox>
@@ -107,10 +105,10 @@
   <groupbox>
     <caption label="&extendedDataViews.label;"/>
     <vbox align="start">
-      <html>&extendedDataExplanation.label;</html>
+      <description>&extendedDataExplanation.label;</description>
       <checkbox id="showExtendedData" label="&showExtendedData.label;"
                 accesskey="&showExtendedData.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.bookmarks.show_extended_data"
+                preftype="bool" prefstring="browser.bookmarks.show_extended_data"
                 prefattribute="checked"/>
     </vbox>
   </groupbox>              

@@ -42,8 +42,6 @@ var list;
 var param;
 
 function selectDialogOnLoad() {
-  doSetOKCancel( commonDialogOnOK, commonDialogOnCancel );
-
   param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
   if( !param )
   dump( " error getting param block interface\n" );

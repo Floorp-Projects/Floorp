@@ -27,10 +27,8 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
 
 <window style="overflow: auto"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
   onunload="DoUnload();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/directory/directory.js"/>

@@ -10,13 +10,11 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&unknownWindow.title;"
         onload="onLoad()"
         onunload="onUnload()"
-        class="dialog"
-        orient="vertical">
+        class="dialog">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/unknownContent.js"/>
@@ -28,8 +26,8 @@
     </vbox>
     <separator orient="vertical" class="thin"/>
     <vbox>
-      <html id="dialog.contentType">&startDownload;</html>
-      <html>&helpText;</html>
+      <description id="dialog.contentType">&startDownload;</description>
+      <description>&helpText;</description>
     </vbox>
     <separator orient="vertical" class="thin"/>
   </hbox>
@@ -37,7 +35,7 @@
   <separator class="groove"/>
     
   <hbox align="center">
-    <button class="dialog" id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
+    <button id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
     <spacer flex="1"/>
     <hbox id="okCancelButtons"/>
   </hbox>

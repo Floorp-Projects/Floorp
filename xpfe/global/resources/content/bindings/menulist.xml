@@ -15,7 +15,7 @@
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content>
       <xul:image class="menu-icon" inherits="src"/>
-      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:image class="menu-dropmarker"/>
       
       <children includes="menupopup"/>

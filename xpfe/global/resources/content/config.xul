@@ -30,7 +30,6 @@ Seth Spitzer <sspitzer@netscape.com>
 
 <window id="config"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        orient="vertical"
         width="750"
         height="500"
         onload="onConfigLoad();">

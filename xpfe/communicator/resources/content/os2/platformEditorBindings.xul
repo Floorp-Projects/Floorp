@@ -1,27 +1,27 @@
 <?xml version="1.0"?> 
-<!-- windows version of platformEditorBindings.xul -->
+<!-- os2 version of platformEditorBindings.xul -->
 
 <keybinding id="platformEditorBindings"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- xul key for Windows -->
+<!-- xul key for OS/2 -->
 <keyset id="editorKeySet" xulkey="ctrl">
 
  
-<!-- alternate cut/copy/paste keys for Windows -->
-<key id="winAlternateCutKey" keycode="VK_DELETE"   
+<!-- alternate cut/copy/paste keys for OS/2 -->
+<key id="os2AlternateCutKey" keycode="VK_DELETE"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');" modifiers="shift"/>
-<key id="winAlternateCopy2Key" keycode="VK_DELETE"   
+<key id="os2AlternateCopy2Key" keycode="VK_DELETE"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');" modifiers="control"/>
-<key id="winAlternateCopyKey" keycode="VK_INSERT"   
+<key id="os2AlternateCopyKey" keycode="VK_INSERT"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');" modifiers="control"/>
-<key id="winAlternatePasteKey" keycode="VK_INSERT"   
+<key id="os2AlternatePasteKey" keycode="VK_INSERT"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');" modifiers="shift"/>
@@ -65,7 +65,7 @@
         controller.doCommand('cmd_moveBottom');" modifiers="control"/>
 </keyset>
 
-<!-- End Windows-specific keybindings -->
+<!-- End OS/2-specific keybindings -->
 
 </keybinding>
 

@@ -7,8 +7,6 @@ var pref_string_content  = "";
 
 function Init()
 {
-  doSetOKCancel(Save);
-
   var applicationArea = "";
 
   if ("arguments" in window && window.arguments[0])
@@ -313,6 +311,7 @@ function Save()
   catch(ex) {
     confirm('exception' + ex);
   }
+  return true;
 } //Save
 
 

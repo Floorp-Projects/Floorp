@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 
 <bindings id="popupBindings"
    xmlns="http://www.mozilla.org/xbl"
@@ -139,7 +139,7 @@
   
   <binding id="titletip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:text inherits="value=label"/>
+      <xul:label inherits="value=label"/>
     </content>
   </binding>
   
@@ -323,7 +323,7 @@
     <content>
       <xul:hbox class="titlebar-box" flex="1">
         <xul:hbox class="titlebar-title-box" flex="1" tooltip="aTooltip" tooltiptext="Click and drag to float">
-          <xul:text class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
+          <xul:label class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
         </xul:hbox>
         <xul:button class="popupClose" tooltip="aTooltip" tooltiptext="Close"/>
       </xul:hbox>

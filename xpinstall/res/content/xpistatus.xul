@@ -29,12 +29,10 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/xpistatus.dtd" >
 
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
         onclose="return false"
         title="&progressTitle.label;"
-        orient="vertical"
         class = "dialog"
 > 
 
@@ -42,8 +40,8 @@
     <keyset id="keyset"/>
 
     <vbox id="mainBox">
-        <hbox id="interiorTitleBox" autostretch="never">
-            <text class="headline" id="interiorTitle" value="&progress.label;"/>
+        <hbox id="interiorTitleBox" align="center">
+            <label class="headline" id="interiorTitle" value="&progress.label;"/>
             <spacer flex="100%"/>
             <image src="chrome://global/skin/animthrob_single.gif" />
         </hbox>
@@ -52,7 +50,7 @@
         <separator class="groove" flex="100%"/>            
         <spacer class="vertical-small-spacer"/>
 
-        <text class="label" id="componentList" value="&downloadBeforeUpdate.text;"/>
+        <label id="componentList" value="&downloadBeforeUpdate.text;"/>
         <spacer class="vertical-small-spacer"/>
         <spacer class="vertical-small-spacer"/>            
 
@@ -82,9 +80,9 @@
             <textbox id="dialog.currentAction" readonly="" />
         </vbox>
 
-        <hbox id="progressBox" autostretch="never">
+        <hbox id="progressBox" align="center">
             <progressmeter id="dialog.progress" mode="normal" value="0"/>
-            <button class="dialog push" id="cancel" onclick="cancel()" label="&dialogCancel.label;"/>
+            <button id="cancel" oncommand="cancel()" label="&dialogCancel.label;"/>
         </hbox>
 
     </vbox>

@@ -344,9 +344,6 @@ function onLoad()
   // Init dialog.
   initDialog();
 
-  // setup the dialogOverlay.xul button handlers
-  doSetOKCancel(onOK, onCancel);
-
   param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
   if( !param ) {
     return;
@@ -358,12 +355,7 @@ function onLoad()
 }
 
 //---------------------------------------------------
-function onUnload()
-{
-}
-
-//---------------------------------------------------
-function onOK()
+function onAccept()
 {
   var print_paper_size = 0;
 

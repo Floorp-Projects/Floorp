@@ -17,7 +17,7 @@
           <xul:image class="checkbox-check"/>
         </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src"/>
-        <xul:html class="checkbox-label" inherits="value=label,accesskey,crop" flex="1"/>
+        <xul:label class="checkbox-label" inherits="xbl:text=label,accesskey,crop" flex="1"/>
       </xul:hbox>
     </content>
     

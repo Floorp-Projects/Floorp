@@ -102,7 +102,7 @@ function onUnload()
     window.opener.findDialog = 0;
 }
 
-function onAccept(aEvent)
+function onAccept()
 {
   // Transfer dialog contents to the find service.
   saveFindData();
@@ -123,10 +123,7 @@ function onAccept(aEvent)
     window.alert(dialog.bundle.getString("notFoundWarning"));
     dialog.findKey.select();
     dialog.findKey.focus();
-  }
-  
-  // prevent window from closing
-  aEvent.preventDefault();
+  } 
   return false;
 }
 

@@ -20,20 +20,15 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
-<page
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="main-box"
-  orient="vertical"
-  title="&charset.customize.title.label;"
-  windowtype="sidebar:customize"
-  onload="Init();"
-  persist="width height"
-  width="500" height="394">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Init();"
+        ondialogaccept="return Save();"
+        persist="width height"
+        width="500" height="394">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-charset.js"/>
   <script type="application/x-javascript">
@@ -50,12 +45,12 @@
   <!-- The two-pane -->
   <hbox flex="1">
     <vbox flex="1">
-      <text class="label" value="&charset.customize.additional.label;" crop="right"/>
+      <label value="&charset.customize.additional.label;"/>
       <!-- Available Charsets Tree -->
-      <tree class="inset" id="available_charsets" flex="1"
+      <tree id="available_charsets" flex="1"
             onselect="SelectAvailableCharset();" 
             ondblclick="AddAvailableCharset();"
-            datasources="rdf:null" indent="false" multiple="true">
+            datasources="rdf:null" multiple="true">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
@@ -63,14 +58,14 @@
       </tree> 
       <separator class="thin"/>
       <hbox align="center">
-        <button id="add_button" oncommand="AddAvailableCharset();" class="dialog"
+        <button id="add_button" oncommand="AddAvailableCharset();"
                 label="&charset.customize.add.label;" disabled="true"/>
       </hbox>
     </vbox> 
     <separator orient="vertical"/>
     <vbox flex="1">
-      <text class="label" value="&charset.customize.current.label;" crop="right"/>
-      <tree class="inset" id="active_charsets" flex="1" 
+      <label value="&charset.customize.current.label;"/>
+      <tree id="active_charsets" flex="1" 
             onselect="SelectActiveCharset();"
             ondblclick="RemoveActiveCharset();"
             datasources="rdf:null"
@@ -96,10 +91,4 @@
       <spacer flex="1"/>
     </vbox>
   </hbox>
-
-  <separator class="groove"/>
-
-  <hbox id="okCancelButtonsRight"/>
-  
-</page>
-
+</dialog>

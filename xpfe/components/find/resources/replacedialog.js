@@ -105,6 +105,7 @@ function onFindNext()
       gReplaceDialog.bundle = document.getElementById("replaceBundle");
     alert(gReplaceDialog.bundle.getString("notFoundWarning"));
   }
+  return false;
 }
 
 function onReplace()

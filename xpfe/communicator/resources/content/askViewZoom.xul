@@ -36,29 +36,21 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/askViewZoom.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="askViewZoom"
   title="&askViewZoom.title;"
-  onload="onLoad();"
-  class="dialog"
-  orient="vertical">
+  onload="onLoad();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/askViewZoom.js"/>
 
   <hbox>
-    <text class="label" value="&selectZoom.label;"/>
+    <label value="&selectZoom.label;"/>
   </hbox>
 
   <hbox>
     <textbox id="zoomValue" oninput="doEnabling();"/>
   </hbox>
 
-  <hbox id="okCancelButtons"/>
-  <keyset id="dialogKeys"/>
-
-</window>
+</dialog>

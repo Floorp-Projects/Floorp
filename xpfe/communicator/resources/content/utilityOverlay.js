@@ -282,6 +282,7 @@ function goUpdateSelectEditMenuItems()
   goUpdateCommand('cmd_cut');
   goUpdateCommand('cmd_copy');
   goUpdateCommand('cmd_delete');
+  goUpdateCommand('cmd_selectAll');
 }
 
 // update menu items that relate to undo/redo

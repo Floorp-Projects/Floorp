@@ -37,7 +37,7 @@
 
 <dialog id="newBookmarkDialog" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        buttons="accept,cancel" ondialogaccept="return onOK(event)"
+        ondialogaccept="return onOK(event)"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         onload="Startup();"
         persist="screenX screenY width height"
@@ -61,7 +61,7 @@
     </columns>
     <rows>
       <row align="center">
-        <text class="label" value="&name.label;" accesskey="&name.accesskey;" for="name"/>
+        <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
         <textbox id="name"/>
         <spacer/>
       </row>
@@ -71,7 +71,7 @@
         <spacer/>
       </row>
       <row align="center">
-        <text class="label" value="&url.label;" accesskey="&url.accesskey;" for="url"/>
+        <label value="&url.label;" accesskey="&url.accesskey;" control="url"/>
         <textbox id="url" oninput="onLocationInput();"/>
         <spacer/>
       </row>
@@ -83,10 +83,10 @@
   <vbox id="folderbox" flex="1">
     <separator/>
     <hbox flex="1">
-      <text id="createinlabel" class="label" value="&createin.label;"/>
+      <label id="createinlabel" value="&createin.label;"/>
       <hbox flex="1">
         <tree id="folders" flex="1" style="height: 12em; width: 0px"
-              class="inset" ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
+              ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
               template="file-bookmarks-template"
               onselect="onTreeSelect();" onkeypress="event.preventBubble();">
           <treecolgroup>

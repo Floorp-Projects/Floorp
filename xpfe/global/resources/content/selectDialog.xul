@@ -21,20 +21,17 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
  
-<window
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  orient="vertical"
-  onload="selectDialogOnLoad()"
-  class="dialog">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+      onload="selectDialogOnLoad()"
+      ondialogaccept="return CommonDialogOnOk();"
+      ondialogcancel="return CommonDialogOnCancel();">
 
   <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
   <vbox style="width: 24em;margin: 5px;">
-    <text id="info.txt" class="label"/>
+    <label id="info.txt"/>
     <vbox>
       <tree rows="4" class="list" id="list" flex="1">
         <treecolgroup>
@@ -44,5 +41,4 @@ Contributor(s): ______________________________________. -->
       </tree>
     </vbox>
   </vbox>
-  <hbox id="okCancelButtons"/>
-</window>
+</dialog>

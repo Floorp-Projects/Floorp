@@ -27,9 +27,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-history.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');">
 
   <script type="application/x-javascript">
@@ -102,48 +100,44 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <!-- history -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&header3.label;"/>
-    <html>&historyPages.label;</html>
+    <description>&historyPages.label;</description>
     <hbox align="center">
-      <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
-      <textbox id="histDay" size="3" wsm_persist="true"
-                 pref="true" preftype="int" prefstring="browser.history_expire_days"
-                 prefattribute="value"/>
-      <text class="label" value="&days.label;"/>
+      <label value="&pageHis.label;" accesskey="&pageHis.accesskey;" control="histDay"/>
+      <textbox id="histDay" size="3"
+                 preftype="int" prefstring="browser.history_expire_days"/>
+      <label value="&days.label;"/>
       <spacer flex="1"/>
-      <button class="dialog" label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+      <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
         oncommand="prefClearGlobalHistory();"
-        id="browserClearHistory" pref="true" preftype="bool"
-        prefstring="pref.browser.history.disable_button.clear_hist" prefattribute="disabled"/>
+        id="browserClearHistory"
+        prefstring="pref.browser.history.disable_button.clear_hist"/>
     </hbox>
   </groupbox>  
   
   <!-- no honey, I haven't been viewing porn, honest! -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&locationBarHistory.label;"/>
     <hbox align="center">
-      <html flex="1">&clearLocationBar.label;</html>
+      <description flex="1">&clearLocationBar.label;</description>
       <hbox align="center" pack="end">
-        <button class="dialog" id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
+        <button id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
          oncommand="prefClearUrlbarHistory();"
-         pref="true" preftype="bool"
-         prefstring="pref.browser.history.disable_button.clear_urlbar" prefattribute="disabled"/>
+         prefstring="pref.browser.history.disable_button.clear_urlbar"/>
       </hbox>
     </hbox>
   </groupbox>  
 
 
   <!-- Session History -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&shistory.label;"/>
-    <html>&shistoryDescription1.label;</html>
+    <description>&shistoryDescription1.label;</description>
     <hbox align="center">
-      <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>
-      <textbox id="shistMax" size="3" wsm_persist="true"
-                  pref="true" preftype="int" prefstring="browser.sessionhistory.max_entries"
-                  prefattribute="value"/>      
+      <label value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" control="shistMax"/>
+      <textbox id="shistMax" size="3"
+                  preftype="int" prefstring="browser.sessionhistory.max_entries"/>      
       <spacer flex="1"/>
     </hbox>
   </groupbox>  

@@ -763,6 +763,7 @@ var BookmarksUtils = {
   // Execute a command with the given source and arguments
   doBookmarksCommand: function (aSourceURI, aCommand, aArgumentsArray)
   {
+    alert(aSourceURI);
     var rCommand = this.RDF.GetResource(aCommand);
   
     var kSuppArrayContractID = "@mozilla.org/supports-array;1";
@@ -778,8 +779,10 @@ var BookmarksUtils = {
       var rArc = this.RDF.GetResource(aArgumentsArray[i].property);
       argsArray.AppendElement(rArc);
       var rValue = null;
-      if ("resource" in aArgumentsArray[i]) 
+      if ("resource" in aArgumentsArray[i]) { 
+        alert(aArgumentsArray[i].resource);
         rValue = this.RDF.GetResource(aArgumentsArray[i].resource);
+      }
       else
         rValue = this.RDF.GetLiteral(aArgumentsArray[i].literal);
       argsArray.AppendElement(rValue);

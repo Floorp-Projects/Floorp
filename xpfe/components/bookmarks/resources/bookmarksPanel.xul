@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- --> 
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public
@@ -34,7 +34,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
-<page id="bookmarksPanel"
+<window id="bookmarksPanel"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup();">
@@ -43,7 +43,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
   <!-- XXX - would like to cut this dependency out -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
   <!-- Bookmarks Shell -->
@@ -66,34 +65,24 @@
   <stringbundleset id="stringbundleset"/>
   
   <!-- bookmarks & edit commands -->
-  <commands id="commands">
-    <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
-                events="click,focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
-    </commandset>                
-    <commandset id="bookmarksItems"/>
-  </commands>
+  <commandset id="bookmarksItems"/>
   
   <hbox id="panel-bar" class="toolbar">
-    <toolbarbutton id="btnAddBookmark" label="&command.addBookmark.label;"
+    <toolbarbutton label="&command.addBookmark.label;"
             oncommand="gBookmarksShell.addBookmark();"/>
-    <toolbarbutton id="btnManageBookmarks" label="&command.manageBookmarks.label;"
+    <toolbarbutton label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
-    <spacer flex="1"/>
-    <toolbarseparator/>
-    <toolbarbutton id="btnFindBookmarks" label="&command.findBookmarks.label;"
+    <toolbarbutton label="&command.findBookmarks.label;"
             oncommand="gBookmarksShell.findInBookmarks();"/>
   </hbox>
   
   <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
-        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+        datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
         flags="dont-test-empty"
-        type="http://home.netscape.com/NC-rdf#Folder"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
         ondraggesture="nsDragAndDrop.startDrag(event, bookmarksDNDObserver);"
         ondragdrop="nsDragAndDrop.drop(event, bookmarksDNDObserver);"
-        onclick="gBookmarksShell.hlClick(event);"
+        onclick="gBookmarksShell.treeClicked(event);"
         style="height:0px" flex="1">
 
     <template>
@@ -114,7 +103,7 @@
       <rule>
         <treechildren>
           <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                    status="rdf:http://home.netscape.com/WEB-rdf#status"
+                    web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
@@ -150,4 +139,4 @@
                   onclick="gBookmarksShell.treeOpen(event);"/>
   </tree>
 
-</page>
+</window>

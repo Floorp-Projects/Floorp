@@ -356,8 +356,7 @@ nsSVGContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::align  ||
         aAttribute == nsHTMLAtoms::valign ||
         aAttribute == nsXULAtoms::flex ||
-        aAttribute == nsXULAtoms::orient ||
-        aAttribute == nsXULAtoms::autostretch) {
+        aAttribute == nsXULAtoms::orient) {
 
         if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
           mInner->mValign = nsSVGContainerFrame::vAlign_Top;

@@ -4,22 +4,21 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/find.dtd">
 
 <window title="&window.title.label;" 
-        class="dialog" orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="dialog"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://communicator/content/search/find.js"/>
 
   <hbox align="center">
-    <text class="label" value="&search1.label;"/>
+    <label value="&search1.label;"/>
     <menulist id="datasource">
       <menupopup>
         <menuitem label="&bookmarks.label;" value="rdf:bookmarks"/>
         <menuitem label="&history.label;" value="rdf:history"/>
       </menupopup>
     </menulist>
-    <text class="label" value="&search2.label;"/>
+    <label value="&search2.label;"/>
   </hbox>
   
   <hbox align="center">

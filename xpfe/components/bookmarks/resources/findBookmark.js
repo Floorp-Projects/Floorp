@@ -40,7 +40,6 @@ var gOKButton;
 var gSearchField;
 function Startup()
 {
-  doSetOKCancel(find);
   var bundle = document.getElementById("bookmarksBundle");
   gOKButton = document.getElementById("ok");
   gOKButton.label = bundle.getString("search_button_label");
@@ -66,7 +65,7 @@ function find()
     bmWindow.gBookmarksShell.setRoot(searchURI);
 
   bmWindow.focus();
-  close();
+  return true;
 }
 
 var gCreatingNewWindow = false;

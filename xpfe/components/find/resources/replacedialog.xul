@@ -26,16 +26,13 @@ Contributor(s): Kin Blas <kin@netscape.com>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://global/locale/replacedialog.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="replaceDialog"
-  onload="onLoad();"
-  onunload="onUnload();"
-  title="&replaceDialog.title;"
-  class="dialog"
-  orient="vertical"
-  persist="screenX screenY"
-  screenX="24" screenY="24">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad();"
+        onunload="onUnload();"
+        ondialogaccept="return onFindNext();"
+        title="&replaceDialog.title;"
+        persist="screenX screenY"
+        screenX="24" screenY="24">
 
   <script type="application/x-javascript" src="chrome://global/content/replacedialog.js"/>
   <stringbundle id="replaceBundle" src="chrome://global/locale/finddialog.properties"/>
@@ -46,9 +43,9 @@ Contributor(s): Kin Blas <kin@netscape.com>
     <separator orient="vertical" class="thin"/>
 
     <vbox>
-      <text class="label" value="&findField.label;"/>
+      <label value="&findField.label;"/>
       <separator class="thin"/>
-      <text class="label" value="&replaceField.label;"/>
+      <label value="&replaceField.label;"/>
     </vbox>
     
     <vbox>
@@ -61,16 +58,10 @@ Contributor(s): Kin Blas <kin@netscape.com>
       </vbox>
     </vbox>
     <vbox>
-      <button class="dialog" id="findNext" label="&findNextButton.label;" oncommand="onFindNext();"/>
-      <button class="dialog" id="replace" label="&replaceButton.label;" oncommand="onReplace();"/>
-      <button class="dialog" id="replaceAll" label="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
-      <button class="dialog" id="close" label="&closeButton.label;" oncommand="close();"/>
+      <button id="findNext" label="&findNextButton.label;" oncommand="onFindNext();" default="true"/>
+      <button id="replace" label="&replaceButton.label;" oncommand="onReplace();"/>
+      <button id="replaceAll" label="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
+      <button id="close" label="&closeButton.label;" oncommand="close();"/>
     </vbox>
   </hbox>
-
-  <separator/>
-
-  <!-- Places to overlay common dialog buttons and keyset -->
-  <keyset id="dialogKeys"/>
-
-</window>
+</dialog>
