@@ -35,7 +35,7 @@
 #include "nsString.h"
 #include "nsIImage.h"
 
-#include "nsIDeviceContextSpecXP.h"
+#include "nsIDeviceContextSpecXPrint.h"
 
 class nsXPrintContext
 {

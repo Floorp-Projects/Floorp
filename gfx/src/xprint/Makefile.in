@@ -43,9 +43,9 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsIDeviceContextXP.h \
-		nsGfxXPCID.h \
-		nsIDeviceContextSpecXP.h \
+		nsIDeviceContextXPrint.h \
+		nsGfxXPrintCID.h \
+		nsIDeviceContextSpecXPrint.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
