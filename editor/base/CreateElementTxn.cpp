@@ -35,10 +35,10 @@ CreateElementTxn::CreateElementTxn()
 {
 }
 
-NS_IMETHODIMP CreateElementTxn::Init(nsIEditor *aEditor,
-                                     const nsString& aTag,
-                                     nsIDOMNode *aParent,
-                                     PRUint32 aOffsetInParent)
+NS_IMETHODIMP CreateElementTxn::Init(nsIEditor      *aEditor,
+                                     const nsString &aTag,
+                                     nsIDOMNode     *aParent,
+                                     PRUint32        aOffsetInParent)
 {
   NS_ASSERTION(aEditor&&aParent, "null args");
   if (aEditor && aParent)
