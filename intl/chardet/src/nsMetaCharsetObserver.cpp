@@ -263,21 +263,27 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
          if (nsnull == charsetValue) 
          {
-			 nsAutoString contentPart1(contentValue+9); // after "text/html"
-			 PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
-			 if(kNotFound != start) 
-	         {	
-				 start += 8; // 8 = "charset=".length 
-				 PRInt32 end = contentPart1.FindCharInSet("\'\";", start  );
-				 if(kNotFound == end ) 
-					 end = contentPart1.Length();
-				 NS_ASSERTION(end>=start, "wrong index");
-                 CopyUCS2toASCII(Substring(contentPart1, start, end-start), newCharset);
-              } 
+           nsAutoString contentPart1(contentValue+9); // after "text/html"
+           PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
+           PRInt32 end = contentPart1.Length();
+           if(kNotFound != start)
+           {
+             start += 8; // 8 = "charset=".length 
+             while (start < end && contentPart1.CharAt(start) == PRUnichar(' '))
+               ++start;
+             if (start < end) {
+               end = contentPart1.FindCharInSet("\'\"; ", start);
+               if(kNotFound == end ) 
+                 end = contentPart1.Length();
+               NS_ASSERTION(end>=start, "wrong index");
+               LossyCopyUTF16toASCII(Substring(contentPart1, start, end-start),
+                                     newCharset);
+             }
+           } 
          }
          else   
          {
-             CopyUCS2toASCII(nsDependentString(charsetValue), newCharset);
+             LossyCopyUTF16toASCII(nsDependentString(charsetValue), newCharset);
          } 
 
          nsCAutoString charsetString; charsetString.AssignWithConversion(charset);
