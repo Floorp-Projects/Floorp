@@ -53,12 +53,6 @@
 #define NS_LOG_RELEASE(_p, _rc, _type) \
   nsTraceRefcnt::LogRelease((_p), (_rc), (_type))
 
-#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line) \
-  nsTraceRefcnt::LogNewXPCOM((_p),(_type),(PRUint32)(_size),(_file),(_line))
-
-#define NS_LOG_DELETE_XPCOM(_p,_file,_line) \
-  nsTraceRefcnt::LogDeleteXPCOM((_p),(_file),(_line))
-
 #ifdef NS_LOSING_ARCHITECTURE
 
 #define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) \
@@ -67,10 +61,19 @@
 #define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) \
   nsTraceRefcnt::LogReleaseCall((_p), (_rc), (_file), (_line))
 
+#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line) \
+  nsTraceRefcnt::LogNewXPCOM((_p),(_type),(PRUint32)(_size),(_file),(_line))
+
+#define NS_LOG_DELETE_XPCOM(_p,_file,_line) \
+  nsTraceRefcnt::LogDeleteXPCOM((_p),(_file),(_line))
+
 #else
 
 #define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
 #define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
+
+#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line)
+#define NS_LOG_DELETE_XPCOM(_p,_file,_line)
 
 #endif
 
