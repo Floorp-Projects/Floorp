@@ -144,11 +144,11 @@ case $os in
 		os=-psos
 		;;
 	-qnx*)
-		basic_machine=i386-pc
+		basic_machine=x6-pc
 		os=-qnx`uname -v | cut -c1-1`
 		;;
 	-nto*)
-		basic_machine=i386-pc
+		basic_machine=`uname -p`-pc
 		os=-nto
 		;;
 	-rhapsody*)
@@ -518,11 +518,11 @@ case $basic_machine in
 		basic_machine=i386-ibm
 		;;
 	*qnx*)
-		basic_machine=i386-pc
+		basic_machine=x86-pc
 		os=-qnx`uname -v | cut -c1-1`
 		;;
 	*nto*)
-		basic_machine=i386-pc
+		basic_machine=`uname -p`-pc
 		os=-nto
 		;;
 	rm[46]00)

@@ -21,30 +21,54 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-CPU_ARCH	 = x86
+#
+# XXX
+# Temporary define for the Client; to be removed when binary release is used
+#
+ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
+CLASSIC_NSPR = 1
+endif
+endif
+
+#
+# The default implementation strategy for Linux is pthreads.
+#
+ifeq ($(CLASSIC_NSPR),1)
+IMPL_STRATEGY		= _EMU
+DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
+else
+USE_PTHREADS		= 1
+IMPL_STRATEGY		= _PTH
+DEFINES			+= -D_REENTRANT
+endif
+
+
 AR			 = qcc -Vgcc_ntox86 -M -a $@
-CC			 = qcc -Vgcc_ntox86 -shared 
+CC			 = qcc -Vgcc_ntox86
 LD			 = $(CC)
 CCC			 = $(CC)
-OS_CFLAGS	 = -Wc,-Wall -Wc,-Wno-parentheses -DNTO -DNTO2 -Di386 \
-			   -D_QNX_SOURCE -DNO_REGEX \
-			   -DSTRINGS_ALIGNED -D__i386__ -D__QNXNTO__ -DPIC \
-			   -DHAVE_POINTER_LOCALTIME_R
+
+# Old Flags  -DNO_REGEX   -DSTRINGS_ALIGNED
+
+OS_CFLAGS	 = -Wc,-Wall -Wc,-Wno-parentheses -DNTO  \
+			   -D_QNX_SOURCE -DHAVE_POINTER_LOCALTIME_R -shared
+
 COMPILER_TAG = _qcc
 MKSHLIB		 = qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -g2 -M
 
 RANLIB		 = ranlib
 G++INCLUDES	 =
 OS_LIBS		 =
-XLDOPTS		 =
+EXTRA_LIBS  = -lsocket
 
-ifdef USE_PTHREADS
-	IMPL_STRATEGY	= _PTH
+ifdef BUILD_OPT
+OPTIMIZER = -O2
 else
-	IMPL_STRATEGY   = _EMU
+OPTIMIZER = -O2 -gdwarf-2
 endif
 
 NOSUCHFILE	= /no-such-file
 
-GARBAGE		= $(wildcard *.err)
+GARBAGE		+= *.map
 
