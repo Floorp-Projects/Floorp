@@ -3,6 +3,7 @@
 # Bugzilla Module              #
 ################################
 
+
 package BotModules::Bugzilla;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
