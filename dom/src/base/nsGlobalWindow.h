@@ -440,6 +440,8 @@ public:
   NS_DECL_NSICONTROLLER
 
 private:
+  nsresult GetEventStateManager(nsIEventStateManager **esm);
+  void ToggleBrowseWithCaret();
   nsresult GetPresShell(nsIPresShell **aPresShell);
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);

@@ -133,6 +133,11 @@ public:
 
   NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
 
+  NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret);
+
+  NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
+  NS_IMETHOD MoveCaretToFocus();
+
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
@@ -140,10 +145,11 @@ protected:
   NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus);
-  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, nsIContent** aResult);
+  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool ignoreTabIndex, nsIContent** aResult);
 
+  void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
-  NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
+  NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
   PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
@@ -189,11 +195,12 @@ protected:
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
 
+  nsresult SetCaretEnabled(nsIPresShell *aPresShell, PRBool aVisibility);
+  nsresult SetContentCaretVisible(nsIPresShell* aPresShell, nsIContent *aContent, PRBool aVisible);
+  void FocusElementButNotDocument(nsIContent *aElement);
+
   // Return the location of the caret
-  nsresult GetCaretLocation(nsIContent **caretContent, nsIFrame **caretFrame, PRUint32 *caretOffset);
-  nsresult MoveFocusToCaret();
-  nsresult MoveCaretToFocus();
-  nsresult EnsureCaretVisible(nsIPresShell* aPresShell, nsIContent *aContent);
+  nsresult GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset);
 
   void GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 

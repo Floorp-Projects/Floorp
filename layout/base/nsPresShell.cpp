@@ -3908,14 +3908,14 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
   }
 
   // Finally try FIXptr
-  nsCOMPtr<nsIDOMRange> fixPtrRange;
+  nsCOMPtr<nsIDOMRange> jumpToRange;
   if (!content) {
     nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
     if (xmldoc) {
-      xmldoc->EvaluateFIXptr(aAnchorName,getter_AddRefs(fixPtrRange));
-      if (fixPtrRange) {
+      xmldoc->EvaluateFIXptr(aAnchorName,getter_AddRefs(jumpToRange));
+      if (jumpToRange) {
         nsCOMPtr<nsIDOMNode> node;
-        fixPtrRange->GetStartContainer(getter_AddRefs(node));
+        jumpToRange->GetStartContainer(getter_AddRefs(node));
         if (node) {
           node->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(content));
         }
@@ -3924,32 +3924,39 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
   }
  
   if (content) {
-    nsIFrame* frame;
+    nsIFrame* frame = nsnull;
 
     // Get the primary frame
-    if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
+    if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame)) && frame) {
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
 
       if (NS_SUCCEEDED(rv)) {
         // Should we select the target?
         // This action is controlled by a preference: the default is to not select.
+        PRBool selectAnchor = PR_FALSE;
         nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID,&rv));
         if (NS_SUCCEEDED(rv) && prefs) {
-          PRBool selectAnchor;
-          nsresult rvPref = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
-          if (NS_SUCCEEDED(rvPref) && selectAnchor) {
-            if (!fixPtrRange) {
-              nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID));
-              nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-              if (range && node) {
-                range->SelectNode(node);
-                SelectRange(range);
-              }
-            } else {
-              SelectRange(fixPtrRange);
-            }
-          }
+          prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
+        }
+        // Even if select anchor pref is false, we must still move the caret there.
+        // That way tabbing will start from the new location
+        if (!jumpToRange) {
+          jumpToRange = do_CreateInstance(kRangeCID);
+          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+          if (jumpToRange && node) 
+            jumpToRange->SelectNode(node);
+        }
+        if (jumpToRange) {
+          if (!selectAnchor)
+            jumpToRange->Collapse(PR_TRUE);
+          SelectRange(jumpToRange);
+        }
+        
+        nsCOMPtr<nsIEventStateManager> esm;
+        if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(esm))) && esm) {
+          PRBool isSelectionWithFocus;
+          esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
         }
       }
     }
