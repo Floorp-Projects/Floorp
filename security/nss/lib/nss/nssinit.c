@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.59 2002/12/19 00:26:29 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.60 2003/01/08 21:48:40 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -49,6 +49,8 @@
 #include "nss.h"
 #include "secrng.h"
 #include "pk11func.h"
+#include "secerr.h"
+#include "nssbase.h"
 
 #include "pki3hack.h"
 #include "certi.h"
@@ -464,8 +466,9 @@ loser:
     }
 
     if (rv == SECSuccess) {
-	/* can this function fail?? */
-	STAN_LoadDefaultNSS3TrustDomain();
+	if (STAN_LoadDefaultNSS3TrustDomain() != PR_SUCCESS) {
+	    return SECFailure;
+	}
 	CERT_SetDefaultCertDB((CERTCertDBHandle *)
 				STAN_GetDefaultTrustDomain());
 #ifndef XP_MAC
@@ -540,18 +543,27 @@ NSS_NoDB_Init(const char * configdir)
 			PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
 }
 
+extern const NSSError NSS_ERROR_BUSY;
+
 SECStatus
 NSS_Shutdown(void)
 {
     SECStatus rv;
+    PRStatus status;
 
     ShutdownCRLCache();
     SECOID_Shutdown();
-    STAN_Shutdown();
+    status = STAN_Shutdown();
     cert_DestroySubjectKeyIDHashTable();
     SECMOD_CleanupCallOnce();
     rv = SECMOD_Shutdown();
     pk11sdr_Shutdown();
+    if (status == PR_FAILURE) {
+	if (NSS_GetError() == NSS_ERROR_BUSY) {
+	    PORT_SetError(SEC_ERROR_BUSY);
+	}
+	rv = SECFailure;
+    }
     nss_IsInitted = PR_FALSE;
     return rv;
 }
