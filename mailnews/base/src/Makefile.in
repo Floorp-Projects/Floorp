@@ -36,7 +36,6 @@ CPPSRCS = \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \
-	nsMsgRDFFolder.cpp \
 	nsNewsSet.cpp \
 	nsMsg.cpp \
 	$(NULL)
