@@ -71,8 +71,8 @@ protected:
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
 
-   NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
-      nsIDOMElement** aDOMElement);
+   NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
+   NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       PRBool aPrimary, const PRUnichar* aID);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 

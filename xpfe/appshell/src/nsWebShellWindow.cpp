@@ -1285,8 +1285,6 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   }
 #endif
 
-  ExecuteStartupCode();
-
 #ifdef USE_NATIVE_MENUS
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
@@ -1415,39 +1413,6 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 } // nsWebShellWindow::GetNamedDOMDoc
 
 //----------------------------------------
-
-/**
- * Get nsIDOMNode corresponding to a given webshell
- * @param aShell the given webshell
- * @return the corresponding DOM element, null if for some reason there is none
- */
-nsCOMPtr<nsIDOMNode>
-nsWebShellWindow::GetDOMNodeFromWebShell(nsIWebShell *aShell)
-{
-   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aShell));
-
-   nsCOMPtr<nsIDOMElement> element;
-   GetDOMElementFromDocShell(docShell, getter_AddRefs(element));
-
-   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
-
-   return node;
-}
-
-/**
- * XXX Hack for XUL Window callbacks. MUST GO AWAY!!!!
- */
-void nsWebShellWindow::ExecuteStartupCode()
-{
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsCOMPtr<nsIDOMElement> webshellElement;
-
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-
-  // Execute the string in the onLoad attribute of the webshellElement.
-  nsString startupCode;
-}
 
 /* copy the window's size and position to the window tag */
 void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool aSizeMode)

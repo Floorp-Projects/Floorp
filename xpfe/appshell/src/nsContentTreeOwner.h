@@ -64,7 +64,6 @@ protected:
    PRBool            mPrimary;
    PRBool            mContentTitleSetting;
    PRUint32          mChromeMask;
-   nsString          mDefaultStatus;
    nsString          mWindowTitleModifier;
    nsString          mTitleSeparator;
    nsString          mTitlePreface;
