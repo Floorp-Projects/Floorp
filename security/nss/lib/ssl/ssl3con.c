@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.55 2003/05/30 23:22:39 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.56 2003/10/03 02:01:18 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2648,7 +2648,7 @@ ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRInt32 bytes, SSL3Opaque **b,
     PORT_Assert( ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
 
-    if (bytes > *length) {
+    if ((PRUint32)bytes > *length) {
 	return ssl3_DecodeError(ss);
     }
     PORT_Memcpy(v, *b, bytes);
@@ -5071,7 +5071,7 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    goto alert_loser;	/* malformed */
 
 	node->name.len = len = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
-	if (len < 0)
+	if (len <= 0)
 	    goto loser;		/* malformed, alert has been sent */
 
 	remaining -= 2;
@@ -7271,22 +7271,17 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	goto decode_loser;
 
     size = ssl3_ConsumeHandshakeNumber(ss, 3, &b, &length);
-    if (size < 0)
+    if (size <= 0)
 	goto loser;	/* fatal alert already sent by ConsumeHandshake. */
 
     remaining -= size;
-    if (remaining < 0)
+    if (remaining < 0 || (PRUint32)size > length)
 	goto decode_loser;
 
-    certItem.data = (unsigned char*)PORT_ArenaAlloc(arena, size);
-    if (certItem.data == NULL) {
-	goto loser;	/* don't send alerts on memory errors */
-    }
-
+    certItem.data = b;
     certItem.len = size;
-    rv = ssl3_ConsumeHandshake(ss, certItem.data, certItem.len, &b, &length);
-    if (rv != SECSuccess)
-	goto loser;	/* fatal alert already sent by ConsumeHandshake. */
+    b      += size;
+    length -= size;
 
     ss->sec.peerCert = CERT_NewTempCertificate(ss->dbHandle, &certItem, NULL,
                                             PR_FALSE, PR_TRUE);
@@ -7304,23 +7299,18 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    goto decode_loser;
 
 	size = ssl3_ConsumeHandshakeNumber(ss, 3, &b, &length);
-	if (size < 0)
+	if (size <= 0)
 	    goto loser;	/* fatal alert already sent by ConsumeHandshake. */
 
 	remaining -= size;
-	if (remaining < 0)
+	if (remaining < 0 || (PRUint32)size > length)
 	    goto decode_loser;
 
-	certItem.data = (unsigned char*)PORT_ArenaAlloc(arena, size);
-	if (certItem.data == NULL) {
-	    goto loser;	/* don't send alerts on memory errors */
-	}
 
+	certItem.data = b;
 	certItem.len = size;
-	rv = ssl3_ConsumeHandshake(ss, certItem.data, certItem.len,
-				   &b, &length);
-	if (rv != SECSuccess)
-	    goto loser;	/* fatal alert already sent by ConsumeHandshake. */
+	b      += size;
+	length -= size;
 
 	c = PORT_ArenaNew(arena, ssl3CertNode);
 	if (c == NULL) {
