@@ -6307,17 +6307,17 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus)
 {
+
+  nsresult result;
   if (aEvent->message == NS_MOUSE_MOVE) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv)){
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
-          PRBool mouseDown = PR_FALSE;
-          if (NS_FAILED(frameselection->GetMouseDownState(&mouseDown)) || !mouseDown) 
-            return NS_OK;//do not handle
-      }
-    }
+    nsCOMPtr<nsISelectionController> selCon;
+    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+    if (NS_FAILED(result) || !selCon)
+      return result?result:NS_ERROR_FAILURE;
+    nsCOMPtr<nsIFrameSelection> frameSelection = do_QueryInterface(selCon);
+    PRBool mouseDown = PR_FALSE;
+    if (!frameSelection || NS_FAILED(frameSelection->GetMouseDownState(&mouseDown)) || !mouseDown) 
+      return NS_OK;//do not handle
   }
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
@@ -6330,7 +6330,6 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
         CaptureMouse(aPresContext, PR_TRUE);
     }
 
-    nsresult result;
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to
     nsCOMPtr<nsILineIterator> it; 

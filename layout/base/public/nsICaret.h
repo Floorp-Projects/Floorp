@@ -47,13 +47,13 @@ public:
   /** SetCaretVisible will set the visibility of the caret
    *  @param inMakeVisible PR_TRUE to show the caret, PR_FALSE to hide it
    */
-  NS_IMETHOD SetCaretVisible(PRBool inMakeVisible) = 0;
+  NS_IMETHOD SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aDOMSel) = 0;
 
   /** SetCaretReadOnly set the appearance of the caret
    *  @param inMakeReadonly PR_TRUE to show the caret in a 'read only' state,
    *  PR_FALSE to show the caret in normal, editing state
    */
-  NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly) = 0;
+  NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly, nsIDOMSelection *aDOMSel) = 0;
 
   /** GetWindowRelativeCoordinates
    *  Get the position of the caret in (top-level) window coordinates.

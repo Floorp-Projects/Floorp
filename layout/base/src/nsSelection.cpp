@@ -111,6 +111,7 @@ class nsAutoScrollTimer;
 class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner, public nsSupportsWeakReference
 {
 public:
+  nsDOMSelection();
   nsDOMSelection(nsSelection *aList);
   virtual ~nsDOMSelection();
   
@@ -523,15 +524,21 @@ nsresult NS_NewSelection(nsIFrameSelection **aFrameSelection)
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
   *aFrameSelection = (nsIFrameSelection *)rlist;
-  nsresult result = rlist->AddRef();
-  if (!NS_SUCCEEDED(result))
-  {
-    delete rlist;
-  }
-  return result;
+  rlist->AddRef();
+  return NS_OK;
 }
 
+nsresult NS_NewDomSelection(nsIDOMSelection **aDomSelection);
 
+nsresult NS_NewDomSelection(nsIDOMSelection **aDomSelection)
+{
+  nsDOMSelection *rlist = new nsDOMSelection;
+  if (!rlist)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aDomSelection = (nsIDOMSelection *)rlist;
+  rlist->AddRef();
+  return NS_OK;
+}
 
 //Horrible statics but no choice
 nsIAtom *nsSelection::sTableAtom = 0;
@@ -781,12 +788,12 @@ nsSelection::nsSelection()
     if (mDomSelections[index])
       autoCopyService->Listen(mDomSelections[index]);
   }
-  mDisplaySelection = nsISelectionController::SELECTION_ON;
+  mDisplaySelection = nsISelectionController::SELECTION_OFF;
 }
 
 
 
-nsSelection::~nsSelection()
+nsSelection::~nsSelection() 
 {
   if (sInstanceCount <= 1)
   {
@@ -1608,10 +1615,8 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
   nsCOMPtr<nsIContent> parent2;
   if (NS_FAILED(aNewFocus->GetParent(*getter_AddRefs(parent))) || !parent)
     return NS_ERROR_FAILURE;
-  //if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
-    //return NS_ERROR_FAILURE;
-
   //END HACKHACKHACK /checking for root frames/content
+
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   domNode = do_QueryInterface(aNewFocus);
   //traverse through document and unselect crap here
@@ -1688,7 +1693,7 @@ nsSelection::SetMouseDownState(PRBool aState)
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
-    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+    //NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
   }
   return NS_OK;
 }
@@ -2625,6 +2630,18 @@ nsDOMSelection::nsDOMSelection(nsSelection *aList)
 }
 
 
+nsDOMSelection::nsDOMSelection()
+{
+  mFixupState = PR_FALSE;
+  mDirection = eDirNext;
+  NS_NewISupportsArray(getter_AddRefs(mRangeArray));
+  mScriptObject = nsnull;
+  mAutoScrollTimer = nsnull;
+  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
+  NS_INIT_REFCNT();
+}
+
+
 
 nsDOMSelection::~nsDOMSelection()
 {
@@ -2986,7 +3003,7 @@ nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
   PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
-  if (content)
+  if (content && mFrameSelection)
     return mFrameSelection->GetFrameForNodeOffset(content, FetchAnchorOffset(),aReturnFrame, &frameOffset);
   return NS_ERROR_FAILURE;
 }
@@ -3001,7 +3018,7 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   *aReturnFrame = 0;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
-  if (content)
+  if (content && mFrameSelection)
     return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame, &frameOffset);
   return NS_ERROR_FAILURE;
 }
@@ -3017,6 +3034,8 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
                              nsIPresShell *aPresShell,
                              PRBool aFlags)
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   nsresult result;
   nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(aInnerIter);
   if (genericiter && aPresShell)
@@ -3065,6 +3084,8 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aFlags)
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   if (!aRange || !aPresContext) 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContentIterator> iter;
@@ -3314,6 +3335,8 @@ nsresult
 nsDOMSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
 {
   nsresult result;
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
 
   if (!mAutoScrollTimer)
   {
@@ -3572,6 +3595,8 @@ nsDOMSelection::GetEnumerator(nsIEnumerator **aIterator)
 NS_IMETHODIMP
 nsDOMSelection::ClearSelection()
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
 
@@ -3608,7 +3633,8 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
   //ScrollIntoView(); this should not happen automatically
-
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
@@ -3632,6 +3658,8 @@ nsDOMSelection::RemoveRange(nsIDOMRange* aRange)
       ScrollIntoView();
     }
   }
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
@@ -3695,7 +3723,8 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   selectFrames(presContext, range,PR_TRUE);
   if (NS_FAILED(result))
     return result;
-    
+  if (!mFrameSelection)
+   return NS_OK;//nothing to do
 	return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
@@ -4503,6 +4532,8 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     printf ("Sel. Extend set to null parent.\n");
   }
 #endif
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
@@ -4572,6 +4603,8 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 nsresult
 nsDOMSelection::GetPresContext(nsIPresContext **aPresContext)
 {
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
   nsIFocusTracker *tracker = mFrameSelection->GetTracker();
 
   if (!tracker)
@@ -4584,6 +4617,8 @@ nsresult
 nsDOMSelection::GetPresShell(nsIPresShell **aPresShell)
 {
   nsresult rv = NS_OK;
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
 
   nsIFocusTracker *tracker = mFrameSelection->GetTracker();
 
@@ -4614,6 +4649,8 @@ nsDOMSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
   // NOTE: This method returns a NON-AddRef'd pointer
   //       to the scrollable view!
   //
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
 
   nsresult rv = NS_OK;
 
@@ -4648,6 +4685,8 @@ nsresult
 nsDOMSelection::GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aX, nscoord *aY)
 {
   nsresult rv = NS_OK;
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
 
   if (!aFrame || !aX || !aY) {
     return NS_ERROR_NULL_POINTER;
@@ -4705,6 +4744,8 @@ nsresult
 nsDOMSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint)
 {
   nsresult rv = NS_OK;
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
   if (!aFrame || !aPoint)
     return NS_ERROR_NULL_POINTER;
 
@@ -4800,6 +4841,8 @@ nsresult
 nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
 {
   nsresult result = NS_OK;
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;//nothing to do
 
   if (!aRect)
     return NS_ERROR_NULL_POINTER;
@@ -4976,6 +5019,8 @@ nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
                               PRIntn  aHPercent)
 {
   nsresult rv = NS_OK;
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
 
   nsIScrollableView *scrollingView = 0;
 
@@ -5052,6 +5097,8 @@ NS_IMETHODIMP
 nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
 {
   nsresult result;
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
 
   if (mFrameSelection->GetBatching())
     return NS_OK;
@@ -5119,6 +5166,8 @@ nsDOMSelection::NotifySelectionListeners()
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
  
   if (mFrameSelection->GetBatching()){
     mFrameSelection->SetDirty();
@@ -5152,6 +5201,8 @@ nsDOMSelection::NotifySelectionListeners()
 NS_IMETHODIMP
 nsDOMSelection::StartBatchChanges()
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->StartBatchChanges();
 }
 
@@ -5160,6 +5211,8 @@ nsDOMSelection::StartBatchChanges()
 NS_IMETHODIMP
 nsDOMSelection::EndBatchChanges()
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->EndBatchChanges();
 }
 
@@ -5168,6 +5221,8 @@ nsDOMSelection::EndBatchChanges()
 NS_IMETHODIMP
 nsDOMSelection::DeleteFromDocument()
 {
+  if (!mFrameSelection)
+    return NS_OK;//nothing to do
   return mFrameSelection->DeleteFromDocument();
 }
 

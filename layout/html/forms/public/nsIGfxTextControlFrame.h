@@ -24,6 +24,8 @@
 
 class nsIEditor;
 class nsIDocShell;
+class nsISelectionController;
+
 
 #define NS_IGFXTEXTCONTROLFRAME_IID \
 {/* d3ea33ea-9e00-11d3-bccc-0060b0fc76bd*/ \
@@ -46,5 +48,28 @@ public:
   
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
+ 
+};
+
+#define NS_IGFXTEXTCONTROLFRAME2_IID \
+{/* A744CFC9-2DA8-416d-A058-ADB1D4B3B534*/ \
+0xa744cfc9, 0x2da8, 0x416d, \
+{ 0xa0, 0x58, 0xad, 0xb1, 0xd4, 0xb3, 0xb5, 0x34 } }
+
+class nsIGfxTextControlFrame2 : public nsISupports
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME2_IID; return iid; }
+
+	NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
   
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
+  
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) = 0;
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) = 0;
+  
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
+  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
+
+  NS_IMETHOD    GetSelectionController(nsISelectionController **aSelCon) = 0;
 };

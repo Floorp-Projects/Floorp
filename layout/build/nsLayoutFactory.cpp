@@ -79,6 +79,8 @@ static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
 
 static NS_DEFINE_CID(kSelectionCID, NS_SELECTION_CID);
 static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
+static NS_DEFINE_IID(kDOMSelectionCID, NS_DOMSELECTION_CID);
+
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kGeneratedContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
@@ -106,6 +108,7 @@ static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
+extern nsresult NS_NewDomSelection(nsIDOMSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
@@ -235,6 +238,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewSelection((nsIFrameSelection**)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewSelection", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kDOMSelectionCID)) {
+    res = NS_NewDomSelection((nsIDOMSelection**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewDomSelection", res);
       return res;
     }
   }

@@ -45,6 +45,11 @@
 #include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
 #include "nsFormFrame.h"
+#include "nsIEditorIMESupport.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsINameSpaceManager.h"
+#include "nsINodeInfo.h"
+
 
 
 #include "nsIContent.h"
@@ -96,6 +101,7 @@ public:
   NS_IMETHOD RepaintSelection(PRInt16 type);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType);
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
+  NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
@@ -213,14 +219,45 @@ NS_IMETHODIMP
 nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
-  if (selCon)
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell)
   {
-    return selCon->SetCaretEnabled(enabled);//we can use presshells because there is only 1 caret
+    nsCOMPtr<nsICaret> caret;
+    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
+    {
+      nsCOMPtr<nsIDOMSelection> domSel;
+      if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
+      {
+        return caret->SetCaretVisible(enabled, domSel);
+      }
+    }
+
   }
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell)
+  {
+    nsCOMPtr<nsICaret> caret;
+    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
+    {
+      nsCOMPtr<nsIDOMSelection> domSel;
+      if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
+      {
+        return caret->SetCaretReadOnly(aReadOnly, domSel);
+      }
+    }
+
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsTextAreaSelectionImpl::GetCaretEnabled(PRBool *_retval)
@@ -436,6 +473,10 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame2))) {
+    *aInstancePtr = (void*)(nsIGfxTextControlFrame2*) this;
+    return NS_OK;
+  }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -443,6 +484,7 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2()
 {
   mIsProcessing=PR_FALSE;
   mFormFrame = nsnull;
+  mCachedState = nsnull;
 }
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
@@ -493,7 +535,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-
+#define DIV_STRING "user-focus: none; overflow:scroll; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -502,18 +544,34 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 //create editor
 //create selection
 //init editor with div.
+//====
 
-  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID += "http://www.w3.org/TR/REC-html40";
-  nsresult rv;
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
+//get the presshell
+  mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell)
+    return rv?rv:NS_ERROR_FAILURE;
+
+//get the document
+  nsCOMPtr<nsIDocument> doc;
+  rv = shell->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc)
+    return rv?rv:NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc, &rv);
+  if (NS_FAILED(rv) || !domdoc)
+    return rv?rv:NS_ERROR_FAILURE;
+  
   nsCOMPtr<nsIContent> content;
-  elementFactory->CreateInstanceByTag(NS_ConvertToString("div"), getter_AddRefs(content));
+  nsCOMPtr<nsIDOMElement> domElement;
+  
+
+  if (NS_FAILED(domdoc->CreateElement(NS_ConvertToString("div"),getter_AddRefs(domElement))) && domElement)
+    content = do_QueryInterface(domElement);
   if (content)
   {
+    content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
     aChildList.AppendElement(content);
 
 //make the editor
@@ -525,11 +583,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (!mEditor) 
       return NS_ERROR_OUT_OF_MEMORY;
 
-//get the presshell
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell)
-      return rv?rv:NS_ERROR_FAILURE;
 //create selection
     nsCOMPtr<nsIFrameSelection> frameSel;
     rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
@@ -539,15 +592,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
     mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)textSelImpl);//this will addref it once
     mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-//get the document
-    nsCOMPtr<nsIDocument> doc;
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv) || !doc)
-      return rv?rv:NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc, &rv);
-    if (NS_FAILED(rv) || !domdoc)
-      return rv?rv:NS_ERROR_FAILURE;
-//get the flags
+//get the flags 
     PRUint32 editorFlags = 0;
     if (IsPlainTextControl())
       editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
@@ -687,6 +732,8 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
+  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+
   // assuming 1 child
   nsIFrame* child = mFrames.FirstChild();
   //mFrames.FirstChild(aPresContext,nsnull,&child);
@@ -700,17 +747,11 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
 
 
   if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE)
-      kidReflowState.mComputedWidth -= kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right;
+      kidReflowState.mComputedWidth -= (kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right);
 
   if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
-      kidReflowState.mComputedHeight -= kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom;
+      kidReflowState.mComputedHeight -= (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);
 
-  if (aReflowState.reason == eReflowReason_Initial)
-  {
-    aDesiredSize.height = 10;
-    return nsHTMLContainerFrame::Reflow(aPresContext,aDesiredSize,aReflowState,aStatus);
-  }
-  else
   if (aReflowState.reason == eReflowReason_Incremental)
   {
     if (aReflowState.reflowCommand) {
@@ -747,6 +788,8 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   FinishReflowChild(child, aPresContext, aDesiredSize, aReflowState.mComputedBorderPadding.left,
                     aReflowState.mComputedBorderPadding.top, 0);
 
+  aStatus = NS_FRAME_COMPLETE;
+
   return rv;
 }
 //#endif
@@ -761,14 +804,14 @@ nsGfxTextControlFrame2::GetSkipSides() const
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetName(nsString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
+  nsresult rv = NS_FORM_NOTOK;
   if (mContent) {
     nsIHTMLContent* formControl = nsnull;
-    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
-    if (NS_SUCCEEDED(result) && formControl) {
+    rv = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
+    if (NS_SUCCEEDED(rv) && formControl) {
       nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      rv = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(*aResult);
         }
@@ -776,22 +819,22 @@ nsGfxTextControlFrame2::GetName(nsString* aResult)
       NS_RELEASE(formControl);
     }
   }
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetType(PRInt32* aType) const
 {
-  nsresult result = NS_FORM_NOTOK;
+  nsresult rv = NS_FORM_NOTOK;
   if (mContent) {
     nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = formControl->GetType(aType);
+    rv = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
+    if ((NS_OK == rv) && formControl) {
+      rv = formControl->GetType(aType);
       NS_RELEASE(formControl);
     }
   }
-  return result;
+  return rv;
 }
 
 
@@ -912,6 +955,282 @@ NS_IMETHODIMP nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsString& aVal
 }  
 
 
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+  *aEditor = mEditor;
+  NS_IF_ADDREF(*aEditor);
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
+{
+  NS_ENSURE_ARG_POINTER(aTextLength);
+  nsString *str = GetCachedString();
+  if (str)
+  {
+    *aTextLength = str->Length();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetSelectionEnd(PRInt32 aSelectionEnd)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetSelectionController(nsISelectionController **aSelCon)
+{
+  NS_ENSURE_ARG_POINTER(aSelCon);
+  NS_IF_ADDREF(*aSelCon = mSelCon);
+  return NS_OK;
+}
+
+
+/////END INTERFACE IMPLEMENTATIONS
+
+////NSIFRAME
+NS_IMETHODIMP
+nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
+                                        nsIContent*     aChild,
+                                        PRInt32         aNameSpaceID,
+                                        nsIAtom*        aAttribute,
+                                        PRInt32         aHint)
+{
+  if (!mEditor || !mSelCon) {return NS_ERROR_NOT_INITIALIZED;}
+  nsresult rv = NS_OK;
+
+  if (nsHTMLAtoms::value == aAttribute) 
+  {
+    if (mEditor)
+    {
+      nsString value;
+      GetText(&value, PR_TRUE);           // get the initial value from the content attribute
+      mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
+      SetTextControlFrameState(value);    // set new text value
+      mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
+    }
+    if (aHint != NS_STYLE_HINT_REFLOW)
+      nsFormFrame::StyleChangeReflow(aPresContext, this);
+  } 
+  else if (nsHTMLAtoms::maxlength == aAttribute) 
+  {
+    PRInt32 maxLength;
+    nsresult rv = GetMaxLength(&maxLength);
+    
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (htmlEditor)
+    {
+      if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+      {  // set the maxLength attribute
+          htmlEditor->SetMaxTextLength(maxLength);
+        // if maxLength>docLength, we need to truncate the doc content
+      }
+      else { // unset the maxLength attribute
+          htmlEditor->SetMaxTextLength(-1);
+      }
+    }
+  } 
+  else if (mEditor && nsHTMLAtoms::readonly == aAttribute) 
+  {
+    nsresult rv = DoesAttributeExist(nsHTMLAtoms::readonly);
+    PRUint32 flags;
+    mEditor->GetFlags(&flags);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    { // set readonly
+      flags |= nsIHTMLEditor::eEditorReadonlyMask;
+      if (mSelCon)
+        mSelCon->SetCaretEnabled(PR_FALSE);
+    }
+    else 
+    { // unset readonly
+      flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
+      if (mSelCon)
+        mSelCon->SetCaretEnabled(PR_TRUE);
+    }    
+    mEditor->SetFlags(flags);
+  }
+  else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
+  {
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell)
+      return rv?rv:NS_ERROR_FAILURE;
+
+    rv = DoesAttributeExist(nsHTMLAtoms::disabled);
+    PRUint32 flags;
+    mEditor->GetFlags(&flags);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    { // set readonly
+      flags |= nsIHTMLEditor::eEditorDisabledMask;
+      mSelCon->SetCaretEnabled(PR_FALSE);
+      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+    }
+    else 
+    { // unset readonly
+      flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
+      mSelCon->SetCaretEnabled(PR_TRUE);
+      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+    }    
+    mEditor->SetFlags(flags);
+  }
+  else if ((nsHTMLAtoms::size == aAttribute ||
+            nsHTMLAtoms::rows == aAttribute) && aHint != NS_STYLE_HINT_REFLOW) {
+    nsFormFrame::StyleChangeReflow(aPresContext, this);
+  }
+  // Allow the base class to handle common attributes supported
+  // by all form elements... 
+  else {
+    rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetText(nsString* aText, PRBool aInitialValue)
+{
+  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) 
+  {
+    if (PR_TRUE==aInitialValue)
+    {
+      rv = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+    }
+    else
+    {
+      if (mEditor)
+      {
+        nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+        if(imeSupport) 
+            imeSupport->ForceCompositionEnd();
+        nsString format; format.AssignWithConversion("text/plain");
+        mEditor->OutputToString(*aText, format, 0);
+      }
+      // we've never built our editor, so the content attribute is the value
+      else
+      {
+        rv = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+      }
+    }
+    RemoveNewlines(*aText);
+  } 
+  else 
+  {
+    nsIDOMHTMLTextAreaElement* textArea = nsnull;
+    rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement), (void**)&textArea);
+    if ((NS_OK == rv) && textArea) {
+      if (PR_TRUE == aInitialValue) {
+        rv = textArea->GetDefaultValue(*aText);
+      }
+      else {
+        if(mEditor) {
+          nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+          if(imeSupport) 
+            imeSupport->ForceCompositionEnd();
+        }
+        rv = textArea->GetValue(*aText);
+      }
+      NS_RELEASE(textArea);
+    }
+  }
+  return rv;
+}
+
+
+
+///END NSIFRAME OVERLOADS
+/////BEGIN PROTECTED METHODS
+
+void nsGfxTextControlFrame2::RemoveNewlines(nsString &aString)
+{
+  // strip CR/LF and null
+  static const char badChars[] = {10, 13, 0};
+  aString.StripChars(badChars);
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
+{
+  *aSize = -1;
+  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    rv = content->GetHTMLAttribute(nsHTMLAtoms::maxlength, value);
+    if (eHTMLUnit_Integer == value.GetUnit()) { 
+      *aSize = value.GetIntValue();
+    }
+    NS_RELEASE(content);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
+{
+  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) 
+  {
+    nsHTMLValue value;
+    rv = content->GetHTMLAttribute(aAtt, value);
+    NS_RELEASE(content);
+  }
+  return rv;
+}
+
+
+nsString *
+nsGfxTextControlFrame2::GetCachedString()
+{
+  if (!mCachedState && mEditor)
+  {
+    mCachedState = new nsString;
+    if (!mCachedState)
+      return nsnull;
+    GetTextControlFrameState(*mCachedState);  
+  }
+  return mCachedState;
+}
+
 void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
 {
   aValue.SetLength(0);  // initialize out param
@@ -926,8 +1245,8 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
     }
 
     nsFormControlHelper::nsHTMLTextWrap wrapProp;
-    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     {
       if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
       {
@@ -949,7 +1268,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
   {
     nsAutoString currentValue;
     nsAutoString format; format.AssignWithConversion("text/plain");
-    nsresult result = mEditor->OutputToString(currentValue, format, 0);
+    nsresult rv = mEditor->OutputToString(currentValue, format, 0);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
     }
@@ -963,11 +1282,11 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
       nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
 
       nsCOMPtr<nsIDOMDocument>domDoc;
-      result = mEditor->GetDocument(getter_AddRefs(domDoc));
-			if (NS_FAILED(result)) return;
+      rv = mEditor->GetDocument(getter_AddRefs(domDoc));
+			if (NS_FAILED(rv)) return;
 			if (!domDoc) return;
 
-      result = mEditor->SelectAll();
+      rv = mEditor->SelectAll();
       nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
 			if (!htmlEditor) return;
 
@@ -992,7 +1311,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
-  nsIFrame *list = aChildList;
+  /*nsIFrame *list = aChildList;
   nsFrameState  frameState;
   while (list)
   {
@@ -1001,58 +1320,11 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     list->SetFrameState(frameState);
     list->GetNextSibling(&list);
   }
-  nsresult result = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  */
+  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (mEditor)
     mEditor->PostCreate();
-  return result;
-}
-
-
-NS_IMETHODIMP
-nsGfxTextControlFrame2::GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon)
-{
-  if (!aSelCon)
-    return NS_ERROR_INVALID_ARG;
-  NS_IF_ADDREF(*aSelCon = mSelCon);
-  return NS_OK;
-}
-
-
-nsresult 
-nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
-                                         nsIAtom *     aColSizeAttr,
-                                         nsHTMLValue & aColSize,
-                                         nsresult &    aColStatus,
-                                         nsIAtom *     aRowSizeAttr,
-                                         nsHTMLValue & aRowSize,
-                                         nsresult &    aRowStatus)
-{
-  nsIContent* iContent = nsnull;
-  aFrame->GetFormContent((nsIContent*&) iContent);
-  if (!iContent) {
-    return NS_ERROR_FAILURE;
-  }
-  nsIHTMLContent* hContent = nsnull;
-  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
-  if ((NS_OK != result) || !hContent) {
-    NS_RELEASE(iContent);
-    return NS_ERROR_FAILURE;
-  }
-
-  aColStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aColSizeAttr) {
-    aColStatus = hContent->GetHTMLAttribute(aColSizeAttr, aColSize);
-  }
-
-  aRowStatus= NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aRowSizeAttr) {
-    aRowStatus = hContent->GetHTMLAttribute(aRowSizeAttr, aRowSize);
-  }
-
-  NS_RELEASE(hContent);
-  NS_RELEASE(iContent);
-  
-  return NS_OK;
+  return rv;
 }
 
 
@@ -1061,12 +1333,12 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
 {
   // see if there's a COL attribute, if so it wins
   nsCOMPtr<nsIHTMLContent> content;
-  nsresult result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), getter_AddRefs(content));
-  if (NS_SUCCEEDED(result) && content)
+  nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), getter_AddRefs(content));
+  if (NS_SUCCEEDED(rv) && content)
   {
     nsHTMLValue resultValue;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
-    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     {
       if (resultValue.GetUnit() == eHTMLUnit_Integer) 
       {

@@ -60,6 +60,8 @@
 #include "nsIDOMRange.h"
 #include "nsITableLayout.h"    //selection neccesity
 #include "nsITableCellLayout.h"//  "
+#include "nsIGfxTextControlFrame.h"
+
 
 
 // Some Misc #defines
@@ -654,76 +656,71 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer)
 {
-  //if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-/** GetDocument
-*/
-    nsCOMPtr<nsIDocument> doc;
-    nsresult result; 
-    nsCOMPtr<nsIPresShell> shell;
-    result = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(result))
-      return result;
+  nsCOMPtr<nsIDocument> doc;
+  nsresult result; 
+  nsCOMPtr<nsIPresShell> shell;
+  result = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result))
+    return result;
 
-    PRBool displyNonTextSelection = PR_TRUE;
-    result = shell->GetDisplayNonTextSelection(&displyNonTextSelection);
-    if (NS_FAILED(result))
+  PRBool displaySelection = PR_TRUE;
+  result = shell->GetDisplayNonTextSelection(&displaySelection);
+  if (NS_FAILED(result))
+    return result;
+  if (!displaySelection)
+    return NS_OK;
+  if (mContent) {
+    result = mContent->GetDocument(*getter_AddRefs(doc));
+  }
+
+//check frame selection state
+  PRBool isSelected;
+  nsFrameState  frameState;
+  GetFrameState(&frameState);
+  isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+//if not selected then return 
+  if (!isSelected)
+    return NS_OK; //nothing to do
+
+//get the selection controller
+  nsCOMPtr<nsISelectionController> selCon;
+  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  PRInt16 selectionValue;
+  selCon->GetDisplaySelection(&selectionValue);
+  displaySelection = selectionValue > nsISelectionController::SELECTION_HIDDEN;
+//check display selection state.
+  if (!displaySelection)
+    return NS_OK; //if frame does not allow selection. do nothing
+
+
+  nsCOMPtr<nsIContent> newContent;
+  result = mContent->GetParent(*getter_AddRefs(newContent));
+
+//check to see if we are anonymouse content
+  PRInt32 offset;
+  if (NS_SUCCEEDED(result) && newContent){
+    result = newContent->IndexOf(mContent, offset);
+    if (NS_FAILED(result)) 
+    {
       return result;
-    PRInt16 displaySelection = displyNonTextSelection;
-    if (!displaySelection)
-      return NS_OK;
-    if (mContent) {
-      result = mContent->GetDocument(*getter_AddRefs(doc));
     }
+  }
 
-    nsCOMPtr<nsISelectionController> selCon;
-    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-    if (NS_FAILED(result) || !selCon)
-      return result? result:NS_ERROR_FAILURE;
+  SelectionDetails *details;
+  if (NS_SUCCEEDED(result) && shell){
 
-    selCon->GetDisplaySelection(&displaySelection);
-    nsFrameState  frameState;
-    PRBool        isSelected;
-    GetFrameState(&frameState);
-    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-//    PRInt32 selectionStartOffset = 0;//frame coordinates
-//    PRInt32 selectionEndOffset = 0;//frame coordinates
-
-    if (!displaySelection || !isSelected)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMSelection> selection;
     nsCOMPtr<nsIFrameSelection> frameSelection;
-
-    nsCOMPtr<nsIContent> newContent;
-    result = mContent->GetParent(*getter_AddRefs(newContent));
-
-    SelectionDetails *details;
-    PRInt32 offset;
-    if (NS_SUCCEEDED(result) && newContent){
-      result = newContent->IndexOf(mContent, offset);
-      if (NS_FAILED(result)) 
-      {
-        return result;
-      }
+    if (NS_SUCCEEDED(result) && selCon)
+    {
+      frameSelection = do_QueryInterface(selCon); //this MAY implement
     }
-
-    if (NS_SUCCEEDED(result) && shell){
-
-      nsCOMPtr<nsISelectionController> selCon;
-      result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(result) && selCon)
-      {
-        frameSelection = do_QueryInterface(selCon); //this MAY implement
-      }
-      if (!frameSelection)
-        result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-      if (NS_SUCCEEDED(result) && frameSelection){
-        result = frameSelection->LookUpSelection(newContent, offset, 
-                              1, &details, PR_FALSE);
-      }
+    if (!frameSelection)
+      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+    if (NS_SUCCEEDED(result) && frameSelection){
+      result = frameSelection->LookUpSelection(newContent, offset, 
+                            1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
     }
-  //}
+  }
   if (details)
   {
     nsRect rect;
@@ -741,8 +738,6 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
       details = deletingDetails;
     }
     delete details;
-    //aRenderingContext.DrawLine(rect.x, rect.y, rect.XMost(), rect.YMost());
-    //aRenderingContext.DrawLine(rect.x, rect.YMost(), rect.XMost(), rect.y);
   }
   return NS_OK;
 }
@@ -972,9 +967,17 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 {
   if (!IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_TRUE);
-  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
-    return NS_OK;
+
+  PRInt16 displayresult = nsISelectionController::SELECTION_OFF;
+  nsresult rv;
+  nsCOMPtr<nsISelectionController> selCon;
+  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  if (NS_SUCCEEDED(rv) && selCon) {
+    selCon->GetDisplaySelection(&displayresult);
+    if (displayresult == nsISelectionController::SELECTION_OFF)
+      return NS_OK;//nothing to do we cannot affect selection from here
   }
+
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (me->clickCount >1 )
@@ -986,7 +989,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (!IsSelectable(this))
     return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
     PRInt32 startPos = 0;
 //    PRUint32 contentOffset = 0;
@@ -1992,23 +1995,19 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
     nsIFrame *tmp = this;
     while ( NS_SUCCEEDED(tmp->GetParent(&tmp)) && tmp)
     {
-      tmp->GetFrameState(&state);
-      if (! (state & NS_FRAME_INDEPENDENT_SELECTION)) //we have found the nsGfx*
+      nsIGfxTextControlFrame2 *tcf;
+      if (NS_SUCCEEDED(tmp->QueryInterface(nsIGfxTextControlFrame2::GetIID(),(void**)&tcf)))
       {
-        nsFrame* castParent = NS_STATIC_CAST(nsFrame *,tmp);
-        return castParent->GetSelectionController(aPresContext, aSelCon);
+        return tcf->GetSelectionController(aSelCon);
       }
     }
   }
-  else
+  nsCOMPtr<nsIPresShell> shell;
+  if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(shell))) && shell)
   {
-    nsCOMPtr<nsIPresShell> shell;
-    if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(shell))) && shell)
-    {
-      nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
-      NS_IF_ADDREF(*aSelCon = selCon);
-      return NS_OK;
-    }
+    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
+    NS_IF_ADDREF(*aSelCon = selCon);
+    return NS_OK;
   }
   return NS_OK;
 }

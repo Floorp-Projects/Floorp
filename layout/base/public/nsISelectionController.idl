@@ -52,8 +52,9 @@ interface nsISelectionController : nsISupports
    const short NUM_SELECTION_REGIONS = 2;
 
    const short SELECTION_OFF = 0;
-   const short SELECTION_ON = 1;
-   const short SELECTION_DISABLED = 2;
+   const short SELECTION_HIDDEN =1;//>HIDDEN displays selection
+   const short SELECTION_ON = 2;
+   const short SELECTION_DISABLED = 3;
 
    /**
    * SetDisplaySelection will set the display mode for the selection. OFF,ON,DISABLED
@@ -99,6 +100,14 @@ interface nsISelectionController : nsISupports
     void setCaretEnabled(in boolean enabled);
 
    /**
+   * Set the caret readonly or not. An readonly caret will
+   * draw but not blink when made visible. 
+   * @param aReadOnly PR_TRUE to enable caret.  PR_FALSE to disable.
+   * @return always NS_OK
+   */
+    void setCaretReadOnly(in boolean readOnly);
+
+   /**
    * Gets the current state of the caret.
    * @param aEnabled  [OUT] set to the current caret state, as set by SetCaretEnabled
    * @return   if aOutEnabled==null, returns NS_ERROR_INVALID_ARG
@@ -113,7 +122,7 @@ interface nsISelectionController : nsISupports
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
-    void characterMove(in boolean aForward, in boolean aExtend);
+    void characterMove(in boolean forward, in boolean extend);
 
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
@@ -123,7 +132,7 @@ interface nsISelectionController : nsISupports
    *  @param aExtend  should it collapse the selection of extend it?
    */
 
-    void wordMove(in boolean aForward, in boolean aExtend);
+    void wordMove(in boolean forward, in boolean extend);
 
     /** LineMove will move the selection one line forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
@@ -132,7 +141,7 @@ interface nsISelectionController : nsISupports
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
-    void lineMove(in boolean aForward, in boolean aExtend);
+    void lineMove(in boolean forward, in boolean extend);
 
   /** IntraLineMove will move the selection to the front of the line or end of the line
    *  in the document.
@@ -142,7 +151,7 @@ interface nsISelectionController : nsISupports
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
-    void intraLineMove(in boolean aForward, in boolean aExtend);
+    void intraLineMove(in boolean forward, in boolean extend);
 
   /** PageMove will move the selection one page forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
@@ -151,12 +160,12 @@ interface nsISelectionController : nsISupports
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
-    void pageMove(in boolean aForward, in boolean aExtend);
+    void pageMove(in boolean forward, in boolean extend);
 
   /** CompleteScroll will move page view to the top or bottom of the document
    *  @param aForward forward or backward if PR_FALSE
    */
-    void completeScroll(in boolean aForward);
+    void completeScroll(in boolean forward);
 
   /** CompleteMove will move page view to the top or bottom of the document
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
@@ -165,23 +174,23 @@ interface nsISelectionController : nsISupports
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
-    void completeMove(in boolean aForward, in boolean aExtend);
+    void completeMove(in boolean forward, in boolean extend);
 
 
   /** ScrollPage will scroll the page without affecting the selection.
    *  @param aForward scroll forward or backwards in selection
    */
-    void scrollPage(in boolean aForward);
+    void scrollPage(in boolean forward);
 
   /** ScrolLine will scroll line up or down dependent on the boolean
    *  @param aForward scroll forward or backwards in selection
    */
-	  void scrollLine(in boolean aForward);
+	  void scrollLine(in boolean forward);
 
   /** ScrolHorizontal will scroll left or right dependent on the boolean
    *  @param aLeft if true will scroll left. if not will scroll right.
    */
-	  void scrollHorizontal(in boolean aLeft);
+	  void scrollHorizontal(in boolean left);
   /** SelectAll will select the whole page
    */
     void selectAll();

@@ -29,7 +29,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
 #include "nsIEditor.h"
-#include "nsHTMLValue.h"
+#include "nsIGfxTextControlFrame.h"
 
 
 class nsIPresState;
@@ -45,7 +45,8 @@ class nsISelectionController;
 
 
 class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
-                           public nsIAnonymousContentCreator, public nsIFormControlFrame
+                           public nsIAnonymousContentCreator, public nsIFormControlFrame,
+                           public nsIGfxTextControlFrame2
 {
 public:
   nsGfxTextControlFrame2();
@@ -74,10 +75,6 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
-  NS_IMETHOD GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
-
-
-
 
 //==== BEGIN NSIFORMCONTROLFRAME
   NS_IMETHOD GetType(PRInt32* aType) const; //*
@@ -108,9 +105,35 @@ public:
 
 
 //==== END NSIFORMCONTROLFRAME
+
+//==== NSIGFXTEXTCONTROLFRAME2
+
+  NS_IMETHOD    GetEditor(nsIEditor **aEditor);
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
+  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
+  NS_IMETHOD    GetSelectionController(nsISelectionController **aSelCon);
+
+//==== END NSIGFXTEXTCONTROLFRAME2
+//==== OVERLOAD of nsIFrame
+  /** handler for attribute changes to mContent */
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
+  NS_IMETHOD GetText(nsString* aText, PRBool aInitialValue);
+
   NS_DECL_ISUPPORTS_INHERITED
 protected:
+  nsString *GetCachedString();
   virtual PRIntn GetSkipSides() const;
+  void RemoveNewlines(nsString &aString);
+  NS_IMETHOD GetMaxLength(PRInt32* aSize);
+  NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
 
 //helper methods
   virtual PRBool IsSingleLineTextControl() const;
@@ -121,30 +144,12 @@ protected:
                                nsIContent *      aContent,
                                nsIFrame**        aFrame);
 
-  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
-                                         nsIAtom *     aColSizeAttr,
-                                         nsHTMLValue & aColSize,
-                                         nsresult &    aColStatus,
-                                         nsIAtom *     aRowSizeAttr,
-                                         nsHTMLValue & aRowSize,
-                                         nsresult &    aRowStatus);
-  NS_IMETHOD GetType(PRInt32* aType) const;
-
-  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
-                                         nsIAtom *     aColSizeAttr,
-                                         nsHTMLValue & aColSize,
-                                         nsresult &    aColStatus,
-                                         nsIAtom *     aRowSizeAttr,
-                                         nsHTMLValue & aRowSize,
-                                         nsresult &    aRowStatus);
-
   PRInt32 GetWidthInCharacters() const;
 
->>>>>>> 1.6
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
-  nsString mCachedState;
+  nsString *mCachedState;
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
 };
