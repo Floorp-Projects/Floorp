@@ -116,7 +116,7 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
 we must be good providers of factories ect. this is where to put ALL editor exports
 */
 //BEGIN EXPORTS
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory
 **aFactory)
 {
   if (nsnull == aFactory) {
