@@ -35,6 +35,10 @@
 int urlLoaded;
 PRBool bTraceEnabled;
 
+#include "nsIPostToServer.h"
+
+NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
+
 
 /* XXX: Don't include net.h... */
 extern "C" {
@@ -54,7 +58,7 @@ public:
     NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
     NS_IMETHOD OnStartBinding(void);
     NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(void);
+    NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
 
 protected:
     ~TestConsumer();
@@ -134,10 +138,10 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 le
 }
 
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(void)
+NS_IMETHODIMP TestConsumer::OnStopBinding(PRInt32 status, const char *msg)
 {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStopBinding\n");
+        printf("\n+++ TestConsumer::OnStopBinding... status: %d\n", status);
     }
 
     /* The document has been loaded, so drop out of the message pump... */
@@ -188,6 +192,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
+#if 0
+    nsIPostToServer *pPoster;
+    result = pURL->QueryInterface(kIPostToServerIID, (void**)&pPoster);
+    if (result == NS_OK) {
+        pPoster->SendFile("foo.txt");
+    }
+    NS_IF_RELEASE(pPoster);
+#endif
 
     // Start the URL load...
     result = pURL->Open(pConsumer);
