@@ -711,18 +711,17 @@ nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
   const nsStyleDisplay* display=nsnull;
   GetStyleData(eStyleStruct_Display,(const nsStyleStruct*&)display,aFrame);
 
-  if(display) {
+  if(display && display->mFloats != NS_STYLE_FLOAT_NONE) {
     const nsAFlatCString& cssFloat =
       nsCSSProps::SearchKeywordTable(display->mFloats,
-	                                 nsCSSProps::kFloatKTable);
+                                     nsCSSProps::kFloatKTable);
     val->SetString(cssFloat);
   }
   else {
-    val->SetString(NS_LITERAL_STRING(""));
+    val->SetString(NS_LITERAL_STRING("none"));
   }
 
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-	                         (void **)&aValue);
+  return CallQueryInterface(val, &aValue);
 }
 
 #if 0
@@ -2841,11 +2840,11 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide,
 
   if(border) {
     nsStyleCoord coord;
-   PRUint8 borderStyle = border->GetBorderStyle(aSide);
-   if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
-     coord.SetCoordValue(0);
-   }
-   else {
+    PRUint8 borderStyle = border->GetBorderStyle(aSide);
+    if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
+      coord.SetCoordValue(0);
+    }
+    else {
       switch(aSide) {
         case NS_SIDE_TOP:
           border->mBorder.GetTop(coord); break;
@@ -2976,18 +2975,23 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide,
   const nsStyleBorder* border = nsnull;
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
 
-  if(border) {
+  PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_NONE;
+
+  if (border) {
+    borderStyle = border->GetBorderStyle(aSide);
+  }
+
+  if (borderStyle != NS_STYLE_BORDER_STYLE_NONE) {
     const nsAFlatCString& style=
-      nsCSSProps::SearchKeywordTable(border->GetBorderStyle(aSide),
+      nsCSSProps::SearchKeywordTable(borderStyle,
                                      nsCSSProps::kBorderStyleKTable);
     val->SetString(style);
   }
   else {
-    val->SetString(NS_LITERAL_STRING(""));
+    val->SetString(NS_LITERAL_STRING("none"));
   }
 
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return CallQueryInterface(val, &aValue);
 }
 
 nsresult
