@@ -264,3 +264,12 @@ nsNoIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
     *aResult = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsNoIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}
+
