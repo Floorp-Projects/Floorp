@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 !endif
 		  $(NULL)
 
+include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

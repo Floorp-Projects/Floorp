@@ -32,6 +32,7 @@
 # 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
 
 DEPTH=..\..
+include <$(DEPTH)/config/config.mak>
 
 DIRS=idl public src  \
      ucvlatin \
