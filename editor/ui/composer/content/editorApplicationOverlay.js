@@ -66,12 +66,7 @@ function initEditorContextMenuItems(aEvent)
   gContextMenu.showItem( "context-editlink", shouldShowEditLink );
 
   // Hide the applications separator if there's no add-on apps present. 
-  var appsSeparator = document.getElementById("context-sep-apps");
-  if (appsSeparator) {
-    var tempElement = appsSeparator.previousSibling;
-    if (tempElement.localName == "menuseparator") 
-      gContextMenu.showItem("context-sep-apps", false);
-  }
+  gContextMenu.showItem("context-sep-apps", gContextMenu.shouldShowSeparator("context-sep-apps"));
 }
   
 function initEditorContextMenuListener(aEvent)
