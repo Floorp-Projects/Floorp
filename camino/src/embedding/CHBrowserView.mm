@@ -232,7 +232,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }
 }
 
-- (void)isOpaque
+- (BOOL)isOpaque
 {
   return YES;
 }
