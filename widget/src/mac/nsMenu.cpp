@@ -1492,6 +1492,9 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     
     domElement->GetAttribute(NS_LITERAL_STRING("value"), mLabel);
 
+    if((mMacMenuID <= 5) && (mMacMenuID >= 2)) 
+      return;
+    
     ::DeleteMenu(mMacMenuID);
     
     mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
