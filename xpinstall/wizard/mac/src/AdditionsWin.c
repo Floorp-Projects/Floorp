@@ -128,7 +128,7 @@ ShowAdditionsWin(void)
 	HUnlock(gControls->cfg->selCompMsg);
 	SetRect(&listBoxFrame, gControls->aw->compListBox.left, 
 						 --gControls->aw->compListBox.top,
-						   gControls->aw->compListBox.right += kScrollBarWidth,
+						   gControls->aw->compListBox.right + kScrollBarWidth,
 						 ++gControls->aw->compListBox.bottom);
 	FrameRect(&listBoxFrame);
 	ShowNavButtons( back, next );
@@ -192,6 +192,20 @@ InAdditionsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	GlobalToLocal( &localPt);
 	
 	/* Mouse Up */
+	
+	/* scroll */
+	SetRect(&r, gControls->aw->compListBox.right, gControls->aw->compListBox.top, 
+	            gControls->aw->compListBox.right + kScrollBarWidth, gControls->aw->compListBox.bottom);
+	if ((evt->what == mouseUp) && (PtInRect( localPt, &r)))
+	{
+	    LClick(localPt, evt->modifiers, gControls->aw->compList);
+	    
+	    SetRect(&r, gControls->aw->compListBox.left, gControls->aw->compListBox.top,
+	                gControls->aw->compListBox.right + 1, gControls->aw->compListBox.bottom);
+	    FrameRect(&r);
+	}
+	
+	/* or un/check components */
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->aw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->aw->compList);
@@ -324,7 +338,9 @@ UpdateAdditionsWin(void)
 	DrawString( CToPascal(*gControls->cfg->selAddMsg));
 	HUnlock(gControls->cfg->selAddMsg);
 	LUpdate( (*gControls->aw->compList)->port->visRgn, gControls->aw->compList);
-	FrameRect(&gControls->aw->compListBox);	
+	SetRect(&r, gControls->aw->compListBox.left, gControls->aw->compListBox.top,
+	            gControls->aw->compListBox.right + 1, gControls->aw->compListBox.bottom);
+	FrameRect(&r);	
 	
 	SetPt(&c, 0, 0);
 	if (LGetSelect(true, &c, gControls->aw->compList))

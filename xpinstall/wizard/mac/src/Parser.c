@@ -1183,6 +1183,7 @@ GetNextSection(char **ioTxt, char *outSectionName, char *outSection)
 	
 	sbuf = outSection;
 	cnt = 0;
+find_contents:
 	while (*txt != START_SECTION && *txt != MY_EOF) /* next section encountered */
 	{
 		if( kSectionMaxLen-1 >= cnt++)	/* prevent from falling of end of outSection buffer */				
@@ -1193,6 +1194,21 @@ GetNextSection(char **ioTxt, char *outSectionName, char *outSection)
 		else
 			txt++;
 	}
+	    
+    /* handle case where '[' is in key or value (i.e., for i18n)*/
+    if (*txt == START_SECTION && 
+        !(txt == *ioTxt || *(txt-1) == MAC_EOL || *(txt-1) == WIN_EOL))
+    {
+		if( kSectionMaxLen-1 >= cnt++)	/* prevent from falling of end of outSection buffer */				
+		{
+			*sbuf = *txt;
+			sbuf++; txt++;
+		}
+		else
+			txt++;
+        goto find_contents;
+    } 
+    
 	*sbuf = MY_EOF;   	/* close string */
 	*ioTxt = txt;		/* move txt ptr to next section */
 	exists = true;
