@@ -31,7 +31,7 @@
 #include "nsIImageContainer.h"
 #include "nsIImageDecoderObserver.h"
 #include "nsIImageFrame.h"
-#include "nsIImageRequest2.h"
+#include "lpIImageRequest.h"
 
 #define NS_PPMDECODER_CID \
 { /* e90bfa06-1dd1-11b2-8217-f38fe5d431a2 */         \
@@ -54,7 +54,7 @@ public:
 private:
   nsCOMPtr<nsIImageContainer> mImage;
   nsCOMPtr<nsIImageFrame> mFrame;
-  nsCOMPtr<nsIImageRequest> mRequest;
+  nsCOMPtr<lpIImageRequest> mRequest;
   nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 
   PRUint32 mDataReceived;

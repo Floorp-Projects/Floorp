@@ -80,8 +80,8 @@ nsJPEGDecoder::~nsJPEGDecoder()
 
 /** nsIImageDecoder methods **/
 
-/* void init (in nsIImageRequest aRequest); */
-NS_IMETHODIMP nsJPEGDecoder::Init(nsIImageRequest *aRequest)
+/* void init (in lpIImageRequest aRequest); */
+NS_IMETHODIMP nsJPEGDecoder::Init(lpIImageRequest *aRequest)
 {
   mRequest = aRequest;
   mObserver = do_QueryInterface(mRequest);
@@ -144,8 +144,8 @@ NS_IMETHODIMP nsJPEGDecoder::Init(nsIImageRequest *aRequest)
   return NS_OK;
 }
 
-/* readonly attribute nsIImageRequest request; */
-NS_IMETHODIMP nsJPEGDecoder::GetRequest(nsIImageRequest * *aRequest)
+/* readonly attribute lpIImageRequest request; */
+NS_IMETHODIMP nsJPEGDecoder::GetRequest(lpIImageRequest * *aRequest)
 {
   *aRequest = mRequest;
   NS_ADDREF(*aRequest);
