@@ -484,8 +484,7 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   if (NS_FAILED(rv)) return rv;
   
   //-- Get its corresponding signature file
-  nsCAutoString sigFilename;
-  sigFilename = manifestFilename;
+  nsCAutoString sigFilename( NS_STATIC_CAST(const char*, manifestFilename) );
   PRInt32 extension = sigFilename.RFindChar('.') + 1;
   NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
   (void)sigFilename.Cut(extension, 2);
