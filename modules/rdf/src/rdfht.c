@@ -75,7 +75,7 @@ walkThroughAllBookmarks (RDF_Resource u)
   while ((next = RDF_NextValue(c)) != NULL) {
     if (resourceType(next) == RDF_RT) walkThroughAllBookmarks(next);
   }
-  freeMem(c);
+  RDF_DisposeCursor(c);
 #endif
 }
 

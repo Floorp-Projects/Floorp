@@ -60,7 +60,7 @@ GuessIEBookmarks (void)
       }
       freeMem(pn);
     }
-    PR_DELETE(ProfilesDir);
+    PR_CloseDir(ProfilesDir);
   }
 #endif
 }
