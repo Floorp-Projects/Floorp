@@ -21,18 +21,21 @@ IGNORE_MANIFEST=1
 MODULE=raptor 
 
 IDLSRCS =  \
-	Attribute.idl  \
+	Attr.idl  \
 	CDATASection.idl \
+	CharacterData.idl \
 	Comment.idl \
-	Data.idl \
-	DOM.idl \
+	DOMImplementation.idl \
 	Document.idl \
 	DocumentFragment.idl \
 	DocumentType.idl \
+	Entity.idl \
+	EntityReference.idl \
 	Element.idl \
 	NamedNodeMap.idl \
 	Node.idl \
 	NodeList.idl \
+	Notation.idl \
 	ProcessingInstruction.idl \
 	Text.idl \
         StyleSheet.idl \

@@ -8,11 +8,11 @@ nsIDOMHTMLAreaElement.h
 nsIDOMHTMLBRElement.h
 nsIDOMHTMLBaseElement.h
 nsIDOMHTMLBaseFontElement.h
+nsIDOMHTMLBlockquoteElement.h
 nsIDOMHTMLBodyElement.h
 nsIDOMHTMLButtonElement.h
 nsIDOMHTMLCollection.h
 nsIDOMHTMLDListElement.h
-nsIDOMHTMLDelElement.h
 nsIDOMHTMLDirectoryElement.h
 nsIDOMHTMLDivElement.h
 nsIDOMHTMLDocument.h
@@ -29,7 +29,6 @@ nsIDOMHTMLHeadingElement.h
 nsIDOMHTMLHtmlElement.h
 nsIDOMHTMLImageElement.h
 nsIDOMHTMLInputElement.h
-nsIDOMHTMLInsElement.h
 nsIDOMHTMLIsIndexElement.h
 nsIDOMHTMLLIElement.h
 nsIDOMHTMLLabelElement.h
@@ -56,10 +55,7 @@ nsIDOMHTMLTableColElement.h
 nsIDOMHTMLTableElement.h
 nsIDOMHTMLTableRowElement.h
 nsIDOMHTMLTableSectionElement.h
-nsIDOMHTMLTbodyElement.h
 nsIDOMHTMLTextAreaElement.h
-nsIDOMHTMLTfootElement.h
-nsIDOMHTMLTheadElement.h
 nsIDOMHTMLTitleElement.h
 nsIDOMHTMLUListElement.h
 nsIDOMImage.h

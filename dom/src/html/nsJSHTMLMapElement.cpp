@@ -143,29 +143,6 @@ SetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLMAPELEMENT_AREAS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetAreas(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLMAPELEMENT_NAME:
       {
         nsAutoString prop;
@@ -291,7 +268,7 @@ JSClass HTMLMapElementClass = {
 //
 static JSPropertySpec HTMLMapElementProperties[] =
 {
-  {"areas",    HTMLMAPELEMENT_AREAS,    JSPROP_ENUMERATE},
+  {"areas",    HTMLMAPELEMENT_AREAS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"name",    HTMLMAPELEMENT_NAME,    JSPROP_ENUMERATE},
   {0}
 };

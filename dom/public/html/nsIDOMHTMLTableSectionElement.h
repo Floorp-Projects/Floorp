@@ -29,8 +29,8 @@ class nsIDOMHTMLElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLTABLESECTIONELEMENT_IID \
-{ 0x6f765327,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf90b5, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
 public:
@@ -38,11 +38,16 @@ public:
   NS_IMETHOD    GetAlign(nsString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
 
+  NS_IMETHOD    GetCh(nsString& aCh)=0;
+  NS_IMETHOD    SetCh(const nsString& aCh)=0;
+
+  NS_IMETHOD    GetChOff(nsString& aChOff)=0;
+  NS_IMETHOD    SetChOff(const nsString& aChOff)=0;
+
   NS_IMETHOD    GetVAlign(nsString& aVAlign)=0;
   NS_IMETHOD    SetVAlign(const nsString& aVAlign)=0;
 
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows)=0;
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows)=0;
 
   NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn)=0;
 
@@ -53,10 +58,13 @@ public:
 #define NS_DECL_IDOMHTMLTABLESECTIONELEMENT   \
   NS_IMETHOD    GetAlign(nsString& aAlign);  \
   NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetCh(nsString& aCh);  \
+  NS_IMETHOD    SetCh(const nsString& aCh);  \
+  NS_IMETHOD    GetChOff(nsString& aChOff);  \
+  NS_IMETHOD    SetChOff(const nsString& aChOff);  \
   NS_IMETHOD    GetVAlign(nsString& aVAlign);  \
   NS_IMETHOD    SetVAlign(const nsString& aVAlign);  \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows);  \
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows);  \
   NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);  \
   NS_IMETHOD    DeleteRow(PRInt32 aIndex);  \
 
@@ -65,10 +73,13 @@ public:
 #define NS_FORWARD_IDOMHTMLTABLESECTIONELEMENT(_to)  \
   NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
   NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
+  NS_IMETHOD    GetCh(nsString& aCh) { return _to##GetCh(aCh); } \
+  NS_IMETHOD    SetCh(const nsString& aCh) { return _to##SetCh(aCh); } \
+  NS_IMETHOD    GetChOff(nsString& aChOff) { return _to##GetChOff(aChOff); } \
+  NS_IMETHOD    SetChOff(const nsString& aChOff) { return _to##SetChOff(aChOff); } \
   NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to##GetVAlign(aVAlign); } \
   NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to##SetVAlign(aVAlign); } \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return _to##GetRows(aRows); } \
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows) { return _to##SetRows(aRows); } \
   NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn) { return _to##InsertRow(aIndex, aReturn); }  \
   NS_IMETHOD    DeleteRow(PRInt32 aIndex) { return _to##DeleteRow(aIndex); }  \
 

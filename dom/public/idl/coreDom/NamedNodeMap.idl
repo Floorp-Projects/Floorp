@@ -1,7 +1,13 @@
-   interface NamedNodeMap {
-     Node                      getNamedItem(in wstring name);
-     void                      setNamedItem(in Node node);
-     Node                      removeNamedItem(in wstring name);
-     Node                      item(in unsigned long index);
-     readonly attribute unsigned long length;
-   };
+ interface NamedNodeMap {
+ /* IID: { 0xa6cf907b, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   Node                      getNamedItem(in DOMString name);
+   Node                      setNamedItem(in Node arg)
+                                          raises(DOMException);
+   Node                      removeNamedItem(in DOMString name)
+                                             raises(DOMException);
+   Node                      item(in unsigned long index);
+   readonly attribute  unsigned long        length;
+ };
+

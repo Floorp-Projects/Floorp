@@ -18,12 +18,11 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS=coreDom coreEvents events html css
+DIRS=base coreDom coreEvents events html css
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h nsIJSScriptObject.h nsIScriptObjectOwner.h \
-        nsIScriptGlobalObject.h nsIDOMWindow.h nsIScriptContextOwner.h \
-	nsIDOMNavigator.h nsIScriptEventListener.h nsIDOMLocation.h \
-	nsIDOMWindowCollection.h nsIDOMScriptObjectFactory.h \
+        nsIScriptGlobalObject.h nsIScriptContextOwner.h \
+	nsIScriptEventListener.h nsIDOMScriptObjectFactory.h \
 	nsIDOMNativeObjectRegistry.h nsDOMCID.h
 
 MODULE=dom 

@@ -620,38 +620,27 @@ nsresult nsDocument::SetScriptObject(void *aScriptObject)
 //
 // nsIDOMDocument interface
 //
-NS_IMETHODIMP
-nsDocument::GetMasterDoc(nsIDOMDocument **aDocument)
-{
-  NS_ADDREF_THIS();
-  *aDocument = (nsIDOMDocument*)this;
-  return NS_OK;
-}
-
 NS_IMETHODIMP    
-nsDocument::GetDocumentType(nsIDOMDocumentType** aDocumentType)
+nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
-  //XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
-nsDocument::GetProlog(nsIDOMNodeList** aProlog)
+nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
-  *aProlog = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDocument::GetEpilog(nsIDOMNodeList** aEpilog)
-{
-  *aEpilog = nsnull;
-  return NS_OK;
+  // XXX To be implemented
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
+  if (nsnull == aDocumentElement) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsresult res = NS_ERROR_FAILURE;
 
   if (nsnull != mRootContent) {
@@ -662,51 +651,39 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
   return res;
 }
 
-#if 0
-NS_IMETHODIMP
-nsDocument::SetDocumentElement(nsIDOMElement *aElement)
-{
-  NS_PRECONDITION(nsnull != aElement, "null arg");
-  nsIContent* content;
-  
-  nsresult res = aElement->QueryInterface(kIContentIID, (void**)&content);
-  if (NS_OK == res) {
-    SetRootContent(content);
-    NS_RELEASE(content);
-  }
-  else NS_ASSERTION(0, "Must be an nsIContent"); // nsIContent not supported. Who are you?
-
-  return res;
-}
-#endif
-
 NS_IMETHODIMP    
 nsDocument::CreateElement(const nsString& aTagName, 
-                              nsIDOMNamedNodeMap* aAttributes, 
-                              nsIDOMElement** aReturn)
+                          nsIDOMElement** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDocument::CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn)
+{
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -715,16 +692,23 @@ nsDocument::CreateProcessingInstruction(const nsString& aTarget,
                                         const nsString& aData, 
                                         nsIDOMProcessingInstruction** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::CreateAttribute(const nsString& aName, 
-                            nsIDOMNode* aValue, 
-                            nsIDOMAttribute** aReturn)
+                            nsIDOMAttr** aReturn)
 {
-  //XXX TBI
+  // Should be implemented by subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsDocument::CreateEntityReference(const nsString& aName, 
+                                  nsIDOMEntityReference** aReturn)
+{
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -767,10 +751,10 @@ nsDocument::SetNodeValue(const nsString& aNodeValue)
 }
 
 NS_IMETHODIMP    
-nsDocument::GetNodeType(PRInt32* aNodeType)
+nsDocument::GetNodeType(PRUint16* aNodeType)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aNodeType = nsIDOMNode::DOCUMENT_NODE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -788,7 +772,7 @@ nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 NS_IMETHODIMP    
-nsDocument::GetHasChildNodes(PRBool* aHasChildNodes)
+nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
   // XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -858,17 +842,17 @@ nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP    
-nsDocument::CloneNode(nsIDOMNode** aReturn)
+nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   // XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 NS_IMETHODIMP    
-nsDocument::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
 }
 
 nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)

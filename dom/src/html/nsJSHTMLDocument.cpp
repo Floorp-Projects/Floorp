@@ -59,29 +59,25 @@ NS_DEF_PTR(nsIDOMNodeList);
 enum HTMLDocument_slots {
   HTMLDOCUMENT_TITLE = -1,
   HTMLDOCUMENT_REFERRER = -2,
-  HTMLDOCUMENT_FILESIZE = -3,
-  HTMLDOCUMENT_FILECREATEDDATE = -4,
-  HTMLDOCUMENT_FILEMODIFIEDDATE = -5,
-  HTMLDOCUMENT_FILEUPDATEDDATE = -6,
-  HTMLDOCUMENT_DOMAIN = -7,
-  HTMLDOCUMENT_URL = -8,
-  HTMLDOCUMENT_BODY = -9,
-  HTMLDOCUMENT_IMAGES = -10,
-  HTMLDOCUMENT_APPLETS = -11,
-  HTMLDOCUMENT_LINKS = -12,
-  HTMLDOCUMENT_FORMS = -13,
-  HTMLDOCUMENT_ANCHORS = -14,
-  HTMLDOCUMENT_COOKIE = -15,
-  NSHTMLDOCUMENT_ALINKCOLOR = -16,
-  NSHTMLDOCUMENT_LINKCOLOR = -17,
-  NSHTMLDOCUMENT_VLINKCOLOR = -18,
-  NSHTMLDOCUMENT_BGCOLOR = -19,
-  NSHTMLDOCUMENT_FGCOLOR = -20,
-  NSHTMLDOCUMENT_STYLESHEETS = -21,
-  NSHTMLDOCUMENT_LASTMODIFIED = -22,
-  NSHTMLDOCUMENT_EMBEDS = -23,
-  NSHTMLDOCUMENT_LAYERS = -24,
-  NSHTMLDOCUMENT_PLUGINS = -25
+  HTMLDOCUMENT_DOMAIN = -3,
+  HTMLDOCUMENT_URL = -4,
+  HTMLDOCUMENT_BODY = -5,
+  HTMLDOCUMENT_IMAGES = -6,
+  HTMLDOCUMENT_APPLETS = -7,
+  HTMLDOCUMENT_LINKS = -8,
+  HTMLDOCUMENT_FORMS = -9,
+  HTMLDOCUMENT_ANCHORS = -10,
+  HTMLDOCUMENT_COOKIE = -11,
+  NSHTMLDOCUMENT_ALINKCOLOR = -12,
+  NSHTMLDOCUMENT_LINKCOLOR = -13,
+  NSHTMLDOCUMENT_VLINKCOLOR = -14,
+  NSHTMLDOCUMENT_BGCOLOR = -15,
+  NSHTMLDOCUMENT_FGCOLOR = -16,
+  NSHTMLDOCUMENT_STYLESHEETS = -17,
+  NSHTMLDOCUMENT_LASTMODIFIED = -18,
+  NSHTMLDOCUMENT_EMBEDS = -19,
+  NSHTMLDOCUMENT_LAYERS = -20,
+  NSHTMLDOCUMENT_PLUGINS = -21
 };
 
 /***********************************************************************/
@@ -117,58 +113,6 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetReferrer(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case HTMLDOCUMENT_FILESIZE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetFileSize(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case HTMLDOCUMENT_FILECREATEDDATE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetFileCreatedDate(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case HTMLDOCUMENT_FILEMODIFIEDDATE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetFileModifiedDate(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case HTMLDOCUMENT_FILEUPDATEDDATE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetFileUpdatedDate(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
@@ -1266,7 +1210,7 @@ PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  nsIDOMNSHTMLDocument *nativeThis;
+  nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
     return JS_FALSE;
@@ -1308,7 +1252,7 @@ PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  nsIDOMNSHTMLDocument *nativeThis;
+  nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
     return JS_FALSE;
@@ -1390,10 +1334,6 @@ static JSPropertySpec HTMLDocumentProperties[] =
 {
   {"title",    HTMLDOCUMENT_TITLE,    JSPROP_ENUMERATE},
   {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"fileSize",    HTMLDOCUMENT_FILESIZE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"fileCreatedDate",    HTMLDOCUMENT_FILECREATEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"fileModifiedDate",    HTMLDOCUMENT_FILEMODIFIEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"fileUpdatedDate",    HTMLDOCUMENT_FILEUPDATEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"body",    HTMLDOCUMENT_BODY,    JSPROP_ENUMERATE},

@@ -28,11 +28,12 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMAttribute.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMCDATASection.h"
 #include "nsIDOMText.h"
+#include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMEntityReference.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMEventCapturer.h"
@@ -45,11 +46,12 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
-static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
-static NS_DEFINE_IID(kIAttributeIID, NS_IDOMATTRIBUTE_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
+static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
 static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
 static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
+static NS_DEFINE_IID(kIEntityReferenceIID, NS_IDOMENTITYREFERENCE_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
@@ -58,11 +60,12 @@ static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMProcessingInstruction);
-NS_DEF_PTR(nsIDOMNamedNodeMap);
-NS_DEF_PTR(nsIDOMAttribute);
-NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMAttr);
+NS_DEF_PTR(nsIDOMCDATASection);
 NS_DEF_PTR(nsIDOMText);
+NS_DEF_PTR(nsIDOMDOMImplementation);
 NS_DEF_PTR(nsIDOMDocumentType);
+NS_DEF_PTR(nsIDOMEntityReference);
 NS_DEF_PTR(nsIDOMDocumentFragment);
 NS_DEF_PTR(nsIDOMComment);
 NS_DEF_PTR(nsIDOMEventCapturer);
@@ -72,10 +75,9 @@ NS_DEF_PTR(nsIDOMNodeList);
 // Document property ids
 //
 enum Document_slots {
-  DOCUMENT_DOCUMENTTYPE = -1,
-  DOCUMENT_PROLOG = -2,
-  DOCUMENT_EPILOG = -3,
-  DOCUMENT_DOCUMENTELEMENT = -4
+  DOCUMENT_DOCTYPE = -1,
+  DOCUMENT_IMPLEMENTATION = -2,
+  DOCUMENT_DOCUMENTELEMENT = -3
 };
 
 /***********************************************************************/
@@ -94,10 +96,10 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENT_DOCUMENTTYPE:
+      case DOCUMENT_DOCTYPE:
       {
         nsIDOMDocumentType* prop;
-        if (NS_OK == a->GetDocumentType(&prop)) {
+        if (NS_OK == a->GetDoctype(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -121,37 +123,10 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case DOCUMENT_PROLOG:
+      case DOCUMENT_IMPLEMENTATION:
       {
-        nsIDOMNodeList* prop;
-        if (NS_OK == a->GetProlog(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case DOCUMENT_EPILOG:
-      {
-        nsIDOMNodeList* prop;
-        if (NS_OK == a->GetEpilog(&prop)) {
+        nsIDOMDOMImplementation* prop;
+        if (NS_OK == a->GetImplementation(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -341,7 +316,6 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
-  nsIDOMNamedNodeMapPtr b1;
 
   *rval = JSVAL_NULL;
 
@@ -350,7 +324,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 1) {
 
     JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
     if (nsnull != jsstring0) {
@@ -360,25 +334,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       b0.SetString("");   // Should this really be null?? 
     }
 
-    if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[1])) {
-      nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
-      NS_ASSERTION(nsnull != supports1, "null pointer");
-
-      if ((nsnull == supports1) ||
-          (NS_OK != supports1->QueryInterface(kINamedNodeMapIID, (void **)(b1.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type NamedNodeMap");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->CreateElement(b0, b1, &nativeRet)) {
+    if (NS_OK != nativeThis->CreateElement(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
@@ -400,7 +356,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
   }
   else {
-    JS_ReportError(cx, "Function createElement requires 2 parameters");
+    JS_ReportError(cx, "Function createElement requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -574,6 +530,64 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method CreateCDATASection
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMCDATASection* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->CreateCDATASection(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Function createCDATASection requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CreateProcessingInstruction
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -648,9 +662,8 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMAttribute* nativeRet;
+  nsIDOMAttr* nativeRet;
   nsAutoString b0;
-  nsIDOMNodePtr b1;
 
   *rval = JSVAL_NULL;
 
@@ -659,7 +672,7 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 1) {
 
     JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
     if (nsnull != jsstring0) {
@@ -669,25 +682,7 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       b0.SetString("");   // Should this really be null?? 
     }
 
-    if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[1])) {
-      nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
-      NS_ASSERTION(nsnull != supports1, "null pointer");
-
-      if ((nsnull == supports1) ||
-          (NS_OK != supports1->QueryInterface(kINodeIID, (void **)(b1.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->CreateAttribute(b0, b1, &nativeRet)) {
+    if (NS_OK != nativeThis->CreateAttribute(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
@@ -709,7 +704,65 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
   }
   else {
-    JS_ReportError(cx, "Function createAttribute requires 2 parameters");
+    JS_ReportError(cx, "Function createAttribute requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CreateEntityReference
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMEntityReference* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->CreateEntityReference(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Function createEntityReference requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -782,7 +835,7 @@ PR_STATIC_CALLBACK(JSBool)
 EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
-  nsIDOMEventCapturer *nativeThis;
+  nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;
@@ -830,7 +883,7 @@ PR_STATIC_CALLBACK(JSBool)
 EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
-  nsIDOMEventCapturer *nativeThis;
+  nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;
@@ -894,9 +947,8 @@ JSClass DocumentClass = {
 //
 static JSPropertySpec DocumentProperties[] =
 {
-  {"documentType",    DOCUMENT_DOCUMENTTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"prolog",    DOCUMENT_PROLOG,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"epilog",    DOCUMENT_EPILOG,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
@@ -907,12 +959,14 @@ static JSPropertySpec DocumentProperties[] =
 //
 static JSFunctionSpec DocumentMethods[] = 
 {
-  {"createElement",          DocumentCreateElement,     2},
+  {"createElement",          DocumentCreateElement,     1},
   {"createDocumentFragment",          DocumentCreateDocumentFragment,     0},
   {"createTextNode",          DocumentCreateTextNode,     1},
   {"createComment",          DocumentCreateComment,     1},
+  {"createCDATASection",          DocumentCreateCDATASection,     1},
   {"createProcessingInstruction",          DocumentCreateProcessingInstruction,     2},
-  {"createAttribute",          DocumentCreateAttribute,     2},
+  {"createAttribute",          DocumentCreateAttribute,     1},
+  {"createEntityReference",          DocumentCreateEntityReference,     1},
   {"getElementsByTagName",          DocumentGetElementsByTagName,     1},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
@@ -948,7 +1002,7 @@ nsresult NS_InitDocumentClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitDocumentFragmentClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context

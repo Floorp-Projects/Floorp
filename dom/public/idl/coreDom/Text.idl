@@ -1,5 +1,7 @@
-   interface Text : Data {
-     Text                      splitText(in unsigned long offset);
-     Text                      joinText(in Text node1, 
-                                        in Text node2);
-   };
+ interface Text : CharacterData {
+ /* IID: { 0xa6cf9082, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   Text                      splitText(in unsigned long offset)
+                                       raises(DOMException);
+ };

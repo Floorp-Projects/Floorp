@@ -45,6 +45,8 @@ static const char *kIncludeJSStr = "#include \"jsapi.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
 static const char *kUuidStr = 
 "#define %s \\\n"
+"%s\n\n";
+static const char *kNoUuidStr = 
 "--- IID GOES HERE ---\n\n";
 static const char *kClassDeclStr = "class nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
@@ -200,9 +202,16 @@ XPCOMGen::GenerateGuid(IdlInterface &aInterface)
   char buf[512];
   char uuid_buf[256];
   ofstream *file = GetFile();
-
+  char *uuid;
+  
+  uuid = aInterface.GetIIDAt(0);
   GetInterfaceIID(uuid_buf, aInterface);
-  sprintf(buf, kUuidStr, uuid_buf);
+  if (NULL != uuid) {
+    sprintf(buf, kUuidStr, uuid_buf, uuid);
+  }
+  else {
+    sprintf(buf, kUuidStr, uuid_buf, kNoUuidStr);
+  }
   *file << buf;
 }
  
@@ -555,8 +564,14 @@ XPCOMGen::GenerateFactory(IdlInterface &aInterface)
   if (HasConstructor(aInterface, &constructor)) {
     strcpy(name_buf, iface_name);
     strcat(name_buf, "Factory");
+    char *iid = aInterface.GetIIDAt(1);
     GetInterfaceIID(uuid_buf, name_buf);
-    sprintf(buf, kUuidStr, uuid_buf);
+    if (NULL != iid) {
+      sprintf(buf, kUuidStr, uuid_buf, iid);
+    }
+    else {
+      sprintf(buf, kUuidStr, uuid_buf, kNoUuidStr);
+    }
     *file << buf;
     
     sprintf(buf, kFactoryClassDeclBeginStr, iface_name);

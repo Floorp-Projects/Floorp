@@ -100,7 +100,7 @@ nsHTMLSpanElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLSpanElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLSpanElement* it = new nsHTMLSpanElement(mInner.mTag);
   if (nsnull == it) {

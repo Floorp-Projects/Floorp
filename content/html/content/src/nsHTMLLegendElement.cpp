@@ -56,7 +56,6 @@ public:
 
   // nsIDOMHTMLLegendElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetAccessKey(nsString& aAccessKey);
   NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
   NS_IMETHOD GetAlign(nsString& aAlign);
@@ -125,7 +124,7 @@ nsHTMLLegendElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLLegendElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLLegendElement* it = new nsHTMLLegendElement(mInner.mTag);
   if (nsnull == it) {
@@ -148,18 +147,6 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
     }
   }
   return result;
-}
-
-NS_IMETHODIMP
-nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-	if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    return aForm->QueryInterface(kIFormIID, (void**)&mForm);
-  }
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey, eSetAttrNotify_None)

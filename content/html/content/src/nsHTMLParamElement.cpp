@@ -118,7 +118,7 @@ nsHTMLParamElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLParamElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLParamElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLParamElement* it = new nsHTMLParamElement(mInner.mTag);
   if (nsnull == it) {

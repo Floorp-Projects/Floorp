@@ -1,40 +1,45 @@
-   interface Node {
-     // NodeType
-     const int                 DOCUMENT           = 1;
-     const int                 ELEMENT            = 2;
-     const int                 ATTRIBUTE          = 3;
-     const int                 PROCESSING_INSTRUCTION = 4;
-     const int                 COMMENT            = 5;
-     const int                 TEXT               = 6;
-     const int                 CDATA_SECTION      = 7;
-     const int                 DOCUMENT_FRAGMENT  = 8;
-     const int                 ENTITY_DECLARATION = 9;
-     const int                 ENTITY_REFERENCE   = 10;
+ interface Node {
+ /* IID: { 0xa6cf907c, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-     readonly attribute wstring nodeName;
-     attribute wstring         nodeValue;
-     readonly attribute int    nodeType;
-     readonly attribute Node   parentNode;
-     readonly attribute NodeList childNodes;
-     readonly attribute boolean  hasChildNodes;
-     readonly attribute Node   firstChild;
-     readonly attribute Node   lastChild;
-     readonly attribute Node   previousSibling;
-     readonly attribute Node   nextSibling;
-     readonly attribute NamedNodeMap attributes;
-     Node                      insertBefore(in Node newChild, 
-                                            in Node refChild)
-                                            raises DOMException;
-     Node                      replaceChild(in Node newChild, 
-                                            in Node oldChild)
-                                            raises DOMException;
-     Node                      removeChild(in Node oldChild)
-                                           raises DOMException;
-     Node                      appendChild(in Node newChild)
-                                           raises DOMException;
-     Node                      cloneNode();
-     boolean                   equals(in Node node, 
-                                      in boolean deep);
-   };
+   const unsigned short      ELEMENT_NODE       = 1;
+   const unsigned short      ATTRIBUTE_NODE     = 2;
+   const unsigned short      TEXT_NODE          = 3;
+   const unsigned short      CDATA_SECTION_NODE = 4;
+   const unsigned short      ENTITY_REFERENCE_NODE = 5;
+   const unsigned short      ENTITY_NODE        = 6;
+   const unsigned short      PROCESSING_INSTRUCTION_NODE = 7;
+   const unsigned short      COMMENT_NODE       = 8;
+   const unsigned short      DOCUMENT_NODE      = 9;
+   const unsigned short      DOCUMENT_TYPE_NODE = 10;
+   const unsigned short      DOCUMENT_FRAGMENT_NODE = 11;
+   const unsigned short      NOTATION_NODE      = 12;
+
+   readonly attribute  DOMString            nodeName;
+            attribute  DOMString            nodeValue;
+                                                  // raises(DOMException) on setting
+                                                  // raises(DOMException) on retrieval
+   readonly attribute  unsigned short       nodeType;
+   readonly attribute  Node                 parentNode;
+   readonly attribute  NodeList             childNodes;
+   readonly attribute  Node                 firstChild;
+   readonly attribute  Node                 lastChild;
+   readonly attribute  Node                 previousSibling;
+   readonly attribute  Node                 nextSibling;
+   readonly attribute  NamedNodeMap         attributes;
+   readonly attribute  Document             ownerDocument;
+   Node                      insertBefore(in Node newChild, 
+                                          in Node refChild)
+                                          raises(DOMException);
+   Node                      replaceChild(in Node newChild, 
+                                          in Node oldChild)
+                                          raises(DOMException);
+   Node                      removeChild(in Node oldChild)
+                                         raises(DOMException);
+   Node                      appendChild(in Node newChild)
+                                         raises(DOMException);
+   boolean                   hasChildNodes();
+   Node                      cloneNode(in boolean deep);
+ };
 
 

@@ -113,7 +113,7 @@ nsHTMLHeadingElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLHeadingElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLHeadingElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLHeadingElement* it = new nsHTMLHeadingElement(mInner.mTag);
   if (nsnull == it) {

@@ -1,19 +1,24 @@
-   interface HTMLFormElement : HTMLElement {
-     readonly attribute HTMLCollection  elements;
-     readonly attribute wstring         name;
-     attribute wstring         acceptCharset;
-     attribute wstring         action;
-     attribute wstring         enctype;
-     attribute wstring         method;
-     attribute wstring         target;
+ interface HTMLFormElement : HTMLElement {
+ /* IID: { 0xa6cf908f, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-     void reset();
-     void submit();
-   };
+   readonly attribute  HTMLCollection       elements;
+   readonly attribute  unsigned long        length;
+            attribute  DOMString            name;
+            attribute  DOMString            acceptCharset;
+            attribute  DOMString            action;
+            attribute  DOMString            enctype;
+            attribute  DOMString            method;
+            attribute  DOMString            target;
+   void                      submit();
+   void                      reset();
+ };
 
    interface NSHTMLFormElement {
+ /* IID: { 0xa6cf90c6, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
      readonly attribute wstring encoding;
-     readonly attribute unsigned long length;
 
      Element namedItem(in wstring name);
    };

@@ -52,7 +52,6 @@ public:
 
   // nsIDOMHTMLIsIndexElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetPrompt(nsString& aPrompt);
   NS_IMETHOD SetPrompt(const nsString& aPrompt);
 
@@ -114,7 +113,7 @@ nsHTMLIsIndexElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLIsIndexElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLIsIndexElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLIsIndexElement* it = new nsHTMLIsIndexElement(mInner.mTag);
   if (nsnull == it) {
@@ -131,11 +130,6 @@ nsHTMLIsIndexElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLIsIndexElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  return NS_OK;
-}
 
 NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt, eSetAttrNotify_Restart)
 

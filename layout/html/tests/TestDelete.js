@@ -29,7 +29,7 @@ function dump2(msg, parent, child)
   dump(" parent=");
   dump(parent.tagName);
   dump(" child=");
-  dump((child.nodeType != Node.TEXT)  ? child.tagName : "(text)");
+  dump((child.nodeType != Node.TEXT_NODE)  ? child.tagName : "(text)");
 
   dump(" kids: ");
   var children = parent.childNodes;
@@ -38,7 +38,7 @@ function dump2(msg, parent, child)
   var count = 0;
   while (count < length) {
     child = children.item(count);
-    dump((child.nodeType != Node.TEXT)  ? child.tagName : "(text)");
+    dump((child.nodeType != Node.TEXT_NODE)  ? child.tagName : "(text)");
     dump(",");
     count++;
   }
@@ -73,7 +73,7 @@ function findContainer(node, name)
   var count = 0;
   while (count < length) {
     child = children.item(count);
-    if (child.nodeType != Node.TEXT) {
+    if (child.nodeType != Node.TEXT_NODE) {
       if (child.tagName == name) {
         return child;
       }
@@ -108,10 +108,10 @@ function makeTestDocument(node)
   spanTag[5] = "TT";
 
   for (b = 0; b < 6; b++) {
-    var block = document.createElement(blockTag[b], null);
+    var block = document.createElement(blockTag[b]);
     block.insertBefore(document.createTextNode("Opening text ["), null);
     for (s = 0; s < 6; s++) {
-      var span = document.createElement(spanTag[s], null);
+      var span = document.createElement(spanTag[s]);
       block.insertBefore(span, null);
       span.insertBefore(document.createTextNode("More text, "), null);
       span.insertBefore(document.createTextNode("And more text, "), null);

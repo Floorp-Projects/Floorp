@@ -445,52 +445,6 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (prop) NS_RELEASE(prop);
         break;
       }
-      case HTMLTABLEELEMENT_ROWS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetRows(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLTABLEELEMENT_TBODIES:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetTBodies(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLTABLEELEMENT_ALIGN:
       {
         nsAutoString prop;
@@ -1079,8 +1033,8 @@ static JSPropertySpec HTMLTableElementProperties[] =
   {"caption",    HTMLTABLEELEMENT_CAPTION,    JSPROP_ENUMERATE},
   {"tHead",    HTMLTABLEELEMENT_THEAD,    JSPROP_ENUMERATE},
   {"tFoot",    HTMLTABLEELEMENT_TFOOT,    JSPROP_ENUMERATE},
-  {"rows",    HTMLTABLEELEMENT_ROWS,    JSPROP_ENUMERATE},
-  {"tBodies",    HTMLTABLEELEMENT_TBODIES,    JSPROP_ENUMERATE},
+  {"rows",    HTMLTABLEELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"tBodies",    HTMLTABLEELEMENT_TBODIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"align",    HTMLTABLEELEMENT_ALIGN,    JSPROP_ENUMERATE},
   {"bgColor",    HTMLTABLEELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
   {"border",    HTMLTABLEELEMENT_BORDER,    JSPROP_ENUMERATE},

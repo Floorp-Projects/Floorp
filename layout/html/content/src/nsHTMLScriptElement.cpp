@@ -125,7 +125,7 @@ nsHTMLScriptElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLScriptElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLScriptElement* it = new nsHTMLScriptElement(mInner.mTag);
   if (nsnull == it) {

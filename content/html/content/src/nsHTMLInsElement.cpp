@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsIDOMHTMLInsElement.h"
+#include "nsIDOMHTMLModElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -27,9 +27,9 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-static NS_DEFINE_IID(kIDOMHTMLInsElementIID, NS_IDOMHTMLINSELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLModElementIID, NS_IDOMHTMLMODELEMENT_IID);
 
-class nsHTMLInsElement : public nsIDOMHTMLInsElement,
+class nsHTMLInsElement : public nsIDOMHTMLModElement,
                   public nsIScriptObjectOwner,
                   public nsIDOMEventReceiver,
                   public nsIHTMLContent
@@ -50,7 +50,7 @@ public:
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
-  // nsIDOMHTMLInsElement
+  // nsIDOMHTMLModElement
   NS_IMETHOD GetCite(nsString& aCite);
   NS_IMETHOD SetCite(const nsString& aCite);
   NS_IMETHOD GetDateTime(nsString& aDateTime);
@@ -104,8 +104,8 @@ nsresult
 nsHTMLInsElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLInsElementIID)) {
-    nsIDOMHTMLInsElement* tmp = this;
+  if (aIID.Equals(kIDOMHTMLModElementIID)) {
+    nsIDOMHTMLModElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     mRefCnt++;
     return NS_OK;
@@ -114,7 +114,7 @@ nsHTMLInsElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLInsElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLInsElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLInsElement* it = new nsHTMLInsElement(mInner.mTag);
   if (nsnull == it) {

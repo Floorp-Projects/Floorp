@@ -27,11 +27,11 @@ EXPORTS=    \
 	nsIDOMHTMLBRElement.h \
 	nsIDOMHTMLBaseElement.h \
 	nsIDOMHTMLBaseFontElement.h \
+	nsIDOMHTMLBlockquoteElement.h \
 	nsIDOMHTMLBodyElement.h \
 	nsIDOMHTMLButtonElement.h \
 	nsIDOMHTMLCollection.h \
 	nsIDOMHTMLDListElement.h \
-	nsIDOMHTMLDelElement.h \
 	nsIDOMHTMLDirectoryElement.h \
 	nsIDOMHTMLDivElement.h \
 	nsIDOMHTMLDocument.h \
@@ -48,7 +48,6 @@ EXPORTS=    \
 	nsIDOMHTMLHtmlElement.h \
 	nsIDOMHTMLImageElement.h \
 	nsIDOMHTMLInputElement.h \
-	nsIDOMHTMLInsElement.h \
 	nsIDOMHTMLIsIndexElement.h \
 	nsIDOMHTMLLIElement.h \
 	$(NULL)
@@ -78,10 +77,7 @@ EXPORTS2= \
 	nsIDOMHTMLTableElement.h \
 	nsIDOMHTMLTableRowElement.h \
 	nsIDOMHTMLTableSectionElement.h \
-	nsIDOMHTMLTbodyElement.h \
 	nsIDOMHTMLTextAreaElement.h \
-	nsIDOMHTMLTfootElement.h \
-	nsIDOMHTMLTheadElement.h \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
 	nsIDOMImage.h \
@@ -94,3 +90,5 @@ include <$(DEPTH)\config\rules.mak>
 export:: $(XPDIST)\public\$(MODULE)
     for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\public\$(MODULE:/=\)
 
+clobber:: $(XPDIST)\public\$(MODULE)
+    -for %g in ($(EXPORTS2)) do $(RM) $(XPDIST:/=\)\public\$(MODULE:/=\)\%g

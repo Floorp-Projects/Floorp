@@ -52,7 +52,6 @@ public:
 
   // nsIDOMHTMLObjectElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetCode(nsString& aCode);
   NS_IMETHOD SetCode(const nsString& aCode);
   NS_IMETHOD GetAlign(nsString& aAlign);
@@ -146,7 +145,7 @@ nsHTMLObjectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLObjectElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLObjectElement* it = new nsHTMLObjectElement(mInner.mTag);
   if (nsnull == it) {
@@ -160,12 +159,6 @@ NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   *aForm = nsnull;/* XXX */
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLObjectElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
   return NS_OK;
 }
 

@@ -61,11 +61,9 @@ public:
 
   // nsIDOMHTMLOptionElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetDefaultSelected(PRBool* aDefaultSelected);
   NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected);
   NS_IMETHOD GetText(nsString& aText);
-  NS_IMETHOD SetText(const nsString& aText);
   NS_IMETHOD GetIndex(PRInt32* aIndex);
   NS_IMETHOD SetIndex(PRInt32 aIndex);
   NS_IMETHOD GetDisabled(PRBool* aDisabled);
@@ -73,7 +71,6 @@ public:
   NS_IMETHOD GetLabel(nsString& aLabel);
   NS_IMETHOD SetLabel(const nsString& aLabel);
   NS_IMETHOD GetSelected(PRBool* aSelected);
-  NS_IMETHOD SetSelected(PRBool aSelected);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
 
@@ -158,7 +155,7 @@ nsHTMLOptionElement::Release()
 }
 
 nsresult
-nsHTMLOptionElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLOptionElement* it = new nsHTMLOptionElement(mInner.mTag);
   if (nsnull == it) {
@@ -184,22 +181,18 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsHTMLOptionElement::GetSelected(PRBool *aSelected)
 {
-	if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    return aForm->QueryInterface(kIFormIID, (void**)&mForm);
-  }
+  nsHTMLValue val;
+  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::selected, val);
+  *aSelected = NS_CONTENT_ATTR_NOT_THERE != rv;
+  return NS_OK;
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected, eSetAttrNotify_None)
 NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index, eSetAttrNotify_None)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label, eSetAttrNotify_Render)
-NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Selected, selected, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value, eSetAttrNotify_Render)
 
 NS_IMETHODIMP
@@ -272,9 +265,3 @@ nsHTMLOptionElement::GetText(nsString& aText)
   return result;
 }
 
-NS_IMETHODIMP
-nsHTMLOptionElement::SetText(const nsString& aText)
-{
-  // XXX write me
-  return NS_OK;
-}

@@ -213,7 +213,7 @@ nsHTMLInputElement::Release()
 // nsIDOMHTMLInputElement
 
 nsresult
-nsHTMLInputElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLInputElement* it = new nsHTMLInputElement(mInner.mTag);
   if (nsnull == it) {

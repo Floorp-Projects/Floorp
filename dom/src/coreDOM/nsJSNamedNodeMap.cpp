@@ -283,6 +283,7 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
   *rval = JSVAL_NULL;
@@ -312,11 +313,26 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->SetNamedItem(b0)) {
+    if (NS_OK != nativeThis->SetNamedItem(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function setNamedItem requires 1 parameters");

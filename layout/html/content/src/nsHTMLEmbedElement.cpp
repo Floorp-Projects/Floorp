@@ -114,7 +114,7 @@ nsHTMLEmbedElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLEmbedElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLEmbedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLEmbedElement* it = new nsHTMLEmbedElement(mInner.mTag);
   if (nsnull == it) {

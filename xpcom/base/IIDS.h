@@ -185,565 +185,565 @@ nsIDOMPaintListener = { /* a6cf906a-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf906b-15b3-11d2-932e-00805f8add32 */
+nsIDOMWindow = { /* a6cf906b-15b3-11d2-932e-00805f8add32 */
     0xa6cf906b,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf906c-15b3-11d2-932e-00805f8add32 */
+nsIDOMEventCapturer = { /* a6cf906c-15b3-11d2-932e-00805f8add32 */
     0xa6cf906c,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf906d-15b3-11d2-932e-00805f8add32 */
+nsIDOMLocation = { /* a6cf906d-15b3-11d2-932e-00805f8add32 */
     0xa6cf906d,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf906e-15b3-11d2-932e-00805f8add32 */
+nsIDOMNavigator = { /* a6cf906e-15b3-11d2-932e-00805f8add32 */
     0xa6cf906e,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf906f-15b3-11d2-932e-00805f8add32 */
+nsIDOMWindowCollection = { /* a6cf906f-15b3-11d2-932e-00805f8add32 */
     0xa6cf906f,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9070-15b3-11d2-932e-00805f8add32 */
+nsIDOMAttr = { /* a6cf9070-15b3-11d2-932e-00805f8add32 */
     0xa6cf9070,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9071-15b3-11d2-932e-00805f8add32 */
+nsIDOMCDATASection = { /* a6cf9071-15b3-11d2-932e-00805f8add32 */
     0xa6cf9071,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9072-15b3-11d2-932e-00805f8add32 */
+nsIDOMCharacterData = { /* a6cf9072-15b3-11d2-932e-00805f8add32 */
     0xa6cf9072,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9073-15b3-11d2-932e-00805f8add32 */
+nsIDOMComment = { /* a6cf9073-15b3-11d2-932e-00805f8add32 */
     0xa6cf9073,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9074-15b3-11d2-932e-00805f8add32 */
+nsIDOMDOMImplementation = { /* a6cf9074-15b3-11d2-932e-00805f8add32 */
     0xa6cf9074,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9075-15b3-11d2-932e-00805f8add32 */
+nsIDOMDocument = { /* a6cf9075-15b3-11d2-932e-00805f8add32 */
     0xa6cf9075,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9076-15b3-11d2-932e-00805f8add32 */
+nsIDOMDocumentFragment = { /* a6cf9076-15b3-11d2-932e-00805f8add32 */
     0xa6cf9076,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9077-15b3-11d2-932e-00805f8add32 */
+nsIDOMDocumentType = { /* a6cf9077-15b3-11d2-932e-00805f8add32 */
     0xa6cf9077,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9078-15b3-11d2-932e-00805f8add32 */
+nsIDOMElement = { /* a6cf9078-15b3-11d2-932e-00805f8add32 */
     0xa6cf9078,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9079-15b3-11d2-932e-00805f8add32 */
+nsIDOMEntity = { /* a6cf9079-15b3-11d2-932e-00805f8add32 */
     0xa6cf9079,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907a-15b3-11d2-932e-00805f8add32 */
+nsIDOMEntityReference = { /* a6cf907a-15b3-11d2-932e-00805f8add32 */
     0xa6cf907a,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907b-15b3-11d2-932e-00805f8add32 */
+nsIDOMNamedNodeMap = { /* a6cf907b-15b3-11d2-932e-00805f8add32 */
     0xa6cf907b,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907c-15b3-11d2-932e-00805f8add32 */
+nsIDOMNode = { /* a6cf907c-15b3-11d2-932e-00805f8add32 */
     0xa6cf907c,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907d-15b3-11d2-932e-00805f8add32 */
+nsIDOMNodeList = { /* a6cf907d-15b3-11d2-932e-00805f8add32 */
     0xa6cf907d,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907e-15b3-11d2-932e-00805f8add32 */
+nsIDOMNotation = { /* a6cf907e-15b3-11d2-932e-00805f8add32 */
     0xa6cf907e,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf907f-15b3-11d2-932e-00805f8add32 */
+nsIDOMProcessingInstruction = { /* a6cf907f-15b3-11d2-932e-00805f8add32 */
     0xa6cf907f,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9080-15b3-11d2-932e-00805f8add32 */
+nsIDOMStyleSheet = { /* a6cf9080-15b3-11d2-932e-00805f8add32 */
     0xa6cf9080,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9081-15b3-11d2-932e-00805f8add32 */
+nsIDOMStyleSheetCollection = { /* a6cf9081-15b3-11d2-932e-00805f8add32 */
     0xa6cf9081,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9082-15b3-11d2-932e-00805f8add32 */
+nsIDOMText = { /* a6cf9082-15b3-11d2-932e-00805f8add32 */
     0xa6cf9082,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9083-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLCollection = { /* a6cf9083-15b3-11d2-932e-00805f8add32 */
     0xa6cf9083,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9084-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLDocument = { /* a6cf9084-15b3-11d2-932e-00805f8add32 */
     0xa6cf9084,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9085-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLElement = { /* a6cf9085-15b3-11d2-932e-00805f8add32 */
     0xa6cf9085,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9086-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLHtmlElement = { /* a6cf9086-15b3-11d2-932e-00805f8add32 */
     0xa6cf9086,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9087-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLHeadElement = { /* a6cf9087-15b3-11d2-932e-00805f8add32 */
     0xa6cf9087,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9088-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLLinkElement = { /* a6cf9088-15b3-11d2-932e-00805f8add32 */
     0xa6cf9088,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9089-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTitleElement = { /* a6cf9089-15b3-11d2-932e-00805f8add32 */
     0xa6cf9089,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908a-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLMetaElement = { /* a6cf908a-15b3-11d2-932e-00805f8add32 */
     0xa6cf908a,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908b-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLBaseElement = { /* a6cf908b-15b3-11d2-932e-00805f8add32 */
     0xa6cf908b,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908c-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLIsIndexElement = { /* a6cf908c-15b3-11d2-932e-00805f8add32 */
     0xa6cf908c,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908d-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLStyleElement = { /* a6cf908d-15b3-11d2-932e-00805f8add32 */
     0xa6cf908d,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908e-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLBodyElement = { /* a6cf908e-15b3-11d2-932e-00805f8add32 */
     0xa6cf908e,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf908f-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLFormElement = { /* a6cf908f-15b3-11d2-932e-00805f8add32 */
     0xa6cf908f,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9090-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLSelectElement = { /* a6cf9090-15b3-11d2-932e-00805f8add32 */
     0xa6cf9090,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9091-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLOptGroupElement = { /* a6cf9091-15b3-11d2-932e-00805f8add32 */
     0xa6cf9091,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9092-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLOptionElement = { /* a6cf9092-15b3-11d2-932e-00805f8add32 */
     0xa6cf9092,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9093-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLInputElement = { /* a6cf9093-15b3-11d2-932e-00805f8add32 */
     0xa6cf9093,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9094-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTextAreaElement = { /* a6cf9094-15b3-11d2-932e-00805f8add32 */
     0xa6cf9094,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9095-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLButtonElement = { /* a6cf9095-15b3-11d2-932e-00805f8add32 */
     0xa6cf9095,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9096-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLLabelElement = { /* a6cf9096-15b3-11d2-932e-00805f8add32 */
     0xa6cf9096,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9097-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLFieldSetElement = { /* a6cf9097-15b3-11d2-932e-00805f8add32 */
     0xa6cf9097,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9098-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLLegendElement = { /* a6cf9098-15b3-11d2-932e-00805f8add32 */
     0xa6cf9098,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9099-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLUListElement = { /* a6cf9099-15b3-11d2-932e-00805f8add32 */
     0xa6cf9099,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909a-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLOListElement = { /* a6cf909a-15b3-11d2-932e-00805f8add32 */
     0xa6cf909a,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909b-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLDListElement = { /* a6cf909b-15b3-11d2-932e-00805f8add32 */
     0xa6cf909b,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909c-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLDirectoryElement = { /* a6cf909c-15b3-11d2-932e-00805f8add32 */
     0xa6cf909c,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909d-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLMenuElement = { /* a6cf909d-15b3-11d2-932e-00805f8add32 */
     0xa6cf909d,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909e-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLLIElement = { /* a6cf909e-15b3-11d2-932e-00805f8add32 */
     0xa6cf909e,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf909f-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLBlockquoteElement = { /* a6cf909f-15b3-11d2-932e-00805f8add32 */
     0xa6cf909f,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a0-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLDivElement = { /* a6cf90a0-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a0,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a1-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLParagraphElement = { /* a6cf90a1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a1,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a2-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLHeadingElement = { /* a6cf90a2-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a2,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a3-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLQuoteElement = { /* a6cf90a3-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a3,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a4-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLPreElement = { /* a6cf90a4-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a4,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a5-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLBRElement = { /* a6cf90a5-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a5,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a6-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLBaseFontElement = { /* a6cf90a6-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a6,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a7-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLFontElement = { /* a6cf90a7-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a7,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a8-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLHRElement = { /* a6cf90a8-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a8,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90a9-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLModElement = { /* a6cf90a9-15b3-11d2-932e-00805f8add32 */
     0xa6cf90a9,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90aa-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLAnchorElement = { /* a6cf90aa-15b3-11d2-932e-00805f8add32 */
     0xa6cf90aa,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ab-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLImageElement = { /* a6cf90ab-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ab,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ac-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLObjectElement = { /* a6cf90ac-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ac,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ad-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLParamElement = { /* a6cf90ad-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ad,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ae-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLAppletElement = { /* a6cf90ae-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ae,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90af-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLMapElement = { /* a6cf90af-15b3-11d2-932e-00805f8add32 */
     0xa6cf90af,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b0-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLAreaElement = { /* a6cf90b0-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b0,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b1-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLScriptElement = { /* a6cf90b1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b1,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b2-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableElement = { /* a6cf90b2-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b2,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b3-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableCaptionElement = { /* a6cf90b3-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b3,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b4-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableColElement = { /* a6cf90b4-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b4,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b5-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableSectionElement = { /* a6cf90b5-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b5,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b6-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableRowElement = { /* a6cf90b6-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b6,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b7-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLTableCellElement = { /* a6cf90b7-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b7,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b8-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLFrameSetElement = { /* a6cf90b8-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b8,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90b9-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLFrameElement = { /* a6cf90b9-15b3-11d2-932e-00805f8add32 */
     0xa6cf90b9,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ba-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLIFrameElement = { /* a6cf90ba-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ba,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90bb-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSFontFaceRule = { /* a6cf90bb-15b3-11d2-932e-00805f8add32 */
     0xa6cf90bb,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90bc-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSMediaRule = { /* a6cf90bc-15b3-11d2-932e-00805f8add32 */
     0xa6cf90bc,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90bd-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSPageRule = { /* a6cf90bd-15b3-11d2-932e-00805f8add32 */
     0xa6cf90bd,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90be-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSStyleDeclaration = { /* a6cf90be-15b3-11d2-932e-00805f8add32 */
     0xa6cf90be,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90bf-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSStyleRule = { /* a6cf90bf-15b3-11d2-932e-00805f8add32 */
     0xa6cf90bf,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c0-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSStyleRuleCollection = { /* a6cf90c0-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c0,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c1-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSStyleRuleSimple = { /* a6cf90c1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c1,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c2-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSStyleSheet = { /* a6cf90c2-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c2,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c3-15b3-11d2-932e-00805f8add32 */
+nsIDOMEvent = { /* a6cf90c3-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c3,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c4-15b3-11d2-932e-00805f8add32 */
+nsIDOMNSEvent = { /* a6cf90c4-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c4,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c5-15b3-11d2-932e-00805f8add32 */
+nsIDOMNSHTMLDocument = { /* a6cf90c5-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c5,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c6-15b3-11d2-932e-00805f8add32 */
+nsIDOMNSHTMLFormElement = { /* a6cf90c6-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c6,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c7-15b3-11d2-932e-00805f8add32 */
+nsIDOMImage = { /* a6cf90c7-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c7,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c8-15b3-11d2-932e-00805f8add32 */
+nsIDOMHTMLImageElementFactory = { /* a6cf90c8-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c8,
     0x15b3,
     0x11d2,
@@ -6023,3 +6023,5 @@ INTERFACENAME = { /* a6cf9437-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
+
+

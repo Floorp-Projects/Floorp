@@ -157,6 +157,7 @@ Token* IdlScanner::NextToken()
           CKeywords(mTokenName + 1, mCurrentToken); 
           break;
         case 'd':
+        case 'D':
           DKeywords(mTokenName + 1, mCurrentToken); 
           break;
         case 'e':
@@ -391,7 +392,7 @@ void IdlScanner::CKeywords(char *aCurrentPos, Token *aToken)
 }
 
 //
-// 'double' is the only keyword starting with 'd'.
+// 'double' and 'DOMString' are the only keyword starting with 'd'.
 // If that is not it, it must be an identifier
 //
 void IdlScanner::DKeywords(char *aCurrentPos, Token *aToken)
@@ -418,6 +419,32 @@ void IdlScanner::DKeywords(char *aCurrentPos, Token *aToken)
     }
     else {
       aToken->SetToken(DOUBLE_TOKEN);
+    }
+  }
+  else  if (c != EOF && c == 'O' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'M' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'S' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 't' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'r' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'n' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'g' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(STRING_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(STRING_TOKEN);
     }
   }
   else {
@@ -1164,6 +1191,7 @@ void IdlScanner::Char(int aStartChar, Token *aToken)
 #define DEFAULT_COMMENT_SIZE    512
 static char *kOptionalStr = "/* optional ";
 static char *kEllipsisStr = "/* ... ";
+static char *kIIDStr = "/* IID:";
 
 void IdlScanner::Comment(char *aCurrentPos, Token *aToken)
 {
@@ -1227,6 +1255,9 @@ void IdlScanner::Comment(char *aCurrentPos, Token *aToken)
     }
     else if (strcmp(aCommentBuffer, kEllipsisStr) == 0) {
       aToken->SetToken(ELLIPSIS_TOKEN, aCommentBuffer);
+    }
+    else if (strncmp(aCommentBuffer, kIIDStr, strlen(kIIDStr)) == 0) {
+      aToken->SetToken(IID_TOKEN, aCommentBuffer + strlen(kIIDStr));
     }
     else {
       aToken->SetToken(COMMENT_TOKEN, aCommentBuffer);

@@ -116,7 +116,7 @@ nsHTMLBaseFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLBaseFontElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLBaseFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement(mInner.mTag);
   if (nsnull == it) {

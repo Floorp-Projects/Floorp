@@ -27,14 +27,13 @@
 
 
 #define NS_IDOMPROCESSINGINSTRUCTION_IID \
-{ 0x6f7652ed,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf907f, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMProcessingInstruction : public nsIDOMNode {
 public:
 
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
-  NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
 
   NS_IMETHOD    GetData(nsString& aData)=0;
   NS_IMETHOD    SetData(const nsString& aData)=0;
@@ -43,7 +42,6 @@ public:
 
 #define NS_DECL_IDOMPROCESSINGINSTRUCTION   \
   NS_IMETHOD    GetTarget(nsString& aTarget);  \
-  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
   NS_IMETHOD    GetData(nsString& aData);  \
   NS_IMETHOD    SetData(const nsString& aData);  \
 
@@ -51,7 +49,6 @@ public:
 
 #define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(_to)  \
   NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
   NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
   NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
 

@@ -54,12 +54,15 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTableSectionElement
+  NS_IMETHOD GetCh(nsString& aCh);
+  NS_IMETHOD SetCh(const nsString& aCh);
+  NS_IMETHOD GetChOff(nsString& aChOff);
+  NS_IMETHOD SetChOff(const nsString& aChOff);
   NS_IMETHOD GetAlign(nsString& aAlign);
   NS_IMETHOD SetAlign(const nsString& aAlign);
   NS_IMETHOD GetVAlign(nsString& aVAlign);
   NS_IMETHOD SetVAlign(const nsString& aVAlign);
   NS_IMETHOD GetRows(nsIDOMHTMLCollection** aRows);
-  NS_IMETHOD SetRows(nsIDOMHTMLCollection* aRows);
   NS_IMETHOD InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);
   NS_IMETHOD DeleteRow(PRInt32 aIndex);
 
@@ -121,7 +124,7 @@ nsHTMLTableSectionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableSectionElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableSectionElement* it = new nsHTMLTableSectionElement(mInner.mTag);
   if (nsnull == it) {
@@ -133,18 +136,13 @@ nsHTMLTableSectionElement::CloneNode(nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, ch, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, choff, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
   *aValue = 0;
-  // XXX write me
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTableSectionElement::SetRows(nsIDOMHTMLCollection* aValue)
-{
   // XXX write me
   return NS_OK;
 }

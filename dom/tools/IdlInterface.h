@@ -33,6 +33,7 @@ class IdlException;
 
 class IdlInterface : public IdlObject {
 private:
+  nsVoidArray *mIIDs;
   nsVoidArray *mBaseClasses;
   nsVoidArray *mAttributes;
   nsVoidArray *mFunctions;
@@ -46,7 +47,10 @@ private:
 public:
                   IdlInterface();
                   ~IdlInterface();
-
+  
+  char*           GetIIDAt(long aIndex);
+  long            IIDCount();
+  void            AddIID(char *aIID);
   void            InheritsFrom(char *aBase);
   long            BaseClassCount();
   char*           GetBaseClassAt(long aIndex);

@@ -1,5 +1,0 @@
-   interface Attribute : Node {
-     readonly attribute wstring name;
-     attribute boolean         specified;
-     readonly attribute wstring value;
-   };

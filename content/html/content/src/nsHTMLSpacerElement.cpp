@@ -113,7 +113,7 @@ nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLSpacerElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLSpacerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLSpacerElement* it = new nsHTMLSpacerElement(mInner.mTag);
   if (nsnull == it) {

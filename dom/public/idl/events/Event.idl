@@ -1,4 +1,7 @@
       interface Event {
+ /* IID: { 0xa6cf90c3, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
 	      const int VK_CANCEL         = 0x03;
 	      const int VK_BACK           = 0x08;
 	      const int VK_TAB            = 0x09;
@@ -141,6 +144,9 @@
       };
 
       interface NSEvent {
+ /* IID: { 0xa6cf90c4, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
 	      const int EVENT_MOUSEDOWN	= 0x00000001;
 	      const int EVENT_MOUSEUP		= 0x00000002;
 	      const int EVENT_MOUSEOVER	= 0x00000004;

@@ -47,13 +47,11 @@ public:
   // nsIDOMNode
   NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
-  // nsIDOMData
-  NS_IMPL_IDOMDATA_USING_GENERIC_DOM_DATA(mInner)
+  // nsIDOMCharacterData
+  NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMText
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
-  NS_IMETHOD JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2,
-                      nsIDOMText** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
@@ -129,22 +127,14 @@ nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTextNode::GetNodeType(PRInt32* aNodeType)
+nsTextNode::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = (PRInt32)nsIDOMNode::TEXT;
+  *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
-{
-  // XXX not yet implemented
-  *aReturn = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::CloneNode(nsIDOMNode** aReturn)
+nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsTextNode* it;
   NS_NEWXPCOM(it, nsTextNode);
@@ -208,13 +198,7 @@ nsTextNode::HandleDOMEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP    
 nsTextNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-nsTextNode::JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2,
-                     nsIDOMText** aReturn)
-{
+  // XXX To be implemented
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

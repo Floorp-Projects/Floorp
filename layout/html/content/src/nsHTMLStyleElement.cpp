@@ -118,7 +118,7 @@ nsHTMLStyleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLStyleElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLStyleElement* it = new nsHTMLStyleElement(mInner.mTag);
   if (nsnull == it) {

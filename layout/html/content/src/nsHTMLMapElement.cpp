@@ -52,7 +52,6 @@ public:
 
   // nsIDOMHTMLMapElement
   NS_IMETHOD GetAreas(nsIDOMHTMLCollection** aAreas);
-  NS_IMETHOD SetAreas(nsIDOMHTMLCollection* aAreas);
   NS_IMETHOD GetName(nsString& aName);
   NS_IMETHOD SetName(const nsString& aName);
 
@@ -114,7 +113,7 @@ nsHTMLMapElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLMapElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLMapElement* it = new nsHTMLMapElement(mInner.mTag);
   if (nsnull == it) {
@@ -131,12 +130,6 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
   return NS_ERROR_OUT_OF_MEMORY;/* XXX */
 }
 
-NS_IMETHODIMP
-nsHTMLMapElement::SetAreas(nsIDOMHTMLCollection* aAreas)
-{
-  // XXX write me
-  return NS_OK;
-}
 
 NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name, eSetAttrNotify_Restart)
 

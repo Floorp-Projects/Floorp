@@ -27,11 +27,11 @@ CPPSRCS =			\
 	nsJSHTMLBRElement.cpp \
 	nsJSHTMLBaseElement.cpp \
 	nsJSHTMLBaseFontElement.cpp \
+	nsJSHTMLBlockquoteElement.cpp \
 	nsJSHTMLBodyElement.cpp \
 	nsJSHTMLButtonElement.cpp \
 	nsJSHTMLCollection.cpp \
 	nsJSHTMLDListElement.cpp \
-	nsJSHTMLDelElement.cpp \
 	nsJSHTMLDirectoryElement.cpp \
 	nsJSHTMLDivElement.cpp \
 	nsJSHTMLDocument.cpp \
@@ -47,7 +47,6 @@ CPPSRCS =			\
 	nsJSHTMLHtmlElement.cpp \
 	nsJSHTMLImageElement.cpp \
 	nsJSHTMLInputElement.cpp \
-	nsJSHTMLInsElement.cpp \
 	nsJSHTMLIsIndexElement.cpp \
 	nsJSHTMLLIElement.cpp \
 	nsJSHTMLLabelElement.cpp \
@@ -74,10 +73,7 @@ CPPSRCS =			\
 	nsJSHTMLTableElement.cpp \
 	nsJSHTMLTableRowElement.cpp \
 	nsJSHTMLTableSectionElement.cpp \
-	nsJSHTMLTbodyElement.cpp \
 	nsJSHTMLTextAreaElement.cpp \
-	nsJSHTMLTfootElement.cpp \
-	nsJSHTMLTheadElement.cpp \
 	nsJSHTMLTitleElement.cpp \
 	nsJSHTMLUListElement.cpp \
 	$(NULL)

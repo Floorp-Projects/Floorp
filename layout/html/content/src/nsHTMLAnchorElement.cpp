@@ -144,7 +144,7 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLAnchorElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLAnchorElement* it = new nsHTMLAnchorElement(mInner.mTag);
   if (nsnull == it) {

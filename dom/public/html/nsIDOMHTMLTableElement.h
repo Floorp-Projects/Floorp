@@ -31,8 +31,8 @@ class nsIDOMHTMLTableSectionElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLTABLEELEMENT_IID \
-{ 0x6f765325,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf90b2, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLTableElement : public nsIDOMHTMLElement {
 public:
@@ -47,10 +47,8 @@ public:
   NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot)=0;
 
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows)=0;
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows)=0;
 
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies)=0;
-  NS_IMETHOD    SetTBodies(nsIDOMHTMLCollection* aTBodies)=0;
 
   NS_IMETHOD    GetAlign(nsString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
@@ -105,9 +103,7 @@ public:
   NS_IMETHOD    GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot);  \
   NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot);  \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows);  \
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows);  \
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies);  \
-  NS_IMETHOD    SetTBodies(nsIDOMHTMLCollection* aTBodies);  \
   NS_IMETHOD    GetAlign(nsString& aAlign);  \
   NS_IMETHOD    SetAlign(const nsString& aAlign);  \
   NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
@@ -145,9 +141,7 @@ public:
   NS_IMETHOD    GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot) { return _to##GetTFoot(aTFoot); } \
   NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot) { return _to##SetTFoot(aTFoot); } \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return _to##GetRows(aRows); } \
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows) { return _to##SetRows(aRows); } \
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies) { return _to##GetTBodies(aTBodies); } \
-  NS_IMETHOD    SetTBodies(nsIDOMHTMLCollection* aTBodies) { return _to##SetTBodies(aTBodies); } \
   NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
   NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
   NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to##GetBgColor(aBgColor); } \

@@ -118,7 +118,7 @@ nsHTMLMetaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLMetaElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLMetaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLMetaElement* it = new nsHTMLMetaElement(mInner.mTag);
   if (nsnull == it) {

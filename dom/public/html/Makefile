@@ -27,11 +27,11 @@ EXPORTS =               \
 	nsIDOMHTMLBRElement.h \
 	nsIDOMHTMLBaseElement.h \
 	nsIDOMHTMLBaseFontElement.h \
+	nsIDOMHTMLBlockquoteElement.h \
 	nsIDOMHTMLBodyElement.h \
 	nsIDOMHTMLButtonElement.h \
 	nsIDOMHTMLCollection.h \
 	nsIDOMHTMLDListElement.h \
-	nsIDOMHTMLDelElement.h \
 	nsIDOMHTMLDirectoryElement.h \
 	nsIDOMHTMLDivElement.h \
 	nsIDOMHTMLDocument.h \
@@ -48,7 +48,6 @@ EXPORTS =               \
 	nsIDOMHTMLHtmlElement.h \
 	nsIDOMHTMLImageElement.h \
 	nsIDOMHTMLInputElement.h \
-	nsIDOMHTMLInsElement.h \
 	nsIDOMHTMLIsIndexElement.h \
 	nsIDOMHTMLLIElement.h \
 	nsIDOMHTMLLabelElement.h \
@@ -75,10 +74,7 @@ EXPORTS =               \
 	nsIDOMHTMLTableElement.h \
 	nsIDOMHTMLTableRowElement.h \
 	nsIDOMHTMLTableSectionElement.h \
-	nsIDOMHTMLTbodyElement.h \
 	nsIDOMHTMLTextAreaElement.h \
-	nsIDOMHTMLTfootElement.h \
-	nsIDOMHTMLTheadElement.h \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
 	nsIDOMImage.h \

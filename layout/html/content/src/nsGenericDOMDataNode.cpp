@@ -33,10 +33,11 @@
 
 // XXX share all id's in this dir
 
-NS_DEFINE_IID(kIDOMDataIID, NS_IDOMDATA_IID);
+NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 extern void NS_QuoteForHTML(const nsString& aValue, nsString& aResult);
 
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
 
 //----------------------------------------------------------------------
 
@@ -140,6 +141,21 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
   return NS_OK;
 }
 
+nsresult    
+nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+{
+  // XXX Actually the owner document is the document in whose context
+  // the node has been created. We should be able to get at it
+  // whether or not we are attached to the document.
+  if (nsnull != mDocument) {
+    return mDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+  }
+  else {
+    *aOwnerDocument = nsnull;
+    return NS_OK;
+  }
+}
+
 #if 0
 nsresult
 nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
@@ -157,7 +173,7 @@ nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 
 //----------------------------------------------------------------------
 
-// Implementation of nsIDOMData
+// Implementation of nsIDOMCharacterData
 
 nsresult    
 nsGenericDOMDataNode::GetData(nsString& aData)
@@ -184,9 +200,9 @@ nsGenericDOMDataNode::SetData(const nsString& aData)
 }
 
 nsresult    
-nsGenericDOMDataNode::GetSize(PRUint32* aSize)
+nsGenericDOMDataNode::GetLength(PRUint32* aLength)
 {
-  *aSize = mText.GetLength();
+  *aLength = mText.GetLength();
   return NS_OK;
 }
 
@@ -195,9 +211,9 @@ nsGenericDOMDataNode::GetSize(PRUint32* aSize)
 #define NS_DOM_INDEX_SIZE_ERR NS_ERROR_FAILURE
 
 nsresult    
-nsGenericDOMDataNode::Substring(PRUint32 aStart,
-                                PRUint32 aCount,
-                                nsString& aReturn)
+nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
+                                    PRUint32 aCount,
+                                    nsString& aReturn)
 {
   aReturn.Truncate();
 
@@ -222,27 +238,27 @@ nsGenericDOMDataNode::Substring(PRUint32 aStart,
 }
 
 nsresult    
-nsGenericDOMDataNode::Append(const nsString& aData)
+nsGenericDOMDataNode::AppendData(const nsString& aData)
 {
-  return Replace(mText.GetLength(), 0, aData);
+  return ReplaceData(mText.GetLength(), 0, aData);
 }
 
 nsresult    
-nsGenericDOMDataNode::Insert(PRUint32 aOffset, const nsString& aData)
+nsGenericDOMDataNode::InsertData(PRUint32 aOffset, const nsString& aData)
 {
-  return Replace(aOffset, 0, aData);
+  return ReplaceData(aOffset, 0, aData);
 }
 
 nsresult    
-nsGenericDOMDataNode::Remove(PRUint32 aOffset, PRUint32 aCount)
+nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
 {
   nsAutoString empty;
-  return Replace(aOffset, aCount, empty);
+  return ReplaceData(aOffset, aCount, empty);
 }
 
 nsresult    
-nsGenericDOMDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
-                              const nsString& aData)
+nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
+                                  const nsString& aData)
 {
   // sanitize arguments
   PRUint32 textLength = mText.GetLength();
@@ -303,8 +319,9 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
       return res;
     }
     
-    res = factory->NewScriptData(nsIDOMNode::TEXT, aContext, mContent,
-                                 mParent, (void**)&mScriptObject);
+    res = factory->NewScriptCharacterData(nsIDOMNode::TEXT_NODE, 
+                                          aContext, mContent,
+                                          mParent, (void**)&mScriptObject);
     NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;

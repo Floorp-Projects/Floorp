@@ -237,93 +237,6 @@ TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 }
 
 
-//
-// Native method JoinText
-//
-PR_STATIC_CALLBACK(JSBool)
-TextJoinText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMText* nativeRet;
-  nsIDOMTextPtr b0;
-  nsIDOMTextPtr b1;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 2) {
-
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kITextIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Text");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[1])) {
-      nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
-      NS_ASSERTION(nsnull != supports1, "null pointer");
-
-      if ((nsnull == supports1) ||
-          (NS_OK != supports1->QueryInterface(kITextIID, (void **)(b1.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Text");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->JoinText(b0, b1, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function joinText requires 2 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
 /***********************************************************************/
 //
 // class for Text
@@ -357,7 +270,6 @@ static JSPropertySpec TextProperties[] =
 static JSFunctionSpec TextMethods[] = 
 {
   {"splitText",          TextSplitText,     1},
-  {"joinText",          TextJoinText,     2},
   {0}
 };
 
@@ -390,7 +302,7 @@ nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitDataClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCharacterDataClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context

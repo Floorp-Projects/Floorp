@@ -19,7 +19,7 @@
 
 function findBody(node)
 {
-  if (node.nodeType != Node.ELEMENT) {
+  if (node.nodeType != Node.ELEMENT_NODE) {
     return null;
   }
   var children = node.childNodes;
@@ -30,7 +30,7 @@ function findBody(node)
   var child = null;
   var count = 0;
   while (count < length) {
-    child = children.item(count);
+    child = children[count];
     if (child.tagName == "BODY") {
       dump("BODY found");
       return child;
@@ -57,8 +57,8 @@ function findTable(body)
   var child = null;
   var count = 0;
   while (count < length) {
-    child = children.item(count);
-    if (child.nodeType == Node.ELEMENT) {
+    child = children[count];
+    if (child.nodeType == Node.ELEMENT_NODE) {
       if (child.tagName == "TABLE") {
         dump("TABLE found");
         break;

@@ -18,50 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DIRS=coreDom html events css
-MODULE=raptor 
+DIRS=coreDom html events css base
 
-IDLSRCS =  \
-        Navigator.idl \
-	Location.idl \
-	WindowCollection.idl
-
-GLOBAL_IDLSRC = Window.idl
-
-XPCOM_DESTDIR=$(DEPTH)\dom\public
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\base
-GENXDIR=genx
-GENJSDIR=genjs
-
-IIDDIRS=$(DIRS: =/genx )/$(GENXDIR) $(GENXDIR) 
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	$(IDLC) -d $(GENXDIR) -g -x $(GLOBAL_IDLSRC)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-	$(IDLC) -d $(GENJSDIR) -g -j $(GLOBAL_IDLSRC)
-	@echo +++ make: generating interface ids
-	@echo +++ make: directories $(IIDDIRS)
-  	$(PERL) $(GENIID) $(IIDDIRS) 
-	
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOMEventCapturer.h $(XPCOM_DESTDIR)\coreEvents
-	$(RM) $(GENXDIR)\nsIDOMEventCapturer.h
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM$(GLOBAL_IDLSRC:.idl=.h) $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS$(GLOBAL_IDLSRC:.idl=.cpp) $(JSSTUB_DESTDIR)
+include <$(DEPTH)\config\rules.mak>
 

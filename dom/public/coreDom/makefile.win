@@ -19,9 +19,10 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_DOM 
-EXPORTS=nsIDOMAttribute.h nsIDOMCDATASection.h nsIDOMComment.h nsIDOMData.h \
-	nsIDOMDOM.h nsIDOMDocument.h nsIDOMDocumentType.h \
-	nsIDOMDocumentFragment.h nsIDOMElement.h nsIDOMNode.h \
+EXPORTS=nsIDOMAttr.h nsIDOMCDATASection.h nsIDOMCharacterData.h \
+	nsIDOMComment.h nsIDOMDOMImplementation.h nsIDOMDocument.h \
+	nsIDOMDocumentType.h nsIDOMDocumentFragment.h nsIDOMElement.h \
+	nsIDOMEntity.h nsIDOMEntityReference.h nsIDOMNode.h \
 	nsIDOMNamedNodeMap.h nsIDOMNodeList.h nsIDOMProcessingInstruction.h \
 	nsIDOMText.h nsIDOMStyleSheet.h nsIDOMStyleSheetCollection.h 
 

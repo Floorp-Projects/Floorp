@@ -28,14 +28,13 @@
 class nsIDOMHTMLFormElement;
 
 #define NS_IDOMHTMLBUTTONELEMENT_IID \
-{ 0x6f7652f8,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9095, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLButtonElement : public nsIDOMHTMLElement {
 public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm)=0;
 
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
   NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;
@@ -50,7 +49,6 @@ public:
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
   NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
 
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
@@ -59,7 +57,6 @@ public:
 
 #define NS_DECL_IDOMHTMLBUTTONELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
   NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
@@ -69,7 +66,6 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
   NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
 
@@ -77,7 +73,6 @@ public:
 
 #define NS_FORWARD_IDOMHTMLBUTTONELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
   NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
@@ -87,7 +82,6 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to##GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to##SetTabIndex(aTabIndex); } \
   NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
 

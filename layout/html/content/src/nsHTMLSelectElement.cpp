@@ -91,17 +91,13 @@ public:
 
   // nsIDOMHTMLSelectElement
   NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
   NS_IMETHOD GetSelectedIndex(PRInt32* aSelectedIndex);
   NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD GetLength(PRInt32* aLength);
-  NS_IMETHOD SetLength(PRInt32 aLength);
+  NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetOptions(nsIDOMHTMLCollection** aOptions);
-  NS_IMETHOD SetOptions(nsIDOMHTMLCollection* aOptions);
   NS_IMETHOD GetDisabled(PRBool* aDisabled);
   NS_IMETHOD SetDisabled(PRBool aDisabled);
   NS_IMETHOD GetMultiple(PRBool* aMultiple);
@@ -130,6 +126,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIFormControl
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init();
@@ -226,7 +223,7 @@ nsHTMLSelectElement::Release()
 // nsIDOMHTMLSelectElement
 
 nsresult
-nsHTMLSelectElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLSelectElement* it = new nsHTMLSelectElement(mInner.mTag);
   if (nsnull == it) {
@@ -265,30 +262,6 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
-NS_IMETHODIMP
-nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsresult result = NS_OK;
-	if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
-      }
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
-}
-
 NS_IMETHODIMP
 nsHTMLSelectElement::GetOptions(nsIDOMHTMLCollection** aValue)
 {
@@ -301,21 +274,38 @@ nsHTMLSelectElement::GetOptions(nsIDOMHTMLCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetOptions(nsIDOMHTMLCollection* aValue)
+nsHTMLSelectElement::GetType(nsString& aType)
 {
-  if (mOptions) {
-    mOptions->Clear();
-    NS_RELEASE(mOptions);
+  PRBool isMultiple;
+  nsresult result = NS_OK;
+
+  result = GetMultiple(&isMultiple);
+  if (NS_OK == result) {
+    if (isMultiple) {
+      aType.SetString("select-multiple");
+    }
+    else {
+      aType.SetString("select-one");
+    }
   }
-  mOptions = new nsOptionList(aValue);
-  NS_ADDREF(mOptions);
-  return NS_OK; 
+  
+  return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Type, type, eSetAttrNotify_Restart)
+NS_IMETHODIMP
+nsHTMLSelectElement::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mOptions) {
+    return mOptions->GetLength(aLength);
+  }
+  else {
+    *aLength = 0;
+    return NS_OK;
+  }
+}
+
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value, eSetAttrNotify_Render)
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, Length, length, eSetAttrNotify_Restart)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple, eSetAttrNotify_Restart)
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name, eSetAttrNotify_Restart)
@@ -457,6 +447,30 @@ nsHTMLSelectElement::SetWidget(nsIWidget* aWidget)
     mWidget = aWidget;
   }
   return NS_OK;
+}
+
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
+NS_IMETHODIMP
+nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  nsresult result = NS_OK;
+  if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
 }
 
 void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)

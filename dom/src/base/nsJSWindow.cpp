@@ -1542,7 +1542,7 @@ PR_STATIC_CALLBACK(JSBool)
 EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
-  nsIDOMEventCapturer *nativeThis;
+  nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;
@@ -1590,7 +1590,7 @@ PR_STATIC_CALLBACK(JSBool)
 EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
-  nsIDOMEventCapturer *nativeThis;
+  nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;

@@ -60,9 +60,7 @@ public:
   NS_IMETHOD GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot);
   NS_IMETHOD SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot);
   NS_IMETHOD GetRows(nsIDOMHTMLCollection** aRows);
-  NS_IMETHOD SetRows(nsIDOMHTMLCollection* aRows);
   NS_IMETHOD GetTBodies(nsIDOMHTMLCollection** aTBodies);
-  NS_IMETHOD SetTBodies(nsIDOMHTMLCollection* aTBodies);
   NS_IMETHOD GetAlign(nsString& aAlign);
   NS_IMETHOD SetAlign(const nsString& aAlign);
   NS_IMETHOD GetBgColor(nsString& aBgColor);
@@ -148,7 +146,7 @@ nsHTMLTableElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableElement* it = new nsHTMLTableElement(mInner.mTag);
   if (nsnull == it) {
@@ -218,21 +216,9 @@ nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableElement::SetRows(nsIDOMHTMLCollection* aValue)
-{
-  return NS_OK; // XXX write me
-}
-
-NS_IMETHODIMP
 nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
   *aValue = nsnull;
-  return NS_OK; // XXX write me
-}
-
-NS_IMETHODIMP
-nsHTMLTableElement::SetTBodies(nsIDOMHTMLCollection* aValue)
-{
   return NS_OK; // XXX write me
 }
 

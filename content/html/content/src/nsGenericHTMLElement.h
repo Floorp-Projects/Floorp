@@ -35,7 +35,7 @@ extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
 extern const nsIID kIHTMLContentIID;
 
-class nsIDOMAttribute;
+class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIEventListenerManager;
@@ -48,7 +48,7 @@ class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
-
+class nsIDOMCSSStyleDeclaration;
 
 // There are a set of DOM- and scripting-specific instance variables
 // that may only be instantiated when a content object is accessed
@@ -73,11 +73,12 @@ public:
   nsresult    GetNodeName(nsString& aNodeName);
   nsresult    GetNodeValue(nsString& aNodeValue);
   nsresult    SetNodeValue(const nsString& aNodeValue);
-  nsresult    GetNodeType(PRInt32* aNodeType);
+  nsresult    GetNodeType(PRUint16* aNodeType);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
   nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
+  nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
   // Implementation for nsIDOMElement
   nsresult    GetTagName(nsString& aTagName);
@@ -85,9 +86,9 @@ public:
   nsresult    SetDOMAttribute(const nsString& aName, const nsString& aValue);
   nsresult    RemoveAttribute(const nsString& aName);
   nsresult    GetAttributeNode(const nsString& aName,
-                               nsIDOMAttribute** aReturn);
-  nsresult    SetAttributeNode(nsIDOMAttribute* aNewAttr);
-  nsresult    RemoveAttributeNode(nsIDOMAttribute* aOldAttr);
+                               nsIDOMAttr** aReturn);
+  nsresult    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
+  nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
   nsresult    GetElementsByTagName(const nsString& aTagname,
                                    nsIDOMNodeList** aReturn);
   nsresult    Normalize();
@@ -338,9 +339,8 @@ public:
                        nsGenericHTMLLeafElement* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult    GetHasChildNodes(PRBool* aHasChildNodes) {
+  nsresult    HasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
@@ -416,9 +416,8 @@ public:
                        nsGenericHTMLContainerElement* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult    GetHasChildNodes(PRBool* aHasChildNodes);
+  nsresult    HasChildNodes(PRBool* aHasChildNodes);
   nsresult    GetFirstChild(nsIDOMNode** aFirstChild);
   nsresult    GetLastChild(nsIDOMNode** aLastChild);
   nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
@@ -454,7 +453,7 @@ public:
  * nsGenericHTMLContainerContent)
  *
  * Note that classes using this macro will need to implement:
- *       NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
+ *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC(_g)                              \
   NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
@@ -466,7 +465,7 @@ public:
   NS_IMETHOD SetNodeValue(const nsString& aNodeValue) {                 \
     return _g.SetNodeValue(aNodeValue);                                 \
   }                                                                     \
-  NS_IMETHOD GetNodeType(PRInt32* aNodeType) {                          \
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType) {                         \
     return _g.GetNodeType(aNodeType);                                   \
   }                                                                     \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                  \
@@ -475,8 +474,8 @@ public:
   NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {              \
     return _g.GetChildNodes(aChildNodes);                               \
   }                                                                     \
-  NS_IMETHOD GetHasChildNodes(PRBool* aHasChildNodes) {                 \
-    return _g.GetHasChildNodes(aHasChildNodes);                         \
+  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {                    \
+    return _g.HasChildNodes(aHasChildNodes);                            \
   }                                                                     \
   NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {                  \
     return _g.GetFirstChild(aFirstChild);                               \
@@ -507,10 +506,10 @@ public:
   NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { \
     return _g.RemoveChild(aOldChild, aReturn);                          \
   }                                                                     \
-  NS_IMETHOD Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn) { \
-    return _g.Equals(aNode, aDeep, aReturn);                            \
+  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {        \
+    return _g.GetOwnerDocument(aOwnerDocument);                         \
   }                                                                     \
-  NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
 /**
  * Implement the nsIDOMElement API by forwarding the methods to a
@@ -531,14 +530,14 @@ public:
     return _g.RemoveAttribute(aName);                                         \
   }                                                                           \
   NS_IMETHOD GetAttributeNode(const nsString& aName,                          \
-                              nsIDOMAttribute** aReturn) {                    \
+                              nsIDOMAttr** aReturn) {                         \
     return _g.GetAttributeNode(aName, aReturn);                               \
   }                                                                           \
-  NS_IMETHOD SetAttributeNode(nsIDOMAttribute* aNewAttr) {                    \
-    return _g.SetAttributeNode(aNewAttr);                                     \
+  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {   \
+    return _g.SetAttributeNode(aNewAttr, aReturn);                            \
   }                                                                           \
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttribute* aOldAttr) {                 \
-    return _g.RemoveAttributeNode(aOldAttr);                                  \
+  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {\
+    return _g.RemoveAttributeNode(aOldAttr, aReturn);                         \
   }                                                                           \
   NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                   \
                                   nsIDOMNodeList** aReturn) {                 \

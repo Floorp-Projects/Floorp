@@ -30,14 +30,13 @@ class nsIDOMHTMLFormElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLSELECTELEMENT_IID \
-{ 0x6f765320,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9090, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
 public:
 
   NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
 
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex)=0;
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex)=0;
@@ -45,14 +44,11 @@ public:
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
 
-  NS_IMETHOD    GetLength(PRInt32* aLength)=0;
-  NS_IMETHOD    SetLength(PRInt32 aLength)=0;
+  NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm)=0;
 
   NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions)=0;
-  NS_IMETHOD    SetOptions(nsIDOMHTMLCollection* aOptions)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
@@ -81,17 +77,13 @@ public:
 
 #define NS_DECL_IDOMHTMLSELECTELEMENT   \
   NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex);  \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
-  NS_IMETHOD    GetLength(PRInt32* aLength);  \
-  NS_IMETHOD    SetLength(PRInt32 aLength);  \
+  NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
   NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions);  \
-  NS_IMETHOD    SetOptions(nsIDOMHTMLCollection* aOptions);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple);  \
@@ -111,17 +103,13 @@ public:
 
 #define NS_FORWARD_IDOMHTMLSELECTELEMENT(_to)  \
   NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex) { return _to##GetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex) { return _to##SetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
-  NS_IMETHOD    GetLength(PRInt32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    SetLength(PRInt32 aLength) { return _to##SetLength(aLength); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
   NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions) { return _to##GetOptions(aOptions); } \
-  NS_IMETHOD    SetOptions(nsIDOMHTMLCollection* aOptions) { return _to##SetOptions(aOptions); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple) { return _to##GetMultiple(aMultiple); } \

@@ -135,7 +135,7 @@ nsHTMLTableColElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableColElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableColElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableColElement* it = new nsHTMLTableColElement(mInner.mTag);
   if (nsnull == it) {

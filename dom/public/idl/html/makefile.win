@@ -28,11 +28,11 @@ IDLSRCS =  \
 	HTMLBRElement.idl \
 	HTMLBaseElement.idl \
 	HTMLBaseFontElement.idl \
+	HTMLBlockquoteElement.idl \
 	HTMLBodyElement.idl \
 	HTMLButtonElement.idl \
 	HTMLCollection.idl \
 	HTMLDListElement.idl \
-	HTMLDelElement.idl \
 	HTMLDirectoryElement.idl \
 	HTMLDivElement.idl \
 	HTMLDocument.idl \
@@ -48,7 +48,6 @@ IDLSRCS =  \
 	HTMLHtmlElement.idl \
 	HTMLImageElement.idl \
 	HTMLInputElement.idl \
-	HTMLInsElement.idl \
 	HTMLIsIndexElement.idl \
 	HTMLLIElement.idl \
 	HTMLLabelElement.idl \
@@ -75,10 +74,7 @@ IDLSRCS =  \
 	HTMLTableElement.idl \
 	HTMLTableRowElement.idl \
 	HTMLTableSectionElement.idl \
-	HTMLTbodyElement.idl \
 	HTMLTextAreaElement.idl \
-	HTMLTfootElement.idl \
-	HTMLTheadElement.idl \
 	HTMLTitleElement.idl \
 	HTMLUListElement.idl
 

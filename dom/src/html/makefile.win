@@ -31,11 +31,11 @@ CPPSRCS =			\
 	nsJSHTMLBRElement.cpp \
 	nsJSHTMLBaseElement.cpp \
 	nsJSHTMLBaseFontElement.cpp \
+	nsJSHTMLBlockquoteElement.cpp \
 	nsJSHTMLBodyElement.cpp \
 	nsJSHTMLButtonElement.cpp \
 	nsJSHTMLCollection.cpp \
 	nsJSHTMLDListElement.cpp \
-	nsJSHTMLDelElement.cpp \
 	nsJSHTMLDirectoryElement.cpp \
 	nsJSHTMLDivElement.cpp \
 	nsJSHTMLDocument.cpp \
@@ -51,7 +51,6 @@ CPPSRCS =			\
 	nsJSHTMLHtmlElement.cpp \
 	nsJSHTMLImageElement.cpp \
 	nsJSHTMLInputElement.cpp \
-	nsJSHTMLInsElement.cpp \
 	nsJSHTMLIsIndexElement.cpp \
 	nsJSHTMLLIElement.cpp \
 	nsJSHTMLLabelElement.cpp \
@@ -78,10 +77,7 @@ CPPSRCS =			\
 	nsJSHTMLTableElement.cpp \
 	nsJSHTMLTableRowElement.cpp \
 	nsJSHTMLTableSectionElement.cpp \
-	nsJSHTMLTbodyElement.cpp \
 	nsJSHTMLTextAreaElement.cpp \
-	nsJSHTMLTfootElement.cpp \
-	nsJSHTMLTheadElement.cpp \
 	nsJSHTMLTitleElement.cpp \
 	nsJSHTMLUListElement.cpp \
 	$(NULL)
@@ -94,11 +90,11 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLBRElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBaseElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBaseFontElement.obj \
+	.\$(OBJDIR)\nsJSHTMLBlockquoteElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBodyElement.obj \
 	.\$(OBJDIR)\nsJSHTMLButtonElement.obj \
 	.\$(OBJDIR)\nsJSHTMLCollection.obj \
 	.\$(OBJDIR)\nsJSHTMLDListElement.obj \
-	.\$(OBJDIR)\nsJSHTMLDelElement.obj \
 	.\$(OBJDIR)\nsJSHTMLDirectoryElement.obj \
 	.\$(OBJDIR)\nsJSHTMLDivElement.obj \
 	.\$(OBJDIR)\nsJSHTMLDocument.obj \
@@ -114,7 +110,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLHtmlElement.obj \
 	.\$(OBJDIR)\nsJSHTMLImageElement.obj \
 	.\$(OBJDIR)\nsJSHTMLInputElement.obj \
-	.\$(OBJDIR)\nsJSHTMLInsElement.obj \
 	.\$(OBJDIR)\nsJSHTMLIsIndexElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLIElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLabelElement.obj \
@@ -141,10 +136,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLTableElement.obj \
 	.\$(OBJDIR)\nsJSHTMLTableRowElement.obj \
 	.\$(OBJDIR)\nsJSHTMLTableSectionElement.obj \
-	.\$(OBJDIR)\nsJSHTMLTbodyElement.obj \
 	.\$(OBJDIR)\nsJSHTMLTextAreaElement.obj \
-	.\$(OBJDIR)\nsJSHTMLTfootElement.obj \
-	.\$(OBJDIR)\nsJSHTMLTheadElement.obj \
 	.\$(OBJDIR)\nsJSHTMLTitleElement.obj \
 	.\$(OBJDIR)\nsJSHTMLUListElement.obj
 

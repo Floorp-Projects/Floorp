@@ -126,21 +126,6 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case PROCESSINGINSTRUCTION_TARGET:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetTarget(prop);
-        
-        break;
-      }
       case PROCESSINGINSTRUCTION_DATA:
       {
         nsAutoString prop;
@@ -266,7 +251,7 @@ JSClass ProcessingInstructionClass = {
 //
 static JSPropertySpec ProcessingInstructionProperties[] =
 {
-  {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE},
+  {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"data",    PROCESSINGINSTRUCTION_DATA,    JSPROP_ENUMERATE},
   {0}
 };

@@ -1,12 +1,19 @@
-   interface Element : Node {
-     readonly attribute wstring tagName;
-     wstring                   getDOMAttribute(in wstring name);
-     void                      setDOMAttribute(in string name, 
-                                     	       in string value);
-     void                      removeAttribute(in wstring name);
-     Attribute                 getAttributeNode(in wstring name);
-     void                      setAttributeNode(in Attribute newAttr);
-     void                      removeAttributeNode(in Attribute oldAttr);
-     NodeList                  getElementsByTagName(in wstring tagname);
-     void                      normalize();
-   };
+ interface Element : Node {
+ /* IID: { 0xa6cf9078, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   readonly attribute  DOMString            tagName;
+   DOMString                 getDOMAttribute(in DOMString name);
+   void                      setDOMAttribute(in DOMString name, 
+                                          in DOMString value)
+                                          raises(DOMException);
+   void                      removeAttribute(in DOMString name)
+                                             raises(DOMException);
+   Attr                      getAttributeNode(in DOMString name);
+   Attr                      setAttributeNode(in Attr newAttr)
+                                              raises(DOMException);
+   Attr                      removeAttributeNode(in Attr oldAttr)
+                                                 raises(DOMException);
+   NodeList                  getElementsByTagName(in DOMString name);
+   void                      normalize();
+ };

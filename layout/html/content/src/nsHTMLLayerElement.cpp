@@ -115,7 +115,7 @@ nsHTMLLayerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLLayerElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLLayerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLLayerElement* it = new nsHTMLLayerElement(mInner.mTag);
   if (nsnull == it) {

@@ -128,7 +128,7 @@ nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLLinkElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLLinkElement* it = new nsHTMLLinkElement(mInner.mTag);
   if (nsnull == it) {

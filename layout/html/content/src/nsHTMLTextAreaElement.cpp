@@ -65,7 +65,6 @@ public:
   NS_IMETHOD GetDefaultValue(nsString& aDefaultValue);
   NS_IMETHOD SetDefaultValue(const nsString& aDefaultValue);
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetAccessKey(nsString& aAccessKey);
   NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
   NS_IMETHOD GetCols(PRInt32* aCols);
@@ -80,6 +79,9 @@ public:
   NS_IMETHOD SetRows(PRInt32 aRows);
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetType(nsString& aType);
+  NS_IMETHOD GetValue(nsString& aValue);
+  NS_IMETHOD SetValue(const nsString& aValue);
   NS_IMETHOD Blur();
   NS_IMETHOD Focus();
   NS_IMETHOD Select();
@@ -97,6 +99,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIFormControl
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init() { return NS_OK; }
@@ -182,7 +185,7 @@ nsHTMLTextAreaElement::Release()
 // nsIDOMHTMLTextAreaElement
 
 nsresult
-nsHTMLTextAreaElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTextAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTextAreaElement* it = new nsHTMLTextAreaElement(mInner.mTag);
   if (nsnull == it) {
@@ -207,29 +210,6 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
-NS_IMETHODIMP
-nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsresult result = NS_OK;
-	if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
-      }
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
-}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur() // XXX not tested
@@ -266,7 +246,6 @@ nsHTMLTextAreaElement::Select() // XXX not tested
   return NS_OK;
 }
 
-//NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, DefaultValue, defaultvalue, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey, eSetAttrNotify_None)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Cols, cols, eSetAttrNotify_Reflow)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled, eSetAttrNotify_Render)
@@ -274,6 +253,28 @@ NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name, eSetAttrNotify_Restart)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows, eSetAttrNotify_Reflow)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex, eSetAttrNotify_None)
+  
+
+NS_IMETHODIMP 
+nsHTMLTextAreaElement::GetType(nsString& aType)
+{
+  aType.SetString("textarea");
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLTextAreaElement::GetValue(nsString& aValue)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsHTMLTextAreaElement::SetValue(const nsString& aValue)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
@@ -410,4 +411,27 @@ nsHTMLTextAreaElement::SetWidget(nsIWidget* aWidget)
   return NS_OK;
 }
 
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  nsresult result = NS_OK;
+  if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
 
