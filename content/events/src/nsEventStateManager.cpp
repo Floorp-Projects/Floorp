@@ -3930,7 +3930,7 @@ nsresult nsEventStateManager::GetCaretLocation(nsIContent **aCaretContent,
 
   *aCaretFrame = primaryFrame;
   *aCaretContent = selectionContent;
-  NS_ADDREF(*aCaretContent);
+  NS_IF_ADDREF(*aCaretContent);
 
   return rv;
 }
