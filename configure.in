@@ -330,6 +330,9 @@ LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
 
 OS_TARGET=`uname -s`
+OS_ARCH=`uname -s | sed -e 's|/|_|g'`
+OS_RELEASE=`uname -r`
+OS_TEST=`uname -m`
 _COMPILER_PREFIX=
 
 dnl ========================================================
@@ -3055,6 +3058,9 @@ AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_NSPR_MDCPUCFG)
 AC_SUBST(TARGET_MD_ARCH)
 AC_SUBST(OS_TARGET)
+AC_SUBST(OS_ARCH)
+AC_SUBST(OS_RELEASE)
+AC_SUBST(OS_TEST)
 
 AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
 
