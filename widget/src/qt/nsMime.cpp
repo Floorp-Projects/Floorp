@@ -53,13 +53,13 @@
 #include <qclipboard.h>
 
 //----------------------------------------------------------
-nsMimeStoreData::nsMimeStoreData(QCString& name, QByteArray& data)
+nsMimeStoreData::nsMimeStoreData(const QCString &name, const QByteArray &data)
 {
     flavorName = name;
     flavorData = data;
 }
 
-nsMimeStoreData::nsMimeStoreData(const char* name,void* rawdata,PRInt32 rawlen)
+nsMimeStoreData::nsMimeStoreData(const char *name, void *rawdata, PRInt32 rawlen)
 {
     flavorName = name;
     flavorData.assign((char*)rawdata,(unsigned int)rawlen);
@@ -126,11 +126,11 @@ PRBool nsMimeStore::ContainsFlavor(const char* name)
     return PR_FALSE;
 }
 
-PRBool nsMimeStore::AddFlavorData(const char* name, void* data, PRInt32 len)
+PRBool nsMimeStore::AddFlavorData(const char* name, const QByteArray &data)
 {
     if (ContainsFlavor(name))
         return PR_FALSE;
-    mMimeStore.append(new nsMimeStoreData(name, data, len));
+    mMimeStore.append(new nsMimeStoreData(name, data));
 
     // we're done unless we're given text/unicode,
     // and text/plain is not already advertised,
@@ -139,11 +139,9 @@ PRBool nsMimeStore::AddFlavorData(const char* name, void* data, PRInt32 len)
     // in which case we also advertise text/plain
     // which we will convert on our own in nsDataObj::GetText().
 
-    char *as = ToNewCString(nsDependentString((PRUnichar*)data));
-
     // let's text/plain be first for stupid programs
     // Ownership of |as| is transfered to mMimeStore
-    mMimeStore.insert(0,new nsMimeStoreData(kTextMime,as,nsCRT::strlen(as) + 1));
+    mMimeStore.insert(0,new nsMimeStoreData(kTextMime,data.data(),data.count() + 1));
     return PR_TRUE;
 }
 

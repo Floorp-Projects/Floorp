@@ -56,9 +56,6 @@
 #include <qclipboard.h>
 #include <qdragobject.h>
 
-// interface definitions
-// static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
-
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
 //-------------------------------------------------------------------------
@@ -66,13 +63,15 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard() :
-    mSelectionOwner(nsnull),
-    mGlobalOwner(nsnull),
-    mSelectionTransferable(nsnull),
-    mGlobalTransferable(nsnull),
-    mIgnoreEmptyNotification(PR_FALSE)
+nsClipboard::nsClipboard()
+    : nsIClipboard(),
+      mIgnoreEmptyNotification(PR_FALSE),
+      mSelectionOwner(nsnull),
+      mGlobalOwner(nsnull),
+      mSelectionTransferable(nsnull),
+      mGlobalTransferable(nsnull)
 {
+    qDebug("###############################################################s");
 }
 
 //-------------------------------------------------------------------------
@@ -84,14 +83,6 @@ nsClipboard::~nsClipboard()
 {
 }
 
-#ifdef DEBUG_timeless
-// XXX nsBaseClipboard will have an init method to allow for constructors to fail
-NS_IMETHODIMP
-nsClipboard::Init()
-{
-    return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
@@ -136,17 +127,21 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
             // add these types as selection targets
             PRUint32   len;
-            void* data;
             nsCOMPtr<nsISupports> clip;
 
             transferable->GetTransferData(flavorStr,getter_AddRefs(clip),&len);
 
-            nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr,clip,&data,len);
+            nsCOMPtr<nsISupportsString> wideString;
+            wideString = do_QueryInterface(clip);
+            if (!wideString)
+                return NS_ERROR_FAILURE;
 
-            QString str = QString::fromAscii((const char*)data, len);
+            nsAutoString ucs2string;
+            wideString->GetData(ucs2string);
+            QString str = QString::fromUcs2(ucs2string.get());
             qDebug("HERE %s '%s'", flavorStr.get(), str.latin1());
 
-            mimeStore->AddFlavorData(flavorStr,data,len);
+            mimeStore->AddFlavorData(flavorStr,str.utf8());
         }
     }
     cb->setData(mimeStore);
@@ -220,19 +215,14 @@ nsITransferable *
 nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
 {
     qDebug("GetTransferable");
-    nsITransferable *transferable = nsnull;
+    nsITransferable *retval;
 
-    switch (aWhichClipboard) {
-    case kGlobalClipboard:
-        transferable = mGlobalTransferable;
-        break;
+    if (aWhichClipboard == kSelectionClipboard)
+        retval = mSelectionTransferable.get();
+    else
+        retval = mGlobalTransferable.get();
 
-    case kSelectionClipboard:
-        transferable = mSelectionTransferable;
-        break;
-    }
-    NS_IF_ADDREF(transferable);
-    return transferable;
+    return retval;
 }
 
 //-------------------------------------------------------------------------
