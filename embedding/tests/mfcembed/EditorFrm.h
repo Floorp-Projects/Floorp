@@ -44,7 +44,6 @@
 #include "nsICommandParams.h"
 #include "nsIEditingSession.h"
 #include "nsICommandManager.h"
-#include "CCommandObserver.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISimpleEnumerator.h"
 	
@@ -60,7 +59,6 @@ protected:
 public:
     BOOL InitEditor();
     NS_METHOD MakeEditable();
-    NS_METHOD AddEditorObservers();
     NS_METHOD DoCommand(nsICommandParams *aCommandParams);
     NS_METHOD IsCommandEnabled(const nsAString &aCommand, PRBool *retval);
     NS_METHOD GetCommandState(nsICommandParams *aCommandParams);
@@ -79,7 +77,11 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
-    CCommandObserver mToolBarObserver;
+    NS_METHOD ExecuteStyleCommand(const nsAString &aCommand);
+    void UpdateStyleToolBarBtn(const nsAString &aCommand, CCmdUI* pCmdUI);
+
+private:
+    nsCOMPtr<nsICommandManager> mCommandManager;
 };
 
 #endif //_EDITORFRM_H_

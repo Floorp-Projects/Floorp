@@ -336,7 +336,18 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
 {
     METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
+    BOOL bContentHasFrames = FALSE;
     UINT nIDResource = IDR_CTXMENU_DOCUMENT;
+
+    // Display the Editor context menu if the we're inside
+    // an EditorFrm which is hosting an editing session
+    //
+    if(pThis->GetEditable())
+    {
+        nIDResource = IDR_CTXMENU_EDITOR;
+
+        GOTO_BUILD_CTX_MENU;
+    }
 
     if(aContextFlags & nsIContextMenuListener::CONTEXT_DOCUMENT)
         nIDResource = IDR_CTXMENU_DOCUMENT;
@@ -411,7 +422,6 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
     // Determine if we need to add the Frame related context menu items
     // such as "View Frame Source" etc.
     //
-    BOOL bContentHasFrames = FALSE;
     if(pThis->m_wndBrowserView.ViewContentContainsFrames())
     {
         bContentHasFrames = TRUE;

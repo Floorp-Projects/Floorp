@@ -43,6 +43,17 @@
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
 
+//------------------------------------------------------------
+//              Editor Command/Parameter Names
+//------------------------------------------------------------
+#define BOLD_COMMAND        NS_LITERAL_STRING("cmd_bold")
+#define ITALIC_COMMAND      NS_LITERAL_STRING("cmd_italic")
+#define UNDERLINE_COMMAND   NS_LITERAL_STRING("cmd_underline")
+
+#define COMMAND_NAME        NS_LITERAL_STRING("cmd_name")
+#define STATE_ALL           NS_LITERAL_STRING("state_all")
+#define STATE_MIXED         NS_LITERAL_STRING("state_mixed")
+
 IMPLEMENT_DYNAMIC(CEditorFrame, CBrowserFrame)
 
 BEGIN_MESSAGE_MAP(CEditorFrame, CBrowserFrame)
@@ -60,7 +71,7 @@ CEditorFrame::CEditorFrame(PRUint32 chromeMask)
 {
     m_chromeMask = chromeMask;
 
-    NS_ADDREF(&mToolBarObserver);//make sure no one releases this
+    mCommandManager = nsnull;
 }
 
 CEditorFrame::~CEditorFrame()
@@ -69,99 +80,103 @@ CEditorFrame::~CEditorFrame()
 
 BOOL CEditorFrame::InitEditor()
 {
-    mToolBarObserver.SetFrame(this,ID_TOOLBAR_UPDATE,100); //update if 100 ticks goes by and no more changes
+    // Get and save off nsICommandManager for later use
+    //
+    nsresult rv;
+    mCommandManager = do_GetInterface(m_wndBrowserView.mWebBrowser, &rv);
 
-    AddEditorObservers();
-
-    MakeEditable();
+    rv = MakeEditable();
  
-    return TRUE;
+    return (NS_SUCCEEDED(rv));
 }
-
-/*
-"bold"
-state_all   //setter and getter
-state_begin //getter
-state_end   //getter
-state_mixed //getter
-*/
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
-#define STATE_ALL NS_ConvertASCIItoUCS2("state_all")
-
-#define BOLD_COMMAND NS_ConvertASCIItoUCS2("cmd_bold")
 
 void CEditorFrame::OnBold() 
 {
-    nsresult rv;
-    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID, &rv);
-	if (NS_FAILED(rv) || !params)
-        return;
-
-    params->SetBooleanValue(STATE_ALL, true);
-    params->SetStringValue(COMMAND_NAME, BOLD_COMMAND);
-
-    DoCommand(params);
+    ExecuteStyleCommand(BOLD_COMMAND);
 }
 
 void CEditorFrame::OnUpdateBold(CCmdUI* pCmdUI) 
 {
-    nsresult rv;
-    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
-    params->SetStringValue(COMMAND_NAME,BOLD_COMMAND);
-
-    rv = GetCommandState(params);
-    if (NS_SUCCEEDED(rv))
-    {
-      //set tri state of button here if we need to
-    }
-
-    //just return true for now
-    pCmdUI->Enable();
+    UpdateStyleToolBarBtn(BOLD_COMMAND, pCmdUI);
 }
 
 void CEditorFrame::OnItalics() 
 {
-	// TODO: Add your command handler code here
-	
+    ExecuteStyleCommand(ITALIC_COMMAND);
 }
 
 void CEditorFrame::OnUpdateItalics(CCmdUI* pCmdUI) 
 {
-	// TODO: Add your command update UI handler code here
-	
+    UpdateStyleToolBarBtn(ITALIC_COMMAND, pCmdUI);
 }
 
 void CEditorFrame::OnUnderline() 
 {
-	// TODO: Add your command handler code here
-	
+    ExecuteStyleCommand(UNDERLINE_COMMAND);
 }
 
 void CEditorFrame::OnUpdateUnderline(CCmdUI* pCmdUI) 
 {
-	// TODO: Add your command update UI handler code here
-	
+    UpdateStyleToolBarBtn(UNDERLINE_COMMAND, pCmdUI);
 }
 
+
+// Called in response to the ON_COMMAND messages generated
+// when style related toolbar buttons(bold, italic etc)
+// are clicked
+//
 NS_METHOD
-CEditorFrame::AddEditorObservers()
+CEditorFrame::ExecuteStyleCommand(const nsAString &aCommand)
 {
-    nsCOMPtr<nsICommandManager> commandManager;
     nsresult rv;
-    commandManager = do_GetInterface(m_wndBrowserView.mWebBrowser,&rv);
-    if (commandManager)
+    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID, &rv);
+    if (NS_FAILED(rv) || !params)
+        return rv;
+
+    params->SetBooleanValue(STATE_ALL, true);
+    params->SetStringValue(COMMAND_NAME, aCommand);
+
+    return DoCommand(params);
+}
+
+// Called in response to the UPDATE_COMMAND_UI messages for 
+// style related toolbar buttons(bold, italic etc.)
+// to update their current state
+//
+void CEditorFrame::UpdateStyleToolBarBtn(const nsAString &aCommand, CCmdUI* pCmdUI)
+{
+    nsresult rv;
+    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
+    params->SetStringValue(COMMAND_NAME, aCommand);
+
+    rv = GetCommandState(params);
+    if (NS_SUCCEEDED(rv))
     {
-        nsAutoString tString(NS_LITERAL_STRING("cmd_bold"));
-        rv = commandManager->AddCommandObserver(&mToolBarObserver,tString);
+        // Does our current selection span mixed styles?
+        // If so, set the toolbar button to an indeterminate
+        // state
+        //
+        PRBool bMixedStyle = PR_FALSE;
+        rv = params->GetBooleanValue(STATE_MIXED, &bMixedStyle);
+        if (NS_SUCCEEDED(rv))
+        {
+            if(bMixedStyle)
+            {
+                pCmdUI->SetCheck(2);
+                return;
+            }
+        }
 
-        tString = NS_LITERAL_STRING("cmd_italic");
-        rv = commandManager->AddCommandObserver(&mToolBarObserver,tString);
-
-        tString = NS_LITERAL_STRING("cmd_underline");
-        rv = commandManager->AddCommandObserver(&mToolBarObserver,tString);
+        // We're not in STATE_MIXED. Enable/Disable the
+        // toolbar button based on it's current state
+        //
+        PRBool bCmdEnabled = PR_FALSE;
+        rv = params->GetBooleanValue(STATE_ALL, &bCmdEnabled);
+        if (NS_SUCCEEDED(rv))
+        {
+            bCmdEnabled ? pCmdUI->SetCheck(1) : pCmdUI->SetCheck(0);
+        }
     }
-
-    return rv;
 }
 
 NS_METHOD
@@ -220,42 +235,18 @@ CEditorFrame::MakeEditable()
 NS_METHOD
 CEditorFrame::DoCommand(nsICommandParams *aCommandParams)
 {
-    nsCOMPtr<nsICommandManager> commandManager;
-    nsresult rv = NS_ERROR_FAILURE;
-    commandManager = do_GetInterface(m_wndBrowserView.mWebBrowser,&rv);
-    if (commandManager)
-    {
-        rv = commandManager->DoCommand(aCommandParams);
-    }
-
-    return rv;
+    return mCommandManager ? mCommandManager->DoCommand(aCommandParams) : NS_ERROR_FAILURE;
 }
 
 NS_METHOD
 CEditorFrame::IsCommandEnabled(const nsAString &aCommand, PRBool *retval)
 {
-    nsCOMPtr<nsICommandManager> commandManager;
-    nsresult rv = NS_ERROR_FAILURE;
-    commandManager = do_GetInterface(m_wndBrowserView.mWebBrowser,&rv);
-    if (commandManager)
-    {
-        rv = commandManager->IsCommandEnabled(aCommand,retval);
-    }
-
-    return rv;
+    return mCommandManager ? mCommandManager->IsCommandEnabled(aCommand, retval) : NS_ERROR_FAILURE;
 }
 
 
 NS_METHOD
 CEditorFrame::GetCommandState(nsICommandParams *aCommandParams)
 {
-    nsCOMPtr<nsICommandManager> commandManager;
-    nsresult rv = NS_ERROR_FAILURE;
-    commandManager = do_GetInterface(m_wndBrowserView.mWebBrowser,&rv);
-    if (commandManager)
-    {
-        rv = commandManager->GetCommandState(aCommandParams);
-    }
-
-    return rv;
+    return mCommandManager ? mCommandManager->GetCommandState(aCommandParams) : NS_ERROR_FAILURE;
 }
