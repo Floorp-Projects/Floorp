@@ -2197,7 +2197,7 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   if (wallet_GetFormsCapturingPref() && (count>=3)) {
     char * message = Wallet_Localize("WantToCaptureForm?");
     char * checkMessage = Wallet_Localize("NeverSave");
-    PRBool checkValue;
+    PRBool checkValue = PR_FALSE;
     *result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
     if (!(*result)) {
       if (checkValue) {
