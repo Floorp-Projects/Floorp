@@ -174,7 +174,12 @@ typedef struct
 	bool		reqCancel;
 	bool		reqSetLoadGroup;
 	bool		reqGetLoadGroup;	
-} Element;
+} ReqElement;
 
+typedef struct
+{
+  char			theUri[1024];
+  unsigned long theFlag;
+} NavElement;
 
 #endif //_TESTS_H
