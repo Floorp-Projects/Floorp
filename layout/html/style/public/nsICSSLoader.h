@@ -27,7 +27,7 @@ class nsIURL;
 class nsICSSParser;
 class nsICSSStyleSheet;
 class nsIPresContext;
-class nsIHTMLContent;
+class nsIContent;
 class nsIParser;
 class nsIDocument;
 class nsIUnicharInputStream;
@@ -36,20 +36,29 @@ class nsIUnicharInputStream;
 #define NS_ICSS_LOADER_IID     \
 {0xa6cf9101, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData);
+
 class nsICSSLoader : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_LOADER_IID; return iid; }
 
   NS_IMETHOD Init(nsIDocument* aDocument) = 0;
+  NS_IMETHOD DropDocumentReference(void) = 0; // notification that doc is going away
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
   NS_IMETHOD SetPreferredSheet(const nsString& aTitle) = 0;
 
+  // Get/Recycle a CSS parser for general use
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
                           nsICSSParser** aParser) = 0;
   NS_IMETHOD RecycleParser(nsICSSParser* aParser) = 0;
 
-  NS_IMETHOD LoadInlineStyle(nsIHTMLContent* aElement,
+  // Load an inline style sheet
+  // - if aCompleted is PR_TRUE, the sheet is fully loaded, don't
+  //   block for it.
+  // - if aCompleted is PR_FALSE, the sheet is still loading and 
+  //   will be inserted in the document when complete
+  NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aIn, 
                              const nsString& aTitle, 
                              const nsString& aMedia, 
@@ -57,7 +66,12 @@ public:
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted) = 0;
 
-  NS_IMETHOD LoadStyleLink(nsIHTMLContent* aElement,
+  // Load a linked style sheet
+  // - if aCompleted is PR_TRUE, the sheet is fully loaded, don't
+  //   block for it.
+  // - if aCompleted is PR_FALSE, the sheet is still loading and 
+  //   will be inserted in the document when complete
+  NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURL* aURL, 
                            const nsString& aTitle, 
                            const nsString& aMedia, 
@@ -65,10 +79,22 @@ public:
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted) = 0;
 
+  // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURL* aURL, 
                             const nsString& aMedia,
                             PRInt32 aSheetIndex) = 0;
+
+  // Load a user agent or user sheet immediately
+  // (note that @imports mayl come in asynchronously)
+  // - if aCompleted is PR_TRUE, the sheet is fully loaded
+  // - if aCompleted is PR_FALSE, the sheet is still loading and 
+  //   aCAllback will be called when the sheet is complete
+  NS_IMETHOD LoadAgentSheet(nsIURL* aURL, 
+                            nsICSSStyleSheet*& aSheet,
+                            PRBool& aCompleted,
+                            nsCSSLoaderCallbackFunc aCallback,
+                            void *aData) = 0;
 };
 
 extern NS_HTML nsresult 
