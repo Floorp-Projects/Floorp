@@ -24,6 +24,7 @@ typedef struct
   GtkWidget *urlEntry;
   GtkWidget *box;
   GtkWidget *view;
+  GtkWidget *memUsageDumpBtn;
   nsIWebBrowserChrome *chrome;
 } MyBrowser;
 
@@ -34,6 +35,7 @@ void destroy( GtkWidget *widget, MyBrowser*   data )
   gtk_widget_destroy( data->window );
   gtk_widget_destroy( data->urlEntry );
   gtk_widget_destroy( data->box );
+  gtk_widget_destroy( data->memUsageDumpBtn );
   //  gtk_widget_destroy( data->view );
   free (data);
   
@@ -46,6 +48,14 @@ gint delete_event( GtkWidget *widget, GdkEvent  *event, MyBrowser* data )
   NS_RELEASE(data->chrome);
   printf("done.\n");
   return(FALSE);
+}
+
+
+void
+dump_mem_clicked_cb(GtkButton *button, nsIWebBrowserChrome *browser)
+{
+  g_print("dumping memory usage:\n");
+  system("ps -eo \"%c %z\" | grep gtkEmbed");
 }
 
 
@@ -123,9 +133,11 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
    browser->urlEntry = gtk_entry_new();
    browser->box = gtk_vbox_new(FALSE, 0);
    browser->view = gtk_event_box_new();
+   browser->memUsageDumpBtn = gtk_button_new_with_label("Dump Memory Usage");
    browser->chrome = chrome;  // take ownership!
 
-   if (!browser->window || !browser->urlEntry || !browser->box || !browser->view)
+   if (!browser->window || !browser->urlEntry || !browser->box || 
+       !browser->view   || !browser->memUsageDumpBtn)
      return nsnull;
    
    /* Put the box into the main window. */
@@ -133,6 +145,7 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
    gtk_box_pack_start(GTK_BOX(browser->box), browser->urlEntry, FALSE, FALSE, 5);
    gtk_box_pack_start(GTK_BOX(browser->box), browser->view,     FALSE, FALSE, 5);
+   gtk_box_pack_start(GTK_BOX(browser->box), browser->memUsageDumpBtn,     FALSE, FALSE, 5);
 
    gtk_signal_connect (GTK_OBJECT (browser->window), 
                        "destroy",
@@ -149,6 +162,11 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 		      GTK_SIGNAL_FUNC(url_activate_cb), 
                       chrome);
 
+   gtk_signal_connect(GTK_OBJECT(browser->memUsageDumpBtn),
+                      "clicked",
+                      GTK_SIGNAL_FUNC(dump_mem_clicked_cb), 
+                      chrome);
+
    gtk_widget_set_usize(browser->view, 430, 430);
 
    gtk_window_set_title (GTK_WINDOW (browser->window), "Embedding is Fun!");
@@ -158,11 +176,12 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
    gtk_widget_realize (browser->window);
 
+   gtk_widget_show (browser->memUsageDumpBtn);
    gtk_widget_show (browser->urlEntry);
    gtk_widget_show (browser->box);
    gtk_widget_show (browser->view);
    gtk_widget_show (browser->window);
-
+   
   return browser->view;
 }
 
