@@ -89,9 +89,12 @@ sub output {
 sub checkAddress {
     my $self = shift;
     my($app, $username) = @_;
-    $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t check address');
-    my $result = $self->handle->verify($username);
-    return $result;
+    return (defined($username) and $username =~ m/^[^@\s]+@[^@\s]+\.[^@.\s]+$/os);
+    # XXX this doesn't seem to be working:
+    # $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t check address');
+    # $self->assert(defined($username), 1, 'Internal error: no username passed to checkAddress');
+    # my $result = $self->handle->verify($username);
+    # return $result;
 }
 
 sub DESTROY {
