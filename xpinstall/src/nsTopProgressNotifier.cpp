@@ -108,10 +108,10 @@ nsTopProgressListener::OnInstallStart(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* UIPackageName)
+nsTopProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* UIPackageName, const PRUnichar* aVersion)
 {
     if (mActive)
-        mActive->OnPackageNameSet(URL, UIPackageName);
+        mActive->OnPackageNameSet(URL, UIPackageName, aVersion);
 
     if (mListeners)
     {
@@ -120,7 +120,7 @@ nsTopProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* U
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->OnPackageNameSet(URL, UIPackageName);
+                element->OnPackageNameSet(URL, UIPackageName, aVersion);
         }
     }
     return NS_OK;

@@ -90,6 +90,7 @@ EXPORTS		= \
 		nsStringIO.h \
 		nsStringStream.h \
 		nsStreamUtils.h \
+		nsNativeCharsetUtils.h \
 		$(NULL)			
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

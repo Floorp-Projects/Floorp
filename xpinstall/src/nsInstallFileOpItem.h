@@ -129,9 +129,9 @@ class nsInstallFileOpItem : public nsInstallObject
     nsCOMPtr<nsIFile>   mShortcutPath;
     nsCOMPtr<nsIFile>   mWorkingPath;
     nsCOMPtr<nsIFile>   mIcon;
-    nsString*           mDescription;
+    nsString            mDescription;
     nsString*           mStrTarget;
-    nsString*           mParams;
+    nsString            mParams;
     long                mFStat;
     PRInt32             mFlags;
     PRInt32             mIconId;

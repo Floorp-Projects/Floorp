@@ -25,10 +25,8 @@
 
 
 
+#include "nsCRT.h"
 #include "prmem.h"
-
-#include "nsFileSpec.h"
-
 #include "VerReg.h"
 #include "nsInstallExecute.h"
 #include "nsInstallResources.h"
@@ -56,14 +54,14 @@ MOZ_DECL_CTOR_COUNTER(nsInstallExecute)
 //
 // Returns the count of the number of command-line arguments actually 
 //   stored into the array aArgs or -1 if it fails.
-PRInt32 xpi_PrepareProcessArguments(char *aArgsString, char **aArgs, PRInt32 aArgsAvailable)
+PRInt32 xpi_PrepareProcessArguments(const char *aArgsString, char **aArgs, PRInt32 aArgsAvailable)
 {
    int   argc;
    char *c;
    char *p; // look ahead
    PRBool quoted = PR_FALSE;
 
-   aArgs[0] = aArgsString;
+   aArgs[0] = (char *)aArgsString;
    if (!aArgs[0])
       return -1;
 

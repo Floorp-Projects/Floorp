@@ -66,7 +66,7 @@ fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   if(NS_FAILED( nativeThis->ToString(&stringReturned)))
-    return JS_FALSE;
+    return JS_TRUE;
 
 
   JSString *jsstring =

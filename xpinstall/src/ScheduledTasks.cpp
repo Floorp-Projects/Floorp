@@ -25,14 +25,11 @@
 
 #include "nscore.h"
 #include "nsXPIDLString.h"
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
 #include "nsInstall.h" // for error codes
 #include "prmem.h"
 #include "ScheduledTasks.h"
 #include "InstallCleanupDefines.h"
 
-#include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -245,39 +242,41 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
     nsCOMPtr<nsIFile>      renamedDoomedFile;
     nsCOMPtr<nsILocalFile> tmpLocalFile;
     nsCOMPtr<nsIFile> parent;
-    nsCAutoString leafname;
     
     doomedFile->Clone(getter_AddRefs(renamedDoomedFile));
     renamedDoomedFile->Exists(&flagExists);
     if ( flagExists )
     {
 #ifdef XP_MACOSX
-      // If we clone an nsIFile, and move the clone, the FSRef of the *original*
-      // file is not what you would expect - it points to the moved file. This
-      // is despite the fact that the two FSRefs are independent objects. Until
-      // the OS X file impl is changed to not use FSRefs, need to do this.
-      nsCOMPtr<nsILocalFile> doomedFileLocal(do_QueryInterface(doomedFile));
-      nsCAutoString doomedFilePath;
-      rv = doomedFileLocal->GetNativePath(doomedFilePath);
-      if (NS_FAILED(rv))
-          return nsInstall::UNEXPECTED_ERROR;
+        // If we clone an nsIFile, and move the clone, the FSRef of the *original*
+        // file is not what you would expect - it points to the moved file. This
+        // is despite the fact that the two FSRefs are independent objects. Until
+        // the OS X file impl is changed to not use FSRefs, need to do this (see
+        // bug 200024).
+        nsCOMPtr<nsILocalFile> doomedFileLocal(do_QueryInterface(doomedFile));
+        nsCAutoString doomedFilePath;
+        rv = doomedFileLocal->GetNativePath(doomedFilePath);
+        if (NS_FAILED(rv))
+            return nsInstall::UNEXPECTED_ERROR;
 #endif
         tmpLocalFile = do_QueryInterface(renamedDoomedFile, &rv); // Convert to an nsILocalFile
 
         //get the leafname so we can convert its extension to .old
+        nsAutoString leafname;
         nsCAutoString uniqueLeafName;
-        tmpLocalFile->GetNativeLeafName(leafname);
+        tmpLocalFile->GetLeafName(leafname);
 
+        // do not RFind on the native charset! UTF8 or Unicode are OK
         PRInt32 extpos = leafname.RFindChar('.');
         if (extpos != -1)
         {
             // We found the extension; 
             leafname.Truncate(extpos + 1); //strip off the old extension
         }
-        leafname.Append("old");
+        leafname.Append(NS_LITERAL_STRING("old"));
         
         //Now reset the leafname
-        tmpLocalFile->SetNativeLeafName(leafname);
+        tmpLocalFile->SetLeafName(leafname);
         tmpLocalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
         tmpLocalFile->GetParent(getter_AddRefs(parent)); //get the parent for later use in MoveTo
         tmpLocalFile->GetNativeLeafName(uniqueLeafName);//this is the new "unique" leafname
@@ -315,6 +314,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
     {
         nsCOMPtr<nsIFile> parentofFinalFile;
         nsCOMPtr<nsIFile> parentofReplacementFile;
+        nsCAutoString leafname;
 
         doomedFile->GetParent(getter_AddRefs(parentofFinalFile));
         replacementFile->GetParent(getter_AddRefs(parentofReplacementFile));
@@ -489,7 +489,8 @@ void DeleteScheduledFiles( HREG reg )
                 {
                     // no need to check return value of 
                     // SetPersistentDescriptorString, it's always NS_OK
-                    //spec->SetPersistentDescriptorString(valbuf); //nsIFileXXX: Do we still need this instead of InitWithPath?
+                    //spec->SetPersistentDescriptorString(valbuf);
+                    //nsIFileXXX: Do we still need this instead of InitWithPath?
                     NS_NewNativeLocalFile(nsDependentCString(valbuf), PR_TRUE, getter_AddRefs(spec));
                     spec->Clone(getter_AddRefs(doomedFile));
                     if (NS_SUCCEEDED(rv)) 

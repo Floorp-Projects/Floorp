@@ -173,14 +173,16 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *fileSpecObject;
 
     fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
-    if (fileSpecObject == NULL)
-      return JS_FALSE;
 
-    JS_SetPrivate(cx, fileSpecObject, parentFolder);
-    if (fileSpecObject == NULL)
-      return JS_FALSE;
+    if (fileSpecObject)
+    {
+      JS_SetPrivate(cx, fileSpecObject, parentFolder);
 
-    *rval = OBJECT_TO_JSVAL(fileSpecObject);
+      if (fileSpecObject)
+      {
+        *rval = OBJECT_TO_JSVAL(fileSpecObject);
+      }
+    }
   }
 
   return JS_TRUE;

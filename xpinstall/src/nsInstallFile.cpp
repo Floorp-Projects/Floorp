@@ -25,7 +25,6 @@
 
 #include "prprf.h"
 #include "nsInstallFile.h"
-#include "nsFileSpec.h"
 #include "VerReg.h"
 #include "ScheduledTasks.h"
 #include "nsInstall.h"
@@ -185,34 +184,46 @@ nsInstallFile::~nsInstallFile()
 
 
 
-void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath, PRInt32 *error)
+void nsInstallFile::CreateAllFolders(nsInstall *aInstall, nsIFile *aFolder, PRInt32 *aError)
 {
-    /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
-     * to be an existing dir
-     */
-
-    nsCOMPtr<nsIFile>   nsfsFolderPath;
-    nsString            nsStrFolder;
     PRBool              flagExists;
-    int                 result = 0;
     nsInstallLogComment *ilc   = nsnull;
 
-    inFolderPath->Exists(&flagExists);
-    if(!flagExists)
+    nsresult rv = aFolder->Exists(&flagExists);
+    if (NS_FAILED(rv))
+        *aError = nsInstall::UNEXPECTED_ERROR;
+    else if (flagExists)
+        *aError = nsInstall::SUCCESS;
+    else
     {
-        inFolderPath->GetParent(getter_AddRefs(nsfsFolderPath));
-        CreateAllFolders(inInstall, nsfsFolderPath, error);
+        // Doesn't exist, work our way up trying to create each node above
+        nsCOMPtr<nsIFile> parent;
+        rv = aFolder->GetParent(getter_AddRefs(parent));
+        if (NS_FAILED(rv))
+        {
+            // we're already at the top -- give up
+            *aError = nsInstall::ACCESS_DENIED;
+            return;
+        }
 
-        inFolderPath->Create(nsIFile::DIRECTORY_TYPE, 0755); //nsIFileXXX: What kind of permissions are required here?
+        CreateAllFolders(aInstall, parent, aError);
+        if (*aError != nsInstall::SUCCESS)
+            return;
+
+        aFolder->Create(nsIFile::DIRECTORY_TYPE, 0755); //nsIFileXXX: What kind of permissions are required here?
         ++mFolderCreateCount;
 
-        inFolderPath->GetPath(nsStrFolder);
-        ilc = new nsInstallLogComment(inInstall, NS_LITERAL_STRING("CreateFolder"), nsStrFolder, error);
+        nsAutoString folderPath;
+        aFolder->GetPath(folderPath);
+        ilc = new nsInstallLogComment(aInstall,
+                                      NS_LITERAL_STRING("CreateFolder"),
+                                      folderPath,
+                                      aError);
         if(ilc == nsnull)
-            *error = nsInstall::OUT_OF_MEMORY;
+            *aError = nsInstall::OUT_OF_MEMORY;
 
-        if(*error == nsInstall::SUCCESS) 
-            *error = mInstall->ScheduleForInstall(ilc);
+        if(*aError == nsInstall::SUCCESS)
+            *aError = mInstall->ScheduleForInstall(ilc);
     }
 }
 

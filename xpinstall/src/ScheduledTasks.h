@@ -29,8 +29,6 @@
 
 
 #include "NSReg.h"
-//#include "mozreg.h"
-#include "nsFileSpec.h"
 #include "nsIFile.h"
 
 PR_BEGIN_EXTERN_C

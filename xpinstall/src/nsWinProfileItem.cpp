@@ -88,7 +88,7 @@ char* nsWinProfileItem::toString()
 {
   char*     resultCString;
   
-  nsString* filename = new nsString(*mProfile->GetFilename());
+  nsString* filename = new nsString(mProfile->GetFilename());
   nsString* result = new nsString;
   result->Assign(NS_LITERAL_STRING("Write "));
 

@@ -49,7 +49,6 @@
 #include "plevent.h"
 
 #include "nsString.h"
-#include "nsFileSpec.h"
 #include "nsHashtable.h"
 
 #include "nsSoftwareUpdate.h"
@@ -123,17 +122,17 @@ class nsWinReg
     nsInstall* mInstallObject;
 
     /* Private Methods */
-    PRInt32           NativeKeyExists(const nsString& subkey);
-    PRInt32           NativeValueExists(const nsString& subkey, const nsString& valname);
-    PRInt32           NativeIsKeyWritable(const nsString& subkey);
+    PRBool            NativeKeyExists(const nsString& subkey);
+    PRBool            NativeValueExists(const nsString& subkey, const nsString& valname);
+    PRBool            NativeIsKeyWritable(const nsString& subkey);
     PRInt32           NativeCreateKey(const nsString& subkey, const nsString& classname);
     PRInt32           NativeDeleteKey(const nsString& subkey);
     PRInt32           NativeDeleteValue(const nsString& subkey, const nsString& valname);
 
     PRInt32           NativeSetValueString(const nsString& subkey, const nsString& valname, const nsString& value);
-    void              NativeGetValueString(const nsString& subkey, const nsString& valname, nsString* aReturn);
+    PRInt32           NativeGetValueString(const nsString& subkey, const nsString& valname, nsString* aReturn);
     PRInt32           NativeSetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value);
-    void              NativeGetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           NativeGetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
 
     PRInt32           NativeSetValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value);
     nsWinRegValue*    NativeGetValue(const nsString& subkey, const nsString& valname);

@@ -42,7 +42,6 @@
 
 
 #include "prio.h"
-#include "nsFileSpec.h"
 
 #define GDIFF_MAGIC         "\xD1\xFF\xD1\xFF"
 #define GDIFF_MAGIC_LEN     4

@@ -41,7 +41,7 @@
 #include "nsInstallFileOpItem.h"
 #include "ScheduledTasks.h"
 #include "nsProcess.h"
-#include "nsReadableUtils.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsInstallExecute.h"
 
 #ifdef _WINDOWS
@@ -80,12 +80,9 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
     mCommand      = aCommand;
     mFlags        = aFlags;
     mSrc          = nsnull;
-    mParams       = nsnull;
     mStrTarget    = nsnull;
     mShortcutPath = nsnull;
-    mDescription  = nsnull;
     mWorkingPath  = nsnull;
-    mParams       = nsnull;
     mIcon         = nsnull;
 }
 
@@ -104,13 +101,10 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
   mIObj       = aInstallObj;
   mCommand    = aCommand;
   mFlags      = 0;
-  mParams     = nsnull;
   mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
   mShortcutPath = nsnull;
-  mDescription  = nsnull;
   mWorkingPath  = nsnull;
-  mParams       = nsnull;
   mIcon         = nsnull;
 }
 
@@ -128,13 +122,10 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
 	mCommand    = aCommand;
 	mFlags      = 0;
 	mSrc        = nsnull;
-  mParams     = nsnull;
 	mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
   mShortcutPath = nsnull;
-  mDescription  = nsnull;
   mWorkingPath  = nsnull;
-  mParams       = nsnull;
   mIcon         = nsnull;
 }
 
@@ -154,9 +145,7 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
     mFlags        = 0;
     mAction       = ACTION_NONE;
     mShortcutPath = nsnull;
-    mDescription  = nsnull;
     mWorkingPath  = nsnull;
-    mParams       = nsnull;
     mIcon         = nsnull;
 
     switch(mCommand)
@@ -165,7 +154,6 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
         case NS_FOP_FILE_RENAME:
             mSrc = a1;
             mTarget     = nsnull;
-            mParams     = nsnull;
             mStrTarget  = new nsString(a2);
 
             if (mSrc == nsnull || mStrTarget == nsnull)
@@ -177,8 +165,8 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
             mBlocking = aBlocking;
         default:
             mSrc        = nsnull;
-            mTarget = a1;
-            mParams     = new nsString(a2);
+            mTarget     = a1;
+            mParams     = a2;
             mStrTarget  = nsnull;
 
     }
@@ -198,7 +186,9 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
  mTarget(aTarget),
  mShortcutPath(aShortcutPath),
  mWorkingPath(aWorkingPath),
- mIcon(aIcon)
+ mIcon(aIcon),
+ mDescription(aDescription),
+ mParams(aParams)
 {
     MOZ_COUNT_CTOR(nsInstallFileOpItem);
 
@@ -210,14 +200,6 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
   mSrc        = nsnull;
   mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
-
-  mDescription = new nsString(aDescription);
-  if(mDescription == nsnull)
-    *aReturn = nsInstall::OUT_OF_MEMORY;
-
-  mParams = new nsString(aParams);
-  if(mParams == nsnull)
-    *aReturn = nsInstall::OUT_OF_MEMORY;
 }
 
 nsInstallFileOpItem::~nsInstallFileOpItem()
@@ -228,12 +210,12 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
   //  delete mTarget;
   if(mStrTarget)
     delete mStrTarget;
-  if(mParams)
-    delete mParams;
+  //if(mParams)
+  //  delete mParams;
   //if(mShortcutPath)
   //  delete mShortcutPath;
-  if(mDescription)
-    delete mDescription;
+  //if(mDescription)
+  //  delete mDescription;
   //if(mWorkingPath)
   //  delete mWorkingPath;
   //if(mIcon)
@@ -337,7 +319,7 @@ char* nsInstallFileOpItem::toString()
 
       mTarget->GetNativePath(dstPath);
 
-      temp = NS_ConvertUCS2toUTF8(*mParams);
+      NS_CopyUnicodeToNative(mParams, temp);
       if(!temp.IsEmpty())
       {
         rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("ExecuteWithArgs"));
@@ -350,7 +332,6 @@ char* nsInstallFileOpItem::toString()
         if(rsrcVal != nsnull)
           PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath.get());
       }
-      temp.Truncate();
       break;
 
     case NS_FOP_FILE_MOVE:
@@ -410,10 +391,12 @@ char* nsInstallFileOpItem::toString()
       rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("WindowsShortcut"));
       if(rsrcVal && mShortcutPath)
       {
+        nsCAutoString description;
+
+        NS_CopyUnicodeToNative(mDescription, description);
         mShortcutPath->GetNativePath(temp);
-        temp.Append(NS_LITERAL_CSTRING("\\") + NS_LossyConvertUCS2toASCII(*mDescription));
+        temp.Append(NS_LITERAL_CSTRING("\\") + description);
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, temp.get());
-        temp.Truncate();
       }
       break;
 
@@ -751,10 +734,9 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
       mSrc->GetParent(getter_AddRefs(parent));
       if(parent)
       {
-        newFilename->Append(*mStrTarget);
-    
         mSrc->GetLeafName(leafName);
 
+        newFilename->Append(*mStrTarget);
         newFilename->MoveTo(parent, leafName);
       }
       else
@@ -974,12 +956,9 @@ nsInstallFileOpItem::NativeFileOpFileExecutePrepare()
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 {
-  //mTarget->Execute(*mParams);
-  //mTarget->Spawn(NS_LossyConvertUCS2toASCII(*mParams).get(), 0);
   #define ARG_SLOTS 256
 
   char *cParams[ARG_SLOTS];
-  char *arguments = nsnull;
   int   argcount = 0;
 
   nsresult rv;
@@ -991,10 +970,12 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 
   nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
   
-  if (mParams && !mParams->IsEmpty())
+  if (!mParams.IsEmpty())
   {
-    arguments = ToNewCString(*mParams);
-    argcount = xpi_PrepareProcessArguments(arguments, cParams, ARG_SLOTS);
+    nsCAutoString temp;
+
+    NS_CopyUnicodeToNative(mParams, temp);
+    argcount = xpi_PrepareProcessArguments(temp.get(), cParams, ARG_SLOTS);
   }
   if (argcount >= 0)
   {
@@ -1005,9 +986,6 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   }
   else
     rv = nsInstall::UNEXPECTED_ERROR;
-
-  if(arguments)
-    Recycle(arguments);
 
   return rv;
 }
@@ -1226,9 +1204,9 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
   mSrc->Exists(&flagExists);
   if(!flagExists)
   {
+    mSrc->GetLeafName(leafName);
     mSrc->GetParent(getter_AddRefs(newDirName));
     newDirName->Append(*mStrTarget);
-    mSrc->GetLeafName(leafName);
     mSrc->GetParent(getter_AddRefs(parent));
     ret = newDirName->MoveTo(parent, leafName);
   }
@@ -1282,20 +1260,19 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
   PRInt32 ret = nsInstall::SUCCESS;
 
 #ifdef _WINDOWS
-  char *cDescription             = nsnull;
-  char *cParams                  = nsnull;
+  nsresult      rv1, rv2;
+  nsCAutoString description;
+  nsCAutoString params;
   nsCAutoString targetNativePathStr;
   nsCAutoString shortcutNativePathStr;
   nsCAutoString workingpathNativePathStr;
   nsCAutoString iconNativePathStr;
 
-  if(mDescription)
-    cDescription = ToNewCString(*mDescription);
-  if(mParams)
-    cParams = ToNewCString(*mParams);
+  rv1 = NS_CopyUnicodeToNative(mDescription, description);
+  rv2 = NS_CopyUnicodeToNative(mParams, params);
 
-  if((cDescription == nsnull) || (cParams == nsnull))
-    ret = nsInstall::OUT_OF_MEMORY;
+  if(NS_FAILED(rv1) || NS_FAILED(rv2))
+    ret = nsInstall::UNEXPECTED_ERROR;
   else
   {
     if(mTarget)
@@ -1309,19 +1286,14 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
 
     CreateALink(targetNativePathStr.get(),
                       shortcutNativePathStr.get(),
-                      cDescription,
+                      description.get(),
                       workingpathNativePathStr.get(),
-                      cParams,
+                      params.get(),
                       iconNativePathStr.get(),
                       mIconId);
 
     mAction = nsInstallFileOpItem::ACTION_SUCCESS;
   }
-
-  if(cDescription)
-    Recycle(cDescription);
-  if(cParams)
-    Recycle(cParams);
 #endif
 
   return ret;
@@ -1331,19 +1303,16 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
 {
 #ifdef _WINDOWS
-  nsString   shortcutDescription;
-  nsCOMPtr<nsIFile> shortcutTarget;
-
-  if(mShortcutPath && mDescription)
+  if(mShortcutPath)
   {
-    shortcutDescription = *mDescription;
-    shortcutDescription.Append(NS_LITERAL_STRING(".lnk"));
+    nsCOMPtr<nsIFile> shortcutTarget;
+    nsAutoString shortcutDescription(mDescription + NS_LITERAL_STRING(".lnk"));
+
     mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
     shortcutTarget->Append(shortcutDescription);
 
     NativeFileOpFileDeleteComplete(shortcutTarget);
   }
-
 #endif
 
   return nsInstall::SUCCESS;
