@@ -260,7 +260,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	if(NS_SUCCEEDED(rv) && folderDescription)
 	{
 		sourceString = folderDescription;
-		PR_Free(folderDescription);
+		delete[] folderDescription;
 	}
 	rv = rdfService->GetLiteral(sourceString.GetUnicode(), getter_AddRefs(source));
 	if(NS_SUCCEEDED(rv))
