@@ -2712,7 +2712,7 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
     child->GetOrdinal(aState, ordCmp);
     if (ord < ordCmp)
       foundNewPrevSib = PR_TRUE;
-    else if (!foundNewPrevSib)
+    else if (!foundNewPrevSib && child != aChild)
       newPrevSib = child;
 
     child->GetNextBox(&child);
@@ -2728,6 +2728,8 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
   // Take aChild out of its old position in the child list.
   if (curPrevSib)
     curPrevSib->SetNextSibling(aChild->GetNextSibling());
+  else
+    mFrames.SetFrames(aChild->GetNextSibling());
 
   nsIBox* newNextSib;
   if (newPrevSib) {
