@@ -259,9 +259,6 @@ BOOL CNetscapeApp::InitApplication()
     fe_InitNSPR((void*)&stackBase);
 	m_appFontList = NULL;
 
-	// Full Circle initialization
-	FCInitialize();
-	
     return TRUE;
 }
 
@@ -1023,6 +1020,14 @@ BOOL CNetscapeApp::InitInstance()
 	if (!login_QueryForCurrentProfile())
 		return FALSE;
 
+    // Full Circle initialization must happen once the current
+    //  profile is known, such that the prefs calls work.
+    XP_Bool fullcircle_enable = TRUE;
+    PREF_GetBoolPref("general.fullcircle_enable", &fullcircle_enable);
+    if(fullcircle_enable)   {
+	    FCInitialize();
+    }
+	
 #endif  // NEW_PREF_ARCH
 
 	// Read in font and setup encoding table stuff (must be done after prefs are read)
