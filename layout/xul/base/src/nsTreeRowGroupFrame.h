@@ -88,7 +88,8 @@ protected:
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
   void ConstructContentChain(nsIContent* aRowContent);
-  void FindPreviousRowContent(PRInt32 aDelta, nsIContent* aHint, nsIContent** aResult);
+  void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
+                              nsIContent* aDownwardHint, nsIContent** aResult);
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
@@ -99,7 +100,7 @@ protected: // Data Members
 
   nsIFrame* mScrollbar; // Our scrollbar.
   
-  nsCOMPtr<nsISupportsArray> mContentChain; // Our content chain
+  nsISupportsArray* mContentChain; // Our content chain
 
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
 }; // class nsTreeRowGroupFrame
