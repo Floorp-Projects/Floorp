@@ -92,6 +92,7 @@ interface nsIProfile : nsISupports {
     void forgetCurrentProfile();
     void loadNewProfilePrefs();
     boolean isCurrentProfileAvailable();
+    void removeCookie(in string cookie);
 
     attribute boolean automigrate;
 
