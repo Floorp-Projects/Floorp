@@ -114,6 +114,11 @@ protected:
     static void*  PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
     static void   PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 
+public:
+    // The Sun Forte compiler and others implement older versions of the
+    // C++ standard's rules on access and nested classes.  These structs
+    // need to be public in order to deal with those compilers.
+
     struct HostInfoIP {
         PRUint16   family;
         PRUint16   mask_len;
@@ -124,6 +129,8 @@ protected:
         char    *host;
         PRUint32 host_len;
     };
+
+protected:
 
     // simplified array of filters defined by this struct
     struct HostInfo {
