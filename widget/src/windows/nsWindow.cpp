@@ -649,8 +649,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       DWORD pos = ::GetMessagePos();
       POINT cpos;
 
-      cpos.x = LOWORD(pos);
-      cpos.y = HIWORD(pos);
+      cpos.x = (short)LOWORD(pos);
+      cpos.y = (short)HIWORD(pos);
 
       if (mWnd != NULL) {
         ::ScreenToClient(mWnd, &cpos);
@@ -776,8 +776,8 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
   POINT mp;
-  mp.x = LOWORD(pos);
-  mp.y = HIWORD(pos);
+  mp.x = (short)LOWORD(pos);
+  mp.y = (short)HIWORD(pos);
 
   // was the event inside this window?
   return (PRBool) PtInRect(&r, mp);
@@ -2985,8 +2985,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
 							POINT ptPos;
-							ptPos.x = LOWORD(lParam);
-							ptPos.y = HIWORD(lParam);
+							ptPos.x = (short)LOWORD(lParam);
+							ptPos.y = (short)HIWORD(lParam);
 							if (IMECompositionHitTest(NS_MOUSE_LEFT_BUTTON_DOWN, &ptPos))
 								if (HandleMouseActionOfIME(IMEMOUSE_LDOWN))
 									break;
@@ -3014,8 +3014,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
 							POINT ptPos;
-							ptPos.x = LOWORD(lParam);
-							ptPos.y = HIWORD(lParam);
+							ptPos.x = (short)LOWORD(lParam);
+							ptPos.y = (short)HIWORD(lParam);
 							if (IMECompositionHitTest(NS_MOUSE_MIDDLE_BUTTON_DOWN, &ptPos))
 	              if (HandleMouseActionOfIME(IMEMOUSE_MDOWN))
 		              break;
@@ -3038,8 +3038,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
 							POINT ptPos;
-							ptPos.x = LOWORD(lParam);
-							ptPos.y = HIWORD(lParam);
+							ptPos.x = (short)LOWORD(lParam);
+							ptPos.y = (short)HIWORD(lParam);
 							if (IMECompositionHitTest(NS_MOUSE_RIGHT_BUTTON_DOWN, &ptPos))
 	              if (HandleMouseActionOfIME(IMEMOUSE_RDOWN))
                 break;
@@ -3918,8 +3918,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   const short kDoubleClickMoveThreshold  = 5;
   POINT mp;
   DWORD pos = ::GetMessagePos();
-  mp.x      = LOWORD(pos);
-  mp.y      = HIWORD(pos);
+  mp.x      = (short)LOWORD(pos);
+  mp.y      = (short)HIWORD(pos);
   PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
                                    (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold);
 
@@ -3939,8 +3939,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP || aEventType == NS_MOUSE_MIDDLE_BUTTON_UP || aEventType == NS_MOUSE_RIGHT_BUTTON_UP) {
     // remember when this happened for the next mouse down
     DWORD pos = ::GetMessagePos();
-    gLastMousePoint.x = LOWORD(pos);
-    gLastMousePoint.y = HIWORD(pos);
+    gLastMousePoint.x = (short)LOWORD(pos);
+    gLastMousePoint.y = (short)HIWORD(pos);
   }
   else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN || aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN || aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
@@ -4035,14 +4035,14 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
       } else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
-        mp.x      = LOWORD(pos);
-        mp.y      = HIWORD(pos);
+        mp.x      = (short)LOWORD(pos);
+        mp.y      = (short)HIWORD(pos);
 
         // OK, now find out if we are still inside
         // the captured native window
         POINT cpos;
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
+        cpos.x = (short)LOWORD(pos);
+        cpos.y = (short)HIWORD(pos);
 
         nsWindow * someWindow = NULL;
         HWND hWnd = ::WindowFromPoint(mp);
@@ -5194,8 +5194,8 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
   point.y = 0;
   DWORD pos = ::GetMessagePos();
 
-  point.x = LOWORD(pos);
-  point.y = HIWORD(pos);
+  point.x = (short)LOWORD(pos);
+  point.y = (short)HIWORD(pos);
 
   if (mWnd != NULL) {
     ::ScreenToClient(mWnd, &point);
