@@ -84,7 +84,7 @@ nsStyleStructID_Length /* one past the end; length of 0-based list */
 #define NS_RULE_NODE_GC_MARK              0x02000000
 
 #define NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(the_sid) \
-  static const nsStyleStructID GetStyleStructID() {return the_sid;}
+  static nsStyleStructID GetStyleStructID() {return the_sid;}
 
 #define NS_GET_STYLESTRUCTID(type) (type::GetStyleStructID())
 

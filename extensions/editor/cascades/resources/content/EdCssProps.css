@@ -51,7 +51,7 @@ html|p#brownFoxLabel {
   border: 1px solid black;
   margin: 0px;
   padding: 2px;
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
   height: 70px;
   max-height: 70px;
   line-height: 70px;

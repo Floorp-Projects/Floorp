@@ -276,7 +276,7 @@ tree.list {
   min-height: 52px;
   max-width: 82px;
   max-height: 52px;
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
 }
 
 #preview-image-holder {

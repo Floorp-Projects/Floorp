@@ -657,8 +657,8 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // XXXldb What should really matter is whether there exist non-
   // empty frames in the block (with appropriate whitespace munging).
   // Consider the case where we clip off the overflow with
-  // 'overflow: hidden' (which doesn't currently affect mOverflowArea,
-  // but probably should.
+  // 'overflow: -moz-hidden-unscrollable' (which doesn't currently
+  // affect mOverflowArea, but probably should.
   if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) 
   {
     // Collapse the bottom margin with the top margin that was already
