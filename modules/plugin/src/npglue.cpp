@@ -5117,7 +5117,8 @@ NPL_IteratePluginTypes(NPReference* ref, NPReference plugin, NPMIMEType* type, c
  * to know which plug-ins can handle a particular type to build their popup menu).
  * The caller is responsible for deleting the strings and the array itself. 
  */
-char**
+/*~~~*/
+PR_IMPLEMENT(char**)
 NPL_FindPluginsForType(const char* typeToFind)
 {
 	char** result;
