@@ -89,6 +89,9 @@ public:
   nsresult FrameAppendedReflow(nsInlineReflowState& aState,
                                nsInlineReflow& aInlineReflow);
 
+  nsresult FrameDeletedReflow(nsInlineReflowState& aState,
+                              nsInlineReflow& aInlineReflow);
+
   nsresult ChildIncrementalReflow(nsInlineReflowState& aState,
                                   nsInlineReflow& aInlineReflow);
 
@@ -369,7 +372,13 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
         state.reflowCommand->GetChildFrame(newFrame);
         state.reflowCommand->GetPrevSiblingFrame(prevSibling);
         InsertNewFrame(newFrame, prevSibling);
-        // fall thru...
+        // XXX For now map into full reflow...
+        rv = ResizeReflow(state, inlineReflow);
+        break;
+
+      case nsIReflowCommand::FrameDeleted:
+        rv = FrameDeletedReflow(state, inlineReflow);
+        break;
 
       default:
         // XXX For now map the other incremental operations into full reflows
@@ -530,6 +539,62 @@ nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState,
     }
   }
   return rs;
+}
+
+nsInlineReflowStatus
+nsInlineFrame::FrameDeletedReflow(nsInlineReflowState& aState,
+                                  nsInlineReflow& aInlineReflow)
+{
+  // Get the deleted frame
+  nsIFrame* deletedFrame;
+  aState.reflowCommand->GetChildFrame(deletedFrame);
+
+  // Find the previous sibling frame
+  nsIFrame* prevSibling = nsnull;
+  for (nsIFrame* f = mFirstChild; f != deletedFrame; f->GetNextSibling(f)) {
+    if (nsnull == f) {
+      // We didn't find the deleted frame in our child list
+      NS_WARNING("Can't find deleted frame");
+      return NS_OK;
+    }
+
+    prevSibling = f;
+  }
+
+  // Take the frame away; Note that we also have to take away any
+  // continuations so we loop here until deadFrame is nsnull.
+  nsInlineFrame*  flow = this;
+  while (nsnull != deletedFrame) {
+    // Remove frame from sibling list
+    nsIFrame* nextSib;
+    deletedFrame->GetNextSibling(nextSib);
+    if (nsnull != prevSibling) {
+      prevSibling->SetNextSibling(nextSib);
+    }
+    else {
+      flow->mFirstChild = nextSib;
+    }
+
+    // Break frame out of its flow and then destroy it
+    nsIFrame* nextInFlow;
+    deletedFrame->GetNextInFlow(nextInFlow);
+    deletedFrame->BreakFromNextFlow();
+    deletedFrame->DeleteFrame(aState.mPresContext);
+    deletedFrame = nextInFlow;
+
+    if (nsnull != deletedFrame) {
+      // Get the parent of deadFrame's continuation
+      deletedFrame->GetGeometricParent((nsIFrame*&) flow);
+
+      // When we move to a next-in-flow then the deadFrame will be the
+      // first child of the new parent. Therefore we know that
+      // prevSibling will be null.
+      prevSibling = nsnull;
+    }
+  }
+
+  // XXX For now map into full reflow...
+  return ResizeReflow(aState, aInlineReflow);
 }
 
 nsInlineReflowStatus

@@ -1151,15 +1151,6 @@ NS_METHOD nsFrame::ContentReplaced(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::ContentDeleted(nsIPresShell*   aShell,
-                                  nsIPresContext* aPresContext,
-                                  nsIContent*     aContainer,
-                                  nsIContent*     aChild,
-                                  PRInt32         aIndexInParent)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
                                   nsIPresContext* aPresContext,
                                   nsIContent*     aChild,

@@ -45,12 +45,6 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  ContentDeleted(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             nsIContent*     aChild,
-                             PRInt32         aIndexInParent);
-
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,

@@ -48,6 +48,12 @@ public:
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer) = 0;
+
+  NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
+                            nsIDocument*    aDocument,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInContainer) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */

@@ -243,12 +243,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
-  NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
-                            nsIPresContext* aPresContext,
-                            nsIContent*     aContainer,
-                            nsIContent*     aChild,
-                            PRInt32         aIndexInParent);
-
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
@@ -2332,7 +2326,101 @@ nsBlockFrame::FrameDeletedReflow(nsBlockReflowState& aState)
   if (nsnull == mLines) {
     return NS_OK;
   } 
-  LineData* line = mLines;
+
+  // Get the deleted frame
+  nsIFrame* deletedFrame;
+  aState.reflowCommand->GetChildFrame(deletedFrame);
+
+  // Find the previous sibling frame
+  nsIFrame* prevSibling = nsnull;
+  for (nsIFrame* f = mLines->mFirstChild; f != deletedFrame; f->GetNextSibling(f)) {
+    if (nsnull == f) {
+      // We didn't find the deleted frame in our child list
+      NS_WARNING("Can't find deleted frame");
+      return NS_OK;
+    }
+
+    prevSibling = f;
+  }
+
+  // Find the line that contains deletedFrame; we also find the pointer to
+  // the line.
+  nsBlockFrame* flow = this;
+  LineData** linep = &flow->mLines;
+  LineData* line = flow->mLines;
+  while (nsnull != line) {
+    if (line->Contains(deletedFrame)) {
+      break;
+    }
+    linep = &line->mNext;
+    line = line->mNext;
+  }
+
+  // Remove frame and its continuations
+  while (nsnull != deletedFrame) {
+    while ((nsnull != line) && (nsnull != deletedFrame)) {
+#ifdef NS_DEBUG
+      nsIFrame* parent;
+      deletedFrame->GetGeometricParent(parent);
+      NS_ASSERTION(flow == parent, "messed up delete code");
+#endif
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
+         ("nsBlockFrame::ContentDeleted: deadFrame=%p", deletedFrame));
+
+      // Remove deletedFrame from the line
+      if (line->mFirstChild == deletedFrame) {
+        nsIFrame* nextFrame;
+        deletedFrame->GetNextSibling(nextFrame);
+        line->mFirstChild = nextFrame;
+      }
+      else {
+        nsIFrame* lastFrame = line->LastChild();
+        if (lastFrame == deletedFrame) {
+          line->SetLastContentIsComplete();
+        }
+      }
+
+      // Take deletedFrame out of the sibling list
+      if (nsnull != prevSibling) {
+        nsIFrame* nextFrame;
+        deletedFrame->GetNextSibling(nextFrame);
+        prevSibling->SetNextSibling(nextFrame);
+      }
+
+      // Destroy frame; capture its next-in-flow first in case we need
+      // to destroy that too.
+      nsIFrame* nextInFlow;
+      deletedFrame->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        deletedFrame->BreakFromNextFlow();
+      }
+      deletedFrame->DeleteFrame(aState.mPresContext);
+      deletedFrame = nextInFlow;
+
+      // If line is empty, remove it now
+      LineData* next = line->mNext;
+      if (0 == --line->mChildCount) {
+        *linep = next;
+        line->mNext = nsnull;
+        delete line;
+      }
+      else {
+        linep = &line->mNext;
+      }
+      line = next;
+    }
+
+    // Advance to next flow block if the frame has more continuations
+    if (nsnull != deletedFrame) {
+      flow = (nsBlockFrame*) flow->mNextInFlow;
+      NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
+      line = flow->mLines;
+      prevSibling = nsnull;
+    }
+  }
+
+  // Find the first dirty line. That's where we start to reflow
+  line = mLines;
   while (nsnull != line->mNext) {
     if (line->IsDirty()) {
       break;
@@ -3465,167 +3553,6 @@ nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBlockFrame::ContentDeleted(nsIPresShell*   aShell,
-                                nsIPresContext* aPresContext,
-                                nsIContent*     aContainer,
-                                nsIContent*     aChild,
-                                PRInt32         aIndexInParent)
-{
-  // Find the frame that precedes the frame to destroy and the frame
-  // to destroy (the first-in-flow if the frame is continued). We also
-  // find which of our next-in-flows contain the dead frame.
-  nsBlockFrame* flow;
-  nsIFrame* deadFrame;
-  nsIFrame* prevSibling;
-  if (aIndexInParent > 0) {
-    nsIContent* precedingContent;
-    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
-    prevSibling = aShell->FindFrameWithContent(precedingContent);
-    NS_RELEASE(precedingContent);
-
-    // The frame may have a next-in-flow. Get the last-in-flow; we do
-    // it the hard way because we can't assume that prevSibling is a
-    // subclass of nsSplittableFrame.
-    nsIFrame* nextInFlow;
-    do {
-      prevSibling->GetNextInFlow(nextInFlow);
-      if (nsnull != nextInFlow) {
-        prevSibling = nextInFlow;
-      }
-    } while (nsnull != nextInFlow);
-
-    // Get the dead frame (maybe)
-    prevSibling->GetGeometricParent((nsIFrame*&)flow);
-    prevSibling->GetNextSibling(deadFrame);
-    if (nsnull == deadFrame) {
-      // The deadFrame must be prevSibling's parent's next-in-flows
-      // first frame. Therefore it doesn't have a prevSibling.
-      flow = (nsBlockFrame*) flow->mNextInFlow;
-      if (nsnull != flow) {
-        deadFrame = flow->mLines->mFirstChild;
-      }
-      prevSibling = nsnull;
-    }
-  }
-  else {
-    prevSibling = nsnull;
-    flow = this;
-    deadFrame = mLines->mFirstChild;
-  }
-  NS_ASSERTION(nsnull != deadFrame, "yikes! couldn't find frame");
-  if (nsnull == deadFrame) {
-    return NS_OK;
-  }
-
-  // Generate a reflow command for the appropriate flow frame
-  nsIReflowCommand* cmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&cmd, flow,
-                                        nsIReflowCommand::FrameDeleted);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  aShell->AppendReflowCommand(cmd);
-  NS_RELEASE(cmd);
-
-  // Find line that contains deadFrame; we also find the pointer to
-  // the line.
-  LineData** linep = &flow->mLines;
-  LineData* line = flow->mLines;
-  while (nsnull != line) {
-    if (line->Contains(deadFrame)) {
-      break;
-    }
-    linep = &line->mNext;
-    line = line->mNext;
-  }
-
-  // Remove frame and its continuations
-  PRBool pseudos = flow->IsPseudoFrame();
-  while (nsnull != deadFrame) {
-    while ((nsnull != line) && (nsnull != deadFrame)) {
-#ifdef NS_DEBUG
-      nsIFrame* parent;
-      deadFrame->GetGeometricParent(parent);
-      NS_ASSERTION(flow == parent, "messed up delete code");
-#endif
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
-         ("nsBlockFrame::ContentDeleted: deadFrame=%p",
-          deadFrame));
-
-      // Remove deadFrame from the line
-      if (line->mFirstChild == deadFrame) {
-        nsIFrame* nextFrame;
-        deadFrame->GetNextSibling(nextFrame);
-        line->mFirstChild = nextFrame;
-      }
-      else {
-        nsIFrame* lastFrame = line->LastChild();
-        if (lastFrame == deadFrame) {
-          line->SetLastContentIsComplete();
-        }
-      }
-
-      // Take deadFrame out of the sibling list
-      if (nsnull != prevSibling) {
-        nsIFrame* nextFrame;
-        deadFrame->GetNextSibling(nextFrame);
-        prevSibling->SetNextSibling(nextFrame);
-      }
-
-      // Destroy frame; capture its next-in-flow first in case we need
-      // to destroy that too.
-      nsIFrame* nextInFlow;
-      deadFrame->GetNextInFlow(nextInFlow);
-      if (nsnull != nextInFlow) {
-        deadFrame->BreakFromNextFlow();
-      }
-      deadFrame->DeleteFrame(*aPresContext);
-      deadFrame = nextInFlow;
-
-      // If line is empty, remove it now
-      LineData* next = line->mNext;
-      if (0 == --line->mChildCount) {
-        *linep = next;
-        line->mNext = nsnull;
-        delete line;
-      }
-      else {
-        linep = &line->mNext;
-      }
-      line = next;
-    }
-
-    // Advance to next flow block if the frame has more continuations
-    if (nsnull != deadFrame) {
-      flow = (nsBlockFrame*) flow->mNextInFlow;
-      NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
-      line = flow->mLines;
-      prevSibling = nsnull;
-    }
-  }
-
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-    // Verify that the above delete code actually deleted the frames!
-    flow = this;
-    while (nsnull != flow) {
-      nsIFrame* frame = flow->mLines->mFirstChild;
-      while (nsnull != frame) {
-        nsIContent* content;
-        frame->GetContent(content);
-        NS_ASSERTION(content != aChild, "delete failed");
-        NS_RELEASE(content);
-        frame->GetNextSibling(frame);
-      }
-      flow = (nsBlockFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-
-  return rv;
 }
 
 PRBool

@@ -97,26 +97,6 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-// XXX CONSTRUCTION
-#if 0
-NS_IMETHODIMP nsAbsoluteFrame::ContentInserted(nsIPresShell*   aShell,
-                                               nsIPresContext* aPresContext,
-                                               nsIContent*     aContainer,
-                                               nsIContent*     aChild,
-                                               PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-inserted target");
-
-  // Forward the notification to the absolutely positioned frame
-  if (nsnull != mFrame) {
-    return mFrame->ContentInserted(aShell, aPresContext, aContainer, aChild,
-                                   aIndexInParent);
-  }
-
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsAbsoluteFrame::ContentReplaced(nsIPresShell*   aShell,
                                                nsIPresContext* aPresContext,
                                                nsIContent*     aContainer,
@@ -130,23 +110,6 @@ NS_IMETHODIMP nsAbsoluteFrame::ContentReplaced(nsIPresShell*   aShell,
   if (nsnull != mFrame) {
     return mFrame->ContentReplaced(aShell, aPresContext, aContainer,
                                    aOldChild, aNewChild, aIndexInParent);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAbsoluteFrame::ContentDeleted(nsIPresShell*   aShell,
-                                              nsIPresContext* aPresContext,
-                                              nsIContent*     aContainer,
-                                              nsIContent*     aChild,
-                                              PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-deleted target");
-
-  // Forward the notification to the absolutely positioned frame
-  if (nsnull != mFrame) {
-    return mFrame->ContentDeleted(aShell, aPresContext, aContainer, aChild,
-                                  aIndexInParent);
   }
 
   return NS_OK;
