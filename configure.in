@@ -833,9 +833,10 @@ LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 
 AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
 LIBS="-ltalkback $LIBS"
-AC_TRY_LINK(
-	#include "fullcircle.h",
-        #include <stdio.h>],
+AC_TRY_LINK([
+	#include "fullcircle.h"
+        #include <stdio.h>
+	],
         [FC_Initialize();
         exit(0);]
         ,[FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
