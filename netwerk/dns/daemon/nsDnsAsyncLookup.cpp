@@ -55,7 +55,7 @@
 #include <sys/un.h>
 #include "unix_dns.h"
 
-#if defined(AIX)
+#if defined(AIX) || defined(__linux)
 #include <sys/select.h>         // for fd_set
 #endif
 
@@ -65,7 +65,10 @@
 #include <resolv.h>             // for res_init() and _res
 #endif
 
-#if !defined(__irix)
+#if defined(__linux)
+// Didn't find gettdtablehi() or gettdtablesize() on linux. Using FD_SETSIZE
+#define getdtablehi() FD_SETSIZE
+#elif !defined(__irix)
 // looks like Irix is the only one that has getdtablehi()?
 #define getdtablehi() getdtablesize()
 
@@ -544,7 +547,7 @@ int main (int argc, char **argv)
                 if (!(strncmp (buffer, "shutdown:", 9)))
                     break;
 
-                char *name = index (buffer, ' ');
+                char *name = strchr ((const char *)buffer, ' ');
                 if (name && *name)
                     name++;
 
