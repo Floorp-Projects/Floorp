@@ -24,6 +24,8 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
+	ClassifiedPlus.gif		\
+	ClassifiedPlus.src		\
 	Jobs.gif			\
 	Jobs.src			\
 	Music_Artist.gif		\
