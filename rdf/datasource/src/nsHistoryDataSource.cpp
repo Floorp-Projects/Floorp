@@ -27,7 +27,6 @@
 #include "nscore.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"

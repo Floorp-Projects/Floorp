@@ -49,6 +49,7 @@
 #include "nsIParser.h"
 #include "nsIPresShell.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"

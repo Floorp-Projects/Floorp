@@ -30,7 +30,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRelatedLinksDataSource.obj \
         .\$(OBJDIR)\nsLocalStore.obj            \
         .\$(OBJDIR)\nsXULContentSink.obj        \
-        .\$(OBJDIR)\nsXULDataSource.obj         \
 	$(NULL)
 
 # XXX Note the dependency on $(DEPTH)\rdf\base\src: we use rdfutil.h over
