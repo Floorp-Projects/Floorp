@@ -25,6 +25,7 @@ mozilla/layout/events/src/nsDOMEventsIIDs.cpp
 mozilla/layout/events/src/nsEventListenerManager.cpp
 mozilla/layout/events/src/nsEventStateManager.cpp
 mozilla/layout/html/base/src/nsAbsoluteFrame.cpp
+mozilla/layout/html/base/src/nsAreaFrame.cpp
 mozilla/layout/html/base/src/nsBlockBandData.cpp
 mozilla/layout/html/base/src/nsBlockFrame.cpp
 mozilla/layout/html/base/src/nsBlockReflowContext.cpp
