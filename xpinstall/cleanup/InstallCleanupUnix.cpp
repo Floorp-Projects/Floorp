@@ -72,7 +72,7 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
         return DONE;
 
     // don't have to do anything if the files are the same
-    if (strcmp(replacementFile, doomedFile))
+    if (strcmp(replacementFile, doomedFile) == 0)
         return DONE;
 
     if (unlink(doomedFile) != 0)
