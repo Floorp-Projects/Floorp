@@ -88,7 +88,7 @@ HRESULT           DeInitializeSmartDownload(void);
 HRESULT           ParseSetupIni(void);
 HRESULT           GetConfigIni(void);
 void              CleanTempFiles(void);
-void              OutputTitle(HDC hDC, LPSTR szString);
+void              OutputSetupTitle(HDC hDC);
 HRESULT           SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir);
 HRESULT           RetrieveArchives(void);
 /* HRESULT           SmartUpdateJars(void); */
