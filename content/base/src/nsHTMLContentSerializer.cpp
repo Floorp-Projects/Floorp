@@ -38,7 +38,6 @@
 #include "nsEscape.h"
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
-static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kMozStr "_moz"
@@ -63,6 +62,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
   mColPos = 0;
   mIndent = 0;
   mInBody = PR_FALSE;
+  mInScriptOrStyle = PR_FALSE;
 }
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
@@ -267,7 +267,12 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
-    
+
+  if ((name.get() == nsHTMLAtoms::script) ||
+      (name.get() == nsHTMLAtoms::style)) {
+    mInScriptOrStyle = PR_TRUE;
+  }
+
   return NS_OK;
 }
   
@@ -296,7 +301,11 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   nsCOMPtr<nsIParserService> parserService;
   GetParserService(getter_AddRefs(parserService));
-  if (parserService) {
+
+  if ((name.get() == nsHTMLAtoms::script) ||
+      (name.get() == nsHTMLAtoms::style)) {
+    mInScriptOrStyle = PR_FALSE;
+  } else if (parserService) {
     nsAutoString nameStr(sharedName);
     PRBool isContainer;
     PRInt32 id;
@@ -444,6 +453,27 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
   }
 }
 
+static PRUint16 kGTVal = 62;
+static const char* kEntities[] = {
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "amp", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "lt", "", "gt"
+};
+
+static const char* kAttrEntities[] = {
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "quot", "", "", "", "amp", "apos",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "lt", "", "gt"
+};
+
 void
 nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
                                         nsAWritableString& aOutputStr,
@@ -457,17 +487,69 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
   if (aIncrColumn) {
     mColPos += aStr.Length();
   }
-  
-  if (aTranslateEntities) {
-    PRUnichar *encodedBuffer;
-    encodedBuffer = nsEscapeHTML2(nsPromiseFlatString(aStr), aStr.Length());
-    if (encodedBuffer) {
-      aOutputStr.Append(encodedBuffer);
-      nsCRT::free(encodedBuffer);
-      return;
+
+  if (aTranslateEntities && !mInScriptOrStyle) {
+    if (mFlags & nsIDocumentEncoder::OutputEncodeEntities) {
+      nsCOMPtr<nsIParserService> parserService;
+      GetParserService(getter_AddRefs(parserService));
+
+      if (!parserService) {
+        NS_ERROR("Can't get parser service");
+        return;
+      }
+
+      nsReadingIterator<PRUnichar> done_reading;
+      aStr.EndReading(done_reading);
+
+      // for each chunk of |aString|...
+      PRUint32 advanceLength = 0;
+      nsReadingIterator<PRUnichar> iter;
+
+      const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+
+      for (aStr.BeginReading(iter); 
+           iter != done_reading; 
+           iter.advance(PRInt32(advanceLength))) {
+        PRUint32 fragmentLength = iter.size_forward();
+        const PRUnichar* c = iter.get();
+        const PRUnichar* fragmentStart = c;
+        const PRUnichar* fragmentEnd = c + fragmentLength;
+        const char* entityText = nsnull;
+        nsCAutoString entityReplacement;
+
+        advanceLength = 0;
+        // for each character in this chunk, check if it
+        // needs to be replaced
+        for (; c < fragmentEnd; c++, advanceLength++) {
+          PRUnichar val = *c;
+          if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
+            entityText = entityTable[val];
+            break;
+          } else if (val > 127) {
+            parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
+
+            if (entityReplacement.Length() > 0) {
+              entityText = entityReplacement.GetBuffer();
+              break;
+            }
+          }
+        }
+
+        aOutputStr.Append(fragmentStart, advanceLength);
+        if (entityText) {
+          aOutputStr.Append(PRUnichar('&'));
+          aOutputStr.Append(NS_ConvertASCIItoUCS2(entityText));
+          aOutputStr.Append(PRUnichar(';'));
+          advanceLength++;
+        }
+      }
+    } else {
+      nsXMLContentSerializer::AppendToString(aStr, aOutputStr, aTranslateEntities, aIncrColumn);
     }
+
+    return;
   }
-  
+
   aOutputStr.Append(aStr);
 }
 

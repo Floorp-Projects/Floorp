@@ -56,6 +56,7 @@ nsXMLContentSerializer::nsXMLContentSerializer()
 {
   NS_INIT_ISUPPORTS();
   mPrefixIndex = 0;
+  mInAttribute = PR_FALSE;
 }
  
 nsXMLContentSerializer::~nsXMLContentSerializer()
@@ -219,16 +220,19 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
     AppendToString(quote, aStr);
     AppendToString(publicId, aStr);
     AppendToString(quote, aStr);
-    AppendToString(PRUnichar(' '), aStr);
-    if (systemId.FindChar(PRUnichar('"')) == -1) {
-      quote = PRUnichar('"');
+
+    if (systemId.Length()) {
+      AppendToString(PRUnichar(' '), aStr);
+      if (systemId.FindChar(PRUnichar('"')) == -1) {
+        quote = PRUnichar('"');
+      }
+      else {
+        quote = PRUnichar('\'');
+      }
+      AppendToString(quote, aStr);
+      AppendToString(systemId, aStr);
+      AppendToString(quote, aStr);
     }
-    else {
-      quote = PRUnichar('\'');
-    }
-    AppendToString(quote, aStr);
-    AppendToString(systemId, aStr);
-    AppendToString(quote, aStr);
   }
   else if (systemId.Length() > 0) {
     if (systemId.FindChar(PRUnichar('"')) == -1) {
@@ -363,7 +367,11 @@ nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
   AppendToString(aName, aStr);
   
   AppendToString(NS_LITERAL_STRING("=\""), aStr);
+
+  mInAttribute = PR_TRUE;
   AppendToString(aValue, aStr, PR_TRUE);
+  mInAttribute = PR_FALSE;
+
   AppendToString(NS_LITERAL_STRING("\""), aStr);
 }
 
@@ -531,6 +539,16 @@ static const char* kEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "&amp;", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "&lt;", "", "&gt;"
+};
+
+static const char* kAttrEntities[] = {
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
+  "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "&quot;", "", "", "", "&amp;", "&apos;",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
@@ -550,7 +568,9 @@ nsXMLContentSerializer::AppendToString(const nsAReadableString& aStr,
     // for each chunk of |aString|...
     PRUint32 advanceLength = 0;
     nsReadingIterator<PRUnichar> iter;
-    
+
+    const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+
     for (aStr.BeginReading(iter); 
          iter != done_reading; 
          iter.advance(PRInt32(advanceLength))) {
@@ -560,12 +580,13 @@ nsXMLContentSerializer::AppendToString(const nsAReadableString& aStr,
       const PRUnichar* fragmentEnd = c + fragmentLength;
       const char* entityText = nsnull;
 
+      advanceLength = 0;
       // for each character in this chunk, check if it
       // needs to be replaced
       for (; c < fragmentEnd; c++, advanceLength++) {
         PRUnichar val = *c;
-        if ((val <= kGTVal) && (kEntities[val][0] != 0)) {
-          entityText = kEntities[val];
+        if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
+          entityText = entityTable[val];
           break;
         }
       }
@@ -576,6 +597,8 @@ nsXMLContentSerializer::AppendToString(const nsAReadableString& aStr,
         advanceLength++;
       }
     }
+
+    return;
   }
   
   aOutputStr.Append(aStr);
