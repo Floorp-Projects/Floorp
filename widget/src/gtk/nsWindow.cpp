@@ -42,6 +42,8 @@
 
 #define DBG 0
 
+#define DEBUG_pavlov 1
+
 GtkWidget *gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
