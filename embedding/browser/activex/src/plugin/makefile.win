@@ -19,9 +19,11 @@
 #
 # Contributor(s): 
 
+###############################################################################
+# CUSTOMISE SETTINGS IN THIS SECTION AS APPROPRIATE FOR YOUR BUILD SYSTEM!
+
 DLLNAME = npmozax
 MODULE = npmozax
-QUIET =
 DEPTH =..\..\..\..\..
 
 REQUIRES = \
@@ -30,16 +32,55 @@ REQUIRES = \
     plugin \
     $(NULL)
 
+include <$(DEPTH)\config\config.mak>
+
+MAKE_OBJ_TYPE = DLL
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+RESFILE = MozActiveX.res
+DEFFILE = npmozax.def
+
 
 # The default is to include control support unless told to do otherwise
 MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
-# MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
+
+
+############
+# LiveConnect settings
+
 # MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
+
+# Specify where the PluginSDK, Java compiler, header file
+# generator and classes live.
+#
+# Note 1: you must use the javah from Netscape PluginSDK.
+# Note 2: you must use JDK1.3 or earlier which has the old JNI support (& oldjavac)
+
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+MOZ_PLUGINSDK = C:\m\PluginSDK
+JAVADIR = C:\j2sdk1.3.1
+JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
+JAVAC = $(JAVADIR)\bin\oldjavac
+JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
+CLASSPATH = $(JAVACLASSES);.
+!endif
+
+############
+# XPConnect settings
+
+# MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
+
+
+# Uncomment these if you wish the plugin to support LiveConnect (Netscape4.x)
+# or XPConnect (Netscape 6.x/Mozilla) for scripting purposes.
 
 # Path to the Mozilla ActiveX control (some files are copied from there)
 MOZCTLSRC=../control
 
+###############################################################################
+
 # Specify the path to the Communicator plugin SDK or get an error message!
+
+
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 !ifndef MOZ_PLUGINSDK
 !message The build cannot proceed because LiveConnect requires a path to
@@ -63,13 +104,9 @@ MOZCTLSRC=../control
 !endif
 !endif
 
-MAKE_OBJ_TYPE = DLL
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-RESFILE = MozActiveX.res
-DEFFILE = npmozax.def
 
 !ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-XPIDLSRCS= \
+XPIDLSRCS = \
     .\nsIMozAxPlugin.idl          \
     $(NULL)
 !endif
@@ -89,10 +126,16 @@ OBJS = \
 # most of these have to be here for nsSetupRegistry.cpp...
 
 LINCS = \
+    $(LINCS)             \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
-    -I..\control \
+    -I..\control         \
     -I$(MOZ_SRC)\include \
-    -I.\_gen \
+!endif
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+    -I.\_gen             \
+!endif
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    -I.\_xpidlgen             \
 !endif
     $(NULL) 
 
@@ -107,22 +150,12 @@ WIN_LIBS = \
     shell32.lib                    \
     $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
-include <$(DEPTH)\config\config.mak>
-
 LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
 LLFLAGS = -SUBSYSTEM:windows /DLL
 
-# If LiveConnect is enabled, we need to know where the Java compiler, header file
-# generator and classes live
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_LIVECONNECT
-JAVADIR = D:\jdk1.3.1
-JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
-JAVAC = $(JAVADIR)\bin\oldjavac
-JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
-CLASSPATH = $(JAVACLASSES);.
 !endif
 
 !ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
@@ -138,8 +171,15 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
 !endif
 
 libs:: $(DLL)
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin\plugins
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+    $(MAKE_INSTALL) MozAxPlugin.class $(DIST)\bin\plugins
+!endif
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+# TODO
+!endif
 
+include <$(DEPTH)\config\rules.mak>
 
 clobber::
     -del $(DEFFILE)
@@ -148,8 +188,11 @@ $(DEFFILE) : mkctldef.bat
     mkctldef.bat $(DEFFILE)
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-MozAxPlugin.class: MozAxPlugin.java
-  $(JAVAC) -classpath $(CLASSPATH) MozAxPlugin.java
+.\MozAxPlugin.class: .\MozAxPlugin.java
+    $(JAVAC) -classpath $(CLASSPATH) MozAxPlugin.java
+
+.\_gen\java_lang_Object.h : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
 
 .\_gen\netscape_plugin_Plugin.h : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
@@ -157,14 +200,11 @@ MozAxPlugin.class: MozAxPlugin.java
 .\_stubs\netscape_plugin_Plugin.c : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs netscape.plugin.Plugin
 
-.\_gen\java_lang_Object.h : $(JAVACLASSES)
-    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
+.\_gen\MozAxPlugin.h : .\MozAxPlugin.class
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
 
-.\_gen\MozAxPlugin.h : MozAxPlugin.class
-  $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
-
-.\_stubs\MozAxPlugin.c : MozAxPlugin.class
-  $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
+.\_stubs\MozAxPlugin.c : .\MozAxPlugin.class
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
 
 !endif
 
@@ -176,11 +216,15 @@ MozActiveX.res: MozActiveX.rc resource.h
 MozActiveX.cpp: StdAfx.h
 
 LegacyPlugin.cpp: StdAfx.h \
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    .\_xpidlgen\nsIMozAxPlugin.h    \
+!endif
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     .\_gen\MozAxPlugin.h            \
     .\_gen\netscape_plugin_Plugin.h \
     .\_gen\java_lang_Object.h       \
     .\_stubs\MozAxPlugin.c          \
+    .\_stubs\netscape_plugin_Plugin.c \
 !endif
     $(NULL)
 

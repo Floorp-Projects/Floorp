@@ -66,6 +66,7 @@ extern CComModule _Module;
 #include <mshtmhst.h>
 #include <docobj.h>
 #include <winsock2.h>
+#include <comdef.h>
 
 #ifdef USE_PLUGIN
 #include <activscp.h>

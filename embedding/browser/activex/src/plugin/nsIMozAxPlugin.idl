@@ -25,5 +25,13 @@
 [scriptable, uuid(b30c2717-2bbf-4475-9ddf-9e26f893f32a)]
 interface nsIMozAxPlugin : nsISupports
 {
-    void x();
+	void   invoke(in string str);
+
+	/* Set and return string values */
+	string getProperty(in string propertyName);
+	void   setProperty(in string propertyName, in string propertyValue);
+
+	/* Set or return an integer value */
+	short  getNProperty(in string propertyName);
+	void   setNProperty(in string propertyName, in short propertyValue);
 };
