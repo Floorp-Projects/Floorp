@@ -19,6 +19,7 @@
 
 %{ C++
 #include "nscore.h"
+#include "nsIServiceManager.h"
 %}
 
 #include "nsISupports.idl"
@@ -47,6 +48,24 @@ interface nsIFileLocator : nsISupports
 
 #define NS_FILELOCATOR_PROGID \
     "component://netscape/filelocator"
+
+// Factory method used in NSGetFactory for appshell.
+extern "C" NS_APPSHELL nsresult
+NS_NewFileLocatorFactory(nsIFactory** aFactory);
+
+// Mostly, all you want to do is this:
+inline nsIFileSpec* NS_LocateFileOrDirectory(PRUint32 selector)
+{
+    nsresult rv;
+    nsIFileSpec* spec = nsnull;
+    NS_WITH_SERVICE(nsIFileLocator, locator, NS_FILELOCATOR_PROGID, &rv);
+    if (NS_SUCCEEDED(rv) && locator)
+    {
+	    rv = locator->GetFileLocation(selector, &spec);
+	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate file.");
+    }
+    return spec;
+}
 
 %}
 
