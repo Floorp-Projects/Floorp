@@ -519,32 +519,32 @@ void nsParseMailMessageState::Init(PRUint32 fileposition)
 
 NS_IMETHODIMP nsParseMailMessageState::Clear()
 {
-	m_message_id.length = 0;
-	m_references.length = 0;
-	m_date.length = 0;
-	m_from.length = 0;
-	m_sender.length = 0;
-	m_newsgroups.length = 0;
-	m_subject.length = 0;
-	m_status.length = 0;
-	m_mozstatus.length = 0;
-	m_mozstatus2.length = 0;
-	m_envelope_from.length = 0;
-	m_envelope_date.length = 0;
-	m_priority.length = 0;
-	m_mdn_dnt.length = 0;
-	m_return_path.length = 0;
+  m_message_id.length = 0;
+  m_references.length = 0;
+  m_date.length = 0;
+  m_from.length = 0;
+  m_sender.length = 0;
+  m_newsgroups.length = 0;
+  m_subject.length = 0;
+  m_status.length = 0;
+  m_mozstatus.length = 0;
+  m_mozstatus2.length = 0;
+  m_envelope_from.length = 0;
+  m_envelope_date.length = 0;
+  m_priority.length = 0;
+  m_mdn_dnt.length = 0;
+  m_return_path.length = 0;
   m_in_reply_to.length = 0;
-	m_content_type.length = 0;
-	m_mdn_original_recipient.length = 0;
-	m_body_lines = 0;
-	m_newMsgHdr = nsnull;
-	m_envelope_pos = 0;
-	ClearAggregateHeader (m_toList);
-	ClearAggregateHeader (m_ccList);
-	m_headers.ResetWritePos();
-	m_envelope.ResetWritePos();
-	return NS_OK;
+  m_content_type.length = 0;
+  m_mdn_original_recipient.length = 0;
+  m_body_lines = 0;
+  m_newMsgHdr = nsnull;
+  m_envelope_pos = 0;
+  ClearAggregateHeader (m_toList);
+  ClearAggregateHeader (m_ccList);
+  m_headers.ResetWritePos();
+  m_envelope.ResetWritePos();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::SetState(nsMailboxParseState aState)
