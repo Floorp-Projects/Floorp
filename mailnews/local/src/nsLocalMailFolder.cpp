@@ -644,10 +644,10 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-        nsIMsgDatabase *unusedDB = NULL;
+        nsCOMPtr<nsIMsgDatabase> unusedDB;
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) &unusedDB);
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, getter_AddRefs(unusedDB));
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
