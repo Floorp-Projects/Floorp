@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
                                                 nsIAppShellComponent::GetIID(),
                                                 (void **)&composer);
     if (NS_SUCCEEDED(result)) {
-      printf("The Composer component is available. Initializing...\n");
+      printf("The Message Compose component is available. Initializing...\n");
       result = composer->Initialize(appShell, cmdLineArgs);
     }
   }
