@@ -31,7 +31,7 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToEUCJP : public nsTableEncoderSupport
+class nsUnicodeToEUCJP : public nsTablesEncoderSupport
 {
 public:
 
