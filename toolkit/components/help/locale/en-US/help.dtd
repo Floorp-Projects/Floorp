@@ -48,7 +48,6 @@
 <!ENTITY glossarytab.label  	  	"Glossary">
 <!ENTITY glossarytab.accesskey          "G">
 <!ENTITY glossname.label    	  	"Name">
-<!ENTITY gobtn.label        	  	"Search">
 <!ENTITY name.label	    	  	"Item">
 
 <!ENTITY textZoomReduceCmd.commandkey	"-">
