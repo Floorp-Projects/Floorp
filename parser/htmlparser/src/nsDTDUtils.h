@@ -75,7 +75,6 @@ class nsEntryStack;  //forware declare to make compilers happy.
 struct nsTagEntry {
   eHTMLTags       mTag;  //for speedier access to tag id
   nsIParserNode*  mNode;
-  PRInt32         mLevel;
   nsEntryStack*   mParent;
   nsEntryStack*   mStyles;
 };
@@ -86,8 +85,8 @@ public:
                   ~nsEntryStack();
 
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
-  void            Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
-  void            PushFront(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
+  void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
+  void            PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
   void            Append(nsEntryStack *theStack);
   nsIParserNode*  Pop(void);
   nsIParserNode*  NodeAt(PRInt32 anIndex) const;
@@ -132,8 +131,8 @@ public:
                 nsDTDContext();
                 ~nsDTDContext();
 
-  void            Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
-  nsIParserNode*  Pop(nsEntryStack*& aStack);
+  void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
+  nsIParserNode*  Pop(nsEntryStack*& aChildStack);
   eHTMLTags       First(void) const;
   eHTMLTags       Last(void) const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;

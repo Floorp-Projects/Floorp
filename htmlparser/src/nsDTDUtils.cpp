@@ -34,7 +34,18 @@ MOZ_DECL_CTOR_COUNTER(nsDTDContext);
 MOZ_DECL_CTOR_COUNTER(CTokenRecycler);
 MOZ_DECL_CTOR_COUNTER(CObserverService); 
  
+/**************************************************************************************
+  A few notes about how residual style handling is performed:
+   
+    1. The style stack contains nsTagEntry elements. 
+    2. Every tag on the containment stack can have it's own residual style stack.
+    3. When a style leaks, it's mParent member is set to the level on the stack where 
+       it originated. A node with an mParent of 0 is not opened on tag stack, 
+       but is open on stylestack.
+    4. An easy way to tell that a container on the element stack is a residual style tag
+       is that it's use count is >1.
 
+ **************************************************************************************/
 
 /**
  * Default constructor
@@ -117,7 +128,7 @@ void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
  * 
  * @update  gess 04/22/99
  */
-void nsEntryStack::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
     EnsureCapacityFor(mCount+1);
@@ -127,8 +138,7 @@ void nsEntryStack::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) 
 
     mEntries[mCount].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[mCount].mNode=(nsIParserNode*)aNode;
-    mEntries[mCount].mLevel=aResidualStyleLevel;
-    mEntries[mCount].mParent=0;
+    mEntries[mCount].mParent=aStyleStack;
     mEntries[mCount++].mStyles=0;
   }
 }
@@ -139,7 +149,7 @@ void nsEntryStack::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) 
  *
  * @update  gess 11/10/99
  */
-void nsEntryStack::PushFront(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+void nsEntryStack::PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
     if(mCount<mCapacity) {
@@ -156,8 +166,7 @@ void nsEntryStack::PushFront(const nsIParserNode* aNode,PRInt32 aResidualStyleLe
 
     mEntries[0].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[0].mNode=(nsIParserNode*)aNode;
-    mEntries[0].mLevel=aResidualStyleLevel;
-    mEntries[0].mParent=0;
+    mEntries[0].mParent=aStyleStack;
     mEntries[0].mStyles=0;
     mCount++;
   }
@@ -177,7 +186,7 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
     PRInt32 theIndex=0;
     for(theIndex=0;theIndex<theCount;theIndex++){
       mEntries[mCount]=aStack->mEntries[theIndex];
-      mEntries[mCount++].mLevel=-1;
+      mEntries[mCount++].mParent=0;
     }
   }
 } 
@@ -190,7 +199,7 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
  */
 nsIParserNode* nsEntryStack::Pop(void) {
 
-  nsIParserNode *result=0;
+  nsIParserNode* result=0;
 
   if(0<mCount) {
     result=mEntries[--mCount].mNode;
@@ -199,6 +208,24 @@ nsIParserNode* nsEntryStack::Pop(void) {
     ((nsCParserNode*)result)->mToken->mUseCount--;
     mEntries[mCount].mNode=0;
     mEntries[mCount].mStyles=0;
+
+    nsEntryStack* theStyleStack=mEntries[mCount].mParent;
+
+    if(theStyleStack) {
+      //now we have to tell the residual style stack where this tag
+      //originated that it's no longer in use.
+      PRUint32 scount=theStyleStack->mCount;
+      PRUint32 sindex=0;
+
+      nsTagEntry *theStyleEntry=theStyleStack->mEntries;
+      for(sindex=scount-1;sindex>=0;sindex--){            
+        if(theStyleEntry->mTag==mEntries[mCount].mTag) {
+          theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
+          break;
+        }
+        theStyleEntry++;
+      } //for
+    }
   }
   return result;
 } 
@@ -358,7 +385,7 @@ PRInt32 nsDTDContext::GetTopmostIndexOf(eHTMLTags aTag) const {
  * 
  * @update  gess7/9/98
  */
-void nsDTDContext::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+void nsDTDContext::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
 #ifdef  NS_DEBUG
@@ -367,7 +394,7 @@ void nsDTDContext::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) 
     if(size< eMaxTags)
       mXTags[size]=theTag;
 #endif
-    mStack.Push((nsIParserNode*)aNode,aResidualStyleLevel);
+    mStack.Push((nsIParserNode*)aNode,aStyleStack);
   }
 }
 
@@ -375,10 +402,10 @@ void nsDTDContext::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) 
  * @update  gess 11/11/99, 
  *          harishd 04/04/99
  */
-nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aStack) {
+nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
 
-  PRInt32       theSize=mStack.mCount;
-  nsIParserNode *result=0;
+  PRInt32         theSize=mStack.mCount;
+  nsIParserNode*  result=0;
 
   if(0<theSize) {
 
@@ -390,10 +417,11 @@ nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aStack) {
 
     nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
     if(theEntry) {
-      aStack=theEntry->mStyles;
+      aChildStyleStack=theEntry->mStyles;
     }
 
     result=mStack.Pop();
+    theEntry->mParent=0;
   }
 
   return result;
@@ -457,10 +485,6 @@ void nsDTDContext::PushStyle(const nsIParserNode* aNode){
     }
     if(theStack) {
       theStack->Push(aNode);
-      theEntry=&theStack->mEntries[theStack->mCount-1];
-      if(theEntry) {
-        theEntry->mParent=theStack;
-      }
     }
   } //if
 }
@@ -480,6 +504,16 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
       nsEntryStack* theStyles=theEntry->mStyles;
       if(!theStyles) {
         theEntry->mStyles=aStyles;
+
+        PRUint32 scount=aStyles->mCount;
+        PRUint32 sindex=0;
+
+        nsTagEntry *theEntry=aStyles->mEntries;
+        for(sindex=0;sindex<scount;sindex++){            
+          theEntry->mParent=0;  //this tells us that the style is not open at any level
+          theEntry++;
+        } //for
+
       }
       else theStyles->Append(aStyles);
     } //if
@@ -492,15 +526,13 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
  * @update  gess 04/28/99
  */
 nsIParserNode* nsDTDContext::PopStyle(void){
-  nsIParserNode* result=0;
+  nsIParserNode *result=0;
 
   nsTagEntry *theEntry=mStack.EntryAt(mStack.mCount-1);
   if(theEntry && (theEntry->mNode)) {
-    if(kNotFound<theEntry->mLevel){
-      nsEntryStack *theStack=mStack.mEntries[theEntry->mLevel].mStyles;
-      if(theStack) {
-        result=theStack->Pop();
-      }
+    nsEntryStack* theStyleStack=theEntry->mParent;
+    if(theStyleStack){
+      result=theStyleStack->Pop();
     }
   } //if
   return result;

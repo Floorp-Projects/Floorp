@@ -323,7 +323,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
  */
 PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
 
-  if(-1==aLen)
+  if(-1==(PRInt32)aLen)
     aLen=nsCRT::strlen(aBuffer);
 
   CBufDescriptor theDesc(aBuffer,PR_TRUE, aLen+1,aLen);

@@ -233,7 +233,7 @@ private:
     nsresult OpenForm(const nsIParserNode *aNode);
     nsresult OpenMap(const nsIParserNode *aNode);
     nsresult OpenFrameset(const nsIParserNode *aNode);
-    nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aUpdateStyleStack,PRInt32 aResidualStyleLevel=-1);
+    nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aUpdateStyleStack,nsEntryStack* aStyleStack=0);
 
     /**
      * The next set of methods close the given HTML element.

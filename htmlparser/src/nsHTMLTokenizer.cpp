@@ -359,8 +359,9 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         PRUnichar theNextChar; 
         result=aScanner.Peek(theNextChar);
         if(NS_OK==result) {
-          if(theNextChar==kMinus)
+          if((kMinus==theNextChar) || (kGreaterThan==theNextChar)) {
             result=ConsumeComment(aChar,aToken,aScanner);
+          }
           else
             result=ConsumeSpecialMarkup(aChar,aToken,aScanner); 
         }
