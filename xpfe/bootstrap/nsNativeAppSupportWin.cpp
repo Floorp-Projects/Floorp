@@ -378,6 +378,7 @@ private:
     static void     SetupSysTrayIcon();
     static void     RemoveSysTrayIcon();
 
+    static UINT mTrayRestart;
 
     static int   mConversations;
     enum {
@@ -952,6 +953,9 @@ struct MessageWindow {
             return TRUE;
         }
     }
+  } else if ((nsNativeAppSupportWin::mTrayRestart) && (msg == nsNativeAppSupportWin::mTrayRestart)) {
+     //Re-add the icon. The taskbar must have been destroyed and recreated
+     ::Shell_NotifyIcon( NIM_ADD, &nsNativeAppSupportWin::mIconData );
   }
   return DefWindowProc( msgWindow, msg, wp, lp );
 }
@@ -960,6 +964,7 @@ private:
     HWND mHandle;
 }; // struct MessageWindow
 
+UINT nsNativeAppSupportWin::mTrayRestart = 0;
 static char nameBuffer[128] = { 0 };
 char *nsNativeAppSupportWin::mAppName = nameBuffer;
 
@@ -2202,6 +2207,11 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
     }
 
     // Add the tray icon.
+
+    /* The tray icon will be removed if explorer restarts. Therefore, we are registering
+    the following window message so we know when the taskbar is created. Explorer will send
+    this message when explorer restarts.*/
+    mTrayRestart = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
     ::Shell_NotifyIcon( NIM_ADD, &mIconData );
 }
 
@@ -2209,6 +2219,7 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
 void
 nsNativeAppSupportWin::RemoveSysTrayIcon() {
     // Remove the tray icon.
+    mTrayRestart = 0;
     ::Shell_NotifyIcon( NIM_DELETE, &mIconData );
     // Delete the menu.
     ::DestroyMenu( mTrayIconMenu );
