@@ -1478,3 +1478,16 @@ nsSocketTransport::GetContentType(char * *aContentType)
   return NS_ERROR_FAILURE;    // XXX doesn't make sense for transports
 }
 
+NS_IMETHODIMP
+nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  NS_ASSERTION(0, "transports shouldn't end up in groups");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+  NS_ASSERTION(0, "transports shouldn't end up in groups");
+  return NS_ERROR_FAILURE;
+}

@@ -27,6 +27,7 @@
 #include "nsIURI.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
+#include "nsCOMPtr.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
@@ -58,6 +59,8 @@ public:
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
 
     // nsIFTPChannel methods:
     NS_IMETHOD Get(void);
@@ -95,6 +98,7 @@ protected:
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
     PRUint32                mLoadAttributes;
+    nsCOMPtr<nsILoadGroup>  mLoadGroup;
 };
 
 #endif /* nsFTPChannel_h___ */
