@@ -71,11 +71,11 @@
     list-style-image: url("chrome://venkman/skin/images/stop.png");
 }
 
-#stop-button[checked="true"] {
+#stop-button[willStop="true"] {
     list-style-image: url("chrome://venkman/skin/images/stop-checked.png");
 }
 
-#stop-button[checked="true"]:hover {
+#stop-button[willStop="true"]:hover {
     list-style-image: url("chrome://venkman/skin/images/stop-checked-hov.png");
 }
 
