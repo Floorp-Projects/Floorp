@@ -3229,6 +3229,12 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       result = HandleScriptToken(aNode);
       break;
     
+    case eHTMLTag_noembed:
+      // <noembed> is unconditionally alternate content.
+      done = PR_FALSE;
+      mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
+      break;
+
     case eHTMLTag_noscript:
       // we want to make sure that OpenContainer gets called below since we're
       // not doing it here
@@ -3315,6 +3321,7 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       break;
     
     case eHTMLTag_iframe:
+    case eHTMLTag_noembed:
     case eHTMLTag_noscript:
     case eHTMLTag_noframes:
       // switch from alternate content state to regular state
