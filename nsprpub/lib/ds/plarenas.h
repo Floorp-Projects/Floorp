@@ -18,6 +18,7 @@
 
 #if defined(PLARENAS_H)
 #else  /* defined(PLARENAS_H) */
+#define PLARENAS_H
 
 PR_BEGIN_EXTERN_C
 
