@@ -193,7 +193,7 @@ set_a_IFoo( nsCOMPtr<IFoo>* result )
     cout << ">>set_a_IFoo()" << endl;
     assert(result);
 
-    nsCOMPtr<IFoo> foop( new IFoo );
+    nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
     *result = foop;
     cout << "<<set_a_IFoo()" << endl;
   }
@@ -202,7 +202,7 @@ nsCOMPtr<IFoo>
 return_a_IFoo()
   {
     cout << ">>return_a_IFoo()" << endl;
-    nsCOMPtr<IFoo> foop( new IFoo );
+    nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
     cout << "<<return_a_IFoo()" << endl;
     return foop;
   }
@@ -389,10 +389,10 @@ main()
 
     {
       cout << endl << "### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?" << endl;
-      nsCOMPtr<IFoo> foop( new IFoo );
+      nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
 
       cout << endl << "### Test  2: will a |nsCOMPtr| |Release| its old pointer when a new one is assigned in?" << endl;
-      foop = new IFoo;
+      foop = do_QueryInterface(new IFoo);
 
         // [Shouldn't compile] Is it a compile time error to try to |AddRef| by hand?
       //foop->AddRef();
@@ -411,13 +411,13 @@ main()
 
     {
       cout << endl << "### Test  6: will a |nsCOMPtr| call the correct destructor?" << endl;
-      nsCOMPtr<IFoo> foop( new IBar );
+      nsCOMPtr<IFoo> foop( do_QueryInterface(new IBar) );
     }
 
     {
       cout << endl << "### Test  7: can you compare one |nsCOMPtr| with another [!=]?" << endl;
 
-      nsCOMPtr<IFoo> foo1p( new IFoo );
+      nsCOMPtr<IFoo> foo1p( do_QueryInterface(new IFoo) );
 
         // [Shouldn't compile] Is it a compile time error to omit |getter_[doesnt_]AddRef[s]|?
       //AnIFooPtrPtrContext(&foo1p);
@@ -425,7 +425,7 @@ main()
         // [Shouldn't compile] Is it a compile time error to omit |getter_[doesnt_]AddRef[s]|?
       //AVoidPtrPtrContext(&foo1p);
 
-      nsCOMPtr<IFoo> foo2p( new IFoo );
+      nsCOMPtr<IFoo> foo2p( do_QueryInterface(new IFoo) );
 
       if ( foo1p != foo2p )
         cout << "foo1p != foo2p" << endl;
@@ -536,14 +536,14 @@ main()
 			nsCOMPtr<IFoo> fooP;
 
 			cout << "### Test 21: is |QueryInterface| called on assigning in a raw pointer?" << endl;
-			fooP = new IFoo;
+			fooP = do_QueryInterface(new IFoo);
 		}
     cout << "### End Test 21" << endl;
 
 		{
     	cout << endl << "### setup for Test 22" << endl;
 			nsCOMPtr<IFoo> fooP;
-			fooP = new IFoo;
+			fooP = do_QueryInterface(new IFoo);
 
 			nsCOMPtr<IFoo> foo2P;
 
@@ -554,7 +554,7 @@ main()
 
 		{
     	cout << endl << "### setup for Test 23" << endl;
-			nsCOMPtr<IBar> barP( new IBar );
+			nsCOMPtr<IBar> barP( do_QueryInterface(new IBar) );
 
 			cout << "### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?" << endl;
 
@@ -578,7 +578,7 @@ main()
 
 
     cout << endl << "### Test 25: will a static |nsCOMPtr| |Release| before program termination?" << endl;
-    gFoop = new IFoo;
+    gFoop = do_QueryInterface(new IFoo);
     
     cout << "<<main()" << endl;
     return 0;
