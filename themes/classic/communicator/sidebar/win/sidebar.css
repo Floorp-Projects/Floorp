@@ -33,7 +33,7 @@
   
 #sidebar-panel-picker:hover
   {
-    color                 : activecaption !important;
+    color                 : inactivecaptiontext !important;
   }
 
 .sidebar-header-text  
