@@ -45,7 +45,8 @@ static int ltermWrite(struct lterms *lts, int *opcodes);
 static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr);
 static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr,
                                  int opcodes, int opvals, int oprow);
-static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr);
+static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr,
+                                int completionRequested);
 static int ltermReturnOutputLine(struct lterms *lts, struct LtermRead *ltr);
 
 
@@ -578,7 +579,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
 
       if (inOpcodes != 0) {
         /* Echoable input data processed; return input line */
-        returnCode = ltermReturnInputLine(lts, ltr);
+        returnCode = ltermReturnInputLine(lts, ltr, 0);
         if (returnCode < 0)
           return returnCode;
 
@@ -664,6 +665,9 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
         if (returnCode < 0)
           return returnCode;
 
+        LTERM_LOG(ltermRead,33, ("read_count=%d, echoChars=%d\n",
+                                 ltr->read_count, lts->echoChars));
+
         if (lts->inputLineBreak) {
           /* Compare output line to initial portion of echo line */
           echoMatch = 1;
@@ -741,7 +745,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
               }
 
               /* Return updated input line, prefixed with prompt */
-              returnCode = ltermReturnInputLine(lts, ltr);
+              returnCode = ltermReturnInputLine(lts, ltr, 1);
               if (returnCode < 0)
                 return returnCode;
 
@@ -756,7 +760,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
             LTERM_LOG(ltermRead,32,("Prompt-only line\n"));
 
             /* Return updated input line, prefixed with prompt */
-            returnCode = ltermReturnInputLine(lts, ltr);
+            returnCode = ltermReturnInputLine(lts, ltr, 0);
             if (returnCode < 0)
               return returnCode;
           }
@@ -1053,13 +1057,15 @@ static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr,
 /** Returns incomplete input line, prefixed with prompt or incomplete output.
  * (Auxiliary procedure for ltermRead.)
  * The LtermRead structure *LTR contains both input and output parameters.
+ * Set COMPLETIONREQUESTED to true if this is a completed command line.
  * @return  0 if successful,
  *         -1 if an error occurred while reading,
  *         -3 if more than COUNT characters are present in the line
  *            (in this case the first COUNT characters are returned in BUF,
  *             and the rest are discarded).
  */
-static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr)
+static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr,
+                                int completionRequested)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
   struct LtermInput *lti = &(lts->ltermInput);
@@ -1070,10 +1076,16 @@ static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr)
                                         lto->outputChars, lto->promptChars));
 
   if (lto->promptChars > 0) {
-    /* Prefix with prompt portion of output only */
+    /* Prefix with prompt output data */
     ltr->opcodes = LTERM_LINEDATA_CODE;
 
-    outChars = lto->promptChars;
+    if (completionRequested) {
+      outChars = lto->promptChars;
+    } else {
+      /* Hack to handle misidentified prompts */
+      outChars = lto->outputChars;
+    }
+
     if (outChars > ltr->max_count)
       outChars = 0;
 

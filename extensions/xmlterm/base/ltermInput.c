@@ -421,6 +421,11 @@ static int ltermLineInput(struct lterms *lts,
     } else {
       /* Control character */
 
+      /* Translate carriage returns to linefeeds in line mode
+         (***NOTE*** may not be portable out of *nix) */
+      if (uch == U_CRETURN)
+        uch = U_LINEFEED;
+
       /* Line break control characters */
       if ( (uch == U_LINEFEED)               ||
            (uch == lts->control[TTYDISCARD]) ||
@@ -484,13 +489,14 @@ static int ltermLineInput(struct lterms *lts,
 
         LTERM_LOG(ltermLineInput,31,("TTYKILL\n"));
 
-      } else if ((uch == U_BACKSPACE) ||
+      } else if ((uch == U_BACKSPACE) || (uch == U_DEL) ||
                  (uch == lts->control[TTYERASE])) {
         /* erase glyph */
         if (ltermDeleteGlyphs(lti, 1) != 0)
           return -1;
 
-        LTERM_LOG(ltermLineInput,39,("TTYERASE\n"));
+        LTERM_LOG(ltermLineInput,39,("TTYERASE=%x/%x\n",
+                                     lts->control[TTYERASE], uch ));
 
       } else {
         /* other control characters */
@@ -542,10 +548,8 @@ static int ltermLineInput(struct lterms *lts,
           case U_CTL_Y:              /* yank */
           case U_TAB:                /* command completion */
 
-            if ( (lti->inputChars == 0) && (uch == U_CTL_D) &&
-                !((lts->processType == LTERM_TCSH_PROCESS) &&
-                  (lti->inputMode >= LTERM3_COMPLETION_MODE)) ) {
-              /* If lone ^D and not TCSH completion, simply transmit it */
+            if ((lti->inputChars == 0) && (uch == U_CTL_D)) {
+              /* If lone ^D input, simply transmit it */
               if (ltermSendData(lts, &uch, 1) != 0)
                 return -1;
               return 0;

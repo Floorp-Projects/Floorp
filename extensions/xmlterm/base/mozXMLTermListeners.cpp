@@ -294,14 +294,16 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_ALT:
         break;                         // ignore modifier key event
       case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-      case nsIDOMKeyEvent::DOM_VK_DELETE:
         keyChar = U_BACKSPACE;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_DELETE:
+        keyChar = U_DEL;
         break;
       case nsIDOMKeyEvent::DOM_VK_TAB:
         keyChar = U_TAB;
         break;
       case nsIDOMKeyEvent::DOM_VK_RETURN:
-        keyChar = U_LINEFEED;
+        keyChar = U_CRETURN;
         break;
       case nsIDOMKeyEvent::DOM_VK_LEFT:
         keyChar = U_CTL_B;
@@ -341,9 +343,10 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
 
     } else if ((ctrlKey == PR_TRUE) && (altKey == PR_FALSE) &&
-               (keyChar > 0x60U) && (keyChar < 0xA0U)) {
+               (keyChar >= 0x40U) && (keyChar < 0x80U)) {
       // Control character, without Alt; adjust character code
-      keyChar = keyChar - 0x60U;   // Is this portable?
+      // Is this portable?
+      keyChar = (keyChar >= 0x60U) ? keyChar-0x60U : keyChar-0x40U;
     }
 
     if (JSCommand.Length() > 0) {
@@ -364,8 +367,6 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
                                                 JSOutput);
       }
     }
-    // Translate Carriage Return to LineFeed (may not be portable??)
-    if (keyChar == U_CRETURN) keyChar = U_LINEFEED;
 
     if (!mSuspend && (keyChar > 0) && (keyChar <= 0xFFFDU)) {
       // Transmit valid non-null Unicode character

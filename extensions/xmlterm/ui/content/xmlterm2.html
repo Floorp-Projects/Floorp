@@ -322,7 +322,7 @@
       function LoadHandler() {
         dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
 
-        //UsageTip();
+        UsageTip();
 
         if (window.xmlterm) {
            // XMLTerm already initialized
@@ -420,7 +420,32 @@
 
   <BODY onLoad="return LoadHandler();">
 
- <HR>
+    <TABLE FRAME=none BORDER=0>
+      <TBODY>
+      <TR><TD ALIGN=center>
+        <FORM NAME="XMLTERM form">
+          <INPUT TYPE="button" VALUE="Hide all output"
+               onClick="return HideAll();">
+          <INPUT TYPE="button" VALUE="Show all output"
+               onClick="return ShowAll();">
+          <INPUT TYPE="button" VALUE="SetHistory"
+                 onClick="return SetHistoryValue();">
+          <INPUT TYPE="button" VALUE="SetPrompt"  onClick="return SetPromptValue();">
+          <INPUT TYPE="button" VALUE="NewXMLTerm"  onClick="return NewXMLTerm('');">
+          <BR>
+          Input Value:
+          <INPUT SIZE=50 TYPE="text" ID="InputValue"
+                 VALUE="<img src='http:/dmoz.org/img/lizard2a.gif'>"
+                 onFocus="return FormFocus();" onBlur="return FormBlur();">
+        </FORM>
+    </TABLE>
+
+<SPAN CLASS="tiphead" ID="tiphead" STYLE="font-weight:bold"> &nbsp; </SPAN>
+<SPAN CLASS="tipdata" ID="tipdata"> &nbsp; </SPAN>
+
+<SPAN CLASS="moretips" ID="moretips" onClick="return MoreTips();">
+More tips/news
+</SPAN>
 <P>
 <!--
     <IFRAME NAME="iframet" SRC="chrome://xmlterm/content/xmltblank.html"

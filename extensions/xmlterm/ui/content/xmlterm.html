@@ -179,10 +179,23 @@
 
         // Entry independent targets
         if (action === "textlink") {
+          // Single click opens hyperlink
+          // Browser-style
           dump("textlink = "+arg1+"\n");
           Load(arg1);
   
         } else if (eventType === "click") {
+
+           dump("clickCount="+eventObj.clickCount+"\n");
+
+           var dblClick = (eventObj.clickCount > 1);
+
+           // Execute shell commands only on double-click for safety
+           // Use single click for "selection" only
+           // Windows-style
+           if (!dblClick)
+              return false;
+
            if (targetType === "prompt") {
              var outputElement = document.getElementById("output"+entryNumber);
              var promptElement = document.getElementById("prompt"+entryNumber);
@@ -199,7 +212,6 @@
            } else if (targetType === "command") {
              var commandElement = document.getElementById(targetType+entryNumber);
              var command = commandElement.firstChild.data;
-             dump("command = "+command+"\n\n");
              window.xmlterm.SendText("\025"+command+"\n", document.cookie);
 
            } else {

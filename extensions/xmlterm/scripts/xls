@@ -63,11 +63,19 @@ foreach $file (glob("*")) {        # for each file in current directory
         $sendtxt1 = "$dir/$file";
         $sendtxt2 = "./$file";
 
-    } elsif (($extension eq ".gif") || ($extension eq ".png") || ($extension eq ".jpg")) {  # image
+    } elsif (($extension eq ".gif") ||
+             ($extension eq ".png") ||
+             ($extension eq ".jpg")) {  # image
         $filetype = "imagefile";
         $fileimg  = "file://$dir/$file";
         $sendtxt1 = "xcat $dir/$file";
         $sendtxt2 = "xcat $file";
+
+    } elsif ($extension eq ".ps") {     # postscript
+        $filetype = "plainfile";
+        $fileimg  = "$imgdir/$img{$filetype}";
+        $sendtxt1 = "ghostview $dir/$file &";
+        $sendtxt2 = "ghostview $file &";
 
     } elsif ($extension eq ".url") {  # URL
         open INFILE, $file or next;
