@@ -155,6 +155,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 {
   mEditorType.Truncate();
   mEditorFlags = 0;
+  mWindowToBeEdited = getter_AddRefs(NS_GetWeakReference(aWindow));
 
   // disable plugins
   nsCOMPtr<nsIDocShell> docShell;
@@ -188,6 +189,8 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
     aEditorType = DEFAULT_EDITOR_TYPE;
   mEditorType = aEditorType;
 
+  // if all this does is setup listeners and I don't need listeners, 
+  // can't this step be ignored?? (based on aDoAfterURILoad)
   rv = PrepareForEditing();
   if (NS_FAILED(rv)) return rv;  
   
@@ -607,7 +610,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     nsCAutoString contentType;
     channel->GetContentType(contentType);
     if (!contentType.IsEmpty())
-      printf(" ++++++ MIMETYPE = %s", contentType.get());
+      printf(" ++++++ MIMETYPE = %s\n", contentType.get());
   }
 #endif
 
@@ -649,8 +652,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
     {
       mCanCreateEditor = PR_TRUE;
-      if (NotifyingCurrentDocument(aWebProgress))
-        (void)StartDocumentLoad(aWebProgress);
+      (void)StartDocumentLoad(aWebProgress,
+                              IsProgressForTargetDocument(aWebProgress));
 #ifdef NOISY_DOC_LOADING
       printf("STATE_START & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
 #endif
@@ -701,22 +704,16 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
       printf("     STATE_STOP: NO CHANNEL  flags=%x\n", aStateFlags);
   }
 #endif
+
     // Document level notification...
     if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
     {
-      if (NotifyingCurrentDocument(aWebProgress))
-      {
-        // Ignore STOP messages we get before we received a START
-        if (mCanCreateEditor)
-        {
-          mCanCreateEditor = PR_FALSE;
-          nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-          nsresult rv = EndDocumentLoad(aWebProgress, channel, aStatus);
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+      nsresult rv = EndDocumentLoad(aWebProgress, channel, aStatus,
+                                    IsProgressForTargetDocument(aWebProgress));
 #ifdef NOISY_DOC_LOADING
-          printf("STATE_STOP & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
+      printf("STATE_STOP & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
 #endif
-        }
-      }      
     }
 
     // Page level notification...
@@ -822,15 +819,20 @@ nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 /*---------------------------------------------------------------------------
 
-  NotifyingCurrentDocument
+  IsProgressForTargetDocument
 
-  Check that this notification is for our document. Necessary?
+  Check that this notification is for our document.
 ----------------------------------------------------------------------------*/
 
 PRBool
-nsEditingSession::NotifyingCurrentDocument(nsIWebProgress *aWebProgress)
+nsEditingSession::IsProgressForTargetDocument(nsIWebProgress *aWebProgress)
 {
-  return PR_TRUE;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  if (aWebProgress)
+    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  nsCOMPtr<nsIDOMWindow> editedDOMWindow = do_QueryReferent(mWindowToBeEdited);
+
+  return (domWindow && (domWindow == editedDOMWindow));
 }
 
 
@@ -857,10 +859,11 @@ nsEditingSession::GetEditorStatus(PRUint32 *aStatus)
   Called on start of load in a single frame
 ----------------------------------------------------------------------------*/
 nsresult
-nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress)
+nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress, 
+                                    PRBool aIsToBeMadeEditable)
 {
 #ifdef NOISY_DOC_LOADING
-  printf("Editing session StartDocumentLoad\n");
+  printf("======= StartDocumentLoad ========\n");
 #endif
 
   NS_ENSURE_ARG_POINTER(aWebProgress);
@@ -869,13 +872,14 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress)
   // We need to blow it away and make a new one at the end of the load.
   nsCOMPtr<nsIDOMWindow> domWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-
   if (domWindow)
   {
     nsresult rv = TearDownEditorOnWindow(domWindow);
   }
     
-  mEditorStatus = eEditorCreationInProgress;
+  if (aIsToBeMadeEditable)
+    mEditorStatus = eEditorCreationInProgress;
+
   return NS_OK;
 }
 
@@ -887,13 +891,22 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress)
 ----------------------------------------------------------------------------*/
 nsresult
 nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
-                                  nsIChannel* aChannel, nsresult aStatus)
+                                  nsIChannel* aChannel, nsresult aStatus,
+                                  PRBool aIsToBeMadeEditable)
 {
   NS_ENSURE_ARG_POINTER(aWebProgress);
   
 #ifdef NOISY_DOC_LOADING
-  printf("Editing shell EndDocumentLoad\n");
+  printf("======= EndDocumentLoad ========\n");
+  printf("with status %d, ", aStatus);
+  nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString spec;
+  if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(uri)))) {
+    uri->GetSpec(spec);
+    printf(" uri %s\n", spec.get());
+  }
 #endif
+
   // We want to call the base class EndDocumentLoad,
   // but avoid some of the stuff
   // that nsWebShell does (need to refactor).
@@ -904,8 +917,10 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   
   // Set the error state -- we will create an editor 
   // anyway and load empty doc later
-  if (aStatus == NS_ERROR_FILE_NOT_FOUND)
-    mEditorStatus = eEditorErrorFileNotFound;
+  if (aIsToBeMadeEditable) {
+    if (aStatus == NS_ERROR_FILE_NOT_FOUND)
+      mEditorStatus = eEditorErrorFileNotFound;
+  }
 
   nsCOMPtr<nsIDocShell> docShell;
   nsresult rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
@@ -921,13 +936,14 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
 
   // did someone set the flag to make this shell editable?
-  if (editorDocShell)
+  if (aIsToBeMadeEditable && mCanCreateEditor && editorDocShell)
   {
     PRBool  makeEditable;
     editorDocShell->GetEditable(&makeEditable);
   
     if (makeEditable)
     {
+      mCanCreateEditor = PR_FALSE;
       rv = SetupEditorOnWindow(domWindow);
       if (NS_FAILED(rv))
       {
@@ -992,6 +1008,23 @@ nsresult
 nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
                               nsIChannel* aChannel, nsresult aStatus)
 {
+#ifdef NOISY_DOC_LOADING
+  printf("======= EndPageLoad ========\n");
+  printf("  with status %d, ", aStatus);
+  nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString spec;
+  if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(uri)))) {
+    uri->GetSpec(spec);
+    printf("uri %s\n", spec.get());
+  }
+ 
+  nsCAutoString contentType;
+  aChannel->GetContentType(contentType);
+  if (!contentType.IsEmpty())
+    printf("   flags = %d, status = %d, MIMETYPE = %s\n", 
+               mEditorFlags, mEditorStatus, contentType.get());
+#endif
+
   // Set the error state -- we will create an editor anyway 
   // and load empty doc later
   if (aStatus == NS_ERROR_FILE_NOT_FOUND)
@@ -1011,7 +1044,12 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   if (refreshURI)
     refreshURI->CancelRefreshURITimers();
 
+#if 0
+  // Shouldn't we do this when we want to edit sub-frames?
+  return MakeWindowEditable(domWindow, "html", PR_FALSE);
+#else
   return NS_OK;
+#endif
 }
 
 

@@ -122,14 +122,16 @@ protected:
   nsCOMPtr<nsITimer>  mLoadBlankDocTimer;
   
   // progress load stuff
-  nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress);
+  nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress,
+                                    PRBool isToBeMadeEditable);
   nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, 
-                                  nsIChannel* aChannel, nsresult aStatus);
+                                  nsIChannel* aChannel, nsresult aStatus,
+                                  PRBool isToBeMadeEditable);
   nsresult        StartPageLoad(nsIChannel *aChannel);
   nsresult        EndPageLoad(nsIWebProgress *aWebProgress, 
                               nsIChannel* aChannel, nsresult aStatus);
   
-  PRBool          NotifyingCurrentDocument(nsIWebProgress *aWebProgress);
+  PRBool          IsProgressForTargetDocument(nsIWebProgress *aWebProgress);
 
 protected:
 
@@ -146,6 +148,8 @@ protected:
   // MORE THAN ONE EDITOR PER EDITING SESSION
   nsCOMPtr<nsISupports> mStateMaintainer;  // we hold the owning ref to this
   
+  nsWeakPtr       mWindowToBeEdited;
+
   // Save the editor type so we can create the editor after loading uri
   nsCString       mEditorType; 
   PRUint32        mEditorFlags;
