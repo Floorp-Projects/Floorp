@@ -901,7 +901,9 @@ NS_IMETHODIMP
 nsNetlibService::SetCustomUserAgent(nsString aCustom)
 {
     PRInt32 inIdx;
-    PRUnichar junkChar = '[';   // damn emacs
+#ifdef emacs_knew_how_to_pattern_match_better_oh_well
+    PRUnichar junkChar = '[';
+#endif
     PRUnichar inChar = ']';
 
     if (!XP_AppVersion || (0 >= aCustom.Length()) )
@@ -980,7 +982,7 @@ nsNetlibService::RegisterProtocol(const nsString& aName,
     }
     pair->mProtocolURLFactory = aProtocolURLFactory;
     pair->mProtocol = aProtocol;
-    void* result = mProtocols->Put(key, pair);
+    mProtocols->Put(key, pair);
     return NS_OK;
 }
 
@@ -1490,7 +1492,13 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 
 	resourceBase = XP_STRDUP(nsUnixMozillaHomePath);
 #ifdef DEBUG
-    printf("Using '%s' as the resource: base\n", resourceBase);
+    {
+        static PRBool firstTime = PR_TRUE;
+        if (firstTime) {
+            firstTime = PR_FALSE;
+            printf("Using '%s' as the resource: base\n", resourceBase);
+        }
+    }
 #endif
 
 #endif /* XP_UNIX */
