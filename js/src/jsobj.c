@@ -1266,15 +1266,21 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
 static JSBool
 obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JSObject *funobj;
     JSFunction *fun;
     jsval userid, value;
     jsid propid;
     uintN attrs;
 
-    fun = js_ValueToFunction(cx, &argv[1], 0);
-    if (!fun)
-        return JS_FALSE;
-    argv[1] = OBJECT_TO_JSVAL(fun->object);
+    if (JSVAL_IS_FUNCTION(cx, argv[1])) {
+        funobj = JSVAL_TO_OBJECT(argv[1]);
+    } else {
+        fun = js_ValueToFunction(cx, &argv[1], 0);
+        if (!fun)
+            return JS_FALSE;
+        funobj = fun->object;
+    }
+    argv[1] = OBJECT_TO_JSVAL(funobj);
 
     /* Compute the unique int/atom symbol id needed by js_LookupProperty. */
     userid = argv[0];
@@ -1285,7 +1291,7 @@ obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (attrs & JSPROP_READONLY)
         return JS_TRUE;
-    return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, fun->object);
+    return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, funobj);
 }
 
 static JSBool
@@ -1967,6 +1973,7 @@ FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp)
 {
     JSAtom *atom;
     JSObject *obj;
+    JSDHashTable *table;
 
     atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
@@ -1981,6 +1988,26 @@ FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp)
     } else {
         obj = cx->globalObject;
         if (!obj) {
+            *vp = JSVAL_VOID;
+            return JS_TRUE;
+        }
+    }
+
+    /*
+     * Don't call OBJ_GET_PROPERTY and risk a strict warning if we are in the
+     * middle of suppressing js_LookupProperty recursion, doing lazy standard
+     * class initialization.
+     */
+    table = cx->resolvingTable;
+    if (table) {
+        JSResolvingKey key;
+        JSResolvingEntry *entry;
+
+        key.obj = obj;
+        key.id = (jsid) atom;
+        entry = (JSResolvingEntry *)
+                JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
+        if (entry->flags & JSRESFLAG_LOOKUP) {
             *vp = JSVAL_VOID;
             return JS_TRUE;
         }
