@@ -59,9 +59,9 @@ CPPSRCS		= \
 		xpctest_out.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-	$(MOZ_TIMER_LIBS) \
-	$(NULL)
+LIBS += \
+		$(MOZ_TIMER_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
