@@ -90,5 +90,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I../base -I../text -I../html -I../../composer/src
+INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
+                   -I$(topsrcdir)/editor/libeditor/text \
+                   -I$(topsrcdir)/editor/libeditor/html \
+                   -I$(topsrcdir)/editor/composer/src
 
