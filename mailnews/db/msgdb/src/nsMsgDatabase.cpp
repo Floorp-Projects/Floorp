@@ -564,6 +564,7 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **pmsgHdr)
 			if (err == NS_OK)
 			{
 				*pmsgHdr = new nsMsgHdr(this, hdrRow);
+				(*pmsgHdr)->SetMessageKey(key);
 				char *uri = CreateURI(m_dbName, key);
 				((nsRDFResource*)(*pmsgHdr))->Init(uri);
 
@@ -1256,6 +1257,7 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 	if (err == NS_OK)
 	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+		(*pnewHdr)->SetMessageKey(key);
 
 		char *uri = CreateURI(m_dbName, key);
 		((nsRDFResource*)(*pnewHdr))->Init(uri);
@@ -1339,6 +1341,7 @@ nsresult nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStru
 	if (err == NS_OK)
 	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+		(*pnewHdr)->SetMessageKey(hdrStruct->m_messageKey);
 		char *uri = CreateURI(m_dbName, hdrStruct->m_messageKey);
 		((nsRDFResource*)(*pnewHdr))->Init(uri);
 		if(uri)
