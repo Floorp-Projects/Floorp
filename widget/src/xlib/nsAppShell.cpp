@@ -241,12 +241,9 @@ static void CallProcessTimeoutsProc(Display *aDisplay)
                      FocusChangeMask | PropertyChangeMask | \
                      ColormapChangeMask | OwnerGrabButtonMask )
 
-NS_IMPL_ADDREF(nsAppShell)
-NS_IMPL_RELEASE(nsAppShell)
-
 nsAppShell::nsAppShell()  
 { 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 
   mScreen = nsnull;
@@ -254,19 +251,7 @@ nsAppShell::nsAppShell()
   xlib_fd = -1;
 }
 
-nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  nsresult result = NS_NOINTERFACE;
-
-  static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kIAppShellIID)) {
-    *aInstancePtr = (void*) ((nsIAppShell*)this);
-    NS_ADDREF_THIS();
-    result = NS_OK;
-  }
-  return result;
-}
-
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
@@ -1095,11 +1080,6 @@ nsAppShell::HandleFocusInEvent(XEvent *event, nsWidget *aWidget)
   focusEvent.point.y = 0;
   
   NS_ADDREF(aWidget);
-  // FIXME FIXME FIXME
-  // We now have to tell the widget that is has focus here, this was
-  // Previously done in cross platform code.
-  // FIXME FIXME FIXME
-  aWidget->SetFocus();
   aWidget->DispatchWindowEvent(focusEvent);
   NS_RELEASE(aWidget);
 }
@@ -1111,7 +1091,7 @@ nsAppShell::HandleFocusOutEvent(XEvent *event, nsWidget *aWidget)
                                        event->xfocus.window));
   nsGUIEvent focusEvent;
   
-  focusEvent.message = NS_DEACTIVATE;
+  focusEvent.message = NS_LOSTFOCUS;
   focusEvent.widget  = aWidget;
   
   focusEvent.eventStructType = NS_GUI_EVENT;
