@@ -87,8 +87,7 @@ UserInGroup("editbugs")
                                      action => "run",
                                      object => "sanity_check"});
 
-print "Content-type: text/html\n";
-print "\n";
+print $cgi->header();
 
 my @row;
 
