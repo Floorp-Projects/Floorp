@@ -148,6 +148,9 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
+    unless ($classification) {
+        ThrowUserError("classification_not_specified");
+    }
     if (TestClassification($classification)) {
         ThrowUserError("classification_already_exists", { name => $classification });
     }
@@ -290,14 +293,6 @@ if ($action eq 'update') {
 
     $dbh->bz_lock_tables('classifications WRITE');
 
-    if ($description ne $descriptionold) {
-        $sth = $dbh->prepare("UPDATE classifications
-                              SET description=?
-                              WHERE id=?");
-        $sth->execute($description,$classification_id);
-        $vars->{'updated_description'} = 1;
-    }
-
     if ($classification ne $classificationold) {
         unless ($classification) {
             ThrowUserError("classification_not_specified");
@@ -311,6 +306,15 @@ if ($action eq 'update') {
         $sth->execute($classification,$classification_id);
         $vars->{'updated_classification'} = 1;
     }
+
+    if ($description ne $descriptionold) {
+        $sth = $dbh->prepare("UPDATE classifications
+                              SET description=?
+                              WHERE id=?");
+        $sth->execute($description,$classification_id);
+        $vars->{'updated_description'} = 1;
+    }
+
     $dbh->bz_unlock_tables();
 
     unlink "data/versioncache";
