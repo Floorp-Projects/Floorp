@@ -205,13 +205,13 @@ nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
         res= mEncoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
            *aOut = (char*)nsMemory::Alloc(outLength+1);
-           if(nsnull != aOut) {
+           if(nsnull != *aOut) {
               res = mEncoder->Convert(aIn, &inLength, *aOut,  &outLength);
               if(NS_SUCCEEDED(res)) {
                  (*aOut)[outLength] = '\0';
               } else {
                  nsMemory::Free(*aOut);
-                 aOut = nsnull;
+                 *aOut = nsnull;
               }
            } else {
               res = NS_ERROR_OUT_OF_MEMORY;
@@ -234,13 +234,13 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
         res= mDecoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
            *aOut = (PRUnichar*)nsMemory::Alloc(2*(outLength+1));
-           if(nsnull != aOut) {
+           if(nsnull != *aOut) {
               res = mDecoder->Convert(aIn, &inLength, *aOut,  &outLength);
               if(NS_SUCCEEDED(res)) {
                  (*aOut)[outLength] = '\0';
               } else {
                  nsMemory::Free(*aOut);
-                 aOut = nsnull;
+                 *aOut = nsnull;
               }
            } else {
               res = NS_ERROR_OUT_OF_MEMORY;
