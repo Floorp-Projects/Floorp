@@ -53,7 +53,7 @@
 #define XPCOMPRIVATE_NATIVE(func) Java_org_mozilla_xpcom_XPCOMPrivate_##func
 
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                              jobject aAppFileLocProvider)
 {
@@ -91,7 +91,7 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
   FreeJavaGlobals(env);
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
   nsresult rv = NS_TermEmbedding();
@@ -101,7 +101,7 @@ GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
   FreeJavaGlobals(env);
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider)
 {
@@ -158,7 +158,7 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
   return nsnull;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
 {
   nsCOMPtr<nsIServiceManager> servMgr;
@@ -184,7 +184,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
   FreeJavaGlobals(env);
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
                             jboolean aFollowLinks)
 {
@@ -229,7 +229,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   return nsnull;
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 {
   // Call XPCOM method
@@ -259,7 +259,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   return nsnull;
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
 {
   // Call XPCOM method
@@ -289,7 +289,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
   return nsnull;
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
 {
   // Call XPCOM method
@@ -319,7 +319,7 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   return nsnull;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodVoid) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -329,7 +329,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodVoid) (JNIEnv *env, jclass that,
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
 }
 
-extern "C" JNIEXPORT jboolean JNICALL
+extern "C" JX_EXPORT jboolean JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodBool) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -340,7 +340,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodBool) (JNIEnv *env, jclass that,
   return rc.z;
 }
 
-extern "C" JNIEXPORT jbooleanArray JNICALL
+extern "C" JX_EXPORT jbooleanArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodBoolA) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -351,7 +351,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodBoolA) (JNIEnv *env, jclass that,
   return (jbooleanArray) rc.l;
 }
 
-extern "C" JNIEXPORT jbyte JNICALL
+extern "C" JX_EXPORT jbyte JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodByte) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -362,7 +362,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodByte) (JNIEnv *env, jclass that,
   return rc.b;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL
+extern "C" JX_EXPORT jbyteArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodByteA) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -373,7 +373,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodByteA) (JNIEnv *env, jclass that,
   return (jbyteArray) rc.l;
 }
 
-extern "C" JNIEXPORT jchar JNICALL
+extern "C" JX_EXPORT jchar JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodChar) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -384,7 +384,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodChar) (JNIEnv *env, jclass that,
   return rc.c;
 }
 
-extern "C" JNIEXPORT jcharArray JNICALL
+extern "C" JX_EXPORT jcharArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodCharA) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -395,7 +395,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodCharA) (JNIEnv *env, jclass that,
   return (jcharArray) rc.l;
 }
 
-extern "C" JNIEXPORT jshort JNICALL
+extern "C" JX_EXPORT jshort JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodShort) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -406,7 +406,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodShort) (JNIEnv *env, jclass that,
   return rc.s;
 }
 
-extern "C" JNIEXPORT jshortArray JNICALL
+extern "C" JX_EXPORT jshortArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodShortA) (JNIEnv *env, jclass that,
                                             jobject aJavaObject,
                                             jint aMethodIndex,
@@ -417,7 +417,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodShortA) (JNIEnv *env, jclass that,
   return (jshortArray) rc.l;
 }
 
-extern "C" JNIEXPORT jint JNICALL
+extern "C" JX_EXPORT jint JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodInt) (JNIEnv *env, jclass that,
                                          jobject aJavaObject,
                                          jint aMethodIndex,
@@ -428,7 +428,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodInt) (JNIEnv *env, jclass that,
   return rc.i;
 }
 
-extern "C" JNIEXPORT jintArray JNICALL
+extern "C" JX_EXPORT jintArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodIntA) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -439,7 +439,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodIntA) (JNIEnv *env, jclass that,
   return (jintArray) rc.l;
 }
 
-extern "C" JNIEXPORT jlong JNICALL
+extern "C" JX_EXPORT jlong JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodLong) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -450,7 +450,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodLong) (JNIEnv *env, jclass that,
   return rc.j;
 }
 
-extern "C" JNIEXPORT jlongArray JNICALL
+extern "C" JX_EXPORT jlongArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodLongA) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -461,7 +461,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodLongA) (JNIEnv *env, jclass that,
   return (jlongArray) rc.l;
 }
 
-extern "C" JNIEXPORT jfloat JNICALL
+extern "C" JX_EXPORT jfloat JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloat) (JNIEnv *env, jclass that,
                                            jobject aJavaObject,
                                            jint aMethodIndex,
@@ -472,7 +472,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloat) (JNIEnv *env, jclass that,
   return rc.f;
 }
 
-extern "C" JNIEXPORT jfloatArray JNICALL
+extern "C" JX_EXPORT jfloatArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloatA) (JNIEnv *env, jclass that,
                                             jobject aJavaObject,
                                             jint aMethodIndex,
@@ -483,7 +483,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloatA) (JNIEnv *env, jclass that,
   return (jfloatArray) rc.l;
 }
 
-extern "C" JNIEXPORT jdouble JNICALL
+extern "C" JX_EXPORT jdouble JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodDouble) (JNIEnv *env, jclass that,
                                             jobject aJavaObject,
                                             jint aMethodIndex,
@@ -494,7 +494,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodDouble) (JNIEnv *env, jclass that,
   return rc.d;
 }
 
-extern "C" JNIEXPORT jdoubleArray JNICALL
+extern "C" JX_EXPORT jdoubleArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodDoubleA) (JNIEnv *env, jclass that,
                                              jobject aJavaObject,
                                              jint aMethodIndex,
@@ -505,7 +505,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodDoubleA) (JNIEnv *env, jclass that,
   return (jdoubleArray) rc.l;
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JX_EXPORT jobject JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodObj) (JNIEnv *env, jclass that,
                                          jobject aJavaObject,
                                          jint aMethodIndex,
@@ -516,7 +516,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodObj) (JNIEnv *env, jclass that,
   return rc.l;
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL
+extern "C" JX_EXPORT jobjectArray JNICALL
 XPCOMPRIVATE_NATIVE(CallXPCOMMethodObjA) (JNIEnv *env, jclass that,
                                           jobject aJavaObject,
                                           jint aMethodIndex,
@@ -527,7 +527,7 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodObjA) (JNIEnv *env, jclass that,
   return (jobjectArray) rc.l;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
                                    jobject aJavaObject)
 {
