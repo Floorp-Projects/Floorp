@@ -1182,8 +1182,12 @@ sub MakeResourceAliases()
 	# Install XPFE component resources
 	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
-	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
-	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST",		"$samples_dir");
+        {
+          my($bookmarks_dir) = "$chrome_dir"."Bookmarks";
+	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",			"$bookmarks_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",			"$bookmarks_dir:skin:default");
+	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:MANIFEST",			"$bookmarks_dir:locale");
+        }
         {
           my($history_dir) = "$chrome_dir"."History";
 	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",			"$history_dir:content:default");

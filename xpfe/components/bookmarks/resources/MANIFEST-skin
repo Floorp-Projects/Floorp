@@ -1,15 +1,8 @@
-bm-panel.xul
-bm-props.xul
-bm-props.js
+bookmarks.css
+manage-bookmarks.css
 bookmark-folder-closed.gif
 bookmark-folder-open.gif
 bookmark-item.gif
-bookmark-popup.js
-bookmarks.css
-bookmarks.html
-bookmarks.js
-bookmarks.xul
 iefavorite.gif
-manage-bookmarks.css
 personal-folder-closed.gif
 personal-folder-open.gif
