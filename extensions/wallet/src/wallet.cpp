@@ -41,7 +41,6 @@
 */
 
 #define AutoCapture
-//#define IgnoreFieldNames
 
 #include "wallet.h"
 #include "singsign.h"
@@ -2428,11 +2427,6 @@ wallet_GetPrefills(
           wallet_GetSchemaFromDisplayableText(inputElement, localSchema, PR_FALSE);
         }
 
-#ifdef IgnoreFieldNames
-// use displayable text instead of field names
-if (!localSchema.IsEmpty()) {
-#endif
-
         /*
          * if schema name was obtained then get value from schema name,
          * otherwise get value from field name by using mapping tables to get schema name
@@ -2470,11 +2464,6 @@ if (!localSchema.IsEmpty()) {
       if (localSchema.IsEmpty()) {
         wallet_GetSchemaFromDisplayableText(selectElement, localSchema, PR_FALSE);
       }
-
-#ifdef IgnoreFieldNames
-// use displayable text instead of field names
-if (!localSchema.IsEmpty()) {
-#endif
 
       nsVoidArray* itemList;
       if (NS_SUCCEEDED(FieldToValue(field, localSchema, value, itemList, index))) {
@@ -2896,13 +2885,6 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
   /* read in the mappings if they are not already present */
   wallet_Initialize();
   wallet_InitializeCurrentURL(doc);
-
-#ifdef IgnoreFieldNames
-// use displayable text instead of field names
-  if (schema.IsEmpty()) {
-    return PR_FALSE;
-  }
-#endif
 
   nsCAutoString valueCString = NS_ConvertUCS2toUTF8(value);
   nsCAutoString oldValue;
@@ -4060,7 +4042,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                             wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
                           }
 
-#ifndef IgnoreFieldNames
                           /* no schema found, so try to get it from field name */
                           if (schema.IsEmpty()) {
                             Strip(field, stripField);
@@ -4068,7 +4049,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                               (stripField, schema, 
                                dummy, wallet_FieldToSchema_list, PR_FALSE);
                           }
-#endif
 
                           /* if schema found, see if it is in distinguished schema list */
                           if (!schema.IsEmpty()) {
