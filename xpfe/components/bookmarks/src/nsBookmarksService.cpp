@@ -92,6 +92,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
+#include "nsIPref.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC
@@ -132,12 +133,13 @@ static NS_DEFINE_IID(kIRDFIntIID,                 NS_IRDFINT_IID);
 static NS_DEFINE_IID(kIRDFDateIID,                NS_IRDFDATE_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFileLocatorIID,       	  NS_IFILELOCATOR_IID);
+static NS_DEFINE_IID(kPrefCID,                    NS_PREF_CID);
 
-static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
-static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
-static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; // XXX?
-static const char kPersonalToolbarFolder[]       = "Personal Toolbar Folder";
-static const char kBookmarkCommand[]             = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
+static const char kURINC_BookmarksRoot[]          = "NC:BookmarksRoot"; // XXX?
+static const char kURINC_IEFavoritesRoot[]        = "NC:IEFavoritesRoot"; // XXX?
+static const char kURINC_PersonalToolbarFolder[]  = "NC:PersonalToolbarFolder"; // XXX?
+static const char kDefaultPersonalToolbarFolder[] = "Personal Toolbar Folder";
+static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
 
 #define bookmark_properties "chrome://bookmarks/locale/bookmark.properties"
 
@@ -310,6 +312,7 @@ private:
 	PRUint32			mContentsLen;
 	PRInt32				mStartOffset;
 	nsInputFileStream		*mInputStream;
+	nsString			mPersonalToolbarName;
 
 friend	class nsBookmarksService;
 
@@ -396,6 +399,28 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource)
 	mFoundIEFavoritesRoot = PR_FALSE;
 
 	nsresult		rv;
+
+	// determine what the name of the Personal Toolbar Folder is...
+	NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv) && (prefServ))
+	{
+		char	*prefVal = nsnull;
+		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
+			&prefVal)) && (prefVal))
+		{
+			mPersonalToolbarName = prefVal;
+			nsCRT::free(prefVal);
+			prefVal = nsnull;
+		}
+
+		if (mPersonalToolbarName.Length() == 0)
+		{
+			// no preference, so fallback to a well-known name
+			mPersonalToolbarName = kDefaultPersonalToolbarFolder;
+		}
+	}
+
+	// determine default platform charset...
 	NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
 	if (NS_SUCCEEDED(rv) && (platformCharset))
 	{
@@ -1257,7 +1282,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	start += (sizeof(kOpenHeading) - 1);
 	start = aLine.FindChar(PRUnichar('>'), PR_FALSE,start); // skip to the end of the '<Hn>' tag
 
-	if (start < 0) {
+	if (start < 0)
+	{
 		NS_WARNING("couldn't find end of header tag");
 		return NS_OK;
 	}
@@ -1277,7 +1303,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 
 	nsAutoString s;
 	ParseAttribute(aLine, kAddDateEquals, sizeof(kAddDateEquals) - 1, s);
-	if (s.Length() > 0) {
+	if (s.Length() > 0)
+	{
 		PRInt32 err;
 		addDate = s.ToInteger(&err); // ignored
 	}
@@ -1286,7 +1313,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	PRInt32 lastmodDate = 0;
 
 	ParseAttribute(aLine, kLastModifiedEquals, sizeof(kLastModifiedEquals) - 1, s);
-	if (s.Length() > 0) {
+	if (s.Length() > 0)
+	{
 		PRInt32 err;
 		lastmodDate = s.ToInteger(&err); // ignored
 	}
@@ -1297,16 +1325,19 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	// Make the necessary assertions
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> folder;
-	if (id.Length() > 0) {
+	if (id.Length() > 0)
+	{
 		// Use the ID attribute, if one is set.
 		rv = gRDF->GetUnicodeResource(id.GetUnicode(), getter_AddRefs(folder));
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource for folder");
 		if (NS_FAILED(rv)) return rv;
 	}
-	else if (name.Equals(kPersonalToolbarFolder)) { // XXX I18n!!!
+	else if (name.Equals(mPersonalToolbarName))
+	{
 		folder = dont_QueryInterface( kNC_PersonalToolbarFolder );
 	}
-	else {
+	else
+	{
 		// We've never seen this folder before. Assign it an anonymous ID
 		rv = CreateAnonymousResource(&folder);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create anonymous resource for folder");
@@ -1319,7 +1350,8 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	if (NS_FAILED(rv)) return rv;
 
 	rv = mDataSource->Assert(folder, kNC_Name, literal, PR_TRUE);
-	if (rv != NS_RDF_ASSERTION_ACCEPTED) {
+	if (rv != NS_RDF_ASSERTION_ACCEPTED)
+	{
 		NS_ERROR("unable to set folder name");
 		return rv;
 	}
@@ -1329,23 +1361,27 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	if (NS_FAILED(rv)) return rv;
 
 	rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
-	if (rv != NS_RDF_ASSERTION_ACCEPTED) {
+	if (rv != NS_RDF_ASSERTION_ACCEPTED)
+	{
 		NS_ERROR("unable to mark new folder as folder");
 		return rv;
 	}
 
-	if (NS_FAILED(rv = AssertTime(folder, kNC_BookmarkAddDate, addDate))) {
+	if (NS_FAILED(rv = AssertTime(folder, kNC_BookmarkAddDate, addDate)))
+	{
 		NS_ERROR("unable to mark add date");
 		return rv;
 	}
-	if (NS_FAILED(rv = AssertTime(folder, kWEB_LastModifiedDate, lastmodDate))) {
+	if (NS_FAILED(rv = AssertTime(folder, kWEB_LastModifiedDate, lastmodDate)))
+	{
 		NS_ERROR("unable to mark lastmod date");
 		return rv;
 	}
 
 	// And now recursively parse the rest of the file...
 
-	if (NS_FAILED(rv = Parse(folder, nodeType))) {
+	if (NS_FAILED(rv = Parse(folder, nodeType)))
+	{
 		NS_WARNING("recursive parse of bookmarks file failed");
 		return rv;
 	}
