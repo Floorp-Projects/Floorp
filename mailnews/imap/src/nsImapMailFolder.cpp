@@ -4012,6 +4012,12 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
   }
   if (m_tempMessageStream)
   {
+      nsCOMPtr <nsISeekableStream> seekable;
+
+      seekable = do_QueryInterface(m_tempMessageStream);
+
+      if (seekable)
+        seekable->Seek(PR_SEEK_END, 0);
      rv = m_tempMessageStream->Write(adoptedMessageLine, 
                   PL_strlen(adoptedMessageLine), &count);
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to write to stream");
@@ -5979,11 +5985,16 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
   {
     ProgressStatus(aProtocol, IMAP_DONE, nsnull);
     m_urlRunning = PR_FALSE;
-    EndOfflineDownload();
-    if (m_downloadingFolderForOfflineUse)
+    // if no protocol, then we're reading from the mem or disk cache
+    // and we don't want to end the offline download just yet.
+    if (aProtocol)
     {
-      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
-      m_downloadingFolderForOfflineUse = PR_FALSE;
+      EndOfflineDownload();
+      if (m_downloadingFolderForOfflineUse)
+      {
+        ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
+        m_downloadingFolderForOfflineUse = PR_FALSE;
+      }
     }
   }
 

@@ -566,7 +566,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
         shouldStoreMsgOffline = PR_FALSE; // if we're fetching by parts, don't store offline
         msgurl->SetAddToMemoryCache(PR_FALSE);
       }
-      if (imapMessageSink)
+      if (imapMessageSink && !hasMsgOffline)
         imapMessageSink->SetNotifyDownloadedLines(shouldStoreMsgOffline);
       
       if (hasMsgOffline)
