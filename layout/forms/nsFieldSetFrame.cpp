@@ -346,7 +346,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
     // Figure out how big the legend is if there is one. 
     nsMargin legendMargin(0,0,0,0);
-  
+
     // reflow the legend only if needed
     if (mLegendFrame) {
         if (reflowLegend) {
@@ -362,6 +362,12 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
           ReflowChild(mLegendFrame, aPresContext, legendDesiredSize, legendReflowState,
                       0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+#ifdef NOISY_REFLOW
+          printf("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
+          if (legendDesiredSize.maxElementSize)
+            printf("  and maxES (%d, %d)\n", 
+                   legendDesiredSize.maxElementSize->width, legendDesiredSize.maxElementSize->height);
+#endif
 
           // get the legend's margin
           const nsStyleSpacing* legendSpacing;
@@ -407,6 +413,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
           }
 
           FinishReflowChild(mLegendFrame, aPresContext, legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
+
         }
     }
 
@@ -431,11 +438,16 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
             nsHTMLReflowMetrics kidDesiredSize(0,0);
 
-
             // Reflow the frame
             ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
                         kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                         0, aStatus);
+#ifdef NOISY_REFLOW
+            printf("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
+            if (kidDesiredSize.maxElementSize)
+              printf("  and maxES (%d, %d)\n", 
+                     kidDesiredSize.maxElementSize->width, kidDesiredSize.maxElementSize->height);
+#endif
 
             /*
             printf("*** %p computedHgt: %d ", this, aReflowState.mComputedHeight);
@@ -453,7 +465,6 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             if (aReflowState.mComputedHeight != NS_INTRINSICSIZE &&
                 borderPadding.top + mLegendSpace+kidDesiredSize.height > aReflowState.mComputedHeight) {
               kidDesiredSize.height = aReflowState.mComputedHeight-(borderPadding.top + mLegendSpace);
-        printf(" areaHgt: %d", kidDesiredSize.height);
             }
 
             FinishReflowChild(mContentFrame, aPresContext, kidDesiredSize, contentRect.x, contentRect.y, 0);
@@ -549,9 +560,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
     aDesiredSize.ascent  = aDesiredSize.height;
     aDesiredSize.descent = 0;
-
+    aDesiredSize.mMaximumWidth = aDesiredSize.width;
     if (nsnull != aDesiredSize.maxElementSize) {
-        // if the legend it wider use it
+        // if the legend is wider use it
         if (aDesiredSize.maxElementSize->width < mLegendRect.width)
             aDesiredSize.maxElementSize->width = mLegendRect.width;
 
@@ -561,7 +572,14 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         // height is border + legend
         aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom + mLegendRect.height;
     }
+#ifdef NOISY_REFLOW
+    printf("FIELDSET:  w=%d, maxWidth=%d, MES=%d\n",
+           aDesiredSize.width, aDesiredSize.mMaximumWidth, 
+           aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : -1);
+    if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)
+      printf("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
 
+#endif
   return NS_OK;
 }
 
