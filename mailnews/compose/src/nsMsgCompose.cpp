@@ -77,7 +77,7 @@ enum RecipientType {
 };
 
 /* this function will be used by the factory to generate an Message Compose Object....*/
-nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
+nsresult NS_NewMsgCompose(const nsIID &aIID, void ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
@@ -85,7 +85,7 @@ nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 	{
 		nsMsgCompose* pCompose = new nsMsgCompose();
 		if (pCompose)
-			return pCompose->QueryInterface(nsIMsgCompose::GetIID(), (void**) aInstancePtrResult);
+			return pCompose->QueryInterface(aIID, aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

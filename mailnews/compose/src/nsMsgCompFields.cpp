@@ -22,7 +22,7 @@
 #include "nsMsgCompFieldsFact.h"
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
-nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
+nsresult NS_NewMsgCompFields(const nsIID &aIID, void ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
@@ -30,7 +30,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 	{
 		nsMsgCompFields* pCompFields = new nsMsgCompFields();
 		if (pCompFields)
-			return pCompFields->QueryInterface(nsIMsgCompFields::GetIID(), (void**) aInstancePtrResult);
+			return pCompFields->QueryInterface(aIID, aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

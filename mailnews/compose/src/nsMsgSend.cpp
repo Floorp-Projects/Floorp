@@ -267,7 +267,7 @@ char * WH_TempName(XP_FileType /*type*/, const char * prefix)
 }
 
 /* this function will be used by the factory to generate an Message Send Object....*/
-nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult)
+nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
@@ -275,7 +275,7 @@ nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult)
 	{
 		nsMsgSendMimeDeliveryState* pSend = new nsMsgSendMimeDeliveryState();
 		if (pSend)
-			return pSend->QueryInterface(kIMsgSend, (void**) aInstancePtrResult);
+			return pSend->QueryInterface(kIMsgSend, aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
