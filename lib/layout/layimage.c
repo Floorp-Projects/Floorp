@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-R
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1149,6 +1149,8 @@ lo_BlockedImageLayout(MWContext *context, lo_DocState *state, PA_Tag *tag,
 			image->percent_width = 0;
 			val = FEUNITS_X(val, context);
 		}
+		if (val < 0)
+			val = 0;
 		image->width = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
@@ -1212,6 +1214,8 @@ lo_BlockedImageLayout(MWContext *context, lo_DocState *state, PA_Tag *tag,
 			image->percent_height = 0;
 			val = FEUNITS_Y(val, context);
 		}
+		if (val < 0)
+			val = 0;
 		image->height = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
@@ -1886,7 +1890,9 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		{
 			image->percent_width = 0;
 			val = FEUNITS_X(val, context);			
-		}		
+		}	
+		if (val < 0)
+			val = 0;	
 		image->width = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
@@ -1949,6 +1955,8 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 			image->percent_height = 0;
 			val = FEUNITS_Y(val, context);
 		}
+		if (val < 0)
+			val = 0;
 		image->height = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
