@@ -60,7 +60,9 @@ LINCS=  \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\pref \
+!ifdef BUILD_PROFILE
   -I$(PUBLIC)\profile \
+!endif
   -I$(PUBLIC)\editor \
   -I$(PUBLIC)\uconv \
   -I$(PUBLIC)\strres \
