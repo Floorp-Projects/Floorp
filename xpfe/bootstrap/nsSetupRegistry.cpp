@@ -64,7 +64,7 @@ static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
 
 #else
 
-// XP_UNIX
+// XP_UNIX || XP_BEOS
 #define APPSHELL_DLL	"libnsappshell"MOZ_DLL_SUFFIX
 #define APPCORES_DLL	"libappcores"MOZ_DLL_SUFFIX
 #define EDITOR_DLL	"libender"MOZ_DLL_SUFFIX
