@@ -707,6 +707,15 @@ Decrypt Key=FALSE
 Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
+[OS2 INI7]
+App=Netscape
+Key=6.0
+Key Value=[SETUP PATH]
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
 [Cleanup Previous Product INIApps]
 Product Name0=Mozilla
 Product INI App0=Mozilla
