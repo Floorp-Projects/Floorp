@@ -521,9 +521,6 @@ public:
   // The current band data for the current Y coordinate
   nsBlockBandData mBand;
 
-  // List of free nsLineBox's
-  nsLineBox* mFreeLineList;
-
   //----------------------------------------
 
   // Temporary line-reflow state. This state is used during the reflow
@@ -578,7 +575,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mApplyTopMargin(PR_FALSE),
     mNextRCFrame(nsnull),
     mPrevBottomMargin(0),
-    mFreeLineList(nsnull),
     mLineNumber(0),
     mNeedResizeReflow(PR_FALSE),
     mIsInlineIncrReflow(PR_FALSE)
@@ -696,14 +692,6 @@ nsBlockReflowState::~nsBlockReflowState()
   // Restore the coordinate system
   const nsMargin& borderPadding = BorderPadding();
   mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
-
-  // Release any line box's that are laying around
-  nsLineBox* line = mFreeLineList;
-  while (line) {
-    nsLineBox* next = line->mNext;
-    delete line;
-    line = next;
-  }
 }
 
 nsLineBox*
@@ -711,24 +699,20 @@ nsBlockReflowState::NewLineBox(nsIFrame* aFrame,
                                PRInt32 aCount,
                                PRBool aIsBlock)
 {
-  nsLineBox* newLine;
-  if (mFreeLineList) {
-    newLine = mFreeLineList;
-    mFreeLineList = newLine->mNext;
-    newLine->Reset(aFrame, aCount, aIsBlock);
-  }
-  else {
-    newLine = new nsLineBox(aFrame, aCount, aIsBlock);
-  }
-  return newLine;
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+
+  return NS_NewLineBox(shell, aFrame, aCount, aIsBlock);
 }
 
 void
 nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
 {
   if (aLine) {
-    aLine->mNext = mFreeLineList;
-    mFreeLineList = aLine;
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    
+    aLine->Destroy(presShell);
   }
 }
 
@@ -4886,6 +4870,9 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
   // Attempt to find the line that contains the previous sibling
   nsLineBox* prevSibLine = nsnull;
   PRInt32 prevSiblingIndex = -1;
@@ -4912,7 +4899,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     PRInt32 rem = prevSibLine->GetChildCount() - prevSiblingIndex - 1;
     if (rem) {
       // Split the line in two where the frame(s) are being inserted.
-      nsLineBox* line = new nsLineBox(prevSiblingNextFrame, rem, PR_FALSE);
+      nsLineBox* line = NS_NewLineBox(presShell, prevSiblingNextFrame, rem, PR_FALSE);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4940,7 +4927,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     if (isBlock || !prevSibLine || prevSibLine->IsBlock()) {
       // Create a new line for the frame and add its line to the line
       // list.
-      nsLineBox* line = new nsLineBox(newFrame, 1, isBlock);
+      nsLineBox* line = NS_NewLineBox(presShell, newFrame, 1, isBlock);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -5045,6 +5032,9 @@ nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
 {
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
   nsBlockFrame* flow = this;
@@ -5145,7 +5135,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
         Invalidate(aPresContext, lineCombinedArea);
-        delete line;
+        line->Destroy(presShell);
         line = next;
       }
       else {

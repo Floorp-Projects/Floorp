@@ -142,17 +142,31 @@ protected:
 need to rearrange the mBits bitfield;
 #endif
 
+// Funtion to create a line box
+nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
+                         PRInt32 aCount, PRBool aIsBlock);
+
 /**
  * The nsLineBox class represents a horizontal line of frames. It contains
  * enough state to support incremental reflow of the frames, event handling
  * for the frames, and rendering of the frames.
  */
 class nsLineBox {
-public:
+private:
   nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
   ~nsLineBox();
+  
+  // Overloaded new operator. Uses an arena (which comes from the presShell)
+  // to perform the allocation.
+  void* operator new(size_t sz, nsIPresShell* aPresShell);
+  void operator delete(void* aPtr, size_t sz);
 
-  void Reset(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+public:
+  // Use these two functions to allocate and destroy line boxes
+  friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
+                                  PRInt32 aCount, PRBool aIsBlock);
+
+  void Destroy(nsIPresShell* aPresShell);
 
   // mBlock bit
   PRBool IsBlock() const {

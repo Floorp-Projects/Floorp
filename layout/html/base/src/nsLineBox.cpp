@@ -66,6 +66,40 @@ nsLineBox::~nsLineBox()
   Cleanup();
 }
 
+nsLineBox*
+NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
+              PRInt32 aCount, PRBool aIsBlock)
+{
+  return new (aPresShell)nsLineBox(aFrame, aCount, aIsBlock);
+}
+
+// Overloaded new operator. Uses an arena (which comes from the presShell)
+// to perform the allocation.
+void* 
+nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell)
+{
+  void* result = nsnull;
+  aPresShell->AllocateFrame(sz, &result);
+  return result;
+}
+
+// Overloaded delete operator. Doesn't actually free the memory, because we
+// use an arena
+void 
+nsLineBox::operator delete(void* aPtr, size_t sz)
+{
+}
+
+void
+nsLineBox::Destroy(nsIPresShell* aPresShell)
+{
+  // Destroy the object. This won't actually free the memory, though
+  delete this;
+
+  // Have the pres shell recycle the memory
+  aPresShell->FreeFrame(sizeof(*this), (void*)this);
+}
+
 void
 nsLineBox::Cleanup()
 {
@@ -78,23 +112,6 @@ nsLineBox::Cleanup()
     }
     mData = nsnull;
   }
-}
-
-void
-nsLineBox::Reset(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
-{
-  Cleanup();
-  mFirstChild = aFrame;
-  mNext = nsnull;
-  mBounds.SetRect(0, 0, 0, 0);
-  mMaxElementWidth = 0;
-  mAllFlags = 0;
-#if NS_STYLE_CLEAR_NONE > 0
-  mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
-#endif
-  SetChildCount(aCount);
-  MarkDirty();
-  mFlags.mBlock = aIsBlock;
 }
 
 #ifdef DEBUG
