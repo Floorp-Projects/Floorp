@@ -163,18 +163,10 @@ smime_main()
   ret=$?
   html_msg $ret 0 "Create Multiple Recipients Enveloped Data Alice" "."
   if [ $ret != 0 ] ; then
-        i=0
-        echo "cp -r ${R_ALICEDIR} ${R_ALICEDIR}.trouble"
-        cp -r ${R_ALICEDIR} ${R_ALICEDIR}.trouble
-        while [ $i -lt 100 ] ; do
-            echo "will attempt to list the certs in the db `expr 100 - $i` more times"
-	    echo "certutil -L -d ${P_R_ALICEDIR}"
-	    certutil -L -d ${P_R_ALICEDIR}
-	    echo "certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com"
-	    certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com
-            sleep 30
-            i=`expr $i + 1`
-        done
+	echo "certutil -L -d ${P_R_ALICEDIR}"
+	certutil -L -d ${P_R_ALICEDIR}
+	echo "certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com"
+	certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com
   fi
 
   echo "$SCRIPTNAME: Testing multiple email addrs ------------------------------"
