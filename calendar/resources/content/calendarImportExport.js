@@ -169,6 +169,8 @@ function createUniqueID()
  
 function addEventsToCalendar( calendarEventArray, silent )
 {
+   gICalLib.batchMode = true;
+
    for(var i = 0; i < calendarEventArray.length; i++)
    {
       calendarEvent = calendarEventArray[i]
@@ -192,6 +194,8 @@ function addEventsToCalendar( calendarEventArray, silent )
       else
          editNewEvent( calendarEvent );
    }
+
+   gICalLib.batchMode = false;   
 }
 
 const ZULU_OFFSET_MILLIS = new Date().getTimezoneOffset() * 60 * 1000;
