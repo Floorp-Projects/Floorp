@@ -70,16 +70,27 @@
 
    <wizardpage pageid="initialPage" description="Choose An Action" onpagehide="checkInitialPage()" next="import">
       <radiogroup id="initial-radiogroup">
-         <radio value="import"    label="&calendar.wizard.import.label;" selected="true"/>
-         <radio value="export"    label="&calendar.wizard.export.label;"/>
-         <radio value="subscribe" label="&calendar.wizard.subscribe.label;"/>
-         <radio value="publish"   label="&calendar.wizard.publish.label;"/>
+         <radio value="import"
+                label="&calendar.wizard.import.label;"
+                selected="true"/>
+         <radio value="export"
+                label="&calendar.wizard.export.label;"/>
+         <radio value="subscribe"
+                label="&calendar.wizard.subscribe.label;"/>
+         <radio value="publish"
+                label="&calendar.wizard.publish.label;"/>
       </radiogroup>
    </wizardpage>
    
-   <wizardpage pageid="import" label="Import Events" description="Choose the events you want to import." onpagehide="" onpageshow="onPageShow( 'import' );" next="import-2">
+   <wizardpage pageid="import"
+               label="Import Events"
+               description="Choose the events you want to import."
+               onpagehide=""
+               onpageshow="onPageShow( 'import' );"
+               next="import-2">
       <textbox id="import-path-textbox"/> 
-      <button oncommand="launchFilePicker( 'open', 'import-path-textbox' )" label="Find a File"/>
+      <button oncommand="launchFilePicker( 'open', 'import-path-textbox' )"
+              label="Find a File"/>
       <description>
          To import events, find the file you are looking to import, then click next.
          The calendar currently only imports .ics files, which are standard calendar data files.
@@ -87,68 +98,114 @@
          
    </wizardpage>
    
-   <wizardpage pageid="import-2" label="Select Calendar" description="Choose the file to import into." onpagehide="" onpageshow="onPageShow( 'import-2' );" next="import-3">
-      <radiogroup id="import-calendar-radiogroup" datasources="rdf:null" ref="urn:calendarcontainer">
+   <wizardpage pageid="import-2"
+               label="Select Calendar"
+               description="Choose the file to import into."
+               onpagehide=""
+               onpageshow="onPageShow( 'import-2' );"
+               next="import-3">
+      <radiogroup id="import-calendar-radiogroup"
+                  datasources="rdf:null"
+                  ref="urn:calendarcontainer">
          <template>
             <rule>
-               <radio oncommand="document.getElementById( 'calendar-wizard' ).canAdvance = true;" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#name" value="rdf:http://home.netscape.com/NC-rdf#path"/>
+               <radio oncommand="document.getElementById( 'calendar-wizard' ).canAdvance = true;"
+                      uri="rdf:*"
+                      label="rdf:http://home.netscape.com/NC-rdf#name"
+                      value="rdf:http://home.netscape.com/NC-rdf#path"/>
             </rule>
          </template>
       </radiogroup>
    </wizardpage>
    
-   <wizardpage pageid="import-3" onpagehide="" onpageshow="" next="import-4">
+   <wizardpage pageid="import-3"
+               onpagehide=""
+               onpageshow=""
+               next="import-4">
       <description>Should I open each event before importing it?</description>
       <radiogroup id="import-2-radiogroup">
-         <radio id="import-2-no"  value="silent"  label="No, just import the events." selected="true"/>
-         <radio id="import-2-yes" value="promtp"  label="Yes, open each event."/>
+         <radio id="import-2-no"
+                value="silent"
+                label="No, just import the events."
+                selected="true"/>
+         <radio id="import-2-yes"
+                value="promtp"
+                label="Yes, open each event."/>
       </radiogroup>   
    </wizardpage>
    
-   <wizardpage pageid="import-4" onpagehide="" onpageshow="setTimeout( 'doWizardImport()', 1000 );">
+   <wizardpage pageid="import-4"
+               onpagehide=""
+               onpageshow="setTimeout( 'doWizardImport()', 1000 );">
       <box id="importing-box">
          <description>Importing...</description>
-         <progressmeter id="import-progress-meter" mode="determined" flex="1"/>
+         <progressmeter id="import-progress-meter"
+                        mode="determined"
+                        flex="1"/>
       </box>
-      <box id="done-importing-box" collapsed="true">
+      <box id="done-importing-box"
+           collapsed="true">
          <description>All your events have been imported. Click finish to close the wizard.</description>
       </box>
    </wizardpage>
    
-   <wizardpage pageid="export" label="Export Events" onpagehide="" onpageshow="buildCalendarsListbox( 'export-calendars-listbox' )" next="export-2">
-      <radiogroup id="export-calendar-radiogroup" datasources="rdf:null" ref="urn:calendarcontainer">
+   <wizardpage pageid="export"
+               label="Export Events"
+               onpagehide=""
+               onpageshow="buildCalendarsListbox( 'export-calendars-listbox' )"
+               next="export-2">
+      <radiogroup id="export-calendar-radiogroup"
+                  datasources="rdf:null"
+                  ref="urn:calendarcontainer">
          <template>
             <rule>
-               <radio oncommand="document.getElementById( 'calendar-wizard' ).canAdvance = true;" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#name" value="rdf:http://home.netscape.com/NC-rdf#path"/>
+               <radio oncommand="document.getElementById( 'calendar-wizard' ).canAdvance = true;"
+                      uri="rdf:*"
+                      label="rdf:http://home.netscape.com/NC-rdf#name"
+                      value="rdf:http://home.netscape.com/NC-rdf#path"/>
             </rule>
          </template>
       </radiogroup>
    </wizardpage>
    
-   <wizardpage pageid="export-2" onpagehide="" onpageshow="">
+   <wizardpage pageid="export-2"
+               onpagehide=""
+               onpageshow="">
       <description>Choose the file location to save the events to.</description>
       <textbox id="export-path-textbox"/> 
-      <button oncommand="launchFilePicker( 'save', 'export-path-textbox' )" label="Find a File"/>
+      <button oncommand="launchFilePicker( 'save', 'export-path-textbox' )"
+              label="Find a File"/>
    </wizardpage>
    
-   <wizardpage pageid="subscribe" onpagehide="" onpageshow="">
-         <!-- Name -->    
-            <description>&calendar.server.dialog.name.label;</description>
-            <textbox id="server-name-textbox"/>
+   <wizardpage pageid="subscribe"
+               onpagehide=""
+               onpageshow="">
+      <!-- Name -->    
+      <description>&calendar.server.dialog.name.label;</description>
+      <textbox id="server-name-textbox"/>
             
-            <description>&calendar.server.dialog.location.label;</description>
-            <textbox id="server-path-textbox"/> 
+      <description>&calendar.server.dialog.location.label;</description>
+      <textbox id="server-path-textbox"/> 
       <description>
          You can subscribe to remote calendars by entering in their URL here.
       </description>
    </wizardpage>
    
-   <wizardpage pageid="publish" next="publish-2" onpagehide="" onpageshow="buildCalendarsListbox( 'publish-calendars-listbox' )">
+   <wizardpage pageid="publish"
+               next="publish-2"
+               onpagehide=""
+               onpageshow="buildCalendarsListbox( 'publish-calendars-listbox' )">
       <radiogroup>
-         <radio id="publish-calendars"   label="Publish Entire Calendar" selected="true"/>
+         <radio id="publish-calendars"
+                label="Publish Entire Calendar"
+                selected="true"/>
          <!-- show a list of calendars here -->
-         <listbox id="publish-calendars-listbox" class="unifinder-tree-class" flex="1" 
-            contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
+         <listbox id="publish-calendars-listbox"
+                  class="unifinder-tree-class"
+                  flex="1"
+                  contextmenu="calendarlist-context-menu"
+                  datasources="rdf:null"
+                  ref="urn:calendarcontainer">
             <listhead>
                <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
                <listheader/>
@@ -162,28 +219,32 @@
                   <listitem uri="rdf:*" 
                      calendarPath="rdf:http://home.netscape.com/NC-rdf#path">
                      <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                        class="calendar-list-item-class"
-                        label="rdf:http://home.netscape.com/NC-rdf#name"
-                        flex="1"
-                        type="checkbox"
-                        checked="rdf:http://home.netscape.com/NC-rdf#active"
+                               class="calendar-list-item-class"
+                               label="rdf:http://home.netscape.com/NC-rdf#name"
+                               flex="1"
+                               type="checkbox"
+                               checked="rdf:http://home.netscape.com/NC-rdf#active"
                         />
                      <listcell>
                         <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                           class="calendar-list-item-class"/>
+                               class="calendar-list-item-class"/>
                      </listcell>
                   </listitem>
                </rule>
             </template>
          </listbox>
          
-         <radio id="publish-events"      label="Publish Selected Events" disabled="true"/>
+         <radio id="publish-events"
+                label="Publish Selected Events"
+                disabled="true"/>
          <!-- TODO: show a list of events here -->
          
       </radiogroup>
    </wizardpage>
    
-   <wizardpage pageid="publish-2" onpagehide="" onpageshow="">
+   <wizardpage pageid="publish-2"
+               onpagehide=""
+               onpageshow="">
       <grid>
          <columns>
            <column />

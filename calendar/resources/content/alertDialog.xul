@@ -109,9 +109,18 @@
                                
                         <menulist name="alarm-length-units" labelnumber="labelplural" crop="none">
                            <menupopup >
-                              <menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
-                              <menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours"/>
-                              <menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
+                              <menuitem label="&alarm.units.minutes;"
+                                        labelplural="&alarm.units.minutes;"
+                                        labelsingular="&alarm.units.minutes.singular;"
+                                        value="minutes"/>
+                              <menuitem label="&alarm.units.hours;"
+                                        labelplural="&alarm.units.hours;"
+                                        labelsingular="&alarm.units.hours.singular;"
+                                        value="hours"/>
+                              <menuitem label="&alarm.units.days;"
+                                        labelplural="&alarm.units.days;"
+                                        labelsingular="&alarm.units.days.singular;"
+                                        value="days"/>
                            </menupopup>
                         </menulist>
                      </box>       

@@ -135,7 +135,9 @@
                             <description>&calendar.server.dialog.local.location.label;</description>
                         </hbox>
                         <hbox>
-                           <textbox readonly="true" id="server-local-path-textbox" flex="1" /> 
+                           <textbox readonly="true"
+                                    id="server-local-path-textbox"
+                                    flex="1" /> 
                         </hbox>
                     </row>
                     

@@ -139,7 +139,8 @@
                         </hbox>
                         <hbox>
                            <textbox id="server-path-textbox" flex="1" /> 
-                           <button oncommand="launchFilePicker()" label="&calendar.server.dialog.browse.label;"/>
+                           <button oncommand="launchFilePicker()"
+                                   label="&calendar.server.dialog.browse.label;"/>
                         </hbox>
                     </row>
                     

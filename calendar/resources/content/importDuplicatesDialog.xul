@@ -28,16 +28,24 @@
       <box align="center">
 
          <radiogroup id="dup-group" >
-             <radio id="auto-discard" selected="true" label="&calendar.importdupes.autodiscard.label;" oncommand="togglePrompting(false); setDiscardDuplicates(true);"/>
-             <radio id="add-duplicates" label="&calendar.importdupes.adddupes.label;" oncommand="togglePrompting(true); setDiscardDuplicates(false);"/>
+             <radio id="auto-discard"
+                    selected="true"
+                    label="&calendar.importdupes.autodiscard.label;"
+                    oncommand="togglePrompting(false); setDiscardDuplicates(true);"/>
+             <radio id="add-duplicates"
+                    label="&calendar.importdupes.adddupes.label;"
+                    oncommand="togglePrompting(true); setDiscardDuplicates(false);"/>
          </radiogroup>
 
       </box>
 
       <hbox style="margin-left: .25in">
 
-         <checkbox id="prompt-on-add" disabled="true" selected="true" label="&calendar.importdupes.prompt.label;"
-                  oncommand="this.checked = !this.checked; setPromptOnAdd(this.checked);"/>
+         <checkbox id="prompt-on-add"
+                   disabled="true"
+                   selected="true"
+                   label="&calendar.importdupes.prompt.label;"
+                   oncommand="this.checked = !this.checked; setPromptOnAdd(this.checked);"/>
 
       </hbox>
 

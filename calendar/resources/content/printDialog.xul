@@ -148,11 +148,17 @@ var descriptionTag="&newevent.description.label;"
                         <spacer />
                         <radiogroup id="view-field" >
                            <caption label="&calendar.print.selectviews.label;" />
-                           <radio label="&calendar.monthview.button.label;"  value="month" selected="true" />
-                           <radio label="&calendar.weekview.button.label;"  value="week"/>
-                           <radio label="&calendar.multiweekview.button.label;"  value="multiweek"/>
-                           <radio label="&calendar.dayview.button.label;"  value="day"/>
-                           <radio label="&calendar.print.listselected.label;"  value="list"/>
+                           <radio label="&calendar.monthview.button.label;"
+                                  value="month"
+                                  selected="true" />
+                           <radio label="&calendar.weekview.button.label;"
+                                  value="week"/>
+                           <radio label="&calendar.multiweekview.button.label;"
+                                  value="multiweek"/>
+                           <radio label="&calendar.dayview.button.label;"
+                                  value="day"/>
+                           <radio label="&calendar.print.listselected.label;"
+                                  value="list"/>
                         </radiogroup>
                      </row>
 
@@ -163,29 +169,47 @@ var descriptionTag="&newevent.description.label;"
                         </hbox>
                         <hbox  id="start-date-box" align="center">
                             <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="start-time-text" readonly="true" value=""        onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start" collapsed="true"/>
-                            <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start" collapsed="true"/>
+                            <textbox id="start-time-text"
+                                     readonly="true"
+                                     value=""
+                                     onmousedown="prepareTimePicker('start-time-text')"
+                                     popup="oe-time-picker-popup"
+                                     position="after_start"
+                                     collapsed="true"/>
+                            <image id="start-time-button"
+                                   class="event-time-button-class"
+                                   onmousedown="prepareTimePicker('start-time-text')"
+                                   popup="oe-time-picker-popup"
+                                   position="after_start"
+                                   collapsed="true"/>
                         </hbox>
                      </row>
                      
                      <!-- Private -->
                      <row align="center">
                         <spacer />
-                        <checkbox id="private-checkbox" checked="true" label="&newevent.private.label;"/>
+                        <checkbox id="private-checkbox"
+                                  checked="true"
+                                  label="&newevent.private.label;"/>
                      </row>
 
                      <!-- Calendar Status -->
                      <row align="center" collapsed="true">
                       <spacer />
-                        <checkbox id="status-checkbox" checked="false" label="&calendar.print.onlyitemsstatus.label;"/>
+                        <checkbox id="status-checkbox"
+                                  checked="false"
+                                  label="&calendar.print.onlyitemsstatus.label;"/>
                      </row>
                      <row align="center" collapsed="true">
                         <spacer />
                         <menulist id="status-field" label="&newevent.status.label;">
                             <menupopup id="status-menulist-menupopup">
-                                <menuitem label="&newevent.status.tentative.label;"  value="ICAL_STATUS_TENTATIVE"/>
-                                <menuitem label="&newevent.status.confirmed.label;"  value="ICAL_STATUS_CONFIRMED"/>
-                                <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
+                                <menuitem label="&newevent.status.tentative.label;"
+                                          value="ICAL_STATUS_TENTATIVE"/>
+                                <menuitem label="&newevent.status.confirmed.label;"
+                                          value="ICAL_STATUS_CONFIRMED"/>
+                                <menuitem label="&newevent.status.cancelled.label;"
+                                          value="ICAL_STATUS_CANCELLED"/>
                             </menupopup>
                         </menulist>
                      </row>
@@ -194,14 +218,18 @@ var descriptionTag="&newevent.description.label;"
                      <!-- Categories -->
                      <row align="center" collapsed="true">
                       <spacer />
-                        <checkbox id="category-checkbox" checked="false" label="&calendar.print.onlyitemscategory.label;"/>
+                        <checkbox id="category-checkbox"
+                                  checked="false"
+                                  label="&calendar.print.onlyitemscategory.label;"/>
                      </row>
 
                      <row align="center" collapsed="true">
                         <spacer />
-                        <menulist id="categories-field" label="&newevent.category.label;">
+                        <menulist id="categories-field"
+                                  label="&newevent.category.label;">
                             <menupopup id="categories-menulist-menupopup">
-                                <menuitem label="&priority.level.none;" value="0"/>
+                                <menuitem label="&priority.level.none;"
+                                          value="0"/>
                             </menupopup>
                         </menulist>
                      </row>

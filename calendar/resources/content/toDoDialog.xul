@@ -145,7 +145,7 @@
                      <!-- Location -->    
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label for="location-field" value="&newevent.location.label;"/>
+                           <label for="location-field" value="&newevent.location.label;"/>
                         </hbox>
                         <textbox id="location-field"/>
                      </row>
@@ -153,37 +153,61 @@
                      <!-- Start Date -->    
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.startdate.label;"/>
+                           <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="start-time-text" readonly="true" value=""        onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                           <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
+                           <textbox id="start-time-text"
+                                    readonly="true"
+                                    value=""
+                                    onmousedown="prepareTimePicker('start-time-text')"
+                                    popup="oe-time-picker-popup"
+                                    position="after_start"/>
+                           <image id="start-time-button"
+                                  class="event-time-button-class"
+                                  onmousedown="prepareTimePicker('start-time-text')"
+                                  popup="oe-time-picker-popup"
+                                  position="after_start"/>
                         </hbox>
                      </row>
                      
-                    <!--  Due Date -->    
+                     <!--  Due Date -->    
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label value="&newtodo.duedate.label;"/>
+                           <label value="&newtodo.duedate.label;"/>
                         </hbox>
                         <hbox  id="due-date-box" align="center">
-                            <datepicker id="due-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="due-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('due-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image id="end-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('due-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                           <datepicker id="due-date-picker" value="" ondatepick="onDatePick( this );"/>
+                           <textbox id="due-time-text"
+                                    readonly="true"
+                                    value=""
+                                    onmousedown="prepareTimePicker('due-time-text')"
+                                    popup="oe-time-picker-popup"
+                                    position="after_start"/>
+                           <image id="end-time-button"
+                                  class="event-time-button-class"
+                                  onmousedown="prepareTimePicker('due-time-text')"
+                                  popup="oe-time-picker-popup"
+                                  position="after_start"/>
                         </hbox>
                      </row>
               
                      <!-- End Time Warning -->    
                      <row align="center">
                         <spacer />
-                        <label id="due-time-warning" class="warning-text-class" value="&newtodo.duetime.warning;" collapsed="true"/>
+                        <label id="due-time-warning"
+                               class="warning-text-class"
+                               value="&newtodo.duetime.warning;"
+                               collapsed="true"/>
                      </row>
               
                      <!-- End Date Warning -->    
                      <row align="center">
                         <spacer />
-                        <label id="due-date-warning" class="warning-text-class" value="&newtodo.duedate.warning;" collapsed="true"/>
+                        <label id="due-date-warning"
+                               class="warning-text-class"
+                               value="&newtodo.duedate.warning;"
+                               collapsed="true"/>
                      </row>
                      
                      
@@ -192,18 +216,25 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label for="description-field" value="&newevent.description.label;"/>
                         </hbox>
-                        <textbox id="description-field" multiline="true" rows="3" cols="30" />
+                        <textbox id="description-field"
+                                 multiline="true"
+                                 rows="3"
+                                 cols="30" />
                      </row>
                      
                      
                      <!-- URI/URL -->    
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label for="uri-field" value="&newevent.uri.label;"/>
+                           <label for="uri-field" value="&newevent.uri.label;"/>
                         </hbox>
                         <hbox>
-                          <textbox id="uri-field" type="autocomplete" searchSessions="history" flex="1"/>
-                          <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
+                           <textbox id="uri-field"
+                                    type="autocomplete"
+                                    searchSessions="history"
+                                    flex="1"/>
+                           <button label="&newevent.uri.visit.label;"
+                                   oncommand="launchBrowser()"/>
                         </hbox>
                      </row>
               
@@ -211,120 +242,163 @@
                      <!-- Private -->    
                      <row align="center">
                         <spacer />
-                        <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
+                        <checkbox id="private-checkbox"
+                                  checked="false"
+                                  label="&newevent.private.label;"/>
                      </row>
                      
                      
             
                     <!-- Priority -->    
                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newtodo.priority.label;"/>
-                        </hbox>
-                        <hbox>
-                            <menulist id="priority-levels">
-                          <menupopup>
-                                    <menuitem label="&priority.level.none;" value="0"/>
-                                    <menuitem label="&priority.level.low;" value="9"/>
-                                    <menuitem label="&priority.level.medium;" value="5"/>
-                                    <menuitem label="&priority.level.high;" value="1"/>
-                          </menupopup>
-                        </menulist>
-                        </hbox>
+                       <hbox class="field-label-box-class" pack="end">
+                          <label value="&newtodo.priority.label;"/>
+                       </hbox>
+                       <hbox>
+                          <menulist id="priority-levels">
+                             <menupopup>
+                                <menuitem label="&priority.level.none;"
+                                          value="0"/>
+                                <menuitem label="&priority.level.low;"
+                                          value="9"/>
+                                <menuitem label="&priority.level.medium;"
+                                          value="5"/>
+                                <menuitem label="&priority.level.high;"
+                                          value="1"/>
+                             </menupopup>
+                          </menulist>
+                       </hbox>
                     </row>
             
-                     <!-- Alarm -->    
-                     <row align="center">
-                        <spacer />
-                        <vbox>
-                           <hbox  id="alarm-box" align="center">
-                              <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
-                              <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
-                              <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
-                                 <menupopup>
-                                    <menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
-                                    <menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
-                                    <menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
-                                 </menupopup>
-                              </menulist>
-                              <menulist id="alarm-trigger-relation" crop="none">
-                                 <menupopup>
-                                    <menuitem label="&newtodo.beforealarm.label;" value="ICAL_RELATED_START"/>
-                                    <menuitem label="&newtodo.beforealarmends.label;" value="ICAL_RELATED_END"/>
-                                 </menupopup>
-                              </menulist>
-                           </hbox>
-                           
-                           <hbox id="alarm-box-email" align="center">
-                               <spacer width="15"/>
-                               <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
-                               <textbox type="autocomplete" searchSessions="addrbook" id="alarm-email-field" size="39" value="" />
-                           </hbox>       
-                        </vbox>
-                     </row>
-   
-                     <!-- Status -->
+                    <!-- Alarm -->    
                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newtodo.status.label;"/>
-                        </hbox>
-                        <checkbox id="cancelled-checkbox"  label="&newtodo.cancelled.label;" checked="false"/>
+                       <spacer />
+                       <vbox>
+                          <hbox  id="alarm-box" align="center">
+                             <checkbox id="alarm-checkbox"
+                                       class="proper-align"
+                                       label="&newevent.alarm.label;"
+                                       checked="false"
+                                       oncommand="commandAlarm()"/>
+                             <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
+                             <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
+                                <menupopup>
+                                   <menuitem label="&alarm.units.minutes;"
+                                             labelplural="&alarm.units.minutes;"
+                                             labelsingular="&alarm.units.minutes.singular;"
+                                             value="minutes"/>
+                                   <menuitem label="&alarm.units.hours;"
+                                             labelplural="&alarm.units.hours;"
+                                             labelsingular="&alarm.units.hours.singular;"
+                                             value="hours" />
+                                   <menuitem label="&alarm.units.days;"
+                                             labelplural="&alarm.units.days;"
+                                             labelsingular="&alarm.units.days.singular;"
+                                             value="days"/>
+                                </menupopup>
+                             </menulist>
+                             <menulist id="alarm-trigger-relation" crop="none">
+                                <menupopup>
+                                   <menuitem label="&newtodo.beforealarm.label;"
+                                             value="ICAL_RELATED_START"/>
+                                   <menuitem label="&newtodo.beforealarmends.label;"
+                                             value="ICAL_RELATED_END"/>
+                                </menupopup>
+                             </menulist>
+                          </hbox>
+                           
+                          <hbox id="alarm-box-email" align="center">
+                             <spacer width="15"/>
+                             <checkbox id="alarm-email-checkbox"
+                                       label="&newevent.email.label;"
+                                       checked="false"
+                                       oncommand="commandAlarmEmail()"/>
+                             <textbox type="autocomplete"
+                                      searchSessions="addrbook"
+                                      id="alarm-email-field"
+                                      size="39"
+                                      value="" />
+                          </hbox>       
+                       </vbox>
+                    </row>
+   
+                    <!-- Status -->
+                    <row align="center">
+                       <hbox class="field-label-box-class" pack="end">
+                          <label value="&newtodo.status.label;"/>
+                       </hbox>
+                       <checkbox id="cancelled-checkbox"
+                                 label="&newtodo.cancelled.label;"
+                                 checked="false"/>
                     </row>
 
                     <!-- Completed -->    
                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                           <label value="&newtodo.completed.label;" pack="end"/>
-                        </hbox>
-                        <hbox>
-                           <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
-                           <datepicker id="completed-date-picker" disabled="true" value=""/>
-                           <spacer/>  
-                           <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
-                              <menupopup>
-                                 <menuitem label="0" value="0"/>
-                                 <menuitem label="10" value="10"/>
-                                 <menuitem label="20" value="20"/>
-                                 <menuitem label="30" value="30"/>
-                                 <menuitem label="40" value="40"/>
-                                 <menuitem label="50" value="50"/>
-                                 <menuitem label="60" value="60"/>
-                                 <menuitem label="70" value="70"/>
-                                 <menuitem label="80" value="80"/>
-                                 <menuitem label="90" value="90"/>
-                                 <menuitem label="100" value="100"/>
-                              </menupopup>
-                           </menulist>
-                           <label id="percent-complete-text" value="&newtodo.percentcomplete.label;"/>
-                        </hbox>
+                       <hbox class="field-label-box-class" pack="end">
+                          <label value="&newtodo.completed.label;" pack="end"/>
+                       </hbox>
+                       <hbox>
+                          <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
+                          <datepicker id="completed-date-picker" disabled="true" value=""/>
+                          <spacer/>  
+                          <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
+                             <menupopup>
+                                <menuitem label="0"
+                                          value="0"/>
+                                <menuitem label="10"
+                                          value="10"/>
+                                <menuitem label="20"
+                                          value="20"/>
+                                <menuitem label="30"
+                                          value="30"/>
+                                <menuitem label="40"
+                                          value="40"/>
+                                <menuitem label="50"
+                                          value="50"/>
+                                <menuitem label="60"
+                                          value="60"/>
+                                <menuitem label="70"
+                                          value="70"/>
+                                <menuitem label="80"
+                                          value="80"/>
+                                <menuitem label="90"
+                                          value="90"/>
+                                <menuitem label="100"
+                                          value="100"/>
+                             </menupopup>
+                          </menulist>
+                          <label id="percent-complete-text" value="&newtodo.percentcomplete.label;"/>
+                       </hbox>
                     </row>
 
-                     <!-- Categories -->
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newtodo.categories.label;"/>
-                        </hbox>
-                        <menulist id="categories-field" label="&newevent.category.label;">
-                            <menupopup id="categories-menulist-menupopup">
-                                <menuitem label="&priority.level.none;" value="0"/>
-                            </menupopup>
-                        </menulist>
-                     </row>
+                    <!-- Categories -->
+                    <row align="center">
+                       <hbox class="field-label-box-class" pack="end">
+                          <label value="&newtodo.categories.label;"/>
+                       </hbox>
+                       <menulist id="categories-field" label="&newevent.category.label;">
+                          <menupopup id="categories-menulist-menupopup">
+                             <menuitem label="&priority.level.none;" value="0"/>
+                          </menupopup>
+                       </menulist>
+                    </row>
             
-                     <!-- Calendar Server -->
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label id="server-field-label" value="&newevent.server.label;"/>
-                        </hbox>
-                        <menulist id="server-field">
-                           <menupopup id="server-menulist-menupopup" datasources="rdf:null" ref="urn:calendarcontainer">
-                              <template>
-                                 <rule>   
-                                    <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#path" label="rdf:http://home.netscape.com/NC-rdf#name"/>
-                                 </rule>
-                              </template>
-                            </menupopup>
-                        </menulist>
+                    <!-- Calendar Server -->
+                    <row align="center">
+                       <hbox class="field-label-box-class" pack="end">
+                          <label id="server-field-label" value="&newevent.server.label;"/>
+                       </hbox>
+                       <menulist id="server-field">
+                          <menupopup id="server-menulist-menupopup" datasources="rdf:null" ref="urn:calendarcontainer">
+                             <template>
+                                <rule>   
+                                   <menuitem uri="rdf:*"
+                                             value="rdf:http://home.netscape.com/NC-rdf#path"
+                                             label="rdf:http://home.netscape.com/NC-rdf#name"/>
+                                </rule>
+                             </template>
+                          </menupopup>
+                       </menulist>
                      </row>
                   </rows>
                </grid>
@@ -334,35 +408,114 @@
             <!-- Repeat -->    
                <vbox>
                   <hbox id="repeat-box" align="center">
-                     <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat();commandUntil()"/>
-                     <textbox id="repeat-length-field" class="cursor-pointer" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
+                     <checkbox id="repeat-checkbox"
+                               class="proper-align"
+                               label="&newevent.repeat.label;"
+                               checked="false"
+                               oncommand="commandRepeat();commandUntil()"/>
+                     <textbox id="repeat-length-field"
+                              class="cursor-pointer"
+                              disable-controller="repeat"
+                              value="1"
+                              oninput="repeatLengthKeyDown( this )"/>
                               
-                     <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
+                     <menulist crop="none"
+                               oncommand="repeatUnitCommand( this )"
+                               labelnumber="labelplural"
+                               id="repeat-length-units"
+                               disable-controller="repeat">
                         <menupopup>
-                           <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   id="repeat-length-days"   value="days" />
-                           <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks"/>
-                           <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"/>
-                           <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"  id="repeat-length-years"  value="years" />
+                           <menuitem label="&repeat.units.days;"
+                                     labelplural="&repeat.units.days;"
+                                     labelsingular="&repeat.units.days.singular;"
+                                     id="repeat-length-days"
+                                     value="days" />
+                           <menuitem label="&repeat.units.weeks;"
+                                     labelplural="&repeat.units.weeks;"
+                                     labelsingular="&repeat.units.weeks.singular;"
+                                     id="repeat-length-weeks"
+                                     value="weeks"/>
+                           <menuitem label="&repeat.units.months;"
+                                     labelplural="&repeat.units.months;"
+                                     labelsingular="&repeat.units.months.singular;"
+                                     id="repeat-length-months"
+                                     value="months"/>
+                           <menuitem label="&repeat.units.years;"
+                                     labelplural="&repeat.units.years;"
+                                     labelsingular="&repeat.units.years.singular;"
+                                     id="repeat-length-years"
+                                     value="years" />
                         </menupopup>
                      </menulist>
                   </hbox>
                     
-                  <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.1.Ddd;" id="advanced-repeat-week-0" value="0" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.2.Ddd;" id="advanced-repeat-week-1" value="1" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.3.Ddd;" id="advanced-repeat-week-2" value="2" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.4.Ddd;" id="advanced-repeat-week-3" value="3" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.5.Ddd;" id="advanced-repeat-week-4" value="4" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.6.Ddd;" id="advanced-repeat-week-5" value="5" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.7.Ddd;" id="advanced-repeat-week-6" value="6" checked="false" />
+                  <hbox id="repeat-extenstions-week"
+                        disabled="true"
+                        disable-controller="repeat"
+                        collapsed="false"
+                        align="center">
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.1.Ddd;"
+                               id="advanced-repeat-week-0"
+                               value="0"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.2.Ddd;"
+                               id="advanced-repeat-week-1"
+                               value="1"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.3.Ddd;"
+                               id="advanced-repeat-week-2"
+                               value="2"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.4.Ddd;"
+                               id="advanced-repeat-week-3"
+                               value="3"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.5.Ddd;"
+                               id="advanced-repeat-week-4"
+                               value="4"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.6.Ddd;"
+                               id="advanced-repeat-week-5"
+                               value="5"
+                               checked="false" />
+                     <checkbox disable-controller="repeat"
+                               class="repeat-day-class"
+                               label="&day.7.Ddd;"
+                               id="advanced-repeat-week-6"
+                               value="6"
+                               checked="false" />
                   </hbox>
                          
-                  <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
+                  <hbox id="repeat-extenstions-month"
+                        diabled="true"
+                        collapsed="true"
+                        align="center">
                      <vbox align="center">
-                        <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="&newevent.advanced.repeat.dayofmonth.label;" selected="true"/>
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="&newevent.advanced.repeat.dayofweek.label;"/>
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="&newevent.advanced.repeat.lastdayofweek.label;" disabled="true"/>
+                        <radiogroup id="advanced-repeat-month"
+                                    disable-controller="repeat">
+                           <radio disable-controller="repeat"
+                                  id="advanced-repeat-dayofmonth"
+                                  label="&newevent.advanced.repeat.dayofmonth.label;"
+                                  selected="true"/>
+                           <radio disable-controller="repeat"
+                                  id="advanced-repeat-dayofweek"
+                                  label="&newevent.advanced.repeat.dayofweek.label;"/>
+                           <radio disable-controller="repeat"
+                                  id="advanced-repeat-dayofweek-last"
+                                  label="&newevent.advanced.repeat.lastdayofweek.label;"
+                                  disabled="true"/>
                         </radiogroup>
                      </vbox>
                   </hbox>
@@ -372,22 +525,34 @@
                   <hbox align="center">
                      <spacer class="repeat-left-spacer" />
                      <radiogroup id="repeat-until-group" disable-controller="repeat">
-                        <radio id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                        <radio id="repeat-forever-radio"
+                               disable-controller="repeat"
+                               label="&newevent.forever.label;"
+                               oncommand="commandUntil()"/>
                         <vbox id="repeat-end-box" align="center">
-									<hbox>
-										<radio id="repeat-numberoftimes-radio" disable-controller="repeat" label="&newevent.numberoftimes.label;" oncommand=""/>
-										<textbox id="repeat-numberoftimes-textbox" disable-controller="repeat"/>
-									</hbox>
+                           <hbox>
+                              <radio id="repeat-numberoftimes-radio"
+                                     disable-controller="repeat"
+                                     label="&newevent.numberoftimes.label;"
+                                     oncommand=""/>
+                              <textbox id="repeat-numberoftimes-textbox" disable-controller="repeat"/>
+                           </hbox>
                         </vbox>
-								<vbox id="repeat-end-box" align="center">
-                              <hbox>
-                                 <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
+                        <vbox id="repeat-end-box" align="center">
+                           <hbox>
+                              <radio id="repeat-until-radio"
+                                     disable-controller="repeat"
+                                     label="&newevent.until.label;"
+                                     oncommand="commandUntil()"/>
                                  <spacer id="until-spacer"/>
                                  <datepicker id="repeat-end-date-picker" value="" ondatepick="commandUntil()"/>
                               </hbox>
-                              <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
+                              <label id="repeat-time-warning"
+                                     class="warning-text-class"
+                                     value="&newevent.recurend.warning;"
+                                     collapsed="true"/>
                         </vbox>
-							</radiogroup>
+                     </radiogroup>
                   </hbox>
                     
                   <hbox align="center">
@@ -403,13 +568,18 @@
                               <row>
                                  <hbox align="center">
                                     <datepicker id="exceptions-date-picker" disable-controller="repeat" value=""/>
-                                 </hbox>   
-                                 <button id="exception-add-button" label="&newevent.addexceptions.label;" disable-controller="repeat" oncommand="addException()"/>
+                                 </hbox> 
+                                 <button id="exception-add-button"
+                                         label="&newevent.addexceptions.label;"
+                                         disable-controller="repeat"
+                                         oncommand="addException()"/>
                               </row>
                               <row>
                                  <listbox id="exception-dates-listbox" disable-controller="repeat" rows="4"/>
                                  <vbox>
-                                    <button label="&newevent.deleteexceptions.label;" disable-controller="repeat" oncommand="removeSelectedExceptionDate()"/>
+                                    <button label="&newevent.deleteexceptions.label;"
+                                            disable-controller="repeat"
+                                            oncommand="removeSelectedExceptionDate()"/>
                                  </vbox>
                               </row>
                            </rows>
@@ -425,7 +595,10 @@
                <!-- Invite -->    
                <vbox collapsed="true">
                   <hbox id="invite-box" align="center">
-                     <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
+                     <checkbox id="invite-checkbox"
+                               label="&newevent.invite.label;"
+                               checked="false"
+                               oncommand="commandInvite()"/>
                      <textbox id="invite-email-field" size="39" disabled="true"/>
                   </hbox>
                </vbox>
@@ -453,16 +626,32 @@
                   <!-- Existing addresses -->                
                   <vbox id="resultsBox" flex="4">
                      <label value=" " />
-                     <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
+                     <tree id="abResultsTree"
+                           flex="1"
+                           persist="height"
+                           hidecolumnpicker="true"
+                           onclick="this.contactsTree.onClick( event );"
+                           ondblclick="this.contactsTree.onDblClick( event );">
                       
                         <treecols id="recipientTreeCols">
-                           <treecol id="GeneratedName" sort-field="GeneratedName" class="sortDirectionIndicator"   list-view-sort-field="true" 
-                              persist="ordinal width" flex="1" label="&ab-selectAddressesDialogNameColumn.label;" primary="true"/>
+                           <treecol id="GeneratedName"
+                                    sort-field="GeneratedName"
+                                    class="sortDirectionIndicator"
+                                    list-view-sort-field="true" 
+                                    persist="ordinal width"
+                                    flex="1"
+                                    label="&ab-selectAddressesDialogNameColumn.label;"
+                                    primary="true"/>
                               
                            <splitter class="tree-splitter"/>
                               
-                           <treecol id="PrimaryEmail" sort-field="PrimaryEmail" class="sortDirectionIndicator" list-view-sort-field="true"  
-                              persist="ordinal width"  flex="1" label="&ab-selectAddressesDialogEmailColumn.label;"/>
+                           <treecol id="PrimaryEmail"
+                                    sort-field="PrimaryEmail"
+                                    class="sortDirectionIndicator"
+                                    list-view-sort-field="true"  
+                                    persist="ordinal width"
+                                    flex="1"
+                                    label="&ab-selectAddressesDialogEmailColumn.label;"/>
                         </treecols>
                           
                         <treechildren />
@@ -473,9 +662,14 @@
                   <!-- Add and remove buttons -->
                   <vbox id="addToBucketButtonBox">
                       <spacer flex="1" />
-                      <button id="toButton" label="&ab-selectAddressesDialogInvite.label;" command="addToInviteList" /> 
+                      <button id="toButton"
+                              label="&ab-selectAddressesDialogInvite.label;"
+                              command="addToInviteList" /> 
                       <spacer />
-                      <button id="remove" label="&ab-selectAddressesDialogUninvite.label;" class="dialog" command="removeFromInviteList" /> 
+                      <button id="remove"
+                              label="&ab-selectAddressesDialogUninvite.label;"
+                              class="dialog"
+                              command="removeFromInviteList" /> 
                       <spacer flex="1" />
                   </vbox>
                   
@@ -483,12 +677,15 @@
                   <vbox id="bucketBox" flex="1">
                       <label value="&ab-selectAddressesDialogInviteList.label;"/>
                       
-                      <tree id="addressBucket" flex="1" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
-                          <treecols>
-                              <treecol id="addressCol" flex="1" hideheader="true"/>
-                          </treecols>
+                      <tree id="addressBucket"
+                            flex="1"
+                            hidecolumnpicker="true"
+                            onclick="selectEventRecipient( this );">
+                         <treecols>
+                            <treecol id="addressCol" flex="1" hideheader="true"/>
+                         </treecols>
                           
-                          <treechildren id="bucketBody" flex="1"/>
+                         <treechildren id="bucketBody" flex="1"/>
                       </tree>
                   </vbox>
                   

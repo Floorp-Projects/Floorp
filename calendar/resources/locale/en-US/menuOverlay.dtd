@@ -41,25 +41,28 @@
 <!ENTITY eventMenuCmd.accesskey     "v">
 
 <!ENTITY event.new.event		"New Event">
-<!ENTITY event.new.event.accesskey "n">
+<!ENTITY event.new.event.accesskey "N">
 
 <!ENTITY event.new.todo		"New Task">
-<!ENTITY event.new.todo.accesskey "t">
+<!ENTITY event.new.todo.accesskey "T">
+
+<!ENTITY calendar.new.server.label "New Calendar">
+<!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event	"Edit">
-<!ENTITY event.edit.event.accesskey	"e">
+<!ENTITY event.edit.event.accesskey	"E">
 
 <!ENTITY event.delete.event	"Delete Selected Event(s)">
-<!ENTITY event.delete.event.accesskey	"d">
+<!ENTITY event.delete.event.accesskey	"D">
 
 <!ENTITY event.delete.tasks	"Delete Selected Task(s)">
-<!ENTITY event.delete.tasks.accesskey	"t">
+<!ENTITY event.delete.tasks.accesskey	"T">
 
 <!ENTITY event.mail.event	"Mail Selected Event(s)">
-<!ENTITY event.mail.event.accesskey	"m">
+<!ENTITY event.mail.event.accesskey	"M">
 
 <!ENTITY calendar.print.label	"Print Active Calendars...">
-<!ENTITY calendar.print.accesskey	"r">
+<!ENTITY calendar.print.accesskey	"P">
 
 <!ENTITY calendar.printpreview.label	"Print Preview">
 <!ENTITY calendar.printpreview.accesskey	"v">
@@ -68,46 +71,46 @@
 <!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"Import From File...">
-<!ENTITY calendar.import.accesskey	"i">
+<!ENTITY calendar.import.accesskey	"I">
 
 <!ENTITY calendar.wizard.label	"Launch Wizard">
-<!ENTITY calendar.wizard.accesskey	"w">
+<!ENTITY calendar.wizard.accesskey	"W">
 
 <!ENTITY calendar.export.label	"Export Selected Events...">
-<!ENTITY calendar.export.accesskey	"e">
+<!ENTITY calendar.export.accesskey	"E">
 
-<!ENTITY calendar.subscribe.label "Subscribe To Remote Calendar...">
-<!ENTITY calendar.subscribe.accesskey "s">
+<!ENTITY calendar.subscribe.label "Subscribe to Remote Calendar...">
+<!ENTITY calendar.subscribe.accesskey "R">
 
 <!ENTITY calendar.publish.label "Publish Selected Events...">
-<!ENTITY calendar.publish.accesskey "p">
+<!ENTITY calendar.publish.accesskey "S">
 
 <!ENTITY calendar.about.label	"About Calendar">
-<!ENTITY calendar.about.accesskey	"a">
+<!ENTITY calendar.about.accesskey	"C">
 
 <!ENTITY calendar.cut.label	"Cut">
 <!ENTITY calendar.cut.accesskey	"t">
 
 <!ENTITY calendar.copy.label	"Copy">
-<!ENTITY calendar.copy.accesskey	"c">
+<!ENTITY calendar.copy.accesskey	"C">
 
 <!ENTITY calendar.paste.label	"Paste">
-<!ENTITY calendar.paste.accesskey	"p">
+<!ENTITY calendar.paste.accesskey	"P">
 
 <!ENTITY calendar.selectall.label	"Select All">
-<!ENTITY calendar.selectall.accesskey	"a">
+<!ENTITY calendar.selectall.accesskey	"A">
 
 <!ENTITY calendar.preferences.label	"Preferences...">
-<!ENTITY calendar.preferences.accesskey	"p">
+<!ENTITY calendar.preferences.accesskey	"e">
 
 <!ENTITY goMenu.label                   "Go">
-<!ENTITY goMenu.accesskey               "g">
+<!ENTITY goMenu.accesskey               "G">
 
-<!ENTITY goTodayCmd.label               "Go To Today">
-<!ENTITY goTodayCmd.accesskey           "t">
+<!ENTITY goTodayCmd.label               "Go to Today">
+<!ENTITY goTodayCmd.accesskey           "T">
 
 <!ENTITY goPreviousCmd.label            "Previous">
-<!ENTITY goPreviousCmd.accesskey        "p">
+<!ENTITY goPreviousCmd.accesskey        "P">
 
 <!ENTITY goNextCmd.label                "Next">
-<!ENTITY goNextCmd.accesskey            "n">
+<!ENTITY goNextCmd.accesskey            "N">

@@ -111,153 +111,420 @@
                
          <!-- This is an overlay being included from above -->
          <box id="day-view-content-box" flex="1">
-	       <stack id="day-view-content-board" flex="1">
-		      <vbox id="day-hour-content-holder" flex="1">    
-                <box top="0" left="31" class="day-view-hour-box-class" id="day-tree-item-0" hour="0" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+         <stack id="day-view-content-board" flex="1">
+            <vbox id="day-hour-content-holder" flex="1">    
+                <box top="0"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-0"
+                     hour="0"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-0" value="&time.midnight; " />
                    </box>
                 </box>
                 
-                <box top="50" left="31" class="day-view-hour-box-class" id="day-tree-item-1" hour="1" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="50"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-1"
+                     hour="1"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
+
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-1"/>
                    </box>
                 </box>
                 
-                <box top="100" left="31" class="day-view-hour-box-class" id="day-tree-item-2" hour="2" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="100"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-2"
+                     hour="2"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-2"/>
                    </box>
                 </box>
                 
-                <box top="150" left="31" class="day-view-hour-box-class" id="day-tree-item-3" hour="3" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="150"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-3"
+                     hour="3"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-3"/>
                    </box>
                 </box>
                 
-                <box top="200" left="31" class="day-view-hour-box-class" id="day-tree-item-4" hour="4" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="200"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-4"
+                     hour="4"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-4"/>
                    </box>
                 </box>
                 
-                <box top="250" left="31" class="day-view-hour-box-class" id="day-tree-item-5" hour="5" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="250"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-5"
+                     hour="5"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-5"/>
                    </box>
                 </box>
                 
-                <box top="300" left="31" class="day-view-hour-box-class" id="day-tree-item-6" hour="6" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="300"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-6"
+                     hour="6"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-6"/>
                    </box>
                 </box>
                 
-                <box top="350" left="31" class="day-view-hour-box-class" id="day-tree-item-7" hour="7" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="350"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-7"
+                     hour="7"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-7"/>
                    </box>
                 </box>
                 
-                <box top="400" left="31" class="day-view-hour-box-class" id="day-tree-item-8" hour="8" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="400"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-8"
+                     hour="8"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-8"/>
                    </box>
                 </box>
                 
-                <box top="450" left="31" class="day-view-hour-box-class" id="day-tree-item-9" hour="9" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="450"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-9"
+                     hour="9"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-9"/>
                    </box>
                 </box>
                 
-                <box top="500" left="31" class="day-view-hour-box-class" id="day-tree-item-10" hour="10" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="500"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-10"
+                     hour="10"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-10"/>
                    </box>
                 </box>
                 
-                <box top="550" left="31" class="day-view-hour-box-class" id="day-tree-item-11" hour="11" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="550"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-11"
+                     hour="11"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-11"/>
                    </box>
                 </box>
                 
-                <box top="600" left="31" class="day-view-hour-box-class" id="day-tree-item-12" hour="12" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="600"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-12"
+                     hour="12"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-12"/>
                    </box>
                 </box>
                 
-                <box top="650" left="31" class="day-view-hour-box-class" id="day-tree-item-13" hour="13" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="650"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-13"
+                     hour="13"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
+
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-13"/>
                    </box>
                 </box>
                 
-                <box top="700" left="31" class="day-view-hour-box-class" id="day-tree-item-14" hour="14" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="700"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-14"
+                     hour="14"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
+
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-14"/>
                    </box>
                 </box>
                 
-                <box top="750" left="31" class="day-view-hour-box-class" id="day-tree-item-15" hour="15" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="750"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-15"
+                     hour="15"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-15"/>
                    </box>
                 </box>
                 
-                <box top="800" left="31" class="day-view-hour-box-class" id="day-tree-item-16" hour="16" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="800"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-16"
+                     hour="16"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-16"/>
                    </box>
                 </box>
                 
-                <box top="850" left="31" class="day-view-hour-box-class" id="day-tree-item-17" hour="17" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="850"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-17"
+                     hour="17"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-17"/>
                    </box>
                 </box>
                 
-                <box top="900" left="31" class="day-view-hour-box-class" id="day-tree-item-18" hour="18" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="900"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-18"
+                     hour="18"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-18"/>
                    </box>
                 </box>
                 
-                <box top="950" left="31" class="day-view-hour-box-class" id="day-tree-item-19" hour="19" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="950"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-19"
+                     hour="19"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-19"/>
                    </box>
                 </box>
                 
-                <box top="1000" left="31" class="day-view-hour-box-class" id="day-tree-item-20" hour="20" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="1000"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-20"
+                     hour="20"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-20"/>
                    </box>
                 </box>
                 
-                <box top="1050" left="31" class="day-view-hour-box-class" id="day-tree-item-21" hour="21" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="1050"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-21"
+                     hour="21"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-21"/>
                    </box>
                 </box>
                 
-                <box top="1100" left="31" class="day-view-hour-box-class" id="day-tree-item-22" hour="22" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="1100"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-22"
+                     hour="22"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-22"/>
                    </box>
                 </box>
                 
-                <box top="1150" left="31" class="day-view-hour-box-class" id="day-tree-item-23" hour="23" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">
+                <box top="1150"
+                     left="31"
+                     class="day-view-hour-box-class"
+                     id="day-tree-item-23"
+                     hour="23"
+                     onclick="dayViewHourClick( event )"
+                     ondblclick="dayViewHourDoubleClick( event )"
+                     flex="1"
+                     ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)"
+                     oncontextmenu="dayViewHourContextClick( event )">
                    <box class="day-time-class">
                       <label class="day-time-class-label" id="day-view-hour-23"/>
                    </box>
                 </box>
-	            </vbox>    
-	         </stack>
+            </vbox>    
+         </stack>
          </box>   <!-- End: day-tree-content-box -->
       </vbox>
    </vbox>  <!-- End: Calendar Day View -->
