@@ -413,7 +413,7 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
  *  @update 3/27/00 dwc
  */
 void 
-nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
+nsImageWin :: CreateDDB(nsIDrawingSurface* aSurface)
 {
   HDC TheHDC;
 
@@ -452,7 +452,7 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
  *  @update 3/27/00 dwc
  */
 NS_IMETHODIMP 
-nsImageWin::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsImageWin::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -587,7 +587,7 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       nsIDeviceContext    *dx;
       aContext.GetDeviceContext(dx);
       
-      nsDrawingSurface     ds;
+      nsIDrawingSurface*     ds;
       NS_STATIC_CAST(nsDeviceContextWin*, dx)->GetDrawingSurface(aContext, ds);
 
       nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
@@ -783,7 +783,7 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
  *  See documentation in nsIImageWin.h
  *  @update 3/27/00 dwc
  */
-NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
          PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   return Draw(aContext, aSurface, 0, 0, mBHead->biWidth, mBHead->biHeight, aX, aY, aWidth, aHeight);
@@ -794,7 +794,7 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
  *  See documentation in nsIRenderingContext.h
  */
 NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aDestRect)
@@ -977,7 +977,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
  */
 PRBool
 nsImageWin::ProgressiveDoubleBlit(nsIDeviceContext *aContext,
-                                  nsDrawingSurface aSurface,
+                                  nsIDrawingSurface* aSurface,
                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
                                   nsRect aDestRect)
 {
@@ -1562,7 +1562,7 @@ nsImageWin :: CleanUpDDB()
  * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
  */
 nsresult 
-nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,PRUint32 aROP)
+nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,PRUint32 aROP)
 {
   HDC   theHDC;
   UINT  palType;

@@ -155,7 +155,7 @@ void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
 } 
 
 // Draw the bitmap, this method has a source and destination coordinates
-NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 	PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 	PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) 
 {
@@ -234,7 +234,7 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 }
 
 // Draw the bitmap, this draw just has destination coordinates
-NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 	PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) 
 {
 	//Don't bother to draw nothing		
@@ -300,7 +300,7 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 	PRInt32 aSXOffset, PRInt32 aSYOffset, PRInt32 aPadX, PRInt32 aPadY, const nsRect &aTileRect) 
 {
 	// Don't bother to draw nothing	
@@ -459,7 +459,7 @@ NS_IMETHODIMP nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels)
 	return NS_OK;
 }
 
-nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface) 
+nsresult nsImageBeOS::BuildImage(nsIDrawingSurface* aDrawingSurface) 
 {
 	CreateImage(aDrawingSurface);
 	return NS_OK;
@@ -469,7 +469,7 @@ nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface)
 // and mAlphaBits) into a BBitmap so it can be drawn using the Be APIs. Since it is
 // expensive to create and destroy a BBitmap for this purpose, we will keep this bitmap
 // around, which also prevents the need to copy the bits if they have not changed.
-void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) 
+void nsImageBeOS::CreateImage(nsIDrawingSurface* aSurface) 
 {
 	PRInt32 validX = 0, validY = 0, validMostX = mWidth, validMostY = mHeight;
 

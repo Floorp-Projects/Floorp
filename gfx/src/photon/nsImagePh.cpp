@@ -258,7 +258,7 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   * @param aDHeight - destination height
   * @result NS_OK if the draw worked
   */
-NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 				 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 				 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -400,7 +400,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   	return NS_OK;
 }
 
-NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   	PhPoint_t pos = { aX, aY };
@@ -441,7 +441,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 }
 
 /* New Tile code *********************************************************************/
-NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 		PRInt32 aSXOffset, PRInt32 aSYOffset, PRInt32 aPadX, PRInt32 aPadY, const nsRect &aTileRect ) 
 {
 	PhPoint_t pos, space, rep;

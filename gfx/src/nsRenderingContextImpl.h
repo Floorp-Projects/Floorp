@@ -90,7 +90,7 @@ public:
    */
   NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
 
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer); 
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer); 
   NS_IMETHOD ReleaseBackbuffer(void);
   NS_IMETHOD DestroyCachedBackbuffer(void);
   NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
@@ -159,14 +159,14 @@ protected:
    * @param aBackbuffer drawing surface used as the backbuffer
    * @param aCacheBackbuffer PR_TRUE then the backbuffer will be cached, if PR_FALSE it is created each time
    */
-  nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer, PRBool aCacheBackbuffer);
+  nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer);
 
 public:
 
 protected:
   nsPenMode   mPenMode;
 private:
-  static nsDrawingSurface  gBackbuffer;         //singleton backbuffer 
+  static nsIDrawingSurface*  gBackbuffer;         //singleton backbuffer 
   static nsRect            gBackbufferBounds;   //backbuffer bounds
     // Largest requested offscreen size if larger than a full screen.
   static nsSize            gLargestRequestedSize;

@@ -2874,7 +2874,7 @@ PRBool nsWindow::OnPaint()
 
                  if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextOS2), (void **)&winrc))
                  {
-                    nsDrawingSurface surf;
+                    nsIDrawingSurface* surf;
                    
                     //i know all of this seems a little backwards. i'll fix it, i swear. MMP
                    

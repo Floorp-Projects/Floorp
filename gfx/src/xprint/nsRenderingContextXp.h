@@ -56,21 +56,21 @@ class nsRenderingContextXp : public nsRenderingContextXlib
    
   NS_IMETHOD Init(nsIDeviceContext* aContext);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface);
 
   NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                                 void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
                                 PRUint32 aFlags);
   NS_IMETHOD UnlockDrawingSurface(void);
 
-  NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
+  NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface);
+  NS_IMETHOD GetDrawingSurface(nsIDrawingSurface* *aSurface);
 
-  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
+  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
   
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
 
-  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+  NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
   NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);

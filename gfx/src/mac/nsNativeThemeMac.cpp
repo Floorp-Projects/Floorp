@@ -292,7 +292,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
                                         PRUint8 aWidgetType, const nsRect& aRect, const nsRect& aClipRect)
 {
   // setup to draw into the correct port
-  nsDrawingSurface surf;
+  nsIDrawingSurface* surf;
   aContext->GetDrawingSurface(&surf);
   nsDrawingSurfaceMac* macSurface = (nsDrawingSurfaceMac*)surf;
   CGrafPtr port = nsnull;

@@ -89,7 +89,7 @@ public:
   //in the device context for re-use.
 
 	inline
-  NS_IMETHODIMP GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+  NS_IMETHODIMP GetDrawingSurface(nsIRenderingContext &aContext, nsIDrawingSurface* &aSurface)
 		{
 		nsRect aRect;
 		GetClientRect( aRect );
@@ -130,7 +130,7 @@ protected:
   void        CommonInit(nsNativeDeviceContext aDC);
   void 		GetPrinterRect(int *width, int *height);
 
-  nsDrawingSurface      mSurface;
+  nsIDrawingSurface*      mSurface;
   PRUint32              mDepth;  // bit depth of device
   float                 mPixelScale;
   PRInt16               mScrollbarHeight;

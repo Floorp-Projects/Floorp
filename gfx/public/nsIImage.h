@@ -185,7 +185,7 @@ public:
    * @param aHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
+  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
    * BitBlit the nsIImage to a device, the source and dest can be scaled
@@ -201,12 +201,12 @@ public:
    * @param aDHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                      nsDrawingSurface aSurface,
+                      nsIDrawingSurface* aSurface,
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       PRInt32 aPadX, PRInt32 aPadY,
                       const nsRect &aTileRect) = 0;

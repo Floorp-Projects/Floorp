@@ -383,7 +383,7 @@ void nsImageXlib::UpdateCachedImage()
 
 NS_IMETHODIMP
 nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
-                        nsDrawingSurface aSurface,
+                        nsIDrawingSurface* aSurface,
                         PRInt32 aSX, PRInt32 aSY,
                         PRInt32 aSWidth, PRInt32 aSHeight,
                         PRInt32 aDX, PRInt32 aDY,
@@ -559,7 +559,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
-nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsImageXlib::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -958,7 +958,7 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
 
 void
 nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
-                            nsDrawingSurface aSurface,
+                            nsIDrawingSurface* aSurface,
                             PRInt32 aSX, PRInt32 aSY,
                             PRInt32 aSWidth, PRInt32 aSHeight,
                             PRInt32 aDX, PRInt32 aDY,
@@ -1206,7 +1206,7 @@ void nsImageXlib::SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY)
 // Draw the bitmap. This draw just has destination coordinates
 NS_IMETHODIMP
 nsImageXlib::Draw(nsIRenderingContext &aContext,
-                  nsDrawingSurface aSurface,
+                  nsIDrawingSurface* aSurface,
                   PRInt32 aX, PRInt32 aY,
                   PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -1329,7 +1329,7 @@ void nsImageXlib::TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset,
 }
 
 NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
-                                    nsDrawingSurface aSurface,
+                                    nsIDrawingSurface* aSurface,
                                     PRInt32 aSXOffset, PRInt32 aSYOffset,
                                     PRInt32 aPadX, PRInt32 aPadY,
                                     const nsRect &aTileRect)

@@ -60,7 +60,7 @@ public:
    * @param  aPort GrafPtr to initialize drawing surface with
    * @return error status
    **/
-  NS_IMETHOD Init(nsDrawingSurface aDS) = 0;
+  NS_IMETHOD Init(nsIDrawingSurface* aDS) = 0;
 
   /**
    * Initialize a drawing surface using a Macintosh GrafPtr.

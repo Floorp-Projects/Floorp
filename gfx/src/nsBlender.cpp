@@ -134,9 +134,9 @@ static void rangeCheck(nsIDrawingSurface* surface, PRInt32& aX, PRInt32& aY, PRI
  *	@update 2/25/00 dwc
  */
 NS_IMETHODIMP
-nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDrawingSurface aSrc,
-                 nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                 nsDrawingSurface aSecondSrc, nscolor aSrcBackColor,
+nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIDrawingSurface* aSrc,
+                 nsIDrawingSurface* aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                 nsIDrawingSurface* aSecondSrc, nscolor aSrcBackColor,
                  nscolor aSecondSrcBackColor)
 {
   NS_ASSERTION(aSrc, "nsBlender::Blend() called with nsnull aSrc");
@@ -160,13 +160,9 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
  
   nsresult result = NS_ERROR_FAILURE;
 
-  nsIDrawingSurface* srcSurface = (nsIDrawingSurface *)aSrc;
-  nsIDrawingSurface* destSurface = (nsIDrawingSurface *)aDst;
-  nsIDrawingSurface* secondSrcSurface = (nsIDrawingSurface *)aSecondSrc;
-
   // range check the coordinates in both the source and destination buffers.
-  rangeCheck(srcSurface, aSX, aSY, aWidth, aHeight);
-  rangeCheck(destSurface, aDX, aDY, aWidth, aHeight);
+  rangeCheck(aSrc, aSX, aSY, aWidth, aHeight);
+  rangeCheck(aDst, aDX, aDY, aWidth, aHeight);
 
   PRUint8* srcBytes = nsnull;
   PRUint8* secondSrcBytes = nsnull;
@@ -174,14 +170,14 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
   PRInt32 srcSpan, destSpan, secondSrcSpan;
   PRInt32 srcRowBytes, destRowBytes, secondSrcRowBytes;
 
-  result = srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY);
+  result = aSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY);
   if (NS_SUCCEEDED(result)) {
-    result = destSurface->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0);
+    result = aDst->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0);
     if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(srcSpan == destSpan, "Mismatched bitmap formats (src/dest) in Blender");
       if (srcSpan == destSpan) {
-        if (secondSrcSurface) {
-          result = secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+        if (aSecondSrc) {
+          result = aSecondSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
           if (NS_SUCCEEDED(result)) {
             NS_ASSERTION(srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes,
                          "Mismatched bitmap formats (src/secondSrc) in Blender");                         
@@ -192,7 +188,7 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
                              srcSpan, aHeight, aSrcOpacity);
             }
             
-            secondSrcSurface->Unlock();
+            aSecondSrc->Unlock();
           }
         }
         else
@@ -204,10 +200,10 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
         }
       }
 
-      destSurface->Unlock();
+      aDst->Unlock();
     }
 
-    srcSurface->Unlock();
+    aSrc->Unlock();
   }
 
   return result;
@@ -223,7 +219,7 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
                                nscolor aSecondSrcBackColor)
 {
   // just hand off to the drawing surface blender, to make code easier to maintain.
-  nsDrawingSurface srcSurface, destSurface, secondSrcSurface = nsnull;
+  nsIDrawingSurface* srcSurface, *destSurface, *secondSrcSurface = nsnull;
   aSrc->GetDrawingSurface(&srcSurface);
   aDest->GetDrawingSurface(&destSurface);
   if (aSecondSrc != nsnull)
@@ -234,8 +230,8 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
 }
 
 #ifndef MOZ_XUL
-NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
-                                   nsDrawingSurface aWhite, PRUint8** aAlphas) {
+NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
+                                   nsIDrawingSurface* aWhite, PRUint8** aAlphas) {
   NS_ERROR("GetAlphas not implemented because XUL support not built");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -350,8 +346,8 @@ static void ComputeAlphas(PRInt32 aNumLines, PRInt32 aBytesPerLine,
   }
 }
 
-NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
-                                   nsDrawingSurface aWhite, PRUint8** aAlphas) {
+NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
+                                   nsIDrawingSurface* aWhite, PRUint8** aAlphas) {
   nsresult result;
 
   nsIDrawingSurface* blackSurface = (nsIDrawingSurface *)aBlack;

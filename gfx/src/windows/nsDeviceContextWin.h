@@ -66,7 +66,7 @@ public:
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsIDrawingSurface* &aSurface);
 
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
@@ -108,7 +108,7 @@ protected:
   PRBool mCachedClientRect;
   PRBool mCachedFullRect;
 
-  nsDrawingSurface      mSurface;
+  nsIDrawingSurface*      mSurface;
   PRUint32              mDepth;  // bit depth of device
   nsPaletteInfo         mPaletteInfo;
   float                 mPixelScale;

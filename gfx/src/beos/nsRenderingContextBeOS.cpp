@@ -102,7 +102,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsIWidget
 	return (CommonInit());
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsDrawingSurface aSurface) {
+NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsIDrawingSurface* aSurface) {
 	mContext = aContext;
 	NS_IF_ADDREF(mContext);
 	mSurface = (nsDrawingSurfaceBeOS *)aSurface;
@@ -144,13 +144,13 @@ NS_IMETHODIMP nsRenderingContextBeOS::UnlockDrawingSurface() {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) {
+NS_IMETHODIMP nsRenderingContextBeOS::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface) {
 	if (nsnull == aSurface) mSurface = mOffscreenSurface;
 	else mSurface = (nsDrawingSurfaceBeOS *)aSurface;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::GetDrawingSurface(nsDrawingSurface *aSurface) {
+NS_IMETHODIMP nsRenderingContextBeOS::GetDrawingSurface(nsIDrawingSurface* *aSurface) {
 	*aSurface = mSurface;
 	return NS_OK;
 }
@@ -458,7 +458,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetCurrentTransform(nsTransform2D *&aTrans
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags,
-	nsDrawingSurface &aSurface) {
+	nsIDrawingSurface* &aSurface) {
 	
 	if (nsnull == mSurface) {
 		aSurface = nsnull;
@@ -479,11 +479,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(const nsRect& aBounds
 		}
 		surf->Init(mView, aBounds.width, aBounds.height, aSurfFlags);
 	}
-	aSurface = (nsDrawingSurface)surf;
+	aSurface = surf;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DestroyDrawingSurface(nsDrawingSurface aDS) {
+NS_IMETHODIMP nsRenderingContextBeOS::DestroyDrawingSurface(nsIDrawingSurface* aDS) {
 	nsDrawingSurfaceBeOS *surf = (nsDrawingSurfaceBeOS *)aDS;
 	if (surf == nsnull) return NS_ERROR_FAILURE;
 	NS_IF_RELEASE(surf);
@@ -1247,7 +1247,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar *aString, PRUin
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
 	PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags) {
 	
 	PRInt32 srcX = aSrcX;

@@ -130,9 +130,9 @@ public:
 
   PRBool mOwnBlackSurface;
   // drawing surface for mBlackCX
-  nsDrawingSurface  mBlack;
+  nsIDrawingSurface*  mBlack;
   // drawing surface for mWhiteCX
-  nsDrawingSurface  mWhite;
+  nsIDrawingSurface*  mWhite;
 
   // The offset within the current widget at which this buffer will
   // eventually be composited
@@ -765,7 +765,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   }
 
   nsCOMPtr<nsIRenderingContext> localcx;
-  nsDrawingSurface    ds = nsnull;
+  nsIDrawingSurface*    ds = nsnull;
 
   if (nsnull == aContext)
     {
@@ -1242,7 +1242,7 @@ PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
   blend directly into the double-buffer offscreen memory.
 */
 void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
-                                const nsRegion& aRegion, nsDrawingSurface aRCSurface,
+                                const nsRegion& aRegion, nsIDrawingSurface* aRCSurface,
                                 const nsVoidArray& aDisplayList)
 {
 #ifdef DEBUG_roc
@@ -1400,7 +1400,7 @@ void nsViewManager::PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x
   aRC.PopState();
 }
 
-static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSurface surface,
+static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
                                     const nsRect& aRect, nsIRenderingContext* *aResult)
 {
   nsresult             rv;
@@ -1450,7 +1450,7 @@ BlendingBuffers::~BlendingBuffers() {
 BlendingBuffers*
 nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
                                      PRBool aBorrowContext,
-                                     nsDrawingSurface aBorrowSurface,
+                                     nsIDrawingSurface* aBorrowSurface,
                                      PRBool aNeedAlpha,
                                      const nsRect& aRect)
 {

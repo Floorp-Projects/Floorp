@@ -87,9 +87,9 @@ public:
 
   virtual PRBool      GetHasAlphaMask()   { return mAlphaBits != nsnull; }
 
-  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY,
+  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY,
+  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aSX, PRInt32 aSY,
                            PRInt32 aSWidth, PRInt32 aSHeight,
                            PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
   NS_IMETHOD          DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
@@ -103,7 +103,7 @@ public:
 
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                      nsDrawingSurface aSurface,
+                      nsIDrawingSurface* aSurface,
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       PRInt32 aPadX, PRInt32 aPadY,
                       const nsRect &aTileRect);
@@ -169,7 +169,7 @@ private:
    * @update dc - 10/29/98
    * @param aSurface - The drawingsurface to create the DDB from.
    */
-  void CreateDDB(nsDrawingSurface aSurface);
+  void CreateDDB(nsIDrawingSurface* aSurface);
 
   void DrawComposited24(unsigned char *aBits,
                         PRUint8 *aImageRGB, PRUint32 aStrideRGB,
@@ -197,7 +197,7 @@ private:
    * @param aWidth - width of DIB
    * @param aHeight - height of DIB
    */
-  nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight,PRUint32  aROP);
+  nsresult PrintDDB(nsIDrawingSurface* aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight,PRUint32  aROP);
 
 
   /** 
@@ -205,7 +205,7 @@ private:
    * @return if TRUE, no errors
    */
   PRBool ProgressiveDoubleBlit(nsIDeviceContext *aContext,
-                               nsDrawingSurface aSurface,
+                               nsIDrawingSurface* aSurface,
                                PRInt32 aSXOffset, PRInt32 aSYOffset,
                                nsRect aDestRect);
 

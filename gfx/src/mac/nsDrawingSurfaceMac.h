@@ -66,7 +66,7 @@ public:
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
   //nsIDrawingSurfaceMac interface
-  NS_IMETHOD Init(nsDrawingSurface aDS);
+  NS_IMETHOD Init(nsIDrawingSurface* aDS);
   NS_IMETHOD Init(CGrafPtr aThePort);
   NS_IMETHOD Init(nsIWidget *aTheWidget);
   NS_IMETHOD Init(PRUint32 aDepth,PRUint32 aWidth, PRUint32 aHeight,PRUint32 aFlags);

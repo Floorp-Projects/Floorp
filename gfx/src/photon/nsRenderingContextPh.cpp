@@ -429,7 +429,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont( nsIFontMetrics *aFontMetrics )
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface ) 
+NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface ) 
 {
 	if( nsnull == mSurface ) {
 		aSurface = nsnull;
@@ -444,7 +444,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBound
 	else 
 		return NS_ERROR_FAILURE;
 	
-	aSurface = (nsDrawingSurface) surf;
+	aSurface = surf;
 	
 	return NS_OK;
 }
@@ -859,7 +859,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& a
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
  */
-NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags ) 
+NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags ) 
 {
 	PhArea_t              darea, sarea;
 	PRInt32               srcX = aSrcX;

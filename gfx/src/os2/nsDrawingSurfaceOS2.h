@@ -64,8 +64,6 @@ class nsFontOS2;
 // the palette when it's dying.
 //
 // This is rather unwieldy...
-//
-// Note: |nsDrawingSurface| == (void*)(nsDrawingSurfaceOS2*)surf
 
 class nsDrawingSurfaceOS2 : public nsIDrawingSurface
 {

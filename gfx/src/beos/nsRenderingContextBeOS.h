@@ -65,7 +65,7 @@ public:
 	NS_DECL_ISUPPORTS
 	
 	NS_IMETHOD Init(nsIDeviceContext *aContext, nsIWidget *aWindow);
-	NS_IMETHOD Init(nsIDeviceContext *aContext, nsDrawingSurface aSurface);
+	NS_IMETHOD Init(nsIDeviceContext *aContext, nsIDrawingSurface* aSurface);
 	
 	NS_IMETHOD Reset();
 	NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
@@ -74,8 +74,8 @@ public:
 		void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes, PRUint32 aFlags);
 	NS_IMETHOD UnlockDrawingSurface();
 	
-	NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-	NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
+	NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface);
+	NS_IMETHOD GetDrawingSurface(nsIDrawingSurface* *aSurface);
 	NS_IMETHOD GetHints(PRUint32 &aResult);
 	
 	NS_IMETHOD PushState();
@@ -104,8 +104,8 @@ public:
 	NS_IMETHOD Scale(float aSx, float aSy);
 	NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
 	
-	NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
-	NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
+	NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
+	NS_IMETHOD DestroyDrawingSurface(nsIDrawingSurface* aDS);
 	
 	NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 	NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
@@ -172,7 +172,7 @@ public:
 	NS_IMETHOD DrawString(const nsString &aString, nscoord aX, nscoord aY, PRInt32 aFontID,
 		const nscoord *aSpacing);
 	
-	NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+	NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
 		const nsRect &aDestBounds, PRUint32 aCopyFlags);
 	NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 *ngd);
 	

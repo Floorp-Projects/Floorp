@@ -214,7 +214,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac::GetPixelFormat(nsPixelFormat *aFormat)
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsDrawingSurface	aDS)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsIDrawingSurface*	aDS)
 {
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aDS);
 	surface->GetGrafPtr(&mPort);

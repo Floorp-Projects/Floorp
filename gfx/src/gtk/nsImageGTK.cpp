@@ -629,7 +629,7 @@ XlibStretchHorizontal(long x1, long x2, long y1, long y2,
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
-nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsImageGTK::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -1258,7 +1258,7 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
 
 void
 nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
-                           nsDrawingSurface aSurface,
+                           nsIDrawingSurface* aSurface,
                            PRInt32 srcWidth, PRInt32 srcHeight,
                            PRInt32 dstWidth, PRInt32 dstHeight,
                            PRInt32 dstOrigX, PRInt32 dstOrigY,
@@ -1397,7 +1397,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
 void
 nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
-                              nsDrawingSurface aSurface,
+                              nsIDrawingSurface* aSurface,
                               PRInt32 aSX, PRInt32 aSY,
                               PRInt32 aSWidth, PRInt32 aSHeight,
                               PRInt32 aDX, PRInt32 aDY,
@@ -1632,7 +1632,7 @@ void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
 // Draw the bitmap, this draw just has destination coordinates
 NS_IMETHODIMP
 nsImageGTK::Draw(nsIRenderingContext &aContext,
-                 nsDrawingSurface aSurface,
+                 nsIDrawingSurface* aSurface,
                  PRInt32 aX, PRInt32 aY,
                  PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -1686,7 +1686,7 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
 
 
 NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
