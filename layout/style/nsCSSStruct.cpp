@@ -550,9 +550,9 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
  
   nsAutoString  buffer;
-  mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
-  mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
-  mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
+  mOutlineWidth.AppendToString(buffer, eCSSProperty__moz_outline_width);
+  mOutlineColor.AppendToString(buffer, eCSSProperty__moz_outline_color);
+  mOutlineStyle.AppendToString(buffer, eCSSProperty__moz_outline_style);
   if (nsnull != mOutlineRadius) {
     static const nsCSSProperty trbl[] = {
       eCSSProperty__moz_outline_radius_topLeft,
@@ -912,13 +912,13 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
   }
   nsCSSCounterData* counter = mCounterIncrement;
   while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_increment);
+    counter->mCounter.AppendToString(buffer, eCSSProperty__moz_counter_increment);
     counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
     counter = counter->mNext;
   }
   counter = mCounterReset;
   while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_reset);
+    counter->mCounter.AppendToString(buffer, eCSSProperty__moz_counter_reset);
     counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
     counter = counter->mNext;
   }
@@ -1711,15 +1711,15 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
       break;
     }
 
-    case eCSSProperty_outline_width:
-    case eCSSProperty_outline_color:
-    case eCSSProperty_outline_style:
+    case eCSSProperty__moz_outline_width:
+    case eCSSProperty__moz_outline_color:
+    case eCSSProperty__moz_outline_style:
     case eCSSProperty_float_edge: {
       CSS_ENSURE(Margin) {
         switch (aProperty) {
-          case eCSSProperty_outline_width:      theMargin->mOutlineWidth = aValue;  break;
-          case eCSSProperty_outline_color:      theMargin->mOutlineColor = aValue;  break;
-          case eCSSProperty_outline_style:      theMargin->mOutlineStyle = aValue;  break;
+          case eCSSProperty__moz_outline_width: theMargin->mOutlineWidth = aValue;  break;
+          case eCSSProperty__moz_outline_color: theMargin->mOutlineColor = aValue;  break;
+          case eCSSProperty__moz_outline_style: theMargin->mOutlineStyle = aValue;  break;
           case eCSSProperty_float_edge:         theMargin->mFloatEdge = aValue;     break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
@@ -1870,8 +1870,8 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
 
       // nsCSSContent
     case eCSSProperty_content:
-    case eCSSProperty_counter_increment:
-    case eCSSProperty_counter_reset:
+    case eCSSProperty__moz_counter_increment:
+    case eCSSProperty__moz_counter_reset:
     case eCSSProperty_marker_offset:
     case eCSSProperty_quotes_open:
     case eCSSProperty_quotes_close: {
@@ -1883,13 +1883,13 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
               CSS_IF_DELETE(theContent->mContent->mNext);
             }
             break;
-          case eCSSProperty_counter_increment:
+          case eCSSProperty__moz_counter_increment:
             CSS_ENSURE_DATA(theContent->mCounterIncrement, nsCSSCounterData) {
               theContent->mCounterIncrement->mCounter = aValue; 
               CSS_IF_DELETE(theContent->mCounterIncrement->mNext);
             }
             break;
-          case eCSSProperty_counter_reset:
+          case eCSSProperty__moz_counter_reset:
             CSS_ENSURE_DATA(theContent->mCounterReset, nsCSSCounterData) {
               theContent->mCounterReset->mCounter = aValue;
               CSS_IF_DELETE(theContent->mCounterReset->mNext);
@@ -2066,7 +2066,7 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
     case eCSSProperty_image_region:
     case eCSSProperty_list_style:
     case eCSSProperty_margin:
-    case eCSSProperty_outline:
+    case eCSSProperty__moz_outline:
     case eCSSProperty_padding:
     case eCSSProperty_pause:
     case eCSSProperty_quotes:
@@ -2138,7 +2138,7 @@ nsCSSDeclaration::AppendStructValue(nsCSSProperty aProperty, void* aStruct)
       break;
     }
 
-    case eCSSProperty_counter_increment: {
+    case eCSSProperty__moz_counter_increment: {
       CSS_ENSURE(Content) {
         CSS_IF_DELETE(theContent->mCounterIncrement);
         theContent->mCounterIncrement = (nsCSSCounterData*)aStruct;
@@ -2146,7 +2146,7 @@ nsCSSDeclaration::AppendStructValue(nsCSSProperty aProperty, void* aStruct)
       break;
     }
 
-    case eCSSProperty_counter_reset: {
+    case eCSSProperty__moz_counter_reset: {
       CSS_ENSURE(Content) {
         CSS_IF_DELETE(theContent->mCounterReset);
         theContent->mCounterReset = (nsCSSCounterData*)aStruct;
@@ -2644,17 +2644,17 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
         break;
       }
 
-      case eCSSProperty_outline_width:
-      case eCSSProperty_outline_color:
-      case eCSSProperty_outline_style:
+      case eCSSProperty__moz_outline_width:
+      case eCSSProperty__moz_outline_color:
+      case eCSSProperty__moz_outline_style:
       case eCSSProperty_float_edge: {
         CSS_VARONSTACK_GET(Margin);
         if (nsnull != theMargin) {
           CSS_ENSURE_IMPORTANT(Margin) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(eCSSProperty_outline_width,      Margin, mOutlineWidth);
-              CSS_CASE_IMPORTANT(eCSSProperty_outline_color,      Margin, mOutlineColor);
-              CSS_CASE_IMPORTANT(eCSSProperty_outline_style,      Margin, mOutlineStyle);
+              CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_width, Margin, mOutlineWidth);
+              CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_color, Margin, mOutlineColor);
+              CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_style, Margin, mOutlineStyle);
               CSS_CASE_IMPORTANT(eCSSProperty_float_edge,         Margin, mFloatEdge);
               CSS_BOGUS_DEFAULT; // make compiler happy
             }
@@ -2846,7 +2846,7 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
         break;
       }
 
-      case eCSSProperty_counter_increment: {
+      case eCSSProperty__moz_counter_increment: {
         CSS_VARONSTACK_GET(Content);
         if (nsnull != theContent) {
           if (nsnull != theContent->mCounterIncrement) {
@@ -2860,7 +2860,7 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
         break;
       }
 
-      case eCSSProperty_counter_reset: {
+      case eCSSProperty__moz_counter_reset: {
         CSS_VARONSTACK_GET(Content);
         if (nsnull != theContent) {
           if (nsnull != theContent->mCounterReset) {
@@ -3134,10 +3134,10 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
         SetValueImportant(eCSSProperty_margin_bottom);
         SetValueImportant(eCSSProperty_margin_left);
         break;
-      case eCSSProperty_outline:
-        SetValueImportant(eCSSProperty_outline_color);
-        SetValueImportant(eCSSProperty_outline_style);
-        SetValueImportant(eCSSProperty_outline_width);
+      case eCSSProperty__moz_outline:
+        SetValueImportant(eCSSProperty__moz_outline_color);
+        SetValueImportant(eCSSProperty__moz_outline_style);
+        SetValueImportant(eCSSProperty__moz_outline_width);
         break;
       case eCSSProperty_padding:
         SetValueImportant(eCSSProperty_padding_top);
@@ -3530,15 +3530,15 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
       break;
     }
 
-    case eCSSProperty_outline_width:
-    case eCSSProperty_outline_color:
-    case eCSSProperty_outline_style:
+    case eCSSProperty__moz_outline_width:
+    case eCSSProperty__moz_outline_color:
+    case eCSSProperty__moz_outline_style:
     case eCSSProperty_float_edge: {
       CSS_CHECK(Margin) {
         switch (aProperty) {
-          case eCSSProperty_outline_width:      theMargin->mOutlineWidth.Reset();  break;
-          case eCSSProperty_outline_color:      theMargin->mOutlineColor.Reset();  break;
-          case eCSSProperty_outline_style:      theMargin->mOutlineStyle.Reset();  break;
+          case eCSSProperty__moz_outline_width: theMargin->mOutlineWidth.Reset();  break;
+          case eCSSProperty__moz_outline_color: theMargin->mOutlineColor.Reset();  break;
+          case eCSSProperty__moz_outline_style: theMargin->mOutlineStyle.Reset();  break;
           case eCSSProperty_float_edge:         theMargin->mFloatEdge.Reset();     break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
@@ -3688,8 +3688,8 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
 
       // nsCSSContent
     case eCSSProperty_content:
-    case eCSSProperty_counter_increment:
-    case eCSSProperty_counter_reset:
+    case eCSSProperty__moz_counter_increment:
+    case eCSSProperty__moz_counter_reset:
     case eCSSProperty_marker_offset:
     case eCSSProperty_quotes_open:
     case eCSSProperty_quotes_close: {
@@ -3701,13 +3701,13 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
               CSS_IF_DELETE(theContent->mContent->mNext);
             }
             break;
-          case eCSSProperty_counter_increment:
+          case eCSSProperty__moz_counter_increment:
             CSS_CHECK_DATA(theContent->mCounterIncrement, nsCSSCounterData) {
               theContent->mCounterIncrement->mCounter.Reset(); 
               CSS_IF_DELETE(theContent->mCounterIncrement->mNext);
             }
             break;
-          case eCSSProperty_counter_reset:
+          case eCSSProperty__moz_counter_reset:
             CSS_CHECK_DATA(theContent->mCounterReset, nsCSSCounterData) {
               theContent->mCounterReset->mCounter.Reset();
               CSS_IF_DELETE(theContent->mCounterReset->mNext);
@@ -3925,10 +3925,10 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
       }
       break;
     }
-    case eCSSProperty_outline:
-      RemoveProperty(eCSSProperty_outline_color);
-      RemoveProperty(eCSSProperty_outline_style);
-      RemoveProperty(eCSSProperty_outline_width);
+    case eCSSProperty__moz_outline:
+      RemoveProperty(eCSSProperty__moz_outline_color);
+      RemoveProperty(eCSSProperty__moz_outline_style);
+      RemoveProperty(eCSSProperty__moz_outline_width);
       break;
     case eCSSProperty_padding: {
       CSS_CHECK(Margin) {
@@ -4366,16 +4366,16 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       break;
     }
 
-    case eCSSProperty_outline_width:
-    case eCSSProperty_outline_color:
-    case eCSSProperty_outline_style:
+    case eCSSProperty__moz_outline_width:
+    case eCSSProperty__moz_outline_color:
+    case eCSSProperty__moz_outline_style:
     case eCSSProperty_float_edge: {
       CSS_VARONSTACK_GET(Margin);
       if (nsnull != theMargin) {
         switch (aProperty) {
-          case eCSSProperty_outline_width:      aValue = theMargin->mOutlineWidth; break;
-          case eCSSProperty_outline_color:      aValue = theMargin->mOutlineColor; break;
-          case eCSSProperty_outline_style:      aValue = theMargin->mOutlineStyle; break;
+          case eCSSProperty__moz_outline_width: aValue = theMargin->mOutlineWidth; break;
+          case eCSSProperty__moz_outline_color: aValue = theMargin->mOutlineColor; break;
+          case eCSSProperty__moz_outline_style: aValue = theMargin->mOutlineStyle; break;
           case eCSSProperty_float_edge:         aValue = theMargin->mFloatEdge;    break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
@@ -4557,8 +4557,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 
       // nsCSSContent
     case eCSSProperty_content:
-    case eCSSProperty_counter_increment:
-    case eCSSProperty_counter_reset:
+    case eCSSProperty__moz_counter_increment:
+    case eCSSProperty__moz_counter_reset:
     case eCSSProperty_marker_offset:
     case eCSSProperty_quotes_open:
     case eCSSProperty_quotes_close: {
@@ -4570,12 +4570,12 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
               aValue = theContent->mContent->mValue;
             }
             break;
-          case eCSSProperty_counter_increment:  
+          case eCSSProperty__moz_counter_increment:  
             if (nsnull != theContent->mCounterIncrement) {
               aValue = theContent->mCounterIncrement->mCounter;
             }
             break;
-          case eCSSProperty_counter_reset:
+          case eCSSProperty__moz_counter_reset:
             if (nsnull != theContent->mCounterReset) {
               aValue = theContent->mCounterReset->mCounter;
             }
@@ -4766,7 +4766,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_image_region:
     case eCSSProperty_list_style:
     case eCSSProperty_margin:
-    case eCSSProperty_outline:
+    case eCSSProperty__moz_outline:
     case eCSSProperty_padding:
     case eCSSProperty_pause:
     case eCSSProperty_quotes:
@@ -5131,10 +5131,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_outline:
-      if (AppendValueToString(eCSSProperty_outline_color, aValue)) aValue.Append(PRUnichar(' '));
-      if (AppendValueToString(eCSSProperty_outline_style, aValue)) aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_outline_width, aValue);
+    case eCSSProperty__moz_outline:
+      if (AppendValueToString(eCSSProperty__moz_outline_color, aValue)) aValue.Append(PRUnichar(' '));
+      if (AppendValueToString(eCSSProperty__moz_outline_style, aValue)) aValue.Append(PRUnichar(' '));
+      AppendValueToString(eCSSProperty__moz_outline_width, aValue);
       break;
     case eCSSProperty_padding: {
       CSS_VARONSTACK_GET(Margin);
@@ -5279,15 +5279,15 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_counter_increment: {
+    case eCSSProperty__moz_counter_increment: {
       CSS_VARONSTACK_GET(Content);
       if ((nsnull != theContent) && (nsnull != theContent->mCounterIncrement)) {
         nsCSSCounterData* data = theContent->mCounterIncrement;
         do {
-          if (AppendValueToString(eCSSProperty_counter_increment, data->mCounter, aValue)) {
+          if (AppendValueToString(eCSSProperty__moz_counter_increment, data->mCounter, aValue)) {
             if (HAS_VALUE(data, mValue)) {
               aValue.Append(PRUnichar(' '));
-              AppendValueToString(eCSSProperty_counter_increment, data->mValue, aValue);
+              AppendValueToString(eCSSProperty__moz_counter_increment, data->mValue, aValue);
             }
           }
           data = data->mNext;
@@ -5298,15 +5298,15 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_counter_reset: {
+    case eCSSProperty__moz_counter_reset: {
       CSS_VARONSTACK_GET(Content);
       if ((nsnull != theContent) && (nsnull != theContent->mCounterReset)) {
         nsCSSCounterData* data = theContent->mCounterReset;
         do {
-          if (AppendValueToString(eCSSProperty_counter_reset, data->mCounter, aValue)) {
+          if (AppendValueToString(eCSSProperty__moz_counter_reset, data->mCounter, aValue)) {
             if (HAS_VALUE(data, mValue)) {
               aValue.Append(PRUnichar(' '));
-              AppendValueToString(eCSSProperty_counter_reset, data->mValue, aValue);
+              AppendValueToString(eCSSProperty__moz_counter_reset, data->mValue, aValue);
             }
           }
           data = data->mNext;
