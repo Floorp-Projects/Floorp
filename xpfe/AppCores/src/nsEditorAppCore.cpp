@@ -652,9 +652,9 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 	if (!aWin)
 	    return NS_ERROR_NULL_POINTER;
 
-  if (!mContentWindow) {
-    return NS_ERROR_FAILURE;
-  }
+//  if (!mContentWindow) {
+//    return NS_ERROR_FAILURE;
+//  }
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -953,6 +953,47 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
   return err;
 }
 
+NS_IMETHODIMP
+nsEditorAppCore::GetParagraphFormat(nsString& aParagraphFormat)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->GetParagraphFormat(aParagraphFormat);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::SetParagraphFormat(const nsString& aParagraphFormat)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->SetParagraphFormat(aParagraphFormat);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
 
 
 NS_IMETHODIMP

@@ -58,7 +58,8 @@ enum EditorAppCore_slots {
   EDITORAPPCORE_CONTENTSASTEXT = -1,
   EDITORAPPCORE_CONTENTSASHTML = -2,
   EDITORAPPCORE_EDITORDOCUMENT = -3,
-  EDITORAPPCORE_EDITORSELECTION = -4
+  EDITORAPPCORE_EDITORSELECTION = -4,
+  EDITORAPPCORE_PARAGRAPHFORMAT = -5
 };
 
 /***********************************************************************/
@@ -117,6 +118,17 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->GetEditorSelection(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EDITORAPPCORE_PARAGRAPHFORMAT:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetParagraphFormat(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -354,6 +366,42 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   else {
     JS_ReportError(cx, "Function getTextProperty requires 6 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetParagraphFormat
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSetParagraphFormat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->SetParagraphFormat(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setParagraphFormat requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -1114,6 +1162,7 @@ static JSPropertySpec EditorAppCoreProperties[] =
   {"contentsAsHTML",    EDITORAPPCORE_CONTENTSASHTML,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"editorDocument",    EDITORAPPCORE_EDITORDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"editorSelection",    EDITORAPPCORE_EDITORSELECTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"ParagraphFormat",    EDITORAPPCORE_PARAGRAPHFORMAT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -1127,6 +1176,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"setTextProperty",          EditorAppCoreSetTextProperty,     3},
   {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     2},
   {"getTextProperty",          EditorAppCoreGetTextProperty,     6},
+  {"setParagraphFormat",          EditorAppCoreSetParagraphFormat,     1},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
   {"cut",          EditorAppCoreCut,     0},

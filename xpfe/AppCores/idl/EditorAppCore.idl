@@ -7,16 +7,18 @@ interface EditorAppCore : BaseAppCore
   readonly attribute DOMString contentsAsText;
   readonly attribute DOMString contentsAsHTML;
 
-	readonly attribute Document editorDocument;
-	readonly attribute Selection editorSelection;
+	readonly attribute Document    editorDocument;
+	readonly attribute Selection   editorSelection;
+  readonly attribute DOMString   ParagraphFormat;
 	
 	void EditorAppCore();
 	
 	void setEditorType(in DOMString editorType);
 	void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
 	void removeTextProperty(in DOMString prop, in DOMString attr);
-		
 	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
+
+  void setParagraphFormat(in DOMString value);
 	
 	void undo();
 	void redo();
