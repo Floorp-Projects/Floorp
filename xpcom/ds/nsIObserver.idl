@@ -57,7 +57,7 @@ interface nsIObserver : nsISupports {
     * responsible for filtering.
     *
     * You should not modify, add, remove, or enumerate 
-    * notifications in the implemention of observer. 
+    * notifications in the implemention of observe. 
     *
     * @param aSubject : Notification specific interface pointer.
     * @param aTopic   : The notification topic or subject.
