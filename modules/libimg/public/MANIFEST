@@ -14,3 +14,4 @@ il_types.h
 il_util.h
 libimg.h
 ni_pixmp.h
+xpcompat.h
