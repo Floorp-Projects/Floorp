@@ -1912,8 +1912,9 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                     cssDecl->GetPropertyValue(behavior, value);
                     if (!value.IsEmpty()) {
                       // We have a binding that must be installed.
+                      PRBool dummy;
                       xblService->LoadBindings(NS_STATIC_CAST(nsIStyledContent*, this), value, PR_FALSE,
-                                               getter_AddRefs(binding));
+                                               getter_AddRefs(binding), &dummy);
                       if (binding) {
                         binding->ExecuteAttachedHandler();
                       }
