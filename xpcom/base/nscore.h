@@ -168,7 +168,6 @@ typedef PRUint32 nsresult;
 
   /* under Metrowerks (Mac), we don't have autoconf yet */
 #ifdef __MWERKS__
-  #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_PARTIAL_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
@@ -185,7 +184,6 @@ typedef PRUint32 nsresult;
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
   /* VC++ 5.0 and greater implement template specialization, 4.2 is unknown */
-  #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
   #define HAVE_CPP_EXTERN_INSTANTIATION
 
