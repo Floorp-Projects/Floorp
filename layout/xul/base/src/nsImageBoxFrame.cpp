@@ -614,9 +614,6 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
                                             nsresult aStatus,
                                             const PRUnichar *statusArg)
 {
-  // XXXbz this is firing DOM events possibly from inside style resolution!
-  // See the nsImageLoadingContent code for how this should be done
-  // asynchronously.
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.
     FireDOMEvent(mContent, NS_IMAGE_LOAD);
