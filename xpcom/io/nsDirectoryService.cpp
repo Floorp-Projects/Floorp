@@ -84,10 +84,12 @@
 #define HOME_DIR NS_MAC_HOME_DIR
 #elif defined (XP_UNIX)
 #define HOME_DIR NS_UNIX_HOME_DIR
+#elif defined (XP_BEOS)
+#define HOME_DIR NS_BEOS_HOME_DIR
 #endif
 
 // define default product directory
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_MAC) || defined(XP_BEOS)
 #define DEFAULT_PRODUCT_DIR "Mozilla"
 #elif defined (XP_UNIX)
 #define DEFAULT_PRODUCT_DIR ".mozilla"
