@@ -913,17 +913,12 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)toggleSidebar:(id)aSender
 {
-    NSResponder* resp = [[self window] firstResponder];
-    [[self window] makeFirstResponder: nil];
-    
-    if ( ([mSidebarDrawer state] == NSDrawerClosedState) || ([mSidebarDrawer state] == NSDrawerClosingState) ) {
-        // XXXHack to bypass sidebar crashes.
-        [mSidebarDrawer openOnEdge: NSMaxXEdge];
-    } else {
-        [mSidebarDrawer close];
-    }
-    
-    [[self window] makeFirstResponder: resp];
+  if ( ([mSidebarDrawer state] == NSDrawerClosedState) || ([mSidebarDrawer state] == NSDrawerClosingState) ) {
+    // XXXHack to bypass sidebar crashes.
+    [mSidebarDrawer openOnEdge: NSMaxXEdge];
+  }
+  else
+    [mSidebarDrawer close];
 }
 
 -(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate
