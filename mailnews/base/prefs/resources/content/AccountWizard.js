@@ -268,11 +268,13 @@ function AccountDataToPageData(accountData, pageData)
         
         if (server.type == "nntp") {
             setPageData(pageData, "accounttype", "newsaccount", true);
+            setPageData(pageData, "accounttype", "mailaccount", false);
             setPageData(pageData, "newsserver", "hostname", server.hostName);
         }
         
         else {
             setPageData(pageData, "accounttype", "mailaccount", true);
+            setPageData(pageData, "accounttype", "newsaccount", false);
             setPageData(pageData, "server", "servertype", server.type);
             setPageData(pageData, "server", "hostname", server.hostName);
         }
@@ -732,7 +734,7 @@ function getPreConfigDataForAccount(account)
 
   try {
     var skipPanelsPrefStr = "mail.identity." + identity.key + ".wizardSkipPanels";
-    accountData.wizardSkipPanels = gPrefs.getBoolPref(skipPanelsPrefStr);
+    accountData.wizardSkipPanels = gPrefs.getCharPref(skipPanelsPrefStr);
 
     if (identity.smtpServerKey) {
       var smtpServer = smtpService.getServerByKey(identity.smtpServerKey);

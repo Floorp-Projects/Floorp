@@ -40,6 +40,7 @@
 var gPrefsBundle;
 var gOnMailServersPage;
 var gOnNewsServerPage;
+var gHideIncoming;
 
 function serverPageValidate() 
 {
@@ -48,7 +49,7 @@ function serverPageValidate()
   var newsServerName = document.getElementById("newsServer");
 
   if ((gOnMailServersPage && 
-      ((hostnameIsIllegal(incomingServerName.value)) || 
+      ((hostnameIsIllegal(incomingServerName.value) && !gHideIncoming) || 
        (hostnameIsIllegal(smtpserver.value)))) ||
       (gOnNewsServerPage && hostnameIsIllegal(newsServerName.value))) {
     var alertText = gPrefsBundle.getString("enterValidHostname");
@@ -81,7 +82,11 @@ function serverPageValidate()
   setPageData(pageData, "server", "servertype", serverType);
 
   if (gOnMailServersPage) {
-    setPageData(pageData, "server", "hostname", incomingServerName.value);
+    // If we have hidden the incoming server dialogs, we don't want
+    // to set the server to an empty value here
+    if (!gHideIncoming) {
+      setPageData(pageData, "server", "hostname", incomingServerName.value);
+    }
     setPageData(pageData, "server", "smtphostname", smtpserver.value);
   }
   else if (gOnNewsServerPage) {
@@ -105,10 +110,27 @@ function serverPageInit() {
     catch (ex){}
   }
     
+  gHideIncoming = false;
+  if (gCurrentAccountData && gCurrentAccountData.wizardHideIncoming)
+    gHideIncoming = true;
+  
+  var incomingServerbox = document.getElementById("incomingServerbox");
+  var serverTypeBox = document.getElementById("serverTypeBox");
+  if (incomingServerbox && serverTypeBox) {
+    if (gHideIncoming) {
+      incomingServerbox.setAttribute("hidden", "true");
+      serverTypeBox.setAttribute("hidden", "true");
+    }
+    else {
+      incomingServerbox.removeAttribute("hidden");
+      serverTypeBox.removeAttribute("hidden");
+    }
+  }
+  
   // Server type selection (pop3 or imap) is for mail accounts only
   var pageData = parent.GetPageData();
   var isMailAccount = pageData.accounttype.mailaccount;
-  if (isMailAccount && isMailAccount.value){
+  if (isMailAccount && isMailAccount.value && !gHideIncoming){
     var serverTypeRadioGroup = document.getElementById("servertype");
     /* 
      * Check to see if the radiogroup has any value. If there is no
@@ -124,6 +146,7 @@ function serverPageInit() {
       var pop3RadioItem = document.getElementById("pop3");
       serverTypeRadioGroup.selectedItem = pop3RadioItem;
     }
+    setServerType();
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");

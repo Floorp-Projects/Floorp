@@ -54,6 +54,9 @@ function donePageInit() {
         setUserNameDescField(currentAccountData.emailIDFieldTitle);
     }
 
+    // Find out if we need to hide details for incoming servers
+    var hideIncoming = (gCurrentAccountData && gCurrentAccountData.wizardHideIncoming);
+
     var email = "";
     if (pageData.identity && pageData.identity.email) {
         // fixup the email
@@ -73,7 +76,9 @@ function donePageInit() {
         var emailData = email.split('@');
         userName = emailData[0];
     }
-    setDivTextFromForm("server.username", userName);
+    // Hide the "username" field if we don't want to show information
+    // on the incoming server.
+    setDivTextFromForm("server.username", hideIncoming ? null : userName);
 
     var accountName="";
     if (pageData.accname && pageData.accname.prettyName) {
@@ -95,7 +100,7 @@ function donePageInit() {
     }
     setDivTextFromForm("account.name", accountName);
 
-    // Show mail servers (incoming&outgoing) detials
+    // Show mail servers (incoming&outgoing) details
     // based on current account data. ISP can set 
     // rdf value of literal showServerDetailsOnWizardSummary
     // to false to hide server details
@@ -108,7 +113,9 @@ function donePageInit() {
                  currentAccountData.incomingServer.hostname)
                 incomingServerName = currentAccountData.incomingServer.hostName;
         }
-        setDivTextFromForm("server.name", incomingServerName);
+        // Hide the incoming server name field if the user specified
+        // wizardHideIncoming in the ISP defaults file
+        setDivTextFromForm("server.name", hideIncoming ? null : incomingServerName);
 
         var incomingServerType="";
         if (pageData.server && pageData.server.servertype) {
@@ -137,14 +144,19 @@ function donePageInit() {
         setDivTextFromForm("smtpServer.name", null);
     }
 
-    var newsServerName="";
-    if (pageData.newsserver && pageData.newsserver.hostname)
-        newsServerName = pageData.newsserver.hostname.value;
-    if (newsServerName) {
-        // No need to show username for news account
-        setDivTextFromForm("server.username", null);
+    if (serverIsNntp(pageData)) {
+        var newsServerName="";
+        if (pageData.newsserver && pageData.newsserver.hostname)
+            newsServerName = pageData.newsserver.hostname.value;
+        if (newsServerName) {
+            // No need to show username for news account
+            setDivTextFromForm("server.username", null);
+        }
+        setDivTextFromForm("newsServer.name", newsServerName);
     }
-    setDivTextFromForm("newsServer.name", newsServerName);
+    else {
+        setDivTextFromForm("newsServer.name", null);
+    }
 
     var isPop = false;
     if (pageData.server && pageData.server.servertype) {
@@ -177,16 +189,20 @@ function hideShowDownloadMsgsUI(isPop)
 function setDivTextFromForm(divid, value) {
 
     // collapse the row if the div has no value
+    var div = document.getElementById(divid);
     if (!value) {
-        var div = document.getElementById(divid);
         div.setAttribute("collapsed","true");
         return;
+    }
+    else {
+        div.removeAttribute("collapsed");
     }
 
     // otherwise fill in the .text element
     div = document.getElementById(divid+".text");
     if (!div) return;
 
+    // set the value
     div.setAttribute("value", value);
 }
 

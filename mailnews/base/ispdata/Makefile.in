@@ -35,14 +35,17 @@ EXPORT_RESOURCE_FILES = \
 # only for unix, and even then, not all unix vendors
 # will want this.  don't make this Makefile.in 
 # or movemail.rdf part of the build for everyone by default
-# EXPORT_RESOURCE_FILES += movemail.rdf
+ifneq (,$(filter AIX,$(OS_ARCH)))
+EXPORT_RESOURCE_FILES += movemail.rdf
+endif
 
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
 				$(addprefix $(EXPORT_DIR_L10N)/, $(EXPORT_RESOURCE_FILES))
 
+ifneq ($(EXPORT_RESOURCE_FILES),$(NULL))
 libs::
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR_L10N)
-
+endif

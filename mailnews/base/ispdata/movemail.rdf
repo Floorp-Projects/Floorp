@@ -10,8 +10,7 @@
         <!-- server info -->
         <NC:incomingServer>
           <NC:nsIMsgIncomingServer>
-            <NC:prettyName>Movemail</NC:prettyName>
-            <NC:hostName>movemail</NC:hostName>
+            <NC:hostName>localhost</NC:hostName>
             <NC:type>movemail</NC:type>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
@@ -22,26 +21,15 @@
             <NC:composeHtml>false</NC:composeHtml>
           </NC:nsIMsgIdentity>
         </NC:identity>
- 
-        <!--
-        <NC:smtp>
-          <NC:nsISmtpServer>
-            <NC:hostname>localhost</NC:hostname>
-          </NC:nsISmtpServer>
-        </NC:smtp>
 
-        <NC:smtpCreateNewServer>true</NC:smtpCreateNewServer>
-        <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>
-        -->
-
-        <NC:wizardSkipPanels>true</NC:wizardSkipPanels>
+        <NC:wizardHideIncoming>true</NC:wizardHideIncoming>
+        <NC:wizardSkipPanels>loginpage</NC:wizardSkipPanels>
         <NC:wizardShortName>Movemail</NC:wizardShortName>
-        <NC:wizardLongName>UNIX Movemail</NC:wizardLongName>
-        <NC:wizardPromote>true</NC:wizardPromote>
+        <NC:wizardLongName>Movemail</NC:wizardLongName>
         <NC:wizardShow>true</NC:wizardShow>
         <NC:emailProviderName>Movemail</NC:emailProviderName>
  
-        <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary> 
+        <NC:showServerDetailsOnWizardSummary>true</NC:showServerDetailsOnWizardSummary> 
       </NC:nsIMsgAccount>
     </NC:providers>
   </RDF:Description>

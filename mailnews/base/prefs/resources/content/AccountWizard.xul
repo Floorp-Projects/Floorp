@@ -133,9 +133,8 @@ Rights Reserved.
                        wsm_persist="true" oncommand="setServerType();" accesskey="&imapType.accesskey;"/>
             </radiogroup>
           </hbox>
+          <separator/>
         </vbox>
-
-        <separator/>
 
         <vbox id="incomingServerbox">
           <description>&incomingServerNameDesc.label;</description>
@@ -144,9 +143,8 @@ Rights Reserved.
                    accesskey="&incomingServerLabel.accesskey;" control="incomingServer"/>
             <textbox wsm_persist="true" id="incomingServer" flex="1" class="uri-element"/>
           </hbox>
+          <separator/>
         </vbox>
-
-        <separator/>
 
         <vbox id="noSmtp">
           <description>&smtpServerDesc.label;</description>
