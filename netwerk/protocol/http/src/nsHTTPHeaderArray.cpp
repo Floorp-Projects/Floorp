@@ -184,7 +184,14 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
     
     entry   = mHTTPHeaders->ElementAt(i);
     element = NS_STATIC_CAST(nsHeaderEntry*, entry);
-    if (aHeader == element->mAtom.get()) {
+
+    PRUnichar* aHeaderString;
+    PRUnichar* elementString;
+    aHeader->GetUnicode( &aHeaderString );
+    element->mAtom.get()->GetUnicode( &elementString );
+    
+    if (nsCRT::strcmp(aHeaderString, elementString) == 0) 
+    { 
       *aResult = element;
       NS_ADDREF(*aResult);
       return i;
