@@ -40,7 +40,7 @@ en-US.jar:
         locale/en-US/help/ssl_help.xhtml                (locale/en-US/ssl_help.xhtml)
         locale/en-US/help/using_priv_help.html          (locale/en-US/using_priv_help.html)
         locale/en-US/help/using_certs_help.html         (locale/en-US/using_certs_help.html)
-        locale/en-US/help/validation_help.html          (locale/en-US/validation_help.html)
+        locale/en-US/help/validation_help.xhtml         (locale/en-US/validation_help.xhtml)
         locale/en-US/help/helpFileLayout.css            (locale/en-US/helpFileLayout.css)
         locale/en-US/help/content_style.css             (locale/en-US/content_style.css)
         locale/en-US/help/help.dtd                      (locale/en-US/help.dtd)
