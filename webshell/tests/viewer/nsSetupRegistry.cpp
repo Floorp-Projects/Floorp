@@ -210,6 +210,14 @@ static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kDataFlavorCID,         NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
+#endif
+
 #ifdef ClientWallet
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
@@ -365,6 +373,18 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kXULDocumentCID,           NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXULContentSinkCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
 #endif
+#endif
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kDataFlavorCID,         NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
+
+  nsComponentManager::RegisterComponent(kClipboardCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kTransferableCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kDataFlavorCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kXIFFormatConverterCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
