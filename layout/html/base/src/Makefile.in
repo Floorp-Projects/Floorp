@@ -34,11 +34,11 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsHTMLReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLContainerFrame.cpp	\
+	nsHTMLReflowState.cpp		\
 	nsHTMLIIDs.cpp			\
 	nsHTMLFrame.cpp			\
 	nsHTMLReflowCommand.cpp		\
