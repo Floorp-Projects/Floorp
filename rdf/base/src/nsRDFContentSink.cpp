@@ -964,12 +964,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     PRInt32 ac = aNode.GetAttributeCount();
     nsresult rv;
 
-#ifdef NECKO
-    char* docURI;
-#else
-    const char* docURI;
-#endif
-    mDocumentURL->GetSpec(&docURI);
+    nsXPIDLCString docURI;
+    rv = mDocumentURL->GetSpec(getter_Copies(docURI));
+    if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
@@ -991,10 +988,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
-            rdf_MakeAbsoluteURI(docURI, uri);
-#ifdef NECKO
-            nsCRT::free(docURI);
-#endif
+            rdf_MakeAbsoluteURI(nsCAutoString(docURI), uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1024,10 +1018,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             // attribute.
             name.Insert('#', 0);
             
-            rdf_MakeAbsoluteURI(docURI, name);
-#ifdef NECKO
-            nsCRT::free(docURI);
-#endif
+            rdf_MakeAbsoluteURI(nsCAutoString(docURI), name);
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1040,10 +1031,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    rv = rdf_CreateAnonymousResource(docURI, aResource);
-#ifdef NECKO
-    nsCRT::free(docURI);
-#endif
+    rv = rdf_CreateAnonymousResource(nsCAutoString(docURI), aResource);
     return rv;
 }
 

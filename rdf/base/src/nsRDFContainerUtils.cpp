@@ -60,6 +60,8 @@ private:
                            nsIRDFResource* aType,
                            nsIRDFContainer** aResult);
 
+    PRBool IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
+
     // pseudo constants
     static PRInt32 gRefCnt;
     static nsIRDFService* gRDFService;
@@ -210,9 +212,9 @@ RDFContainerUtilsImpl::IsContainer(nsIRDFDataSource *aDataSource, nsIRDFResource
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 
-    if (rdf_IsA(aDataSource, aResource, kRDF_Bag) ||
-        rdf_IsA(aDataSource, aResource, kRDF_Seq) ||
-        rdf_IsA(aDataSource, aResource, kRDF_Alt)) {
+    if (IsA(aDataSource, aResource, kRDF_Bag) ||
+        IsA(aDataSource, aResource, kRDF_Seq) ||
+        IsA(aDataSource, aResource, kRDF_Alt)) {
         *_retval = PR_TRUE;
     }
     else {
@@ -237,7 +239,7 @@ RDFContainerUtilsImpl::IsBag(nsIRDFDataSource *aDataSource, nsIRDFResource *aRes
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = rdf_IsA(aDataSource, aResource, kRDF_Bag);
+    *_retval = IsA(aDataSource, aResource, kRDF_Bag);
     return NS_OK;
 }
 
@@ -257,7 +259,7 @@ RDFContainerUtilsImpl::IsSeq(nsIRDFDataSource *aDataSource, nsIRDFResource *aRes
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = rdf_IsA(aDataSource, aResource, kRDF_Seq);
+    *_retval = IsA(aDataSource, aResource, kRDF_Seq);
     return NS_OK;
 }
 
@@ -277,7 +279,7 @@ RDFContainerUtilsImpl::IsAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aRes
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = rdf_IsA(aDataSource, aResource, kRDF_Alt);
+    *_retval = IsA(aDataSource, aResource, kRDF_Alt);
     return NS_OK;
 }
 
@@ -409,3 +411,14 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
     return NS_OK;
 }
 
+PRBool
+RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
+{
+    nsresult rv;
+
+    PRBool result;
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    return result;
+}
