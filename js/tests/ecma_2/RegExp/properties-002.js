@@ -34,6 +34,37 @@ re_5 = /\B/;
 re_5.lastIndex = Math.pow(2,30);
 AddRegExpCases( re_5, "\\B", false, false, false, Math.pow(2,30) );
 
+/*
+ * Brendan: "need to test cases Math.pow(2,32) and greater to see
+ * whether they round-trip." Reason: thanks to the work done in
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, lastIndex
+ * is now stored as a double instead of a uint32 (unsigned integer).
+ *
+ * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
+ * all the way up to Number.MAX_VALUE. So that's why we need cases
+ * between those two numbers.
+ *
+ */ 
+re_6 = /\B/;
+re_6.lastIndex = Math.pow(2,32);
+AddRegExpCases( re_6, "\\B", false, false, false, Math.pow(2,32) );
+
+re_7 = /\B/;
+re_7.lastIndex = Math.pow(2,32) + 1;
+AddRegExpCases( re_7, "\\B", false, false, false, Math.pow(2,32) + 1 );
+
+re_8 = /\B/;
+re_8.lastIndex = Math.pow(2,32) * 2;
+AddRegExpCases( re_8, "\\B", false, false, false, Math.pow(2,32) * 2 );
+
+re_9 = /\B/;
+re_9.lastIndex = Math.pow(2,40);
+AddRegExpCases( re_9, "\\B", false, false, false, Math.pow(2,40) );
+
+re_10 = /\B/;
+re_10.lastIndex = Number.MAX_VALUE;
+AddRegExpCases( re_10, "\\B", false, false, false, Number.MAX_VALUE );
+
 
 
 //-----------------------------------------------------------------------------
