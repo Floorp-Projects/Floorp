@@ -223,17 +223,10 @@ nscoord CalcLength(const nsCSSValue& aValue,
     case eCSSUnit_XHeight: {
       aInherited = PR_TRUE;
       const nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
-      nsIFontMetrics* fm;
-      aPresContext->GetMetricsFor(*font, &fm);
-      NS_ASSERTION(nsnull != fm, "can't get font metrics");
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext->GetMetricsFor(*font, getter_AddRefs(fm));
       nscoord xHeight;
-      if (nsnull != fm) {
-        fm->GetXHeight(xHeight);
-        NS_RELEASE(fm);
-      }
-      else {
-        xHeight = ((font->size * 2) / 3);
-      }
+      fm->GetXHeight(xHeight);
       return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
     }
     case eCSSUnit_CapHeight: {

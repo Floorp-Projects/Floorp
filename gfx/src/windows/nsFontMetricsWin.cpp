@@ -2400,7 +2400,15 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
     }
   }
 
-  // if we ever reach here, the replacement char should be changed to a more common char
+  // We are running out of resources if we reach here... Try a stock font
+  NS_ASSERTION(::GetMapMode(aDC) == MM_TEXT, "mapping mode needs to be MM_TEXT");
+  nsFontWin* font = LoadSubstituteFont(aDC, nsnull);
+  if (font) {
+    ((nsFontWinSubstitute*)font)->SetRepresentable(c);
+    mSubstituteFont = font;
+    return font;
+  }
+
   NS_ERROR("Could not provide a substititute font");
   return nsnull;
 }
@@ -2409,12 +2417,15 @@ nsFontWin*
 nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
-  HFONT hfont = CreateFontHandle(aDC, aName, &logFont);
+  HFONT hfont = aName
+    ? CreateFontHandle(aDC, aName, &logFont)
+    : (HFONT)::GetStockObject(SYSTEM_FONT);
   if (hfont) {
     // XXX 'displayUnicode' has to be initialized based on the desired rendering mode
     PRBool displayUnicode = PR_FALSE;
     /* substitute font does not need ccmap */
-    nsFontWinSubstitute* font = new nsFontWinSubstitute(&logFont, hfont, nsnull, displayUnicode);
+    LOGFONT* lfont = aName ? &logFont : nsnull;
+    nsFontWinSubstitute* font = new nsFontWinSubstitute(lfont, hfont, nsnull, displayUnicode);
     if (font) {
       HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
       InitMetricsFor(aDC, font);
