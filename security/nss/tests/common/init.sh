@@ -151,10 +151,10 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     if [ -z "${DON_T_SET_PATHS}" -o "${DON_T_SET_PATHS}" != "TRUE" ] ; then
         if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  != "CYGWIN_NT" ]; then
-            PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+            PATH=.\;${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
             PATH=`perl ../path_uniq -d ';' "$PATH"`
         else
-            PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+            PATH=.:${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
             PATH=`perl ../path_uniq -d ':' "$PATH"`
         fi
 
