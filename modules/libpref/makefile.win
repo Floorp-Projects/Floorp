@@ -17,7 +17,7 @@
 
 
 
-IGNORE_MANIFEST=1
+
 
 DEPTH = ..\..
 

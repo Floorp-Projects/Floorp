@@ -22,7 +22,7 @@
 DLLNAME = npmozctl
 QUIET =
 DEPTH =..\..\..
-IGNORE_MANIFEST=1
+
 
 # The default is to include control support unless told to do otherwise
 !ifndef MOZ_ACTIVEX_NO_CONTROL_SUPPORT
