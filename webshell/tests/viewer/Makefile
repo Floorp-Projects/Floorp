@@ -25,7 +25,7 @@ CPPSRCS = \
 	nsEditorInterfaces.cpp  \
 	nsMotifMenu.cpp         \
 	nsSetupRegistry.cpp     \
-	nsGtkMain.cpp          \
+	nsUnixMain.cpp          \
 	nsViewerApp.cpp         \
 	nsWebCrawler.cpp        \
 	nsStubs.cpp             \
@@ -109,7 +109,7 @@ include $(DEPTH)/config/rules.mk
 $(PROGS): $(OBJS) $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXpm -lXt -lX11 -lXp -lXext
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
 ifeq ($(OS_ARCH),IRIX)
 	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
