@@ -179,6 +179,8 @@ protected:
   nsresult RemoveListStructure(nsIDOMNode *aList);
   nsresult AdjustSpecialBreaks(PRBool aSafeToAskFrames = PR_FALSE);
   nsresult AdjustWhitespace(nsISelection *aSelection);
+  nsresult PinSelectionToNewBlock(nsISelection *aSelection);
+  nsresult CheckInterlinePosition(nsISelection *aSelection);
   nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aAction);
   nsresult FindNearSelectableNode(nsIDOMNode *aSelNode, 
                                   PRInt32 aSelOffset, 
@@ -202,6 +204,7 @@ protected:
   PRBool                  mReturnInEmptyLIKillsList;
   nsCOMPtr<nsIDOMRange>   mUtilRange;
   PRUint32                mJoinOffset;  // need to remember an int across willJoin/didJoin...
+  nsCOMPtr<nsIDOMNode>    mNewBlock;
 
 };
 
