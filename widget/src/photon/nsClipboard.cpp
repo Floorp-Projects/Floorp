@@ -560,7 +560,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
 
 nsresult nsClipboard::GetFormat(const char* aMimeStr, char *format ) 
 {
- 	nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
+ 	nsDependentCString mimeStr(aMimeStr);
 	int ret = NS_OK;
 
  	if( mimeStr.Equals(kUnicodeMime) || mimeStr.Equals(kTextMime) )
