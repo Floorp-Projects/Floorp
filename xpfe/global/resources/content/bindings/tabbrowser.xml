@@ -1130,8 +1130,8 @@
       <handler event="keypress" modifiers="control" keycode="vk_f4" action="this.removeCurrentTab();"/>
       <handler event="DOMWindowClose">
         <![CDATA[
-          const browser = this.browsers;
-          if (browser.length == 1)
+          const browsers = this.browsers;
+          if (browsers.length == 1)
             return;
           var i = 0;
           for (; i < browsers.length; ++i) {
