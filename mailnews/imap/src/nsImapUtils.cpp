@@ -127,6 +127,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     rv = server->GetLocalPath(&localPath);
     
     if (NS_SUCCEEDED(rv)) {
+		nsFileSpec dirCreator(localPath, PR_TRUE);	// force parent directories to be created
       pathResult = localPath;
       pathResult.CreateDirectory();
       PL_strfree(localPath);
