@@ -34,7 +34,7 @@ my $debug = $::FORM{'debug'};
 print "Content-Type: text/html\n\n";
 
 my $CVS_ROOT = $::FORM{'root'};
-if( $CVS_ROOT eq '' ){ 
+if( !defined($CVSROOT) || $CVS_ROOT eq '' ){ 
     $CVS_ROOT = pickDefaultRepository();
 }
 validateRepository($CVS_ROOT);
