@@ -24,6 +24,7 @@
 #include "nsMsgBaseCID.h"
 #include "MailNewsTypes.h"
 #include "nsIAllocator.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID); 
@@ -273,6 +274,15 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 		descriptionString = str;
 		PR_smprintf_free(str);
 	}
+	// if flash panel is going to ignore the source, I'm going to add it to the description for now
+	nsXPIDLString folderName;
+	rv = folder->GetPrettyName(getter_Copies(folderName));
+	if (NS_SUCCEEDED(rv) && folderName)
+	{
+		descriptionString += " in ";
+		descriptionString += folderName;
+	}
+
 	rv = rdfService->GetLiteral(descriptionString.GetUnicode(), getter_AddRefs(description));
 	if(NS_SUCCEEDED(rv))
 	{
