@@ -54,6 +54,12 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/forward.gif \
 	$(srcdir)/trash.gif \
 	$(srcdir)/newsHost.gif \
+	$(srcdir)/content1.xul \
+	$(srcdir)/content2.xul \
+	$(srcdir)/content3.xul \
+	$(srcdir)/content4.xul \
+	$(srcdir)/cpw.xul \
+	$(srcdir)/navigation.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

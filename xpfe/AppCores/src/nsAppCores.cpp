@@ -21,6 +21,7 @@
 #include "nsAppCoresManagerFactory.h"
 #include "nsDOMPropsCoreFactory.h"
 #include "nsPrefsCoreFactory.h"
+#include "nsProfileCoreFactory.h" 
 #include "nsRDFCoreFactory.h"
 #include "nsToolbarCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
@@ -39,6 +40,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,    NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kPrefsCoreCID,       NS_PREFSCORE_CID);
+static NS_DEFINE_IID(kProfileCoreCID,     NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
@@ -64,6 +66,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kDOMPropsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kPrefsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kProfileCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE); 
     nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -80,6 +83,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterFactory(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterFactory(kDOMPropsCoreCID, path);
     nsComponentManager::UnregisterFactory(kPrefsCoreCID, path);
+    nsComponentManager::UnregisterFactory(kProfileCoreCID, path); 
     nsComponentManager::UnregisterFactory(kRDFCoreCID, path);
     nsComponentManager::UnregisterFactory(kToolbarCoreCID, path);
     nsComponentManager::UnregisterFactory(kToolkitCoreCID, path);
@@ -117,6 +121,10 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kPrefsCoreCID) )
     {
         inst = new nsPrefsCoreFactory();      
+    } 
+    else if ( aClass.Equals(kProfileCoreCID) ) 
+    { 
+        inst = new nsProfileCoreFactory(); 
     }
     else if ( aClass.Equals(kRDFCoreCID) )
     {

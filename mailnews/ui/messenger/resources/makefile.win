@@ -24,31 +24,37 @@ MODULE=mailnews
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) mailshell.xul	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) messenger.css	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) folderPane.xul	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) folderPane.css	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) threadPane.xul  $(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) threadPane.css	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) message.html	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) widgetglue.js	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) commandglue.js	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) shareglue.js	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) 3panemail.html 	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) messagePane.xul	$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) mailshell.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) messenger.css		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) folderPane.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) folderPane.css		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) threadPane.xul 		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) threadPane.css		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) message.html		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) widgetglue.js		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) commandglue.js		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) shareglue.js		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) 3panemail.html 		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) messagePane.xul		$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) closedMailFolder.gif	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) openMailFolder.gif	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) localMailHost.gif	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) mailMessage.gif	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) closedInbox.gif	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) closedTrash.gif	$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) mailMessage.gif		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) closedInbox.gif		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) closedTrash.gif		$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) closedOutbox.gif	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) getmsg.gif		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) newmsg.gif		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) reply.gif		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) forward.gif		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) trash.gif		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) getmsg.gif			$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) newmsg.gif			$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) reply.gif			$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) forward.gif			$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) trash.gif			$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) newsHost.gif		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) content1.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) content2.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) content3.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) content4.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) cpw.xul				$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) navigation.xul		$(DIST)\bin\res\mailnews\messenger
 
 clobber::
 	rm -f $(DIST)\res\mailnews\messenger\mailshell.xul

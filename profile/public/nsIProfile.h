@@ -65,6 +65,9 @@ public:
 
 	// Setters
 	NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir) = 0;
+
+    // Creators
+    NS_IMETHOD CreateNewProfile(char* data) = 0;
 };
 
 #endif /* nsIProfile_h__ */
