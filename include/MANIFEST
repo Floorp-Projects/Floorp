@@ -25,6 +25,7 @@ gui.h
 imap.h
 intl_csi.h
 itapefs.h
+jscookie.h
 libcnv.h
 libc_r.h
 libevent.h

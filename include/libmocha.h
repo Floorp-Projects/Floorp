@@ -222,15 +222,14 @@ typedef void
 (PR_CALLBACK *JSLockReleaseFunc)(void * data);
 
 
-#ifdef OJI
-extern JSBool PR_CALLBACK LM_LockJS(char **errp);
-#else
-extern void PR_CALLBACK LM_LockJS(void);
-#endif
+extern JSBool PR_CALLBACK LM_LockJS(MWContext *mwc, char **errp);
+extern void PR_CALLBACK LM_UnlockJS(MWContext *mwc);
+extern JSBool PR_CALLBACK LM_AttemptLockJS(MWContext *mwc, 
+                                           JSLockReleaseFunc fn, void * data);
+extern JSBool PR_CALLBACK LM_ClearAttemptLockJS(MWContext *mwc, 
+                                                JSLockReleaseFunc fn, 
+                                                void * data);
 
-extern void PR_CALLBACK LM_UnlockJS(void);
-extern JSBool PR_CALLBACK LM_AttemptLockJS(JSLockReleaseFunc fn, void * data);
-extern JSBool PR_CALLBACK LM_ClearAttemptLockJS(JSLockReleaseFunc fn, void * data);
 extern PRBool PR_CALLBACK
 LM_HandOffJSLock(PRThread * oldOwner, PRThread *newOwner);
 
@@ -239,7 +238,7 @@ LM_HandOffJSLock(PRThread * oldOwner, PRThread *newOwner);
  *   context who is holding the JS lock
  */
 extern void LM_JSLockSetContext(MWContext * context);
-extern MWContext * LM_JSLockGetContext(void);
+extern MWContext * LM_JSLockGetContext(MWContext *mwc);
 
 /*
  * Enable/disable for Mocha-in-the-client.
@@ -564,6 +563,9 @@ LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray);
 extern JSPrincipals *
 LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals, 
                       char *name, char *src);
+
+extern JSContext *LM_GetCrippledContext(void);
+
 /*
  * JavaScript Debugger support
  */
@@ -585,9 +587,6 @@ LM_JamSourceIntoJSDebug( const char *filename,
                          MWContext  *mwcontext );
 
 #endif
-
-extern JSContext*
-LM_GetCrippledContext(void);
 
 NSPR_END_EXTERN_C
 
