@@ -27,12 +27,16 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
+// XXX nav4 has type= start= (same as OL/UL)
+
+extern nsGenericHTMLElement::EnumTable kListTypeTable[];
+
 static NS_DEFINE_IID(kIDOMHTMLMenuElementIID, NS_IDOMHTMLMENUELEMENT_IID);
 
 class nsHTMLMenuElement : public nsIDOMHTMLMenuElement,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent
 {
 public:
   nsHTMLMenuElement(nsIAtom* aTag);
@@ -67,7 +71,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -126,36 +130,69 @@ NS_IMPL_BOOL_ATTR(nsHTMLMenuElement, Compact, compact, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLMenuElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsString& aValue,
-                              nsHTMLValue& aResult)
+                                     const nsString& aValue,
+                                     nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
+                                              aResult)) {
+      aResult.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+    }
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::start) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::compact) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_NO_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLMenuElement::AttributeToString(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue,
-                              nsString& aResult) const
+                                     nsHTMLValue& aValue,
+                                     nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLMenuElement::MapAttributesInto(nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext)
+                                     nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    nsStyleList* list = (nsStyleList*)
+      aContext->GetMutableStyleData(eStyleStruct_List);
+
+    // type: enum
+    GetAttribute(nsHTMLAtoms::type, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      list->mListStyleType = value.GetIntValue();
+    }
+
+    // compact: empty
+    GetAttribute(nsHTMLAtoms::compact, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      // XXX set
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLMenuElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus& aEventStatus)
+                                  nsEvent* aEvent,
+                                  nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

@@ -67,7 +67,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -129,7 +129,10 @@ nsHTMLDListElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
                                       nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::compact) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_NO_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -138,7 +141,6 @@ nsHTMLDListElement::AttributeToString(nsIAtom* aAttribute,
                                       nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -146,8 +148,18 @@ NS_IMETHODIMP
 nsHTMLDListElement::MapAttributesInto(nsIStyleContext* aContext,
                                       nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    nsStyleList* list = (nsStyleList*)
+      aContext->GetMutableStyleData(eStyleStruct_List);
+
+    // compact: empty
+    GetAttribute(nsHTMLAtoms::compact, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      // XXX set
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

@@ -67,7 +67,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -126,7 +126,7 @@ nsHTMLLayerElement::CloneNode(nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Cite, cite, eSetAttrNotify_None)
 
-static nsHTMLGenericContent::EnumTable kVisibilityTable[] = {
+static nsGenericHTMLElement::EnumTable kVisibilityTable[] = {
   {"hide", NS_STYLE_VISIBILITY_HIDDEN},
   {"visible", NS_STYLE_VISIBILITY_VISIBLE},
   {0}
@@ -194,7 +194,7 @@ nsHTMLLayerElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::visibility) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::EnumValueToString(aValue, kVisibilityTable, aResult);
+      nsGenericHTMLElement::EnumValueToString(aValue, kVisibilityTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -263,9 +263,9 @@ nsHTMLLayerElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // Background and bgcolor
-//XXX    MapBackgroundAttributesInto(aContext, aPresContext);
+    mInner.MapBackgroundAttributesInto(aContext, aPresContext);
   }
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

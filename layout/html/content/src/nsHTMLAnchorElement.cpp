@@ -30,6 +30,11 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 
+// XXX suppress
+
+// XXX either suppress is handled in the event code below OR we need a
+// custom frame
+
 static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 
 class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
@@ -94,7 +99,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -182,9 +187,21 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    nsHTMLGenericContent::ParseValue(aValue, 0, 32767, aResult,
+    nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
                                      eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::href) {
+    nsAutoString href(aValue);
+    href.StripWhitespace();
+    aResult.SetStringValue(href);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::suppress) {
+    if (aValue.EqualsIgnoreCase("true")) {
+      aResult.SetEmptyValue();
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
@@ -201,9 +218,10 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::MapAttributesInto(nsIStyleContext* aContext,
                                        nsIPresContext* aPresContext)
 {
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
+// XXX support suppress in here
 NS_IMETHODIMP
 nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                     nsEvent* aEvent,

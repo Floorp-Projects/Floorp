@@ -26,8 +26,19 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsStyleUtil.h"
+#include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
+#include "nsIHTMLStyleSheet.h"
+#include "nsIStyleRule.h"
+#include "nsIWebShell.h"
 
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
+
+class BodyRule;
 
 class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
                           public nsIScriptObjectOwner,
@@ -74,11 +85,133 @@ public:
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMPL_IHTMLCONTENT_USING_GENERIC2(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
+  BodyRule* mStyleRule;
 };
+
+class BodyRule: public nsIStyleRule {
+public:
+  BodyRule(nsHTMLBodyElement* aPart);
+  ~BodyRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext, 
+                          nsIContent* aContent);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsHTMLBodyElement* mPart;
+};
+
+//----------------------------------------------------------------------
+
+BodyRule::BodyRule(nsHTMLBodyElement* aPart)
+{
+  NS_INIT_REFCNT();
+  mPart = aPart;
+}
+
+BodyRule::~BodyRule()
+{
+}
+
+NS_IMPL_ISUPPORTS(BodyRule, kIStyleRuleIID);
+
+NS_IMETHODIMP
+BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+{
+  aResult = PRBool(this == aRule);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyRule::HashValue(PRUint32& aValue) const
+{
+  aValue = (PRUint32)(mPart);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                       nsIContent* aContent)
+{
+  NS_ASSERTION(aContent == mPart, "bad content mapping");
+  if (nsnull != mPart) {
+
+    nsStyleSpacing* styleSpacing = (nsStyleSpacing*)(aContext->GetMutableStyleData(eStyleStruct_Spacing));
+
+    if (nsnull != styleSpacing) {
+      nsHTMLValue   value;
+      nsStyleCoord  zero(0);
+      PRInt32       count = 0;
+      PRInt32       attrCount;
+      mPart->GetAttributeCount(attrCount);
+
+      if (0 < attrCount) {
+        // if marginwidth/marginheigth is set in our attribute zero out left,right/top,bottom padding
+        // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
+        mPart->GetAttribute(nsHTMLAtoms::marginwidth, value);
+        if (eHTMLUnit_Pixel == value.GetUnit()) {
+          styleSpacing->mPadding.SetLeft(zero);
+          styleSpacing->mPadding.SetRight(zero);
+          count++;
+        }
+
+        mPart->GetAttribute(nsHTMLAtoms::marginheight, value);
+        if (eHTMLUnit_Pixel == value.GetUnit()) {
+          styleSpacing->mPadding.SetTop(zero);
+          styleSpacing->mPadding.SetBottom(zero);
+          count++;
+        }
+
+        if (count < attrCount) {  // more to go...
+          mPart->MapAttributesInto(aContext, aPresContext);
+        }
+      }
+
+      if (count < 2) {
+        // if marginwidth or marginheight is set in the web shell zero out left,right,top,bottom padding
+        // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
+        nsISupports* container;
+        aPresContext->GetContainer(&container);
+        if (nsnull != container) {
+          nsIWebShell* webShell = nsnull;
+          container->QueryInterface(kIWebShellIID, (void**) &webShell);
+          if (nsnull != webShell) {
+            PRInt32 marginWidth, marginHeight;
+            webShell->GetMarginWidth(marginWidth);
+            webShell->GetMarginHeight(marginHeight);
+            if ((marginWidth >= 0) || (marginHeight >= 0)) { // nav quirk
+              styleSpacing->mPadding.SetLeft(zero);
+              styleSpacing->mPadding.SetRight(zero);
+              styleSpacing->mPadding.SetTop(zero);
+              styleSpacing->mPadding.SetBottom(zero);
+            }
+            NS_RELEASE(webShell);
+          }
+          NS_RELEASE(container);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyRule::List(FILE* out, PRInt32 aIndent) const
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
 
 nsresult
 NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
@@ -95,6 +228,7 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
+  : mStyleRule(nsnull)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
@@ -102,6 +236,10 @@ nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
 
 nsHTMLBodyElement::~nsHTMLBodyElement()
 {
+  if (nsnull != mStyleRule) {
+    mStyleRule->mPart = nsnull;
+    NS_RELEASE(mStyleRule);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLBodyElement)
@@ -144,7 +282,25 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
                                      const nsString& aValue,
                                      nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::background) {
+    nsAutoString href(aValue);
+    href.StripWhitespace();
+    aResult.SetStringValue(href);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if ((aAttribute == nsHTMLAtoms::bgcolor) ||
+      (aAttribute == nsHTMLAtoms::text) ||
+      (aAttribute == nsHTMLAtoms::link) ||
+      (aAttribute == nsHTMLAtoms::alink) ||
+      (aAttribute == nsHTMLAtoms::vlink)) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if ((aAttribute == nsHTMLAtoms::marginwidth) ||
+      (aAttribute == nsHTMLAtoms::marginheight)) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -153,7 +309,6 @@ nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue,
                                      nsString& aResult) const
 {
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -161,8 +316,52 @@ NS_IMETHODIMP
 nsHTMLBodyElement::MapAttributesInto(nsIStyleContext* aContext,
                                      nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (mInner.mAttributes) {
+    nsHTMLValue value;
+    mInner.MapBackgroundAttributesInto(aContext, aPresContext);
+    GetAttribute(nsHTMLAtoms::text, value);
+    if (eHTMLUnit_Color == value.GetUnit()) {
+      nsStyleColor* color = (nsStyleColor*)
+        aContext->GetMutableStyleData(eStyleStruct_Color);
+      color->mColor = value.GetColorValue();
+      aPresContext->SetDefaultColor(color->mColor);
+    }
+
+    nsIHTMLDocument*  htmlDoc;
+    if (NS_OK == mInner.mDocument->QueryInterface(kIHTMLDocumentIID,
+                                                  (void**)&htmlDoc)) {
+      nsIHTMLStyleSheet* styleSheet;
+      if (NS_OK == htmlDoc->GetAttributeStyleSheet(&styleSheet)) {
+        GetAttribute(nsHTMLAtoms::link, value);
+        if (eHTMLUnit_Color == value.GetUnit()) {
+          styleSheet->SetLinkColor(value.GetColorValue());
+        }
+
+        GetAttribute(nsHTMLAtoms::alink, value);
+        if (eHTMLUnit_Color == value.GetUnit()) {
+          styleSheet->SetActiveLinkColor(value.GetColorValue());
+        }
+
+        GetAttribute(nsHTMLAtoms::vlink, value);
+        if (eHTMLUnit_Color == value.GetUnit()) {
+          styleSheet->SetVisitedLinkColor(value.GetColorValue());
+        }
+      }
+      NS_RELEASE(htmlDoc);
+    }
+
+    // marginwidth/height get set by a special style rule
+
+    // set up the basefont (defaults to 3)
+    nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+    const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
+    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
+    PRInt32 scaler = aPresContext->GetFontScaler();
+    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+    font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
+    font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
@@ -174,4 +373,16 @@ nsHTMLBodyElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetStyleRule(nsIStyleRule*& aResult)
+{
+  if (nsnull == mStyleRule) {
+    mStyleRule = new BodyRule(this);
+    NS_IF_ADDREF(mStyleRule);
+  }
+  NS_IF_ADDREF(mStyleRule);
+  aResult = mStyleRule;
+  return NS_OK;
 }

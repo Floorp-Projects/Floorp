@@ -30,9 +30,9 @@
 static NS_DEFINE_IID(kIDOMHTMLHeadingElementIID, NS_IDOMHTMLHEADINGELEMENT_IID);
 
 class nsHTMLHeadingElement : public nsIDOMHTMLHeadingElement,
-                      public nsIScriptObjectOwner,
-                      public nsIDOMEventReceiver,
-                      public nsIHTMLContent
+                             public nsIScriptObjectOwner,
+                             public nsIDOMEventReceiver,
+                             public nsIHTMLContent
 {
 public:
   nsHTMLHeadingElement(nsIAtom* aTag);
@@ -67,7 +67,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -126,36 +126,53 @@ NS_IMPL_STRING_ATTR(nsHTMLHeadingElement, Align, align, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
-                                 const nsString& aValue,
-                                 nsHTMLValue& aResult)
+                                        const nsString& aValue,
+                                        nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseDivAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::AttributeToString(nsIAtom* aAttribute,
-                                 nsHTMLValue& aValue,
-                                 nsString& aResult) const
+                                        nsHTMLValue& aValue,
+                                        nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::DivAlignValueToString(aValue, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext)
+                                        nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                              nsEvent* aEvent,
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus& aEventStatus)
+                                     nsEvent* aEvent,
+                                     nsIDOMEvent** aDOMEvent,
+                                     PRUint32 aFlags,
+                                     nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

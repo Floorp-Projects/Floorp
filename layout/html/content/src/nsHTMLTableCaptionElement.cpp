@@ -67,7 +67,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -147,7 +147,7 @@ nsHTMLTableCaptionElement::MapAttributesInto(nsIStyleContext* aContext,
                                       nsIPresContext* aPresContext)
 {
   // XXX write me
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

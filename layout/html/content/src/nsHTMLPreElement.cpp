@@ -27,14 +27,14 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-// XXX missing nav attributes
+// XXX wrap, variable, cols, tabstop
 
 static NS_DEFINE_IID(kIDOMHTMLPreElementIID, NS_IDOMHTMLPREELEMENT_IID);
 
 class nsHTMLPreElement : public nsIDOMHTMLPreElement,
-                  public nsIScriptObjectOwner,
-                  public nsIDOMEventReceiver,
-                  public nsIHTMLContent
+                         public nsIScriptObjectOwner,
+                         public nsIDOMEventReceiver,
+                         public nsIHTMLContent
 {
 public:
   nsHTMLPreElement(nsIAtom* aTag);
@@ -69,7 +69,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -128,45 +128,86 @@ NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
-                             const nsString& aValue,
-                             nsHTMLValue& aResult)
+                                    const nsString& aValue,
+                                    nsHTMLValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (nsHTMLGenericContent::ParseAlignValue(aValue, aResult)) {
+  if ((aAttribute == nsHTMLAtoms::wrap) ||
+      (aAttribute == nsHTMLAtoms::variable)) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::cols) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult,
+                                         eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
+  }
+  if (aAttribute == nsHTMLAtoms::width) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult,
+                                         eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  if (aAttribute == nsHTMLAtoms::tabstop) {
+    PRInt32 ec, tabstop = aValue.ToInteger(&ec);
+    if (tabstop <= 0) {
+      tabstop = 8;
+    }
+    aResult.SetIntValue(tabstop, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLPreElement::AttributeToString(nsIAtom* aAttribute,
-                             nsHTMLValue& aValue,
-                             nsString& aResult) const
+                                    nsHTMLValue& aValue,
+                                    nsString& aResult) const
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::AlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLPreElement::MapAttributesInto(nsIStyleContext* aContext,
-                             nsIPresContext* aPresContext)
+                                    nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+
+    // wrap: empty
+    GetAttribute(nsHTMLAtoms::wrap, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      // XXX set
+    }
+      
+    // variable: empty
+    GetAttribute(nsHTMLAtoms::variable, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      nsStyleFont* font = (nsStyleFont*)
+        aContext->GetMutableStyleData(eStyleStruct_Font);
+      font->mFont.name = "serif";
+    }
+
+    // cols: int
+    GetAttribute(nsHTMLAtoms::cols, value);
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      // XXX set
+    }
+
+    // tabstop: int
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      // XXX set
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLPreElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                          nsEvent* aEvent,
-                          nsIDOMEvent** aDOMEvent,
-                          PRUint32 aFlags,
-                          nsEventStatus& aEventStatus)
+                                 nsEvent* aEvent,
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

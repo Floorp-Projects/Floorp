@@ -30,9 +30,9 @@
 static NS_DEFINE_IID(kIDOMHTMLLIElementIID, NS_IDOMHTMLLIELEMENT_IID);
 
 class nsHTMLLIElement : public nsIDOMHTMLLIElement,
-                 public nsIScriptObjectOwner,
-                 public nsIDOMEventReceiver,
-                 public nsIHTMLContent
+                        public nsIScriptObjectOwner,
+                        public nsIDOMEventReceiver,
+                        public nsIHTMLContent
 {
 public:
   nsHTMLLIElement(nsIAtom* aTag);
@@ -69,7 +69,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -127,38 +127,72 @@ nsHTMLLIElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type, eSetAttrNotify_Reflow)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value, eSetAttrNotify_Reflow)
 
+static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
+  { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "round", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "square", NS_STYLE_LIST_STYLE_SQUARE },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { 0 }
+};
+
 NS_IMETHODIMP
 nsHTMLLIElement::StringToAttribute(nsIAtom* aAttribute,
-                            const nsString& aValue,
-                            nsHTMLValue& aResult)
+                                   const nsString& aValue,
+                                   nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kListItemTypeTable,
+                                             aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::value) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
-                            nsHTMLValue& aValue,
-                            nsString& aResult) const
+                                   nsHTMLValue& aValue,
+                                   nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
+                                            aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLLIElement::MapAttributesInto(nsIStyleContext* aContext,
-                            nsIPresContext* aPresContext)
+                                   nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    nsStyleList* list = (nsStyleList*)
+      aContext->GetMutableStyleData(eStyleStruct_List);
+
+    // type: enum
+    GetAttribute(nsHTMLAtoms::type, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      list->mListStyleType = value.GetIntValue();
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLLIElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                         nsEvent* aEvent,
-                         nsIDOMEvent** aDOMEvent,
-                         PRUint32 aFlags,
-                         nsEventStatus& aEventStatus)
+                                nsEvent* aEvent,
+                                nsIDOMEvent** aDOMEvent,
+                                PRUint32 aFlags,
+                                nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

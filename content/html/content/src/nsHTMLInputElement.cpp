@@ -105,7 +105,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericLeafContent mInner;
+  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -242,7 +242,7 @@ nsHTMLInputElement::MapAttributesInto(nsIStyleContext* aContext,
                                nsIPresContext* aPresContext)
 {
   // XXX align
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

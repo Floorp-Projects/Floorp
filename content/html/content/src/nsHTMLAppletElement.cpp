@@ -87,7 +87,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -160,11 +160,11 @@ nsHTMLAppletElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsHTMLGenericContent::ParseAlignValue(aValue, aResult)) {
+    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsHTMLGenericContent::ParseImageAttribute(aAttribute,
+  else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
                                                      aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
@@ -178,11 +178,11 @@ nsHTMLAppletElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::AlignValueToString(aValue, aResult);
+      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsHTMLGenericContent::ImageAttributeToString(aAttribute,
+  else if (nsGenericHTMLElement::ImageAttributeToString(aAttribute,
                                                         aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
@@ -196,7 +196,7 @@ nsHTMLAppletElement::MapAttributesInto(nsIStyleContext* aContext,
   mInner.MapImageAlignAttributeInto(aContext, aPresContext);
   mInner.MapImageAttributesInto(aContext, aPresContext);
   mInner.MapImageBorderAttributesInto(aContext, aPresContext, nsnull);
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

@@ -67,7 +67,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericLeafContent mInner;
+  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -124,7 +124,7 @@ nsHTMLBRElement::CloneNode(nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear, eSetAttrNotify_Reflow)
 
-static nsHTMLGenericContent::EnumTable kClearTable[] = {
+static nsGenericHTMLElement::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
   { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
@@ -138,7 +138,7 @@ nsHTMLBRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::clear) {
-    if (nsHTMLGenericContent::ParseEnumValue(aValue, kClearTable, aResult)) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kClearTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -152,7 +152,7 @@ nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::clear) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::EnumValueToString(aValue, kClearTable, aResult);
+      nsGenericHTMLElement::EnumValueToString(aValue, kClearTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -172,7 +172,7 @@ nsHTMLBRElement::MapAttributesInto(nsIStyleContext* aContext,
       display->mBreakType = value.GetIntValue();
     }
   }
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

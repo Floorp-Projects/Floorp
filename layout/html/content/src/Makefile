@@ -68,6 +68,7 @@ CPPSRCS=				\
 	nsHTMLQuoteElement.cpp		\
 	nsHTMLScriptElement.cpp		\
 	nsHTMLSelectElement.cpp		\
+	nsHTMLSpanElement.cpp		\
 	nsHTMLStyleElement.cpp		\
 	nsHTMLTableElement.cpp		\
 	nsHTMLTableCaptionElement.cpp	\
