@@ -48,7 +48,7 @@
       <spring style="height: 10px;"/>
       <box id="system1" flex="100%" align="horizontal">
         <spring style="width: 7px;"/>
-        <div style="width: 195px;">
+        <html style="width: 195px;">
           <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
              style="height: 250px; width: 195px;" align="vertical" onclick="ViewEntries();">
@@ -63,9 +63,9 @@
             <button id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
             <button id="addSchema" class="dialog push" disabled="false" value="&button.addschema.label;" onclick="AddSchema();"/>
           </box>
-        </div>
+        </html>
         <spring style="width: 7px;"/>
-        <div style="width: 195px;">
+        <html style="width: 195px;">
           <text class="label" id="entrytext" value2="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
@@ -83,9 +83,9 @@
             </treecolgroup>
             <treechildren flex="1" id="synonymslist"/>
           </tree>
-        </div>
+        </html>
         <spring style="width: 7px;"/>
-        <div style="width: 120px;">
+        <html style="width: 120px;">
           <box align="vertical">
             <spring style="height: 15px;"/>
             <button id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
@@ -94,7 +94,7 @@
             <button id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
             <button id="addSynonym" class="dialog push" disabled="false" value="&button.addsynonym.label;" onclick="AddSynonym();"/>
           </box>
-        </div>
+        </html>
         <spring style="width: 7px;"/>
       </box>
     </box>

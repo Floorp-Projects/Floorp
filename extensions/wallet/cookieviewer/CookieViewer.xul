@@ -51,7 +51,6 @@
     </tabbox>
     <tabpanel id="panel" align="horizontal" style="width: 400px;">
       <box class="tabpanel" id="system" flex="100%" align="vertical">
-        <div>
           <text class="label" value="&div.cookiesonsystem.label;"/>
           <spring style="height: 10px;"/>
           <tree id="cookietree" class="inset" style="height: 15em; width: 380px;" align="vertical" 
@@ -71,8 +70,8 @@
             <treechildren id="cookielist" flex="1"/>
           </tree>
           <spring style="height: 5px;"/>
-          <fieldset style="border: 2px groove #CCCCDD;">
-            <text class="label" value="&treehead.infoselected.label;"/>
+          <titledbox style="border: 2px groove #CCCCDD;">
+            <title> <text class="label" value="&treehead.infoselected.label;"/> </title>
             <spring style="height: 5px;"/>
             <!-- labels -->
             <grid>
@@ -108,7 +107,7 @@
                 </row>
               </rows>
             </grid>
-          </fieldset>
+          </titledbox>
           <spring flex="5%"/>
           <box align="horizontal">
             <button id="removeCookies" class="dialog push" disabled="true"
@@ -120,11 +119,9 @@
             <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
           </box>
           <checkbox id="checkbox" value="&checkbox.label;" />
-        </div>
       </box>
       
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
-        <div>
           <text class="label" value="&div.bannedservers.label;"/>
           <spring flex="5%"/>
           <tree id="permissionstree" class="inset" style="height: 30em; width: 380px;" align="vertical"
@@ -151,11 +148,9 @@
                           onclick="DeleteAllPermissions();"/>
           </box>
           <spring style="height: 5px;"/>
-        </div>
       </box>
 
       <box class="tabpanel" id="images" style="display:none" flex="100%" align="vertical">
-        <div>
           <text class="label" value="&div.bannedimages.label;"/>
           <spring flex="5%"/>
           <tree id="imagestree" class="inset" style="height: 30em; width: 380px;" align="vertical"
@@ -182,7 +177,6 @@
                           onclick="DeleteAllImages();"/>
           </box>
           <spring style="height: 5px;"/>
-        </div>
       </box>
 
     </tabpanel>

@@ -40,7 +40,6 @@
            
   <spring style="height: 10px;"/>
   <box align="vertical" flex="100%">
-    <div>
       <title>
         <text id="heading"/>
       </title>
@@ -57,7 +56,6 @@
         </treehead>
         <treechildren flex="1" id="combolists"/>
       </tree>
-    </div>  
   </box>
 
   <spring style="height: 10px;"/>
