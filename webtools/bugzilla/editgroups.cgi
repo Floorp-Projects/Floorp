@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Dave Miller <justdave@syndicomm.com>
+#                 Jake Steenhagen <jake@acutexx.net>
 
 # Code derived from editowners.cgi and editusers.cgi
 
