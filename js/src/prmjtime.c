@@ -293,7 +293,7 @@ PRMJ_DSTOffset(PRInt64 time)
     PRInt64  maxtimet;
     struct tm tm;
     PRMJTime prtm;
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD )
     struct tm *ptm;
 #endif
 
@@ -312,7 +312,7 @@ PRMJ_DSTOffset(PRInt64 time)
     }
     LL_L2UI(local,time);
     PRMJ_basetime(time,&prtm);
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD )
     ptm = localtime(&local);
     if(!ptm){
       return LL_ZERO;
