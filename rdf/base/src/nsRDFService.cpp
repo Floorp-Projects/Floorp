@@ -58,6 +58,10 @@ static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog = nsnull;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // ServiceImpl
 //
@@ -435,6 +439,11 @@ ServiceImpl::ServiceImpl(void)
                                         PL_CompareStrings,
                                         PL_CompareValues,
                                         nsnull, nsnull);
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFService");
+#endif
 }
 
 
@@ -691,6 +700,10 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
         // only ever held a weak reference to it. We simply replace
         // it.
 
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("rdfserv   replace-resource [%p] <-- [%p] %s",
+                (*hep)->value, aResource, (const char*) uri));
+
         (*hep)->value = aResource;
     }
     else {
@@ -699,6 +712,10 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
             return NS_ERROR_OUT_OF_MEMORY;
 
         PL_HashTableAdd(mResources, key, aResource);
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("rdfserv   register-resource [%p] %s",
+                aResource, (const char*) uri));
 
         // N.B., we only hold a weak reference to the resource: that
         // way, the resource can be destroyed when the last refcount
@@ -710,16 +727,16 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
 }
 
 NS_IMETHODIMP
-ServiceImpl::UnregisterResource(nsIRDFResource* resource)
+ServiceImpl::UnregisterResource(nsIRDFResource* aResource)
 {
-    NS_PRECONDITION(resource != nsnull, "null ptr");
-    if (! resource)
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
 
     nsXPIDLCString uri;
-    rv = resource->GetValue(getter_Copies(uri));
+    rv = aResource->GetValue(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
 
     PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
@@ -731,6 +748,10 @@ ServiceImpl::UnregisterResource(nsIRDFResource* resource)
 
     // N.B. that we _don't_ release the resource: we only held a weak
     // reference to it in the hashtable.
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv unregister-resource [%p] %s",
+            aResource, (const char*) uri));
 
     PL_HashTableRawRemove(mResources, hep, *hep);
     return NS_OK;
@@ -759,6 +780,10 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
         // N.B., we only hold a weak reference to the datasource, so
         // just replace the old with the new and don't touch any
         // refcounts.
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("rdfserv    replace-datasource [%p] <-- [%p] %s",
+                (*hep)->value, aDataSource, (const char*) uri));
+
         (*hep)->value = aDataSource;
     }
     else {
@@ -767,6 +792,10 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
             return NS_ERROR_OUT_OF_MEMORY;
 
         PL_HashTableAdd(mNamedDataSources, key, aDataSource);
+
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("rdfserv   register-datasource [%p] %s",
+                aDataSource, (const char*) uri));
 
         // N.B., we only hold a weak reference to the datasource, so don't
         // addref.
@@ -804,6 +833,10 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     // N.B., we only held a weak reference to the datasource, so we
     // don't release here.
     PL_HashTableRawRemove(mNamedDataSources, hep, *hep);
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfserv unregister-datasource [%p] %s",
+            aDataSource, (const char*) uri));
 
     return NS_OK;
 }
