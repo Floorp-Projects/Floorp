@@ -751,6 +751,13 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     return NS_OK;
 }
 
+#ifdef XP_MAC
+#define GESTALT_CHAR_CODE(x)          (((unsigned long) ((x[0]) & 0x000000FF)) << 24) \
+                                    | (((unsigned long) ((x[1]) & 0x000000FF)) << 16) \
+                                    | (((unsigned long) ((x[2]) & 0x000000FF)) << 8)  \
+                                    | (((unsigned long) ((x[3]) & 0x000000FF)))
+#endif /* XP_MAC */
+								
 PRInt32    
 nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
 {
@@ -758,20 +765,27 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
 
 #ifdef XP_MAC
 	
-    long response = 0;
+    long    response = 0;
+    char    selectorChars[4];
+    int     i;
+    OSErr   err = noErr;
+    OSType  selector;
     
     if (aSelector == "")
     {
         return NS_OK;
     }
 
-	char selector[4];
-	
-    aSelector.ToCString((char*)&selector,4);
-
-    Gestalt(selector, (int*)&response);
-
-    *aReturn = response;
+    for (i=0; i<4; i++)
+        selectorChars[i] = aSelector.CharAt(i);
+    selector = GESTALT_CHAR_CODE(selectorChars);
+    
+    err = ::Gestalt(selector, &response);
+    
+    if (err != noErr)
+        *aReturn = err;
+    else
+        *aReturn = response;
 	
 #endif    
     return NS_OK;    
