@@ -69,11 +69,11 @@
                                ((octal-value digit-value)))
                (:hex-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\A #\B #\C #\D #\E #\F #\a #\b #\c #\d #\e #\f)
                            ((hex-value digit-value)))
-               (:exponent-indicator (#\E #\e) ())
-               (:hex-indicator (#\X #\x) ())
-               ((:plain-string-char single) (- :unicode-character (+ (#\' #\\) :octal-digit :line-terminator))
+               (:letter-e (#\E #\e) (($default-action $default-action)))
+               (:letter-x (#\X #\x) (($default-action $default-action)))
+               ((:literal-string-char single) (- :unicode-character (+ (#\' #\\) :line-terminator))
                 (($default-action $default-action)))
-               ((:plain-string-char double) (- :unicode-character (+ (#\" #\\) :octal-digit :line-terminator))
+               ((:literal-string-char double) (- :unicode-character (+ (#\" #\\) :line-terminator))
                 (($default-action $default-action)))
                (:identity-escape (- :non-terminator :unicode-alphanumeric)
                                  (($default-action $default-action)))
@@ -181,10 +181,10 @@
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
        
        (deftype reg-exp (tuple (re-body string)
-                               (re-flags string)))
+                          (re-flags string)))
        
        (deftype quantity (tuple (amount double)
-                                (unit string)))
+                           (unit string)))
        
        (deftype token (oneof (identifier string)
                              (keyword string)
@@ -213,7 +213,7 @@
          (production :initial-identifier-character (:ordinary-initial-identifier-character) initial-identifier-character-ordinary
            (character-value ($default-action :ordinary-initial-identifier-character))
            (contains-escapes false))
-         (production :initial-identifier-character (:hex-escape) initial-identifier-character-escape
+         (production :initial-identifier-character (#\\ :hex-escape) initial-identifier-character-escape
            (character-value (if (is-ordinary-initial-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
                               (bottom character)))
@@ -226,7 +226,7 @@
          (production :continuing-identifier-character (:ordinary-continuing-identifier-character) continuing-identifier-character-ordinary
            (character-value ($default-action :ordinary-continuing-identifier-character))
            (contains-escapes false))
-         (production :continuing-identifier-character (:hex-escape) continuing-identifier-character-escape
+         (production :continuing-identifier-character (#\\ :hex-escape) continuing-identifier-character-escape
            (character-value (if (is-ordinary-continuing-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
                               (bottom character)))
@@ -347,7 +347,7 @@
        (rule :numeric-literal ((double-value double))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
            (double-value (rational-to-double (rational-value :decimal-literal))))
-         (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
+         (production :numeric-literal (:hex-integer-literal (:- :hex-digit)) numeric-literal-hex
            (double-value (rational-to-double (integer-to-rational (integer-value :hex-integer-literal)))))
          (production :numeric-literal (:octal-integer-literal) numeric-literal-octal
            (double-value (rational-to-double (integer-to-rational (integer-value :octal-integer-literal))))))
@@ -361,8 +361,12 @@
              (rational* base (expt base (- exponent 1))))))
        
        (rule :decimal-literal ((rational-value rational))
-         (production :decimal-literal (:mantissa :exponent) decimal-literal
-           (rational-value (rational* (rational-value :mantissa) (expt (integer-to-rational 10) (integer-value :exponent))))))
+         (production :decimal-literal (:mantissa) decimal-literal
+           (rational-value (rational-value :mantissa)))
+         (production :decimal-literal (:mantissa :letter-e :signed-integer) decimal-literal-exponent
+           (rational-value (rational* (rational-value :mantissa) (expt (integer-to-rational 10) (integer-value :signed-integer))))))
+       
+       (%charclass :letter-e)
        
        (rule :mantissa ((rational-value rational))
          (production :mantissa (:decimal-integer-literal) mantissa-integer
@@ -395,13 +399,6 @@
                                       (expt (integer-to-rational 10) (n-digits :decimal-digits))))))
        (%print-actions)
        
-       (rule :exponent ((integer-value integer))
-         (production :exponent () exponent-none
-           (integer-value 0))
-         (production :exponent (:exponent-indicator :signed-integer) exponent-integer
-           (integer-value (integer-value :signed-integer))))
-       (%charclass :exponent-indicator)
-       
        (rule :signed-integer ((integer-value integer))
          (production :signed-integer (:decimal-digits) signed-integer-no-sign
            (integer-value (integer-value :decimal-digits)))
@@ -422,11 +419,11 @@
        (%print-actions)
        
        (rule :hex-integer-literal ((integer-value integer))
-         (production :hex-integer-literal (#\0 :hex-indicator :hex-digit) hex-integer-literal-first
+         (production :hex-integer-literal (#\0 :letter-x :hex-digit) hex-integer-literal-first
            (integer-value (hex-value :hex-digit)))
          (production :hex-integer-literal (:hex-integer-literal :hex-digit) hex-integer-literal-rest
            (integer-value (+ (* 16 (integer-value :hex-integer-literal)) (hex-value :hex-digit)))))
-       (%charclass :hex-indicator)
+       (%charclass :letter-x)
        (%charclass :hex-digit)
        
        (rule :octal-integer-literal ((integer-value integer))
@@ -440,8 +437,15 @@
        (%section "Quantity literals")
        
        (rule :quantity-literal ((quantity-value quantity))
-         (production :quantity-literal (:numeric-literal #\_ :identifier-name) quantity-literal-underscore
-           (quantity-value (tuple quantity (double-value :numeric-literal) (name :identifier-name)))))
+         (production :quantity-literal (:numeric-literal :quantity-name) quantity-literal-quantity-name
+           (quantity-value (tuple quantity (double-value :numeric-literal) (name :quantity-name)))))
+       
+       (rule :quantity-name ((name string))
+         (production :quantity-name ((:- :letter-e :letter-x) :identifier-name) quantity-name-identifier
+           (name (name :identifier-name)))
+         ;(production :quantity-name (:letter-x :identifier-name) quantity-name-x-identifier
+         ;  (name (append (vector ($default-action :letter-x)) (name :identifier-name))))
+         )
        (%print-actions)
        
        (%section "String literals")
@@ -455,62 +459,53 @@
        (%print-actions)
        
        (rule (:string-chars :theta) ((string-value string))
-         (production (:string-chars :theta) ((:ordinary-string-chars :theta)) string-chars-ordinary
-           (string-value (string-value :ordinary-string-chars)))
-         (production (:string-chars :theta) ((:string-chars :theta) :short-octal-escape) string-chars-short-escape
-           (string-value (append (string-value :string-chars)
-                                 (vector (character-value :short-octal-escape))))))
-       
-       (rule (:ordinary-string-chars :theta) ((string-value string))
-         (production (:ordinary-string-chars :theta) () ordinary-string-chars-empty
+         (production (:string-chars :theta) () string-chars-none
            (string-value ""))
-         (production (:ordinary-string-chars :theta) ((:string-chars :theta) (:plain-string-char :theta)) ordinary-string-chars-char
+         (production (:string-chars :theta) ((:string-chars :theta) (:string-char :theta)) string-chars-some
            (string-value (append (string-value :string-chars)
-                                 (vector ($default-action :plain-string-char)))))
-         (production (:ordinary-string-chars :theta) ((:ordinary-string-chars :theta) :octal-digit) ordinary-string-chars-octal
-           (string-value (append (string-value :ordinary-string-chars)
-                                 (vector ($default-action :octal-digit)))))
-         (production (:ordinary-string-chars :theta) ((:string-chars :theta) :ordinary-escape) ordinary-string-chars-escape
-           (string-value (append (string-value :string-chars)
-                                 (vector (character-value :ordinary-escape))))))
+                                 (vector (character-value :string-char))))))
        
-       (%charclass (:plain-string-char single))
-       (%charclass (:plain-string-char double))
+       (rule (:string-char :theta) ((character-value character))
+         (production (:string-char :theta) ((:literal-string-char :theta)) string-char-literal
+           (character-value ($default-action :literal-string-char)))
+         (production (:string-char :theta) (#\\ :string-escape) string-char-escape
+           (character-value (character-value :string-escape))))
+       
+       (%charclass (:literal-string-char single))
+       (%charclass (:literal-string-char double))
        (%print-actions)
        
-       (rule :ordinary-escape ((character-value character))
-         (production :ordinary-escape (:control-escape) ordinary-escape-control
+       (rule :string-escape ((character-value character))
+         (production :string-escape (:control-escape) string-escape-control
            (character-value (character-value :control-escape)))
-         (production :ordinary-escape (:full-octal-escape) ordinary-escape-full-octal
-           (character-value (character-value :full-octal-escape)))
-         (production :ordinary-escape (:hex-escape) ordinary-escape-hex
+         (production :string-escape (:octal-escape) string-escape-octal
+           (character-value (character-value :octal-escape)))
+         (production :string-escape (:hex-escape) string-escape-hex
            (character-value (character-value :hex-escape)))
-         (production :ordinary-escape (#\\ :identity-escape) ordinary-escape-non-escape
+         (production :string-escape (:identity-escape) string-escape-non-escape
            (character-value ($default-action :identity-escape))))
        (%charclass :identity-escape)
        (%print-actions)
        
        (rule :control-escape ((character-value character))
-         (production :control-escape (#\\ #\b) control-escape-backspace (character-value #?0008))
-         (production :control-escape (#\\ #\f) control-escape-form-feed (character-value #?000C))
-         (production :control-escape (#\\ #\n) control-escape-new-line (character-value #?000A))
-         (production :control-escape (#\\ #\r) control-escape-return (character-value #?000D))
-         (production :control-escape (#\\ #\t) control-escape-tab (character-value #?0009))
-         (production :control-escape (#\\ #\v) control-escape-vertical-tab (character-value #?000B)))
+         (production :control-escape (#\b) control-escape-backspace (character-value #?0008))
+         (production :control-escape (#\f) control-escape-form-feed (character-value #?000C))
+         (production :control-escape (#\n) control-escape-new-line (character-value #?000A))
+         (production :control-escape (#\r) control-escape-return (character-value #?000D))
+         (production :control-escape (#\t) control-escape-tab (character-value #?0009))
+         (production :control-escape (#\v) control-escape-vertical-tab (character-value #?000B)))
        (%print-actions)
        
-       (rule :short-octal-escape ((character-value character))
-         (production :short-octal-escape (#\\ :octal-digit) short-octal-escape-1
+       (rule :octal-escape ((character-value character))
+         (production :octal-escape (:octal-digit (:- :octal-digit)) octal-escape-1
            (character-value (code-to-character (octal-value :octal-digit))))
-         (production :short-octal-escape (#\\ :zero-to-three :octal-digit) short-octal-escape-2
+         (production :octal-escape (:zero-to-three :octal-digit (:- :octal-digit)) octal-escape-2-low
            (character-value (code-to-character (+ (* 8 (octal-value :zero-to-three))
-                                                  (octal-value :octal-digit))))))
-       
-       (rule :full-octal-escape ((character-value character))
-         (production :full-octal-escape (#\\ :four-to-seven :octal-digit) full-octal-escape-2
+                                                  (octal-value :octal-digit)))))
+         (production :octal-escape (:four-to-seven :octal-digit) octal-escape-2-high
            (character-value (code-to-character (+ (* 8 (octal-value :four-to-seven))
                                                   (octal-value :octal-digit)))))
-         (production :full-octal-escape (#\\ :zero-to-three :octal-digit :octal-digit) full-octal-escape-3
+         (production :octal-escape (:zero-to-three :octal-digit :octal-digit) octal-escape-3
            (character-value (code-to-character (+ (+ (* 64 (octal-value :zero-to-three))
                                                      (* 8 (octal-value :octal-digit 1)))
                                                   (octal-value :octal-digit 2))))))
@@ -519,10 +514,10 @@
        (%print-actions)
        
        (rule :hex-escape ((character-value character))
-         (production :hex-escape (#\\ #\x :hex-digit :hex-digit) hex-escape-2
+         (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
            (character-value (code-to-character (+ (* 16 (hex-value :hex-digit 1))
                                                   (hex-value :hex-digit 2)))))
-         (production :hex-escape (#\\ #\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
+         (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
            (character-value (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
                                                         (* 256 (hex-value :hex-digit 2)))
                                                      (* 16 (hex-value :hex-digit 3)))
@@ -671,4 +666,5 @@ fjds*/y//z")
 (js-pmetaparse "if \\x69f \\u0069f")
 (js-pmetaparse "if \\x69f z\\x20z")
 (js-pmetaparse "3lbs 3in 3 in 3_in 3_lbs")
+(js-pmetaparse "3a+in'a+b\\040\\077\\700\\150\\15A\\69\"de'\"'\"")
 |#
