@@ -13,29 +13,36 @@
 TODO List for XPCOM</h1></center>
 
 <center>Last updated: 22 March 1999
-<br>Suresh Duddi</center>
+<br><a href="mailto:dp@netscape.com">Suresh Duddi</a></center>
 
 <p><br>
-<table BORDER COLS=3 WIDTH="100%" NOSAVE >
+<table BORDER WIDTH="100%" NOSAVE >
 <tr NOSAVE>
 <th NOSAVE>Task</th>
+
+<th NOSAVE>Priority</th>
 
 <th NOSAVE>Owner</th>
 
 <th NOSAVE>MileStone complete/Status</th>
 </tr>
 
-<tr>
-<td>Move xpcom from using NR_*() functions *(libreg) to nsIRegistry</td>
+<tr NOSAVE>
+<td NOSAVE>Move xpcom from using NR_*() functions (modules/libreg) to nsIRegistry
+(xpcom/src/nsRegistry.cpp)</td>
 
-<td>Nick Ambrose &lt;nicka@interdyn.com></td>
+<td>P1</td>
+
+<td>Nick Ambrose &lt;<a href="mailto:nicka@interdyn.com">nicka@interdyn.com</a>></td>
 
 <td>3/22/1999 started</td>
 </tr>
 
 <tr>
-<td>Startup componentes:&nbsp;Some components need to be created at startup.
+<td>Startup components:&nbsp;Some components need to be created at startup.
 Have a framework for them.</td>
+
+<td>P0</td>
 
 <td></td>
 
@@ -43,7 +50,9 @@ Have a framework for them.</td>
 </tr>
 
 <tr>
-<td>nsIRegistry access via Javascript</td>
+<td>nsIRegistry access via Javascript.</td>
+
+<td>P0</td>
 
 <td></td>
 
@@ -53,12 +62,43 @@ Have a framework for them.</td>
 <tr>
 <td>API changes: Remove all pathlist. XPCOM&nbsp;should support only paths.</td>
 
+<td>P0</td>
+
+<td></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>Fix xpcom from being initialized before main from static variables.</td>
+
+<td>P0</td>
+
+<td></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>Path handling:&nbsp;Use nsFileSpec instead of file path names. Char
+* pathnames are not intl, and cannot be stored in the registry. Plus that
+wont support mac aliases.</td>
+
+<td>P1</td>
+
 <td></td>
 
 <td></td>
 </tr>
 </table>
 
-<br>&nbsp;
+<h3>
+Priority</h3>
+
+<blockquote>P0 - Got to fix. Blocking others.
+<br>P1 - Important to fix. Otherwise things will suck
+<br>P2 - Would be nice
+<br>P3 - Request for Enhancement</blockquote>
+
 </body>
 </html>
