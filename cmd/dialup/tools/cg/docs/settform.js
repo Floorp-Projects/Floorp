@@ -66,6 +66,7 @@ function loadData()
 	
 	//set the two other options flags
 	setCheckBox(asFormName, "Show_Intro_Screens", parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"Show_Intro_Screens"));	
+	setCheckBox(asFormName, "OneStepMode", parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"OneStepMode"));	
 	var Dialer_Idle_Time = parseInt(parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"Dialer_Disconnect_After"));
 	
 	if (Dialer_Idle_Time == null || isNaN(Dialer_Idle_Time) || Dialer_Idle_Time == "null" || Dialer_Idle_Time == "" || Dialer_Idle_Time < 5)
@@ -134,8 +135,9 @@ function saveData()
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "no");	
 	}
 	
-	//set dialer idle time and show_intro screens
+	//set dialer idle time, show_intro screens and OneStepMode
 	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "Show_Intro_Screens", getCheckBox(asFormName, "Show_Intro_Screens"));
+	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", getCheckBox(asFormName, "OneStepMode"));
 	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "Dialer_Disconnect_After", getText(asFormName, "Dialer_Disconnect_After"));
 	
 
