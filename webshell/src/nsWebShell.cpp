@@ -266,7 +266,7 @@ public:
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment, 
                          const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow);
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
@@ -2198,12 +2198,12 @@ nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent,
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment, 
                          const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow)
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
 {
   if (nsnull != mContainer) {
     return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, 
                                    anAnchorAlignment, aPopupAlignment,
-                                   aWindow);
+                                   aWindow, outPopup);
   }
   return NS_OK;
 }

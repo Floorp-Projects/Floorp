@@ -1004,9 +1004,17 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
                               PRInt32 aXPos, PRInt32 aYPos, 
                               const nsString& aPopupType, const nsString& anAnchorAlignment,
                               const nsString& aPopupAlignment,
-                              nsIDOMWindow* aWindow)
+                              nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
 {
   nsresult rv = NS_OK;
+  
+  // clear out result param up front. It's an error if a legal place to
+  // stick the result isn't provided.
+  if ( !outPopup ) {
+    NS_ERROR ( "Invalid param -- need to provide a place for result" );
+    return NS_ERROR_INVALID_ARG;
+  }
+  *outPopup = nsnull;
 
   nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
   contentViewerContainer = do_QueryInterface(mWebShell);
@@ -1082,6 +1090,8 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   }
 
   nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
+  if ( !popupContent ) 
+    return NS_OK; // It's ok. Really.
   
   // Fire the CONSTRUCT DOM event to give JS/C++ a chance to build the popup
   // dynamically.
@@ -1090,7 +1100,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   event.eventStructType = NS_EVENT;
   event.message = NS_POPUP_CONSTRUCT;
   rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  if (rv != NS_OK)
+  if ( NS_FAILED(rv) )
     return rv;
 
   // Find out if we're a menu.
@@ -1103,10 +1113,9 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (NS_FAILED(popupContent->ChildAt(0, *getter_AddRefs(rootContent))))
     return NS_OK; // Doesn't matter. Don't report it.
 
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(rootContent);
-  
   nsString tagName;
-  if (NS_FAILED(rootElement->GetTagName(tagName))) 
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(rootContent);
+  if ( !rootElement || NS_FAILED(rootElement->GetTagName(tagName))) 
     return NS_OK; // It's ok. Really.
 
   if (tagName == "menu") {
@@ -1223,16 +1232,18 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // (8) Set up the opener property
   domWindow->SetOpener(aWindow);
 
-  // (9) Show the window, and give the window the focus.
+  // (9) Show the window. Don't give the focus yet because we may not want to.
+  // For example, popup windows want focus, but tooltips do not.
   newWindow->Show(PR_TRUE);
-  domWindow->Focus();
 
   // (10) Do some layout.
   nsCOMPtr<nsIXULChildDocument> popupChild = do_QueryInterface(popupDocument);
   popupChild->LayoutPopupDocument();
 
-  // XXX Do we return the popup document? Might want to, since it's kind of like
-  // a sick and twisted distortion of a window.open call.
+  // return the popup.
+  *outPopup = domWindow;
+  NS_ADDREF(*outPopup);
+  
   return rv;
 }
 

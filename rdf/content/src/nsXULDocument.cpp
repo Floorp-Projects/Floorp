@@ -782,10 +782,20 @@ protected:
     nsString                   mCommand;
     nsCOMPtr<nsIRDFResource>   mFragmentRoot;     // [OWNER] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
-    nsCOMPtr<nsIDOMElement>    mPopup;            // [OWNER] of this popup element in the doc
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULFocusTracker>     mFocusTracker; // [OWNER] of the focus tracker
+
+      // The following are pointers into the content model which provide access to
+      // the objects triggering either a popup or a tooltip. These are marked as
+      // [OWNER] only because someone could, through DOM calls, delete the object from the
+      // content model while the popup/tooltip was visible. If we didn't have a reference
+      // to it, the object would go away and we'd be left pointing to garbage. This
+      // does not introduce cycles into the ownership model because this is still
+      // parent/child ownership. Just wanted the reader to know hyatt and I had thought about
+      // this (pinkerton).
+    nsCOMPtr<nsIDOMElement>    mPopupElement;            // [OWNER] element triggering the popup
+    nsCOMPtr<nsIDOMElement>    mTooltipElement;          // [OWNER] element triggering the tooltip
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -2902,19 +2912,36 @@ XULDocumentImpl::CreateRange(nsIDOMRange** aRange)
 // nsIDOMXULDocument interface
 
 NS_IMETHODIMP
-XULDocumentImpl::GetPopup(nsIDOMElement** anElement)
+XULDocumentImpl::GetPopupElement(nsIDOMElement** anElement)
 {
-	*anElement = mPopup;
+	*anElement = mPopupElement;
 	NS_IF_ADDREF(*anElement);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::SetPopup(nsIDOMElement* anElement)
+XULDocumentImpl::SetPopupElement(nsIDOMElement* anElement)
 {
-	mPopup = dont_QueryInterface(anElement);
+	mPopupElement = dont_QueryInterface(anElement);
 	return NS_OK;
 }
+
+
+NS_IMETHODIMP
+XULDocumentImpl::GetTooltipElement(nsIDOMElement** anElement)
+{
+	*anElement = mTooltipElement;
+	NS_IF_ADDREF(*anElement);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::SetTooltipElement(nsIDOMElement* anElement)
+{
+	mTooltipElement = dont_QueryInterface(anElement);
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP
 XULDocumentImpl::GetFocus(nsIDOMXULFocusTracker** aTracker)
@@ -3128,7 +3155,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     popupDoc->mNameSpaceManager = mNameSpaceManager;
 
     // We share the mPopup
-    popupDoc->mPopup = mPopup;
+    popupDoc->mPopupElement = mPopupElement;
 
     // Suck all of the root's content into our document.
     // We need to make the XUL builder instantiate this node.

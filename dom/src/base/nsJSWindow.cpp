@@ -2083,6 +2083,7 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMWindow* nativeRet;
   nsIDOMElementPtr b0;
   nsIDOMElementPtr b1;
   PRInt32 b2;
@@ -2147,11 +2148,11 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
     nsJSUtils::nsConvertJSValToString(b6, cx, argv[6]);
 
-    if (NS_OK != nativeThis->CreatePopup(b0, b1, b2, b3, b4, b5, b6)) {
+    if (NS_OK != nativeThis->CreatePopup(b0, b1, b2, b3, b4, b5, b6, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function createPopup requires 7 parameters");

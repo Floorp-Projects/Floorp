@@ -111,7 +111,7 @@ public:
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow) = 0;
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup) = 0;
 
   /**
    * Notify the WebShellContainer that a contained webshell is

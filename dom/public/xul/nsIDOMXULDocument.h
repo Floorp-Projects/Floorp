@@ -37,8 +37,11 @@ class nsIDOMXULDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 
-  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup)=0;
-  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup)=0;
+  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement)=0;
+  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement)=0;
+
+  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement)=0;
+  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement)=0;
 
   NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus)=0;
 
@@ -49,8 +52,10 @@ public:
 
 
 #define NS_DECL_IDOMXULDOCUMENT   \
-  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup);  \
-  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup);  \
+  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement);  \
+  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement);  \
+  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement);  \
+  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement);  \
   NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
@@ -58,8 +63,10 @@ public:
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
-  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup) { return _to GetPopup(aPopup); } \
-  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup) { return _to SetPopup(aPopup); } \
+  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement) { return _to GetPopupElement(aPopupElement); } \
+  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement) { return _to SetPopupElement(aPopupElement); } \
+  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement) { return _to GetTooltipElement(aTooltipElement); } \
+  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement) { return _to SetTooltipElement(aTooltipElement); } \
   NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus) { return _to GetFocus(aFocus); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
