@@ -1,9 +1,9 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * libpng 1.2.5 - October 2, 2002
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -35,9 +35,9 @@ png_error(png_structp png_ptr, png_const_charp error_message)
    char msg[16];
    if (png_ptr->flags&(PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT))
    {
-     int offset = 0;
      if (*error_message == '#')
      {
+         int offset;
          for (offset=1; offset<15; offset++)
             if (*(error_message+offset) == ' ')
                 break;
@@ -63,11 +63,11 @@ png_error(png_structp png_ptr, png_const_charp error_message)
      }
    }
 #endif
-   if (png_ptr->error_fn != NULL)
+   if (png_ptr != NULL && png_ptr->error_fn != NULL)
       (*(png_ptr->error_fn))(png_ptr, error_message);
 
-   /* if the following returns or doesn't exist, use the default function,
-      which will not return */
+   /* If the custom handler doesn't exist, or if it returns,
+      use the default handler, which will not return. */
    png_default_error(png_ptr, error_message);
 }
 
@@ -79,7 +79,7 @@ png_error(png_structp png_ptr, png_const_charp error_message)
 void PNGAPI
 png_warning(png_structp png_ptr, png_const_charp warning_message)
 {
-     int offset = 0;
+   int offset = 0;
 #ifdef PNG_ERROR_NUMBERS_SUPPORTED
    if (png_ptr->flags&(PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT))
 #endif
@@ -91,11 +91,10 @@ png_warning(png_structp png_ptr, png_const_charp warning_message)
                 break;
      }
    }
-   if (png_ptr->warning_fn != NULL)
-      (*(png_ptr->warning_fn))(png_ptr,
-         (png_const_charp)(warning_message+offset));
+   if (png_ptr != NULL && png_ptr->warning_fn != NULL)
+      (*(png_ptr->warning_fn))(png_ptr, warning_message+offset);
    else
-      png_default_warning(png_ptr, (png_const_charp)(warning_message+offset));
+      png_default_warning(png_ptr, warning_message+offset);
 }
 
 /* These utilities are used internally to build an error message that relates
@@ -104,10 +103,11 @@ png_warning(png_structp png_ptr, png_const_charp warning_message)
  * to 63 bytes, the name characters are output as hex digits wrapped in []
  * if the character is invalid.
  */
-#define isnonalpha(c) ((c) < 41 || (c) > 122 || ((c) > 90 && (c) < 97))
+#define isnonalpha(c) ((c) < 65 || (c) > 122 || ((c) > 90 && (c) < 97))
 static PNG_CONST char png_digit[16] = {
-   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
-   'F' };
+   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+   'A', 'B', 'C', 'D', 'E', 'F'
+};
 
 static void /* PRIVATE */
 png_format_buffer(png_structp png_ptr, png_charp buffer, png_const_charp
@@ -190,25 +190,27 @@ png_default_error(png_structp png_ptr, png_const_charp error_message)
    else
 #endif
    fprintf(stderr, "libpng error: %s\n", error_message);
-#else
-   if (error_message)
-     /* make compiler happy */ ;
 #endif
 
 #ifdef PNG_SETJMP_SUPPORTED
 #  ifdef USE_FAR_KEYWORD
    {
       jmp_buf jmpbuf;
-      png_memcpy(jmpbuf,png_ptr->jmpbuf,sizeof(jmp_buf));
+      png_memcpy(jmpbuf,png_ptr->jmpbuf,png_sizeof(jmp_buf));
       longjmp(jmpbuf, 1);
    }
 #  else
    longjmp(png_ptr->jmpbuf, 1);
 # endif
 #else
+   /* make compiler happy */ ;
    if (png_ptr)
-     /* make compiler happy */ ;
    PNG_ABORT();
+#endif
+#ifdef PNG_NO_CONSOLE_IO
+   /* make compiler happy */ ;
+   if (&error_message != NULL)
+      return;
 #endif
 }
 
@@ -245,9 +247,11 @@ png_default_warning(png_structp png_ptr, png_const_charp warning_message)
 #  endif
      fprintf(stderr, "libpng warning: %s\n", warning_message);
 #else
+   /* make compiler happy */ ;
    if (warning_message)
-     /* appease compiler */ ;
+     return;
 #endif
+   /* make compiler happy */ ;
    if (png_ptr)
       return;
 }

@@ -1,8 +1,9 @@
+
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng 1.2.5 - October 2, 2002
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -20,6 +21,10 @@
  * mozilla utilizes.
  */
 #include "mozpngconf.h"
+
+#ifdef PNG_USER_CONFIG
+#include "pngusr.h"
+#endif
 
 /* This is the size of the compression buffer, and thus the size of
  * an IDAT chunk.  Make this whatever size you feel is best for your
@@ -257,8 +262,11 @@
 #      undef _BSD_SOURCE
 #    endif
 #    ifdef _SETJMP_H
-      __png.h__ already includes setjmp.h;
-      __dont__ include it again.;
+     /* If you encounter a compiler error here, see the explanation
+      * near the end of INSTALL.
+      */
+         __png.h__ already includes setjmp.h;
+         __dont__ include it again.;
 #    endif
 #  endif /* __linux__ */
 
@@ -322,15 +330,13 @@
 #  define PNG_ALWAYS_EXTERN
 #endif
 
-/* For some reason, Borland C++ defines memcmp, etc. in mem.h, not
- * stdlib.h like it should (I think).  Or perhaps this is a C++
- * "feature"?
- */
-#ifdef __TURBOC__
+/* This provides the non-ANSI (far) memory allocation routines. */
+#if defined(__TURBOC__) && defined(__MSDOS__)
 #  include <mem.h>
-#  include "alloc.h"
+#  include <alloc.h>
 #endif
 
+/* I have no idea why is this necessary... */
 #if defined(_MSC_VER) && (defined(WIN32) || defined(_Windows) || \
     defined(_WINDOWS) || defined(_WIN32) || defined(__WIN32__))
 #  include <malloc.h>
@@ -588,13 +594,6 @@
 #  endif
 #endif /* PNG_WRITE_TRANSFORMS_SUPPORTED */
 
-#if defined(PNG_READ_USER_TRANSFORM_SUPPORTED) || \
-    defined(PNG_WRITE_USER_TRANSFORM_SUPPORTED)
-#  ifndef PNG_NO_USER_TRANSFORM_PTR
-#    define PNG_USER_TRANSFORM_PTR_SUPPORTED
-#  endif
-#endif
-
 #define PNG_WRITE_INTERLACING_SUPPORTED  /* not required for PNG-compliant
                                             encoders, but can cause trouble
                                             if left undefined */
@@ -603,12 +602,6 @@
      defined(PNG_FLOATING_POINT_SUPPORTED)
 #  define PNG_WRITE_WEIGHTED_FILTER_SUPPORTED
 #endif
-
-#ifndef PNG_1_0_X
-#ifndef PNG_NO_ERROR_NUMBERS
-#define PNG_ERROR_NUMBERS_SUPPORTED
-#endif
-#endif /* PNG_1_0_X */
 
 #ifndef PNG_NO_WRITE_FLUSH
 #  define PNG_WRITE_FLUSH_SUPPORTED
@@ -620,6 +613,19 @@
 #endif
 
 #endif /* PNG_WRITE_SUPPORTED */
+
+#ifndef PNG_1_0_X
+#  ifndef PNG_NO_ERROR_NUMBERS
+#    define PNG_ERROR_NUMBERS_SUPPORTED
+#  endif
+#endif /* PNG_1_0_X */
+
+#if defined(PNG_READ_USER_TRANSFORM_SUPPORTED) || \
+    defined(PNG_WRITE_USER_TRANSFORM_SUPPORTED)
+#  ifndef PNG_NO_USER_TRANSFORM_PTR
+#    define PNG_USER_TRANSFORM_PTR_SUPPORTED
+#  endif
+#endif
 
 #ifndef PNG_NO_STDIO
 #  define PNG_TIME_RFC1123_SUPPORTED
@@ -668,6 +674,25 @@
 #endif
 #endif /* PNG_1_0_X */
 
+/* Added at libpng-1.2.6 */
+#if !defined(PNG_1_0_X)
+#ifndef PNG_SET_USER_LIMITS_SUPPORTED
+#if !defined(PNG_NO_SET_USER_LIMITS) && !defined(PNG_SET_USER_LIMITS_SUPPORTED)
+#  define PNG_SET_USER_LIMITS_SUPPORTED
+#endif
+#endif
+#endif /* PNG_1_0_X */
+
+/* Added at libpng-1.0.16 and 1.2.6.  To accept all valid PNGS no matter
+ * how large, set these limits to 0x7fffffffL
+ */
+#ifndef PNG_USER_WIDTH_MAX
+#  define PNG_USER_WIDTH_MAX 1000000L
+#endif
+#ifndef PNG_USER_HEIGHT_MAX
+#  define PNG_USER_HEIGHT_MAX 1000000L
+#endif
+
 /* These are currently experimental features, define them if you want */
 
 /* very little testing */
@@ -682,10 +707,8 @@
 /* This is only for PowerPC big-endian and 680x0 systems */
 /* some testing */
 /*
-#ifdef PNG_READ_SUPPORTED
-#  ifndef PNG_PNG_READ_BIG_ENDIAN_SUPPORTED
-#    define PNG_READ_BIG_ENDIAN_SUPPORTED
-#  endif
+#ifndef PNG_READ_BIG_ENDIAN_SUPPORTED
+#  define PNG_READ_BIG_ENDIAN_SUPPORTED
 #endif
 */
 
@@ -993,7 +1016,13 @@ typedef unsigned char png_byte;
 
 /* This is usually size_t.  It is typedef'ed just in case you need it to
    change (I'm not sure if you will or not, so I thought I'd be safe) */
-typedef size_t png_size_t;
+#ifdef PNG_SIZE_T
+   typedef PNG_SIZE_T png_size_t;
+#  define png_sizeof(x) png_convert_size(sizeof (x))
+#else
+   typedef size_t png_size_t;
+#  define png_sizeof(x) sizeof (x)
+#endif
 
 /* The following is needed for medium model support.  It cannot be in the
  * PNG_INTERNAL section.  Needs modification for other compilers besides
@@ -1176,8 +1205,6 @@ typedef z_stream FAR *  png_zstreamp;
  * zlib and your applications the same way you build libpng.
  */
 
-#ifndef PNGAPI
-
 #if defined(__MINGW32__) && !defined(PNG_MODULEDEF)
 #  ifndef PNG_NO_MODULEDEF
 #    define PNG_NO_MODULEDEF
@@ -1192,10 +1219,12 @@ typedef z_stream FAR *  png_zstreamp;
     (( defined(_Windows) || defined(_WINDOWS) || \
        defined(WIN32) || defined(_WIN32) || defined(__WIN32__) ))
 
-#  if defined(__GNUC__) || (defined (_MSC_VER) && (_MSC_VER >= 800))
-#    define PNGAPI __cdecl
-#  else
-#    define PNGAPI _cdecl
+#  ifndef PNGAPI
+#     if defined(__GNUC__) || (defined (_MSC_VER) && (_MSC_VER >= 800))
+#        define PNGAPI __cdecl
+#     else
+#        define PNGAPI _cdecl
+#     endif
 #  endif
 
 #  if !defined(PNG_IMPEXP) && (!defined(PNG_DLL) || \
@@ -1233,17 +1262,14 @@ typedef z_stream FAR *  png_zstreamp;
 #     endif
 #  endif  /* PNG_IMPEXP */
 #else /* !(DLL || non-cygwin WINDOWS) */
-#    if (defined(__IBMC__) || defined(__IBMCPP__)) && defined(__OS2__)
-#      define PNGAPI _System
-#      define PNG_IMPEXP
-#    else
-#      if 0 /* ... other platforms, with other meanings */
-#      else
-#        define PNGAPI
-#        define PNG_IMPEXP
+#   if (defined(__IBMC__) || defined(__IBMCPP__)) && defined(__OS2__)
+#      ifndef PNGAPI
+#         define PNGAPI _System
 #      endif
-#    endif
-#endif
+#   else
+#      if 0 /* ... other platforms, with other meanings */
+#      endif
+#   endif
 #endif
 
 #ifndef PNGAPI
@@ -1284,30 +1310,30 @@ typedef z_stream FAR *  png_zstreamp;
 #  define NOCHECK 0
 #  define CVT_PTR(ptr) (png_far_to_near(png_ptr,ptr,CHECK))
 #  define CVT_PTR_NOCHECK(ptr) (png_far_to_near(png_ptr,ptr,NOCHECK))
-#  define png_strcpy _fstrcpy
-#  define png_strncpy _fstrncpy    /* Added to v 1.2.6 */
-#  define png_strlen _fstrlen
-#  define png_memcmp _fmemcmp      /* SJT: added */
-#  define png_memcpy _fmemcpy
-#  define png_memset _fmemset
+#  define png_strcpy  _fstrcpy
+#  define png_strncpy _fstrncpy   /* Added to v 1.2.6 */
+#  define png_strlen  _fstrlen
+#  define png_memcmp  _fmemcmp    /* SJT: added */
+#  define png_memcpy  _fmemcpy
+#  define png_memset  _fmemset
 #else /* use the usual functions */
 #  define CVT_PTR(ptr)         (ptr)
 #  define CVT_PTR_NOCHECK(ptr) (ptr)
-#  define png_strcpy strcpy
-#  define png_strncpy strncpy   /* Added to v 1.2.6 */
-#  define png_strlen strlen
-#  define png_memcmp memcmp     /* SJT: added */
-#  define png_memcpy memcpy
-#  define png_memset memset
+#  define png_strcpy  strcpy
+#  define png_strncpy strncpy     /* Added to v 1.2.6 */
+#  define png_strlen  strlen
+#  define png_memcmp  memcmp      /* SJT: added */
+#  define png_memcpy  memcpy
+#  define png_memset  memset
 #endif
 /* End of memory model independent support */
 
 /* Just a little check that someone hasn't tried to define something
  * contradictory.
  */
-#if (PNG_ZBUF_SIZE > 65536) && defined(PNG_MAX_MALLOC_64K)
+#if (PNG_ZBUF_SIZE > 65536L) && defined(PNG_MAX_MALLOC_64K)
 #  undef PNG_ZBUF_SIZE
-#  define PNG_ZBUF_SIZE 65536
+#  define PNG_ZBUF_SIZE 65536L
 #endif
 
 #ifdef PNG_READ_SUPPORTED

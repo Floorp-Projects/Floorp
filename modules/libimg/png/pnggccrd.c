@@ -6,9 +6,9 @@
  *     and http://www.intel.com/drg/pentiumII/appnotes/923/923.htm
  *     for Intel's performance analysis of the MMX vs. non-MMX code.
  *
- * libpng version 1.2.5 - October 2, 2002
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * Copyright (c) 1998, Intel Corporation
  *
  * Based on MSVC code contributed by Nirav Chhatrapati, Intel Corp., 1998.
@@ -223,6 +223,10 @@
  * 20020304:
  *  - eliminated incorrect use of width_mmx in pixel_bytes == 8 case
  *
+ * 20040724:
+ *   - more tinkering with clobber list at lines 4529 and 5033, to get
+ *     it to compile on gcc-3.4.
+ *
  * STILL TO DO:
  *     - test png_do_read_interlace() 64-bit case (pixel_bytes == 8)
  *     - write MMX code for 48-bit case (pixel_bytes == 6)
@@ -412,8 +416,10 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED)
    if (_mmx_supported == 2) {
+#if !defined(PNG_1_0_X)
        /* this should have happened in png_init_mmx_flags() already */
        png_warning(png_ptr, "asm_flags may not have been initialized");
+#endif
        png_mmx_support();
    }
 #endif
@@ -422,7 +428,7 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
    {
       png_debug(2,"mask == 0xff:  doing single png_memcpy()\n");
       png_memcpy(row, png_ptr->row_buf + 1,
-       (png_size_t)((png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3));
+       (png_size_t)PNG_ROWBYTES(png_ptr->row_info.pixel_depth,png_ptr->width));
    }
    else   /* (png_combine_row() is never called with mask == 0) */
    {
@@ -1767,8 +1773,8 @@ png_do_read_interlace(png_structp png_ptr)
 
                         : "1" (sptr),      // esi      // input regs
                           "2" (dp),        // edi
-                          "0" (width)      // ecx
-// doesn't work           "i" (0x0000000000FFFFFFLL)   // %1 (a.k.a. _const4)
+                          "0" (width),     // ecx
+                          "rim" (_const4)  // %1(?)  (0x0000000000FFFFFFLL)
 
 #if 0  /* %mm0, ..., %mm4 not supported by gcc 2.7.2.3 or egcs 1.1 */
                         : "%mm0", "%mm1", "%mm2"       // clobber list
@@ -1811,7 +1817,8 @@ png_do_read_interlace(png_structp png_ptr)
 
                         : "1" (sptr),      // esi      // input regs
                           "2" (dp),        // edi
-                          "0" (width)      // ecx
+                          "0" (width),     // ecx
+                          "rim" (_const4)  // (0x0000000000FFFFFFLL)
 
 #if 0  /* %mm0, ..., %mm2 not supported by gcc 2.7.2.3 or egcs 1.1 */
                         : "%mm0", "%mm1", "%mm2"       // clobber list
@@ -1865,7 +1872,9 @@ png_do_read_interlace(png_structp png_ptr)
 
                            : "1" (sptr),      // esi      // input regs
                              "2" (dp),        // edi
-                             "0" (width_mmx)  // ecx
+                             "0" (width_mmx), // ecx
+                             "rim" (_const4), // 0x0000000000FFFFFFLL
+                             "rim" (_const6)  // 0x00000000000000FFLL
 
 #if 0  /* %mm0, ..., %mm3 not supported by gcc 2.7.2.3 or egcs 1.1 */
                            : "%mm0", "%mm1"               // clobber list
@@ -2727,8 +2736,8 @@ png_do_read_interlace(png_structp png_ptr)
       } /* end switch (row_info->pixel_depth) */
 
       row_info->width = final_width;
-      row_info->rowbytes = ((final_width *
-         (png_uint_32)row_info->pixel_depth + 7) >> 3);
+
+      row_info->rowbytes = PNG_ROWBYTES(row_info->pixel_depth,final_width);
    }
 
 } /* end png_do_read_interlace() */
@@ -4529,8 +4538,7 @@ png_read_filter_row_mmx_sub(png_row_infop row_info, png_bytep row)
       : "0" (bpp),              // eax    // input regs
         "1" (row)               // edi
 
-      : "%ebx", "%ecx", "%edx"            // clobber list
-      , "%esi"
+      : "%esi", "%ecx", "%edx"            // clobber list
 
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
       , "%mm0", "%mm1", "%mm2", "%mm3"
@@ -5034,7 +5042,10 @@ png_read_filter_row_mmx_up(png_row_infop row_info, png_bytep row,
         "1" (prev_row),         // esi
         "2" (row)               // edi
 
-      : "%eax", "%ebx", "%ecx"            // clobber list (no input regs!)
+      : "%eax", "%ecx"            // clobber list (no input regs!)
+#ifndef __PIC__
+      , "%ebx"
+#endif
 
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
       , "%mm0", "%mm1", "%mm2", "%mm3"
