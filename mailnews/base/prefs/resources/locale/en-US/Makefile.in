@@ -49,6 +49,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-copies.dtd \
 		am-main.dtd \
 		am-server-top.dtd \
+		prefs.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

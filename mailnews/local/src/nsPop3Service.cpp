@@ -331,3 +331,19 @@ nsPop3Service::GetServerIID(nsIID* *aServerIID)
     *aServerIID = new nsIID(NS_GET_IID(nsIPop3IncomingServer));
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPop3Service::GetRequiresUsername(PRBool *aRequiresUsername)
+{
+        NS_ENSURE_ARG_POINTER(aRequiresUsername);
+        *aRequiresUsername = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Service::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNameWithEmailAddress)
+{
+        NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
+        *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
+        return NS_OK;
+}

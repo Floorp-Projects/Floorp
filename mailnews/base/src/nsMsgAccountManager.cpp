@@ -1405,7 +1405,7 @@ nsMsgAccountManager::UpgradePrefs()
       if (NS_FAILED(rv)) return rv;
 
       // everyone gets a local mail account in 5.0
-      rv = CreateLocalMailAccount(identity);
+      rv = CreateLocalMailAccount(identity, PR_TRUE);
       if (NS_FAILED(rv)) return rv;
     }
     else if (oldMailType == IMAP_4X_MAIL_TYPE) {
@@ -1424,7 +1424,7 @@ nsMsgAccountManager::UpgradePrefs()
 	if (NS_FAILED(rv)) return rv;
 
         // everyone gets a local mail account in 5.0
-        rv = CreateLocalMailAccount(identity);
+        rv = CreateLocalMailAccount(identity, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
 #endif /* HAVE_MOVEMAIL */
@@ -1764,7 +1764,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
 }
 
 NS_IMETHODIMP
-nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
+nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool migrating)
 {
   nsresult rv;
   
@@ -1803,8 +1803,12 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
     rv = CopyIdentity(identity,copied_identity);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetMailCcAndFccValues(copied_identity);
-    if (NS_FAILED(rv)) return rv;
+    // only set the cc and fcc values if we were migrating.
+    // otherwise, we won't have them.
+    if (migrating) {
+	rv = SetMailCcAndFccValues(copied_identity);
+	if (NS_FAILED(rv)) return rv;
+    }
   }
   else {
     char *profileName = nsnull;

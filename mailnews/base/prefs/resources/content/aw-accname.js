@@ -19,13 +19,17 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  */
+
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate() {
   var accountname = document.getElementById("server.prettyName").value;
 
   if (!accountname || accountname =="") {
-      window.alert("Please enter a name for this account.");
+      var alertText = Bundle.GetStringFromName("enterAccountName");
+      window.alert(alertText);
       return false;
   }
   return true;
@@ -34,7 +38,15 @@ function validate() {
 function onInit() {
     var accountNameInput = document.getElementById("server.prettyName");
     if (accountNameInput.value=="") {
-        var email = document.getElementById("identity.email").value;
-        accountNameInput.value = email;
+        var type = document.getElementById("server.type").value;
+        var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+	if (protocolinfo.preflightPrettyNameWithEmailAddress) {
+		var email = document.getElementById("identity.email").value;
+		accountNameInput.value = email;
+	}
+	else {
+		var hostname = document.getElementById("server.hostName").value;
+		accountNameInput.value = hostname;
+	}
     }
 }

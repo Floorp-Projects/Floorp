@@ -261,7 +261,7 @@ function createAccount(hash) {
 
 	if (!localMailServer) {
 		// creates a copy of the identity you pass in
-		am.createLocalMailAccount(identity);
+		am.createLocalMailAccount(identity, false);
         }
 
     return true;

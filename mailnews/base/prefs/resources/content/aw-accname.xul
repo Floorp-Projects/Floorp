@@ -28,8 +28,13 @@ Rights Reserved.
     class="dialog"
     align="vertical"
     onload="parent.wizardPageLoaded('accname');">
-  <html:script src="aw-accname.js"/>
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/aw-accname.js"/>
+
   <html:input type="hidden" name="identity.email" id="identity.email"/>
+  <html:input type="hidden" name="server.type" id="server.type"/>
+  <html:input type="hidden" name="server.hostName" id="server.hostName"/>
   <box class="title" align="horizontal">
     <html:div class="title">&accnameTitle.label;</html:div>
     <spring flex="100%"/>

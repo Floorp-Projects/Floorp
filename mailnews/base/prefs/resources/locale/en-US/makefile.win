@@ -46,6 +46,7 @@ install::
 	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) prefs.properties $(DISTBROWSER)
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\custreceipt.dtd
@@ -68,3 +69,4 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-copies.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-main.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-server-top.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\prefs.properties

@@ -19,13 +19,18 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  */
+
+var protocolinfo = null;
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate() {
   var username = document.getElementById("server.username").value;
 
-  if (!username || username == "") {
-      window.alert("Please enter a username.\n");
+  if (protocolinfo.requiresUsername && (!username || username == "")) { 
+      var alertText = Bundle.GetStringFromName("enterUserName");
+      window.alert(alertText);
       return false;
   }
 
@@ -34,10 +39,20 @@ function validate() {
 
 function onInit() {
     var loginNameInput = document.getElementById("server.username");
+    var type = document.getElementById("server.type").value;
+
+    protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+
     if (loginNameInput.value == "") {
-        var email = document.getElementById("identity.email").value;
-        var emailParts = email.split("@");
-        loginNameInput.value = emailParts[0];
+	if (protocolinfo.requiresUsername) {
+		// since we require a username, use the uid from the email address
+		var email = document.getElementById("identity.email").value;
+		var emailParts = email.split("@");
+		loginNameInput.value = emailParts[0];
+	}
+	else {
+		// leave it blank.
+	}
     }
 
 }

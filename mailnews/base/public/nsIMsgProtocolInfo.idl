@@ -34,5 +34,7 @@ interface nsIMsgProtocolInfo : nsISupports
 {
     attribute nsIFileSpec defaultLocalPath;
     readonly attribute nsIIDPtr serverIID;
+    readonly attribute boolean requiresUsername;
+    readonly attribute boolean preflightPrettyNameWithEmailAddress;
 };
 

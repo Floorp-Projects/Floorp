@@ -1077,3 +1077,19 @@ nsNntpService::GetServerIID(nsIID* *aServerIID)
     *aServerIID = new nsIID(NS_GET_IID(nsINntpIncomingServer));
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNntpService::GetRequiresUsername(PRBool *aRequiresUsername)
+{
+        NS_ENSURE_ARG_POINTER(aRequiresUsername);
+        *aRequiresUsername = PR_FALSE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNameWithEmailAddress)
+{
+        NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
+        *aPreflightPrettyNameWithEmailAddress = PR_FALSE;
+        return NS_OK;
+}

@@ -2328,3 +2328,19 @@ nsImapService::GetServerIID(nsIID* *aServerIID)
     *aServerIID = new nsIID(NS_GET_IID(nsIImapIncomingServer));
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImapService::GetRequiresUsername(PRBool *aRequiresUsername)
+{
+	NS_ENSURE_ARG_POINTER(aRequiresUsername);
+	*aRequiresUsername = PR_TRUE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNameWithEmailAddress)
+{
+	NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
+	*aPreflightPrettyNameWithEmailAddress = PR_TRUE;
+	return NS_OK;
+}

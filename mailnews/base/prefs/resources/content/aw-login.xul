@@ -28,8 +28,12 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('login');">
-  <html:script src="aw-login.js"/>
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
+
   <html:input type="hidden" name="identity.email" id="identity.email"/>
+  <html:input type="hidden" name="server.type" id="server.type"/>
 
   <box class="title" align="horizontal">
     <html:div class="title">&loginTitle.label;</html:div>
