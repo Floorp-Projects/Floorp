@@ -84,6 +84,7 @@ mkdirs(char *path, mode_t mode)
 {
     char *cp;
     struct stat sb;
+    int res;
     
     while (*path == '/' && path[1] == '/')
 	path++;
@@ -97,7 +98,11 @@ mkdirs(char *path, mode_t mode)
 	}
 	*cp = '/';
     }
-    return mkdir(path, mode);
+    res = mkdir(path, mode);
+    if ((res != 0) && (errno == EEXIST))
+	return 0;
+     else
+	return res;
 }
 
 static uid_t
