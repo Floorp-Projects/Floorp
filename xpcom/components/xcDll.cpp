@@ -281,14 +281,20 @@ PRBool nsDll::Load(void)
 
         nsCRT::free(nsprPath);
 #else
-				
-				nsFileSpec		fileSpec;
-				m_dllSpec->GetFileSpec(&fileSpec);
-				FSSpec		libSpec = fileSpec.GetFSSpec();
-				m_instance = PR_LoadIndexedFragment(&libSpec, 0);
+        nsFileSpec fileSpec;
+        m_dllSpec->GetFileSpec(&fileSpec);
+        FSSpec libSpec = fileSpec.GetFSSpec();
+        m_instance = PR_LoadIndexedFragment(&libSpec, 0);
 				
 #endif /* XP_MAC */
     }
+#ifdef NS_BUILD_REFCNT_LOGGING
+    if (m_instance) {
+        // Inform refcnt tracer of new library so that calls through the
+        // new library can be traced.
+        nsTraceRefcnt::LoadLibrarySymbols(GetNativePath(), GetInstance());
+    }
+#endif
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
 
