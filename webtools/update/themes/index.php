@@ -48,26 +48,21 @@ require"../core/config.php";
 
 <TITLE>Mozilla Update :: Themes - Change the Look of Mozilla Software</TITLE>
 
+<?php
+include"$page_header";
+?>
 
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
-</HEAD>
-<BODY>
+<div id="mBody">
 <?php
 $type = "T";
 if ($_GET["application"]) {$application=$_GET["application"]; }
-include"$page_header";
+
 $index="yes";
 include"inc_sidebar.php";
 ?>
-<DIV class="box">
-<DIV class="boxheader" style="width: 100%">What is a Theme?</DIV>
-<SPAN class="itemdescription">Themes are skins for <?php print(ucwords($application)); ?>, they allow you to change the look and
-feel of the browser and personalize it to your tastes. A theme can simply change the colors of <?php print(ucwords($application)); ?> 
-or it can change every piece of the browser appearance.</SPAN>
-</DIV>
 
-<DIV class="box">
-<DIV class="boxheader" style="width: 100%">Featured <?php print(ucwords($application)); ?> Theme</DIV>
+<div class="key-point">
+<h2 style="margin: 0; font-size: 2px;"><img src="/images/t_featuring.gif" alt="Featuring: Firefox!"></h2>
 <?php
 $sql = "SELECT TR.ID, TM.Name, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
 INNER JOIN t_main TM ON TR.ID = TM.ID
@@ -106,6 +101,14 @@ echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 }
 ?>
 </DIV>
+
+<div id="mBody">
+<h3>What is a Theme?</h3>
+<p>Themes are skins for <?php print(ucwords($application)); ?>, they allow you to change the look and
+feel of the browser and personalize it to your tastes. A theme can simply change the colors of <?php print(ucwords($application)); ?> 
+or it can change every piece of the browser appearance.</p>
+
+
 <?php
 //Temporary!! Current Version Array Code
 $currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
@@ -113,84 +116,13 @@ $currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird
 $currentver = $currentver_array[$application];
 $currentver_display = $currentver_display_array[$application];
 ?>
-<DIV class="box" style="width: 80%; min-height: 200px; border: 0px">
-<DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Popular">Most Popular</A>:</DIV>
-<?php
-$i=0;
-$sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
-FROM  `t_main` TM
-INNER  JOIN t_version TV ON TM.ID = TV.ID
-INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `DownloadCount` > '0' AND `approved` = 'YES' ORDER BY `DownloadCount` DESC ";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-   $i++;
-   $id = $row["ID"];
-   $vid = $row["vID"];
-   $name = $row["Name"];
-   $version = $row["Version"];
-   $downloadcount = $row["downloadcount"];
-   $totaldownloads = $row["TotalDownloads"];
-if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id\">$name</a><br>\n";
-  echo"<SPAN class=\"smallfont nocomment\">($downloadcount downloads)</SPAN><BR>\n";
 
-$lastname = $name;
-if ($i >= "5") {break;}
-}
-?>
-<BR>
-</DIV>
-<DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Top Rated">Top Rated</A>:</DIV>
-<?php
-$r=0;
-$usednames = array();
-$sql = "SELECT TM.ID, TV.vID, TM.Name, TV.Version, TM.Rating, TU.UserName
-FROM  `t_main` TM
-INNER  JOIN t_version TV ON TM.ID = TV.ID
-INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-INNER JOIN t_authorxref TAX ON TAX.ID = TM.ID
-INNER JOIN t_userprofiles TU ON TU.UserID = TAX.UserID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `Rating` > '0' AND `approved` = 'YES' ORDER BY `Rating` DESC, `Name` ASC, `Version` DESC";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-   $r++; $s++;
-   $id = $row["ID"];
-   $vid = $row["vID"];
-   $name = $row["Name"];
-   $version = $row["Version"];
-   $rating = $row["Rating"];
-  $arraysearch = array_search("$name", $usednames);
-  if ($arraysearch !== false AND $usedversions[$arraysearch]['version']<$version) {$r--; continue; } //
-  echo"$r - <a href=\"moreinfo.php?id=$id&vid=$vid\">$name</a>&nbsp;";
+  <!-- Start News Columns -->
+  <div class="frontcolumn">
+<a href="http://www.mozilla.org/news.rdf"><img src="../images/rss.png" width="28" height="16" class="rss" alt="Mozilla News in RSS"></a><h2 style="margin-top: 0;"><a href="showlist.php?category=Newest" title="New Extensions on Mozilla Update">New Additions</a></h2>
+<span class="newsSubline">New and Updated Themes</span>
+<ul class="news">
 
-  //$rating = round($rating);
-
-echo"<SPAN title=\"Rated: $rating of 5\" style=\"font-size: 8pt\">";
-for ($i = 1; $i <= floor($rating); $i++) {
-echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-if ($rating>floor($rating)) {
-$val = ($rating-floor($rating))*10;
-echo"<IMG SRC=\"/images/stars/star_0$val.png\" BORDER=0 ALT=\"\">";
-$i++;
-}
-for ($i = $i; $i <= 5; $i++) {
-echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-echo"</SPAN><br>\n";
-//echo"<SPAN class=\"smallfont nocomment\">By $author</SPAN><BR>\n";
-$usednames[$s] = $name;
-$usedversions[$s] = $version;
-if ($r >= "5") {break;}
-}
-unset($usednames, $usedversions, $r, $s, $i);
-?>
-</DIV>
-<DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Newest">Most Recent</A>:</DIV>
 <?php
 $i=0;
 //MacOSX Specific override for All+Mac themes. Bug 252294
@@ -212,18 +144,116 @@ WHERE `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$
    $dateadded = $row["DateAdded"];
 //Create Customizeable Datestamp
     $timestamp = strtotime("$dateadded");
-    $dateadded = gmdate("F d, Y g:i:sa", $timestamp); //    $dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
+    $dateadded = gmdate("M d", $timestamp); //    $dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
 
 if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id&vid=$vid\">$name $version</a><BR>\n";
-  echo"<SPAN class=\"smallfont nocomment\">($dateadded)</SPAN><BR>\n";
+  echo"<li>\n";
+  echo"<div class=\"date\">$dateadded</div>\n";
+  echo"<a href=\"moreinfo.php?id=$id&vid=$vid\">$name $version</a><BR>\n";
+  echo"</li>\n";
 
 $lastname = $name;
 if ($i >= "5") {break;}
 }
 ?>
-</DIV>
-</DIV>
+</ul>
+</div>
+<div class="frontcolumn">
+<a href="http://planet.mozilla.org/rss10.xml"><img src="../images/rss.png" width="28" height="16" class="rss" alt="Mozilla Weblogs in RSS"></a><h2 style="margin-top: 0;"><a href="showlist.php?category=Popular" title="Most Popular Extensions, based on Downloads over the last week">Most Popular</a></h2>
+<span class="newsSubline">Downloads over the last week</span>
+<ul class="news">
+
+<?php
+$i=0;
+$sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
+FROM  `t_main` TM
+INNER  JOIN t_version TV ON TM.ID = TV.ID
+INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `DownloadCount` > '0' AND `approved` = 'YES' ORDER BY `DownloadCount` DESC ";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  while ($row = mysql_fetch_array($sql_result)) {
+   $i++;
+   $id = $row["ID"];
+   $vid = $row["vID"];
+   $name = $row["Name"];
+   $version = $row["Version"];
+   $downloadcount = $row["downloadcount"];
+   $totaldownloads = $row["TotalDownloads"];
+if ($lastname == $name) {$i--; continue; }
+  echo"<li>\n";
+  echo"<div class=\"date\">$i</div>\n";
+  echo"<a href=\"moreinfo.php?id=$id\">$name</a><br>\n";
+  echo"<span class=\"newsSubline\">($downloadcount downloads)</span>\n";
+  echo"</li>\n";
+$lastname = $name;
+if ($i >= "5") {break;}
+}
+?>
+</ul>
+</div>
+
+<div class="frontcolumn">
+<a href="http://www.mozillazine.org/atom.xml"><img src="../images/rss.png" width="28" height="16" class="rss" alt="MozillaZine News in RSS"></a><h2 style="margin-top: 0;"><a href="showlist.php?category=Top Rated" title="Highest Rated Extensions by the Community">Top Rated</a></h2>
+<span class="newsSubline">Based on feedback from visitors</span>
+<ul class="news">
+
+<?php
+$r=0;
+$usednames = array();
+$sql = "SELECT TM.ID, TV.vID, TM.Name, TV.Version, TM.Rating, TU.UserName
+FROM  `t_main` TM
+INNER  JOIN t_version TV ON TM.ID = TV.ID
+INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
+INNER JOIN t_authorxref TAX ON TAX.ID = TM.ID
+INNER JOIN t_userprofiles TU ON TU.UserID = TAX.UserID
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `Rating` > '0' AND `approved` = 'YES' ORDER BY `Rating` DESC, `Name` ASC, `Version` DESC";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  while ($row = mysql_fetch_array($sql_result)) {
+   $r++; $s++;
+   $id = $row["ID"];
+   $vid = $row["vID"];
+   $name = $row["Name"];
+   $version = $row["Version"];
+   $rating = $row["Rating"];
+  $arraysearch = array_search("$name", $usednames);
+  if ($arraysearch !== false AND $usedversions[$arraysearch]['version']<$version) {$r--; continue; }
+
+  echo"<li>\n";
+  echo"<div class=\"date\">$rating stars</div>\n";
+  echo"<a href=\"moreinfo.php?id=$id\">$name</a>\n";
+  echo"</li>\n";
+
+
+// Code for the OLD Graphical Star System. 
+//$rating = round($rating);
+//echo"<SPAN title=\"Rated: $rating of 5\" style=\"font-size: 8pt\">";
+//for ($i = 1; $i <= floor($rating); $i++) {
+//echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
+//}
+//if ($rating>floor($rating)) {
+//$val = ($rating-floor($rating))*10;
+//echo"<IMG SRC=\"/images/stars/star_0$val.png\" BORDER=0 ALT=\"\">";
+//$i++;
+//}
+//for ($i = $i; $i <= 5; $i++) {
+//echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
+//}
+//echo"</SPAN><br>\n";
+$usednames[$s] = $name;
+$usedversions[$s] = $version;
+if ($r >= "5") {break;}
+}
+unset($usednames, $usedversions, $r, $s, $i);
+?>
+</ul>
+</div>
+
+  <!-- End News Columns -->  
+<br style="clear: both;">
+
+
+</div>
+</div>
 <BR>
 <?php
 include"$page_footer";

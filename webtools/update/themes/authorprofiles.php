@@ -60,7 +60,6 @@ exit;
 
 <TITLE>Mozilla Update :: Themes - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
 
-
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 </HEAD>
 <BODY>
@@ -85,26 +84,24 @@ $userid = $_GET["id"];
     $userrole = $row["UserRole"];
     $useremailhide = $row["UserEmailHide"];
 ?>
-<DIV class="item">
-<SPAN class="boldfont">Profile for <?php echo"$username"; ?></SPAN><BR>
-<DIV class="boxheader2"></DIV>
-<SPAN class="boldfont">Homepage:</SPAN> <?php 
+
+<h3>Author Profile &#187; <?php echo"$username"; ?></h3>
+
+Homepage: <?php 
 if ($userwebsite) {echo"<A HREF=\"$userwebsite\" target=\"_blank\">$userwebsite</A>";
  } else {
-echo"<SPAN CLASS=\"disabled\">Not Available for this Author</SPAN>";
+echo"Not Available for this Author";
 }
 ?><BR>
-<SPAN class="boldfont">E-Mail:</SPAN> <?php if ($useremailhide=="1") {
-echo"<SPAN class=\"disabled\">Not Disclosed by Author</SPAN>";
+E-Mail: <?php if ($useremailhide=="1") {
+echo"Not Disclosed by Author";
 } else {
-echo"<SPAN class=\"emailactive\">Contact this Author via the <A HREF=\"#email\">E-Mail form</A> below</SPAN>";
+echo"Contact this Author via the <A HREF=\"#email\">E-Mail form</A> below";
 } 
 ?>
-</DIV>
+
 &nbsp;<BR>
-<DIV class="item">
-<SPAN class="boldfont">All Extensions and Themes by <?php echo"$username"; ?></SPAN><BR>
-<DIV class="boxheader2"></DIV>
+<h3>All Extensions and Themes by <?php echo"$username"; ?></h3>
 <?php
 $sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.DateUpdated, TM.TotalDownloads, TU.UserEmail FROM  `t_main`  TM 
 LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
@@ -114,7 +111,8 @@ ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numresults = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
-    unset($downloadcount);
+
+   unset($downloadcount);
 
 $sql2 = "SELECT `vID`, `Version` FROM `t_version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -142,26 +140,21 @@ $v++;
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y", $dutimestamp);
 
-echo"<DIV CLASS=\"item\">";
-echo"<SPAN class=\"title itemtitle\" style=\"margin-left: 0px\"><A HREF=\"moreinfo.php?id=$id\">$name</A></SPAN><BR>";
-echo"<DIV class=\"profileitemdesc\">$description</DIV>\n";
-echo"<DIV class=\"baseline\">Updated: $dateupdated | Downloads: $downloadcount</DIV>\n";
-
-echo"</DIV>\n";
-echo"<BR>\n";
+echo"<h3><A HREF=\"moreinfo.php?id=$id\">$name</A></h3>";
+echo"$description<br>\n";
 }
 }
 if ($numresults=="0") {
-echo"<DIV class=\"noitems\">No Extensions or Themes in the Database for $username yet...</DIV>";
+echo"No Extensions or Themes in the Database for $username";
 }
 ?>
 </DIV>
 &nbsp;<BR>
 <?php if ($useremailhide !=="1") { ?>
 <A NAME="email"></A>
-<DIV class="item">
-<SPAN class="boldfont">Send an E-Mail to <?php echo"$username"; ?></SPAN><BR>
-<DIV class="boxheader2"></DIV>
+
+<h3>Send an E-Mail to <?php echo"$username"; ?></h3>
+
 <?php
 //SendMail Returned Message Section
 if ($_GET["mail"]) {
@@ -177,7 +170,8 @@ echo"</DIV>\n";
 ?>
 <FORM NAME="sendmail" METHOD="POST" ACTION="sendmail.php">
 <INPUT NAME="senduserid" TYPE="HIDDEN" VALUE="<?php echo"$userid"; ?>">
-Your Name: <INPUT NAME="fromname" TYPE="TEXT" SIZE=40 MAXLENGTH=100>&nbsp;&nbsp; Email: <INPUT NAME="fromemail" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
+Your Name: <INPUT NAME="fromname" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
+Email: <INPUT NAME="fromemail" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
 Subject: <INPUT NAME="subject" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
 Message:<BR>
 <CENTER><TEXTAREA NAME="body" ROWS=20 COLS=65></TEXTAREA><BR>

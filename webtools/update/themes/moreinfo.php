@@ -65,37 +65,48 @@ $pagetitle = $pagetitles[$_GET["page"]];
 <TITLE>Mozilla Update :: Themes -- More Info: <?php echo"$row[Name]"; if ($pagetitle) {echo" - $pagetitle"; } ?></TITLE>
 
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
-</HEAD>
-<BODY>
+
 <?php
 include"$page_header";
 $type = "T";
 $category=$_GET["category"];
 include"inc_sidebar.php";
 ?>
-<DIV id="content">
+
 <?php
 //Get Author Data
 $sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail FROM  `t_main`  TM 
 LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
 INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.ID = '$_GET[id]'
-ORDER  BY  `Type` , `Name`  ASC "; // TM.Type = 'E'
+ORDER  BY  `Type` , `Name`  ASC ";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
      $authorarray[$row2[Name]][] = $row2["UserName"];
      $authorids[$row2[UserName]] = $row2["UserID"];
    }
 
+//Assemble a display application version array
+$sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` WHERE `AppName`='$application' ORDER BY `major`,`minor`";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  while ($row = mysql_fetch_array($sql_result)) {
+  $version = $row["Version"];
+  $subver = $row["SubVer"];
+  $release = "$row[major].$row[minor]";
+  if ($row["release"]) {$release = ".$release$row[release]";}
+  if ($subver !=="final") {$release="$release$subver";}
+
+  $appvernames[$release] = $version;
+  }
+
 
 //Run Query and Create List
 $s = "0";
-$sql = "SELECT TM.ID, TM.Type, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes, TM.TotalDownloads, TA.AppName, TOS.OSName, TP.PreviewURI
+$sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TM.TotalDownloads, TM.downloadcount, TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes, TA.AppName, TOS.OSName
 FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
-LEFT  JOIN t_previews TP ON TV.vID = TP.vID
 WHERE TM.ID = '$_GET[id]' AND `approved` = 'YES' ";
 if ($_GET["vid"]) { $sql .=" AND TV.vID = '$_GET[vid]' "; }
 $sql .= "ORDER  BY  `Name` , `Version` DESC LIMIT 1";
@@ -118,22 +129,26 @@ $v++;
    $vid = $row["vID"];
 if (!$_GET['vid']) {$_GET['vid']=$vid;}
    $appname = $row["AppName"];
-   $minappver = $row["MinAppVer"];
-   $maxappver = $row["MaxAppVer"];
+if ($appvernames[$row["MinAppVer"]]) {$minappver = $appvernames[$row["MinAppVer"]]; } else { $minappver = $row["MinAppVer"]; }
+if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"]]; } else { $maxappver = $row["MaxAppVer"]; }
    $verdateadded = $row["VerDateAdded"];
    $verdateupdated = $row["VerDateUpdated"];
    $filesize = $row["Size"];
    $notes = $row["Notes"];
    $version = $row["Version"];
    $uri = $row["URI"];
-   $previewuri = $row["PreviewURI"];
    $downloadcount = $row["TotalDownloads"];
+   $populardownloads = $row["downloadcount"];
    $filename = basename($uri);
+
+$sql3 = "SELECT `PreviewURI`, `caption` from `t_previews` WHERE `ID` = '$id' AND `preview`='YES' LIMIT 1";
+ $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   $row3 = mysql_fetch_array($sql_result3);
+   $previewuri = $row3["PreviewURI"];
+   $caption = $row3["caption"];
 
 if ($VerDateAdded > $dateadded) {$dateadded = $VerDateAdded; }
 if ($VerDateUpdated > $dateupdated) {$dateupdated = $VerDateUpdated; }
-
-
 
 //Turn Authors Array into readable string...
 $authorcount = count($authors);
@@ -147,79 +162,57 @@ if ($authorcount != $n) {$authorstring .=", "; }
 $authors = $authorstring;
 unset($authorstring, $n); // Clear used Vars.. 
 
-//Create Customizeable Timestamp for DateAdded/DateUpdated
-	$day=substr($dateadded,8,2);  //get the day
-    $month=substr($dateadded,5,2); //get the month
-    $year=substr($dateadded,0,4); //get the year
-    $hour=substr($dateadded,11,2); //get the hour
-    $minute=substr($dateadded,14,2); //get the minute
-    $second=substr($dateadded,17,2); //get the sec
-    $datimestamp = strtotime("$year-$month-$day $hour:$minute:$second");
+if ($dateupdated > $dateadded) {
+    $timestamp = $dateupdated;
+    $datetitle = "Last Update: ";
+  } else {
+    $timestamp = $dateadded;
+    $datetitle = "Added on: ";
+  }
 
-	$day=substr($dateupdated,8,2);  //get the day
-    $month=substr($dateupdated,5,2); //get the month
-    $year=substr($dateupdated,0,4); //get the year
-    $hour=substr($dateupdated,11,2); //get the hour
-    $minute=substr($dateupdated,14,2); //get the minute
-    $second=substr($dateupdated,17,2); //get the sec
-    $dutimestamp = strtotime("$year-$month-$day $hour:$minute:$second");
+  $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
 
-    $dateadded = gmdate("F d, Y g:i:sa", $datimestamp); //gmdate("F d, Y", $datimestamp);
-    $dateupdated = gmdate("F d, Y g:i:sa", $dutimestamp); //gmdate("F d, Y", $dutimestamp);
+
+$datestring = "$datetitle $date";
 
 //Rating
 if (!$rating) { $rating="0"; }
 ?>
 
 
-<DIV class="tabbar">
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid"; ?>">More Info</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=releases"; ?>">All Releases</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=comments"; ?>">Comments</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A></DIV>
-</DIV>
+<H3> <?php ucwords("$application "); ?> Extensions &#187; <?php echo"$row[Name]"; if ($pagetitle) {echo" :: $pagetitle"; } ?></H3>
+
+<A HREF="?<?php echo"id=$id&vid=$vid"; ?>">More Info</A> | 
+<A HREF="?<?php echo"id=$id&vid=$vid&page=releases"; ?>">All Releases</A> | 
+<A HREF="?<?php echo"id=$id&vid=$vid&page=comments"; ?>">Comments</A> | 
+<A HREF="?<?php echo"id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A> | 
+<A HREF="?<?php echo"id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A>
 <?php
-echo"<DIV class=\"item\">\n";
-//echo"<DIV style=\"height: 100px\">"; //Why?!?
+echo"<DIV id=\"item\">\n";
+
 if ($previewuri) {
-list($width, $height, $imagetype, $attr) = getimagesize("$websitepath"."$previewuri");
-
-echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width STYLE=\"float: right; padding-right: 5px\" ALT=\"$name preview\">";
+list($width, $height, $type, $attr) = getimagesize("$websitepath"."$previewuri");
+echo"<DIV style=\"padding-top: 6px; float: right; padding-right: 0px\">\n";
+echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width ALT=\"$name preview - $caption\" TITLE=\"$caption\">\n";
+echo"</DIV>\n";
 }
-
-//Upper-Right Side Box
-echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?id=$id&page=comments\">";
-for ($i = 1; $i <= floor($rating); $i++) {
-echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-if ($rating>floor($rating)) {
-$val = ($rating-floor($rating))*10;
-echo"<IMG SRC=\"/images/stars/star_0$val.png\" BORDER=0 ALT=\"\">";
-$i++;
-}
-for ($i = $i; $i <= 5; $i++) {
-echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-echo"</A></DIV>\n";
-
-echo"<DIV class=\"itemtitle\">";
+echo"<h5>";
 echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
-echo"<SPAN class=\"authorline\">By $authors</SPAN><br>";
-echo"</DIV>";
+echo"<SPAN class=\"authorline\">By $authors</SPAN>";
+echo"</h5>";
+
 
 //Description & Version Notes
-echo"<SPAN class=\"itemdescription\">";
-echo"$description<BR>";
-if ($notes) {echo"$notes"; }
-echo"</SPAN>\n";
+echo"$description<BR>\n";
+if ($notes) {echo"<BR>\n$notes<BR>"; }
+echo"<BR>\n";
 
-//echo"</DIV>\n";
-echo"<BR>\n\n";
 
 $page = $_GET["page"];
 if (!$page or $page=="general") {
 ?>
+
+
 <DIV class="downloadbox">
 <?php
 //Create DateStamp for Version Release Date ($verdateadded)
@@ -246,27 +239,39 @@ $time .= "$time_minutes minutes ";
 }
 $time .="$time_seconds seconds";
 
+
 echo"
 <SPAN style=\"itemdescription\">Released on $verdateadded</SPAN><BR>
 <DIV class=\"moreinfoinstall\">";
 if ($appname=="Thunderbird") { 
 echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
 } else {
-//Make Theme Install work again, Bug 246754
-//echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php/$filename?id=$id&vid=$vid','$name'))\"";
 echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
 }
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
-<BR>";
+";
+
+
+
+//Icon Bar Modules
+echo"<DIV style=\"margin-top: 30px; height: 34px\">";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
+if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
+
+echo"</DIV>";
+
+echo"<BR>";
+
 if ($application=="thunderbird") {
 echo"<SPAN style=\"font-size: 10pt; color: #00F\">Theme Install Instructions for Thunderbird Users:</SPAN><BR>
 <SPAN style=\"font-size: 8pt;\">(1) Click the link above to Download and save the file to your hard disk.<BR>
 (2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
-(3) Click the Install button, and locate/select the file you downloaded and click \"OK\"<BR></SPAN>
+(3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN><BR>
 ";
 }
-
 if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this theme? For Help and Technical Support, visit the <A HREF=\"$homepage\">Theme's Homepage</A>.</SPAN>";}
 
 echo"<UL style=\"font-size:10pt\">";
@@ -277,9 +282,10 @@ echo"<LI> <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=releases\">Other Versions<
 </UL>
 </DIV>
 
+
+
 <DIV class="commentbox">
-<DIV class="boxheader">User Comments:</DIV>
-<BR>
+<H3>User Comments:</H3>
 <?php
 $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `t_feedback` WHERE ID = '$_GET[id]' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -301,8 +307,8 @@ $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote 
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $commentdate = gmdate("F d, Y g:ia", $timestamp);
 
-echo"<DIV class=\"commenttitlebar\">";
-echo"<SPAN class=\"commenttitle\">$commenttitle</SPAN>";
+//echo"<DIV class=\"commenttitlebar\">";
+echo"<h4>$commenttitle</h4>";
 echo"<SPAN class=\"liststars\">";
 
 for ($i = 1; $i <= $rating; $i++) {
@@ -312,7 +318,7 @@ for ($i = $i; $i <= 5; $i++) {
 echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 WIDTH=16 HEIGHT=16 ALT=\"\">";
 }
 echo"</SPAN>";
-echo"</DIV>";
+//echo"</DIV>";
 echo"&nbsp;&nbsp;By $commentname<BR>\n";
 echo"&nbsp;<BR>\n";
 echo"$commentnotes<BR>\n\n";
@@ -332,27 +338,29 @@ echo"</DIV>";
 ?>
 
 </DIV>
-
+<?php
+echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
+if ($populardownloads > 5 ) {echo" | Downloads this Week: $populardownloads";}
+echo"</DIV>\n";
+?>
 <?php
 } else if ($page=="releases") {
 
-echo"<DIV class=\"mipageheading\">";
-echo"Recent Releases:<BR>";
-echo"</DIV>";
+echo"<h3>All Releases</h3>";
 
 $sql = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.URI, TV.Notes, TA.AppName, TOS.OSName
 FROM  `t_version` TV
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
-WHERE TV.ID = '$_GET[id]' AND `approved` = 'YES'
+WHERE TV.ID = '$_GET[id]' AND `approved` = 'YES' AND TA.AppName = '$application'
 ORDER  BY  `Version` DESC, `OSName` ASC 
 LIMIT 0, 10";
 
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $vid = $row["vID"];
-   $minappver = $row["MinAppVer"];
-   $maxappver = $row["MaxAppVer"];
+if ($appvernames[$row["MinAppVer"]]) {$minappver = $appvernames[$row["MinAppVer"]]; } else { $minappver = $row["MinAppVer"]; }
+if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"]]; } else { $maxappver = $row["MaxAppVer"]; }
    $filesize = $row["Size"];
    $notes = $row["Notes"];
    $version = $row["Version"];
@@ -363,25 +371,16 @@ LIMIT 0, 10";
 echo"<DIV>"; //Open Version DIV
 
 //Description & Version Notes
-echo"<SPAN class=\"itemdescription\">";
-echo"<SPAN class=\"listtitle\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">Version $version</A></SPAN><br>\n";
-if ($notes) {echo"$notes"; }
-echo"</SPAN>\n";
+echo"<h4><A HREF=\"moreinfo.php?id=$id&vid=$vid\">Version $version</A></h4>\n";
+if ($notes) {echo"$notes<br><br>\n"; }
 
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
-echo"<DIV class=\"iconbar\" style=\"width: 100px;\">";
-if ($type=="T") {
-//Make Theme Install work again, Bug 246754
-//echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php?id=$id&vid=$vid','$name'))\">";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\">";
-} else {
-echo"<A HREF=\"install.php?id=$id&vid=$vid\">";
-}
-echo"<IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname \">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
-echo"<DIV class=\"iconbar\" style=\"width: 90px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>"; if($osname=="ALL") {echo"All OSes";} else {echo"$osname";} echo"</DIV>";
-echo"</DIV>";
+echo"<DIV class=\"iconbar\">";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
+echo"</DIV><BR>\n";
 
 echo"</DIV>";
 }
@@ -389,36 +388,25 @@ echo"</DIV>";
 //End General Page
 } else if ($page=="comments") {
 //Comments/Ratings Page
-echo"<DIV class=\"mipageheading\">";
-echo"User Comments:<BR>";
-echo"</DIV>";
-$sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `t_feedback` WHERE ID = '$_GET[id]' AND CommentNote IS NOT NULL ORDER  BY  `CommentDate` ASC";
+echo"<h3>User Comments:</h3>";
+
+$sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `t_feedback` WHERE ID = '$_GET[id]' AND CommentNote IS NOT NULL ORDER  BY  `CommentDate` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $num_results = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
     $name = $row["CommentName"];
     $title = $row["CommentTitle"];
     $notes = $row["CommentNote"];
-    $date = $row["CommentDate"];
+    $date = date("l, F j Y", strtotime($row["CommentDate"]));
     $rating = $row["CommentVote"];
 
-echo"<DIV class=\"commenttitlebar\">";
-echo"<SPAN class=\"commenttitle\">$title</SPAN>";
-echo"<SPAN class=\"liststars\">";
 
-for ($i = 1; $i <= $rating; $i++) {
-echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 WIDTH=16 HEIGHT=16 ALT=\"*\">";
-}
-for ($i = $i; $i <= 5; $i++) {
-echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 WIDTH=16 HEIGHT=16 ALT=\"\">";
-}
-echo"</SPAN>";
-echo"</DIV>";
+echo"<h4>$title</h4>";
+echo"&nbsp;&nbsp;Posted on $date by $name<br>";
 echo"$notes<BR>\n\n";
 
-echo"<DIV class=\"commentfooter\">\n";
-echo"<SPAN style=\"padding-left: 30px; font-size: 8pt; font-weight: bold\">Posted on $date by $name</SPAN><br>";
-echo"</DIV>\n";
+echo"<DIV class=\"iconbar\" style=\"padding-left: 20px\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV><BR><BR>";
+
 }
 
 if ($num_results=="0") {
@@ -434,9 +422,7 @@ echo"<DIV style=\"height: 5px;\"></DIV>";
 
 } else if ($page=="staffreview") {
 //Staff/Editor Review Tab
-echo"<DIV class=\"mipageheading\">";
-echo"Editor Review:<BR>";
-echo"</DIV>";
+echo"<h3>Editor Review:</h3>";
 
 echo"<DIV class=\"reviewbox\">\n";
 $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `Pick`, TU.UserName FROM `t_reviews`  TR
@@ -456,7 +442,7 @@ WHERE `Type` = 'E' AND TR.ID = '$_GET[id]' ORDER BY `rID` DESC LIMIT 1";
 //Create Customizeable Timestamp
     $timestamp = strtotime("$dateadded");
     $date = gmdate("F, Y", $timestamp);
-    $posteddate = gmdate("F j Y, g:i:sa", $timestamp);
+    $posteddate = date("F j Y, g:i:sa", $timestamp);
 
 
 echo"$title<br>\n";
@@ -468,11 +454,10 @@ echo"<DIV class=\"commentfooter\">Posted on $posteddate by $username</DIV>\n";
 $typename = "extension";
 if ($num_results=="0") {
 echo"
-<SPAN style=\"font-weight: bold\">
+
 This $typename has not yet been reviewed.<BR><BR>
 
-To see what other users think of this extension, view the <A HREF=\"moreinfo.php?id=$id&vid=$vid&category=$category&page=comments\">User Comments...</A>
-</SPAN>
+To see what other users think of this theme, view the <A HREF=\"moreinfo.php?id=$id&page=comments\">User Comments...</A>
 ";
 
 
@@ -481,15 +466,14 @@ echo"</DIV>\n";
 
 } else if ($page=="opinion") {
 //My Opinion Tab
-echo"<DIV class=\"mipageheading\">";
-echo"Your Rating / Feedback:<BR>";
-echo"</DIV>";
+echo"<h3>Your opinion of $name:</h3>";
 ?>
 <?php
 if ($_GET["error"]=="norating") {
 echo"<DIV class=\"errorbox\">\n
 Your comment submission had the following error(s), please fix these errors and try again.<br>\n
-&nbsp;&nbsp;&nbsp;Rating field cannot be left blank.<br>\n
+&nbsp;&nbsp;&nbsp;Rating cannot be left blank.<br>\n
+&nbsp;&nbsp;&nbsp;Review/Comments cannot be left blank.<br>\n
 </DIV>\n";
 }
 ?>
@@ -514,9 +498,8 @@ Rating:*<BR>
 Title:<BR>
 <INPUT NAME="title" TYPE="TEXT" SIZE=30 MAXLENGTH=50><BR>
 
-Review/Comments:<BR>
+Review/Comments:*<BR>
 <TEXTAREA NAME="comments" ROWS=5 COLS=55></TEXTAREA><BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<SPAN class="smallfont">No Comment?<INPUT NAME="commententered" TYPE="CHECKBOX" VALUE="FALSE"></SPAN><BR>
 <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Post">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset"><BR>
 <SPAN class="smallfont">* Required Fields</SPAN>
 </FORM>
@@ -525,10 +508,6 @@ Review/Comments:<BR>
 <?php
 } // End Pages
 
-echo"<DIV class=\"baseline\">";
-echo"Date Added: $dateadded | Last Updated: $dateupdated | ";
-echo"Total Downloads: $downloadcount<BR>";
-echo"</DIV>\n";
 echo"</DIV>\n";
 echo"<BR>\n";
 ?>
