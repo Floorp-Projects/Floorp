@@ -522,6 +522,8 @@ function gotoDirectory(directory) {
   outlinerView.setDirectory(directory.unicodePath);
   window.setCursor("auto");
 
+  outlinerView.selection.clearSelection();
+  textInput.focus();
   sfile = directory;
 }
 
