@@ -43,6 +43,7 @@ var documentLoaded = false;
 var windowLocked = false;
 var contentChanged = false;
 var currentIdentity = null;
+var defaultSaveOperation = "draft";
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties"); 
 
@@ -97,6 +98,7 @@ var defaultController =
       case "cmd_attachPage":
       case "cmd_close":
       case "cmd_saveDefault":
+      case "cmd_saveAsFile":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
       case "cmd_sendNow":
@@ -200,6 +202,7 @@ var defaultController =
       case "cmd_attachPage":
       case "cmd_close":
       case "cmd_saveDefault":
+      case "cmd_saveAsFile":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
       case "cmd_sendNow":
@@ -312,7 +315,8 @@ var defaultController =
       case "cmd_attachFile"         : if (defaultController.isCommandEnabled(command)) AttachFile();           break;
       case "cmd_attachPage"         : AttachPage();           break;
       case "cmd_close"              : DoCommandClose();       break;
-      case "cmd_saveDefault"        : SaveAsDraft();          break; /* TEMPORARY: We should save either as file, as draft or template, depending of last save type */
+      case "cmd_saveDefault"        : Save();                 break;
+      case "cmd_saveAsFile"         : SaveAsFile(true);       break;
       case "cmd_saveAsDraft"        : SaveAsDraft();          break;
       case "cmd_saveAsTemplate"     : SaveAsTemplate();       break;
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
@@ -356,6 +360,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_attachPage");
   goUpdateCommand("cmd_close");
   goUpdateCommand("cmd_saveDefault");
+  goUpdateCommand("cmd_saveAsFile");
   goUpdateCommand("cmd_saveAsDraft");
   goUpdateCommand("cmd_saveAsTemplate");
   goUpdateCommand("cmd_sendNow");
@@ -993,6 +998,24 @@ function SendMessageLater()
 	GenericSendMessage(msgCompDeliverMode.Later);
 }
 
+function Save()
+{
+	dump("Save from XUL\n");
+	switch (defaultSaveOperation)
+	{
+	  case "file"     : SaveAsFile(false);      break;
+	  case "template" : SaveAsTemplate(false);  break;
+	  default         : SaveAsDraft(false);     break;
+	}
+}
+
+function SaveAsFile(saveAs)
+{
+	dump("SaveAsFile from XUL\n");
+	editorShell.saveDocument(saveAs, false);
+  defaultSaveOperation = "file";
+}
+
 function SaveAsDraft()
 {
 	dump("SaveAsDraft from XUL\n");
@@ -1001,6 +1024,7 @@ function SaveAsDraft()
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
   GenericSendMessage(msgCompDeliverMode.SaveAsDraft);
+  defaultSaveOperation = "draft";
 }
 
 function SaveAsTemplate()
@@ -1011,6 +1035,7 @@ function SaveAsTemplate()
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
   GenericSendMessage(msgCompDeliverMode.SaveAsTemplate);
+  defaultSaveOperation = "template";
 }
 
 

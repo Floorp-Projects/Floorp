@@ -98,6 +98,7 @@ Rights Reserved.
 	<broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
 	<broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
 	<broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
+	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
 	<broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
 	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
@@ -261,7 +262,7 @@ Rights Reserved.
 		<menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
 		<menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
       <menupopup>
-        <menuitem value="&saveAsFileCmd.label;" disabled="true" accessKey="&saveAsFileCmd.accesskey;"/>
+        <menuitem value="&saveAsFileCmd.label;" accessKey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
         <menuseparator/>
         <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
         <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
