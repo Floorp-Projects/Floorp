@@ -1223,6 +1223,7 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",      "$messenger_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",              "$messenger_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
