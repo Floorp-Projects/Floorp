@@ -52,6 +52,8 @@
 #define  kPABDirectory  2 // defined in nsDirPrefs.h
 #define  kMAPIDirectory 3 // defined in nsDirPrefs.h
 
+#define PERSONAL_ADDRBOOK_URL   "moz-abmdbdirectory://abook.mab" // defined in MozABConduitSync.h
+
 #ifdef DEBUG_bienvenu
    PRBool PalmDataDisplayed = PR_FALSE;
    void DisplayTestData(nsABCOMCardStruct * aIPCCard, PRBool IsUnicode)
@@ -228,7 +230,11 @@ nsresult nsAbPalmHotSync::GetABInterface()
           if (description.Length() > 15 && mAbName.Length() <= 15)
             description.Cut(15, description.Length()-15);
 
-          if(description == mAbName)
+          // check for matching AB+Category, and special case personal address book
+          // to match "Personal" category.
+          if(description == mAbName || 
+              (uri.Equals(PERSONAL_ADDRBOOK_URL, nsCaseInsensitiveCStringComparator())
+               && mAbName.Equals(NS_LITERAL_STRING("Personal"), nsCaseInsensitiveStringComparator())))
             break;
           directory = nsnull;
         }

@@ -382,7 +382,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
           retval = sync->m_dbPC->SynchronizePCAB(catIndex, catID, catName,
                                                  recordCountHH, recordListHH,
                                                  &recordCountPC, &recordListPC);
-          CONDUIT_LOG1(gFD, "Done syncing AB. retval=%d.\n", retval);
+          CONDUIT_LOG1(gFD, "Done syncing AB. retval=%lx.\n", retval);
 
           // SynchronizePCAB() returns a list of modified moz records so update those on Palm.
           if (!retval) {
@@ -522,10 +522,12 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
                 CONDUIT_LOG1(gFD, "  Creating new Palm AB with %d record(s) ... ", recordCountPC);
                 retval = sync->m_dbHH->AddCategory(cat);
                 CONDUIT_LOG2(gFD, "Done creating new Palm AB, new category index=%d. retval=%d.\n", cat.GetIndex(), retval);
-                if(!retval) {
+                if(!retval) 
+                {
                     CONDUIT_LOG1(gFD, "  Adding %d record(s) to new Palm AB ... ", recordCountPC);
                     newRecIDList = (DWORD *) calloc(recordCountPC, sizeof(DWORD));
-                    for (unsigned long i=0; i < recordCountPC; i++) {
+                    for (unsigned long i=0; i < recordCountPC; i++) 
+                    {
                         if(!recordListPC[i])
                             continue;
                         CPalmRecord palmRec = *recordListPC[i];
