@@ -1,0 +1,110 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2002 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Dan Mosedale <dmose@netscape.com> (Original Author)
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIMsgFilterHitNotify;
+interface nsIMsgWindow;
+interface nsIMsgDBHdr;
+interface nsIStreamListener;
+
+/**
+ * This interface is still very much under development, and is not yet stable.
+ */
+
+[scriptable, uuid(e2e56690-a676-11d6-80c9-00008646b737)]
+interface nsIMsgFilterPlugin : nsISupports
+{
+    /**
+     * Initialize the plugin object.
+     * 
+     * @param aServerPrefsKey     The preferences key for the server
+     *                            this object will be used with.
+     */
+    void init(in ACString aServerPrefsKey);
+
+    /**
+     * Filter a message by headers.
+     *
+     * @param aMsgHdr       Can be used to set properties on the header of the
+     *                      message (e.g. for attaching a score to it).
+     *
+     * @param aHeaders      Array of header strings.  Note that these are in
+     *                      raw, 8-bit form, in violation of XPCOMs |string|
+     *                      typing rules.  Hopefully someday arrays of 
+     *                      nsACString will be supported by XPCOM.
+     *
+     * @param aCount        Number of elements in aHeaders.
+     *
+     * @param aListener     Used to perform actions, such as moving to another
+     *                      folder.
+     *
+     * @param aMsgWindow    Passed back to the listener.
+     */
+    void filterMsgByHeaders(in nsIMsgDBHdr aMsgHdr, in unsigned long aCount,
+                            [array, size_is(aCount)] in string aHeaders,
+                            in nsIMsgFilterHitNotify aListener,
+                            in nsIMsgWindow aMsgWindow);
+
+    /**
+     * XXX |string| -- should really be a UTF8 String
+     */
+    void filterMsg(in string aMessageURL,
+                   in nsIMsgDBHdr aMsgHdr, 
+                   in nsIMsgFilterHitNotify aListener);
+
+    /**
+     * Do any necessary cleanup: flush and close any open files, etc.
+     */
+    void shutdown();
+
+    /**
+     * Some protocols (ie IMAP) can, as an optimization, avoid
+     * downloading all message header lines.  If your plugin doesn't need
+     * any more than the minimal set, it can return false for this attribute.
+     */     
+    readonly attribute boolean shouldDownloadAllHeaders;
+
+
+    /**
+     * When a large number of messages are going to be trained or filtered,
+     * it's typically not worth it to write everything to disk after
+     * each message.  The calling code will set batchUpdate to true before
+     * starting a set messages, and then to false once it has finished.
+     */
+    attribute boolean batchUpdate;
+
+};
+

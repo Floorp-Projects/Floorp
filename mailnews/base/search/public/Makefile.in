@@ -43,6 +43,7 @@ XPIDLSRCS	= \
 		nsIMsgFilter.idl \
 		nsIMsgFilterHitNotify.idl \
 		nsIMsgFilterList.idl \
+                nsIMsgFilterPlugin.idl \
 		nsIMsgFilterService.idl \
 		nsIMsgSearchTerm.idl \
 		nsIMsgSearchValue.idl	\

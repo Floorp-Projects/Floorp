@@ -29,4 +29,5 @@ nsIMsgSearchSession.idl
 nsMsgFilterCore.idl
 nsMsgSearchCore.idl
 nsIMsgSearchTerm.idl
+nsIMsgFilterPlugin.idl
 
