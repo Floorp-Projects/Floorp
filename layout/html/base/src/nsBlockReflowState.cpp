@@ -5393,6 +5393,8 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
         result = resultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
         mainframe = resultFrame;
       }
+      if (!resultFrame)
+        break;//time to go nothing was found
     }
     //end while loop. if nssucceeded resutl then keep going that means
     //we have successfully hit another block frame and we should keep going.
