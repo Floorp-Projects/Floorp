@@ -92,16 +92,7 @@ nsAppStartup::Init()
   mAppShell = do_CreateInstance(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICmdLineService> cmdLineService
-    (do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 argc = 0;
-  char** argv = nsnull;
-  cmdLineService->GetArgc(&argc);
-  cmdLineService->GetArgv(&argv);
-
-  rv = mAppShell->Create(&argc, argv);
+  rv = mAppShell->Create(nsnull, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // listen to EventQueues' comings and goings. do this after the appshell

@@ -135,24 +135,6 @@ static int event_processor_callback(int fd, void *data, unsigned mode)
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
-  int argc = bac ? *bac : 0;
-  char **argv = bav;
-
-  nsresult rv;
-
-  nsCOMPtr<nsICmdLineService> cmdLineArgs = 
-           do_GetService(kCmdLineServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = cmdLineArgs->GetArgc(&argc);
-    if(NS_FAILED(rv))
-      argc = bac ? *bac : 0;
-
-    rv = cmdLineArgs->GetArgv(&argv);
-    if(NS_FAILED(rv))
-      argv = bav;
-  }
-
 	/*
 	This used to be done in the init function of nsToolkit. It was moved here because the phoenix
 	browser may ( when -ProfileManager is used ) create/ListenToEventQueue of an nsAppShell before

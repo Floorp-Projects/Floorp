@@ -369,6 +369,10 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 
 #endif /* XP_MACOSX */
 
+#if defined(MOZ_WIDGET_QT)
+#include <qapplication.h>
+#endif
+
 #ifdef MOZ_X11
 #include <X11/Xlib.h>
 #endif /* MOZ_X11 */
@@ -1199,7 +1203,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("appStartup->Initialize");
 
   // Create the Application Shell instance...
-  rv = appStartup->Initialize(cmdLineArgs, nativeAppOwner);
+  rv = appStartup->Initialize(nativeAppOwner);
 
   NS_TIMELINE_LEAVE("appStartup->Initialize");
 
@@ -1711,6 +1715,15 @@ int main(int argc, char* argv[])
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 #endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
+
+#if defined(MOZ_WIDGET_QT)
+  QApplication qapp(argc, argv);
+#endif
+
+// #if defined(MOZ_WIDGET_XLIB)
+// XXXtimeless fix me! Because we don't have external shared libs holding global
+// refs, there isn't an easy way to get a Display from here to the widget component.
+// #endif
     
   // Call the code to install our handler
 #ifdef MOZ_JPROF
