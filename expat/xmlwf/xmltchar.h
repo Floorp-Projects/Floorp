@@ -1,3 +1,8 @@
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file COPYING for copying permission.
+*/
+
 #ifdef XML_UNICODE
 #ifndef XML_UNICODE_WCHAR_T
 #error xmlwf requires a 16-bit Unicode-compatible wchar_t 
