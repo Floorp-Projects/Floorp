@@ -190,6 +190,12 @@
 
           <listitem allowevents="true">
             <listcell>
+              <checkbox id="fetchBodyFromServer" enableforpop3="true" label="&fetchBodyFromServer.label;"/>
+            </listcell>
+          </listitem>
+
+          <listitem allowevents="true">
+            <listcell>
               <checkbox id="kill" enablefornews="true" label="&killThread.label;"/>
             </listcell>
           </listitem>

@@ -43,9 +43,10 @@ interface nsIMsgFolder;
 interface nsIUrlListener;
 interface nsIMsgWindow;
 
-[scriptable, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(dcae2877-b7e7-47e1-80ca-5a67de03ec4c)]
 interface nsIPop3IncomingServer : nsISupports {
   attribute boolean leaveMessagesOnServer;
+  attribute boolean headersOnly;
   attribute boolean deleteMailLeftOnServer;
   attribute boolean authLogin;
   attribute boolean dotFix;
@@ -53,9 +54,9 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean deleteByAgeFromServer;
   attribute long numDaysToLeaveOnServer;
   attribute nsIPop3Protocol runningProtocol;
-  // client adds uidls to mark one by one, then calls markMessagesDeleted
-  void addUidlToMarkDeleted(in string aUidl);
-  void markMessagesDeleted(in boolean aDeleteMsgs);
+  // client adds uidls to mark one by one, then calls markMessages
+  void addUidlToMark(in string aUidl, in PRInt32 newStatus);
+  void markMessages();
   attribute boolean authenticated;
   /* account to which this server defers storage, for global inbox */
   attribute string deferredToAccount;

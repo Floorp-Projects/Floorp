@@ -110,6 +110,10 @@ NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         "leave_on_server")
 
 NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        HeadersOnly,
+                        "headers_only")
+
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         DeleteMailLeftOnServer,
                         "delete_mail_left_on_server")
 
@@ -547,17 +551,36 @@ NS_IMETHODIMP nsPop3IncomingServer::GetRunningProtocol(nsIPop3Protocol **aProtoc
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3IncomingServer::AddUidlToMarkDeleted(const char *aUidl)
+NS_IMETHODIMP nsPop3IncomingServer::AddUidlToMark(const char *aUidl,
+	PRInt32 aMark)
 {
-  return m_uidlsToMarkDeleted.AppendCString(nsDependentCString(aUidl));
+  Pop3UidlEntry *uidlEntry;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+
+  uidlEntry = PR_NEWZAP(Pop3UidlEntry);
+  if (uidlEntry)
+  {
+    uidlEntry->uidl = strdup(aUidl);
+    if (uidlEntry->uidl)
+    {
+      uidlEntry->status = (aMark == POP3_DELETE) ? DELETE_CHAR :
+  	(aMark == POP3_FETCH_BODY) ? FETCH_BODY : KEEP;
+      m_uidlsToMark.AppendElement(uidlEntry);
+      rv = NS_OK;
+    } else
+    {
+      PR_Free(uidlEntry);
+    }
+  }
+  return rv;
 }
 
-NS_IMETHODIMP nsPop3IncomingServer::MarkMessagesDeleted(PRBool aDeleteMsgs)
+NS_IMETHODIMP nsPop3IncomingServer::MarkMessages()
 {
   nsresult rv;
   if (m_runningProtocol)
   {
-    rv = m_runningProtocol->MarkMessagesDeleted(&m_uidlsToMarkDeleted, aDeleteMsgs);
+    rv = m_runningProtocol->MarkMessages(&m_uidlsToMark);
   }
   else
   {
@@ -570,9 +593,16 @@ NS_IMETHODIMP nsPop3IncomingServer::MarkMessagesDeleted(PRBool aDeleteMsgs)
     GetHostName(getter_Copies(hostName));
     GetUsername(getter_Copies(userName));
     // do it all in one fell swoop
-    rv = nsPop3Protocol::MarkMsgDeletedForHost(hostName, userName, localPath, m_uidlsToMarkDeleted, aDeleteMsgs);
+    rv = nsPop3Protocol::MarkMsgForHost(hostName, userName, localPath, m_uidlsToMark);
   }
-  m_uidlsToMarkDeleted.Clear();
+  PRUint32 count = m_uidlsToMark.Count();
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    Pop3UidlEntry *ue = NS_STATIC_CAST(Pop3UidlEntry*,m_uidlsToMark[i]);
+    PR_Free(ue->uidl);
+    PR_Free(ue);
+  }
+  m_uidlsToMark.Clear();
   return rv;
 }
 

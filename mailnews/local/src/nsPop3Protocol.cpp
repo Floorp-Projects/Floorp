@@ -158,10 +158,10 @@ put_hash(PLHashTable* table, const char* key, char value, PRTime dateReceived)
   if (tmp) 
   {
     tmp->uidl = PL_strdup(key);
-    tmp->dateReceived = dateReceived;
-    tmp->status = value;
     if (tmp->uidl) 
     {
+      tmp->dateReceived = dateReceived;
+      tmp->status = value;
       PL_HashTableAdd(table, (const void *)tmp->uidl, (void*) tmp);
     }
     else 
@@ -313,7 +313,7 @@ net_pop3_load_state(const char* searchhost,
           if (flags && uidl) 
           {
             if ((flags[0] == KEEP) || (flags[0] == DELETE_CHAR) ||
-              (flags[0] == TOO_BIG)) 
+              (flags[0] == TOO_BIG) || (flags[0] == FETCH_BODY)) 
             {
               put_hash(current->hash, uidl, flags[0], dateReceived);
             }
@@ -368,6 +368,7 @@ net_pop3_write_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
   Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) he->value;
   NS_ASSERTION((uidlEntry->status == KEEP) ||
     (uidlEntry->status ==  DELETE_CHAR) ||
+    (uidlEntry->status ==  FETCH_BODY) ||
     (uidlEntry->status == TOO_BIG), "invalid status");
   char* tmpBuffer = PR_smprintf("%c %s %d" MSG_LINEBREAK, uidlEntry->status, (char*)
     uidlEntry->uidl, uidlEntry->dateReceived);
@@ -446,15 +447,14 @@ message is not found, then the message was downloaded completly and already dele
 from the server. So this only applies to messages kept on the server or too big
 for download. */
 /* static */
-void nsPop3Protocol::MarkMsgDeletedInHashTable(PLHashTable *hashTable, const char *uidl, PRBool deleteChar, PRBool *changed)
+void nsPop3Protocol::MarkMsgInHashTable(PLHashTable *hashTable, const Pop3UidlEntry *uidlE, PRBool *changed)
 {
-  Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(hashTable, uidl);
+  Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(hashTable, uidlE->uidl);
   if (uidlEntry)
   {
-    char newStatus = (deleteChar) ? DELETE_CHAR : KEEP;
-    if (uidlEntry->status != newStatus)
+    if (uidlEntry->status != uidlE->status)
     {
-      uidlEntry->status = newStatus;
+      uidlEntry->status = uidlE->status;
       *changed = PR_TRUE;
     }
   }
@@ -462,10 +462,9 @@ void nsPop3Protocol::MarkMsgDeletedInHashTable(PLHashTable *hashTable, const cha
 
 /* static */ 
 nsresult 
-nsPop3Protocol::MarkMsgDeletedForHost(const char *hostName, const char *userName,
+nsPop3Protocol::MarkMsgForHost(const char *hostName, const char *userName,
                                       nsIFileSpec *mailDirectory, 
-                                       nsCStringArray &UIDLArray, 
-                                      PRBool deleteMsgs)
+                                       nsVoidArray &UIDLArray)
 {
   if (!hostName || !userName || !mailDirectory)
     return NS_ERROR_NULL_POINTER;
@@ -478,7 +477,10 @@ nsPop3Protocol::MarkMsgDeletedForHost(const char *hostName, const char *userName
 
   PRUint32 count = UIDLArray.Count();
   for (PRUint32 i = 0; i < count; i++)
-    MarkMsgDeletedInHashTable(uidlHost->hash, UIDLArray[i]->get(), deleteMsgs, &changed);
+  {
+    MarkMsgInHashTable(uidlHost->hash,
+      NS_STATIC_CAST(Pop3UidlEntry*,UIDLArray[i]), &changed);
+  }
 
   if (changed)
     net_pop3_write_state(uidlHost, mailDirectory);
@@ -798,6 +800,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     // size limit
     
     m_pop3Server->GetLeaveMessagesOnServer(&m_pop3ConData->leave_on_server);
+    m_pop3Server->GetHeadersOnly(&m_pop3ConData->headers_only);
     PRBool limitMessageSize = PR_FALSE;
 
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
@@ -2396,7 +2399,7 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
 PRInt32 
 nsPop3Protocol::GetMsg()
 {
-  char c;
+  char c = 0;
   int i;
   PRBool prefBool = PR_FALSE;
   PRInt32 popstateTimestamp = TimeInSecondsFromPRTime(PR_Now());
@@ -2636,10 +2639,18 @@ nsPop3Protocol::GetMsg()
         {
           m_pop3ConData->next_state = POP3_GET_MSG;
         }
-        else if ((c != TOO_BIG) && (m_pop3ConData->size_limit > 0) &&
-          (info->size > m_pop3ConData->size_limit) && 
+        else if (c == FETCH_BODY) 
+        {
+          m_pop3ConData->next_state = POP3_SEND_RETR;
+	  PL_HashTableRemove (m_pop3ConData->uidlinfo->hash, (void*)
+              info->uidl);
+        }
+        else if ((c != TOO_BIG) &&
           (TestCapFlag(POP3_TOP_UNDEFINED | POP3_HAS_TOP)) &&
-          !m_pop3ConData->only_uidl) 
+	  (m_pop3ConData->headers_only ||
+	  ((m_pop3ConData->size_limit > 0) &&
+          (info->size > m_pop3ConData->size_limit) && 
+          !m_pop3ConData->only_uidl))) 
         { 
           /* message is too big */
           m_pop3ConData->truncating_cur_msg = PR_TRUE;
@@ -2678,7 +2689,7 @@ nsPop3Protocol::GetMsg()
         
         // if this is a message we already know about (i.e., it was in popstate.dat already),
         // we need to maintain the original date the message was downloaded.
-        if (info->uidl && !m_pop3ConData->only_uidl && !m_pop3ConData->truncating_cur_msg)	
+        if (info->uidl && !m_pop3ConData->only_uidl && !m_pop3ConData->truncating_cur_msg)
             /* message already marked as too_big */
             put_hash(m_pop3ConData->newuidl, info->uidl, KEEP, popstateTimestamp); 
       }
@@ -2694,8 +2705,9 @@ nsPop3Protocol::GetMsg()
  */
 PRInt32 nsPop3Protocol::SendTop()
 {
-   char * cmd = PR_smprintf( "TOP %ld 20" CRLF,
-     m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].msgnum);
+   char * cmd = PR_smprintf( "TOP %ld %d" CRLF,
+     m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].msgnum,
+     m_pop3ConData->headers_only ? 0 : 20);
    PRInt32 status = -1;
    if (cmd)
    {
@@ -2841,7 +2853,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
            */
         if (m_pop3ConData->truncating_cur_msg)
         { /* TOP, truncated message */
-            m_pop3ConData->cur_msg_size = m_pop3ConData->size_limit;
             flags |= MSG_FLAG_PARTIAL;
         }
         else
@@ -2910,8 +2921,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
           nsCOMPtr<nsIMsgWindow> msgWindow;
           if (NS_SUCCEEDED(rv))
             rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-
-            rv = m_nsIPop3Sink->IncorporateComplete(msgWindow);
+          rv = m_nsIPop3Sink->IncorporateComplete(msgWindow,
+            m_pop3ConData->truncating_cur_msg ? m_pop3ConData->cur_msg_size : 0);
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See 
             // bug 62480)
@@ -2980,7 +2991,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         if (NS_SUCCEEDED(rv))
           rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
         rv = 
-            m_nsIPop3Sink->IncorporateComplete(msgWindow);
+            m_nsIPop3Sink->IncorporateComplete(msgWindow,
+	      m_pop3ConData->truncating_cur_msg ? m_pop3ConData->cur_msg_size : 0);
 
         // The following was added to prevent the loss of Data when we try
         // and write to somewhere we dont have write access error to (See
@@ -3001,10 +3013,34 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         if (m_pop3ConData->truncating_cur_msg ||
             m_pop3ConData->leave_on_server )
         {
+	    Pop3UidlEntry *uidlEntry = NULL;
+
+	    // A filter might have decided to retrieve this full msg
+	    if (m_pop3ConData->truncating_cur_msg)
+	    {
+               Pop3MsgInfo* info = m_pop3ConData->msg_info + m_pop3ConData->last_accessed_msg; 
+	       uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
+	    }
+	    if (uidlEntry && uidlEntry->status == FETCH_BODY)
+	    {
+	    // A filter decided to retrieve this full msg
+	       m_pop3ConData->next_state = POP3_SEND_RETR;
+	       m_pop3ConData->truncating_cur_msg = PR_FALSE;
+	    } else
+	    {
             /* We've retrieved all or part of this message, but we want to
                keep it on the server.  Go on to the next message. */
-            m_pop3ConData->last_accessed_msg++;
-            m_pop3ConData->next_state = POP3_GET_MSG;
+               m_pop3ConData->last_accessed_msg++;
+               m_pop3ConData->next_state = POP3_GET_MSG;
+	    }
+	    if (m_pop3ConData->only_uidl)
+	    {
+	    /* GetMsg didn't update this field. Do it now. */
+	       uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, m_pop3ConData->only_uidl);
+               NS_ASSERTION(uidlEntry, "uidl not found in uidlinfo");
+               if (uidlEntry)
+	         put_hash(m_pop3ConData->uidlinfo->hash, m_pop3ConData->only_uidl, KEEP, uidlEntry->dateReceived);
+	    }
         } else
         {
             m_pop3ConData->next_state = POP3_SEND_DELE;
@@ -3122,7 +3158,8 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
           nsCOMPtr<nsIMsgWindow> msgWindow;
           if (NS_SUCCEEDED(rv))
             rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-          rv = m_nsIPop3Sink->IncorporateComplete(msgWindow);
+          rv = m_nsIPop3Sink->IncorporateComplete(msgWindow,
+	     m_pop3ConData->truncating_cur_msg ? m_pop3ConData->cur_msg_size : 0);
 
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See
@@ -3711,7 +3748,7 @@ nsresult nsPop3Protocol::CloseSocket()
     return rv;
 }
 
-NS_IMETHODIMP nsPop3Protocol::MarkMessagesDeleted(nsCStringArray *aUIDLArray, PRBool aDeleteMsgs)
+NS_IMETHODIMP nsPop3Protocol::MarkMessages(nsVoidArray *aUIDLArray)
 {
   NS_ENSURE_ARG_POINTER(aUIDLArray);
   PRUint32 count = aUIDLArray->Count();
@@ -3720,9 +3757,9 @@ NS_IMETHODIMP nsPop3Protocol::MarkMessagesDeleted(nsCStringArray *aUIDLArray, PR
   {
     PRBool changed;
     if (m_pop3ConData->newuidl) 
-      MarkMsgDeletedInHashTable(m_pop3ConData->newuidl, aUIDLArray->CStringAt(i)->get(), aDeleteMsgs, &changed);
+      MarkMsgInHashTable(m_pop3ConData->newuidl, NS_STATIC_CAST(Pop3UidlEntry*,aUIDLArray->ElementAt(i)), &changed);
     if (m_pop3ConData->uidlinfo)
-      MarkMsgDeletedInHashTable(m_pop3ConData->uidlinfo->hash, aUIDLArray->CStringAt(i)->get(), aDeleteMsgs, &changed);
+      MarkMsgInHashTable(m_pop3ConData->uidlinfo->hash, NS_STATIC_CAST(Pop3UidlEntry*,aUIDLArray->ElementAt(i)), &changed);
   }
   return NS_OK;
 }

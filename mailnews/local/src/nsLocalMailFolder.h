@@ -174,6 +174,10 @@ public:
 
   NS_IMETHOD GetName(PRUnichar **aName);
 
+  // Used when headers_only is TRUE
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *aMessages, nsIMsgWindow *aWindow);
+
+
 protected:
   nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
 

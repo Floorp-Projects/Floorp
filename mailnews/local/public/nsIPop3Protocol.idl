@@ -38,15 +38,19 @@
 
 #include "nsISupports.idl"
 
-[ptr] native nsCStringArray(nsCStringArray);
+[ptr] native nsVoidArray(nsVoidArray);
 
 %{C++
 #include "nsVoidArray.h"
 %}
 
-[scriptable, uuid(853daefb-411a-41f5-97e0-2f93e79b7302)]
+[scriptable, uuid(aebda729-c423-4113-ae36-2229fdc3b699)]
 interface nsIPop3Protocol : nsISupports {
-  [noscript] void markMessagesDeleted(in nsCStringArray aUidlArray, in boolean aDeleteMsgs);
+  /* aUidl is an array of pointers to Pop3UidlEntry's. That structure is
+   * currently defined in nsPop3Protocol.h, perhaps it should be here
+   * instead...
+   */
+  [noscript] void markMessages(in nsVoidArray aUidl);
 };
 
 

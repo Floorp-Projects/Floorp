@@ -82,5 +82,8 @@
 #define MIME_MSG_PARTIAL_FMT_3                    1039
 #define MIME_MSG_DEFAULT_ATTACHMENT_NAME          1040
 #define MIME_FORWARDED_MESSAGE_HTML_USER_WROTE    1041
+#define MIME_MSG_PARTIAL_FMT2_1                   1042
+#define MIME_MSG_PARTIAL_FMT2_2                   1043
+#define MIME_MSG_PARTIAL_FMT2_3                   1044
 
 #endif /* _NAME_OF_THIS_HEADER_FILE__ */

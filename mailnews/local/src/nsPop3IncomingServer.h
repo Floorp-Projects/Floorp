@@ -79,7 +79,7 @@ private:
     PRBool m_authenticated;
     nsCOMPtr <nsIPop3Protocol> m_runningProtocol;
     nsCOMPtr <nsIMsgFolder> m_rootMsgFolder;
-    nsCStringArray m_uidlsToMarkDeleted;
+    nsVoidArray m_uidlsToMark;
 };
 
 #endif

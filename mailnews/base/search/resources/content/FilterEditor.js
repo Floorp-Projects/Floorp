@@ -63,6 +63,7 @@ var gDeleteCheckbox;
 var gKillCheckbox;
 var gWatchCheckbox;
 var gDeleteFromServerCheckbox;
+var gFetchBodyFromServerCheckbox;
 var gFilterActionList;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
@@ -290,6 +291,7 @@ function initializeFilterWidgets()
     gKillCheckbox = document.getElementById("kill");
     gWatchCheckbox = document.getElementById("watch");
     gDeleteFromServerCheckbox = document.getElementById("deleteFromServer");
+    gFetchBodyFromServerCheckbox = document.getElementById("fetchBodyFromServer");
     gFilterActionList = document.getElementById("filterActionList");
 }
 
@@ -354,6 +356,8 @@ function initializeDialog(filter)
         gKillCheckbox.checked = true;
       else if (filterAction.type == nsMsgFilterAction.DeleteFromPop3Server)
         gDeleteFromServerCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.FetchBodyFromPop3Server)
+        gFetchBodyFromServerCheckbox.checked = true;
 
       SetUpFilterActionList(getScope(filter));
     }
@@ -518,6 +522,13 @@ function saveFilter()
   {
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.DeleteFromPop3Server;
+    gFilter.appendAction(filterAction);
+  }
+
+  if (gFetchBodyFromServerCheckbox.checked)
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.FetchBodyFromPop3Server;
     gFilter.appendAction(filterAction);
   }
 

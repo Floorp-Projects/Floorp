@@ -111,6 +111,7 @@ MimeMessage_initialize (MimeObject *object)
 {
   MimeMessage *msg = (MimeMessage *)object;
   msg->grabSubject = PR_FALSE;
+  msg->bodyLength = 0;
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(object);
 }
@@ -192,6 +193,8 @@ MimeMessage_parse_line (char *aLine, PRInt32 aLength, MimeObject *obj)
 	  PRBool nl;
 	  PR_ASSERT(kid);
 	  if (!kid) return -1;
+
+          msg->bodyLength += length;
 
 	  /* Don't allow MimeMessage objects to not end in a newline, since it
 		 would be inappropriate for any following part to appear on the same
@@ -521,8 +524,11 @@ MimeMessage_close_headers (MimeObject *obj)
 		char dummy = 0;
 		if (sscanf(xmoz, " %lx %c", &flags, &dummy) == 1 &&
 			flags & MSG_FLAG_PARTIAL)
+		{
+			obj->options->html_closure = obj;
 			obj->options->generate_footer_html_fn =
 				MimeMessage_partial_message_html;
+		}
 		PR_FREEIF(xmoz);
 	}
   }
@@ -816,12 +822,14 @@ static char *
 MimeMessage_partial_message_html(const char *data, void *closure,
 								 MimeHeaders *headers)
 {
+  MimeMessage *msg = (MimeMessage *)closure;
   nsCAutoString orig_url(data);
   char *partialMsgHtml = nsnull;
   char *uidl = MimeHeaders_get(headers, HEADER_X_UIDL, PR_FALSE, PR_FALSE);
   char *msgId = MimeHeaders_get(headers, HEADER_MESSAGE_ID, PR_FALSE,
 								  PR_FALSE);
   char *msgIdPtr = PL_strstr(msgId, "<");
+  int msgBase;
 
   orig_url.ReplaceSubstring("mailbox-message", "mailbox");
   orig_url.ReplaceSubstring("#", "?number=");
@@ -834,11 +842,12 @@ MimeMessage_partial_message_html(const char *data, void *closure,
   if (gtPtr)
     *gtPtr = 0;
 
+  msgBase = (msg->bodyLength > MSG_LINEBREAK_LEN) ? MIME_MSG_PARTIAL_FMT_1 : MIME_MSG_PARTIAL_FMT2_1;
   char *escapedUidl = uidl ? nsEscape(uidl, url_XAlphas) : nsnull;
   char *escapedMsgId = msgIdPtr ? nsEscape(msgIdPtr, url_Path) : nsnull;
-  char *fmt1 = MimeGetStringByID(1037);
-  char *fmt2 = MimeGetStringByID(1038);
-  char *fmt3 = MimeGetStringByID(1039);
+  char *fmt1 = MimeGetStringByID(msgBase);
+  char *fmt2 = MimeGetStringByID(msgBase+1);
+  char *fmt3 = MimeGetStringByID(msgBase+2);
   char *msgUrl = PR_smprintf("%s&messageid=%s&uidl=%s",
                              orig_url.get(), escapedMsgId, escapedUidl);
   partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);

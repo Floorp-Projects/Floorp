@@ -64,6 +64,7 @@ struct MimeMessage {
   PRBool crypto_msg_signed_p;	/* What the emitted xlation-stamp *says*. */
   PRBool crypto_msg_encrypted_p;
   PRBool grabSubject;	/* Should we try to grab the subject of this message */
+  PRInt32 bodyLength;
 };
 
 #endif /* _MIMEMSG_H_ */

@@ -1722,7 +1722,29 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             NS_ENSURE_SUCCESS(rv, rv);
             nsCOMPtr<nsISupports> iSupports = do_QueryInterface(msgHdr);
             messages->AppendElement(iSupports);
-            localFolder->MarkMsgsOnPop3Server(messages, PR_TRUE);
+            // This action ignores the deleteMailLeftOnServer preference
+            localFolder->MarkMsgsOnPop3Server(messages, POP3_FORCE_DEL);
+          }
+        }
+        break;
+      case nsMsgFilterAction::FetchBodyFromPop3Server:
+        {
+	  PRUint32 flags = 0;
+          nsCOMPtr <nsIMsgFolder> downloadFolder;
+          msgHdr->GetFolder(getter_AddRefs(downloadFolder));
+          nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(downloadFolder);
+          msgHdr->GetFlags(&flags);
+          if (localFolder && (flags & MSG_FLAG_PARTIAL))
+          {
+            nsCOMPtr<nsISupportsArray> messages;
+            rv = NS_NewISupportsArray(getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(msgHdr);
+            messages->AppendElement(iSupports);
+            localFolder->MarkMsgsOnPop3Server(messages, POP3_FETCH_BODY);
+	    // Don't add this header to the DB, we're going to replace it
+	    // with the full message.
+            m_msgMovedByFilter = PR_TRUE;
           }
         }
         break;

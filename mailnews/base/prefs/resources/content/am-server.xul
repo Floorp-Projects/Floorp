@@ -150,6 +150,12 @@
               accesskey="&downloadOnBiff.accesskey;"
               prefstring="mail.server.%serverkey%.download_on_biff"/>
 
+    <checkbox wsm_persist="true" id="pop3.headersOnly"
+              label="&headersOnly.label;"
+              accesskey="&headersOnly.accesskey;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.headers_only"/>
+
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
               label="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"
               accesskey="&leaveOnServer.accesskey;"

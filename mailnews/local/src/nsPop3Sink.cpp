@@ -533,7 +533,7 @@ nsresult nsPop3Sink::WriteLineToMailbox(const char *buffer)
 }
 
 NS_IMETHODIMP
-nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow)
+nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
 {
   if (m_buildMessageUri && m_baseMessageUri)
   {
@@ -549,7 +549,14 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow)
   if (NS_FAILED(rv)) return rv;
   NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
   if (m_newMailParser)
+  {
+    // PublishMsgHdr clears m_newMsgHdr, so we need a comptr to 
+    // hold onto it.
+    nsCOMPtr <nsIMsgDBHdr> hdr = m_newMailParser->m_newMsgHdr;
     m_newMailParser->PublishMsgHeader(aMsgWindow); 
+    if (aSize)
+      hdr->SetUint32Property("onlineSize", aSize);
+  }
 
 #ifdef DEBUG
   printf("Incorporate message complete.\n");

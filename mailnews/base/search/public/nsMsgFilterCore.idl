@@ -59,7 +59,7 @@ typedef long nsMsgFilterIndex;
 
 typedef long nsMsgRuleActionType;
 
-[scriptable, uuid(11ba0ed6-304f-11d3-9c16-00a0c900d445)]
+[scriptable, uuid(3099cee1-eb76-4cd3-a40e-cfc8d2ef4437)]
 interface nsMsgFilterAction {
   
     /* these longs are all actually of type nsMsgFilterActionType */
@@ -78,5 +78,6 @@ interface nsMsgFilterAction {
     const long DeleteFromPop3Server=12;
     const long LeaveOnPop3Server=13;
     const long JunkScore=14;
+    const long FetchBodyFromPop3Server=15;
 };
 

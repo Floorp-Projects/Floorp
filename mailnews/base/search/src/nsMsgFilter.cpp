@@ -745,6 +745,7 @@ static struct RuleActionsTableEntry ruleActionsTable[] =
   { nsMsgFilterAction::DeleteFromPop3Server, nsMsgFilterType::All,   0, "Delete from Pop3 server"},
   { nsMsgFilterAction::LeaveOnPop3Server, nsMsgFilterType::All,   0, "Leave on Pop3 server"},
   { nsMsgFilterAction::JunkScore, nsMsgFilterType::All,   0, "JunkScore"},
+  { nsMsgFilterAction::FetchBodyFromPop3Server, nsMsgFilterType::All,   0, "Fetch body from Pop3Server"},
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)

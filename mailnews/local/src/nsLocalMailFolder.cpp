@@ -1601,7 +1601,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       if(NS_SUCCEEDED(rv))
       {
           nsCOMPtr<nsISupports> msgSupport;
-          MarkMsgsOnPop3Server(messages, PR_TRUE);
+          MarkMsgsOnPop3Server(messages, POP3_DELETE);
 
           rv = EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
           if (NS_SUCCEEDED(rv))
@@ -2938,12 +2938,11 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 // The next time we look at mail the message will be deleted from the server.
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool aDeleteMsgs)
+nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 aMark)
 {
   const char      *uidl, *accountKey;
   char      *header = nsnull;
   PRUint32  size = 0, len = 0;
-  nsCOMPtr <nsIMsgDBHdr> hdr;
   nsCOMPtr<nsIPop3IncomingServer> curFolderPop3MailServer;
   nsCOMPtr<nsIFileSpec> mailboxSpec;
   nsCOMArray<nsIPop3IncomingServer> pop3Servers; // servers with msgs deleted...
@@ -2982,6 +2981,11 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
   PRUint32 srcCount;
   aMessages->Count(&srcCount);
   
+  // Filter delete requests are always honored, others are subject
+  // to the deleteMailLeftOnServer preference.
+  PRInt32 mark;
+  mark = (aMark == POP3_FORCE_DEL) ? POP3_DELETE : aMark;
+
   for (PRInt32 i = 0; i < srcCount; i++)
   {
     /* get uidl for this message */
@@ -2992,7 +2996,7 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
     
     PRUint32 flags = 0;
 
-    if (msgDBHdr /* maybe check for partial flag || some server has leave on server */)
+    if (msgDBHdr)
     {
       msgDBHdr->GetFlags(&flags);
       len = 0;
@@ -3007,8 +3011,6 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
         curFolderPop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
       }
 
-      if (!deleteMailLeftOnServer)
-        continue;
       msgDBHdr->GetMessageOffset(&messageOffset);
       rv = seekableStream->Seek(PR_SEEK_SET, messageOffset);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -3048,20 +3050,22 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
                   msgPop3Server = curMsgPop3MailServer;
                   msgPop3Server->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
                   msgPop3Server->GetLeaveMessagesOnServer(&leaveOnServer);
-                  // stop looking at headers if leaveOnServer not set...
-                  if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
-                    continue;
                 }
               }
             }
+            // ignore this header if not partial and leaveOnServer not set...
+            if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
+              continue;
+            // if marking deleted, ignore header if we're not deleting from
+            // server when deleting locally.
+            if (aMark == POP3_DELETE && leaveOnServer && !deleteMailLeftOnServer)
+              continue;
             uidl = strstr(header.get(), X_UIDL);
             if (uidl)
             {
-              if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
-                continue;
               uidl += X_UIDL_LEN + 2; // skip UIDL: header
               len = strlen(uidl);
-              msgPop3Server->AddUidlToMarkDeleted(uidl);
+              msgPop3Server->AddUidlToMark(uidl, mark);
               // remember this pop server in list of servers with msgs deleted
               if (pop3Servers.IndexOfObject(msgPop3Server) == kNotFound)
                 pop3Servers.AppendObject(msgPop3Server);
@@ -3079,13 +3083,39 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
   // need to do this for all pop3 mail servers that had messages deleted.
   PRInt32 serverCount = pop3Servers.Count();
   for (PRUint32 index = 0; index < serverCount; index++)
-    pop3Servers[index]->MarkMessagesDeleted(aDeleteMsgs); 
+    pop3Servers[index]->MarkMessages();
 
   mailboxSpec->CloseStream();
   return rv;
 }
 
 
+NS_IMETHODIMP nsMsgLocalMailFolder::DownloadMessagesForOffline(
+	nsISupportsArray *aMessages, nsIMsgWindow *aWindow)
+{
+  nsresult rv;
+  MarkMsgsOnPop3Server(aMessages, POP3_FETCH_BODY);
+  rv = GetNewMessages(aWindow, nsnull);
+
+  if (NS_SUCCEEDED(rv))
+  {
+    PRUint32 srcCount;
+    aMessages->Count(&srcCount);
+  
+    for (PRInt32 i = 0; i < srcCount; i++)
+    {
+      nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
+      if (msgDBHdr)
+      {
+        PRUint32 flags = 0;
+        msgDBHdr->GetFlags(&flags);
+	if (flags & MSG_FLAG_PARTIAL)
+          mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_FALSE, PR_TRUE);
+      }
+    }
+  }
+  return rv;
+}
 
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
 // this method will go away.

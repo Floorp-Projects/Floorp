@@ -24,6 +24,7 @@
 <!ENTITY killThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY deleteFromServer.label "Delete from POP server">
+<!ENTITY fetchBodyFromServer.label "Fetch body from POP server">
 <!ENTITY setJunkScore.label "Set Junk Status to:">
 <!ENTITY filterName.label "Filter name:">
 <!ENTITY filterName.accesskey "i">

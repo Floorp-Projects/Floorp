@@ -346,7 +346,7 @@ nsLocalMoveCopyMsgTxn::UndoTransactionInternal()
             }
             nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder);
             if (localFolder)
-              localFolder->MarkMsgsOnPop3Server(srcMessages, PR_FALSE /*deleteMsgs*/);
+              localFolder->MarkMsgsOnPop3Server(srcMessages, POP3_NONE /*deleteMsgs*/);
         }
         srcDB->SetSummaryValid(PR_TRUE);
         srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -430,7 +430,7 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
         {
             nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder);
             if (localFolder)
-              localFolder->MarkMsgsOnPop3Server(srcMessages, PR_TRUE /*deleteMsgs*/);
+              localFolder->MarkMsgsOnPop3Server(srcMessages, POP3_DELETE /*deleteMsgs*/);
 
             rv = srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
             srcDB->SetSummaryValid(PR_TRUE);
