@@ -16,12 +16,15 @@
  * Reserved.
  */
 
-// this file implements the nsIMsgDatabase interface using the MDB API.
+// this file implements the nsMsgDatabase interface using the MDB Interface.
 
+#include "nsMsgDatabase.h"
+
+#ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_IID(kIMDBIID, NS_IMDB_IID);
 static NS_DEFINE_IID(kIMBBCID, NS_IMBB_IID);
 
-#include "nsIMsgDatabase.h"
+
 
 	nsresult rv = nsRepository::CreateInstance(kMDBCID, nsnull, kIMDBIID, (void **)&gMDBInterface);
 
@@ -31,3 +34,108 @@ static NS_DEFINE_IID(kIMBBCID, NS_IMBB_IID);
 	    rv = NS_OK;
 	  }
 	}
+#endif
+
+nsMsgDatabaseArray *nsMsgDatabase::m_dbCache = NULL;
+
+nsMsgDatabaseArray::nsMsgDatabaseArray()
+{
+}
+
+//----------------------------------------------------------------------
+// GetDBCache
+//----------------------------------------------------------------------
+nsMsgDatabaseArray *
+nsMsgDatabase::GetDBCache()
+{
+	if (!m_dbCache)
+	{
+		m_dbCache = new nsMsgDatabaseArray();
+	}
+	return m_dbCache;
+	
+}
+
+void
+nsMsgDatabase::CleanupCache()
+{
+	if (m_dbCache) // clean up memory leak
+	{
+		for (int i = 0; i < GetDBCache()->GetSize(); i++)
+		{
+			nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
+			if (pMessageDB)
+			{
+#ifdef DEBUG_bienvenu
+				XP_Trace("closing %s\n", pMessageDB->m_dbName);
+#endif
+				pMessageDB->ForceClosed();
+				i--;	// back up array index, since closing removes db from cache.
+			}
+		}
+		XP_ASSERT(GetNumInCache() == 0);	// better not be any open db's.
+		delete m_dbCache;
+	}
+	m_dbCache = NULL; // Need to reset to NULL since it's a
+			  // static global ptr and maybe referenced 
+			  // again in other places.
+}
+
+//----------------------------------------------------------------------
+// FindInCache
+//----------------------------------------------------------------------
+nsMsgDatabase* nsMsgDatabase::FindInCache(const char * pDbName)
+{
+	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	{
+		nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
+		if (pMessageDB->MatchDbName(pDbName))
+		{
+			return(pMessageDB);
+		}
+	}
+	return(NULL);
+}
+
+//----------------------------------------------------------------------
+// FindInCache
+//----------------------------------------------------------------------
+int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
+{
+	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	{
+		if (GetDBCache()->GetAt(i) == pMessageDB)
+		{
+			return(i);
+		}
+	}
+	return(-1);
+}
+
+//----------------------------------------------------------------------
+// RemoveFromCache
+//----------------------------------------------------------------------
+void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
+{
+	int i = FindInCache(pMessageDB);
+	if (i != -1)
+	{
+		GetDBCache()->RemoveAt(i);
+	}
+}
+
+
+#ifdef DEBUG
+void nsMsgDatabase::DumpCache()
+{
+	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	{
+#ifdef DEBUG_bienvenu
+		nsMsgDatabase* pMessageDB = 
+#endif
+        GetDBCache()->GetAt(i);
+#ifdef DEBUG_bienvenu
+		XP_Trace("db %s in cache use count = %d\n", pMessageDB->m_dbName, pMessageDB->m_useCount);
+#endif
+	}
+}

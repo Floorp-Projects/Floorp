@@ -22,6 +22,18 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = mailnewsmsgdb
+LIBRARY_NAME=mailnewsmsgdb
+NO_SHARED_LIB=1
+
+EXPORTS = \
+	$(NULL)
+
+CPPSRCS = \
+	nsMsgDatabase.cpp\
+	nsMailMsgDatabase.cpp\
+	$(NULL)
+
 DIRS = public src tests
 
 include $(topsrcdir)/config/config.mk
