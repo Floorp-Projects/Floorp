@@ -31,4 +31,9 @@ pascal void nsDynamicMDEFMain(
   Point hitPt, 
   short * whichItem);
 
+void nsPreviousMenuStackUnwind(
+  nsIMenu * aMenuJustBuilt, 
+  MenuHandle aMenuHandleJustBuilt);
+  
+
 #endif nsDynamicMDEF_h__

@@ -55,6 +55,7 @@ MenuHandle gLevel4HierMenu = nsnull;
 MenuHandle gLevel5HierMenu = nsnull;
 
 extern nsVoidArray gPreviousMenuStack;
+extern PRInt16 gCurrentMenuDepth;
 
 // #if APPLE_MENU_HACK
 #include "nsMenu.h"				// need to get APPLE_MENU_HACK macro
@@ -337,6 +338,9 @@ nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
+  gCurrentMenuDepth = 1;
+  nsPreviousMenuStackUnwind(nsnull, nsnull);
+  
   NS_INIT_REFCNT();
   mNumMenus       = 0;
   mParent         = nsnull;
@@ -498,6 +502,7 @@ NS_METHOD nsMenuBar::SetNativeData(void* aData)
 NS_METHOD nsMenuBar::Paint()
 {
   gMacMenubar = this;
+  
   ::SetMenuBar(mMacMBarHandle);
   // Now we have blown away the merged Help menu, so we have to rebuild it
   for(int i = mMenuVoidArray.Count()-1; i>=0; --i) {
