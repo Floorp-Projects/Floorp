@@ -24,6 +24,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
 
+// Forward declarations...
 class nsSocketTransport;
 
 class nsSocketTransportService : public nsISocketTransportService,

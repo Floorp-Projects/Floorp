@@ -24,8 +24,13 @@
 #include "prnetdb.h"
 
 #include "nsITransport.h"
-#include "nsIInputStream.h"
-#include "nsIByteBufferInputStream.h"
+
+//
+// This is the size of the global buffer used by all nsSocketTransport 
+// instances when reading from or writing to the network.
+//
+#define MAX_IO_BUFFER_SIZE   8192
+
 
 enum nsSocketState {
   eSocketState_Created        = 0,
@@ -50,7 +55,9 @@ enum nsSocketOperation {
 };
 
 
+// Forward declarations...
 class nsSocketTransportService;
+class nsSocketTransportStream;
 
 class nsSocketTransport : public nsITransport
 {
@@ -121,7 +128,7 @@ protected:
 
   nsISupports*              mReadContext;
   nsIStreamListener*        mReadListener;
-  nsIByteBufferInputStream* mReadStream;
+  nsSocketTransportStream*  mReadStream;
 
   nsISupports*              mWriteContext;
   nsIStreamObserver*        mWriteObserver;
@@ -131,5 +138,6 @@ protected:
 
   nsSocketTransportService* mService;
 };
+
 
 #endif /* nsSocketTransport_h___ */
