@@ -22,6 +22,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+XPIDL_MODULE = netwerk_http
+
 XPIDLSRCS =                  \
         nsIHTTPChannel.idl \
 	nsIHttpNotify.idl  \
