@@ -88,12 +88,12 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
 {
   nsresult rv = NS_OK;
 
-  NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
-
   if (!mTargetProfile) 
     GetTargetProfile(aProfile, aReplace);
   if (!mSourceProfile)
     GetSourceProfile(aProfile);
+
+  NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
   COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
   COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
