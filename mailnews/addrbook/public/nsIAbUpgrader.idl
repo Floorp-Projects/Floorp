@@ -28,4 +28,5 @@ interface nsIAbUpgrader : nsISupports {
 
 	void StartUpgrade4xAddrBook(in nsIFileSpec sourceAddrBook, in nsIFileSpec destAddrBook);
 	void ContinueExport(out boolean done);
+	attribute string currentCharset;
 };

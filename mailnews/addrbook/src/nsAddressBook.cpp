@@ -1495,6 +1495,14 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 		// check to see that that file doesn't exist.
 		// what if there are colision?
 
+		// set the current charset to "", so later we'll use the system charset
+		//
+		// when importing .na2 files from disk, we really
+		// have no idea what the charset was (it's in the 4.x prefs file)
+		// so we just guess that it is the system charset.
+		rv = abUpgrader->SetCurrentCharset("");
+  		if (NS_FAILED(rv)) return rv;
+
 		rv = ConvertNA2toLDIF(fileSpec, tmpLDIFFile);
   		if (NS_FAILED(rv)) return rv;
 

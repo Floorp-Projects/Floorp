@@ -1737,6 +1737,7 @@ static PRBool charEndsWith(const char *str, const char *endStr)
 
 #define ADDRESSBOOK_PREF_NAME_ROOT "ldap_2.servers."
 #define ADDRESSBOOK_PREF_NAME_SUFFIX ".filename"
+#define ADDRESSBOOK_PREF_CSID_SUFFIX ".csid"
 #define ADDRESSBOOK_PREF_VALUE_4x_SUFFIX ".na2"
 #define ADDRESSBOOK_PREF_VALUE_5x_SUFFIX ".mab"
 #define TEMP_LDIF_FILE_SUFFIX ".ldif"
@@ -1825,6 +1826,26 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
      rv = tmpLDIFFileSpec->SetNativePath(pathBuf);
      if (NS_FAILED(rv)) return;
   }
+
+  // get the csid from the prefs
+  nsCAutoString csidPrefName;
+  csidPrefName = ADDRESSBOOK_PREF_NAME_ROOT;
+  csidPrefName += abName; 
+  csidPrefName += ADDRESSBOOK_PREF_CSID_SUFFIX;
+  nsXPIDLCString csidPrefValue;
+  rv = prefs->CopyCharPref((const char *)csidPrefName,getter_Copies(csidPrefValue));
+  if (NS_FAILED(rv)) { 
+	// if we fail to get the pref value, set it to "", which will
+	// later cause us to use the system charset
+	*((char **)getter_Copies(csidPrefValue)) = nsXPIDLCString::Copy("");
+  }
+
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && abUpgrader, "failed to get upgrader");
+  if (NS_FAILED(rv) || !abUpgrader) return;
+  rv = abUpgrader->SetCurrentCharset((const char *)csidPrefValue);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set the current char set");
+  if (NS_FAILED(rv)) return;
 
 // HACK:  I need to rename pab.ldif -> abook.ldif, because a bunch of places are hacked to point to abook.mab, and when I import abook.ldif it will create abook.mab. this is a temporary hack and will go away soon.
   if (!PL_strcmp((const char *)abName,"pab")) {
