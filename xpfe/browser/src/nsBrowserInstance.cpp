@@ -995,7 +995,7 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
 }
 
 #ifdef DEBUG
-#include "nsIAppShellService.h"
+#include "nsProxyObjectManager.h"
 
 class PageCycler : public nsIObserver {
 public:
@@ -1062,11 +1062,16 @@ public:
     else {
       // no more URLs, so quit the browser
       nsresult rv;
-      static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
-      NS_WITH_SERVICE(nsIAppShellService, appShellServ,
-                      kAppShellServiceCID, &rv);
-      if (NS_SUCCEEDED(rv)) 
-        (void)appShellServ->Quit();
+      NS_WITH_SERVICE(nsIAppShellService, appShellServ, kAppShellServiceCID, &rv);
+      if(NS_FAILED(rv)) return rv;
+      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, nsIProxyObjectManager::GetCID(), &rv);
+      if(NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIAppShellService> appShellProxy;
+      rv = pIProxyObjectManager->GetProxyObject(nsnull, nsIAppShellService::GetIID(), 
+                                                appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
+                                                getter_AddRefs(appShellProxy));
+
+      (void)appShellProxy->Quit();
       return NS_ERROR_FAILURE;
     }
   }
