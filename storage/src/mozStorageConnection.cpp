@@ -267,25 +267,15 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
 {
     int srv;
     char *buf;
-    int buflen = 0;
 
-    buflen = PR_snprintf(nsnull, 0, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
-    if (buflen <= 0)
-        return NS_ERROR_FAILURE;
-
-    buf = (char *) nsMemory::Alloc(buflen + 1);
+    buf = PR_smprintf("CREATE TABLE %s (%s)", aTableName, aTableSchema);
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    buflen = PR_snprintf(buf, buflen+1, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
-    if (buflen <= 0) {
-        nsMemory::Free(buf);
-        return NS_ERROR_FAILURE;
-    }
-
     srv = sqlite3_exec (mDBConn, buf,
                         NULL, NULL, NULL);
-    nsMemory::Free(buf);
+
+    PR_smprintf_free(buf);
 
     if (srv != SQLITE_OK) {
         return NS_ERROR_FAILURE; // XXX SQL_ERROR_TABLE_EXISTS
