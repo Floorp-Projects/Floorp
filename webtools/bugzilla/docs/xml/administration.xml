@@ -774,12 +774,6 @@
      
     <orderedlist>
       <listitem>
-        <para>Ensure you are running at least MysQL version 3.22.32 or newer.
-        Earlier versions had notable security holes and (from a security
-        point of view) poor default configuration choices.</para>
-      </listitem>
-
-      <listitem>
         <para>
         <emphasis>There is no substitute for understanding the tools on your
         system!</emphasis>
@@ -791,9 +785,9 @@
       </listitem>
 
       <listitem>
-        <para>Lock down /etc/inetd.conf. Heck, disable inet entirely on this
-        box. It should only listen to port 25 for Sendmail and port 80 for
-        Apache.</para>
+        <para>Lock down <filename>/etc/inetd.conf</filename>. Heck, disable
+        inet entirely on this box. It should only listen to port 25 for
+        Sendmail and port 80 for Apache.</para>
       </listitem>
 
       <listitem>
@@ -821,27 +815,45 @@
 
       <listitem>
         <para>Ensure you have adequate access controls for the
-        $BUGZILLA_HOME/data/ directory, as well as the
-        $BUGZILLA_HOME/localconfig file.
+        <filename>$BUGZILLA_HOME/data/</filename> directory, as well as the
+        <filename>$BUGZILLA_HOME/localconfig</filename> file.
         The localconfig file stores your "bugs" database account password. 
         In addition, some
-        files under $BUGZILLA_HOME/data/ store sensitive information.
+        files under <filename>$BUGZILLA_HOME/data/</filename> store sensitive
+        information.
         </para>
 
-        <para>Bugzilla provides default .htaccess files to protect the most
-        common Apache installations. However, you should verify these are
-        adequate according to the site-wide security policy of your web
-        server, and ensure that the .htaccess files are allowed to
-        "override" default permissions set in your Apache configuration
-        files. Covering Apache security is beyond the scope of this Guide;
-        please consult the Apache documentation for details.</para>
+        <para>Also, beware that some text editors create backup files in the
+        current working directory so you need to also secure files like
+        <filename>localconfig~</filename>.
+        </para>
+
+        <note>
+          <para>Simply blocking <computeroutput>.*localconfig.*</computeroutput>
+          won't work because the QuickSearch feature requires the web browser
+          to be able to retrieve <filename>localconfig.js</filename> and
+          others may be introduced in the future (see 
+          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">bug
+          186383</ulink> for more information.
+          </para>
+        </note>
+
+        <para>Bugzilla provides default <filename>.htaccess</filename> files
+        to protect the most common Apache installations. However, you should
+        verify these are adequate according to the site-wide security policy
+        of your web server, and ensure that the <filename>.htaccess</filename>
+        files are allowed to <quote>override</quote> default permissions set
+        in your Apache configuration files. Covering Apache security is beyond
+        the scope of this Guide; please consult the Apache documentation for
+        details.
+        </para>
 
         <para>If you are using a web server that does not support the
-        .htaccess control method, 
+        <filename>.htaccess</filename> control method, 
         <emphasis>you are at risk!</emphasis>
 
         After installing, check to see if you can view the file
-        "localconfig" in your web browser (e.g.: 
+        <filename>localconfig</filename> in your web browser (e.g.: 
         <ulink url="http://bugzilla.mozilla.org/localconfig">
         http://bugzilla.mozilla.org/localconfig</ulink>
 
@@ -850,11 +862,14 @@
         problem before deploying Bugzilla. If, however, it gives you a
         "Forbidden" error, then it probably respects the .htaccess
         conventions and you are good to go.</para>
+      </listitem>
 
+      <listitem>
         <para>When you run checksetup.pl, the script will attempt to modify
         various permissions on files which Bugzilla uses. If you do not have
-        a webservergroup set in the localconfig file, then Bugzilla will have
-        to make certain files world readable and/or writable. 
+        a webservergroup set in the <filename>localconfig</filename> file,
+        then Bugzilla will have to make certain files world readable and/or
+        writable. 
         <emphasis>THIS IS INSECURE!</emphasis>
 
         . This means that anyone who can get access to your system can do
@@ -867,33 +882,93 @@
           installation.</para>
         </note>
 
-        <para>On Apache, you can use .htaccess files to protect access to
-        these directories, as outlined in 
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=57161">Bug
-        57161</ulink>
+        <para>On Apache, you can use <filename>.htaccess</filename> files to
+        protect access to these directories, as outlined in Bugs 
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=57161">
+        57161</ulink> and
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">
+        186383</ulink>
 
-        for the localconfig file, and 
+        for the <filename>localconfig</filename> file, and 
         <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=65572">Bug
         65572</ulink>
 
-        for adequate protection in your data/ directory.</para>
+        for adequate protection in your <filename>data/</filename> directory.
+        Also, don't forget about the <filename>template/</filename> and
+        <filename>Bugzilla/</filename> directories and to allow access to the
+        <filename>data/webdot</filename> directory for the
+        <computeroutput>192.20.225.10</computeroutput> IP address if you are
+        using webdot from research.att.com.  The easiest way to
+        accomplish this is to set <function>$create_htaccess</function> to 1
+        in <filename>localconfig</filename>.  However, the information below
+        is provided for those that want to know exactly what is created.
+        </para>
 
         <para>Note the instructions which follow are Apache-specific. If you
         use IIS, Netscape, or other non-Apache web servers, please consult
         your system documentation for how to secure these files from being
         transmitted to curious users.</para>
 
-        <para>Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/data directory. 
-        <literallayout>&lt;Files comments&gt; allow from all &lt;/Files&gt;
-        deny from all</literallayout>
+        <para><filename>$BUGZILLA_HOME/.htaccess</filename>
+        <programlisting><![CDATA[
+# don't allow people to retrieve non-cgi executable files or our private data
+<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
+  deny from all
+</FilesMatch>
+<FilesMatch ^(localconfig.js|localconfig.rdf)$>
+  allow from all
+</FilesMatch>
+        ]]></programlisting> 
         </para>
 
-        <para>Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/ directory. 
-        <literallayout>&lt;Files localconfig&gt; deny from all &lt;/Files&gt;
-        allow from all</literallayout>
+        <para><filename>$BUGZILLA_HOME/data/.htaccess</filename> 
+        <programlisting><![CDATA[
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
+deny from all
+<Files duplicates.rdf>
+  allow from all
+</Files>
+        ]]></programlisting>
         </para>
+
+        <para><filename>$BUGZILLA_HOME/data/webdot</filename>
+        <programlisting><![CDATA[
+# Restrict access to .dot files to the public webdot server at research.att.com 
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+<FilesMatch ^[0-9]+\.dot$>
+  Allow from 192.20.225.10
+  Deny from all
+</FilesMatch>
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+  Allow from all
+</FilesMatch>
+
+# And no directory listings, either.
+Deny from all
+        ]]></programlisting>
+        </para>
+
+        <para><filename>$BUGZILLA_HOME/Bugzilla/.htaccess</filename>
+        <programlisting>
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </programlisting>
+         </para>
+
+        <para><filename>$BUGZILLA_HOME/template/.htaccess</filename>
+        <programlisting>
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </programlisting>
+         </para>
 
       </listitem>
     </orderedlist>
@@ -901,10 +976,10 @@
   </section>
 
   <section id="cust-templates">
-    <title>Template Customisation</title>
+    <title>Template Customization</title>
     
     <para>
-      One of the large changes for 2.16 was the templatisation of the
+      One of the large changes for 2.16 was the templatization of the
       entire user-facing UI, using the 
       <ulink url="http://www.template-toolkit.org">Template Toolkit</ulink>.
       Administrators can now configure the look and feel of Bugzilla without
@@ -913,9 +988,9 @@
     </para>
     
     <para>
-      Templatisation also makes localised versions of Bugzilla possible, 
+      Templatization also makes localized versions of Bugzilla possible, 
       for the first time. In the future, a Bugzilla installation may
-      have templates installed for multiple localisations, and select
+      have templates installed for multiple localizations, and select
       which ones to use based on the user's browser language setting.      
     </para>
     
@@ -926,7 +1001,7 @@
         and which you use depends mainly on how you upgrade Bugzilla. The
         template directory structure is that there's a top level directory,
         <filename>template</filename>, which contains a directory for
-        each installed localisation. The default English templates are
+        each installed localization. The default English templates are
         therefore in <filename>en</filename>. Underneath that, there
         is the <filename>default</filename> directory and optionally the 
         <filename>custom</filename> directory. The <filename>default</filename>
@@ -936,7 +1011,7 @@
       </para>
 
       <para>
-        The first method of making customisations is to directly edit the
+        The first method of making customizations is to directly edit the
         templates in <filename>template/en/default</filename>. This is
         probably the best method for small changes if you are going to use
         the CVS method of upgrading, because if you then execute a
@@ -1089,7 +1164,7 @@
       
       <para>
         There are a few templates you may be particularly interested in
-        customising for your installation.
+        customizing for your installation.
       </para>
       
       <para>
@@ -1110,7 +1185,7 @@
         <command>global/banner.html.tmpl</command>:
         This contains the "banner", the part of the header that appears
         at the top of all Bugzilla pages.  The default banner is reasonably
-        barren, so you'll probably want to customise this to give your
+        barren, so you'll probably want to customize this to give your
         installation a distinctive look and feel.  It is recommended you
         preserve the Bugzilla version number in some form so the version 
         you are running can be determined, and users know what docs to read.
@@ -1191,7 +1266,7 @@
   </section>
 
   <section id="cust-change-permissions">
-    <title>Change Permission Customisation</title>
+    <title>Change Permission Customization</title>
     
     <warning>
       <para>
@@ -1213,7 +1288,7 @@
     </para>
     
     <para>
-      For maximum flexibility, customising this means editing Bugzilla's Perl 
+      For maximum flexibility, customizing this means editing Bugzilla's Perl 
       code. This gives the administrator complete control over exactly who is
       allowed to do what. The relevant function is called 
       <filename>CheckCanChangeField()</filename>,
@@ -1245,7 +1320,7 @@
     </para>
     
     <para>
-      More complex customisations are not much harder. Basically, you add
+      More complex customizations are not much harder. Basically, you add
       a check in the right place in the function, i.e. after all the variables
       you are using have been set up. So, don't look at $ownerid before 
       $ownerid has been obtained from the database. You can either add a
@@ -1280,7 +1355,7 @@
       For a list of possible field names, look in 
       <filename>data/versioncache</filename> for the list called 
       <filename>@::log_columns</filename>. If you need help writing custom
-      rules for your organisation, ask in the newsgroup.
+      rules for your organization, ask in the newsgroup.
     </para>    
   </section>   
   
@@ -1299,12 +1374,12 @@
     
     <para>However, things get a bit more complicated if you've made
     changes to Bugzilla's code. In this case, you may have to re-make or
-    reapply those changes. One good method is to take a diff of your customised
+    reapply those changes. One good method is to take a diff of your customized
     version against the original, so you can survey all that you've changed.
-    Hopefully, templatisation will reduce the need for
+    Hopefully, templatization will reduce the need for
     this in the future.</para>
 
-    <para>From version 2.8 onwards, Bugzilla databases can be automatically
+    <para>From version 2.8 onward, Bugzilla databases can be automatically
     carried forward during an upgrade. However, because the developers of
     Bugzilla are constantly adding new
     tables, columns and fields, you'll probably get SQL errors if you just
