@@ -31,8 +31,7 @@
 #include "nsString.h"
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
-
-//#include <Navigation.h>
+#include "nsCOMArray.h"
 
 class nsILocalFileMac;
 @class NSArray;
@@ -61,6 +60,7 @@ public:
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter);
 
@@ -73,9 +73,10 @@ protected:
 
     // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
     // aFile is an existing but unspecified file. These functions must specify it.
-  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFileMac* aFile);
-  PRInt16 GetLocalFile(const nsString& inTitle, nsILocalFileMac* aFile);
-  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFileMac* aFile);
+  PRInt16 GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
+  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile);
+  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
+
   NSArray  *GenerateFilterList();
   void     SetDialogTitle(const nsString& inTitle, id aDialog);
   NSString *PanelDefaultDirectory();
@@ -84,7 +85,7 @@ protected:
   PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
-  nsCOMPtr<nsILocalFile> mFile;
+  nsCOMArray<nsILocalFile> mFiles;
   nsString               mDefault;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
 
