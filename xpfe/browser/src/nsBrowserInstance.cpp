@@ -190,12 +190,17 @@ class PageCycler : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
-  PageCycler(nsBrowserInstance* appCore, const char *aTimeoutValue = nsnull)
-    : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull), mTimeoutValue(0) { 
+  PLEvent mEvent;
+
+  PageCycler(nsBrowserInstance* appCore, const char *aTimeoutValue = nsnull, const char *aWaitValue = nsnull)
+    : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull), mTimeoutValue(0), mWaitValue(1 /*sec*/) { 
     NS_INIT_REFCNT();
     NS_ADDREF(mAppCore);
     if (aTimeoutValue){
       mTimeoutValue = atol(aTimeoutValue);
+    }
+    if (aWaitValue) {
+      mWaitValue = atol(aWaitValue);
     }
   }
 
@@ -291,10 +296,33 @@ public:
           // Stop the current load and move on to the next
           mAppCore->Stop();
         }
-        // load the URL
-        rv = mAppCore->LoadUrl(url.GetUnicode());
-        // start new timer
-        StartTimer();
+
+        // We need to enqueue an event to load the next page,
+        // otherwise we'll run the risk of confusing the docshell
+        // (which notifies observers before propogating the
+        // DocumentEndLoad up to parent docshells).
+        nsCOMPtr<nsIEventQueueService> eqs
+          = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+
+        rv = NS_ERROR_FAILURE;
+
+        if (eqs) {
+          nsCOMPtr<nsIEventQueue> eq;
+          eqs->ResolveEventQueue(NS_UI_THREAD_EVENTQ, getter_AddRefs(eq));
+          if (eq) {
+            rv = eq->InitEvent(&mEvent, this, HandleAsyncLoadEvent,
+                               DestroyAsyncLoadEvent);
+
+            if (NS_SUCCEEDED(rv)) {
+              rv = eq->PostEvent(&mEvent);
+            }
+          }
+        }
+
+        if (NS_FAILED(rv)) {
+          printf("######### PageCycler couldn't asynchronously load: %s\n",
+                 NS_STATIC_CAST(const char*, NS_ConvertUCS2toUTF8(mLastRequest)));
+        }
       }
     }
     else {
@@ -304,6 +332,27 @@ public:
     }
     return rv;
   }
+
+  static void* PR_CALLBACK
+  HandleAsyncLoadEvent(PLEvent* aEvent)
+  {
+    // This is the callback that actually loads the page
+    PageCycler* self = NS_STATIC_CAST(PageCycler*, PL_GetEventOwner(aEvent));
+
+    // load the URL
+    const PRUnichar* url = self->mLastRequest.GetUnicode();
+    printf("########## PageCycler starting: %s\n",
+           NS_STATIC_CAST(const char*, NS_ConvertUCS2toUTF8(url)));
+
+    self->mAppCore->LoadUrl(url);
+
+    // start new timer
+    self->StartTimer();
+    return nsnull;
+  }
+
+  static void PR_CALLBACK
+  DestroyAsyncLoadEvent(PLEvent* aEvent) { /*no-op*/ }
 
   const nsAutoString &GetLastRequest( void )
   { 
@@ -343,6 +392,7 @@ protected:
   nsAutoString          mLastRequest;
   nsCOMPtr<nsITimer>    mShutdownTimer;
   PRUint32              mTimeoutValue;
+  PRUint32              mWaitValue;
 };
 
 NS_IMPL_ADDREF(PageCycler)
@@ -687,8 +737,11 @@ nsBrowserInstance::LoadInitialPage(void)
       // see if we have a timeout value corresponding to the url-file
       nsXPIDLCString timeoutVal;
       rv = cmdLineArgs->GetCmdLineValue("-ftimeout", getter_Copies(timeoutVal));
+      // see if we have a wait value corresponding to the url-file
+      nsXPIDLCString waitVal;
+      rv = cmdLineArgs->GetCmdLineValue("-fwait", getter_Copies(waitVal));
       // cereate the cool PageCycler instance
-      PageCycler* bb = new PageCycler(this, timeoutVal);
+      PageCycler* bb = new PageCycler(this, timeoutVal, waitVal);
       if (bb == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
