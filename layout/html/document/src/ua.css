@@ -324,19 +324,23 @@ ol {
   counter-reset: -html-counter 0;
 }
 
+/* make orphaned li's have inside bullet */
 li {
   display: list-item;
   list-style-position: inside; 
 }
 
+/* restore outside position for lists inside li's */
 li ul, li ol, li dir, li menu { 
   list-style-position: outside; 
 }
 
-ul li, dir li, menu li, ol li { 
-  list-style-position: inherit; 
+/* undo previous two rules for properly nested lists */
+ul li, dir li, menu li, ol li,
+ul ul, ul dir, ul menu, ul ol, dir ul, dir dir, dir menu, dir ol, menu ul, menu 
+dir, menu menu, menu ol, ol ul, ol dir, ol menu, ol ol {
+  list-style-position: inherit;
 }
-
 
 /* nested lists have no top/bottom margins */
 ul ul,   ul ol,   ul menu,   ul dir,
