@@ -47,25 +47,25 @@
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define BUFSIZE 128
 #define LOCALIZATION "chrome://cookie/locale/cookie.properties"
 
 nsresult
-ckutil_getChar(nsInputFileStream& strm, char& c) {
-  static char buffer[BUFSIZE];
-  static PRInt32 next = BUFSIZE, count = BUFSIZE;
+ckutil_getChar(nsInputFileStream& strm, 
+               char *buffer, PRInt32 bufsize, 
+               PRInt32& next, PRInt32& count, 
+               char& c) {
 
   if (next == count) {
-    if (BUFSIZE > count) { // never say "count < ..." vc6.0 thinks this is a template beginning and crashes
-      next = BUFSIZE;
-      count = BUFSIZE;
+    if (bufsize > count) { // never say "count < ..." vc6.0 thinks this is a template beginning and crashes
+      next = bufsize;
+      count = bufsize;
       return NS_ERROR_FAILURE;
     }
-    count = strm.read(buffer, BUFSIZE);
+    count = strm.read(buffer, bufsize);
     next = 0;
     if (count == 0) {
-      next = BUFSIZE;
-      count = BUFSIZE;
+      next = bufsize;
+      count = bufsize;
       return NS_ERROR_FAILURE;
     }
   }
@@ -79,13 +79,14 @@ ckutil_getChar(nsInputFileStream& strm, char& c) {
  * strip carriage returns and line feeds from end of line
  */
 PUBLIC PRInt32
-CKutil_GetLine(nsInputFileStream& strm, nsACString& aLine) {
+CKutil_GetLine(nsInputFileStream& strm, char *buffer, PRInt32 bufsize,
+               PRInt32& next, PRInt32& count, nsACString& aLine) {
 
   /* read the line */
   aLine.Truncate();
   char c;
   for (;;) {
-    if NS_FAILED(ckutil_getChar(strm, c)) {
+    if NS_FAILED(ckutil_getChar(strm, buffer, bufsize, next, count, c)) {
       return -1;
     }
     if (c == '\n') {
