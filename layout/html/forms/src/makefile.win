@@ -63,10 +63,9 @@ CPP_OBJS= \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\
-  -I$(PUBLIC)\walletlib						\
+  -I$(PUBLIC)\wallet						\
   -I..\..\base\src -I..\..\style\src				\
-  -I..\..\..\base\src -I..\..\content\src \
-  -I$(PUBLIC)\wallet
+  -I..\..\..\base\src -I..\..\content\src
 
 LCFLAGS = \
         $(LCFLAGS) \
