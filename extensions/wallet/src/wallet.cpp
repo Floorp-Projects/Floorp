@@ -2779,7 +2779,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
           mapElement->item2,
           mapElement->itemList, 
           wallet_SchemaToValue_list,
-          PR_TRUE);
+          PR_FALSE); /* note: obscure=false, otherwise we will obscure an obscured value */
         delete mapElement;
         return;
       }
@@ -2820,7 +2820,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
           mapElement->item2,
           mapElement->itemList, 
           wallet_SchemaToValue_list,
-          PR_TRUE);
+          PR_FALSE); /* note: obscure=false, otherwise we will obscure an obscured value */
         delete mapElement;
         return;
       }
@@ -3073,7 +3073,7 @@ WLLT_PrefillReturn(nsAutoString results) {
               mapElement->item2,
               mapElement->itemList,
               wallet_SchemaToValue_list,
-              PR_TRUE);
+              PR_FALSE); /* note: obscure=false, otherwise we will obscure an obscured value */
             delete mapElement;
             break;
           }
