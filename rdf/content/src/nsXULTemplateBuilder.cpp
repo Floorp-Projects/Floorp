@@ -5554,11 +5554,24 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             
             nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
             if (xulcontent) {
-                // Just mark the XUL element as requiring more work to
-                // be done. We'll get around to it when somebody asks
-                // for it.
-                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-                if (NS_FAILED(rv)) return rv;
+                PRInt32 count2;
+                tmplKid->ChildCount(count2);
+
+                if (count2 == 0 && !isResourceElement) {
+                    // If we're at a leaf node, then we'll eagerly
+                    // mark the content as having its template &
+                    // container contents built. This avoids a useless
+                    // trip back to the template builder only to find
+                    // that we've got no work to do!
+                    xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
+                    xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
+                }
+                else {
+                    // Just mark the XUL element as requiring more work to
+                    // be done. We'll get around to it when somebody asks
+                    // for it.
+                    xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                }
             }
             else {
                 // Otherwise, it doesn't support lazy instantiation,
