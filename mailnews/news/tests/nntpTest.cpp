@@ -342,7 +342,8 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 	// only replace m_userData if the user actually entered a valid line...
 	// this allows the command function to set a default value on m_userData before
 	// calling this routine....
-    PL_strcpy(m_userData, tempBuffer);
+	if (tempBuffer && *tempBuffer)
+		PL_strcpy(m_userData, tempBuffer);
 
 	return NS_OK;
 }
