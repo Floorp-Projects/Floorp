@@ -36,6 +36,7 @@
 #endif /* XP_PC */
 
 #ifdef XP_MAC
+#define JS_HAVE_LONG_LONG
 
 JS_BEGIN_EXTERN_C
 
