@@ -26,6 +26,8 @@
 #include "plstr.h"
 #include "plevent.h"
 
+#include "nsIComponentManager.h"
+
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
@@ -228,6 +230,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    NS_InitXPCOM(nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, "./components");
+
+    testURL(argv[1]);
+    return 0;
+#if 0
     nsRepository::RegisterComponent(
 		kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterComponent(
@@ -257,6 +265,7 @@ int main(int argc, char **argv)
         nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
     }
     return 0;
+#endif
 }
 
 
