@@ -356,10 +356,8 @@ var gEditorDocumentObserver =
             }
           }
     
-          // Set window title and build "Recent Files" menu  
-          // (to detect empty menu and disable it)
+          // Set window title
           UpdateWindowTitle();
-          BuildRecentMenu();
 
           // We must wait until document is created to get proper Url
           // (Windows may load with local file paths)
@@ -1848,7 +1846,7 @@ function UpdateWindowTitle()
   } catch (e) { dump(e); }
 }
 
-function BuildRecentMenu()
+function BuildRecentPagesMenu()
 {
   var editor = GetCurrentEditor();
   if (!editor || !gPrefs)
@@ -1864,39 +1862,26 @@ function BuildRecentMenu()
 
   // Current page is the "0" item in the list we save in prefs,
   //  but we don't include it in the menu.
-  var curTitle = editor.document.title;
   var curUrl = StripPassword(GetDocumentUrl());
   var historyCount = 10;
-  try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
+  try {
+    historyCount = gPrefs.getIntPref("editor.history.url_maximum");
+  } catch(e) {}
   var menuIndex = 1;
-  var i;
-  var disableMenu = true;
 
-  for (i = 0; i < historyCount; i++)
+  for (var i = 0; i < historyCount; i++)
   {
-    var title = GetUnicharPref("editor.history_title_"+i);
     var url = GetUnicharPref("editor.history_url_"+i);
 
-    // Continue if URL pref is missing because 
-    //  a URL not found during loading may have been removed
-    // Also skip "data:" URL
-    if (!url || GetScheme(url) == "data")
-      continue;
-
-    // Skip over current URL
-    if (url != curUrl)
+    // Skip over current url
+    if (url && url != curUrl)
     {
-
       // Build the menu
+      var title = GetUnicharPref("editor.history_title_"+i);
       AppendRecentMenuitem(popup, title, url, menuIndex);
       menuIndex++;
-      disableMenu = false;
-
     }
   }
-
-  // Disable menu item if no entries
-  SetElementEnabledById("menu_RecentFiles", !disableMenu);
 }
 
 function SaveRecentFilesPrefs()
@@ -1905,55 +1890,39 @@ function SaveRecentFilesPrefs()
   if (!gPrefs) return;
 
   var curUrl = StripPassword(GetDocumentUrl());
-
-  // Nothing will change, so don't bother doing the work
-  if(IsUrlAboutBlank(curUrl))
-    return;
-
-  var curTitle = GetCurrentEditor().document.title;
   var historyCount = 10;
   try {
     historyCount = gPrefs.getIntPref("editor.history.url_maximum"); 
   } catch(e) {}
-  var titleArray = new Array(historyCount);
-  var urlArray   = new Array(historyCount);
-  var arrayIndex = 0;
-  var i;
 
-  // Always put latest-opened URL at start of array
-  titleArray[arrayIndex] = curTitle;
-  urlArray[arrayIndex] = curUrl;
-  arrayIndex++;
+  var titleArray = [];
+  var urlArray = [];
 
-  for (i = 0; i < historyCount; i++)
+  if (historyCount && !IsUrlAboutBlank(curUrl) &&  GetScheme(curUrl) != "data")
   {
-    var title = GetUnicharPref("editor.history_title_"+i);
+    titleArray.push(GetDocumentTitle());
+    urlArray.push(curUrl);
+  }
+
+  for (var i = 0; i < historyCount && urlArray.length < historyCount; i++)
+  {
     var url = GetUnicharPref("editor.history_url_"+i);
 
     // Continue if URL pref is missing because 
     //  a URL not found during loading may have been removed
-    // Also skip "about:blank" or "data:" URL
-    if (!url || IsUrlAboutBlank(url) || GetScheme(url) == "data")
-      continue;
 
-    // Skip over current URL
-    if (url != curUrl)
+    // Skip over current an "data" URLs
+    if (url && url != curUrl && GetScheme(url) != "data")
     {
-      // Save in array for prefs
-      if (arrayIndex < historyCount)
-      {
-        titleArray[arrayIndex] = title;
-        urlArray[arrayIndex] = url;
-        arrayIndex++;
-      }
+      var title = GetUnicharPref("editor.history_title_"+i);
+      titleArray.push(title);
+      urlArray.push(url);
     }
   }
 
   // Resave the list back to prefs in the new order
-  for (i = 0; i < historyCount; i++)
+  for (i = 0; i < urlArray.length; i++)
   {
-    if (!urlArray[i])
-      break;
     SetUnicharPref("editor.history_title_"+i, titleArray[i]);
     SetUnicharPref("editor.history_url_"+i, urlArray[i]);
   }
@@ -1998,9 +1967,25 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
 function EditorInitFileMenu()
 {
   // Disable "Save" menuitem when editing remote url. User should use "Save As"
-  var scheme = GetScheme(GetDocumentUrl());
+  var docUrl = GetDocumentUrl();
+  var scheme = GetScheme(docUrl);
   if (scheme && scheme != "file")
     SetElementEnabledById("saveMenuitem", false);
+
+  // Enable recent pages submenu if there are any history entries in prefs
+  var historyUrl = "";
+
+  var historyCount = 10;
+  try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
+  if (historyCount)
+  {
+    historyUrl = GetUnicharPref("editor.history_url_0");
+    
+    // See if there's more if current file is only entry in history list
+    if (historyUrl && historyUrl == docUrl)
+      historyUrl = GetUnicharPref("editor.history_url_1");
+  }
+  SetElementEnabledById("menu_RecentFiles", historyUrl != "");
 }
 
 function EditorInitFormatMenu()
