@@ -1,0 +1,1054 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley <garths@oeone.com>
+ *                 Mike Potter <mikep@oeone.com>
+ *                 Karl Guertin <grayrest@grayrest.com> 
+ *                 Colin Phillips <colinp@oeone.com> 
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*--------------------------------------------------------------------
+ *   C A L E N D A R
+ *-------------------------------------------------------------------*/
+
+#calendar-top-box
+{
+}
+
+
+/*--------------------------------------------------------------------
+ *   Top bar, with name, image and buttons
+ *-------------------------------------------------------------------*/
+#calendar-deck{
+    overflow:auto;
+}
+#calendar-bar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://calendar/skin/calendar_topbar.gif");
+}
+
+
+/*--------------------------------------------------------------------
+ *   Top bar, with name, image and buttons
+ *-------------------------------------------------------------------*/
+
+#calendar-controls-box
+{
+   background-image        : url("chrome://calendar/skin/calendar_topbar.png");
+   background-repeat       : no-repeat;
+   min-height              : 33px;
+   max-height              : 33px;
+}
+
+/*--------------------------------------------------------------------
+ *   Button bar vertical divider line
+ *-------------------------------------------------------------------*/
+
+.calendar-control-divider
+{
+    list-style-image        : url("chrome://calendar/skin/divider.png");
+}
+
+
+button.calendar-management-button,
+button.calendar-management-button:hover,
+button.calendar-management-button:hover:active
+{
+	margin				  		: 0px;
+	border						: 0px; 
+	 -moz-binding				: url("chrome://calendar/content/penBindings.xml#penButton");
+	-moz-user-focus			: ignore !important;
+	max-height					: 36px;
+}
+
+/*--------------------------------------------------------------------
+ *   new event button
+ *-------------------------------------------------------------------*/
+
+#calendar-new-event-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/newitem_up.gif");
+  }
+#calendar-new-event-button[disabled="true"],
+#calendar-new-event-button[disabled="true"]:hover,
+#calendar-new-event-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/newitem_disabled.gif");
+  }
+#calendar-new-event-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/newitem_hover.gif");
+  }
+#calendar-new-event-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/newitem_down.gif");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Go To Today button
+ *-------------------------------------------------------------------*/
+
+#calendar-go-to-today-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/today_up.gif");
+  }
+#calendar-go-to-today-button[disabled="true"],
+#calendar-go-to-today-button[disabled="true"]:hover,
+#calendar-go-to-today-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/today_disabled.gif");
+  }
+#calendar-go-to-today-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/today_hover.gif");
+  }
+#calendar-go-to-today-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/today_down.gif");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Choose date button
+ *-------------------------------------------------------------------*/
+
+#calendar-choose-date-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/goto_up.gif");
+  }
+#calendar-choose-date-button[disabled="true"],
+#calendar-choose-date-button[disabled="true"]:hover,
+#calendar-choose-date-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/goto_disabled.gif");
+  }
+#calendar-choose-date-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/goto_hover.gif");
+  }
+#calendar-choose-date-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/goto_down.gif");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Change to month view button
+ *-------------------------------------------------------------------*/
+
+#calendar-month-view-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/month_up.gif");
+  }
+#calendar-month-view-button[disabled="true"],
+#calendar-month-view-button[disabled="true"]:hover,
+#calendar-month-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/month_disabled.gif");*/
+	list-style-image         : url("chrome://calendar/skin/month_down.gif");
+  }
+#calendar-month-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/month_hover.gif");
+  }
+#calendar-month-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/month_down.gif");
+  }
+
+/*--------------------------------------------------------------------
+ *   Change to week view button
+ *-------------------------------------------------------------------*/
+
+#calendar-week-view-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/week_up.gif");
+  }
+#calendar-week-view-button[disabled="true"],
+#calendar-week-view-button[disabled="true"]:hover,
+#calendar-week-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/week_disabled.gif");*/
+	list-style-image         : url("chrome://calendar/skin/week_down.gif");
+  }
+#calendar-week-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/week_hover.gif");
+  }
+#calendar-week-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/week_down.gif");
+  }
+
+/*--------------------------------------------------------------------
+ *   Change to day view button
+ *-------------------------------------------------------------------*/
+
+#calendar-day-view-button 
+  {
+    padding-top:	1px;
+    list-style-image        : url("chrome://calendar/skin/day_up.gif");
+  }
+#calendar-day-view-button[disabled="true"],
+#calendar-day-view-button[disabled="true"]:hover,
+#calendar-day-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/day_disabled.gif");*/
+	list-style-image         : url("chrome://calendar/skin/day_down.gif");
+  }
+#calendar-day-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/day_hover.gif");
+  }
+#calendar-day-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/day_down.gif");
+  }
+
+
+/*
+**  U N I F I N D E R  S T U F F
+*/
+.unifinder-calendar-event-icon-class
+{
+   list-style-image         : url( "chrome://calendar/skin/event.png" );
+}
+
+.unifinder-calendar-event-icon-class[alarm="true"]
+{
+   list-style-image         : url( "chrome://calendar/skin/event_alarm.png" );
+}
+
+.unifinder-calendar-event-icon-class[recur="true"]
+{
+   list-style-image         : url( "chrome://calendar/skin/event_repeating.png" );
+}
+
+.unifinder-treecell-box-class
+{
+   -moz-box-align           : start;
+}
+/*<<-------------------------------------------------/\/\/\ Month*/
+
+#month-controls-box{
+    -moz-box-align:center;
+    -moz-box-pack:center;
+    margin:0px 15px;
+	 min-height:	54px;
+}
+
+#month-view-box{
+    -moz-box-align: center;
+    -moz-box-pack: center;
+    overflow: auto;
+    background-color: #FAFCFB;
+}
+
+
+/* Month title Stuff */
+#month-title-container
+{
+    -moz-box-align: center;
+    -mox-box-pack: center;
+    margin: 0px 15px 0px 15px;
+}
+
+#2-month-title, #-2-month-title
+{
+    font-size:1.2em;
+    color: #9FBEC8;
+    margin:0px;
+    padding:0px;
+    cursor:pointer;
+}
+#1-month-title, #-1-month-title
+{
+    font-size:1.5em;
+    color: #9FBEC8;
+    cursor:pointer;
+}
+
+#0-month-title, #0-year-title
+{
+    font-size:2.0em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.month-title-label-box
+{
+    width: 10em !important;
+    -moz-box-align: center;
+    -moz-box-pack: end;
+}
+
+
+/*Previous/Next Buttons*/
+.prevnextbuttons{
+    list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
+}
+#month-next-button{
+    -moz-box-align:right;
+    -moz-image-region: rect(33px 20px 66px 0);
+    cursor:pointer;
+}
+#month-next-button:hover{
+    -moz-image-region: rect(33px 40px 66px 20px);
+}
+#month-next-button:hover:active{
+    -moz-image-region: rect(33px 60px 66px 40px);
+}
+#month-previous-button{
+    -moz-box-align:left;
+    -moz-image-region: rect(0 20px 33px 0);
+    cursor:pointer;
+}
+#month-previous-button:hover{
+    -moz-image-region: rect(0 40px 33px 20px);
+}
+#month-previous-button:hover:active{
+    -moz-image-region: rect(0 60px 33px 40px);
+}
+
+
+/*The box around the month grid*/
+#month-grid-box{
+    border: 1px solid #3f7d91;
+    padding: 2px;
+    margin: 10px 15px 15px 15px;
+    background-color: #E7EEEC;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+}
+#month-grid-box[background="true"]{
+    background-image: url("chrome://calendar/skin/userbackground.png"); 
+}
+
+/*this rule defines the borders around the day boxes and day names*/
+#month-grid, #month-header-columns{
+    border-right: 1px solid #3f7d91;
+    border-bottom: 1px solid #3f7d91;
+}
+/*this rule is for the day name and surrounding box*/
+.month-column-center-day-class{
+    border-left: 1px solid #3f7d91;
+    border-top: 1px solid #3f7d91;
+    -moz-box-align: center;
+    font-size: 1.3em;
+    font-family: Arial, Helvetica;
+    color: #3f7d91;
+    background-color: #FFFFFF;
+    font-weight:bold;
+}
+
+
+/*This is the base rule for each actual box in the month, if you
+  want to affect all day boxes with a rule, stick it here*/
+.month-day-box-class{
+    background-color: #FFFFFF;
+    border-left: 1px solid #3f7d91;
+    border-top: 1px solid #3f7d91;
+    width:93px;
+    height:93px;
+    min-width:15px;
+    min-height: 15px;
+}
+
+/*user enableable background*/
+.month-day-box-class[background="true"]{
+    -moz-opacity: 90%;
+    border-left: 1px solid #3f7d91;
+    border-top: 1px solid #3f7d91;
+}
+.weekend{
+    background-color: #FFF9EF;
+}
+/*Day boxes that aren't in this month*/
+.month-day-box-class[empty="true"]{
+   background-color: #E7EEEC;
+}
+/*today's day box*/
+.month-day-box-class[today="true"]{
+    font-weight:bold;
+    border: 2px solid #1D7AB5;
+}
+/*the selected day box, since it's last, it has the highest priority*/
+.month-day-box-class[monthselected="true"]{
+   background-color: #d5e3f2;
+}
+
+/*--------------------------------------------------------------------
+ * Day numbers - alignment is contolled above in month-day-box-class
+ *-------------------------------------------------------------------*/
+
+.month-day-number-class
+{
+
+    margin-top: 3px; 	
+    margin-left: 4px; 	
+    margin-bottom: -1px; 	
+    font-size: 1.1em;
+    font-family: Arial, Helvetica;
+    color: #1d7ab5;
+}
+
+
+/*--------------------------------------------------------------------
+ * Events in month view are in a box
+ *-------------------------------------------------------------------*/
+
+.month-day-event-box-class
+{
+    border: 1px solid #1D7AB5;
+    margin-bottom: 1px;
+    margin-left: 2px;
+    margin-right: 2px;
+    background-color: #F9F4FF;
+    text-align: center; 	
+    font-size: 0.9em;
+    font-family: Arial, Helvetica;
+}
+
+.month-day-event-box-class:hover
+{
+   background-color  : #F9F4FF;
+	border				: 1px solid #003366;
+
+}
+
+.month-day-event-box-class[eventselected="true"]
+{
+   background-color:  #D5E3F2;  
+   border-color:  #003366;
+}
+
+
+/*--------------------------------------------------------------------
+ * Text item for events in month view
+ *-------------------------------------------------------------------*/
+
+.month-day-event-text-class
+{
+}
+
+
+/*--------------------------------------------------------------------
+ * Box that contains a view of the day's overall busyness
+ *-------------------------------------------------------------------*/
+
+.month-day-busy-ind-class
+{
+   min-width             : 30px;
+   max-width             : 30px;
+   max-height            : 10px;
+   min-height            : 10px;
+}
+
+.month-day-busy-ind-class[busy="true"]
+{
+   background-color        : #6699CC;
+}
+
+.month-allday-busy-ind-class
+{
+}
+
+.all-day-event-class,
+.month-allday-busy-ind-class[busy="true"]
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event.gif");
+}  
+
+.all-day-event-class:hover,
+.month-allday-busy-ind-class[busy="true"]:hover
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event_hover.gif");
+}  
+
+.all-day-event-class:hover:active,
+.month-allday-busy-ind-class[busy="true"]:hover:active
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event_down.gif");
+}  
+
+.month-view-event-dot-class
+{                  
+   margin-left             : 2px;
+   margin-top              : 2px;
+   list-style-image        : url("chrome://calendar/skin/dot.png");
+}
+
+.month-view-event-dot-class[eventselected="true"]
+{
+   list-style-image        : url("chrome://calendar/skin/dot_selected.png");
+}
+
+
+
+
+
+/*--------------------------------------------------------------------
+ *   D A Y   V I E W
+ *-------------------------------------------------------------------*/
+
+
+
+/*--------------------------------------------------------------------
+ * Box containing the whole day view
+ *-------------------------------------------------------------------*/
+
+
+#day-view-box
+{
+	background-color			: white;
+}
+
+#inner-day-view-box
+{
+	margin						: 15px;
+}
+
+/*--------------------------------------------------------------------
+ * Box for title, next, prev controls
+ *-------------------------------------------------------------------*/
+
+#day-controls-box
+{
+    -moz-box-align:center;
+    -moz-box-pack:center;
+    margin:0px 15px;
+	 min-height:	54px;
+}
+
+#day-specific-title-box
+{
+    -moz-box-align:center;
+    -moz-box-pack:center;
+}
+
+/*--------------------------------------------------------------------
+ * Next and Previous buttons.
+ *-------------------------------------------------------------------*/
+
+#day-next-button
+{
+    -moz-box-align:right;
+    -moz-image-region: rect(33px 20px 66px 0);
+    cursor:pointer;
+}
+
+#day-next-button:hover
+{
+    -moz-image-region: rect(33px 40px 66px 20px);
+}
+
+#day-next-button:hover:active
+{
+    -moz-image-region: rect(33px 60px 66px 40px);
+}
+
+#day-previous-button
+{
+    -moz-box-align:left;
+    -moz-image-region: rect(0 20px 33px 0);
+    cursor:pointer;
+}
+
+#day-previous-button:hover
+{
+    -moz-image-region: rect(0 40px 33px 20px);
+}
+
+#day-previous-button:hover:active
+{
+    -moz-image-region: rect(0 60px 33px 40px);
+}
+
+/* Day title Stuff */
+#day-title-container
+{
+    -moz-box-align: center;
+    -mox-box-pack: center;
+    margin: 0px 15px 0px 15px;
+}
+
+#2-day-title, #-2-day-title, #1-day-specific-title, #-1-day-specific-title
+{
+    font-size:1.2em;
+    color: #9FBEC8;
+    margin:0px;
+    padding:0px;
+    cursor:pointer;
+}
+
+#1-day-title, #-1-day-title
+{
+    font-size:1.5em;
+    color: #9FBEC8;
+    cursor:pointer;
+}
+
+#0-day-specific-title
+{
+    font-size:1.2em;
+    color: #3f7d91;
+}
+
+#0-day-title
+{
+    font-size:2.0em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.day-title-label-box
+{
+    width: 10em !important;
+    -moz-box-align: center;
+    -moz-box-pack: end;
+}
+
+/*--------------------------------------------------------------------
+ * Box around the all day content at the top
+ *-------------------------------------------------------------------*/
+
+#all-day-content-box
+{
+   min-height           : 25px;
+   max-height           : 25px;
+   overflow             : auto;
+   border-top           : 1px solid #1D7AB5;
+   border-left          : 1px solid #1D7AB5;
+   border-right         : 1px solid #1D7AB5;
+	background-color		: #ffffff;
+}
+
+/*--------------------------------------------------------------------
+ * Box around the tree content
+ *-------------------------------------------------------------------*/
+
+#day-view-content-box
+{
+   overflow             : auto;
+   background-color     : white;
+   border             : 1px solid #2085c4;
+}
+
+
+/*--------------------------------------------------------------------
+ * Box around the tree content
+ *-------------------------------------------------------------------*/
+
+#day-view-content-box[allday="true"]
+{
+}
+
+.day-view-event-class
+{
+   margin-bottom     : 1px;
+   margin-top        : 1px;
+   border            : 1px solid #1D7AB5;
+   background-color  : #F9F4FF;
+}
+
+.day-view-event-class[eventselected="true"]
+{
+   background-color  : #d5e3f2;
+	border-color      : #003366
+}
+ 
+/*--------------------------------------------------------------------
+ * Box for hours
+ *-------------------------------------------------------------------*/
+
+.day-view-hour-box-class
+{
+   border-top           : 1px solid #2085c4;
+   background-color     : white;
+   -moz-box-pack        : start;
+   -moz-box-align       : center;
+   height               : 50px;
+   padding-top          : 2px;
+   margin-right 	: 5px;
+}
+
+
+#day-tree-item-0
+{
+   border-top           : none;
+}
+
+
+.day-view-hour-box-class[selected="true"]
+{
+   background-color     : blue;
+   
+}
+
+/*--------------------------------------------------------------------
+ * Class for time shown on left
+ *-------------------------------------------------------------------*/
+
+.day-time-class
+{
+   margin               : 6px; 	
+   margin-left          : 0px;
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   -moz-box-pack        : start;
+   -moz-box-align       : center;
+}
+
+/*--------------------------------------------------------------------
+ * Class for text of events
+ *-------------------------------------------------------------------*/
+
+.day-view-event-text-class
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #000000;
+}
+
+/*--------------------------------------------------------------------
+ *   W E E K     V I E W
+ *-------------------------------------------------------------------*/
+
+
+#week-view-box
+{
+	background-color			: white;
+}
+
+#inner-week-view-box
+{
+	margin						: 15px;
+}
+
+#week-view-day-gradient
+{
+   list-style-image              : url( "chrome://calendar/skin/day_left_gradient.png"  );
+}	
+
+/* Week View: Controls */
+
+#week-controls-box
+{
+    -moz-box-align:center;
+    -moz-box-pack:center;
+    margin:0px 15px;
+	 min-height:	54px;
+}
+
+#week-next-button
+{
+    -moz-box-align:right;
+    -moz-image-region: rect(33px 20px 66px 0);
+    cursor:pointer;
+}
+
+#week-next-button:hover
+{
+    -moz-image-region: rect(33px 40px 66px 20px);
+}
+
+#week-next-button:hover:active
+{
+    -moz-image-region: rect(33px 60px 66px 40px);
+}
+
+#week-previous-button
+{
+    -moz-box-align:left;
+    -moz-image-region: rect(0 20px 33px 0);
+    cursor:pointer;
+}
+
+#week-previous-button:hover
+{
+    -moz-image-region: rect(0 40px 33px 20px);
+}
+
+#week-previous-button:hover:active
+{
+    -moz-image-region: rect(0 60px 33px 40px);
+}
+
+#week-next-button-box
+{
+   -moz-box-pack           : end;
+}
+
+/* Week title Stuff */
+#week-title-container
+{
+    -moz-box-align: center;
+    -mox-box-pack: center;
+    margin: 0px 15px;
+}
+
+#week-title-text
+{
+    font-size:2.0em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.week-title-label-box
+{
+    -moz-box-align: center;
+}
+
+/* Week View: Day name header */
+
+#weekview-header-spacer-image
+{
+   list-style-image     : url("chrome://calendar/skin/week-view-1px.gif");
+}
+
+#weekview-header-spacer-left
+{
+	-moz-box-align 		: start;
+	background-color		: #1D7AB5;
+}
+
+#weekview-daynumber-spacer-mid
+{
+	-moz-box-pack			: end;  
+	-moz-box-align 		: start;
+   width                :99px;
+	background-color		: #ffffff;
+   background-image     : url("chrome://calendar/skin/week-view-1px.gif");
+   background-position  : top;
+   background-repeat    : repeat-x;
+}
+
+#weekview-daynumber-spacer-image
+{
+   list-style-image        : url("chrome://calendar/skin/week-view-corner.gif");
+}
+
+#week-view-header-days
+{
+   border-top               : 1px solid #1D7AB5;
+   border-right             : 1px solid #1D7AB5;
+}
+
+.weekview-daynumber-class
+{
+   -moz-box-align       : center;
+   width                :78px;
+}
+
+#week-view-header
+{
+   color                   : #3f7d91;
+   font-size               : 11pt;
+   font-family             : Arial, Helvetica;
+   text-align              : center; 
+   font-weight             : bold;
+   background-color	      : white;
+}
+
+
+
+/* Week View: Calendar Tree */
+
+#week-view-content-outer-box
+{
+   border-left          : 1px solid #2085c4;
+   border-bottom        : 1px solid #2085c4;
+   border-right         : 1px solid #2085c4;
+	padding					: 2px;
+   background-color     : white;
+}
+
+#week-view-content-box
+{
+   overflow             : auto;
+   border               : 1px solid #2085c4;
+}
+
+
+#week-view-content-box[allday="true"]
+{
+}
+  
+
+.week-view-event-class
+{
+   margin-bottom     : 1px;
+   margin-top        : 1px;
+   border            : 1px solid #1D7AB5;
+   background-color  : #F9F4FF;
+   min-width         : 20px;
+}
+
+.week-view-event-class[eventselected="true"]
+{
+   background-color  : #D5E3F2;
+	border				: 1px solid #003366;
+}
+
+/*--------------------------------------------------------------------
+ * Class for text of events
+ *-------------------------------------------------------------------*/
+
+.week-view-event-text-class
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #000000;
+}
+
+
+.week-time-class-text
+{
+   margin               : 5px; 	
+   margin-top           : 10px;
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   
+   
+}
+
+.week-time-class
+{
+   -moz-box-pack        : end;
+   -moz-box-align       : center;
+}
+
+
+.week-view-hour-box-class
+{
+   border-bottom        : 1px solid #2085c4;
+	border-left          : 1px solid #2085c4;
+   width                : 78px;
+   height               : 50px;
+   background-color     : white;
+}
+
+.week-view-hour-box-class-last-day
+{
+   border-bottom        : 1px solid #2085c4;
+}
+
+.week-view-hour-box-class[today="true"]
+{
+  	border-left				: 2px solid #2085c4;
+	border-right			: 1px solid #2085c4;
+}
+
+.week-view-hour-box-class-last-day[today="true"]
+{
+   border-right        : 2px solid #2085c4;
+}
+
+.week-view-hours-only-box-class
+{
+   border-bottom        : 1px solid #2085c4;
+   width                : 82px;
+   height               : 50px;
+   background-color     : white;
+}
+
+#week-view-all-day-content-box
+{
+	padding					: 2px;
+   background-color     : white;
+   border-top           : 1px solid #2085c4;
+   border-left          : 1px solid #2085c4;
+   border-right         : 1px solid #2085c4;
+   min-height       		: 15px;
+} 
+
+.all-day-content-box-text-title
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   -moz-box-pack       : center;
+   text-align           : center;
+} 
+
+.all-day-content-box-week
+{
+  	width				: 78px;
+   -moz-box-align : start;
+}
+
+#week-view-header-spacer,
+#all-day-content-spacer
+{
+  	width			: 8px;
+}	
+
+.weekend
+{
+  	background-color 		: #FFF9EF;
+}
+
+.calendar-unifinder-event-text
+{
+}
+
+.calendar-unifinder-event-indent
+{
+  	padding-left		: 30px;
+}
+
+
+#unifinder-search-results-tree > treechildren treeitem[selected="true"] > treerow,
+#unifinder-categories-tree > treechildren treeitem[selected="true"] > treerow
+{
+   background-color        : #D5E3F2;
+   color                   : #000000;
+}
+
+#calendar-bar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://calendar/skin/calendar_topbar.gif");
+}
+

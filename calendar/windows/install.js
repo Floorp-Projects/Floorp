@@ -20,6 +20,7 @@ if ( err == SUCCESS ) {
 
    var returnval = registerChrome(CONTENT | DELAYED_CHROME, calendarContent );
    var returnval = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "modern/");
+   var returnval = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "classic/");
    var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "en-US/");
   
    err = performInstall();
