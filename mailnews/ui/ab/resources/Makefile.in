@@ -45,6 +45,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/list.gif \
 	$(srcdir)/myaddrbk.gif \
 	$(srcdir)/editcard.xul \
+	$(srcdir)/selectaddress.xul \
 	$(srcdir)/addressbook.js \
 	$(NULL)
 
