@@ -223,7 +223,7 @@ sub CheckFormField (\%$;\@) {
             $vars->{'field'} = $fieldname;
         }
         
-        ThrowCodeError("illegal_field", "abort");
+        ThrowCodeError("illegal_field", undef, "abort");
       }
 }
 
@@ -827,6 +827,10 @@ sub PutFooter {
 #
 # If you are doing incremental output, set $vars->{'header_done'} once you've
 # done the header.
+#
+# You can call Throw*Error with extra template variables in one pass by using
+# the $extra_vars hash reference parameter:
+# ThrowUserError("some_tag", { bug_id => $bug_id, size => 127 });
 ###############################################################################
 
 # DisplayError is deprecated. Use ThrowCodeError, ThrowUserError or 
@@ -842,13 +846,18 @@ sub DisplayError {
 }
 
 # For "this shouldn't happen"-type places in the code.
-# $vars->{'variables'} is a reference to a hash of useful debugging info.
+# The contents of $extra_vars get printed out in the template - useful for
+# debugging info.
 sub ThrowCodeError {
-  ($vars->{'error'}, my $unlock_tables, $vars->{'variables'}) = (@_);
+  ($vars->{'error'}, my $extra_vars, my $unlock_tables) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
-  # We may one day log something to file here.
+  # Copy the extra_vars into the vars hash 
+  @::vars{keys %$extra_vars} = values %$extra_vars;
+
+  # We may one day log something to file here also.
+  $vars->{'variables'} = $extra_vars;
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)
@@ -859,10 +868,13 @@ sub ThrowCodeError {
 
 # For errors made by the user.
 sub ThrowUserError {
-  ($vars->{'error'}, my $unlock_tables) = (@_);
+  ($vars->{'error'}, my $extra_vars, my $unlock_tables) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
-  
+ 
+  # Copy the extra_vars into the vars hash 
+  @::vars{keys %$extra_vars} = values %$extra_vars;
+
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());

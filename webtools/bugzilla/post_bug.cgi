@@ -262,14 +262,14 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || ThrowCodeError("group_id_invalid", "abort");
+          || ThrowCodeError("group_id_invalid", undef, "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
             $vars->{'bit'} = $v;
-            ThrowCodeError("inactive_group", "abort");
+            ThrowCodeError("inactive_group", undef, "abort");
         }
         SendSQL("SELECT user_id FROM user_group_map 
                  WHERE user_id = $::userid

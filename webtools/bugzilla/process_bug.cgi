@@ -1067,7 +1067,7 @@ foreach my $id (@idlist) {
                 $vars->{'oldvalue'} = $oldvalues[$i];
                 $vars->{'newvalue'} = $::FORM{$col};
                 $vars->{'field'} = $col;
-                ThrowUserError("illegal_change", "abort");            
+                ThrowUserError("illegal_change", undef, "abort");            
             }
         }
         $i++;
@@ -1082,7 +1082,7 @@ foreach my $id (@idlist) {
         if ($value eq FetchOneColumn()) {
             SendSQL("UNLOCK TABLES");
             $vars->{'bug_id'} = $id;
-            ThrowUserError("milestone_required", "abort");
+            ThrowUserError("milestone_required", undef, "abort");
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -1117,7 +1117,7 @@ foreach my $id (@idlist) {
                 next if $i eq "";
                 
                 if ($id eq $i) {
-                    ThrowUserError("dependency_loop_single", "abort");
+                    ThrowUserError("dependency_loop_single", undef, "abort");
                 }
                 if (!exists $seen{$i}) {
                     push(@{$deptree{$target}}, $i);
@@ -1161,7 +1161,7 @@ foreach my $id (@idlist) {
                     }
                     
                     $vars->{'both'} = $both;
-                    ThrowUserError("dependency_loop_multi", "abort");
+                    ThrowUserError("dependency_loop_multi", undef, "abort");
                 }
             }
             my $tmp = $me;
