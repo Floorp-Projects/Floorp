@@ -9,17 +9,28 @@ function doSearch()
 	dump("Search text: " + text + "\n");
 
 	// get selected search engines
-	var treeBody = document.getElementById("NC:SearchEngineRoot");
-	if (!treeBody)	return(false);
+	var treeNode = document.getElementById("NC:SearchEngineRoot");
+	if (!treeNode)	return(false);
+	var treeChildrenNode = null;
+	var numChildren = treeNode.childNodes.length;
+	for (var x = 0; x<numChildren; x++)
+	{
+		if (treeNode.childNodes[x].tagName == "treechildren")
+		{
+			treeChildrenNode = treeNode.childNodes[x];
+			break;
+		}
+	}
+	if (treeChildrenNode == null)	return(false);
 
 	var searchURL="";
 	var foundEngine = false;
 
-	var numEngines = treeBody.childNodes.length;
+	var numEngines = treeChildrenNode.childNodes.length;
 	dump("Found treebody, it has " + numEngines + " kids\n");
 	for (var x = 0; x<numEngines; x++)
 	{
-		var treeItem = treeBody.childNodes[x];
+		var treeItem = treeChildrenNode.childNodes[x];
 		if (!treeItem)	continue;
 		// XXX when its fully implemented, instead use
 		//     var engines = document.getElementsByTagName("checkbox");
@@ -58,7 +69,7 @@ function doSearch()
 	// load find URL into results pane
 	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
 	if (!resultsTree)	return(false);
-        tree.setAttribute("ref", searchURL);
+        resultsTree.setAttribute("ref", searchURL);
 
 	// enable "Save Search" button
 	var searchButton = document.getElementById("SaveSearch");

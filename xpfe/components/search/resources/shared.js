@@ -13,21 +13,9 @@ function OpenURL(event,node)
 		return(false);
 	}
 
-	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-	if (!toolkitCore)
-	{
-		toolkitCore = new ToolkitCore();
-		if (toolkitCore)
-		{
-			toolkitCore.Init("ToolkitCore");
-		}
-	}
-	if (toolkitCore)
-	{
-		toolkitCore.ShowWindow(url,window);
-	}
+	dump("Opening URL: " + url + "\n");
+	window.open(url, "_blank");
 
-	dump("OpenURL(" + url + ")\n");
 	return true;
 }
 

@@ -46,16 +46,16 @@
 					<treerow>
 						<treecell>
 							<treeindentation />
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="left" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="left" style="list-style-image: none;" />
 						</treecell>
 					</treerow>
 				</treeitem>

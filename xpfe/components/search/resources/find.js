@@ -45,7 +45,7 @@ function doFind()
 	// load find URL into results pane
 	var resultsTree = parent.frames[1].document.getElementById("findresultstree");
 	if (!resultsTree)	return(false);
-        tree.setAttribute("ref", url);
+        resultsTree.setAttribute("ref", url);
 	dump("doFind done.\n");
 
 	return(true);
