@@ -74,42 +74,18 @@ static void debug_out(StringPtr stream, const void *message, UInt32 messageLengt
 
 static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
 {
-	// if (theConsole != NULL)
-	//	theConsole->write(message, messageLengthInBytes);
-	/* else
-		debug_out("\pSystem.out:", message, messageLengthInBytes); */
-	// Added by Mark Lin (mark.lin@eng.sun.com):
-	char* buffer = new char[messageLengthInBytes + 1];
-	
-	if (buffer != NULL) {
-		memcpy(buffer, message, messageLengthInBytes);
-		buffer[messageLengthInBytes] = '\0';
-		if (messageLengthInBytes == 1) {
-			printf(buffer);
-		} else {
-			printf("<Java Console System.out>: %s", buffer);
-		}
-	}
+	if (theConsole != NULL)
+		theConsole->write(message, messageLengthInBytes);
+	 else
+		debug_out("\pSystem.out:", message, messageLengthInBytes); 
 }
 
 static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
 {
-	// if (theConsole != NULL)
-	//	theConsole->write(message, messageLengthInBytes);
-	/* else
-		debug_out("\pSystem.err:", message, messageLengthInBytes); */
-	// Added by Mark Lin (mark.lin@eng.sun.com):
-	char* buffer = new char[messageLengthInBytes + 1];
-	
-	if (buffer != NULL) {
-		memcpy(buffer, message, messageLengthInBytes);
-		buffer[messageLengthInBytes] = '\0';
-		if (messageLengthInBytes == 1) {
-			printf(buffer);
-		} else {
-			printf("<Java Console System.err>: %s", buffer);
-		}
-	}
+	if (theConsole != NULL)
+		theConsole->write(message, messageLengthInBytes);
+	 else
+		debug_out("\pSystem.err:", message, messageLengthInBytes);
 }
 
 static SInt32 java_stdin(JMSessionRef session, void *buffer, SInt32 maxBufferLength)
@@ -217,40 +193,6 @@ MRJSession::MRJSession()
 
 		mStatus = ::JMOpenSession(&mSession, eJManager2Defaults, eCheckRemoteCode,
 											&callbacks, kTextEncodingMacRoman, NULL);
-		
-		
-		// Below added by Mark Lin (mark.lin@eng.sun.com):
-		// This code will run the plugin using the Swing Toolkit as the AWT peer set
-		// It is commented out for now, because the implementation isn't finished yet
-		/*
-		// PENDING(mark): Need a way to check if the toolkit is present. If not,
-		// then don't load the SwingPeers stuff
-		status = ::JMNewTextRef(mSession, &nameRef, kTextEncodingMacRoman, 
-			"awt.toolkit", strlen("awt.toolkit"));
-			
-		if (status != noErr) {
-			printf("MRJSession Error: GOT ERROR TRYING TO create text ref awt.toolkit\n");
-		}
-
-		// PENDING(mark): We need to agree on the package name
-		status = ::JMNewTextRef(mSession, &valueRef, kTextEncodingMacRoman, 
-			"black.peer.mac.SwingToolkit", strlen("black.peer.mac.SwingToolkit"));
-			
-		if (status != noErr) {
-			printf("MRJSession Error: GOT ERROR TRYING TO create text ref swing toolkit\n");
-		}
-		
-		status = ::JMPutSessionProperty(mSession, nameRef, valueRef);
-
-		if (status != noErr) {
-			printf("MRJSession Error: GOT ERROR TRYING TO SET PROPERTY awt.toolkit\n");
-		}
-
-		// PENDING(mark): I probably don't need this
-		addToClassPath("/Macintosh HD/SwingPeers");
-		// PENDING(mark): How do I get to the System folder?
-		addToClassPath("/Macintosh HD/swingall.jar");
-		*/
 
 		// capture the main environment, so it can be distinguished from true Java threads.
 		if (mStatus == noErr) {
