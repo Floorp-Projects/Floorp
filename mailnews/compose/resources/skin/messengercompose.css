@@ -28,6 +28,19 @@ tree[class="attachment"] treeitem > treerow > treecell > titledbutton {
  list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
 
+tree[class="addressingWidget"] treeitem > treerow  > treecell > titledbutton {
+	 vertical-align: middle;
+	 min-height: 1px;
+	 min-width: 1px;
+	 height: 1em;
+	 width: 2em;
+	 margin:0px;
+	 padding:0px;
+	 border:none;
+	 list-style-image: url("chrome://addressbook/skin/person.gif");
+	 color:inherit;
+}
+
 titledbutton#Throbber
 {
         list-style-image:url(chrome://navigator/skin/animthrob_single.gif);

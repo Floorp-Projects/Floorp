@@ -38,16 +38,17 @@ Rights Reserved.
 
 		<!-- for fixed height:  height:5em;  -->
 		<tree id="addressingWidgetTree"		
-			  style="background-color:inherit"
-			  treeallowevents="true">
+			  class="addressingWidget" 
+			  style="background-color:inherit">
 			  
 			<treecol style="width:15%"/>
-			<treecol style="width:85%"/>
+			<treecol style="width:3%"/>
+			<treecol style="width:82%"/>
 
 			<treechildren id="addressWidgetBody">
 				<treeitem>
 					<treerow>
-						<treecell>
+						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#1">
 								<html:option value="addr_to">&toAddr.label;</html:option>
 								<html:option value="addr_cc">&ccAddr.label;</html:option>
@@ -57,7 +58,8 @@ Rights Reserved.
 								<html:option value="addr_followup">&followupAddr.label;</html:option>
 							</html:select>
 						</treecell>
-						<treecell>
+						<treecell><titledbutton/></treecell>
+						<treecell treeallowevents="true">
 							<html:input type="text" id="msgRecipient#1" style="width:90%"
 										onkeyup="if (event.which == 13)
 										{ AutoCompleteAddress('msgRecipientType#1',
@@ -68,10 +70,11 @@ Rights Reserved.
 				
 				<treeitem>
 					<treerow>
-						<treecell>
+						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#2"/>
 						</treecell>
-						<treecell>
+						<treecell><titledbutton/></treecell>
+						<treecell treeallowevents="true">
 							<html:input type="text" id="msgRecipient#2" style="width:90%"
 										onkeyup="if (event.which == 13)
 										{ AutoCompleteAddress('msgRecipientType#2',
@@ -82,10 +85,11 @@ Rights Reserved.
 				
 				<treeitem>
 					<treerow>
-						<treecell>
+						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#3"/>
 						</treecell>
-						<treecell>
+						<treecell><titledbutton/></treecell>
+						<treecell treeallowevents="true">
 							<html:input type="text" id="msgRecipient#3" style="width:90%"
 										onkeyup="if (event.which == 13)
 										{ AutoCompleteAddress('msgRecipientType#3',
@@ -96,10 +100,11 @@ Rights Reserved.
 				
 				<treeitem>
 					<treerow>
-						<treecell>
+						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#4"/>
 						</treecell>
-						<treecell>
+						<treecell><titledbutton/></treecell>
+						<treecell treeallowevents="true">
 							<html:input type="text" id="msgRecipient#4" style="width:90%"
 										onkeyup="if (event.which == 13)
 										{ AutoCompleteAddress('msgRecipientType#4',
@@ -110,10 +115,11 @@ Rights Reserved.
 				
 				<treeitem>
 					<treerow>
-						<treecell>
+						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#5"/>
 						</treecell>
-						<treecell>
+						<treecell><titledbutton/></treecell>
+						<treecell treeallowevents="true">
 							<html:input type="text" id="msgRecipient#5" style="width:90%"
 										onkeyup="if (event.which == 13)
 										{ AutoCompleteAddress('msgRecipientType#5',
