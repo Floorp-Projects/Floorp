@@ -1055,7 +1055,7 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
       // Flush out all our kids.
       PRInt32 childCount;
       element->ChildCount(childCount);
-      if (childCount > 0)
+      for (PRInt32 i = 0; i < childCount; i++)
         element->RemoveChildAt(0, PR_TRUE);
       
       if (!aRemoveFlag) {
