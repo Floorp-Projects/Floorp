@@ -1437,31 +1437,35 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 	/*
 	 * Allocate a string to hold the concatenated arguments, including room
-	 * for a terminating 0.
+	 * for a terminating 0.  Mark cx->tempPool for later release, to free
+	 * collected_args and its tokenstream in one swoop.
 	 */
-	cp = collected_args = JS_malloc(cx, (args_length + 1) * sizeof(jschar));
+	mark = PR_ARENA_MARK(&cx->tempPool);
+	PR_ARENA_ALLOCATE(cp, &cx->tempPool, (args_length+1) * sizeof(jschar));
+	if (!cp)
+	    return JS_FALSE;
+	collected_args = cp;
 
 	/*
 	 * Concatenate the arguments into the new string, separated by commas.
 	 */
 	for (i = 0; i < n; i++) {
 	    arg = JSVAL_TO_STRING(argv[i]);
-	    (void)js_strncpy(cp, arg->chars, arg->length);
+	    (void) js_strncpy(cp, arg->chars, arg->length);
 	    cp += arg->length;
+
 	    /* Add separating comma or terminating 0. */
-	    *(cp++) = (i + 1 < n) ? ',' : 0;
+	    *cp++ = (i + 1 < n) ? ',' : 0;
 	}
 
 	/*
-	 * Make a tokenstream that reads from the given string.  Save the
-	 * watermark below it in tempPool, whence it's allocated, for later
-	 * release before returning.
+	 * Make a tokenstream (allocated from cx->tempPool) that reads from
+	 * the given string.
 	 */
-	mark = PR_ARENA_MARK(&cx->tempPool);
 	ts = js_NewTokenStream(cx, collected_args, args_length, filename,
 			       lineno, principals);
 	if (!ts) {
-	    JS_free(cx, collected_args);
+	    PR_ARENA_RELEASE(&cx->tempPool, mark);
 	    return JS_FALSE;
 	}
 
@@ -1537,7 +1541,6 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 
 	/* Clean up. */
-	JS_free(cx, collected_args);
 	ok = js_CloseTokenStream(cx, ts);
 	PR_ARENA_RELEASE(&cx->tempPool, mark);
 	if (!ok)
@@ -1591,7 +1594,6 @@ bad_formal:
      * Clean up the arguments string and tokenstream if we failed to parse
      * the arguments.
      */
-    JS_free(cx, collected_args);
     (void)js_CloseTokenStream(cx, ts);
     PR_ARENA_RELEASE(&cx->tempPool, mark);
     return JS_FALSE;
