@@ -1503,7 +1503,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   // Flush any collected text content. Release the last text
   // node to indicate that no more should be added to it.
   FlushTextAndRelease();
-  
+
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::CloseContainer", aNode, mStackPos-1, mSink);
 
@@ -1604,7 +1604,8 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_select:
       {
-        nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
+        nsCOMPtr<nsISelectElement> select = do_QueryInterface(content);
+
         if (select) {
           result = select->DoneAddingChildren();
         }
@@ -3824,43 +3825,57 @@ HTMLContentSink::DidProcessAToken(void)
 PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
 #endif
 
-    // There is both a high frequency interrupt mode and a low frequency 
-    // interupt mode controlled by the flag NS_SINK_FLAG_DYNAMIC_LOWER_VALUE
-    // The high frequency mode interupts the parser frequently to provide
-    // UI responsiveness at the expense of page load time. The low frequency mode 
-    // interrupts the parser and samples the system clock infrequently to provide fast 
-    // page load time. When the user moves the mouse, clicks or types the mode switches 
-    // to the high frequency interrupt mode. If the user stops moving the mouse or typing 
-    // for a duration of time (mDynamicIntervalSwitchThreshold) it switches to low 
-    // frequency interrupt mode.
+    // There is both a high frequency interrupt mode and a low
+    // frequency interupt mode controlled by the flag
+    // NS_SINK_FLAG_DYNAMIC_LOWER_VALUE The high frequency mode
+    // interupts the parser frequently to provide UI responsiveness at
+    // the expense of page load time. The low frequency mode
+    // interrupts the parser and samples the system clock infrequently
+    // to provide fast page load time. When the user moves the mouse,
+    // clicks or types the mode switches to the high frequency
+    // interrupt mode. If the user stops moving the mouse or typing
+    // for a duration of time (mDynamicIntervalSwitchThreshold) it
+    // switches to low frequency interrupt mode.
 
     // Get the current user event time
     nsCOMPtr<nsIPresShell> shell;
     mDocument->GetShellAt(0, getter_AddRefs(shell));
-    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+    if (!shell) {
+      // If there's no pres shell in the document, return early since
+      // we're not laying anything out here.
+
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     PRUint32 eventTime;
     nsresult rv = vm->GetLastUserEventTime(eventTime);
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
-     
    
     if ((!(mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) && 
       (mLastSampledUserEventTime == eventTime)) {
-      // The magic value of NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE was selected by 
-      // empirical testing. It provides reasonable
-      // user response and prevents us from sampling the clock too frequently.
+      // The magic value of NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE
+      // was selected by empirical testing. It provides reasonable
+      // user response and prevents us from sampling the clock too
+      // frequently.
       if (mDeflectedCount < NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE) {
         mDeflectedCount++;
-        return NS_OK; // return early to prevent sampling the clock. Note: This prevents
-                      // us from switching to higher frequency (better UI responsive) mode, so
-                      // limit ourselves to doing for no more than 
-                      // NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE tokens.
+
+        // return early to prevent sampling the clock. Note: This
+        // prevents us from switching to higher frequency (better UI
+        // responsive) mode, so limit ourselves to doing for no more
+        // than NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE tokens.
+
+        return NS_OK;
       } else {
-         mDeflectedCount = 0; // reset count and drop through to the code which samples the clock and
-                              // does the dynamic switch between the high frequency and low frequency
-                              // interruption of the parser.
+         // reset count and drop through to the code which samples the
+         // clock and does the dynamic switch between the high
+         // frequency and low frequency interruption of the parser.
+
+         mDeflectedCount = 0;
       }
     }
 
@@ -3868,48 +3883,49 @@ PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
     
     PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
    
-    // Get the last user event time and compare it with
-    // the current time to determine if the lower value
-    // for content notification and max token processing 
-    // should be used. But only consider using the lower
-    // value if the document has already been loading
-    // for 2 seconds. 2 seconds was chosen because it is
-    // greater than the default 3/4 of second that is used
-    // to determine when to switch between the modes and it
-    // gives the document a little time to create windows.
-    // This is important because on some systems (Windows, 
-    // for example) when a window is created and the mouse
-    // is over it, a mouse move event is sent, which will kick
-    // us into interactive mode otherwise. It also supresses
-    // reaction to pressing the ENTER key in the URL bar...
+    // Get the last user event time and compare it with the current
+    // time to determine if the lower value for content notification
+    // and max token processing should be used. But only consider
+    // using the lower value if the document has already been loading
+    // for 2 seconds. 2 seconds was chosen because it is greater than
+    // the default 3/4 of second that is used to determine when to
+    // switch between the modes and it gives the document a little
+    // time to create windows.  This is important because on some
+    // systems (Windows, for example) when a window is created and the
+    // mouse is over it, a mouse move event is sent, which will kick
+    // us into interactive mode otherwise. It also supresses reaction
+    // to pressing the ENTER key in the URL bar...
 
     PRUint32 delayBeforeLoweringThreshold = NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) + NS_DELAY_FOR_WINDOW_CREATION));
-    if (((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) && mDocument) {      
-        if ((currentTime - eventTime) < NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
-          // lower the dynamic values to favor
-          // application responsiveness over page load
-          // time.
-          mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
-        }
-        else {
-          // raise the content notification and
-          // MaxTokenProcessing time to favor overall 
-          // page load speed over responsiveness
-          mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
+
+    if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
+      if ((currentTime - eventTime) <
+          NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
+        // lower the dynamic values to favor application
+        // responsiveness over page load time.
+
+        mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
+      } else {
+        // raise the content notification and MaxTokenProcessing time
+        // to favor overall page load speed over responsiveness
+
+        mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
       }
     }
 
 #ifdef NS_DEBUG
-PRInt32 newMaxTokenProcessingTime = GetMaxTokenProcessingTime();
+    PRInt32 newMaxTokenProcessingTime = GetMaxTokenProcessingTime();
 
-   if (newMaxTokenProcessingTime != oldMaxTokenProcessingTime) {
-//     printf("Changed dynamic interval : MaxTokenProcessingTime %d\n", GetMaxTokenProcessingTime());
-   }
+    if (newMaxTokenProcessingTime != oldMaxTokenProcessingTime) {
+//      printf("Changed dynamic interval : MaxTokenProcessingTime %d\n",
+//             GetMaxTokenProcessingTime());
+    }
 #endif
 
-   if ((currentTime - mDelayTimerStart) > NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
-     return NS_ERROR_HTMLPARSER_INTERRUPTED;
-   }
+    if ((currentTime - mDelayTimerStart) >
+        NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
+      return NS_ERROR_HTMLPARSER_INTERRUPTED;
+    }
   }
 
   return NS_OK;
@@ -4156,7 +4172,7 @@ nsresult
 HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  if (nsnull != mCurrentMap) {
+  if (mCurrentMap) {
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent* area;
     rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &area);

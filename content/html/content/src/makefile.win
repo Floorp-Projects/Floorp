@@ -32,10 +32,10 @@ REQUIRES	= xpcom \
 		  webshell \
 		  htmlparser \
 		  necko \
-			uriloader \
 		  view \
 		  pref \
 		  docshell \
+		  uriloader \
 		  xpconnect \
 		  caps \
 		  editor \

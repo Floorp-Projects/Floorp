@@ -265,28 +265,6 @@ public:
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const = 0;
 
-  /** 
-   * Returns the object that acts as a subshell for aContent.
-   * For example, for an html frame aResult will be an nsIDocShell.
-   */
-  NS_IMETHOD GetSubShellFor(nsIContent*   aContent,
-                            nsISupports** aResult) const = 0;
-
-  /**
-   * Establish a relationship between aContent and aSubShell.
-   * aSubShell will be returned from GetSubShellFor(aContent, ...);
-   */
-  NS_IMETHOD SetSubShellFor(nsIContent*  aContent,
-                            nsISupports* aSubShell) = 0;
-
-  /**
-   * Find the content in the map that has aSubShell set
-   * as its subshell.  If there is more than one mapping for
-   * aSubShell, the result is undefined.
-   */
-  NS_IMETHOD FindContentForShell(nsISupports* aSubShell,
-                                 nsIContent** aContent) const = 0;
-
   /**
    * Gets the placeholder frame associated with the specified frame. This is
    * a helper frame that forwards the request to the frame manager.
