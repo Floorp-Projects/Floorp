@@ -43,8 +43,8 @@ MISCDEP=$(LLIBS)
 
 INCS = $(INCS)                      \
         -I$(DEPTH)\dist\include     \
-        -I$(DEPTH)\necko\base\src \
-        -I$(DEPTH)\necko\dns\src  \
+        -I$(DEPTH)\netwerk\base\src \
+        -I$(DEPTH)\netwerk\dns\src  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
