@@ -244,7 +244,7 @@ NS_IMETHODIMP nsSOAPMessage::GetMethodName(nsAString & aMethodName)
       return NS_OK;
     }
   }
-  aMethodName.SetLength(0);
+  aMethodName.Truncate();
   return NS_OK;
 }
 
@@ -271,7 +271,7 @@ GetTargetObjectURI(nsAString & aTargetObjectURI)
       return encoding->GetInternalSchemaURI(temp, aTargetObjectURI);
     }
   }
-  aTargetObjectURI.SetLength(0);
+  aTargetObjectURI.Truncate();
   return NS_OK;
 }
 

@@ -256,6 +256,7 @@ nsresult
     nsSOAPUtils::GetElementTextContent(nsIDOMElement * aElement,
                                        nsAString & aText)
 {
+  aText.Truncate();
   nsCOMPtr < nsIDOMNode > child;
   nsAutoString rtext;
   aElement->GetFirstChild(getter_AddRefs(child));
@@ -336,7 +337,7 @@ nsresult
                                  const nsAString & aQName,
                                  nsAString & aURI)
 {
-  aURI.Truncate(0);
+  aURI.Truncate();
   PRInt32 i = aQName.FindChar(':');
   if (i < 0) {
     return NS_OK;
@@ -415,7 +416,7 @@ nsresult
   else {
     externalURI.Assign(aURI);
   }
-  aPrefix.Truncate(0);
+  aPrefix.Truncate();
   if (externalURI.IsEmpty())
     return NS_OK;
   if (externalURI.Equals(nsSOAPUtils::kXMLNamespaceURI)) {
