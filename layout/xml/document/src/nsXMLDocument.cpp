@@ -32,6 +32,8 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
+#include "nsIStyleSet.h"
 #include "nsRepository.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
@@ -62,6 +64,7 @@ nsXMLDocument::nsXMLDocument()
   mParser = nsnull;
   mNameSpaces = nsnull;
   mAttrStyleSheet = nsnull;
+  mInlineStyleSheet = nsnull;
   mProlog = nsnull;
   mEpilog = nsnull;
 
@@ -88,6 +91,10 @@ nsXMLDocument::~nsXMLDocument()
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
+  }
+  if (nsnull != mInlineStyleSheet) {
+    mInlineStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mInlineStyleSheet);
   }
   if (nsnull != mProlog) {
     delete mProlog;
@@ -143,6 +150,10 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
   }
+  if (nsnull != mInlineStyleSheet) {
+    mInlineStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mInlineStyleSheet);
+  }
 
   nsIWebShell* webShell;
 
@@ -164,6 +175,9 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
       // For the HTML content within a document
       if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this)) {
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      }
+      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aUrl, this)) {
+        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
       }
       
       // Set the parser as the stream listener for the document loader...
@@ -194,8 +208,6 @@ nsXMLDocument::EndLoad()
   return nsDocument::EndLoad();
 }
 
-// XXX Currently a nsIHTMLDocument method. Should go into an interface
-// implemented for XML documents that hold HTML content.
 NS_IMETHODIMP 
 nsXMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
@@ -211,6 +223,33 @@ nsXMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
     NS_ADDREF(mAttrStyleSheet);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mInlineStyleSheet;
+  if (nsnull == mInlineStyleSheet) {
+    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
+  }
+  else {
+    NS_ADDREF(mInlineStyleSheet);
+  }
+  return NS_OK;
+}
+
+void nsXMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
+{
+  if ((nsnull != mInlineStyleSheet) && (aSheet != mInlineStyleSheet)) {
+    aSet->InsertDocStyleSheetAfter(aSheet, mInlineStyleSheet);
+  }
+  else {
+    aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it in front
+  }
 }
 
 // nsIDOMDocument interface

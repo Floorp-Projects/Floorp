@@ -80,11 +80,15 @@ public:
 
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
+  NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
 protected:
+  void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
+
 
   // For HTML elements in our content model
   nsIHTMLStyleSheet*    mAttrStyleSheet;
+  nsIHTMLCSSStyleSheet* mInlineStyleSheet;
 
   nsVoidArray *mProlog;
   nsVoidArray *mEpilog;
