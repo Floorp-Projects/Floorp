@@ -101,7 +101,7 @@ Bool NET_AreThereStoppableConnectionsForWindow(MWContext * window_id)
 { return FALSE; }
 void GH_UpdateGlobalHistory(URL_Struct * URL_s) { }
 char * NET_EscapeHTML(const char * string) { return (char *)string; }
-
+char * NET_EscapeDoubleQuote(const char * string) { return (char *)string; }
 extern int il_first_write(NET_StreamClass *stream, const unsigned char *str, int32 len);
 
 extern ilIURL *IL_CreateIURL(URL_Struct *urls);
