@@ -609,13 +609,14 @@ JS_TypeOfValue(JSContext *cx, jsval v)
             type = JSTYPE_FUNCTION;
         } else {
 #ifdef NARCISSUS
-            /* XXX suppress errors/exceptions */
-            OBJ_GET_PROPERTY(cx, obj,
-                             (jsid)cx->runtime->atomState.callAtom,
-                             &v);
-            if (JSVAL_IS_FUNCTION(cx, v))
-                type = JSTYPE_FUNCTION;
-            else
+            if (obj) {
+                /* XXX suppress errors/exceptions */
+                OBJ_GET_PROPERTY(cx, obj,
+                                 (jsid)cx->runtime->atomState.callAtom,
+                                 &v);
+                if (JSVAL_IS_FUNCTION(cx, v))
+                    return JSTYPE_FUNCTION;
+            }
 #endif
             type = JSTYPE_OBJECT;
         }
