@@ -17,14 +17,6 @@
  */
 
 #include "nsCheckButton.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
-#include "nsString.h"
-#include "nsStringUtil.h"
-#include "nsIFontMetrics.h"
-#include "nsIDeviceContext.h"
-#include "nsFont.h"
-#include "nsFontMetricsMac.h"
 
 
 NS_IMPL_ADDREF(nsCheckButton);
@@ -68,13 +60,14 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(PRBool aState) 
 {
-	mButtonSet = aState;
+	mValue = (aState ? 1 : 0);
 	Invalidate(PR_TRUE);
 	return NS_OK;
 }
@@ -85,7 +78,7 @@ NS_METHOD nsCheckButton::SetState(PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-	aState = mButtonSet;
+	aState = (mValue != 0);
 	return NS_OK;
 }
 
