@@ -18,71 +18,36 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 10-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
  */
 
 
 #include "nsISupports.idl"
-#include "nsICacheEntryDescriptor.idl"
 
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
+interface nsICacheSession;
+interface nsICacheVisitor;
 
 
 [scriptable, uuid(0ebec4c7-742f-4f27-8e7b-7c8a0cc76348)]
 interface nsICacheService : nsISupports
 {
-
     void init();
     void shutdown();
 
-    /**
-     * Access flags.
-     */
-    const unsigned long NO_ACCESS  = 0;
-    const unsigned long READ       = 1;
-    const unsigned long WRITE      = 2;
-    const unsigned long READ_WRITE = 3;
-
     /*
-     * Synchronous cache access. This returns a unique descriptor each
-     * time it is called, even if the same key is specified. When
-     * called by multiple threads for write access, only one writeable
-     * descriptor will be granted.
+     * Create Session
      */
-    nsICacheEntryDescriptor  openCacheEntry(in string         clientID,
-                                            in string         key,
-                                            in unsigned long  accessFlagsRequested,
-                                            in boolean        streamBased);
-
-
-    /*
-     * Asynchronous cache access. Does not block the calling thread.
-     */
-    void asyncOpenCacheEntry(in string           clientID,
-                             in string           key,
-                             in unsigned long    accessFlagsRequested,
-                             in boolean          streamBased,
-                             in nsICacheListener listener);
-
+    nsICacheSession createSession(in string   clientID,
+                                  in long     storagePolicy,
+                                  in boolean  streamBased);
 
     /*
      * methods for implementing about:cache
      */
-    nsISimpleEnumerator enumerateDeviceIDs();
-    nsISimpleEnumerator enumerateClientIDs();
-    nsISimpleEnumerator enumerateEntries(in string deviceID,
-                                         in string clientID);
-
+    void visitEntries(in nsICacheVisitor visitor);
 };
-
-%{C++
-
-#define NS_ERROR_CACHE_KEY_NOT_FOUND        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 60)
-#define NS_ERROR_CACHE_DATA_IS_STREAM       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 61)
-#define NS_ERROR_CACHE_DATA_IS_NOT_STREAM   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 62)
-#define NS_ERROR_CACHE_WAIT_FOR_VALIDATION  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 63)
-#define NS_ERROR_CACHE_ENTRY_DOOMED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 64)
-
-%}

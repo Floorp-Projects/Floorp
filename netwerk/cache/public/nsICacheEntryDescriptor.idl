@@ -19,10 +19,13 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 10-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
  */
 
 #include "nsITransport.idl"
+#include "nsICache.idl"
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
@@ -35,42 +38,32 @@ interface nsICacheEntryDescriptor : nsITransport
      * attributes from cache entry
      */
     
-    readonly attribute string            clientID;
-    readonly attribute string            key;
-    readonly attribute PRTime            lastValidated;
-    readonly attribute PRTime            lastFetch;
-    readonly attribute unsigned long     fetchCount;
+    readonly attribute string   key;
+    readonly attribute long     fetchCount;
+    readonly attribute PRTime   lastFetched;
+    readonly attribute PRTime   lastValidated;
 
-    attribute PRTime                     expiresDate;
-    attribute boolean                    streamBased;
+    attribute PRTime  expirationTime;
+
+    /**
+     *  Indicate whether the cached data is a stream or object.
+     */
+    boolean  isStreamBased();
 
     /**
      * For accessing non-persistent cached objects
      */
-    attribute nsISupports                cacheElement;
-    
-    
+    attribute nsISupports  cacheElement;
+     
     /**
      * Access granted to this descriptor. (see nsICacheService.idl)
      */
     readonly attribute unsigned long accessGranted;
     
     /**
-     * Storage flags
+     *  
      */
-    
-    const unsigned long DONT_CACHE                 = 0;
-    const unsigned long ALLOW_IN_MEMORY            = 1;
-    const unsigned long ALLOW_ON_DISK              = 2;
-    const unsigned long ALLOW_IN_MEMORY_OR_ON_DISK = 3;
-    
-    attribute unsigned long storageFlags;
-    
-    /* and/or */
-    
-    attribute boolean allowInMemory;
-    attribute boolean allowOnDisk;
-    
+    attribute nsCacheStoragePolicy storagePolicy;
     
     /**
      * Doom the cache entry this descriptor references in order to slate it for 
@@ -78,19 +71,6 @@ interface nsICacheEntryDescriptor : nsITransport
      */
     void doom();
     void doomAndFailPendingRequests(in nsresult status);
-    
-    /**
-     * Data in an existing cache object may only be appended to.  Therefore,
-     * a writer wishing to replace existing cache data should first truncate
-     * the existing data to the appropriate length.
-     */ 
-    void truncateExistingData(in unsigned long newLength);
-    
-    /**
-     * Set internal flag so we know more data is expected than what is there currently.
-     *
-     */
-    void appendToExistingData();
     
     /**
      * A writer must validate this cache object before any readers are given
@@ -105,6 +85,5 @@ interface nsICacheEntryDescriptor : nsITransport
     void    setMetadataElement(in string  key, in string  value);
     
     nsISimpleEnumerator  getMetaDataEnumerator();
-
 };
 

@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is nsICacheService.idl, released February 23, 2001.
+ * The Original Code is nsICacheVisitor.idl, released February 23, 2001.
  * 
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
@@ -18,7 +18,9 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 23-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
  */
 
 
@@ -32,7 +34,6 @@ interface nsICacheVisitor : nsISupports
      */
     boolean  visitDevice(in string  deviceID, in nsISupports  deviceInfo);
     /* XXX we should define device info as well (stats, etc)*/
-
 
     /**
      *  return true to visit the next entry on current device

@@ -18,11 +18,15 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 19-January-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
  */
 
 
 #include "nsISupports.idl"
+#include "nsICache.idl"
+
 
 interface nsICacheEntryDescriptor;
 
@@ -35,6 +39,6 @@ interface nsICacheListener : nsISupports
      * See nsICacheService.idl for accessGranted values.
      */
     void onDescriptorAvailable(in nsICacheEntryDescriptor descriptor,
-                               in unsigned long           accessGranted,
+                               in nsCacheAccessMode       accessGranted,
                                in nsresult                status);
 };
