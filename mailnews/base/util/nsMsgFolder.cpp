@@ -32,6 +32,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
