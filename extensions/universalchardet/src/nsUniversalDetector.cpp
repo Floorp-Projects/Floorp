@@ -227,7 +227,7 @@ void nsUniversalDetector::DataEnd()
     {
       float proberConfidence;
       float maxProberConfidence = (float)0.0;
-      PRInt32 maxProber;
+      PRInt32 maxProber = 0;
 
       for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
       {

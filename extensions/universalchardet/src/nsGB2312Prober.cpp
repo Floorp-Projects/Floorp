@@ -43,7 +43,7 @@
 
 #include "nsGB2312Prober.h"
 
-void  nsGB2312Prober::Reset(void)
+void  nsGB18030Prober::Reset(void)
 {
   mCodingSM->Reset(); 
   mState = eDetecting;
@@ -51,7 +51,7 @@ void  nsGB2312Prober::Reset(void)
   //mContextAnalyser.Reset();
 }
 
-nsProbingState nsGB2312Prober::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsGB18030Prober::HandleData(const char* aBuf, PRUint32 aLen)
 {
   nsSMState codingState;
 
@@ -93,7 +93,7 @@ nsProbingState nsGB2312Prober::HandleData(const char* aBuf, PRUint32 aLen)
   return mState;
 }
 
-float nsGB2312Prober::GetConfidence(void)
+float nsGB18030Prober::GetConfidence(void)
 {
   float distribCf = mDistributionAnalyser.GetConfidence();
 
