@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= DebugRobot
 SHORT_LIBNAME	= dbgrobot
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  htmlparser \

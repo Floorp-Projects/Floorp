@@ -43,6 +43,7 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= logparse$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
    xpcom \

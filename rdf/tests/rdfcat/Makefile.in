@@ -43,6 +43,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= rdfcat$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
+
 CPPSRCS		= rdfcat.cpp
 REQUIRES	= xpcom \
 		  rdf \
