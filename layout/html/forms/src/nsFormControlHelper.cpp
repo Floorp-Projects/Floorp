@@ -140,8 +140,10 @@ PRBool nsFormControlHelper::GetBool(const nsAReadableString& aValue)
 void nsFormControlHelper::GetBoolString(const PRBool aValue,
                                         nsAWritableString& aResult)
 {
-  aResult.Assign( aValue ? NS_STRING_TRUE :
-                  NS_STRING_FALSE );
+  if (aValue)
+    aResult.Assign(NS_STRING_TRUE); 
+  else
+    aResult.Assign(NS_STRING_FALSE);
 }
 
 
