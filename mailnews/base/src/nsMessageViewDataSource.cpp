@@ -102,16 +102,6 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 	mShowStatus = VIEW_SHOW_ALL;
 	mInitialized = PR_FALSE;
 	mShowThreads = PR_TRUE;
-
-  // XXX This call should be moved to a NS_NewMessageViewDataSource()
-  // method that the factory calls, so that failure to construct will
-  // return an error code instead of returning a partially initialized
-  // object.
-  nsresult rv = Init();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh. couldn't initialize.");
-  if (NS_FAILED(rv)) return /* rv */;
-
-  return /* NS_OK */;
 }
 
 nsMessageViewDataSource::~nsMessageViewDataSource (void)
@@ -829,4 +819,25 @@ nsresult nsMessageViewThreadEnumerator::GetMessagesForCurrentThread()
 	}
 
 	return rv;
+}
+
+nsresult
+NS_NewMessageViewDataSource(const nsIID& iid, void **result)
+{
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsMessageViewDataSource* datasource = new nsMessageViewDataSource();
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = datasource->Init();
+    if (NS_FAILED(rv)) {
+        delete datasource;
+        return rv;
+    }
+
+	return datasource->QueryInterface(iid, result);
 }
