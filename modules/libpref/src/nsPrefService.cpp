@@ -638,12 +638,12 @@ pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2, void* /*unused*/)
   aFile1->GetNativeLeafName(filename1);
   aFile2->GetNativeLeafName(filename2);
 
-  return Compare(filename1, filename2);
+  return Compare(filename2, filename1);
 }
 
 /**
  * Load default pref files from a directory. The files in the
- * directory are sorted alphabetically; a set of "special file
+ * directory are sorted reverse-alphabetically; a set of "special file
  * names" may be specified which are loaded after all the others.
  */
 static nsresult
