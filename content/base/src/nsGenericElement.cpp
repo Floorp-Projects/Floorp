@@ -3347,6 +3347,23 @@ nsGenericContainerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return SetAttr(ni, aValue, aNotify);
 }
 
+static PRBool
+NodeHasMutationListeners(nsISupports* aNode)
+{
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aNode));
+  if (rec) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    rec->GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasMutationListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasMutationListeners);
+      if (hasMutationListeners)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 // Static helper method
 
 PRBool
@@ -3371,44 +3388,12 @@ nsGenericElement::HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 
   // We know a mutation listener is registered, but it might not
   // be in our chain.  Check quickly to see.
-  nsCOMPtr<nsIEventListenerManager> manager;
 
-  for (nsIContent* curr = aContent; curr; curr = curr->GetParent()) {
-    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
-    if (rec) {
-      rec->GetListenerManager(getter_AddRefs(manager));
-      if (manager) {
-        PRBool hasMutationListeners = PR_FALSE;
-        manager->HasMutationListeners(&hasMutationListeners);
-        if (hasMutationListeners)
-          return PR_TRUE;
-      }
-    }
-  }
+  for (nsIContent* curr = aContent; curr; curr = curr->GetParent())
+    if (NodeHasMutationListeners(curr))
+      return PR_TRUE;
 
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
-  if (rec) {
-    rec->GetListenerManager(getter_AddRefs(manager));
-    if (manager) {
-      PRBool hasMutationListeners = PR_FALSE;
-      manager->HasMutationListeners(&hasMutationListeners);
-      if (hasMutationListeners)
-        return PR_TRUE;
-    }
-  }
-
-  rec = do_QueryInterface(window);
-  if (rec) {
-    rec->GetListenerManager(getter_AddRefs(manager));
-    if (manager) {
-      PRBool hasMutationListeners = PR_FALSE;
-      manager->HasMutationListeners(&hasMutationListeners);
-      if (hasMutationListeners)
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  return NodeHasMutationListeners(doc) || NodeHasMutationListeners(window);
 }
 
 nsresult
