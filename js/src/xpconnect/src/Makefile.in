@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  string \
 		  js \
 		  caps \
+		  dom \
 		  $(NULL)
 
 CPPSRCS		= \

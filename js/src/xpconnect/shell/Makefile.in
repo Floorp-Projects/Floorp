@@ -74,5 +74,5 @@ DEFINES		+= -DJS_THREADSAFE
 #
 ifdef JS_READLINE
 DEFINES += -DEDITLINE
-LIBS += -lreadline
+LIBS += -lreadline $(JS_READLINE_EXTRA_LIBS)
 endif

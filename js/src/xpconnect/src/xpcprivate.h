@@ -2772,6 +2772,49 @@ private:
 {0xb5e65b52, 0x1dd1, 0x11b2, \
     { 0xae, 0x8f, 0xf0, 0x92, 0x8e, 0xd8, 0x84, 0x82 }}
 
+#ifndef XPCONNECT_STANDALONE
+#include "nsIScriptSecurityManager.h"
+#include "nsIPrincipal.h"
+#include "nsIScriptObjectPrincipal.h"
+
+class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCSCRIPTABLE
+  
+  virtual nsIPrincipal* GetPrincipal() {
+    return mPrincipal;
+  }
+
+  BackstagePass(nsIPrincipal *prin) :
+    mPrincipal(prin)
+  {
+  }
+
+  virtual ~BackstagePass() { }
+
+private:
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+};
+
+#else
+
+class BackstagePass : public nsIXPCScriptable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCSCRIPTABLE
+
+  BackstagePass()
+  {
+  }
+
+  virtual ~BackstagePass() { }
+};
+
+#endif
+
 class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
                                public nsSupportsWeakReference
 {
@@ -2793,6 +2836,7 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
  protected:
     JSRuntime *mRuntime;
     static nsJSRuntimeServiceImpl* gJSRuntimeService;
+    nsCOMPtr<nsIXPCScriptable> mBackstagePass;
 };
 
 /***************************************************************************/
