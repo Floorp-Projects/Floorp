@@ -283,6 +283,7 @@ sub BuildDist()
     InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",		"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
