@@ -24,6 +24,7 @@ var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var msgCompType = Components.interfaces.nsIMsgCompType;
 var msgCompFormat = Components.interfaces.nsIMsgCompFormat;
 var abPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
+var plaintextEditor = Components.interfaces.nsIPlaintextEditor;
 
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var accountManager = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
@@ -82,15 +83,39 @@ if (prefs) {
 	}
 }
 
+function disableEditableFields()
+{
+  editorShell.editor.SetFlags(plaintextEditor.eEditorReadonlyMask);
+  document.getElementById("msgSubject").setAttribute('disabled', 'true');
+  var disableElements = document.getElementsByAttribute("disableonsend", "true");
+  for (i=0;i<disableElements.length;i++)
+  {
+    disableElements[i].setAttribute('disabled', 'true');
+  }
+}
+
+function enableEditableFields()
+{
+  editorShell.editor.SetFlags(plaintextEditor.eEditorMailMask);
+  document.getElementById("msgSubject").removeAttribute("disabled");
+  var enableElements = document.getElementsByAttribute("disableonsend", "true");
+  for (i=0;i<enableElements.length;i++)
+  {
+    enableElements[i].removeAttribute('disabled');
+  }
+}
+
 var stateListener = {
 	NotifyComposeFieldsReady: function() {
 		ComposeFieldsReady();
 	},
 
 	ComposeProcessDone: function(aResult) {
-		dump("\n RECEIVE ComposeProcessDone\n\n");
-		windowLocked = false;
-	  CommandUpdate_MsgCompose();
+    dump("\n RECEIVE ComposeProcessDone\n\n");
+    windowLocked = false;
+    CommandUpdate_MsgCompose();
+    enableEditableFields();
+
     if (aResult== Components.results.NS_OK)
     {
       contentChanged = false;
@@ -1382,9 +1407,10 @@ function GenericSendMessage( msgType )
 				}
 			}
 			try {
-			  windowLocked = true;
-			  CommandUpdate_MsgCompose();
-			  
+        windowLocked = true;
+        CommandUpdate_MsgCompose();
+        disableEditableFields();
+
         var progress = Components.classes["@mozilla.org/messenger/progress;1"].createInstance(Components.interfaces.nsIMsgProgress);
         if (progress)
         {
@@ -1394,9 +1420,10 @@ function GenericSendMessage( msgType )
 				msgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
 			}
 			catch (ex) {
-				dump("failed to SendMsg: " + ex + "\n");
-			  windowLocked = false;
-			  CommandUpdate_MsgCompose();
+        dump("failed to SendMsg: " + ex + "\n");
+        windowLocked = false;
+        enableEditableFields();
+        CommandUpdate_MsgCompose();
 			}
 		}
 	}
