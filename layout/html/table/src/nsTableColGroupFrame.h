@@ -112,6 +112,8 @@ public:
 
 protected:
 
+  nsTableColGroupFrame();
+
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
@@ -160,7 +162,11 @@ protected:
 
 };
 
+inline nsTableColGroupFrame::nsTableColGroupFrame()
+: mColCount(0), mStartColIndex(0)
+{}
+  
 inline int nsTableColGroupFrame::GetStartColumnIndex ()
 {  return mStartColIndex;}
-  
+
 #endif

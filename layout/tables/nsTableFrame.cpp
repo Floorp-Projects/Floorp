@@ -2181,24 +2181,28 @@ void nsTableFrame::SetColumnDimensions(nscoord aHeight)
     colGroupFrame->FirstChild(nsnull, &colFrame);
     nsPoint colOrigin(0, 0);
     while (nsnull != colFrame) {
-      NS_ASSERTION(colX < numCols, "invalid number of columns");
-      nscoord colWidth = mColumnWidths[colX];
-      if (numCols == 1) {
-        colWidth += cellSpacingX + cellSpacingX;
-      }
-      else if ((0 == colX) || (numCols - 1 == colX)) {
-        colWidth += cellSpacingX + halfCellSpacingX;
-      }
-      else if (GetNumCellsOriginatingIn(colX) > 0) {
-        colWidth += cellSpacingX;
-      }
+      const nsStyleDisplay* colDisplay;
+      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
+        NS_ASSERTION(colX < numCols, "invalid number of columns");
+        nscoord colWidth = mColumnWidths[colX];
+        if (numCols == 1) {
+          colWidth += cellSpacingX + cellSpacingX;
+        }
+        else if ((0 == colX) || (numCols - 1 == colX)) {
+          colWidth += cellSpacingX + halfCellSpacingX;
+        }
+        else if (GetNumCellsOriginatingIn(colX) > 0) {
+          colWidth += cellSpacingX;
+        }
 
-      colGroupWidth += colWidth;
-      nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
-      colFrame->SetRect(colRect);
+        colGroupWidth += colWidth;
+        nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
+        colFrame->SetRect(colRect);
+        colOrigin.x += colWidth;
+        colX++;
+      }
       colFrame->GetNextSibling(&colFrame);
-      colOrigin.x += colWidth;
-      colX++;
     }
     nsRect colGroupRect(colGroupOrigin.x, colGroupOrigin.y, colGroupWidth, colHeight);
     colGroupFrame->SetRect(colGroupRect);
@@ -4468,24 +4472,23 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
 void nsTableFrame::CacheColFramesInCellMap()
 {
   nsIFrame * childFrame = mColGroups.FirstChild();
-  while (nsnull!=childFrame)
-  { // in this loop, we cache column info 
-    nsTableColFrame *colFrame=nsnull;
+  while (nsnull != childFrame) { // in this loop, we cache column info 
+    nsTableColFrame* colFrame = nsnull;
     childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
-    while (nsnull!=colFrame)
-    {
-      PRInt32 colIndex = colFrame->GetColumnIndex();
-      PRInt32 repeat   = colFrame->GetSpan();
-      for (PRInt32 i=0; i<repeat; i++)
-      {
-         nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex+i);
-        if (nsnull==cachedColFrame)
-        {
-          if (gsDebug) 
-            printf("TIF BCB: adding column frame %p\n", colFrame);
-          mCellMap->AppendColumnFrame(colFrame);
+    while (nsnull != colFrame) {
+      const nsStyleDisplay* colDisplay;
+      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
+        PRInt32 colIndex = colFrame->GetColumnIndex();
+        PRInt32 repeat   = colFrame->GetSpan();
+        for (PRInt32 i=0; i<repeat; i++) {
+          nsTableColFrame* cachedColFrame = mCellMap->GetColumnFrame(colIndex+i);
+          if (nsnull==cachedColFrame) {
+            if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
+            mCellMap->AppendColumnFrame(colFrame);
+          }
+          colIndex++;
         }
-        colIndex++;
       }
       colFrame->GetNextSibling((nsIFrame **)&colFrame);
     }
