@@ -97,6 +97,8 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
             return NS_OK;
         start = space + 1;
     }
+    /* NOTREACHED */
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -129,6 +131,8 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
             return NS_OK;
         start = space + 1;
     }
+    /* NOTREACHED */
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -215,6 +219,8 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
             return NS_OK;
         start = space + 1;
     }
+    /* NOTREACHED */
+    return NS_OK;
 }
 
 int nsBasePrincipal::mCapabilitiesOrdinal = 0;
