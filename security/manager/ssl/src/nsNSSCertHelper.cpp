@@ -314,13 +314,18 @@ ProcessNSCertTypeExtensions(SECItem  *extData,
                             nsString &text,
                             nsINSSComponent *nssComponent)
 {
+  nsAutoString local;
   SECItem decoded;
   decoded.data = nsnull;
   decoded.len  = 0;
-  SEC_ASN1DecodeItem(nsnull, &decoded, 
-		SEC_ASN1_GET(SEC_BitStringTemplate), extData);
+  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+		SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpExtensionFailure").get(),
+                                        local);
+    text.Append(local.get());
+    return NS_OK;
+  }
   unsigned char nsCertType = decoded.data[0];
-  nsString local;
   nsMemory::Free(decoded.data);
   if (nsCertType & NS_CERT_TYPE_SSL_CLIENT) {
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLClient").get(),
@@ -371,13 +376,18 @@ nsresult
 ProcessKeyUsageExtension(SECItem *extData, nsString &text,
                          nsINSSComponent *nssComponent)
 {
+  nsAutoString local;
   SECItem decoded;
   decoded.data = nsnull;
   decoded.len  = 0;
-  SEC_ASN1DecodeItem(nsnull, &decoded, 
-				SEC_ASN1_GET(SEC_BitStringTemplate), extData);
+  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+				SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpExtensionFailure").get(),
+                                        local);
+    text.Append(local.get());
+    return NS_OK;
+  }
   unsigned char keyUsage = decoded.data[0];
-  nsString local;
   nsMemory::Free(decoded.data);  
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUSign").get(),
