@@ -132,7 +132,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   m_scriptcode = 0; //smRoman
   mCharset.SetString("ISO-8859-1"); //TODO: should be "MacRoman"
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar; 
+    PRUnichar *aLocaleUnichar; 
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
     nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
@@ -141,10 +141,10 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
       //TODO: Get a charset name from a script code.
       nsIMacLocale* macLocale = nsnull;
-      short scriptcode, langcode;
+      short scriptcode, langcode, regioncode;
       res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
       if (NS_SUCCEEDED(res) && nsnull != macLocale) {
-        if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode))) {
+        if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
           m_scriptcode = scriptcode;
         }
         macLocale->Release();

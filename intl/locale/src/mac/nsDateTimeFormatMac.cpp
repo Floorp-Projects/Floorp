@@ -262,7 +262,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   // Get a script code and a charset name
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar; 
+    PRUnichar *aLocaleUnichar; 
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
@@ -270,10 +270,10 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       aLocale.SetString(aLocaleUnichar);
       //TODO: Get a charset name from a script code.
       nsCOMPtr <nsIMacLocale> macLocale;
-      short langcode;
+      short langcode, regioncode;
       res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, getter_AddRefs(macLocale));
       if (NS_SUCCEEDED(res)) {
-        res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode);
+        res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode);
       }
     }    
   }
