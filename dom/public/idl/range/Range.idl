@@ -1,0 +1,35 @@
+interface Range : Node {
+ /* IID: { 0xa6cf90ce, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+    attribute boolean     isPositioned;
+
+    attribute Element     startParent();
+    attribute long        startOffset();
+    attribute Element     endParent();
+    attribute long        endOffset();
+
+    void                setStart(in Node parent, in long offset);
+    void                setEnd(in Node parent, in long offset);
+
+    void                collapse(in boolean toStart);
+    attribute boolean   isCollapsed();
+    void                unposition();
+
+    void                selectNode(in Node n);
+    void                selectNodeContents(in Node n);
+
+    void                deleteContents();
+
+    DocumentFragment    extractContents();
+    DocumentFragment    copyContents();
+
+    void                insertNode(in Node n);
+
+    void                surroundContents(in Node n);
+
+    Range               clone();
+    attribute Node      commonParent();
+
+    DOMString           toString();
+ };
