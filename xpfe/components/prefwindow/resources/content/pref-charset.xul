@@ -40,7 +40,7 @@
 
   <keyset id="keyset"/>
   
-  <box class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text"/>
+  <box class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text" value="&charset.customize.save.popup;"/>
 
   <!-- The two-pane -->
   <box flex="1">
