@@ -69,6 +69,7 @@ LINCS=  \
   -I$(PUBLIC)\uconv \
   -I$(PUBLIC)\intl \
   -I$(PUBLIC)\locale \
+  -I$(PUBLIC)\lwbrk \
   -I$(PUBLIC)\unicharutil \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\rdf
