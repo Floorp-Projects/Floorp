@@ -108,16 +108,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_TextFieldHeight:
         {
-	  GtkRequisition req;
-	  GtkWidget *text = gtk_entry_new();
-	  // needed to avoid memory leak
-	  gtk_widget_ref(text);
-	  gtk_object_sink(GTK_OBJECT(text));
-	  gtk_widget_size_request(text,&req);
-	  aMetric = req.height;
-	  gtk_widget_destroy(text);
-	  gtk_widget_unref(text);
-	}
+            GtkRequisition req;
+            GtkWidget *text = gtk_entry_new();
+            // needed to avoid memory leak
+            gtk_widget_ref(text);
+            gtk_object_sink(GTK_OBJECT(text));
+            gtk_widget_size_request(text,&req);
+            aMetric = req.height;
+            gtk_widget_destroy(text);
+            gtk_widget_unref(text);
+        }
         break;
     case eMetric_TextVerticalInsidePadding:
         aMetric = 0;
@@ -126,10 +126,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 0;
+        aMetric = 15;
         break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
         aMetric = 10;

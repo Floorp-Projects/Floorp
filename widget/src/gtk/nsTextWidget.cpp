@@ -45,6 +45,8 @@ nsTextWidget::nsTextWidget() : nsTextHelper()
 //-------------------------------------------------------------------------
 nsTextWidget::~nsTextWidget()
 {
+  // avoid freeing this twice in other destructors
+  mTextWidget = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -56,6 +58,10 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
   PRBool oldIsReadOnly;
   mWidget = gtk_entry_new();
+
+  // used by nsTextHelper because nsTextArea needs a scrolled_window
+  mTextWidget = mWidget;
+
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",

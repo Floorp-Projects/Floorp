@@ -53,6 +53,7 @@ public:
     NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
 
 protected:
+    GtkWidget *mTextWidget;
     PRBool  mIsPassword;
     PRBool  mIsReadOnly;
 
