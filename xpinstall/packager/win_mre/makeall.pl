@@ -85,11 +85,11 @@ if($inRedirIniURL eq "")
 }
 
 $seiFileNameGeneric   = "nsinstall.exe";
-$seiFileNameSpecific  = "mfcembed-win32-installer.exe";
-$seiStubRootName = "mfcembed-win32-stub-installer";
+$seiFileNameSpecific  = "mre-win32-installer.exe";
+$seiStubRootName = "mre-win32-stub-installer";
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific  = "MFCEmbedUninstall.exe";
-$seuzFileNameSpecific = "mfcembeduninstall.zip";
+$seuFileNameSpecific  = "MREUninstall.exe";
+$seuzFileNameSpecific = "mreuninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
 if($versionParts[2] eq "0")
@@ -102,8 +102,8 @@ else
 }
 print "The display version is: $versionMain\n";
 $ENV{WIZ_nameCompany}          = "Mozilla";
-$ENV{WIZ_nameProduct}          = "MFCEmbed";
-$ENV{WIZ_nameProductNoVersion} = "MFCEmbed";
+$ENV{WIZ_nameProduct}          = "MRE";
+$ENV{WIZ_nameProductNoVersion} = "MRE";
 $ENV{WIZ_fileMainExe}          = "none.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
@@ -123,7 +123,7 @@ if(!(-d "$inStagePath"))
 }
 
 # List of components for to create xpi files from
-@gComponentList = ("mfcembed");
+@gComponentList = ("mre");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {
