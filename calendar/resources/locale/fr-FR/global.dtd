@@ -86,9 +86,6 @@
 
 <!ENTITY time.am "AM" >
 <!ENTITY time.pm "PM" >
-<!ENTITY time.midnight "Minuit" >
-<!ENTITY time.noon "Midi" >
-
 
 <!ENTITY month.1.MMM "JAN" >
 <!ENTITY month.2.MMM "FÉV" >

@@ -86,9 +86,6 @@
 
 <!ENTITY time.am "AM" >
 <!ENTITY time.pm "PM" >
-<!ENTITY time.midnight "Půlnoc" >
-<!ENTITY time.noon "Poledne" >
-
 
 <!ENTITY month.1.MMM "LED" >
 <!ENTITY month.2.MMM "ÚNO" >

@@ -87,9 +87,6 @@
 
 <!ENTITY time.am "de." >
 <!ENTITY time.pm "du." >
-<!ENTITY time.midnight "éjfél" >
-<!ENTITY time.noon "dél" >
-
 
 <!ENTITY month.1.MMM "JAN" >
 <!ENTITY month.2.MMM "FEB" >

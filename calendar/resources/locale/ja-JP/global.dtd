@@ -89,9 +89,6 @@
 
 <!ENTITY time.am "午前" >
 <!ENTITY time.pm "午後" >
-<!ENTITY time.midnight "真夜中" >
-<!ENTITY time.noon "正午" >
-
 
 <!ENTITY month.1.MMM "1 月" >
 <!ENTITY month.2.MMM "2 月" >
