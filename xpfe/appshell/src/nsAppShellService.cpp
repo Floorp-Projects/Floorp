@@ -342,9 +342,7 @@ nsAppShellService::RunModalDialog(
 {
 
   nsresult             rv;
-  nsIWebShellWindow    *window;
 
-  window = nsnull;
 
 #ifdef XP_PC // XXX: Won't work with any other platforms yet.
   // First push a nested event queue for event processing from netlib
@@ -358,7 +356,7 @@ nsAppShellService::RunModalDialog(
   eQueueService->PushThreadEventQueue();
 #endif
 
-  rv = CreateDialogWindow(aParent, aUrl, PR_TRUE, window, anObserver, nsnull,
+  rv = CreateDialogWindow(aParent, aUrl, PR_TRUE, aResult, anObserver, aCallbacks,
             aInitialWidth, aInitialHeight);
 
   if (NS_SUCCEEDED(rv)) {
@@ -369,7 +367,7 @@ nsAppShellService::RunModalDialog(
     // Windows OS wants the parent disabled for modality
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_FALSE);
-    window->ShowModal();
+    aResult->ShowModal();
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_TRUE);
   }
