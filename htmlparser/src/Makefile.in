@@ -50,6 +50,7 @@ CPPSRCS= \
 	nsToken.cpp					\
 	nsTokenHandler.cpp			\
 	nsHTMLContentSinkStream.cpp	\
+	nsHTMLToTXTSinkStream.cpp	\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp 		\
@@ -64,6 +65,7 @@ EXPORTS =     \
 	nsIExpatTokenizer.h \
 	nsIHTMLContentSink.h  \
 	nsHTMLContentSinkStream.h \
+	nsHTMLToTXTSinkStream.h \
 	nsHTMLEntities.h \
 	nsHTMLTokens.h \
 	nsILoggingSink.h \
