@@ -67,7 +67,7 @@
 #include "nsInt64.h"
 #include "nsManifestLineReader.h"
 
-#include <new.h>     // for placement new
+#include NEW_H     // for placement new
 
 
 #ifdef XP_BEOS
