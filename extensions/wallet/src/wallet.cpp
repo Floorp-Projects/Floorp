@@ -148,6 +148,7 @@ NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 NS_IMETHODIMP
 InputConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
+fprintf(stdout,"<<OnStartRequest>>");
     return NS_OK;
 }
 
@@ -158,6 +159,7 @@ InputConsumer::OnDataAvailable(nsIChannel* channel,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+fprintf(stdout,"<<OnDataAvailable>>");
   char buf[1001];
   PRUint32 amt;
   nsresult rv;
@@ -178,6 +180,7 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
                              nsresult aStatus,
                              const PRUnichar* aMsg)
 {
+fprintf(stdout,"<<OnStopAvailable>>");
   outFile->flush();
   outFile->close();
   gKeepRunning -= 1;
@@ -590,6 +593,44 @@ Wallet_Confirm(char * szMessage)
 #endif
 }
 
+PUBLIC PRBool
+Wallet_ConfirmYN(char * szMessage)
+{
+#ifdef NECKO
+  PRBool retval = PR_TRUE; /* default value */
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+
+  const nsString message = szMessage;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
+  res = dialog->ConfirmYN(message.GetUnicode(), &retval);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+
+  return retval;
+#else
+  PRBool retval = PR_TRUE; /* default value */
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+  if (dialog) {
+    const nsString message = szMessage;
+    retval = PR_FALSE; /* in case user exits dialog by clicking X */
+    dialog->ConfirmYN(message, &retval);
+  }
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  return retval;
+#endif
+}
+
 PUBLIC void
 Wallet_Alert(char * szMessage)
 {
@@ -620,7 +661,7 @@ Wallet_Alert(char * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
+Wallet_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValue)
 {
 #ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
@@ -635,7 +676,7 @@ Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
   const nsString message = szMessage;
   const nsString checkMessage = szCheckMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+  res = dialog->ConfirmCheckYN(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
@@ -655,7 +696,7 @@ Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
     const nsString message = szMessage;
     const nsString checkMessage = szCheckMessage;
     retval = PR_FALSE; /* in case user exits dialog by clicking X */
-    dialog->ConfirmCheck(message, checkMessage, &retval, checkValue);
+    dialog->ConfirmCheckYN(message, checkMessage, &retval, checkValue);
     if (*checkValue!=0 && *checkValue!=1) {
       *checkValue = 0; /* this should never happen but it is happening!!! */
     }
@@ -2139,7 +2180,7 @@ wallet_OKToCapture(char* urlName) {
   char * message = Wallet_Localize("WantToCaptureForm?");
   char * checkMessage = Wallet_Localize("NeverSave");
   PRBool checkValue;
-  PRBool result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
+  PRBool result = Wallet_CheckConfirmYN(message, checkMessage, &checkValue);
   if (!result) {
     if (checkValue) {
       /* add URL to list with NO_CAPTURE indicator set */

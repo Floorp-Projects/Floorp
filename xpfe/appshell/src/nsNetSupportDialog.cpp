@@ -55,7 +55,6 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
 #endif
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-
 // Copy and paste
 #define APP_DEBUG 1
 static nsresult setAttribute( nsIWebShell *shell,
@@ -385,6 +384,46 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 }
 
 #ifdef NECKO
+NS_IMETHODIMP nsNetSupportDialog::ConfirmYN(const PRUnichar *text, PRBool *returnValue)
+#else
+NS_IMETHODIMP nsNetSupportDialog::ConfirmYN( const nsString &aText, PRInt32* returnValue )
+#endif
+{
+	Init();
+#ifdef NECKO
+  nsAutoString aText(text);
+#endif
+	mMsg = &aText;
+	mReturnValue = returnValue;
+	nsString  url( "chrome://navigator/content/NetSupportConfirmYN.xul") ; 
+	DoDialog( url  );
+	return NS_OK;	
+}
+
+#ifdef NECKO
+NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN(const PRUnichar *text, 
+                                               const PRUnichar *checkMsg, 
+                                               PRBool *checkValue, 
+                                               PRBool *returnValue)
+#else
+NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
+#endif
+{
+	Init();
+#ifdef NECKO
+  nsAutoString aText(text);
+  nsAutoString aCheckMsg(checkMsg);
+#endif
+	mMsg = &aText;
+	mReturnValue = returnValue;
+	mCheckValue = checkValue;
+	mCheckMsg = &aCheckMsg;
+	nsString  url( "chrome://navigator/content/NetSupportConfirmCheckYN.xul") ; 
+	DoDialog( url  );
+	return NS_OK;	
+}
+
+#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,
                                          const PRUnichar *defaultText, 
                                          PRUnichar **resultText,
@@ -521,8 +560,6 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     return result;
   }
 
-  appShellService->PushThreadEventQueue();
-
   result = appShellService->CreateTopLevelWindow(nsnull, dialogURL, PR_TRUE,
                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                               this, 300, 200, &dialogWindow);
@@ -532,8 +569,6 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     appShellService->RunModalDialog(&dialogWindow, nsnull, dialogURL,
                        NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                        this, 300, 200);
-
-  appShellService->PopThreadEventQueue();
 
   // cleanup
   if ( mOKButton )

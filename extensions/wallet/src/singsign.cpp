@@ -81,6 +81,7 @@ struct LO_FormSubmitData_struct {
 
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 extern PRBool Wallet_Confirm(char * szMessage);
+extern PRBool Wallet_ConfirmYN(char * szMessage);
 extern void Wallet_Alert(char * szMessage);
 
 /* StrAllocCopy and StrAllocCat should really be defined elsewhere */
@@ -345,7 +346,7 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount)
     nsString msg = "user = ";
     msg += pList[i];
     msg += "?";
-    res = dialog->Confirm(msg.GetUnicode(), &retval);
+    res = dialog->ConfirmYN(msg.GetUnicode(), &retval);
     if (NS_SUCCEEDED(res) && retval) {
       *pCount = i;
       break;
@@ -370,7 +371,7 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount)
         nsString msg = "user = ";
         msg += pList[i];
         msg += "?";
-        dialog->Confirm(msg, &retval);
+        dialog->ConfirmYN(msg, &retval);
         if (retval) {
           *pCount = i;
           break;
@@ -1217,7 +1218,7 @@ si_OkToSave(char *URLName, char *userName) {
         StrAllocCat(notification, message);
         PR_FREEIF(message);
         si_SetNotificationPref(PR_TRUE);
-        if (!Wallet_Confirm(notification)) {
+        if (!Wallet_ConfirmYN(notification)) {
             XP_FREE (notification);
             SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
             return PR_FALSE;
@@ -1233,7 +1234,7 @@ si_OkToSave(char *URLName, char *userName) {
     }
 
     char * message = Wallet_Localize("WantToSavePassword?");
-    if (!Wallet_Confirm(message)) {
+    if (!Wallet_ConfirmYN(message)) {
         si_PutReject(strippedURLName, userName, PR_TRUE);
         XP_FREE(strippedURLName);
         PR_FREEIF(message);
@@ -1851,7 +1852,7 @@ SI_LoadSignonData(PRBool fullLoad) {
       si_RestartKey();
       char * message = Wallet_Localize("IncorrectKey_TryAgain?");
       while (!si_SetKey()) {
-        if (!Wallet_Confirm(message)) {
+        if (!Wallet_ConfirmYN(message)) {
           return 1;
         }
       }
@@ -2163,7 +2164,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
         si_RestartKey();
         char * message = Wallet_Localize("IncorrectKey_TryAgain?");
         while (!si_SetKey()) {
-          if (!Wallet_Confirm(message)) {
+          if (!Wallet_ConfirmYN(message)) {
             return 1;
           }
         }

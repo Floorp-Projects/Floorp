@@ -31,8 +31,10 @@ install::
 	$(MAKE_INSTALL) navigator.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.js $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirm.xul $(DISTBROWSWER)
+	$(MAKE_INSTALL) NetSupportConfirmYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportAlert.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheck.xul $(DISTBROWSWER)
+	$(MAKE_INSTALL) NetSupportConfirmCheckYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportPassword.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportPrompt.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTBROWSWER)
@@ -49,8 +51,10 @@ clobber::
   rm -f $(DISTBROWSER)\navigator.xul
   rm -f $(DISTBROWSER)\navigator.js
   rm -f $(DISTBROWSER)\NetSupportConfirm.xul
+  rm -f $(DISTBROWSER)\NetSupportConfirmYN.xul
   rm -f $(DISTBROWSER)\NetSupportAlert.xul
   rm -f $(DISTBROWSER)\NetSupportConfirmCheck.xul
+  rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.xul
   rm -f $(DISTBROWSER)\NetSupportPassword.xul
   rm -f $(DISTBROWSER)\NetSupportPrompt.xul
   rm -f $(DISTBROWSER)\NetSupportUserPassword.xul

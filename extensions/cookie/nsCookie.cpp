@@ -121,7 +121,7 @@ static int cookie_deferLockCount = 0;
 //#define REAL_DIALOG 1
 
 PRBool
-cookie_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
+cookie_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
 #ifdef REAL_DIALOG
   PRBool retval = PR_TRUE; /* default value */
   nsresult res;  
@@ -133,7 +133,7 @@ cookie_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
   const nsString message = szMessage;
   const nsString checkMessage = szCheckMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+  res = dialog->ConfirmCheckYN(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
@@ -1258,7 +1258,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     {
       PRBool rememberChecked = cookie_rememberChecked;
       PRBool userHasAccepted =
-        cookie_CheckConfirm(new_string, remember_string, &cookie_rememberChecked);
+        cookie_CheckConfirmYN(new_string, remember_string, &cookie_rememberChecked);
       PR_FREEIF(new_string);
       PR_FREEIF(remember_string);
       if (cookie_rememberChecked) {

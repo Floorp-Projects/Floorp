@@ -136,6 +136,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD Alert(const PRUnichar *text);
     NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
     NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+    NS_IMETHOD ConfirmYN(const PRUnichar *text, PRBool *_retval);
+    NS_IMETHOD ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
     NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
     NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
     NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
@@ -144,6 +146,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD_(void) Alert(const nsString &aText);
   
     NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+
+
+    NS_IMETHOD_(PRBool) ConfirmYN(const nsString &aText);
 
 
     NS_IMETHOD_(PRBool) Prompt(const nsString &aText,

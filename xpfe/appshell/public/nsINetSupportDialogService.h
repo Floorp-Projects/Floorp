@@ -36,9 +36,11 @@ class nsINetSupportDialogService  : public nsISupports
 public:
 	static const nsIID& GetIID() { static nsIID iid = NS_INETSUPPORTDIALOGSERVICE_IID; return iid; }
 			
-	NS_IMETHOD 	Alert( const nsString &aText ) =0 ;
+  NS_IMETHOD 	Alert( const nsString &aText ) =0 ;
   NS_IMETHOD 	Confirm( const nsString &aText, PRInt32* returnValue ) =0;
-	NS_IMETHOD	ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue ) =0;
+  NS_IMETHOD 	ConfirmYN( const nsString &aText, PRInt32* returnValue ) =0;
+  NS_IMETHOD	ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue ) =0;
+  NS_IMETHOD	ConfirmCheckYN( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue ) =0;
   NS_IMETHOD 	Prompt(	const nsString &aText,
                       const nsString &aDefault,
                       nsString &aResult
