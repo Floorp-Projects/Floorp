@@ -27,6 +27,7 @@
 [scriptable, uuid(F4C0DA81-3887-11d3-9F5D-006008A6EFE9)]
 interface nsIProfileServices : nsISupports
 {
+	void Init();
 	void CreateNewProfile(in string data);
 	void RenameProfile(in string oldName, in string newName);
 	void DeleteProfile(in string profileName, in string canDeleteFiles);

@@ -56,6 +56,8 @@ private:
 nsresult
 NS_NewProfileServices(nsIProfileServices** aProfile)
 {
+    nsresult rv;
+    
     NS_PRECONDITION(aProfile != nsnull, "null ptr");
     if (! aProfile)
         return NS_ERROR_NULL_POINTER;
@@ -64,6 +66,13 @@ NS_NewProfileServices(nsIProfileServices** aProfile)
     if (! *aProfile)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    rv = (*aProfile)->Init();
+    if (NS_FAILED(rv)) {
+        delete *aProfile;
+        *aProfile = nsnull;
+        return rv;
+    }
+    
     NS_ADDREF(*aProfile);
     return NS_OK;
 }
@@ -76,9 +85,6 @@ ProfileServicesImpl::ProfileServicesImpl()
 {
     NS_INIT_REFCNT();
 
-	nsresult rv = nsServiceManager::GetService(kProfileCID, 
-                                    nsIProfile::GetIID(), 
-                                    (nsISupports **)&mProfile);
 }
 
 
@@ -90,6 +96,14 @@ ProfileServicesImpl::~ProfileServicesImpl()
 
 NS_IMPL_ISUPPORTS(ProfileServicesImpl, nsIProfileServices::GetIID());
 
+NS_IMETHODIMP
+ProfileServicesImpl::Init()
+{
+	nsresult rv = nsServiceManager::GetService(kProfileCID, 
+                                    nsIProfile::GetIID(), 
+                                    (nsISupports **)&mProfile);
+    return rv;
+}
 
 NS_IMETHODIMP
 ProfileServicesImpl::CreateNewProfile(const char* data)
