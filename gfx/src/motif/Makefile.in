@@ -39,13 +39,7 @@ EXTRA_DSO_LDOPTS+=\
 	$(DIST)/bin/libreg.so \
 	$(NSPR_LIBS)
 
-# This should really be done properly in 'config'
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS+=\
-	 -L/usr/X11R6/lib -lXt -lX11 -lXext -lm
-else
-EXTRA_DSO_LDOPTS+= -lXt -lX11 -lXext -lm
-endif
+EXTRA_DSO_LDOPTS+= $(XLDFLAGS) $(XLIBS)
 
 
 CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
