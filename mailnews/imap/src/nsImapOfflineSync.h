@@ -30,13 +30,14 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h"
 
-class nsImapOfflineSync : public nsIUrlListener {
+class nsImapOfflineSync : public nsIUrlListener, public nsIMsgCopyServiceListener {
 public:												// set to one folder to playback one folder only
 	nsImapOfflineSync(nsIMsgWindow *window, nsIUrlListener *listener, nsIMsgFolder *singleFolderOnly = nsnull);
 	virtual ~nsImapOfflineSync();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLLISTENER
+  NS_DECL_NSIMSGCOPYSERVICELISTENER
 	virtual nsresult		ProcessNextOperation(); // this kicks off playback
 	
 	PRInt32		GetCurrentUIDValidity();

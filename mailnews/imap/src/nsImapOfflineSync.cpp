@@ -35,7 +35,7 @@
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-NS_IMPL_ISUPPORTS1(nsImapOfflineSync, nsIUrlListener)
+NS_IMPL_ISUPPORTS2(nsImapOfflineSync, nsIUrlListener, nsIMsgCopyServiceListener)
 
 nsImapOfflineSync::nsImapOfflineSync(nsIMsgWindow *window, nsIUrlListener *listener, nsIMsgFolder *singleFolderOnly)
 {
@@ -311,29 +311,29 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
 
 void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *currentOp)
 {
-	nsMsgKeyArray matchingFlagKeys ;
-	PRUint32 currentKeyIndex = m_KeyIndex;
-	nsXPIDLCString moveDestination;
-	currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
-	PRBool moveMatches = PR_TRUE;
-	
-	do 
+  nsMsgKeyArray matchingFlagKeys ;
+  PRUint32 currentKeyIndex = m_KeyIndex;
+  nsXPIDLCString moveDestination;
+  currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+  PRBool moveMatches = PR_TRUE;
+  
+  do 
   {	// loop for all messsages with the same destination
-		if (moveMatches)
-		{
+    if (moveMatches)
+    {
       nsMsgKey curKey;
       currentOp->GetMessageKey(&curKey);
-			matchingFlagKeys.Add(curKey);
+      matchingFlagKeys.Add(curKey);
       currentOp->ClearOperation(nsIMsgOfflineImapOperation::kMsgMoved);
-		}
-		currentOp = nsnull;
-		
-		if (++currentKeyIndex < m_CurrentKeys.GetSize())
-		{
-			nsXPIDLCString nextDestination;
-			nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, &currentOp);
+    }
+    currentOp = nsnull;
+    
+    if (++currentKeyIndex < m_CurrentKeys.GetSize())
+    {
+      nsXPIDLCString nextDestination;
+      nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, &currentOp);
       moveMatches = PR_FALSE;
-			if (NS_SUCCEEDED(rv) && currentOp)
+      if (NS_SUCCEEDED(rv) && currentOp)
       {
         nsOfflineImapOperationType opType; 
         currentOp->GetOperation(&opType);
@@ -343,12 +343,12 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
           moveMatches = nsCRT::strcmp(moveDestination, nextDestination) == 0;
         }
       }
-		}
-	} 
+    }
+  } 
   while (currentOp);
-	
+  
   nsresult rv;
-
+  
   nsCOMPtr<nsIRDFResource> res;
   NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
   if (NS_FAILED(rv)) return ; // ### return error code.
@@ -362,10 +362,30 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
       if (imapFolder)
       {
         rv = imapFolder->ReplayOfflineMoveCopy(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), PR_TRUE, destFolder,
-                       this, m_window);
+          this, m_window);
+      }
+      else
+      {
+        nsCOMPtr <nsISupportsArray> messages = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+        if (messages && NS_SUCCEEDED(rv))
+        {
+          NS_NewISupportsArray(getter_AddRefs(messages));
+          for (PRUint32 keyIndex = 0; keyIndex < matchingFlagKeys.GetSize(); keyIndex++)
+          {
+            nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
+            rv = m_currentFolder->GetMessageHeader(matchingFlagKeys.ElementAt(keyIndex), getter_AddRefs(mailHdr));
+            if (NS_SUCCEEDED(rv) && mailHdr)
+            {
+              nsCOMPtr<nsISupports> iSupports;
+              iSupports = do_QueryInterface(mailHdr);
+              messages->AppendElement(iSupports);
+            }
+          }
+          destFolder->CopyMessages(m_currentFolder, messages, PR_TRUE, m_window, this, PR_FALSE, PR_FALSE);
+        }
       }
     }
-	}
+  }
 }
 
 
@@ -419,14 +439,34 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
     nsCOMPtr<nsIMsgFolder> destFolder(do_QueryInterface(res, &rv));
     if (NS_SUCCEEDED(rv) && destFolder)
     {
-      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(destFolder);
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
       if (imapFolder)
       {
         rv = imapFolder->ReplayOfflineMoveCopy(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), PR_FALSE, destFolder,
                        this, m_window);
       }
+      else
+      {
+        nsCOMPtr <nsISupportsArray> messages = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+        if (messages && NS_SUCCEEDED(rv))
+        {
+          NS_NewISupportsArray(getter_AddRefs(messages));
+          for (PRUint32 keyIndex = 0; keyIndex < matchingFlagKeys.GetSize(); keyIndex++)
+          {
+            nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
+            rv = m_currentFolder->GetMessageHeader(matchingFlagKeys.ElementAt(keyIndex), getter_AddRefs(mailHdr));
+            if (NS_SUCCEEDED(rv) && mailHdr)
+            {
+              nsCOMPtr<nsISupports> iSupports;
+              iSupports = do_QueryInterface(mailHdr);
+              messages->AppendElement(iSupports);
+            }
+          }
+          destFolder->CopyMessages(m_currentFolder, messages, PR_FALSE, m_window, this, PR_FALSE, PR_FALSE);
+        }
+      }
     }
-	}
+  }
 }
 
 void nsImapOfflineSync::ProcessEmptyTrash(nsIMsgOfflineImapOperation *currentOp)
@@ -867,6 +907,35 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
   return rv;
 }
 
+
+NS_IMETHODIMP nsImapOfflineSync::OnStartCopy()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void OnProgress (in PRUint32 aProgress, in PRUint32 aProgressMax); */
+NS_IMETHODIMP nsImapOfflineSync::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void SetMessageKey (in PRUint32 aKey); */
+NS_IMETHODIMP nsImapOfflineSync::SetMessageKey(PRUint32 aKey)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void GetMessageId (in nsCString aMessageId); */
+NS_IMETHODIMP nsImapOfflineSync::GetMessageId(nsCString * aMessageId)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void OnStopCopy (in nsresult aStatus); */
+NS_IMETHODIMP nsImapOfflineSync::OnStopCopy(nsresult aStatus)
+{
+  return OnStopRunningUrl(nsnull, aStatus);
+}
 
 
 
