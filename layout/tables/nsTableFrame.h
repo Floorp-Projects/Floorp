@@ -53,7 +53,7 @@ struct nsStyleSpacing;
   * Used as a pseudo-frame within nsTableOuterFrame, it may also be used
   * stand-alone as the top-level frame.
   *
-  * The flowed child list contains row group framess. There is also an additional
+  * The flowed child list contains row group frames. There is also an additional
   * named child list:
   * - "ColGroup-list" which contains the col group frames
   *
@@ -78,48 +78,78 @@ public:
   friend nsresult 
   NS_NewTableFrame(nsIFrame*& aResult);
 
+  /** sets defaults for table-specific style.
+    * @see nsIFrame::Init 
+    */
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext);
 
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
+  /** @see nsIFrame::DeleteFrame */
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
   /** helper method for determining if this is a nested table or not */
   PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
+  // TODO: today, this depends on display types.  This should be changed to rely
+  // on stronger criteria, like an inner table frame atom
   static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);
 
   /** helper method for getting the width of the table's containing block */
   static nscoord GetTableContainerWidth(const nsHTMLReflowState& aReflowState);
 
-
+  /** helper method for determining the width specification for a table frame
+    * within a specific reflow context.
+    *
+    * @param aTableFrame   the table frame we're inspecting
+    * @param aTableStyle   the style context for aTableFrame
+    * @param aReflowState  the context within which we're to determine the table width info
+    * @param aSpecifiedTableWidth [OUT] if the table is not auto-width,
+    *                                   aSpecifiedTableWidth iw set to the resolved width.
+    * @return PR_TRUE if the table is auto-width.  value of aSpecifiedTableWidth is undefined.
+    *         PR_FALSE if the table is not auto-width, 
+    *         and aSpecifiedTableWidth is set to the resolved width in twips.
+    */
   static PRBool TableIsAutoWidth(nsTableFrame *           aTableFrame,
                                  nsIStyleContext *        aTableStyle,
                                  const nsHTMLReflowState& aReflowState,
                                  nscoord&                 aSpecifiedTableWidth);
   
-  /** return PR_TRUE if aDisplayType represents a rowgroup of any sort
+  /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
   PRBool IsRowGroup(PRInt32 aDisplayType) const;
 
+  /** Initialize the table frame with a set of children.
+    * Calls DidAppendRowGroup which calls nsTableRowFrame::InitChildren
+    * which finally calls back into this table frame to build the cell map.
+    * Also ensures we have the right number of column frames for the child list.
+    * 
+    * @see nsIFrame::SetInitialChildList 
+    */
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  /** return the first child belonging to the list aListName. 
+    * @see nsIFrame::FirstChild
+    */
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
 
+  /** @see nsIFrame::GetAdditionalChildListName */
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
                                          nsIAtom*& aListName) const;
 
   /** complete the append of aRowGroupFrame to the table
-    * this builds the cell map
+    * this builds the cell map by calling nsTableRowFrame::InitChildren
+    * which calls back into this table frame to build the cell map.
+    * @param aRowGroupFrame the row group that was appended.
+    * note that this method is optimized for content appended, and doesn't
+    * work for random insertion of row groups.  Random insertion must go
+    * through incremental reflow notifications.
     */
   NS_IMETHOD DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFrame);
 
@@ -144,7 +174,7 @@ public:
     * @see ResizeReflowPass1
     * @see ResizeReflowPass2
     * @see BalanceColumnWidths
-    * @see nsIFrame::Reflow 
+    * @see nsIFrameReflow::Reflow
     */
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -180,14 +210,8 @@ public:
   /** return PR_TRUE if the column width information has been set */
   PRBool IsColumnWidthsSet();
 
-         
-  /**
-    * DEBUG METHOD
-    *
-    */
-  //virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-
+  /** @see nsIFrame::GetFrameName */
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** get the max border thickness for each edge */
@@ -220,6 +244,8 @@ public:
   /** Calculate Layout Information */
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
 
+// begin methods for collapsing borders
+
   /** notification that top and bottom borders have been computed */ 
   void DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
                                              PRInt32 aStartRowIndex,
@@ -235,15 +261,28 @@ public:
                                              PRInt32 aStartRowIndex, 
                                              PRInt32 aEndRowIndex);
 
+  /** compute the left borders for the table objects intersecting at (aRowIndex, aColIndex) */
   void    ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
                                      PRInt32 aRowIndex, 
                                      PRInt32 aColIndex);
+
+  /** compute the right border for the table cell at (aRowIndex, aColIndex)
+    * and the appropriate border for that cell's right neighbor 
+    * (the left border for a neighboring cell, or the right table edge) 
+    */
   void    ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
                                       PRInt32 aRowIndex, 
                                       PRInt32 aColIndex);
+
+  /** compute the top borders for the table objects intersecting at (aRowIndex, aColIndex) */
   void    ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
                                     PRInt32 aRowIndex, 
                                     PRInt32 aColIndex);
+
+  /** compute the bottom border for the table cell at (aRowIndex, aColIndex)
+    * and the appropriate border for that cell's bottom neighbor 
+    * (the top border for a neighboring cell, or the bottom table edge) 
+    */
   void    ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
                                        PRInt32 aRowIndex, 
                                        PRInt32 aColIndex);
@@ -253,19 +292,51 @@ public:
     */
   void    SetCollapsingBorderHorizontalEdgeLengths();
 
+  /** @return the identifier representing the edge opposite from aEdge (left-right, top-bottom) */
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
+  /** @return the computed width for aSide of aBorder */
   nscoord GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide);
 
+  /** returns BORDER_PRECEDENT_LOWER if aStyle1 is lower precedent that aStyle2
+    *         BORDER_PRECEDENT_HIGHER if aStyle1 is higher precedent that aStyle2
+    *         BORDER_PRECEDENT_EQUAL if aStyle1 and aStyle2 have the same precedence
+    *         (note, this is not necessarily the same as saying aStyle1==aStyle2)
+    * according to the CSS-2 collapsing borders for tables precedent rules.
+    */
   PRUint8 CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2);
 
+  /** helper to set the length of an edge for aSide border of this table frame */
   void    SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength);
 
+  /** Compute the style, width, and color of an edge in a collapsed-border table.
+    * This method is the CSS2 border conflict resolution algorithm
+    * The spec says to resolve conflicts in this order:<br>
+    * 1. any border with the style HIDDEN wins<br>
+    * 2. the widest border with a style that is not NONE wins<br>
+    * 3. the border styles are ranked in this order, highest to lowest precedence:<br>
+    *       double, solid, dashed, dotted, ridge, outset, groove, inset<br>
+    * 4. borders that are of equal width and style (differ only in color) have this precedence:<br>
+    *       cell, row, rowgroup, col, colgroup, table<br>
+    * 5. if all border styles are NONE, then that's the computed border style.<br>
+    * This method assumes that the styles were added to aStyles in the reverse precedence order
+    * of their frame type, so that styles that come later in the list win over style 
+    * earlier in the list if the tie-breaker gets down to #4.
+    * This method sets the out-param aBorder with the resolved border attributes
+    *
+    * @param aSide   the side that is being compared
+    * @param aStyles the resolved styles of the table objects intersecting at aSide
+    *                styles must be added to this list in reverse precedence order
+    * @param aBorder [OUT] the border edge that we're computing.  Results of the computation
+    *                      are stored in aBorder:  style, color, and width.
+    * @param aFlipLastSide an indication of what the bordering object is:  another cell, or the table itself.
+    */
   void    ComputeCollapsedBorderSegment(PRUint8       aSide, 
                                         nsVoidArray * aStyles, 
                                         nsBorderEdge& aBorder,
                                         PRBool        aFlipLastSide);
 
+// end methods for collapsing borders
 
   void    RecalcLayoutData(nsIPresContext& aPresContext);
 
@@ -353,7 +424,7 @@ protected:
     * Incremental layout can take advantage of aStartingFrame to pick up where a previous
     * ResizeReflowPass1 left off.
     *
-    * @see Reflow
+    * @see nsIFrameReflow::Reflow
     */
   NS_IMETHOD ResizeReflowPass1(nsIPresContext&          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
@@ -368,19 +439,20 @@ protected:
     * Pass 2 is executed every time the table needs to resize.  An optimization is included
     * so that if the table doesn't need to actually be resized, no work is done (see NeedsReflow).
     * 
-    *
-    * @see Reflow
-    * @see NeedsReflow
+    * @see nsIFrameReflow::Reflow
     */
   NS_IMETHOD ResizeReflowPass2(nsIPresContext&          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
+// begin incremental reflow methods
+
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
     * commands to child elements.  This is done by processing the reflow command,
     * rebalancing column widths (if necessary), then comparing the resulting column widths
     * to the prior column widths and reflowing only those cells that require a reflow.
+    * All incremental reflows go through this method.
     *
     * @see Reflow
     */
@@ -389,17 +461,30 @@ protected:
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
+  /** process an incremental reflow command targeted at a child of this frame. 
+    * @param aNextFrame  the next frame in the reflow target chain
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_TargetIsChild(nsIPresContext&        aPresContext,
                               nsHTMLReflowMetrics&   aDesiredSize,
                               InnerTableReflowState& aReflowState,
                               nsReflowStatus&        aStatus,
                               nsIFrame *             aNextFrame);
 
+  /** process an incremental reflow command targeted at this frame. 
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_TargetIsMe(nsIPresContext&        aPresContext,
                            nsHTMLReflowMetrics&   aDesiredSize,
                            InnerTableReflowState& aReflowState,
                            nsReflowStatus&        aStatus);
 
+  /** process a colgroup inserted notification 
+    * @param aInsertedFrame  the new colgroup frame
+    * @param aReplace        PR_TRUE if aInsertedFrame is replacing an existing frame
+    *                        Not Yet Implemented.
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_ColGroupInserted(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
@@ -407,18 +492,32 @@ protected:
                                  nsTableColGroupFrame * aInsertedFrame,
                                  PRBool                 aReplace);
 
+  /** process a colgroup appended notification. This method is optimized for append.
+    * @param aAppendedFrame  the new colgroup frame
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_ColGroupAppended(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
                                  nsTableColGroupFrame * aAppendedFrame); 
 
+  /** process a colgroup removed notification.
+    * @param aDeletedFrame  the colgroup frame to remove
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_ColGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 InnerTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus,
                                 nsTableColGroupFrame * aDeletedFrame);
 
+  /** process a rowgroup inserted notification 
+    * @param aInsertedFrame  the new rowgroup frame
+    * @param aReplace        PR_TRUE if aInsertedFrame is replacing an existing frame
+    *                        Not Yet Implemented.
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_RowGroupInserted(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
@@ -426,18 +525,30 @@ protected:
                                  nsTableRowGroupFrame * aInsertedFrame,
                                  PRBool                 aReplace);
 
+  /** process a rowgroup appended notification. This method is optimized for append.
+    * @param aAppendedFrame  the new rowgroup frame
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_RowGroupAppended(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
                                  nsTableRowGroupFrame * aAppendedFrame);
 
+  /** process a rowgroup removed notification.
+    * @param aDeletedFrame  the rowgroup frame to remove
+    * @see nsIFrameReflow::Reflow
+    */
   NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 InnerTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus,
                                 nsTableRowGroupFrame * aDeletedFrame);
 
+  /** process a style chnaged notification.
+    * @see nsIFrameReflow::Reflow
+    * TODO: needs to be optimized for which attribute was actually changed.
+    */
   NS_IMETHOD IR_StyleChanged(nsIPresContext&        aPresContext,
                              nsHTMLReflowMetrics&   aDesiredSize,
                              InnerTableReflowState& aReflowState,
@@ -447,12 +558,16 @@ protected:
                                        InnerTableReflowState& aReflowState,
                                        nsIFrame*              aKidFrame,
                                        nscoord                aDeltaY);
+// end incremental reflow methods
 
   /** return the desired width of this table accounting for the current
     * reflow state, and for the table attributes and parent
     */
   nscoord ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const;
 
+  /** return the desired height of this table accounting for the current
+    * reflow state, and for the table attributes and parent
+    */
   nscoord ComputeDesiredHeight(nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aDefaultHeight);
