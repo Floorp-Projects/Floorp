@@ -49,3 +49,27 @@ function StartUp(windowName)
          browser.openWindow();
          toolkit.CloseWindow( window );
  }
+ 
+ function SetHomePageToCurrentPage()
+ {
+ 	dump("SetHomePageToCurrentPage() \n ");
+ 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+
+    
+	var topWindowOfType = windowManagerInterface.GetMostRecentWindow( "navigator:browser" );
+	if ( topWindowOfType )
+	{
+		var inputfield = document.getElementById("pref:string:browser.startup.homepage");
+		dump( "window found "+inputfield+"\n");
+		if ( inputfield )
+		{
+			dump("setting home page to "+topWindowOfType.content.location.href+"\n");
+			inputfield.value = topWindowOfType.content.location.href;
+		}
+	}
+	else
+	{
+		dump(" No browser window. Should be disabling this button \n");
+	}
+ }

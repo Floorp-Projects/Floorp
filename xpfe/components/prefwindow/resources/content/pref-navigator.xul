@@ -76,7 +76,7 @@
 			<html:input name="homepage" type="text"	id="pref:string:browser.startup.homepage" size="30" /> 
 			<html:div>
 				<spring flex="100%"/>
-				<titledbutton name="starts" type="button" value="&useCurrent;" />
+				<titledbutton name="starts" type="button" value="&useCurrent;" onclick="SetHomePageToCurrentPage();" />
 				<titledbutton name="browse" type="button" value="&browseFile;" />
 			</html:div>		
 		</html:fieldset>  
