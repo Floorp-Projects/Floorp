@@ -133,6 +133,23 @@ public:
    */
   virtual nsISelection * GetSelection();
 
+  /**
+    * Selects all the Content
+   */
+  virtual void SelectAll();
+
+  /**
+    * Copies all text from the selection
+   */
+  virtual void GetSelectionText(nsString & aText);
+
+  void TraverseTree(nsString   & aText,  
+                    nsIContent * aContent, 
+                    nsIContent * aStart, 
+                    nsIContent * aEnd, 
+                    PRBool     & aInRange);
+
+
 public:
   
   virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);

@@ -154,6 +154,16 @@ public:
     * Returns the Selection Object
    */
   virtual nsISelection * GetSelection() = 0;
+
+  /**
+    * Selects all the Content
+   */
+  virtual void SelectAll() = 0;
+
+  /**
+    * Copies all text from the selection
+   */
+  virtual void GetSelectionText(nsString & aText) = 0;
 };
 
 // XXX Belongs somewhere else
