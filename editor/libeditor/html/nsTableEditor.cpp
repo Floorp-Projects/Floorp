@@ -2054,7 +2054,9 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   // Set to the opposite of current type
   nsAutoString tagName;
   GetTagString(aSourceCell, tagName);
-  nsString newCellType( (tagName == NS_LITERAL_STRING("td")) ? NS_LITERAL_STRING("th") : NS_LITERAL_STRING("td") );
+  NS_NAMED_LITERAL_STRING(tdType, "td");
+  NS_NAMED_LITERAL_STRING(thType, "th");
+  nsString newCellType( (tagName == tdType) ? thType : tdType );
 
   // Save current selection to restore when done
   // This is needed so ReplaceContainer can monitor selection
