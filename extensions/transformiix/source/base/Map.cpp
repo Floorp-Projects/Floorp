@@ -149,7 +149,7 @@ void  Map::put(TxObject* key, TxObject* obj) {
     if ((!key) || (!obj)) return;
 
     //-- compute hash for key
-    PRInt32 hashCode = key->hashCode();
+    PRUint32 hashCode = key->hashCode();
 
     //-- calculate index
     int idx = hashCode % numberOfBuckets;
@@ -197,7 +197,7 @@ TxObject* Map::remove(TxObject* key) {
     if (!key) return 0;
 
     // compute hash for key
-    PRInt32 hashCode = key->hashCode();
+    PRUint32 hashCode = key->hashCode();
 
     int idx = hashCode % numberOfBuckets;
 
@@ -253,7 +253,7 @@ Map::BucketItem* Map::createBucketItem(TxObject* key, TxObject* obj)
 Map::BucketItem* Map::getBucketItem(TxObject* key) {
 
     // compute hash for key
-    PRInt32 hashCode = key->hashCode();
+    PRUint32 hashCode = key->hashCode();
 
     int idx = hashCode % numberOfBuckets;
 
