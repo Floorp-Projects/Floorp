@@ -89,9 +89,6 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 
-// XXX Get rid of this
-#pragma message("WARNING: XXX bad include, remove it.")
-#include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
 #define SIZEMODE_NORMAL    NS_LITERAL_STRING("normal")
@@ -124,6 +121,7 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mDebuting(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
+   mLockedUntilChromeLoad(PR_FALSE),
    mContextFlags(0), mBlurSuppressionLevel(0),
    mPersistentAttributesDirty(0), mPersistentAttributesMask(0),
    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
@@ -137,7 +135,7 @@ nsXULWindow::~nsXULWindow()
 
 //*****************************************************************************
 // nsXULWindow::nsISupports
-//*****************************************************************************   
+//*****************************************************************************
 
 NS_IMPL_THREADSAFE_ADDREF(nsXULWindow)
 NS_IMPL_THREADSAFE_RELEASE(nsXULWindow)
@@ -1703,9 +1701,10 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
       parent = this;
 
    nsCOMPtr<nsIXULWindow> newWindow;
-   appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
-      aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
-      nsIAppShellService::SIZE_TO_CONTENT, aAppShell, getter_AddRefs(newWindow));
+   appShell->CreateTopLevelWindow(parent, nsnull, aChromeFlags,
+                                  nsIAppShellService::SIZE_TO_CONTENT,
+                                  nsIAppShellService::SIZE_TO_CONTENT,
+                                  aAppShell, getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
@@ -1765,13 +1764,11 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIXULWindow> newWindow;
-   appShell->CreateTopLevelWindow(parent, uri, PR_FALSE, PR_FALSE,
+   appShell->CreateTopLevelWindow(parent, uri,
                                   aChromeFlags, 615, 480, aAppShell,
-                                 getter_AddRefs(newWindow));
+                                  getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIWebShellWindow> webShellWindow(do_QueryInterface(newWindow));
 
    newWindow->SetChromeFlags(aChromeFlags);
 
@@ -1782,25 +1779,24 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    subShell->Spinup();
 
    // Specify that we want the window to remain locked until the chrome has loaded.
-   webShellWindow->LockUntilChromeLoad();
+   nsXULWindow *xulWin = NS_STATIC_CAST(nsXULWindow*,
+                                        NS_STATIC_CAST(nsIXULWindow*,
+                                                       newWindow));
 
-   PRBool locked = PR_FALSE;
-   webShellWindow->GetLockedState(locked);
+   xulWin->LockUntilChromeLoad();
 
    // Push nsnull onto the JSContext stack before we dispatch a native event.
    nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
    if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
       {
       nsresult looprv = NS_OK;
-      while(NS_SUCCEEDED(looprv) && locked)
+      while(NS_SUCCEEDED(looprv) && xulWin->IsLocked())
          {
          void      *data;
          PRBool    isRealEvent;
     
          looprv = subShell->GetNativeEvent(isRealEvent, data);
          subShell->DispatchNativeEvent(isRealEvent, data);
-
-         webShellWindow->GetLockedState(locked);
          }
 
       JSContext *cx;
@@ -1912,9 +1908,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
       void *data;
       (*aActualBelow)->GetClientData(data);
       if (data) {
-        nsWebShellWindow *win;
-        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-        windowAbove = do_QueryInterface(NS_STATIC_CAST(nsIWebShellWindow *,win));
+        windowAbove = NS_REINTERPRET_CAST(nsWebShellWindow*, data);
       }
     }
 

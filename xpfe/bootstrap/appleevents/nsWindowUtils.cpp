@@ -54,7 +54,6 @@
 #include "nsIDOMNode.h"
 #include "nsIServiceManager.h"
 #include "nsIWebNavigation.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIURI.h"

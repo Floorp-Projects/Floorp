@@ -67,7 +67,6 @@
 
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"

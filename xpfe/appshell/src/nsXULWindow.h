@@ -69,7 +69,7 @@
 
 class nsXULWindow : public nsIBaseWindow,
                     public nsIInterfaceRequestor,
-                    public nsIXULWindow, 
+                    public nsIXULWindow,
                     public nsSupportsWeakReference
 {
 friend class nsChromeTreeOwner;
@@ -81,6 +81,9 @@ public:
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIXULWINDOW
    NS_DECL_NSIBASEWINDOW
+
+   void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
+   PRBool IsLocked() const { return mLockedUntilChromeLoad; }
 
 protected:
    enum persistentAttributes {
@@ -151,6 +154,7 @@ protected:
    PRPackedBool            mIntrinsicallySized; 
    PRPackedBool            mCenterAfterLoad;
    PRPackedBool            mIsHiddenWindow;
+   PRPackedBool            mLockedUntilChromeLoad;
    PRUint32                mContextFlags;
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
