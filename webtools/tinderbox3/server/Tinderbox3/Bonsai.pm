@@ -86,6 +86,7 @@ sub _grab_cache {
 }mgxi) {
       if (defined($9)) {
         if (defined($description)) {
+          $checkin_date =~ s!(\d+)/(\d+)/(\d+)!$3/$1/$2!g;
           $insert_sth->execute($bonsai_id, $checkin_date, $who, $files,
                                $revisions, $size_plus, $size_minus,
                                $description);
