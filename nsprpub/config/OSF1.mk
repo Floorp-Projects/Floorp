@@ -60,7 +60,7 @@ ifdef MOZILLA_CLIENT
 IMPL_STRATEGY =
 endif
 
-CC			= cc $(NON_LD_FLAGS) -std -readonly_strings
+CC			= cc $(NON_LD_FLAGS) -std1 -readonly_strings
 # The C++ compiler cxx has -readonly_strings on by default.
 CCC			= cxx
 
@@ -80,7 +80,7 @@ ifeq ($(OS_RELEASE),V3.2)
 OS_CFLAGS		+= -DOSF1V3
 endif
 
-ifeq ($(OS_RELEASE),V4.0)
+ifeq (V4,$(findstring V4,$(OS_RELEASE)))
 OS_CFLAGS		+= -DOSF1V4
 endif
 
