@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+
+   Contributor(s): Mohan Bhamidipati (mohanb@netscape.com)
+                   Diego Biurrun     (diego@biurrun.de)
+
+  -->
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-offline.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-offline.xul');"
+      headertitle="&boxHeader;">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
+
+  function Startup()
+  {
+    var aCheckbox = document.getElementById("offlineCompactFolder");
+    enableField(aCheckbox, "offlineCompactFolderMin", false);
+  }
+
+  function enableField(aCheckbox, aNodeID, setFocus)
+  {
+    var aField = document.getElementById(aNodeID);
+    if (aCheckbox.checked)
+      aField.removeAttribute("disabled");
+    else
+      aField.setAttribute("disabled", "true");
+
+    if (!aField.disabled && setFocus)
+      aField.focus();
+  }
+  ]]>
+  </script>
+
+<groupbox>
+  <caption label="&rHeader;"/>
+
+  <separator class="thin"/>
+  <label value="&textGoingOnline;"/>
+    <radiogroup id="whengoingOnlinestate"
+                prefstring="offline.send.unsent_messages">
+    <radio value="0" label="&radioAskUnsent;"/>
+    <radio value="1" label="&radioAutoSend;"/>
+    <radio value="2" label="&radioNotSend;"/>
+    </radiogroup>
+
+  <separator class="thin"/>
+  <label value="&textGoingOffline;"/>
+    <radiogroup id="whengoingOfflinestate"
+      prefstring="offline.download.download_messages">
+    <radio value="0" label="&radioAskDownload;"/>
+    <radio value="1" label="&radioAutoDownload;"/>
+    <radio value="2" label="&radioNotDownload;"/>
+    </radiogroup>
+
+</groupbox>
+
+<groupbox>
+  <caption label="&Diskspace;"/>
+  <hbox align="center">
+    <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
+      prefstring="mail.prompt_purge_threshhold"
+      oncommand="enableField(this,'offlineCompactFolderMin',true);"/> 
+    <textbox id="offlineCompactFolderMin" size="5" value="100"
+      preftype="int" prefstring="mail.purge_threshhold"/>
+    <label value="&kb.label;"/>
+  </hbox>
+</groupbox>
+</page>
