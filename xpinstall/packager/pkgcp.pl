@@ -39,13 +39,11 @@ use File::Basename;
 
 # initialize variables
 %components        = ();	# list of components to copy
-$line             = "";		# line being processed
 $srcdir           = "";		# root directory being copied from
 $destdir          = "";		# root directory being copied to
 $package          = "";		# file listing files to copy
 $os               = "";  	# os type (MacOS, MSDOS, Unix, OS/2)
 $verbose          = 0;		# shorthand for --debug 1
-$lineno           = 0;		# line # of package file for error text
 $debug            = 0;		# controls amount of debug output
 $help             = 0;		# flag: if set, print usage
 

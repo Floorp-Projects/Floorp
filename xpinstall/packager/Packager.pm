@@ -33,7 +33,7 @@ my($line)             = "";		# line being processed
 my($srcdir)           = "";		# root directory being copied from
 my($destdir)          = "";		# root directory being copied to
 my($package)          = "";		# file listing files to copy
-my($os)               = "";  	# os type (MacOS, MSDOS, Unix, OS/2)
+my($os)               = "";		# os type (MacOS, MSDOS, Unix)
 my($lineno)           = 0;		# line # of package file for error text
 my($debug)            = 0;		# controls amount of debug output
 my($dirflag)          = 0;		# flag: are we copying a directory?
@@ -208,7 +208,6 @@ sub do_copyfile
 	my ($srcpath)      = "";  # source file directory path
 	my ($srcname)      = "";  # source file name
 	my ($srcsuffix)    = "";  # source file name suffix
-	my ($curdir)       = getcwd;  # need current dir on OS/2 to switch back
 	
 	($debug >= 2) && print "do_copyfile():\n";
 
@@ -266,14 +265,6 @@ sub do_copyfile
 				$destpath =~ s/\//\\/g;
 				$srcdir =~ s/\//\\/g;
 				$PD = "\\";
-                        } elsif ( $os eq "OS2") {
-				#Don't Look!  Seriously...
-				$destpath =~ s/\\/\//g;
-				$srcdir =~ s/\\/\//g;                                                 
-				$PD = "/";
-				$destpath =~ s/$srcdir$PD//g;
-				$destpath = "$srcdir$PD$destpath";
-				$PD = "\\";
 			} else {
 				$destpath =~ s/$srcdir$PD//;
 			}
@@ -288,16 +279,11 @@ sub do_copyfile
 		}
 	}
 
-	#Ensure correct directory
-	if ($os eq "OS2") {
-		chdir($saved_cwd);
-	}
-
 	# create the destination path if it doesn't exist
 	if (! -d "$destpath" ) {
 		($debug >= 5) && print " mkpath($destpath)\n";
-		#OS2 hack.  Sorry... Chop off "/"
-	  chop($destpath);
+		# For OS/2 - remove trailing '/'
+		chop($destpath);
 		mkpath ($destpath, 0, 0755) ||
 			die "Error: mkpath() failed: $!.  Exiting...\n";
 		# Put delimeter back for copying...
@@ -333,10 +319,6 @@ sub do_copyfile
 	} else {
 		warn "Error: file $srcpath$srcname$srcsuffix is not a file or is not readable ($package, $component, $lineno).\n";
 	}
-	#Resetting dir...
-	if ($os eq "OS2") {
-		chdir($curdir);
-	}
 }
 
 
@@ -357,10 +339,6 @@ sub do_wildcard
 		if ($os eq "MacOS") {
 			warn "Warning: globbing on Mac not supported.\nWorkaround is to copy entire directory.\n";
 			@list = <$entry>;
-		} elsif ( $os eq "OS2") {
- 			#warn "Warning: globbing on OS/2 not supported.\nWorkaround is to copy entire directory.\n";
-			@list = $entry;
-			chop($list[0]);
 		} else {
 			@list = glob($entry);			# expand it
 		}
@@ -499,7 +477,7 @@ sub check_arguments
 		$exitval += 4;
 	}
 
-	# check OS == {mac|unix|dos|os2}
+	# check OS == {mac|unix|dos}
 	if ($os eq "") {
 		print "Error: OS type (--os) not specified.\n";
 		$exitval += 8;
@@ -515,10 +493,6 @@ sub check_arguments
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
 		$PD = "/";
 		fileparse_set_fstype ($os);
-	} elsif ( $os =~ /os2/i) {
-		$os = "OS2";
-		$PD = "/";
-		fileparse_set_fstype($os);
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
 		$exitval += 16;
@@ -581,7 +555,7 @@ NOTE:	Source and destination directories must be absolute paths.
 		destination directory.
 		Required.
 
-	-o, --os [dos|mac|unix|os2]
+	-o, --os [dos|mac|unix]
 		Specifies which type of system this is.  Used for parsing
 		file specifications from the package file.
 		Required.
