@@ -358,16 +358,6 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 // Perhaps there is a better, pubically supported way to get the same thing done?
 ////////
 
-PRBool
-nsContextMenuInfo::FindBackground(nsIPresContext* aPresContext,
-                               nsIFrame* aForFrame,
-                               const nsStyleBackground** aBackground,
-                               PRBool* aIsCanvas)
-{
-  *aIsCanvas = PR_TRUE;
-  return FindCanvasBackground(aPresContext, aForFrame, aBackground);
-}
-
 // nethod GetFrameForBackgroundUpdate
 //
 // If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
@@ -561,3 +551,14 @@ nsContextMenuInfo::IsCanvasFrame(nsIFrame *aFrame)
           frameType == mTag_rootFrame ||
           frameType == mTag_pageFrame);
 }
+
+PRBool
+nsContextMenuInfo::FindBackground(nsIPresContext* aPresContext,
+                               nsIFrame* aForFrame,
+                               const nsStyleBackground** aBackground,
+                               PRBool* aIsCanvas)
+{
+  *aIsCanvas = PR_TRUE;
+  return FindCanvasBackground(aPresContext, aForFrame, aBackground);
+}
+
