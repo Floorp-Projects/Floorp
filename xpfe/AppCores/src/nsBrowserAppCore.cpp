@@ -28,8 +28,7 @@
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
-#define FILE_WIDGET_DEPENDENCY
-#include "nsIFileSpec.h"
+#include "nsIFileSpecWithUI.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -1144,13 +1143,13 @@ static void BuildFileURL(const char * aFileName, nsString & aFileURL)
 NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
 //----------------------------------------------------------------------------------------
 {  
-  nsCOMPtr<nsIFileSpec> fileSpec;
-  nsresult rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
+  nsCOMPtr<nsIFileSpecWithUI> fileSpec;
+  nsresult rv = NS_NewFileSpecWithUI(getter_AddRefs(fileSpec));
   if (NS_FAILED(rv))
   	return rv;
 
   rv = fileSpec->chooseInputFile(
-  	"Open File", nsIFileSpec::eAllStandardFilters, nsnull, nsnull);
+  	"Open File", nsIFileSpecWithUI::eAllStandardFilters, nsnull, nsnull);
   if (NS_FAILED(rv))
     return rv;
   

@@ -21,6 +21,10 @@ IGNORE_MANIFEST=1
 DEFINES=-D_IMPL_NS_UI 
 MODULE=raptor 
 
+XPIDLSRCS =                     \
+        .\nsIFileSpecWithUI.idl       \
+        $(NULL)
+
 EXPORTS=nsui.h \
   nsIFontSizeIterator.h \
   nsIFontNameIterator.h \
@@ -29,6 +33,7 @@ EXPORTS=nsui.h \
   nsIFormatConverter.h \
   nsIClipboardOwner.h \
   nsIClipboard.h \
+  nsIFileWidget.h            \
   nsITransferable.h \
   nsIGenericTransferable.h \
   nsIDragService.h \
