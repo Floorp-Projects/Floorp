@@ -48,6 +48,7 @@ LIBS		= \
 		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconevents_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxmldoc_s.$(LIB_SUFFIX) \
