@@ -10,8 +10,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:25:35 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/22 15:03:03 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -190,6 +190,8 @@ sub split_cgi_args {
 # I added the URL to the end of the functions named: escapeURL,
 # unescapeURL for clarity.
 
+# I modified escapeHTML() to escape the "'" as well so that my popup
+# windows code do not see a "'" in their input as this confuses them.
 
 
 # Escape HTML 
@@ -201,6 +203,7 @@ sub escapeHTML {
 
     $toencode=~s/&/&amp;/g;
     $toencode=~s/\"/&quot;/g;
+    $toencode=~s/\'/&\#039;/g;
     $toencode=~s/>/&gt;/g;
     $toencode=~s/</&lt;/g;
     return $toencode;
