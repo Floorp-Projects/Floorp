@@ -51,6 +51,7 @@ enum
 	submenu_CompatibilityMode = 32,
 	
 	cmd_Sample0					= 1000,
+	cmd_FirstXPToolkitSample	= 1100,
 	cmd_PrintOneColumn	= 2000,
 	cmd_Find						= 3000,
 
@@ -232,8 +233,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 					break;
 
 				case cmd_ViewSource:			xpID = VIEW_SOURCE;					break;
-				case cmd_ViewTreeView:		xpID = VIEWER_TREEVIEW;			break;
-				case cmd_ViewToolbar:			xpID = VIEWER_TOOLBARDEMO;	break;
 				case cmd_Save:			/*n.a.*/						break;
 				case cmd_SaveAs:		/*n.a.*/						break;
 				case cmd_Revert:		/*n.a.*/						break;
@@ -258,7 +257,10 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 			break;
 
 		case menu_Sample:
-			xpID = VIEWER_DEMO0 + menuItem - cmd_Sample0;
+			if ( menuItem < cmd_FirstXPToolkitSample )
+				xpID = VIEWER_DEMO0 + menuItem - cmd_Sample0;
+			else
+				xpID = VIEWER_XPTOOLKITDEMOBASE + (menuItem - cmd_FirstXPToolkitSample);
 			break;
 
 		case menu_Debug:
