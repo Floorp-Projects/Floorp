@@ -427,8 +427,8 @@ sub print_ci {
     if (defined $::query_module && $::query_module eq 'allrepositories') {
         $d = "$ci->[$::CI_REPOSITORY]/$d";
     }
-    $d =~ s:/:/ :g;             # Insert a whitespace after any slash, so that
-                                # we'll break long names at a reasonable place.
+    $d =~ s:/:/<wbr>:g;         # Insert a <wbr> tag after each slash, so that
+                                # we'll break long paths at a reasonable place.
     print "$d\n";
 
     if( $rev ne '' ){
