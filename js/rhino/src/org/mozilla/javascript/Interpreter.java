@@ -60,8 +60,8 @@ public class Interpreter {
     // Last icode
         END_ICODE                       = TokenStream.LAST_TOKEN + 6;
 
-    public IRFactory createIRFactory(TokenStream ts,
-                                     ClassNameHelper nameHelper, Scriptable scope)
+    public IRFactory createIRFactory(Context cx, TokenStream ts,
+                                     Scriptable scope)
     {
         return new IRFactory(ts, scope);
     }
@@ -72,8 +72,7 @@ public class Interpreter {
 
     public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
-                          SecurityController securityController,
-                          ClassNameHelper nameHelper)
+                          SecurityController securityController)
     {
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(securityDomain);

@@ -184,7 +184,7 @@ public class JavaAdapter extends ScriptableObject {
                                            String adapterName, Class superClass,
                                            Class[] interfaces,
                                            String scriptClassName,
-                                           ClassNameHelper nameHelper)
+                                           ClassRepository repository)
         throws ClassNotFoundException
     {
         ClassFileWriter cfw = new ClassFileWriter(adapterName,
@@ -319,11 +319,9 @@ public class JavaAdapter extends ScriptableObject {
         }
         byte[] bytes = cfw.toByteArray();
 
-        if (nameHelper != null) {
+        if (repository != null) {
             try {
-                if (!nameHelper.getClassRepository().storeClass(adapterName,
-                                                                bytes, true))
-                {
+                if (!repository.storeClass(adapterName, bytes, true)) {
                     return null;
                 }
             } catch(IOException iox) {

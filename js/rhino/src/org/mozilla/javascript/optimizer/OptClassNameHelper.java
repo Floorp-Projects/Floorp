@@ -48,12 +48,8 @@ public class OptClassNameHelper extends ClassNameHelper {
         setClassName(null);
     }
 
-    public synchronized void reset() {
-        classNames = null;
-    }
-
-    public synchronized String getJavaScriptClassName(String functionName,
-                                                      boolean primary)
+    synchronized String getScriptClassName(String functionName,
+                                           boolean primary)
     {
         StringBuffer s = new StringBuffer();
         if (packageName != null && packageName.length() > 0) {
@@ -73,26 +69,10 @@ public class OptClassNameHelper extends ClassNameHelper {
                 s.append(++serial);
             }
         } else {
-            synchronized(defaultRepository) {
-                s.append(globalSerial++);
-            }
+            s.append(globalSerial++);
         }
 
-        // We wish to produce unique class names between calls to reset()
-        // we disregard case since we may write the class names to file
-        // systems that are case insensitive
-        String result = s.toString();
-        String lowerResult = result.toLowerCase();
-        String base = lowerResult;
-        int count = 0;
-        if (classNames == null)
-            classNames = new Hashtable();
-        while (classNames.get(lowerResult) != null) {
-            lowerResult = base + ++count;
-        }
-
-        classNames.put(lowerResult, Boolean.TRUE);
-        return count == 0 ? result : (result + count);
+        return s.toString();
     }
 
     public String getTargetPackage() {
@@ -130,7 +110,7 @@ public class OptClassNameHelper extends ClassNameHelper {
         } else {
             packageName = "org.mozilla.javascript.gen";
             this.initialName = "c";
-            classRepository = defaultRepository;
+            classRepository = null;
             appendFunctionName = false;
         }
         serial = fserial = 0;
@@ -141,24 +121,15 @@ public class OptClassNameHelper extends ClassNameHelper {
     }
 
     public void setClassRepository(ClassRepository classRepository) {
-        this.classRepository = classRepository != null ? classRepository : defaultRepository;
+        this.classRepository = classRepository;
     }
 
     private boolean appendFunctionName;
     private String packageName;
     private String initialName;
-    private static int globalSerial=1;
+    private int globalSerial=1;
     private int serial, fserial;
     private Class targetExtends;
     private Class[] targetImplements;
     private ClassRepository classRepository;
-    private Hashtable classNames;
-
-    static class DefaultRepository implements ClassRepository {
-        public boolean storeClass(String name, byte[] bytes, boolean tl) {
-            return true;
-        }
-    }
-
-    private static ClassRepository defaultRepository = new DefaultRepository();
 }

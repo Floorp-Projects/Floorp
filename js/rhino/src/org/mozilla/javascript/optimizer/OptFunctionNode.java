@@ -41,12 +41,10 @@ import java.util.*;
 
 public class OptFunctionNode extends FunctionNode {
 
-    public OptFunctionNode(String name, Node statements,
-                           ClassNameHelper nameHelper)
+    public OptFunctionNode(String name, Node statements, String className)
     {
         super(name, statements);
-        OptClassNameHelper nh = (OptClassNameHelper) nameHelper;
-        itsClassName = nh.getJavaScriptClassName(name, false);
+        itsClassName = className;
     }
 
     public String getDirectCallParameterSignature() {

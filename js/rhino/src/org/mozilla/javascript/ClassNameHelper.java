@@ -63,13 +63,6 @@ public abstract class ClassNameHelper {
         return helper;
     }
 
-    static void clearCache() {
-        ClassNameHelper helper = savedNameHelper;
-        if (helper != null) {
-            helper.reset();
-        }
-    }
-
     /**
      * Get the current target class file name.
      * <p>
@@ -186,8 +179,6 @@ public abstract class ClassNameHelper {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public abstract void setClassName(String initialName);
-
-    public abstract void reset();
 
     // Implement class file saving here instead of inside codegen.
     private class FileClassRepository implements ClassRepository {

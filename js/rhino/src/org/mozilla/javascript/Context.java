@@ -1641,7 +1641,6 @@ public class Context {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
             JavaMembers.classTable = new Hashtable();
-            ClassNameHelper.clearCache();
         }
         isCachingEnabled = cachingEnabled;
         FunctionObject.setCachingEnabled(cachingEnabled);
@@ -2039,12 +2038,8 @@ public class Context {
         Interpreter compiler = optimizationLevel == -1
                                ? new Interpreter()
                                : getCompiler();
-        ClassNameHelper nameHelper = optimizationLevel == -1
-                                     ? null
-                                     : ClassNameHelper.get(this);
-
         errorCount = 0;
-        IRFactory irf = compiler.createIRFactory(ts, nameHelper, scope);
+        IRFactory irf = compiler.createIRFactory(this, ts, scope);
         Parser p = new Parser(irf);
         Node tree = (Node) p.parse(ts);
         if (tree == null)
@@ -2071,8 +2066,7 @@ public class Context {
 
         Object result = compiler.compile(this, scope, tree,
                                          dynamicSecurityDomain,
-                                         securityController,
-                                         nameHelper);
+                                         securityController);
 
         return errorCount == 0 ? result : null;
     }

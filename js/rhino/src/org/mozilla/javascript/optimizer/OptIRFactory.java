@@ -44,17 +44,18 @@ import org.mozilla.javascript.*;
  * @see IRFactory
  * @author Norris Boyd
  */
-public class OptIRFactory extends IRFactory {
+class OptIRFactory extends IRFactory {
 
-    public OptIRFactory(TokenStream ts, ClassNameHelper nameHelper, Scriptable scope) {
+    OptIRFactory(TokenStream ts, Scriptable scope, Codegen compiler) {
         super(ts, scope);
-        this.nameHelper = nameHelper;
+        this.compiler = compiler;
     }
 
     public Object createFunctionNode(String name, Object statements)
     {
-        return new OptFunctionNode(name, (Node)statements, nameHelper);
+        String className = compiler.getScriptClassName(name, false);
+        return new OptFunctionNode(name, (Node)statements, className);
     }
 
-    private ClassNameHelper nameHelper;
+    private Codegen compiler;
 }

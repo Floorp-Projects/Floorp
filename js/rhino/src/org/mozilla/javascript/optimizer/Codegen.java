@@ -56,10 +56,19 @@ public class Codegen extends Interpreter {
     public Codegen() {
     }
 
-    public IRFactory createIRFactory(TokenStream ts,
-                                     ClassNameHelper nameHelper, Scriptable scope)
+    private Codegen(Codegen parent) {
+        this.nameHelper = parent.nameHelper;
+        this.classNames = parent.classNames;
+    }
+
+    public IRFactory createIRFactory(Context cx, TokenStream ts,
+                                     Scriptable scope)
     {
-        return new OptIRFactory(ts, nameHelper, scope);
+        if (nameHelper == null) {
+            nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
+            classNames = new ObjToIntMap();
+        }
+        return new OptIRFactory(ts, scope, this);
     }
 
     public Node transform(Node tree, TokenStream ts, Scriptable scope) {
@@ -69,14 +78,11 @@ public class Codegen extends Interpreter {
 
     public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
-                          SecurityController securityController,
-                          ClassNameHelper cnh)
+                          SecurityController securityController)
     {
         ObjArray classFiles = new ObjArray();
         ObjArray names = new ObjArray();
         String generatedName = null;
-
-        OptClassNameHelper nameHelper = (OptClassNameHelper) cnh;
 
         Exception e = null;
         Class result = null;
@@ -88,22 +94,22 @@ public class Codegen extends Interpreter {
             loader = securityController.createClassLoader(parentLoader,
                                                           securityDomain);
         }
-        nameHelper.reset();
 
+        ClassRepository repository = nameHelper.getClassRepository();
         try {
             if (cx.getOptimizationLevel() > 0) {
                 (new Optimizer()).optimize(tree, cx.getOptimizationLevel());
             }
-            generatedName = generateCode(tree, names, classFiles, nameHelper);
-
-            ClassRepository repository = nameHelper.getClassRepository();
+            generatedName = generateCode(tree, names, classFiles);
 
             for (int i=0; i < names.size(); i++) {
                 String name = (String) names.get(i);
                 byte[] classFile = (byte[]) classFiles.get(i);
                 boolean isTopLevel = name.equals(generatedName);
                 try {
-                    if (repository.storeClass(name, classFile, isTopLevel)) {
+                    if (repository == null
+                        || repository.storeClass(name, classFile, isTopLevel))
+                    {
                         Class cl = loader.defineClass(name, classFile);
                         if (isTopLevel) {
                             result = cl;
@@ -129,7 +135,7 @@ public class Codegen extends Interpreter {
         Class[] interfaces = nameHelper.getTargetImplements();
         Class superClass = nameHelper.getTargetExtends();
         if (interfaces != null || superClass != null) {
-            String name = nameHelper.getJavaScriptClassName(null, true);
+            String name = getScriptClassName(null, true);
             ScriptableObject obj = new NativeObject();
             for (Node cursor = tree.getFirstChild(); cursor != null;
                  cursor = cursor.getNext())
@@ -147,7 +153,7 @@ public class Codegen extends Interpreter {
                                                superClass,
                                                interfaces,
                                                generatedName,
-                                               nameHelper);
+                                               repository);
             } catch (ClassNotFoundException exn) {
                 // should never happen
                 throw new Error(exn.toString());
@@ -182,6 +188,23 @@ public class Codegen extends Interpreter {
             }
             return script;
         }
+    }
+
+    String getScriptClassName(String functionName, boolean primary)
+    {
+        String result = nameHelper.getScriptClassName(functionName, primary);
+
+        // We wish to produce unique class names between calls to reset()
+        // we disregard case since we may write the class names to file
+        // systems that are case insensitive
+        String lowerResult = result.toLowerCase();
+        String base = lowerResult;
+        int count = 0;
+        while (classNames.has(lowerResult)) {
+            lowerResult = base + ++count;
+        }
+        classNames.put(lowerResult, 0);
+        return count == 0 ? result : (result + count);
     }
 
     void addByteCode(byte theOpcode)
@@ -337,15 +360,14 @@ public class Codegen extends Interpreter {
 
     }
 
-    public String generateCode(Node tree, ObjArray names, ObjArray classFiles,
-                               OptClassNameHelper nameHelper)
+    public String generateCode(Node tree, ObjArray names, ObjArray classFiles)
     {
         ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (fns != null) {
             for (int i = 0; i != fns.size(); ++i) {
                 OptFunctionNode fn = (OptFunctionNode) fns.get(i);
-                Codegen codegen = new Codegen();
-                codegen.generateCode(fn, names, classFiles, nameHelper);
+                Codegen codegen = new Codegen(this);
+                codegen.generateCode(fn, names, classFiles);
             }
         }
 
@@ -456,7 +478,7 @@ public class Codegen extends Interpreter {
             vars = (VariableTable) tree.getProp(Node.VARS_PROP);
             boolean isPrimary = nameHelper.getTargetExtends() == null &&
                                 nameHelper.getTargetImplements() == null;
-            this.name = nameHelper.getJavaScriptClassName(null, isPrimary);
+            this.name = getScriptClassName(null, isPrimary);
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
             classFile.addInterface("org/mozilla/javascript/Script");
             generateScriptCtor(cx, tree);
@@ -3691,6 +3713,9 @@ public class Codegen extends Interpreter {
                           "org.mozilla.javascript.NativeFunction";
     private static final String scriptSuperClassName =
                           "org.mozilla.javascript.NativeScript";
+
+    private OptClassNameHelper nameHelper;
+    private ObjToIntMap classNames;
     private String superClassName;
     private String superClassSlashName;
     private String name;
