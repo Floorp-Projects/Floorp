@@ -105,8 +105,7 @@ calItemBase.prototype = {
         m.mId = this.mId;
         m.mTitle = this.mTitle;
         m.mPriority = this.mPriority;
-        m.mIsPrivate = this.mIsPrivate;
-        m.mMethod = this.mMethod;
+        m.mPrivacy = this.mPrivacy;
         m.mStatus = this.mStatus;
         m.mHasAlarm = this.mHasAlarm;
 
