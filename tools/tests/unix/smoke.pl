@@ -13,21 +13,31 @@ $test_duration = 120; # seconds before i deem this url timed out
 #       paths, so we need to get the pwd and replace 'tools/tests/unix'
 #       with 'dist/bin' -- then we're golden.
 #$apprunner_bin = '/u/phillip/seamonkey/linux/package';
+
+
+chop($start_dir = `pwd`);
 $apprunner_bin = '../../../dist/bin';
+
+chdir($apprunner_bin);
+
+# need the absolute path, not the relative one
+chop($apprunner_bin = `pwd`);
 
 #nothing else needs to be changed
 $apprunner = "$apprunner_bin/apprunner";
 $apprunner_samples = "$apprunner_bin/res/samples";
-$apprunner_log = 'smoketest.log';
-#$mail_log = '/tmp/maillog.txt';
+$apprunner_log = $start_dir . '/smoketest.log';
+#$mail_log = '/tmp/maillog.txt'; 
+#open (LOG_FILE, ">> $apprunner_log");
+#print LOG_FILE "Starting directory is $start_dir \n";
+#print LOG_FULE "apprunner binary is $apprunner \n";
+#print LOG_FULE "Samples directory is $apprunner_samples \n";
+#close (LOG_FILE);
 
 # we fork and launch apprunner in a few spots around here, so let's define
 # this just once:
 $ENV{'MOZILLA_FIVE_HOME'}="$apprunner_bin";
 $ENV{'LD_LIBRARY_PATH'}="/usr/lib:/lib:$apprunner_bin";
-
-
-cwd $apprunner_bin;
 
 # here are a few subroutines we use:
 # get_build_date - look through navigator.xul for the build id (1999-04-18-08)
@@ -94,7 +104,7 @@ sub main {
     print (REPORT_FILE "</font></CENTER></B>\n");
     
     &get_url_list;
-    
+
     my $i;
     my $style;
     
@@ -198,17 +208,24 @@ sub test_url {
     ## loads a doc successfully or unsuccessfully, or
     ## until the reaperchild kills apprunner
     open STATUS, "$apprunner $url 2>&1 |";
+
     open LOG_FILE, ">> $apprunner_log";
     LOG_FILE->autoflush();
     unless ($url eq ""){ print LOG_FILE "testing url: $url\n" }
     while (<STATUS>){
     	print LOG_FILE;
         #     Document: Done (7.918 secs)
-        if (/Document: Done \((..*) secs/) {
+        if (/Document: Done \((\d*\.\d*) secs/) {
             $run_time = $1;
+	    last; # we can quit if we get a Document: Done message
         }
         
-        last if (/loaded successfully/);
+        if (/loaded successfully/) {
+	    if ($run_time eq 'E2-FAILED') { 
+		$run_time = -1 ;
+	    }
+	    last; # we can quit if we get a loaded successfully message
+	}
         $run_time = 'E3-FAILED' and last if (/Error loading URL/);
             
     }
@@ -243,6 +260,7 @@ sub test_url {
         sleep 1 && print ".";
     }
     print "don't fear the reaper, man\n" and sleep 1;
+    # yuck. killall is very bad for solaris. 
     system ("killall -9 apprunner");
     system ("echo timeout > timeout.txt");
     exit 0;
@@ -284,7 +302,7 @@ sub get_build_date {
         }
     }
     close( XUL_FILE );
-    $BuildNo =~ s/["<>]/ /g;
+    $BuildNo =~ s/[<>]/ /g;
     return $BuildNo;
 }
 
@@ -293,7 +311,7 @@ sub get_build_date {
 # get_url_list -- opens the $url file and loads up all the urls.
 ################################################################
 sub get_url_list {
-    local $url = shift || "url.txt";
+    local $url = shift || $start_dir . "/url.txt";
     my $i = 0;
 
     open (URL_FILE, "< $url");
