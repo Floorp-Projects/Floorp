@@ -52,6 +52,12 @@ void nsKeygenThread::SetParams(GenerateKeypairParameters *p)
   PR_Unlock(mutex);
 }
 
+static void PR_CALLBACK nsKeygenThreadRunner(void *arg)
+{
+  nsKeygenThread *self = NS_STATIC_CAST(nsKeygenThread *, arg);
+  self->Run();
+}
+
 nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
 {
   if (!mutex)
@@ -84,7 +90,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
 
     iAmRunning = PR_TRUE;
 
-    threadHandle = PR_CreateThread(PR_USER_THREAD, run, NS_STATIC_CAST(void*, this), 
+    threadHandle = PR_CreateThread(PR_USER_THREAD, nsKeygenThreadRunner, NS_STATIC_CAST(void*, this), 
       PR_PRIORITY_LOW, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     // bool thread_started_ok = (threadHandle != nsnull);
@@ -120,26 +126,19 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
   return NS_OK;
 }
 
-void nsKeygenThread::run(void *args)
+void nsKeygenThread::Run(void)
 {
-  if (!args)
-    return;
-
-  nsKeygenThread *self = NS_STATIC_CAST(nsKeygenThread *, args);
-  if (!self)
-    return;
-  
   GenerateKeypairParameters *p = 0;
 
-  PR_Lock(self->mutex);
+  PR_Lock(mutex);
 
-    if (self->params) {
-      p = self->params;
+    if (params) {
+      p = params;
       // Make sure it's impossible that will use the same parameters again.
-      self->params = 0;
+      params = 0;
     }
 
-  PR_Unlock(self->mutex);
+  PR_Unlock(mutex);
 
   if (p)
     p->privateKey = PK11_GenerateKeyPair(p->slot, p->keyGenMechanism,
@@ -154,18 +153,18 @@ void nsKeygenThread::run(void *args)
 
   nsIDOMWindowInternal *windowToClose = 0;
 
-  PR_Lock(self->mutex);
+  PR_Lock(mutex);
 
-    self->keygenReady = PR_TRUE;
-    self->iAmRunning = PR_FALSE;
+    keygenReady = PR_TRUE;
+    iAmRunning = PR_FALSE;
 
-    if (!self->statusDialogClosed)
-      windowToClose = self->statusDialogPtr;
+    if (!statusDialogClosed)
+      windowToClose = statusDialogPtr;
 
-    self->statusDialogPtr = 0;
-    self->statusDialogClosed = PR_TRUE;
+    statusDialogPtr = 0;
+    statusDialogClosed = PR_TRUE;
 
-  PR_Unlock(self->mutex);
+  PR_Unlock(mutex);
 
   if (windowToClose)
     windowToClose->Close();
