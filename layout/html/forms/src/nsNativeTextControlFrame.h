@@ -27,7 +27,7 @@ class nsIPresContext;
 class nsNativeTextControlFrame : public nsTextControlFrame
 {
 private:
-  typedef nsTextControlFrame Inherited;
+	typedef nsNativeFormControlFrame Inherited;
 
 public:
        // nsIFormControlFrame
