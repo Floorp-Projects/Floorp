@@ -511,11 +511,10 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   aFrame->GetView(view);
   if (nsnull != view) {
     if (PR_FALSE == aFrame->mDidInit) {
-	  ((nsInput*)aFrame->mContent)->GetFormManager()->Init(PR_FALSE);
+      ((nsInput*)aFrame->mContent)->GetFormManager()->Init(PR_FALSE);
       aFrame->PostCreateWidget(aPresContext, view);
-	  aFrame->mDidInit = PR_TRUE;
-	}
-    NS_RELEASE(view);
+      aFrame->mDidInit = PR_TRUE;
+    }
   }
 
   aBounds.width  = CSS_NOTSET;
