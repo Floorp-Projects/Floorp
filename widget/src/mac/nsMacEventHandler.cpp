@@ -1346,7 +1346,7 @@ PRBool nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRangeAr
 	textEvent.widget	= focusedWidget;
 	textEvent.nativeMsg	= (void*)nsnull;		// no native message for this
 
-	if (focusedWidget->DispatchWindowEvent(textEvent)==NS_OK) 
+	if (NS_SUCCEEDED(focusedWidget->DispatchWindowEvent(textEvent))) 
 		return PR_TRUE;
 	else 
 		return PR_FALSE;
