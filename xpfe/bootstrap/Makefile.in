@@ -123,8 +123,10 @@ endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 install:: $(srcdir)/mozilla
 	$(INSTALL) $< $(DIST)/bin
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 install:: $(srcdir)/splash.bmp
