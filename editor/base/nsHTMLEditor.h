@@ -24,7 +24,6 @@
 #include "nsIHTMLEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
-#include "InsertTableTxn.h"
 
 /**
  * The HTML editor implementation.<br>
