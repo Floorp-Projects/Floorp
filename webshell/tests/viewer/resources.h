@@ -50,4 +50,10 @@
 
 #define JS_CONSOLE              40100
 
+#define VIEWER_EDIT_CUT         40201
+#define VIEWER_EDIT_COPY        40202
+#define VIEWER_EDIT_PASTE       40203
+#define VIEWER_EDIT_SELECTALL   40204
+#define VIEWER_EDIT_FINDINPAGE  40205
+
 #endif /* resources_h___ */

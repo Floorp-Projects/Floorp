@@ -45,6 +45,17 @@ VIEWER MENU DISCARDABLE
     }
     MENUITEM "&Exit", VIEWER_EXIT
   }
+  POPUP "&Edit"
+  BEGIN
+      MENUITEM "Cu&t",                        VIEWER_EDIT_CUT, GRAYED
+      MENUITEM "&Copy",                       VIEWER_EDIT_COPY
+      MENUITEM "&Paste",                      VIEWER_EDIT_PASTE, GRAYED
+      MENUITEM SEPARATOR
+      MENUITEM "Select &All",                 VIEWER_EDIT_SELECTALL, HELP
+      MENUITEM SEPARATOR
+      MENUITEM "&Find in Page",               VIEWER_EDIT_FINDINPAGE
+      , GRAYED
+  END
   POPUP "&Debug"
   {
     MENUITEM "&Visual Debugging", VIEWER_VISUAL_DEBUGGING
@@ -78,7 +89,7 @@ PRINTPREVIEW MENU DISCARDABLE
   }
 }
 
-JSCONSOLE_MENU MENU DISCARDABLE 
+JSCONSOLE_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
@@ -103,9 +114,9 @@ BEGIN
     POPUP "&Commands"
     BEGIN
         MENUITEM "&Evaluate All\tF5",           ID_COMMANDSEVALALL
-        MENUITEM "Evaluate &Selection\tF10",    ID_COMMANDSEVALSEL              
+        MENUITEM "Evaluate &Selection\tF10",    ID_COMMANDSEVALSEL
         MENUITEM SEPARATOR
-        MENUITEM "&Inspector",                  ID_COMMANDSINSPECTOR    
+        MENUITEM "&Inspector",                  ID_COMMANDSINSPECTOR
     END
     POPUP "&Help"
     BEGIN
@@ -115,6 +126,6 @@ END
 
 ACCELERATOR_TABLE ACCELERATORS
 BEGIN
-    VK_F5,      ID_COMMANDSEVALALL,         VIRTKEY    
-    VK_F10,     ID_COMMANDSEVALSEL,         VIRTKEY    
+    VK_F5,      ID_COMMANDSEVALALL,         VIRTKEY
+    VK_F10,     ID_COMMANDSEVALSEL,         VIRTKEY
 END
