@@ -57,25 +57,35 @@
       <![CDATA[
         function onLoad() {
           var versionField = document.getElementById("versionField");
+          var hidversionField = document.getElementById("hidversionField");
           var brandShortNameEl = document.getElementById("brandShortName");          
-          versionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
-          versionField.size = versionField.value.length - 5; // total hack..we are calculating a length that is too long, 
-                                                             // which keeps the text box from looking centered in the dialog.
+          hidversionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
+          versionField.value = hidversionField.value;
+          versionField.width = hidversionField.width;
         }
       ]]>
     </script>
 
     <vbox align="center" flex="1">
       <image src="chrome://messenger/content/about-thunderbird.png"/>
+      <!--
       <separator class="thin"/>
+      -->
       <hbox>
-        <label value="&brandShortName;" style="font-weight: bold;"/>
-        <label id="versionField"/>
+        <vbox>
+          <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
+          <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important; font-weight: bold;" tabindex="2"/>
+        </vbox>
       </hbox>
 
       <separator class="thin"/>
 
-      <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
+      <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
     </vbox>
     <separator class="groove"/>
+    
+    <!-- Localizable strings (from .dtd) -->
+    <strings style="display:none;">
+      <string id="brandShortName">&brandShortName;</string>
+    </strings>
 </dialog>
