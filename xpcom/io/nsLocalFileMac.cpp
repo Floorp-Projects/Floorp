@@ -1390,14 +1390,27 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 NS_IMETHODIMP  
 nsLocalFile::Spawn(const char **args, PRUint32 count)
 {
+	OSErr err = noErr;
+	LaunchParamBlockRec	launchPB;
 	PRBool isFile;
 	nsresult rv = IsFile(&isFile);
 
 	if (NS_FAILED(rv))
 		return rv;
 
+	launchPB.launchAppSpec = &mTargetSpec;
+	launchPB.launchAppParameters = NULL;
+	launchPB.launchBlockID = extendedBlock;
+	launchPB.launchEPBLength = extendedBlockLen;
+	launchPB.launchFileFlags = NULL;
+	launchPB.launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
+	launchPB.launchControlFlags += launchDontSwitch;
 
-	return NS_ERROR_FILE_EXECUTION_FAILED;
+	err = LaunchApplication(&launchPB);
+	if (err != noErr)
+		return MacErrorMapper(err);
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -2376,8 +2389,11 @@ NS_IMETHODIMP nsLocalFile::GetInitType(nsLocalFileMacInitType *type)
 NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *fileSpec)
 {
 	MakeDirty();
-	mSpec = *fileSpec;
-	mInitType = eInitWithFSSpec;
+	mSpec          = *fileSpec;
+	mResolvedSpec  = *fileSpec;
+	mTargetSpec    = *fileSpec;
+	mAppendedPath  = "";
+	mInitType      = eInitWithFSSpec;
 	return NS_OK;
 }
 
