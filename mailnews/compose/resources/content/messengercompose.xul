@@ -230,6 +230,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
 			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
+			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')"/>
 		</menupopup>
 	</menu>
