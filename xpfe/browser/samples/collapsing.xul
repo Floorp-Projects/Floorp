@@ -12,36 +12,36 @@
 		verifyControls();
 	}
 	function verifyControls() {
-		var aolSite = window.frames["AOLSite"];
-		var nsSite = window.frames["NetcenterSite"];
-		if(aolSite==null)
-			window.alert("Our AOL Frame isn't in the DOM!");
-		if(nsSite == null)
-			window.alert("Our Netcenter Frame isn't in the DOM!");
+		var siteOne = window.frames["SiteOne"];
+		var siteTwo = window.frames["SiteTwo"];
+		if(siteOne==null)
+			window.alert("Our SiteOne Frame isn't in the DOM!");
+		if(siteTwo == null)
+			window.alert("Our SiteTwo Frame isn't in the DOM!");
 	}
-	function cmdHideAOL(){
+	function cmdHideSiteOne(){
 		verifyControls();
-		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideAOL");		
+		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideSiteOne");		
 		verifyControls();
 	}
 
-	function cmdHideNetcenter() {
+	function cmdHideSiteTwo() {
 		verifyControls();
-		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideNetcenter");
+		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideSiteTwo");
 		verifyControls();
 	}
 	</html:script>
 
-	<broadcaster id="ShowSite" sitemode="hideNetcenter" />
+	<broadcaster id="ShowSite" sitemode="hideSiteTwo" />
 	<observes element="ShowSite" attribute="sitemode" />
 	
-	<box align="vertical" id="AOLBox" flex="1">
-		<html:iframe flex="1" name="AOLSite" src="http://www.aol.com"/>
-		<html:input type="BUTTON" value="Show Netcenter" onclick="cmdHideAOL()"/>
+	<box align="vertical" id="SiteOneBox" flex="1">
+		<html:iframe flex="1" name="SiteOne" src="http://www.mozilla.org/xpfe/xptoolkit"/>
+		<html:input type="BUTTON" value="Show Boxes Documentation" onclick="cmdHideSiteOne()"/>
 	</box>
-	<box align="vertical" id="NetcenterBox" flex="1">
-		<html:iframe flex="1" name="NetcenterSite" src="http://www.netscape.com"/>
-		<html:input type="BUTTON" value="Show AOL" onclick="cmdHideNetcenter()"/>
+	<box align="vertical" id="SiteTwoBox" flex="1">
+		<html:iframe flex="1" name="SiteTwo" src="http://www.mozilla.org/xpfe/xptoolkit/boxes.html"/>
+		<html:input type="BUTTON" value="Show XPFE Documentation" onclick="cmdHideSiteTwo()"/>
 	</box>
 	
 </window>
