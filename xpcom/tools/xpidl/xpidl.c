@@ -114,6 +114,9 @@ int main(int argc, char *argv[])
     char *basename = NULL;
     ModeData *mode = NULL;
 
+    /* turn this on for extra checking of our code */
+/*    IDL_check_cast_enable(TRUE); */
+
     inc_head = xpidl_malloc(sizeof *inc);
 #ifndef XP_MAC
     inc_head->directory = ".";
