@@ -95,7 +95,9 @@ public class Codegen extends Interpreter {
                 for (int i = 0; i != functionCount; ++i) {
                     OptFunctionNode fn;
                     fn = (OptFunctionNode)tree.getFunctionNode(i);
-                    if (fn.getType() == FunctionNode.FUNCTION_STATEMENT) {
+                    if (fn.getFunctionType()
+                        == FunctionNode.FUNCTION_STATEMENT)
+                    {
                         String name = fn.getFunctionName();
                         if (name.length() != 0) {
                             if (possibleDirectCalls == null) {
