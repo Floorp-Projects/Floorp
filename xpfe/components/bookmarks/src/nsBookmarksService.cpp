@@ -3912,13 +3912,10 @@ nsBookmarksService::AddObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (! mObservers) {
-        nsresult rv;
-        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-        if (NS_FAILED(rv)) return rv;
+    if (! mObservers.AppendObject(aObserver)) {
+        return NS_ERROR_FAILURE;
     }
-
-    mObservers->AppendElement(aObserver);
+    
     return NS_OK;
 }
 
@@ -3928,10 +3925,7 @@ nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (mObservers)
-    {
-        mObservers->RemoveElement(aObserver);
-    }
+    mObservers.RemoveObject(aObserver);
 
     return NS_OK;
 }
@@ -4063,12 +4057,10 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
     // multiple arguments can be the same, by the way, thus the "offset"
     for (loop = 0; loop < numArguments; loop += 2)
     {
-        nsCOMPtr<nsISupports>   aSource = arguments->ElementAt(loop);
-        if (!aSource)   return NS_ERROR_NULL_POINTER;
-        nsCOMPtr<nsIRDFResource>    src = do_QueryInterface(aSource);
-        if (!src)   return NS_ERROR_NO_INTERFACE;
+        nsCOMPtr<nsIRDFResource> src = do_QueryElementAt(arguments, loop, &rv);
+        if (!src) return rv;
         
-        if (src.get() == res)
+        if (src == res)
         {
             if (offset > 0)
             {
@@ -4076,10 +4068,9 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
                 continue;
             }
 
-            nsCOMPtr<nsISupports>   aValue = arguments->ElementAt(loop + 1);
-            if (!aSource)   return NS_ERROR_NULL_POINTER;
-            nsCOMPtr<nsIRDFNode>    val = do_QueryInterface(aValue);
-            if (!val)   return NS_ERROR_NO_INTERFACE;
+            nsCOMPtr<nsIRDFNode> val = do_QueryElementAt(arguments, loop + 1,
+                                                         &rv);
+            if (!val) return rv;
 
             *argValue = val;
             NS_ADDREF(*argValue);
@@ -4471,10 +4462,8 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 
     for (loop=((PRInt32)numSources)-1; loop>=0; loop--)
     {
-        nsCOMPtr<nsISupports>   aSource = aSources->ElementAt(loop);
-        if (!aSource)   return NS_ERROR_NULL_POINTER;
-        nsCOMPtr<nsIRDFResource>    src = do_QueryInterface(aSource);
-        if (!src)   return NS_ERROR_NO_INTERFACE;
+        nsCOMPtr<nsIRDFResource> src = do_QueryElementAt(aSources, loop, &rv);
+        if (!src) return rv;
 
         if (aCommand == kNC_BookmarkCommand_NewBookmark)
         {
@@ -5508,22 +5497,11 @@ nsBookmarksService::OnAssert(nsIRDFDataSource* aDataSource,
 {
     if (mUpdateBatchNest != 0)  return NS_OK;
 
-    if (mObservers)
+
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; ++i)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i)
-        {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->OnAssert(this, aSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-        }
+        (void) mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5537,22 +5515,10 @@ nsBookmarksService::OnUnassert(nsIRDFDataSource* aDataSource,
 {
     if (mUpdateBatchNest != 0)  return NS_OK;
 
-    if (mObservers)
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; ++i)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i)
-        {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->OnUnassert(this, aSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-        }
+        (void) mObservers[i]->OnUnassert(this, aSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5567,22 +5533,10 @@ nsBookmarksService::OnChange(nsIRDFDataSource* aDataSource,
 {
     if (mUpdateBatchNest != 0)  return NS_OK;
 
-    if (mObservers)
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; ++i)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i)
-        {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
-            NS_RELEASE(obs);
-        }
+        (void) mObservers[i]->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
     }
 
     return NS_OK;
@@ -5597,22 +5551,10 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
 {
     if (mUpdateBatchNest != 0)  return NS_OK;
 
-    if (mObservers)
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; ++i)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i)
-        {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-        }
+        (void) mObservers[i]->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5621,20 +5563,11 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
 NS_IMETHODIMP
 nsBookmarksService::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    if ((mUpdateBatchNest++ == 0) && mObservers)
+    if (mUpdateBatchNest++ == 0)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->BeginUpdateBatch(aDataSource);
-            NS_RELEASE(obs);
+        PRInt32 count = mObservers.Count();
+        for (PRInt32 i = 0; i < count; ++i) {
+            (void) mObservers[i]->BeginUpdateBatch(aDataSource);
         }
     }
 
@@ -5649,20 +5582,11 @@ nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
         --mUpdateBatchNest;
     }
 
-    if ((mUpdateBatchNest == 0) && mObservers)
+    if (mUpdateBatchNest == 0)
     {
-        nsresult rv;
-
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-            nsIRDFObserver* obs =
-                NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-            (void) obs->EndUpdateBatch(aDataSource);
-            NS_RELEASE(obs);
+        PRInt32 count = mObservers.Count();
+        for (PRInt32 i = 0; i < count; ++i) {
+            (void) mObservers[i]->EndUpdateBatch(aDataSource);
         }
     }
 
