@@ -723,8 +723,11 @@ scrollbar {
   direction: ltr;
 }
 
-scrollbar[collapsed="true"],
-scrollbar[moz-collapsed="true"] {
+/* Scrollbars which have been marked 'lazy' are unbound while
+   collapsed; this saves anonymous content creation for scrollbars
+   which are not visible */
+scrollbar[lazy="true"][collapsed="true"],
+scrollbar[lazy="true"][moz-collapsed="true"] {
   -moz-binding: none;
 }
 
