@@ -34,7 +34,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.3 2001/01/30 21:02:14 wtc%netscape.com Exp $
+ * $Id: p7encode.c,v 1.4 2001/09/20 21:37:16 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -234,7 +234,7 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
 		PK11SymKey *tek;
 		CERTCertificate *ourCert;
 		SECKEYPublicKey *ourPubKey;
-		SECKEATemplateSelector whichKEA;
+		SECKEATemplateSelector whichKEA = SECKEAInvalid;
 
 		/* We really want to show our KEA tag as the
 		   key exchange algorithm tag. */
@@ -356,6 +356,8 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
 		PK11_FreeSymKey(tek);
 		if (err != SECSuccess)
 		    goto loser;
+
+		PORT_Assert( whichKEA != SECKEAInvalid);
 
 		/* Encode the KEA parameters into the recipient info. */
 		params = SEC_ASN1EncodeItem(arena,NULL, &keaParams, 
