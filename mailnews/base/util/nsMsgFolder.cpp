@@ -1372,17 +1372,30 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 	rv = GetServer(getter_AddRefs(server));
 	if(NS_SUCCEEDED(rv))
 	{
+		if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
+		{
+			PRUnichar *folderName = nsnull;
+			rv = GetPrettyName(&folderName);
+			if (NS_SUCCEEDED(rv) && folderName)
+			{
+				description = folderName;
+				description += " on ";
+				PR_Free(folderName);
+			}
+
+
+		}
 		char *serverName = nsnull;
 		rv = server->GetPrettyName(&serverName);
 		if(NS_SUCCEEDED(rv) && PL_strcmp(serverName, ""))
-			description = serverName;
+			description += serverName;
 		else
 		{
 			if(serverName)
 				PR_Free(serverName);
 			rv = server->GetHostName(&serverName);
 			if(NS_SUCCEEDED(rv))
-				description = serverName;
+				description += serverName;
 		}
 		if(serverName)
 		  PR_Free(serverName);

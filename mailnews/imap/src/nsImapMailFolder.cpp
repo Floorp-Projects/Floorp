@@ -633,25 +633,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
 
 NS_IMETHODIMP nsImapMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
-    if (mDepth == 1) {
-        char *hostName = nsnull;
-        GetHostname(&hostName);
-		nsString2 unicodePrettyName(hostName);
-        *prettyName = unicodePrettyName.ToNewUnicode();
-        PR_FREEIF(hostName);
-    }
-    else {
-        nsresult rv = NS_ERROR_NULL_POINTER;
-        /**** what is this??? doesn't make sense to me
-        char *pName = prettyName.ToNewCString();
-        if (pName)
-            rv = nsMsgFolder::GetPrettyName(&pName);
-        delete[] pName;
-        *****/
-        return rv;
-    }
-    
-    return NS_OK;
+	return GetName(prettyName);
 }
     
 NS_IMETHODIMP nsImapMailFolder::BuildFolderURL(char **url)
