@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
+#include "nsIAbsorbingTransaction.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -54,6 +55,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 #include "nsIStringStream.h"
+#include "nsITextContent.h"
 
 #ifdef NECKO
 #include "nsNeckoUtil.h"
@@ -68,6 +70,7 @@
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
 #include "EditAggregateTxn.h"
+#include "PlaceholderTxn.h"
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
 #include "InsertElementTxn.h"
@@ -85,6 +88,7 @@
 
 #include "nsEditorCID.h"
 #include "nsEditor.h"
+#include "nsEditorUtils.h"
 
 
 #ifdef HACK_FORCE_REDRAW
@@ -143,6 +147,12 @@ nsEditor::nsEditor()
 ,  mActionListeners(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
+,  mPlaceHolderTxn(nsnull)
+,  mPlaceHolderName(nsnull)
+,  mPlaceHolderBatch(0)
+,  mTxnStartNode(nsnull)
+,  mTxnStartOffset(0)
+
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -332,6 +342,31 @@ nsEditor::Do(nsITransaction *aTxn)
 {
   if (gNoisy) { printf("Editor::Do ----------\n"); }
   nsresult result = NS_OK;
+  
+  if (mPlaceHolderBatch && !mPlaceHolderTxn)
+  {
+    // it's pretty darn amazing how many different types of pointers
+    // this transcation goes through here.  I bet this is a record.
+    EditTxn *editTxn;
+    nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
+    result = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(), &editTxn);
+    if (NS_FAILED(result)) { return result; }
+    if (!editTxn) { return NS_ERROR_NULL_POINTER; }
+    editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
+    // have to use line above instead of line below due to our broken 
+    // interface model for transactions.
+//    plcTxn = do_QueryInterface(editTxn);
+    // save off weak reference to placeholder txn
+    mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
+    plcTxn->Init(mPresShellWeak, mPlaceHolderName, mTxnStartNode, mTxnStartOffset);
+    // we will recurse, but will not hit this case in the nested call
+    nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
+    nsITransaction* txn = theTxn;
+    // we want to escape from this routine with a positive refcount
+    txn->AddRef();
+    Do(txn);
+  }
+  
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(selectionResult) && selection) {
@@ -501,6 +536,72 @@ nsEditor::EndTransaction()
 
   EndUpdateViewBatch();
 
+  return NS_OK;
+}
+
+
+// These two routines are similar to the above, but do not use
+// the transaction managers batching feature.  Instead we use
+// a placeholder transaction to wrap up any further transaction
+// while the batch is open.  The advantage of this is that
+// placeholder transactions can later merge, if needed.  Merging
+// is unavailable between transaction manager batches.
+
+NS_IMETHODIMP 
+nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
+{
+  NS_PRECONDITION(mPlaceHolderBatch >= 0, "negative placeholder batch count!");
+  if (!mPlaceHolderBatch)
+  {
+    // time to turn on the batch
+    BeginUpdateViewBatch();
+    mPlaceHolderTxn = nsnull;
+    mPlaceHolderName = aName;
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsresult res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    PRBool collapsed;
+    res = selection->GetIsCollapsed(&collapsed);
+    if (NS_FAILED(res)) return res;
+    if (collapsed)  // we cant merge with previous typing if selection not collapsed
+    {
+      // need to remember colapsed selection point to Init the placeholder with later.
+      // this is because we dont actually make the placeholder until we need it, and we
+      // might have moved the selection as part of the typing processing by then.
+      res = GetStartNodeAndOffset(selection, &mTxnStartNode, &mTxnStartOffset);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  mPlaceHolderBatch++;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsEditor::EndPlaceHolderTransaction()
+{
+  NS_PRECONDITION(mPlaceHolderBatch > 0, "zero or negative placeholder batch count when ending batch!");
+  if (mPlaceHolderBatch == 1)
+  {
+    // time to turn off the batch
+    EndUpdateViewBatch();
+    mTxnStartNode = nsnull;
+    mTxnStartOffset = 0;
+    if (mPlaceHolderTxn)  // we might have never made a placeholder if no action took place
+    {
+      nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryReferent(mPlaceHolderTxn);
+      if (plcTxn) 
+      {
+        plcTxn->EndPlaceHolderBatch();
+      }
+      else  // but if we did make one it should be around
+      {
+        NS_NOTREACHED("should this ever happen?");
+      }
+    }
+  }
+  mPlaceHolderBatch--;
+  
   return NS_OK;
 }
 
@@ -1489,8 +1590,9 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
   result = CreateTxnForInsertText(aStringToInsert, nsnull, &txn); // insert at the current selection
   if ((NS_SUCCEEDED(result)) && txn)  {
     BeginUpdateViewBatch();
-    aggTxn->AppendChild(txn);
+//    aggTxn->AppendChild(txn);
     result = Do(aggTxn);
+    result = Do(txn);
     EndUpdateViewBatch();
   }
   else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
@@ -1769,7 +1871,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
       //  This may be OK, now that I fixed InsertText so it inserts 
       //    at the offset of the selection anchor (i.e., the caret offset)
       //    instead of at offset+1
-      PRBool collapsed
+      PRBool collapsed;
       result = selection->GetIsCollapsed(&collapsed);
       if (NS_SUCCEEDED(result) && collapsed) 
       {
@@ -2559,8 +2661,8 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
   nsresult result = NS_OK;
   if (!aParentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
   
-  // if we are at beginning of node than just look before it
-  if (!aOffset)
+  // if we are at beginning of node, or it is a textnode, then just look before it
+  if (!aOffset || IsTextNode(aParentNode))
   {
     return GetPriorNode(aParentNode, aEditableNode, aResultNode);
   }
@@ -2601,6 +2703,14 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   nsresult result = NS_OK;
   if (!aParentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
   
+  // if aParentNode is a text node, use it's location instead
+  if (IsTextNode(aParentNode))
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    nsEditor::GetNodeLocation(aParentNode, &parent, &aOffset);
+    aParentNode = parent;
+    aOffset++;  // _after_ the text node
+  }
   // look at the child at 'aOffset'
   nsCOMPtr<nsIDOMNode> child = GetChildAt(aParentNode, aOffset);
   if (child)
@@ -2828,6 +2938,18 @@ nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
   return mDTD->CanContain(parentTagEnum, childTagEnum);
 }
 
+PRBool 
+nsEditor::IsContainer(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  nsAutoString stringTag;
+  PRInt32 tagEnum;
+  nsresult res = aNode->GetNodeName(stringTag);
+  if (NS_FAILED(res)) return PR_FALSE;
+  res = mDTD->StringTagToIntTag(stringTag,&tagEnum);
+  if (NS_FAILED(res)) return PR_FALSE;
+  return mDTD->IsContainer(tagEnum);
+}
 
 PRBool 
 nsEditor::IsEditable(nsIDOMNode *aNode)
@@ -2885,11 +3007,25 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     if (NS_FAILED(result) || !resultFrame) {  // if it has no frame, it is not editable
       return PR_FALSE;
     }
-    else {                                    // it has a frame, so it is editable
+    else {                                    
+      // it has a frame, so it might editable
+      // but not if it's a formatting whitespace node
+      if (IsEmptyTextContent(content)) return PR_FALSE;          
       return PR_TRUE;
     }
   }
   return PR_FALSE;  // it's not a content object (???) so it's not editable
+}
+
+PRBool
+nsEditor::IsEmptyTextContent(nsIContent* aContent)
+{
+  PRBool result = PR_FALSE;
+  nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
+  if (tc) {
+    tc->IsOnlyWhitespace(&result);
+  }
+  return result;
 }
 
 nsresult
@@ -3108,7 +3244,7 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRang
   }
   else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
   {
-    BeginTransaction();
+    nsAutoEditBatch batchIt (this);
     nsCOMPtr<nsIDOMSelection> selection;
     result = GetSelection(getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
@@ -3138,8 +3274,6 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRang
         }
       }
     }
-    
-    EndTransaction();
   }
 
   return result;

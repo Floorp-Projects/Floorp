@@ -49,7 +49,6 @@ protected:
   // nsHTMLEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool         *aCancel,
-                            PlaceholderTxn **aTxn,
                             const nsString *inString,
                             nsString       *outString,
                             TypeInState     typeInState,
@@ -63,8 +62,8 @@ protected:
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel);
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel);
 
-  nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
-  nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
+  nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, nsString *outString);
+  nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, nsString *outString);
 
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel);
@@ -83,8 +82,12 @@ protected:
   static PRBool IsBreak(nsIDOMNode *aNode);
   static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
+  static PRBool IsAnchor(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
+  static PRBool IsNormalDiv(nsIDOMNode *aNode);
+  static PRBool IsMozDiv(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
+  static PRBool HasMozAttr(nsIDOMNode *aNode);
   
   static PRBool InBody(nsIDOMNode *aNode);
   
@@ -92,6 +95,9 @@ protected:
   nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
+  PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
+  PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
+  nsresult CreateMozDiv(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outDiv);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
@@ -115,10 +121,12 @@ protected:
 
   nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
   nsresult RemoveContainer(nsIDOMNode *inNode);
-  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
+  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
 
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
   nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
+  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
+  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
                            nsIDOMNode *aNodeRight, 

@@ -27,7 +27,6 @@
 #include "nsEditRules.h"
 #include "TypeInState.h"
 
-class PlaceholderTxn;
 class nsTextEditor;
 
 /** Object that encapsulates HTML text-specific editing rules.
@@ -86,7 +85,6 @@ protected:
   // nsTextEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool         *aCancel,
-                            PlaceholderTxn **aTxn,
                             const nsString *inString,
                             nsString       *outString,
                             TypeInState    typeInState,
@@ -180,7 +178,6 @@ protected:
   /** do the actual text insertion */
   nsresult DoTextInsertion(nsIDOMSelection *aSelection, 
                            PRBool          *aCancel,
-                           PlaceholderTxn **aTxn,
                            const nsString  *aInString,
                            TypeInState      aTypeInState);
   
@@ -199,7 +196,6 @@ class nsTextRulesInfo : public nsRulesInfo
  
   nsTextRulesInfo(int aAction) : 
     nsRulesInfo(aAction),
-    placeTxn(0),
     inString(0),
     outString(0),
     outputFormat(0),
@@ -215,7 +211,6 @@ class nsTextRulesInfo : public nsRulesInfo
   virtual ~nsTextRulesInfo() {};
   
   // kInsertText
-  PlaceholderTxn **placeTxn;
   const nsString *inString;
   nsString *outString;
   const nsString *outputFormat;

@@ -20,11 +20,18 @@
 #define AggregatePlaceholderTxn_h__
 
 #include "EditAggregateTxn.h"
+#include "nsIAbsorbingTransaction.h"
+#include "nsIDOMNode.h"
+#include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
+#include "nsWeakReference.h"
 
 #define PLACEHOLDER_TXN_CID \
 {/* {0CE9FB00-D9D1-11d2-86DE-000064657374} */ \
 0x0CE9FB00, 0xD9D1, 0x11d2, \
 {0x86, 0xde, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
+
+class nsHTMLEditor;
 
 /**
  * An aggregate transaction that knows how to absorb all subsequent
@@ -32,12 +39,17 @@
  * But it absorbs other transactions via merge, and can undo/redo the
  * transactions it has absorbed.
  */
-class PlaceholderTxn : public EditAggregateTxn
+ 
+class PlaceholderTxn : public EditAggregateTxn, 
+                       public nsIAbsorbingTransaction, 
+                       public nsSupportsWeakReference
 {
 public:
 
   static const nsIID& GetCID() { static nsIID iid = PLACEHOLDER_TXN_CID; return iid; }
 
+  NS_DECL_ISUPPORTS_INHERITED  
+  
 private:
   PlaceholderTxn();
 
@@ -45,11 +57,25 @@ public:
 
   virtual ~PlaceholderTxn();
 
+// ------------ EditAggregateTxn -----------------------
+
   NS_IMETHOD Do(void);
+
+  NS_IMETHOD Undo(void);
 
   NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  NS_IMETHOD SetAbsorb(PRBool aAbsorb);
+// ------------ nsIAbsorbingTransaction -----------------------
+
+  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsIDOMNode *aStartNode, PRInt32 aStartOffset);
+  
+  NS_IMETHOD GetTxnName(nsIAtom **aName);
+  
+  NS_IMETHOD GetStartNodeAndOffset(nsCOMPtr<nsIDOMNode> *aTxnStartNode, PRInt32 *aTxnStartOffset);
+
+  NS_IMETHOD EndPlaceHolderBatch();
+
+  NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress);
 
   friend class TransactionFactory;
 
@@ -57,14 +83,12 @@ public:
 
 protected:
 
-  PRBool mAbsorb;
-
-};
-
-inline NS_IMETHODIMP PlaceholderTxn::SetAbsorb(PRBool aAbsorb)
-{
-  mAbsorb = aAbsorb;
-  return NS_OK;
+  /** the presentation shell, which we'll need to get the selection */
+  nsWeakPtr mPresShellWeak;   // weak reference to the nsIPresShell
+  PRBool    mAbsorb;
+  nsCOMPtr<nsIDOMNode> mStartNode, mEndNode; // selection nodes at beginning and end of operation
+  PRInt32   mStartOffset, mEndOffset;      // selection offsets at beginning and end of operation
+  nsWeakPtr mForwarding;
 };
 
 
