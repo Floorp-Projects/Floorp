@@ -282,7 +282,7 @@ checksetup.pl, and re-enter your answers.
 
 
 EOT
-die "Syntax error in localconfig";
+    die "Syntax error in localconfig";
 }
 my $newstuff = "";
 sub LocalVar ($$)
