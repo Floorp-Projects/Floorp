@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Bienvenu <bienvenu@netscape.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *   Jeff Tsai <jefft@netscape.com>
  *   Scott MacGregor <mscott@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
@@ -406,20 +406,20 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, AOLMailboxView,
 NS_IMETHODIMP
 nsImapIncomingServer::GetIsAOLServer(PRBool *aBool)
 {
-	if (!aBool)
-		return NS_ERROR_NULL_POINTER;
-	*aBool = ((m_capability & kAOLImapCapability) != 0);
-	return NS_OK;
+  if (!aBool)
+    return NS_ERROR_NULL_POINTER;
+  *aBool = ((m_capability & kAOLImapCapability) != 0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetIsAOLServer(PRBool aBool)
 {
-	if (aBool)
-		m_capability |= kAOLImapCapability;
-	else
-		m_capability &= ~kAOLImapCapability;
-	return NS_OK;
+  if (aBool)
+    m_capability |= kAOLImapCapability;
+  else
+    m_capability &= ~kAOLImapCapability;
+  return NS_OK;
 }
 
 
@@ -1012,8 +1012,8 @@ const char *nsImapIncomingServer::GetPFCName()
   {
     if(NS_SUCCEEDED(GetStringBundle()))
     {
-		  nsXPIDLString pfcName;
-		  nsresult res = m_stringBundle->GetStringFromID(IMAP_PERSONAL_FILING_CABINET, getter_Copies(pfcName));
+      nsXPIDLString pfcName;
+      nsresult res = m_stringBundle->GetStringFromID(IMAP_PERSONAL_FILING_CABINET, getter_Copies(pfcName));
       if (NS_SUCCEEDED(res))
         m_pfcName = NS_ConvertUCS2toUTF8(pfcName).get();
     }
@@ -1604,12 +1604,12 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
 
 NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderDelete(const char *aFolderName) 
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderCreateFailed(const char *aFolderName) 
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(nsIMsgWindow *msgWindow, const char *oldName, const char *newName)
@@ -1764,6 +1764,9 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
   if(NS_FAILED(rv))
     return rv;
   
+  PRBool usingSubscription = PR_TRUE;
+  GetUsingSubscription(&usingSubscription);
+
   rv = GetUnverifiedFolders(unverifiedFolders, &numUnverifiedFolders);
   if (numUnverifiedFolders > 0)
   {
@@ -1778,7 +1781,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
       nsCOMPtr<nsIMsgFolder> currentFolder = do_QueryInterface(element, &rv);
       if (NS_FAILED(rv))
         continue;
-      if ((NS_SUCCEEDED(currentImapFolder->GetExplicitlyVerify(&explicitlyVerify)) && explicitlyVerify) ||
+      if ((!usingSubscription || (NS_SUCCEEDED(currentImapFolder->GetExplicitlyVerify(&explicitlyVerify)) && explicitlyVerify)) ||
         ((NS_SUCCEEDED(currentFolder->GetHasSubFolders(&hasSubFolders)) && hasSubFolders)
         && !NoDescendentsAreVerified(currentFolder)))
       {
@@ -3612,7 +3615,7 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aFolder,
       (void) aFolder->GetIsServer(&isServer);
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aFolder);
       if (imapFolder && !isServer)
-        imapFolder->UpdateStatus(nsnull, aWindow);
+        imapFolder->UpdateStatus(nsnull, nsnull /* aWindow - null window will prevent alerts */);
     }
     else
     {
