@@ -31,6 +31,11 @@
 #include "nsIPtr.h"
 #include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
+// the following header files are required for style optimizations that work only when the child content is really a cell
+#include "nsITableContent.h"
+#include "nsTableCell.h"
+static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+// end includes for style optimizations that require real content knowledge
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -502,12 +507,13 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize;
   PRInt32   kidIndex = 0;
-  PRInt32   colIndex = -1;
+  PRInt32   colIndex = 0;
   nsIFrame* prevKidFrame = nsnull;
   nscoord   maxTopMargin = 0;
   nscoord   maxBottomMargin = 0;
   nscoord   x = 0;
   nsresult  result = NS_OK;
+  PRBool    isFirst=PR_TRUE;
 
   for (;;) {
     // Get the next content object
@@ -517,22 +523,41 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       break;  // no more content
     }
 
-    // what column does this cell span to?
-    nsHTMLValue value;
-    ((nsHTMLTagContent *)cell)->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-      colIndex += value.GetIntValue();
-    else
-      colIndex += 1;
+    // what row am I?
+    if (PR_TRUE==isFirst)
+      SetRowIndex(aState.tableFrame->GetNextAvailRowIndex());
 
-    // create column frames if necessary
+    // what column does this cell belong to?
+    colIndex = aState.tableFrame->GetNextAvailColIndex(mRowIndex, colIndex);
+    if (gsDebug) printf("%p : next col index = %d\n", this, colIndex);
+
+    /* for style context optimization, set the content's column index if possible.
+     * this can only be done if we really have an nsTableCell.  
+     * other tags mapped to table cell display won't benefit from this optimization
+     * see nsHTMLStyleSheet::RulesMatching
+     */
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = cell->QueryInterface(kITableContentIID, 
+                                       (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    if (NS_SUCCEEDED(rv))
+    { // we know it's a table part of some sort, is it a cell?
+      const int contentType = ((nsTableContent *)tableContentInterface)->GetType();
+      if (contentType == nsITableContent::kTableCellType)
+      {
+        ((nsTableCell *)tableContentInterface)->SetColIndex(colIndex);
+        if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, tableContentInterface, colIndex);
+      }
+      NS_RELEASE(tableContentInterface);
+    }
+    // part of the style optimization is to ensure that the column frame for the cell exists
+    // we used to do this post-pass1, now we do it incrementally for the optimization
     nsReflowStatus status;
     aState.tableFrame->EnsureColumnFrameAt(colIndex,
                                            &aPresContext,
                                            aDesiredSize,
                                            aState.reflowState,
                                            status);
-    // Create a child frame -- always an nsTableCell frame
+    // Create a child frame -- always an nsTableCellFrame
     nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_FALSE);
     nsIContentDelegate* kidDel = cell->GetDelegate(&aPresContext);
     nsIFrame*           kidFrame;
@@ -544,21 +569,16 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       NS_RELEASE(kidSC);
       break;
     }
+    // this sets the frame's notion of it's column index
+    ((nsTableCellFrame *)kidFrame)->SetColIndex(colIndex);
+    if (gsDebug) printf("%p : set cell frame %p to col index = %d\n", this, kidFrame, colIndex);
+    // add the cell frame to the table's cell map
+    aState.tableFrame->AddCellToTable(this, (nsTableCellFrame *)kidFrame, isFirst);
 
     // Because we're not splittable always allow the child to be as high as
     // it wants. The default available width is also unconstrained so we can
     // get the child's maximum width
     nsSize  kidAvailSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-    // See if there's a width constraint for the cell
-    /*
-    const nsStylePosition* cellPosition = (const nsStylePosition*)
-      kidSC->GetStyleData(eStyleStruct_Position);
-    if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) 
-    {
-      kidAvailSize.width = cellPosition->mWidth.GetCoordValue();
-    }
-    */
     NS_IF_RELEASE(kidSC);
 
     // Get the child's margins
@@ -622,6 +642,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     // Move to the next content child
     prevKidFrame = kidFrame;
     kidIndex++;
+    isFirst=PR_FALSE;
   }
 
   SetMaxChildHeight(aState.maxCellHeight, maxTopMargin, maxBottomMargin);  // remember height of tallest child who doesn't have a row span

@@ -33,6 +33,10 @@ class nsTableCellFrame;
 class CellData
 {
 public:
+  /** if not null, the cell that this CellData maps.
+    * if null, mRealCell points to the CellData that holds the 
+	* mapped cell frame.
+	*/
   nsTableCellFrame *mCell;
   CellData *mRealCell;
   CellData *mOverlap;

@@ -73,6 +73,9 @@ public:
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  /** helper method for determining if this is a nested table or not */
+  PRBool IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const;
+
   /** helper method for getting the width of the table's containing block */
   static nscoord GetTableContainerWidth(const nsReflowState& aState);
 
@@ -210,6 +213,26 @@ public:
                                    const nsReflowState& aReflowState,
                                    nsReflowStatus&      aStatus);
 
+  /** return the index of the next row that is not yet assigned.
+    * If no row is initialized, 0 is returned.
+    */
+  PRInt32 GetNextAvailRowIndex() const;
+
+  /** return the index of the next column in aRowIndex after aColIndex 
+    * that does not have a cell assigned to it.
+    * If aColIndex is past the end of the row, it is returned.
+    * If the row is not initialized, 0 is returned.
+    */
+  PRInt32 GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex) const;
+
+  /** build as much of the CellMap as possible from the info we have so far 
+    */
+  virtual void AddCellToTable (nsTableRowFrame  *aRowFrame, 
+                               nsTableCellFrame *aCellFrame,
+                               PRBool            aAddRow);
+
+  virtual void AddColumnFrame (nsTableColFrame *aColFrame);
+
 protected:
 
   /** protected constructor.
@@ -255,6 +278,11 @@ protected:
                                      InnerTableReflowState& aState,
                                      nsIFrame*              aKidFrame,
                                      nscoord                aDeltaY);
+
+  /** return the desired width of this table accounting for the current
+    * reflow state, and for the table attributes and parent
+    */
+  nscoord ComputeDesiredWidth(const nsReflowState& aReflowState) const;
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
@@ -345,10 +373,6 @@ protected:
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
-  /** build as much of the CellMap as possible from the info we have so far 
-    */
-  virtual void BuildCellMap ();
-
   /** called whenever the number of columns changes, to increase the storage in mCellMap 
     */
   virtual void GrowCellMap(PRInt32 aColCount);
@@ -374,12 +398,6 @@ protected:
     */
   void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
 
-  /** ResetColumns is called when the column structure of the table is changed.
-    * Call with caution, only when adding or removing columns, changing 
-    * column attributes, changing the rowspan or colspan attribute of a cell, etc.
-    */
-  virtual void ResetColumns ();
-
   /** sum the columns represented by all nsTableColGroup objects. 
     * if the cell map says there are more columns than this, 
     * add extra implicit columns to the content tree.
@@ -389,9 +407,8 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus);
 
-  /** Ensure that the cell map has been built for the table
-    */
-  virtual void EnsureCellMap();
+  /** Set the min col span for every column in the table.  Scans the whole table. */
+  virtual void SetMinColSpanForTable();
 
   virtual void BuildColumnCache(nsIPresContext*      aPresContext,
                                 nsReflowMetrics&     aDesiredSize,
