@@ -44,6 +44,7 @@
 #include "nsString.h"
 #endif
 
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIComponentManager.h"
@@ -76,7 +77,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
