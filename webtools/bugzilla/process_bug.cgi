@@ -931,6 +931,7 @@ if ($::FORM{'keywords'}) {
 my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
 
 if ($::comma eq ""
+    && (! @groupAdd) && (! @groupDel)
     && (! @::legal_keywords || (0 == @keywordlist && $keywordaction ne "makeexact"))
     && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
     ) {

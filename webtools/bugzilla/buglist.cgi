@@ -200,12 +200,12 @@ sub GetGroupsByUserId {
     return if !$userid;
 
     SendSQL("
-        SELECT  groups.id, name, description, isactive
-          FROM  groups, user_group_map
-         WHERE  user_id = $userid AND NOT isbless
-           AND  user_group_map.group_id = groups.id
-           AND  isbuggroup
-      ORDER BY  description ");
+        SELECT DISTINCT  groups.id, name, description, isactive
+                   FROM  groups, user_group_map
+                  WHERE  user_id = $userid AND NOT isbless
+                    AND  user_group_map.group_id = groups.id
+                    AND  isbuggroup
+               ORDER BY  description ");
 
     my @groups;
 
