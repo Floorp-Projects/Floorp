@@ -161,6 +161,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-border-right-colors: transparent !important;
   -moz-border-bottom-colors: transparent !important;
   -moz-border-left-colors: transparent !important;
+  background-color: transparent !important;
 }
 
 toolbarbutton[type="menu-button"]:hover > .toolbarbutton-menubutton-button,
