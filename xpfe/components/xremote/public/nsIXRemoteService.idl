@@ -1,0 +1,54 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by Christopher Blizzard
+ * are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+/* This interface provides the clue that allows you set up a specific
+ * browser instance so that it will respond to X remote requests. */
+
+interface nsIDOMWindowInternal;
+
+[scriptable, uuid(510c0946-1dd2-11b2-b210-f5031abff3f0)]
+interface nsIXRemoteService : nsISupports {
+
+  // this is called once the browser starts up so that we can create a
+  // dummy window to respond to requests on
+  [noscript] void startup      ();
+
+  // this is called right before shutdown so we can destroy the window
+  // that we are receving requests on
+  [noscript] void shutdown     ();
+
+  // parse the command given and generate a response
+  [noscript] void parseCommand (in string aCommand, out string aResponse);
+
+  // add a new browser instance to listen for remote requests on
+  void addBrowserInstance      (in nsIDOMWindowInternal aBrowser);
+
+  // remove a browser instance from the list to listen for requests on
+  void removeBrowserInstance   (in nsIDOMWindowInternal aBrowser);
+
+};
+
+%{C++
+#define NS_IXREMOTESERVICE_CONTRACTID "@mozilla.org/browser/xremoteservice;1"
+#define NS_IXREMOTESERVICE_CLASSNAME  "Mozilla XRemote Service"
+%}
+
