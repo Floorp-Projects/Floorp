@@ -85,6 +85,7 @@ typedef enum {
 struct XPTState {
     XPTMode          mode;
     uint32           data_offset;
+    uint32           next_cursor[2];
     XPTDatapool      *pool;
 };
 
@@ -106,7 +107,7 @@ XPTState *
 XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
 
 PRBool
-XPT_MakeCursor(XPTState *state, XPTPool pool, XPTCursor *cursor);
+XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor);
 
 void
 XPT_DestroyXDRState(XPTState *state);
@@ -121,20 +122,17 @@ XPT_DataOffset(XPTState *state, uint32 *data_offsetp);
 void
 XPT_SetDataOffset(XPTState *state, uint32 data_offset);
 
-PRBool
-XPT_MakeCursor(XPTState *state, XPTPool pool, XPTCursor *cursor);
-
 /* all data structures are big-endian */
 
 #if defined IS_BIG_ENDIAN
-#  define XPTXDR_SWAB32(x) x
-#  define XPTXDR_SWAB16(x) x
+#  define XPT_SWAB32(x) x
+#  define XPT_SWAB16(x) x
 #elif defined IS_LITTLE_ENDIAN
-#  define XPTXDR_SWAB32(x) (((x) >> 24) |                                     \
+#  define XPT_SWAB32(x) (((x) >> 24) |                                        \
              (((x) >> 8) & 0xff00) |                                          \
              (((x) << 8) & 0xff0000) |                                        \
              ((x) << 24))
-#  define XPTXDR_SWAB16(x) (((x) >> 8) | ((x) << 8))
+#  define XPT_SWAB16(x) (((x) >> 8) | ((x) << 8))
 #else
 #  error "unknown byte order"
 #endif
