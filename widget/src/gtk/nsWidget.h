@@ -226,8 +226,14 @@ protected:
 
   // this is set when a given widget has the focus.
   PRBool       mHasFocus;
+
+
+  // if anyone uses this for public access other than the key press/release code on the main window, i will kill you. pav
+public:
   // this is the current GdkSuperWin with the focus
   static nsWidget *focusWindow;
+
+protected:
   // 
   PRBool mIsDragDest;
 

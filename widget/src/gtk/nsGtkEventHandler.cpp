@@ -594,7 +594,7 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
-static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin)
+static gint composition_start(GdkEventKey *aEvent, nsWidget *aWin)
 {
   nsCompositionEvent compEvent;
 
@@ -615,7 +615,7 @@ static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin)
   return PR_TRUE;
 }
 
-static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin)
+static gint composition_draw(GdkEventKey *aEvent, nsWidget *aWin)
 {
   nsresult res= NS_OK;
   if (!aWin->mIMECompositionUniString) {
@@ -669,7 +669,7 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin)
   return True;
 }
 
-static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin)
+static gint composition_end(GdkEventKey *aEvent, nsWidget *aWin)
 {
   nsCompositionEvent compEvent;
 
@@ -758,7 +758,10 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
 gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
   nsKeyEvent kevent;
-  nsWindow* win = (nsWindow*)p;
+  nsWidget *win = (nsWidget*)p;
+
+  if (win->focusWindow)
+    win = win->focusWindow;
 
   // work around for annoying things.
   if (event->keyval == GDK_Tab)
@@ -774,12 +777,14 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
     return PR_TRUE;
 
   NS_ADDREF(win);
+
   //
   // First, dispatch the Key event as a virtual key down event
+  //   but lie about where it came from and say it is from the
+  //   window that currently has focus inside our app...
   //
-  InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
+  InitKeyEvent(event, win, kevent, NS_KEY_DOWN);
   win->OnKey(kevent);
- 
 
 
   //
@@ -793,16 +798,17 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
       composition_draw(event, win);
       composition_end(event, win);
     } else {
-      InitKeyPressEvent(event,p, kevent);
+      InitKeyPressEvent(event, win, kevent);
       win->OnKey(kevent);
 
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key
-    InitKeyPressEvent(event,p, kevent);
+    InitKeyPressEvent(event, win, kevent);
     win->OnKey(kevent);
   }
 
   NS_RELEASE(win);
+
   if (w)
   {
     gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
@@ -821,10 +827,13 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
       || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
-  nsKeyEvent kevent;
-  InitKeyEvent(event, p, kevent, NS_KEY_UP);
+  nsWidget *win = (nsWidget *)p;
+  if (win->focusWindow)
+    win = win->focusWindow;
 
-  nsWindow * win = (nsWindow *) p;
+  nsKeyEvent kevent;
+  InitKeyEvent(event, win, kevent, NS_KEY_UP);
+
   NS_ADDREF(win);
   win->OnKey(kevent);
   NS_RELEASE(win);
