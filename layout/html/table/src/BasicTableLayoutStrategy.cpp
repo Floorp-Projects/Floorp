@@ -979,7 +979,7 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
       else
         totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
     }
-    excess = aTableFixedWidth - totalEffectiveWidthOfAutoColumns;
+    excess = aTableFixedWidth - aComputedTableWidth;
     // 2. next, compute the proportion to be added to each column, and add it
     for (i = 0; i<numAutoColumns; i++)
     {

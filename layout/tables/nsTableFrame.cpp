@@ -444,6 +444,8 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
                                  nsReflowStatus&      aStatus)
 {
   EnsureCellMap();
+  if (nsnull==mCellMap)
+    return; // no info yet, so nothing useful to do
 
   PRInt32 actualColumns = 0;
   nsTableColGroupFrame *lastColGroupFrame = nsnull;
@@ -543,7 +545,6 @@ void nsTableFrame::BuildCellMap ()
   if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
 
   int rowCount = GetRowCount();
-  NS_ASSERTION(0!=rowCount, "bad state");
   if (0 == rowCount)
   {
     // until we have some rows, there's nothing useful to do
@@ -828,6 +829,9 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTable
 
 void nsTableFrame::RecalcLayoutData()
 {
+  if (nsnull==mCellMap)
+    return; // no info yet, so nothing useful to do
+
   PRInt32 colCount = mCellMap->GetColCount();
   PRInt32 rowCount = mCellMap->GetRowCount();
   PRInt32 row = 0;
@@ -2195,6 +2199,9 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     printf ("BalanceColumnWidths...\n");
 
   nsVoidArray *columnLayoutData = GetColumnLayoutData();
+  if (nsnull==columnLayoutData)
+    return; // we don't have any information yet, so we can't do any useful work
+
   PRInt32 numCols = columnLayoutData->Count();
   if (nsnull==mColumnWidths)
   {
@@ -2275,6 +2282,9 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   if (gsDebug==PR_TRUE) printf ("SetTableWidth...");
   PRInt32 tableWidth = 0;
   nsVoidArray *columnLayoutData = GetColumnLayoutData();
+  if (nsnull==columnLayoutData)
+    return;  // no info, so nothing to do
+
   PRInt32 numCols = columnLayoutData->Count();
   for (PRInt32 i = 0; i<numCols; i++)
   {
@@ -2489,11 +2499,11 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
   }
 }
 
+// nsnull is a valid return value.  This is for empty tables.
 nsVoidArray * nsTableFrame::GetColumnLayoutData()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  NS_ASSERTION(nsnull!=firstInFlow->mColumnLayoutData, "illegal state -- no column layout data");
   return firstInFlow->mColumnLayoutData;
 }
 
