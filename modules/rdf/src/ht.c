@@ -2976,7 +2976,7 @@ fillContainer (HT_Resource node)
 	RDF_Cursor		c;
 	RDF_Resource		next;
 	uint32			numElements=0;
-#ifdef	WIN32
+#if defined(WIN32) || defined(XP_MAC)
 	char			*advertURL;
 #endif
 
@@ -2985,7 +2985,7 @@ fillContainer (HT_Resource node)
 	XP_ASSERT(node->view->pane != NULL);
 	XP_ASSERT(node->view->pane->db != NULL);
 
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_MAC)
 	advertURL = RDF_GetSlotValue (node->view->pane->db, node->node, 
 				       gNavCenter->RDF_HTMLURL, RDF_STRING_TYPE, 0, 1);
 #endif
@@ -3012,7 +3012,7 @@ fillContainer (HT_Resource node)
 			}
 			pr = rn;
 		}
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_MAC)
 		if (advertURL) XP_GetURLForView(node->view, advertURL);
 #endif
 		RDF_DisposeCursor(c);
@@ -8643,7 +8643,7 @@ PR_PUBLIC_API(HT_Error)
 HT_SetSelectedView (HT_Pane pane, HT_View view)
 {
 	HT_Notification		ns;
-#ifdef	WIN32
+#if defined(WIN32) || defined(XP_MAC)
 	char			*advertURL;
 #endif
 
@@ -8670,7 +8670,7 @@ HT_SetSelectedView (HT_Pane pane, HT_View view)
 			if (view->itemListCount == 0)
 			{
 				HT_SetOpenState(view->top, PR_TRUE);
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_MAC)
 				advertURL = advertURLOfContainer(pane->db, view->top->node);
 				if (advertURL != NULL)
 				{
