@@ -474,6 +474,14 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
   }
 }
 
+/**
+ * Restore information about floaters into the space manager for an
+ * incremental reflow, and simultaneously push the floaters by
+ * |aDeltaY|, which is the amount |aLine| was pushed relative to its
+ * parent.  The recovery of state is one of the things that makes
+ * incremental reflow O(N^2) and this state should really be kept
+ * around, attached to the frame tree.
+ */
 void
 nsBlockReflowState::RecoverFloaters(nsLineList::iterator aLine,
                                     nscoord aDeltaY)
@@ -481,25 +489,26 @@ nsBlockReflowState::RecoverFloaters(nsLineList::iterator aLine,
   if (aLine->HasFloaters()) {
     // Place the floaters into the space-manager again. Also slide
     // them, just like the regular frames on the line.
-    nsRect r;
     nsFloaterCache* fc = aLine->GetFirstFloater();
     while (fc) {
-      fc->mRegion.y += aDeltaY;
-      fc->mCombinedArea.y += aDeltaY;
       nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
-      floater->GetRect(r);
-      floater->MoveTo(mPresContext, r.x, r.y + aDeltaY);
+      if (aDeltaY != 0) {
+        fc->mRegion.y += aDeltaY;
+        fc->mCombinedArea.y += aDeltaY;
+        nsPoint p;
+        floater->GetOrigin(p);
+        floater->MoveTo(mPresContext, p.x, p.y + aDeltaY);
+      }
 #ifdef DEBUG
       if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
         nscoord tx, ty;
         mSpaceManager->GetTranslation(tx, ty);
         nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-        printf("RecoverState: txy=%d,%d (%d,%d) ",
+        printf("RecoverFloaters: txy=%d,%d (%d,%d) ",
                tx, ty, mSpaceManagerX, mSpaceManagerY);
         nsFrame::ListTag(stdout, floater);
-        printf(" r.y=%d aDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
-               r.y, aDeltaY, r.y + aDeltaY,
-               fc->mRegion.x, fc->mRegion.y,
+        printf(" aDeltaY=%d region={%d,%d,%d,%d}\n",
+               aDeltaY, fc->mRegion.x, fc->mRegion.y,
                fc->mRegion.width, fc->mRegion.height);
       }
 #endif
@@ -511,15 +520,17 @@ nsBlockReflowState::RecoverFloaters(nsLineList::iterator aLine,
     nsBlockFrame *kid = nsnull;
     aLine->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&kid);
     if (kid) {
-      nsRect kidRect;
-      kid->GetRect(kidRect);
-      mSpaceManager->Translate(kidRect.x, kidRect.y);
+      nscoord kidx = kid->mRect.x, kidy = kid->mRect.y;
+      mSpaceManager->Translate(kidx, kidy);
       for (nsBlockFrame::line_iterator line = kid->begin_lines(),
                                    line_end = kid->end_lines();
            line != line_end;
            ++line)
-        RecoverFloaters(line, aDeltaY);
-      mSpaceManager->Translate(-kidRect.x, -kidRect.y);
+        // Pass 0, not the real DeltaY, since these floaters aren't
+        // moving relative to their parent block, only relative to
+        // the space manager.
+        RecoverFloaters(line, 0);
+      mSpaceManager->Translate(-kidx, -kidy);
     }
   }
 }

@@ -188,12 +188,6 @@ public:
     */
   nsIFrame* GetTopBlockChild();
 
-  /** Place the floaters in the spacemanager for all lines in this block.
-    * recursively adds floaters in child blocks of this frame.
-    */
-  nsresult UpdateSpaceManager(nsIPresContext* aPresContext,
-                              nsSpaceManager* aSpaceManager);
-
   // returns true on success and false if aFoundLine is set to end_lines()
   PRBool FindLineFor(nsIFrame* aFrame,
                      PRBool* aIsFloaterResult,
