@@ -58,7 +58,7 @@ interface nsIMsgAttachment : nsISupports {
   /**
    * temporary attribute
    *
-   * @If set to true, the file pointed by the url will be destroyed when tis object is destroyed.
+   * @If set to true, the file pointed by the url will be destroyed when this object is destroyed.
    * @This is only for local attachment.
    */
 	attribute boolean   temporary;
@@ -73,7 +73,7 @@ interface nsIMsgAttachment : nsISupports {
   /**
    * contentType attribute
    *
-   * @Specify the content-type of the attachment, this not include extra content-type parameters. If
+   * @Specify the content-type of the attachment, this does not include extra content-type parameters. If
    * @you need to specify extra information, use contentTypeParam, charset, macType or macCreator.
    * @If ommitted, it will be determined base on either the name, the url or the content of the file.
    */
