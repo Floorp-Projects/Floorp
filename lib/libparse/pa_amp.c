@@ -514,6 +514,9 @@ pa_map_escape(char *buf, int32 len, int32 *esc_len, unsigned char *out,
 		*/
 		switch(unicode)
 		{
+			case 0x20AC:
+				r = "EUR"; 
+				break;
 			case 0x00A9:
 				switch(win_csid)
 				{
@@ -568,6 +571,9 @@ pa_map_escape(char *buf, int32 len, int32 *esc_len, unsigned char *out,
 	*/
 		switch(unicode)
 		{
+			case 0x20AC:
+				r = "EUR"; 
+				break;
 			case 0x00A9:
 				switch(win_csid)
 				{
@@ -639,6 +645,9 @@ pa_map_escape(char *buf, int32 len, int32 *esc_len, unsigned char *out,
 #ifdef XP_UNIX 
 		switch(unicode)
 		{
+			case 0x20AC:
+				r = "EUR"; 	
+				break;
 			case 0x00A9:
 				switch(win_csid)
 				{
