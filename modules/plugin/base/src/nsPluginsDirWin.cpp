@@ -279,14 +279,14 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
 	DWORD zerome, versionsize;
 	char* verbuf = nsnull;
-  const char* fileName;
-
 	const char* path = this->GetCString();
+
+  const char* fileName;
   fileName = PL_strrchr(path, '\\');
   if(fileName)
    ++fileName;
 
-	versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
+  versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
 	if (versionsize > 0)
 		verbuf = (char *)PR_Malloc(versionsize);
 	if(!verbuf)

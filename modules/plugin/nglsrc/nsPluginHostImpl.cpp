@@ -2095,11 +2095,11 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &
       for (cnt = 0; cnt < variants; cnt++)
       {
         if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
-		{
-			aPlugin = plugins;
-			return NS_OK;
-		}
-	  }
+		    {
+          aPlugin = plugins;
+			    return NS_OK;
+		    }
+	    }
 
       if (cnt < variants)
         break;
@@ -2126,6 +2126,32 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	nsPluginTag* pluginTag;
 	if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
 	{
+
+#ifdef XP_WIN // actually load a dll on Windows
+
+    nsPluginsDir pluginsDir;
+    if (! pluginsDir.Valid())
+      return NS_ERROR_FAILURE;
+    char * path = (char *)pluginsDir.GetCString();
+    PRInt32 len = PL_strlen(path) + PL_strlen(pluginTag->mFileName) + 2;
+    char * fullname = new char[len];
+    if(fullname == NULL)
+      return NS_ERROR_FAILURE;
+    PL_strcpy(fullname, path);
+    PL_strcat(fullname, "\\");
+    PL_strcat(fullname, pluginTag->mFileName);
+    nsFileSpec file(fullname);
+    delete fullname;
+    nsPluginFile pluginFile(file);
+    PRLibrary* pluginLibrary = NULL;
+
+    if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
+      return NS_ERROR_FAILURE;
+
+    pluginTag->mLibrary = pluginLibrary;
+
+#endif
+
 		nsIPlugin* plugin = pluginTag->mEntryPoint;
 		if(plugin == NULL)
 		{
@@ -2173,9 +2199,12 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 			const nsFileSpec& file = iter;
 			if (pluginsDir.IsPluginFile(file)) {
 				nsPluginFile pluginFile(file);
-				// load the plugin's library so we can ask it some questions.
 				PRLibrary* pluginLibrary = NULL;
-				if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
+
+#ifndef XP_WIN
+				// load the plugin's library so we can ask it some questions but not for Windows for now
+        if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
+#endif
 					// create a tag describing this plugin.
 					nsPluginTag* pluginTag = new nsPluginTag();
 					pluginTag->mNext = mPlugins;
@@ -2198,7 +2227,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 					pluginTag->mLibrary = pluginLibrary;
 					pluginTag->mEntryPoint = NULL;
 					pluginTag->mFlags = 0;
+#ifndef XP_WIN
 				}
+#endif
 			}
 		}
 
