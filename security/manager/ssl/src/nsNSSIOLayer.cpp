@@ -38,6 +38,7 @@
 #include "nsNSSCallbacks.h"
 
 #include "prlog.h"
+#include "nsIPref.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
@@ -1144,9 +1145,33 @@ done:
  */
 nsresult nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 {
-  NS_ENSURE_ARG_POINTER(certChoice);
-  *certChoice = AUTO;
-  return NS_OK;
+	char *mode=NULL;
+	nsresult ret;
+
+	NS_ENSURE_ARG_POINTER(certChoice);
+
+	nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+
+	ret = prefService->CopyCharPref("security.default_personal_cert", &mode);
+	if (NS_FAILED(ret)) {
+		goto loser;
+	}
+
+    if (PL_strcmp(mode, "Select Automatically") == 0) {
+		*certChoice = AUTO;
+	}
+    else if (PL_strcmp(mode, "Ask Every Time") == 0) {
+        *certChoice = ASK;
+    }
+    else {
+		ret = NS_ERROR_FAILURE;
+	}
+
+loser:
+	if (mode) {
+		nsMemory::Free(mode);
+	}
+	return ret;
 }
 
 /*
