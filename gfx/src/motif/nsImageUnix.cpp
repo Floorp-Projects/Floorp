@@ -55,7 +55,37 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   mDepth = aDepth;
   mMaskReq = aMaskRequirements;
 
+  // create the memory for the image
+  ComputeMetrics();
+  mImageBits = new unsigned char[mSizeImage];
+
   return NS_OK;
+}
+
+//------------------------------------------------------------
+
+void nsImageUnix::ComputMetrics()
+{
+
+  mRowBytes = CalcBytesSpan(mWidth);
+  mSizeImage = mRowBytes * mHeight;
+
+}
+
+//------------------------------------------------------------
+
+PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
+{
+PRInt32 spanbytes;
+
+  spanbytes = (aWidth * mDepth) >> 5;
+
+	if (((PRUint32)aWidth * mDepth) & 0x1F) 
+		spanbytes++;
+
+	spanbytes <<= 2;
+
+  return(spanbytes);
 }
 
 //------------------------------------------------------------
@@ -117,15 +147,14 @@ PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
   return(PR_FALSE);
 }
 
+//------------------------------------------------------------
+
 nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 {
   return(NS_OK);
 }
 
-nsIImage * nsImageUnix::DuplicateImage()
-{
-  return(nsnull);
-}
+//------------------------------------------------------------
 
 void nsImageUnix::CreateImage(nsIDeviceContext * aDeviceContext)
 {
