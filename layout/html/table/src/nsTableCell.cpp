@@ -100,7 +100,10 @@ void nsTableCell::Init()
 
 nsTableCell::~nsTableCell()
 {
+#if 0
+  // XXX Circular reference between table row and table cell
   NS_IF_RELEASE(mRow);
+#endif
 }
 
 // for debugging only
@@ -147,9 +150,14 @@ nsTableRow * nsTableCell::GetRow ()
 
 void nsTableCell::SetRow (nsTableRow * aRow)
 {
+#if 0
+  // XXX Circular reference between table row and table cell
   NS_IF_RELEASE(mRow);
   mRow = aRow;
   NS_IF_ADDREF(aRow);
+#else
+  mRow = aRow;
+#endif
 }
 
 int nsTableCell::GetColIndex ()
