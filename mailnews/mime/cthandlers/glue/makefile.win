@@ -18,8 +18,6 @@
 # Contributor(s): 
 #
 
-IGNORE_MANIFEST = 1
-
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
