@@ -55,6 +55,31 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsString& aData);
 
 extern nsresult
+NS_NewXMLEntity(nsIContent** aInstancePtrResult,
+                const nsString& aName,
+                const nsString& aPublicId,
+                const nsString& aSystemId,
+                const nsString aNotationName);
+
+extern nsresult
+NS_NewXMLNotation(nsIContent** aInstancePtrResult,
+                  const nsString& aName,
+                  const nsString& aPublicId,
+                  const nsString& aSystemId);
+
+class nsIDOMNamedNodeMap;
+
+extern nsresult
+NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
+                      const nsString& aName,
+                      nsIDOMNamedNodeMap *aEntities,
+                      nsIDOMNamedNodeMap *aNotations);
+
+extern nsresult
+NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
+                      nsISupportsArray *aArray);
+
+extern nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
 
 #endif // nsIXMLContent_h___
