@@ -99,6 +99,7 @@ public:
         }
 
         nsPipeInputStream() : mReaderRefCnt(0), mBlocking(PR_TRUE) {}
+        virtual ~nsPipeInputStream() { }
         nsresult Fill();
 
     protected:
@@ -134,6 +135,7 @@ public:
         }
 
         nsPipeOutputStream() : mWriterRefCnt(0), mBlocking(PR_TRUE) {}
+        virtual ~nsPipeOutputStream() { }
 
     protected:
         nsrefcnt        mWriterRefCnt; // separate refcnt so that we know when to close the producer

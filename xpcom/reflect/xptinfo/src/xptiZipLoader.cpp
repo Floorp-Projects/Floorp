@@ -109,7 +109,7 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
 
     do
     {
-        PRBool result;
+        PRBool result = PR_FALSE;
         int index = 0;
         PRBool hasMore;
         
