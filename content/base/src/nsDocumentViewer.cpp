@@ -150,7 +150,6 @@ public:
   // nsIContentViewer interface...
   NS_IMETHOD Init(nsNativeWidget aParent,
                   nsIDeviceContext* aDeviceContext,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
@@ -421,7 +420,6 @@ DocumentViewerImpl::GetContainer(nsISupports** aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
                          nsIDeviceContext* aDeviceContext,
-                         nsIPref* aPrefs,
                          const nsRect& aBounds,
                          nsScrollPreference aScrolling)
 {
@@ -439,7 +437,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     rv = NS_NewGalleyContext(getter_AddRefs(mPresContext));
     if (NS_FAILED(rv)) return rv;
 
-    mPresContext->Init(aDeviceContext, aPrefs); 
+    mPresContext->Init(aDeviceContext); 
     makeCX = PR_TRUE;
   }
 
@@ -639,7 +637,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
   NS_ENSURE_ARG_POINTER(aDContext);
 
   nsCOMPtr<nsIStyleSet>       ss;
-  nsCOMPtr<nsIPref>           prefs;
   nsCOMPtr<nsIViewManager>    vm;
   PRInt32                     width, height;
   nsIView                     *view;
@@ -671,8 +668,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
       return rv;
     }
 
-    mPresContext->GetPrefs(getter_AddRefs(prefs));
-    cx->Init(aDContext, prefs);
+    cx->Init(aDContext);
 
     nsCompatibility mode;
     mPresContext->GetCompatibilityMode(&mode);
@@ -1175,7 +1171,6 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile)
 nsCOMPtr<nsIWebShell>                 webContainer;
 nsCOMPtr<nsIDeviceContextSpecFactory> factory;
 PRInt32                               width,height;
-nsCOMPtr<nsIPref>                     prefs;
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
                                      nsnull,
@@ -1211,8 +1206,7 @@ nsCOMPtr<nsIPref>                     prefs;
           }
 
           mPrintDC->GetDeviceSurfaceDimensions(width,height);
-          mPresContext->GetPrefs(getter_AddRefs(prefs));
-          mPrintPC->Init(mPrintDC,prefs);
+          mPrintPC->Init(mPrintDC);
           mPrintPC->SetContainer(webContainer);
           CreateStyleSet(mDocument,&mPrintSS);
 
@@ -1402,8 +1396,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
       webShell = do_QueryInterface(mContainer);
       if (webShell)
       {
-        nsCOMPtr<nsIPref> prefs;
-        NS_ENSURE_SUCCESS(webShell->GetPrefs(*(getter_AddRefs(prefs))), NS_ERROR_FAILURE);
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
         if(prefs)
           prefs->CopyCharPref("intl.charset.default", &gDefCharset);
       }

@@ -703,7 +703,7 @@ nsViewerApp::OpenWindow()
   }
   bw->SetApp(this);
   bw->SetShowLoadTimes(mShowLoadTimes);
-  bw->Init(mAppShell, mPrefs, nsRect(0, 0, mWidth, mHeight),
+  bw->Init(mAppShell, nsRect(0, 0, mWidth, mHeight),
            PRUint32(~0), mAllowPlugins);
   bw->Show();
   nsIBrowserWindow*	bwCurrent;
@@ -772,7 +772,7 @@ nsViewerApp::ViewSource(nsString& aURL)
     return rv;
   }
   bw->SetApp(this);
-  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
+  bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
   bw->GoTo(aURL.GetUnicode(),"view-source");
   NS_RELEASE(bw);
@@ -792,7 +792,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
     return rv;
   }
   bw->SetApp(this);
-  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
+  bw->Init(mAppShell, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
 
   aNewWindow = bw;
 

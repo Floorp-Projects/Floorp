@@ -787,13 +787,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       }
 
       mWebShell->SetChromeEventHandler(chromeEventHandler);
-      
-
-      nsCOMPtr<nsIPref> parentPrefs; // connect the prefs
-      parentShell->GetPrefs(getter_AddRefs(parentPrefs));
-      if (parentPrefs) {
-        mWebShell->SetPrefs(parentPrefs);
-      } 
     }
     NS_RELEASE(container);
   }

@@ -395,23 +395,6 @@ NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
    return mContentListener->SetParentContentListener(aParent);
 }
 
-NS_IMETHODIMP nsDocShell::GetPrefs(nsIPref** aPrefs)
-{
-   NS_ENSURE_ARG_POINTER(aPrefs);
-
-   *aPrefs = mPrefs;
-   NS_IF_ADDREF(*aPrefs);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetPrefs(nsIPref* aPrefs)
-{
-  // null aPrefs is ok
-  mPrefs = aPrefs;    // this assignment does an addref
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::GetZoom(float* zoom)
 {
    NS_ENSURE_ARG_POINTER(zoom);
@@ -1064,6 +1047,7 @@ NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP nsDocShell::Create()
 {
    NS_ENSURE_STATE(!mContentViewer);
+   mPrefs = do_GetService(NS_PREF_PROGID);
 
    return NS_OK;
 }
@@ -2003,7 +1987,7 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    nsRect bounds(x, y, cx, cy);
    nsCOMPtr<nsIDeviceContext> deviceContext(dont_AddRef(widget->GetDeviceContext()));
    if(NS_FAILED(mContentViewer->Init(widget->GetNativeData(NS_NATIVE_WIDGET),
-      deviceContext, mPrefs, bounds, nsScrollPreference_kAuto)))
+      deviceContext, bounds, nsScrollPreference_kAuto)))
       {
       mContentViewer = nsnull;
       NS_ERROR("ContentViewer Initialization failed");

@@ -70,6 +70,7 @@
 #include "nsCSSRendering.h"
 #include "nsISelfScrollingFrame.h"
 #include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 #define CONSTANT 0
 //#define DEBUG_REFLOW
@@ -2762,8 +2763,7 @@ void
 nsBoxDebug::GetPref(nsIPresContext* aPresContext)
 {
     gDebug = PR_FALSE;
-    nsCOMPtr<nsIPref> pref;
-    aPresContext->GetPrefs(getter_AddRefs(pref));
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
     if (pref) {
 	    pref->GetBoolPref("xul.debug.box", &gDebug);
     }

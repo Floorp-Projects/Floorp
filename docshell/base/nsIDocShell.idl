@@ -125,11 +125,6 @@ interface nsIDocShell : nsISupports
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
 
-	/*
-	Prefs to use for the DocShell.
-	*/
-	attribute nsIPref prefs;
-
 	/**
 	* Set/Get the document scale factor.  When setting this attribute, a
 	* NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations

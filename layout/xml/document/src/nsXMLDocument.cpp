@@ -422,8 +422,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 					nsresult rv_detect = NS_OK;
 					if(! gInitDetector)
 					{
-						nsIPref* pref = nsnull;
-						if(NS_SUCCEEDED(webShell->GetPrefs(pref)) && pref)
+                  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+						if(pref)
 						{
 							char* detector_name = nsnull;
 							if(NS_SUCCEEDED(
@@ -437,7 +437,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 									}
 								pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
 						}
-						NS_IF_RELEASE(pref);
 						gInitDetector = PR_TRUE;
 					} 
 					

@@ -95,8 +95,7 @@ nsXPBaseWindow::nsXPBaseWindow() :
   mContentRoot(nsnull),
   mWindowListener(nsnull),
   mDocIsLoaded(PR_FALSE),
-  mAppShell(nsnull),
-  mPrefs(nsnull)
+  mAppShell(nsnull)
 {
 }
 
@@ -104,7 +103,6 @@ nsXPBaseWindow::nsXPBaseWindow() :
 nsXPBaseWindow::~nsXPBaseWindow()
 {
   NS_IF_RELEASE(mContentRoot);
-  NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mAppShell);
 }
 
@@ -188,7 +186,6 @@ HandleXPDialogEvent(nsGUIEvent *aEvent)
 //----------------------------------------------------------------------
 nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
                               nsIAppShell*       aAppShell,
-                              nsIPref*           aPrefs,
                               const nsString&    aDialogURL,
                               const nsString&    aTitle,
                               const nsRect&      aBounds,
@@ -199,9 +196,6 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mWindowType   = aType;
   mAppShell     = aAppShell;
   NS_IF_ADDREF(mAppShell);
-
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
 
   // Create top level window
   nsresult rv;
@@ -235,7 +229,6 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
                        r.x, r.y, r.width, r.height,
                        aAllowPlugins, PR_FALSE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->SetPrefs(aPrefs);
   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
   webShellWin->SetVisibility(PR_TRUE);
 
@@ -534,7 +527,7 @@ NS_IMETHODIMP nsXPBaseWindow::NewWebShell(PRUint32 aChromeMask,
     nsRect  bounds;
     GetBounds(bounds);
 
-    rv = dialogWindow->Init(mWindowType, mAppShell, mPrefs, mDialogURL, mTitle, bounds, aChromeMask, mAllowPlugins);
+    rv = dialogWindow->Init(mWindowType, mAppShell, mDialogURL, mTitle, bounds, aChromeMask, mAllowPlugins);
     if (NS_OK == rv) {
       if (aVisible) {
         dialogWindow->SetVisible(PR_TRUE);

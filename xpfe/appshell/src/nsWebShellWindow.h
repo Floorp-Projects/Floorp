@@ -190,7 +190,6 @@ public:
 
   // nsIBrowserWindow methods not already covered elsewhere
   NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   PRUint32 aChromeMask,
                   PRBool aAllowPlugins = PR_TRUE);

@@ -40,6 +40,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURIContentListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIServiceManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -262,13 +263,13 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 }
 
 NS_IMETHODIMP
-nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
+nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
 
   mDeviceContext = dont_QueryInterface(aDeviceContext);
 
-  mPrefs = dont_QueryInterface(aPrefs);
+  mPrefs = do_GetService(NS_PREF_PROGID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
     mPrefs->RegisterCallback("browser.", PrefChangedCallback, (void*)this);
@@ -319,18 +320,6 @@ nsPresContext::GetShell(nsIPresShell** aResult)
   }
   *aResult = mShell;
   NS_IF_ADDREF(mShell);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetPrefs(nsIPref** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mPrefs;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 

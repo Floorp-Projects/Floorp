@@ -66,7 +66,6 @@ class nsIBrowserWindow : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IBROWSER_WINDOW_IID; return iid; }
   NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   PRUint32 aChromeMask,
                   PRBool aAllowPlugins = PR_TRUE) = 0;

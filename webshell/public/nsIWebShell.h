@@ -152,16 +152,6 @@ public:
   NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult) = 0;
 
   /**
-   * Set the nsIPref used to get/set preference values...
-   */
-  NS_IMETHOD SetPrefs(nsIPref* aPrefs) = 0;
-
-  /**
-   * Return the current nsIPref interface.
-   */
-  NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
-
-  /**
    * Return the root WebShell instance.  Since WebShells can be nested 
    * (when frames are present for example) this instance represents the 
    * outermost WebShell.
