@@ -115,18 +115,18 @@
               label="&formshowCmd.label;"
               accesskey="&formshowCmd.accesskey;"
               oncommand="formShow();"
-              insertafter="menu_selectAll"/>
+              insertafter="menu_findAgain"/>
     <menuitem id="edit_capture"
               label="&captureCmd.label;"
               accesskey="&captureCmd.accesskey;"
               oncommand="formCapture();"
-              insertafter="menu_selectAll"/>
+              insertafter="menu_findAgain"/>
     <menuitem id="edit_prefill"
               label="&prefillCmd.label;"
               accesskey="&prefillCmd.accesskey;"
               oncommand="formPrefill();"
-              insertafter="menu_selectAll"/>
-    <menuseparator insertafter="menu_selectAll"/> 
+              insertafter="menu_findAgain"/>
+    <menuseparator insertafter="menu_findAgain"/> 
   </menupopup>
 
   <!-- Form toolbar items -->
