@@ -731,56 +731,6 @@ PRBool nsWidget::DispatchMouseEvent( nsMouseEvent& aEvent ) {
   return result;
 	}
 
-//-------------------------------------------------------------------------
-// Old icky code I am trying to replace!
-//-------------------------------------------------------------------------
-PRBool nsWidget::DispatchMouseEvent( PhPoint_t &aPos, PRUint32 aEvent ) {
-
-  PRBool result = PR_FALSE;
-
-  if( nsnull == mEventCallback && nsnull == mMouseListener ) return result;
-
-  nsMouseEvent event;
-
-  InitEvent( event, aEvent );
-  event.point.x = aPos.x;
-  event.point.y = aPos.y;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;       /* hack  makes the mouse not work */
-  
-  // call the event callback
-  if( nsnull != mEventCallback ) {
-    result = DispatchWindowEvent( &event );
-    NS_IF_RELEASE(event.widget);
-    return result;
-  	}
-
-  if( nsnull != mMouseListener ) { 
-    switch( aEvent ) {
-      case NS_MOUSE_MOVE:
-        result = ConvertStatus(mMouseListener->MouseMoved(event));
-        break;
-
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(event));
-        break;
-
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(event));
-        result = ConvertStatus(mMouseListener->MouseClicked(event));
-        break;
-    	} // switch
-  	}
-  return result;
-	}
-
 struct nsKeyConverter {
   PRUint32       vkCode; // Platform independent key code
   unsigned long  keysym; // Photon key_sym key code
@@ -1126,17 +1076,29 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
         break;
 
       case Ph_EV_BOUNDARY:
+				PRUint32 evtype;
+
         switch( event->subtype ) {
           case Ph_EV_PTR_ENTER:
-						result = DispatchStandardEvent( NS_MOUSE_ENTER );
+					case Ph_EV_PTR_ENTER_FROM_CHILD:
+						evtype = NS_MOUSE_ENTER;
             break;
 					case Ph_EV_PTR_LEAVE_TO_CHILD:
           case Ph_EV_PTR_LEAVE:
-						result = DispatchStandardEvent( NS_MOUSE_EXIT );
+						evtype = NS_MOUSE_EXIT;
             break;
           default:
+						evtype = 0;
             break;
         	}
+
+				if( evtype != 0 ) {
+					PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
+					nsMouseEvent theMouseEvent;
+					ScreenToWidgetPos( ptrev->pos );
+					InitMouseEvent( ptrev, this, theMouseEvent, evtype );
+					result = DispatchMouseEvent( theMouseEvent );
+					}
         break;
     	}
 
