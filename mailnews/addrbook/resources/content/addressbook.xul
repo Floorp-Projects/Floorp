@@ -59,7 +59,6 @@ Rights Reserved.
 	<broadcaster id="cmd_copy"/>
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"
-				 valueDefault="&deleteCmd.label;"
 				 valueAddressBook="&deleteAbCmd.label;"
 				 valueCard="&deleteCardCmd.label;"/>
 	<broadcaster id='cmd_selectAll'/>

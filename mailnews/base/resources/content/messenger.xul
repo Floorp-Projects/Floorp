@@ -54,13 +54,16 @@ Rights Reserved.
 	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo" oncommand="MsgEditUndo()"/>
-	<broadcaster id="cmd_redo" oncommand="MsgEditRedo()"/>
-	<broadcaster id="cmd_cut" oncommand="MsgEditCut()"/>
-	<broadcaster id="cmd_copy" oncommand="MsgEditCopy()"/>
-	<broadcaster id="cmd_paste" oncommand="MsgEditPaste()"/>
-	<broadcaster id="cmd_delete" oncommand="Delete_FixMe()"/>
-	<broadcaster id="cmd_selectAll" oncommand="MsgSelectAll()"/>
+	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
+	<broadcaster id="cmd_delete"
+				 valueFolder="&deleteFolderCmd.label;"
+				 valueMessage="&deleteMsgCmd.label;"
+				 valueMessages="&deleteMsgsCmd.label;"/>
+	<broadcaster id="cmd_selectAll"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -141,7 +144,9 @@ Rights Reserved.
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
 			 <menuseparator/>
+			<menuitem value="This delete not yet working"/>
 			<menuitem id="menu_delete"/>
+			 <menuseparator/>
 			<menuitem value="&deleteMsgCmd.label;" oncommand="MsgDeleteMessage(false);"/>
 			<menuitem value="&deleteFolderCmd.label;" oncommand="MsgDeleteFolder();"/>
 			 <menuseparator/>

@@ -80,6 +80,10 @@ function OnLoadMessenger()
     loadStartFolder();
 
     getFolderListener();
+	
+	// FIX ME! - can remove these as soon as waterson enables auto-registration
+	document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
+	document.commandDispatcher.addCommand(document.getElementById('cmd_delete'));
 }
 
 function OnUnloadMessenger()
@@ -230,6 +234,8 @@ function OnLoadFolderPane(folderTree)
 	folderTree.database.AddDataSource(accountManagerDataSource);
     folderTree.database.AddDataSource(folderDataSource);
 	folderTree.setAttribute('ref', 'msgaccounts:/');
+	
+	SetupCommandUpdateHandlers();
 }
 
 function OnLoadThreadPane(threadTree)

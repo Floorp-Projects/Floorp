@@ -24,6 +24,104 @@
  * and then calls a function/command in commandglue
  */
 
+// Controller object for folder pane
+var FolderPaneController =
+{
+	IsCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				return true;
+			
+			case "cmd_delete":
+				goSetMenuValue(command, 'valueFolder');
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	DoCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				var folderTree = GetFolderTree();
+				if ( folderTree )
+				{
+					dump("select all now!!!!!!" + "\n");
+					folderTree.selectAll();
+				}
+				break;
+			
+			case "cmd_delete":
+				MsgDeleteFolder();
+				break;
+		}
+	}
+};
+
+
+// Controller object for thread pane
+var ThreadPaneController =
+{
+	IsCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				return true;
+			
+			case "cmd_delete":
+				goSetMenuValue(command, 'valueMessage');
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	DoCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				var threadTree = GetThreadTree();
+				if ( threadTree )
+				{
+					dump("select all now!!!!!!" + "\n");
+					threadTree.selectAll();
+				}
+				break;
+			
+			case "cmd_delete":
+				MsgDeleteMessage(false);
+				break;
+		}
+	}
+};
+
+
+function SetupCommandUpdateHandlers()
+{
+	dump("SetupCommandUpdateHandlers\n");
+
+	var widget;
+	
+	// folder pane
+	widget = GetFolderTree();
+	if ( widget )
+		widget.controller = FolderPaneController;
+	
+	// thread pane
+	widget = GetThreadTree();
+	if ( widget )
+		widget.controller = ThreadPaneController;
+}
+
+
 var viewShowAll =0;
 var viewShowRead = 1;
 var viewShowUnread =2;

@@ -54,6 +54,7 @@ Rights Reserved.
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  
+<!ENTITY deleteMsgsCmd.label "Delete Selected Messages">  
 <!ENTITY deleteFolderCmd.label "Delete Folder">  
 <!ENTITY selectThreadCmd.label ".Thread">  
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
