@@ -42,6 +42,7 @@
 #include "nsImageGTK.h"
 #include "nsGraphicsStateGTK.h"
 #include "nsCompressedCharMap.h"
+#include "nsXFont.h"
 #include <math.h>
 #include "nsGCCache.h"
 #include <gtk/gtk.h>
@@ -1197,10 +1198,11 @@ Widen8To16AndMove(const gchar *char_p,
 
 // handle 8 bit data with a 16 bit font
 gint
-Widen8To16AndGetWidth (GdkFont        *font,
+Widen8To16AndGetWidth (nsXFont        *xFont,
                        const gchar    *text,
                        gint            text_length)
 {
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
   XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
   XChar2b *p = buf;
   int uchar_size;
@@ -1212,7 +1214,7 @@ Widen8To16AndGetWidth (GdkFont        *font,
   }
 
   uchar_size = Widen8To16AndMove(text, text_length, p);
-  rawWidth = gdk_text_width(font, (const gchar *)p, uchar_size);
+  rawWidth = xFont->TextWidth16(p, uchar_size/2);
 
   if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
     PR_Free((char*)p);
@@ -1222,13 +1224,14 @@ Widen8To16AndGetWidth (GdkFont        *font,
 
 /* static */ void
 nsRenderingContextGTK::Widen8To16AndDraw (GdkDrawable *drawable,
-                                          GdkFont     *font,
+                                          nsXFont     *xFont,
                                           GdkGC       *gc,
                                           gint         x,
                                           gint         y,
                                           const gchar *text,
                                           gint         text_length)
 {
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
   XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
   XChar2b *p = buf;
   int uchar_size;
@@ -1239,7 +1242,7 @@ nsRenderingContextGTK::Widen8To16AndDraw (GdkDrawable *drawable,
   }
 
   uchar_size = Widen8To16AndMove(text, text_length, p);
-  my_gdk_draw_text(drawable, font, gc, x, y, (const gchar *)p, uchar_size);
+  xFont->DrawText16(drawable, gc, x, y, p, uchar_size/2);
 
   if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
     PR_Free((char*)p);
@@ -1288,13 +1291,16 @@ nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mCurrentFont != NULL, NS_ERROR_FAILURE);
     gint rawWidth;
-    if (!mCurrentFont->GetGDKFontIs10646()) {
+    nsXFont *xFont = mCurrentFont->GetXFont();
+    if (!mCurrentFont->GetXFontIs10646()) {
+      NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
       // 8 bit data with an 8 bit font
-      rawWidth = gdk_text_width (mCurrentFont->GetGDKFont(), aString, aLength);
+      rawWidth = xFont->TextWidth8(aString, aLength);
     }
     else {
+      NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
       // we have 8 bit data but a 16 bit font
-      rawWidth = Widen8To16AndGetWidth (mCurrentFont->GetGDKFont(), aString, aLength);
+      rawWidth = Widen8To16AndGetWidth (mCurrentFont->GetXFont(), aString, aLength);
     }
     aWidth = NSToCoordRound(rawWidth * mP2T);
   }
@@ -1450,6 +1456,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
 
     UpdateGC();
 
+    nsXFont *xFont = mCurrentFont->GetXFont();
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
       const char* end = aString + aLength;
@@ -1458,15 +1465,15 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        if (!mCurrentFont->GetGDKFontIs10646()) {
+        if (!mCurrentFont->GetXFontIs10646()) {
           // 8 bit data with an 8 bit font
-          nsRenderingContextGTK::my_gdk_draw_text(mSurface->GetDrawable(), 
-                                                mCurrentFont->GetGDKFont(), mGC,
-                                                xx, yy, &ch, 1);
+          NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+          xFont->DrawText8(mSurface->GetDrawable(), mGC, xx, yy, &ch, 1);
         }
         else {
           // we have 8 bit data but a 16 bit font
-          Widen8To16AndDraw(mSurface->GetDrawable(), mCurrentFont->GetGDKFont(), mGC,
+          NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+          Widen8To16AndDraw(mSurface->GetDrawable(), xFont, mGC,
                                                 xx, yy, &ch, 1);
         }
         x += *aSpacing++;
@@ -1474,17 +1481,17 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
     }
     else {
       mTranMatrix->TransformCoord(&x, &y);
-      if (!mCurrentFont->GetGDKFontIs10646()) { // keep 8 bit path fast
+      if (!mCurrentFont->GetXFontIs10646()) { // keep 8 bit path fast
         // 8 bit data with an 8 bit font
-        nsRenderingContextGTK::my_gdk_draw_text (mSurface->GetDrawable(),
-                                                 mCurrentFont->GetGDKFont(), mGC,
-                                                 x, y, aString, aLength);
+        NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+        xFont->DrawText8(mSurface->GetDrawable(), mGC, x, y, aString, aLength);
         }
-        else {
-          // we have 8 bit data but a 16 bit font
-          Widen8To16AndDraw(mSurface->GetDrawable(), mCurrentFont->GetGDKFont(), mGC,
-                                               x, y, aString, aLength);
-        }
+      else {
+        // we have 8 bit data but a 16 bit font
+        NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+        Widen8To16AndDraw(mSurface->GetDrawable(), xFont, mGC,
+                                             x, y, aString, aLength);
+      }
     }
   }
 
@@ -1812,12 +1819,8 @@ NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 *
 
 #ifdef MOZ_MATHML
 
-// bstell Sept. 22, 2000: 
-// added code to handle displaying 8 bit data using a 16 bit font.
-// have not tested the MOZ_MATHML code path
-
 void
-Widen8To16AndGetTextExtents (GdkFont     *font,  
+Widen8To16AndGetTextExtents (nsXFont *xFont,  
                         const gchar *text,
                         gint         text_length,
                         gint        *lbearing,
@@ -1826,6 +1829,7 @@ Widen8To16AndGetTextExtents (GdkFont     *font,
                         gint        *ascent,
                         gint        *descent)
 {
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
   XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
   XChar2b *p = buf;
   int uchar_size;
@@ -1843,7 +1847,7 @@ Widen8To16AndGetTextExtents (GdkFont     *font,
   }
 
   uchar_size = Widen8To16AndMove(text, text_length, p);
-  gdk_text_extents (font, (const char*)p, uchar_size,
+  xFont->TextExtents16(p, uchar_size/2,
                     lbearing, 
                     rbearing, 
                     width, 
@@ -1864,9 +1868,11 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
   if (aString && 0 < aLength) {
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mCurrentFont != NULL, NS_ERROR_FAILURE);
-    if (!mCurrentFont->GetGDKFontIs10646()) {
+    nsXFont *xFont = mCurrentFont->GetXFont();
+    if (!mCurrentFont->GetXFontIs10646()) {
         // 8 bit data with an 8 bit font
-        gdk_text_extents (mCurrentFont->GetGDKFont(), aString, aLength,
+        NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+        xFont->TextExtents8(aString, aLength,
                                 &aBoundingMetrics.leftBearing, 
                                 &aBoundingMetrics.rightBearing, 
                                 &aBoundingMetrics.width, 
@@ -1875,7 +1881,8 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
     }
     else {
         // we have 8 bit data but a 16 bit font
-        Widen8To16AndGetTextExtents (mCurrentFont->GetGDKFont(), aString, aLength,
+        NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+        Widen8To16AndGetTextExtents (mCurrentFont->GetXFont(), aString, aLength,
                           &aBoundingMetrics.leftBearing, 
                           &aBoundingMetrics.rightBearing, 
                           &aBoundingMetrics.width, 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 1; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -59,6 +59,7 @@
 #include <gtk/gtk.h>
 
 class nsFontGTK;
+class nsXFont;
 
 class nsRenderingContextGTK : public nsRenderingContextImpl
 {
@@ -231,7 +232,7 @@ public:
 
   // handle drawing 8 bit data with a 16 bit font
   static void Widen8To16AndDraw(GdkDrawable *drawable,
-                               GdkFont     *font,
+                               nsXFont     *font,
                                GdkGC       *gc,
                                gint         x,
                                gint         y,

@@ -68,6 +68,7 @@ struct nsFontCharSet;
 struct nsFontFamily;
 struct nsFontNode;
 struct nsFontStretch;
+class nsXFont;
 
 class nsFontGTKUserDefined;
 class nsFontMetricsGTK;
@@ -76,17 +77,19 @@ class nsFontGTK
 {
 public:
   nsFontGTK();
+  nsFontGTK(nsFontGTK*);
   virtual ~nsFontGTK();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void LoadFont(void);
-  PRBool IsEmptyFont(GdkFont*);
+  PRBool IsEmptyFont(nsXFont*);
 
   inline int SupportsChar(PRUnichar aChar)
     { return mFont && CCMAP_HAS_CHAR(mCCMap, aChar); };
 
   virtual GdkFont* GetGDKFont(void);
-  virtual PRBool   GetGDKFontIs10646(void);
+  virtual nsXFont* GetXFont(void);
+  virtual PRBool   GetXFontIs10646(void);
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual gint DrawString(nsRenderingContextGTK* aContext,
                           nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -107,6 +110,7 @@ public:
   char*                  mName;
   nsFontGTKUserDefined*  mUserDefinedFont;
   PRUint16               mSize;
+  PRUint16               mAABaseSize;
   PRInt16                mBaselineAdjust;
 
   // these values are not in app units, they need to be scaled with 
@@ -116,6 +120,8 @@ public:
 
 protected:
   GdkFont*               mFont;
+  GdkFont*               mFontHolder;
+  nsXFont*               mXFont;
   PRBool                 mAlreadyCalledLoadFont;
 };
 
@@ -172,6 +178,7 @@ public:
   nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontGTK*  AddToLoadedFontsList(nsFontGTK* aFont);
+  nsFontGTK*  FindNearestSize(nsFontStretch* aStretch, PRUint16 aSize);
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet, 
                                PRUnichar aChar,
