@@ -332,6 +332,15 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mDidSetFocus(PR_FALSE),
   mPassThroughMouseEvents(eUninitialized)
 {
+#ifdef DEBUG
+  mDebugTotalReflows=0;
+  mDebugResizeReflows=0;
+  mDebugResizeUnconstrained=0;
+  mDebugResizeReflowsThatChangedMySize=0;
+  mDebugReflowsThatMovedSubdoc=0;
+  mDebugTotalPaints=0;
+  mDebugPaintsSinceLastReflow=0;
+#endif
 }
 
 nsGfxTextControlFrame::~nsGfxTextControlFrame()
@@ -488,6 +497,15 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     delete mCachedState;
     mCachedState = nsnull;
   }
+#ifdef DEBUG
+#if NOISY
+  printf("gfxTC: %p reflow stats at destructor:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
+  printf("\t%d\t%d\t%d\t%d\t%d\n", 
+          mDebugTotalReflows, mDebugResizeReflows, 
+          mDebugResizeUnconstrained,
+          mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
+#endif
+#endif
 }
 
 NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
@@ -1130,6 +1148,10 @@ nsGfxTextControlFrame::Paint(nsIPresContext* aPresContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
 {
+#ifdef NOISY
+  printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
+    aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+#endif
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
     nsAutoString text(" ");
@@ -1231,6 +1253,10 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
                                         nsRect& aRect)
 {
   // XXX: aText is currently unused!
+#ifdef DEBUG
+  mDebugTotalPaints++;
+  mDebugPaintsSinceLastReflow++;
+#endif
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE) 
   {
@@ -1244,7 +1270,6 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
                                     aDirtyRect, rect,  *color, *mySpacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
-    
     if (!mWebShell)
     {
       if (mDisplayFrame) {
@@ -1253,6 +1278,12 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
       }
     }
   }
+#ifdef DEBUG
+#ifdef NOISY
+  printf("gfxTC: %p totalPaints=%d, paintsSinceLastReflow=%d\n",
+          mDebugTotalPaints, mDebugPaintsSinceLastReflow);
+#endif
+#endif
 }
 
 //XXX: this needs to be fixed for HTML output
@@ -1346,6 +1377,29 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     }
   }
 }
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::ContentChanged(nsIPresContext* aPresContext,
+                                      nsIContent*     aChild,
+                                      nsISupports*    aSubContent)
+{
+  // Generate a reflow command with this frame as the target frame
+  nsIReflowCommand* cmd;
+  nsresult          rv;
+                                                
+  rv = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell) {
+      shell->AppendReflowCommand(cmd);
+    }
+    NS_RELEASE(cmd);
+  }
+
+  return rv;
+}
+
 
 NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
@@ -1994,6 +2048,17 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus& aStatus)
 {
+#ifdef DEBUG
+  mDebugTotalReflows++;
+  if (eReflowReason_Resize == aReflowState.reason) {
+    mDebugResizeReflows++;
+  }
+  if (aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE) {
+    mDebugResizeUnconstrained++;
+  }
+  mDebugPaintsSinceLastReflow=0;
+#endif
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsGfxTextControlFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));
@@ -2005,14 +2070,15 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
-
+#ifdef NOISY
+  printf("gfxTCF: reflow reason=%d\n", aReflowState.reason);
+#endif
 
   nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                      aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
   }
-
 
   // Figure out if we are doing Quirks or Standard
   nsCompatibility mode;
@@ -2074,8 +2140,17 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     }
     aStatus = NS_FRAME_COMPLETE;
   }
+#if DEBUG
+  nsRect myRect;
+  GetRect(myRect);
+  if ((aDesiredSize.width != myRect.width) ||
+    (aDesiredSize.height != myRect.height)) {
+    mDebugResizeReflowsThatChangedMySize++;
+  }
+#endif
 
   SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+
 
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d\n",
@@ -2107,6 +2182,12 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         { // password controls and multi-line text areas get their subdoc right away
           rv = CreateSubDoc(&subBoundsInPixels);
         }
+        else if (mDisplayFrame)
+        {
+#ifdef NOISY
+          printf("Error in nsGfxTextControlFrame: already created display content on intial reflow!\n");
+#endif
+        }
         else
         { // single line text controls get a display frame rather than a subdoc.
           // the subdoc will be created when the frame first gets focus
@@ -2124,8 +2205,34 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
           // set the value of the text node
           content->QueryInterface(NS_GET_IID(nsITextContent), getter_AddRefs(mDisplayContent));
           if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
+
+          // get the text value, either from input element attribute or cached state
           nsAutoString value;
-          GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
+          if (mCachedState) {
+            value = *mCachedState;
+	        } 
+          else 
+          {
+            nsIHTMLContent *htmlContent = nsnull;
+            if (mContent)
+            {
+              mContent->QueryInterface(kIHTMLContentIID, (void**) &htmlContent);
+              if (htmlContent) 
+              {
+                nsHTMLValue htmlValue;
+                if (NS_CONTENT_ATTR_HAS_VALUE ==
+                    htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, htmlValue)) 
+                {
+                  if (eHTMLUnit_String == htmlValue.GetUnit()) 
+                  {
+                    htmlValue.GetStringValue(value);
+                  }
+                }
+              }
+              NS_RELEASE(htmlContent);
+            }
+	        }
+
           PRInt32 len = value.Length();
           if (0<len)
           {
@@ -2220,6 +2327,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #ifdef NOISY
       printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
 #endif
+#ifdef DEBUG
+      mDebugReflowsThatMovedSubdoc++;
+#endif
       webShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
          subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
     }
@@ -2254,12 +2364,17 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
         // notice how status is ignored here
 #ifdef NOISY
-        printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
+        printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mDisplayFrame, subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
 #endif
         mDisplayFrame->SetRect(aPresContext, subBounds);
       }
     }
   }
+
+#ifdef NOISY
+        printf("at the time of the reflow, the frame looks like...\n");
+        List(aPresContext, stdout, 0);
+#endif
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
@@ -2324,6 +2439,15 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
       }
     }
   }
+#endif
+#ifdef DEBUG
+#if NOISY
+  printf("gfxTC: %p reflow stats at end of reflow:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
+  printf("\t%d\t%d\t%d\t%d\t%d\n", 
+          mDebugTotalReflows, mDebugResizeReflows, 
+          mDebugResizeUnconstrained,
+          mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
+#endif
 #endif
   return NS_OK;
 }
@@ -2487,10 +2611,11 @@ nsGfxTextControlFrame::InstallEditor()
           PRInt32 type;
           GetType(&type);
           if (NS_FORM_TEXTAREA == type) {
+            // use a local result value, since we don't care about errors here
             nsScrollPreference scrollPref = nsScrollPreference_kAlwaysScroll;
             nsFormControlHelper::nsHTMLTextWrap wrapProp;
-            result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-            if (NS_CONTENT_ATTR_NOT_THERE != result) {
+            nsresult wrapResult = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+            if (NS_CONTENT_ATTR_NOT_THERE != wrapResult) {
               if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Soft ||
                   wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard) {
                 scrollPref = nsScrollPreference_kAuto;
@@ -2834,6 +2959,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
           wrapToContainerWidth = PR_FALSE;
         }
       } else {
+        result = mailEditor->SetBodyWrapWidth(-1);
         wrapToContainerWidth = PR_FALSE;
       }
     }
@@ -3138,19 +3264,18 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
   IndentBy(out, aIndent);
   fputs(">\n", out);
 
-    if (mDisplayFrame) {
-      nsIFrameDebug*  frameDebug;
-      
-      IndentBy(out, aIndent);
-      nsAutoString tmp;
-      fputs("<\n", out);
-      if (NS_SUCCEEDED(mDisplayFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-        frameDebug->List(aPresContext, out, aIndent + 1);
-      }
-      IndentBy(out, aIndent);
-      fputs(">\n", out);
+  if (mDisplayFrame) {
+    nsIFrameDebug*  frameDebug;
+    
+    IndentBy(out, aIndent);
+    nsAutoString tmp;
+    fputs("<\n", out);
+    if (NS_SUCCEEDED(mDisplayFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+      frameDebug->List(aPresContext, out, aIndent + 1);
     }
-
+    IndentBy(out, aIndent);
+    fputs(">\n", out);
+  }
 
   return NS_OK;
 }
