@@ -176,6 +176,12 @@ public:
   NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength) = 0;
 
   /**
+   * Scrolls the document so that the current selection is visible.
+   */
+
+  NS_IMETHOD ScrollSelectionIntoView() = 0;
+
+  /**
    * Deletes the text selected by SetSelection(). Calling
    * DeleteSelection with nothing selected, or with a collapsed
    * selection (cursor) does nothing and returns NS_OK.
