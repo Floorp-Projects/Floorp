@@ -57,6 +57,18 @@ interface nsIDirIndexListener : nsISupports {
     void onIndexAvailable(in nsIRequest aRequest,
                           in nsISupports aCtxt,
                           in nsIDirIndex aIndex);
+
+    /**
+     * Called for each information line
+     *
+     * @param request - the request
+     * @param ctxt - opaque parameter
+     * @param info - new info to add
+     */
+    void onInformationAvailable(in nsIRequest aRequest,
+                                in nsISupports aCtxt,
+                                in AString aInfo);
+
 };
 
 %{C++

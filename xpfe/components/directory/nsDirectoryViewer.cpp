@@ -543,6 +543,13 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   return rv;
 }
 
+nsresult
+nsHTTPIndex::OnInformationAvailable(nsIRequest *aRequest,
+                                  nsISupports *aCtxt,
+                                  const nsAString& aInfo) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //----------------------------------------------------------------------
 //
 // nsHTTPIndex implementation
