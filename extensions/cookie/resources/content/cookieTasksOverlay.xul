@@ -70,7 +70,7 @@
     // perform a Cookie or Image action
     function CookieImageAction(action) {
 
-      if (!("_content" in window)) {
+      if (!("_content" in window) || !window._content) {
         // this occurs if doing tasks->privacy->cookie->block from java console
         return;
       }
