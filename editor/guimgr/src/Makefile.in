@@ -27,7 +27,7 @@ LIBRARY_NAME = editguimgr
 
 CPPSRCS =                   \
 	nsEditGuiManager.cpp	\
-	nsEditGuiManagerFactory.cpp \
+	nsGuiManagerFactory.cpp \
     $(NULL)
 
 MODULE = editguimgr
