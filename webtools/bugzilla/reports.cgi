@@ -73,11 +73,11 @@ ConnectToDatabase(1);
 quietly_check_login();
 
 print "Content-type: text/html\n";
-  #Changing attachment to inline to resolve 46897
-    #zach@zachlipton.com
+
+# Changing attachment to inline to resolve 46897 - zach@zachlipton.com
 print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
 
-# If we're here for the first time, give a banner.  Else respect the banner flag.
+# If we're here for the first time, give a banner. Else respect the banner flag.
 if ( (!defined $FORM{'product'}) || ($FORM{'banner'})  ) {
     PutHeader ("Bug Reports")
 }
@@ -159,8 +159,15 @@ PutFooter() if $FORM{banner};
 
 sub choose_product {
     my $product_popup = make_options (\@myproducts, $myproducts[0]);
-	my $charts = $use_gd && -d $dir ? "<option value=\"show_chart\">Bug Charts" : "";
+  
+    my $datafile = daily_stats_filename('-All-');
 
+    # Can we do bug charts?  
+         my $do_charts = ($use_gd && -d $dir && -d $graph_dir &&
+                              open(DATA, "$dir/$datafile"));
+ 
+     my $charts = $do_charts ? "<option value=\"show_chart\">Bug Charts" : "";
+ 
     print <<FIN;
 <center>
 <h1>Welcome to the Bugzilla Query Kitchen</h1>
@@ -187,39 +194,43 @@ FIN
     print <<FIN;
 $charts
 </select>
-<tr>
-<td align=center><b>Chart datasets:</b></td>
-<td align=center>
-<select name="datasets" multiple size=5>
+</tr>
 FIN
 
-    my @datasets = ();
+  if ($do_charts) {
+      print <<FIN;
+      <tr>
+      <td align=center><b>Chart datasets:</b></td>
+      <td align=center>
+      <select name="datasets" multiple size=5>
+FIN
 
-    my $datafile = daily_stats_filename('-All-');
-    if (! open(DATA, "$dir/$datafile")) {
-        die_politely("Couldn't read daily statistics file");
-    }
-    
-    while (<DATA>) {
-        if (/^# fields?: (.+)\s*$/) {
-            @datasets = grep ! /date/i, (split /\|/, $1);
-            last;
-        }
-    }
-        
-    close(DATA);
+      my @datasets = ();
 
-    my %default_sel = map { $_ => 1 }
-                          qw/UNCONFIRMED NEW ASSIGNED REOPENED/;
-    foreach my $dataset (@datasets) {
-        my $sel = $default_sel{$dataset} ? ' selected' : '';
-        print qq{<option value="$dataset:"$sel>$dataset</option>\n};
-    }
+      while (<DATA>) {
+          if (/^# fields?: (.+)\s*$/) {
+              @datasets = grep ! /date/i, (split /\|/, $1);
+              last;
+          }
+      }
 
-    print <<FIN;
-</select>
-</td>
-</tr>
+      close(DATA);
+
+      my %default_sel = map { $_ => 1 }
+                            qw/UNCONFIRMED NEW ASSIGNED REOPENED/;
+      foreach my $dataset (@datasets) {
+          my $sel = $default_sel{$dataset} ? ' selected' : '';
+          print qq{<option value="$dataset:"$sel>$dataset</option>\n};
+      }
+
+      print <<FIN;
+      </select>
+      </td>
+      </tr>
+FIN
+  }
+
+print <<FIN;
 <tr>
 <td align=center><b>Switches:</b></td>
 <td align=left>
