@@ -136,25 +136,25 @@
 <!ENTITY addressBookCmd.label     "Adressenboek">
 <!ENTITY addressBookCmd.accesskey "@">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "@">
+<!ENTITY helpMenu.label         "Hulp">
+<!ENTITY helpMenu.accesskey            "H">
 
 <!ENTITY walletPasswordManager.label     "Password Manager">
 <!ENTITY walletPasswordManager.accesskey "p">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label         "Bestand">
+<!ENTITY fileMenu.accesskey       "B">
 
-<!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label         "Bewerken">
+<!ENTITY editMenu.accesskey       "E">
+<!ENTITY preferencesCmd.label       "Voorkeuren...">
+<!ENTITY preferencesCmd.accesskey     "V">
 
-<!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY viewMenu.label         "Beeld">
+<!ENTITY viewMenu.accesskey       "L">
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY releaseCmd.label       "Uitgave opmerkingen">
+<!ENTITY releaseCmd.accesskey       "U">
+<!ENTITY aboutCmd.label         "Over &brandFullName;">
+<!ENTITY aboutCmd.accesskey       "M">
