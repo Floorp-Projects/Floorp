@@ -59,7 +59,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
@@ -365,6 +365,9 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
   NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv;
 
+  rv = LoadAccounts();
+  if (NS_FAILED(rv)) return rv;
+
   nsCAutoString key;
   getUniqueKey(SERVER_PREFIX, &m_incomingServers, key);
   rv = createKeyedServer(key, username, hostname, type, _retval);
@@ -451,7 +454,7 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   serverContractID += type;
   
   // finally, create the server
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("serverContractID = %s\n", (const char *)serverContractID);
 #endif
   rv = nsComponentManager::CreateInstance(serverContractID,
@@ -1138,6 +1141,9 @@ nsMsgAccountManager::LoadAccounts()
       str.StripWhitespace();
       
       if (!str.IsEmpty()) {
+#ifdef DEBUG_ACCOUNTMANAGER
+	  printf("account = %s\n",(const char *)str.GetBuffer());
+#endif
           rv = GetAccount(str.GetBuffer(), getter_AddRefs(account));
       }
 
