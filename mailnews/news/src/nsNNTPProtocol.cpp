@@ -1048,201 +1048,201 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
   if (NS_SUCCEEDED(rv) && message)
-	{
-	  m_typeWanted = NEWS_POST;
-	  NS_MsgSACopy(&m_path, "");
-	}
+  {
+    m_typeWanted = NEWS_POST;
+    NS_MsgSACopy(&m_path, "");
+  }
   else 
-	if (m_messageID || (m_key != nsMsgKey_None))
-	{
-	  /* 
+    if (m_messageID || (m_key != nsMsgKey_None))
+    {
+    /* 
     news-message://HOST/GROUP#key
     news://HOST/MESSAGE_ID
-
-    not sure about these:
-
-    news:MESSAGE_ID
-    news:/GROUP/MESSAGE_ID (useless)
-    news://HOST/GROUP/MESSAGE_ID (useless)
-    */
-	  if (cancel)
-		m_typeWanted = CANCEL_WANTED;
-	  else
-		m_typeWanted = ARTICLE_WANTED;
-	}
-  else if (!commandSpecificData.IsEmpty())
-	{
-	  if (PL_strstr (commandSpecificData.get(), "?newgroups"))
-	    /* news://HOST/?newsgroups
-	        news:/GROUP/?newsgroups (useless)
-	        news:?newsgroups (default host)
-	     */
-	    m_typeWanted = NEW_GROUPS;
-    else
-	  {
-		  if (PL_strstr(commandSpecificData.get(), "?list-pretty"))
-		  {
-			  m_typeWanted = PRETTY_NAMES_WANTED;
-			  m_commandSpecificData = ToNewCString(commandSpecificData);
-		  }
-		  else if (PL_strstr(commandSpecificData.get(), "?profile"))
-		  {
-			  m_typeWanted = PROFILE_WANTED;
-			  m_commandSpecificData = ToNewCString(commandSpecificData);
-		  }
-		  else if (PL_strstr(commandSpecificData.get(), "?list-ids"))
-		  {
-        m_typeWanted = IDS_WANTED;
-        m_commandSpecificData = ToNewCString(commandSpecificData);
-        
-        rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
-        if (!m_newsFolder) goto FAIL;
-		  }
-		  else
-		  {
-              m_typeWanted = SEARCH_WANTED;
-              m_commandSpecificData = ToNewCString(commandSpecificData);
-              nsUnescape(m_commandSpecificData);
-              m_searchData = m_commandSpecificData;
-              
-
-              rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
-              if (!m_newsFolder) goto FAIL;
-          }
-	  }
-	}
-  else if (!group.IsEmpty())
-  {
-    /* news:GROUP
-       news:/GROUP
-       news://HOST/GROUP
-     */
-    if (PL_strchr(group.get(),'*')) {
-      // getting all the newsgroups on the server, for subscribe dialog
-      m_typeWanted = LIST_WANTED;
+    
+      not sure about these:
+      
+        news:MESSAGE_ID
+        news:/GROUP/MESSAGE_ID (useless)
+        news://HOST/GROUP/MESSAGE_ID (useless)
+      */
+      if (cancel)
+        m_typeWanted = CANCEL_WANTED;
+      else
+        m_typeWanted = ARTICLE_WANTED;
     }
-    else 
+    else if (!commandSpecificData.IsEmpty())
     {
-      if (m_nntpServer)
+      if (PL_strstr (commandSpecificData.get(), "?newgroups"))
+      /* news://HOST/?newsgroups
+      news:/GROUP/?newsgroups (useless)
+      news:?newsgroups (default host)
+	     */
+             m_typeWanted = NEW_GROUPS;
+      else
       {
-        PRBool containsGroup = PR_TRUE;
-        rv = m_nntpServer->ContainsNewsgroup(group.get(),&containsGroup);
-        if (NS_FAILED(rv)) goto FAIL;
-
-        if (!containsGroup) 
+        if (PL_strstr(commandSpecificData.get(), "?list-pretty"))
         {
-          // We have the name of a newsgroup which we're not subscribed to,
-          // the next step is to ask the user whether we should subscribe to it.
-
-          nsCOMPtr<nsIPrompt> dialog;
-
-          if (m_msgWindow)
-              m_msgWindow->GetPromptDialog(getter_AddRefs(dialog));
-
-          if (!dialog)
-          {
-            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-            wwatch->GetNewPrompter(nsnull, getter_AddRefs(dialog));
-          }
-
-          nsXPIDLString statusString, confirmText;
-          nsCOMPtr<nsIStringBundle> bundle;
-          nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-
-          // to handle non-ASCII newsgroup names, we store them internally as escaped.
-          // decode and unescape the newsgroup name so we'll display a proper name.
-          nsXPIDLString unescapedName;
-          rv = NS_MsgDecodeUnescapeURLPath(group.get(), getter_Copies(unescapedName));
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
-          const PRUnichar *formatStrings[1] = { unescapedName.get() };
-
-          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("autoSubscribeText").get(),
-                                            formatStrings, 1,
-                                            getter_Copies(confirmText));
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          PRBool confirmResult = PR_FALSE;
-          rv = dialog->Confirm(nsnull, confirmText, &confirmResult);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          if (confirmResult)
-          {
-            rv = m_nntpServer->SubscribeToNewsgroup(group.get());
-            containsGroup = PR_TRUE;
-          }
-          else {
-            // XXX FIX ME
-            // the way news is current written, we've already opened the socket
-            // and initialized the connection.
-            //
-            // until that is fixed, when the user cancels an autosubscribe, we've got to close it and clean up after ourselves
-            //
-            // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108293
-            // another problem, autosubscribe urls are ending up as cache entries
-            // because the default action on nntp urls is ActionFetchArticle
-            //
-            // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108294
-            if (m_runningURL)
-              FinishMemCacheEntry(PR_FALSE); // cleanup mem cache entry
-
-            return CloseConnection();
-          }
+          m_typeWanted = PRETTY_NAMES_WANTED;
+          m_commandSpecificData = ToNewCString(commandSpecificData);
         }
-
-        // If we have a group (since before, or just subscribed), set the m_newsFolder.
-        if (containsGroup)
+        else if (PL_strstr(commandSpecificData.get(), "?profile"))
         {
+          m_typeWanted = PROFILE_WANTED;
+          m_commandSpecificData = ToNewCString(commandSpecificData);
+        }
+        else if (PL_strstr(commandSpecificData.get(), "?list-ids"))
+        {
+          m_typeWanted = IDS_WANTED;
+          m_commandSpecificData = ToNewCString(commandSpecificData);
+          
+          rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+          if (!m_newsFolder) goto FAIL;
+        }
+        else
+        {
+          m_typeWanted = SEARCH_WANTED;
+          m_commandSpecificData = ToNewCString(commandSpecificData);
+          nsUnescape(m_commandSpecificData);
+          m_searchData = m_commandSpecificData;
+          
+          
           rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
           if (!m_newsFolder) goto FAIL;
         }
       }
-      m_typeWanted = GROUP_WANTED;
     }
-  }
-  else
-    // news: or news://HOST
-    m_typeWanted = READ_NEWS_RC;
-
-  // if this connection comes from the cache, we need to initialize the
-  // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
-  // ignores the first parameter (which is supposed to be the channel) so we'll pass in null.
-  if (m_fromCache)
-    nsMsgProtocol::OnStartRequest(nsnull, aURL);
-
-  /* At this point, we're all done parsing the URL, and know exactly
-	 what we want to do with it.
-   */
+    else if (!group.IsEmpty())
+    {
+    /* news:GROUP
+    news:/GROUP
+    news://HOST/GROUP
+      */
+      if (PL_strchr(group.get(),'*')) {
+        // getting all the newsgroups on the server, for subscribe dialog
+        m_typeWanted = LIST_WANTED;
+      }
+      else 
+      {
+        if (m_nntpServer)
+        {
+          PRBool containsGroup = PR_TRUE;
+          rv = m_nntpServer->ContainsNewsgroup(group.get(),&containsGroup);
+          if (NS_FAILED(rv)) goto FAIL;
+          
+          if (!containsGroup) 
+          {
+            // We have the name of a newsgroup which we're not subscribed to,
+            // the next step is to ask the user whether we should subscribe to it.
+            
+            nsCOMPtr<nsIPrompt> dialog;
+            
+            if (m_msgWindow)
+              m_msgWindow->GetPromptDialog(getter_AddRefs(dialog));
+            
+            if (!dialog)
+            {
+              nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+              wwatch->GetNewPrompter(nsnull, getter_AddRefs(dialog));
+            }
+            
+            nsXPIDLString statusString, confirmText;
+            nsCOMPtr<nsIStringBundle> bundle;
+            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+            
+            // to handle non-ASCII newsgroup names, we store them internally as escaped.
+            // decode and unescape the newsgroup name so we'll display a proper name.
+            nsXPIDLString unescapedName;
+            rv = NS_MsgDecodeUnescapeURLPath(group.get(), getter_Copies(unescapedName));
+            NS_ENSURE_SUCCESS(rv,rv);
+            
+            bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+            const PRUnichar *formatStrings[1] = { unescapedName.get() };
+            
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("autoSubscribeText").get(),
+              formatStrings, 1,
+              getter_Copies(confirmText));
+            NS_ENSURE_SUCCESS(rv,rv);
+            
+            PRBool confirmResult = PR_FALSE;
+            rv = dialog->Confirm(nsnull, confirmText, &confirmResult);
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            if (confirmResult)
+            {
+              rv = m_nntpServer->SubscribeToNewsgroup(group.get());
+              containsGroup = PR_TRUE;
+            }
+            else {
+              // XXX FIX ME
+              // the way news is current written, we've already opened the socket
+              // and initialized the connection.
+              //
+              // until that is fixed, when the user cancels an autosubscribe, we've got to close it and clean up after ourselves
+              //
+              // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108293
+              // another problem, autosubscribe urls are ending up as cache entries
+              // because the default action on nntp urls is ActionFetchArticle
+              //
+              // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108294
+              if (m_runningURL)
+                FinishMemCacheEntry(PR_FALSE); // cleanup mem cache entry
+              
+              return CloseConnection();
+            }
+          }
+          
+          // If we have a group (since before, or just subscribed), set the m_newsFolder.
+          if (containsGroup)
+          {
+            rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+            if (!m_newsFolder) goto FAIL;
+          }
+        }
+        m_typeWanted = GROUP_WANTED;
+      }
+    }
+    else
+      // news: or news://HOST
+      m_typeWanted = READ_NEWS_RC;
+    
+    // if this connection comes from the cache, we need to initialize the
+    // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
+    // ignores the first parameter (which is supposed to be the channel) so we'll pass in null.
+    if (m_fromCache)
+      nsMsgProtocol::OnStartRequest(nsnull, aURL);
+    
+      /* At this point, we're all done parsing the URL, and know exactly
+      what we want to do with it.
+    */
 #ifdef UNREADY_CODE
 #ifndef NO_ARTICLE_CACHEING
-  /* Turn off caching on all news entities, except articles. */
-  /* It's very important that this be turned off for CANCEL_WANTED;
-	 for the others, I don't know what cacheing would cause, but
-	 it could only do harm, not good. */
-  if(m_typeWanted != ARTICLE_WANTED)
+    /* Turn off caching on all news entities, except articles. */
+    /* It's very important that this be turned off for CANCEL_WANTED;
+    for the others, I don't know what cacheing would cause, but
+    it could only do harm, not good. */
+    if(m_typeWanted != ARTICLE_WANTED)
 #endif
-  	ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
+      ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
 #endif
-
-
-  FAIL:
-  if (NS_FAILED(rv))
-  {
-    AlertError(rv, nsnull);
-    return rv;
-  }
-  else 
-  {
-    if (!m_socketIsOpen)
+    
+    
+FAIL:
+    if (NS_FAILED(rv))
     {
-      m_nextStateAfterResponse = m_nextState;
-      m_nextState = NNTP_RESPONSE; 
+      AlertError(rv, nsnull);
+      return rv;
     }
-    rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
-  }
-
-  return rv;
+    else 
+    {
+      if (!m_socketIsOpen)
+      {
+        m_nextStateAfterResponse = m_nextState;
+        m_nextState = NNTP_RESPONSE; 
+      }
+      rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
+    }
+    
+    return rv;
 
 }
 
