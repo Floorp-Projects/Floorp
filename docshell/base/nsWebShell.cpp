@@ -1288,41 +1288,7 @@ nsWebShell::SelectAll(void)
 NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
-  if (!window) return NS_OK;
-
-  //
-  // Locate the nsISelectionController of the currently focused window...
-  //
-  nsCOMPtr<nsIFocusController> focusController;
-  (void) window->GetRootFocusController ( getter_AddRefs(focusController) );
-  if (!focusController) return NS_OK;
-
-  nsCOMPtr<nsIDOMWindowInternal> focusWindow;
-  (void) focusController->GetFocusedWindow(getter_AddRefs(focusWindow));
-  if (!focusWindow) return NS_OK;
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(focusWindow);
-  if (!sgo) return NS_OK;
-
-  nsCOMPtr<nsIDocShell> docshell;
-  (void) sgo->GetDocShell(getter_AddRefs(docshell));
-  if (!docshell) return NS_OK;
-
-  (void) docshell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) return NS_OK;
-
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
-  if (!selCon) return NS_OK;
-
-  // Now, get the selection...
-  nsCOMPtr<nsISelection> selection;
-  (void) selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (!selection) return NS_OK;
-  
-  // Clear the selection...
-  return selection->CollapseToStart();
+  return DoCommand ( NS_LITERAL_STRING("cmd_selectNone") );
 }
 
 
