@@ -31,6 +31,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
+#include "nsITimer.h"
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -133,7 +134,12 @@ protected:
   nsIWindowMediator* mWindowMediator;
   nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
   PRBool mDeleteCalled;
-  PRBool mQuiting;
+
+  // The mShutdownTimer is set in Quit() to asynchronously call the
+  // ExitCallback(). This allows one last pass through any events in
+  // the event queue before shutting down the appshell.
+  nsCOMPtr<nsITimer> mShutdownTimer;
+  static void ExitCallback(nsITimer* aTimer, void* aClosure);
 };
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
@@ -144,7 +150,6 @@ nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
   mWindowList   = nsnull;
   mCmdLineService = nsnull;
   mDeleteCalled		= PR_FALSE;
-  mQuiting	= PR_FALSE;
 }
 
 nsAppShellService::~nsAppShellService()
@@ -484,36 +489,68 @@ nsAppShellService::Run(void)
 }
 
 
-NS_IMETHODIMP nsAppShellService::Quit()
+NS_IMETHODIMP
+nsAppShellService::Quit()
 {
-	if ( mQuiting )
-		return NS_OK;
- nsresult rv;
- mQuiting = PR_TRUE;
-	// now step through all opened registered windows and close them.
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  // Quit the application. We will asynchronously call the appshell's
+  // Exit() method via the ExitCallback() to allow one last pass
+  // through any events in the queue. This guarantees a tidy cleanup.
 
-    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
-      PRBool more;
+  if (! mShutdownTimer) {
+    // Only set the shutdown timer if it hasn't already been set.
+    nsresult rv;
+    rv = NS_NewTimer(getter_AddRefs(mShutdownTimer));
+    if (NS_FAILED(rv)) return rv;
 
-      // get the (main) webshell for each window in the enumerator
-      windowEnumerator->HasMoreElements(&more);
-      while (more) {
-        nsCOMPtr<nsISupports> protoWindow;
-        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
-        if (NS_SUCCEEDED(rv) && protoWindow) {
-          nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(protoWindow));
-          if (window)
-            window->Close();
+    // Enumerate through each open window and close it
+    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+      rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+
+      if (NS_SUCCEEDED(rv)) {
+        PRBool more;
+
+        while (1) {
+          rv = windowEnumerator->HasMoreElements(&more);
+          if (NS_FAILED(rv) || !more)
+            break;
+
+          nsCOMPtr<nsISupports> isupports;
+          rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
+          if (NS_FAILED(rv))
+            break;
+
+          nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(isupports);
+          NS_ASSERTION(window != nsnull, "not an nsIDOMWindow");
+          if (! window)
+            continue;
+
+          window->Close();
         }
-        windowEnumerator->HasMoreElements(&more);
       }
     }
-   }
-  mQuiting = PR_FALSE; 
-  return mAppShell->Exit();
+
+    // Note that we don't allow any premature returns from the above
+    // loop: no matter what, make sure we set the callback timer.  If
+    // worst comes to worst, we'll do a leaky shutdown but we WILL
+    // shut down.
+    rv = mShutdownTimer->Init(ExitCallback, this, 0);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+nsAppShellService::ExitCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsAppShellService* svc = NS_REINTERPRET_CAST(nsAppShellService*, aClosure);
+
+  // Tell the appshell to exit
+  svc->mAppShell->Exit();
+
+  svc->mShutdownTimer = nsnull;
 }
 
 NS_IMETHODIMP
