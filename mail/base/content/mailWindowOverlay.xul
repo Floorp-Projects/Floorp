@@ -977,11 +977,6 @@
     <menuitem id="messagePaneContext-delete"
         command="cmd_delete"/>
     <menuseparator id="messagePaneContext-sep-edit"/>
-        <menuitem id="context-viewimage"
-                  label="&viewImageCmd.label;"
-                  accesskey="&viewImageCmd.accesskey;"
-                  oncommand="gContextMenu.viewImage();"/>
-        <menuseparator id="messagePaneContext-sep-image"/>
         <menuitem id="context-copylink"
                   label="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"

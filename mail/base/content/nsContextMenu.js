@@ -577,7 +577,8 @@ nsContextMenu.prototype = {
     },
     // Change current window to the URL of the image.
     viewImage : function () {
-        openTopWin( this.imageURL );
+        // we don't really want to open the url in a top level window because we don't have a 
+        // browser window...for now do nothing
     },
     // Change current window to the URL of the background image.
     viewBGImage : function () {
