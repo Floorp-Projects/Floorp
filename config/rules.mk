@@ -164,7 +164,7 @@ endif
 MAKE_OBJDIR		= mkdir $(OBJDIR)
 else
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
+if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
 endef
 endif
 
@@ -278,7 +278,7 @@ ifdef NSPR_AUTOCONF
 endif # NSPR_AUTOCONF
 else
 	@(cd $(DEPTH)/nsprpub/config; \
-		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; fi; \
+		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; else true; fi; \
 		mv UNIX.mk UNIX.mk.orig; \
 		awk '/^OBJDIR_NAME[ 	]*=/ { \
 			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk)
