@@ -34,7 +34,7 @@ public:
   virtual   ~nsHTMLEditRules();
 
   // nsEditRules methods
-  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
+  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
 protected:
@@ -49,24 +49,26 @@ protected:
   // nsHTMLEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool         *aCancel,
+                            PRBool         *aHandled,
                             const nsString *inString,
                             nsString       *outString,
                             TypeInState     typeInState,
                             PRInt32         aMaxLength);
-  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, PRBool *aCancel);
-  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel);
-  nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel);
-  nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel);
-  nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel);
+  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, 
+                               PRBool *aCancel, PRBool *aHandled);
+  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
 
-  nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, nsString *outString);
-  nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, nsString *outString);
+  nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
+  nsresult InsertSpace(nsIDOMSelection *aSelection, nsString *outString);
 
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
-  nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel);
+  nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
 
   // helper methods

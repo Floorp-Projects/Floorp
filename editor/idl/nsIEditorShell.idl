@@ -146,6 +146,8 @@ interface nsIEditorShell : nsISupports
   void SetDocumentCharacterSet(in wstring characterSet);
   
   /* Structure change */
+       /* TypedText actionToTake param is an enum - values in nsIHTMLEditor.h */
+  void TypedText(in wstring textToInsert, in PRInt32 actionToTake);
   void InsertText(in wstring textToInsert);
   void InsertSource(in wstring textToInsert);
   void InsertBreak();

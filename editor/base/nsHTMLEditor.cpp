@@ -113,6 +113,7 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 nsIAtom *nsHTMLEditor::gTypingTxnName;
+nsIAtom *nsHTMLEditor::gDeleteTxnName;
 
 
 #define IsLink(s) (s.EqualsIgnoreCase(hrefText))
@@ -211,6 +212,8 @@ nsHTMLEditor::nsHTMLEditor()
 // NS_INIT_REFCNT();
   if (!gTypingTxnName)
     gTypingTxnName = NS_NewAtom("Typing");
+  if (!gDeleteTxnName)
+    gDeleteTxnName = NS_NewAtom("Deleting");
 } 
 
 nsHTMLEditor::~nsHTMLEditor()
@@ -559,8 +562,6 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
   PRBool   isShift, ctrlKey, altKey, metaKey;
   nsresult res;
 
-  nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
-  
   if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
 
   if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
@@ -584,19 +585,52 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
     }
     else if (keyCode == nsIDOMUIEvent::DOM_VK_RETURN)
     {
+      nsAutoString empty;
       if (isShift && !(mFlags&eEditorPlaintextBit))
       {
-        nsCOMPtr<nsIDOMNode> brNode;
-        return InsertBR(&brNode);  // only inserts a br node
+        return TypedText(empty, eTypedBR);  // only inserts a br node
       }
       else 
-        return InsertBreak();  // uses rules to figure out what to insert
+      {
+        return TypedText(empty, eTypedBreak);  // uses rules to figure out what to insert
+      }
     }
-      
-    nsAutoString key(character);
-    return InsertText(key);
+    else  // normal typing
+    {  
+      nsAutoString key(character);
+      return TypedText(key, eTypedText);
+    }
   }
   return NS_ERROR_FAILURE;
+}
+
+/* This routine is needed to provide a bottleneck for typing for logging
+   purposes.  Can't use EditorKeyPress() (above) for that since it takes
+   a nsIDOMUIEvent* parameter.  So instead we pass enough info through
+   to TypedText() to determine what action to take, but without passing
+   an event.
+   */
+NS_IMETHODIMP nsHTMLEditor::TypedText(const nsString& aString, PRInt32 aAction)
+{
+  nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
+
+  switch (aAction)
+  {
+    case eTypedText:
+      {
+        return InsertText(aString);
+      }
+    case eTypedBR:
+	  {
+	    nsCOMPtr<nsIDOMNode> brNode;
+	    return InsertBR(&brNode);  // only inserts a br node
+	  }
+    case eTypedBreak:
+      {
+        return InsertBreak();  // uses rules to figure out what to insert
+      } 
+  } 
+  return NS_ERROR_FAILURE; 
 }
 
 NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
@@ -739,10 +773,11 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
-  PRBool cancel;
+  PRBool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(result)) return result;
+  if (!cancel && !handled)
   {
     PRBool isCollapsed;
     selection->GetIsCollapsed(&isCollapsed);
@@ -836,6 +871,9 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         //      for setting a compound selection yet.
       }
     }
+  }
+  if (!cancel)
+  {
     // post-process
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
@@ -994,11 +1032,11 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
-  PRBool cancel;
+  PRBool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveTextProperty);
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(result)) return result;
-  if (PR_FALSE==cancel)
+  if (!cancel && !handled)
   {
     PRBool isCollapsed;
     selection->GetIsCollapsed(&isCollapsed);
@@ -1080,6 +1118,9 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
         ResetTextSelectionForRange(parentForSelection, rangeStartOffset, rangeEndOffset, selection);
       }
     }
+  }
+  if (!cancel)
+  {
     // post-process 
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
@@ -1137,14 +1178,10 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirecti
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
+  PRBool cancel, handled;
 
-  // unnamed placeholder txns dont merge, but they do get sucked 
-  // into placeholders that they are nested in.  So this delte wont 
-  // merge with other deletes, but if it happens in the course of
-  // a typing placehilder context, it will be consumed by that.
-  // This is the desired behavior.
-  nsAutoPlaceHolderBatch batch(this, nsnull); 
+  // delete placeholder txns merge.
+  nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
 
   // pre-process
   nsresult result = GetSelection(getter_AddRefs(selection));
@@ -1153,10 +1190,14 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirecti
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
   ruleInfo.collapsedAction = aAction;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(result)) return result;
+  if (!cancel && !handled)
   {
     result = DeleteSelectionImpl(aAction);
+  }
+  if (!cancel)
+  {
     // post-process 
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
@@ -1169,30 +1210,32 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
+  PRBool cancel, handled;
+
+  nsAutoPlaceHolderBatch batch(this, nsnull); 
 
   // pre-process
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsAutoString resultString;
-  PlaceholderTxn *placeholderTxn=nsnull;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertText);
-//  ruleInfo.placeTxn = &placeholderTxn;
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.typeInState = *mTypeInState;
   ruleInfo.maxLength = mMaxTextLength;
 
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(result)) return result;
+  if (!cancel && !handled)
   {
     result = InsertTextImpl(resultString);
+  }
+  if (!cancel)
+  {
     // post-process 
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
-//  if (placeholderTxn)
-//    placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
   return result;
 }
 
@@ -1290,7 +1333,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
+  PRBool cancel, handled;
 
   // pre-process
   res = GetSelection(getter_AddRefs(selection));
@@ -1298,8 +1341,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertBreak);
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(res)))
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(res)) return res;
+  if (!cancel && !handled)
   {
     // create the new BR node
     nsCOMPtr<nsIDOMNode> newNode;
@@ -1350,6 +1394,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
         }
       }
     }
+  }
+  if (!cancel)
+  {
     // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
     res = mRules->DidDoAction(selection, &ruleInfo, res);
   }
@@ -1374,106 +1421,110 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     return NS_ERROR_FAILURE;
 
   // hand off to the rules system, see if it has anything to say about this
-  PRBool cancel;
+  PRBool cancel, handled;
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
   ruleInfo.insertElement = aElement;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
 
-  if (aDeleteSelection)
+  if (!handled)
   {
-    nsCOMPtr<nsIDOMNode> tempNode;
-    PRInt32 tempOffset;
-    nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
-    if (!NS_SUCCEEDED(result))
-      return result;
-  }
-
-  // If deleting, selection will be collapsed.
-  // so if not, we collapse it
-  if (!aDeleteSelection)
-  {
-    // Named Anchor is a special case,
-    // We collapse to insert element BEFORE the selection
-    // For all other tags, we insert AFTER the selection
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-    if (IsNamedAnchorNode(node))
+    if (aDeleteSelection)
     {
-      selection->CollapseToStart();
-    } else {
-      selection->CollapseToEnd();
+      nsCOMPtr<nsIDOMNode> tempNode;
+      PRInt32 tempOffset;
+      nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
+      if (!NS_SUCCEEDED(result))
+        return result;
     }
-  }
 
-  nsCOMPtr<nsIDOMNode> parentSelectedNode;
-  PRInt32 offsetForInsert;
-  res = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
-  // XXX: ERROR_HANDLING bad XPCOM usage
-  if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) && parentSelectedNode)
-  {
+    // If deleting, selection will be collapsed.
+    // so if not, we collapse it
+    if (!aDeleteSelection)
+    {
+      // Named Anchor is a special case,
+      // We collapse to insert element BEFORE the selection
+      // For all other tags, we insert AFTER the selection
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+      if (IsNamedAnchorNode(node))
+      {
+        selection->CollapseToStart();
+      } else {
+        selection->CollapseToEnd();
+      }
+    }
+
+    nsCOMPtr<nsIDOMNode> parentSelectedNode;
+    PRInt32 offsetForInsert;
+    res = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
+    // XXX: ERROR_HANDLING bad XPCOM usage
+    if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) && parentSelectedNode)
+    {
 #ifdef DEBUG_cmanske
-    {
-    nsAutoString name;
-    parentSelectedNode->GetNodeName(name);
-    printf("InsertElement: Anchor node of selection: ");
-    wprintf(name.GetUnicode());
-    printf(" Offset: %d\n", offsetForInsert);
-    }
+      {
+      nsAutoString name;
+      parentSelectedNode->GetNodeName(name);
+      printf("InsertElement: Anchor node of selection: ");
+      wprintf(name.GetUnicode());
+      printf(" Offset: %d\n", offsetForInsert);
+      }
 #endif
-    nsAutoString tagName;
-    aElement->GetNodeName(tagName);
-    tagName.ToLowerCase();
-    nsCOMPtr<nsIDOMNode> parent = parentSelectedNode;
-    nsCOMPtr<nsIDOMNode> topChild = parentSelectedNode;
-    nsCOMPtr<nsIDOMNode> tmp;
-    nsAutoString parentTagName;
-    PRBool isRoot;
+      nsAutoString tagName;
+      aElement->GetNodeName(tagName);
+      tagName.ToLowerCase();
+      nsCOMPtr<nsIDOMNode> parent = parentSelectedNode;
+      nsCOMPtr<nsIDOMNode> topChild = parentSelectedNode;
+      nsCOMPtr<nsIDOMNode> tmp;
+      nsAutoString parentTagName;
+      PRBool isRoot;
 
-    // Search up the parent chain to find a suitable container    
-    while (!CanContainTag(parent, tagName))
-    {
-      // If the current parent is a root (body or table cell)
-      // then go no further - we can't insert
-      parent->GetNodeName(parentTagName);
-      res = IsRootTag(parentTagName, isRoot);
-      if (!NS_SUCCEEDED(res) || isRoot)
-        return NS_ERROR_FAILURE;
-      // Get the next parent
-      parent->GetParentNode(getter_AddRefs(tmp));
-      if (!tmp)
-        return NS_ERROR_FAILURE;
-      topChild = parent;
-      parent = tmp;
-    }
+      // Search up the parent chain to find a suitable container      
+      while (!CanContainTag(parent, tagName))
+      {
+        // If the current parent is a root (body or table cell)
+        // then go no further - we can't insert
+        parent->GetNodeName(parentTagName);
+        res = IsRootTag(parentTagName, isRoot);
+        if (!NS_SUCCEEDED(res) || isRoot)
+          return NS_ERROR_FAILURE;
+        // Get the next parent
+        parent->GetParentNode(getter_AddRefs(tmp));
+        if (!tmp)
+          return NS_ERROR_FAILURE;
+        topChild = parent;
+        parent = tmp;
+      }
 #ifdef DEBUG_cmanske
-    {
-    nsAutoString name;
-    parent->GetNodeName(name);
-    printf("Parent node to insert under: ");
-    wprintf(name.GetUnicode());
-    printf("\n");
-    topChild->GetNodeName(name);
-    printf("TopChild to split: ");
-    wprintf(name.GetUnicode());
-    printf("\n");
-    }
+      {
+        nsAutoString name;
+        parent->GetNodeName(name);
+        printf("Parent node to insert under: ");
+        wprintf(name.GetUnicode());
+        printf("\n");
+        topChild->GetNodeName(name);
+        printf("TopChild to split: ");
+        wprintf(name.GetUnicode());
+        printf("\n");
+      }
 #endif
-    if (parent != topChild)
-    {
-      // we need to split some levels above the original selection parent
-      res = SplitNodeDeep(topChild, parentSelectedNode, offsetForInsert, &offsetForInsert);
-      if (NS_FAILED(res))
-        return res;
+      if (parent != topChild)
+      {
+        // we need to split some levels above the original selection parent
+        res = SplitNodeDeep(topChild, parentSelectedNode, offsetForInsert, &offsetForInsert);
+        if (NS_FAILED(res))
+          return res;
+      }
+      // Now we can insert the new node
+      res = InsertNode(aElement, parent, offsetForInsert);
+
+      // Set caret after element, but check for special case 
+      //  of inserting table-related elements: set in first cell instead
+      if (!SetCaretInTableCell(aElement))
+        res = SetCaretAfterElement(aElement);
+
     }
-    // Now we can insert the new node
-    res = InsertNode(aElement, parent, offsetForInsert);
-
-    // Set caret after element, but check for special case 
-    //  of inserting table-related elements: set in first cell instead
-    if (!SetCaretInTableCell(aElement))
-      res = SetCaretAfterElement(aElement);
-
   }
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
 
@@ -1848,7 +1899,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
+  PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
   
@@ -1860,222 +1911,31 @@ nsHTMLEditor::InsertList(const nsString& aListType)
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeList);
   if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
 
-  // Find out if the selection is collapsed:
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
-  
-  res = GetStartNodeAndOffset(selection, &node, &offset);
-  if (!node) res = NS_ERROR_FAILURE;
-  if (NS_FAILED(res)) return res;
-  
-  if (isCollapsed)
+  if (!handled)
   {
-    // have to find a place to put the list
-    nsCOMPtr<nsIDOMNode> parent = node;
-    nsCOMPtr<nsIDOMNode> topChild = node;
-    nsCOMPtr<nsIDOMNode> tmp;
-    
-    while ( !CanContainTag(parent, aListType))
-    {
-      parent->GetParentNode(getter_AddRefs(tmp));
-      if (!tmp) return NS_ERROR_FAILURE;
-      topChild = parent;
-      parent = tmp;
-    }
-    
-    if (parent != node)
-    {
-      // we need to split up to the child of parent
-      res = SplitNodeDeep(topChild, node, offset, &offset);
-      if (NS_FAILED(res)) return res;
-    }
+    // Find out if the selection is collapsed:
+    PRBool isCollapsed;
+    res = selection->GetIsCollapsed(&isCollapsed);
+    if (NS_FAILED(res)) return res;
 
-    // make a list
-    nsCOMPtr<nsIDOMNode> newList;
-    res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
-    if (NS_FAILED(res)) return res;
-    // make a list item
-    nsAutoString tag("li");
-    nsCOMPtr<nsIDOMNode> newItem;
-    res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
-    if (NS_FAILED(res)) return res;
-    // put a space in it so layout will draw the list item
-    // XXX - revisit when layout is fixed
-    res = selection->Collapse(newItem,0);
-    if (NS_FAILED(res)) return res;
-#if 0    
-    nsAutoString theText(" ");
-    res = InsertText(theText);
-    if (NS_FAILED(res)) return res;
-    // reposition selection to before the space character
+    nsCOMPtr<nsIDOMNode> node;
+    PRInt32 offset;
+  
     res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
-    res = selection->Collapse(node,0);
-    if (NS_FAILED(res)) return res;
-#endif
-  }
-
-  return res;
-}
-
-
-NS_IMETHODIMP
-nsHTMLEditor::RemoveList(const nsString& aListType)
-{
-  nsresult res;
-  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
-
-  nsAutoEditBatch beginBatching(this);
   
-  // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kRemoveList);
-  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
-  else  ruleInfo.bOrdered = PR_FALSE;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if (cancel || (NS_FAILED(res))) return res;
-
-  // no default behavior for this yet.  what would it mean?
-
-  return res;
-}
-
-
-NS_IMETHODIMP
-nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
-{
-  nsresult res;
-  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nsCOMPtr<nsIDOMSelection> selection;
-  PRBool cancel= PR_FALSE;
-
-  nsAutoEditBatch beginBatching(this);
-  
-  // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeBasicBlock);
-  ruleInfo.blockType = &aBlockType;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if (cancel || (NS_FAILED(res))) return res;
-
-  // Find out if the selection is collapsed:
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
-  
-  res = GetStartNodeAndOffset(selection, &node, &offset);
-  if (!node) res = NS_ERROR_FAILURE;
-  if (NS_FAILED(res)) return res;
-  
-  if (isCollapsed)
-  {
-    // have to find a place to put the block
-    nsCOMPtr<nsIDOMNode> parent = node;
-    nsCOMPtr<nsIDOMNode> topChild = node;
-    nsCOMPtr<nsIDOMNode> tmp;
-    
-    while ( !CanContainTag(parent, aBlockType))
-    {
-      parent->GetParentNode(getter_AddRefs(tmp));
-      if (!tmp) return NS_ERROR_FAILURE;
-      topChild = parent;
-      parent = tmp;
-    }
-    
-    if (parent != node)
-    {
-      // we need to split up to the child of parent
-      res = SplitNodeDeep(topChild, node, offset, &offset);
-      if (NS_FAILED(res)) return res;
-    }
-
-    // make a block
-    nsCOMPtr<nsIDOMNode> newBlock;
-    res = CreateNode(aBlockType, parent, offset, getter_AddRefs(newBlock));
-    if (NS_FAILED(res)) return res;
-    
-    // xxx
-    
-    // put a space in it so layout will draw it
-    res = selection->Collapse(newBlock,0);
-    if (NS_FAILED(res)) return res;
-    nsAutoString theText(nbsp);
-    res = InsertText(theText);
-    if (NS_FAILED(res)) return res;
-    // reposition selection to before the space character
-    res = GetStartNodeAndOffset(selection, &node, &offset);
-    if (NS_FAILED(res)) return res;
-    res = selection->Collapse(node,0);
-    if (NS_FAILED(res)) return res;
-  }
-
-  return res;
-}
-
-// TODO: Implement "outdent"
-NS_IMETHODIMP
-nsHTMLEditor::Indent(const nsString& aIndent)
-{
-  nsresult res;
-  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
-
-  PRBool cancel= PR_FALSE;
-
-  nsAutoEditBatch beginBatching(this);
-  
-  // pre-process
-  nsCOMPtr<nsIDOMSelection> selection;
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kIndent);
-  if (aIndent == "outdent")
-    ruleInfo.action = nsHTMLEditRules::kOutdent;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if (cancel || (NS_FAILED(res))) return res;
-  
-  // Do default - insert a blockquote node if selection collapsed
-  nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-
-  res = GetStartNodeAndOffset(selection, &node, &offset);
-  if (!node) res = NS_ERROR_FAILURE;
-  if (NS_FAILED(res)) return res;
-  
-  nsAutoString inward("indent");
-  if (aIndent == inward)
-  {
     if (isCollapsed)
     {
-      // have to find a place to put the blockquote
+      // have to find a place to put the list
       nsCOMPtr<nsIDOMNode> parent = node;
       nsCOMPtr<nsIDOMNode> topChild = node;
       nsCOMPtr<nsIDOMNode> tmp;
-      nsAutoString bq("blockquote");
-      while ( !CanContainTag(parent, bq))
+    
+      while ( !CanContainTag(parent, aListType))
       {
         parent->GetParentNode(getter_AddRefs(tmp));
         if (!tmp) return NS_ERROR_FAILURE;
@@ -2090,14 +1950,133 @@ nsHTMLEditor::Indent(const nsString& aIndent)
         if (NS_FAILED(res)) return res;
       }
 
-      // make a blockquote
-      nsCOMPtr<nsIDOMNode> newBQ;
-      res = CreateNode(bq, parent, offset, getter_AddRefs(newBQ));
+      // make a list
+      nsCOMPtr<nsIDOMNode> newList;
+      res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
+      if (NS_FAILED(res)) return res;
+      // make a list item
+      nsAutoString tag("li");
+      nsCOMPtr<nsIDOMNode> newItem;
+      res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
       if (NS_FAILED(res)) return res;
       // put a space in it so layout will draw the list item
-      res = selection->Collapse(newBQ,0);
+      // XXX - revisit when layout is fixed
+      res = selection->Collapse(newItem,0);
       if (NS_FAILED(res)) return res;
+#if 0    
       nsAutoString theText(" ");
+      res = InsertText(theText);
+      if (NS_FAILED(res)) return res;
+      // reposition selection to before the space character
+      res = GetStartNodeAndOffset(selection, &node, &offset);
+      if (NS_FAILED(res)) return res;
+      res = selection->Collapse(node,0);
+      if (NS_FAILED(res)) return res;
+#endif
+    }
+  }
+  
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
+  return res;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditor::RemoveList(const nsString& aListType)
+{
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel, handled;
+
+  nsAutoEditBatch beginBatching(this);
+  
+  // pre-process
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kRemoveList);
+  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
+  else  ruleInfo.bOrdered = PR_FALSE;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || (NS_FAILED(res))) return res;
+
+  // no default behavior for this yet.  what would it mean?
+
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
+  return res;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
+{
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel, handled;
+
+  nsAutoEditBatch beginBatching(this);
+  
+  // pre-process
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeBasicBlock);
+  ruleInfo.blockType = &aBlockType;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || (NS_FAILED(res))) return res;
+
+  if (!handled)
+  {
+    // Find out if the selection is collapsed:
+    PRBool isCollapsed;
+    res = selection->GetIsCollapsed(&isCollapsed);
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMNode> node;
+    PRInt32 offset;
+  
+    res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (!node) res = NS_ERROR_FAILURE;
+    if (NS_FAILED(res)) return res;
+  
+    if (isCollapsed)
+    {
+      // have to find a place to put the block
+      nsCOMPtr<nsIDOMNode> parent = node;
+      nsCOMPtr<nsIDOMNode> topChild = node;
+      nsCOMPtr<nsIDOMNode> tmp;
+    
+      while ( !CanContainTag(parent, aBlockType))
+      {
+        parent->GetParentNode(getter_AddRefs(tmp));
+        if (!tmp) return NS_ERROR_FAILURE;
+        topChild = parent;
+        parent = tmp;
+      }
+    
+      if (parent != node)
+      {
+        // we need to split up to the child of parent
+        res = SplitNodeDeep(topChild, node, offset, &offset);
+        if (NS_FAILED(res)) return res;
+      }
+
+      // make a block
+      nsCOMPtr<nsIDOMNode> newBlock;
+      res = CreateNode(aBlockType, parent, offset, getter_AddRefs(newBlock));
+      if (NS_FAILED(res)) return res;
+    
+      // xxx
+    
+      // put a space in it so layout will draw it
+      res = selection->Collapse(newBlock,0);
+      if (NS_FAILED(res)) return res;
+      nsAutoString theText(nbsp);
       res = InsertText(theText);
       if (NS_FAILED(res)) return res;
       // reposition selection to before the space character
@@ -2107,7 +2086,91 @@ nsHTMLEditor::Indent(const nsString& aIndent)
       if (NS_FAILED(res)) return res;
     }
   }
+
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
+  return res;
+}
+
+// TODO: Implement "outdent"
+NS_IMETHODIMP
+nsHTMLEditor::Indent(const nsString& aIndent)
+{
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  PRBool cancel, handled;
+
+  nsAutoEditBatch beginBatching(this);
   
+  // pre-process
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kIndent);
+  if (aIndent == "outdent")
+    ruleInfo.action = nsHTMLEditRules::kOutdent;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || (NS_FAILED(res))) return res;
+  
+  if (!handled)
+  {
+    // Do default - insert a blockquote node if selection collapsed
+    nsCOMPtr<nsIDOMNode> node;
+    PRInt32 offset;
+    PRBool isCollapsed;
+    res = selection->GetIsCollapsed(&isCollapsed);
+    if (NS_FAILED(res)) return res;
+
+    res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (!node) res = NS_ERROR_FAILURE;
+    if (NS_FAILED(res)) return res;
+  
+    nsAutoString inward("indent");
+    if (aIndent == inward)
+    {
+      if (isCollapsed)
+      {
+        // have to find a place to put the blockquote
+        nsCOMPtr<nsIDOMNode> parent = node;
+        nsCOMPtr<nsIDOMNode> topChild = node;
+        nsCOMPtr<nsIDOMNode> tmp;
+        nsAutoString bq("blockquote");
+        while ( !CanContainTag(parent, bq))
+        {
+          parent->GetParentNode(getter_AddRefs(tmp));
+          if (!tmp) return NS_ERROR_FAILURE;
+          topChild = parent;
+          parent = tmp;
+        }
+    
+        if (parent != node)
+        {
+          // we need to split up to the child of parent
+          res = SplitNodeDeep(topChild, node, offset, &offset);
+          if (NS_FAILED(res)) return res;
+        }
+
+        // make a blockquote
+        nsCOMPtr<nsIDOMNode> newBQ;
+        res = CreateNode(bq, parent, offset, getter_AddRefs(newBQ));
+        if (NS_FAILED(res)) return res;
+        // put a space in it so layout will draw the list item
+        res = selection->Collapse(newBQ,0);
+        if (NS_FAILED(res)) return res;
+        nsAutoString theText(" ");
+        res = InsertText(theText);
+        if (NS_FAILED(res)) return res;
+        // reposition selection to before the space character
+        res = GetStartNodeAndOffset(selection, &node, &offset);
+        if (NS_FAILED(res)) return res;
+        res = selection->Collapse(node,0);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
 
@@ -2118,7 +2181,7 @@ nsHTMLEditor::Align(const nsString& aAlignType)
 {
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> node;
-  PRBool cancel= PR_FALSE;
+  PRBool cancel, handled;
   
   // Find out if the selection is collapsed:
   nsCOMPtr<nsIDOMSelection> selection;
@@ -2127,8 +2190,11 @@ nsHTMLEditor::Align(const nsString& aAlignType)
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kAlign);
   ruleInfo.alignType = &aAlignType;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || NS_FAILED(res))
+    return res;
+  
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
 
@@ -3284,8 +3350,8 @@ nsHTMLEditor::Undo(PRUint32 aCount)
   nsTextRulesInfo ruleInfo(nsTextEditRules::kUndo);
   nsCOMPtr<nsIDOMSelection> selection;
   GetSelection(getter_AddRefs(selection));
-  PRBool cancel;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  PRBool cancel, handled;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
   if (!cancel && NS_SUCCEEDED(result))
   {
@@ -3309,8 +3375,8 @@ nsHTMLEditor::Redo(PRUint32 aCount)
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRedo);
   nsCOMPtr<nsIDOMSelection> selection;
   GetSelection(getter_AddRefs(selection));
-  PRBool cancel;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  PRBool cancel, handled;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
   if (!cancel && NS_SUCCEEDED(result))
   {
@@ -3441,14 +3507,14 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
                                            const nsString& aFormatType,
                                            PRUint32 aFlags)
 {
-  PRBool cancel;
+  PRBool cancel, handled;
   nsString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
   ruleInfo.outString = &resultString;
   ruleInfo.outputFormat = &aFormatType;
-  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
-  if (NS_FAILED(rv)) { return rv; }
-  if (PR_TRUE==cancel)
+  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel, &handled);
+  if (cancel || NS_FAILED(rv)) { return rv; }
+  if (handled)
   { // this case will get triggered by password fields
     aOutputString = *(ruleInfo.outString);
   }
@@ -3680,10 +3746,10 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertTextIME);
-  PRBool cancel;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
-  if (NS_FAILED(result)) return result;
-  // we don't care if WillInsert said to cancel...
+  PRBool cancel, handled;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || NS_FAILED(result)) return result;
+  
   result = SetInputMethodText(aCompositionString,aTextRangeList);
   if (NS_FAILED(result)) return result;
   mIMEBufferLength = aCompositionString.Length();
@@ -3694,6 +3760,7 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   ps->GetCaret(getter_AddRefs(caretP));
   caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
 
+  result = mRules->DidDoAction(selection, &ruleInfo, result);
   return result;
 }
 

@@ -72,12 +72,15 @@ nsHTMLEditRules::~nsHTMLEditRules()
 
 NS_IMETHODIMP 
 nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection, 
-                              nsRulesInfo *aInfo, PRBool *aCancel)
+                              nsRulesInfo *aInfo, 
+                              PRBool *aCancel, 
+                              PRBool *aHandled)
 {
-  if (!aInfo || !aCancel) 
+  if (!aInfo || !aCancel || !aHandled) 
     return NS_ERROR_NULL_POINTER;
 
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
     
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
@@ -87,30 +90,31 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kInsertText:
       return WillInsertText(aSelection, 
                             aCancel, 
+                            aHandled,
                             info->inString,
                             info->outString,
                             info->typeInState,
                             info->maxLength);
     case kInsertBreak:
-      return WillInsertBreak(aSelection, aCancel);
+      return WillInsertBreak(aSelection, aCancel, aHandled);
     case kDeleteSelection:
-      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
+      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kMakeList:
-      return WillMakeList(aSelection, info->bOrdered, aCancel);
+      return WillMakeList(aSelection, info->bOrdered, aCancel, aHandled);
     case kIndent:
-      return WillIndent(aSelection, aCancel);
+      return WillIndent(aSelection, aCancel, aHandled);
     case kOutdent:
-      return WillOutdent(aSelection, aCancel);
+      return WillOutdent(aSelection, aCancel, aHandled);
     case kAlign:
-      return WillAlign(aSelection, info->alignType, aCancel);
+      return WillAlign(aSelection, info->alignType, aCancel, aHandled);
     case kMakeBasicBlock:
-      return WillMakeBasicBlock(aSelection, info->blockType, aCancel);
+      return WillMakeBasicBlock(aSelection, info->blockType, aCancel, aHandled);
     case kRemoveList:
-      return WillRemoveList(aSelection, info->bOrdered, aCancel);
+      return WillRemoveList(aSelection, info->bOrdered, aCancel, aHandled);
     case kInsertElement:
       return WillInsert(aSelection, aCancel);
   }
-  return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
+  return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
 }
   
   
@@ -143,14 +147,16 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
 nsresult
 nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
+                                PRBool          *aHandled,
                                 const nsString *inString,
                                 nsString       *outString,
                                 TypeInState    typeInState,
                                 PRInt32         aMaxLength)
-{  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+{  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
   // initialize out param
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
+  *aHandled = PR_TRUE;
   nsresult res;
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
@@ -176,7 +182,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   
   // initialize out param
   // we want to ignore result of WillInsert()
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
 
   // split any mailcites in the way
   if (mFlags & nsIHTMLEditor::eEditorMailMask)
@@ -277,23 +283,23 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
     // is it a solo tab?
     if (partialString == "\t" )
     {
-      res = InsertTab(aSelection,&bCancel,outString);
+      res = InsertTab(aSelection,outString);
       if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, aCancel, outString, typeInState);
+      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
     }
     // is it a solo space?
     else if (partialString == " ")
     {
-      res = InsertSpace(aSelection,&bCancel,outString);
+      res = InsertSpace(aSelection,outString);
       if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, aCancel, outString, typeInState);
+      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
     }
     // is it a solo nbsp?
     else if (partialString == nbspStr)
     {
-      res = InsertSpace(aSelection,&bCancel,outString);
+      res = InsertSpace(aSelection,outString);
       if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, aCancel, outString, typeInState);
+      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
     }
     // is it a solo return?
     else if (partialString == "\n")
@@ -302,7 +308,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
     }
     else
     {
-      res = DoTextInsertion(aSelection, aCancel, &partialString, typeInState);
+      res = DoTextInsertion(aSelection, &bCancel, &partialString, typeInState);
     }
     if (NS_FAILED(res)) return res;
     pos = theString.FindCharInSet(specialChars);
@@ -312,11 +318,12 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
 }
 
 nsresult
-nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   
   nsresult res;
   res = WillInsert(aSelection, aCancel);
@@ -372,7 +379,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   if (isPRE)
   {
     nsString theString = "\n";
-    *aCancel = PR_TRUE;
+    *aHandled = PR_TRUE;
     return mEditor->InsertTextImpl(theString);
   }
 
@@ -415,7 +422,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
       res = mEditor->SetAttribute(brElem, "type", "_moz");
       if (NS_FAILED(res)) return res;
     }
-    *aCancel = PR_TRUE;
+    *aHandled = PR_TRUE;
   }
   else if (bIsMozDiv && AtStartOfBlock(node, offset, blockParent))
   {
@@ -442,21 +449,21 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
     if (!newDiv || !IsMozDiv(newDiv)) return NS_ERROR_FAILURE;
     res = aSelection->Collapse(newDiv, 0);
     if (NS_FAILED(res)) return res;
-    *aCancel = PR_TRUE;
+    *aHandled = PR_TRUE;
   }
   
   // headers: close (or split) header
   else if (IsHeader(blockParent))
   {
     res = ReturnInHeader(aSelection, blockParent, node, offset);
-    *aCancel = PR_TRUE;
+    *aHandled = PR_TRUE;
     return NS_OK;
   }
   
   // paragraphs: special rules to look for <br>s
   else if (IsParagraph(blockParent))
   {
-    res = ReturnInParagraph(aSelection, blockParent, node, offset, aCancel);
+    res = ReturnInParagraph(aSelection, blockParent, node, offset, aCancel, aHandled);
     return NS_OK;
   }
   
@@ -464,7 +471,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   else if (IsListItem(blockParent))
   {
     res = ReturnInListItem(aSelection, blockParent, node, offset);
-    *aCancel = PR_TRUE;
+    *aHandled = PR_TRUE;
     return NS_OK;
   }
   
@@ -474,11 +481,15 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
 
 
 nsresult
-nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, PRBool *aCancel)
+nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
+                                     nsIEditor::ESelectionCollapseDirection aAction, 
+                                     PRBool *aCancel,
+                                     PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   
   // if there is only bogus content, cancel the operation
   if (mBogusNode) 
@@ -542,7 +553,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           nsCOMPtr<nsIDOMNode> topParent;
           leftParent->GetParentNode(getter_AddRefs(topParent));
           
-          *aCancel = PR_TRUE;
+          *aHandled = PR_TRUE;
           res = JoinNodesSmart(leftParent,rightParent,&selNode,&selOffset);
           if (NS_FAILED(res)) return res;
           // fix up selection
@@ -582,7 +593,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           nsCOMPtr<nsIDOMNode> topParent;
           leftParent->GetParentNode(getter_AddRefs(topParent));
           
-          *aCancel = PR_TRUE;
+          *aHandled = PR_TRUE;
           res = JoinNodesSmart(leftParent,rightParent,&selNode,&selOffset);
           if (NS_FAILED(res)) return res;
           // fix up selection
@@ -689,7 +700,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
       if (IsParagraph(leftParent))
       {
         // first delete the selection
-        *aCancel = PR_TRUE;
+        *aHandled = PR_TRUE;
         res = mEditor->DeleteSelectionImpl(aAction);
         if (NS_FAILED(res)) return res;
         // then join para's, insert break
@@ -702,7 +713,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
       if (IsListItem(leftParent) || IsHeader(leftParent))
       {
         // first delete the selection
-        *aCancel = PR_TRUE;
+        *aHandled = PR_TRUE;
         res = mEditor->DeleteSelectionImpl(aAction);
         if (NS_FAILED(res)) return res;
         // join blocks
@@ -723,9 +734,12 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
 
 
 nsresult
-nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBool *aCancel)
+nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, 
+                              PRBool aOrdered, 
+                              PRBool *aCancel,
+                              PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
@@ -733,6 +747,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
 
   nsAutoString blockType("ul");
   if (aOrdered) blockType = "ol";
@@ -752,7 +767,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   
-  *aCancel = PR_TRUE;
+  *aHandled = PR_TRUE;
 
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
   res = GetPromotedRanges(aSelection, &arrayOfRanges, kMakeList);
@@ -964,11 +979,15 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
 
 
 nsresult
-nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBool *aCancel)
+nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection, 
+                                PRBool aOrdered, 
+                                PRBool *aCancel,
+                                PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
+  *aHandled = PR_TRUE;
 
   nsAutoString blockType("ul");
   if (aOrdered) blockType = "ol";
@@ -1053,11 +1072,15 @@ nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrdered, PR
 
 
 nsresult
-nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel)
+nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection, 
+                                    const nsString *aBlockType, 
+                                    PRBool *aCancel,
+                                    PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   
   PRBool makeEmpty;
   nsresult res = ShouldMakeEmptyBlock(aSelection, aBlockType, &makeEmpty);
@@ -1067,7 +1090,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString 
   
   // else it's not that easy...
   nsAutoSelectionReset selectionResetter(aSelection);
-  *aCancel = PR_TRUE;
+  *aHandled = PR_TRUE;
 
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
   res = GetPromotedRanges(aSelection, &arrayOfRanges, kMakeBasicBlock);
@@ -1086,16 +1109,17 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString 
 
 
 nsresult
-nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool * aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
 
   // initialize out param
   // we want to ignore result of WillInsert()
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
+  *aHandled = PR_TRUE;
 
   nsAutoSelectionReset selectionResetter(aSelection);
   
@@ -1194,11 +1218,12 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
 
 
 nsresult
-nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
+  *aHandled = PR_TRUE;
   
   nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
@@ -1302,9 +1327,12 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
 
 
 nsresult
-nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel)
+nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, 
+                           const nsString *alignType, 
+                           PRBool *aCancel,
+                           PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
@@ -1312,7 +1340,8 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignTyp
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
-
+  *aHandled = PR_FALSE;
+  
   nsAutoSelectionReset selectionResetter(aSelection);
 
   PRBool outMakeEmpty;
@@ -1325,7 +1354,7 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignTyp
   // this basically just expands the range to include the immediate
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
-  *aCancel = PR_TRUE;
+  *aHandled = PR_TRUE;
   
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
   res = GetPromotedRanges(aSelection, &arrayOfRanges, kAlign);
@@ -2475,7 +2504,6 @@ nsHTMLEditRules::InsertContainerAbove(nsIDOMNode *inNode,
 //                       
 nsresult 
 nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection, 
-                           PRBool *aCancel, 
                            nsString *outString)
 {
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -2538,7 +2566,6 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
 //                       
 nsresult 
 nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection, 
-                             PRBool *aCancel, 
                              nsString *outString)
 {
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -2650,10 +2677,13 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
                                    nsIDOMNode *aHeader, 
                                    nsIDOMNode *aNode, 
                                    PRInt32 aOffset,
-                                   PRBool *aCancel)
+                                   PRBool *aCancel,
+                                   PRBool *aHandled)
 {
-  if (!aSelection || !aHeader || !aNode || !aCancel) return NS_ERROR_NULL_POINTER;
+  if (!aSelection || !aHeader || !aNode || !aCancel || !aHandled) 
+    { return NS_ERROR_NULL_POINTER; }
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
 
   nsCOMPtr<nsIDOMNode> sibling;
   nsresult res = NS_OK;
@@ -3308,6 +3338,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
           isupports = do_QueryInterface(node);
           arrayOfNodes->AppendElement(isupports);
         }
+        
         res = iter->Next();
         if (NS_FAILED(res)) return res;
       }

@@ -617,11 +617,11 @@ protected:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
   nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
-  nsWeakPtr       mPlaceHolderTxn;
-  nsIAtom        *mPlaceHolderName;
-  PRInt32         mPlaceHolderBatch;
-  nsCOMPtr<nsIDOMNode> mTxnStartNode;
-  PRInt32         mTxnStartOffset;
+  nsWeakPtr       mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
+  nsIAtom        *mPlaceHolderName;    // name of placeholder transaction
+  PRInt32         mPlaceHolderBatch;   // nesting count for batching
+  nsCOMPtr<nsIDOMNode> mTxnStartNode;  // saved selection info to pass to placeholder at init time
+  PRInt32         mTxnStartOffset;     //  "  "  "  "
 
   //
   // data necessary to build IME transactions
