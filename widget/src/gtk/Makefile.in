@@ -58,8 +58,7 @@ CPPSRCS= \
 	nsGtkEventHandler.cpp \
 	nsRadioButton.cpp \
 	nsPopUpMenu.cpp \
-	nsWindow.cpp \
-	nsWidgetFactory.cpp
+	nsWindow.cpp
 
 CSRCS = gtklayout.c \
 	$(NULL)
