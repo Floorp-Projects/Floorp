@@ -330,12 +330,12 @@ void
 derelativizeURL (char* tok, char* url, RDFFile f)
 {
   if ((tok[0] == '/') && (endsWith(".mco", tok))) {
-	void stringAppendBase (char* dest, char* addition) ;
+	void stringAppendBase (char* dest, const char* addition) ;
     stringAppendBase(url, f->url); 
     stringAppend(url, "#");
     stringAppend(url, tok);
   } else if  ((endsWith(".mco", tok)) && (charSearch('#', tok) == -1)) {
-    void stringAppendBase (char* dest, char* addition) ;
+    void stringAppendBase (char* dest, const char* addition) ;
     stringAppendBase(url, f->url);
     stringAppend(url, "#");
     stringAppend(url, tok);
