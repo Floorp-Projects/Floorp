@@ -399,8 +399,6 @@ Rights Reserved.
 <!ENTITY junkButton.label "Junk">
 
 <!--Tooltips-->
-<!ENTITY menuBar.tooltip "Menu Bar">
-<!ENTITY mailToolbar.tooltip "Mail Toolbar">
 <!ENTITY advancedButton.tooltip "Advanced message search">
 <!ENTITY clearButton.tooltip "Clear the search criteria and show all messages">
 <!ENTITY getMsgButton.tooltip "Get new messages">
@@ -555,3 +553,9 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (accounts.img) : DONT_TRANSLATE -->
 <!ENTITY accounts.img "chrome://messenger/skin/local-mailhost.gif">
 
+<!ENTITY helpMenu.label "Help">
+<!ENTITY helpMenu.accesskey "H">
+<!ENTITY releaseCmd.label "Release Notes">
+<!ENTITY releaseCmd.accesskey "R">
+<!ENTITY aboutCmd.label "About">
+<!ENTITY aboutCmd.accesskey "A">

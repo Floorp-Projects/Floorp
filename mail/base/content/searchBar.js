@@ -368,7 +368,9 @@ function onSearchInput(returnKeyHit)
 
 function onClearSearch()
 {
+  var focusedElement = gLastFocusedElement;  // save of the last focused element so that focus can be restore
   Search("");
+  focusedElement.focus();
 }
 
 function disableQuickSearchClearButton()

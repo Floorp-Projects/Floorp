@@ -944,7 +944,7 @@ Rights Reserved.
 </popup>
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
-    <menubar id="mailMenubar" grippytooltiptext="&menuBar.tooltip;">
+    <menubar id="mailMenubar">
       <menu id="menu_File" >
         <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
           <menu id="menu_New">
@@ -1584,10 +1584,21 @@ Rights Reserved.
                   oncommand="toImport();"/>
       </menupopup>
     </menu>
-    <menu id="menu_Help"/>
-    <spacer flex="100%"/>
+    <menu label="&helpMenu.label;"
+          accesskey="&helpMenu.accesskey;">
+      <menupopup>
+        <menuitem accesskey="&releaseCmd.accesskey;"
+                  label="&releaseCmd.label;"
+                  oncommand="openTopWin('&releaseURL;');"/>
+        <menuseparator/>
+        <menuitem accesskey="&aboutCmd.accesskey;"
+                  label="&aboutCmd.label;"
+                  oncommand="openAboutDialog();"/>
+      </menupopup>
+    </menu>
+
     </menubar>
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed" grippytooltiptext="&mailToolbar.tooltip;">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
       <hbox id="toolbar_button_box">
         <toolbarbutton type="menu-button" id="button-getmsg" 
                        class="toolbarbutton-1"
@@ -1831,9 +1842,7 @@ Rights Reserved.
       </tree>
     </vbox>
       
-    <splitter id="gray_vertical_splitter" collapse="before" persist="state">
-      <grippy/>
-    </splitter>
+    <splitter id="gray_vertical_splitter" collapse="before" persist="state"/>
     
     <vbox id="messengerBox" flex="1" persist="width">
       <vbox id="accountCentralBox" flex="1">
@@ -1885,7 +1894,7 @@ Rights Reserved.
       </tree>
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 
-		onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
+		            onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
                 id="threadpane-splitter"/>
       
       <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
