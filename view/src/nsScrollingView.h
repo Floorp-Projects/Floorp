@@ -66,15 +66,19 @@ public:
   virtual PRBool GetShowQuality(void);
   virtual void SetQuality(nsContentQuality aQuality);
 
+  virtual void SetScrollPreference(nsScrollPreference aPref);
+  virtual nsScrollPreference GetScrollPreference(void);
+
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
 
 protected:
-  nscoord mSizeX, mSizeY;
-  nscoord mOffsetX, mOffsetY;
-  nsIView *mVScrollBarView;
-  nsIView *mHScrollBarView;
-  nsIView *mCornerView;
+  nscoord             mSizeX, mSizeY;
+  nscoord             mOffsetX, mOffsetY;
+  nsIView             *mVScrollBarView;
+  nsIView             *mHScrollBarView;
+  nsIView             *mCornerView;
+  nsScrollPreference  mScrollPref;
 };
 
 #endif

@@ -24,6 +24,13 @@
 #include "nsIViewManager.h"
 class nsIView;
 
+typedef enum
+{
+  nsScrollPreference_kAuto = 0,
+  nsScrollPreference_kNeverScroll,
+  nsScrollPreference_kAlwaysScroll
+} nsScrollPreference;
+
 // IID for the nsIView interface
 #define NS_ISCROLLABLEVIEW_IID    \
 { 0xc95f1830, 0xc376, 0x11d1, \
@@ -83,6 +90,20 @@ public:
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
   virtual void SetQuality(nsContentQuality aQuality) = 0;
+
+  /**
+   * Select whether scroll bars should be displayed all the time, never or
+   * only when necessary.
+   * @param aPref desired scrollbar selection
+   */
+  virtual void SetScrollPreference(nsScrollPreference aPref) = 0;
+
+  /**
+   * Query whether scroll bars should be displayed all the time, never or
+   * only when necessary.
+   * @return current scrollbar selection
+   */
+  virtual nsScrollPreference GetScrollPreference(void) = 0;
 };
 
 #endif
