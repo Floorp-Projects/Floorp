@@ -38,6 +38,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIURL.h"
 #include "nsIDOMHTMLDocument.h"
 #include "prmem.h"
 #include "prprf.h"  
@@ -46,6 +48,8 @@
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 
 /********************
@@ -767,6 +771,7 @@ si_GetURL(char * URLName) {
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
 si_RemoveUser(char *URLName, char *userName, PRBool save) {
+  nsresult res;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -776,18 +781,63 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
     return PR_FALSE;
   }
 
+  /* convert URLName to a uri so we can parse out the username and hostname */
+  char* host = nsnull;
+  char * userName2 = nsnull;
+  char * colon = nsnull;
+  if (URLName) {
+    NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
+    if (NS_FAILED(res)) {
+      return PR_FALSE;
+    }
+
+    nsCOMPtr<nsIURL> uri;
+    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+    uri->SetSpec(URLName);
+
+    /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
+
+    /* get host part of the uri */
+    res = uri->GetHost(&host);
+    if (NS_FAILED(res)) {
+      return PR_FALSE;
+    }
+
+    /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
+    if (userName && *userName != '\0') {
+      userName2 = PL_strdup(userName);
+    } else {
+      res = uri->GetPreHost(&userName2);
+      if (NS_FAILED(res)) {
+        PR_FREEIF(host);
+        return PR_FALSE;
+      }
+      if (userName2) {
+        colon = (char*) PL_strchr(userName2, ':');
+        if (colon) {
+          *colon = '\0';
+        }
+      }
+    }
+  }
+
   si_lock_signon_list();
 
-  /* get URL corresponding to URLName (or first URL if URLName is NULL) */
-  url = si_GetURL(URLName);
+  /* get URL corresponding to host */
+  url = si_GetURL(host);
   if (!url) {
     /* URL not found */
     si_unlock_signon_list();
+    if (colon) {
+      *colon = ':';
+    }
+    PR_FREEIF(userName2); //@@@
+    PR_FREEIF(host);
     return PR_FALSE;
   }
 
   /* free the data in each node of the specified user node for this URL */
-  if (userName == NULL) {
+  if (userName2 == NULL) {
 
     /* no user specified so remove the first one */
     user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
@@ -801,12 +851,17 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
       for (PRInt32 ii=0; ii<dataCount; ii++) {
         data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(ii));
-        if (PL_strcmp(data->value, userName)==0) {
+        if (PL_strcmp(data->value, userName2)==0) {
           goto foundUser;
         }
       }
     }
     si_unlock_signon_list();
+    if (colon) {
+      *colon = ':';
+    }
+    PR_FREEIF(user); //@@@
+    PR_FREEIF(host);
     return PR_FALSE; /* user not found so nothing to remove */
     foundUser: ;
   }
@@ -838,6 +893,11 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   }
 
   si_unlock_signon_list();
+  if (colon) {
+    *colon = ':';
+  }
+  PR_FREEIF(userName2); //@@@
+  PR_FREEIF(host);
   return PR_TRUE;
 }
 
@@ -1488,23 +1548,27 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     if (!data) {
       delete user->signonData_list;
       PR_Free(user);
+      if (save) {
+        si_unlock_signon_list();
+      }
+      return;
     }
     data->isPassword = (((uint8 *)submit->type_array)[k] == FORM_TYPE_PASSWORD);
     name = 0; /* so that StrAllocCopy doesn't free previous name */
-    StrAllocCopy(name, ((char **)submit->name_array)[k]);
+    name = PL_strdup(((char **)submit->name_array)[k]);
     data->name = name;
     value = 0; /* so that StrAllocCopy doesn't free previous name */
     if (submit->value_array[k]) {
-      StrAllocCopy(value, ((char **)submit->value_array)[k]);
+      value = PL_strdup(((char **)submit->value_array)[k]);
     } else {
-      StrAllocCopy(value, ""); /* insures that value is not null */
+      value = PL_strdup(""); /* insures that value is not null */
     }
     data->value = value;
     if (data->isPassword) {
       si_Randomize(data->value);
     }
     /* append new data node to end of data list */
-    user->signonData_list->InsertElementAt(data, 0);
+    user->signonData_list->AppendElement(data);
   }
 
   /* append new user node to front of user list for matching URL */
@@ -2220,6 +2284,10 @@ si_RestoreOldSignonDataFromBrowser
   }
   SI_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
   user = si_GetUser(URLName, pickFirstUser, "username");
+  if (!user) {
+    si_unlock_signon_list();
+    return;
+  }
 
   /* restore the data from previous time this URL was visited */
   PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -2420,9 +2488,28 @@ SINGSIGN_PromptUsernameAndPassword
     return dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
   }
 
+  /* convert to a uri so we can parse out the hostname */
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  nsCOMPtr<nsIURL> uri;
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+  uri->SetSpec(urlname);
+
+  /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
+
+  /* get host part of the uri */
+  char* host = nsnull;
+  res = uri->GetHost(&host);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
   /* prefill with previous username/password if any */
-  char *password=0, *username=0;
-  si_RestoreOldSignonDataFromBrowser(urlname, PR_FALSE, &username, &password);
+  char *username= nsnull, *password=nsnull;
+  si_RestoreOldSignonDataFromBrowser(host, PR_FALSE, &username, &password);
   *user = nsAutoString(username).ToNewUnicode();
   *pwd = nsAutoString(password).ToNewUnicode();
 
@@ -2430,6 +2517,9 @@ SINGSIGN_PromptUsernameAndPassword
   res = dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
   if (NS_FAILED(res) || !(*returnValue)) {
     /* user pressed Cancel */
+    PR_FREEIF(user);
+    PR_FREEIF(pwd);
+    PR_FREEIF(host);
     return res;
   }
 
@@ -2441,8 +2531,11 @@ SINGSIGN_PromptUsernameAndPassword
   }
 
   /* cleanup and return */
+  PR_FREEIF(user);
+  PR_FREEIF(pwd);
   PR_FREEIF(username);
   PR_FREEIF(password);
+  PR_FREEIF(host);
   return NS_OK;
 }
 
@@ -2451,6 +2544,7 @@ SINGSIGN_PromptPassword
     (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, char* urlname) {
 
   nsresult res;
+  char *password=0, *username=0;
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
     return res;
@@ -2461,23 +2555,49 @@ SINGSIGN_PromptPassword
     return dialog->PromptPassword(text, pwd, returnValue);
   }
 
-  /* get host part of URL which is of form user@host */
-  char * host = (char*) PL_strchr(urlname, '@');
-  if (host) {
-    /* @ found, host is URL part following the @ */
-    host++; /* host is part of URL after the @ */
-  } else {
-    host = urlname;
+  /* convert to a uri so we can parse out the username and hostname */
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
   }
 
-  /* get previous password used with this username */
-  char *password=0, *username=0;
-  si_RestoreOldSignonDataFromBrowser(host, PR_TRUE, &username, &password);
+  nsCOMPtr<nsIURL> uri;
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+  uri->SetSpec(urlname);
+
+  /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
+
+  /* get host part of the uri */
+  char* host;
+  res = uri->GetHost(&host);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  /* extract username from uri -- note: prehost is <username>:<password> */
+  res = uri->GetPreHost(&username);
+  if (NS_FAILED(res)) {
+    PR_FREEIF(host);
+    return res;
+  }
+  char * colon = (char*) PL_strchr(username, ':');
+  if (colon) {
+    *colon = '\0';
+  }  
+
+  /* get previous password used with this username, pick first user if no username found */
+  si_RestoreOldSignonDataFromBrowser(host, (username == nsnull), &username, &password);
 
   /* return if a password was found */
   if (password) {
     *pwd = nsAutoString(password).ToNewUnicode();
     *returnValue = PR_TRUE;
+    PR_FREEIF(password);
+    if (colon) {
+      *colon = ':';
+    }
+    PR_FREEIF(username);
+    PR_FREEIF(host);
     return NS_OK;
   }
 
@@ -2485,32 +2605,27 @@ SINGSIGN_PromptPassword
   res = dialog->PromptPassword(text, pwd, returnValue);
   if (NS_FAILED(res) || !(*returnValue)) {
     /* user pressed Cancel */
+    if (colon) {
+      *colon = ':';
+    }
+    PR_FREEIF(username);
+    PR_FREEIF(host);
     return res;
   }
         
-  /* extract username from URLName */
-  if (!username) {
-    char * s = (char*) PL_strchr(urlname, '@');
-    if (s) {
-      /* @ found, username is URL part preceding the @ */
-      *s = '\0';
-      StrAllocCopy(username, urlname);
-      *s = '@';
-    } else {
-      /* no @ found, use entire URL as username */
-      StrAllocCopy(username, urlname);
-    }
-  }
-
   /* remember these values for next time */
-
   password = nsString(*pwd).ToNewCString();
   if (password && PL_strlen(password) && si_OkToSave(host, username)) {
     si_RememberSignonDataFromBrowser (host, username, password);
   }
 
   /* cleanup and return */
+  if (colon) {
+    *colon = ':';
+  }
   PR_FREEIF(username);
+  PR_FREEIF(password);
+  PR_FREEIF(host);
   return NS_OK;
 }
 
@@ -2679,14 +2794,20 @@ SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
     for (PRInt32 j=0; j<userCount; j++) {
       user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(j));
 
-      /* first data item for user is the username */
-      data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+      /* first non-password data item for user is the username */
+      PRInt32 dataCount = LIST_COUNT(user->signonData_list);
+      for (PRInt32 k=0; k<dataCount; k++) {
+        data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(k));
+        if (!(data->isPassword)) {
+          break;
+        }
+      }
       g += PR_snprintf(buffer+g, BUFLEN2-g,
 "%c        <OPTION value=%d>%s:%s</OPTION>\n",
         BREAK,
         signonNum,
         url->URLName,
-        data->value
+        data->isPassword ? "" : data->value // just in case all fields were passwords
       );
       signonNum++;
     }
