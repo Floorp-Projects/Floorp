@@ -70,6 +70,11 @@ public:
     // Utility methods
     virtual PRBool OnPaint(nsPaintEvent &event);
     virtual PRBool OnKey(nsKeyEvent &aEvent);
+    virtual PRBool OnText(nsTextEvent &aEvent);
+    virtual PRBool OnComposition(nsCompositionEvent &aEvent);
+    virtual PRBool DispatchFocusInEvent();
+    virtual PRBool DispatchFocusOutEvent();
+    virtual PRBool DispatchActivateEvent();
     virtual PRBool DispatchFocus(nsGUIEvent &aEvent);
     virtual PRBool OnScroll(nsScrollbarEvent &aEvent,PRUint32 cPos);
 
@@ -77,13 +82,17 @@ protected:
     virtual void InitCallbacks(char *aName = nsnull);
     NS_IMETHOD CreateNative(QWidget *parentWidget);
 
-    PRBool mBlockFocusEvents;
     PRBool mIsDialog;
     PRBool mIsPopup;
+    PRBool mBlockFocusEvents;
 
     // are we doing a grab?
     static PRBool    mIsGrabbing;
     static nsWindow  *mGrabWindow;
+    static nsQBaseWidget *mFocusWidget;
+    static PRBool    mGlobalsInitialized;
+    static PRBool    mRaiseWindows;
+    static PRBool    mGotActivate;
     PRInt32	     mWindowID;
 };
 

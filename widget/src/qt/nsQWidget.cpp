@@ -64,7 +64,6 @@ struct nsKeyConverter nsKeycodes[] =
   { NS_VK_SHIFT,         Qt::Key_Shift },
   { NS_VK_CONTROL,       Qt::Key_Control },
   { NS_VK_ALT,           Qt::Key_Alt },
-  { NS_VK_ALT,           Qt::Key_Meta },
   { NS_VK_PAUSE,         Qt::Key_Pause },
   { NS_VK_CAPS_LOCK,     Qt::Key_CapsLock },
   { NS_VK_ESCAPE,        Qt::Key_Escape },
@@ -172,7 +171,9 @@ struct nsKeyConverter nsKeycodes[] =
   { NS_VK_BACK_QUOTE,    Qt::Key_QuoteLeft },
   { NS_VK_OPEN_BRACKET,  Qt::Key_ParenLeft },
   { NS_VK_CLOSE_BRACKET, Qt::Key_ParenRight },
-  { NS_VK_QUOTE,         Qt::Key_QuoteDbl }
+  { NS_VK_QUOTE,         Qt::Key_QuoteDbl },
+
+  { NS_VK_META,          Qt::Key_Meta }
 };
 
 static PRInt32 NS_GetKey(PRInt32 aKey)
@@ -232,7 +233,7 @@ unsigned int NS_GetQWFlags(nsBorderStyle aBorder,nsWindowType aType)
 
   switch (aType) {
     case eWindowType_toplevel:
-      w |= Qt::WType_TopLevel | Qt::WDestructiveClose;
+      w |= Qt::WType_TopLevel | Qt::WDestructiveClose | Qt::WGroupLeader;
       break;
 
     case eWindowType_dialog:
@@ -450,13 +451,19 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
   bool handled = false;
 
   if (mDestroyed) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Destroyed\n");
+#endif
     return true;
   }
   switch (aEvent->type()) {
     case QEvent::MouseButtonPress:
-      if (mEnabled) {
 #ifdef DBG_JCG_EVENT
         printf("JCG: Mouse Button Pushed. Widget: %p\n",mWidget);
+#endif
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Handled\n");
 #endif
         handled = MouseButtonEvent((QMouseEvent*)aEvent,PR_TRUE,1);
       }
@@ -465,9 +472,12 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
       break;
 
     case QEvent::MouseButtonRelease:
-      if (mEnabled) {
 #ifdef DBG_JCG_EVENT
         printf("JCG: Mouse Button Released widget: %p\n",mWidget);
+#endif
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Handled\n");
 #endif
         handled = MouseButtonEvent((QMouseEvent*)aEvent,PR_FALSE,1);
       }
@@ -520,9 +530,12 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
       break;
 
     case QEvent::Enter:
-      if (mEnabled) {
 #ifdef DBG_JCG_EVENT
         printf("JCG: Mouse Enter widget: %p\n",mWidget);
+#endif
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Handled\n");
 #endif
         handled = MouseEnterEvent(aEvent);
       }
@@ -531,9 +544,12 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
       break;
 
     case QEvent::Leave:
-      if (mEnabled) {
 #ifdef DBG_JCG_EVENT
         printf("JCG: Mouse Exit widget: %p\n",mWidget);
+#endif
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Handled\n");
 #endif
         handled = MouseExitEvent(aEvent);
       }
@@ -579,9 +595,12 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
       break;
 
     case QEvent::FocusIn:
-      if (mEnabled) {
 #ifdef DBG_JCG_EVENT
         printf("JCG: Focus In widget: %p\n",mWidget);
+#endif
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Handled\n");
 #endif
         handled = FocusInEvent();
       }
@@ -590,9 +609,12 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
       break;
 
     case QEvent::FocusOut:
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Focus Out widget: %p\n",mWidget);
+#endif
       if (mEnabled) {
 #ifdef DBG_JCG_EVENT
-        printf("JCG: Focus In widget: %p\n",mWidget);
+        printf("JCG: Handled\n");
 #endif
         handled = FocusOutEvent();
       }
@@ -681,8 +703,8 @@ PRBool nsQBaseWidget::MouseButtonEvent(QMouseEvent *aEvent,PRBool aButtonDown,
         nsEvent.message = NS_MOUSE_MOVE;
         break;
     }
-    nsEvent.point.x         = aEvent->x();
-    nsEvent.point.y         = aEvent->y();
+    nsEvent.point.x         = nscoord(aEvent->x());
+    nsEvent.point.y         = nscoord(aEvent->y());
     nsEvent.widget          = mWidget;
     nsEvent.nativeMsg       = (void*)aEvent;
     nsEvent.eventStructType = NS_MOUSE_EVENT;
@@ -691,7 +713,7 @@ PRBool nsQBaseWidget::MouseButtonEvent(QMouseEvent *aEvent,PRBool aButtonDown,
     nsEvent.isControl       = aEvent->state() & ControlButton;
     nsEvent.isAlt           = aEvent->state() & AltButton;
     nsEvent.isMeta          = PR_FALSE;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
 
     mWidget->DispatchMouseEvent(nsEvent);
   }
@@ -707,13 +729,13 @@ PRBool nsQBaseWidget::MouseMovedEvent(QMouseEvent *aEvent)
     // Generate XPFE mouse moved event
     nsMouseEvent nsEvent;
 
-    nsEvent.point.x         = aEvent->x();
-    nsEvent.point.y         = aEvent->y();
+    nsEvent.point.x         = nscoord(aEvent->x());
+    nsEvent.point.y         = nscoord(aEvent->y());
     nsEvent.message         = NS_MOUSE_MOVE;
     nsEvent.widget          = mWidget;
     nsEvent.nativeMsg       = (void*)aEvent;
     nsEvent.eventStructType = NS_MOUSE_EVENT;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
     nsEvent.isShift         = aEvent->state() & ShiftButton;
     nsEvent.isControl       = aEvent->state() & ControlButton;
     nsEvent.isAlt           = aEvent->state() & AltButton;
@@ -733,7 +755,7 @@ PRBool nsQBaseWidget::MouseEnterEvent(QEvent *aEvent)
     nsEvent.widget          = mWidget;
     nsEvent.nativeMsg       = (void*)aEvent;
     nsEvent.eventStructType = NS_MOUSE_EVENT;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
 
     mWidget->DispatchMouseEvent(nsEvent);
   }
@@ -749,7 +771,7 @@ PRBool nsQBaseWidget::MouseExitEvent(QEvent *aEvent)
     nsEvent.widget          = mWidget;
     nsEvent.nativeMsg       = (void*)aEvent;
     nsEvent.eventStructType = NS_MOUSE_EVENT;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
 
     mWidget->DispatchMouseEvent(nsEvent);
   }
@@ -800,7 +822,7 @@ PRBool nsQBaseWidget::PaintEvent(QPaintEvent *aEvent)
     nsEvent.message         = NS_PAINT;
     nsEvent.widget          = mWidget;
     nsEvent.eventStructType = NS_PAINT_EVENT;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
     nsEvent.rect            = &rect;
 
     mWidget->OnPaint(nsEvent);
@@ -827,7 +849,7 @@ PRBool nsQBaseWidget::KeyPressEvent(QKeyEvent *aEvent)
     nsEvent.isMeta          = PR_FALSE;
     nsEvent.point.x         = 0;
     nsEvent.point.y         = 0;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
     nsEvent.charCode        = 0;
 
     mWidget->OnKey(nsEvent);
@@ -841,7 +863,7 @@ PRBool nsQBaseWidget::KeyPressEvent(QKeyEvent *aEvent)
     nsEvent.isMeta          = PR_FALSE;
     nsEvent.point.x         = 0;
     nsEvent.point.y         = 0;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
     if (aEvent->text().length() && aEvent->text()[0].isPrint()) {
       nsEvent.charCode = (PRInt32)aEvent->text()[0].unicode();
     }
@@ -878,7 +900,7 @@ PRBool nsQBaseWidget::KeyReleaseEvent(QKeyEvent *aEvent)
     nsEvent.isControl       = aEvent->state() & ControlButton;
     nsEvent.isAlt           = aEvent->state() & AltButton;
     nsEvent.isMeta          = PR_FALSE;
-    nsEvent.time            = PR_IntervalNow();
+    nsEvent.time            = 0;
 
     mWidget->OnKey(nsEvent);
   }
@@ -888,16 +910,7 @@ PRBool nsQBaseWidget::KeyReleaseEvent(QKeyEvent *aEvent)
 PRBool nsQBaseWidget::FocusInEvent()
 {
   if (mWidget) {
-    nsGUIEvent nsEvent;
-
-    nsEvent.message         = NS_GOTFOCUS;
-    nsEvent.eventStructType = NS_GUI_EVENT;
-    nsEvent.widget          = mWidget;
-    nsEvent.time            = PR_IntervalNow();
-    nsEvent.point.x         = 0;
-    nsEvent.point.y         = 0;
-
-    mWidget->DispatchFocus(nsEvent);
+    mWidget->DispatchFocusInEvent();
   }
   return PR_TRUE;
 }
@@ -905,16 +918,7 @@ PRBool nsQBaseWidget::FocusInEvent()
 PRBool nsQBaseWidget::FocusOutEvent()
 {
   if (mWidget) {
-    nsGUIEvent nsEvent;
-
-    nsEvent.message         = NS_LOSTFOCUS;
-    nsEvent.eventStructType = NS_GUI_EVENT;
-    nsEvent.widget          = mWidget;
-    nsEvent.time            = PR_IntervalNow();
-    nsEvent.point.x         = 0;
-    nsEvent.point.y         = 0;
-
-    mWidget->DispatchFocus(nsEvent);
+    mWidget->DispatchFocusOutEvent();
   }
   return PR_TRUE;
 }
@@ -1033,6 +1037,7 @@ nsQWidget::nsQWidget(QWidget *aParent,const char *aName,unsigned int aFlags)
   setAcceptDrops(PR_TRUE);
   setBackgroundMode(QWidget::NoBackground);
   setMouseTracking(PR_TRUE);
+  setFocusPolicy(QWidget::WheelFocus);
 
 #ifdef DBG_JCG
   gQWidgetCount++;

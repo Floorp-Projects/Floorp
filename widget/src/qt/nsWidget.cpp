@@ -607,10 +607,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   CreateNative(parentWidget);
   Resize(aRect.width,aRect.height,PR_FALSE);
-  if (mIsToplevel || IsDialog()) {
-    /* We have to Spin the Qt Event loop to make non-modal dialogs */
-    /* and top level windows come up with the correct size, but it */
-    /* creates problems for menus, etc.                            */
+  mWidget->Polish();
+  if (mIsToplevel) {
+    /* We have to Spin the Qt Event loop to make top level windows */
+    /* come up with the correct size, but it creates problems for  */
+    /* menus, etc. */
     qApp->processEvents(1);
   }
   DispatchStandardEvent(NS_CREATE);

@@ -105,8 +105,14 @@ public:
   virtual void Scroll(PRInt32 aDx,PRInt32 aDy) {mQWidget->scroll(aDx,aDy);};
   virtual void Show() {mQWidget->show();};
   virtual void Hide() {mQWidget->hide();};
-  virtual bool IsVisible() {return mQWidget->isVisible();};
+  virtual PRBool IsVisible() {return mQWidget->isVisible();};
   virtual void SetFocus() {mQWidget->setFocus();};
+  virtual void SetTopLevelFocus() {mQWidget->topLevelWidget()->setFocus();};
+  virtual void RaiseTopLevel() {mQWidget->topLevelWidget()->raise();};
+  virtual PRBool IsTopLevelActive()
+  {
+    return(mQWidget->topLevelWidget()->isActiveWindow());
+  };
   virtual void SetTitle(const char *aTitleStr)
   {
     mQWidget->setCaption(QString::fromLocal8Bit(aTitleStr));
@@ -116,6 +122,7 @@ public:
     QColor color(NS_GET_R(aColor),NS_GET_G(aColor),NS_GET_B(aColor));
     mQWidget->setBackgroundColor(color);
   };
+  virtual void Polish() {mQWidget->polish();};
   virtual void Repaint(PRBool aErase) {mQWidget->repaint(aErase);};
   virtual void Repaint(PRInt32 aX,PRInt32 aY,PRInt32 aW, PRInt32 aH,PRBool aErase)
   {
