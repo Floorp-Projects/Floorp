@@ -47,6 +47,10 @@
 	</html:fieldset>
 
 	<html:fieldset>
+		<html:legend align="left">
+                        <html:div>&spellCheckHeader.label;</html:div>
+                </html:legend>
+
 		<html:input id="pref:0:bool:mail.SpellCheckBeforeSend" type="checkbox"/>
 		<html:label for="pref:0:bool:mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
 	</html:fieldset>
@@ -84,6 +88,13 @@
 		</html:div>
 		<html:div class="indent">&useMIMEpart2.label;</html:div>
 
+	</html:fieldset>
+	 <html:fieldset>
+                <html:legend align="left">
+                        <html:div>&emoticons.label;</html:div>
+                </html:legend>
+		<html:input id="pref:0:bool:mail.enable_emoticons" type="checkbox"/>
+		<html:label for="pref:0:bool:mail.enable_emoticons">&enableEmoticons.label;</html:label>
 	</html:fieldset>
 
 </window>

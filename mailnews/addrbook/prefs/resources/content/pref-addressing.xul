@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://addressbook/locale/pref-addressing.dtd">
 
@@ -8,6 +8,8 @@
 		onload="StartUp('Mailnews-Main')"
         class="dialog"
 		align="vertical">
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 	<box class="header" align="horizontal">
 		<html:div class="left-header-text">&pane.title;</html:div>
