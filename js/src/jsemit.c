@@ -934,7 +934,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * We need an activation object if an inner peeks out, or if such
          * inner-peeking caused one of our inners to become heavyweight.
          */
-        if (cg2.treeContext.flags & 
+        if (cg2.treeContext.flags &
             (TCF_FUN_USES_NONLOCALS | TCF_FUN_HEAVYWEIGHT)) {
             cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
         }
@@ -1776,13 +1776,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /*
          * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
          * for later fixup.
-         * 
+         *
          * When a finally block is `active' (STMT_FINALLY on the treeContext),
          * non-local jumps (including jumps-over-catches) result in a GOSUB
          * being written into the bytecode stream and fixed-up later (c.f.
          * EMIT_CHAINED_JUMP and PatchGotos).
          */
-        js_PushStatement(&cg->treeContext, &stmtInfo, 
+        js_PushStatement(&cg->treeContext, &stmtInfo,
                          pn->pn_kid3 ? STMT_FINALLY : STMT_BLOCK,
                          CG_OFFSET(cg));
 
@@ -2119,9 +2119,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         }
 
-        /* 
+        /*
          * EmitNonLocalJumpFixup emits JSOP_SWAPs to maintain the return value
-         * at the top of the stack, so the return still executes OK. 
+         * at the top of the stack, so the return still executes OK.
          */
         if (!EmitNonLocalJumpFixup(cx, cg, NULL, JS_TRUE))
             return JS_FALSE;
@@ -2371,50 +2371,48 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_OR:
-        /* Emit left operand, emit pop-if-converts-to-false-else-jump. */
-        if (!js_EmitTree(cx, cg, pn->pn_left))
-            return JS_FALSE;
-#if JS_BUG_SHORT_CIRCUIT
-        beq = js_Emit3(cx, cg, JSOP_IFEQ, 0, 0);
-        tmp = js_Emit1(cx, cg, JSOP_TRUE);
-        jmp = js_Emit3(cx, cg, JSOP_GOTO, 0, 0);
-        if (beq < 0 || tmp < 0 || jmp < 0)
-            return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-#else
+      case TOK_AND:
         /*
          * JSOP_OR converts the operand on the stack to boolean, and if true,
          * leaves the original operand value on the stack and jumps; otherwise
-         * it pops and falls into the next bytecode.
+         * it pops and falls into the next bytecode, which evaluates the right
+         * operand.  The jump goes around the right operand evaluation.
+         *
+         * JSOP_AND converts the operand on the stack to boolean, and if false,
+         * leaves the original operand value on the stack and jumps; otherwise
+         * it pops and falls into the right operand's bytecode.
+         *
+         * Avoid tail recursion for long ||...|| expressions and long &&...&&
+         * expressions or long mixtures of ||'s and &&'s that can easily blow
+         * the stack, by forward-linking and then backpatching all the JSOP_OR
+         * and JSOP_AND bytecodes' immediate jump-offset operands.
          */
-        jmp = js_Emit3(cx, cg, JSOP_OR, 0, 0);
-        if (jmp < 0)
-            return JS_FALSE;
-#endif
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
-        break;
-
-      case TOK_AND:
-        /* && is like || except it uses a pop-if-converts-to-true-else-jump. */
         if (!js_EmitTree(cx, cg, pn->pn_left))
             return JS_FALSE;
-#if JS_BUG_SHORT_CIRCUIT
-        beq = js_Emit3(cx, cg, JSOP_IFNE, 0, 0);
-        tmp = js_Emit1(cx, cg, JSOP_FALSE);
-        jmp = js_Emit3(cx, cg, JSOP_GOTO, 0, 0);
-        if (beq < 0 || tmp < 0 || jmp < 0)
+        top = js_Emit3(cx, cg, pn->pn_op, 0, 0);
+        if (top < 0)
             return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-#else
-        jmp = js_Emit3(cx, cg, JSOP_AND, 0, 0);
-        if (jmp < 0)
+        jmp = top;
+        pn2 = pn->pn_right;
+        while (pn2->pn_type == TOK_OR || pn2->pn_type == TOK_AND) {
+            pn = pn2;
+            if (!js_EmitTree(cx, cg, pn->pn_left))
+                return JS_FALSE;
+            off = js_Emit3(cx, cg, pn->pn_op, 0, 0);
+            if (off < 0)
+                return JS_FALSE;
+            SET_JUMP_OFFSET(CG_CODE(cg, jmp), off - jmp);
+            jmp = off;
+            pn2 = pn->pn_right;
+        }
+        if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
-#endif
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
+        for (off = CG_OFFSET(cg); top < jmp; top += tmp) {
+            jsbytecode *pc = CG_CODE(cg, top);
+            tmp = GET_JUMP_OFFSET(pc);
+            CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, off - top);
+        }
+        CHECK_AND_SET_JUMP_OFFSET(cx, cg, CG_CODE(cg, jmp), off - jmp);
         break;
 
       case TOK_BITOR:

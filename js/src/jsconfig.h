@@ -44,7 +44,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 1       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 1       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 1       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    1       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   1       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    0       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    0       /* eval('this') in function f is f */
@@ -101,7 +100,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 1       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 1       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    1       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   1       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    0       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    1       /* eval('this') in function f is f */
@@ -158,7 +156,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    0       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    1       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    0       /* eval('this') in function f is f */
@@ -215,7 +212,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    0       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    0       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    0       /* eval('this') in function f is f */
@@ -272,7 +268,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    0       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    0       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    0       /* eval('this') in function f is f */
@@ -329,7 +324,6 @@
 #define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
-#define JS_BUG_SHORT_CIRCUIT    0       /* 1 && 1 => true, 1 && 0 => 0 bug */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
 #define JS_BUG_VOID_TOSTRING    0       /* void 0 + 0 == "undefined0" */
 #define JS_BUG_EVAL_THIS_FUN    0       /* eval('this') in function f is f */

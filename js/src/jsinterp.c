@@ -1468,7 +1468,6 @@ js_Interpret(JSContext *cx, jsval *result)
             }
             break;
 
-#if !JS_BUG_SHORT_CIRCUIT
           case JSOP_OR:
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_TRUE) {
@@ -1484,7 +1483,6 @@ js_Interpret(JSContext *cx, jsval *result)
                 PUSH_OPND(rval);
             }
             break;
-#endif
 
           case JSOP_TOOBJECT:
             SAVE_SP(fp);
