@@ -88,7 +88,7 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-static nsIPersistentProperties2* gFontEncodingProperties = nsnull;
+static nsIPersistentProperties* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager2* gCharsetManager = nsnull;
 static nsObjectHashtable* gFontMaps = nsnull;
 static nsFontCleanupObserver *gFontCleanupObserver = nsnull;
