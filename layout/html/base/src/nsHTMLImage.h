@@ -20,6 +20,7 @@
 
 #include "nslayout.h"
 #include "nsIFrameImageLoader.h"
+#include "nsString.h"
 class nsIFrame;
 class nsIFrameImageLoader;
 class nsIPresContext;
@@ -41,11 +42,17 @@ public:
 
   void DestroyLoader() {
     NS_IF_RELEASE(mImageLoader);
+    mLoadImageFailed = PR_FALSE;
+    mLoadBrokenImageFailed = PR_FALSE;
   }
 
   nsIImage* GetImage();
 
   nsresult SetURL(const nsString& aURLSpec);
+
+  void GetURL(nsString& aResult) {
+    aResult = *mURLSpec;
+  }
 
   nsresult LoadImage(nsIPresContext* aPresContext,
                      nsIFrame* aForFrame,
