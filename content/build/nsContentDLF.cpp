@@ -56,8 +56,6 @@
 #include "nsIXULContentSink.h"
 #include "nsIDocStreamLoaderFactory.h"
 
-#define VIEW_SOURCE_HTML
-
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -206,23 +204,12 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
   if(0==PL_strcmp(aCommand,"view-source")) {
-#ifdef VIEW_SOURCE_HTML
     NS_ENSURE_ARG(aChannel);
     // It's a view-source. Reset channel's content type to the original 
     // type so as not to choke the parser when it asks the channel 
     // for the content type during the parse phase
     aChannel->SetContentType(aContentType);
     aContentType=gHTMLTypes[0];    
-#else
-    if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {
-      aContentType=gHTMLTypes[0];
-    }
-    else if(0==PL_strcmp(aContentType,gHTMLTypes[2])) {
-      aContentType=gHTMLTypes[0];
-    }
-    else 
-      aContentType=gXMLTypes[0];
-#endif
   }
 
   // Try html
