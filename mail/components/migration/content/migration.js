@@ -12,7 +12,6 @@ var MigrationWizard = {
 
   init: function ()
   {
-    dump('\n\n calling init: \n\n');
     var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
@@ -70,7 +69,6 @@ var MigrationWizard = {
       }
     }
 
-    dump('this.source = ' + this._source + '\n');
     group.selectedItem = this._source == "" ? firstNonDisabled : document.getElementById(this._source);
   },
   
