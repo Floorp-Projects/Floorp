@@ -309,17 +309,20 @@ sub print_table_row {
         
     # Build Note
     # 
+    $buildname = &url_encode($buildname);
+    my $logurl = "${rel_path}showlog.cgi?logfile=$logfile\&tree=$buildtree"
+                ."&errorparser=$errorparser&buildname=$buildname"
+                ."&buildtime=$buildtime";
+
     if ($hasnote) {
-      print "<a href='' onClick=\"return js_what_menu(event,$noteid,$bn,",
-            "'$logfile','$buildtime');\">",
+      print "<a href='$logurl' onClick=\"return ",
+            "comment_popup(event,$noteid,$bn,'$logfile','$buildtime');\">",
             "<img src='$images{star}' border=0></a>\n";
     }
         
     # Build Log
     # 
-    $buildname = &url_encode($buildname);
-    print "<A HREF='${rel_path}showlog.cgi?logfile=$logfile\&tree=$buildtree",
-      "&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime' ",
+    print "<A HREF='$logurl' ",
       "onClick=\"return log_popup(event,$bn,'$logfile','$buildtime');\">";
     print "L</a>";
       
@@ -560,7 +563,7 @@ sub print_javascript {
       return "addnote.cgi?" + log_params(buildindex,logfile,buildtime);
     }
 
-    function js_what_menu(d,noteid,buildindex,logfile,buildtime) {
+    function comment_popup(d,noteid,buildindex,logfile,buildtime) {
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
         document.location = log_url(buildindex,logfile,buildtime);
