@@ -147,7 +147,7 @@ nsDNSService::Lookup(nsISupports*    ctxt,
     rv = listener->OnStartLookup(ctxt, hostname);
 	
     PRBool numeric = PR_TRUE;
-    for (char *hostCheck = mHostName; *hostCheck; hostCheck++) {
+    for (const char *hostCheck = hostname; *hostCheck; hostCheck++) {
         if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
             numeric = PR_FALSE;
             break;
