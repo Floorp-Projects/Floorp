@@ -21,7 +21,6 @@
 
 [%# INTERFACE:
   # realname: string. The user's real name, if any.
-  # login:    string. The user's Bugzilla login email address.
   # login_change_date: string. The date the email change will be complete. (optional)
   # new_login_name:    string. The user's new Bugzilla login whilst not confirmed. (optional)
   #%]
@@ -36,7 +35,7 @@
     <th align="right">Password:</th>
     <td>
       <input type="hidden" name="Bugzilla_login" 
-             value="[% login FILTER html %]">
+             value="[% user.login FILTER html %]">
       <input type="password" name="Bugzilla_password">
     </td>
   </tr>              
@@ -79,7 +78,7 @@
       [% ELSE %]
         <tr>
           <th align="right">Confirmed email address:</th>
-          <td>[% login FILTER html %]
+          <td>[% user.login FILTER html %]
         </tr>
         <tr>
           <th align="right">Completion date:</th>
