@@ -4213,41 +4213,44 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   setAnchorFocusRange(count -1);
   
 //TABLE CELL CHECK
-  nsCOMPtr<nsIDOMNode> startNode;
-  result = aRange->GetStartParent(getter_AddRefs(startNode));
-  if (NS_SUCCEEDED(result))
+  if(mFrameSelection)// don't assume we have a FrameSelection
   {
-    nsCOMPtr<nsIDOMNode> endNode;
-    result = aRange->GetEndParent(getter_AddRefs(endNode));
+    nsCOMPtr<nsIDOMNode> startNode;
+    result = aRange->GetStartParent(getter_AddRefs(startNode));
     if (NS_SUCCEEDED(result))
     {
-      if (startNode == endNode)
-      {//check for table row
-        nsCOMPtr<nsIContent> content(do_QueryInterface(startNode));
-        if (content)
-        {
-          nsIAtom *atom;
-          if (NS_SUCCEEDED(content->GetTag(atom)) && atom == nsSelection::sRowAtom)
-          {//we are selecting a talble cell!
-            mFrameSelection->mSelectingTableCellMode = TABLESELECTION_CELL;
-          }
-          else //check to see if we are selecting a table
+      nsCOMPtr<nsIDOMNode> endNode;
+      result = aRange->GetEndParent(getter_AddRefs(endNode));
+      if (NS_SUCCEEDED(result))
+      {
+        if (startNode == endNode)
+        {//check for table row
+          nsCOMPtr<nsIContent> content(do_QueryInterface(startNode));
+          if (content)
           {
-            PRInt32 startOffset;
-            PRInt32 endOffset;
-            result = aRange->GetEndOffset(&endOffset);
-            result &= aRange->GetStartOffset(&startOffset);
-            if (NS_SUCCEEDED(result))
+            nsIAtom *atom;
+            if (NS_SUCCEEDED(content->GetTag(atom)) && atom == nsSelection::sRowAtom)
+            {//we are selecting a talble cell!
+              mFrameSelection->mSelectingTableCellMode = TABLESELECTION_CELL;
+            }
+            else //check to see if we are selecting a table
             {
-              if ((endOffset - startOffset) == 1) //1 child selected
+              PRInt32 startOffset;
+              PRInt32 endOffset;
+              result = aRange->GetEndOffset(&endOffset);
+              result &= aRange->GetStartOffset(&startOffset);
+              if (NS_SUCCEEDED(result))
               {
-                nsCOMPtr<nsIContent> childAt;
-                if (NS_SUCCEEDED(content->ChildAt(startOffset, *getter_AddRefs(childAt))))
+                if ((endOffset - startOffset) == 1) //1 child selected
                 {
-                  if (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom)
+                  nsCOMPtr<nsIContent> childAt;
+                  if (NS_SUCCEEDED(content->ChildAt(startOffset, *getter_AddRefs(childAt))))
                   {
-                    mFrameSelection->mSelectingTableCellMode = TABLESELECTION_TABLE;
-                  } 
+                    if (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom)
+                    {
+                      mFrameSelection->mSelectingTableCellMode = TABLESELECTION_TABLE;
+                    }
+                  }
                 }
               }
             }
