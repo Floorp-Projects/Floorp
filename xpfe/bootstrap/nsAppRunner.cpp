@@ -146,7 +146,7 @@ static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
   return PR_FALSE;
 } // CheckandRunPrefs
 
-int main(int argc, char* argv[])
+int main1(int argc, char* argv[])
 {
   nsresult rv;
 
@@ -800,4 +800,22 @@ done:
    */
 
   return TranslateReturnValue(rv);
+}
+
+int main(int argc, char* argv[])
+{
+    nsresult rv;
+    nsIServiceManager* servMgr;
+    rv = NS_InitXPCOM(&servMgr);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+
+    int result = main1(argc, argv);
+
+    // calling this explicitly will cut down on a large number of leaks we're
+    // seeing:
+    rv = NS_ShutdownXPCOM(servMgr);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+    NS_RELEASE(servMgr);
+
+    return result;
 }
