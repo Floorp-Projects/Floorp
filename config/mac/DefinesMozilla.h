@@ -49,6 +49,11 @@
 
 #define USE_NSREG 1
 
+// 99-04-05 pinkerton -- use new nsIClipboard instead of selection manager stuff.
+// REMOVE WHEN THIS LANDS FULLY!!!
+#define NEW_CLIPBOARD_SUPPORT
+
+
 // ———————————————————————————————————————————————————————————————————————————
 //	•	You typically will not need to change things below here
 // ———————————————————————————————————————————————————————————————————————————
