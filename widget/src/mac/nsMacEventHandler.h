@@ -54,6 +54,7 @@ public:
 protected:
 	nsWindow*			mTopLevelWidget;
 	nsWindow*			mLastWidgetHit;
+	PRBool				mMouseInWidgetHit;
 	nsWindow*			mLastWidgetPointed;
 	RgnHandle			mUpdateRgn;
 };
