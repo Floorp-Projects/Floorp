@@ -1014,6 +1014,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_DRAGDROP_OVER:
     case NS_DRAGDROP_EXIT:
     case NS_DRAGDROP_DROP:
+    case NS_DRAGDROP_GESTURE:
       if (nsnull != mDragListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -1041,6 +1042,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_DRAGDROP_DROP:
                     ret = dragListener->DragDrop(*aDOMEvent);
+                    break;
+                  case NS_DRAGDROP_GESTURE:
+                    ret = dragListener->DragGesture(*aDOMEvent);
                     break;
                 } // switch 
                 NS_RELEASE(dragListener);

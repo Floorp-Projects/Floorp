@@ -40,6 +40,8 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
+#include "nsIDeviceContext.h"
+
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -54,7 +56,9 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
-nsEventStateManager::nsEventStateManager() {
+nsEventStateManager::nsEventStateManager()
+  : mGestureDownPoint(0,0)
+{
   mLastMouseOverFrame = nsnull;
   mLastDragOverFrame = nsnull;
   mCurrentTarget = nsnull;
@@ -62,6 +66,10 @@ nsEventStateManager::nsEventStateManager() {
   mLastLeftMouseDownContent = nsnull;
   mLastMiddleMouseDownContent = nsnull;
   mLastRightMouseDownContent = nsnull;
+
+  // init d&d gesture state machine variables
+  mIsTrackingDragGesture = PR_FALSE;
+  mGestureDownFrame = nsnull;
 
   mActiveContent = nsnull;
   mHoverContent = nsnull;
@@ -107,7 +115,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   aStatus = nsEventStatus_eIgnore;
   
   switch (aEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+    BeginTrackingDragGesture ( aEvent, aTargetFrame );
+    break;
+  case NS_MOUSE_LEFT_BUTTON_UP:
+    StopTrackingDragGesture();
+    break;
   case NS_MOUSE_MOVE:
+    GenerateDragGesture(aPresContext, aEvent);
     UpdateCursor(aPresContext, aEvent->point, aTargetFrame, aStatus);
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
@@ -211,6 +226,95 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+
+
+// 
+// BeginTrackingDragGesture
+//
+// Record that the mouse has gone down and that we should move to TRACKING state
+// of d&d gesture tracker.
+//
+void
+nsEventStateManager :: BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame )
+{
+  mIsTrackingDragGesture = PR_TRUE;
+  mGestureDownPoint = inDownEvent->point;
+  mGestureDownFrame = inDownFrame;
+}
+
+
+//
+// StopTrackingDragGesture
+//
+// Record that the mouse has gone back up so that we should leave the TRACKING 
+// state of d&d gesture tracker and return to the START state.
+//
+void
+nsEventStateManager :: StopTrackingDragGesture ( )
+{
+  mIsTrackingDragGesture = PR_FALSE;
+  mGestureDownPoint = nsPoint(0,0);
+  mGestureDownFrame = nsnull;
+}
+
+
+//
+// GenerateDragGesture
+//
+// If we're in the TRACKING state of the d&d gesture tracker, check the current position
+// of the mouse in relation to the old one. If we've moved a sufficient amount from
+// the mouse down, then fire off a drag gesture event.
+//
+// Note that when the mouse enters a new child window with its own view, the event's
+// coordinates will be in relation to the origin of the inner child window, which could
+// either be very different from that of the mouse coords of the mouse down and trigger
+// a drag too early, or very similiar which might not trigger a drag. 
+//
+// Do we need to do anything about this? Let's wait and see.
+//
+void
+nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUIEvent *aEvent )
+{
+  if ( IsTrackingDragGesture() ) {
+    // figure out the delta in twips, since that is how it is in the event.
+    // Do we need to do this conversion every time? Will the pres context really change on
+    // us or can we cache it?
+    long twipDeltaToStartDrag = 0;
+    const long pixelDeltaToStartDrag = 5;
+    nsCOMPtr<nsIDeviceContext> devContext;
+    aPresContext.GetDeviceContext ( getter_AddRefs(devContext) );
+    if ( devContext ) {
+      float pixelsToTwips = 0.0;
+      devContext->GetDevUnitsToTwips(pixelsToTwips);
+      twipDeltaToStartDrag =  pixelDeltaToStartDrag * pixelsToTwips;
+    }
+ 
+    // fire drag gesture if mouse has moved enough
+    if ( abs(aEvent->point.x - mGestureDownPoint.x) > twipDeltaToStartDrag ||
+          abs(aEvent->point.y - mGestureDownPoint.y) > twipDeltaToStartDrag ) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsMouseEvent event;
+      event.eventStructType = NS_DRAGDROP_EVENT;
+      event.message = NS_DRAGDROP_GESTURE;
+      event.widget = aEvent->widget;
+      event.clickCount = 0;
+      event.point = aEvent->point;
+      event.refPoint = aEvent->refPoint;
+
+      // dispatch to the DOM
+      nsCOMPtr<nsIContent> lastContent;
+      mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
+      if ( lastContent )
+        lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+ 
+      // dispatch to the frame
+      mGestureDownFrame->HandleEvent(aPresContext, &event, status);   
+
+      StopTrackingDragGesture();              
+    }
+  }
+} // GenerateDragGesture
+
 
 NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext, 
