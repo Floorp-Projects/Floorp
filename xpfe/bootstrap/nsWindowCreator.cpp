@@ -64,38 +64,23 @@
    Mozilla version, which calls through to nsAppShellService.
 */
 
-#ifdef USE_POPUP_MANAGER
-#undef USE_POPUP_MANAGER
-#endif
-
 #include "nsCOMPtr.h"
 #include "nsAppShellCIDs.h"
-#include "nsNetUtil.h"
-#include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsWindowCreator.h"
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDOMLocation.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIJSContextStack.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
-#ifdef USE_POPUP_MANAGER
-#include "nsIPopupWindowManager.h"
-#endif
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsWindowCreator::nsWindowCreator() {
   NS_INIT_ISUPPORTS();
@@ -104,48 +89,21 @@ nsWindowCreator::nsWindowCreator() {
 nsWindowCreator::~nsWindowCreator() {
 }
 
-NS_IMPL_ISUPPORTS2(nsWindowCreator, nsIWindowCreator, nsIWindowCreator2)
+NS_IMPL_ISUPPORTS1(nsWindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
 nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                     PRUint32 aChromeFlags,
                                     nsIWebBrowserChrome **_retval)
 {
-  return CreateChromeWindow2(aParent, aChromeFlags, 0, _retval);
-}
-
-NS_IMETHODIMP
-nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
-                                     PRUint32 aChromeFlags,
-                                     PRUint32 aContextFlags,
-                                     nsIWebBrowserChrome **_retval)
-{
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
-
-#ifdef USE_POPUP_MANAGER
-  PRUint32         allow = nsIPopupWindowManager::eAllow;
-  nsCOMPtr<nsIURI> parentURI;
-
-  GetParentURI(aParent, getter_AddRefs(parentURI));
-  if (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT)
-    allow = AllowWindowCreation(parentURI);
-#endif
 
   nsCOMPtr<nsIXULWindow> newWindow;
 
   if (aParent) {
-#ifdef USE_POPUP_MANAGER
-    if (allow == nsIPopupWindowManager::eDisallow)
-      return NS_OK; // ruse to not give scripts a catchable error
-    if (allow == nsIPopupWindowManager::eAllow &&
-        (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT))
-      aContextFlags &= ~PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-#endif
-
     nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
     NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
-
     if (xulParent)
       xulParent->CreateNewWindow(aChromeFlags, getter_AddRefs(newWindow));
     // And if it fails, don't try again without a parent. It could fail
@@ -167,53 +125,10 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   }
 
   // if anybody gave us anything to work with, use it
-  if (newWindow) {
-    newWindow->SetContextFlags(aContextFlags);
-    nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
-    if (thing)
-      thing->GetInterface(NS_GET_IID(nsIWebBrowserChrome), (void **) _retval);
-  }
+  nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
+  if (thing)
+    thing->GetInterface(NS_GET_IID(nsIWebBrowserChrome), (void **) _retval);
 
   return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-PRUint32
-nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
-{
-#ifdef USE_POPUP_MANAGER
-  nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
-  if (!pm)
-    return nsIPopupWindowManager::eAllow;
-
-  PRUint32 permission;
-  if (NS_SUCCEEDED(pm->TestPermission(aURI, &permission)))
-    return permission;
-  return nsIPopupWindowManager::eAllow;
-#else
-  return 1;
-#endif
-}
-
-void
-nsWindowCreator::GetParentURI(nsIWebBrowserChrome *aParent, nsIURI **aURI)
-{
-  if (!aParent)
-    return;
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_GetInterface(aParent));
-  if (treeOwner) {
-    nsCOMPtr<nsIDocShellTreeItem> content;
-    treeOwner->GetPrimaryContentShell(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMWindowInternal> domParent(do_GetInterface(content));
-    if (domParent) {
-      nsCOMPtr<nsIDOMLocation> location;
-      domParent->GetLocation(getter_AddRefs(location));
-      if (location) {
-        nsAutoString url;
-        location->GetHref(url);
-        NS_NewURI(aURI, url);
-      }
-    }
-  }
 }
 

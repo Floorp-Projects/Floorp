@@ -566,46 +566,26 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     }
 
     NS_ASSERTION(mWindowCreator, "attempted to open a new window with no WindowCreator");
-    rv = NS_ERROR_FAILURE;
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
 
-      /* If the window creator is an nsIWindowCreator2, we can give it
-         some hints. The only hint at this time is whether the opening window
-         is in a situation that's likely to mean this is an unrequested
-         popup window we're creating. However we're not completely honest:
-         we clear that indicator if the opener is chrome, so that the
-         downstream consumer can treat the indicator to mean simply
-         that the new window is subject to popup control. */
+      // If the window creator is an nsIWindowCreator2, we can give it some hints.
       nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
       if (windowCreator2) {
         PRUint32 contextFlags = 0;
-        PRBool popupConditions = PR_FALSE;
-
-        // is the parent under popup conditions?
         nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aParent));
-        if (piWindow)
-          piWindow->IsLoadingOrRunningTimeout(&popupConditions);
-
-        // chrome is always allowed, so clear the flag if the opener is chrome
-        if (popupConditions) {
-          PRBool isChrome = PR_FALSE;
-          nsCOMPtr<nsIScriptSecurityManager>
-            sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-          if (sm)
-            sm->SubjectPrincipalIsSystem(&isChrome);
-          popupConditions = !isChrome;
+        if (piWindow) {
+          PRBool parentIsLoadingOrRunningTimeout;
+          piWindow->IsLoadingOrRunningTimeout(&parentIsLoadingOrRunningTimeout);
+          if (parentIsLoadingOrRunningTimeout)
+            contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
         }
-
-        if (popupConditions)
-          contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-
-        rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                               contextFlags, getter_AddRefs(newChrome));
+        windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags, contextFlags,
+                          getter_AddRefs(newChrome));
       }
       else
-        rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
-                               getter_AddRefs(newChrome));
+        mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
+                          getter_AddRefs(newChrome));
       if (newChrome) {
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
@@ -615,15 +595,13 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
         if (!newDocShellItem)
           newDocShellItem = do_GetInterface(newChrome);
-        if (!newDocShellItem)
-          rv = NS_ERROR_FAILURE;
       }
     }
   }
 
   // better have a window to use by this point
   if (!newDocShellItem)
-    return rv;
+    return NS_ERROR_FAILURE;
 
   rv = ReadyOpenedDocShellItem(newDocShellItem, aParent, _retval);
   if (NS_FAILED(rv))
