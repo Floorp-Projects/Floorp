@@ -152,21 +152,20 @@ public class Codegen extends Interpreter {
 
             if (!isPrimary) {
                 String adapterClassName = nameHelper.getScriptClassName(true);
-                ScriptableObject obj = new NativeObject();
                 int functionCount = scriptOrFn.getFunctionCount();
+                ObjToIntMap functionNames = new ObjToIntMap(functionCount);
                 for (int i = 0; i != functionCount; ++i) {
-                    OptFunctionNode fn;
-                    fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+                    FunctionNode fn = scriptOrFn.getFunctionNode(i);
                     String name = fn.getFunctionName();
                     if (name != null && name.length() != 0) {
-                        obj.put(fn.getFunctionName(), obj, fn);
+                        functionNames.put(name, fn.getParamCount());
                     }
                 }
                 if (superClass == null) {
                     superClass = ScriptRuntime.ObjectClass;
                 }
                 byte[] classFile = JavaAdapter.createAdapterCode(
-                                       cx, obj, adapterClassName,
+                                       functionNames, adapterClassName,
                                        superClass, interfaces,
                                        mainClassName);
                 try {

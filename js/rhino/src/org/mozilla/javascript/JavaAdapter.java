@@ -89,10 +89,15 @@ public final class JavaAdapter
 
     static Object js_createAdpter(Context cx, Scriptable scope, Object[] args)
     {
+        int N = args.length;
+        if (N == 0) {
+            throw ScriptRuntime.typeError0("msg.adapter.zero.args");
+        }
+
         Class superClass = null;
-        Class[] intfs = new Class[args.length-1];
+        Class[] intfs = new Class[N - 1];
         int interfaceCount = 0;
-        for (int i=0; i < args.length-1; i++) {
+        for (int i = 0; i != N - 1; ++i) {
             Object arg = args[i];
             if (!(arg instanceof NativeJavaClass)) {
                 throw ScriptRuntime.typeError2("msg.not.java.class.arg",
@@ -116,7 +121,7 @@ public final class JavaAdapter
 
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
-        Scriptable obj = (Scriptable) args[args.length - 1];
+        Scriptable obj = ScriptRuntime.toObject(cx, scope, args[N - 1]);
 
         JavaAdapterSignature sig;
         sig = new JavaAdapterSignature(superClass, interfaces, obj);
@@ -126,7 +131,8 @@ public final class JavaAdapter
             synchronized (generatedClasses) {
                 adapterName = "adapter" + serial++;
             }
-            byte[] code = createAdapterCode(cx, obj, adapterName,
+            ObjToIntMap names = getObjectFunctionNames(obj);
+            byte[] code = createAdapterCode(names, adapterName,
                                             superClass, interfaces, null);
 
             adapterClass = loadAdapterClass(cx, adapterName, code);
@@ -158,10 +164,11 @@ public final class JavaAdapter
             synchronized (generatedClasses) {
                 adapterName = "adapter" + serial++;
             }
+            ObjToIntMap names = getObjectFunctionNames(obj);
+            byte[] code = createAdapterCode(names, adapterName,
+                                            superClass, interfaces, null);
             Context cx = Context.enter();
             try {
-                byte[] code = createAdapterCode(cx, obj, adapterName,
-                                                superClass, interfaces, null);
                 adapterClass = loadAdapterClass(cx, adapterName, code);
                 generatedClasses.put(sig, adapterClass);
             } finally {
@@ -185,7 +192,29 @@ public final class JavaAdapter
         throw new ClassNotFoundException("adapter");
     }
 
-    public static byte[] createAdapterCode(Context cx, Scriptable jsObj,
+    private static ObjToIntMap getObjectFunctionNames(Scriptable obj)
+    {
+        Object[] ids = ScriptableObject.getPropertyIds(obj);
+        ObjToIntMap map = new ObjToIntMap(ids.length);
+        for (int i = 0; i != ids.length; ++i) {
+            if (!(ids[i] instanceof String))
+                continue;
+            String id = (String) ids[i];
+            Object value = ScriptableObject.getProperty(obj, id);
+            if (value instanceof Function) {
+                Function f = (Function)value;
+                int length = ScriptRuntime.toInt32(
+                                 ScriptableObject.getProperty(f, "length"));
+                if (length < 0) {
+                    length = 0;
+                }
+                map.put(id, length);
+            }
+        }
+        return map;
+    }
+
+    public static byte[] createAdapterCode(ObjToIntMap functionNames,
                                            String adapterName,
                                            Class superClass,
                                            Class[] interfaces,
@@ -221,14 +250,13 @@ public final class JavaAdapter
             for (int j = 0; j < methods.length; j++) {
                 Method method = methods[j];
                 int mods = method.getModifiers();
-                if (Modifier.isStatic(mods) || Modifier.isFinal(mods) ||
-                    jsObj == null)
-                {
+                if (Modifier.isStatic(mods) || Modifier.isFinal(mods)) {
                     continue;
                 }
-                if (!ScriptableObject.hasProperty(jsObj, method.getName())) {
+                String methodName = method.getName();
+                if (!functionNames.has(methodName)) {
                     try {
-                        superClass.getMethod(method.getName(),
+                        superClass.getMethod(methodName,
                                              method.getParameterTypes());
                         // The class we're extending implements this method and
                         // the JavaScript object doesn't have an override. See
@@ -240,7 +268,6 @@ public final class JavaAdapter
                 }
                 // make sure to generate only one instance of a particular
                 // method/signature.
-                String methodName = method.getName();
                 String methodKey = methodName + getMethodSignature(method);
                 if (! generatedOverrides.has(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
@@ -266,12 +293,10 @@ public final class JavaAdapter
             // resulting class won't be instantiable. otherwise, if the object
             // has a property of the same name, then an override is intended.
             boolean isAbstractMethod = Modifier.isAbstract(mods);
-            if (isAbstractMethod ||
-                (jsObj != null && ScriptableObject.hasProperty(jsObj,method.getName())))
-            {
+            String methodName = method.getName();
+            if (isAbstractMethod || functionNames.has(methodName)) {
                 // make sure to generate only one instance of a particular
                 // method/signature.
-                String methodName = method.getName();
                 String methodSignature = getMethodSignature(method);
                 String methodKey = methodName + methodSignature;
                 if (! generatedOverrides.has(methodKey)) {
@@ -292,34 +317,19 @@ public final class JavaAdapter
             }
         }
 
-        // Generate Java methods, fields for remaining properties that
-        // are not overrides.
-        if (jsObj != null) {
-            Object[] ids = ScriptableObject.getPropertyIds(jsObj);
-            for (int i = 0; i != ids.length; ++i) {
-                if (!(ids[i] instanceof String))
-                    continue;
-                String id = (String) ids[i];
-                if (generatedMethods.has(id))
-                    continue;
-                Object f = ScriptableObject.getProperty(jsObj, id);
-                int length;
-                if (f instanceof Function) {
-                    Function p = (Function) f;
-                    length = (int) Context.toNumber(
-                                ScriptableObject.getProperty(p, "length"));
-                } else if (f instanceof FunctionNode) {
-                    // This is used only by optimizer/Codegen
-                    length = ((FunctionNode)f).getParamCount();
-                } else {
-                    continue;
-                }
-                Class[] parms = new Class[length];
-                for (int k=0; k < length; k++)
-                    parms[k] = ScriptRuntime.ObjectClass;
-                generateMethod(cfw, adapterName, id, parms,
-                               ScriptRuntime.ObjectClass);
-            }
+        // Generate Java methods for remaining properties that are not
+        // overrides.
+        ObjToIntMap.Iterator iter = new ObjToIntMap.Iterator(functionNames);
+        for (iter.start(); !iter.done(); iter.next()) {
+            String functionName = (String)iter.getKey();
+            if (generatedMethods.has(functionName))
+                continue;
+            int length = iter.getValue();
+            Class[] parms = new Class[length];
+            for (int k=0; k < length; k++)
+                parms[k] = ScriptRuntime.ObjectClass;
+            generateMethod(cfw, adapterName, functionName, parms,
+                           ScriptRuntime.ObjectClass);
         }
         return cfw.toByteArray();
     }
@@ -655,7 +665,7 @@ public final class JavaAdapter
         // System.out.flush();
         cfw.startMethod(methodName, methodSignature,
                         ClassFileWriter.ACC_PUBLIC);
-        cfw.add(ByteCode.BIPUSH, (byte) parms.length);  // > 255 parms?
+        cfw.addPush(parms.length);
         cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
         cfw.add(ByteCode.ASTORE, arrayLocal);
 
