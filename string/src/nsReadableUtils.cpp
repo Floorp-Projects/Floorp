@@ -410,16 +410,16 @@ ToLowerCase( nsACString& aCString )
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
 
-NS_COM
+template <class StringT, class Comparator>
 PRBool
-FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+FindInReadable_Impl( const StringT& aPattern, StringT::const_iterator& aSearchStart, StringT::const_iterator& aSearchEnd, const Comparator& compare )
   {
     PRBool found_it = PR_FALSE;
 
       // only bother searching at all if we're given a non-empty range to search
     if ( aSearchStart != aSearchEnd )
       {
-        nsReadingIterator<PRUnichar> aPatternStart, aPatternEnd;
+        typename StringT::const_iterator aPatternStart, aPatternEnd;
         aPattern.BeginReading(aPatternStart);
         aPattern.EndReading(aPatternEnd);
 
@@ -427,7 +427,7 @@ FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearch
         while ( !found_it )
           {
               // fast inner loop (that's what it's called, not what it is) looks for a potential match
-            while ( aSearchStart != aSearchEnd && *aPatternStart != *aSearchStart )
+            while ( aSearchStart != aSearchEnd && !compare(*aPatternStart, *aSearchStart) )
               ++aSearchStart;
 
               // if we broke out of the `fast' loop because we're out of string ... we're done: no match
@@ -435,8 +435,8 @@ FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearch
               break;
 
               // otherwise, we're at a potential match, let's see if we really hit one
-            nsReadingIterator<PRUnichar> testPattern(aPatternStart);
-            nsReadingIterator<PRUnichar> testSearch(aSearchStart);
+            typename StringT::const_iterator testPattern(aPatternStart);
+            typename StringT::const_iterator testSearch(aSearchStart);
 
               // slow inner loop verifies the potential match (found by the `fast' loop) at the current position
             for(;;)
@@ -464,7 +464,7 @@ FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearch
 
                   // else if we mismatched ... it's time to advance to the next search position
                   //  and get back into the `fast' loop
-                if ( *testPattern != *testSearch )
+                if ( !compare(*testPattern, *testSearch) )
                   {
                     ++aSearchStart;
                     break;
@@ -476,70 +476,57 @@ FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearch
     return found_it;
   }
 
+
+class CaseSensitivePRUnicharComparator
+  {
+    public:
+      PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const { return lhs == rhs; }
+  };
+
+class CaseSensitiveCharComparator
+  {
+    public:
+      PRBool operator()( char lhs, char rhs ) const { return lhs == rhs; }
+  };
+
+class CaseInsensitivePRUnicharComparator
+  {
+    public:
+      PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const { return nsCRT::ToUpper(lhs) == nsCRT::ToUpper(rhs); }
+  };
+
+class CaseInsensitiveCharComparator
+  {
+    public:
+      PRBool operator()( char lhs, char rhs ) const { return nsCRT::ToUpper(lhs) == nsCRT::ToUpper(rhs); }
+  };
+
+NS_COM
+PRBool
+FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+  {
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitivePRUnicharComparator());
+  }
+
 NS_COM
 PRBool
 FindInReadable( const nsACString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
   {
-    PRBool found_it = PR_FALSE;
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitiveCharComparator());
+  }
 
-      // only bother searching at all if we're given a non-empty range to search
-    if ( aSearchStart != aSearchEnd )
-      {
-        nsReadingIterator<char> aPatternStart, aPatternEnd;
-        aPattern.BeginReading(aPatternStart);
-        aPattern.EndReading(aPatternEnd);
+NS_COM
+PRBool
+CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+  {
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitivePRUnicharComparator());
+  }
 
-          // outer loop keeps searching till we find it or run out of string to search
-        while ( !found_it )
-          {
-              // fast inner loop (that's what it's called, not what it is) looks for a potential match
-            while ( aSearchStart != aSearchEnd && *aPatternStart != *aSearchStart )
-              ++aSearchStart;
-
-              // if we broke out of the `fast' loop because we're out of string ... we're done: no match
-            if ( aSearchStart == aSearchEnd )
-              break;
-
-              // otherwise, we're at a potential match, let's see if we really hit one
-            nsReadingIterator<char> testPattern(aPatternStart);
-            nsReadingIterator<char> testSearch(aSearchStart);
-
-              // slow inner loop verifies the potential match (found by the `fast' loop) at the current position
-            for(;;)
-              {
-                  // we already compared the first character in the outer loop,
-                  //  so we'll advance before the next comparison
-                ++testPattern;
-                ++testSearch;
-
-                  // if we verified all the way to the end of the pattern, then we found it!
-                if ( testPattern == aPatternEnd )
-                  {
-                    found_it = PR_TRUE;
-                    aSearchEnd = testSearch; // return the exact found range through the parameters
-                    break;
-                  }
-
-                  // if we got to end of the string we're searching before we hit the end of the
-                  //  pattern, we'll never find what we're looking for
-                if ( testSearch == aSearchEnd )
-                  {
-                    aSearchStart = aSearchEnd;
-                    break;
-                  }
-
-                  // else if we mismatched ... it's time to advance to the next search position
-                  //  and get back into the `fast' loop
-                if ( *testPattern != *testSearch )
-                  {
-                    ++aSearchStart;
-                    break;
-                  }
-              }
-          }
-      }
-
-    return found_it;
+NS_COM
+PRBool
+CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+  {
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitiveCharComparator());
   }
 
   /**

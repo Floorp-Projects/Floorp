@@ -178,10 +178,13 @@ NS_COM void ToLowerCase( nsACString& );
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
    *
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
-   * If we need something faster; we can implement that later.
+   * If we need something faster, then we can implement that later.
    */
 NS_COM PRBool FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
 NS_COM PRBool FindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+
+NS_COM PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
 
 
   /**
@@ -190,7 +193,7 @@ NS_COM PRBool FindInReadable( const nsACString& aPattern, nsReadingIterator<char
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
    *
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
-   * If we need something faster; we can implement that later.
+   * If we need something faster, then we can implement that later.
    */
 NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
 NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
