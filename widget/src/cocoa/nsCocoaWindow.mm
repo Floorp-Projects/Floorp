@@ -364,11 +364,13 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   Inherited::BaseCreate ( aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                             aToolkit, aInitData );
                             
-  if ( !aNativeParent ) {
+  if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup))
+  {
     mOffsetParent = aParent;
 
     nsWindowType windowType = eWindowType_toplevel;
-    if (aInitData) {
+    if (aInitData)
+    {
       mWindowType = aInitData->mWindowType;
       // if a toplevel window was requested without a titlebar, use a dialog windowproc
       if (aInitData->mWindowType == eWindowType_toplevel &&
@@ -377,7 +379,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         windowType = eWindowType_dialog;
     } 
     else
+    {
       mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+    }
     
     // create the cocoa window
     NSRect rect;
