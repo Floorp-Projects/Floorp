@@ -46,18 +46,19 @@ node_is_error(TreeState *state)
 void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
-    IDL_tree iter = p;
-    for (; iter; iter = IDL_LIST(iter).next)
+    IDL_tree iter;
+    for (iter = p; iter; iter = IDL_LIST(iter).next) {
         if (!foreach(IDL_LIST(iter).data,
                      IDL_tree_get_scope(IDL_LIST(iter).data), user_data))
             return;
+    }
 }
 
 /*
  * The bulk of the generation happens here.
  */
 gboolean
-process_node(TreeState *state)
+xpidl_process_node(TreeState *state)
 {
     nodeHandler *handlerp = state->dispatch, handler;
     gint type;
@@ -86,7 +87,7 @@ process_tree(TreeState *state)
     if (!process_tree_pass1(state))
         return FALSE;
     state->tree = top;		/* pass1 might mutate state */
-    if (!process_node(state))
+    if (!xpidl_process_node(state))
         return FALSE;
     state->tree = NULL;
     if (!process_tree_pass1(state))
@@ -143,7 +144,7 @@ fopen_from_includes(const char *filename, const char *mode,
         return stdin;
 
     for (; include_path && !file; include_path = include_path->next) {
-        filebuf = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s", 
+        filebuf = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
                                   include_path->directory, filename);
         if (!filebuf)
             return NULL;
@@ -161,28 +162,16 @@ fopen_from_includes(const char *filename, const char *mode,
 static struct input_callback_data *
 new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 {
-    struct input_callback_data *new_data = calloc(1, sizeof *new_data);
-    if (!new_data)
-        return NULL;
+    struct input_callback_data *new_data = xpidl_malloc(sizeof *new_data);
+    memset(new_data, 0, sizeof *new_data);
     new_data->input = fopen_from_includes(filename, "r", include_path);
     if (!new_data->input)
         return NULL;
-    new_data->buf = malloc(INPUT_BUF_CHUNK + 1); /* trailing NUL */
-    if (!new_data->buf) {
-        fclose(new_data->input);
-        return NULL;
-    }
-    new_data->len = 0;
+    new_data->buf = xpidl_malloc(INPUT_BUF_CHUNK + 1); /* trailing NUL */
     new_data->point = new_data->buf;
     new_data->max = INPUT_BUF_CHUNK;
-    new_data->filename = strdup(filename);
-    if (!new_data->filename) {
-        free(new_data->buf);
-        fclose(new_data->input);
-        return NULL;
-    }
+    new_data->filename = xpidl_strdup(filename);
     new_data->lineno = 1;
-    new_data->next = NULL;
     return new_data;
 }
 
@@ -194,7 +183,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
     struct input_callback_data *data = stack->top, *new_data = NULL;
     int avail, copy;
     char *check_point, *ptr, *end_copy, *raw_start, *comment_start,
-        *include_start;
+         *include_start;
 
     switch(reason) {
       case IDL_INPUT_REASON_INIT:
@@ -206,7 +195,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         IDL_file_set(new_data->filename, new_data->lineno);
         stack->top = new_data;
         return 0;
-	
+
       case IDL_INPUT_REASON_FILL:
     fill_start:
         avail = data->buf + data->len - data->point;
@@ -273,7 +262,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
                 end_copy = comment_start;
             }
-                        
+
             /* include */
             if ((include_start = strstr(check_point, "#include")) &&
                 (!raw_start || include_start < raw_start) &&
@@ -295,11 +284,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
         } else {
 #ifdef DEBUG_shaver_bufmgmt
-            fprintf(stderr, "already have special %d/%d/%d\n", 
+            fprintf(stderr, "already have special %d/%d/%d\n",
                     data->f_raw, data->f_comment, data->f_include);
 #endif
         }
-        
+
         if ((end_copy == data->point || /* just found one at the start */
              end_copy == data->buf + data->len /* left over */) &&
             (data->f_raw || data->f_comment || data->f_include)) {
@@ -349,7 +338,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                     return -1;
                 }
                 data->point = ptr+1;
-                
+
                 *ptr = 0;
                 ptr = strrchr(filename, '.');
 
@@ -359,11 +348,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                 assert(stack->includes);
                 if (!g_hash_table_lookup(stack->includes, filename)) {
                     char *basename = filename;
-                    filename = strdup(filename);
+                    filename = xpidl_strdup(filename);
                     ptr = strrchr(basename, '.');
                     if (ptr)
                         *ptr = 0;
-                    basename = strdup(basename);
+                    basename = xpidl_strdup(basename);
                     g_hash_table_insert(stack->includes, filename, basename);
                     new_data = new_input_callback_data(filename,
                                                        stack->include_path);
@@ -381,22 +370,21 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
                     /* now continue getting data from new file */
                     goto fill_start;
-                } else {
-                    /*
-                     * if we started with a #include, but we've already
-                     * processed that file, we need to continue scanning
-                     * for special sequences.
-                     */
-                    data->f_include = INPUT_IN_NONE;
-                    goto scan_for_special;
                 }
+		/*
+		 * if we started with a #include, but we've already
+		 * processed that file, we need to continue scanning
+		 * for special sequences.
+		 */
+		data->f_include = INPUT_IN_NONE;
+		goto scan_for_special;
             }
         } else {
 #ifdef DEBUG_shaver_bufmgmt
             fprintf(stderr, "no specials\n");
 #endif
         }
-        
+
         avail = MIN(data->buf + data->len, end_copy) - data->point;
 #ifdef DEBUG_shaver_bufmgmt
         fprintf(stderr,
@@ -413,7 +401,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         memcpy(cb_data->fill.buffer, data->point, copy);
         data->point += copy;
         return copy;
-	
+
       case IDL_INPUT_REASON_ABORT:
       case IDL_INPUT_REASON_FINISH:
         if (data->input != stdin)
@@ -447,15 +435,15 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         return 0;
     }
 
-    state.basename = strdup(filename);
+    state.basename = xpidl_strdup(filename);
     tmp = strrchr(state.basename, '.');
     if (tmp)
         *tmp = '\0';
-    
+
     if (!basename)
-        outname = strdup(state.basename);
+        outname = xpidl_strdup(state.basename);
     else
-        outname = strdup(basename);
+        outname = xpidl_strdup(basename);
 
     /* so we don't include it again! */
     g_hash_table_insert(stack.includes, filename, state.basename);
@@ -474,6 +462,11 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         }
         return 0;
     }
+
+    state.basename = xpidl_strdup(filename);
+    tmp = strrchr(state.basename, '.');
+    if (tmp)
+        *tmp = '\0';
 
     /* so we don't make a #include for it  */
     g_hash_table_remove(stack.includes, filename);
@@ -509,6 +502,6 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     */
     IDL_ns_free(state.ns);
     IDL_tree_free(top);
-    
+
     return 1;
 }

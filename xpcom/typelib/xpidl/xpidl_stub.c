@@ -16,21 +16,13 @@
  * Reserved.
  */
 
-#include "xpidl.h"
-
 /*
- * Generates documentation from javadoc-style comments in XPIDL files.
+ * Generate JS API class stub functions from XPIDL.
  */
 
-nodeHandler *xpidl_doc_dispatch()
-{
-    static nodeHandler table[IDLN_LAST];
-    static gboolean initialized = FALSE;
+#include "xpidl.h"
 
-    if (!initialized) {
-        /* Initialize non-NULL elements */
-        initialized = TRUE;
-    }
-  
-    return table;  
+nodeHandler *xpidl_stub_dispatch()
+{
+    return NULL;
 }

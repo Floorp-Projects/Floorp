@@ -148,7 +148,7 @@ interface(TreeState *state)
 
     state->tree = IDL_INTERFACE(iface).body;
 
-    if (state->tree && !process_node(state))
+    if (state->tree && !xpidl_process_node(state))
         return FALSE;
 
     fputs("};\n", state->file);
@@ -162,7 +162,7 @@ list(TreeState *state)
     IDL_tree iter;
     for (iter = state->tree; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
-        if (!process_node(state))
+        if (!xpidl_process_node(state))
             return FALSE;
     }
     return TRUE;
@@ -310,7 +310,7 @@ param_dcls(TreeState *state)
             return FALSE;
         fputs(" ", state->file);
         state->tree = (IDL_tree)decl.simple_declarator;
-        if (!process_node(state))
+        if (!xpidl_process_node(state))
             return FALSE;
         if (IDL_LIST(iter).next)
             fputs(", ", state->file);
@@ -364,7 +364,7 @@ static gboolean
 do_enum(TreeState *state)
 {
     IDL_tree enumb = state->tree, iter;
-    
+
     fprintf(state->file, "enum %s {\n",
             IDL_IDENT(IDL_TYPE_ENUM(enumb).ident).str);
 
@@ -491,7 +491,7 @@ codefrag(TreeState *state)
     return TRUE;
 }
 
-nodeHandler *headerDispatch()
+nodeHandler *xpidl_header_dispatch()
 {
     static nodeHandler table[IDLN_LAST];
     static gboolean initialized = FALSE;
@@ -508,6 +508,6 @@ nodeHandler *headerDispatch()
         table[IDLN_TYPE_DCL] = do_typedef;
         initialized = TRUE;
     }
-  
-    return table;  
+
+    return table;
 }
