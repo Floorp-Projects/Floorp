@@ -186,7 +186,7 @@ nsPluginInstallerWizard.prototype.canCancel = function (aBool){
 }
 
 nsPluginInstallerWizard.prototype.showLicenses = function (){
-  this.canAdvance(true);
+  this.canAdvance(false);
   this.canRewind(false);
 
   // only add if a license is provided and the plugin was selected to
@@ -198,14 +198,14 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
   }
 
   if (this.mPluginLicenseArray.length == 0) {
-    // no plugins require licenses  
-    this.advancePage(null, true, false, false);
+    // no plugins require licenses
+    this.advancePage(null, false, false, false);
   } else {
     this.licenseAcceptCounter = 0;
     document.getElementById("licenseIFrame").contentWindow.addEventListener("load", gPluginInstaller.enableNext, false);
     this.showLicense();
   }
-} 
+}
 
 nsPluginInstallerWizard.prototype.enableNext = function (){
   gPluginInstaller.canAdvance(true);
@@ -243,7 +243,7 @@ nsPluginInstallerWizard.prototype.showNextLicense = function (){
       this.canRewind(true);
     }
   }
-  
+
   return rv;
 }
 
