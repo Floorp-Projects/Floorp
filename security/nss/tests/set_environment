@@ -70,7 +70,11 @@ then
         PATH=$PATH:/tools/ns/workshop-4.0/bin
     fi
     PATH=$PATH:/usr/ccs/bin:/usr/ucb/bin:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin
-    PATH=/usr/ucb:/h/tortoise/export/share/builds/tools/sparc_sun_solaris2.5.1/perl5.004/bin:$PATH
+    if [ "$os_full" = "SOLARISx86 2.8" ] ; then
+        PATH=/usr/ucb:/opt/usr/local/bin:$PATH
+    else
+        PATH=/usr/ucb:/h/tortoise/export/share/builds/tools/sparc_sun_solaris2.5.1/perl5.004/bin:$PATH
+    fi
     export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
 elif [ $os_name = "IRIX" ]
 then
