@@ -61,6 +61,7 @@ public:
   //NS_PIBOXOBJECT interfaces
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
+  NS_IMETHOD InvalidatePresentationStuff();
 
   nsITreeBoxObject* mTreeBody;
 };
@@ -88,6 +89,15 @@ nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
   return nsBoxObject::SetDocument(aDocument);
 }
 
+
+NS_IMETHODIMP
+nsTreeBoxObject::InvalidatePresentationStuff()
+{
+  SetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), nsnull);
+  SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), nsnull);
+
+  return nsBoxObject::InvalidatePresentationStuff();
+}
   
 nsTreeBoxObject::nsTreeBoxObject()
 :mTreeBody(nsnull)
