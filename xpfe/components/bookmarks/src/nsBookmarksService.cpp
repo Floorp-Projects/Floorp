@@ -2674,6 +2674,27 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 
 
 NS_IMETHODIMP
+nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
+{
+	if (!aURI)		return(NS_ERROR_UNEXPECTED);
+	if (!isBookmarkedFlag)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)		return(NS_ERROR_UNEXPECTED);
+
+	*isBookmarkedFlag = PR_FALSE;
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFResource>	bookmark;
+	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark))))
+	{
+		rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
+			PR_TRUE, isBookmarkedFlag);
+	}
+	return(rv);
+}
+
+
+
+NS_IMETHODIMP
 nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 {
 	nsCOMPtr<nsIRDFResource>	bookmark;
