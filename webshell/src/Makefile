@@ -24,7 +24,9 @@ MODULE=raptor
 
 REQUIRES=xpcom raptor dom js plugin java netlib pref jsurl
 
+ifneq ($(OS_TARGET),Rhapsody)
 EXTRA_DSO_LDOPTS += -lm
+endif
 
 INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/plugin -I$(PUBLIC)/java -I$(PUBLIC)/jsurl
 
