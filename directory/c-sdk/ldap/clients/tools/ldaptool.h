@@ -53,10 +53,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 extern int getopt (int argc, char *const *argv, const char *optstring);
+#include <io.h>	/* for _mktemp() */
+#define LDAPTOOL_MKTEMP( p )	_mktemp( p )
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#define LDAPTOOL_MKTEMP( p )	mktemp( p )
 #endif
 
 #include <ctype.h>

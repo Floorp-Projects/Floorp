@@ -295,7 +295,7 @@ main( int argc, char **argv )
 static void
 options_callback( int option, char *optarg )
 {
-    char *s, *p, *temp_arg, *ps_ptr, *ps_arg;
+    char *s, *temp_arg, *ps_ptr, *ps_arg;
     int i=0;
     
     switch( option ) {
@@ -910,7 +910,7 @@ print_entry( ld, entry, attrsonly )
 #endif
 		    tmpfp = NULL;
 
-		    if ( mktemp( tmpfname ) == NULL ) {
+		    if ( LDAPTOOL_MKTEMP( tmpfname ) == NULL ) {
 			perror( tmpfname );
 		    } else if (( tmpfp = fopen( tmpfname, mode)) == NULL ) {
 			perror( tmpfname );

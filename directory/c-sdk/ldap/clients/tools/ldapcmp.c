@@ -251,7 +251,7 @@ cmp2( LDAP *ld1, LDAP *ld2, LDAPMessage *e1, int findonly)
 {
     LDAPMessage		*e2, *res;
     char		*dn, *attrcmp;
-    int			found=0, rc, msgid;
+    int			found=0, rc;
     ATTR		*a1, *a2;
 
     dn = ldap_get_dn( ld1, e1 );
@@ -546,7 +546,7 @@ print_entry( ld, entry, attrsonly )
 			    ldaptool_get_tmp_dir(), a );
 		    tmpfp = NULL;
 
-		    if ( mktemp( tmpfname ) == NULL ) {
+		    if ( LDAPTOOL_MKTEMP( tmpfname ) == NULL ) {
 			perror( tmpfname );
 		    } else if (( tmpfp = fopen( tmpfname, mode)) == NULL ) {
 			perror( tmpfname );
