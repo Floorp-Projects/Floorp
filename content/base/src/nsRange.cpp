@@ -648,17 +648,12 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   
   // no null nodes please
   if (!aNode1 || !aNode2) 
-    return nsCOMPtr<nsIDOMNode>();  // moral equiv or nsnull
+    return nsCOMPtr<nsIDOMNode>();  // moral equiv of nsnull
   
   // shortcut for common case - both nodes are the same
   if (aNode1 == aNode2)
   {
-    // should be able to remove this error check later
-    nsresult res = aNode1->GetParentNode(getter_AddRefs(theParent));
-    if (!NS_SUCCEEDED(res)) 
-      return nsCOMPtr<nsIDOMNode>();  // moral equiv or nsnull
-
-    return theParent;
+    return aNode1;
   }
 
   // otherwise traverse the tree for the common ancestor
@@ -673,7 +668,7 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
     NS_NOTREACHED("nsRange::CommonParent");
     delete array1;
     delete array2;
-    return nsCOMPtr<nsIDOMNode>();
+    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
   }
   
   // get ancestors of each node
@@ -686,7 +681,7 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
     NS_NOTREACHED("nsRange::CommonParent");
     delete array1;
     delete array2;
-    return nsCOMPtr<nsIDOMNode>();
+    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
   }
   
   // sanity test (for now) - the end of each array
@@ -696,7 +691,7 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
     NS_NOTREACHED("nsRange::CommonParent");
     delete array1;
     delete array2;
-    return nsCOMPtr<nsIDOMNode>();
+    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
   }
   
   // back through the ancestors, starting from the root, until
@@ -881,7 +876,7 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIDOMNode>theParent( dont_QueryInterface(aParent) );
+  nsCOMPtr<nsIDOMNode>theParent( do_QueryInterface(aParent) );
     
   // must be in same document as endpoint, else 
   // endpoint is collapsed to new start.
@@ -902,7 +897,7 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
+  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -911,7 +906,7 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
+  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -924,7 +919,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode>theParent( dont_QueryInterface(aParent) );
+  nsCOMPtr<nsIDOMNode>theParent( do_QueryInterface(aParent) );
   
   // must be in same document as startpoint, else 
   // endpoint is collapsed to new end.
@@ -945,7 +940,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
+  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -954,7 +949,7 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
+  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -985,7 +980,7 @@ nsresult nsRange::Unposition()
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
   nsCOMPtr<nsIDOMNode> parent;
-  nsCOMPtr<nsIDOMNode> theNode( dont_QueryInterface(aN) );
+  nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
   if (!NS_SUCCEEDED(res))
@@ -997,7 +992,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
-  nsCOMPtr<nsIDOMNode> theNode( dont_QueryInterface(aN) );
+  nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
   nsresult res = aN->GetChildNodes(getter_AddRefs(aChildNodes));
@@ -1503,7 +1498,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aParentNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
+  nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
   // quick return if no range list
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
@@ -1548,8 +1543,8 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aParentNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
-  nsCOMPtr<nsIContent> removed( dont_QueryInterface(aRemovedNode) );
+  nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
+  nsCOMPtr<nsIContent> removed( do_QueryInterface(aRemovedNode) );
   // quick return if no range list
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
@@ -1606,8 +1601,8 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   // but we do need to pop out any range endpoints inside the subtree
   // rooted by aReplacedNode.
   
-  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
-  nsCOMPtr<nsIContent> replaced( dont_QueryInterface(aReplacedNode) );
+  nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
+  nsCOMPtr<nsIContent> replaced( do_QueryInterface(aReplacedNode) );
   nsCOMPtr<nsIDOMNode> parentDomNode; 
   nsresult res;
   
@@ -1626,7 +1621,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aTextNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> textNode( dont_QueryInterface(aTextNode) );
+  nsCOMPtr<nsIContent> textNode( do_QueryInterface(aTextNode) );
   nsVoidArray *theRangeList;
   aTextNode->GetRangeList(theRangeList);
   // the caller already checked to see if there was a range list
