@@ -45,6 +45,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsFormFrame.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
@@ -305,6 +306,28 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   }
 }
 
+// XXX This is a copy of the code in nsImageFrame.cpp
+static nsresult
+UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
+                 PRIntn aStatus)
+{
+  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+    // Now that the size is available, trigger a content-changed reflow
+    nsIContent* content = nsnull;
+    aFrame->GetContent(content);
+    if (nsnull != content) {
+      nsIDocument* document = nsnull;
+      content->GetDocument(document);
+      if (nsnull != document) {
+        document->ContentChanged(content, nsnull);
+        NS_RELEASE(document);
+      }
+      NS_RELEASE(content);
+    }
+  }
+  return NS_OK;
+}
+
 void 
 nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
@@ -326,7 +349,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
         mImageLoader.SetURL(src);
       }
-      mImageLoader.GetDesiredSize(aPresContext, aReflowState, this, nsnull,
+      mImageLoader.GetDesiredSize(aPresContext, aReflowState, this, UpdateImageFrame,
                                   aDesiredLayoutSize);
     } else {  // there is a widget
       nsSize styleSize;
