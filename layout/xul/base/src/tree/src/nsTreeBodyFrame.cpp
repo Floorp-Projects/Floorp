@@ -581,7 +581,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetPageCount(PRInt32 *_retval)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 {
-  nsLeafBoxFrame::Invalidate(mPresContext, mRect, PR_FALSE);
+  if (!mRect.IsEmpty()) {
+    nsLeafBoxFrame::Invalidate(mPresContext, mRect, PR_FALSE);
+  }
   return NS_OK;
 }
 
@@ -591,7 +593,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
     return NS_OK;
 
   nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aIndex-mTopRowIndex), mInnerBox.width, mRowHeight);
-  nsLeafBoxFrame::Invalidate(mPresContext, rowRect, PR_FALSE);
+  if (!rowRect.IsEmpty()) {
+    nsLeafBoxFrame::Invalidate(mPresContext, rowRect, PR_FALSE);
+  }
   return NS_OK;
 }
 

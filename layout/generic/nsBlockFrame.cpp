@@ -913,8 +913,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       printf("%p invalidate 1 (%d, %d, %d, %d)\n",
              this, 0, 0, mRect.width, mRect.height);
 #endif
-
-      Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+      nsRect damageRect(0, 0, mRect.width, mRect.height);
+      if (!damageRect.IsEmpty()) {
+        Invalidate(aPresContext,damageRect);
+      }
     } else {
       nsMargin  border = aReflowState.mComputedBorderPadding -
                          aReflowState.mComputedPadding;
@@ -943,7 +945,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
         printf("%p invalidate 2 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
-        Invalidate(aPresContext, damageRect);
+        if (!damageRect.IsEmpty()) {
+          Invalidate(aPresContext, damageRect);
+        }
       }
   
       // See if our height changed
@@ -970,7 +974,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
         printf("%p invalidate 3 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
-        Invalidate(aPresContext, damageRect);
+        if (!damageRect.IsEmpty()) {
+          Invalidate(aPresContext, damageRect);
+        }
       }
     }
   }
@@ -2376,7 +2382,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         printf("%p invalidate 6 (%d, %d, %d, %d)\n",
                this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-        Invalidate(aState.mPresContext, dirtyRect);
+        if (!dirtyRect.IsEmpty()) {
+          Invalidate(aState.mPresContext, dirtyRect);
+        }
 
       } else {
         if (oldCombinedArea.width != lineCombinedArea.width) {
@@ -2396,7 +2404,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           printf("%p invalidate 7 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-          Invalidate(aState.mPresContext, dirtyRect);
+          if (!dirtyRect.IsEmpty()) {
+            Invalidate(aState.mPresContext, dirtyRect);
+          }
         }
         if (oldCombinedArea.height != lineCombinedArea.height) {
           nsRect  dirtyRect;
@@ -2415,7 +2425,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           printf("%p invalidate 8 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-          Invalidate(aState.mPresContext, dirtyRect);
+          if (!dirtyRect.IsEmpty()) {
+            Invalidate(aState.mPresContext, dirtyRect);
+          }
         }
       }
     }
@@ -2516,7 +2528,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       if (aLine->IsForceInvalidate())
         printf("  dirty line is %p\n");
 #endif
-      Invalidate(aState.mPresContext, dirtyRect);
+      if (!dirtyRect.IsEmpty()) {
+        Invalidate(aState.mPresContext, dirtyRect);
+      }
     }
   }
 
@@ -2614,7 +2628,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
     else {
       // Free up the fromLine now that it's empty
       // Its bounds might need to be redrawn, though.
-      if (aDamageDeletedLines) {
+      if (aDamageDeletedLines && !fromLine->mBounds.IsEmpty()) {
         Invalidate(aState.mPresContext, fromLine->mBounds);
       }
       if (aFromLine.next() != end_lines())
@@ -3152,7 +3166,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                        applyTopMargin, aState.mPrevBottomMargin,
                        aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
-  if (brc.BlockShouldInvalidateItself()) {
+  if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
     Invalidate(aState.mPresContext, mRect);
   }
 
@@ -4928,7 +4942,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
 #endif
-        Invalidate(aPresContext, lineCombinedArea);
+        if (!lineCombinedArea.IsEmpty()) {
+          Invalidate(aPresContext, lineCombinedArea);
+        }
         cur->Destroy(presShell);
 
         // If we're removing a line, ReflowDirtyLines isn't going to
@@ -5084,7 +5100,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
     }
   }
 
-  if (brc.BlockShouldInvalidateItself()) {
+  if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
     Invalidate(aState.mPresContext, mRect);
   }
 

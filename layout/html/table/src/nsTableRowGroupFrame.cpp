@@ -1525,8 +1525,10 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
           // repaint the entire row
           // XXX Improve this so the row knows it should bitblt (or repaint) those
           // cells that change position...
-          Invalidate(aPresContext, kidRect);
-
+          if (!kidRect.IsEmpty()) {
+            Invalidate(aPresContext, kidRect);
+          }
+          
           // Invalidate the area we're offseting. Note that we only repaint within
           // our existing frame bounds.
           // XXX It would be better to bitblt the row frames and not repaint,

@@ -4741,7 +4741,9 @@ PresShell::UnsuppressAndInvalidate()
   if (rootFrame) {
     nsRect rect;
     rootFrame->GetRect(rect);
-    ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
+    if (!rect.IsEmpty()) {
+      ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
+    }
   }
 
   if (ourWindow)

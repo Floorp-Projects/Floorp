@@ -2077,6 +2077,11 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
                     const nsRect&   aDamageRect,
                     PRBool          aImmediate) const
 {
+  if (aDamageRect.IsEmpty()) {
+    NS_WARNING("empty damage rect: update caller to avoid fcn call overhead");
+    return;
+  }
+
   if (aPresContext) {
     // Don't allow invalidates to do anything when
     // painting is suppressed.
@@ -2093,6 +2098,13 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   nsIViewManager* viewManager = nsnull;
   nsRect damageRect(aDamageRect);
 
+#if 0
+  // NOTE: inflating the damagerect is to account for outlines but 
+  // ONLY WHEN outlines are actually drawn outside of the frame. This
+  // assumes that they are *but they are not* and it also assumes that the
+  // entire frame is being invalidated, which it often is not
+  // - therefore, this code is invalid and has been removed
+
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
   const nsStyleOutline* outline;
@@ -2102,6 +2114,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   if (width > 0) {
     damageRect.Inflate(width, width);
   }
+#endif
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   nsIView* view;
@@ -2613,7 +2626,9 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
   nsRect frameRect;
   GetRect(frameRect);
   nsRect rect(0, 0, frameRect.width, frameRect.height);
-  Invalidate(aPresContext, rect, PR_FALSE);
+  if (!rect.IsEmpty()) {
+    Invalidate(aPresContext, rect, PR_FALSE);
+  }
 #if 0
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
