@@ -234,17 +234,18 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
       break;
 
     document->GetShellAt(0, getter_AddRefs(presShell));
-    if (!presShell)
-      break;
-    nsCOMPtr<nsICaret> caret;
-    presShell->GetCaret(getter_AddRefs(caret));
-    if (!caret)
-      break;
+    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
+    NS_ASSERTION(selCon, "No selection controller for presShell");
 
-    if (mIsActive) // store whether caret was visible so that we can restore that state when menu is closed
-      caret->GetCaretVisible(&mCaretWasVisible);
-    if (mCaretWasVisible)
-      caret->SetCaretVisible(!mIsActive);
+    if (mIsActive) {// store whether caret was visible so that we can restore that state when menu is closed
+      PRBool isCaretVisible;
+      selCon->GetCaretEnabled(&isCaretVisible);
+      mCaretWasVisible |= isCaretVisible;
+    }
+    selCon->SetCaretEnabled(!mIsActive && mCaretWasVisible);
+    if (!mIsActive) {
+      mCaretWasVisible = PR_FALSE;
+    }
   } while (0);
 
   NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
