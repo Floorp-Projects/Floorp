@@ -31,6 +31,7 @@
 %}
 
 interface gfxIImageFrame;
+native nsRectRef(nsRect &);
 
 /**
  * gfxIImageFrame interface
@@ -92,8 +93,9 @@ interface gfxIImageFrame : nsISupports
 
   /**
    * The rectangle this frame ocupies.
+   * @param rect this is really an out parameter.
    */
-  [noscript] readonly attribute nsRect rect;
+  [noscript] void getRect(in nsRectRef rect);
 
   /**
    * The image data format the image was created with.
