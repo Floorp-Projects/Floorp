@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 // vim:cindent:sw=4:et:ts=8:
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
@@ -15,10 +16,15 @@
 
 // Additional contributors:
 //  L. David Baron - JP_REALTIME, JPROF_PTHREAD_HACK, and SIGUSR1 handling
+//  Mike Shaver - JP_RTC_HZ support
 
 // The linux glibc hides part of sigaction if _POSIX_SOURCE is defined
 #if defined(linux)
 #undef _POSIX_SOURCE
+#undef _SVID_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #endif
 
 // Some versions of glibc (i.e., the one that comes with RedHat 6.0 rather
@@ -26,15 +32,22 @@
 // If things don't work for you, try defining this:
 //#define JPROF_PTHREAD_HACK
 
-#include <stdlib.h>
-#include <signal.h>
+#include <errno.h>
+#if defined(linux)
+#include <linux/rtc.h>
+#include <pthread.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include "libmalloc.h"
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -55,19 +68,10 @@ extern r_debug _r_debug;
 
 
 static int gLogFD = -1;
+static pthread_t main_thread;
 
 static void startSignalCounter(unsigned long milisec);
 
-static void writeStrStdout(const char* str)
-{
-    int len = strlen(str);
-    if(len) {
-        int wc, tot=0;
-	do {
-	    wc = write(1, str, len);
-	} while(wc>0 && (tot+=wc)<len);
-    }
-}
 
 //----------------------------------------------------------------------
 
@@ -85,10 +89,16 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
   int skip = 3;
 #else
   // This is a linux hack we have to do to figure out where the signal was
-  // called from
-  me->pcs[numpcs++] = first;
+  // called from.  Only use |first| if it looks like a reasonable value
+  // (sometimes it's not -- in this case we'll just lose the lowest frame
+  // before the signal invocation).
+  if (first >= (char *)0x08000000 && first <= (char *)0x7fffffff) {
+    me->pcs[numpcs++] = first;
+  }
 
-  int skip = 3;
+  // skip 2 frames: StackHook, __restore_rt.
+  // The next frame is the frame _above_ |first|.
+  int skip = 2;
 #endif
   while (numpcs < MAX_STACK_CRAWL) {
     u_long* nextbp = (u_long*) *bp++;
@@ -142,7 +152,7 @@ static void DumpAddressMap()
 static void EndProfilingHook(int signum)
 {
     DumpAddressMap();
-    writeStrStdout("Jprof: profiling paused.\n");
+    puts("Jprof: profiling paused.");
 }
 
 //----------------------------------------------------------------------
@@ -166,7 +176,9 @@ Log(u_long aTime, char *first)
 #endif
 }
 
-static int  realTime = 0;
+static int realTime;
+static int rtcHz;
+static int rtcFD = -1;
 
 /* Lets interrupt at 10 Hz.  This is so my log files don't get too large.
  * This can be changed to a faster value latter.  This timer is not
@@ -191,6 +203,60 @@ static void startSignalCounter(unsigned long milisec)
 
 static long timerMiliSec = 50;
 
+#if defined(linux)
+static int setupRTCSignals(int hz, struct sigaction *sap)
+{
+    /* global */ rtcFD = open("/dev/rtc", O_RDONLY);
+    if (rtcFD < 0) {
+        perror("JPROF_RTC setup: open(\"/dev/rtc\", O_RDONLY)");
+        return 0;
+    }
+
+    if (sigaction(SIGIO, sap, NULL) == -1) {
+        perror("JPROF_RTC setup: sigaction(SIGIO)");
+        return 0;
+    }
+
+    if (ioctl(rtcFD, RTC_IRQP_SET, hz) == -1) {
+        perror("JPROF_RTC setup: ioctl(/dev/rtc, RTC_IRQP_SET, $JPROF_RTC_HZ)");
+        return 0;
+    }
+
+    if (ioctl(rtcFD, RTC_PIE_ON, 0) == -1) {
+        perror("JPROF_RTC setup: ioctl(/dev/rtc, RTC_PIE_ON)");
+        return 0;
+    }
+
+    if (fcntl(rtcFD, F_SETSIG, 0) == -1) {
+        perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETSIG, 0)");
+        return 0;
+    }
+
+    if (fcntl(rtcFD, F_SETOWN, getpid()) == -1) {
+        perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETOWN, getpid())");
+        return 0;
+    }
+
+    return 1;
+}
+
+int enableRTCSignals()
+{
+    int flags = fcntl(rtcFD, F_GETFL);
+    if (flags < 0) {
+        perror("JPROF_RTC setup: fcntl(/dev/rtc, F_GETFL)");
+        return 0;
+    }
+
+    if (fcntl(rtcFD, F_SETFL, flags | FASYNC) == -1) {
+        perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags | FASYNC)");
+        return 0;
+    }
+
+    return 1;
+}
+#endif
+
 static void StackHook(
 int signum,
 siginfo_t *info,
@@ -198,12 +264,26 @@ void *mystry)
 {
     static struct timeval tFirst;
     static int first=1;
-    size_t milisec;
+    size_t milisec = 0;
+
+#if defined(linux)
+    if (rtcHz && pthread_self() != main_thread) {
+      // Only collect stack data on the main thread, for now.
+      return;
+    }
+#endif
 
     if(first && !(first=0)) {
-        writeStrStdout("Jprof: received first timer signal\n");
-        gettimeofday(&tFirst, 0);
-        milisec = 0;
+        puts("Jprof: received first signal");
+#if defined(linux)
+        if (rtcHz) {
+            enableRTCSignals();
+        } else
+#endif
+        {
+            gettimeofday(&tFirst, 0);
+            milisec = 0;
+        }
     } else {
 	struct timeval tNow;
         gettimeofday(&tNow, 0);
@@ -222,7 +302,8 @@ void *mystry)
     // the EIP register when the handler was called
     Log(milisec, ((char**)mystry)[19]);
 #endif
-    startSignalCounter(timerMiliSec);
+    if (!rtcHz)
+        startSignalCounter(timerMiliSec);
 }
 
 void setupProfilingStuff(void)
@@ -272,6 +353,26 @@ void setupProfilingStuff(void)
 	    if(first) {
 	        firstDelay = atol(first+9);
 	    }
+
+            char *rtc = strstr(tst, "JP_RTC_HZ=");
+            if (rtc) {
+#if defined(linux)
+                rtcHz = atol(rtc+10);
+
+#define IS_POWER_OF_TWO(x) (((x) & ((x) - 1)) == 0)
+
+                if (!IS_POWER_OF_TWO(rtcHz) || rtcHz < 2) {
+                    fprintf(stderr, "JP_RTC_HZ must be power of two and >= 2, "
+                            "but %d was provided; using default of 2048\n",
+                            rtcHz);
+                    rtcHz = 2048;
+                }
+#else
+                fputs("JP_RTC_HZ found, but RTC profiling only supported on "
+                      "Linux!\n", stderr);
+                  
+#endif
+            }
 	}
 
 	if(!doNotStart) {
@@ -284,21 +385,31 @@ void setupProfilingStuff(void)
 		} else {
 		    struct sigaction action;
 		    sigset_t mset;
-		    char buffer[1024];
 
 		    // Dump out the address map when we terminate
 		    atexit(DumpAddressMap);
+
+		    main_thread = pthread_self();
 
 		    sigemptyset(&mset);
 		    action.sa_handler = NULL;
 		    action.sa_sigaction = StackHook;
 		    action.sa_mask  = mset;
 		    action.sa_flags = SA_RESTART | SA_SIGINFO;
-		    if (realTime) {
-		    	sigaction(SIGALRM, &action, NULL);
-		    } else {
-		    	sigaction(SIGPROF, &action, NULL);
-		    }
+#if defined(linux)
+                    if (rtcHz) {
+                        if (!setupRTCSignals(rtcHz, &action)) {
+                            fputs("jprof: Error initializing RTC, NOT "
+                                  "profiling\n", stderr);
+                            return;
+                        }
+                    } else
+#endif
+                    if (realTime) {
+                        sigaction(SIGALRM, &action, NULL);
+                    } else {
+                        sigaction(SIGPROF, &action, NULL);
+                    }
 
 		    // make it so a SIGUSR1 will stop the profiling
 		    // Note:  It currently does not close the logfile.
@@ -311,14 +422,24 @@ void setupProfilingStuff(void)
 		    stop_action.sa_flags = SA_RESTART;
 		    sigaction(SIGUSR1, &stop_action, NULL);
 
-		    sprintf(buffer, "Jprof: Initialized signal hander and set "
-		    "timer for %lu mili-seconds with %d second initial delay\n",
-		    timerMiliSec, firstDelay);
-		    writeStrStdout(buffer);
+                    printf("Jprof: Initialized signal handler and set "
+                           "timer for %lu %s, %d s "
+                           "initial delay\n",
+                           rtcHz ? rtcHz : timerMiliSec, 
+                           rtcHz ? "Hz" : "ms",
+                           firstDelay);
 
 		    if(startTimer) {
-			writeStrStdout("Jprof: started timer\n");
-			startSignalCounter(firstDelay*1000 + timerMiliSec);
+#if defined(linux)
+                        if (rtcHz) {
+                            puts("Jprof: enabled RTC signals");
+                            enableRTCSignals();
+                        } else
+#endif
+                        {
+                            puts("Jprof: started timer");
+                            startSignalCounter(firstDelay*1000 + timerMiliSec);
+                        }
 		    }
 		}
 	    }
