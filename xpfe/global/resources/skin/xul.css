@@ -254,6 +254,26 @@ menuitem {
 	display: none;
 }
 
+xpmenubar {
+	display:block;
+    background-color: #CCCCDD;
+    border-bottom: 1px solid #9999cc;
+    font: inherit;
+    min-height: 2em;
+    width: 100%;
+}
+
+xpmenu {
+	display: block;
+	font: inherit;
+}
+
+
+xpmenuchildren {
+	display: none;
+}
+
+
 progressmeter {
         display:inline;
         border: 1px #666699;
@@ -540,6 +560,57 @@ toolbar titledbutton[disabled="true"]:active {
 }
 
 toolbar titledbutton[toggled="1"] {
+  border: 1px inset white;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+xpmenubar titledbutton {
+  border: 1px solid transparent;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+xpmenubar.main-bar titledbutton[align="bottom"]{
+	min-width: 3.5em;
+}
+
+xpmenubar titledbutton:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+ 
+xpmenubar titledbutton:hover:-moz-outline {
+   border : 1px solid black;
+}
+ 
+xpmenubar titledbutton:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+
+xpmenubar titledbutton:active:-moz-outline {
+   border : 1px solid black;
+}
+ 
+xpmenubar titledbutton[disabled] {
+	border: 1px solid transparent;
+}
+
+xpmenubar titledbutton[disabled]:hover {
+	border: 1px solid transparent;
+}
+
+xpmenubar titledbutton[disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+xpmenubar titledbutton[toggled="1"] {
   border: 1px inset white;
 
   padding-left: 3px;
