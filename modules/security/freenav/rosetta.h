@@ -189,7 +189,7 @@
 #define HG98379
 #define HG65293(a) 0
 #define HG42539
-#define HG72761 	cur_ptr += 2*sizeof(int32); 
+#define HG72761 	cur_ptr += 2*sizeof(int32);
 #define HG42490
 #define HG73699
 #define HG72873
@@ -677,6 +677,80 @@
 #define HG28336
 #define HG02070
 #define HG62519
+
+
+#define HG09842 FALSE
+#define HG09843 FALSE
+#define HG09844 FALSE
+#define HG09845 f[0] = 0;
+
+#define HG09846 \
+    PR_Init("mimefilt", 24, 1, 0); \
+    RNG_RNGInit(); \
+
+#define HG09847
+#define HG09848 "usage: %s [ URL [ -fancy | -no-fancy | -html | -raw | -outline ]]\n"
+#define HG09849
+#define HG09850
+#define HG09851
+#define HG09852
+#define HG09853
+#define HG09854
+#define HG09855
+#define HG09856
+#define HG09857
+#define HG09858
+#define HG09859
+#define HG09860
+#define HG09861
+#define HG09862
+#define HG09863
+#define HG09864
+#define HG09865
+#define HG09866
+#define HG09867
+#define HG09868
+
+#define HG09869 \
+  /* If we're supposed to write this object, but aren't supposed to convert */ \
+  /* it to HTML, simply pass it through unaltered.  (But, if we're supposed */ \
+  /* to ******* ... uh, do something else.) */ \
+  /*   */ \
+  if (obj->output_p && \
+          obj->options && \
+          !obj->options->write_html_p && \
+          obj->options->output_fn) \
+        return MimeObject_write(obj, line, length, TRUE); \
+
+
+#define HG09870
+#define HG09871
+
+#define HG09872 status = MimeHeaders_write_raw_headers(msg->hdrs, obj->options, 0);
+#define HG09873 altform_p = (msg && msg->hdrs);
+
+#define HG43771
+#define HG56232 0
+#define HG78388
+#define HG80200
+#define HG88918
+#define HG89321
+#define HG82921
+#define HG82991
+#define HG89202 middle_key = 0;
+#define HG82001 "%s<IMG SRC=\"%s\" BORDER=0>%s" 
+#define HG28974
+#define HG87988
+#define HG43290
+#define HG89332 0
+#define HG09878
+
+
+
+
+
+
+
 
 
 
