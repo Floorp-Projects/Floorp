@@ -22,7 +22,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsLocaleCID.h"
 #include "nsIWin32Locale.h"
-
+#include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
 
@@ -126,13 +127,12 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     }
     aLocale.SetString(aLocaleUnichar);
   	
-	  nsIWin32Locale* win32Locale;
-	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
+	  nsCOMPtr <nsIWin32Locale> win32Locale;
+	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, getter_AddRefs(win32Locale));
     if (NS_FAILED(res)) {
       return res;
     }
   	res = win32Locale->GetPlatformLocale(&aLocale, &lcid);
-	  win32Locale->Release();
   }
 
   // Call GetDateFormatW
@@ -210,6 +210,8 @@ nsresult nsDateTimeFormatWin::FormatPRExplodedTime(nsILocale* locale,
                                                    nsString& stringOut)
 {
   struct tm  tmTime;
+  nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+
   tmTime.tm_yday = explodedTime->tm_yday;
   tmTime.tm_wday = explodedTime->tm_wday;
   tmTime.tm_year = explodedTime->tm_year;
@@ -225,17 +227,15 @@ nsresult nsDateTimeFormatWin::FormatPRExplodedTime(nsILocale* locale,
 
 nsresult nsDateTimeFormatWin::ConvertToUnicode(const char *inString, const PRInt32 inLen, PRUnichar *outString, PRInt32 *outLen)
 {
+  nsresult res;
   // convert result to unicode
-  nsICharsetConverterManager * ccm = nsnull;
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
 
   *outLen = 0;
-  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                              kICharsetConverterManagerIID, 
-                                              (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsIUnicodeDecoder * decoder = nsnull;
-    res = ccm->GetUnicodeDecoder(&mCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+  if(NS_SUCCEEDED(res) && ccm) {
+    nsCOMPtr <nsIUnicodeDecoder> decoder;
+    res = ccm->GetUnicodeDecoder(&mCharset, getter_AddRefs(decoder));
+    if(NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = inLen;
       res = decoder->Length(inString, 0, srcLength, &unicharLength);
@@ -248,10 +248,8 @@ nsresult nsDateTimeFormatWin::ConvertToUnicode(const char *inString, const PRInt
           *outLen = unicharLength;
         }
       }
-      NS_IF_RELEASE(decoder);
     }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
-    }
+  }
 
   return res;
 }

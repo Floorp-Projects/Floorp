@@ -23,6 +23,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIScriptableDateFormat.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -100,6 +101,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
         struct tm tmTime;
         time_t  timetTime;
 
+	nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
         tmTime.tm_year = year - 1900;
         tmTime.tm_mon = month - 1;
         tmTime.tm_mday = day;

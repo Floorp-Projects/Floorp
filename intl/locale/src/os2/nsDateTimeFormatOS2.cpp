@@ -26,6 +26,7 @@
 
 #include "nsDateTimeFormatOS2.h"
 #include "nsILocaleOS2.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kILocaleOS2IID, NS_ILOCALEOS2_IID);
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
@@ -68,17 +69,16 @@ nsresult nsDateTimeFormatOS2::FormatTMTime( nsILocale     *aLocale,
    if( !aLocale || !aTime)
       return NS_ERROR_NULL_POINTER;
 
-   nsILocaleOS2 *os2locale = 0;
+   nsCOMPtr <nsILocaleOS2> os2locale;
    nsresult      rc = NS_ERROR_FAILURE;
 
    // find a sane locale object
 
    if( NS_SUCCEEDED(aLocale->QueryInterface( kILocaleOS2IID,
-                                             (void**) &os2locale)))
+                                             getter_AddRefs(os2locale))))
    {
       LocaleObject locale_object = 0;
       os2locale->GetLocaleObject( &locale_object);
-      NS_RELEASE(os2locale);
 
       // Build up a strftime-style format string - date first and then
       // time.
