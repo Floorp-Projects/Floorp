@@ -420,7 +420,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource://res/rdf/history.xul",window);
+      toolkitCore.ShowWindow("resource://res/samples/history.xul",window);
     }
   }
 
