@@ -5462,14 +5462,14 @@ nsBookmarksService::LoadBookmarks()
 }
 
 static char kFileIntro[] = 
-    "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n"
-    "<!-- This is an automatically generated file.\n"
-    "     It will be read and overwritten.\n"
-    "     DO NOT EDIT! -->\n"
+    "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
+    "<!-- This is an automatically generated file." NS_LINEBREAK
+    "     It will be read and overwritten." NS_LINEBREAK
+    "     DO NOT EDIT! -->" NS_LINEBREAK
     // Note: we write bookmarks in UTF-8
-    "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n"
-    "<TITLE>Bookmarks</TITLE>\n"
-    "<H1>Bookmarks</H1>\n\n";
+    "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">" NS_LINEBREAK
+    "<TITLE>Bookmarks</TITLE>" NS_LINEBREAK
+    "<H1>Bookmarks</H1>" NS_LINEBREAK NS_LINEBREAK;
 
 nsresult
 nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
@@ -5561,20 +5561,20 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     return NS_OK;
 }
 
-static const char kBookmarkIntro[] = "<DL><p>\n";
+static const char kBookmarkIntro[] = "<DL><p>" NS_LINEBREAK;
 static const char kIndent[] = "    ";
 static const char kContainerIntro[] = "<DT><H3";
 static const char kSpaceStr[] = " ";
 static const char kTrueEnd[] = "true\"";
 static const char kQuoteStr[] = "\"";
 static const char kCloseAngle[] = ">";
-static const char kCloseH3[] = "</H3>\n";
+static const char kCloseH3[] = "</H3>" NS_LINEBREAK;
 static const char kHROpen[] = "<HR";
-static const char kAngleNL[] = ">\n";
+static const char kAngleNL[] = ">" NS_LINEBREAK;
 static const char kDTOpen[] = "<DT><A";
-static const char kAClose[] = "</A>\n";
-static const char kBookmarkClose[] = "</DL><p>\n";
-static const char kNL[] = "\n";
+static const char kAClose[] = "</A>" NS_LINEBREAK;
+static const char kBookmarkClose[] = "</DL><p>" NS_LINEBREAK;
+static const char kNL[] = NS_LINEBREAK;
 
 nsresult
 nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
