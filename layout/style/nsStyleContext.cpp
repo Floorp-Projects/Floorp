@@ -1333,7 +1333,7 @@ public:
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
 
-  NS_IMETHOD RemapStyle(nsIPresContext* aPresContext);
+  NS_IMETHOD RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse = PR_TRUE);
 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID);
@@ -1814,7 +1814,7 @@ static PRBool MapStyleRule(nsISupports* aRule, void* aData)
 }
 
 NS_IMETHODIMP
-StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
+StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
 {
   mDataCode = -1;
   if (nsnull != mParent) {
@@ -1913,19 +1913,21 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 
   RecalcAutomaticData(aPresContext);
 
-  if (nsnull != mChild) {
-    StyleContextImpl* child = mChild;
-    do {
-      child->RemapStyle(aPresContext);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (nsnull != mEmptyChild) {
-    StyleContextImpl* child = mEmptyChild;
-    do {
-      child->RemapStyle(aPresContext);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
+  if (aRecurse) {
+    if (nsnull != mChild) {
+      StyleContextImpl* child = mChild;
+      do {
+        child->RemapStyle(aPresContext);
+        child = child->mNextSibling;
+      } while (mChild != child);
+    }
+    if (nsnull != mEmptyChild) {
+      StyleContextImpl* child = mEmptyChild;
+      do {
+        child->RemapStyle(aPresContext);
+        child = child->mNextSibling;
+      } while (mEmptyChild != child);
+    }
   }
   return NS_OK;
 }
