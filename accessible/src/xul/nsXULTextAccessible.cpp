@@ -46,7 +46,7 @@
   * For XUL descriptions and labels
   */
 nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsTextAccessible(aDomNode, aShell)
+nsTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 

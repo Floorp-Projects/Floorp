@@ -41,11 +41,11 @@
 #ifndef _nsXULTextAccessible_H_
 #define _nsXULTextAccessible_H_
 
-#include "nsTextAccessible.h"
+#include "nsTextAccessibleWrap.h"
 
 class nsIWeakReference;
 
-class nsXULTextAccessible : public nsTextAccessible
+class nsXULTextAccessible : public nsTextAccessibleWrap
 {
 
 public:
