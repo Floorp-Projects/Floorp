@@ -222,7 +222,7 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				":mozilla:dist:security:");
 		
 		#XPCOM
-		InstallFromManifest(":mozilla:xpcom:src:MANIFEST",								":mozilla:dist:xpcom:");
+		InstallFromManifest(":mozilla:xpcom:public:MANIFEST",								":mozilla:dist:xpcom:");
 		
 		#ZLIB
 		InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						":mozilla:dist:zlib:");
