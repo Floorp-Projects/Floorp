@@ -397,7 +397,7 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
-	if (::FrontWindow() != nil)
+	if (IsUserWindow(::FrontWindow()))
 	{
 		DispatchMenuCommandToRaptor(anEvent, menuResult);
 	}
