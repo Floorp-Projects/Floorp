@@ -27,7 +27,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
     onunload = "onClose()">
@@ -73,7 +73,7 @@
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" style="min-height:6em">
+        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" style="min-height:8em">
           <treecolgroup>
             <treecol flex="1"/>
           </treecolgroup>
@@ -119,4 +119,4 @@
       </row>
     </rows>
   </grid>
-</window>
+</dialog>
