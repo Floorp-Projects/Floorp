@@ -244,10 +244,11 @@ typedef void
 (*JSGCThingMarker)(void *thing, void *data);
 
 extern void
-js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark, void *data);
+js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
+                 void *data);
 
 extern void
-js_SweepAtomState(JSAtomState *state, uintN gcflags);
+js_SweepAtomState(JSAtomState *state);
 
 extern void
 js_UnpinPinnedAtoms(JSAtomState *state);

@@ -1059,7 +1059,7 @@ restart:
     JS_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, cx);
     if (rt->gcLocksHash)
         JS_HashTableEnumerateEntries(rt->gcLocksHash, gc_lock_marker, cx);
-    js_MarkAtomState(&rt->atomState, gc_mark_atom_key_thing, cx);
+    js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
 	/*
@@ -1137,7 +1137,7 @@ restart:
      * Sweep phase, with interleaved finalize phase.
      */
     finalpos = 0;
-    js_SweepAtomState(&rt->atomState, gcflags);
+    js_SweepAtomState(&rt->atomState);
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
         flagp = (uint8 *) a->base;
         split = (uint8 *) FIRST_THING_PAGE(a);

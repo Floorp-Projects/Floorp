@@ -306,6 +306,7 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
 }
 
 typedef struct MarkArgs {
+    uintN           gcflags;
     JSGCThingMarker mark;
     void            *data;
 } MarkArgs;
@@ -314,15 +315,15 @@ JS_STATIC_DLL_CALLBACK(intN)
 js_atom_marker(JSHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
-    jsval key;
     MarkArgs *args;
+    jsval key;
 
     atom = (JSAtom *)he;
-    if (atom->flags & ATOM_PINNED) {
+    args = (MarkArgs *) arg;
+    if ((atom->flags & ATOM_PINNED) || (args->gcflags & GC_KEEP_ATOMS)) {
 	atom->flags |= ATOM_MARK;
 	key = ATOM_KEY(atom);
 	if (JSVAL_IS_GCTHING(key)) {
-	    args = (MarkArgs *) arg;
 	    args->mark(JSVAL_TO_GCTHING(key), args->data);
 	}
     }
@@ -330,10 +331,12 @@ js_atom_marker(JSHashEntry *he, intN i, void *arg)
 }
 
 void
-js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark, void *data)
+js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
+                 void *data)
 {
     MarkArgs args;
 
+    args.gcflags = gcflags;
     args.mark = mark;
     args.data = data;
     JS_HashTableEnumerateEntries(state->table, js_atom_marker, &args);
@@ -343,16 +346,12 @@ JS_STATIC_DLL_CALLBACK(intN)
 js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
-    uintN gcflags;
 
     atom = (JSAtom *)he;
     if (atom->flags & ATOM_MARK) {
         atom->flags &= ~ATOM_MARK;
         return HT_ENUMERATE_NEXT;
     }
-    gcflags = (uintN)arg;
-    if (gcflags & GC_KEEP_ATOMS)
-        return HT_ENUMERATE_NEXT;
     JS_ASSERT((atom->flags & ATOM_PINNED) == 0);
     atom->entry.key = NULL;
     atom->flags = 0;
@@ -360,9 +359,9 @@ js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
 }
 
 void
-js_SweepAtomState(JSAtomState *state, uintN gcflags)
+js_SweepAtomState(JSAtomState *state)
 {
-    JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, (void*)gcflags);
+    JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, NULL);
 }
 
 JS_STATIC_DLL_CALLBACK(intN)
