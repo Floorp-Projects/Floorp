@@ -59,8 +59,6 @@
 #define HAVE_DLL
 #define USE_DLFCN
 
-#define _MD_MINIMUM_STACK_SIZE (32 * 1024)
-
 #define USE_SETJMP
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _PR_POLL_AVAILABLE
