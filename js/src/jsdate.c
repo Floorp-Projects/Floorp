@@ -1630,6 +1630,14 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
 	/* If it failed, default to toString. */
 	if (result_len == 0)
 	    return date_format(cx, *date, FORMATSPEC_FULL, rval);
+
+        /* Hacked check against undesired 2-digit year 00/00/00 form. */
+        if (buf[result_len - 3] == '/' &&
+            isdigit(buf[result_len - 2]) && isdigit(buf[result_len - 1])) {
+            JS_snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2),
+                        "%d", js_DateGetYear(cx, obj));
+        }
+
     }
 
     str = JS_NewStringCopyZ(cx, buf);
