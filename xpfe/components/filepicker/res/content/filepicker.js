@@ -517,30 +517,29 @@ function onDirectoryChanged(target)
   }
 }
 
-function addToHistory(directoryName) {
+function populateAncestorList(directory) {
   var menu = document.getElementById("lookInMenu");
-  var children = menu.childNodes;
 
-  var i = 0;
-  while (i < children.length) {
-    if (children[i].getAttribute("label") == directoryName)
-      break;
-
-    ++i;
+  while (menu.hasChildNodes()) {
+    menu.removeChild(menu.firstChild);
   }
+  
+  var menuItem = document.createElement("menuitem");
+  menuItem.setAttribute("label", directory.unicodePath);
+  menuItem.setAttribute("crop", "start");
+  menu.appendChild(menuItem);
 
-  if (i < children.length) {
-    if (i != 0) {
-      var node = children[i];
-      menu.removeChild(node);
-      menu.insertBefore(node, children[0]);
-    }
-  } else {
-    var menuItem = document.createElement("menuitem");
-    menuItem.setAttribute("label", directoryName);
-    menu.insertBefore(menuItem, children[0]);
+  // .parent is _sometimes_ null, see bug 121489.  Do a dance around that.
+  var parent = directory.parent;
+  while (parent && !parent.equals(directory)) {
+    menuItem = document.createElement("menuitem");
+    menuItem.setAttribute("label", parent.unicodePath);
+    menuItem.setAttribute("crop", "start");
+    menu.appendChild(menuItem);
+    directory = parent;
+    parent = directory.parent;
   }
-
+  
   var menuList = document.getElementById("lookInMenuList");
   menuList.selectedIndex = 0;
 }
@@ -556,17 +555,17 @@ function goUp() {
 }
 
 function gotoDirectory(directory) {
-  addToHistory(directory.unicodePath);
-
   window.setCursor("wait");
   try {
     outlinerView.setDirectory(directory);
+    populateAncestorList(directory);
   } catch(ex) {
     var errorTitle = gFilePickerBundle.getString("noPermissionTitle");
     var errorMsg = gFilePickerBundle.getString("noPermissionError");
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                               .getService(Components.interfaces.nsIPromptService);
     promptService.alert(window, errorTitle, errorMsg);
+    window.setCursor("auto");
     return;
   }
 

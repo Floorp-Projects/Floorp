@@ -44,10 +44,9 @@
 
 <hbox align="center">
   <label value="&lookInMenuList.label;"/>
-  <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="left">
+  <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="start">
     <menupopup id="lookInMenu"/>
   </menulist>
-  <button label=".." oncommand="goUp();"/>
 </hbox>
 
 <hbox flex="1">
