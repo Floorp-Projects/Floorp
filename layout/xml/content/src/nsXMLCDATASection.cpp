@@ -148,21 +148,31 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
+  nsresult result = NS_OK;
   nsXMLCDATASection* it;
   NS_NEWXPCOM(it, nsXMLCDATASection);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsAutoString data;
-  nsresult result = GetData(data);
+  // XXX Increment the ref count before calling any
+  // methods. If they do a QI and then a Release()
+  // the instance will be deleted.
+  result = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
   if (NS_FAILED(result)) {
+    return result;
+  }
+  nsAutoString data;
+  result = GetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
     return result;
   }
   result = it->SetData(data);
   if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
     return result;
   }
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return result;
 }
 
 NS_IMETHODIMP

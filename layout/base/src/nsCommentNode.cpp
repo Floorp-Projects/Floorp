@@ -32,11 +32,13 @@
 
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
+static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class nsCommentNode : public nsIDOMComment,
                       public nsIScriptObjectOwner,
                       public nsIDOMEventReceiver,
-                      public nsIContent
+                      public nsIContent,
+                      public nsITextContent
 {
 public:
   nsCommentNode();
@@ -159,6 +161,18 @@ public:
     return mInner.GetRangeList(aResult);
   }                                                                        
 
+  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
+                     PRInt32& aNumFragmentsResult)
+    { return mInner.GetText(aFragmentsResult, aNumFragmentsResult); }
+  NS_IMETHOD SetText(const PRUnichar* aBuffer,
+                     PRInt32 aLength,
+                     PRBool aNotify);
+  NS_IMETHOD SetText(const char* aBuffer,
+                     PRInt32 aLength,
+                     PRBool aNotify);
+  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult)
+    { return mInner.IsOnlyWhitespace(aResult); }
+
 protected:
   nsGenericDOMDataNode mInner;
 };
@@ -202,6 +216,12 @@ nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kITextContentIID)) {
+    nsITextContent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -230,20 +250,30 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
+  nsresult result = NS_OK;
   nsCommentNode* it = new nsCommentNode();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsAutoString data;
-  nsresult result = GetData(data);
+  // XXX Increment the ref count before calling any
+  // methods. If they do a QI and then a Release()
+  // the instance will be deleted.
+  result = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
   if (NS_FAILED(result)) {
+    return result;
+  }
+  nsAutoString data;
+  result = GetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
     return result;
   }
   result = it->SetData(data);
   if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
     return result;
   }
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -254,13 +284,13 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Comment refcount=%d<", mRefCnt);
+  fprintf(out, "Comment refcount=%d<!--", mRefCnt);
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
   fputs(tmp, out);
 
-  fputs(">\n", out);
+  fputs("-->\n", out);
   return NS_OK;
 }
 
@@ -385,3 +415,65 @@ nsCommentNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
 }
 #endif
 
+// This would ideally be done by the parser, but for the sake
+// of "genericity" it's being done in the comment content code
+static void
+StripCommentDelimiters(nsString& aCommentString)
+{
+  PRInt32 offset;
+  static char* kCommentStart = "<!";
+  static char* kCommentEnd = "->";
+  static char* kCommentAlternateEnd = "--!>";
+  static char kMinus = '-';
+  static char kExclamation = '!';
+
+  offset = aCommentString.Find(kCommentStart);
+  offset += strlen(kCommentStart);
+  if (-1 != offset) {
+    // Take up to 2 '-' characters
+    if (kMinus == aCommentString.CharAt(offset)) {
+      offset++;
+      if (kMinus == aCommentString.CharAt(offset)) {
+        offset++;
+      }
+    }
+    aCommentString.Cut(0, offset);
+  }
+
+  offset = aCommentString.RFind(kCommentEnd);
+  if (-1 != offset) {
+    // Take up to 1 more '-'
+    if (kMinus == aCommentString.CharAt(offset-1)) {
+      offset--;
+    }
+    aCommentString.Cut(offset, aCommentString.Length()-offset);
+  }
+  else {
+    offset = aCommentString.RFind(kCommentAlternateEnd);
+    if (-1 != offset) {
+      aCommentString.Cut(offset, aCommentString.Length()-offset);
+    }
+  }
+}
+
+NS_IMETHODIMP 
+nsCommentNode::SetText(const PRUnichar* aBuffer,
+                       PRInt32 aLength,
+                       PRBool aNotify)
+{
+  nsAutoString str(aBuffer);
+
+  StripCommentDelimiters(str);
+  return mInner.SetText(str.GetUnicode(), str.Length(), aNotify);
+}
+
+NS_IMETHODIMP
+nsCommentNode::SetText(const char* aBuffer,
+                       PRInt32 aLength,
+                       PRBool aNotify)
+{
+  nsAutoString str(aBuffer);
+
+  StripCommentDelimiters(str);
+  return mInner.SetText(str.GetUnicode(), str.Length(), aNotify);
+}
