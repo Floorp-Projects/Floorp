@@ -1793,8 +1793,9 @@ WriteLineToStream (MimeObject *obj, const char *line)
   charset = PL_strcasestr(obj->content_type, "charset=");
   if (!charset)
     charset = FindCharacterSet(obj);
-  if (!charset)
-    charset = "ISO-8859-1";
+
+  if ( (!charset) || ( (charset) && (!nsCRT::strcasecmp(charset, "us-ascii"))) )
+    charset = nsCRT::strdup("ISO-8859-1");
   
   // convert from the resource charset.
   res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line),
