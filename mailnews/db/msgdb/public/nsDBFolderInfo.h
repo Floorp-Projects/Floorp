@@ -106,7 +106,7 @@ protected:
 
 	PRInt32		m_folderSize;
 	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
-	time_t		m_folderDate;
+	PRUint32	m_folderDate;
 	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
 
   // m_numVisibleMessages, m_numNewMessages and m_numMessages can never be negative. 0 means 'no msgs'.
