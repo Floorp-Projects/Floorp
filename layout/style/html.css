@@ -516,8 +516,8 @@ input[type="radio"] {
   margin-right:  5px;  
   margin-top:    2px; 
   margin-bottom: 4px; 
-  border: 2px outset rgb(153, 153, 153);
-  background-color:rgb(204, 204, 204);
+  border: 2px inset rgb(153, 153, 153);
+  background-color:rgb(255, 255, 255);
   color:black;
   width:8px;
   height:8px;
@@ -540,7 +540,7 @@ input[type="radio"]:hover {
 }
 
 input[type="radio"]:active {
-  background-color: white;
+  background-color: lightgray;
 }
 
 input[type="radio"][disabled]:hover {
