@@ -65,6 +65,8 @@ function onLoad() {
 }
 
 function onFinish() {
+    if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
+        return;
     var pageData = parent.wizardManager.WSM.PageData;
 
     dump(parent.wizardManager.WSM);

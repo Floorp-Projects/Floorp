@@ -33,32 +33,34 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
 
   <box id="wizardHeader">
-    <html:div class="title">&loginTitle.label;</html:div>
+    <titledbutton class="left-header-text" value="&loginTitle.label;"/>
   </box>
 
-  <box align="vertical" class="padded">
+  <box align="vertical">
     <html:div>&usernameDesc.label; &usernameExample.label;</html:div>
     <html:div>
-      &usernameLabel.label;
+      <html:label for="username">&usernameLabel.label;</html:label>
       <html:input type="text" name="username" id="username"/>
     </html:div>
   </box>
-
-  <box align="vertical" class="padded">
+  <spring class="spacer"/>
+  <box align="vertical">
     <html:div class="title">&passwordTitle.label;</html:div>
     <html:div>&savePasswordDesc.label;</html:div>
+    <spring class="spacer"/>
     <html:div>&savePasswordLabel.label;</html:div>
     <html:div>
       <html:input type="checkbox" name="rememberPassword"
                   onchange="onSavePassword(event.target);"
                   id="rememberPassword"/>
-      &savePasswordCheckbox.label;
+      <html:label for="rememberPassword">&savePasswordCheckbox.label;</html:label>
     </html:div>
-    <html:div style="padding-left: 15px">
-      <html:div>&passwordDesc.label;</html:div>
+    <spring class="spacer"/>
+    <html:div style="padding-left: 20px">
+      <html:label>&passwordDesc.label;</html:label>
       <html:div>
-        &passwordLabel.label;
-        <html:input type="password" 
+        <html:label for="password">&passwordLabel.label;</html:label>
+        <html:input type="password"
                     name="password" id="password"/>
       </html:div>
     </html:div>

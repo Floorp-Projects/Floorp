@@ -33,26 +33,28 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
 
   <box id="wizardHeader">
-    <html:div class="title">&identityTitle.label;</html:div>
+    <titledbutton class="left-header-text" value="&identityTitle.label;"/>
   </box>
   <html:div>&identityDesc.label;</html:div>
 
-
+  <spring class="spacer"/>
   <html:div>
     <html:div>&fullnameDesc.label; &fullnameExample.label;</html:div>
-    <box align="horizontal">
-      <html:label for="fullName">&fullnameLabel.label;</html:label><html:spacer/>
+    <spring class="spacer"/>
+    <html:div>
+      <html:label for="fullName">&fullnameLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
-      <spring flex="100%"/>
-    </box>
+    </html:div>
   </html:div>
 
+  <spring class="spacer"/>
+  <spring class="spacer"/>
   <html:div>
     <html:div>&emailDesc.label; &emailExample.label;</html:div>
-    <box align="horizontal">
-      <html:label for="email">&emailLabel.label;</html:label><html:spacer/>
+    <spring class="spacer"/>
+    <html:div>
+      <html:label for="email">&emailLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="email" id="email"/>
-      <spring flex="100%"/>
-    </box>
+    </html:div>
   </html:div>
 </window>

@@ -29,11 +29,11 @@ Rights Reserved.
     onload="parent.wizardManager.onPageLoad('done');">
   <html:script src="chrome://messenger/content/aw-done.js"/>
   <box id="wizardHeader">
-    <html:div class="title">&completionTitle.label;</html:div>
+    <titledbutton class="left-header-text" value="&completionTitle.label;"/>
   </box>
 
 <html:div>&completionText.label;</html:div>
-<html:p/>
+<spring class="spacer"/>
 <box align="horizontal">
   <spring class="spacer"/>
   <html:div id="server.username.label">&userNamePrefix.label;</html:div>
@@ -46,15 +46,14 @@ Rights Reserved.
   <spring class="spacer"/>
   <html:div id="identity.email.text"/>
 </box>
-<html:p/>
+<spring class="spacer"/>
 <!-- <html:div>&setupAnother.label;</html:div> -->
 <spring class="spacer"/>
 <html:div>&clickFinish.label;</html:div>
-<html:p/>
+<spring class="spacer"/>
 <!--
 <box align="horizontal">
   <titledbutton class="dialog push" value="&setupAnotherButton.label;" onclick="setupAnother(event);"/>
-  <spring flex="100%"/>
 </box>
 -->
 </window>

@@ -40,7 +40,6 @@ function onInit() {
     if (accountNameInput.value=="") {
         var pageData = parent.wizardManager.WSM.PageData;
         var type = parent.getCurrentServerType(pageData);
-        dump(parent.wizardManager.WSM);
         var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
         var accountName;
         if (type == "nntp") {

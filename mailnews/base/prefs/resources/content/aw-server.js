@@ -41,6 +41,7 @@ function onInit() {
 
   var smtpserver = document.getElementById("smtphostname");
 
-  if (smtpserver && smtpserver.value == "")
+  if (smtpserver && smtpserver.value == "" &&
+      parent.smtpService.defaultServer.hostname)
     smtpserver.value = parent.smtpService.defaultServer.hostname;
 }

@@ -34,32 +34,40 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
   <box id="wizardHeader">
-    <html:div class="title">&serverTitle.label;</html:div>
+    <titledbutton class="left-header-text" value="&serverTitle.label;"/>
   </box>
 
-  <box align="vertical" class="padded">
+  <box align="vertical">
     <html:div class="title">&incomingServerTitle.label;</html:div>
+    <spring class="spacer"/>
     <html:div>&incomingServerTypeDesc.label;</html:div>
+    <spring class="spacer"/>
     <html:div>
-      &incomingServerTypeLabel.label;
+    <html:label for="servertype">
+      &incomingServerTypeLabel.label;</html:label>
       <html:select id="servertype" name="servertype">
         <html:option value="pop3">&popType.label;</html:option>
         <html:option value="imap">&imapType.label;</html:option>
       </html:select>
     </html:div>
-    <html:br/>
+    <spring class="spacer"/>
     <html:div>&incomingServerNameDesc.label;</html:div>
+    <spring class="spacer"/>
     <html:div>
-      &incomingServerLabel.label;
+      <html:label for="hostname">&incomingServerLabel.label;</html:label>
       <html:input type="text" id="hostname" name="hostname"/>
     </html:div>
   </box>
 
-  <box align="vertical" class="padded">
+  <spring class="spacer"/>
+  <spring class="spacer"/>
+  <box align="vertical">
     <html:div class="title">&smtpServerTitle.label;</html:div>
+    <spring class="spacer"/>
     <html:div>&smtpServerDesc.label;</html:div>
+    <spring class="spacer"/>
     <html:div>
-      &smtpServerLabel.label;
+      <html:label for="smtphostname">&smtpServerLabel.label;</html:label>
       <html:input type="text" id="smtphostname" name="smtphostname"/>
     </html:div>
   </box>

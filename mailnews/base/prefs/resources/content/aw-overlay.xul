@@ -23,16 +23,17 @@ Alec Flett <alecf@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <overlay id="wizardOverlay"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<box class="title" align="horizontal" id="wizardHeader">
-    <!-- html:div gets inserted here -->
-    <spring flex="100%"/>
-    <titledbutton id="Throbber"/>
-</box>  
+<box class="header" align="horizontal" id="wizardHeader">-->
+    <!-- titledbutton gets inserted here -->
+    <spring class="header-spring" flex="1"/>
+    <titledbutton class="right-header-text" id="Throbber"/>
+</box>
 
 <html:div class="titlebox" id="wizardHeaderDiv">
 
