@@ -30,4 +30,10 @@ DIRS=          \
 	src    \
 	$(NULL)
 
+ifdef ENABLE_TESTS
+DIRS+=         \
+	test    \
+	$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
