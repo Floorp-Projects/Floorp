@@ -862,7 +862,6 @@ RunInstaller()
   char                szText[256];
   char                szTempPath[4096];
   char                szTmp[MAX_PATH];
-  char                szCurrentDirectory[MAX_PATH];
   char                szFilename[MAX_BUF];
   char                szBuf[MAX_BUF];
   DWORD               dwLen;
@@ -898,12 +897,7 @@ RunInstaller()
     lstrcpy(szCmdLine, szSetupFile);
     GetModuleFileName(NULL, szBuf, sizeof(szBuf));
     ParsePath(szBuf, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
-    ParsePath(szBuf, szCurrentDirectory, sizeof(szCurrentDirectory), PP_PATH_ONLY);
-    RemoveBackSlash(szCurrentDirectory);
-    GetShortPathName(szCurrentDirectory, szBuf, sizeof(szBuf));
 
-    lstrcat(szCmdLine, " -a ");
-    lstrcat(szCmdLine, szBuf);
     lstrcat(szCmdLine, " -n ");
     lstrcat(szCmdLine, szFilename);
   }
