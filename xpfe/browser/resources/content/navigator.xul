@@ -49,6 +49,7 @@ Contributor(s): ______________________________________. -->
 <html:script language="javascript" src="navigator.js" />
 <html:script language="javascript" src="nsContextMenu.js" />
 <html:script language="javascript" src="tooltip.js" />
+<html:script language="javascript" src="navigatorDD.js" />
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
