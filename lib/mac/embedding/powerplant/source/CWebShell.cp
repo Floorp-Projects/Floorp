@@ -85,8 +85,11 @@ CWebShell::Init()
 	{
 		gFirstTime = false;
 		NS_SetupRegistry();
-		nsIImageManager *manager;
-		NS_NewImageManager(&manager);
+		
+		// this is obsolete; the Image Manager is now a service,
+		// so will get created on demand.
+		// nsIImageManager *manager;
+		// NS_NewImageManager(&manager);
 	}
 
 	mWindow = nil;
@@ -101,7 +104,7 @@ CWebShell::Init()
 	// create top-level widget
 	nsresult rv;
 	rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return;
 
 	nsWidgetInitData initData;
@@ -109,13 +112,13 @@ CWebShell::Init()
 	nsRect r(portRect.left, portRect.top, portRect.right - portRect.left, portRect.bottom - portRect.top);
 
 	rv = mWindow->Create((nsNativeWidget)GetMacPort(), r, nsnull, nsnull);
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return;
 	mWindow->Show(PR_TRUE);
 
 	// create webshell
 	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, (void**)&mWebShell);
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return;
 
 	Rect webRect;
@@ -126,7 +129,7 @@ CWebShell::Init()
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kNeverScroll, //nsScrollPreference_kAuto, 
                        allowPlugins, PR_FALSE);
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return;
 	mWebShell->SetContainer((nsIWebShellContainer*)this);
 	mWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);

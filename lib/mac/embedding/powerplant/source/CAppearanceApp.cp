@@ -62,8 +62,11 @@ int main()
  // Initialize the Registry
  // Note: This can go away when Auto-Registration is implemented in all the Raptor DLLs.
 	NS_SetupRegistry();
-	nsIImageManager *manager;
-	NS_NewImageManager(&manager);
+
+	// this is obsolete; the Image Manager is now a service,
+	// so will get created on demand.
+	// nsIImageManager *manager;
+	// NS_NewImageManager(&manager);
 	InitTSMAwareApplication();
 
 	nsresult rv;
