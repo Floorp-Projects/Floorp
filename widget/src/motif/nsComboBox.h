@@ -39,9 +39,6 @@ public:
     NS_IMETHOD_(nsrefcnt) Release();
     NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
    
-    // nsIWidget overrides
-    virtual void   GetBounds(nsRect &aRect);
-
     // nsIComboBox interface
     virtual void    AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
