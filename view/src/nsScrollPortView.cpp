@@ -646,8 +646,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   mOffsetY = aY;
   
   Scroll(scrolledView, dxPx, dyPx, t2p, 0);
-
-  mViewManager->SynthesizeMouseMove(PR_TRUE);
   
   // notify the listeners.
   if (nsnull != mListeners) {
