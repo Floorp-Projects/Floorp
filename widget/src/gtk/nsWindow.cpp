@@ -2585,7 +2585,7 @@ void nsWindow::SetInternalVisibility(PRBool aVisible)
     // later.
     // So, we delay setting the mask until the last moment: when the window
     // is shown.
-    if (mTransparencyBitmap) {
+    if (mIsTranslucent) {
       ApplyTransparencyBitmap();
     }
 
@@ -4320,19 +4320,25 @@ NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent) {
   return NS_OK;
 }
 
+static gchar* CreateDefaultTransparencyBitmap(PRInt32 aWidth, PRInt32 aHeight) {
+  PRInt32 size = ((aWidth+7)/8)*aHeight;
+  gchar* bits = new gchar[size];
+  if (bits) {
+    memset(bits, 255, size);
+  }
+  return bits;
+}
+
 void nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight) {
   if (!mTransparencyBitmap)
     return;
 
-  PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
-  gchar* newBits = new gchar[newSize];
+  gchar* newBits = CreateDefaultTransparencyBitmap(aNewWidth, aNewHeight);
   if (!newBits) {
     delete[] mTransparencyBitmap;
     mTransparencyBitmap = nsnull;
     return;
   }
-  // fill new mask with "opaque", first
-  memset(newBits, 255, newSize);
 
   // Now copy the intersection of the old and new areas into the new mask
   PRInt32 copyWidth = PR_MIN(aNewWidth, mBounds.width);
@@ -4395,6 +4401,12 @@ static void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHe
 }
 
 void nsWindow::ApplyTransparencyBitmap() {
+  if (!mTransparencyBitmap) {
+    mTransparencyBitmap = CreateDefaultTransparencyBitmap(mBounds.width, mBounds.height);
+    if (!mTransparencyBitmap)
+      return;
+  }
+
   gtk_widget_reset_shapes(mShell);
   GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
                                                       mTransparencyBitmap,
@@ -4414,12 +4426,10 @@ NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect,
 
   NS_ASSERTION(mIsTranslucent, "Window is not transparent");
 
-  if (mTransparencyBitmap == nsnull) {
-    PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
-    mTransparencyBitmap = new gchar[size];
-    if (mTransparencyBitmap == nsnull)
+  if (!mTransparencyBitmap) {
+    mTransparencyBitmap = CreateDefaultTransparencyBitmap(mBounds.width, mBounds.height);
+    if (!mTransparencyBitmap)
       return NS_ERROR_FAILURE;
-    memset(mTransparencyBitmap, 255, size);
   }
 
   NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0
