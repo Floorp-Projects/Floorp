@@ -95,6 +95,11 @@ nsMacCharset::nsMacCharset()
 nsMacCharset::~nsMacCharset()
 {
   PR_AtomicDecrement(&g_InstanceCount);
+  PR_AtomicDecrement(&gCnt);
+  if((0 == gCnt) && (nsnull != gInfo)) {
+  	delete gInfo;
+  	gInfo = nsnull;
+  }
 }
 
 NS_IMETHODIMP 
