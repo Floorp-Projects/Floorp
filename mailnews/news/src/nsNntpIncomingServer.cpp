@@ -815,20 +815,20 @@ nsNntpIncomingServer::WriteHostInfoFile()
 
     if (!mHostInfoHasChanged) {
         return NS_OK;
-	}
+    }
 
-	PRInt32 firstnewdate;
+    PRInt32 firstnewdate;
 
-	LL_L2I(firstnewdate, mFirstNewDate);
+    LL_L2I(firstnewdate, mFirstNewDate);
 
-	nsXPIDLCString hostname;
-	rv = GetHostName(getter_Copies(hostname));
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
     NS_ENSURE_SUCCESS(rv,rv);
-	
+    
     nsFileSpec hostinfoFileSpec;
 
     if (!mHostInfoFile) 
-      return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_UNEXPECTED;
 
     rv = mHostInfoFile->GetFileSpec(&hostinfoFileSpec);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -836,34 +836,35 @@ nsNntpIncomingServer::WriteHostInfoFile()
     if (mHostInfoStream) {
         mHostInfoStream->close();
         delete mHostInfoStream;
-        mHostInfoStream = nsnull;
     }
 
     mHostInfoStream = new nsIOFileStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
-    NS_ASSERTION(mHostInfoStream, "no stream!");
+    if (!mHostInfoStream)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // todo, missing some formatting, see the 4.x code
-    *mHostInfoStream << "# News host information file." << MSG_LINEBREAK;
-	*mHostInfoStream << "# This is a generated file!  Do not edit." << MSG_LINEBREAK;
-	*mHostInfoStream << "" << MSG_LINEBREAK;
-	*mHostInfoStream << "version=" << VALID_VERSION << MSG_LINEBREAK;
-	*mHostInfoStream << "newsrcname=" << (const char*)hostname << MSG_LINEBREAK;
-	*mHostInfoStream << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK;
-	*mHostInfoStream << "firstnewdate=" << firstnewdate << MSG_LINEBREAK;
-	*mHostInfoStream << "uniqueid=" << mUniqueId << MSG_LINEBREAK;
-	*mHostInfoStream << "" << MSG_LINEBREAK;
-	*mHostInfoStream << "begingroups" << MSG_LINEBREAK;
+    *mHostInfoStream
+         << "# News host information file." << MSG_LINEBREAK
+         << "# This is a generated file!  Do not edit." << MSG_LINEBREAK
+         << "" << MSG_LINEBREAK
+         << "version=" << VALID_VERSION << MSG_LINEBREAK
+         << "newsrcname=" << (const char*)hostname << MSG_LINEBREAK
+         << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK
+         << "firstnewdate=" << firstnewdate << MSG_LINEBREAK
+         << "uniqueid=" << mUniqueId << MSG_LINEBREAK
+         << "" << MSG_LINEBREAK
+         << "begingroups" << MSG_LINEBREAK;
 
-	// XXX todo, sort groups first?
+    // XXX todo, sort groups first?
 
-	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)writeGroupToHostInfoFile, (void *)mHostInfoStream);
+    mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)writeGroupToHostInfoFile, (void *)mHostInfoStream);
 
     mHostInfoStream->close();
     delete mHostInfoStream;
     mHostInfoStream = nsnull;
 
-	mHostInfoHasChanged = PR_FALSE;
-	return NS_OK;
+    mHostInfoHasChanged = PR_FALSE;
+    return NS_OK;
 }
 
 nsresult

@@ -832,6 +832,9 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     rv = ParseURL(m_url, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
 
     nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
+    if (!cacheListener)
+       return NS_ERROR_OUT_OF_MEMORY;
+
     NS_ADDREF(cacheListener);
 
     SetLoadGroup(m_loadGroup);
@@ -896,6 +899,9 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
         m_typeWanted = ARTICLE_WANTED;
 
         nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
+        if (!cacheListener)
+          return PR_FALSE;
+
         NS_ADDREF(cacheListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
 

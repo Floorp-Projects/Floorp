@@ -544,6 +544,7 @@ nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
 
 nsresult nsMsgDownloadAllNewsgroups::DownloadMsgsForCurrentGroup()
 {
+  NS_ENSURE_TRUE(m_downloaderForGroup, NS_ERROR_OUT_OF_MEMORY);
   nsCOMPtr <nsIMsgDatabase> db;
   nsCOMPtr <nsISupportsArray> termList;
   nsCOMPtr <nsIMsgDownloadSettings> downloadSettings;
@@ -568,11 +569,11 @@ nsresult nsMsgDownloadAllNewsgroups::DownloadMsgsForCurrentGroup()
   PRUint32 ageLimitOfMsgsToDownload;
 
   downloadSettings->GetDownloadByDate(&downloadByDate);
-	downloadSettings->GetDownloadUnreadOnly(&downloadUnreadOnly);
-	downloadSettings->GetAgeLimitOfMsgsToDownload(&ageLimitOfMsgsToDownload);
+  downloadSettings->GetDownloadUnreadOnly(&downloadUnreadOnly);
+  downloadSettings->GetAgeLimitOfMsgsToDownload(&ageLimitOfMsgsToDownload);
 
   nsCOMPtr <nsIMsgSearchTerm> term;
-	nsCOMPtr <nsIMsgSearchValue>		value;
+  nsCOMPtr <nsIMsgSearchValue>    value;
 
   rv = searchSession->CreateTerm(getter_AddRefs(term));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -584,14 +585,14 @@ nsresult nsMsgDownloadAllNewsgroups::DownloadMsgsForCurrentGroup()
     value->SetStatus(MSG_FLAG_READ);
     searchSession->AddSearchTerm(nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, value, PR_TRUE, nsnull);
   }
-	if (downloadByDate)
-	{
+  if (downloadByDate)
+  {
     value->SetAttrib(nsMsgSearchAttrib::AgeInDays);
-		value->SetAge(ageLimitOfMsgsToDownload);
-		searchSession->AddSearchTerm(nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, value, nsMsgSearchBooleanOp::BooleanAND, nsnull);
-	}
+    value->SetAge(ageLimitOfMsgsToDownload);
+    searchSession->AddSearchTerm(nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, value, nsMsgSearchBooleanOp::BooleanAND, nsnull);
+  }
   value->SetAttrib(nsMsgSearchAttrib::MsgStatus);
-	value->SetStatus(MSG_FLAG_OFFLINE);
+  value->SetStatus(MSG_FLAG_OFFLINE);
   searchSession->AddSearchTerm(nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, value, nsMsgSearchBooleanOp::BooleanAND, nsnull);
 
   m_downloaderForGroup->RunSearch(m_currentFolder, db, searchSession);
