@@ -580,6 +580,7 @@ nsresult nsImapIncomingServer::DoomUrlIfChannelHasError(nsIImapUrl *aImapUrl, PR
       {
         nsresult res;
         *urlDoomed = PR_TRUE;
+        nsImapProtocol::LogImapUrl("dooming url", aImapUrl);
         
         mockChannel->Close(); // try closing it to get channel listener nulled out.
         
