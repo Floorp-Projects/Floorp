@@ -194,6 +194,6 @@ private:
 	OSErr	FSMakeUnique(FSSpec *ioSpec);
 };
 
-
+#pragma options align=reset
 
 #endif /* _NS_APPLESINGLEDECODER_H_ */
