@@ -450,17 +450,62 @@ static NPX_PlugIn *readPluginInfo(NPX_PlugInList *list, char *filename)
     
     if ((obj = PR_LoadLibrary(filename)) != NULL) {
 
-#ifndef NSPR20
-	fct = (char *(*)())PR_FindSymbol("NP_GetMIMEDescription", obj);
-#else
-	fct = (char *(*)())PR_FindSymbol(obj, "NP_GetMIMEDescription");
-#endif /* NSPR20 */
-	if (fct == NULL ||
-	    (newInfo = (*fct)()) == NULL) {
-	    int err = PR_UnloadLibrary(obj);
-	    PR_ASSERT(err == 0);
-	    return NULL;
+	nsFactoryProc nsGetFactory =
+          (nsFactoryProc)PR_FindSymbol(obj, "NSGetFactory");
+
+	if (nsGetFactory != NULL) {
+            // XXX Figure out where this should go: this seems a
+            // little late in the game to be creating the plugin
+            // manager...
+	    if (thePluginManager == NULL) {
+                static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+                if (nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager) != NS_OK)
+                    return NULL;
+	    }
+
+            PR_ASSERT(thePluginManager != NULL);
+
+            static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+	    nsIPlugin* userPlugin = NULL;
+	    nsresult err = nsGetFactory(kIPluginIID, (nsIFactory**)&userPlugin);
+
+	    if ((err != NS_OK)
+                || (userPlugin == NULL)
+                || (userPlugin->Initialize((nsIPluginManager*)thePluginManager) != NS_OK)) {
+		PR_UnloadLibrary(obj);
+		return NULL;
+	    }
+
+#ifdef LATER // XXX coming soon...
+            // add the plugin directory if successful
+            JVM_AddToClassPathRecursively(csPluginDir);
+#endif
+
+            err = userPlugin->GetMIMEDescription((const char**)&newInfo);
+            if (err != NS_OK) {
+		PR_UnloadLibrary(obj);
+		return NULL;
+            }
+
+            err = userPlugin->Shutdown();
+            if (err != NS_OK) {
+		PR_UnloadLibrary(obj);
+		return NULL;
+            }
 	}
+        else {
+#ifndef NSPR20
+            fct = (char *(*)())PR_FindSymbol("NP_GetMIMEDescription", obj);
+#else
+            fct = (char *(*)())PR_FindSymbol(obj, "NP_GetMIMEDescription");
+#endif /* NSPR20 */
+            if (fct == NULL ||
+                (newInfo = (*fct)()) == NULL) {
+                int err = PR_UnloadLibrary(obj);
+                PR_ASSERT(err == 0);
+                return NULL;
+            }
+        }
 
 	if (currentInfo == NULL) {
 	    currentInfo = getNewPluginInfo(list, filename);
