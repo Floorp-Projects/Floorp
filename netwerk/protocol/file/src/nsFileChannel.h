@@ -219,7 +219,7 @@ protected:
 
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsILoadGroup*               mLoadGroup;
 
 #ifdef STREAM_CONVERTER_HACK
 	nsCOMPtr<nsIStreamConverter2> mStreamConverter;

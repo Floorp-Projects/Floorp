@@ -109,7 +109,7 @@ protected:
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsILoadGroup*               mLoadGroup;
 };
 
 #endif /* _nsHTTPChannel_h_ */

@@ -59,7 +59,7 @@ nsFileChannel::nsFileChannel()
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
       mLoadAttributes(LOAD_NORMAL),
-	  mReadFixedAmount(PR_FALSE)
+	  mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -148,6 +148,7 @@ nsFileChannel::~nsFileChannel()
     NS_ASSERTION(mBufferOutputStream == nsnull, "channel not closed");
     if (mMonitor) 
         PR_DestroyMonitor(mMonitor);
+    NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMETHODIMP
@@ -656,7 +657,9 @@ nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsFileChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-    mLoadGroup = aLoadGroup;    // releases and addrefs
+    NS_IF_RELEASE(mLoadGroup);
+    mLoadGroup = aLoadGroup;
+    NS_IF_ADDREF(mLoadGroup);
     return NS_OK;
 }
 
