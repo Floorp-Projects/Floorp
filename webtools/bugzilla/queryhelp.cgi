@@ -136,7 +136,11 @@ print qq{
 <OPTION VALUE="REMIND">REMIND
 <OPTION VALUE="DUPLICATE">DUPLICATE
 <OPTION VALUE="WORKSFORME">WORKSFORME
-<OPTION VALUE="MOVED">MOVED
+};
+
+print '<OPTION VALUE="MOVED">MOVED' if Param('move-enabled');
+
+print qq{
 <OPTION VALUE="---">---
 </SELECT>
 
@@ -289,6 +293,13 @@ bug description.
 code produces no clues as to why this behavior would occur. If
 more information appears later, please re-assign the bug, for
 now, file it.
+};
+
+print '<li><b>MOVED</b> - The problem described might be a bug but is not a bug in this database,
+so it was transfered to a more appropriate database.'
+  if Param('move-enabled');
+
+print qq{
 </ul>
 
 <a name="platform"></a>
