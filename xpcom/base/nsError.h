@@ -94,6 +94,7 @@
 #define NS_ERROR_MODULE_XSLT       27
 #define NS_ERROR_MODULE_IPC        28
 #define NS_ERROR_MODULE_SVG        29
+#define NS_ERROR_MODULE_STORAGE    30
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that
