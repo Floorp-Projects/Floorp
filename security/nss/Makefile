@@ -88,7 +88,6 @@ endif
 else
 	$(NSINSTALL) -L ../../dist include $(DIST)
 	$(NSINSTALL) -L ../../dist lib $(DIST)
-	cp $(DIST)/lib/libmozdbm_s.a $(DIST)/lib/libdbm.a
 	cp $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)
 endif
 
