@@ -32,6 +32,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
+#include "nsTimer.h"
 
 class nsBrowserWindow;
 
@@ -70,6 +71,9 @@ protected:
 
 protected:
    nsBrowserWindow*  mBrowserWindow;
+
+   PRBool            mTimerSet;
+   MOZ_TIMER_DECLARE(mTotalTime)
 };
 
 #endif /* nsWebBrowserChrome_h__ */
