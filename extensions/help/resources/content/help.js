@@ -375,15 +375,23 @@ function UpdateBackForwardButtons()
     forwardBroadcaster.setAttribute("disabled", !forwardDisabled);
 }
 
+var gFindInstData;
+function getFindInstData()
+{
+  if (!gFindInstData) {
+    gFindInstData = new nsFindInstData();
+    gFindInstData.browser = helpBrowser;
+    // defaults for rootSearchWindow and currentSearchWindow are fine here
+  }
+  return gFindInstData;
+}
+
 function find(again, reverse)
 {
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!focusedWindow || focusedWindow == window)
-    focusedWindow = window._content;
   if (again)
-    findAgainInPage(helpBrowser, window._content, focusedWindow, reverse);
+    findAgainInPage(getFindInstData(), reverse);
   else
-    findInPage(helpBrowser, window._content, focusedWindow)
+    findInPage(getFindInstData())
 }
 
 function getMarkupDocumentViewer()

@@ -1260,18 +1260,26 @@ function MsgViewPageSource()
     ViewPageSource(messages);
 }
 
+var gFindInstData;
+function getFindInstData()
+{
+  if (!gFindInstData) {
+    gFindInstData = new nsFindInstData();
+    gFindInstData.browser = getMessageBrowser();
+    gFindInstData.rootSearchWindow = window.top.content;
+    gFindInstData.currentSearchWindow = window.top.content;
+  }
+  return gFindInstData;
+}
+
 function MsgFind()
 {
-  var contentWindow = window.top._content;
-
-  // from utilityOverlay.js
-  findInPage(getMessageBrowser(), contentWindow, contentWindow)
+  findInPage(getFindInstData());
 }
 
 function MsgFindAgain(reverse)
 {
-  var contentWindow = window.top._content;
-  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow, reverse)
+  findAgainInPage(getFindInstData(), reverse);
 }
 
 function MsgCanFindAgain()

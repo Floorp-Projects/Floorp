@@ -2222,6 +2222,8 @@ function cmdCloseTab (e)
     source2View.removeSourceTabAtIndex (e.index);
 }
 
+var gFindInstData;
+
 function cmdFindString (e)
 {
     var source2View = console.views.source2;
@@ -2233,7 +2235,12 @@ function cmdFindString (e)
         return;
 
     var browser = source2View.sourceTabList[index].iframe;
-    findInPage (browser, browser.contentWindow, browser.contentWindow);
+    if (!gFindInstData)
+      gFindInstData = new nsFindInstData();
+    gFindInstData.browser = browser;
+    gFindInstData.rootSearchWindow = browser.contentWindow;
+    gFindInstData.currentSearchWindow = browser.contentWindow;
+    findInPage(gFindInstData);
 }
 
 function cmdReloadTab (e)
