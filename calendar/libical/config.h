@@ -5,7 +5,8 @@
 #define HAVE_ASSERT_H 1
 
 /* Define to 1 if you have the `gmtime_r' function. */
-#define HAVE_GMTIME_R 1
+/* XXX Not using gmtime_r isn't threadsafe */
+/* #define HAVE_GMTIME_R 1 */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
