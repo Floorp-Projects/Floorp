@@ -517,7 +517,10 @@
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
                tooltiptext="&attachButton.tooltip;" 
-               command="cmd_attachFile">
+               command="cmd_attachFile"
+               ondragover="nsDragAndDrop.dragOver(event, envelopeDragObserver);"
+               ondragdrop="nsDragAndDrop.drop(event, envelopeDragObserver);"
+               ondragexit="nsDragAndDrop.dragExit(event, envelopeDragObserver);">
          <menupopup>
             <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
             <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
@@ -630,7 +633,7 @@
               </listcell>
               <listcell class="addressingWidgetCell">
                 <textbox id="addressCol2#1" class="plain textbox-addressingWidget uri-element"
-                         type="autocomplete" flex="1"
+                         type="autocomplete" flex="1" 
                          searchSessions="addrbook" timeout="300" maxrows="4" 
                          autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                          minResultsForPopup="3" ignoreBlurWhileSearching="true"
