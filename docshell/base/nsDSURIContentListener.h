@@ -31,27 +31,29 @@ class nsDocShellBase;
 
 class nsDSURIContentListener : public nsIURIContentListener
 {
+friend class nsDocShellBase;
 public:
-   nsDSURIContentListener();
-
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIURICONTENTLISTENER
+
+protected:
+   nsDSURIContentListener();
+   virtual ~nsDSURIContentListener();
 
    void DocShellBase(nsDocShellBase* aDocShellBase);
    nsDocShellBase* DocShellBase();
    void GetParentContentListener(nsIURIContentListener** aParentListener);
    void SetParentContentListener(nsIURIContentListener* aParentListener);
-
-protected:
-   virtual ~nsDSURIContentListener();
-
+   void GetPresContext(nsIPresContext** aPresContext);
+   void SetPresContext(nsIPresContext* aPresContext);
    PRBool HandleInCurrentDocShell(const char* aContentType, 
       const char* aCommand, const char* aWindowTarget);
 
 protected:
    nsDocShellBase*                  mDocShell;
    nsCOMPtr<nsIURIContentListener>  mParentContentListener;
+   nsCOMPtr<nsIPresContext>         mPresContext;
 };
 
 #endif /* nsDSURIContentListener_h__ */
