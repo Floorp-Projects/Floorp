@@ -171,6 +171,7 @@ protected:
 
 private:
   nsRect             mRect;
+  PRInt32            mOperator;
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
   nsIStyleContext*   mStyleContext;

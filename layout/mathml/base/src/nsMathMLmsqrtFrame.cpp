@@ -228,8 +228,6 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
   // height(radical) should be >= height(base) + psi + ruleThickness
   nsBoundingMetrics radicalSize;
-  nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
-  mSqrChar.SetData(aPresContext, sqrChar); // XXX hack to reset the char, bug 45010
   mSqrChar.Stretch(aPresContext, renderingContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
