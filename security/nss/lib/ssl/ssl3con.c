@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.41 2002/09/07 01:44:11 jpierre%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.42 2002/09/30 20:51:05 wtc%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1544,6 +1544,12 @@ ssl3_SendApplicationData(sslSocket *ss, const unsigned char *in,
 	PRInt32   count;
 
 	if (sent > 0) {
+	    /*
+	     * The thread yield is intended to give the reader thread a
+	     * chance to get some cycles while the writer thread is in
+	     * the middle of a large application data write.  (See
+	     * Bugzilla bug 127740, comment #1.)
+	     */
 	    ssl_ReleaseXmitBufLock(ss);
 	    PR_Sleep(PR_INTERVAL_NO_WAIT);	/* PR_Yield(); */
 	    ssl_GetXmitBufLock(ss);
