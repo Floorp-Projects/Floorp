@@ -67,6 +67,7 @@ struct JSRuntime {
     JSArenaPool         gcArenaPool;
     JSArenaPool         gcFlagsPool;
     JSHashTable         *gcRootsHash;
+    JSHashTable         *gcLocksHash;
     JSGCThing           *gcFreeList;
     jsword              gcDisabled;
     uint32              gcBytes;
