@@ -48,6 +48,7 @@
 #include "nsIPresContext.h"
 #include "nsWeakReference.h"
 #include "nsIFocusController.h"
+#include "nsIViewManager.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 
@@ -118,16 +119,15 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
+  PRBool IsEntirelyVisible(); 
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent);
-
 
   // Data Members
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIWeakReference> mPresShell;
   nsCOMPtr<nsIFocusController> mFocusController;
-
 };
 
 /* Special Accessible that knows how to handle hit detection for flowing text */

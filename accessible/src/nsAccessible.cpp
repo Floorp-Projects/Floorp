@@ -45,6 +45,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
+#include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRootAccessible.h"
 #include "nsIScriptGlobalObject.h"
@@ -622,6 +623,54 @@ nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *a
   return NS_OK;
 }
 
+PRBool nsAccessible::IsEntirelyVisible() 
+{
+  // Set up the variables we need, return false if we can't get at them all
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell) 
+    return PR_FALSE;
+
+  nsCOMPtr<nsIViewManager> viewManager;
+  shell->GetViewManager(getter_AddRefs(viewManager));
+  if (!viewManager)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) 
+    return PR_FALSE;
+
+  nsIFrame *frame = nsnull;
+  shell->GetPrimaryFrameFor(content, &frame);
+  if (!frame) 
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return PR_FALSE;
+
+  // Get the bounds of the current frame, relative to the current view.
+  // We don't use the more accurate GetAccBounds, because that is more expensive 
+  // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough indicator
+  nsRect relFrameRect;
+  nsIView *containingView = nsnull;
+  nsPoint frameOffset;
+  frame->GetRect(relFrameRect);
+  frame->GetView(presContext, &containingView);
+  if (!containingView) {
+    frame->GetOffsetFromView(presContext, frameOffset, &containingView);
+    if (!containingView)
+      return PR_FALSE;  // no view -- not visible
+    relFrameRect.x = frameOffset.x;
+    relFrameRect.y = frameOffset.y;
+  }
+
+  PRBool isVisible = PR_FALSE;
+  viewManager->IsRectVisible(containingView, relFrameRect, PR_TRUE, &isVisible);
+
+  return isVisible;
+}
+
 /* readonly attribute wstring accState; */
 NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState) 
 { 
@@ -639,48 +688,9 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
     }
   }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content) {
-    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-    if (shell) {
-      nsIFrame *frame = nsnull;
-      shell->GetPrimaryFrameFor(content, &frame);
-      if (frame) {
-        /*
-        PRBool isVisible = PR_FALSE, isFinishedLooking = PR_FALSE;
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        nsRect twipsRect, pixelsRect;
-        GetAbsoluteFramePosition(presContext, frame, twipsRect, pixelsRect);
-        
-
-        //frame->IsVisibleForPainting(presContext, presContext, PR_TRUE, &isVisible); // 3rd param = bool to check css visibility
-        //frame->CheckVisibility(presContext, 0,1, PR_TRUE, &isFinishedLooking, &isVisible);
-        if (twipsRect.y < 0)
-          *aAccState |= STATE_OFFSCREEN;
-        */
-        nsSize frameSize;
-        frame->GetSize(frameSize);
-        if (frameSize.width == 0)
-          *aAccState |= STATE_INVISIBLE;
-
-      }
-    }
-  }
-
-
-    /**
-   *  called to see if the children of the frame are visible from indexstart to index end.
-   *  this does not change any state. returns PR_TRUE only if the indexes are valid and any of
-   *  the children are visible.  for textframes this index is the character index.
-   *  if aStart = aEnd result will be PR_FALSE
-   *  @param aStart start index of first child from 0-N (number of children)
-   *  @param aEnd   end index of last child from 0-N
-   *  @param aRecurse should this frame talk to siblings to get to the contents other children?
-   *  @param aFinished did this frame have the aEndIndex? or is there more work to do
-   *  @param _retval  return value true or false. false = range is not rendered.
-   */
-  //NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
+  // Check if STATE_OFFSCREEN bitflag should be turned on for this object
+  if (!IsEntirelyVisible())
+    *aAccState |= STATE_OFFSCREEN;
 
   return rv;
 }

@@ -552,6 +552,15 @@ public:
    * @param aTime Last user event time in microseconds
    */
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
+
+  /**
+	 * Determine if a rectangle specified in the view's coordinate system 
+	 * is completely, or partially visible.
+   * @param aView view that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to test for visibility 
+   * @returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
+	 */
+  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *isVisible)=0;
 };
 
 //when the refresh happens, should it be double buffered?
