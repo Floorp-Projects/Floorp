@@ -49,7 +49,6 @@
 #include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
 #include "nsIURI.idl"
-#include "nsIMIMEDataSource.idl"
 #include "nsIFile.idl"
 
 %{C++
