@@ -1,7 +1,7 @@
 const APP_DISPLAY_NAME = "Offline Support";
 const APP_NAME = "offline";
 const APP_PACKAGE = "/XXX.mozdev.org/offline";
-const APP_VERSION = "0.0.1";
+const APP_VERSION = "0.0.2";
 
 const APP_JAR_FILE = "offline.jar";
 const APP_CONTENT_FOLDER = "content/messenger-offline/";
