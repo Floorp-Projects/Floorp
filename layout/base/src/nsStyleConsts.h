@@ -170,10 +170,11 @@
 #define NS_STYLE_SPACING_NORMAL                 0
 
 // See nsStyleText
-#define NS_STYLE_TEXT_ALIGN_LEFT                0
-#define NS_STYLE_TEXT_ALIGN_RIGHT               1
-#define NS_STYLE_TEXT_ALIGN_CENTER              2
-#define NS_STYLE_TEXT_ALIGN_JUSTIFY             3
+#define NS_STYLE_TEXT_ALIGN_DEFAULT             0
+#define NS_STYLE_TEXT_ALIGN_LEFT                1
+#define NS_STYLE_TEXT_ALIGN_RIGHT               2
+#define NS_STYLE_TEXT_ALIGN_CENTER              3
+#define NS_STYLE_TEXT_ALIGN_JUSTIFY             4
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0
