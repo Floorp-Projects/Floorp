@@ -326,6 +326,18 @@ nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
+static nscolor ColorNameToRGB(const nsHTMLValue& aValue)
+{
+  nsAutoString buffer;
+  aValue.GetStringValue(buffer);
+  char cbuf[40];
+  buffer.ToCString(cbuf, sizeof(cbuf));
+
+  nscolor color;
+  NS_ColorNameToRGB(cbuf, &color);
+  return color;
+}
+
 static void
 MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
@@ -340,7 +352,11 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       nsStyleColor* color = (nsStyleColor*)
         aContext->GetMutableStyleData(eStyleStruct_Color);
       color->mColor = value.GetColorValue();
-      aPresContext->SetDefaultColor(color->mColor);
+    }
+    else if (eHTMLUnit_String == value.GetUnit()) {
+      nsStyleColor* color = (nsStyleColor*)
+        aContext->GetMutableStyleData(eStyleStruct_Color);
+      color->mColor = ColorNameToRGB(value);
     }
 
     nsIPresShell* presShell = aPresContext->GetShell();
@@ -356,15 +372,24 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
             if (eHTMLUnit_Color == value.GetUnit()) {
               styleSheet->SetLinkColor(value.GetColorValue());
             }
+            else if (eHTMLUnit_String == value.GetUnit()) {
+              styleSheet->SetLinkColor(ColorNameToRGB(value));
+            }
 
             aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
             if (eHTMLUnit_Color == value.GetUnit()) {
               styleSheet->SetActiveLinkColor(value.GetColorValue());
             }
+            else if (eHTMLUnit_String == value.GetUnit()) {
+              styleSheet->SetActiveLinkColor(ColorNameToRGB(value));
+            }
 
             aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
             if (eHTMLUnit_Color == value.GetUnit()) {
               styleSheet->SetVisitedLinkColor(value.GetColorValue());
+            }
+            else if (eHTMLUnit_String == value.GetUnit()) {
+              styleSheet->SetVisitedLinkColor(ColorNameToRGB(value));
             }
             NS_RELEASE(styleSheet);
           }
