@@ -953,6 +953,22 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *fh,
                                   JSPrincipals *principals);
 
+/*
+ * NB: you must use JS_NewScriptObject and root a pointer to its return value
+ * in order to keep a JSScript and its atoms safe from garbage collection after
+ * creating the script via JS_Compile* and before a JS_ExecuteScript* call.
+ * E.g., and without error checks:
+ *
+ *    JSScript *script = JS_CompileFile(cx, global, filename);
+ *    JSObject *scrobj = JS_NewScriptObject(cx, script);
+ *    JS_AddNamedRoot(cx, &scrobj, "scrobj");
+ *    do {
+ *        jsval result;
+ *        JS_ExecuteScript(cx, global, script, &result);
+ *        JS_GC();
+ *    } while (!JSVAL_IS_BOOLEAN(result) || JSVAL_TO_BOOLEAN(result));
+ *    JS_RemoveRoot(cx, &scrobj);
+ */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
 
