@@ -1602,7 +1602,8 @@ static PRBool dir_AreServersSame (DIR_Server *first, DIR_Server *second, PRBool 
 		/* assume for right now one personal address book type where offline is PR_FALSE */
 		if ((first->dirType == PABDirectory) && (second->dirType == PABDirectory))
 		{
-			if ((first->isOffline == PR_FALSE) && (second->isOffline == PR_FALSE))  /* are they both really address books? */
+      /* are they both really address books? */
+      if (!first->isOffline && !second->isOffline)
 			{
 				PR_ASSERT(first->fileName && second->fileName);
 				if (first->fileName && second->fileName)
@@ -3245,11 +3246,9 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
           /* Don't add servers which are in the old list and don't add a
           * second personal address book.
             */
-            if (   dir_AreServersSame(newServer, oldServer, PR_FALSE)
-              || (   oldServer->dirType == PABDirectory
-              && newServer->dirType == PABDirectory
-              && oldServer->isOffline == PR_FALSE
-              && newServer->isOffline == PR_FALSE))
+            if (dir_AreServersSame(newServer, oldServer, PR_FALSE) ||
+                (oldServer->dirType == PABDirectory && !oldServer->isOffline &&
+                 newServer->dirType == PABDirectory && !newServer->isOffline))
             {
             /* Copy any new prefs out of the new server.
               */

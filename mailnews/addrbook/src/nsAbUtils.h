@@ -100,7 +100,7 @@ private:
         if (!mArray)
             return;
 
-        if (mFreeElements == PR_TRUE)
+        if (mFreeElements)
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSize, mArray);
         else
         {
@@ -194,7 +194,7 @@ private:
         if (!mArray)
             return;
 
-        if (mFreeElements == PR_TRUE)
+        if (mFreeElements)
           NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSize, mArray);
         else
         {

@@ -148,7 +148,7 @@ nsAbQueryLDAPMessageListener::~nsAbQueryLDAPMessageListener ()
 
 nsresult nsAbQueryLDAPMessageListener::Initiate ()
 {
-    if(mInitialized == PR_TRUE)
+    if (mInitialized)
         return NS_OK;
                 
     mLock = PR_NewLock ();
@@ -171,7 +171,7 @@ nsresult nsAbQueryLDAPMessageListener::Cancel ()
 
     nsAutoLock lock(mLock);
 
-    if (mFinished == PR_TRUE || mCanceled == PR_TRUE)
+    if (mFinished || mCanceled)
         return NS_OK;
 
     mCanceled = PR_TRUE;
@@ -196,12 +196,12 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     {
         nsAutoLock lock (mLock);
 
-        if (mFinished == PR_TRUE)
+        if (mFinished)
             return NS_OK;
 
         if (messageType == nsILDAPMessage::RES_SEARCH_RESULT)
             mFinished = PR_TRUE;
-        else if (mCanceled == PR_TRUE)
+        else if (mCanceled)
         {
             mFinished = PR_TRUE;
             cancelOperation = PR_TRUE;
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     // Leave lock
 
     nsCOMPtr<nsIAbDirectoryQueryResult> queryResult;
-    if (cancelOperation == PR_FALSE)
+    if (!cancelOperation)
     {
         switch (messageType)
         {
@@ -376,7 +376,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
             NS_ConvertUTF8toUCS2(spec).get(),
             nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
             &status);
-        if (NS_FAILED(rv) || status == PR_FALSE) {
+        if (NS_FAILED(rv) || !status) {
             return NS_ERROR_FAILURE;
         }
     }
@@ -405,7 +405,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
 
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessage)
 {
-    if (mBound == PR_TRUE)
+    if (mBound)
         return NS_OK;
 
     // see whether the bind actually succeeded
@@ -521,7 +521,7 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
                     &hasSetCardProperty);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (hasSetCardProperty == PR_FALSE)
+            if (!hasSetCardProperty)
                 continue;
 
             _propertyValue = new nsAbDirectoryQueryPropertyValue(propertyName.get (), card);
@@ -643,7 +643,7 @@ nsAbLDAPDirectoryQuery::~nsAbLDAPDirectoryQuery()
 }
 nsresult nsAbLDAPDirectoryQuery::Initiate ()
 {
-    if(mInitialized == PR_TRUE)
+    if (mInitialized)
         return NS_OK;
 
     mLock = PR_NewLock ();
@@ -673,7 +673,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     PRBool doSubDirectories;
     rv = arguments->GetQuerySubDirectories (&doSubDirectories);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (doSubDirectories == PR_TRUE)
+    if (doSubDirectories)
         scope = "sub";
     else
         scope = "one";

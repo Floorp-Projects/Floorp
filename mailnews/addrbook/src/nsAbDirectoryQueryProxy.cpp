@@ -53,7 +53,7 @@ nsAbDirectoryQueryProxy::~nsAbDirectoryQueryProxy()
 /* void initiate (in nsIAbDirectory directory); */
 NS_IMETHODIMP nsAbDirectoryQueryProxy::Initiate(nsIAbDirectory *directory)
 {
-    if (mInitiated == PR_TRUE)
+    if (mInitiated)
         return NS_OK;
 
     nsAbDirectoryQuery* _directoryQuery = new nsAbDirectoryQuery (directory);

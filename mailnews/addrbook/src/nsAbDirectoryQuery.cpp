@@ -472,7 +472,7 @@ nsresult nsAbDirectoryQuery::matchCard (nsIAbCard* card,
     rv = matchCardExpression (card, expression, &matchFound);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (matchFound == PR_TRUE)
+    if (matchFound)
     {
         (*resultLimit)--;
         rv = queryMatch (card, arguments, listener);
@@ -530,14 +530,12 @@ nsresult nsAbDirectoryQuery::matchCardExpression (nsIAbCard* card,
             else
                 return NS_ERROR_FAILURE;
         }
-        if (operation == nsIAbBooleanOperationTypes::OR &&
-            value == PR_TRUE)
+        if (operation == nsIAbBooleanOperationTypes::OR && value)
             break;
-        else if (operation == nsIAbBooleanOperationTypes::AND &&
-            value == PR_FALSE)
+        else if (operation == nsIAbBooleanOperationTypes::AND && !value)
             break;
         else if (operation == nsIAbBooleanOperationTypes::NOT)
-            value = (value == PR_TRUE) ? PR_FALSE : PR_TRUE;
+            value = !value;
     }
     *result = value;
 
