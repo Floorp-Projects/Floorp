@@ -35,11 +35,11 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/navigator.js \
 	$(srcdir)/openLocation.xul \
 	$(srcdir)/viewSource.xul \
-	$(srcdir)/NetSupportConfirm.xul \
+	$(srcdir)/NetsupportConfirm.xul \
 	$(srcdir)/NetSupportAlert.xul \
 	$(srcdir)/NetSupportConfirmCheck.xul \
 	$(srcdir)/NetSupportPassword.xul \
-	$(srcdir)/NetSupportUserPassword.xul \
+	$(srcdir)/NetSupportUserPAssword.xul \
 	$(NULL)
 
 install:: 
