@@ -48,7 +48,7 @@ CPPSRCS		= \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
-		nsFragmenedString.cpp \
+		nsFragmentedString.cpp \
 		nsHashtable.cpp \
 		nsHashtableEnumerator.cpp \
 		nsObserver.cpp \
