@@ -17,7 +17,6 @@
  */
 
 #include "nsIRDFContainer.h"
-#include "nsRDFContentUtils.h"
 #include "nsRDFParserUtils.h"
 #include "nsRDFResource.h"
 #include "nsString.h"
@@ -33,17 +32,6 @@ void XXXNeverCalled()
     nsRDFParserUtils::StripAndConvert(s);
     nsRDFParserUtils::GetQuotedAttributeValue(s, s, s);
     nsRDFParserUtils::IsJavaScriptLanguage(s);
-
-    // nsRDFContentUtils
-    nsRDFContentUtils::AttachTextNode(nsnull, nsnull);
-    nsRDFContentUtils::FindChildByTag(nsnull, 0, nsnull, nsnull);
-    nsRDFContentUtils::FindChildByResource(nsnull, nsnull, nsnull);
-    nsRDFContentUtils::GetElementResource(nsnull, nsnull);
-    nsRDFContentUtils::GetElementRefResource(nsnull, nsnull);
-    nsRDFContentUtils::GetTextForNode(nsnull, s);
-    nsRDFContentUtils::GetElementLogString(nsnull, s);
-    nsRDFContentUtils::MakeElementURI(nsnull, s, cs);
-    nsRDFContentUtils::MakeElementID(nsnull, s, s);
 
     // rdfutils
     rdf_MakeRelativeRef(s, s);
