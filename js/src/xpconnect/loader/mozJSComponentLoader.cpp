@@ -234,7 +234,6 @@ mozJSComponentLoader::~mozJSComponentLoader()
 
         JS_DestroyContext(mContext);
         mContext = nsnull;
-        mXPC = nsnull;
         mRuntimeService = nsnull;
     }
 }
@@ -365,9 +364,9 @@ mozJSComponentLoader::ReallyInit()
     /*
      * Get the XPConnect service.
      */
-    mXPC = do_GetService(kXPConnectServiceProgID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    if (!xpc)
+        return NS_ERROR_FAILURE;
 
     mContext = JS_NewContext(mRuntime, 8192 /* pref? */);
     if (!mContext)
@@ -394,14 +393,14 @@ mozJSComponentLoader::ReallyInit()
         return NS_ERROR_FAILURE;
     }
 
-    rv = mXPC->InitClasses(mContext, mSuperGlobal);
+    rv = xpc->InitClasses(mContext, mSuperGlobal);
     if (NS_FAILED(rv))
         return rv;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = mXPC->WrapNative(mContext, mSuperGlobal, mCompMgr, 
-                          NS_GET_IID(nsIComponentManager),
-                          getter_AddRefs(holder));
+    rv = xpc->WrapNative(mContext, mSuperGlobal, mCompMgr, 
+                         NS_GET_IID(nsIComponentManager),
+                         getter_AddRefs(holder));
 
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
@@ -852,7 +851,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
         rv = mDeferredComponents.QueryElementAt(i, NS_GET_IID(nsIFile), getter_AddRefs(component));
         if (NS_FAILED(rv))
             continue;
-        
+
         rv = AttemptRegistration(component, PR_TRUE /* deferred */);
         if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
             if (NS_SUCCEEDED(rv))
@@ -901,6 +900,10 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         return nsnull;
     }
 
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    if (!xpc)
+        return nsnull;
+
     nsresult rv;
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
     if (NS_FAILED(rv) ||
@@ -935,8 +938,8 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         goto out;
     }
 
-    if (NS_FAILED(mXPC->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
-                               (void **)&module))) {
+    if (NS_FAILED(xpc->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
+                              (void **)&module))) {
         /* XXX report error properly */
         fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
         goto out;
@@ -985,10 +988,14 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
       new BackstagePass();
 #endif
 
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    if (!xpc)
+      return nsnull;
+
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = mXPC->WrapNative(mContext, mSuperGlobal, backstagePass,
-                          NS_GET_IID(nsISupports),
-                          getter_AddRefs(holder));
+    rv = xpc->WrapNative(mContext, mSuperGlobal, backstagePass,
+                         NS_GET_IID(nsISupports),
+                         getter_AddRefs(holder));
     if (NS_FAILED(rv))
         return nsnull;
     

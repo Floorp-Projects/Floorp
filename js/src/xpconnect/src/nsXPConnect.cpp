@@ -41,6 +41,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPConnect,nsIXPConnect)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
+JSBool nsXPConnect::gOnceAliveNowDead = JS_FALSE;
 
 /***************************************************************************/
 
@@ -197,6 +198,7 @@ nsXPConnect::~nsXPConnect()
     if(mRuntime)
         delete mRuntime;
     gSelf = nsnull;
+    gOnceAliveNowDead = JS_TRUE;
 }
 
 // static
@@ -205,6 +207,8 @@ nsXPConnect::GetXPConnect()
 {
     if(!gSelf)
     {
+        if(gOnceAliveNowDead)
+            return nsnull;
         gSelf = new nsXPConnect();
         if (!gSelf ||
             !gSelf->mArbitraryScriptable ||
@@ -438,12 +442,53 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     return NS_OK;
 }        
 
-/* nsIXPConnectWrappedNative initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID); */
-NS_IMETHODIMP
-nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectWrappedNative **_retval)
+static JSClass xpcTempGlobalClass = {
+    "xpcTempGlobalClass", 0,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+};
+
+
+/* nsIXPConnectJSObjectHolder initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID); */
+NS_IMETHODIMP 
+nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectJSObjectHolder **_retval)
 {
-    // XXX need to implement InitClassesWithNewWrappedGlobal
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aCOMObj);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    // XXX This is not pretty. We make a temporary global object and 
+    // init it with all the Components object junk just so we have a 
+    // parent with an xpc scope to use when wrapping the object that will 
+    // become the 'real' global.  
+
+    JSObject* tempGlobal = JS_NewObject(aJSContext, &xpcTempGlobalClass, 
+                                        nsnull, nsnull);
+
+    if(!tempGlobal ||
+       !JS_InitStandardClasses(aJSContext, tempGlobal))
+        return NS_ERROR_FAILURE;
+
+    if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    if(NS_FAILED(WrapNative(aJSContext, tempGlobal, aCOMObj, aIID,
+                            getter_AddRefs(holder))) || !holder)
+        return NS_ERROR_FAILURE;
+
+    JSObject* aGlobalJSObj;
+    if(NS_FAILED(holder->GetJSObject(&aGlobalJSObj)) || !aGlobalJSObj)
+        return NS_ERROR_FAILURE;
+
+    JS_SetParent(aJSContext, aGlobalJSObj, nsnull);
+
+    if(NS_FAILED(InitClasses(aJSContext, aGlobalJSObj)))
+        return NS_ERROR_FAILURE;
+    
+    NS_ADDREF(*_retval = holder);
+
+    return NS_OK;
 }        
 
 /* nsIXPConnectJSObjectHolder wrapNative (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDRef aIID); */
