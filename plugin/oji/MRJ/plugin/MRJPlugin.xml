@@ -173,9 +173,27 @@
                     </SETTING>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::::dist:netwerk:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>:MacOS Support:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>CodeWarrior</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::::xpcom:macbuild:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
                         <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
@@ -828,13 +846,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>PPC</VALUE></SETTING>
@@ -1182,6 +1200,15 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>:::::xpcom:macbuild:</ACCESSPATH>
+                    <PATH>:xpcom.shlb</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS>Debug, WeakImport</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1377,6 +1404,13 @@
                     <PATHROOT>CodeWarrior</PATHROOT>
                     <ACCESSPATH>:MacOS Support:</ACCESSPATH>
                     <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>:::::xpcom:macbuild:</ACCESSPATH>
+                    <PATH>:xpcom.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2144,13 +2178,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>PPC</VALUE></SETTING>
@@ -3071,13 +3105,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>PPC</VALUE></SETTING>
@@ -4159,13 +4193,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>MC68K</VALUE></SETTING>
@@ -5208,13 +5242,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>PPC</VALUE></SETTING>
@@ -6436,13 +6470,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>i› </VALUE></SETTING>
-                    <SETTING><VALUE>ñ8</VALUE></SETTING>
-                    <SETTING><VALUE>Ñ0</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
+                    <SETTING><VALUE>üêØ</VALUE></SETTING>
+                    <SETTING><VALUE></VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "Perl Panel" panel -->
-                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE></VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>MC68K</VALUE></SETTING>
@@ -6938,6 +6972,14 @@
                 <PATHROOT>Project</PATHROOT>
                 <ACCESSPATH>:::::dist:client_stubs:</ACCESSPATH>
                 <PATH>:NSStdLibStubs</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>MRJPlugin</TARGETNAME>
+                <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHROOT>Project</PATHROOT>
+                <ACCESSPATH>:::::xpcom:macbuild:</ACCESSPATH>
+                <PATH>:xpcom.shlb</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
