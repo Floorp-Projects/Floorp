@@ -1091,10 +1091,10 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * Callers should therefore pass SPROP_INVALID_SLOT for all
                  * non-alias, unshared property adds.
                  */
-                if (slot == SPROP_INVALID_SLOT &&
-                    !js_AllocSlot(cx, scope->object, &slot)) {
+                if (slot != SPROP_INVALID_SLOT)
+                    JS_ASSERT(overwriting);
+                else if (!js_AllocSlot(cx, scope->object, &slot))
                     goto fail_overwrite;
-                }
             }
         }
 
@@ -1228,18 +1228,14 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
         }
     } else {
         /*
-         * js_RemoveScopeProperty must allocate scope->table, so it may fail.
-         * Let's hope this doesn't happen too often for small scopes, due e.g.
-         * to getter/setter definitions interleaved for several properties.
+         * Let js_AddScopeProperty handle this |overwriting| case, including
+         * the conservation of sprop->slot (if it's valid).  We must not call
+         * js_RemoveScopeProperty here, it will free a valid sprop->slot and
+         * js_AddScopeProperty won't re-allocate it.
          */
-        if (!js_RemoveScopeProperty(cx, scope, sprop->id)) {
-            newsprop = NULL;
-        } else {
-            newsprop = js_AddScopeProperty(cx, scope, child.id, child.getter,
-                                           child.setter, child.slot,
-                                           child.attrs, child.flags,
-                                           child.shortid);
-        }
+        newsprop = js_AddScopeProperty(cx, scope, child.id,
+                                       child.getter, child.setter, child.slot,
+                                       child.attrs, child.flags, child.shortid);
     }
 
 #ifdef DEBUG_brendan
