@@ -569,6 +569,8 @@ interface nsIXPConnect : nsISupports
 
     attribute PRBool collectGarbageOnMainThreadOnly;
     attribute PRBool deferReleasesUntilAfterGarbageCollection;
+
+    void releaseJSContext(in JSContextPtr aJSContext, in PRBool noGC);
 };
 
 

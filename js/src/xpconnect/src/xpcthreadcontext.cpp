@@ -103,6 +103,17 @@ XPCJSContextStack::Push(JSContext * cx)
     return NS_OK;
 }
 
+#ifdef DEBUG
+JSBool 
+XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
+{
+    for(PRInt32 i; i < mStack.GetSize(); i++)
+        if(aJSContext == (JSContext*)mStack.ObjectAt(i))
+            return JS_TRUE;
+    return JS_FALSE;
+}
+#endif
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 SafeGlobalResolve(JSContext *cx, JSObject *obj, jsval id)
 {

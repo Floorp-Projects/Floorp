@@ -527,7 +527,8 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
 
     // Notify observer that the download is complete.
     if ( !mError && mObserver ) {
-        rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
+        nsCOMPtr<nsIObserver> kungFuDeathGrip(mObserver);
+        rv = kungFuDeathGrip->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).get(),
                                   nsnull );
         if ( NS_FAILED( rv ) ) {
