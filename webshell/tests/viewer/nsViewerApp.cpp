@@ -251,7 +251,7 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
   mPrefs->StartUp();
-
+  mPrefs->ReadUserPrefs();
 
   // Load Fullcircle Talkback crash-reporting mechanism.
   // http://www.fullcirclesoftware.com for more details.

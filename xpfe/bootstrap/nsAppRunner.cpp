@@ -625,6 +625,9 @@ int main(int argc, char* argv[])
 	}
 #endif
 
+  // Now we have the right profile, read the user-specific prefs.
+  prefs->ReadUserPrefs();
+ 
   if ( !useArgs ) {
       rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
                        nsnull, nsnull, widthVal, heightVal);
