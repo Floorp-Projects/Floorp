@@ -1229,7 +1229,8 @@ typedef z_stream FAR *  png_zstreamp;
 #  endif  /* PNG_IMPEXP */
 #else /* !(DLL || non-cygwin WINDOWS) */
 #    if (defined(__IBMC__) || defined(IBMCPP__)) && defined(__OS2__)
-#      define PNGAPI _System
+/* #      define PNGAPI _System */
+#      define PNGAPI
 #      define PNG_IMPEXP
 #    else
 #      if 0 /* ... other platforms, with other meanings */
