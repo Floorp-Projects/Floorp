@@ -51,9 +51,6 @@ namespace JavaScript {
         NEW_OBJECT,     // Destination Register
         NEW_ARRAY,      // Destination Array
 
-//        GET_PROP,       // Destination Register         StringAtom &                Base Register               
-//        SET_PROP,       // StringAtom &                 Base Register               Source Register
-
         GET_PROP,       // Destination Register         Object Register             StringAtom* (name)
         SET_PROP,       // Object Register              StringAtom* (name)          Source Register
 
