@@ -15,7 +15,7 @@
 
 CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20 -I$(GDEPTH)/include
 
-PROGRAM        = trex
+PROGRAM        = zulu
 
 OS_LIBS += $(GUI_LIBS) 
 
