@@ -474,6 +474,8 @@ PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
   PushContext(*pc);
 
+  pc->mSourceType="text/html";
+
   mParserContext->mScanner->Eof();
   if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
                                          mParserContext->mSourceType)) {
