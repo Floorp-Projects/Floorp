@@ -290,9 +290,9 @@ jsapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jspa
 endif
 endif
 
-# On OS/2 we are already linking against fdlibm, so don't bother
+# On OS/2 & win32 we are already linking against fdlibm, so don't bother
 # creating jsmathtemp
-ifneq ($(OS_ARCH),OS2)
+ifeq (,$(filter OS2 WINNT,$(OS_ARCH)))
 # special rule for jsmath.o since we want to incrementally link
 # against fdlibm to pull in only what is needed
 # Do this in a single step to avoid dependency problems
@@ -370,10 +370,6 @@ jscpucfg: jscpucfg.o
 endif
 else
 jscpucfg$(BIN_SUFFIX): jscpucfg.c Makefile.in
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) /Fe$@ $<
-else
-	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
-endif
+	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
 endif
 

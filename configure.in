@@ -140,24 +140,21 @@ MOZ_BUILD_ROOT=`pwd`
 dnl Special win32 checks
 dnl ==============================================================
 case "$target" in
-*-cygwin*)
+*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=
-    if test "$CC" = "cl" || test "$CXX" = "cl"; then
-        _WIN32_MSVC=1
-    elif test -z "$CC"; then
+    AC_CHECK_PROGS(CC, cl)
+    if test "$CC" = "cl"; then
         echo 'main() { return 0; }' > dummy.c
-        cl -o dummy dummy.c >/dev/null 2>&1
+        ${CC} -o dummy dummy.c >/dev/null 2>&1
         if test $? = 0; then
             _WIN32_MSVC=1
+            CXX=$CC
         else
-            AC_MSG_WARN([cl.exe test failed.  Using normal feature tests])
+            AC_MSG_WARN([$(CC) test failed.  Using normal feature tests])
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
-    ;;
-*-msvc*|*-mksnt*)
-    _WIN32_MSVC=1
     ;;
 esac
 
@@ -344,7 +341,6 @@ AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
-AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
@@ -369,6 +365,7 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
+AC_PATH_PROG(DOXYGEN, doxygen, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
@@ -923,6 +920,7 @@ case "$target" in
         XARGS=xargs
         ZIP=zip
         UNZIP=unzip
+        DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         LIB_PREFIX=
     	OBJ_SUFFIX=obj
@@ -970,7 +968,6 @@ case "$target" in
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
     no_x=yes
-    AC_DEFINE(NO_X11)
 
     dnl Remove cygwinism from MOZ_BUILD_ROOT
     MOZ_BUILD_ROOT=`cygpath -w $MOZ_BUILD_ROOT | sed -e 's|\\\\|/|g'`
@@ -3889,8 +3886,6 @@ MOZ_ARG_ENABLE_BOOL(verbose-config-defs,
 dnl ========================================================
 dnl = Doxygen configuration
 dnl ========================================================
-AC_PATH_PROG(DOXYGEN, doxygen, :)
-
 dnl Use commas to specify multiple dirs to this arg
 MOZ_DOC_INPUT_DIRS='./dist/include ./dist/idl'
 MOZ_ARG_WITH_STRING(doc-input-dirs,
@@ -4317,7 +4312,7 @@ if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
 fi
 fi
 
-if test -z "${GLIB_GMODULE_LIBS}" ; then
+if test -z "${GLIB_GMODULE_LIBS}" -a -n "${GLIB_CONFIG}"; then
     GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
 fi
 
@@ -4331,6 +4326,7 @@ AC_SUBST(HOST_LIBIDL_CFLAGS)
 AC_SUBST(HOST_LIBIDL_LIBS)
 
 dnl older versions of glib do not seem to have gmodule which ctl needs
+if test "`echo $MOZ_EXTENSIONS | grep -c ctl 2>/dev/null`" != 0; then
 _SAVE_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 AC_TRY_COMPILE([#include <gmodule.h>],
@@ -4338,6 +4334,7 @@ AC_TRY_COMPILE([#include <gmodule.h>],
     [AC_MSG_WARN([Cannot build ctl without gmodule support in glib. Removing ctl from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'` ])
 CFLAGS=$_SAVE_CFLAGS
+fi
 
 dnl ========================================================
 dnl Check for libart
