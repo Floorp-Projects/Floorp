@@ -1065,8 +1065,10 @@ nsFileTransport::Process(void)
             delete mBuffer;
             mBuffer = nsnull;
         }
-        (void)mSource->Close();
-        mSource = null_nsCOMPtr();
+        if (mSource) {
+            (void)mSource->Close();
+            mSource = null_nsCOMPtr();
+        }
 
         mState = OPENED;
 
