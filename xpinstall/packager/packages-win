@@ -78,6 +78,7 @@ bin\components\appcomps.dll
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
 bin\components\directory.xpt
+bin\components\downloadmanager.xpt
 bin\components\embedcomponents.dll
 bin\components\commandhandler.xpt
 bin\components\history.xpt
@@ -255,6 +256,7 @@ bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
+bin\components\nsDownloadProgressListener.js
 bin\components\transformiix.xpt
 bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll

@@ -51,6 +51,7 @@ XPIDLSRCS=						\
     .\nsIDocumentLoader.idl \
     .\nsIWebProgress.idl \
     .\nsIWebProgressListener.idl \
+    .\nsIDownload.idl \
 		$(NULL)
 
 LIBRARY_NAME=uriloaderbase_s

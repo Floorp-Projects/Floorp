@@ -25,6 +25,9 @@
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey				"S">
 
+<!ENTITY downloadManagerCmd.label "Download Manager">
+<!ENTITY downloadManagerCmd.accesskey "D">
+
 <!-- LOCALIZATION NOTE (privacyMenu.label): DONT_TRANSLATE -->
 <!ENTITY privacyMenu.label "Privacy &amp; Security">
 <!ENTITY privacyMenu.accesskey "p">
