@@ -43,6 +43,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
+#include "plbase64.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
@@ -74,7 +75,6 @@ nsMimeXULEmitter::nsMimeXULEmitter()
 
   // Vars to handle the body...
   mBody = "";
-  mBodyFileSpec = nsnull;
   mBodyStarted = PR_FALSE;
 
   if (mPrefs)
@@ -139,9 +139,6 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
 
     delete mMiscStatusArray;
   }
-
-  if (mBodyFileSpec)
-    delete mBodyFileSpec;
 }
 
 // Attachment handling routines
@@ -206,61 +203,12 @@ nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
 
 #define TEMP_FILE_PREFIX    "nsMimeBody"
 
-//
-// RICHIE - We need to find a way to tell the webshell to delete the file once it is
-// loaded. Until then, we will continually cleaup behind ourselves....ugh..
-nsresult
-nsMimeXULEmitter::OhTheHumanityCleanupTempFileHack()
-{
-  // Age old question, where to find temp files....ugh!
-  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
-
-  if (!tmpSpec)
-    return NS_OK;
-
-  if (tmpSpec->Exists())
-  {
-    for (nsDirectoryIterator i(*tmpSpec, PR_FALSE); i.Exists(); i++) 
-    {
-      nsFileSpec possibleTempFile = i.Spec();
-      char       *filename = possibleTempFile.GetLeafName();
-    
-      if ((nsCRT::strncmp(TEMP_FILE_PREFIX, filename, nsCRT::strlen(TEMP_FILE_PREFIX)) == 0) && 
-          (nsCRT::strlen(filename) > nsCRT::strlen(TEMP_FILE_PREFIX)))
-      {
-        possibleTempFile.Delete(PR_FALSE);
-      }
-
-      nsCRT::free(filename);
-      filename = nsnull;
-    }
-  }
-
-  delete tmpSpec;
-  return NS_OK;
-}
 
 nsresult
 nsMimeXULEmitter::EndBody()
 {
-  OhTheHumanityCleanupTempFileHack();
-
   mBody.Append("</HTML>");
   mBodyStarted = PR_FALSE;
-
-  // Now that the body is complete, we are going to create a temp file and 
-  // write it out to disk. The nsFileSpec will be stored in the object for 
-  // writing to the output stream on the Complete() call.  
-  mBodyFileSpec = nsMsgCreateTempFileSpec("nsMimeBody.html");
-  if (!mBodyFileSpec)
-    return NS_ERROR_NULL_POINTER;
-
-  nsOutputFileStream tempOutfile(*mBodyFileSpec);
-  if (! tempOutfile.is_open())
-    return NS_ERROR_UNEXPECTED;
-  
-  tempOutfile.write((const char *) mBody, mBody.Length());
-  tempOutfile.close();
   return NS_OK;
 }
 
@@ -678,17 +626,17 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
 nsresult
 nsMimeXULEmitter::DumpBody()
 {
-  // Now we will write out the XUL/IFRAME line for the mBody which
-  // we have cached to disk.
+  // Now we will write out the XUL/IFRAME line for the mBody
   //
-  char  *url = nsnull;
-  if (mBodyFileSpec)
-    url = nsMimePlatformFileToURL(*mBodyFileSpec);
-
+  // remove nsMimePlatformFileToURL?
   UtilityWrite("<html:iframe id=\"mail-body-frame\" type=\"content-primary\" src=\"");
-  UtilityWrite(url);
+  UtilityWrite("data:text/html;base64,");
+  char *encoded = PL_Base64Encode(mBody, 0, nsnull);
+  if (!encoded)
+    return NS_ERROR_OUT_OF_MEMORY;
+  UtilityWrite(encoded);
+  PR_Free(encoded);
   UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" flex=\"1\"/>");
-  PR_FREEIF(url);
   return NS_OK;
 }
 

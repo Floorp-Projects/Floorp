@@ -123,7 +123,7 @@ var folderListener = {
 						msgFolder.endFolderLoading();
 						dump("before reroot in OnFolderLoaded\n");
 						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID);
-						gCurrentLoadingFolderIsThreaded = FALSE;
+						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
 					}
 				}
