@@ -1130,10 +1130,43 @@ nsCrypto::SignText(JSContext *cx, jsval *argv, PRUint32 argc,
   return NS_ERROR_FAILURE;
 }
 
+void
+alertUser(char *message)
+{
+  nsCOMPtr<nsIDOMWindow> hiddenWindow;
+  JSContext *jsContext;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
+                                               &jsContext); 
+    if (NS_SUCCEEDED(rv)) {
+      // set up arguments for window.alert
+
+      void *stackPtr;
+      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
+      if (argv) {
+        hiddenWindow->Alert(jsContext, argv, 1);
+        JS_PopArguments(jsContext, stackPtr);
+      }
+    }
+  }
+}
+
+
 NS_IMETHODIMP
 nsCrypto::Alert(const nsString& aMessage)
 {
-  return NS_ERROR_FAILURE;
+  char *message;
+
+  message = aMessage.ToNewCString();
+  if (message == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  alertUser(message);
+  delete []message;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1404,30 +1437,6 @@ confirm_user(char *message)
     }
   }
   return confirmation;
-}
-
-void
-alertUser(char *message)
-{
-  nsCOMPtr<nsIDOMWindow> hiddenWindow;
-  JSContext *jsContext;
-  nsresult rv;
-
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
-                                               &jsContext); 
-    if (NS_SUCCEEDED(rv)) {
-      // set up arguments for window.alert
-
-      void *stackPtr;
-      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
-      if (argv) {
-        hiddenWindow->Alert(jsContext, argv, 1);
-        JS_PopArguments(jsContext, stackPtr);
-      }
-    }
-  }
 }
 
 //These defines are returned by PSM as the type of module deleted.
