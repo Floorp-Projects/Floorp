@@ -30,6 +30,7 @@ public class InterfaceRegistry {
     private static String IID_STRING = "IID";
     private static Hashtable interfaces = null;
     private static Hashtable iMethods = null;
+    private static Hashtable keywords = null;
     private static boolean debug = true;
     
     private InterfaceRegistry() {
@@ -43,6 +44,14 @@ public class InterfaceRegistry {
         register(cl);
     }
 
+    public static void register(String name) {
+        try {
+            register(Class.forName(name));
+        } catch (Exception e) {
+            debug(e.toString());
+        }
+    }
+
     public static void register(Class cl) {
         if (cl == null) {
             return;
@@ -52,6 +61,12 @@ public class InterfaceRegistry {
         }
         if (iMethods == null) {
             iMethods = new Hashtable();
+        }
+        if (keywords == null) {
+            keywords = new Hashtable(javaKeywords.length);
+            for (int i = 0; i < javaKeywords.length; i++) {
+                keywords.put(javaKeywords[i], javaKeywords[i]);
+            }
         }
         if (!cl.isInterface()) {
             Class[] ifaces = cl.getInterfaces();
@@ -84,7 +99,7 @@ public class InterfaceRegistry {
                     } while (ifaces.length == 1);
 
                     for (int j = methodNames.length - 1; j >= 0; j--) {
-                        rmethods[j] = (Method)mhash.get(methodNames[j]);
+                        rmethods[j] = (Method)mhash.get(subscriptMethodName(methodNames[j]));
                     }
 
                     interfaces.put(iid, cl);
@@ -134,22 +149,23 @@ public class InterfaceRegistry {
     public static int getIndexByMethod(Method method, IID iid) {
         int result = -1;
         MethodArray m = (MethodArray)iMethods.get(iid);
-        String methodName = method.getName();
-        if (m != null && m.methods !=null) {
-            
+        if (m != null && m.methods != null) {            
             for (int i = 0; i < m.methods.length; i++) {
-                if (m.methods[i] != null) {
-                    if (methodName.equals(m.methods[i].getName())) {
-                        result = i;
-                        break;
-                    }
+                if (method.equals(m.methods[i])) {
+                    result = i;
+                    break;
                 }
             }
         }
         return result;
     }
 
-
+    private static String subscriptMethodName(String str) {
+        if (keywords.get(str) != null) {
+            return str + "_";
+        }
+        return str;
+    }
 
     // methods for debugging
 
@@ -185,6 +201,19 @@ public class InterfaceRegistry {
         }
     }
 
+    private static String[] javaKeywords = {
+        "abstract", "default", "if"        , "private"     , "this"     ,
+        "boolean" , "do"     , "implements", "protected"   , "throw"    ,
+        "break"   , "double" , "import",     "public"      , "throws"   ,
+        "byte"    , "else"   , "instanceof", "return"      , "transient",
+        "case"    , "extends", "int"       , "short"       , "try"      ,
+        "catch"   , "final"  , "interface" , "static"      , "void"     ,
+        "char"    , "finally", "long"      , "strictfp"    , "volatile" ,
+        "class"   , "float"  , "native"    , "super"       , "while"    ,
+        "const"   , "for"    , "new"       , "switch"      , 
+        "continue", "goto"   , "package"   , "synchronized", 
+        // non-final method names of Object class
+        "toString", "clone"  , "finalize"  , "hashCode"    , "equals"};
 }
 
 class MethodArray {

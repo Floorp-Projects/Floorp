@@ -25,7 +25,7 @@ public interface nsISupportsString extends nsISupports
     public void setData(String value);
 
     /* string toString (); */
-    public String toString();
+    public String toString_();
 
     /* void setDataWithLength (in unsigned long length, [size_is (length)] in string data); */
     public void setDataWithLength(int length, String data);

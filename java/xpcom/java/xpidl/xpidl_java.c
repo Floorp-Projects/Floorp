@@ -36,13 +36,29 @@
  * source decompiled from state->tree.
  */
 void write_comment(TreeState *state);
+char* subscriptIdentifier(TreeState *state, char *str);
+char* subscriptMethodName(TreeState *state, char *str);
 
 struct java_priv_data {
     GHashTable *typedefTable;
+    GHashTable *keywords;    
     FILE *file;
 };
 
+char* javaKeywords[] = {
+    "abstract", "default", "if"        , "private"     , "this"     ,
+    "boolean" , "do"     , "implements", "protected"   , "throw"    ,
+    "break"   , "double" , "import",     "public"      , "throws"   ,
+    "byte"    , "else"   , "instanceof", "return"      , "transient",
+    "case"    , "extends", "int"       , "short"       , "try"      ,
+    "catch"   , "final"  , "interface" , "static"      , "void"     ,
+    "char"    , "finally", "long"      , "strictfp"    , "volatile" ,
+    "class"   , "float"  , "native"    , "super"       , "while"    ,
+    "const"   , "for"    , "new"       , "switch"      , 
+    "continue", "goto"   , "package"   , "synchronized"};
+
 #define TYPEDEFS(state)     (((struct java_priv_data *)state->priv)->typedefTable)
+#define KEYWORDS(state)     (((struct java_priv_data *)state->priv)->keywords)
 #define FILENAME(state)     (((struct java_priv_data *)state->priv)->file)
 
 static gboolean
@@ -69,6 +85,7 @@ write_classname_iid_define(FILE *file, const char *className)
 static gboolean
 java_prolog(TreeState *state)
 {
+    int len, i;
     state->priv = calloc(1, sizeof(struct java_priv_data));
     if (!state->priv)
         return FALSE;
@@ -79,7 +96,19 @@ java_prolog(TreeState *state)
         free(state->priv);
         return FALSE;
     }
-
+    KEYWORDS(state) = 0;
+    KEYWORDS(state) = g_hash_table_new(g_str_hash, g_str_equal);
+    if (!KEYWORDS(state)) {
+        g_hash_table_destroy(TYPEDEFS(state));
+        free(state->priv);
+        return FALSE;
+    }
+    len = sizeof(javaKeywords)/sizeof(*javaKeywords);
+    for (i = 0; i < len; i++) {
+        g_hash_table_insert(KEYWORDS(state),
+                            javaKeywords[i],
+                            javaKeywords[i]);
+    }
     return TRUE;
 }
 
@@ -88,6 +117,7 @@ java_epilog(TreeState *state)
 {
     /* points to other elements of the tree, so just destroy the table */
     g_hash_table_destroy(TYPEDEFS(state));
+    g_hash_table_destroy(KEYWORDS(state));
     free(state->priv);
     state->priv = NULL;
     
@@ -121,7 +151,8 @@ interface_declaration(TreeState *state)
     char *outname;
     IDL_tree interface = state->tree;
     IDL_tree iterator = NULL;
-    char *interface_name = IDL_IDENT(IDL_INTERFACE(interface).ident).str;
+    char *interface_name = 
+        subscriptIdentifier(state, IDL_IDENT(IDL_INTERFACE(interface).ident).str);
     const char *iid = NULL;
     GSList *doc_comments = IDL_IDENT(IDL_INTERFACE(interface).ident).comments;
     char *prefix = IDL_GENTREE(IDL_NS(state->ns).current)._cur_prefix;
@@ -392,7 +423,7 @@ xpcom_to_java_type (TreeState *state)
                     state->tree = orig_tree;
                 }
                 else {
-                    fputs(ident_str, FILENAME(state));
+                    fputs(subscriptIdentifier(state, ident_str), FILENAME(state));
                 }
             }
         }
@@ -446,7 +477,9 @@ xpcom_to_java_param(TreeState *state)
 
     fputc(' ', FILENAME(state));
 
-    fputs(IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str, FILENAME(state));
+    fputs(subscriptIdentifier(state, 
+                              IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str), 
+          FILENAME(state));
     return TRUE;
 }
 
@@ -484,7 +517,10 @@ method_declaration(TreeState *state)
         (IDL_tree_property_get(method->ident, "noscript") != NULL);
     IDL_tree iterator = NULL;
     IDL_tree retval_param = NULL;
-    const char *method_name = IDL_IDENT(method->ident).str;
+    char *method_name = 
+        g_strdup_printf("%c%s", 
+                        tolower(IDL_IDENT(method->ident).str[0]), 
+                        IDL_IDENT(method->ident).str + 1);
 
     if (doc_comments != NULL) {
         fputs("    ", FILENAME(state));
@@ -559,7 +595,8 @@ method_declaration(TreeState *state)
     /*
      * Write method name
      */
-    fprintf(FILENAME(state), " %c%s(", tolower(method_name[0]), method_name + 1);
+    fprintf(FILENAME(state), " %s(", subscriptMethodName(state, method_name));
+    free(method_name);
 
     /*
      * Write parameters
@@ -667,10 +704,14 @@ constant_declaration(TreeState *state)
         default:
             /*
              * Whoops, it's some other kind of number
-             */
-            
+             */            
             success = FALSE;
         }	
+    } else {
+            IDL_tree_error(state->tree,
+                           "const declaration \'%s\' must be of type short or long",
+                           name);
+            return FALSE;
     }
 
     if (doc_comments != NULL) {
@@ -683,8 +724,9 @@ constant_declaration(TreeState *state)
         write_comment(state);
 
         fprintf(FILENAME(state), "    public static final %s %s = %d;\n",
-		(isshort ? "short" : "int"),
-                name, (int) IDL_INTEGER(declaration->const_exp).value);
+                (isshort ? "short" : "int"),
+                subscriptIdentifier(state, name),
+                (int) IDL_INTEGER(declaration->const_exp).value);
     } else {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "A constant \"%s\" was not of type short or long."
@@ -856,4 +898,29 @@ void write_comment(TreeState *state)
                     IDLF_OUTPUT_NO_QUALIFY_IDENTS |
                     IDLF_OUTPUT_PROPERTIES);
     fputs(" */\n", FILENAME(state));
+}
+
+char* subscriptMethodName(TreeState *state, char *str)
+{
+    char *sstr = NULL;
+    if (strcmp(str, "toString") &&
+        strcmp(str, "clone") &&
+        strcmp(str, "finalize") &&
+        strcmp(str, "equals") &&
+        strcmp(str, "hashCode")) {
+        return subscriptIdentifier(state, str);
+    } 
+    sstr = g_strdup_printf("%s_", str);
+    return sstr;
+}
+
+char* subscriptIdentifier(TreeState *state, char *str)
+{
+    char *sstr = NULL;
+    char *keyword = g_hash_table_lookup(KEYWORDS(state), str);
+    if (keyword) {
+        sstr = g_strdup_printf("%s_", keyword);
+        return sstr;
+    }
+    return str;
 }

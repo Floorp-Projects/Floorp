@@ -33,14 +33,28 @@ class ProxyHandler implements InvocationHandler {
 			 Method method,
 			 Object[] args) throws Throwable {
         System.out.println("--[java]ProxyHandler.invoke "+method);
-        /*
-         *if ("toString".equals(method.getName()) &&
-         *   (method.getParameterTypes()).length == 0) { //it is String toString() method
-         *   return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";
-         *}
-         */
-        return Utilities.callMethod(oid, method, iid, orb, args);
+        String str = method.getName();
+        if (str.equals("toString")) {
+            return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";
+        } else if (str.equals("clone")) {
+            throw new java.lang.CloneNotSupportedException();
+        } else if (str.equals("finalize")) {
+            finalize();
+        } else if (str.equals("equals")) {
+            if (args[0] instanceof ProxyHandler) {
+                ProxyHandler p = (ProxyHandler)args[0];
+                return new Boolean((oid == p.oid) &&
+                                   iid.equals(p.iid) &&
+                                   (orb == p.orb));
+            }
+        } else if (str.equals("hashCode")) {
+            return new Integer(hashCode());
+        } else {
+            return Utilities.callMethod(oid, method, iid, orb, args);
+        }
+        return null;
     }
+
     private long oid;
     private IID iid;
     private long orb;
