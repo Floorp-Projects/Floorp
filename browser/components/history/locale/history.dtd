@@ -1,5 +1,5 @@
-<!ENTITY find.label                "Find:">
-<!ENTITY find.accesskey            "n">
+<!ENTITY find.label                "Search:">
+<!ENTITY find.accesskey            "S">
 <!ENTITY collapseExpand.accesskey            "e">
 <!ENTITY byDate.label "By Date">
 <!ENTITY byDate.accesskey "D">
