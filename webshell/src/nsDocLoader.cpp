@@ -663,7 +663,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
   nsDocumentBindInfo* loader = nsnull;
 
 #if defined(DEBUG)
-  char buffer[256];
+  char buffer[512];
 
   aURLSpec.ToCString(buffer, sizeof(buffer));
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -746,7 +746,7 @@ nsDocLoaderImpl::LoadSubDocument(const nsString& aURLSpec,
   nsDocumentBindInfo* loader = nsnull;
 
 #ifdef DEBUG
-  char buffer[256];
+  char buffer[512];
 
   aURLSpec.ToCString(buffer, sizeof(buffer));
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
