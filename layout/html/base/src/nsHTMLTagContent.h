@@ -23,6 +23,8 @@
 #include "nsIDOMElement.h"
 
 class nsIHTMLAttributes;
+class nsIPresContext;
+class nsIStyleContext;
 
 /** 
  * Base class for tagged html content objects, holds attributes.
@@ -154,6 +156,9 @@ public:
   static PRBool ImagePropertyToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
                                       nsString& aResult);
+
+  void MapImagePropertiesInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext);
 
   static PRBool ParseAlignParam(const nsString& aString, nsHTMLValue& aResult);
 
