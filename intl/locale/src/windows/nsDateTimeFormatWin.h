@@ -46,6 +46,22 @@ public:
                           nsString& stringOut); 
 
   nsDateTimeFormatWin() {NS_INIT_REFCNT();};
+
+private:
+  // util function to call unicode converter
+  nsresult ConvertToUnicode(const char *inString, const PRInt32 inLen, PRUnichar *outString, PRInt32 *outLen);
+
+  // call GetTimeFormatW or TimeFormatA
+  int nsGetTimeFormatW(LCID Locale, DWORD dwFlags, const SYSTEMTIME *lpTime,
+                    const char* format, PRUnichar *timeStr, int cchTime);
+
+  // call GetDateFormatW or GetDateFormatA
+  int nsGetDateFormatW(LCID Locale, DWORD dwFlags, const SYSTEMTIME *lpDate,
+                       const char* format, PRUnichar *dataStr, int cchDate);
+
+  PRBool      mW_API;     // W or A API
+  nsString    mCharset;   // for A version of API, we need to convert
+
 };
 
 #endif  /* nsDateTimeFormatWin_h__ */

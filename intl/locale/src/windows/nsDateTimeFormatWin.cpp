@@ -17,7 +17,9 @@
  */
 
 #include "nsDateTimeFormatWin.h"
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsICharsetConverterManager.h"
 #include "nsLocaleCID.h"
 #include "nsIWin32Locale.h"
 
@@ -96,6 +98,20 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     break;
   }
 
+  // get os version
+  OSVERSIONINFO os;
+  os.dwOSVersionInfoSize = sizeof(os);
+  ::GetVersionEx(&os);
+  if (VER_PLATFORM_WIN32_NT == os.dwPlatformId &&
+      os.dwMajorVersion >= 4) {
+    mW_API = PR_TRUE;   // has W API
+  }
+  else {
+    mW_API = PR_FALSE;
+  }
+
+  // store local charset name
+  mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
   // Get LCID
   if (locale != nsnull) {
     nsString aLocale;
@@ -120,16 +136,16 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   }
   else {
     if (dateFormatSelector == kDateFormatYearMonth) {
-      dateLen = GetDateFormatW(lcid, 0, &system_time, L"yy/MM", 
-                               dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
+      dateLen = nsGetDateFormatW(lcid, 0, &system_time, "yy/MM", 
+                                 dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     else if (dateFormatSelector == kDateFormatWeekday) {
-      dateLen = GetDateFormatW(lcid, 0, &system_time, L"ddd", 
-                               dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
+      dateLen = nsGetDateFormatW(lcid, 0, &system_time, "ddd", 
+                                 dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     else {
-      dateLen = GetDateFormatW(lcid, dwFlags_Date, &system_time, NULL, 
-                               dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
+      dateLen = nsGetDateFormatW(lcid, dwFlags_Date, &system_time, NULL, 
+                                 dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     if (dateLen != 0) {
       dateLen--;  // Since the count includes the terminating null.
@@ -141,8 +157,8 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     timeLen = 0;
   }
   else {
-    timeLen = GetTimeFormatW(lcid, dwFlags_Time, &system_time, NULL, 
-                        timeBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
+    timeLen = nsGetTimeFormatW(lcid, dwFlags_Time, &system_time, NULL, 
+                               timeBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     if (timeLen != 0) {
       timeLen--;  // Since the count includes the terminating null.
     }
@@ -166,4 +182,93 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   }
 
   return NS_OK;
+}
+
+nsresult nsDateTimeFormatWin::ConvertToUnicode(const char *inString, const PRInt32 inLen, PRUnichar *outString, PRInt32 *outLen)
+{
+  // convert result to unicode
+  nsICharsetConverterManager * ccm = nsnull;
+
+  *outLen = 0;
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                              kICharsetConverterManagerIID, 
+                                              (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsIUnicodeDecoder * decoder = nsnull;
+    res = ccm->GetUnicodeDecoder(&mCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 unicharLength = 0;
+      PRInt32 srcLength = inLen;
+      res = decoder->Length(inString, 0, srcLength, &unicharLength);
+      PRUnichar *unichars = outString;
+
+      if (nsnull != unichars) {
+        res = decoder->Convert(unichars, 0, &unicharLength,
+                               inString, 0, &srcLength);
+        if (NS_SUCCEEDED(res)) {
+          *outLen = unicharLength;
+        }
+      }
+      NS_IF_RELEASE(decoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+    }
+
+  return res;
+}
+
+int nsDateTimeFormatWin::nsGetTimeFormatW(LCID Locale, DWORD dwFlags, const SYSTEMTIME *lpTime,
+                                          const char* format, PRUnichar *timeStr, int cchTime)
+{
+  int len = 0;
+  nsresult res = NS_OK;
+
+  if (mW_API) {
+    nsString formatString(format ? format : "");
+    LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
+    len = GetTimeFormatW(Locale, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
+  }
+  else {
+    char *cstr_time;
+    cstr_time = new char[NSDATETIMEFORMAT_BUFFER_LEN];
+    if (nsnull == cstr_time) {
+      return 0;
+    }
+    len = GetTimeFormatA(Locale, dwFlags, lpTime, (LPCSTR) format, 
+                         (LPSTR) cstr_time, cchTime);
+
+    // convert result to unicode
+    res = ConvertToUnicode((const char *) cstr_time, (const PRInt32) len, timeStr, &len);
+
+    delete [] cstr_time;
+  }
+  return NS_SUCCEEDED(res) ? len : 0;
+}
+
+int nsDateTimeFormatWin::nsGetDateFormatW(LCID Locale, DWORD dwFlags, const SYSTEMTIME *lpDate,
+                                          const char* format, PRUnichar *dataStr, int cchDate)
+{
+  int len = 0;
+  nsresult res = NS_OK;
+
+  if (mW_API) {
+    nsString formatString(format ? format : "");
+    LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
+    len = GetDateFormatW(Locale, dwFlags, lpDate, wstr, (LPWSTR) dataStr, cchDate);
+  }
+  else {
+    char *cstr_date;
+    cstr_date = new char[NSDATETIMEFORMAT_BUFFER_LEN];
+    if (nsnull == cstr_date) {
+      return 0;
+    }
+    len = GetDateFormatA(Locale, dwFlags, lpDate, (LPCSTR) format, 
+                         (LPSTR) cstr_date, cchDate);
+
+    // convert result to unicode
+    res = ConvertToUnicode((const char *) cstr_date, (const PRInt32) len, dataStr, &len);
+
+    delete [] cstr_date;
+  }
+  return NS_SUCCEEDED(res) ? len : 0;
 }
