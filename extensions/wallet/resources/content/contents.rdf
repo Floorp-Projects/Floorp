@@ -12,7 +12,7 @@
         chrome:displayName="Form Manager"
         chrome:author="mozilla.org"
         chrome:name="wallet"
- 	chrome:localeVersion="1.1b">
+ 	chrome:localeVersion="1.2a">
   </RDF:Description>
 
   <!-- overlay information -->

@@ -12,7 +12,7 @@
         chrome:displayName="Type Ahead Find"
         chrome:author="mozilla.org"
         chrome:name="typeaheadfind"
- 	chrome:localeVersion="1.1b">
+ 	chrome:localeVersion="1.2a">
   </RDF:Description>
 
 </RDF:RDF>
