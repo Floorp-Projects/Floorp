@@ -401,17 +401,17 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
       fontMet->GetUnderline(offset, size);
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         aRenderingContext.SetColor(overColor);
-        aRenderingContext.FillRect(textRect.x, textRect.y, mRect.width, size);
+        aRenderingContext.FillRect(textRect.x, textRect.y, textRect.width, size);
       }
       if (decorations & NS_FONT_DECORATION_UNDERLINE) {
         aRenderingContext.SetColor(underColor);
-        aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
+        aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
       }
     }
     if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
       fontMet->GetStrikeout(offset, size);
       aRenderingContext.SetColor(strikeColor);
-      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
+      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
     }
  
     aRenderingContext.SetFont(fontStyle->mFont, nsnull);
