@@ -45,29 +45,74 @@ private:
 	int fLastNumberOfFonts;
 };
 //---------------------------------------------------------------
-class WidgetFontListNotifier : public FontListNotifier {
-public:
-	WidgetFontListNotifier(Widget inWidget, String inParam) 
-		{ fWidget = inWidget; fParam = inParam; }
-	virtual void notify(XmFontList inFontList);
-private:
-	Widget fWidget;
-	String	fParam;
-};
-
-
-
-
-void WidgetFontListNotifier::notify(XmFontList inFontlist)
+fe_Font UnicodePseudoFontFactory::make( Display *dpy, XmFontList defFontList)
 {
-	XtVaSetValues(fWidget, fParam, inFontlist, NULL);
+	fe_Font ret = NULL;
+	XmFontContext context;
+	XmFontListEntry entry;
+	XmFontListInitFontContext(&context, defFontList);
+	while(NULL != (entry = XmFontListNextEntry(context)))
+	{
+		XtPointer font;
+		XmFontType type;
+		char* tag;
+
+		tag = XmFontListEntryGetTag(entry);
+		if((NULL == ret) ||
+                   (0 == strcmp(XmFONTLIST_DEFAULT_TAG, tag)))
+		{
+			font = XmFontListEntryGetFont(entry, &type);
+			if(XmFONT_IS_FONT == type)
+				ret = UnicodePseudoFontFactory::make(dpy, 
+                                         (XFontStruct*) font);
+			else
+				ret = UnicodePseudoFontFactory::make(dpy, 
+                                         (XFontSet) font);
+		}
+		free(tag);
+	}
+	XmFontListFreeFontContext(context);
+	return ret;
 }
-//---------------------------------------------------------------
-fe_Font UnicodePseudoFontFactory::make( Display *dpy)
+fe_Font UnicodePseudoFontFactory::make( Display *dpy, XFontSet xfset)
+{
+	char **fnl;
+	XFontStruct ** fsl;
+	if(XFontsOfFontSet(xfset, &fsl, &fnl)>0)
+		return UnicodePseudoFontFactory::make(dpy, fsl[0]);
+	else
+		return UnicodePseudoFontFactory::make(dpy, "", 120);
+}
+fe_Font UnicodePseudoFontFactory::make( Display *dpy, XFontStruct* xfstruct)
+{
+	Atom fmlAtom;
+	char fam[32];
+	int ptSize = 0;
+
+	if(XGetFontProperty( xfstruct, XA_FAMILY_NAME, (unsigned long* )&fmlAtom))
+	{
+		char * famName = XGetAtomName(dpy, fmlAtom);
+		PR_snprintf(fam, 31, famName);
+		fam[31] = '\0';
+		XFree((void*)famName);
+	} 
+	else
+	{
+		PR_snprintf(fam, 31, "");
+	}
+
+	if(! XGetFontProperty( xfstruct, XA_POINT_SIZE, (unsigned long*)&ptSize))
+	    ptSize = 120;	
+	return UnicodePseudoFontFactory::make(dpy, fam, ptSize);
+}
+extern "C" {
+extern int fe_UnicodePointToPixelSize(Display *dpy, int ptSize);
+};
+fe_Font UnicodePseudoFontFactory::make( Display *dpy, const char* family, int ptSize)
 {
 	return (fe_Font) fe_LoadUnicodeFont(
 		NULL,
-		"",
+		(char*)family,
 		0,
 		2,
 		0,
@@ -76,14 +121,6 @@ fe_Font UnicodePseudoFontFactory::make( Display *dpy)
 		0,
 		dpy
 	);
-}
-//---------------------------------------------------------------
-FontListNotifier* FontListNotifierFactory::make(
-	Widget inWidget,
-	String inParam
-)
-{
-	return new WidgetFontListNotifier(inWidget, inParam);
 }
 //---------------------------------------------------------------
 UTF8ToXmStringConverter* UTF8ToXmStringConverterFactory::make(
@@ -107,7 +144,6 @@ UTF8TextAndFontListTracer::UTF8TextAndFontListTracer(
 
 UTF8TextAndFontListTracer::~UTF8TextAndFontListTracer()
 {
-	delete fNotifier;
 	// fe_freeUnicodePseudoFont(fUFont);
 }
 int UTF8TextAndFontListTracer::numberOfFonts(fe_Font f)
@@ -121,15 +157,71 @@ int UTF8TextAndFontListTracer::numberOfFonts(fe_Font f)
 }
 XmString UTF8TextAndFontListTracer::convertToXmString(const char* utf8text)
 {
-	XmFontList *pFontlist;
+	XmFontList fontlist;
 	XmFontType type = XmFONT_IS_FONT;
-	XmString xmstr = fe_ConvertToXmString((unsigned char*)utf8text, CS_UTF8, fUFont, type , pFontlist);
+	XmString xmstr = fe_ConvertToXmString((unsigned char*)utf8text, CS_UTF8, fUFont, type , &fontlist);
 
 	int newNumberOfFonts = numberOfFonts(fUFont);
 	if(fLastNumberOfFonts != newNumberOfFonts)
 	{	
-		fNotifier->notify(*pFontlist);
+		fNotifier->notifyFontListChanged(fontlist);
 		fLastNumberOfFonts = newNumberOfFonts; 
 	}
 	return xmstr;
 }
+
+
+/* some debugger function here */
+void DebugXmString(XmString inString)
+{
+	XmStringContext context;
+	char *text;
+	XmStringCharSet tag;
+	XmStringDirection dir;
+	Boolean sep;
+	if(! XmStringInitContext(&context, inString) )
+	{
+		fprintf(stderr, "cannot exam this XmString\n");
+		return;
+	}
+	fprintf(stderr, "dump XmString:");
+	while(XmStringGetNextSegment(context, &text,&tag, &dir,&sep))
+	{
+		fprintf(stderr,"[%s:%s:%s:%s:%s]",
+			(sep ? "Sep" : ""),
+			((dir == XmSTRING_DIRECTION_L_TO_R) ? "L2R" :
+			 ((dir == XmSTRING_DIRECTION_R_TO_L) ? "R2L" : "Def")),
+			tag,
+			text,
+			(sep ? "Sep" : ""));
+		
+		XtFree(text);
+	}	
+	fprintf(stderr,"\n");
+	fflush(stderr);	
+	XmStringFreeContext(context);	
+}
+void DebugFontList(XmFontList inFontList)
+{
+	XmFontContext context;
+	XmFontListEntry entry;
+	XmFontListInitFontContext(&context, inFontList);
+	fprintf(stderr, "dump XmFontList:");
+	while(NULL != (entry = XmFontListNextEntry(context)))
+	{
+		XtPointer font;
+		XmFontType type;
+		char* tag;
+		font = XmFontListEntryGetFont(entry, &type);
+		tag = XmFontListEntryGetTag(entry);
+		fprintf(stderr, "[%s:%s:%xl]",
+			((type == XmFONT_IS_FONT) ? "F" : "L"),
+			tag, (int)font );
+		free(tag);
+	}
+	fprintf(stderr,"\n");
+	XmFontListFreeFontContext(context);
+}
+
+
+

@@ -28,7 +28,7 @@
 
 class  FontListNotifier {
 public:
-	virtual void notify(XmFontList inFontList) = 0;
+	virtual void notifyFontListChanged(XmFontList inFontList) = 0;
 };
 
 class UTF8ToXmStringConverter
@@ -37,11 +37,6 @@ public:
 	virtual XmString convertToXmString(const char* utf8text) = 0;
 };
 
-class FontListNotifierFactory {
-public:	
-	static FontListNotifier* make(
-		Widget inWidget, String  inParam);
-}; 
 class UTF8ToXmStringConverterFactory {
 public:	
 	static UTF8ToXmStringConverter* make(
@@ -51,7 +46,10 @@ public:
 class UnicodePseudoFontFactory
 {
 public:
-	static fe_Font  make(Display* dpy);
+	static fe_Font  make(Display* dpy, XmFontList defFontList);
+	static fe_Font  make(Display* dpy, XFontStruct *xfstruc);
+	static fe_Font  make(Display* dpy, XFontSet  xfset);
+	static fe_Font  make(Display* dpy, const char* fam, int pt);
 };
 
 #endif /* __utfxfe_h__ */
