@@ -20,7 +20,10 @@
 
 #include "nsContainerFrame.h"
 class nsString;
+class nsAbsoluteFrame;
 class nsPlaceholderFrame;
+struct nsStyleDisplay;
+struct nsStylePosition;
 
 // Base class for html container frames that provides common
 // functionality.
@@ -51,6 +54,17 @@ public:
 
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
+  nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
+                                                  nsIFrame*       aAbsoluteFrame);
+  PRBool CreateWrapperFrame(nsIPresContext& aPresContext,
+                            nsIFrame*       aFrame,
+                            nsIFrame*&      aWrapperFrame);
+
+  PRBool MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
+                            nsIFrame*              aFrame,
+                            const nsStyleDisplay*  aDisplay,
+                            const nsStylePosition* aPosition,
+                            nsIFrame*&             aPlaceholderFrame);
 
   // Helper method to create next-in-flows if necessary
   static nsresult CreateNextInFlow(nsIPresContext& aPresContext,

@@ -32,10 +32,12 @@ public:
    */
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           nsIFrame*   aParent);
+                           nsIFrame*   aParent,
+                           nsIFrame*   aAbsoluteFrame = nsnull);
 
   // Returns the associated anchored item
   nsIFrame*   GetAbsoluteFrame() const {return mFrame;}
+  void        SetAbsoluteFrame(nsIFrame* aAbsoluteFrame) {mFrame = aAbsoluteFrame;}
 
   // nsIFrame overrides
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
@@ -55,7 +57,7 @@ protected:
 
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame* aAbsoluteFrame);
 
   virtual ~nsAbsoluteFrame();
 

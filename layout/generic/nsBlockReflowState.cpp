@@ -21,6 +21,7 @@
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
 #include "nsCSSLayout.h"
+#include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
@@ -2008,16 +2009,11 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     PRBool isBlock =
       nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
 
-// XXX yikes! this has to be here because otherwise we bust...why?
-#if 1
-    // See if the element wants to be floated
-    if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
-      // Create a placeholder frame that will serve as the anchor point.
-      nsPlaceholderFrame* placeholder =
-        CreatePlaceholderFrame(aPresContext, frame);
-
-      // Remove the floated element from the flow, and replace it with the
-      // placeholder frame
+    // See if we need to move the frame outside of the flow, and insert in
+    // its place a placeholder frame
+    nsIFrame* placeholder;
+    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
+      // Remove 'frame' from the flow, and replace it with 'placeholder'
       if (nsnull != prevFrame) {
         prevFrame->SetNextSibling(placeholder);
       }
@@ -2026,58 +2022,17 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
       placeholder->SetNextSibling(nextSibling);
       frame->SetNextSibling(nsnull);
 
-      // If the floated element can contain children then wrap it in a
-      // BODY frame before floating it
-      nsIContent* content;
-      PRBool      isContainer;
-
-      frame->GetContent(content);
-      content->CanContainChildren(isContainer);
-      if (isContainer) {
-        // Wrap the floated element in a BODY frame.
-        nsIFrame* wrapperFrame;
-        NS_NewBodyFrame(content, this, wrapperFrame);
-    
-        // The body wrapper frame gets the original style context, and the floated
-        // frame gets a pseudo style context
-        nsIStyleContext*  kidStyle;
-        frame->GetStyleContext(&aPresContext, kidStyle);
-        wrapperFrame->SetStyleContext(&aPresContext, kidStyle);
-        NS_RELEASE(kidStyle);
-
-        nsIStyleContext*  pseudoStyle;
-        pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
-                                                                 wrapperFrame);
-        frame->SetStyleContext(&aPresContext, pseudoStyle);
-        NS_RELEASE(pseudoStyle);
-    
-        // Init the body frame
-        wrapperFrame->Init(aPresContext, frame);
-
-        // Bind the wrapper frame to the placeholder
-        placeholder->SetAnchoredItem(wrapperFrame);
-      }
-      NS_RELEASE(content);
-
       // The placeholder frame is always inline
       frame = placeholder;
       isBlock = PR_FALSE;
     }
-#endif
 
-    // XXX CONSTRUCTION See if it wants to be absolutely positioned or scrolled
-    // if overflows...
+    // XXX CONSTRUCTION See if it wants to be scrolled if overflows...
 #if 0
     nsIFrame* kidFrame = nsnull;
     nsresult rv;
-    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-      rv = nsAbsoluteFrame::NewFrame(&kidFrame, aKid, aParentFrame);
-      if (NS_OK == rv) {
-        kidFrame->SetStyleContext(aPresContext, kidSC);
-      }
-    }
-    else if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
-             (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
+    if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
+        (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
       rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
       if (NS_OK == rv) {
         kidFrame->SetStyleContext(aPresContext, kidSC);
@@ -3446,6 +3401,8 @@ nsBlockFrame::DrainOverflowLines()
   return drained;
 }
 
+// XXX This code doesn't handle floating elements or absolutely positioned
+// elements...
 nsresult
 nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
                              nsIFrame* aNewFrame,
