@@ -55,8 +55,6 @@ extern PRLock *_pr_sleeplock;  /* allocated and initialized in prinit */
 */
 void _PR_CleanupThread(PRThread *thread)
 {
-    PRUintn i;
-
     /* Free up per-thread-data */
     _PR_DestroyThreadPrivate(thread);
 
