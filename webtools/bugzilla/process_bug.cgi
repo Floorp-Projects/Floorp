@@ -895,18 +895,65 @@ sub SnapShotDeps {
 
 my $timestamp;
 
+sub FindWrapPoint {
+    my ($string, $startpos) = @_;
+    if (!$string) { return 0 }
+    if (length($string) < $startpos) { return length($string) }
+    my $wrappoint = rindex($string, ",", $startpos); # look for comma
+    if ($wrappoint < 0) {  # can't find comma
+        $wrappoint = rindex($string, " ", $startpos); # look for space
+        if ($wrappoint < 0) {  # can't find space
+            $wrappoint = rindex($string, "-", $startpos); # look for hyphen
+            if ($wrappoint < 0) {  # can't find hyphen
+                $wrappoint = $startpos;  # just truncate it
+            } else {
+                $wrappoint++; # leave hyphen on the left side
+            }
+        }
+    }
+    return $wrappoint;
+}
+
+sub LogActivityEntry {
+    my ($i,$col,$removed,$added) = @_;
+    # in the case of CCs, deps, and keywords, there's a possibility that someone
+    # might try to add or remove a lot of them at once, which might take more
+    # space than the activity table allows.  We'll solve this by splitting it
+    # into multiple entries if it's too long.
+    while ($removed || $added) {
+        my ($removestr, $addstr) = ($removed, $added);
+        if (length($removestr) > 254) {
+            my $commaposition = FindWrapPoint($removed, 254);
+            $removestr = substr($removed,0,$commaposition);
+            $removed = substr($removed,$commaposition);
+            $removed =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $removed = ""; # no more entries
+        }
+        if (length($addstr) > 254) {
+            my $commaposition = FindWrapPoint($added, 254);
+            $addstr = substr($added,0,$commaposition);
+            $added = substr($added,$commaposition);
+            $added =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $added = ""; # no more entries
+        }
+        $addstr = SqlQuote($addstr);
+        $removestr = SqlQuote($removestr);
+        my $fieldid = GetFieldID($col);
+        SendSQL("INSERT INTO bugs_activity " .
+                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
+                "($i,$whoid,$timestamp,$fieldid,$removestr,$addstr)");
+    }
+}
+
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
         my ($removed, $added) = DiffStrings($oldstr, $newstr);
-        $added = SqlQuote($added);
-        $removed = SqlQuote($removed);
-        my $fieldid = GetFieldID($target);
-        SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($i,$whoid,$timestamp,$fieldid,$removed,$added)");
+        LogActivityEntry($i,$target,$removed,$added);
         return 1;
     }
     return 0;
@@ -1147,12 +1194,9 @@ The changes made were:
 
         # If any changes were found, record it in the activity log
         if (scalar(@removed) || scalar(@added)) {
-            my $col = GetFieldID('cc');
-            my $removed = SqlQuote(join(", ", @removed));
-            my $added = SqlQuote(join(", ", @added));
-            SendSQL("INSERT INTO bugs_activity " .
-                    "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                    "($id,$whoid,'$timestamp',$col,$removed,$added)");
+            my $removed = join(", ", @removed);
+            my $added = join(", ", @added);
+            LogActivityEntry($id,"cc",$removed,$added);
         }
     }
 
@@ -1322,12 +1366,7 @@ The changes made were:
                 RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
             }
-            $col = GetFieldID($col);
-            $old = SqlQuote($old);
-            $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,removed,added) values ($id,$whoid,'$timestamp',$col,$old,$new)";
-            # puts "<pre>$q</pre>"
-            SendSQL($q);
+            LogActivityEntry($id,$col,$old,$new);
         }
     }
     
@@ -1360,10 +1399,7 @@ The changes made were:
         unless ($isreporter || $isoncc || ! $::FORM{'confirm_add_duplicate'}) {
             # The reporter is oblivious to the existance of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
-            my $ccid = GetFieldID("cc");
-            my $whochange = DBNameToIdAndCheck($::FORM{'who'});
-            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                    "('$duplicate','$whochange',now(),$ccid,'','" . DBID_to_name($reporter) . "')"); 
+            LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         AppendComment($duplicate, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
