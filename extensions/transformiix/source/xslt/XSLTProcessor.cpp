@@ -108,6 +108,7 @@ XSLTProcessor::XSLTProcessor() {
     xslTypes.put(ELEMENT,         new XSLType(XSLType::ELEMENT));
     xslTypes.put(FOR_EACH,        new XSLType(XSLType::FOR_EACH));
     xslTypes.put(IF,              new XSLType(XSLType::IF));
+    xslTypes.put(IMPORT,          new XSLType(XSLType::IMPORT));
     xslTypes.put(INCLUDE,         new XSLType(XSLType::INCLUDE));
     xslTypes.put(KEY,             new XSLType(XSLType::KEY));
     xslTypes.put(MESSAGE,         new XSLType(XSLType::MESSAGE));
@@ -394,13 +395,17 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
 **/
 void XSLTProcessor::processTopLevel(Document* aSource,
                                     Document* aStylesheet,
+                                    ListIterator* importFrame,
                                     ProcessorState* aPs)
 {
     NS_ASSERTION(aStylesheet, "processTopLevel called without stylesheet");
     if (!aStylesheet)
         return;
 
-    processTopLevel(aSource, aStylesheet->getDocumentElement(), aPs);
+    processTopLevel(aSource,
+                    aStylesheet->getDocumentElement(),
+                    importFrame,
+                    aPs);
 }
 
 /**
@@ -408,6 +413,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
 **/
 void XSLTProcessor::processTopLevel(Document* aSource,
                                     Element* aStylesheet,
+                                    ListIterator* importFrame,
                                     ProcessorState* aPs)
 {
     // Index templates and process top level xsl elements
@@ -416,8 +422,39 @@ void XSLTProcessor::processTopLevel(Document* aSource,
         return;
 
     NS_ASSERTION(aSource, "processTopLevel called without source document");
-                        
+
+    MBool importsDone = MB_FALSE;
     Node* node = aStylesheet->getFirstChild();
+    while (node && !importsDone) {
+        if (node->getNodeType() == Node::ELEMENT_NODE) {
+            Element* element = (Element*)node;
+            String name = element->getNodeName();
+            switch (getElementType(name, aPs)) {
+                case XSLType::IMPORT :
+                {
+                    String href;
+                    URIUtils::resolveHref(element->getAttribute(HREF_ATTR),
+                                          element->getBaseURI(),
+                                          href);
+
+                    importFrame->addAfter(new ProcessorState::ImportFrame);
+                    importFrame->next();
+
+                    processInclude(href, aSource, importFrame, aPs);
+
+                    importFrame->previous();
+
+                    break;
+                }
+                default:
+                    importsDone = MB_TRUE;
+                    break;
+            }
+        }
+        if (!importsDone)
+            node = node->getNextSibling();
+    }
+
     while (node) {
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
@@ -439,41 +476,20 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     bindVariable(name, exprResult, MB_TRUE, aPs);
                     break;
                 }
+                case XSLType::IMPORT :
+                {
+                    notifyError("xsl:import only allowed at top of stylesheet");
+                    break;
+                }
                 case XSLType::INCLUDE :
                 {
+                    String href;
+                    URIUtils::resolveHref(element->getAttribute(HREF_ATTR),
+                                          element->getBaseURI(),
+                                          href);
 
-                    String href = element->getAttribute(HREF_ATTR);
-                    //-- Read in XSL document
-
-                    if (aPs->getInclude(href)) {
-                        /* XXX this is wrong, it's allowed to include one stylesheet multiple
-                           times but we should build some sort of stack to make sure that we
-                           don't have circular inclusions */
-                        String err("stylesheet already included: ");
-                        err.append(href);
-                        notifyError(err, ErrorObserver::WARNING);
-                        break;
-                    }
-
-                    String errMsg;
-                    XMLParser xmlParser;
-
-                    Document* xslDoc = xmlParser.getDocumentFromURI(href, element->getBaseURI(), aStylesheet->getOwnerDocument(), errMsg);
-
-                    if (!xslDoc) {
-                        String err("error including XSL stylesheet: ");
-                        err.append(href);
-                        err.append("; ");
-                        err.append(errMsg);
-                        notifyError(err);
-                    }
-                    else {
-                        //-- add stylesheet to list of includes
-                        aPs->addInclude(href, xslDoc);
-                        processTopLevel(aSource, xslDoc, aPs);
-                    }
+                    processInclude(href, aSource, importFrame, aPs);
                     break;
-
                 }
                 case XSLType::KEY :
                 {
@@ -567,6 +583,64 @@ void XSLTProcessor::processTopLevel(Document* aSource,
 
 } //-- process(Document, ProcessorState)
 
+/*
+ * Processes an include or import stylesheet
+ * @param aHref    URI of stylesheet to process
+ * @param aSource  source document
+ * @param aImportFrame current importFrame iterator
+ * @param aPs      current ProcessorState
+ */
+void XSLTProcessor::processInclude(String& aHref,
+                                   Document* aSource,
+                                   ListIterator* aImportFrame,
+                                   ProcessorState* aPs)
+{
+    // make sure the include isn't included yet
+    StackIterator* iter = aPs->getEnteredStylesheets()->iterator();
+    if (!iter) {
+        // XXX report out of memory
+        return;
+    }
+    
+    while(iter->hasNext()) {
+        if (((String*)iter->next())->isEqual(aHref)) {
+            String err("Stylesheet includes itself. URI: ");
+            err.append(aHref);
+            notifyError(err);
+            delete iter;
+            return;
+        }
+    }
+    aPs->getEnteredStylesheets()->push(&aHref);
+    delete iter;
+
+    // Load XSL document
+    Node* stylesheet = aPs->retrieveDocument(aHref, NULL_STRING);
+    if (!stylesheet) {
+        String err("Unable to load included stylesheet ");
+        err.append(aHref);
+        notifyError(err);
+        aPs->getEnteredStylesheets()->pop();
+        return;
+    }
+
+    switch(stylesheet->getNodeType()) {
+        case Node::DOCUMENT_NODE :
+            processTopLevel(aSource, (Document*)stylesheet, aImportFrame, aPs);
+            break;
+        case Node::ELEMENT_NODE :
+            processTopLevel(aSource, (Element*)stylesheet, aImportFrame, aPs);
+            break;
+        default:
+            // This should never happen
+            String err("Unsupported fragment identifier");
+            notifyError(err);
+            break;
+    }
+
+    aPs->getEnteredStylesheets()->pop();
+}
+
 #ifdef TX_EXE
 /**
  * Processes the given XML Document using the given XSL document
@@ -597,7 +671,10 @@ Document* XSLTProcessor::process
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
 
-    processTopLevel(&xmlDocument, &xslDocument, &ps);
+    ListIterator importFrame(ps.getImportFrames());
+    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.next();
+    processTopLevel(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -640,7 +717,10 @@ void XSLTProcessor::process
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
 
-    processTopLevel(&xmlDocument, &xslDocument, &ps);
+    ListIterator importFrame(ps.getImportFrames());
+    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.next();
+    processTopLevel(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -1946,7 +2026,10 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
       //------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //------------------------------------------------------/
-    processTopLevel(sourceDocument, xslDocument, ps);
+    ListIterator importFrame(ps->getImportFrames());
+    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.next();
+    processTopLevel(sourceDocument, xslDocument, &importFrame, ps);
 
       //---------------------------------------/
      //- Process root of XML source document -/

@@ -79,14 +79,6 @@ public:
     **/
     void addErrorObserver(ErrorObserver& errorObserver);
 
-
-    /**
-     * Adds the given XSL document to the list of includes
-     * The href is used as a key for the include, to prevent
-     * including the same document more than once
-    **/
-    void addInclude(const String& href, Document* xslDocument);
-
     /**
      *  Adds the given template to the list of templates to process
      * @param xslTemplate, the Element to add as a template
@@ -125,12 +117,6 @@ public:
      * Gets the default Namespace URI stack.
     **/ 
     Stack* getDefaultNSURIStack();
-
-    /**
-     * @return the included xsl document that was associated with the
-     * given href, or null if no document is found 
-    **/
-    Document* getInclude(const String& href);
 
     /**
      * Returns the template associated with the given name, or
@@ -178,6 +164,45 @@ public:
     NodeSet* getTemplates();
 
     String& getXSLNamespace();
+
+    /**
+     * Retrieve the document designated by the URI uri, using baseUri as base URI.
+     * Parses it as an XML document, and returns it. If a fragment identifier is
+     * supplied, the element with seleced id is returned.
+     * The returned document is owned by the ProcessorState
+     *
+     * @param uri the URI of the document to retrieve
+     * @param baseUri the base URI used to resolve the URI if uri is relative
+     * @return loaded document or element pointed to by fragment identifier. If
+     *         loading or parsing fails NULL will be returned.
+    **/
+    Node* retrieveDocument(const String& uri, const String& baseUri);
+
+    /*
+     * Return stack of urls of currently entered stylesheets
+     */
+    Stack* getEnteredStylesheets();
+
+    /**
+     * Contain information that is import precedence dependant.
+    **/
+    struct ImportFrame {
+        // The following stuff is missing here:
+
+        // ImportFrame(?) for xsl:apply-imports
+        // Nametests for xsl:strip-space and xsl:preserve-space
+        // Template rules
+        // Names templates
+        // Namespace aliases (xsl:namespace-alias)
+        // Named attribute sets
+        // Toplevel variables/parameters
+        // Output specifier (xsl:output)
+    };
+
+    /**
+     * Return list of import containers
+    **/
+    List* getImportFrames();
 
     /**
      * Finds a template for the given Node. Only templates without
@@ -248,16 +273,6 @@ public:
      * with MB_FALSE
     **/
     void shouldStripSpace(String& names, MBool shouldStrip);
-
-    /**
-     * Adds a document to set of loaded documents
-    **/
-    void addLoadedDocument(Document* doc, String& location);
-    
-    /**
-     * Returns a loaded document given it's url. NULL if no such doc exists
-    **/
-    Document* getLoadedDocument(String& url);
 
     /**
      * Adds the supplied xsl:key to the set of keys
@@ -367,10 +382,14 @@ private:
     List  errorObservers;
 
     /**
-     * A map for included stylesheets 
-     * (used for deletion when processing is done)
+     * Stack of URIs for currently entered stylesheets
     **/
-    NamedMap includes;
+    Stack          enteredStylesheets;
+
+    /**
+     * List of import containers. Sorted by ascending import precedence
+    **/
+    List           importFrames;
 
     /**
      * A map for named attribute sets
@@ -409,7 +428,8 @@ private:
     NodeSet        templates;
     
     /**
-     * the set of loaded documents
+     * The set of loaded documents. This includes both document() loaded
+     * documents and xsl:include/xsl:import'ed documents.
     **/
     NamedMap       loadedDocuments;
     
@@ -423,8 +443,6 @@ private:
     Stack          nodeSetStack;
     Document*      mSourceDocument;
     Document*      xslDocument;
-    String         mMainSourceURL;
-    String         mMainStylesheetURL;
     Document*      resultDocument;
     NamedMap       exprHash;
     NamedMap       patternExprHash;

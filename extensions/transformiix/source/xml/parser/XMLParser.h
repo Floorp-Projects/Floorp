@@ -67,7 +67,7 @@ class XMLParser
     XMLParser();
    ~XMLParser();
 
-    Document* getDocumentFromURI(const String& href, const String& baseUri, Document* aLoader, String& errMsg);
+    Document* getDocumentFromURI(const String& href, Document* aLoader, String& errMsg);
 #ifdef TX_EXE
     Document* parse(istream& inputStream, const String& uri);
     const String& getErrorString();

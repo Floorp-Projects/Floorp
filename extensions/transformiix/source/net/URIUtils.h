@@ -78,7 +78,7 @@ public:
 
 
     static istream* getInputStream
-        (String& href, String& errMsg);
+        (const String& href, String& errMsg);
 
     /**
      * Returns the document base of the href argument

@@ -343,8 +343,27 @@ private:
     **/
     void processDefaultTemplate(Node* node, ProcessorState* ps, String* mode);
 
-    void processTopLevel(Document* aSource, Document* aStylesheet, ProcessorState* aPs);
-    void processTopLevel(Document* aSource, Element* aStylesheet, ProcessorState* aPs);
+    void processTopLevel(Document* aSource,
+                         Document* aStylesheet,
+                         ListIterator* importFrame,
+                         ProcessorState* aPs);
+
+    void processTopLevel(Document* aSource,
+                         Element* aStylesheet,
+                         ListIterator* importFrame,
+                         ProcessorState* aPs);
+
+    /*
+     * Processes an include or import stylesheet
+     * @param aHref    URI of stylesheet to process
+     * @param aSource  source document
+     * @param aImportFrame current importFrame iterator
+     * @param aPs      current ProcessorState
+     */
+    void processInclude(String& aHref,
+                        Document* aSource,
+                        ListIterator* aImportFrame,
+                        ProcessorState* aPs);
 
     ExprResult* processVariable(Node* node, Element* xslVariable, ProcessorState* ps);
 
@@ -375,6 +394,7 @@ public:
         COPY_OF,
         ELEMENT,
         IF,
+        IMPORT,
         INCLUDE,
         KEY,
         FOR_EACH,

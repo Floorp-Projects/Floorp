@@ -65,7 +65,7 @@ const short  URIUtils::PATH_MODE      = 4;
  * found
 **/
 istream* URIUtils::getInputStream
-    (String& href, String& errMsg)
+    (const String& href, String& errMsg)
 {
 
     istream* inStream = 0;
