@@ -32,12 +32,12 @@ nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter)
   mNumberOfFilters = 0;
 }
 
-void nsFileWidget::Create(nsIWidget *aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull) 
+void nsFileWidget::Create(nsIWidget        *aParent,
+                          const nsRect     &aRect,
+                          EVENT_CALLBACK   aHandleEventFunction,
+                          nsIDeviceContext *aContext,
+                          nsIToolkit       *aToolkit,
+                          nsWidgetInitData *aInitData) 
 {
   nsString title("Load");
   Create(aParent, title, eMode_load, aContext, aToolkit, aInitData);
@@ -45,12 +45,12 @@ void nsFileWidget::Create(nsIWidget *aParent,
 
 
 //-------------------------------------------------------------------------
-void   nsFileWidget:: Create(nsIWidget *aParent,
-                                 nsString& aTitle,
-                                 nsMode aMode,
-                                 nsIDeviceContext *aContext,
-                                 nsIToolkit *aToolkit,
-                                 void *aInitData)
+void   nsFileWidget:: Create(nsIWidget  *aParent,
+                             nsString&   aTitle,
+                             nsMode      aMode,
+                             nsIDeviceContext *aContext,
+                             nsIToolkit *aToolkit,
+                             void       *aInitData)
 {
   //mWnd = (aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0;
   mTitle.SetLength(0);
