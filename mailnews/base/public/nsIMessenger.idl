@@ -53,6 +53,8 @@ interface nsIMessenger : nsISupports {
 	void ViewAllThreadMessages(in nsIRDFCompositeDataSource database);
 	void MarkMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
 						  in boolean markRead);
+	void MarkMessageRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
+						  in boolean markRead);
 	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in string name);
     void Undo();
