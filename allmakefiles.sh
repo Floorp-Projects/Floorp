@@ -656,7 +656,7 @@ xpfe/components/remote/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/resources/Makefile
-xpfe/components/autocomplete/resources/skin/Makefile
+xpfe/components/autocomplete/resources/content/Makefile
 xpfe/components/autocomplete/src/Makefile
 xpfe/components/console/Makefile
 xpfe/components/console/resources/Makefile
@@ -680,8 +680,6 @@ xpfe/appfilelocprovider/public/Makefile
 xpfe/appfilelocprovider/src/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
-xpfe/global/resources/skin/os2/Makefile
-xpfe/global/resources/skin/unix/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
