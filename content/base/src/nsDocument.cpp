@@ -1432,7 +1432,12 @@ nsDocument::SetRootContent(nsIContent* aRoot)
 NS_IMETHODIMP 
 nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-  NS_IF_ADDREF(aResult = mChildren[aIndex]);
+  NS_PRECONDITION(aIndex >= 0, "Negative indices are bad");
+  if (aIndex < 0 || aIndex >= mChildren.Count()) {
+    aResult = nsnull;
+  } else {
+    NS_IF_ADDREF(aResult = mChildren[aIndex]);
+  }
   return NS_OK;
 }
 
