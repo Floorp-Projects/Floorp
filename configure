@@ -4632,13 +4632,6 @@ CYGWIN_WRAPPER=
 MOZ_USER_DIR=".mozilla"
 MOZ_APP_NAME=mozilla
 
-MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
-cat >> confdefs.h <<EOF
-#define MOZILLA_VERSION "$MOZILLA_VERSION"
-EOF
-
-MOZ_APP_VERSION=$MOZILLA_VERSION
-
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
 MOZ_ZLIB_CFLAGS=
@@ -4848,7 +4841,7 @@ MKSHLIB_FORCE_ALL=
 MKSHLIB_UNFORCE_ALL=
 if test "$GNU_CC"; then
   echo $ac_n "checking whether ld has archive extraction flags""... $ac_c" 1>&6
-echo "configure:4852: checking whether ld has archive extraction flags" >&5
+echo "configure:4845: checking whether ld has archive extraction flags" >&5
   if eval "test \"`echo '$''{'ac_cv_mkshlib_force_and_unforce'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4865,14 +4858,14 @@ LOOP_INPUT
       LDFLAGS=$force
       LIBS=$unforce
       cat > conftest.$ac_ext <<EOF
-#line 4869 "configure"
+#line 4862 "configure"
 #include "confdefs.h"
 
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:4876: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4869: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_cv_mkshlib_force_and_unforce=$line; break
 else
@@ -4954,6 +4947,13 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 esac
+
+MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+cat >> confdefs.h <<EOF
+#define MOZILLA_VERSION "$MOZILLA_VERSION"
+EOF
+
+MOZ_APP_VERSION=$MOZILLA_VERSION
 
 case "$target" in
 *-aix*)
