@@ -8,6 +8,7 @@
 class nsIDOMNode;
 class nsIDOMHTMLInputElement;
 class nsIPref;
+class nsIWebShellWindow;
 
 //========================================================================================
 class nsPrefWindow
@@ -73,11 +74,14 @@ class nsPrefWindow
 
 	static nsPrefWindow* sPrefWindow;
 	static PRUint32      sInstanceCount;
+    
+    
+    nsIWebShellWindow*   mWindow;
     nsString             mTreeScript;     
     nsString             mPanelScript;     
 
-    nsIDOMWindow*        mTreeWindow;
-    nsIDOMWindow*        mPanelWindow;
+    nsIDOMWindow*        mTreeFrame;
+    nsIDOMWindow*        mPanelFrame;
     
     nsIPref*             mPrefs;
 
