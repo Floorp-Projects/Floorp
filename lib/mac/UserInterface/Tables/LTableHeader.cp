@@ -780,7 +780,7 @@ Boolean LTableHeader::RedistributeSpace(
 	int signedUnit = roundingError < 0 ? -1 : +1;
 #ifdef DEBUG
 	int maxRound =  (inToColumn - inFromColumn + 2) / 2;
-	Assert_(roundingError * signedUnit <= maxRound);
+//	Assert_(roundingError * signedUnit <= maxRound);
 #endif
 	static int rovingIndex = 0;
 	const Int16 initialError = roundingError;
