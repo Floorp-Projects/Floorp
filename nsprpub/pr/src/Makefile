@@ -364,6 +364,8 @@ else
 	SUF = LL
 endif
 
+DEFINES     += -D_NSPR_BUILD_
+
 $(TINC):
 	@$(MAKE_OBJDIR)
 	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)

@@ -50,6 +50,8 @@ TARGETS	= $(OBJS)
 
 INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include
 
+DEFINES     += -D_NSPR_BUILD_
+
 include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(TARGETS)
