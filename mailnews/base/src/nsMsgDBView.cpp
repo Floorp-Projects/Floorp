@@ -141,8 +141,9 @@ nsMsgDBView::nsMsgDBView()
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
-  mOutstandingJunkBatches = 0;
-
+  mJunkIndices = nsnull;
+  mNumJunkIndices = 0;
+  
   /* mCommandsNeedDisablingBecauseOffline - A boolean that tell us if we needed to disable commands because we're offline w/o a downloaded msg select */
   
   mCommandsNeedDisablingBecauseOffline = PR_FALSE;  
@@ -2229,185 +2230,206 @@ nsresult
 nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewIndex* indices,
 					PRInt32 numIndices)
 {
-  nsresult rv = NS_OK;
-  nsMsgKeyArray imapUids;
-
-  // if numIndices == 0, return quietly, just in case
-  if (numIndices == 0) 
-      return NS_OK;
-
   NS_ASSERTION(numIndices >= 0, "nsMsgDBView::ApplyCommandToIndices(): "
                "numIndices is negative!");
 
-  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
-  PRBool thisIsImapFolder = (imapFolder != nsnull);
+  if (numIndices == 0) 
+      return NS_OK; // return quietly, just in case
 
   if (command == nsMsgViewCommandType::deleteMsg)
-    rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_FALSE);
-  else if (command == nsMsgViewCommandType::deleteNoTrash)
-    rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_TRUE);
-  else
+    return DeleteMessages(mMsgWindow, indices, numIndices, PR_FALSE);
+  if (command == nsMsgViewCommandType::deleteNoTrash)
+    return DeleteMessages(mMsgWindow, indices, numIndices, PR_TRUE);
+
+  nsMsgKeyArray imapUids;
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+  PRBool thisIsImapFolder = (imapFolder != nsnull);
+  nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
+
+  // if this is a junk command, start a batch. 
+  //  
+  if (    command == nsMsgViewCommandType::junk
+       || command == nsMsgViewCommandType::unjunk ) 
   {
-    nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
+    // get the folder from the first item; we assume that
+    // all messages in the view are from the same folder (no
+    // more junk status column in the 'search messages' dialog
+    // like in earlier versions...)
+     //
+     nsCOMPtr<nsIMsgFolder> folder;
+     rv = GetFolderForViewIndex(indices[0], getter_AddRefs(folder));
+     NS_ENSURE_SUCCESS(rv, rv);
 
-    // if this is a junk command, start a batch.  The batch will be ended
-    // in the last callback.
-    //  
-    if ( command == nsMsgViewCommandType::junk
-         || command == nsMsgViewCommandType::unjunk ) 
+     nsCOMPtr<nsIMsgIncomingServer> server;
+     rv = folder->GetServer(getter_AddRefs(server));
+     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (command == nsMsgViewCommandType::junk)
     {
+      // append this batch of junk message indices to the
+      // array of junk message indices to be acted upon
+      // once OnMessageClassified() is run for the last message
+      //
+      // note: although message classification is done
+      // asynchronously, it is not done in a different thread,
+      // so the manipulations of mJunkIndices here and in
+      // OnMessageClassified() cannot interrupt each other
+      //
+      mNumJunkIndices += numIndices;
+      mJunkIndices = (nsMsgViewIndex *)nsMemory::Realloc(mJunkIndices, mNumJunkIndices * sizeof(nsMsgViewIndex));
+      memcpy(mJunkIndices + (mNumJunkIndices - numIndices), indices, numIndices * sizeof(nsMsgViewIndex));
 
-        // get the folder from the first item (if it's the search view, 
-        // only one item can be touched at a time; if a regular folder view,
-        // all items will have the same folder).
-        //
-        nsCOMPtr<nsIMsgFolder> folder;
-        rv = GetFolderForViewIndex(indices[0], getter_AddRefs(folder));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = folder->GetServer(getter_AddRefs(server));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
-        rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        junkPlugin = do_QueryInterface(filterPlugin, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = junkPlugin->StartBatch();
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        mOutstandingJunkBatches++;
+      // save the last URI, so that OnMessageClassified()
+      // will know when the classification it runs after
+      // is the last one; if the classification of previously-marked
+      // messages has not been completed, we replace here the
+      // previous 'last URI' with a new 'last URI',
+      // causing the batches to be coalesced
+      //
+      rv = GetURIForViewIndex(indices[numIndices-1], getter_Copies(mLastJunkURIInBatch));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-           
-    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+   
+    nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
+    rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    for (int32 i = 0; i < numIndices; i++)
+    junkPlugin = do_QueryInterface(filterPlugin, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = junkPlugin->StartBatch();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+         
+  m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+
+  for (int32 i = 0; i < numIndices; i++)
+  {
+    if (thisIsImapFolder && command != nsMsgViewCommandType::markThreadRead)
+      imapUids.Add(GetAt(indices[i]));
+    
+    switch (command)
     {
-      if (thisIsImapFolder && command != nsMsgViewCommandType::markThreadRead)
-        imapUids.Add(GetAt(indices[i]));
-      
-      switch (command)
-      {
-      case nsMsgViewCommandType::markMessagesRead:
-        rv = SetReadByIndex(indices[i], PR_TRUE);
-        break;
-      case nsMsgViewCommandType::markMessagesUnread:
-        rv = SetReadByIndex(indices[i], PR_FALSE);
-        break;
-      case nsMsgViewCommandType::toggleMessageRead:
-        rv = ToggleReadByIndex(indices[i]);
-        break;
-      case nsMsgViewCommandType::flagMessages:
-        rv = SetFlaggedByIndex(indices[i], PR_TRUE);
-        break;
-      case nsMsgViewCommandType::unflagMessages:
-        rv = SetFlaggedByIndex(indices[i], PR_FALSE);
-        break;
-      case nsMsgViewCommandType::markThreadRead:
-        rv = SetThreadOfMsgReadByIndex(indices[i], imapUids, PR_TRUE);
-        break;
-      case nsMsgViewCommandType::label0:
-      case nsMsgViewCommandType::label1:
-      case nsMsgViewCommandType::label2:
-      case nsMsgViewCommandType::label3:
-      case nsMsgViewCommandType::label4:
-      case nsMsgViewCommandType::label5:
-        rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
-        break;
-      case nsMsgViewCommandType::junk:
-        rv = SetJunkScoreByIndex(junkPlugin.get(), indices[i],
-                                 nsIJunkMailPlugin::JUNK, (i == numIndices-1));
-        break;
-      case nsMsgViewCommandType::unjunk:
-        rv = SetJunkScoreByIndex(junkPlugin.get(), indices[i], 
-                                 nsIJunkMailPlugin::GOOD, (i == numIndices-1));
-        break;
-      case nsMsgViewCommandType::undeleteMsg:
-        break; // this is completely handled in the imap code below.
-      default:
-        NS_ASSERTION(PR_FALSE, "unhandled command");
-        break;
-      }
-    }
-    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
-
-    if (thisIsImapFolder)
-    {
-      imapMessageFlagsType flags = kNoImapMsgFlag;
-      PRBool commandIsLabelSet = PR_FALSE;
-      PRBool addFlags = PR_FALSE;
-      PRBool isRead = PR_FALSE;
-      
-      switch (command)
-      {
-      case nsMsgViewCommandType::markThreadRead:
-      case nsMsgViewCommandType::markMessagesRead:
-        flags |= kImapMsgSeenFlag;
-        addFlags = PR_TRUE;
-        break;
-      case nsMsgViewCommandType::markMessagesUnread:
-        flags |= kImapMsgSeenFlag;
-        addFlags = PR_FALSE;
-        break;
-      case nsMsgViewCommandType::toggleMessageRead:
-        {
-          flags |= kImapMsgSeenFlag;
-          m_db->IsRead(GetAt(indices[0]), &isRead);
-          if (isRead)
-            addFlags = PR_TRUE;
-          else
-            addFlags = PR_FALSE;
-        }
-        break;
-      case nsMsgViewCommandType::flagMessages:
-        flags |= kImapMsgFlaggedFlag;
-        addFlags = PR_TRUE;
-        break;
-      case nsMsgViewCommandType::unflagMessages:
-        flags |= kImapMsgFlaggedFlag;
-        addFlags = PR_FALSE;
-        break;
-      case nsMsgViewCommandType::label0:
-      case nsMsgViewCommandType::label1:
-      case nsMsgViewCommandType::label2:
-      case nsMsgViewCommandType::label3:
-      case nsMsgViewCommandType::label4:
-      case nsMsgViewCommandType::label5:
-        flags |= ((command - nsMsgViewCommandType::label0) << 9);
-        addFlags = (command != nsMsgViewCommandType::label0);
-        commandIsLabelSet = PR_TRUE;
-        break;
-      case nsMsgViewCommandType::undeleteMsg:
-        flags = kImapMsgDeletedFlag;
-        addFlags = PR_FALSE;
-        break;
-      case nsMsgViewCommandType::junk:
-          return imapFolder->StoreCustomKeywords(mMsgWindow,
-                      "Junk",
-                      "NonJunk",
-                      imapUids.GetArray(), imapUids.GetSize(),
-                      nsnull);
-      case nsMsgViewCommandType::unjunk:
-          return imapFolder->StoreCustomKeywords(mMsgWindow,
-                      "NonJunk",
-                      "Junk",
-                      imapUids.GetArray(), imapUids.GetSize(),
-                      nsnull);
-
-      default:
-        break;
-      }
-      
-      if (flags != kNoImapMsgFlag || commandIsLabelSet)	// can't get here without thisIsImapThreadPane == TRUE
-        imapFolder->StoreImapFlags(flags, addFlags, imapUids.GetArray(), imapUids.GetSize());
-      
+    case nsMsgViewCommandType::markMessagesRead:
+      rv = SetReadByIndex(indices[i], PR_TRUE);
+      break;
+    case nsMsgViewCommandType::markMessagesUnread:
+      rv = SetReadByIndex(indices[i], PR_FALSE);
+      break;
+    case nsMsgViewCommandType::toggleMessageRead:
+      rv = ToggleReadByIndex(indices[i]);
+      break;
+    case nsMsgViewCommandType::flagMessages:
+      rv = SetFlaggedByIndex(indices[i], PR_TRUE);
+      break;
+    case nsMsgViewCommandType::unflagMessages:
+      rv = SetFlaggedByIndex(indices[i], PR_FALSE);
+      break;
+    case nsMsgViewCommandType::markThreadRead:
+      rv = SetThreadOfMsgReadByIndex(indices[i], imapUids, PR_TRUE);
+      break;
+    case nsMsgViewCommandType::label0:
+    case nsMsgViewCommandType::label1:
+    case nsMsgViewCommandType::label2:
+    case nsMsgViewCommandType::label3:
+    case nsMsgViewCommandType::label4:
+    case nsMsgViewCommandType::label5:
+      rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
+      break;
+    case nsMsgViewCommandType::junk:
+      rv = SetAsJunkByIndex(junkPlugin.get(), indices[i],
+                             nsIJunkMailPlugin::JUNK);
+      break;
+    case nsMsgViewCommandType::unjunk:
+    rv = SetAsJunkByIndex(junkPlugin.get(), indices[i], 
+                             nsIJunkMailPlugin::GOOD);
+      break;
+    case nsMsgViewCommandType::undeleteMsg:
+      break; // this is completely handled in the imap code below.
+    default:
+      NS_ASSERTION(PR_FALSE, "unhandled command");
+      break;
     }
   }
+
+  m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
+
+  if (thisIsImapFolder)
+  {
+    imapMessageFlagsType flags = kNoImapMsgFlag;
+    PRBool commandIsLabelSet = PR_FALSE;
+    PRBool addFlags = PR_FALSE;
+    PRBool isRead = PR_FALSE;
+    
+    switch (command)
+    {
+    case nsMsgViewCommandType::markThreadRead:
+    case nsMsgViewCommandType::markMessagesRead:
+      flags |= kImapMsgSeenFlag;
+      addFlags = PR_TRUE;
+      break;
+    case nsMsgViewCommandType::markMessagesUnread:
+      flags |= kImapMsgSeenFlag;
+      addFlags = PR_FALSE;
+      break;
+    case nsMsgViewCommandType::toggleMessageRead:
+      {
+        flags |= kImapMsgSeenFlag;
+        m_db->IsRead(GetAt(indices[0]), &isRead);
+        if (isRead)
+          addFlags = PR_TRUE;
+        else
+          addFlags = PR_FALSE;
+      }
+      break;
+    case nsMsgViewCommandType::flagMessages:
+      flags |= kImapMsgFlaggedFlag;
+      addFlags = PR_TRUE;
+      break;
+    case nsMsgViewCommandType::unflagMessages:
+      flags |= kImapMsgFlaggedFlag;
+      addFlags = PR_FALSE;
+      break;
+    case nsMsgViewCommandType::label0:
+    case nsMsgViewCommandType::label1:
+    case nsMsgViewCommandType::label2:
+    case nsMsgViewCommandType::label3:
+    case nsMsgViewCommandType::label4:
+    case nsMsgViewCommandType::label5:
+      flags |= ((command - nsMsgViewCommandType::label0) << 9);
+      addFlags = (command != nsMsgViewCommandType::label0);
+      commandIsLabelSet = PR_TRUE;
+      break;
+    case nsMsgViewCommandType::undeleteMsg:
+      flags = kImapMsgDeletedFlag;
+      addFlags = PR_FALSE;
+      break;
+    case nsMsgViewCommandType::junk:
+        return imapFolder->StoreCustomKeywords(mMsgWindow,
+                    "Junk",
+                    "NonJunk",
+                    imapUids.GetArray(), imapUids.GetSize(),
+                    nsnull);
+    case nsMsgViewCommandType::unjunk:
+        return imapFolder->StoreCustomKeywords(mMsgWindow,
+                    "NonJunk",
+                    "Junk",
+                    imapUids.GetArray(), imapUids.GetSize(),
+                    nsnull);
+
+    default:
+      break;
+    }
+    
+    if (flags != kNoImapMsgFlag || commandIsLabelSet)	// can't get here without thisIsImapThreadPane == TRUE
+      imapFolder->StoreImapFlags(flags, addFlags, imapUids.GetArray(), imapUids.GetSize());
+    
+  }
+   
   return rv;
 }
+
 // view modifications methods by index
 
 // This method just removes the specified line from the view. It does
@@ -2621,12 +2643,10 @@ nsresult nsMsgDBView::SetStringPropertyByIndex(nsMsgViewIndex index, const char 
   return rv;
 }
 
-nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
+nsresult nsMsgDBView::SetAsJunkByIndex(nsIJunkMailPlugin *aJunkPlugin,
                                           nsMsgViewIndex aIndex,
-                                          nsMsgJunkStatus aNewClassification, 
-                                          PRBool aIsLastInBatch)
+                                          nsMsgJunkStatus aNewClassification)
 {
-
     // get the message header (need this to get string properties)
     //
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
@@ -2667,13 +2687,6 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
     rv = GetURIForViewIndex(aIndex, getter_Copies(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if ( aIsLastInBatch ) {
-        // if there's already a batch in progress, just replace the URI,
-        // thus causing the batches to be coalesced
-        //
-        mLastJunkUriInBatch = uri;
-    }
-
     // tell the plugin about this change, so that it can (potentially)
     // adjust its database appropriately
     //
@@ -2709,106 +2722,185 @@ NS_IMETHODIMP
 nsMsgDBView::OnMessageClassified(const char *aMsgURI,
                                  nsMsgJunkStatus aClassification)
 {
-  // we can't just use m_folder
-  // as this might be from a cross folder search
-  // see bug #180477
-  nsCOMPtr <nsIMsgFolder> folder;
-  nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
-  NS_ENSURE_SUCCESS(rv,rv);
+  // Note: we know all messages in a batch have the same
+  // classification, since unlike OnMessageClassified
+  // methods in other classes (such as nsLocalMailFolder
+  // and nsImapMailFolder), this class, nsMsgDBView, currently
+  // only triggers message classifications due to a command to
+  // mark some of the messages in the view as junk, or as not
+  // junk - so the classification is dictated to the filter,
+  // not suggested by it.
+  //
+  // for this reason the only thing we (may) have to do is
+  // perform the action on all of the junk messages
+  //
+
+  // this check is necessary because it is theoretically 
+  // possible for a message to be flagged as non-junk,
+  // and before the classifier can finish with it, for it
+  // to be again classified as junk, and thus to have
+  // mLastJunkURIInBatch set with its URI - and it should
+  // not be considered the last junk messages during
+  // the first call of this function
+  if (aClassification == nsIJunkMailPlugin::GOOD)
+    return NS_OK;
+
+  NS_ASSERTION(mJunkIndices != nsnull, "the classification of a manually-marked junk message has been classified as junk, yet there seem to be no such outstanding messages");
   
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = folder->GetServer(getter_AddRefs(server));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if ( mLastJunkURIInBatch.Equals(aMsgURI) )
+  {
+    nsCOMPtr<nsIMsgFolder> folder;
+    nsresult rv = GetFolderForViewIndex(mJunkIndices[0], getter_AddRefs(folder));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // save off the msg hdr, if we need to
-  rv = SaveJunkMsgForAction(server, aMsgURI, aClassification);
-  NS_ENSURE_SUCCESS(rv,rv);
+    // it seems EndBatch must be called here, rather
+    // than after the last message has been dispatched for
+    // classification. One would think when the UI tells the
+    // classifier "I am done with sending you this batch of 
+    // messages" the classifer should say "ok, now as soon
+    // as I finish classification I should flush my data file"
+    // ... but that's not the way it works. If that were
+    // to change you could move the EndBatch() call to 
+    // ApplyCommandToIndices and avoid the redundant 
+    // lines of code which get the pointer to the junk plugin
+    // object.
 
-  // is this the last url in the batch?
-  if (mLastJunkUriInBatch.Equals(aMsgURI))
-  {    
-    // get the filter, and QI to the interface we want
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = folder->GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
     rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIJunkMailPlugin> junkPlugin = do_QueryInterface(filterPlugin, &rv);
+
+    nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
+    junkPlugin = do_QueryInterface(filterPlugin, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = junkPlugin->EndBatch();
     NS_ENSURE_SUCCESS(rv, rv);
     
-    // close out existing coalesced junk batches 
-    for ( ; mOutstandingJunkBatches > 0 ; --mOutstandingJunkBatches ) 
-    {    
-      // tell the plugin that all outstanding batches from us
-      // have finished.
-      rv = junkPlugin->EndBatch();
-      NS_ENSURE_SUCCESS(rv, rv);
+    if ( mNumJunkIndices > 0 )
+    {
+      PerformActionsOnJunkMsgs();
+      nsMemory::Free(mJunkIndices);
+      mJunkIndices = nsnull;
+      mNumJunkIndices = 0;
+      mLastJunkURIInBatch.Truncate();
     }
     
-    rv = PerformActionOnJunkMsgs();
-    NS_ENSURE_SUCCESS(rv,rv);
   }
   return NS_OK;
 }
 
 nsresult
-nsMsgDBView::PerformActionOnJunkMsgs()
+nsMsgDBView::PerformActionsOnJunkMsgs()
 {
-  PRUint32 numIndices = mJunkKeys.GetSize();
-  // nothing to do, bail out
-  if (!numIndices) 
-  {
-    mJunkTargetFolder = nsnull; // just to be safe
-    return NS_OK;
-  }
+  PRBool movingJunkMessages,markingJunkMessagesRead;
+  nsCOMPtr <nsIMsgFolder> junkTargetFolder;
 
-  nsMsgViewIndex *indices = (nsMsgViewIndex *)nsMemory::Alloc(numIndices * sizeof(nsMsgViewIndex));
-  if (!indices) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  for (PRUint32 i=0;i<numIndices;i++)
-    indices[i] = FindKey(mJunkKeys.GetAt(i), PR_TRUE /* expand */); // what if we don't find the index?
-
-  // tell the FE to call SetNextMessageAfterDelete() because a delete is coming
-  nsresult rv = mCommandUpdater->UpdateNextMessageAfterDelete();
-  NS_ENSURE_SUCCESS(rv,rv);
+  // question: is it possible for the junk mail move/mark as read
+  // options to change after we've handled some of the batches but
+  // before we've handled the last one? if so, we can decide when
+  // handling each batch whether to save its indices or forget
+  // them, and then perform the known action when handling the 
+  // last batch; however if the options can change between batches
+  // we may have to remember in separate arrays the indices to
+  // mark as read and the indices to move
+  //
+  // for now, we assume the options do not change between batches
+  //
   
-  if (numIndices > 1)
-    NS_QuickSort(indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
-  NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
-  if (mJunkTargetFolder) 
-    rv = ApplyCommandToIndicesWithFolder(nsMsgViewCommandType::moveMessages, indices, numIndices, mJunkTargetFolder);
-  else
-    rv = ApplyCommandToIndices(nsMsgViewCommandType::deleteMsg, indices, numIndices);
-  NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
+  nsresult rv = DetermineActionsForJunkMsgs(&movingJunkMessages, &markingJunkMessagesRead, getter_AddRefs(junkTargetFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+	
+  // nothing to do, bail out
+  if (!(movingJunkMessages || markingJunkMessagesRead))
+    return NS_OK;
 
-  mJunkKeys.RemoveAll();
-  mJunkTargetFolder = nsnull;
-  nsMemory::Free(indices);
+  NS_ASSERTION( (mNumJunkIndices > 0), "no indices of marked-as-junk messages to act on");
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "move or delete failed");
+  if (mNumJunkIndices > 1)
+    NS_QuickSort(mJunkIndices, mNumJunkIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
+
+  if (markingJunkMessagesRead)
+  {
+    // notes on marking junk as read:
+    // 1. there are 2 occasions on which junk messages are marked as 
+    //    read: here (after a manual marking) as well as after automatic
+    //    marking by the bayesian filter (see code for local mail folders
+    //    and for imap mail folders); it is perhaps worth considering
+    //    making these two separate options... but for now they are
+    //    controlled by a single preference
+    // 2. even though move/delete on manual mark may be
+    //    turned off, we might still need to mark as read
+
+    NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
+    rv = ApplyCommandToIndices(nsMsgViewCommandType::markMessagesRead, mJunkIndices, mNumJunkIndices);
+    NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "marking marked-as-junk messages as read failed");
+  }
+  if (movingJunkMessages) 
+  {
+    // tell the FE to call SetNextMessageAfterDelete() because a delete is coming
+    rv = mCommandUpdater->UpdateNextMessageAfterDelete();
+    NS_ENSURE_SUCCESS(rv,rv);
+  
+    NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
+    if (junkTargetFolder) 
+      rv = ApplyCommandToIndicesWithFolder(nsMsgViewCommandType::moveMessages, mJunkIndices, mNumJunkIndices, junkTargetFolder);
+    else
+      rv = ApplyCommandToIndices(nsMsgViewCommandType::deleteMsg, mJunkIndices, mNumJunkIndices);
+    NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "move or deletion of marked-as-junk messages failed");
+  }
   return rv;
 }
 
 nsresult
-nsMsgDBView::SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification)
+nsMsgDBView::DetermineActionsForJunkMsgs(PRBool* movingJunkMessages, PRBool* markingJunkMessagesRead, nsIMsgFolder** junkTargetFolder)
 {
-  // we only care when the message gets marked as junk
-  if (aClassification == nsIJunkMailPlugin::GOOD)
-    return NS_OK;
+  // there are two possible actions which may be performed
+  // on messages marked as spam: marking as read and moving
+  // somewhere...
+
+  *movingJunkMessages = false;
+  *markingJunkMessagesRead = false;
+  
+  // ... the 'somewhere', junkTargetFolder, can be a folder,
+  // but if it remains null we'll delete the messages
+  
+  *junkTargetFolder = nsnull;
+
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsresult rv = GetFolderForViewIndex(mJunkIndices[0], getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
     
   nsCOMPtr <nsISpamSettings> spamSettings;
-  nsresult rv = aServer->GetSpamSettings(getter_AddRefs(spamSettings));
+  rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // if the spam feature is disabled, do nothing
-  // the user could still manually mark spam if the feature is disabled
-  // but let's not move or delete in that scenario
+  // if the spam system is completely disabled we won't do anything
+  // question: is this a valid choice?
   PRInt32 spamLevel;
   (void)spamSettings->GetLevel(&spamLevel);
   if (!spamLevel)
     return NS_OK;
     
-  // if the manual mark functionality is turned off, bail out.
+  // now let's determine whether we'll be taking the first action,
+  // marking as read
+  
+  (void)spamSettings->GetMarkAsReadOnSpam(markingJunkMessagesRead);
+
+
+  // now let's determine whether we'll be taking the second action,
+  // the move / deletion (and also determine which of these two)
+   
   PRBool manualMark; 
   (void)spamSettings->GetManualMark(&manualMark);
   if (!manualMark)
@@ -2816,28 +2908,14 @@ nsMsgDBView::SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMs
   
   PRInt32 manualMarkMode;
   (void)spamSettings->GetManualMarkMode(&manualMarkMode);
+  NS_ASSERTION(manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE
+            || manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE,
+            "bad manual mark mode");
   
-  nsCOMPtr <nsIMsgMessageService> msgMessageService;
-  rv = GetMessageServiceFromURI(aMsgURI, getter_AddRefs(msgMessageService));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = msgMessageService->MessageURIToMsgHdr(aMsgURI, getter_AddRefs(msgHdr));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCOMPtr <nsIMsgFolder> srcFolder;
-  rv = msgHdr->GetFolder(getter_AddRefs(srcFolder));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsMsgKey msgKey;
-  rv = msgHdr->GetMessageKey(&msgKey);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // we can execute the move or delete
+  // the folder must allow us to execute the move (or the deletion)
   PRUint32 folderFlags;
-  srcFolder->GetFlags(&folderFlags);
+  folder->GetFlags(&folderFlags);
   
-  NS_ASSERTION(manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE || manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE, "bad mode");
   if (manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE) 
   {
     PRBool moveOnSpam;
@@ -2856,48 +2934,25 @@ nsMsgDBView::SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMs
     rv = spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
     NS_ENSURE_SUCCESS(rv,rv);
     
-    NS_ASSERTION(!spamFolderURI.IsEmpty(), "spam folder is empty, can't move");
+    NS_ASSERTION(!spamFolderURI.IsEmpty(), "spam folder URI is empty, can't move");
     if (!spamFolderURI.IsEmpty()) 
     {
-      nsCOMPtr<nsIMsgFolder> destFolder;
-      rv = GetExistingFolder(spamFolderURI.get(), getter_AddRefs(destFolder));
-      if (NS_SUCCEEDED(rv) && destFolder)
-      {
-#ifdef DEBUG
-        // double check the assumptions
-        if (mJunkKeys.GetSize())
-        {
-          NS_ASSERTION(mJunkTargetFolder, "should have a junk folder at this point");
-          NS_ASSERTION(mJunkTargetFolder.get() == destFolder.get(), "junk folder doesn't match");
-        }
-        else
-          NS_ASSERTION(mJunkTargetFolder == nsnull, "junk folder should be null, no keys yet");
-#endif
-        // save off msg key and folder
-        mJunkKeys.Add(msgKey);
-        if (!mJunkTargetFolder)
-          mJunkTargetFolder = destFolder;
-      }
+      //nsCOMPtr<nsIMsgFolder> destFolder;
+      rv = GetExistingFolder(spamFolderURI.get(), junkTargetFolder);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      *movingJunkMessages = true;
     }
+    return NS_OK;
   }
-  else // manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE)
-  {
-    // if this is in the trash, don't delete?
-    if (folderFlags & MSG_FOLDER_FLAG_TRASH)
-      return NS_OK;
-    
-    // we can't delete, bail out
-    PRBool canDelete;
-    (void)srcFolder->GetCanDeleteMessages(&canDelete);
-    if (!canDelete)
-      return NS_OK;
-    
-    // save off msg key
-    mJunkKeys.Add(msgKey);
-    NS_ASSERTION(mJunkTargetFolder == nsnull, "should be null");
-    mJunkTargetFolder = nsnull;  // should already be null
-  }
-  return NS_OK;
+  
+  // at this point manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE)
+
+  // if this is in the trash, let's not delete
+  if (folderFlags & MSG_FOLDER_FLAG_TRASH)
+    return NS_OK;
+
+  return folder->GetCanDeleteMessages(movingJunkMessages);
 }
 
 // reversing threads involves reversing the threads but leaving the

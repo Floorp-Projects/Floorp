@@ -150,6 +150,8 @@
     </hbox>
   </vbox>
 
+  <checkbox id="markAsReadOnSpam" oncommand="conditionallyEnableUI('markAsReadOnSpam')" label="&markAsReadOnSpam.label;"/>
+
   <vbox align="start">
     <checkbox id="manualMark" oncommand="conditionallyEnableUI('manualMark')" label="&manualMark.label;"/>
     <hbox>

@@ -3429,6 +3429,15 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
 
   if (aClassification == nsIJunkMailPlugin::JUNK)
   {
+    PRBool markAsReadOnSpam;
+    (void)spamSettings->GetMarkAsReadOnSpam(&markAsReadOnSpam);
+    if (markAsReadOnSpam)
+    {
+      rv = mDatabase->MarkRead(msgKey, true, this);
+        if (!NS_SUCCEEDED(rv))
+          NS_WARNING("failed marking spam message as read");
+    }
+
     PRBool willMoveMessage = PR_FALSE;
 
     // don't do the move when we are opening up 

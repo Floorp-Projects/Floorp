@@ -250,10 +250,9 @@ protected:
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);
   virtual nsresult DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage);
   nsresult SetStringPropertyByIndex(nsMsgViewIndex index, const char *aProperty, const char *aValue);
-  nsresult SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin, 
+  nsresult SetAsJunkByIndex(nsIJunkMailPlugin *aJunkPlugin, 
                                nsMsgViewIndex aIndex,
-                               nsMsgJunkStatus aNewClassification,
-                               PRBool aIsLastInBatch);
+                               nsMsgJunkStatus aNewClassification);
   nsresult ToggleReadByIndex(nsMsgViewIndex index);
   nsresult SetReadByIndex(nsMsgViewIndex index, PRBool read);
   nsresult SetThreadOfMsgReadByIndex(nsMsgViewIndex index, nsMsgKeyArray &keysMarkedRead, PRBool read);
@@ -360,11 +359,20 @@ protected:
   // used to cache the atoms created for each color to be displayed
   static nsIAtom* mLabelPrefColorAtoms[PREF_LABELS_MAX];
 
-  // used to know to finish out the junk mail classification batch when the 
-  // last classification callback happens
-  nsCString mLastJunkUriInBatch;
-  PRUint8 mOutstandingJunkBatches;
+  // comparing against this value, the classifier
+  // callback function, OnMessageClassified(), can know
+  // when the classified message is the last one in the
+  // batch/series of batches (in which case the
+  // appropriate action is taken for all the messages)
+  nsXPIDLCString mLastJunkURIInBatch;
+  // these are the indices of the messages in the current
+  // batch/series of batches of messages manually marked
+  // as junk
+  nsMsgViewIndex *mJunkIndices;
+  PRUint32 mNumJunkIndices;
+  
   nsUInt32Array mIndicesToNoteChange;
+
 
 protected:
   static nsresult   InitDisplayFormats();
@@ -375,10 +383,8 @@ private:
   static nsDateFormatSelector  m_dateFormatToday;
   PRBool ServerSupportsFilterAfterTheFact();
 
-  nsMsgKeyArray	mJunkKeys;
-  nsCOMPtr <nsIMsgFolder> mJunkTargetFolder;
-  nsresult PerformActionOnJunkMsgs();
-  nsresult SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification);
+  nsresult PerformActionsOnJunkMsgs();
+  nsresult DetermineActionsForJunkMsgs(PRBool* movingJunkMessages, PRBool* markingJunkMessagesRead, nsIMsgFolder** junkTargetFolder);
 
 };
 

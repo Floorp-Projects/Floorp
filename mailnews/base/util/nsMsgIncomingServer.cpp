@@ -2101,6 +2101,10 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   (void)mSpamSettings->GetMoveOnSpam(&moveOnSpam);
   (void)SetBoolValue("moveOnSpam", moveOnSpam);
 
+  PRBool markAsReadOnSpam;
+  (void)mSpamSettings->GetMarkAsReadOnSpam(&markAsReadOnSpam);
+  (void)SetBoolValue("markAsReadOnSpam", markAsReadOnSpam);
+
   PRInt32 moveTargetMode;
   (void)mSpamSettings->GetMoveTargetMode(&moveTargetMode);
   (void)SetIntValue("moveTargetMode", moveTargetMode);
@@ -2211,6 +2215,12 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     rv = GetBoolValue("moveOnSpam", &moveOnSpam);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = mSpamSettings->SetMoveOnSpam(moveOnSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool markAsReadOnSpam;
+    rv = GetBoolValue("markAsReadOnSpam", &markAsReadOnSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetMarkAsReadOnSpam(markAsReadOnSpam);
     NS_ENSURE_SUCCESS(rv,rv);
 
     PRInt32 moveTargetMode;

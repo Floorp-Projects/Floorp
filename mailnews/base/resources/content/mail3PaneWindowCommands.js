@@ -611,7 +611,7 @@ var DefaultController =
         MsgApplyFilters(null);
         return;
       case "cmd_runJunkControls":
-        analyzeFolderForJunk();
+        filterFolderForJunk();
         return;
       case "cmd_deleteJunk":
         deleteJunkInFolder();

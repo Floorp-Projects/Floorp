@@ -58,6 +58,7 @@ nsSpamSettings::nsSpamSettings()
 {
   mLevel = 0;
   mMoveOnSpam = PR_FALSE;
+  mMarkAsReadOnSpam = PR_FALSE;
   mMoveTargetMode = nsISpamSettings::MOVE_TARGET_MODE_ACCOUNT;
   mPurge = PR_FALSE;
   mPurgeInterval = 14; // 14 days
@@ -123,6 +124,7 @@ NS_IMETHODIMP nsSpamSettings::SetManualMarkMode(PRInt32 aManualMarkMode)
 
 NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled)
 NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam)
+NS_IMPL_GETSET(nsSpamSettings, MarkAsReadOnSpam, PRBool, mMarkAsReadOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge)
 NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList)
 NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark)
@@ -349,6 +351,7 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
 
   (void)aSpamSettings->GetMoveOnSpam(&mMoveOnSpam);
+  (void)aSpamSettings->GetMarkAsReadOnSpam(&mMarkAsReadOnSpam);
   (void)aSpamSettings->GetManualMark(&mManualMark); 
   (void)aSpamSettings->GetManualMarkMode(&mManualMarkMode); 
   (void)aSpamSettings->GetPurge(&mPurge); 

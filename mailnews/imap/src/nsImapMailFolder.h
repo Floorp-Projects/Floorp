@@ -447,6 +447,7 @@ protected:
   PRInt32 m_numFilterClassifyRequests;
   PRBool m_msgMovedByFilter;
   nsImapMoveCoalescer *m_moveCoalescer; // strictly owned by the nsImapMailFolder
+  nsCOMPtr <nsISupportsArray> m_junkMessagesToMarkAsRead;
   nsMsgKey m_curMsgUid;
   PRUint32 m_uidValidity;
   PRInt32 m_numStatusRecentMessages; // used to store counts from Status command

@@ -55,6 +55,7 @@ interface nsISpamSettings: nsISupports {
   attribute long level; 
 
   attribute boolean moveOnSpam;
+  attribute boolean markAsReadOnSpam;
 
   /**
    * Most consumers will just use spamFolderURI rather than accessing any of

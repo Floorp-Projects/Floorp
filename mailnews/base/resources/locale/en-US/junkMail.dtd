@@ -8,6 +8,7 @@
 <!ENTITY level.label "Enable junk mail controls">
 <!ENTITY level.accesskey "E">
 <!ENTITY move.label "Move incoming messages determined to be junk mail to:">
+<!ENTITY markAsReadOnSpam.label "Mark messages determined to be Junk as read">
 <!ENTITY otherFolder.label "Other:">
 <!ENTITY junkFolderOn.label "&quot;Junk&quot; folder on:">
 <!ENTITY purge1.label "Automatically delete junk messages older than">

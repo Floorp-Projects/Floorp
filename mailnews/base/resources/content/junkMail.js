@@ -115,6 +115,9 @@ function setupForAccountFromFolder(aURI)
   document.getElementById("moveOnSpam").checked = obj.settings.moveOnSpam;
   document.getElementById("moveTargetMode").selectedItem = document.getElementById("moveTargetMode" + obj.settings.moveTargetMode);
 
+  // set up the 'mark as read' checkbox
+  document.getElementById("markAsReadOnSpam").checked = obj.settings.markAsReadOnSpam;
+
   // the default account should be the current account
   // unless you can't create a folder on that server
   // or search on that account (for purge)
@@ -177,6 +180,7 @@ function onAccept()
 function storeSettings(aSettings, aLoggingEnabled)
 {
   aSettings.level = document.getElementById("level").checked ? 100 : 0;
+  aSettings.markAsReadOnSpam = document.getElementById("markAsReadOnSpam").checked;
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
   aSettings.moveTargetMode = document.getElementById("moveTargetMode").value;
   aSettings.actionTargetAccount = document.getElementById("actionTargetAccount").getAttribute("uri");
@@ -206,6 +210,7 @@ function conditionallyEnableUI(id)
     document.getElementById("useWhiteList").disabled = true;
     document.getElementById("whiteListAbURI").disabled = true;
     document.getElementById("moveOnSpam").disabled = true;
+    document.getElementById("markAsReadOnSpam").disabled = true;
 
     document.getElementById("moveTargetMode").disabled = true;
     document.getElementById("actionTargetAccount").disabled = true;
@@ -222,6 +227,7 @@ function conditionallyEnableUI(id)
 
   document.getElementById("useWhiteList").disabled = false;
   document.getElementById("moveOnSpam").disabled = false;
+  document.getElementById("markAsReadOnSpam").disabled = false;
   document.getElementById("manualMark").disabled = false;
 
   var enabled;

@@ -7512,6 +7512,15 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
     NS_ENSURE_SUCCESS(rv, rv); 
     
+    PRBool markAsReadOnSpam;
+    (void)spamSettings->GetMarkAsReadOnSpam(&markAsReadOnSpam);
+    if (markAsReadOnSpam)
+    {
+      if (!m_junkMessagesToMarkAsRead)
+        NS_NewISupportsArray(getter_AddRefs(m_junkMessagesToMarkAsRead));
+      m_junkMessagesToMarkAsRead->AppendElement(msgHdr);
+    }
+ 
     PRBool willMoveMessage = PR_FALSE;
   
     // don't do the move when we are opening up 
@@ -7562,6 +7571,17 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
   }
   if (--m_numFilterClassifyRequests == 0)
   {
+    if (m_junkMessagesToMarkAsRead)
+    {
+      PRUint32 count;
+      m_junkMessagesToMarkAsRead->Count(&count);
+      if (count > 0)
+      {
+        rv = MarkMessagesRead(m_junkMessagesToMarkAsRead, true);
+        NS_ENSURE_SUCCESS(rv,rv);
+        m_junkMessagesToMarkAsRead->SizeTo(0);
+      }
+    }
     PlaybackCoalescedOperations();
     // If we are performing biff for this folder, tell the server object
     if (m_performingBiff)
