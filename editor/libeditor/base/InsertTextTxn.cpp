@@ -21,10 +21,19 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
 #include "nsIPresShell.h"
+#include "EditAggregateTxn.h"
 
 static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
+nsIAtom *InsertTextTxn::gInsertTextTxnName;
+
+nsresult InsertTextTxn::ClassInit()
+{
+  if (nsnull==gInsertTextTxnName)
+    gInsertTextTxnName = NS_NewAtom("NS_InsertTextTxn");
+  return NS_OK;
+}
 
 InsertTextTxn::InsertTextTxn()
   : EditTxn()
@@ -81,8 +90,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
     nsCOMPtr<InsertTextTxn> otherTxn(aTransaction);
-    nsresult result=NS_OK;// = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
-    if (NS_SUCCEEDED(result) && (otherTxn))
+    if (otherTxn)
     {
       if (PR_TRUE==IsSequentialInsert(otherTxn))
       {
@@ -90,6 +98,32 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
         otherTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = PR_TRUE;
+      }
+    }
+    else
+    { // the next InsertTextTxn might be inside an aggregate that we have special knowledge of
+      nsCOMPtr<EditAggregateTxn> otherTxn(aTransaction);
+      if (otherTxn)
+      {
+        nsCOMPtr<nsIAtom> txnName;
+        otherTxn->GetName(getter_AddRefs(txnName));
+        if (txnName==gInsertTextTxnName)
+        { // yep, it's one of ours.  By definition, it must contain only
+          // a single InsertTextTxn
+          nsCOMPtr<EditTxn> childTxn;
+          otherTxn->GetTxnAt(0, getter_AddRefs(childTxn));
+          nsCOMPtr<InsertTextTxn> otherInsertTxn(childTxn);
+          if (otherInsertTxn)
+          {
+            if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+            {
+              nsAutoString otherData;
+              otherInsertTxn->GetData(otherData);
+              mStringToInsert += otherData;
+              *aDidMerge = PR_TRUE;
+            }
+          }
+        }
       }
     }
   }
@@ -154,7 +188,8 @@ PRBool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
     if (aOtherTxn->mElement == mElement)
     {
       // here, we need to compare offsets.
-      // if (something about offsets is true)
+      PRInt32 strlen = mStringToInsert.Length();
+      if (aOtherTxn->mOffset==(mOffset+strlen))
       {
         result = PR_TRUE;
       }
