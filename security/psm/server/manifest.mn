@@ -59,10 +59,6 @@ CSRCS = \
 	msgthread.c \
 	$(NULL) 
 
-CPPSRCS = \
-	nlslayer.cpp \
-	$(NULL)
-
 RESNAME = psm.rc
 
 RES = $(PLATFORM)/psm.res

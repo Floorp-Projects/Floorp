@@ -78,7 +78,7 @@ CPLUSPLUSRUNTIME = -lC -lm
 endif
 endif
 
-INCLUDES += -I$(LDAPSDKDIST)/include -I$(CORE_DEPTH)/../dist/public/i18n
+INCLUDES += -I$(LDAPSDKDIST)/include -I$(CORE_DEPTH)/../dist/public/nlslayer
 
 ifeq ($(OS_ARCH), SunOS)
 ifeq ($(OS_RELEASE), 5.5.1)
@@ -177,6 +177,7 @@ EXTRA_LIBS = \
 	$(DIST)/lib/freebl.lib \
 	$(DIST)/lib/dbm.lib \
 	$(DIST)/lib/protocol.lib \
+	$(DIST)/lib/nlslayer.lib \
 	$(DIST)/lib/xpcom.lib \
 	$(NSPR_STUB_LIBS) \
 	$(LDAPSDKDIST)/lib/nsldaps32v30.lib \
@@ -248,6 +249,7 @@ EXTRA_LIBS += \
         $(DIST)/lib/libcrypto.a \
         $(DIST)/lib/libdbm.a \
         $(DIST)/lib/libprotocol.a \
+	$(DIST)/lib/libnlslayer.a \
 	$(NSPR_LINK_LIBS) \
 	$(XPCOM_LINK_LIBS) \
 	$(CPLUSPLUSRUNTIME) \
