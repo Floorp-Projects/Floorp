@@ -350,17 +350,103 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         return rv;
     }
 }
+/**
+ *  Allocates a C string into that contains a ISO 639 language list
+ *  notated with HTTP "q" values for output with a HTTP Accept-Language
+ *  header. Previous q values will be stripped because the order of
+ *  the langs imply the q value. The q values are calculated by dividing
+ *  1.0 amongst the number of languages present.
+ *
+ *  Ex: passing: "en, ja"
+ *      returns: "en, ja; q=0.500"
+ *
+ *      passing: "en, ja, fr_CA"
+ *      returns: "en, ja; q=0.667, fr_CA; q=0.333"
+ */
+
+static char *
+PrepareAcceptLanguages(const char *i_AcceptLanguages)
+{
+  if (i_AcceptLanguages)
+  {
+    PRUint32 n, size, wrote;
+    double q, dec;
+    char *p, *p2, *token, *q_Accept;
+    const char *comma;
+    char *o_AcceptLanguages;
+    PRInt32 available;
+
+
+    o_AcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
+    if (nsnull == o_AcceptLanguages)
+      return nsnull;
+    for (p = o_AcceptLanguages, n = size = 0; '\0' != *p; p++)
+    {
+      if (*p == ',') n++;
+        size++;
+    }
+
+    available = size + ++n * 11 + 1;
+    q_Accept = new char[available];
+    if ((char *) 0 == q_Accept)
+      return nsnull;
+    *q_Accept = '\0';
+    q = 1.0;
+    dec = q / (double) n;
+    n = 0;
+    p2 = q_Accept;
+    for (token = nsCRT::strtok(o_AcceptLanguages, ",", &p);
+         token != (char *) 0;
+         token = nsCRT::strtok(p, ",", &p))
+    {
+      while (*token == ' ' || *token == '\x9') token++;
+      char* trim;
+      trim = PL_strpbrk(token, "; \x9");
+      if (trim != (char*)0)  // remove "; q=..." if present
+      *trim = '\0';
+
+      if (*token != '\0')
+      {
+        comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+        if (q < 0.9995)
+          wrote = PR_snprintf(p2, available, "%s%s; q=%1.3f", comma, token, q);
+        else
+          wrote = PR_snprintf(p2, available, "%s%s", comma, token);
+        q -= dec;
+        p2 += wrote;
+        available -= wrote;
+        NS_ASSERTION(available > 0, "allocated string not long enough");
+
+      }
+    }
+    nsCRT::free(o_AcceptLanguages);
+
+    // change alloc from C++ new/delete to nsCRT::strdup's way
+    o_AcceptLanguages = nsCRT::strdup(q_Accept);
+    if (nsnull == o_AcceptLanguages)
+      return nsnull;
+    delete [] q_Accept;
+    return o_AcceptLanguages;
+  }
+  else
+    return nsnull;
+}
 
 NS_IMETHODIMP
 nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
 {
-    CRTFREEIF(mAcceptLanguages);
-    if (i_AcceptLanguages)
-    {
-        mAcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
-        return (mAcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
+  CRTFREEIF (mAcceptLanguages);
+  if (i_AcceptLanguages)
+  {
+    mAcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
+    if (nsnull == mAcceptLanguages)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mAcceptLanguagesPrepped = PrepareAcceptLanguages(i_AcceptLanguages);
+    if (nsnull == mAcceptLanguagesPrepped)
+      return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -370,8 +456,8 @@ nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
         return NS_ERROR_NULL_POINTER;
     if (mAcceptLanguages)
     {
-        *o_AcceptLanguages = nsCRT::strdup(mAcceptLanguages);
-        return (*o_AcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+      *o_AcceptLanguages = nsCRT::strdup(mAcceptLanguagesPrepped);
+      return (*o_AcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
     else
     {
@@ -750,6 +836,7 @@ nsHTTPHandler::nsHTTPHandler():
     mLastPostID(NowInSeconds()),
 #endif
     mAcceptLanguages(nsnull),
+    mAcceptLanguagesPrepped(nsnull),
     mAcceptEncodings(nsnull),
     mAcceptCharset(nsnull),
     mAcceptCharsetPrepped(nsnull),
