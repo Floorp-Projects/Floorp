@@ -2150,7 +2150,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	{
 
 #ifdef XP_WIN // actually load a dll on Windows
-
+/*
     nsPluginsDir pluginsDir;
     if (! pluginsDir.Valid())
       return NS_ERROR_FAILURE;
@@ -2164,6 +2164,9 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
     PL_strcat(fullname, pluginTag->mFileName);
     nsFileSpec file(fullname);
     delete fullname;
+*/
+    nsFileSpec file(pluginTag->mFileName);
+
     nsPluginFile pluginFile(file);
     PRLibrary* pluginLibrary = NULL;
 
