@@ -234,9 +234,6 @@ var bookmarksDNDObserver = {
           }
           catch (ex) { }
         }
-        else {
-          dump("*** copy!\n");
-        }
       }
 
       RDFC.Init(kBMDS, rContainer);
@@ -248,7 +245,7 @@ var bookmarksDNDObserver = {
         // If we're going to copy a folder type, we need to clone the folder 
         // rather than just asserting the new node as a child of the drop folder.
         if (aDragSession.dragAction & kCopyAction)
-          rSource = this.cloneFolder(rSource, rContainer, rTarget);
+          rSource = BookmarksUtils.cloneFolder(rSource, rContainer, rTarget);
       }
       
       if (dropAction == "before" || dropAction == "after") {

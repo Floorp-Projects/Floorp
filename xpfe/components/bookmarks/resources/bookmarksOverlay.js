@@ -81,6 +81,7 @@ BookmarksUIElement.prototype = {
     }
   },
 
+  /* XXX template problems.
   listener: null,  
   exDB: ["rdf:files", "rdf:httpindex"],
   setUpCompositeDataSource: function ()
@@ -106,6 +107,7 @@ BookmarksUIElement.prototype = {
     }
     element.builder.rebuild();
   },
+  */
   
   /////////////////////////////////////////////////////////////////////////////
   // Fill a context menu popup with menuitems that are appropriate for the current
@@ -283,7 +285,7 @@ BookmarksUIElement.prototype = {
     case "setpersonaltoolbarfolder":
     case "setnewsearchfolder":
       var args = [];
-      gBookmarksShell.doBookmarksCommand(NODE_ID(selectedItem), NC_NS_CMD + aCommandID, []);
+      BookmarksUtils.doBookmarksCommand(NODE_ID(selectedItem), NC_NS_CMD + aCommandID, []);
       // XXX - The containing node seems to be closed here and the 
       //       focus/selection is destroyed.
       this.selectElement(selectedItem);
@@ -318,7 +320,11 @@ BookmarksUIElement.prototype = {
       break;
     case "newseparator":
       nfseln = this.getBestItem ();
-      this.commands.createSeparator(nfseln);
+      var parentNode = this.findRDFNode(aSelectedItem, false);
+      var args = [{ property: NC_NS + "parent", 
+                    resource: NODE_ID(parentNode) }];
+      BookmarksUtils.doBookmarksCommand(NODE_ID(aSelectedItem), 
+                                        NC_NS_CMD + "newseparator", args);
       break;
     case "import":
     case "export":
@@ -343,42 +349,11 @@ BookmarksUIElement.prototype = {
       }
       var seln = this.getBestItem();
       var args = [{ property: NC_NS + "URL", literal: fileName}];
-      gBookmarksShell.doBookmarksCommand(NODE_ID(seln), NC_NS_CMD + aCommandID, args);
+      BookmarksUtils.doBookmarksCommand(NODE_ID(seln), NC_NS_CMD + aCommandID, args);
       break;
     }
   },
   
-  ///////////////////////////////////////////////////////////////////////////
-  // Execute a command with the given source and arguments
-  doBookmarksCommand: function (aSourceURI, aCommand, aArgumentsArray)
-  {
-    var rCommand = this.RDF.GetResource(aCommand);
-  
-    var kSuppArrayContractID = "@mozilla.org/supports-array;1";
-    var kSuppArrayIID = Components.interfaces.nsISupportsArray;
-    var sourcesArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-    if (aSourceURI) {
-      var rSource = this.RDF.GetResource(aSourceURI);
-      sourcesArray.AppendElement (rSource);
-    }
-  
-    var argsArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-    for (var i = 0; i < aArgumentsArray.length; ++i) {
-      var rArc = this.RDF.GetResource(aArgumentsArray[i].property);
-      argsArray.AppendElement(rArc);
-      var rValue = null;
-      if ("resource" in aArgumentsArray[i]) 
-        rValue = this.RDF.GetResource(aArgumentsArray[i].resource);
-      else
-        rValue = this.RDF.GetLiteral(aArgumentsArray[i].literal);
-      argsArray.AppendElement(rValue);
-    }
-
-    // Exec the command in the Bookmarks datasource. 
-    const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
-    kBMDS.DoCommand(sourcesArray, rCommand, argsArray);
-  },
-
   openFolderInNewWindow: function (aSelectedItem)
   {
     openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", 
@@ -489,7 +464,7 @@ BookmarksUIElement.prototype = {
       // If the node is a folder, then we need to create a new anonymous 
       // resource and copy all the arcs over.
       if (rType.Value == NC_NS + "Folder")
-        rCurrent = this.cloneFolder(rCurrent, krParent, krSource);
+        rCurrent = BookmarksUtils.cloneFolder(rCurrent, krParent, krSource);
 
       // If we are given names, this implies that the nodes do not already 
       // exist in the graph, and we need to create some additional information
@@ -512,38 +487,6 @@ BookmarksUIElement.prototype = {
     }
     if ("endBatch" in this && nodes.length > 1)
       this.endBatch();
-  },
-  
-  cloneFolder: function (aFolder, aParent, aRelativeItem) 
-  {
-    const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
-    
-    const krNameArc = this.RDF.GetResource(NC_NS + "Name");
-    var rName = kBMDS.GetTarget(aFolder, krNameArc, true);
-    rName = rName.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    
-    const kBMSvcContractID = "@mozilla.org/browser/bookmarks-service;1";
-    const kBMSvcIID = Components.interfaces.nsIBookmarksService;
-    const kBMSvc = Components.classes[kBMSvcContractID].getService(kBMSvcIID);
-    const krNewFolder = kBMSvc.CreateFolder(rName.Value, aRelativeItem, aParent);
-    
-    // Now need to append kiddies. 
-    try {
-      const kRDFCContractID = "@mozilla.org/rdf/container;1";
-      const kRDFCIID = Components.interfaces.nsIRDFContainer;
-      const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
-      ksRDFC.Init(kBMDS, aFolder);
-
-      const kElts = ksRDFC.GetElements();
-      ksRDFC.Init(kBMDS, krNewFolder);
-      while (kElts.hasMoreElements()) {
-        var curr = kElts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        ksRDFC.AppendElement(curr);
-      }
-    }
-    catch (e) {
-    }
-    return krNewFolder;
   },
   
   canPaste: function ()
@@ -718,6 +661,96 @@ CommandArrayEnumerator.prototype = {
 };
 
 var BookmarksUtils = {
+  _rdf: null,
+  get RDF ()
+  {
+    if (!this._rdf) {
+      const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+      const kRDFIID = Components.interfaces.nsIRDFService;
+      this._rdf = Components.classes[kRDFContractID].getService(kRDFIID);
+    }
+    return this._rdf;
+  },
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Execute a command with the given source and arguments
+  doBookmarksCommand: function (aSourceURI, aCommand, aArgumentsArray)
+  {
+    var rCommand = this.RDF.GetResource(aCommand);
+  
+    var kSuppArrayContractID = "@mozilla.org/supports-array;1";
+    var kSuppArrayIID = Components.interfaces.nsISupportsArray;
+    var sourcesArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
+    if (aSourceURI) {
+      var rSource = this.RDF.GetResource(aSourceURI);
+      sourcesArray.AppendElement (rSource);
+    }
+  
+    var argsArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
+    for (var i = 0; i < aArgumentsArray.length; ++i) {
+      var rArc = this.RDF.GetResource(aArgumentsArray[i].property);
+      argsArray.AppendElement(rArc);
+      var rValue = null;
+      if ("resource" in aArgumentsArray[i]) 
+        rValue = this.RDF.GetResource(aArgumentsArray[i].resource);
+      else
+        rValue = this.RDF.GetLiteral(aArgumentsArray[i].literal);
+      argsArray.AppendElement(rValue);
+    }
+
+    // Exec the command in the Bookmarks datasource. 
+    const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    kBMDS.DoCommand(sourcesArray, rCommand, argsArray);
+  },
+
+  cloneFolder: function (aFolder, aParent, aRelativeItem) 
+  {
+    const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    
+    const krNameArc = this.RDF.GetResource(NC_NS + "Name");
+    var rName = kBMDS.GetTarget(aFolder, krNameArc, true);
+    rName = rName.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    
+    const krNewFolder = this.createFolderWithID(rName.Value, aRelativeItem.Value, aParent.Value);
+    
+    // Now need to append kiddies. 
+    try {
+      const kRDFCContractID = "@mozilla.org/rdf/container;1";
+      const kRDFCIID = Components.interfaces.nsIRDFContainer;
+      const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+      ksRDFC.Init(kBMDS, aFolder);
+
+      const kElts = ksRDFC.GetElements();
+      ksRDFC.Init(kBMDS, krNewFolder);
+      while (kElts.hasMoreElements()) {
+        var curr = kElts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        ksRDFC.AppendElement(curr);
+      }
+    }
+    catch (e) {
+    }
+    return krNewFolder;
+  },
+  
+  createFolderWithID: function (aTitle, aRelativeItem, aParentFolder)
+  {
+    const krAnonymous = this.RDF.GetAnonymousResource();
+    
+    var args = [{ property: NC_NS + "parent", resource: aParentFolder },
+                { property: NC_NS + "Name",   literal:  aTitle },
+                { property: NC_NS + "URL",    literal:  krAnonymous.Value}];
+    this.doBookmarksCommand(aRelativeItem, NC_NS_CMD + "newfolder", args);
+
+    // Tidy up.
+    const krURL = this.RDF.GetResource(NC_NS + "URL");
+    const krBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    const krCurrURL = krBMDS.GetTarget(krAnonymous, krURL, true);
+    const krEmpty = this.RDF.GetLiteral("");
+    krBMDS.Change(krAnonymous, krURL, krCurrURL, krEmpty);
+    
+    return krAnonymous;
+  },
+
   addBookmarkToWindow: function (aWindow)
   {
     var url = aWindow.location.href;
@@ -755,6 +788,7 @@ var BookmarksUtils = {
 
 };
 
+/* XXX Template problems
 function AggregationPrefListener () 
 { 
   const kPrefSvcContractID = "@mozilla.org/preferences;1";
@@ -771,4 +805,9 @@ AggregationPrefListener.prototype = {
     gBookmarksShell.setUpCompositeDataSource();
   }
 };
-  
+*/
+
+
+
+
+

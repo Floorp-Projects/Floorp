@@ -33,23 +33,23 @@ interface nsIRDFResource;
 [scriptable, uuid(a82e9300-e4af-11d2-8fdf-0008c70adc7b)]
 interface nsIBookmarksService : nsISupports
 {
-    const unsigned long	BOOKMARK_DEFAULT_TYPE   = 0;
-    const unsigned long	BOOKMARK_SEARCH_TYPE    = 1;
-    const unsigned long	BOOKMARK_FIND_TYPE      = 2;
+    const unsigned long BOOKMARK_DEFAULT_TYPE   = 0;
+    const unsigned long BOOKMARK_SEARCH_TYPE    = 1;
+    const unsigned long BOOKMARK_FIND_TYPE      = 2;
 
-    void	ReadBookmarks();
-    boolean	IsBookmarked(in string aURI);
-    void	AddBookmark(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    void ReadBookmarks();
+    boolean IsBookmarked(in string aURI);
+
+    void AddBookmark(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
-    // Temporary method. This will be replaced in .9 by a more generic node creation mechanism. 
-    nsIRDFResource  CreateFolder(in wstring aTitle, in nsIRDFResource aRelativeItem, in nsIRDFResource aParentFolder);
-    void            AddBookmarkToFolder(in string aURI, 
-								in nsIRDFResource aFolder, 
-								in wstring aTitle, 
-								in wstring docCharSet);
-    void	UpdateBookmarkLastVisitedDate(in string aURL, in wstring docCharset);
-    string	FindShortcut(in wstring aName);
-    wstring	GetLastCharset(in string aURI);
+    void AddBookmarkToFolder(in string aURI, in nsIRDFResource aFolder, 
+                             in wstring aTitle, in wstring docCharSet);
+
+    void UpdateBookmarkLastVisitedDate(in string aURL, in wstring docCharset);
+    
+    string FindShortcut(in wstring aName);
+    
+    wstring GetLastCharset(in string aURI);
 
 };
 

@@ -2551,64 +2551,6 @@ NS_IMPL_QUERY_INTERFACE8(nsBookmarksService,
 // nsIBookmarksService
 
 NS_IMETHODIMP
-nsBookmarksService::CreateFolder(const PRUnichar* aTitle, 
-                                 nsIRDFResource* aRelativeItem, 
-                                 nsIRDFResource* aParentFolder,
-                                 nsIRDFResource** aNewFolder)
-{
-  nsresult rv;
-  *aNewFolder = nsnull;
-
-  // Init parent container
-  nsCOMPtr<nsIRDFContainer> container (do_CreateInstance("@mozilla.org/rdf/container;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = container->Init(this, aParentFolder);
-  if (NS_FAILED(rv)) return rv;
-
-  // Create Item
-  nsCOMPtr<nsIRDFResource> folder;
-  rv = BookmarkParser::CreateAnonymousResource(address_of(folder));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = gRDFC->MakeSeq(mInner, folder, nsnull);
-  if (NS_FAILED(rv)) return rv;
-
-  // Item Name
-  nsCOMPtr<nsIRDFLiteral> nameLiteral;
-  rv = gRDF->GetLiteral(aTitle, getter_AddRefs(nameLiteral));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = mInner->Assert(folder, kNC_Name, nameLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  // Item Type
-  rv = mInner->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  // Add Date
-  nsCOMPtr<nsIRDFDate> dateLiteral;
-  rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral));
-  if (NS_FAILED(rv)) return rv;
-  rv = mInner->Assert(folder, kNC_BookmarkAddDate, dateLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-  
-  // Look up the index of aRelativeItem, if it exists we want to insert after 
-  // it, otherwise we want to add this item as the first child of the container.
-  PRInt32 idx;
-  rv = container->IndexOf(aRelativeItem, &idx);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = container->InsertElementAt(folder, idx > 0 ? idx : 1, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  *aNewFolder = folder;
-  NS_ADDREF(*aNewFolder);
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsBookmarksService::AddBookmarkToFolder(const char *aURI,
                                         nsIRDFResource *aFolder,
                                         const PRUnichar* aTitle,
@@ -3542,124 +3484,130 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
 }
 
 
-
+/** 
+ * Inserts a bookmark item of the given type adjacent to the node specified 
+ * with aRelativeNode. Creation parameters are given in aArguments. 
+ */
 nsresult
-nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType)
+nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode, 
+                                       nsISupportsArray *aArguments, 
+                                       nsIRDFResource *aItemType)
 {
-	nsresult			rv;
-	PRInt32				srcIndex = 0;
-	nsCOMPtr<nsIRDFResource>	argParent;
+  nsresult rv;
+  const kParentArgumentIndex = 0;
+  
+  nsCOMPtr<nsIRDFResource> rParent;
 
-	if (src == kNC_BookmarksRoot)
-	{
-		argParent = src;
-	}
-	else
-	{
-		nsCOMPtr<nsIRDFNode>	aNode;
-		if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
-				parentArgIndex, getter_AddRefs(aNode))))
-			return(rv);
-		argParent = do_QueryInterface(aNode);
-		if (!argParent)	return(NS_ERROR_NO_INTERFACE);
-	}
-	nsCOMPtr<nsIRDFContainer>	container;
-	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
-		return(rv);
-	if (NS_FAILED(rv = container->Init(this, argParent)))
-		return(rv);
+  if (aRelativeNode == kNC_BookmarksRoot)
+    rParent = aRelativeNode;
+  else {
+    nsCOMPtr<nsIRDFNode> parentNode;
+    rv = getArgumentN(aArguments, kNC_Parent, kParentArgumentIndex, getter_AddRefs(parentNode));
+    if (NS_FAILED(rv)) return rv;
+    rParent = do_QueryInterface(parentNode, &rv);
+    if (NS_FAILED(rv)) return rv;
+  }
 
-	if (src != kNC_BookmarksRoot)
-	{
-		if (NS_FAILED(rv = container->IndexOf(src, &srcIndex)))
-			return(rv);
-    // If not in the container, add at the end
-    if (srcIndex == -1) {
-      if (NS_FAILED(rv = container->GetCount(&srcIndex)))
-        return(rv);
+  nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = container->Init(this, rParent);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 relNodeIdx = 0;
+  if (aRelativeNode != kNC_BookmarksRoot) {
+    // Find the position of the relative node, so we can create this item 
+    // adjacent to it.
+    rv = container->IndexOf(aRelativeNode, &relNodeIdx);
+    if (NS_FAILED(rv)) return rv;
+
+    // If the item isn't in the container, just append to the container.
+    if (relNodeIdx == -1) {
+      rv = container->GetCount(&relNodeIdx);
+      if (NS_FAILED(rv)) return rv;
     }
   }
 
-	nsAutoString			newName;
+  nsAutoString itemName;
+  
+  // If a creation name was supplied, use it. 
+  if (aItemType == kNC_Bookmark || aItemType == kNC_Folder) {
+    nsCOMPtr<nsIRDFNode> nameNode;
+    getArgumentN(aArguments, kNC_Name, kParentArgumentIndex, getter_AddRefs(nameNode));
+    nsCOMPtr<nsIRDFLiteral> nameLiteral;
+    nameLiteral = do_QueryInterface(nameNode);
+    if (nameLiteral) {
+      const PRUnichar* uName = nsnull;
+      nameLiteral->GetValueConst(&uName);
+      if (uName) 
+        itemName = uName;
+    }
+  }
 
-	if ((objType == kNC_Bookmark) || (objType == kNC_Folder))
-	{
-		nsCOMPtr<nsIRDFNode>	nameNode;
-		if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kNC_Name, parentArgIndex, getter_AddRefs(nameNode))))
-		{
-			nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
-			if (nameLiteral)
-			{
-				const	PRUnichar	*nameUni = nsnull;
-				nameLiteral->GetValueConst(&nameUni);
-				if (nameUni)
-				{
-					newName = nameUni;
-				}
-			}
-		}
-	}
-	if (newName.Length() == 0)
-	{
-		// get a default name
-		if (objType == kNC_Bookmark)	getLocaleString("NewBookmark", newName);
-		else if (objType == kNC_Folder)	getLocaleString("NewFolder", newName);
-	}
+  if (itemName.IsEmpty()) {
+    // Retrieve a default name from the bookmark properties file.
+    if (aItemType == kNC_Bookmark) 
+      getLocaleString("NewBookmark", itemName);
+    else if (aItemType == kNC_Folder) 
+      getLocaleString("NewFolder", itemName);
+  }
 
-	nsCOMPtr<nsIRDFResource>	newElement;
+  nsCOMPtr<nsIRDFResource> newResource;
+  
+  // Retrieve the URL from the arguments list. 
+  if (aItemType == kNC_Bookmark || aItemType == kNC_Folder) {
+    nsCOMPtr<nsIRDFNode> urlNode;
+    getArgumentN(aArguments, kNC_URL, kParentArgumentIndex, getter_AddRefs(urlNode));
+    nsCOMPtr<nsIRDFLiteral> bookmarkURILiteral(do_QueryInterface(urlNode));
+    if (bookmarkURILiteral) {
+      const PRUnichar* uURL = nsnull;
+      bookmarkURILiteral->GetValueConst(&uURL);
+      if (uURL) {
+          rv = gRDF->GetUnicodeResource(uURL, getter_AddRefs(newResource));
+          if (NS_FAILED(rv)) return rv;
+      }
+    }
+  }
 
-	if (objType == kNC_Bookmark)
-	{
-		nsCOMPtr<nsIRDFNode>	bookmarkNode;
-		if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kNC_URL, parentArgIndex, getter_AddRefs(bookmarkNode))))
-		{
-			nsCOMPtr<nsIRDFLiteral>	bookmarkURLLiteral = do_QueryInterface(bookmarkNode);
-			if (!bookmarkURLLiteral)	return(NS_ERROR_NO_INTERFACE);
-			const	PRUnichar	*urlUni = nsnull;
-			bookmarkURLLiteral->GetValueConst(&urlUni);
-			if (urlUni)
-			{
-				rv = gRDF->GetUnicodeResource(urlUni, getter_AddRefs(newElement));
-				if (NS_FAILED(rv))	return(rv);
-			}
-		}
-	}
+  if (!newResource) {
+    // We're a folder, or some other type of anonymous resource.
+    rv = BookmarkParser::CreateAnonymousResource(address_of(newResource));
+    if (NS_FAILED(rv)) return rv;
+  }
 
-	if (!newElement)
-	{
-		if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(address_of(newElement))))
-			return(rv);
-	}
+  if (aItemType == kNC_Folder) {
+    // Make Sequences for Folders.
+    rv = gRDFC->MakeSeq(mInner, newResource, nsnull);
+    if (NS_FAILED(rv)) return rv;
+  }
 
-	if (objType == kNC_Folder)
-	{
-		if (NS_FAILED(rv = gRDFC->MakeSeq(mInner, newElement, nsnull)))
-			return(rv);
-	}
+  // Assert Name arc
+  if (!itemName.IsEmpty()) {
+    nsCOMPtr<nsIRDFLiteral> nameLiteral;
+    rv = gRDF->GetLiteral(itemName.GetUnicode(), getter_AddRefs(nameLiteral));
+    if (NS_FAILED(rv)) return rv;
+    rv = mInner->Assert(newResource, kNC_Name, nameLiteral, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+  }
 
-	if (newName.Length() > 0)
-	{
-		nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-		if (NS_FAILED(rv = gRDF->GetLiteral(newName.GetUnicode(), getter_AddRefs(nameLiteral))))
-			return(rv);
-		if (NS_FAILED(rv = mInner->Assert(newElement, kNC_Name, nameLiteral, PR_TRUE)))
-			return(rv);
-	}
+  // Assert type arc
+  rv = mInner->Assert(newResource, kRDF_type, aItemType, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-	if (NS_FAILED(rv = mInner->Assert(newElement, kRDF_type, objType, PR_TRUE)))
-		return(rv);
+  // XXX - investigate asserting date as a resource with a raw date value for
+  //       lookup, and a Name arc with a pretty display name, e.g. "Saturday"
+  
+  // Convert the current date/time from microseconds (PRTime) to seconds.
+  nsCOMPtr<nsIRDFDate> dateLiteral;
+  rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral));
+  if (NS_FAILED(rv)) return rv;
+  rv = mInner->Assert(newResource, kNC_BookmarkAddDate, dateLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-	// convert the current date/time from microseconds (PRTime) to seconds
-	nsCOMPtr<nsIRDFDate>	dateLiteral;
-	if (NS_FAILED(rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral))))
-		return(rv);
-	if (NS_FAILED(rv = mInner->Assert(newElement, kNC_BookmarkAddDate, dateLiteral, PR_TRUE)))
-		return(rv);
-
-	if (NS_FAILED(rv = container->InsertElementAt(newElement, ((srcIndex == 0) ? 1 : srcIndex+1), PR_TRUE)))
-		return(rv);
-	return(rv);
+  // Add to container. 
+  rv = container->InsertElementAt(newResource, !relNodeIdx ? 1 : relNodeIdx + 1, PR_TRUE);
+  
+  return rv;
 }
 
 
@@ -3908,19 +3856,19 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 
 		if (aCommand == kNC_BookmarkCommand_NewBookmark)
 		{
-			rv = insertBookmarkItem(src, aArguments, loop, kNC_Bookmark);
+			rv = insertBookmarkItem(src, aArguments, kNC_Bookmark);
 			if (NS_FAILED(rv))	return(rv);
 			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_NewFolder)
 		{
-			rv = insertBookmarkItem(src, aArguments, loop, kNC_Folder);
+			rv = insertBookmarkItem(src, aArguments, kNC_Folder);
 			if (NS_FAILED(rv))	return(rv);
 			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_NewSeparator)
 		{
-			rv = insertBookmarkItem(src, aArguments, loop, kNC_BookmarkSeparator);
+			rv = insertBookmarkItem(src, aArguments, kNC_BookmarkSeparator);
 			if (NS_FAILED(rv))	return(rv);
 			break;
 		}

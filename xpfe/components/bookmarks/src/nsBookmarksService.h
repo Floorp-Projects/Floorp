@@ -84,7 +84,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
 	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFNode **argValue);
-	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
+	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, nsIRDFResource *objType);
 	nsresult deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 	nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
 	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
