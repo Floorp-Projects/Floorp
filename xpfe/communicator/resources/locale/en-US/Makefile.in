@@ -26,16 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS 		= win
-else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		= mac
-else
-DIRS 		= unix
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 libs::
