@@ -98,6 +98,7 @@
 #ifdef NS_DEBUG
   #define NSCAP_FEATURE_TEST_DONTQUERY_CASES
   #define NSCAP_FEATURE_DEBUG_PTR_TYPES
+  #define NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
 #endif
 
   /*
@@ -233,9 +234,9 @@ class nsCOMPtr_helper
       Good candidates for helpers are |QueryInterface()|, |CreateInstance()|, etc.
 
       Here are the rules for a helper:
-        - it implements operator() to produce an interface pointer
-        - (except for its name) operator() is a valid [XP]COM `getter'
-        - that interface pointer it returns is already |AddRef()|ed (as from any good getter)
+        - it implements |operator()| to produce an interface pointer
+        - (except for its name) |operator()| is a valid [XP]COM `getter'
+        - the interface pointer that it returns is already |AddRef()|ed (as from any good getter)
         - it matches the type requested with the supplied |nsIID| argument
         - its constructor provides an optional |nsresult*| that |operator()| can fill
           in with an error when it is executed
@@ -374,22 +375,22 @@ class nsCOMPtr_base
     protected:
       nsISupports* mRawPtr;
 
-			void
-			assign_assuming_AddRef( nsISupports* newPtr )
-			  {
-			  		/*
-			  			|AddRef()|ing the new value (before entering this function) before
-			  			|Release()|ing the old lets us safely ignore the self-assignment case.
-			  			We must, however, be careful only to |Release()| _after_ doing the
-			  			assignment, in case the |Release()| leads to our _own_ destruction,
-			  			which would, in turn, cause an incorrect second |Release()| of our old
-			  			pointer.  Thank waterson@netscape.com for discovering this.
-			  		*/
-			    nsISupports* oldPtr = mRawPtr;
-			    mRawPtr = newPtr;
-			    if ( oldPtr )
-			      NSCAP_RELEASE(oldPtr);
-			  }
+      void
+      assign_assuming_AddRef( nsISupports* newPtr )
+        {
+            /*
+              |AddRef()|ing the new value (before entering this function) before
+              |Release()|ing the old lets us safely ignore the self-assignment case.
+              We must, however, be careful only to |Release()| _after_ doing the
+              assignment, in case the |Release()| leads to our _own_ destruction,
+              which would, in turn, cause an incorrect second |Release()| of our old
+              pointer.  Thank waterson@netscape.com for discovering this.
+            */
+          nsISupports* oldPtr = mRawPtr;
+          mRawPtr = newPtr;
+          if ( oldPtr )
+            NSCAP_RELEASE(oldPtr);
+        }
   };
 
 // template <class T> class nsGetterAddRefs;
@@ -497,6 +498,16 @@ class nsCOMPtr
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
 
+#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+        // For debug only --- this particular helper doesn't need to do the
+        //  |NSCAP_ASSERT_NO_QUERY_NEEDED()| test.
+      nsCOMPtr( const nsQueryInterface& helper )
+            : NSCAP_CTOR_BASE(0)
+        {
+          assign_from_helper(helper, NS_GET_IID(T));
+        }
+#endif
+
 
         // Assignment operators
 
@@ -521,7 +532,7 @@ class nsCOMPtr
       operator=( const nsDontAddRef<T>& rhs )
           // assign from |dont_AddRef(expr)|
         {
-        	assign_assuming_AddRef(rhs.mRawPtr);
+          assign_assuming_AddRef(rhs.mRawPtr);
           NSCAP_ASSERT_NO_QUERY_NEEDED();
           return *this;
         }
@@ -536,13 +547,24 @@ class nsCOMPtr
           return *this;
         }
 
+#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+        // For debug only --- this particular helper doesn't need to do the
+        //  |NSCAP_ASSERT_NO_QUERY_NEEDED()| test.
+      nsCOMPtr<T>&
+      operator=( const nsQueryInterface& rhs )
+        {
+          assign_from_helper(rhs, NS_GET_IID(T));
+          return *this;
+        }
+#endif
+
 
         // Other pointer operators
 
       nsDerivedSafe<T>*
       get() const
           /*
-            Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<nsISupports*() const|.
+            Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<T>*() const|.
              Use |get()| _only_ to resolve ambiguity.
 
             Returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|.
@@ -597,7 +619,12 @@ class nsCOMPtr
 
 
   /*
-    Specializing |nsCOMPtr| for |nsISupports| allows us to 
+    Specializing |nsCOMPtr| for |nsISupports| allows us to use |nsCOMPtr<nsISupports>| the
+    same way people use |nsISupports*| and |void*|, i.e., as a `catch-all' pointer pointing
+    to any valid [XP]COM interface.  Otherwise, an |nsCOMPtr<nsISupports>| would only be able
+    to point to the single [XP]COM-correct |nsISupports| instance within an object; extra
+    querying ensues.  Clients need to be able to pass around arbitrary interface pointers,
+    without hassles, through intermediary code that doesn't know the exact type.
   */
 
 NS_SPECIALIZE_TEMPLATE
@@ -698,10 +725,10 @@ class nsCOMPtr<nsISupports>
       nsDerivedSafe<nsISupports>*
       get() const
           /*
-            Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<nsISupports*() const|.
+            Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<nsISupports>*() const|.
              Use |get()| _only_ to resolve ambiguity.
 
-            Returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|.
+            Returns a |nsDerivedSafe<nsISupports>*| to deny clients the use of |AddRef| and |Release|.
           */
         {
           return NS_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mRawPtr);
@@ -794,7 +821,7 @@ class nsGetterAddRefs
       DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
 
       When initialized with a |nsCOMPtr|, as in the example above, it returns
-      a |void**| (or |T**| if needed) that the outer call (|QueryInterface| in this
+      a |void**|, a |T**|, or an |nsISupports**| as needed, that the outer call (|QueryInterface| in this
       case) can fill in.
 
       This type should be a nested class inside |nsCOMPtr<T>|.
@@ -822,14 +849,14 @@ class nsGetterAddRefs
           return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
         }
 
-      operator T**()
-        {
-          return mTargetSmartPtr.StartAssignment();
-        }
-
       operator nsISupports**()
         {
           return NS_REINTERPRET_CAST(nsISupports**, mTargetSmartPtr.StartAssignment());
+        }
+
+      operator T**()
+        {
+          return mTargetSmartPtr.StartAssignment();
         }
 
       T*&
@@ -985,8 +1012,8 @@ template <class SourceType, class DestinationType>
 inline
 nsresult
 CallQueryInterface( nsCOMPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr )
-	{
-		return CallQueryInterface(aSourcePtr.get(), aDestPtr);
-	}
+  {
+    return CallQueryInterface(aSourcePtr.get(), aDestPtr);
+  }
 
 #endif // !defined(nsCOMPtr_h___)
