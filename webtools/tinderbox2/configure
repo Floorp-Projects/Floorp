@@ -35,7 +35,7 @@
 # configure can not easily be extended to handle other directories.
 
 : ${prefix:=/home/tinderbox}
-: ${cgibin_prefix:="\$(prefix)/bin"}
+: ${cgibin_prefix:="/var/www/cgi-bin/tinderbox"}
 : ${htmldir:="/home/httpd/html/tinderbox"}
 
 : ${perl_flags:='-T'}
