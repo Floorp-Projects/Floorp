@@ -106,6 +106,7 @@ function filterEditorOnLoad()
 
         }
     }
+
     if (!gFilter)
     {
       var stub = gFilterBundle.getString("untitledFilterName");
@@ -119,7 +120,12 @@ function filterEditorOnLoad()
         name = stub + " " + count.toString();
       }
       gFilterNameElement.value = name;
+
+      // initialize priority
+      var defaultValue = String(Components.interfaces.nsMsgPriority.Default);
+      gActionPriority.selectedItem = gActionPriority.getElementsByAttribute("value", defaultValue)[0]
     }
+
     gFilterNameElement.select();
     moveToAlertPosition();
 }

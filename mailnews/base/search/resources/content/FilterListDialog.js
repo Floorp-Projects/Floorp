@@ -72,7 +72,6 @@ function onLoad()
     if (firstItem) {
         selectServer(firstItem);
     }
-    
 }
 
 function onOk()

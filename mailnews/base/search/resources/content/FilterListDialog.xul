@@ -37,8 +37,6 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   ondialogaccept="return onOk();"
   ondialogcancel="return onCancel();"
   ondialoghelp="return doHelpButton();"
-  width="440"
-  height="320"
   persist="width height screenX screenY"
   title="&window.title;">
 

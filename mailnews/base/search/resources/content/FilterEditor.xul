@@ -92,7 +92,7 @@ Contributor(s):
             <!-- see MailNewsTypes2.idl -->
             <menuitem value="6" label="&highestPriorityCmd.label;"/>
             <menuitem value="5" label="&highPriorityCmd.label;"/>
-            <menuitem value="4" label="&normalPriorityCmd.label;" selected="true" />
+            <menuitem value="4" label="&normalPriorityCmd.label;"/>
             <menuitem value="3" label="&lowPriorityCmd.label;"/>
             <menuitem value="2" label="&lowestPriorityCmd.label;"/>
           </menupopup>

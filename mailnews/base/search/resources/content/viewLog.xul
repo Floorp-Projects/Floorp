@@ -24,10 +24,10 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/viewLog.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window id="viewLogWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad();"
         title="&viewLog.title;"
-        width="440" height="370"
         persist="screenX screenY width height">
 
   <script type="application/x-javascript" src="chrome://messenger/content/viewLog.js"/>
@@ -39,6 +39,14 @@ Rights Reserved.
       <spacer flex="1"/>
       <button label="&clearLog.label;" accesskey="&clearLog.accesskey;" oncommand="clearLog()"/>
     </hbox>
-    <browser id="logView" disablehistory="true" disablesecurity="true" src="about:blank" flex="1"/>
+    <vbox flex="1">
+      <spacer height="10px"/>
+      <hbox flex="1">
+        <spacer width="10px"/>
+        <browser id="logView" disablehistory="true" disablesecurity="true" src="about:blank" flex="1"/>
+        <spacer width="10px"/>
+      </hbox>
+      <spacer height="10px"/>
+    </vbox>
   </vbox>
 </window>

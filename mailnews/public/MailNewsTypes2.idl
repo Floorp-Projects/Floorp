@@ -42,7 +42,7 @@ typedef long nsMsgSearchScopeValue;
 
 typedef long nsMsgPriorityValue;
 
-[uuid(94C0D8D8-2045-11d3-8A8F-0060B0FC04D2)]
+[scriptable, uuid(94C0D8D8-2045-11d3-8A8F-0060B0FC04D2)]
 interface nsMsgPriority {
     const nsMsgPriorityValue notSet = 0;
     const nsMsgPriorityValue none = 1;
@@ -51,6 +51,8 @@ interface nsMsgPriority {
     const nsMsgPriorityValue normal = 4;
     const nsMsgPriorityValue high = 5;
     const nsMsgPriorityValue highest = 6;
+    // the default for a priority picker
+    const nsMsgPriorityValue Default = 4;
 };
 
 typedef unsigned long nsMsgLabelValue;

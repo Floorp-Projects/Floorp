@@ -263,9 +263,9 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     return NS_OK;
 }
 
-#define LOG_ENTRY_START_TAG "<pre>\n"
+#define LOG_ENTRY_START_TAG "<p>\n"
 #define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
-#define LOG_ENTRY_END_TAG "</pre>\n"
+#define LOG_ENTRY_END_TAG "</p>\n"
 #define LOG_ENTRY_END_TAG_LEN (strlen(LOG_ENTRY_END_TAG))
 
 NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *aMsgHdr)
