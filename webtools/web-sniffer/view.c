@@ -236,14 +236,21 @@ viewVerbose(void)
 }
 
 void
+viewPrintHTML(App *app, char *str)
+{
+	fprintf(app->view.out, "%s", str);
+	fflush(app->view.out);
+}
+
+void
 viewReport(App *app, char *str)
 {
 	unsigned char	*esc;
 
 	if (verbose)
 	{
-         	esc = escapeHTML((unsigned char *) str);
-         	fprintf(app->view.out, "%s\n", (char *) esc);
+		esc = escapeHTML((unsigned char *) str);
+		fprintf(app->view.out, "%s\n", (char *) esc);
 		free(esc);
 		fflush(app->view.out);
 	}
@@ -254,7 +261,7 @@ viewReportHTML(App *app, char *str)
 {
 	if (verbose)
 	{
-         	fprintf(app->view.out, "%s\n", str);
+		fprintf(app->view.out, "%s\n", str);
 		fflush(app->view.out);
 	}
 }

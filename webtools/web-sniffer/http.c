@@ -114,6 +114,9 @@ httpReadHeaders(HTTP *http, App *app, Buf *buf, unsigned char *url,
 	unsigned char	*value;
 	char		*version;
 
+	viewPrintHTML(app, "<h4>Response</h4>");
+	viewPrintHTML(app, "<pre>");
+
 	contentType = NULL;
 	locationFound = 0;
 
@@ -379,6 +382,8 @@ httpParseStream(HTTP *http, App *app, unsigned char *url)
 	{
 		bufFree(buf);
 	}
+
+	viewPrintHTML(app, "</pre>");
 }
 
 static void
@@ -416,6 +421,9 @@ httpGetObject(App *app, HTTP *http, int sock)
 {
 	Buf		*buf;
 	HTTPNameValue	*h;
+
+	viewPrintHTML(app, "<h4>Request</h4>");
+	viewPrintHTML(app, "<pre>");
 
 	buf = bufAlloc(sock);
 
@@ -457,6 +465,8 @@ httpGetObject(App *app, HTTP *http, int sock)
 	bufPutString(buf, (unsigned char *) "\r\n");
 	bufMark(buf, 0);
 	app->httpRequest(app, buf);
+
+	viewPrintHTML(app, "</pre>");
 
 	if (bufError(buf))
 	{

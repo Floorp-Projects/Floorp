@@ -384,8 +384,8 @@ main(int argc, char *argv[])
 	if (url && (*url))
 	{
 		fprintf(view->out,
-			"<html><head><title>View %s</title></head><body>\n"
-			"<pre>", url);
+			"<html><head><title>View %s</title></head><body>\n",
+			url);
 		viewReport(app, "input url:");
 		viewReport(app, (char *) url);
 		viewReportHTML(app, "<hr>");
@@ -469,7 +469,7 @@ main(int argc, char *argv[])
 				u->scheme
 			);
 		}
-		fprintf(view->out, "</pre></body></html>\n");
+		fprintf(view->out, "</body></html>\n");
 	}
 	else
 	{

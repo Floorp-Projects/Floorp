@@ -43,6 +43,7 @@ void viewHTMLText(App *app, Buf *buf);
 void viewHTTP(App *app, Buf *buf);
 void viewHTTPHeaderName(App *app, Buf *buf);
 void viewHTTPHeaderValue(App *app, Buf *buf);
+void viewPrintHTML(App *app, char *str);
 void viewReport(App *app, char *str);
 void viewReportHTML(App *app, char *str);
 void viewVerbose(void);
