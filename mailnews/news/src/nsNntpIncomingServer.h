@@ -38,6 +38,8 @@
 #include "nsISubscribableServer.h"
 #include "nsMsgLineBuffer.h"
 #include "nsVoidArray.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -47,6 +49,7 @@ class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
 			     public nsIUrlListener,
 			     public nsISubscribableServer,
+				 public nsITimerCallback,
 				 public nsMsgLineBuffer
 							 
 {
@@ -55,6 +58,9 @@ public:
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSISUBSCRIBABLESERVER
+
+	// nsITimerCallback interfaces
+ 	NS_IMETHOD_(void) Notify(nsITimer *timer);
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -76,6 +82,8 @@ protected:
 	nsByteArray		mHostInfoInputStream;	
 
 private:
+	PRInt32 mGroupsOnServerIndex;
+	PRInt32 mGroupsOnServerCount;
 	nsCStringArray mGroupsOnServer;
 	nsCStringArray mSubscribedNewsgroups;
 
@@ -90,12 +98,15 @@ private:
 	PRBool mHostInfoHasChanged;
 	nsCOMPtr <nsISubscribableServer> mInner;
 	nsCOMPtr <nsIFileSpec> mHostInfoFile;
-
+	
 	PRUint32 mLastGroupDate;
 	PRTime mFirstNewDate;
 	PRInt32 mUniqueId;	
 	PRBool mPushAuth;
 	PRInt32 mVersion;
+
+	nsCOMPtr <nsITimer> mUpdateTimer;
+	nsCOMPtr <nsIMsgWindow> mMsgWindow;
 };
 
 #endif

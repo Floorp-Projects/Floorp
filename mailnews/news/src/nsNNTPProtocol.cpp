@@ -707,8 +707,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
   {
-      PRInt32 port = 0;
- 
       m_newsHost = do_CreateInstance(kNNTPHostCID, &rv);
       if (NS_FAILED(rv) || (!m_newsHost)) goto FAIL;
 

@@ -44,6 +44,9 @@
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 #define HOSTINFO_FILE_NAME		 "hostinfo.dat"
 
+#define HOSTINFO_COUNT_MAX 200 /* number of groups to process at a time when reading the list from the hostinfo.dat file */
+#define HOSTINFO_TIMEOUT 5   /* uSec to wait until doing more */
+
 // this platform specific junk is so the newsrc filenames we create 
 // will resemble the migrated newsrc filenames.
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -73,6 +76,7 @@ NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsINntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
     NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
+	NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
@@ -89,6 +93,8 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mPushAuth = PR_FALSE;
   mHasSeenBeginGroups = PR_FALSE;
   mVersion = 0;
+  mGroupsOnServerIndex = 0;
+  mGroupsOnServerCount = 0;
 }
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
@@ -99,6 +105,12 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
     	delete mGroupsEnumerator;
 		mGroupsEnumerator = nsnull;
 	}
+
+	if (mUpdateTimer) {
+      mUpdateTimer->Cancel();
+      mUpdateTimer = nsnull;
+    }
+
     rv = CloseCachedConnections();
 	NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
 }
@@ -686,19 +698,6 @@ writeGroupToHostInfo(nsCString &aElement, void *aData)
 	return PR_TRUE;
 }
 
-PRBool
-addGroupFunction(nsCString &aElement, void *aData)
-{
-	nsresult rv;
-	nsNntpIncomingServer *server;
-	server = (nsNntpIncomingServer *)aData;
-	
-	rv = server->AddToSubscribeDS((const char *)aElement, PR_FALSE, PR_TRUE);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"AddToSubscribeDS failed");
-	return PR_TRUE;
-}
-
-
 nsresult
 nsNntpIncomingServer::WriteHostInfoFile()
 {
@@ -803,16 +802,59 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 #ifdef DEBUG_sspitzer
 	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
 #endif
+	mGroupsOnServerCount = mGroupsOnServer.Count();
+	nsCString currentGroup;
 
-	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)addGroupFunction, (void *)this);
+	while (mGroupsOnServerIndex < mGroupsOnServerCount) {
+		mGroupsOnServer.CStringAt(mGroupsOnServerIndex, currentGroup);
+		rv = AddToSubscribeDS((const char *)currentGroup, PR_FALSE, PR_TRUE);
+		if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_seth
+		printf("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
+#endif
 
-	rv = UpdateSubscribedInSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
+		mGroupsOnServerIndex++;
+		if ((mGroupsOnServerIndex % HOSTINFO_COUNT_MAX) == 0) break;
+	}
 
-	rv = StopPopulatingSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
+	if (mGroupsOnServerIndex < mGroupsOnServerCount) {
+#ifdef DEBUG_seth
+		printf("there is more to do...\n");
+#endif
+		if (mUpdateTimer) {
+			mUpdateTimer->Cancel();
+			mUpdateTimer = nsnull;
+		}
+
+    	mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
+    	NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
+    	if (NS_FAILED(rv)) return rv;
+
+		const PRUint32 kUpdateTimerDelay = HOSTINFO_TIMEOUT;
+        rv = mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
+        if (NS_FAILED(rv)) return rv;
+	}
+	else {
+#ifdef DEBUG_seth
+		printf("we are done\n");
+#endif
+		rv = UpdateSubscribedInSubscribeDS();
+		if (NS_FAILED(rv)) return rv;
+
+		rv = StopPopulatingSubscribeDS();
+		if (NS_FAILED(rv)) return rv;
+	}
 
 	return NS_OK;
+}
+
+void
+nsNntpIncomingServer::Notify(nsITimer *timer)
+{
+  NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
+  mUpdateTimer = nsnull;    // release my hold  
+  PopulateSubscribeDatasourceFromHostInfo(mMsgWindow);
 }
 
 NS_IMETHODIMP
@@ -863,6 +905,10 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
   }
 
   if (!aForceToServer && mHostInfoLoaded && (mVersion == VALID_VERSION)) {
+	mGroupsOnServerIndex = 0;
+	mGroupsOnServerCount = mGroupsOnServer.Count();
+	mMsgWindow = aMsgWindow;
+
 	rv = PopulateSubscribeDatasourceFromHostInfo(aMsgWindow);
 	if (NS_FAILED(rv)) return rv;
   }

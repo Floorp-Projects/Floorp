@@ -154,7 +154,8 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
   return rv;
 }
 
-nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+NS_IMETHODIMP 
+nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
                                        nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, const PRUnichar * aCharsetOverride, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
@@ -342,7 +343,8 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
 }
 
 
-nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+NS_IMETHODIMP
+nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -354,7 +356,8 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 	return rv;
 }
 
-nsresult nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+NS_IMETHODIMP
+nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -585,7 +588,8 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retval)
+NS_IMETHODIMP
+nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retval)
 {
   nsresult rv = NS_OK;
   
@@ -733,7 +737,8 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   return NS_OK;
 }
 
-nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+NS_IMETHODIMP
+nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
   printf("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
@@ -1271,7 +1276,7 @@ nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 // rhp: Right now, this is the same as simple DisplayMessage, but it will change
 // to support print rendering.
 //
-nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+NS_IMETHODIMP nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISupports * aDisplayConsumer, 
                                                   nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
   mPrintingOperation = PR_TRUE;
