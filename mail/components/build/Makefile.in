@@ -59,6 +59,8 @@ REQUIRES = \
 	intl \
 	pref \
 	msgbase \
+	mailnews \
+	import \
 	$(NULL)
 
 CPPSRCS = nsModule.cpp \
