@@ -944,9 +944,9 @@ static nsFontCharSetInfo ISO106461 =
 static nsFontCharSetInfo AdobeSymbol =
    { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMEX =
-   { "x-cm-cmex", SingleByteConvert, 0 };
+   { "x-t1-cmex", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMSY =
-   { "x-cm-cmsy", SingleByteConvert, 0 };
+   { "x-t1-cmsy", SingleByteConvert, 0 };
 #endif
 
 /*
