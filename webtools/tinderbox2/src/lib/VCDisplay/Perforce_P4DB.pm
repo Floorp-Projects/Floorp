@@ -4,8 +4,8 @@
 # have installed perforce with P4DB to let your webserver render html
 # pages of your VC repository.
 
-# $Revision: 1.3 $ 
-# $Date: 2003/05/12 21:55:46 $ 
+# $Revision: 1.4 $ 
+# $Date: 2003/08/17 01:29:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Perforce_P4DB.pm,v $ 
 # $Name:  $ 
@@ -30,10 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.9 $ 
-# $Date: 2003/05/10 19:59:26 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/08/17 01:29:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -32,10 +32,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
