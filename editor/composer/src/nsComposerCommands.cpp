@@ -603,6 +603,7 @@ nsParagraphStateCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refC
   return rv;  
 }
 
+
 #ifdef XP_MAC
 #pragma mark -
 #endif

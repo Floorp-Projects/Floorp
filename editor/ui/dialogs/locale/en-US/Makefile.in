@@ -47,6 +47,7 @@ CHROME_L10N = \
 		EdAdvancedEdit.dtd \
 		EditorImageMap.dtd \
 		EditorImageMapHotSpot.dtd \
+		EditConflict.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

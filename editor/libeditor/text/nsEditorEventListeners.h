@@ -76,7 +76,7 @@ protected:
 };
 
 
-/** editor Implementation of the MouseListener interface
+/** editor Implementation of the TextListener interface
  */
 class nsTextEditorTextListener : public nsIDOMTextListener
 {
@@ -140,7 +140,7 @@ protected:
 };
 
 
-/** editor Implementation of the TextListener interface
+/** editor Implementation of the MouseListener interface
  */
 class nsTextEditorMouseListener : public nsIDOMMouseListener 
 {
@@ -176,7 +176,7 @@ protected:
 };
 
 
-/** editor Implementation of the MouseListener interface
+/** editor Implementation of the DragListener interface
  */
 class nsTextEditorDragListener : public nsIDOMDragListener 
 {

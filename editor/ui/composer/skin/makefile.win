@@ -46,7 +46,6 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\spell.gif			$(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\table.gif			$(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\anchor.gif         $(DIST)\bin\chrome\editor\skin\images
-  $(MAKE_INSTALL) images\anchor-in-doc.gif  $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\div.gif  $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\span.gif  $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\underline.gif	    $(DIST)\bin\chrome\editor\skin\images
@@ -71,6 +70,11 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\hline-white.gif      $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\dec-font-size.gif    $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\inc-font-size.gif    $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\editmode-normal.gif  $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\editmode-tags.gif    $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\editmode-html.gif    $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\editmode-preview.gif $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\editmode-toggle.gif   $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\tag-abr.gif    $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\tag-acr.gif    $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\tag-adr.gif    $(DIST)\bin\chrome\editor\skin\images
@@ -165,7 +169,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\tag-u.gif       $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\tag-ul.gif      $(DIST)\bin\chrome\editor\skin\images
   $(MAKE_INSTALL) images\tag-var.gif     $(DIST)\bin\chrome\editor\skin\images
-  $(MAKE_INSTALL) images\tag-unknown.gif $(DIST)\bin\chrome\editor\skin\images
+  $(MAKE_INSTALL) images\tag-userdefined.gif $(DIST)\bin\chrome\editor\skin\images
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\editor.css
@@ -189,7 +193,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\images\spell.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\images\table.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\images\anchor.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\images\anchor-in-doc.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\div.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\span.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\underline.gif
@@ -215,6 +218,11 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\images\hline-white.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\dec-font-size.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\inc-font-size.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\images\editmode-normal.gif 
+  rm -f $(DIST)\bin\chrome\editor\skin\images\editmode-tags.gif   
+  rm -f $(DIST)\bin\chrome\editor\skin\images\editmode-html.gif   
+  rm -f $(DIST)\bin\chrome\editor\skin\images\editmode-preview.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\images\editmode-toggle.gif  
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-abr.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-acr.gif
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-adr.gif
@@ -309,4 +317,4 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-u.gif   
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-ul.gif  
   rm -f $(DIST)\bin\chrome\editor\skin\images\tag-var.gif 
-  rm -f $(DIST)\bin\chrome\editor\skin\images\tag-unknown.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\images\tag-userdefined.gif

@@ -27,8 +27,9 @@
  *  place in EditorOverride.css, instead of here.
 */
 
+/* Use "before" rule so single click can select icon */
 a[name]:before {
-  content: url(chrome://editor/skin/images/anchor-in-doc.gif);
+  content: url(chrome://editor/content/images/tag-anchor.gif);
 }
 
 /* Force border display for empty cells 

@@ -2767,9 +2767,9 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
+NS_IMETHODIMP 
+nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
-  //Kinda sad to waste memory just to force lower case
   nsAutoString tag; tag.Assign(aParagraphFormat);
   tag.ToLowerCase();
   return InsertBasicBlock(tag);
@@ -3340,25 +3340,50 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   // default is null - no element found
   *aReturn = nsnull;
   
+  // First look for a single element in selection
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  PRBool bNodeFound = PR_FALSE;
+  res=NS_ERROR_NOT_INITIALIZED;
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+
+  nsCOMPtr<nsIDOMElement> selectedElement;
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> startParent;
+  PRInt32 startOffset, endOffset;
+  res = range->GetStartParent(getter_AddRefs(startParent));
+  if (NS_FAILED(res)) return res;
+  res = range->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> endParent;
+  res = range->GetEndParent(getter_AddRefs(endParent));
+  if (NS_FAILED(res)) return res;
+  res = range->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+
+  if (startParent && startParent == endParent && (endOffset-startOffset) == 1)
+  {
+    nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startParent, startOffset);
+    if (NS_FAILED(res)) return NS_OK;
+
+    selectedElement = do_QueryInterface(selectedNode);
+    bNodeFound = PR_TRUE;
+  }
+
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
   // Empty string indicates we should match any element tag
   PRBool anyTag = (TagName.IsEmpty());
   
   //Note that this doesn't need to go through the transaction system
-
-  nsresult res=NS_ERROR_NOT_INITIALIZED;
-  //PRBool first=PR_TRUE;
-  nsCOMPtr<nsIDOMSelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-  
-  PRBool isCollapsed;
-  selection->GetIsCollapsed(&isCollapsed);
-  nsCOMPtr<nsIDOMElement> selectedElement;
-  PRBool bNodeFound = PR_FALSE;
-
   if (IsLink(TagName))
   {
     // Link tag is a special case - we return the anchor node

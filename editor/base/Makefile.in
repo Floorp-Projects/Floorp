@@ -44,6 +44,7 @@ CPPSRCS		= \
 		TextEditorTest.cpp \
 		nsHTMLEditRules.cpp \
 		nsEditorEventListeners.cpp \
+		nsEditorShellMouseListener.cpp \
 		nsEditProperty.cpp \
 		nsHTMLEditor.cpp \
 		ChangeAttributeTxn.cpp \

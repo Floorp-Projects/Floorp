@@ -331,7 +331,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   NS_REGISTER_ONE_COMMAND(nsRemoveStylesCommand, "cmd_removeStyles");
   NS_REGISTER_ONE_COMMAND(nsIncreaseFontSizeCommand, "cmd_increaseFont");
   NS_REGISTER_ONE_COMMAND(nsDecreaseFontSizeCommand, "cmd_decreaseFont");
-  
+
   return NS_OK;
 }
 

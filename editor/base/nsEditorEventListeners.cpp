@@ -25,6 +25,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 
+#include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -352,8 +353,6 @@ nsTextEditorKeyListener::ScrollSelectionIntoView()
  * nsTextEditorMouseListener implementation
  */
 
-
-
 NS_IMPL_ADDREF(nsTextEditorMouseListener)
 
 NS_IMPL_RELEASE(nsTextEditorMouseListener)
@@ -540,41 +539,8 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
-  // Detect double click message:
-  PRUint16 clickCount;
-  nsresult res = mouseEvent->GetClickCount(&clickCount);
-  if (NS_FAILED(res)) return res;
-
-  if (clickCount == 2)
-  {
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-    if (htmlEditor)
-    {
-      nsCOMPtr<nsIDOMElement> selectedElement;
-      if (NS_SUCCEEDED(htmlEditor->GetSelectedElement(nsAutoString(), getter_AddRefs(selectedElement)))
-           && selectedElement)
-      {
-        nsAutoString TagName;
-        selectedElement->GetTagName(TagName);
-        TagName.ToLowerCase();
-
-  #if DEBUG_cmanske
-        char szTagName[64];
-        TagName.ToCString(szTagName, 64);
-        printf("Single Selected element found: %s\n", szTagName);
-  #endif
-      }
-    }
-  }
   return NS_OK;
 }
-
-
 
 nsresult
 nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
@@ -607,12 +573,9 @@ nsTextEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
 }
 
 
-
 /*
- * nsTextEditorMouseListener implementation
+ * nsTextEditorTextListener implementation
  */
-
-
 
 NS_IMPL_ADDREF(nsTextEditorTextListener)
 

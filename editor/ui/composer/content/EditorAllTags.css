@@ -24,42 +24,34 @@
  *  for the "All Tags Edit Mode" Every HTML tag shows up as an icon.
 */
 
-/* For "userdefined" or "unknown" tags */
+/* For "userdefined" or "unknown" tags
+   (Note that "_" must be escaped)
+*/
 
-*[_moz-userdefined] {
+*[\_moz-userdefined] {
+  display: inline:
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-unknown.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-userdefined.gif) no-repeat;
   background-position: top left;
 }
 
-*[_moz-userdefined]:before {
-  content: url(chrome://editor/skin/images/tag-unknown.gif);
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
-}
-
-foo[_moz-userdefined] {
-  padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-a.gif) no-repeat; 
-  background-position: top left;
-}
-
-foo[_moz-userdefined]:before {
-  content: url(chrome://editor/skin/images/tag-abr.gif.gif);
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+a:before {
+  content: none; 
+  /*url(chrome://editor/content/images/tag-a.gif);*/
 }
 
 a {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-a.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-a.gif) no-repeat; 
   background-position: top left;
 }
 
 abbr {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-abr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-abr.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -67,157 +59,154 @@ abbr {
 acronym {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-acr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-acr.gif) no-repeat; 
   background-position: top left;
 }
 
 address {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-adr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-adr.gif) no-repeat; 
   background-position: top left;
 }
 
 applet {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-app.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-app.gif) no-repeat; 
   background-position: top left;
 }
 
 area {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ara.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ara.gif) no-repeat; 
   background-position: top left;
 }
 
 b {
-  content: url(chrome://editor/skin/images/tag-b.gif);
   min-height: 35px; margin-left: 2px; margin-top: 2px;
-/*
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-b.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-b.gif) no-repeat; 
   background-position: top left;
-*/
 }
 
 basefont {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-bsf.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-bsf.gif) no-repeat; 
   background-position: top left;
 }
 
 bdo {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-bdo.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-bdo.gif) no-repeat; 
   background-position: top left;
 }
 
 big {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-big.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-big.gif) no-repeat; 
   background-position: top left;
 }
 
 blockquote {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-blq.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-blq.gif) no-repeat; 
   background-position: top left;
 }
 
 body {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-body.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-body.gif) no-repeat; 
   background-position: top left;
 }
 
 br {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-br.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-br.gif) no-repeat; 
   background-position: top left;
 }
 
 button {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-btn.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-btn.gif) no-repeat; 
   background-position: top left;
 }
 
 caption {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-cpt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-cpt.gif) no-repeat; 
   background-position: top left;
 }
 
 center {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ctr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ctr.gif) no-repeat; 
   background-position: top left;
 }
 
 cite {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-cit.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-cit.gif) no-repeat; 
   background-position: top left;
 }
 
 code {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-cod.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-cod.gif) no-repeat; 
   background-position: top left;
 }
 
 col {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-col.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-col.gif) no-repeat; 
   background-position: top left;
 }
 
 colgroup {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-clg.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-clg.gif) no-repeat; 
   background-position: top left;
 }
 
 dd {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-dd.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-dd.gif) no-repeat; 
   background-position: top left;
 }
 
 del {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-del.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-del.gif) no-repeat; 
   background-position: top left;
 }
 
 dfn {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-dfn.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-dfn.gif) no-repeat; 
   background-position: top left;
 }
 
 dir {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-dir.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-dir.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -225,315 +214,315 @@ div {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-div.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-div.gif) no-repeat; 
   background-position: top left;
 }
 
 dl {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-dl.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-dl.gif) no-repeat; 
   background-position: top left;
 }
 
 dt {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-dt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-dt.gif) no-repeat; 
   background-position: top left;
 }
 
 em {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-em.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-em.gif) no-repeat; 
   background-position: top left;
 }
 
 fieldset {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-fld.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-fld.gif) no-repeat; 
   background-position: top left;
 }
 
 font {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-fnt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-fnt.gif) no-repeat; 
   background-position: top left;
 }
 
 form {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-for.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-for.gif) no-repeat; 
   background-position: top left;
 }
 
 frame {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-frm.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-frm.gif) no-repeat; 
   background-position: top left;
 }
 
 frameset {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-fst.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-fst.gif) no-repeat; 
   background-position: top left;
 }
 
 h1 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h1.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h1.gif) no-repeat; 
   background-position: top left;
 }
 
 h2 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h2.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h2.gif) no-repeat; 
   background-position: top left;
 }
 
 h3 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h3.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h3.gif) no-repeat; 
   background-position: top left;
 }
 
 h4 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h4.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h4.gif) no-repeat; 
   background-position: top left;
 }
 
 h5 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h5.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h5.gif) no-repeat; 
   background-position: top left;
 }
 
 h6 {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-h6.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-h6.gif) no-repeat; 
   background-position: top left;
 }
 
 hr {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-hr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-hr.gif) no-repeat; 
   background-position: top left;
 }
 
 i {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-i.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-i.gif) no-repeat; 
   background-position: top left;
 }
 
 iframe {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ifr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ifr.gif) no-repeat; 
   background-position: top left;
 }
 
 img {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-img.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-img.gif) no-repeat; 
   background-position: top left;
 }
 
 input {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-inp.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-inp.gif) no-repeat; 
   background-position: top left;
 }
 
 ins {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ins.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ins.gif) no-repeat; 
   background-position: top left;
 }
 
 isindex {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-isx.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-isx.gif) no-repeat; 
   background-position: top left;
 }
 
 kbd {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-kbd.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-kbd.gif) no-repeat; 
   background-position: top left;
 }
 
 label {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-lbl.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-lbl.gif) no-repeat; 
   background-position: top left;
 }
 
 legend {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-lgn.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-lgn.gif) no-repeat; 
   background-position: top left;
 }
 
 li {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-li.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-li.gif) no-repeat; 
   background-position: top left;
 }
 
 listing {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-lst.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-lst.gif) no-repeat; 
   background-position: top left;
 }
 
 map {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-map.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-map.gif) no-repeat; 
   background-position: top left;
 }
 
 menu {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-men.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-men.gif) no-repeat; 
   background-position: top left;
 }
 
 noframes {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-nfr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-nfr.gif) no-repeat; 
   background-position: top left;
 }
 
 noscript {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-nsc.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-nsc.gif) no-repeat; 
   background-position: top left;
 }
 
 object {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-obj.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-obj.gif) no-repeat; 
   background-position: top left;
 }
 
 ol {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ol.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ol.gif) no-repeat; 
   background-position: top left;
 }
 
 optgroup {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-opg.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-opg.gif) no-repeat; 
   background-position: top left;
 }
 
 option {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-opt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-opt.gif) no-repeat; 
   background-position: top left;
 }
 
 p {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-p.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-p.gif) no-repeat; 
   background-position: top left;
 }
 
 param {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-prm.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-prm.gif) no-repeat; 
   background-position: top left;
 }
 
 plaintext {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-pln.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-pln.gif) no-repeat; 
   background-position: top left;
 }
 
 pre {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-pre.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-pre.gif) no-repeat; 
   background-position: top left;
 }
 
 q {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-q.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-q.gif) no-repeat; 
   background-position: top left;
 }
 
 s {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-s.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-s.gif) no-repeat; 
   background-position: top left;
 }
 
 samp {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-smp.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-smp.gif) no-repeat; 
   background-position: top left;
 }
 
 script {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-scr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-scr.gif) no-repeat; 
   background-position: top left;
 }
 
 select {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-slc.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-slc.gif) no-repeat; 
   background-position: top left;
 }
 
 small {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-sml.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-sml.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -541,35 +530,35 @@ span {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-spn.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-spn.gif) no-repeat; 
   background-position: top left;
 }
 
 strike {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-stk.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-stk.gif) no-repeat; 
   background-position: top left;
 }
 
 strong {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-stn.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-stn.gif) no-repeat; 
   background-position: top left;
 }
 
 sub {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-sub.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-sub.gif) no-repeat; 
   background-position: top left;
 }
 
 sup {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-sup.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-sup.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -577,30 +566,24 @@ sup {
    some table elements. Trying the "before" strategy
 */
 
-table:before {
-  content: url(chrome://editor/skin/images/tag-tbl.gif);
-  /*
+table {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-tbl.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-tbl.gif) no-repeat; 
   background-position: top left;
-  */
 }
 
-tbody:before {
-  content: url(chrome://editor/skin/images/tag-tbd.gif);
-  /*
+tbody {
   min-height: 35px; margin-left: 2px; margin-top: 1px;
   padding-left: 16px; 
-  content: url(chrome://editor/skin/images/tag-tbd.gif) no-repeat; 
+  content: url(chrome://editor/content/images/tag-tbd.gif) no-repeat; 
   background-position: top left;
-  */
 }
 
 td {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background-image: url(chrome://editor/skin/images/tag-td.gif);
+  background-image: url(chrome://editor/content/images/tag-td.gif);
   background-repeat: no-repeat;
   background-position: top left;
 }
@@ -608,79 +591,69 @@ td {
 textarea {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-txt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-txt.gif) no-repeat; 
   background-position: top left;
 }
 
-tfoot:before {
-  content: url(chrome://editor/skin/images/tag-tft.gif.gif);
-  /*
+tfoot {
   min-height: 35px; margin-left: 2px; margin-top: 1px;
   padding-left: 16px; 
-  content: url(chrome://editor/skin/images/tag-tft.gif) no-repeat; 
+  content: url(chrome://editor/content/images/tag-tft.gif) no-repeat; 
   background-position: top left;
-  */
 }
 
 th {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-th.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-th.gif) no-repeat; 
   background-position: top left;
 }
 
-thead:before {
-  content: url(chrome://editor/skin/images/tag-thd.gif);
-  /*
+thead {
   min-height: 35px; margin-left: 2px; margin-top: 1px;
   padding-left: 16px; 
-  content: url(chrome://editor/skin/images/tag-thd.gif) no-repeat; 
+  content: url(chrome://editor/content/images/tag-thd.gif) no-repeat; 
   background-position: top left;
-  */
 }
 
 tr {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-tr.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-tr.gif) no-repeat; 
   background-position: top left;
 }
 
 tt {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-tt.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-tt.gif) no-repeat; 
   background-position: top left;
 }
 
-u:before {
-  min-height: 35px; margin-left: 2px;
-  content: url(chrome://editor/skin/images/tag-u.gif);
-/*
+u {
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-u.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-u.gif) no-repeat; 
   background-position: top left;
-*/
 }
 
 ul {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ul.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ul.gif) no-repeat; 
   background-position: top left;
 }
 
 var {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-var.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-var.gif) no-repeat; 
   background-position: top left;
 }
 
 xmp {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-xmp.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-xmp.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -692,14 +665,14 @@ xmp {
 html {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-html.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-html.gif) no-repeat; 
   background-position: top left;
 }
 
 head {
   min-height: 35px; margin-left: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-hed.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-hed.gif) no-repeat; 
   background-position: top left;
 }
 
@@ -708,35 +681,35 @@ These are tags that are ONLY allowed as children of HEAD:
 title {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-ttl.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-ttl.gif) no-repeat; 
   background-position: top left;
 }
 
 base {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-bas.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-bas.gif) no-repeat; 
   background-position: top left;
 }
 
 style {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-stl.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-stl.gif) no-repeat; 
   background-position: top left;
 }
 
 meta {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-met.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-met.gif) no-repeat; 
   background-position: top left;
 }
 
 link {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
-  background: url(chrome://editor/skin/images/tag-lnk.gif) no-repeat; 
+  background: url(chrome://editor/content/images/tag-lnk.gif) no-repeat; 
   background-position: top left;
 }
 */
