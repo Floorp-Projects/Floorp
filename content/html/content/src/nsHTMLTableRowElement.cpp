@@ -327,15 +327,17 @@ nsHTMLTableRowElement::GetTable(nsIDOMHTMLTableElement** aTable)
 
   nsCOMPtr<nsIDOMNode> sectionNode;
   nsresult rv = GetParentNode(getter_AddRefs(sectionNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sectionNode) {
+    return rv;
+  }
 
   nsCOMPtr<nsIDOMNode> tableNode;
   rv = sectionNode->GetParentNode(getter_AddRefs(tableNode));
-  if (NS_SUCCEEDED(rv) && sectionNode) {
-    rv = CallQueryInterface(tableNode, aTable);
+  if (!tableNode) {
+    return rv;
   }
-
-  return rv;
+  
+  return CallQueryInterface(tableNode, aTable);
 }
 
 NS_IMETHODIMP
