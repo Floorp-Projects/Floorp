@@ -252,6 +252,7 @@
 ]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()" title="&mainWindow.title;"> 
 
@@ -466,6 +467,9 @@
 	<template>
 		<rule iscontainer="true">
 			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
+		<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+			<separator uri="..." />
 		</rule>
 		<rule>
 			<menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="OpenBookmarkURL(event.target)" />
