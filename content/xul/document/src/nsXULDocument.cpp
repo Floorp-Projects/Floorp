@@ -6763,8 +6763,6 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-listbox";
     else if (tag.get() == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
-    else if (tag.get() == nsXULAtoms::tree)
-      contractID += "-tree";
   }
   contractID += ";1";
 

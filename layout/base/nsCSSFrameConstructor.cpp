@@ -9009,7 +9009,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
         nsIListBoxObject* bodyBoxObject = nsnull;
         listBoxObject->GetListboxBody(&bodyBoxObject);
         nsListBoxBodyFrame* listBoxBody = NS_STATIC_CAST(nsListBoxBodyFrame*, bodyBoxObject);
-        NS_RELEASE(bodyBoxObject);
+        NS_IF_RELEASE(bodyBoxObject);
         if (listBoxBody)
           listBoxBody->OnContentInserted(aPresContext, aChild);
       }
