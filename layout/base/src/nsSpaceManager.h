@@ -160,5 +160,9 @@ private:
   friend PR_CALLBACK PRIntn NS_RemoveFrameInfoEntries(PLHashEntry*, PRIntn, void*);
 };
 
+/* prototypes */
+PR_CALLBACK PLHashNumber
+NS_HashNumber(const void* key);
+
 #endif /* nsSpaceManager_h___ */
 

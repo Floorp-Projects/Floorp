@@ -72,4 +72,7 @@ public:
 
 };
 
+/* prototypes */
+void PR_CALLBACK NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+
 #endif /* nsJSEnvironment_h___ */
