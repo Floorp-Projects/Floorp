@@ -1174,7 +1174,7 @@ nsBrowserAppCore::LoadInitialPage(void)
            * "about:blank" and there by return from here with out 
            * loading the command line url or default home page.
            */
-        if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(spec, "about:blank") == 0) {
+        if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(spec, "about:blank") != 0) {
             // Something has already been loaded (probably via window.open),
             // leave it be.
             return NS_OK;
