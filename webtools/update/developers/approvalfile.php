@@ -10,9 +10,6 @@ if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     exit;
 }
 
-
-
-
 $filename = basename($_SERVER["PATH_INFO"]);
 $file = "$repositorypath/approval/$filename";
 header('Content-Description: File Transfer');

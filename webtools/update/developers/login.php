@@ -18,6 +18,10 @@ $usermode=$row["UserMode"];
 $usertrusted=$row["UserTrusted"];
 $logoncheck="YES";
 
+//Update LastLogin Time to current.
+$sql = "UPDATE `t_userprofiles` SET `UserLastLogin`=NOW(NULL) WHERE `UserID`='$userid' LIMIT 1";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
 //User Role to Session Level variable...
 $rolearray = array("A"=>"admin", "E"=>"editor","U"=>"user");
 $usermode = $rolearray[$usermode];

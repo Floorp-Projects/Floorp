@@ -16,7 +16,7 @@ $userid=$_SESSION["uid"];
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <HTML>
 <HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: </TITLE>
+<TITLE>Mozilla Update :: Developer Control Panel :: User Manager</TITLE>
 <?php
 include"$page_header";
 include"inc_sidebar.php";
