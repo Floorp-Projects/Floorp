@@ -254,8 +254,6 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 */
 NS_METHOD nsMenuItemX::DoCommand()
 {
-  nsresult rv = NS_ERROR_FAILURE;
- 
   nsCOMPtr<nsIPresContext> presContext;
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (!webShell)
