@@ -90,6 +90,10 @@ extern PRInt32 _PR_x86_AtomicSet(PRInt32 *val, PRInt32 newval);
 #endif
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
+#if (__GLIBC__ >= 2) && defined(_PR_PTHREADS)
+#define _PR_HAVE_GETHOST_R
+#define _PR_HAVE_GETHOST_R_INT
+#endif
 
 #ifdef _PR_PTHREADS
 

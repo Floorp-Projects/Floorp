@@ -126,6 +126,14 @@ OS_CFLAGS	+= -DHAVE_POINTER_LOCALTIME_R
 endif
 endif
 
+ifeq (,$(filter-out 4.3,$(OS_RELEASE)))
+# On these OS revisions, gethostbyXXX() returns result in thread
+# specific storage.
+ifeq ($(USE_PTHREADS),1)
+OS_CFLAGS	+= -D_PR_HAVE_THREADSAFE_GETHOST
+endif
+endif
+
 #
 # Special link info for constructing AIX programs. On AIX we have to
 # statically link programs that use NSPR into a single .o, rewriting the
