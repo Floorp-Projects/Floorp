@@ -68,6 +68,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -658,4 +659,60 @@ void nsWebBrowserChrome::OnWindowActivityFinished()
    if(mBrowserWindow->mThrobber)
       mBrowserWindow->mThrobber->Stop();
 
+}
+
+
+// nsIPrompt
+/* void alert (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP nsWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void alertCheck (in wstring dialogTitle, in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP nsWebBrowserChrome::AlertCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirm (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP nsWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirmCheck (in wstring dialogTitle, in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP nsWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean prompt (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, in wstring defaultText, out wstring result); */
+NS_IMETHODIMP nsWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring user, out wstring pwd); */
+NS_IMETHODIMP nsWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring pwd); */
+NS_IMETHODIMP nsWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **pwd, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean select (in wstring dialogTitle, in wstring text, in PRUint32 count, [array, size_is (count)] in wstring selectList, out long outSelection); */
+NS_IMETHODIMP nsWebBrowserChrome::Select(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 count, const PRUnichar **selectList, PRInt32 *outSelection, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void universalDialog (in wstring titleMessage, in wstring dialogTitle, in wstring text, in wstring checkboxMsg, in wstring button0Text, in wstring button1Text, in wstring button2Text, in wstring button3Text, in wstring editfield1Msg, in wstring editfield2Msg, inout wstring editfield1Value, inout wstring editfield2Value, in wstring iconURL, inout boolean checkboxState, in PRInt32 numberButtons, in PRInt32 numberEditfields, in PRInt32 editField1Password, out PRInt32 buttonPressed); */
+NS_IMETHODIMP nsWebBrowserChrome::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text, const PRUnichar *button1Text, const PRUnichar *button2Text, const PRUnichar *button3Text, const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg, PRUnichar **editfield1Value, PRUnichar **editfield2Value, const PRUnichar *iconURL, PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields, PRInt32 editField1Password, PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
