@@ -7059,23 +7059,34 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
                                PRInt32* aOrdinal,
                                PRInt32 aDepth)
 {
+  NS_ASSERTION(aPresContext && aKid && aOrdinal, "null params are immoral!");
+
   // add in a sanity check for absurdly deep frame trees.  See bug 42138
   if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth)
     return PR_FALSE;
 
   PRBool kidRenumberedABullet = PR_FALSE;
+  nsIFrame* kid = aKid;
+
+  // if the frame is a placeholder, then get the out of flow frame
+  nsCOMPtr<nsIAtom> frameType;
+  aKid->GetFrameType(getter_AddRefs(frameType));
+  if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+    kid = NS_STATIC_CAST(nsPlaceholderFrame*, aKid)->GetOutOfFlowFrame();
+    NS_ASSERTION(kid, "no out-of-flow frame");
+  }
 
   // If the frame is a list-item and the frame implements our
   // block frame API then get it's bullet and set the list item
   // ordinal.
   const nsStyleDisplay* display;
-  aKid->GetStyleData(eStyleStruct_Display,
+  kid->GetStyleData(eStyleStruct_Display,
                     (const nsStyleStruct*&) display);
   if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
     // Make certain that the frame isa block-frame in case
     // something foreign has crept in.
     nsBlockFrame* listItem;
-    nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**)&listItem);
+    nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**)&listItem);
     if (NS_SUCCEEDED(rv)) {
       if (nsnull != listItem->mBullet) {
         PRBool changed;
@@ -7096,7 +7107,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
     }
   }
   else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
-    if (FrameStartsCounterScope(aKid)) {
+    if (FrameStartsCounterScope(kid)) {
       // Don't bother recursing into a block frame that is a new
       // counter scope. Any list-items in there will be handled by
       // it.
@@ -7106,7 +7117,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
       // ahead and recurse into it as it might have child
       // list-items.
       nsBlockFrame* kidBlock;
-      nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
+      nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
       if (NS_SUCCEEDED(rv)) {
         kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal, aDepth + 1);
       }
@@ -7119,10 +7130,10 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
     // ahead and recurse into it as it might have child
     // list-items.
     nsInlineFrame* kidInline;
-    nsresult rv = aKid->QueryInterface(nsInlineFrame::kInlineFrameCID,
+    nsresult rv = kid->QueryInterface(nsInlineFrame::kInlineFrameCID,
                                        (void**) &kidInline);
     if (NS_SUCCEEDED(rv)) {
-      kidRenumberedABullet = RenumberListsIn(aPresContext, aKid, aOrdinal, aDepth + 1);
+      kidRenumberedABullet = RenumberListsIn(aPresContext, kid, aOrdinal, aDepth + 1);
     }
   }
   return kidRenumberedABullet;
