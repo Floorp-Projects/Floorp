@@ -14,13 +14,11 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 #//
 #// Makefile to build 
 #//
 #//------------------------------------------------------------------------
-
 
 #//------------------------------------------------------------------------
 #//
@@ -30,15 +28,17 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
 
-!ifndef MAKE_OBJ_TYPE
-MAKE_OBJ_TYPE=DLL
-!endif
-
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
+
+USE_STATIC_LIBS=1
+
+!ifndef MAKE_OBJ_TYPE
+MAKE_OBJ_TYPE=DLL
+!endif
 
 #//------------------------------------------------------------------------
 #// 
@@ -62,6 +62,7 @@ OBJS=                                       \
 
 LIBNAME=nsreg
 DLL=$(OBJDIR)\$(LIBNAME).dll
+LIBRARY=$(OBJDIR)\$(LIBNAME)_s.lib
 
 #//------------------------------------------------------------------------
 #//
@@ -87,9 +88,10 @@ docopy:
     $(MAKE_INSTALL) ..\src\*.c .
 
 
-export:: docopy $(DLL)	
+export:: docopy $(DLL) $(LIBRARY)
     
     $(MAKE_INSTALL) $(DLL)                    $(DIST)\bin
+    $(MAKE_INSTALL) $(LIBRARY)                $(DIST)\lib
     $(MAKE_INSTALL) $(OBJDIR)\$(LIBNAME).lib  $(DIST)\lib
     $(RM) *.[hc]
      
@@ -98,8 +100,5 @@ clobber::
     
     $(RM) $(DIST)\bin\$(LIBNAME).dll
     $(RM) $(DIST)\lib\$(LIBNAME).lib
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
+    $(RM) $(DIST)\lib\$(LIBNAME)_s.lib
+    $(RM) *.[hc]
