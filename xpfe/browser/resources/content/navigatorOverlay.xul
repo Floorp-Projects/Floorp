@@ -28,7 +28,7 @@ Contributor(s): ______________________________________. -->
 
 <overlay id="navigatorOverlay"
          xmlns:html="http://www.w3.org/TR/REC-html40"
-		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- Keysets -->
@@ -553,6 +553,10 @@ Contributor(s): ______________________________________. -->
            <menuitem value="&da-DK-http.label;" oncommand="localeTo('http://www.mozilla.org/projects/intl/chrome/', 'da-DK');" />
         </menupopup>
       </menu>
+      <menuseparator />
+      <menuitem value="&BloatDumpNewCmd.label;" oncommand="window.content.location.href='about:bloat?new'"/>
+      <menuitem value="&BloatDumpAllCmd.label;" oncommand="window.content.location.href='about:bloat'"/>
+      <menuitem value="&BloatClearCmd.label;"   oncommand="window.content.location.href='about:bloat?clear'"/>
     </menupopup>
   </menu>
   <spring flex="100%"/>
