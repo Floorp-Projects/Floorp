@@ -115,7 +115,7 @@ PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *c)
 			v = PyInt_FromLong( c->value.ui16 );
 			break;
 		case TD_UINT32:
-			v = PyInt_FromLong( c->value.ui8 );
+			v = PyInt_FromLong( c->value.ui32 );
 			break;
 		case TD_UINT64:
 			v = PyLong_FromUnsignedLongLong(c->value.ui64);

@@ -31,7 +31,8 @@ interface nsIPythonTestInterface : nsISupports
     const long                  Two = 2;
     const long                  MinusOne = -1;
     const long                  BigLong = 0x7FFFFFFF;
-    const long                  BigULong = 0xFFFFFFFF;
+    const long                  BiggerLong = 0xFFFFFFFF;
+    const unsigned long         BigULong = 0xFFFFFFFF;
 
     // Declare every type supported as an attribute.
     attribute boolean                   boolean_value; // PRBool
