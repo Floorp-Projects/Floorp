@@ -2580,7 +2580,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			m_attachment1_encoder_data =
 			MimeQPEncoderInit(mime_encoder_output_fn, this);
 			if (!m_attachment1_encoder_data)
-				goto FAILMEM;
+;//JFD				goto FAILMEM;
 		}
 
 	// ### mwelch
@@ -2762,7 +2762,7 @@ FAIL:
 			m_status = status;
 			Fail (status, error_msg);
 		}
-		delete this;
+//JFD don't delete myself		delete this;
 	}
 
 	return status;
@@ -4996,7 +4996,7 @@ nsMsgSendMimeDeliveryState::DeliverAsMailExit(URL_Struct *url, int status)
 										  m_fe_data, status, NULL);
 	  m_message_delivery_done_callback = 0;
     Clear();
-	  delete this;
+//JFD don't delete myself	  delete this;
 	}
 }
 
@@ -5071,7 +5071,7 @@ nsMsgSendMimeDeliveryState::DeliverAsNewsExit(URL_Struct *url, int status)
 										  m_fe_data, status, NULL);
 	  m_message_delivery_done_callback = 0;
   	Clear();
-	  delete this;
+//JFD Don't delete myself	  delete this;
 	}
 }
 
@@ -6645,7 +6645,7 @@ nsMsgSendMimeDeliveryState::SendToMagicFolder ( PRUint32 flag )
   {
 	  char *error_msg = XP_GetString(status);
 	  Fail (status, error_msg ? PL_strdup(error_msg) : 0);
-	  delete this;
+//JFD don't delete myself	  delete this;
 	  PR_FREEIF(name);
 	  return;
   }
@@ -6661,7 +6661,7 @@ nsMsgSendMimeDeliveryState::SendToMagicFolder ( PRUint32 flag )
 	  if (SendToImapMagicFolder(flag) != FCC_ASYNC_SUCCESS)
 	  {
 		  Fail(MK_IMAP_NO_ONLINE_FOLDER, 0);	/* -1 rb */
-		  delete this;
+//JFD don't delete myself		  delete this;
 	  }
 	  PR_FREEIF(name);
 	  return;
@@ -6716,7 +6716,7 @@ nsMsgSendMimeDeliveryState::SendToMagicFolder ( PRUint32 flag )
 		  MSG_MailCompositionAllConnectionsComplete(MSG_FindPane(context,
 																 MSG_ANYPANE));
 	}
-  delete this;
+//JFD don't delete myself  delete this;
 }
 
 /* Queues the message for later delivery, and runs the completion/failure
