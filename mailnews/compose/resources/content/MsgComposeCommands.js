@@ -1807,32 +1807,31 @@ function AttachmentBucketClicked(event)
 var attachmentBucketObserver = {
   onDrop: function (aEvent, aData, aDragSession)
     {
-      aData = aData.length ? aData[0] : aData;
-      if (aData.flavour == "text/x-moz-url" || aData.flavour == "text/nsmessage") {
-          aData = aData.data.data.toString();
-          // pull out the URL / title
-          
-          var prettyName;
-          var separator = aData.indexOf("\n");
-          if (separator != -1) {
-              prettyName = aData.substr(separator+1);
-              aData = aData.substr(0,separator);
-          }
-          if (!(DuplicateFileCheck(aData)))
-	          AddAttachment(aData, prettyName);
-          else 
-          {
-            dump("###ERROR ADDING DUPLICATE FILE \n");
-            var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
-            var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
+      var prettyName;
+      var rawData = aData.data;
+      switch (aData.flavour.contentType) {
+      case "text/x-moz-url":
+      case "text/nsmessage":
+        var separator = rawData.indexOf("\n");
+        if (separator != -1) {
+          prettyName = rawData.substr(separator+1);
+          rawData = rawData.substr(0,separator);
+        }
+        break;
+      case "application/x-moz-file":
+        rawData = rawData.path;
+        break;
+      }
+      if (!(DuplicateFileCheck(rawData)))
+        AddAttachment(rawData, prettyName);
+      else {
+        var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
+        var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
 
-            if (commonDialogsService)
-              commonDialogsService.Alert(window, errorTitle, errorMsg);
-            else
-              window.alert(errorMsg);
-          }
-
-          
+        if (commonDialogsService)
+          commonDialogsService.Alert(window, errorTitle, errorMsg);
+        else
+          window.alert(errorMsg);
       }
     },
     
@@ -1850,10 +1849,10 @@ var attachmentBucketObserver = {
         
   getSupportedFlavours: function ()
     {
-      var flavourList = { };
-      flavourList["text/x-moz-url"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["text/nsmessage"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
-      return flavourList;
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/nsmessage");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      return flavourSet;
     }  
 };
