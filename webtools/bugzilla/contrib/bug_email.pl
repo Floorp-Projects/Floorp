@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.1 2000/02/12 16:13:01 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.2 2000/02/13 02:16:11 seth%cs.brandeis.edu Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -79,6 +79,37 @@ my $test = 0;
 my $restricted = 0;
 my $SenderShort;
 my $Message_ID;
+
+my $EMAIL_TRANSFORM_NONE = "email_transform_none";
+my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
+my $EMAIL_TRANSFORM_NAME_ONLY = "email_transform_name_only";
+
+my $email_transform = $EMAIL_TRANSFORM_NONE;
+
+###############################################################
+# findUser
+#
+# this sub will find a user from the profiles table which is reasonably
+# the same as the passed in email address, depending on the $email_transform
+# parameter
+sub findUser($) {
+  my ($address) = @_;
+  # if $email_transform is $EMAIL_TRANSFORM_NONE, return the address, otherwise, return undef
+  if ($email_transform eq $EMAIL_TRANSFORM_NONE) {
+    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name = \'$address\';";
+    SendSQL($stmt);
+    my $found_address = FetchOneColumn();
+    return $found_address;
+  } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
+    
+  } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
+    my ($username) = ($address =~ /(.+)@/);
+    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
+    SendSQL($stmt);
+    my $found_address = FetchOneColumn();
+    return $found_address;
+  }
+}
 
 ###############################################################
 # storeAttachments
@@ -163,14 +194,15 @@ sub CheckPermissions {
 #    } else {
 #	return;
 #    }
-    my $query = "SELECT login_name FROM profiles WHERE profiles.login_name=\'$Name\'";
-    SendSQL($query);
-    my $check_name = FetchOneColumn();
-    if ($check_name eq $Name) {
-      return $Name;
-    } else {
-      return;
-    }
+#    my $query = "SELECT login_name FROM profiles WHERE profiles.login_name=\'$Name\'";
+#    SendSQL($query);
+#    my $check_name = FetchOneColumn();
+#    if ($check_name eq $Name) {
+#      return $Name;
+#    } else {
+#      return;
+#    }
+    return findUser($Name);
 }
 
 ###############################################################
