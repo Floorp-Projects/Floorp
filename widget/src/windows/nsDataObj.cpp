@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Sean Echevarria <Sean@Beatnik.com>
+ *   Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -477,8 +478,18 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
       } 
     }
     titleStr[lenTitleStr] = '\0';
+ 
+    // replace any forbidden characters with
+    // dash, a la IE
+    char* pos;
+    const char* forbiddenChars = "\\:/";
+    for (int i = 0; i < PL_strlen(forbiddenChars); ++i) {
+      while (pos = PL_strchr((const char*)titleStr, forbiddenChars[i])) {
+        *pos = '-';
+      }
+    }
 
-    // one file in the file descriptor block
+    // one file in the file file:///c:/testcases/hellodescriptor block
     fileGroupDesc->cItems = 1;
     fileGroupDesc->fgd[0].dwFlags = FD_LINKUI;
     
