@@ -75,4 +75,5 @@ en-US.jar:
 
 US.jar:
 +   locale/US/messenger-region/region.properties     (locale/region.properties)
++   locale/US/global-region/region.dtd               (locale/region.dtd)
 
