@@ -137,6 +137,8 @@ public:
   // nsITimerCallback interface
   virtual void Notify(nsITimer *timer);
   
+  void CancelTimer();
+  
   //locals
 
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
@@ -197,6 +199,8 @@ public:
   //local methods
   nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
   nsresult GetFullURL(nsIURL*& aFullURL);
+
+  nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   
   //~~~
   void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
@@ -223,9 +227,12 @@ private:
 
 nsObjectFrame::~nsObjectFrame()
 {
+  // beard: stop the timer explicitly to reduce reference count.
+  if (nsnull != mInstanceOwner)
+    mInstanceOwner->CancelTimer();
+
   NS_IF_RELEASE(mWidget);
   NS_IF_RELEASE(mInstanceOwner);
-
   NS_IF_RELEASE(mFullURL);
 }
 
@@ -933,11 +940,16 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
 	nsresult rv = NS_OK;
 	
 	switch (anEvent->message) {
+	case NS_DESTROY:
+		mInstanceOwner->CancelTimer();
+		break;
 	case NS_GOTFOCUS:
 	case NS_LOSTFOCUS:
-	case NS_PAINT:
 	case NS_KEY_UP:
 	case NS_KEY_DOWN:
+	case NS_MOUSE_MOVE:
+	case NS_MOUSE_ENTER:
+	case NS_MOUSE_LEFT_BUTTON_UP:
 	case NS_MOUSE_LEFT_BUTTON_DOWN:
 		anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
 		break;
@@ -972,6 +984,10 @@ nsresult nsObjectFrame::GetFullURL(nsIURL*& aFullURL)
   return NS_OK;
 }
 
+nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
+{
+  return mInstanceOwner->GetInstance(aPluginInstance);
+}
 
 nsresult
 NS_NewObjectFrame(nsIFrame*& aFrameResult)
@@ -981,6 +997,17 @@ NS_NewObjectFrame(nsIFrame*& aFrameResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
+}
+
+// TODO: put this in a header file.
+extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
+
+nsresult
+NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance)
+{
+	// TODO: any way to determine this cast is safe?
+	nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, aFrame);
+	return objectFrame->GetPluginInstance(aPluginInstance);
 }
 
 //plugin instance owner
@@ -1244,29 +1271,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* *result)
 {
-  PRInt32 count;
-
-  if (nsnull == mAttrNames)
-  {
+  if (nsnull == mAttrNames) {
     PRUint16  numattrs;
     const char * const *names, * const *vals;
 
     GetAttributes(numattrs, names, vals);
   }
 
-  for (count = 0; count < mNumAttrs; count++)
-  {
-    if (0 == PL_strcasecmp(mAttrNames[count], name))
-    {
-      *result = mAttrVals[count];
-      break;
+  *result = NULL;
+
+  for (int i = 0; i < mNumAttrs; i++) {
+    if (0 == PL_strcasecmp(mAttrNames[i], name)) {
+      *result = mAttrVals[i];
+      return NS_OK;
     }
   }
 
-  if (count >= mNumAttrs)
-    *result = "";
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
@@ -1726,9 +1747,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetCodeBase(const char* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetArchive(const char* *result)
 {
-printf("instance owner getarchive called\n");
-  *result = "";
-  return NS_ERROR_FAILURE;
+  return GetAttribute("ARCHIVE", result);
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetName(const char* *result)
@@ -1738,19 +1757,47 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetName(const char* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 {
-printf("instance owner getmayscript called\n");
-  *result = PR_FALSE;
-  return NS_ERROR_FAILURE;
+  const char* unused;
+  *result = (GetAttribute("MAYSCRIPT", &unused) == NS_OK ? PR_TRUE : PR_FALSE);
+  return NS_OK;
 }
 
 // Here's where we forward events to plugins.
 
-nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent & anEvent)
+#ifdef XP_MAC
+static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
+{
+	::OSEventAvail(0, &aMacEvent);
+	
+	switch (anEvent.message) {
+	case NS_GOTFOCUS:
+		aMacEvent.what = nsPluginEventType_GetFocusEvent;
+		break;
+	case NS_LOSTFOCUS:
+		aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+		break;
+	case NS_MOUSE_MOVE:
+	case NS_MOUSE_ENTER:
+		aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
+		break;
+	default:
+		aMacEvent.what = nullEvent;
+		break;
+	}
+}
+#endif
+
+nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
 #ifdef XP_MAC
 	if (mInstance != NULL) {
-		EventRecord* event = (EventRecord*) anEvent.nativeMsg;
+		EventRecord* event = (EventRecord*)anEvent.nativeMsg;
+		if (event == NULL || event->what == nullEvent) {
+			EventRecord macEvent;
+			GUItoMacEvent(anEvent, macEvent);
+			event = &macEvent;
+		}
 		nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
 		nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
 		PRBool eventHandled = PR_FALSE;
@@ -1805,6 +1852,14 @@ void nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
   NS_IF_RELEASE(mPluginTimer);
   if (NS_NewTimer(&mPluginTimer) == NS_OK)
     mPluginTimer->Init(this, 1000 / 60);
+}
+
+void nsPluginInstanceOwner::CancelTimer()
+{
+	if (mPluginTimer != NULL) {
+	    mPluginTimer->Cancel();
+    	NS_RELEASE(mPluginTimer);
+    }
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObjectFrame *aFrame)
