@@ -393,9 +393,9 @@ sub applyUserPrefsFieldChange {
                 my($changeCrypt, $changePassword) = $app->getService('service.passwords')->newPassword();
                 my $changeToken = $targetUser->addFieldChange($field, $newValue, $changeCrypt, 0); # XXX BARE CONSTANT ALERT
                 # send confirmation requests:
-                $app->output($fieldName, $targetUser)->userPrefsOverrideDetails($overrideToken, $overridePassword);
+                $app->output($fieldName, $targetUser)->userPrefsOverrideDetails($overrideToken, $overridePassword, $oldValue, $newValue);
                 $field->returnNewData();
-                $app->output($fieldName, $targetUser)->userPrefsChangeDetails($changeToken, $changePassword);
+                $app->output($fieldName, $targetUser)->userPrefsChangeDetails($changeToken, $changePassword, $oldValue, $newValue);
                 return [$targetUserID, "fields.$fieldCategory.$fieldName", 'contact.confirmationSent'];
             }
         } elsif ($rightContactMethods) {
@@ -492,20 +492,24 @@ sub outputUserPrefsSuccess {
 # dispatcher.output.generic
 sub outputUserPrefsOverrideDetails {
     my $self = shift;
-    my($app, $output, $overrideToken, $overridePassword) = @_;
+    my($app, $output, $overrideToken, $overridePassword, $oldValue, $newValue) = @_;
     $output->output('userPrefs.change.overrideDetails', {
                                                          'token' => $overrideToken,
                                                          'password' => $overridePassword,
+                                                         'oldAddress' => $oldValue,
+                                                         'newAddress' => $newValue,
                                                         });
 }
 
 # dispatcher.output.generic
 sub outputUserPrefsChangeDetails {
     my $self = shift;
-    my($app, $output, $changeToken, $changePassword) = @_;
+    my($app, $output, $changeToken, $changePassword, $oldValue, $newValue) = @_;
     $output->output('userPrefs.change.changeDetails', {
                                                        'token' => $changeToken,
                                                        'password' => $changePassword,
+                                                       'oldAddress' => $oldValue,
+                                                       'newAddress' => $newValue,
                                                       });
 }
 
