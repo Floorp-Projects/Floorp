@@ -64,10 +64,12 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  char* dst = aDest+anOffset;
-  char* src = aDest+anOffset+aCount;
+  char*   dst = aDest+anOffset;
+  char*   src = aDest+anOffset+aCount;
+  char*   end = aDest+aLength+1;
+  PRInt32 cnt = end-src;
 
-  memmove(dst,src,aLength-anOffset);
+  memmove(dst,src,cnt);
 }
 
 /**
@@ -97,8 +99,10 @@ void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint3
   PRUnichar* root=(PRUnichar*)aDest;
   PRUnichar* dst = root+anOffset;
   PRUnichar* src = root+anOffset+aCount;
+  PRUnichar* end = root+aLength+1;
+  PRInt32    cnt = end-src;
 
-  memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
+  memmove(dst,src,cnt*sizeof(PRUnichar));
 }
 
 
@@ -116,7 +120,6 @@ void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint
   PRUnichar* dst = root+anOffset+aCount;
 
   memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
-
 }
 
 
