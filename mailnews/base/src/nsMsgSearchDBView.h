@@ -67,6 +67,8 @@ public:
   virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey parentKey, PRBool ensureListed);
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
 
+  NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator);
+
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
   virtual nsresult GetFolderFromMsgURI(const char *aMsgURI, nsIMsgFolder **aFolder);
 
