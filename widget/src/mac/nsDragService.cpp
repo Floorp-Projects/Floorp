@@ -68,7 +68,7 @@ nsDragService::~nsDragService()
 // Do all the work to kick it off.
 //
 NS_IMETHODIMP
-nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsIRegion * aDragRgn, PRUint32 aActionType)
+nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
   DragReference theDragRef;
   OSErr result = ::NewDrag(&theDragRef);
@@ -130,8 +130,12 @@ nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsIRe
 // the region we're given is null, create our own placeholder.
 //
 void
-nsDragService :: BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn )
+nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn )
 {
+  nsCOMPtr<nsIRegion> holder ( do_QueryInterface(inRegion) );
+  if ( !holder )
+    return;
+    
   // create the drag region. Pull out the native mac region from the nsIRegion we're
   // given, copy it, inset it one pixel, and subtract them so we're left with just an
   // outline. Too bad we can't do this with gfx api's.
@@ -139,7 +143,7 @@ nsDragService :: BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, 
   // At the end, we are left with an outline of the region in global coordinates.
   if ( inRegion ) {
     RgnHandle dragRegion = nsnull;
-    inRegion->GetNativeRegion(dragRegion);
+    holder->GetNativeRegion(dragRegion);
     if ( dragRegion && ioDragRgn ) {
       ::CopyRgn ( dragRegion, ioDragRgn );
       ::InsetRgn ( ioDragRgn, 1, 1 );

@@ -40,7 +40,7 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
   NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
   NS_IMETHOD StartDragSession ();
   NS_IMETHOD EndDragSession ();

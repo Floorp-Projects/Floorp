@@ -58,7 +58,7 @@ nsDragService::~nsDragService()
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType)
+NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
   nsresult rv;
   PRUint32 cnt;
