@@ -120,7 +120,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
                NS_SUCCEEDED(mAutoRegLogFile->InitWithPath(autoRegFilename)))
             {
 #ifdef DEBUG
-                printf("***** logging xptinfo stats to: %s\n", autoRegFilename);
+                printf("***** logging xptinfo autoreg to: %s\n", autoRegFilename);
 #endif
             }
             else
