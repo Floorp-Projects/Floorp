@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -64,7 +65,7 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  PRUint32 theMax=aLength-anOffset;
+  //PRUint32 theMax=aLength-anOffset;
   //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   char* first= aDest+anOffset+aCount;
@@ -109,7 +110,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  PRUint32 theMax=aLength-anOffset;
+  //PRUint32 theMax=aLength-anOffset;
   //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   PRUnichar* theBuf=(PRUnichar*)aDest;
