@@ -141,7 +141,8 @@ const kSaveAsType_Text = 2;       // Save document, converting to plain text.
 //  - Context ->  Save Page/Frame As...
 //  - Context ->  Save Link As...
 //  - Context ->  Save Image As...
-//  - Alt-Click Save Link As
+//  - Alt-Click links in web pages
+//  - Alt-Click links in the UI
 //
 // Try saving each of these types:
 // - A complete webpage using File->Save Page As, and Context->Save Page As
