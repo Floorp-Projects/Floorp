@@ -413,7 +413,7 @@ nsAttributeContent::ValidateTextFragment()
 
     PRUnichar * text = result.ToNewUnicode();
     mText.SetTo(text, result.Length());
-    delete text;
+    nsCRT::free(text);
   }
   else {
     mText.SetTo("", 0);
