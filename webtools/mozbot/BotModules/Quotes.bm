@@ -4,6 +4,9 @@
 ################################
 # Based on a request from Nortis http://www.blomstereng.org/
 
+# XXX need to support multiple quote servers:
+# !discworld
+
 package BotModules::Quotes;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
@@ -100,7 +103,7 @@ sub checkRights {
 sub Schedule {
     my $self = shift;
     my ($event) = @_;
-    unless ($self->dbconnect($event)) {
+    unless ($self->dbconnect()) {
         $self->say($event, "Failed to connect to quotes database: $self->{dberror}");
         $self->say($event, 'Use the \'setupquotes\' command to configure the database.');
     }
@@ -109,7 +112,6 @@ sub Schedule {
 
 sub dbconnect {
     my $self = shift;
-    my ($event) = @_;
     eval {
         $self->{dbhandle} =
           DBI->connect("DBI:mysql:$self->{dbname}:$self->{dbhost}:$self->{dbport}",
@@ -203,7 +205,7 @@ sub dbcreatetables {
 sub verifyConnection {
     my $self = shift;
     my ($event) = @_;
-    if ($self->dbconnect($event)) {
+    if ($self->dbconnect()) {
         if (not $self->dbcheckconfig($event)) {
             if (@{$self->{dbtables}}) {
                 local $" = '\', \'';
@@ -327,7 +329,8 @@ sub markRead {
         $self->{dbhandle}->do("UPDATE $self->{tableName} SET shown = shown + 1 WHERE id = ?", undef, $id);
         $self->{dbhandle}->do("UPDATE $self->{tableName} SET age = age + 1");
     };
-    # ignore errors
+    # ignore errors (don't have to worry about timeouts, this is only
+    # ever done after recent db access)
 }
 
 sub getQuote {
@@ -353,14 +356,7 @@ sub randomQuote {
     my ($event) = @_;
     $self->sanitiseTableName();
     my($id, $quote, $author, $note);
-    eval {
-        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note, shown/age AS freq FROM $self->{tableName} ORDER BY freq, RAND() LIMIT 1", undef);
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
-        $self->tellAdmin($event, "While trying to read a random quote to the database, I got: $@");
-        return;
-    }
+    return unless $self->attempt($event, sub { ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note, shown/age AS freq FROM $self->{tableName} ORDER BY freq, RAND() LIMIT 1", undef); }, 'read from the database for some reason', 'read a random quote from');
     if (defined $quote) {
         $self->markRead($id);
         $note = defined $note ? " ($note)" : '';
@@ -375,14 +371,9 @@ sub getQuoteById {
     my ($event, $id, $action) = @_;
     $self->sanitiseTableName();
     my($quote, $author, $note);
-    eval {
+    return unless $self->attempt($event, sub {
         ($quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT quote, author, note FROM $self->{tableName} WHERE id=?", undef, $id);
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
-        $self->tellAdmin($event, "While trying to read a quote to the database, I got: $@");
-        return;
-    }
+    }, 'read from the database for some reason', 'read a quote from');
     if (defined $quote) {
         $self->markRead($id);
         $note = defined $note ? " ($note)" : '';
@@ -439,16 +430,11 @@ sub searchQuote {
 
     $self->sanitiseTableName();
     my($id, $count, $quote, $author, $note);
-    eval {
+    return unless $self->attempt($event, sub {
         local $" = ' AND ';
         ($count) = $self->{dbhandle}->selectrow_array("SELECT COUNT(*) FROM $self->{tableName} WHERE @columns", undef, @values);
         ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} WHERE @columns LIMIT $skip,1", undef, @values);
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
-        $self->tellAdmin($event, "While trying to search for a quote in the database, I got: $@");
-        return;
-    }
+    }, 'read from the database for some reason', 'search for a quote in');
     if (defined $quote) {
         $self->markRead($id);
         $note = defined $note ? " ($note)" : '';
@@ -475,14 +461,9 @@ sub getLastQuote {
     my $skip = ($1 || 1) - 1;
     $self->sanitiseTableName();
     my($id, $quote, $author, $note);
-    eval {
+    return unless $self->attempt($event, sub {
         ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} ORDER BY id DESC LIMIT $skip,1", undef);
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
-        $self->tellAdmin($event, "While trying to read the last few quotes from the database, I got: $@");
-        return;
-    }
+    }, 'read from the database for some reason', 'read the last few quotes from the database');
     if (defined $quote) {
         $self->markRead($id);
         $note = defined $note ? " ($note)" : '';
@@ -514,7 +495,7 @@ sub addQuote {
         my $note = $3;
         # insert data
         $self->sanitiseTableName();
-        eval {
+        return unless $self->attempt($event, sub {
             $self->{dbhandle}->do("INSERT INTO $self->{tableName} SET
                                    quote = ?, author = ?, date = NOW(), note = ?",
                                  undef, $quote, $author, $note);
@@ -522,11 +503,7 @@ sub addQuote {
             if (not $self->getQuoteById($event, $id, 'inserted')) {
                 $self->say($event, "$event->{from}: Your quote disappeared after I inserted it into the database. You may wish to speak to the other people who have access to the quotes database about this... :-)");
             }
-        };
-        if ($@) {
-            $self->say($event, "$event->{from}: I'm sorry, I had some problems adding the quote to the database.");
-            $self->tellAdmin($event, "While trying to add a quote to the database, I got: $@");
-        }
+        }, 'seem to add that quote to the database.', 'add a quote to');
     } else {
         $self->say($event, "$event->{from}: The syntax for adding a quote is 'quote - author' or 'quote - author (note)'.");
     }
@@ -550,23 +527,13 @@ sub deleteQuote {
     my $id = $1;
     $self->sanitiseTableName();
     my($quote, $author, $note);
-    eval {
+    return unless $self->attempt($event, sub {
         ($quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT quote, author, note FROM $self->{tableName} WHERE ID=?", undef, $id);
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
-        $self->tellAdmin($event, "While trying to read a quote to delete from the database, I got: $@");
-        return;
-    }
+    }, 'read from the database for some reason', 'read a quote to delete from');
     if (defined $quote) {
-        eval {
+        return unless $self->attempt($event, sub {
             $self->{dbhandle}->do("DELETE FROM $self->{tableName} WHERE ID=?", undef, $id);
-        };
-        if ($@) {
-            $self->say($event, "$event->{from}: I'm sorry, I can't delete from the database. Maybe I don't have enough privileges on the database server.");
-            $self->tellAdmin($event, "While trying to delete from the database, I got: $@");
-            return;
-        }
+        }, 'delete from the database. Maybe I don\'t have enough privileges on the database server', 'delete from');
         $note = defined $note ? " ($note)" : '';
         $self->say($event, "Deleted: Quote $id: $quote - $author$note");
     } else {
@@ -597,7 +564,7 @@ sub editQuote {
         my $note = $4;
         # insert data
         $self->sanitiseTableName();
-        eval {
+        return unless $self->attempt($event, sub {
             $self->{dbhandle}->do("UPDATE $self->{tableName} SET
                                    quote = ?, author = ?, note = ?
                                    WHERE id = ?",
@@ -605,11 +572,7 @@ sub editQuote {
             if (not $self->getQuoteById($event, $id, 'edited')) {
                 $self->say($event, "$event->{from}: I couldn't find a quote with ID $id.");
             }
-        };
-        if ($@) {
-            $self->say($event, "$event->{from}: I'm sorry, I had some problems editing the quote in the database.");
-            $self->tellAdmin($event, "While trying to edit a quote in the database, I got: $@");
-        }
+        }, 'seem to edit that quote', 'edit a quote in');
     } else {
         $self->say($event, "$event->{from}: The syntax for editing a quote is 'id quote - author' or 'id quote - author (note)', much like for adding a quote but with the id of the quote to edit at the start.");
     }
@@ -624,15 +587,10 @@ sub printStatus {
     }
     $self->sanitiseTableName();
     my ($quotes, $sources, $shown, $id) = @_;
-    eval {
+    return unless $self->attempt($event, sub {
         ($quotes, $sources, $shown) = $self->{dbhandle}->selectrow_array("SELECT COUNT(*), COUNT(DISTINCT author), SUM(shown) FROM $self->{tableName}");
         ($id) = $self->{dbhandle}->selectrow_array("SELECT id, shown/age AS freq FROM $self->{tableName} ORDER BY freq, shown LIMIT 1");
-    };
-    if ($@) {
-        $self->say($event, "$event->{from}: I am getting errors when connecting to the quotes database.");
-        $self->tellAdmin($event, "While trying to obtain statistics of the database, I got: $@");
-        return;
-    }
+    }, 'connect to the quotes database', 'obtain statistics of');
     if ($quotes) {
         my $s1 = $quotes == 1 ? '' : 's';
         my $s2 = $sources == 1 ? '' : 's';
@@ -641,4 +599,36 @@ sub printStatus {
     } else {
         $self->say($event, "$event->{from}: The database contains 0 quotes.");
     }
+}
+
+sub attempt {
+    my $self = shift;
+    my($event, $sub, $action1, $action2) = @_;
+    eval { &$sub };
+    if ($@) {
+        chomp $@;
+        my $error = $@;
+        # A common error is:
+        # "DBD::mysql::db selectrow_array failed: MySQL server has
+        # gone away at (eval 34) line 357."
+        # ...so we try to reconnect and do it again
+        if ($self->dbconnect()) {
+            eval { &$sub };
+            if ($@) {
+                chomp $@;
+                $self->say($event, "$event->{from}: I'm sorry, I can't $action1.");
+                if ($@ eq $error) {
+                    $self->tellAdmin($event, "While trying to $action2 the database, I got '$@'. I tried reconnecting but that didn't help.");
+                } else {
+                    $self->tellAdmin($event, "While trying to $action2 the database, I got '$error'. Then I tried reconnecting and it worked but when I tried to $action2 the database a second time, it said '$@'.");
+                }
+                return 0;
+            }
+        } else {
+            $self->say($event, "$event->{from}: I'm sorry, I can't $action1.");
+            $self->tellAdmin($event, "While trying to $action2 the database, I got '$error', so I tried reconnecting to the database but I got '$self->{dberror}'. Help!");
+            return 0;
+        }
+    }
+    return 1;
 }
