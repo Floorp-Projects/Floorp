@@ -45,25 +45,22 @@
 #include "ipcd.h"
 #include "ipcm.h"
 
-typedef const char * constCharPtr;
-
-class ipcCommandModule : public ipcModule
+struct ipcCommandModule
 {
-public:
-    typedef void (ipcCommandModule:: *MsgHandler)(ipcClient *, const ipcMessage *);
+    typedef void (* MsgHandler)(ipcClient *, const ipcMessage *);
 
     //
     // message handlers
     //
 
-    void OnPing(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnPing(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got PING\n"));
 
         IPC_SendMsg(client, new ipcmMessagePing());
     }
 
-    void OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_HELLO\n"));
 
@@ -75,7 +72,7 @@ public:
         IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
     }
 
-    void OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_ADD_NAME\n"));
 
@@ -85,7 +82,7 @@ public:
             client->AddName(name);
     }
 
-    void OnClientDelName(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnClientDelName(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_DEL_NAME\n"));
 
@@ -95,7 +92,7 @@ public:
             client->DelName(name);
     }
 
-    void OnClientAddTarget(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnClientAddTarget(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_ADD_TARGET\n"));
 
@@ -103,7 +100,7 @@ public:
         client->AddTarget(msg->Target());
     }
 
-    void OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_DEL_TARGET\n"));
 
@@ -111,7 +108,7 @@ public:
         client->DelTarget(msg->Target());
     }
 
-    void OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got QUERY_CLIENT_BY_NAME\n"));
 
@@ -127,7 +124,7 @@ public:
         }
     }
 
-    void OnForward(ipcClient *client, const ipcMessage *rawMsg)
+    static void OnForward(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got FORWARD\n"));
 
@@ -145,31 +142,26 @@ public:
     // ipcModule interface impl
     //
 
-    void Shutdown()
+    static void Shutdown()
     {
     }
 
-    const nsID &ID()
-    {
-        return IPCM_TARGET;
-    }
-
-    void HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
+    static void HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
     {
         static MsgHandler handlers[] =
         {
-            &ipcCommandModule::OnPing,
+            OnPing,
             NULL, // ERROR
-            &ipcCommandModule::OnClientHello,
+            OnClientHello,
             NULL, // CLIENT_ID
             NULL, // CLIENT_INFO
-            &ipcCommandModule::OnClientAddName,
-            &ipcCommandModule::OnClientDelName,
-            &ipcCommandModule::OnClientAddTarget,
-            &ipcCommandModule::OnClientDelTarget,
-            &ipcCommandModule::OnQueryClientByName,
+            OnClientAddName,
+            OnClientDelName,
+            OnClientAddTarget,
+            OnClientDelTarget,
+            OnQueryClientByName,
             NULL, // QUERY_CLIENT_INFO
-            &ipcCommandModule::OnForward,
+            OnForward,
         };
 
         int type = IPCM_GetMsgType(rawMsg);
@@ -178,14 +170,19 @@ public:
         if (type < IPCM_MSG_TYPE_UNKNOWN) {
             if (handlers[type]) {
                 MsgHandler handler = handlers[type];
-                (this->*handler)(client, rawMsg);
+                handler(client, rawMsg);
             }
         }
     }
 };
 
-ipcModule *IPC_GetCommandModule()
+ipcModuleMethods *IPC_GetCommandModuleMethods()
 {
-    static ipcCommandModule module;
-    return &module;
+    static ipcModuleMethods methods =
+    {
+        IPC_MODULE_METHODS_VERSION,
+        ipcCommandModule::Shutdown,
+        ipcCommandModule::HandleMsg
+    };
+    return &methods;
 }

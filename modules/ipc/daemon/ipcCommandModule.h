@@ -38,8 +38,8 @@
 #ifndef ipcCommandModule_h__
 #define ipcCommandModule_h__
 
-#include "ipcm.h"
+#include "ipcm.h" // for IPCM_TARGET
 
-class ipcModule *IPC_GetCommandModule();
+struct ipcModuleMethods *IPC_GetCommandModuleMethods();
 
 #endif // !ipcCommandModule_h__

@@ -51,9 +51,9 @@
 
 struct ipcModuleRegEntry
 {
-    nsID       id;
-    ipcModule *module;
-    PRLibrary *lib;
+    nsID              target;
+    ipcModuleMethods *methods;
+    PRLibrary        *lib;
 };
 
 #define IPC_MAX_MODULE_COUNT 64
@@ -62,15 +62,15 @@ static ipcModuleRegEntry ipcModules[IPC_MAX_MODULE_COUNT];
 static int ipcModuleCount;
 
 static PRStatus
-AddModule(const nsID &id, ipcModule *module, PRLibrary *lib)
+AddModule(const nsID &target, ipcModuleMethods *methods, PRLibrary *lib)
 {
     if (ipcModuleCount == IPC_MAX_MODULE_COUNT) {
         LOG(("too many modules!\n"));
         return PR_FAILURE;
     }
 
-    ipcModules[ipcModuleCount].id = id;
-    ipcModules[ipcModuleCount].module = module;
+    ipcModules[ipcModuleCount].target = target;
+    ipcModules[ipcModuleCount].methods = methods;
     ipcModules[ipcModuleCount].lib = lib;
 
     ++ipcModuleCount;
@@ -81,6 +81,22 @@ static void
 InitModuleFromLib(const char *modulesDir, const char *fileName)
 {
     LOG(("InitModuleFromLib [%s]\n", fileName));
+
+    static ipcDaemonMethods gDaemonMethods =
+    {
+        IPC_DAEMON_METHODS_VERSION,
+        IPC_DispatchMsg,
+        IPC_SendMsg,
+        IPC_GetClientByID,
+        IPC_GetClientByName,
+        IPC_EnumClients,
+        IPC_GetClientID,
+        IPC_GetPrimaryClientName,
+        IPC_ClientHasName,
+        IPC_ClientHasTarget,
+        IPC_EnumClientNames,
+        IPC_EnumClientTargets
+    };
 
     int dLen = strlen(modulesDir);
     int fLen = strlen(fileName);
@@ -93,16 +109,16 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
 
     PRLibrary *lib = PR_LoadLibrary(buf);
     if (lib) {
-        ipcGetModuleListFunc func =
-            (ipcGetModuleListFunc) PR_FindFunctionSymbol(lib, "IPC_GetModuleList");
+        ipcGetModulesFunc func =
+            (ipcGetModulesFunc) PR_FindFunctionSymbol(lib, "IPC_GetModules");
+
+        LOG(("  func=%p\n", (void*) func));
+
         if (func) {
-            ipcModule **modules = func();
-            if (modules) {
-                while (*modules) {
-                    AddModule((*modules)->ID(), *modules, PR_LoadLibrary(buf));
-                    ++modules;
-                }
-            }
+            ipcModuleEntry *entries = NULL;
+            int count = func(&gDaemonMethods, &entries);
+            for (int i=0; i<count; ++i)
+                AddModule(entries[i].target, entries[i].methods, PR_LoadLibrary(buf));
         }
         PR_UnloadLibrary(lib);
     }
@@ -117,13 +133,13 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
 //
 // search for a module registered under the specified id
 //
-ipcModule *
-IPC_GetModuleByID(const nsID &id)
+ipcModuleMethods *
+IPC_GetModuleByTarget(const nsID &target)
 {
     for (int i=0; i<ipcModuleCount; ++i) {
         ipcModuleRegEntry &entry = ipcModules[i];
-        if (entry.id.Equals(id))
-            return entry.module;
+        if (entry.target.Equals(target))
+            return entry.methods;
     }
     return NULL;
 }
@@ -134,8 +150,7 @@ IPC_InitModuleReg(const char *exePath)
     //
     // register built-in modules
     //
-    ipcModule *module = IPC_GetCommandModule();
-    AddModule(module->ID(), module, NULL);
+    AddModule(IPCM_TARGET, IPC_GetCommandModuleMethods(), NULL);
 
     //
     // register plug-in modules
@@ -186,8 +201,8 @@ IPC_ShutdownModuleReg()
     //
     for (int i = ipcModuleCount - 1; i >= 0; --i) {
         ipcModuleRegEntry &entry = ipcModules[i];
-        if (entry.module)
-            entry.module->Shutdown();
+        if (entry.methods)
+            entry.methods->shutdown();
         if (entry.lib)
             PR_UnloadLibrary(entry.lib);
     }

@@ -43,11 +43,6 @@
 
 #ifdef XP_UNIX
 #include "prio.h"
-#include "ipcdUnix.h"
-#endif
-
-#ifdef XP_WIN
-#include "ipcdWin.h"
 #endif
 
 PRUint32 ipcClient::gLastID = 0;
@@ -129,36 +124,8 @@ ipcClient::DelTarget(const nsID &target)
         mTargets.FindAndDelete(target);
 }
 
-PRBool
-ipcClient::EnqueueOutboundMsg(ipcMessage *msg)
-{
-    LOG(("enqueue outbound message\n"));
-
-    if (!HasTarget(msg->Target())) {
-        LOG(("  no registered message handler\n"));
-        delete msg;
-        return PR_FALSE;
-    }
-
-#ifdef XP_WIN
-    IPC_SendMessageNow(this, msg);
-    delete msg;
-#endif
-
 #ifdef XP_UNIX
-    mOutMsgQ.Append(msg);
-    //
-    // the message was successfully put on the queue...
-    //
-    // since our Process method may have already been called, we must ensure
-    // that the PR_POLL_WRITE flag is set.
-    //
-    IPC_ClientWritePending(this);
-#endif
-    return PR_TRUE;
-}
 
-#ifdef XP_UNIX
 //
 // called to process a client socket
 //
@@ -260,4 +227,5 @@ ipcClient::WriteMsgs(PRFileDesc *fd)
 
     return 0;
 }
+
 #endif

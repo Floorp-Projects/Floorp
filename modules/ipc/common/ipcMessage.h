@@ -98,7 +98,7 @@ public:
     // 
     // create a copy of this message
     //
-    ipcMessage *Clone();
+    ipcMessage *Clone() const;
 
     //
     // initialize message

@@ -59,7 +59,7 @@ ipcMessage::Reset()
 }
 
 ipcMessage *
-ipcMessage::Clone()
+ipcMessage::Clone() const
 {
     ipcMessage *clone = new ipcMessage();
     if (!clone)

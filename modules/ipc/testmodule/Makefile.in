@@ -61,10 +61,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../common \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXTRA_DSO_LIBS = mozipcd
-endif
-
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
         $(NSPR_LIBS) \
