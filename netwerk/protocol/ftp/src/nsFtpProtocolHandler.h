@@ -45,8 +45,6 @@ public:
     nsFtpProtocolHandler();
     virtual ~nsFtpProtocolHandler();
     
-    // Define a Create method to be used with a factory:
-    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     nsresult Init();
 
     // FTP Connection list access
