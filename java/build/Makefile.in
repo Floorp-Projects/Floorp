@@ -60,6 +60,7 @@ ifneq ($(BUILD_DOM_ONLY),)
 	chmod 775 $(PACKAGE_LIB)/libjavadom.so
 	cp $(DIST)/../java/build/install_dom_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
+	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.DOM $(PACKAGE_DIR)/README.DOM
 	cd $(DIST) ; \
 	zip -r JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
@@ -89,6 +90,7 @@ ifneq ($(BUILD_PLUGLETS_ONLY),)
 	chmod 775 $(PACKAGE_LIB)/libpluglet.so
 	cp $(DIST)/../java/build/install_pluglet_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
+	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.PLUGLET $(PACKAGE_DIR)/README.PLUGLET
 	cd $(DIST) ; \
 	zip -r Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
@@ -145,6 +147,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	chmod 775 $(PACKAGE_EXAMPLE)/runem.pl
 	cp $(DIST)/../java/build/install_webclient_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
+	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.WEBCLIENT $(PACKAGE_DIR)/README.WEBCLIENT
 	cd $(DIST) ; \
 	zip -r Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
@@ -176,6 +179,7 @@ ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 	chmod 775 $(PACKAGE_LIB)/regxpcom
 	cp $(DIST)/../java/build/install_blackconnect_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
+	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.BLACKCONNECT $(PACKAGE_DIR)/README.BLACKCONNECT
 	cd $(DIST) ; \
 	zip -r Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
@@ -235,6 +239,7 @@ ifneq ($(BUILD_BLACKWOOD),)
 	chmod 775 $(PACKAGE_EXAMPLE)/runem.pl
 	cp $(DIST)/../java/build/install_blackwood_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
+	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.BLACKWOOD $(PACKAGE_DIR)/README.BLACKWOOD
 	cd $(DIST) ; \
 	zip -r Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
