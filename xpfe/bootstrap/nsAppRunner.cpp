@@ -27,6 +27,7 @@
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
+#include "nsIAppShellComponent.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -390,7 +391,7 @@ int main(int argc, char* argv[])
   /* Comments/questions to alecf@netscape.com */
   {
 	/*MESSENGER*/
-    nsIAppShellService *messenger;
+    nsIAppShellComponent *messenger;
     //const char *messengerProgID = "component://netscape/messenger";
     nsresult result;
 
@@ -404,15 +405,15 @@ int main(int argc, char* argv[])
     
     result = nsComponentManager::CreateInstance(kCMessengerBootstrapCID,
                                                 nsnull,
-                                                nsIAppShellService::GetIID(),
+                                                nsIAppShellComponent::GetIID(),
                                                 (void **)&messenger);
     if (NS_SUCCEEDED(result)) {
       printf("The Messenger component is available. Initializing...\n");
-      result = messenger->Initialize();
+      result = messenger->Initialize(appShell, cmdLineArgs);
     }
  
 	/*COMPOSER*/
-      nsIAppShellService *composer;
+      nsIAppShellComponent *composer;
       //const char *composerProgID = "component://netscape/composer";
 
     /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
@@ -425,11 +426,11 @@ int main(int argc, char* argv[])
     
     result = nsComponentManager::CreateInstance(kCComposerBootstrapCID,
                                                 nsnull,
-                                                nsIAppShellService::GetIID(),
+                                                nsIAppShellComponent::GetIID(),
                                                 (void **)&composer);
     if (NS_SUCCEEDED(result)) {
       printf("The Composer component is available. Initializing...\n");
-      result = composer->Initialize();
+      result = composer->Initialize(appShell, cmdLineArgs);
     }
   }
   /* End of mailhack */

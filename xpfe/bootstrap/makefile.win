@@ -53,6 +53,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\intl                  \
       -I$(PUBLIC)\appcores				\
       -I$(PUBLIC)\walletlib             \
+      -I$(PUBLIC)\xpfe\components       \
       -I$(PUBLIC)\oji    
 #      -I..\browser
 
