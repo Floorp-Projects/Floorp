@@ -216,6 +216,7 @@ static NSArray* sToolbarDefaults = nil;
 - (void)setupSidebarTabs;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
+- (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
 @end
 
 @implementation BrowserWindowController
@@ -1243,7 +1244,8 @@ static NSArray* sToolbarDefaults = nil;
       [[BrowserWindowController searchURLDictionary] objectForKey:
         [aSender titleOfSelectedPopUpItem]]];
     NSString *currentURL = [[self getBrowserWrapper] getCurrentURLSpec];
-
+    NSString *searchString = [aSender stringValue];
+    
     const char *aURLSpec = [currentURL lossyCString];
     NSString *aDomain;
     nsIURI *aURI;
@@ -1257,7 +1259,8 @@ static NSArray* sToolbarDefaults = nil;
       NSRange domainStringRange = [searchURL rangeOfString:@" site:%d"
                                                    options:NSBackwardsSearch];
 
-      if (NSEqualRanges(domainStringRange, NSMakeRange(NSNotFound, 0)) == NO)
+      NSRange notFoundRange = NSMakeRange(NSNotFound, 0);
+      if (NSEqualRanges(domainStringRange, notFoundRange) == NO)
         [searchURL deleteCharactersInRange:domainStringRange];
     }
 
@@ -1274,7 +1277,8 @@ static NSArray* sToolbarDefaults = nil;
 
         [self loadURL:aDomain referrer:nil activate:NO];
       }
-    } else {
+    }
+    else {
       aURLSpec = [[[self getBrowserWrapper] getCurrentURLSpec] lossyCString];
 
       // Get the domain so that we can replace %d in our searchURL
@@ -1285,22 +1289,76 @@ static NSArray* sToolbarDefaults = nil;
         aDomain = [NSString stringWithUTF8String:spec.get()];
       }
 
-      // Replace any occurence of %d in the search URL with the current domain
-      [searchURL replaceOccurrencesOfString:@"%d"
-                                 withString:aDomain
-                                    options:NSBackwardsSearch
-                                      range:NSMakeRange(0, [searchURL length])];
-
-      // Replace any occurence of %s in the search URL with the
-      // contents of the search text field
-      [searchURL replaceOccurrencesOfString:@"%s"
-                                 withString:[aSender stringValue]
-                                    options:NSBackwardsSearch
-                                      range:NSMakeRange(0, [searchURL length])];
-
-
+      // replace the conversion specifiers (%d, %s) in the search string
+      [self transformFormatString:searchURL domain:aDomain search:searchString];
+      
       [self loadURL:searchURL referrer:nil activate:NO];
     }
+  }
+}
+
+//
+// - transformFormatString:domain:search
+//
+// Replaces all occurances of %d in |inFormat| with |inDomain| and all occurances of
+// %s with |inSearch|. This is easy on jaguar and beyond, but not as easy on 10.1. Both
+// implementations are presented here.
+//
+- (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch
+{
+  if ([NSMutableString instancesRespondToSelector:
+                          @selector(replaceOccurrencesOfString:withString:options:range:)]) {
+    
+    // If we're on Mac OS X >= 10.2...
+
+    // Replace any occurence of %d with the current domain
+    [inFormat replaceOccurrencesOfString:@"%d" withString:inDomain options:NSBackwardsSearch
+                  range:NSMakeRange(0, [inFormat length])];
+
+    // Replace any occurence of %s with the contents of the search text field
+    [inFormat replaceOccurrencesOfString:@"%s" withString:inSearch options:NSBackwardsSearch
+                  range:NSMakeRange(0, [inFormat length])];
+  } 
+  else {
+    
+    // If we're not on Mac OS X 10.2, do the string replacement manually
+
+    NSRange notFoundRange = NSMakeRange(NSNotFound, 0);
+    
+    // Keep finding %d's and replacing them with the domain
+    NSRange domainEscapeRange = [inFormat rangeOfString:@"%d" options:NSBackwardsSearch];
+
+    while (NSEqualRanges(domainEscapeRange, notFoundRange) == NO) {
+      [inFormat replaceCharactersInRange:domainEscapeRange withString:inDomain];
+
+      // Get the next %d found. A domain can't contain a %d string,
+      // so don't worry about that
+      domainEscapeRange = [inFormat rangeOfString:@"%d" options:NSBackwardsSearch];
+    }
+
+    // Replace any occurence of %s with the contents of the search text field
+    NSMutableArray *formatLocations = [[NSMutableArray alloc] init];
+    NSScanner *formatScanner = [NSScanner scannerWithString:inFormat];
+    NSString *tempString = nil;
+
+    // Find the locations of all %s and store them in an NSMutableArray
+    const int kStringConverterLen = 2;    // strlen("%s")
+    [formatScanner scanUpToString:@"%s" intoString:nil];
+    while ([formatScanner scanString:@"%s" intoString:&tempString]) {
+      [formatLocations addObject:[NSNumber numberWithUnsignedInt:([formatScanner scanLocation] - kStringConverterLen)]];
+
+      [formatScanner scanUpToString:@"%s" intoString:nil];
+    }
+
+    // Replace all %s in the string, starting at the end first to so we don't disrupt the
+    // ranges we've computed
+    NSRange formatRange;        
+    for (int i = [formatLocations count] - 1; i >= 0; i--) {
+      formatRange = NSMakeRange([[formatLocations objectAtIndex:i] unsignedIntValue], 2);
+      [inFormat replaceCharactersInRange:formatRange withString:inSearch];
+    }
+    
+    [formatLocations release];
   }
 }
 
