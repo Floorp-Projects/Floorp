@@ -541,34 +541,7 @@ nsXULAttribute::SetScriptObject(void *aScriptObject)
 void
 nsXULAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)
 {
-// This should be removed, call sites should be replaced with mNodeInfo->Get...
-    aQualifiedName.Truncate();
-    PRInt32 nsid;
-    mNodeInfo->GetNamespaceID(nsid);
-    if ((nsid != kNameSpaceID_None) && (nsid != kNameSpaceID_Unknown)) {
-        nsresult rv;
-
-        nsIAtom* prefix;
-        rv = mContent->GetNameSpacePrefixFromId(nsid, prefix);
-
-        if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
-            const PRUnichar *unicodeString;
-            prefix->GetUnicode(&unicodeString);
-            aQualifiedName.Append(unicodeString);
-            aQualifiedName.Append(PRUnichar(':'));
-            NS_RELEASE(prefix);
-        }
-    }
-    const PRUnichar *unicodeString;
-    nsCOMPtr<nsIAtom> name;
-    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    name->GetUnicode(&unicodeString);
-    aQualifiedName.Append(unicodeString);
-
-    // All the above code should be replaced with this one line once
-    // nsINodeInfo is fully functional in attributes.
-
-    // mNodeInfo->GetQualifiedName(aQualifiedName);
+    mNodeInfo->GetQualifiedName(aQualifiedName);
 }
 
 
@@ -598,7 +571,6 @@ nsXULAttribute::SetValueInternal(const nsAReadableString& aValue)
         mValue = (void*)(PRWord(newAtom.get()) | kAtomType);
     }
     else {
-        PRInt32 len = aValue.Length();
         PRUnichar* str = ToNewUnicode(aValue);
         if (! str)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -723,8 +695,9 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
 
     PRInt32 nameSpaceID;
     nsIAtom* name;
+    nsCOMPtr<nsINodeInfo> inpNodeInfo;
 
-    if (NS_FAILED(rv = mContent->ParseAttributeString(aName, name, nameSpaceID)))
+    if (NS_FAILED(rv = mContent->NormalizeAttributeString(aName, *getter_AddRefs(inpNodeInfo))))
         return rv;
 
     if (kNameSpaceID_Unknown == nameSpaceID) {
@@ -737,10 +710,7 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
         nsXULAttribute* attr = (nsXULAttribute*) mAttributes[i];
         nsINodeInfo *ni = attr->GetNodeInfo();
 
-        if ((ni->NamespaceEquals(nameSpaceID) ||
-             (nameSpaceID == kNameSpaceID_Unknown) ||
-             (nameSpaceID == kNameSpaceID_None)) &&
-            ni->Equals(name)) {
+        if (inpNodeInfo->Equals(ni)) {
             NS_ADDREF(attr);
             *aReturn = attr;
             break;

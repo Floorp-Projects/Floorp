@@ -132,10 +132,6 @@
 #include "nsReadableUtils.h"
 #include "nsIXIFConverter.h"
 
-// Used for the temporary DOM Level2 hack
-#include "nsIPref.h"
-static PRBool kStrictDOMLevel2 = PR_FALSE;
-
 
 //----------------------------------------------------------------------
 //
@@ -444,14 +440,6 @@ nsXULDocument::nsXULDocument(void)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
-
-// Temporary hack that tells if some new DOM Level 2 features are on or off
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
-    }
-// End of temp hack.
 }
 
 nsXULDocument::~nsXULDocument()
@@ -2465,29 +2453,8 @@ nsXULDocument::CreateElement(const nsAReadableString& aTagName,
 
     nsCOMPtr<nsIAtom> name, prefix;
 
-    if (kStrictDOMLevel2) {
-        PRInt32 pos = aTagName.FindChar(':');
-        if (pos >= 0) {
-          nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aTagName));
-          printf ("Possible DOM Error: CreateElement(\"%s\") called, use CreateElementNS() in stead!\n", (const char *)tmp);
-        }
-
-        name = dont_AddRef(NS_NewAtom(aTagName));
-        NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-    } else {
-        // parse the user-provided string into a tag name and a namespace ID
-        rv = ParseTagString(aTagName, *getter_AddRefs(name),
-                            *getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) {
-#ifdef PR_LOGGING
-            char* tagNameStr = ToNewCString(aTagName);
-            PR_LOG(gXULLog, PR_LOG_ERROR,
-                   ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
-            nsCRT::free(tagNameStr);
-#endif
-            return rv;
-        }
-    }
+    name = dont_AddRef(NS_NewAtom(aTagName));
+    NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
@@ -2604,14 +2571,6 @@ NS_IMETHODIMP
 nsXULDocument::GetElementsByTagName(const nsAReadableString& aTagName,
                                     nsIDOMNodeList** aReturn)
 {
-    if (kStrictDOMLevel2) {
-        PRInt32 pos = aTagName.FindChar(':');
-        if (pos >= 0) {
-          nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aTagName));
-          printf ("Possible DOM Error: GetElementsByTagName(\"%s\") called, use GetElementsByTagNameNS() in stead!\n", (const char *)tmp);
-        }
-    }
-
     nsresult rv;
     nsRDFDOMNodeList* elements;
     if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
@@ -2682,8 +2641,12 @@ nsXULDocument::Persist(const nsAReadableString& aID,
 
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> tag;
-    rv = element->ParseAttributeString(aAttr, *getter_AddRefs(tag), nameSpaceID);
+    nsCOMPtr<nsINodeInfo> ni;
+    rv = element->NormalizeAttributeString(aAttr, *getter_AddRefs(ni));
     if (NS_FAILED(rv)) return rv;
+
+    ni->GetNameAtom(*getter_AddRefs(tag));
+    ni->GetNamespaceID(nameSpaceID);
 
     rv = Persist(element, nameSpaceID, tag);
     if (NS_FAILED(rv)) return rv;
@@ -2806,59 +2769,6 @@ nsXULDocument::GetCharacterSet(nsAWritableString& aCharacterSet)
 {
   return GetDocumentCharacterSet(aCharacterSet);
 }
-
-NS_IMETHODIMP    
-nsXULDocument::CreateElementWithNameSpace(const nsAReadableString& aTagName,
-                                          const nsAReadableString& aNameSpace,
-                                          nsIDOMElement** aResult)
-{
-  printf ("Deprecated method CreateElementWithNameSpace() used, use CreateElementNS() in stead!\n");
-
-    // Create a DOM element given a namespace URI and a tag name.
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-      char* namespaceCStr = ToNewCString(aNameSpace);
-      char* tagCStr = ToNewCString(aTagName);
-
-      PR_LOG(gXULLog, PR_LOG_DEBUG,
-             ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
-
-      nsCRT::free(tagCStr);
-      nsCRT::free(namespaceCStr);
-    }
-#endif
-
-    nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(aTagName));
-    if (! name)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PRInt32 nameSpaceID;
-    rv = mNameSpaceManager->GetNameSpaceID(aNameSpace, nameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsINodeInfo> ni;
-    // XXX This whole method is depricated!
-    mNodeInfoManager->GetNodeInfo(name, nsnull, nameSpaceID,
-                                  *getter_AddRefs(ni));
-
-    nsCOMPtr<nsIContent> result;
-    rv = CreateElement(ni, getter_AddRefs(result));
-    if (NS_FAILED(rv)) return rv;
-
-    // get the DOM interface
-    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsXULDocument::CreateRange(nsIDOMRange** aRange)
@@ -3204,7 +3114,7 @@ nsXULDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
       char* tagCStr = ToNewCString(aQualifiedName);
 
       PR_LOG(gXULLog, PR_LOG_DEBUG,
-             ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
+             ("xul[CreateElementNS] [%s]:%s", namespaceCStr, tagCStr));
 
       nsCRT::free(tagCStr);
       nsCRT::free(namespaceCStr);

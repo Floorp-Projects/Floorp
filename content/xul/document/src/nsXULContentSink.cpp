@@ -180,7 +180,8 @@ protected:
     nsresult GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID);
     nsresult AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
     nsresult ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo);
-    nsresult ParseAttributeString(const nsString& aText, nsIAtom*& aAttr, PRInt32& aNameSpaceID);
+    nsresult NormalizeAttributeString(const nsAReadableString& aText,
+                                      nsINodeInfo*& aNodeInfo);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
     nsresult OpenRoot(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo);
@@ -1273,10 +1274,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
     for (PRInt32 i = 0; i < count; i++) {
         const nsString& qname = aNode.GetKeyAt(i);
 
-        PRInt32 nameSpaceID;
-        nsCOMPtr<nsIAtom> name;
-        // XXX Don't drop the prefix!!!
-        rv = ParseAttributeString(qname, *getter_AddRefs(name), nameSpaceID);
+        rv = NormalizeAttributeString(qname,
+                                      *getter_AddRefs(attrs->mNodeInfo));
 
         if (NS_FAILED(rv)) {
             nsCAutoString qnameC;
@@ -1291,11 +1290,6 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             --(aElement->mNumAttributes);
             continue;
         }
-
-        // XXX Include the prefix!!!
-        mNodeInfoManager->GetNodeInfo(name, nsnull, nameSpaceID,
-                                      *getter_AddRefs(attrs->mNodeInfo));
-        NS_ENSURE_TRUE(attrs->mNodeInfo, NS_ERROR_FAILURE);
 
         attrs->mValue       = aNode.GetValueAt(i);
 
@@ -1400,9 +1394,11 @@ XULContentSinkImpl::ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo)
 
 
 nsresult
-XULContentSinkImpl::ParseAttributeString(const nsString& aText, nsIAtom*& aAttr, PRInt32& aNameSpaceID)
+XULContentSinkImpl::NormalizeAttributeString(const nsAReadableString& aText,
+                                             nsINodeInfo*& aNodeInfo)
 {
     nsresult rv;
+    PRInt32 nameSpaceID = kNameSpaceID_None;
 
     // Split the attribute into prefix and tag substrings.
     nsAutoString prefixStr;
@@ -1421,16 +1417,11 @@ XULContentSinkImpl::ParseAttributeString(const nsString& aText, nsIAtom*& aAttr,
         rv = GetTopNameSpace(&ns);
         if (NS_FAILED(rv)) return rv;
 
-        rv = ns->FindNameSpaceID(prefix, aNameSpaceID);
+        rv = ns->FindNameSpaceID(prefix, nameSpaceID);
         if (NS_FAILED(rv)) return rv;
     }
-    else {
-        aNameSpaceID = kNameSpaceID_None;
-    }
 
-    aAttr = NS_NewAtom(attrStr);
-    if (! aAttr)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mNodeInfoManager->GetNodeInfo(attrStr, prefixStr, nameSpaceID, aNodeInfo);
 
     return NS_OK;
 }

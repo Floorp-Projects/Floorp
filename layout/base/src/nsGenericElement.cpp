@@ -76,9 +76,6 @@
 #include "nsIJSContextStack.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h" // Used by the temp pref, should be removed!
-static PRBool kStrictDOMLevel2 = PR_FALSE;
-
 
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -389,23 +386,9 @@ nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
 }
 
 nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
-                                       mParent(nsnull),
-                                       mNodeInfo(nsnull), mDOMSlots(nsnull), mContentID(0)
+                                       mParent(nsnull), mNodeInfo(nsnull),
+                                       mDOMSlots(nsnull), mContentID(0)
 {
-  static PRInt32 been_here = 0;
-
-// Temporary hack that tells if some new DOM Level 2 features are on or off
-  if (!been_here) {
-    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
-    }
-    been_here = 1;
-  }
-// End of temp hack.
-
 }
 
 nsGenericElement::~nsGenericElement()
@@ -719,9 +702,17 @@ nsGenericElement::GetTagName(nsAWritableString& aTagName)
 nsresult
 nsGenericElement::GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aName)));
+  nsCOMPtr<nsINodeInfo> ni;
+  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-  mContent->GetAttribute(kNameSpaceID_Unknown, nameAtom, aReturn);
+  PRInt32 nsid;
+  nsCOMPtr<nsIAtom> nameAtom;
+
+  ni->GetNamespaceID(nsid);
+  ni->GetNameAtom(*getter_AddRefs(nameAtom));
+
+  mContent->GetAttribute(nsid, nameAtom, aReturn);
 
   return NS_OK;
 }
@@ -730,57 +721,25 @@ nsresult
 nsGenericElement::SetAttribute(const nsAReadableString& aName,
                                const nsAReadableString& aValue)
 {
-  if (kStrictDOMLevel2) {
-    PRInt32 pos = aName.FindChar(':');
-    if (pos >= 0) {
-      nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aName));
-      printf ("Possible DOM Error: SetAttribute(\"%s\") called, use SetAttributeNS() in stead!\n", (const char *)tmp);
-    }
-
-    nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
-    return mContent->SetAttribute(kNameSpaceID_None, tag, aValue, PR_TRUE);
-  }
-
-  nsIAtom* nameAtom;
-  PRInt32 nameSpaceID;
-  nsresult result = NS_OK;
-
-  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
-  if (kNameSpaceID_Unknown == nameSpaceID) {
-    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-  }
-  result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
-  NS_RELEASE(nameAtom);
-
-  return result;
+  nsCOMPtr<nsINodeInfo> ni;
+  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  return mContent->SetAttribute(ni, aValue, PR_TRUE);
 }
 
 nsresult
 nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
 {
-  if (kStrictDOMLevel2) {
-    PRInt32 pos = aName.FindChar(':');
-    if (pos >= 0) {
-      nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aName));
-      printf ("Possible DOM Error: RemoveAttribute(\"%s\") called, use RemoveAttributeNS() in stead!\n", (const char *)tmp);
-    }
+  nsCOMPtr<nsINodeInfo> ni;
+  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
-    return mContent->UnsetAttribute(kNameSpaceID_None, tag, PR_TRUE);
-  }
+  PRInt32 nsid;
+  nsCOMPtr<nsIAtom> tag;
 
-  nsIAtom* nameAtom;
-  PRInt32 nameSpaceID;
-  nsresult result = NS_OK;
+  ni->GetNamespaceID(nsid);
+  ni->GetNameAtom(*getter_AddRefs(tag));
 
-  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
-  if (kNameSpaceID_Unknown == nameSpaceID) {
-    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-  }
-  result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
-  NS_RELEASE(nameAtom);
-
-  return result;
+  return mContent->UnsetAttribute(nsid, tag, PR_TRUE);
 }
 
 nsresult
@@ -868,42 +827,26 @@ nsresult
 nsGenericElement::GetElementsByTagName(const nsAReadableString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
-  nsIAtom* nameAtom;
-  PRInt32 nameSpaceId;
-  nsresult result = NS_OK;
+  nsCOMPtr<nsIAtom> nameAtom;
 
-  if (kStrictDOMLevel2) {
-    PRInt32 pos = aTagname.FindChar(':');
-    if (pos >= 0) {
-      nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aTagname));
-      printf ("Possible DOM Error: GetElementsByTagName(\"%s\") called, use GetElementsByTagNameNS() in stead!\n", (const char *)tmp);
-    }
-
-    nameAtom = NS_NewAtom(aTagname);
-    nameSpaceId = kNameSpaceID_Unknown;
-  } else {
-    result = mContent->ParseAttributeString(aTagname, nameAtom,
-                                            nameSpaceId);
-    if (NS_OK != result) {
-      return result;
-    }
-  }
+  nameAtom = dont_AddRef(NS_NewAtom(aTagname));
 
   nsContentList* list = new nsContentList(mDocument, 
                                           nameAtom, 
-                                          nameSpaceId, 
+                                          kNameSpaceID_Unknown, 
                                           mContent);
-  NS_IF_RELEASE(nameAtom);
-  if (nsnull == list) {
+
+  if (!list) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
+  return list->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
 }
 
 nsresult
 nsGenericElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aLocalName, nsAWritableString& aReturn)
+                                 const nsAReadableString& aLocalName,
+                                 nsAWritableString& aReturn)
 {
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
@@ -1070,10 +1013,18 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
+  nsCOMPtr<nsINodeInfo> ni;
+  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+
+  PRInt32 nsid;
+  nsCOMPtr<nsIAtom> nameAtom;
+
+  ni->GetNamespaceID(nsid);
+  ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
   nsAutoString tmp;
-  nsresult rv = mContent->GetAttribute(kNameSpaceID_Unknown, name, tmp);
+  nsresult rv = mContent->GetAttribute(nsid, nameAtom, tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -2549,6 +2500,29 @@ nsGenericContainerElement::~nsGenericContainerElement()
 }
 
 nsresult
+nsGenericContainerElement::NormalizeAttributeString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo)
+{
+  if (mAttributes) {
+    PRInt32 indx, count = mAttributes->Count();
+    for (indx = 0; indx < count; indx++) {
+      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(indx);
+      if (attr->mNodeInfo->QualifiedNameEquals(aStr)) {
+        aNodeInfo = attr->mNodeInfo;
+        NS_ADDREF(aNodeInfo);
+
+        return NS_OK;
+      }
+    }
+  }
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
+}
+
+nsresult
 nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
                                        nsGenericContainerElement* aDst,
                                        PRBool aDeep)
@@ -2791,8 +2765,8 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult 
-nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                                          PRBool aNotify)
+nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
+                                          nsIAtom* aName, PRBool aNotify)
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {

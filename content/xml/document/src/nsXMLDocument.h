@@ -69,9 +69,6 @@ public:
   NS_IMETHOD    CreateProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData, nsIDOMProcessingInstruction** aReturn);
   NS_IMETHOD    CreateElement(const nsAReadableString& aTagName, 
                               nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, 
-                                           const nsAReadableString& aNameSpace, 
-                                           nsIDOMElement** aReturn);
   NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn);

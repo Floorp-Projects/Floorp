@@ -163,6 +163,7 @@ public:
    * name, name and prefix, name and prefix and namespace ID, or just
    * namespace ID.
    */
+  NS_IMETHOD_(PRBool) Equals(nsINodeInfo *aNodeInfo) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom) = 0;
   NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) = 0;
@@ -177,6 +178,7 @@ public:
                              PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI) = 0;
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAReadableString& aQualifiedName) = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs

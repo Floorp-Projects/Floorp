@@ -1264,55 +1264,6 @@ DocumentXBLLoadBindingDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
 
 //
-// Native method CreateElementWithNameSpace
-//
-PR_STATIC_CALLBACK(JSBool)
-NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsCOMPtr<nsIDOMNSDocument> nativeThis;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, getter_AddRefs(nativeThis))) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-  }
-
-  nsIDOMElement* nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (!nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CREATEELEMENTWITHNAMESPACE, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
-    result = nativeThis->CreateElementWithNameSpace(b0, b1, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method CreateRange
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1461,7 +1412,6 @@ static JSFunctionSpec DocumentMethods[] =
   {"addBinding",          DocumentXBLAddBinding,     2},
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
   {"loadBindingDocument",          DocumentXBLLoadBindingDocument,     1},
-  {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     1},
   {0}

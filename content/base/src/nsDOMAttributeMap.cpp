@@ -98,47 +98,22 @@ nsDOMAttributeMap::GetNamedItem(const nsAReadableString& aAttrName,
 
   nsresult rv = NS_OK;
   if (mContent) {
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aAttrName)));
-    nsCOMPtr<nsIAtom> prefix;
-    nsresult attrResult;
-    nsAutoString value;
+    nsCOMPtr<nsINodeInfo> ni;
+    mContent->NormalizeAttributeString(aAttrName, *getter_AddRefs(ni));
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    attrResult = mContent->GetAttribute(kNameSpaceID_Unknown, nameAtom,
-                                        *getter_AddRefs(prefix), value);
+    PRInt32 nsid;
+    nsCOMPtr<nsIAtom> nameAtom;
+
+    ni->GetNamespaceID(nsid);
+    ni->GetNameAtom(*getter_AddRefs(nameAtom));
+
+    nsresult attrResult;
+
+    nsAutoString value;
+    attrResult = mContent->GetAttribute(nsid, nameAtom, value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      PRInt32 nameSpaceID = kNameSpaceID_None;
-
-      if (prefix) {
-        nsCOMPtr<nsIAtom> tmpName, tmpPrefix;
-        PRInt32 tmpNameSpaceID, attrCount;
-
-        mContent->GetAttributeCount(attrCount);
-
-        while (attrCount--) {
-          mContent->GetAttributeNameAt(attrCount, tmpNameSpaceID,
-                                       *getter_AddRefs(tmpName),
-                                       *getter_AddRefs(tmpPrefix));
-
-          if (tmpName == nameAtom && tmpPrefix == prefix) {
-            nameSpaceID = tmpNameSpaceID;
-            break;
-          }
-        }
-      }
-
-      nsCOMPtr<nsINodeInfo> ni;
-      mContent->GetNodeInfo(*getter_AddRefs(ni));
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-      NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-      nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID,
-                         *getter_AddRefs(ni));
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
       nsDOMAttribute* domAttribute;
       domAttribute = new nsDOMAttribute(mContent, ni, value);
       NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
@@ -171,25 +146,20 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
     }
 
     nsAutoString name, value;
-    nsCOMPtr<nsIAtom> nameAtom;
 
     attribute->GetName(name);
 
     nsCOMPtr<nsINodeInfo> ni;
-    mContent->GetNodeInfo(*getter_AddRefs(ni));
+    mContent->NormalizeAttributeString(name, *getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIAtom> nameAtom;
+    PRInt32 nsid;
 
-    nimgr->GetNodeInfo(name, nsnull, kNameSpaceID_None, *getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
+    ni->GetNamespaceID(nsid);
     ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
-    nsresult attrResult = mContent->GetAttribute(kNameSpaceID_Unknown,
-                                                 nameAtom, value);
+    nsresult attrResult = mContent->GetAttribute(nsid, nameAtom, value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
       nsDOMAttribute* domAttribute;
@@ -206,14 +176,15 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 
     attribute->GetValue(value);
 
-    rv = mContent->SetAttribute(kNameSpaceID_None, nameAtom, value, PR_TRUE);
+    rv = mContent->SetAttribute(ni, value, PR_TRUE);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsDOMAttributeMap::RemoveNamedItem(const nsAReadableString& aName,
+                                   nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
@@ -221,46 +192,23 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** 
   nsresult rv = NS_OK;
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aName)));
-    PRInt32 nameSpaceID = kNameSpaceID_None;
+    nsCOMPtr<nsINodeInfo> ni;
+    mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIAtom> nameAtom;
+    PRInt32 nsid;
+
+    ni->GetNamespaceID(nsid);
+    ni->GetNameAtom(*getter_AddRefs(nameAtom));
+
     nsCOMPtr<nsIDOMNode> attribute;
-    nsCOMPtr<nsIAtom> prefix;
 
     nsresult attrResult;
     nsAutoString value;
-    attrResult = mContent->GetAttribute(kNameSpaceID_Unknown, nameAtom,
-                                        *getter_AddRefs(prefix), value);
+    attrResult = mContent->GetAttribute(nsid, nameAtom, value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      if (prefix) {
-        nsCOMPtr<nsIAtom> tmpName, tmpPrefix;
-        PRInt32 tmpNameSpaceID, attrCount;
-
-        mContent->GetAttributeCount(attrCount);
-
-        while (attrCount--) {
-          mContent->GetAttributeNameAt(attrCount, tmpNameSpaceID,
-                                       *getter_AddRefs(tmpName),
-                                       *getter_AddRefs(tmpPrefix));
-
-          if (tmpName == nameAtom && tmpPrefix == prefix) {
-            nameSpaceID = tmpNameSpaceID;
-            break;
-          }
-        }
-      }
-
-      nsCOMPtr<nsINodeInfo> ni;
-      mContent->GetNodeInfo(*getter_AddRefs(ni));
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-      NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-      nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, *getter_AddRefs(ni));
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
       nsDOMAttribute* domAttribute;
       domAttribute = new nsDOMAttribute(nsnull, ni, value);
       if (!domAttribute) {
@@ -273,7 +221,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** 
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    rv = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
+    rv = mContent->UnsetAttribute(nsid, nameAtom, PR_TRUE);
   }
 
   return rv;
@@ -412,6 +360,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     PRInt32 nameSpaceID;
 
     attribute->GetName(name);
+    attribute->GetPrefix(name);
     attribute->GetNamespaceURI(nsURI);
 
     nsCOMPtr<nsINodeInfo> ni;

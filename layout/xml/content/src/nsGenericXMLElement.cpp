@@ -175,44 +175,6 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
   return res;
 }
 
-nsresult 
-nsGenericXMLElement::ParseAttributeString(const nsAReadableString& aStr, 
-                                          nsIAtom*& aName,
-                                          PRInt32& aNameSpaceID)
-{
-  nsAutoString attrName(aStr);
-  nsIAtom* nameSpaceAtom = nsGenericElement::CutNameSpacePrefix(attrName); 
-  nsIAtom* nameAtom = NS_NewAtom(attrName);
-  aNameSpaceID = kNameSpaceID_None;
-
-  if (nsnull != nameSpaceAtom) {
-    if (nameSpaceAtom == nsLayoutAtoms::xmlNameSpace) {
-      aNameSpaceID = kNameSpaceID_XML;
-    }
-    else if (nsnull != mNameSpace) {
-      mNameSpace->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
-    }
-  }
-
-  aName = nameAtom;
-  NS_IF_RELEASE(nameSpaceAtom);
-
-  return NS_OK;
-}
-
-nsresult 
-nsGenericXMLElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                              nsIAtom*& aPrefix)
-{
-  if (nsnull != mNameSpace) {
-    return mNameSpace->FindNameSpacePrefix(aNameSpaceID, aPrefix);
-  }
-  else {
-    aPrefix = nsnull;
-    return NS_OK;
-  }
-}
-
 nsresult
 nsGenericXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {

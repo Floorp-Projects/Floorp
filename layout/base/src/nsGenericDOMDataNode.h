@@ -158,17 +158,10 @@ struct nsGenericDOMDataNode {
     aID = kNameSpaceID_None;
     return NS_OK;
   }
-  nsresult ParseAttributeString(const nsAReadableString& aStr, 
-                                nsIAtom*& aName,
-                                PRInt32& aNameSpaceID) { 
-    aName = nsnull;
-    aNameSpaceID = kNameSpaceID_None;
+  nsresult NormalizeAttributeString(const nsAReadableString& aStr, 
+                                    nsINodeInfo*& aNodeInfo) { 
+    aNodeInfo = nsnull;
     return NS_OK; 
-  }
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                      nsIAtom*& aPrefix) {
-    aPrefix = nsnull;
-    return NS_OK;
   }
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
                         PRBool aNotify) {
@@ -492,14 +485,9 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;                              \
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;                     \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
                           nsAWritableString& aResult) const {                       \

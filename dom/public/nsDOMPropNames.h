@@ -752,7 +752,6 @@
     "notation.publicid", \
     "notation.systemid", \
     "nsdocument.characterset", \
-    "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
     "nsdocument.load", \
     "nsdocument.location", \

@@ -761,44 +761,6 @@ nsXMLDocument::CreateElement(const nsAReadableString& aTagName,
 }
 
 NS_IMETHODIMP    
-nsXMLDocument::CreateElementWithNameSpace(const nsAReadableString& aTagName, 
-                                          const nsAReadableString& aNameSpace, 
-                                          nsIDOMElement** aReturn)
-{
-  printf ("Deprecated method CreateElementWithNameSpace() used, use CreateElementNS() in stead!\n");
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfoManager->GetNodeInfo(aTagName, nsString(), aNameSpace,
-                                *getter_AddRefs(nodeInfo));
-
-  PRInt32 namespaceID;
-  nodeInfo->GetNamespaceID(namespaceID);
-
-  nsIContent* content;
-  if (namespaceID == kNameSpaceID_HTML) {
-    nsIHTMLContent* htmlContent;
-
-    rv = NS_CreateHTMLElement(&htmlContent, nodeInfo);
-    content = (nsIContent*)htmlContent;
-  }
-  else {
-    nsIXMLContent* xmlContent;
-    rv = NS_NewXMLElement(&xmlContent, nodeInfo);
-    content = NS_STATIC_CAST(nsIXMLContent *, xmlContent);
-  }
-
-  if (NS_OK != rv) {
-    return rv;
-  }
-  content->SetContentID(mNextContentID++);
-  rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
-  
-  return rv;
-}
-
-NS_IMETHODIMP    
 nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);

@@ -80,12 +80,6 @@ public:
     return nsGenericContainerElement::GetAttribute(aNameSpaceID, aName,
                                                    aPrefix, aResult);
   }
-  nsresult ParseAttributeString(const nsAReadableString& aStr, 
-                                nsIAtom*& aName,
-                                PRInt32& aNameSpaceID);
-  nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                    nsIAtom*& aPrefix);
-
 
   // nsIXMLContent
   nsresult SetContainingNameSpace(nsINameSpace* aNameSpace);

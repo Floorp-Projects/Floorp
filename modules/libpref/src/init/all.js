@@ -23,9 +23,6 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead. 
 //  The first character after a period must be alphabetic.
 
-// Temporary DOM preference, will go away -- jst@netscape.com
-pref("temp.DOMLevel2update.enabled", true);
-
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");

@@ -113,18 +113,10 @@ public:
   }
 
 
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
-                                nsIAtom*& aName,
-                                PRInt32& aNameSpaceID) { 
-    aName = nsnull;
-    aNameSpaceID = kNameSpaceID_None;
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, 
+                                      nsINodeInfo*& aNodeInfo) { 
+    aNodeInfo = nsnull;
     return NS_OK; 
-  }
-
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                      nsIAtom*& aPrefix) {
-    aPrefix = nsnull;
-    return NS_OK;
   }
 
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }

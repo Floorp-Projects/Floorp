@@ -110,14 +110,10 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     aResult = nsnull; return NS_OK;
   }
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,
-                                  nsIAtom*& aName,
-                                  PRInt32& aNameSpaceID) {
-    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
-  }
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                nsIAtom*& aPrefix) {
-    return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
+                                      nsINodeInfo*& aNodeInfo) {
+    aNodeInfo = nsnull;
+    return NS_OK;
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                           nsAWritableString& aResult) const {

@@ -192,14 +192,9 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     return mInner.GetNodeInfo(aResult);
   }
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,
-                                  nsIAtom*& aName,
-                                  PRInt32& aNameSpaceID) {
-    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
-  }
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                nsIAtom*& aPrefix) {
-    return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
+                                      nsINodeInfo*& aNodeInfo) {
+    return mInner.NormalizeAttributeString(aStr, aNodeInfo);
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue, PRBool aNotify) {
