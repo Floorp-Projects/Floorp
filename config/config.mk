@@ -301,9 +301,7 @@ LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
 LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 
 NSPR20		= 1
-ifndef USE_AUTOCONF
 NSPRDIR		= nsprpub
-endif
 DEFINES		+= -DNSPR20
 INCLUDES	+= -I$(DIST)/include
 LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
