@@ -166,13 +166,18 @@ NS_IMPL_ISUPPORTS1_CI(nsWSDLLoader, nsIWSDLLoader)
 nsresult
 nsWSDLLoader::Init()
 {
-  PRBool enabled = PR_FALSE;
+  PRBool disabled = PR_FALSE;
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch) {
-    prefBranch->GetBoolPref("xml.xmlextras.soap.wsdl", &enabled);
+    if (NS_FAILED(prefBranch->GetBoolPref("xml.xmlextras.soap.wsdl.disabled",
+                                          &disabled))) {
+      // We default to enabling WSDL, it'll only be disabled if
+      // specificly disabled in the prefs.
+      disabled = PR_FALSE;
+    }
   }
 
-  if (!enabled) {
+  if (disabled) {
     return NS_ERROR_WSDL_NOT_ENABLED;
   }
 
