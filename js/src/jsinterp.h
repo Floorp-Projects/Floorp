@@ -65,10 +65,14 @@ struct JSStackFrame {
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     JSPackedBool    constructing;   /* true if called via new operator */
     uint8           overrides;      /* bit-set of overridden Call properties */
-    JSPackedBool    debugging;      /* true if for JS_EvaluateInStackFrame */
+    uint8           flags;          /* flags, see below */
     JSPackedBool    reserved;       /* reserved for future use */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
+
+/* JS stack frame flags. */
+#define JSFRAME_DEBUGGER    0x1     /* frame for JS_EvaluateInStackFrame */
+#define JSFRAME_EVAL        0x2     /* frame for obj_eval */
 
 /*
  * Property cache for quickened get/set property opcodes.
@@ -227,7 +231,7 @@ js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
 
 extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
-	   JSStackFrame *down, JSBool debugging, jsval *result);
+	   JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
 js_Interpret(JSContext *cx, jsval *result);

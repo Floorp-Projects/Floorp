@@ -529,7 +529,7 @@ have_fun:
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.overrides = 0;
-    frame.debugging = JS_FALSE;
+    frame.flags = 0;
     frame.dormantNext = NULL;
 
     /*
@@ -772,7 +772,7 @@ out:
 
 JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
-	   JSStackFrame *down, JSBool debugging, jsval *result)
+	   JSStackFrame *down, uintN flags, jsval *result)
 {
     JSStackFrame *oldfp, frame;
     JSBool ok;
@@ -809,7 +809,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.sharpDepth = 0;
     frame.constructing = JS_FALSE;
     frame.overrides = 0;
-    frame.debugging = debugging;
+    frame.flags = (uint8) flags;
     frame.dormantNext = NULL;
 
     /*
@@ -2681,7 +2681,9 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_DEFVAR:
             atom = GET_ATOM(cx, script, pc);
             obj = js_FindVariableScope(cx, &fun);
-            attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+            attrs = JSPROP_ENUMERATE;
+            if (!(fp->flags & JSFRAME_EVAL))
+                attrs |= JSPROP_PERMANENT;
             if (op == JSOP_DEFCONST)
                 attrs |= JSPROP_READONLY;
             ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,

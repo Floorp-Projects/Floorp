@@ -647,7 +647,7 @@ JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->debugging;
+    return fp->flags & JSFRAME_DEBUGGER;
 }
 
 JS_PUBLIC_API(jsval)
@@ -716,7 +716,8 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 					   bytes, length, filename, lineno);
     if (!script)
 	return JS_FALSE;
-    ok = js_Execute(cx, fp->scopeChain, script, fp->fun, fp, JS_TRUE, rval);
+    ok = js_Execute(cx, fp->scopeChain, script, fp->fun, fp, JSFRAME_DEBUGGER,
+                    rval);
     js_DestroyScript(cx, script);
     return ok;
 }
