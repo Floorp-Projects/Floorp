@@ -30,11 +30,11 @@ package Bugzilla::Config;
 
 =head1 NAME
 
-Bugzilla::Config - Configuration paramaters for Bugzilla
+Bugzilla::Config - Configuration parameters for Bugzilla
 
 =head1 SYNOPSIS
 
-  # Getting paramaters
+  # Getting parameters
   use Bugzilla::Config;
 
   my $fooSetting = Param('foo');
@@ -172,7 +172,7 @@ sub Param {
 
 =item C<GetParamList()>
 
-Returns the list of known paramater types, from defparams.pl. Users should not
+Returns the list of known parameter types, from defparams.pl. Users should not
 rely on this method; it is intended for editparams/doeditparams only
 
 The format for the list is specified in defparams.pl

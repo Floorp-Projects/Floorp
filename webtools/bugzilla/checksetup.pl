@@ -679,8 +679,8 @@ $::ENV{'PATH'} = $origPath;
 
 # The |require "globals.pl"| above ends up creating a template object with
 # a COMPILE_DIR of 'data'. This means that TT creates the directory for us,
-# so this code wouldn't run if we just checked for the existance of the
-# directory. Instead, check for the existance of 'data/nomail', which is
+# so this code wouldn't run if we just checked for the existence of the
+# directory. Instead, check for the existence of 'data/nomail', which is
 # created in this block
 unless (-d 'data' && -e 'data/nomail') {
     print "Creating data directory ...\n";

@@ -1406,7 +1406,7 @@ foreach my $id (@idlist) {
         SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate) . " and who = $reporter");
         my $isoncc = FetchOneColumn();
         unless ($isreporter || $isoncc || ! $::FORM{'confirm_add_duplicate'}) {
-            # The reporter is oblivious to the existance of the new bug and is permitted access
+            # The reporter is oblivious to the existence of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
