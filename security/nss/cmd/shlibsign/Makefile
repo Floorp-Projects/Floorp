@@ -106,7 +106,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 include ../platrules.mk
 
 %.chk: %.$(DLL_SUFFIX) 
+ifeq ($(OS_TARGET), OS2)
+	-exec sign.cmd $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+else
 	@sh ./sign.sh $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+endif
 
 libs install :: $(CHECKLOC)
 
