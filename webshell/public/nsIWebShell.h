@@ -92,64 +92,174 @@ public:
  */
 class nsIWebShell : public nsIContentViewerContainer {
 public:
+  /**
+   * Initialization function for a WebShell instance.  This method provides 
+   * information needed by the WebShell to embed itself inside of a native 
+   * window provided by the caller. It is assumed that this function will be 
+   * called only once.
+   */
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_TRUE) = 0;
 
+  /**
+   * Notify the WebShell that its parent's window is being destroyed.  After 
+   * being destroyed, a WebShell is no longer visible and can no longer display 
+   * documents.
+   */
   NS_IMETHOD Destroy() = 0;
 
+  /**
+   * Return the current dimensions of the WebShell.
+   */
   NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h) = 0;
 
+  /**
+   * Resize the WebShell to the given dimensions.
+   */
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
+  /**
+   * Make the WebShell visible.
+   */
   NS_IMETHOD Show() = 0;
 
+  /**
+   * Make the WebShell invisible.
+   */
   NS_IMETHOD Hide() = 0;
 
+  /**
+   * Give the WebShell window focus.
+   */
   NS_IMETHOD SetFocus() = 0;
   NS_IMETHOD RemoveFocus() = 0;
 
+  /**
+   * Force the WebShell to repaint its window.
+   */
   NS_IMETHOD Repaint(PRBool aForce) = 0;
 
   // SetContextView moved to bottom to keep branch/tip interfaces
   // compatible
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
 
+  /**
+   * Set the nsIWebShellContainer for the WebShell.
+   */
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
+
+  /**
+   * Return the current nsIWebShellContainer.
+   */
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
+  /**
+   * Set the nsIStreamObserver which receives all notifications from URLs 
+   * loaded by the document.
+   */
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
+
+  /**
+   * Return the current nsIStreamObserver.
+   */
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
 
+  /**
+   * Set the nsIPref used to get/set preference values...
+   */
   NS_IMETHOD SetPrefs(nsIPref* aPrefs) = 0;
+
+  /**
+   * Return the current nsIPref interface.
+   */
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
 
+  /**
+   * Return the root WebShell instance.  Since WebShells can be nested 
+   * (when frames are present for example) this instance represents the 
+   * outermost WebShell.
+   */
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
+
+  /**
+   * Set the parent WebShell.
+   */
   NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;
+
+  /**
+   * Return the parent WebShell.
+   */
   NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
+
+  /**
+   * Return the current number of WebShells which are immediate children 
+   * of the current WebShell.
+   */
   NS_IMETHOD GetChildCount(PRInt32& aResult) = 0;
+
+  /**
+   * Add a new child WebShell.
+   */
   NS_IMETHOD AddChild(nsIWebShell* aChild) = 0;
+
+  /**
+   * Return the child WebShell at the requested index.
+   */
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult) = 0;
+
+  /**
+   * Return the name of the current WebShell.
+   */
   NS_IMETHOD GetName(PRUnichar** aName) = 0;
+
+  /**
+   * Set the name of the current WebShell.
+   */
   NS_IMETHOD SetName(const PRUnichar* aName) = 0;
+
+  /**
+   * Return the child WebShell with the specified name.
+   */
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult) = 0;
-
+  //
   // Document load api's
+  //
+  /**
+   * Return the nsIDocumentLoader associated with the WebShell.
+   */
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
+
+  /**
+   * Load the document associated with the specified URL into the WebShell.
+   */
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
                      nsURLReloadType aType=nsURLReload,
                      const PRUint32 aLocalIP=0) = 0;
+
+  /**
+   * Stop loading the current document.
+   */
   NS_IMETHOD Stop(void) = 0;
+
+  /**
+   * Reload the current document.
+   */
   NS_IMETHOD Reload(nsURLReloadType aType) = 0;
-  
+
+  //
   // History api's
+  //
+  /**
+   * Load the previous document in the history list.
+   */
   NS_IMETHOD Back() = 0;
   NS_IMETHOD CanBack() = 0;
   NS_IMETHOD Forward() = 0;
