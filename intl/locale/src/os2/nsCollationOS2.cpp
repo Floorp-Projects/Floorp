@@ -176,6 +176,7 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
   int uLen = UniStrxfrm(locObj, NULL, stringNormalized.GetUnicode(), 0);
+  UniFreeLocaleObject(locObj);
   
   *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
   return res;
@@ -200,7 +201,7 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
   int length = UniStrlen(stringNormalized.GetUnicode());
   int uLen = UniStrxfrm(locObj, (UniChar*)key, stringNormalized.GetUnicode(), length);
   *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
-  UniFreeMem(locObj);
+  UniFreeLocaleObject(locObj);
 
   return res;
 }

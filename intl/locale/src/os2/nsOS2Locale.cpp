@@ -120,11 +120,13 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsString* locale)
       }
     }
 
-    locale->AssignWithConversion(os2Locale);
+    locale->AssignWithConversion(os2_locale);
     return NS_OK;
+
   }
 
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+
 }
 
 //
