@@ -30,6 +30,16 @@
 #include "nsAString.h"
 #endif
 
+  /**
+   * |nsASingleFragmentC?String| is an abstract class.  Strings
+   * implementing |nsASingleFragmentC?String| have a buffer that is
+   * stored as a single fragment.  However, they are not necessarily
+   * NULL-terminated.
+   *
+   * See also |nsAFlatC?String|, the remaining more-specific abstract
+   * class in the string hierarchy.
+   */
+
 class NS_COM nsASingleFragmentString
     : public nsAString
   {

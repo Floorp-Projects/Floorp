@@ -58,6 +58,9 @@
 #error "JSVAL_STRING has zero value -- need to fix root management!"
 #endif
 
+/* static */
+const PRUnichar XPCReadableJSStringWrapper::sEmptyString = PRUnichar(0);
+
 XPCReadableJSStringWrapper::~XPCReadableJSStringWrapper()
 {
     if (mBufferHandle)

@@ -30,6 +30,16 @@
 #include "nsASingleFragmentString.h"
 #endif
 
+  /**
+   * |nsAFlatC?String| is an abstract class.  Strings implementing
+   * |nsAFlatC?String| have a buffer that is stored as a single fragment
+   * and is NULL-terminated.  That buffer can be accessed for reading
+   * using the |get| method.
+   *
+   * See also |nsASingleFragmentC?String| and |nsAC?String|, base
+   * classes of |nsAFlatC?String|.
+   */
+
 class NS_COM nsAFlatString
     : public nsASingleFragmentString
   {

@@ -215,15 +215,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         while(IS_SPACE_CHARS(*keyStr)) 
           keyStr++;
 
-        if(0 == Compare(nsDependentString(keyStr, 10),
+        if(0 == Compare(Substring(keyStr, keyStr+10),
                         NS_LITERAL_STRING("HTTP-EQUIV"),
                         nsCaseInsensitiveStringComparator()))
               httpEquivValue = values->StringAt(i)->get();
-        else if(0 == Compare(nsDependentString(keyStr, 7),
+        else if(0 == Compare(Substring(keyStr, keyStr+7),
                              NS_LITERAL_STRING("content"),
                              nsCaseInsensitiveStringComparator()))
               contentValue = values->StringAt(i)->get();
-        else if (0 == Compare(nsDependentString(keyStr, 7),
+        else if (0 == Compare(Substring(keyStr, keyStr+7),
                               NS_LITERAL_STRING("charset"),
                               nsCaseInsensitiveStringComparator()))
               charsetValue = values->StringAt(i)->get();
@@ -241,24 +241,24 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
       if(
           // first try unquoted strings
-         ((0==Compare(nsDependentString(httpEquivValue,contenttype.Length()),
+         ((0==Compare(Substring(httpEquivValue,httpEquivValue+contenttype.Length()),
                       contenttype,
                       nsCaseInsensitiveStringComparator())) ||
           // now try "quoted" or 'quoted' strings
           (( (httpEquivValue[0]=='\'') ||
              (httpEquivValue[0]=='\"') ) && 
-           (0==Compare(nsDependentString(httpEquivValue+1, contenttype.Length()),
+           (0==Compare(Substring(httpEquivValue+1, httpEquivValue+1+contenttype.Length()),
                        contenttype,
                        nsCaseInsensitiveStringComparator()))
           )) &&
           // first try unquoted strings
-         ((0==Compare(nsDependentString(contentValue,texthtml.Length()),
+         ((0==Compare(Substring(contentValue,contentValue+texthtml.Length()),
                       texthtml,
                       nsCaseInsensitiveStringComparator())) ||
           // now try "quoted" or 'quoted' strings
           (((contentValue[0]=='\'') ||
             (contentValue[0]=='\"'))&&
-           (0==Compare(nsDependentString(contentValue+1, texthtml.Length()),
+           (0==Compare(Substring(contentValue+1, contentValue+1+texthtml.Length()),
                        texthtml,
                        nsCaseInsensitiveStringComparator()))
           ))

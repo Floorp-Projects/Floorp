@@ -51,13 +51,19 @@ class NS_COM nsDependentString
       void
       Rebind( const char_type* aPtr )
         {
+          NS_ASSERTION(aPtr, "nsDependentString must wrap a non-NULL buffer");
           mHandle.DataStart(aPtr);
+          // XXX This should not be NULL-safe, but we should flip the switch
+          // early in a milestone.
+          //mHandle.DataEnd(aPtr+nsCharTraits<char_type>::length(aPtr));
           mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<char_type>::length(aPtr)) : 0);
         }
 
       void
       Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
+          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentString must wrap a non-NULL buffer");
+          NS_ASSERTION(!*aEndPtr, "nsDependentString must wrap only null-terminated strings");
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
         }
@@ -65,13 +71,8 @@ class NS_COM nsDependentString
       void
       Rebind( const char_type* aPtr, PRUint32 aLength )
         {
-          if ( aLength == PRUint32(-1) )
-            {
-//            NS_WARNING("Tell scc: Caller binding a dependent string doesn't know the real length.  Please pick the appropriate call.");
-              Rebind(aPtr);
-            }
-          else
-            Rebind(aPtr, aPtr+aLength);
+          NS_ASSERTION(aLength != PRUint32(-1), "caller passing bogus length");
+          Rebind(aPtr, aPtr+aLength);
         }
 
       nsDependentString( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
@@ -104,13 +105,19 @@ class NS_COM nsDependentCString
       void
       Rebind( const char_type* aPtr )
         {
+          NS_ASSERTION(aPtr, "nsDependentCString must wrap a non-NULL buffer");
           mHandle.DataStart(aPtr);
+          // XXX This should not be NULL-safe, but we should flip the switch
+          // early in a milestone.
+          //mHandle.DataEnd(aPtr+nsCharTraits<char_type>::length(aPtr));
           mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<char_type>::length(aPtr)) : 0);
         }
 
       void
       Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
+          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentCString must wrap a non-NULL buffer");
+          NS_ASSERTION(!*aEndPtr, "nsDependentCString must wrap only null-terminated strings");
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
         }
@@ -118,13 +125,8 @@ class NS_COM nsDependentCString
       void
       Rebind( const char_type* aPtr, PRUint32 aLength )
         {
-          if ( aLength == PRUint32(-1) )
-            {
-//            NS_WARNING("Tell scc: Caller binding a dependent string doesn't know the real length.  Please pick the appropriate call.");
-              Rebind(aPtr);
-            }
-          else
-            Rebind(aPtr, aPtr+aLength);
+          NS_ASSERTION(aLength != PRUint32(-1), "caller passing bogus length");
+          Rebind(aPtr, aPtr+aLength);
         }
 
       nsDependentCString( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
@@ -136,7 +138,7 @@ class NS_COM nsDependentCString
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const self_type& );                                        // we're immutable, so no copy-assignment operator
+      void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
 
     public:
       virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }

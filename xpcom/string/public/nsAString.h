@@ -42,7 +42,14 @@
 
 
   /**
+   * |nsAC?String| is the most abstract class in the string hierarchy.
+   * Strings implementing |nsAC?String| may be stored in multiple
+   * fragments.  They need not be null-terminated and they may contain
+   * embedded null characters.  They may be dependent objects that
+   * depend on other strings.
    *
+   * See also |nsASingleFragmentC?String| and |nsAFlatC?String|, the
+   * other main abstract classes in the string hierarchy.
    */
 
 class NS_COM nsAString
