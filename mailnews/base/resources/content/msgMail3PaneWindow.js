@@ -1191,7 +1191,10 @@ function GetSelectedMessages()
     var length = {};
     var view = GetDBView();
     view.getURIsForSelection(messageArray,length);
-    return messageArray.value;
+    if (length.value)
+      return messageArray.value;
+    else 
+      return null;
   }
   catch (ex) {
     dump("ex = " + ex + "\n");
