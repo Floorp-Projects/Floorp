@@ -33,6 +33,8 @@ interface nsIDBFolderInfo;
 
 typedef long nsMsgDBCommit;
 
+[scriptable, uuid(aa4d45d0-3956-11d3-8d76-00805f8a6617)]
+
 interface nsMsgDBCommitType 
 {
   const long kSmallCommit = 0;
