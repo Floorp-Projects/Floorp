@@ -49,8 +49,8 @@ int main (int argc, char **argv) {
     iim->GetNameForIID(iid1, &name1);
     fprintf(stderr, "%s iid %s\n", name1, iid1->ToString());
 
-    fprintf(stderr, "\ngetting iid for 'nsIBaseStream'\n");
-    iim->GetIIDForName("nsIBaseStream", &iid2);
+    fprintf(stderr, "\ngetting iid for 'nsIInputStream'\n");
+    iim->GetIIDForName("nsIInputStream", &iid2);
     iim->GetNameForIID(iid2, &name2);
     fprintf(stderr, "%s iid %s\n", name2, iid2->ToString());
 
