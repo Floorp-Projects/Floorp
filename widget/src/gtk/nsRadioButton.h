@@ -59,6 +59,7 @@ public:
 protected:
   NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
+  GtkWidget *mRadioButton;
 
 };
 

@@ -34,6 +34,7 @@ nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
   NS_INIT_REFCNT();
   mLabel = nsnull;
+  mCheckButton = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -52,8 +53,15 @@ nsCheckButton::~nsCheckButton()
 //-------------------------------------------------------------------------
 NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
 {
-  mWidget = gtk_check_button_new();
-  gtk_widget_set_name(mWidget, "nsCheckButton");
+  mWidget = gtk_event_box_new();
+  mCheckButton = gtk_check_button_new();
+
+  gtk_container_add(GTK_CONTAINER(mWidget), mCheckButton);
+
+  gtk_widget_show(mCheckButton);
+
+  gtk_widget_set_name(mCheckButton, "nsCheckButton");
+
   return NS_OK;
 }
 
@@ -87,7 +95,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mWidget), aState);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckButton), aState);
   return NS_OK;
 }
 
@@ -98,7 +106,7 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-  gint state = GTK_TOGGLE_BUTTON(mWidget)->active;
+  gint state = GTK_TOGGLE_BUTTON(mCheckButton)->active;
   aState = state;
   return NS_OK;
 }
@@ -116,7 +124,7 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
   } else {
     mLabel = gtk_label_new(label);
     gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
+    gtk_container_add(GTK_CONTAINER(mCheckButton), mLabel);
     gtk_widget_show(mLabel);
   }
   NS_FREE_STR_BUF(label);

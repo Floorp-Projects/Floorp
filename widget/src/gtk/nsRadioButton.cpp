@@ -38,6 +38,7 @@ nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 {
   NS_INIT_REFCNT();
   mLabel = nsnull;
+  mRadioButton = nsnull;
 }
 
 
@@ -81,8 +82,14 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 {
-  mWidget = gtk_radio_button_new(nsnull);
-  gtk_widget_set_name(mWidget, "nsRadioButton");
+  mWidget = gtk_event_box_new();
+  mRadioButton = gtk_radio_button_new(nsnull);
+
+  gtk_container_add(GTK_CONTAINER(mWidget), mRadioButton);
+
+  gtk_widget_show(mRadioButton);
+
+  gtk_widget_set_name(mRadioButton, "nsRadioButton");
 
   return NS_OK;
 }
@@ -94,7 +101,7 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mWidget), aState);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mRadioButton), aState);
   return NS_OK;
 }
 
@@ -104,7 +111,7 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  int state = GTK_TOGGLE_BUTTON(mWidget)->active;
+  int state = GTK_TOGGLE_BUTTON(mRadioButton)->active;
   return state;
 }
 
@@ -122,7 +129,7 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
   } else {
     mLabel = gtk_label_new(label);
     gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
+    gtk_container_add(GTK_CONTAINER(mRadioButton), mLabel);
     gtk_widget_show(mLabel); /* XXX */
   }
   NS_FREE_STR_BUF(label);
