@@ -776,7 +776,6 @@ nsFontMetricsXlib::InitGlobals(void)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 i; // XXX no local scope in |for| on some compilers
   nsCompressedCharMap empty_ccmapObj;
   gEmptyCCMap = empty_ccmapObj.NewCCMap();
   if (!gEmptyCCMap)
