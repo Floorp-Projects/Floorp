@@ -156,16 +156,16 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                JS_ValueToECMAUint32(cx, val, &argCount) &&
                argCount > namedArgCount)
             {
-                for(uint32 i = namedArgCount; i < argCount; i++)
+                for(uint32 k = namedArgCount; k < argCount; k++)
                 {
                     char num[8];
-                    JS_snprintf(num, 8, "%d", (int) i);
+                    JS_snprintf(num, 8, "%d", (int) k);
 
                     if(JS_GetProperty(cx, argsObj, num, &val))
                     {
                         value = JSVAL2String(cx, val, &isString);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
-                                        i ? ", " : "",
+                                        k ? ", " : "",
                                         isString ? "\"" : "",
                                         value ? value : "?unknown?",
                                         isString ? "\"" : "");
