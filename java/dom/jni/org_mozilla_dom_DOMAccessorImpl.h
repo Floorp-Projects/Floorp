@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Inaccessible static: instance */
 /*
  * Class:     org_mozilla_dom_DOMAccessorImpl
  * Method:    register
@@ -22,6 +23,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
   (JNIEnv *, jclass);
+
+/*
+ * Class:     org_mozilla_dom_DOMAccessorImpl
+ * Method:    getElementByHandle
+ * Signature: (J)Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessorImpl_getElementByHandle
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

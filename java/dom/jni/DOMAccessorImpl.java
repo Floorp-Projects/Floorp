@@ -25,18 +25,22 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 
     private static DOMAccessor instance = null;
     private Vector documentLoadListeners = new Vector();
 
-    public static native void register();
-    public static native void unregister();
-
     static {
 	System.loadLibrary("javadomjni");
     }
+
+    private void DOMAccessorImpl() {}
+
+    private static native void register();
+    private static native void unregister();
+    private static native Element getElementByHandle(long p);
 
     public static synchronized DOMAccessor getInstance() {
 	if (instance == null) {
@@ -47,9 +51,8 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 
     public synchronized void 
 	addDocumentLoadListener(DocumentLoadListener listener) {
-
 	if (documentLoadListeners.size() == 0) {
-	  register();
+	    register();
 	}
 	documentLoadListeners.addElement(listener);
     }

@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Inaccessible static: javaDOMlisteners */
 /*
  * Class:     org_mozilla_dom_DocumentImpl
  * Method:    createAttribute
@@ -71,7 +72,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   (JNIEnv *, jobject, jstring);
 
-
 /*
  * Class:     org_mozilla_dom_DocumentImpl
  * Method:    getDoctype
@@ -103,14 +103,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
   (JNIEnv *, jobject);
-
-/*
- * Class:     org_mozilla_dom_DocumentImpl
- * Method:    initialize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentImpl_initialize
-  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

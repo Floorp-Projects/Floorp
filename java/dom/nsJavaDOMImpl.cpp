@@ -504,6 +504,12 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
 
 #ifndef JAVA_DOM_OJI_ENABLE
 void nsJavaDOMImpl::StartJVM(void) {
+  jsize jvmCount;
+  JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
+  if (jvmCount) {
+    return;
+  }
+
   JNIEnv *env = NULL;	
   JDK1_1InitArgs vm_args;
   JNI_GetDefaultJavaVMInitArgs(&vm_args);

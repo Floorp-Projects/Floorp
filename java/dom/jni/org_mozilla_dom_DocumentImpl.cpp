@@ -37,21 +37,6 @@
 
 /*
  * Class:     org_mozilla_dom_DocumentImpl
- * Method:    initialize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentImpl_initialize
-  (JNIEnv *env, jclass)
-{
-  if (!JavaDOMGlobals::log) {
-    JavaDOMGlobals::Initialize(env);
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
-	   ("Document.initialize\n"));
-  }
-}
-
-/*
- * Class:     org_mozilla_dom_DocumentImpl
  * Method:    createAttribute
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Attr;
  */

@@ -1,4 +1,3 @@
-#include "org_mozilla_dom_DOMAccessorImpl.h"
 
 #include "prlog.h"
 #include "javaDOMGlobals.h"
@@ -8,6 +7,7 @@
 #include "nsCURILoader.h"
 
 #include "nsIJavaDOM.h"
+#include "org_mozilla_dom_DOMAccessorImpl.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
@@ -18,26 +18,29 @@ static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
-  (JNIEnv *, jclass jthis)
+  (JNIEnv *env, jclass jthis)
 {
+  if (!JavaDOMGlobals::log) {
+    JavaDOMGlobals::Initialize(env);
+  }
   nsresult rv = NS_OK; 
   NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
   if (NS_FAILED(rv) || !docLoaderService) {
-    fprintf(stderr, 
-	    "DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
-	    rv);
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
+	    rv));
   } else {
     NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &rv);
     if (NS_FAILED(rv) || !javaDOM) {
-      fprintf(stderr, 
-	      "DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
-	      rv);
+      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	     ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
+	      rv));
     } else {
       rv = docLoaderService->AddObserver((nsIDocumentLoaderObserver*)javaDOM);
       if (NS_FAILED(rv)) {
-	fprintf(stderr, 
-		"DOMAccessor::register: AddObserver(JavaDOM) failed x\n", 
-		rv);
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	       ("DOMAccessor::register: AddObserver(JavaDOM) failed x\n", 
+		rv));
       }
     }
     nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
@@ -77,4 +80,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
     }
     nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
   }
+}
+
+/*
+ * Class:     org_mozilla_dom_DOMAccessorImpl
+ * Method:    createElement
+ * Signature: (J)Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessorImpl_getElementByHandle
+  (JNIEnv *env, jclass jthis, jlong p)
+{ 
+  if (!JavaDOMGlobals::log) {
+    JavaDOMGlobals::Initialize(env);
+  }
+  nsIDOMNode *node = (nsIDOMNode*)p;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }

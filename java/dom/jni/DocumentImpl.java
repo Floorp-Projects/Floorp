@@ -61,15 +61,8 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
     public native Element getDocumentElement();
     public native NodeList getElementsByTagName(String tagName);
     public native DOMImplementation getImplementation();
-
-    private static native void initialize();
-
     public Event createEvent(String type) throws DOMException {
         throw new UnsupportedOperationException();
-    }
-
-    static {
-	initialize();
     }
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
