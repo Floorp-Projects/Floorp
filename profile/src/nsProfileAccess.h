@@ -26,69 +26,96 @@
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
 
-typedef struct _profile_struct {
-	char*	profileName;
-	char*	profileLocation;
-	char*	isMigrated;
-	char*   NCProfileName;
-	char*	NCDeniedService;
-	char*   NCEmailAddress;
-	char*   NCHavePregInfo;
-	PRBool	updateProfileEntry;
-}ProfileStruct;
+class ProfileStruct
+{
+public:
+    nsString    profileName;
+    nsString    profileLocation;
+    nsString    isMigrated;
+    nsString    NCProfileName;
+    nsString    NCDeniedService;
+    nsString    NCEmailAddress;
+    nsString    NCHavePregInfo;
+    PRBool      updateProfileEntry;
+
+private:
+    // prevent inadvertent copies and assignments
+    //ProfileStruct& operator=(const ProfileStruct& rhs); 
+    //ProfileStruct(const ProfileStruct& rhs); 
+};
 
 class nsProfileAccess
 {
 
 private:
-	nsCOMPtr <nsIRegistry> m_registry;
+    nsCOMPtr <nsIRegistry> m_registry;
 
-	nsVoidArray		*mProfiles;
-	PRInt32			mCount;
-	char*			mCurrentProfile;
-	char*			mVersion;
-	PRBool			mFixRegEntries;
-	char*			mHavePREGInfo;
-	PRInt32			m4xCount;
+    // This is an array that holds all the profile information--migrated/unmigrated
+    // unmigrated: if the profileinfo is migrated--i.e. -installer option is used
+    nsVoidArray*  mProfiles;
 
-	nsresult OpenRegistry();
-	nsresult CloseRegistry();
+    // Represents the size of the mProfiles array
+    // This value keeps changing as profiles are created/deleted/migrated
+    PRInt32       mCount;
+
+    nsString      mCurrentProfile;
+    nsString      mVersion;
+    PRBool        mFixRegEntries;
+    nsString      mHavePREGInfo;
+
+    // Represents the size of the m4xProfiles array
+    // This value gets set after the profile information is migrated
+    // and does not change subsequently.
+    PRInt32       m4xCount;
+
+
+    nsresult OpenRegistry();
+    nsresult CloseRegistry();
+
+    // It looks like mCount and m4xCount are not required.
+    // But retaining them for now to avoid some problems.
+    // Will re-evaluate them in future.
 
 public:
-	PRBool			mProfileDataChanged;
-	PRBool			mForgetProfileCalled;
-	PRInt32			mNumProfiles;
-	PRInt32			mNumOldProfiles;
-	nsVoidArray		*m4xProfiles;
+    PRBool         mProfileDataChanged;
+    PRBool         mForgetProfileCalled;
 
-	nsProfileAccess();
-	virtual ~nsProfileAccess();
+    // This is the num of 5.x profiles at any given time
+    PRInt32        mNumProfiles;
 
-	nsresult SetValue(ProfileStruct* aProfile);
-	nsresult FillProfileInfo();
+    // This is the num of 4.x profiles at any given time
+    PRInt32        mNumOldProfiles;
 
-	void	 GetNumProfiles(PRInt32 *numProfiles);
-	void	 GetNum4xProfiles(PRInt32 *numProfiles);
-	void	 GetFirstProfile(char **firstProfile);
+    nsVoidArray*   m4xProfiles;
 
-	void	 SetCurrentProfile(const char *profileName);
-	void	 GetCurrentProfile(char **profileName);
+    nsProfileAccess();
+    virtual ~nsProfileAccess();
 
-	void	 RemoveSubTree(const char* profileName);
-	void	 FixRegEntry(char** dirName);
+    nsresult SetValue(ProfileStruct* aProfile);
+    nsresult FillProfileInfo();
 
-	nsresult HavePregInfo(char **info);
-	nsresult GetValue(const char* profileName, ProfileStruct** aProfile);
-	PRInt32	 FindProfileIndex(const char* profileName);
+    void GetNumProfiles(PRInt32 *numProfiles);
+    void GetNum4xProfiles(PRInt32 *numProfiles);
+    void GetFirstProfile(PRUnichar **firstProfile);
 
-	nsresult UpdateRegistry();
-	void	 GetProfileList(char **profileListStr);
-	PRBool	 ProfileExists(const char *profileName);
-	nsresult Get4xProfileInfo(const char *registryName);
-	nsresult UpdateProfileArray();
-	void	 SetPREGInfo(const char* pregInfo);
-	void	 GetPREGInfo(const char *profileName, char** pregInfo);
-	void	 FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
+    void SetCurrentProfile(const PRUnichar *profileName);
+    void GetCurrentProfile(PRUnichar **profileName);
+
+    void RemoveSubTree(const PRUnichar* profileName);
+    void FixRegEntry(PRUnichar** dirName);
+
+    nsresult HavePregInfo(char **info);
+    nsresult GetValue(const PRUnichar* profileName, ProfileStruct** aProfile);
+    PRInt32	 FindProfileIndex(const PRUnichar* profileName);
+
+    nsresult UpdateRegistry();
+    void GetProfileList(PRUnichar **profileListStr);
+    PRBool ProfileExists(const PRUnichar *profileName);
+    nsresult Get4xProfileInfo(const char *registryName);
+    nsresult UpdateProfileArray();
+    void SetPREGInfo(const char* pregInfo);
+    void GetPREGInfo(const PRUnichar *profileName, char** pregInfo);
+    void FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
 };
 
 #endif // __nsProfileAccess_h___
