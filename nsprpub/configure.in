@@ -2421,7 +2421,6 @@ lib/libc/Makefile
 lib/libc/include/Makefile 
 lib/libc/src/Makefile 
 lib/tests/Makefile
-pkg/Makefile
 pkg/solaris/Makefile
 pkg/solaris/SUNWpr/Makefile
 pkg/solaris/SUNWprx/Makefile
@@ -2457,6 +2456,12 @@ fi
 
 if test -n "$USE_CPLUS"; then
     MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
+fi
+
+dnl There is no pkg/Makefile.in, so AC_OUTPUT won't create the pkg directory
+dnl for us.
+if test ! -d pkg; then
+    mkdir pkg
 fi
 
 AC_OUTPUT([$MAKEFILES], [chmod +x config/nspr-config])
