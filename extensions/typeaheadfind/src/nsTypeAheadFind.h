@@ -69,7 +69,7 @@ enum {
   eRepeatingReverse
 }; 
 
-const kMaxBadCharsBeforeCancel = 3;
+const int kMaxBadCharsBeforeCancel = 3;
 
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMKeyListener,
