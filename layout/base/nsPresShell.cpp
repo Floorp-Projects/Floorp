@@ -1147,6 +1147,7 @@ protected:
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
+  PRPackedBool mDidInitialReflow;
   nsIFrame* mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
@@ -1408,6 +1409,7 @@ PresShell::PresShell():mAnonymousContentTable(nsnull),
   NS_INIT_REFCNT();
   mIsDocumentGone = PR_FALSE;
   mIsDestroying = PR_FALSE;
+  mDidInitialReflow = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;
   mCurrentEventContent = nsnull;
@@ -2564,6 +2566,7 @@ NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
   nsCOMPtr<nsIContent> root;
+  mDidInitialReflow = PR_TRUE;
 
 #ifdef NS_DEBUG
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
@@ -3557,6 +3560,11 @@ NS_IMETHODIMP
 PresShell::AppendReflowCommandInternal(nsIReflowCommand* aReflowCommand,
                                        nsVoidArray&      aQueue)
 {
+  // If we've not yet done the initial reflow, then don't bother
+  // enqueuing a reflow command yet.
+  if (! mDidInitialReflow)
+    return NS_OK;
+
 #ifdef DEBUG
   //printf("gShellCounter: %d\n", gShellCounter++);
   if (mInVerifyReflow) {
