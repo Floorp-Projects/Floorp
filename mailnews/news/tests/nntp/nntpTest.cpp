@@ -228,6 +228,7 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
     rv = nsServiceManager::GetService(kNntpUrlCID,
                                       nsINntpUrl::GetIID(),
                                       (nsISupports**)&m_url);
+
 	if (NS_FAILED(rv) || (m_url == nsnull)) { 
         printf("InitializeProtocol failed\n");
         return rv;
@@ -265,10 +266,12 @@ nsresult nsNntpTestDriver::RunDriver()
 		}  // if running url
 #ifdef XP_UNIX
 
+        printf("processing...");
         PL_ProcessPendingEvents(m_eventQueue);
 
 #endif
 #ifdef XP_PC	
+        printf("processing...");
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
 		{
