@@ -27,7 +27,6 @@
 #include "nsScanner.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
-#include "prstrm.h"
 #include <fstream.h>
 #include "nsIInputStream.h"
 #include "nsIParserFilter.h"
