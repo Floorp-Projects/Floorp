@@ -526,7 +526,8 @@
              var count = 0;
 
              while (currCol) {
-               while (currCol && currCol.localName != "outlinercol")
+               while (currCol && (currCol.localName != "outlinercol" ||
+                                  currCol.getAttribute("primary") == "true"))
                  currCol = currCol.nextSibling;
  
                if (currCol && (currCol != this)) {
