@@ -930,10 +930,15 @@ char* EDT_GetTargetData( MWContext *pContext );
 void  EDT_SetTargetData( MWContext *pContext, char *pTargetName );
 void  EDT_InsertTarget( MWContext *pContext, char* pTargetName );
 char* EDT_GetAllDocumentTargets( MWContext *pContext );
-/* Scroll (move insert point) to a target withing current document */
+/* Scroll (move insert point) to a target withing current document 
+ * This tests for valid link to internal target, returns FALSE if not found
+*/
 XP_Bool EDT_ScrollToTarget(MWContext *pContext, char *pTargetURL);
+/* Tells if URL is to an internal Target tag */
+XP_Bool EDT_IsInternalLink(MWContext *pContext, char *pURL);
 /* Get text to display on status line: "Target Name: name" */
 char* EDT_GetTargetNameFromIcon(LO_ImageStruct *pIcon);
+
 
 /*CLM: Check current file-update time and
  *     return TRUE if it is different
