@@ -54,6 +54,7 @@ OBJS =                                 \
 	.\$(OBJDIR)\IEHtmlElementCollection.obj \
 	.\$(OBJDIR)\IEHtmlElement.obj      \
 	.\$(OBJDIR)\IEHtmlDocument.obj     \
+	.\$(OBJDIR)\DropTarget.obj         \
 	.\$(OBJDIR)\guids.obj              \
 !endif
 #	.\$(OBJDIR)\ActiveXPlugin.obj      \
@@ -165,6 +166,8 @@ IEHtmlElementCollection.cpp : StdAfx.h IEHtmlElementCollection.h
 IEHtmlElement.cpp : StdAfx.h IEHtmlNode.h IEHtmlElement.h
 
 IEHtmlDocument.cpp : StdAfx.h IEHtmlNode.h IEHtmlDocument.h
+
+DropTarget.cpp: StdAfx.h DropTarget.h
 
 MozillaControl.cpp \
 MozillaBrowser.cpp \
