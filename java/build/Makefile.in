@@ -115,7 +115,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	cp $(DIST)/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so
 	cp $(DIST)/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so
 	cp $(DIST)/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so
-	cp $(DIST)/lib/libwc_share.a $(PACKAGE_LIB)/libwc_share.a
+	cp $(DIST)/lib/libwc_share.so $(PACKAGE_LIB)/libwc_share.so
 	cp $(DIST)/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so
 	cp $(DIST)/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so
 	cp $(DIST)/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so
@@ -132,7 +132,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	chmod 775 $(PACKAGE_LIB)/libjavadom.so
 	chmod 775 $(PACKAGE_LIB)/libwebclient.so
 	chmod 775 $(PACKAGE_LIB)/libwebclientstub.so
-	chmod 775 $(PACKAGE_LIB)/libwc_share.a
+	chmod 775 $(PACKAGE_LIB)/libwc_share.so
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
 	rm -f runem_unix_commercial.bat
 	@echo copy ../lib/libwebclient.so ../.. >> runem_unix_commercial.bat
@@ -203,7 +203,7 @@ ifneq ($(BUILD_BLACKWOOD),)
 	cp $(DIST)/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so
 	cp $(DIST)/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so
 	cp $(DIST)/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so
-	cp $(DIST)/lib/libwc_share.a $(PACKAGE_LIB)/libwc_share.a
+	cp $(DIST)/lib/libwc_share.so $(PACKAGE_LIB)/libwc_share.so
 	cp $(DIST)/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so
 	cp $(DIST)/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so
 	cp $(DIST)/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so
@@ -216,7 +216,7 @@ ifneq ($(BUILD_BLACKWOOD),)
 	chmod 775 $(PACKAGE_LIB)/libpluglet.so
 	chmod 775 $(PACKAGE_LIB)/libwebclient.so
 	chmod 775 $(PACKAGE_LIB)/libwebclientstub.so
-	chmod 775 $(PACKAGE_LIB)/libwc_share.a
+	chmod 775 $(PACKAGE_LIB)/libwc_share.so
 	chmod 775 $(PACKAGE_LIB)/libbcorb.so
 	chmod 775 $(PACKAGE_LIB)/libbcjavastubs.so
 	chmod 775 $(PACKAGE_LIB)/libjavaloader.so
