@@ -2566,7 +2566,7 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;  // already pushed back
       }
-      else if (mToken.mIdent.EqualsIgnoreCase("-moz-hsl")) {
+      else if (mToken.mIdent.EqualsIgnoreCase("hsl")) {
         // hsl ( hue , saturation , lightness )
         // "hue" is a number, "saturation" and "lightness" are percentages.
         if (ParseHSLColor(aErrorCode, rgba, ')')) {
@@ -3411,7 +3411,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
          (tk->mIdent.EqualsIgnoreCase("rgb") ||
-          tk->mIdent.EqualsIgnoreCase("-moz-hsl") ||
+          tk->mIdent.EqualsIgnoreCase("hsl") ||
           tk->mIdent.EqualsIgnoreCase("-moz-rgba") ||
           tk->mIdent.EqualsIgnoreCase("-moz-hsla")))) {
       // Put token back so that parse color can get it
