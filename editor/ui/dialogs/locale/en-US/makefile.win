@@ -41,6 +41,7 @@ install::
 	$(MAKE_INSTALL) EdAdvancedEdit.dtd               $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorImageMap.dtd               $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorImageMapHotSpot.dtd        $(DIST)\bin\chrome\editor\locale
+	$(MAKE_INSTALL) EditorSaveAsCharset.dtd        $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditConflict.dtd                 $(DIST)\bin\chrome\editor\locale
 
 clobber::
@@ -61,6 +62,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\EdAdvancedEdit.dtd
   rm -f $(DIST)\bin\chrome\editor\locale\EditorImageMap.dtd
   rm -f $(DIST)\bin\chrome\editor\locale\EditorImageMapHotSpot.dtd
+  rm -f $(DIST)\bin\chrome\editor\locale\SaveAsCharset.dtd
   rm -f $(DIST)\bin\chrome\editor\locale\EditConflict.dtd
 
 

@@ -63,6 +63,8 @@ install::
 	$(MAKE_INSTALL) EdImageMapHotSpot.xul  $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdImageMapShapes.js    $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdImageMapPage.html    $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) EditorSaveAsCharset.xul    $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) EditorSaveAsCharset.js    $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditConflict.xul       $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditConflict.js        $(DIST)\bin\chrome\editor\content
 
@@ -107,5 +109,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\EdImageMapHotSpot.xul
   rm -f $(DIST)\bin\chrome\editor\content\EdImageMapShapes.js
   rm -f $(DIST)\bin\chrome\editor\content\EdImageMapPage.html
+  rm -f $(DIST)\bin\chrome\editor\content\EditorSaveAsCharset.xul
+  rm -f $(DIST)\bin\chrome\editor\content\EditorSaveAsCharset.js
   rm -f $(DIST)\bin\chrome\editor\content\EditConflict.xul
   rm -f $(DIST)\bin\chrome\editor\content\EditConflict.js

@@ -461,12 +461,16 @@ function ClearTreelist(tree)
   }
 }
 
-function GetSelectedTreelistValue(tree)
+function GetSelectedTreelistAttribute(tree, attr)
 {
   if (tree)
-    return tree.selectedCells[0].getAttribute("value");
+    return tree.selectedCells[0].getAttribute(attr);
 
   return "";
+}
+function GetSelectedTreelistValue(tree)
+{
+  return GetSelectedTreelistAttribute(tree,"value")
 }
 
 
