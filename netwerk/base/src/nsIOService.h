@@ -62,7 +62,9 @@ public:
 
 protected:
     NS_METHOD GetCachedProtocolHandler(const char *scheme,
-                                       nsIProtocolHandler* *hdlrResult);
+                                       nsIProtocolHandler* *hdlrResult,
+                                       PRUint32 start=0,
+                                       PRUint32 end=0);
     NS_METHOD CacheProtocolHandler(const char *scheme,
                                    nsIProtocolHandler* hdlr);
 
