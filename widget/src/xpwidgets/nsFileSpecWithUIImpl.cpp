@@ -83,7 +83,7 @@ nsFileSpecWithUIImpl::~nsFileSpecWithUIImpl()
 NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
 	const char *windowTitle,
 	const char *suggestedLeafName,
-  nsIFileSpecWithUI::StandardFilterMask outMask)
+    PRUint32 outMask)
 //----------------------------------------------------------------------------------------
 {
     if (!mBaseFileSpec)
@@ -101,10 +101,10 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
 
     SetFileWidgetFilterList(fileWidget, outMask, nsnull, nsnull);
 
-    nsFileSpec spec;
     // If there is a filespec specified, then start there.
-    if (GetFileSpec(&spec) != NS_ERROR_NOT_INITIALIZED)
-      fileWidget->SetDisplayDirectory(spec);
+    SetFileWidgetStartDir(fileWidget);
+
+    nsFileSpec spec;
     
     nsString winTitle(windowTitle);
 
@@ -129,7 +129,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseFile(const char *title, char **_retval
 
 // ---------------------------------------------------------------------------
 void nsFileSpecWithUIImpl::SetFileWidgetFilterList(
-  nsIFileWidget* fileWidget, nsIFileSpecWithUI::StandardFilterMask mask,
+  nsIFileWidget* fileWidget, PRUint32 mask,
   const char *inExtraFilterTitle, const char *inExtraFilter)
 {
   if (!fileWidget) return;
@@ -200,9 +200,23 @@ Clean:
 }
 
 //----------------------------------------------------------------------------------------
+void nsFileSpecWithUIImpl::SetFileWidgetStartDir( nsIFileWidget *fileWidget ) {
+    // We set the file widget's starting directory to the one specified by this nsIFileSpec.
+    if ( mBaseFileSpec && fileWidget ) {
+        nsFileSpec spec;
+        nsresult rv = mBaseFileSpec->GetFileSpec( &spec );
+        if ( NS_SUCCEEDED( rv ) && spec.Valid() ) {
+            // Set as starting directory in file widget.
+            fileWidget->SetDisplayDirectory( spec );
+        }
+    }
+}
+
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
   const char *inTitle,
-  nsIFileSpecWithUI::StandardFilterMask inMask,
+  PRUint32 inMask,
   const char *inExtraFilterTitle, const char *inExtraFilter)
 //----------------------------------------------------------------------------------------
 {
@@ -220,6 +234,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
 
   SetFileWidgetFilterList(fileWidget, inMask, 
                           inExtraFilterTitle, inExtraFilter);
+  SetFileWidgetStartDir(fileWidget);
   nsString winTitle(inTitle);
 	if (fileWidget->GetFile(nsnull, winTitle, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
@@ -243,6 +258,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
         (void**)getter_AddRefs(fileWidget));
 	if (NS_FAILED(rv))
 		return rv;
+    SetFileWidgetStartDir(fileWidget);
     nsFileSpec spec;
 	if (fileWidget->GetFolder(nsnull, title, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;

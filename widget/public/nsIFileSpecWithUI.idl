@@ -25,66 +25,48 @@
 // may think they are. Welcome to reality.
 
 #include "nsIFileSpec.idl"
-
-%{C++
-#include "nscore.h" // for NS_WIDGET
-#include "nsIComponentManager.h"
-%}
-native StandardFilterMask(nsIFileSpecWithUI::StandardFilterMask);
+#include "nsIComponentManager.idl"
 
 [scriptable, uuid(8ddf7681-139a-11d3-915f-dc1f8c138b7c)]
 interface nsIFileSpecWithUI : nsIFileSpec
 {
-%{C++
-	//
-	// The "choose" functions present the file picker UI in order to set the
-	// value of the file spec.
-%}
+    // Filter mask flags.  These may be or'd together.
+    const unsigned long eAllReadable = 1<<0;
+    const unsigned long eHTMLFiles   = 1<<1;
+    const unsigned long eXMLFiles    = 1<<2;
+    const unsigned long eImageFiles  = 1<<3;
+    const unsigned long eMailFiles   = 1<<4;
+    const unsigned long eTextFiles   = 1<<5;
+    const unsigned long eAllFiles    = 1<<6;
 
-%{C++
-	// The mask for standard filters is given as follows:
-	enum StandardFilterMask
-	{
-		eAllReadable		= (1<<0)
-	,	eHTMLFiles			= (1<<1)
-	,	eXMLFiles			= (1<<2)
-	,	eImageFiles			= (1<<3)
-    ,   eMailFiles          = (1<<4)
-    ,   eTextFiles          = (1<<5)
-	,	eAllFiles			= (1<<6)
+    const unsigned long eAllStandardFilters = eAllReadable |
+                                              eHTMLFiles   |
+                                              eXMLFiles    |
+                                              eImageFiles  |
+                                              eMailFiles   |
+                                              eTextFiles   |
+                                              eAllFiles;
+
+    const unsigned long eAllMailOutputFilters = eHTMLFiles |
+                                                eMailFiles |
+                                                eTextFiles;
 	
-	// Mask containing all the above default filters
-	,	eAllStandardFilters = (
-							  eAllReadable
-							| eHTMLFiles
-							| eXMLFiles
-							| eImageFiles
-                            | eMailFiles
-                            | eTextFiles
-							| eAllFiles)
-    ,   eAllMailOutputFilters = (
-                                 eHTMLFiles
-                               | eMailFiles
-                               | eTextFiles)
-	
-	// The "extra filter" bit should be set if the "extra filter"
-	// is passed in to chooseInputFile.
-	,   eExtraFilter        = (1<<31)
-	};
-	enum { kNumStandardFilters = 7, kNumMailFilters = 3 };
-%}
-	[noscript] void chooseInputFile(
-		in string title
-	,	in StandardFilterMask standardFilterMask
-	,	in string extraFilterTitle
-	,	in string extraFilter
-		);
+    const unsigned long eExtraFilter = 1<<31;
 
-	[noscript] void chooseOutputFile(in string windowTitle, 
-                                     in string suggestedLeafName,
-                                     in StandardFilterMask standardFilterMask);
+    const unsigned long kNumStandardFilters = 7;
+    const unsigned long kNumMailFilters     = 3;
 
-  string chooseFile(in string title);
+	void chooseInputFile( in string title,
+                          in unsigned long filterMask,
+                          in string extraFilterTitle,
+                          in string extraFilter );
+
+	void chooseOutputFile( in string windowTitle, 
+                           in string suggestedLeafName,
+                           in unsigned long filterMask );
+
+    string chooseFile(in string title);
+
 	string chooseDirectory(in string title);
 };
 	

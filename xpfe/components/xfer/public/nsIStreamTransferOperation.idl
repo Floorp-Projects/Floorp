@@ -21,6 +21,8 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIChannel.idl"
+#include "nsIFileSpec.idl"
 
 interface nsIObserver;
 
@@ -34,11 +36,22 @@ interface nsIObserver;
 ------------------------------------------------------------------------------*/
 [scriptable, uuid(E2200F90-3E23-11d3-806A-00600811A9C3)]
 interface nsIStreamTransferOperation : nsISupports {
-    readonly attribute string source;
-    readonly attribute string target;
+    readonly attribute nsIChannel  source;
+    readonly attribute nsIFileSpec target;
 
     attribute nsIObserver observer;
 
     void Start();
     void Stop();
+
+    // Operation codes (for error notifications):
+    const unsigned long kOpAsyncRead        = 1;
+    const unsigned long kOpWrite            = 2;
+    const unsigned long kOpOpenOutputStream = 3;
+    const unsigned long kOpCreateTransport  = 4;
+    const unsigned long kOpGetService       = 5;
+    const unsigned long kOpInputCancel      = 6;
+    const unsigned long kOpOutputClose      = 8;
+    const unsigned long kOpOutputCancel     = 9;
+    const unsigned long kOpRead             = 10;
 };

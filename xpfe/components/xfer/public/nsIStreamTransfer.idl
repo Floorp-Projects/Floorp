@@ -22,13 +22,7 @@
 
 #include "nsIAppShellComponent.idl"
 #include "domstubs.idl"
-
-[ptr] native nsIURI( nsIURI );
-
-%{C++
-class nsIURI;
-class nsIDOMWindow;
-%}
+#include "nsIChannel.idl"
 
 /*----------------------------- nsIStreamTransfer ------------------------------
 | This file describes Mozilla's general-purpose "stream transfer" component.   |
@@ -51,11 +45,18 @@ class nsIDOMWindow;
 interface nsIStreamTransfer : nsIAppShellComponent {
 
     /*-------------------- SelectFileAndTransferLocation -----------------------
-    | Prompt the user for a destination file and then transfer the data using  |
-    | the argument URL as source to that file, while showing a progress        |
+    | Prompt the user for a destination file and then transfer the data, using |
+    | the argument channel as source, to that file, while showing a progress   |
     | dialog.                                                                  |
     --------------------------------------------------------------------------*/
-    [noscript] void SelectFileAndTransferLocation( in nsIURI aURL, in nsIDOMWindow parent );
+    [noscript] void SelectFileAndTransferLocation( in nsIChannel aChannel,
+	                                               in nsIDOMWindow parent );
+
+    /*------------------ SelectFileAndTransferLocationSpec ---------------------
+    | Prompt the user for a destination file and then transfer the data, using |
+    | the argument URL as source, to that file, while showing a progress       |
+    | dialog.                                                                  |
+    --------------------------------------------------------------------------*/
     void SelectFileAndTransferLocationSpec( in string aURL, in nsIDOMWindow parent );
 };
 

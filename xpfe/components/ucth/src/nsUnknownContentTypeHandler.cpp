@@ -24,11 +24,10 @@
 #include "nsIAppShellComponentImpl.h"
 
 #include "nsString.h"
-#include "nsIURL.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-
 #include "nsIChannel.h"
+#include "nsIURI.h"
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
@@ -64,79 +63,78 @@ NS_IMETHODIMP
 nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                        const char *aContentType,
                                                        nsIDOMWindow *aWindow ) {
-    if ( !aWindow ) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
     nsresult rv = NS_OK;
 
-    // Open "Unknown content type" dialog.
-    // We pass in the url and the content type.
-    // Note that the "parent" browser window will be window.opener within the
-    // new dialog.
+    nsCOMPtr<nsISupports> channel;
 
-    // Extract URI from channel.
-    nsCOMPtr<nsIURI> channelUri = nsnull;
-    rv = aChannel->GetURI(getter_AddRefs(channelUri));
-    if ( NS_FAILED( rv ) ) {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: GetURI failed, rv=0x%08X\n",
-                      (char*)__FILE__, (int)__LINE__, (int)rv );
-        return rv;
+    if ( aChannel ) {
+        // Need root nsISupports for later JS_PushArguments call.
+        channel = do_QueryInterface( aChannel );
+
+        // Cancel input channel now.
+        rv = aChannel->Cancel();
+        if ( NS_FAILED( rv ) ) {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Cancel failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
+        }
     }
 
-    // url string non-const in this case.
-    char *urlStr = 0;
-
-    // Get url string from channel.
-    channelUri->GetSpec( &urlStr );
-
-    // Get JS context from parent window.
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( aWindow, &rv );
-    if ( NS_SUCCEEDED( rv ) && sgo ) {
-        nsCOMPtr<nsIScriptContext> context;
-        sgo->GetContext( getter_AddRefs( context ) );
-        if ( context ) {
-            JSContext *jsContext = (JSContext*)context->GetNativeContext();
-            if ( jsContext ) {
-                void *stackPtr;
-                jsval *argv = JS_PushArguments( jsContext,
-                                                &stackPtr,
-                                                "sssss",
-                                                "chrome://global/content/unknownContent.xul",
-                                                "_blank",
-                                                "chrome",
-                                                urlStr,
-                                                aContentType );
-                // Free url string.
-                nsCRT::free(urlStr);
-                if ( argv ) {
-                    nsIDOMWindow *newWindow;
-                    rv = aWindow->OpenDialog( jsContext, argv, 5, &newWindow );
-                    if ( NS_SUCCEEDED( rv ) ) {
-                        newWindow->Release();
+    if ( NS_SUCCEEDED( rv ) && channel && aContentType && aWindow ) {
+        // Open "Unknown content type" dialog.
+        // We pass in the channel and the content type.
+        // Note that the "parent" browser window will be window.opener within the
+        // new dialog.
+    
+        // Get JS context from parent window.
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( aWindow, &rv );
+        if ( NS_SUCCEEDED( rv ) && sgo ) {
+            nsCOMPtr<nsIScriptContext> context;
+            sgo->GetContext( getter_AddRefs( context ) );
+            if ( context ) {
+                JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                if ( jsContext ) {
+                    void *stackPtr;
+                    jsval *argv = JS_PushArguments( jsContext,
+                                                    &stackPtr,
+                                                    "sss%ips",
+                                                    "chrome://global/content/unknownContent.xul",
+                                                    "_blank",
+                                                    "chrome",
+                                                    (const nsIID*)(&nsIChannel::GetIID()),
+                                                    (nsISupports*)channel.get(),
+                                                    aContentType );
+                    if ( argv ) {
+                        nsCOMPtr<nsIDOMWindow> newWindow;
+                        rv = aWindow->OpenDialog( jsContext, argv, 5, getter_AddRefs( newWindow ) );
+                        if ( NS_FAILED( rv ) ) {
+                            DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialog failed, rv=0x%08X\n",
+                                          (char*)__FILE__, (int)__LINE__, (int)rv );
+                        }
+                        JS_PopArguments( jsContext, stackPtr );
                     } else {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialog failed, rv=0x%08X\n",
-                                      (char*)__FILE__, (int)__LINE__, (int)rv );
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
+                                      (char*)__FILE__, (int)__LINE__ );
+                        rv = NS_ERROR_FAILURE;
                     }
-                    JS_PopArguments( jsContext, stackPtr );
                 } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
                                   (char*)__FILE__, (int)__LINE__ );
                     rv = NS_ERROR_FAILURE;
                 }
             } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
+                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
                               (char*)__FILE__, (int)__LINE__ );
                 rv = NS_ERROR_FAILURE;
             }
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
-                          (char*)__FILE__, (int)__LINE__ );
-            rv = NS_ERROR_FAILURE;
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-                      (char*)__FILE__, (int)__LINE__, (int)rv );
+        // If no error recorded so far, set one now.
+        if ( NS_SUCCEEDED( rv ) ) {
+            rv = NS_ERROR_NULL_POINTER;
+        }
     }
 
     return rv;

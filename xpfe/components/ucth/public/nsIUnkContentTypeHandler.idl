@@ -22,14 +22,7 @@
 
 #include "nsIAppShellComponent.idl"
 #include "domstubs.idl"
-
-interface nsIURI;
-interface nsIChannel;
-
-%{C++
-class nsIDOMWindow; // Seems domstubs.idl should do this, though.
-%}
-
+#include "nsIChannel.idl"
 
 /*----------------------- nsIUnknownContentTypeHandler -------------------------
 | This file describes the interface for Mozilla's "unknown content-type        |
@@ -38,7 +31,7 @@ class nsIDOMWindow; // Seems domstubs.idl should do this, though.
 |                                                                              |
 | This component provides one component-specific member function:              |
 | HandleUnknownContentType.  This method's areguments include:                 |
-|   o the URL at which the content resides                                     |
+|   o the nsIChannel that encountered the content                              |
 |   o the content-type                                                         |
 |   o the window that encountered the unknown content.                         |
 |                                                                              |

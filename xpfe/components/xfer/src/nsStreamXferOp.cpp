@@ -20,39 +20,40 @@
  * Contributor(s): 
  */
 #include "nsStreamXferOp.h"
-
 #include "nsIStreamTransfer.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
-#include "nsFileStream.h"
-#include "nsFileSpec.h"
+
+// Basic dependencies.
+#include "nsIServiceManager.h"
+
+// For notifying observer.
 #include "nsIObserver.h"
+
+// For opening dialog.
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsNeckoUtil.h"
-#include "nsIURL.h"
-#include "nsIChannel.h"
-#include "nsIEventQueueService.h"
-#include "nsIBufferInputStream.h"
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "jsapi.h"
-#include "prprf.h"
+
+// For opening input/output streams.
+#include "nsIFileTransportService.h"
+#include "nsIOutputStream.h"
+#include "nsNeckoUtil.h"
 
 #ifdef NS_DEBUG
+#include "prprf.h"
 #define DEBUG_PRINTF PR_fprintf
 #else
 #define DEBUG_PRINTF (void)
 #endif
 
 // ctor - save arguments in data members.
-nsStreamXferOp::nsStreamXferOp( const nsString &source, const nsString &target ) 
-    : mSource( source ),
-      mTarget( target ),
+nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target ) 
+    : mInputChannel( source ),
+      mOutputChannel( 0 ),
+      mOutputStream( 0 ),
+      mOutputSpec( target ),
       mObserver( 0 ),
-      mBufLen( 8192 ),
-      mBuffer( new char[ mBufLen ] ),
-      mStopped( PR_FALSE ),
-      mOutput( 0 ) {
+      mContentLength( 0 ),
+      mBytesProcessed( 0 ) {
     // Properly initialize refcnt.
     NS_INIT_REFCNT();
 }
@@ -60,9 +61,9 @@ nsStreamXferOp::nsStreamXferOp( const nsString &source, const nsString &target )
 // dtor
 nsStreamXferOp::~nsStreamXferOp() {
     // Delete dynamically allocated members (file and buffer).
+#ifdef DEBUG_law
     DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp destructor called\n" );
-    delete mOutput;
-    delete [] mBuffer;
+#endif
 }
 
 // Invoke nsIDOMWindow::OpenDialog, passing this object as argument.
@@ -87,11 +88,9 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
                                                 (const nsIID*)(&nsCOMTypeInfo<nsIStreamTransferOperation>::GetIID()),
                                                 (nsISupports*)(nsIStreamTransferOperation*)this );
                 if ( argv ) {
-                    nsIDOMWindow *newWindow;
-                    rv = parent->OpenDialog( jsContext, argv, 4, &newWindow );
-                    if ( NS_SUCCEEDED( rv ) ) {
-                        newWindow->Release();
-                    } else {
+                    nsCOMPtr<nsIDOMWindow> newWindow;
+                    rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( newWindow ) );
+                    if ( NS_FAILED( rv ) ) {
                         DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindow::OpenDialog failed, rv=0x%08X\n",
                                       (char*)__FILE__, (int)__LINE__, (int)rv );
                     }
@@ -118,64 +117,118 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
     return rv;
 }
 
-// Start the download by opening the output file and then loading the source location.
+// Notify observer of error.
+NS_IMETHODIMP
+nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG_law
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnError; op=%d, rv=0x%08X\n",
+                  operation, (int)errorCode );
+#endif
+
+    if ( mObserver ) {
+        char buf[32];
+        PR_snprintf( buf, sizeof( buf ), "%d %X", operation, (int)errorCode );
+        rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
+                                 nsAutoString( NS_ISTREAMTRANSFER_PROGID ";onError" ).GetUnicode(),
+                                 nsAutoString( buf ).GetUnicode() );
+        if ( NS_FAILED( rv ) ) {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
+        }
+    }
+
+    return rv;
+};
+
+// Start the download by opening the output file and then reading the input channel.
 NS_IMETHODIMP
 nsStreamXferOp::Start( void ) {
     nsresult rv = NS_OK;
 
-    if ( !mOutput ) {
-        // Open the output file stream.
-        mOutput = new nsOutputFileStream( nsFileSpec( mTarget.GetBuffer() ) );
-        if ( mOutput ) {
-            if ( !mOutput->failed() ) {
-                nsIURI *url = 0;
-                rv = NS_NewURI( &url, mSource.GetBuffer() );
-                if ( NS_SUCCEEDED( rv ) && url ) {
-                    // XXX: Should there be a LoadGroup?
-                    nsresult rv = NS_OpenURI( this, nsnull, url, nsnull
-                     );
-                    NS_RELEASE(url);
-                
+    if ( mInputChannel ) {
+        if ( !mOutputChannel ) {
+            // First, get file transport service.
+            NS_DEFINE_IID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+            NS_WITH_SERVICE( nsIFileTransportService, fts, kFileTransportServiceCID, &rv );
+    
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Next, create output file channel.
+                nsFileSpec target;
+                mOutputSpec->GetFileSpec( &target );
+                rv = fts->CreateTransport( target,
+                                          "load",
+                                          0,
+                                          getter_AddRefs( mOutputChannel ) );
+    
+                if ( NS_SUCCEEDED( rv ) ) {
+                    // Read the input channel (with ourself as the listener).
+                    rv = mInputChannel->AsyncRead( 0, -1, 0, this );
                     if ( NS_FAILED( rv ) ) {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: NS_OpenURI failed, rv=0x%08X\n",
-                                      (char*)__FILE__, (int)__LINE__, (int)rv );
+                        this->OnError( kOpAsyncRead, rv );
                     }
                 } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: NS_NewURI failed, rv=0x%X\n",
-                                  __FILE__, (int)__LINE__, (int)rv );
+                    this->OnError( kOpCreateTransport, rv );
+                    rv = NS_ERROR_OUT_OF_MEMORY;
                 }
-        
             } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: error opening output file, rv=0x%08X\n",
-                              (char*)__FILE__, (int)__LINE__, (int)mOutput->error() );
-                delete mOutput;
-                mOutput = 0;
+                this->OnError( kOpGetService, rv );
             }
         } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
+            rv = NS_ERROR_ALREADY_INITIALIZED;
+            this->OnError( 0, rv );
         }
-
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsStreamXferOp already started\n",
-                      (char*)__FILE__, (int)__LINE__ );
-        rv = NS_ERROR_ALREADY_INITIALIZED;
+        rv = NS_ERROR_NOT_INITIALIZED;
+        this->OnError( 0, rv );
+    }
+
+    // If an error occurred, shut down.
+    if ( NS_FAILED( rv ) ) {
+        this->Stop();
     }
 
     return rv;
 }
 
-// Terminate the download by setting flag (checked in OnDataAvailable).
+// Terminate the download by cancelling/closing input and output channels.
 NS_IMETHODIMP
 nsStreamXferOp::Stop( void ) {
     nsresult rv = NS_OK;
 
-    // Set flag indicating netlib xfer should cease.
-    mStopped = PR_TRUE;
+    // Cancel input.
+    if ( mInputChannel ) {
+        // Unhook it first.
+        nsCOMPtr<nsIChannel> channel = mInputChannel;
+        mInputChannel = 0;
+        // Now cancel it.
+        rv = channel->Cancel();
+        if ( NS_FAILED( rv ) ) {
+            this->OnError( kOpInputCancel, rv );
+        }
+    }
+
+    // Close output stream.
+    if ( mOutputStream ) {
+        // Unhook it first.
+        nsCOMPtr<nsIOutputStream> stream = mOutputStream;
+        mOutputStream = 0;
+
+        // Now close it.
+        rv = stream->Close();
+        if ( NS_FAILED( rv ) ) {
+            this->OnError( kOpOutputClose, rv );
+        }
+    }
+
+    // Cancel output channel.
+    mOutputChannel = 0;
 
     return rv;
 }
 
-// Process the data by reading it and then writing it to the output file.
+// Process the data by writing it to the output channel.
 NS_IMETHODIMP
 nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
                                  nsISupports    *aContext,
@@ -184,60 +237,92 @@ nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
                                  PRUint32        aLength ) {
     nsresult rv = NS_OK;
 
-    // Check for download cancelled by user.
-    if ( mStopped ) {
-        // Close the output file.
-        if ( mOutput ) {
-            mOutput->close();
-        }
-        // Close the input stream.
-        aIStream->Close();
-    } else {
-        // Allocate buffer space.
-        if ( aLength > mBufLen ) {
-            char *oldBuffer = mBuffer;
-    
-            mBuffer = new char[ aLength ];
-    
-            if ( mBuffer ) {
-                // Use new (bigger) buffer.
-                mBufLen = aLength;
-                // Delete old (smaller) buffer.
-                delete [] oldBuffer;
-            } else {
-                // Keep the one we've got.
-                mBuffer = oldBuffer;
-            }
-        }
-    
-        // Read the data.
-        PRUint32 bytesRead;
-        rv = aIStream->Read( mBuffer, ( mBufLen > aLength ) ? aLength : mBufLen, &bytesRead );
-    
-        if ( NS_SUCCEEDED(rv) && bytesRead > 0 ) {
-            // Write the data just read to the output stream.
-            if ( mOutput ) {
-                mOutput->write( mBuffer, bytesRead );
-                if ( mOutput->failed() ) {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: Error writing file, rv=0x%08X\n",
-                                  (char*)__FILE__, (int)__LINE__, (int)mOutput->error() );
+#ifdef DEBUG_law
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnDataAvailable, offset=%d length=%d\n",
+                  (int)offset, (int)aLength );
+#endif
+
+    if ( mOutputStream ) {
+        // Write the data to the output stream.
+        // Read a buffer full till aLength bytes have been processed.
+        char buffer[ 8192 ];
+        unsigned long bytesRemaining = aLength;
+        while ( bytesRemaining ) {
+            unsigned int bytesRead;
+            // Read a buffer full or the number remaining (whichever is smaller).
+            rv = aIStream->Read( buffer,
+                                 PR_MIN( sizeof( buffer ),
+                                 bytesRemaining ),
+                                 &bytesRead );
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Write the bytes just read to the output stream.
+                unsigned int bytesWritten;
+                rv = mOutputStream->Write( buffer, bytesRead, &bytesWritten );
+                if ( NS_SUCCEEDED( rv ) && bytesWritten == bytesRead ) {
+                    // All bytes written OK.
+                    bytesRemaining -= bytesWritten;
+                } else {
+                    // Something is wrong.
+                    if ( NS_SUCCEEDED( rv ) ) {
+                        // Not all bytes were written for some strange reason.
+                        rv = NS_ERROR_FAILURE;
+                    }
+                    this->OnError( kOpWrite, rv );
                 }
+            } else {
+                this->OnError( kOpRead, rv );
             }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error reading stream, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
+    } else {
+        rv = NS_ERROR_NOT_INITIALIZED;
+        this->OnError( 0, rv );
+    }
+
+    if ( NS_FAILED( rv ) ) {
+        // Oh dear.  close up shop.
+        this->Stop();
+    } else {
+        // Fake OnProgress.
+        mBytesProcessed += aLength;
+        if ( mContentLength == 0 && channel ) {
+            // Get content length from input channel.
+            channel->GetContentLength( &mContentLength );
+        }
+        this->OnProgress( mOutputChannel, 0, mBytesProcessed, mContentLength );
     }
 
     return rv;
 }
 
-// We aren't interested in this notification; simply return NS_OK.
+// This is called when the input channel is successfully opened.
+//
+// We also open the output stream at this point.
 NS_IMETHODIMP
 nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
     nsresult rv = NS_OK;
 
+#ifdef DEBUG_law
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStartRequest; channel=0x%08X, context=0x%08X\n",
+                  (int)(void*)channel, (int)(void*)aContext );
+#endif
+
+    // Open output stream.
+    rv = mOutputChannel->OpenOutputStream( 0, getter_AddRefs( mOutputStream ) );
+
+    if ( NS_FAILED( rv ) ) {
+        // Give up all hope.
+        this->OnError( kOpOpenOutputStream, rv );
+        this->Stop();
+    }
+
     return rv;
+}
+
+
+// As an event sink getter, we get ourself.
+NS_IMETHODIMP
+nsStreamXferOp::GetEventSink( const char *cmd, const nsIID &anIID, nsISupports **aResult ) {
+    return this->QueryInterface( anIID, (void**)aResult );
 }
 
 // Pass notification to our observer (if we have one). This object is the
@@ -245,6 +330,9 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
 // the data is the progress numbers (in the form "%lu %lu" where the first
 // value is the number of bytes processed, the second the total number
 // expected.
+//
+//XXX This function is not called at the moment because this object is not
+//    provided as the event sink by any event sink getter!
 NS_IMETHODIMP
 nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
                                      PRUint32 aProgress, PRUint32 aProgressMax) {
@@ -252,7 +340,7 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
 
     if ( mObserver ) {
         char buf[32];
-        PR_snprintf( buf, sizeof buf, "%lu %lu", (unsigned long)aProgress, (unsigned long)aProgressMax );
+        PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)aProgressMax );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   nsString( NS_ISTREAMTRANSFER_PROGID ";onProgress" ).GetUnicode(),
                                   nsString( buf ).GetUnicode() );
@@ -288,8 +376,7 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
     return rv;
 }
 
-// Close the output stream. In addition, notify our observer
-// (if we have one).
+// This is called when the end of input is reached on the input channel.
 NS_IMETHODIMP
 nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                nsISupports     *aContext,
@@ -297,12 +384,24 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                const PRUnichar *aMsg ) {
     nsresult rv = NS_OK;
 
-    // Close the output file.
-    if ( mOutput ) {
-        mOutput->close();
+#ifdef DEBUG_law
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStopRequest notified of input completion, status=0x%08X\n",
+                  (int)aStatus );
+#endif
+
+    // Close the output stream.
+    if ( mOutputStream ) {
+        rv = mOutputStream->Close();
+        if ( NS_FAILED( rv ) ) {
+            this->OnError( kOpOutputClose, rv );
+        }
     }
 
-    // Notify observer.
+    // Unhook input/output channels (don't need to cancel 'em).
+    mInputChannel = 0;
+    mOutputChannel = 0;
+
+    // Notify observer that the download is complete.
     if ( mObserver ) {
         nsString msg = aMsg;
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
@@ -320,14 +419,12 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
 // Attribute getters/setters...
 
 NS_IMETHODIMP
-nsStreamXferOp::GetSource( char**result ) {
+nsStreamXferOp::GetSource( nsIChannel**result ) {
     nsresult rv = NS_OK;
 
     if ( result ) {
-        *result = mSource.ToNewCString();
-        if ( !*result ) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+        *result = mInputChannel;
+        NS_IF_ADDREF( *result );
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -336,14 +433,12 @@ nsStreamXferOp::GetSource( char**result ) {
 }
 
 NS_IMETHODIMP
-nsStreamXferOp::GetTarget( char**result ) {
+nsStreamXferOp::GetTarget( nsIFileSpec**result ) {
     nsresult rv = NS_OK;
 
     if ( result ) {
-        *result = mTarget.ToNewCString();
-        if ( !*result ) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+        *result = mOutputSpec;
+        NS_IF_ADDREF( *result );
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -390,11 +485,6 @@ nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
     // Always NULL result, in case of failure
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsCOMTypeInfo<nsIProgressEventSink>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIProgressEventSink*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
     if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (void*) ((nsIStreamObserver*)this);
         NS_ADDREF_THIS();
@@ -412,6 +502,16 @@ nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
     }
     if (aIID.Equals(nsCOMTypeInfo<nsIStreamTransferOperation>::GetIID())) {
         *aInstancePtr = (void*) ((nsIStreamTransferOperation*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsCOMTypeInfo<nsIProgressEventSink>::GetIID())) {
+        *aInstancePtr = (void*) ((nsIProgressEventSink*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsCOMTypeInfo<nsIEventSinkGetter>::GetIID())) {
+        *aInstancePtr = (void*) ((nsIEventSinkGetter*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
