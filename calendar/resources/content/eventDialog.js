@@ -490,7 +490,6 @@ function onOKCommand()
 function checkEndTime()
 {
    var AllDayEvent = getFieldValue( "all-day-event-checkbox", "checked" );
-   
    if( gEvent.end < gEvent.start && !AllDayEvent )
    {
       return( true );
@@ -511,12 +510,16 @@ function checkEndDate()
    // Bad to get into floats.
    var startDate = Math.floor(document.getElementById( "start-date-picker" ).value.getTime()/86400000); 
    var endDate = Math.floor(document.getElementById( "end-date-picker" ).value.getTime()/86400000); 
-   if ( endDate < startDate)
+   
+   if( startDate.getFullYear() == endDate.getFullYear() &&
+       startDate.getMonth() == endDate.getMonth() &&
+       startDate.getDay() == endDate.getDay() )
+      return( 0 );
+
+   else if ( endDate < startDate)
       return -1;
    else if (endDate > startDate)
       return 1;
-   else 
-      return 0;
 }
 
 function checkSetTimeDate()
@@ -535,6 +538,7 @@ function checkSetTimeDate()
    {
       setDateError(false);
       // start & end same
+      alert( "dates are same, check end time is "+CheckEndTime );
       setTimeError(CheckEndTime);
       return !CheckEndTime;
    }
