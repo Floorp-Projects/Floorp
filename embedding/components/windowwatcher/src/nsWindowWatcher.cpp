@@ -508,9 +508,15 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
         if (shelltree)
           shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
-      } else
-        parentTreeOwner->FindItemWithName(name.GetUnicode(), nsnull,
-                                          getter_AddRefs(newDocShellItem));
+      } else {
+        /* parent is being simultaneously torn down (probably because of
+           the code that keeps an old docshell alive but disconnected while
+           we load a new one). not much to do but open the new window
+           without a parent. */
+        if (parentTreeOwner)
+          parentTreeOwner->FindItemWithName(name.GetUnicode(), nsnull,
+                                            getter_AddRefs(newDocShellItem));
+      }
     } else
       FindItemWithName(name.GetUnicode(), getter_AddRefs(newDocShellItem));
   }
