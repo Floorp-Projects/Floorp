@@ -359,7 +359,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     if (m_prefTrySSL != PREF_SSL_NEVER) {
-        rv = OpenNetworkSocket(aURL, "tls", callbacks);
+        rv = OpenNetworkSocket(aURL, "tlsstepup", callbacks);
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
             m_prefTrySSL = PREF_SSL_NEVER;
             rv = OpenNetworkSocket(aURL, nsnull, callbacks);

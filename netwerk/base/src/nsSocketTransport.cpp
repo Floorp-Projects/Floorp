@@ -714,9 +714,9 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
               
                 if (!NS_SUCCEEDED(rv) || !mSocketFD) break;
 
-                // if the service was ssl or tls, we want to hold onto the socket info
+                // if the service was ssl or tlsstepup, we want to hold onto the socket info
                 if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
-                    nsCRT::strcmp(mSocketTypes[type], "tls") == 0) {
+                    nsCRT::strcmp(mSocketTypes[type], "tlsstepup") == 0) {
                     mSecurityInfo = socketInfo;
                     nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(mSecurityInfo));
                     if (secInfo)
