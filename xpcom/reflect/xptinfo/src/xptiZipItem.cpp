@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,7 +44,11 @@
 MOZ_DECL_CTOR_COUNTER(xptiZipItem)
 
 xptiZipItem::xptiZipItem()
-    :   mName(nsnull),
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(nsnull),
+#endif
+        mName(nsnull),
         mGuts(nsnull)
 {
     MOZ_COUNT_CTOR(xptiZipItem);
@@ -50,54 +56,47 @@ xptiZipItem::xptiZipItem()
 }
 
 xptiZipItem::xptiZipItem(const char*     aName,
-                         xptiWorkingSet* aWorkingSet,
-                         XPTHeader*      aHeader /*= nsnull */)
+                         xptiWorkingSet* aWorkingSet)
 
-    :   mName(aName),
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(aWorkingSet),
+#endif
+        mName(aName),
         mGuts(nsnull)
 {
     MOZ_COUNT_CTOR(xptiZipItem);
 
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), aName);
-
-    if(aHeader)
-        SetHeader(aHeader);
 }
 
-xptiZipItem::xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet,
-                         PRBool cloneGuts)
-    :   mName(nsnull),
+xptiZipItem::xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet)
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(aWorkingSet),
+#endif
+        mName(nsnull),
         mGuts(nsnull)
 {
     MOZ_COUNT_CTOR(xptiZipItem);
 
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), r.mName);
-
-    if(cloneGuts && r.mGuts)
-        mGuts = r.mGuts->Clone();
 }
 
 xptiZipItem::~xptiZipItem()
 {
     MOZ_COUNT_DTOR(xptiZipItem);
-
-    if(mGuts)
-        delete mGuts;
 }
 
 PRBool 
-xptiZipItem::SetHeader(XPTHeader* aHeader)
+xptiZipItem::SetHeader(XPTHeader* aHeader, xptiWorkingSet* aWorkingSet)
 {
     NS_ASSERTION(!mGuts,"bad state");
     NS_ASSERTION(aHeader,"bad param");
+    NS_ASSERTION(aWorkingSet,"bad param");
 
-    mGuts = new xptiTypelibGuts(aHeader);
-    if(mGuts && !mGuts->IsValid())
-    {
-        delete mGuts;
-        mGuts = nsnull;
-    } 
+    mGuts = xptiTypelibGuts::NewGuts(aHeader, aWorkingSet);
     return mGuts != nsnull;
 }

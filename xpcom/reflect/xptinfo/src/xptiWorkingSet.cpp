@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,17 +45,74 @@
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_HASHTABLE_SIZE             128
 
-PR_STATIC_CALLBACK(PLHashNumber)
-xpti_HashIID(const void *key)
+/***************************************************************************/
+
+PR_STATIC_CALLBACK(const void*)
+IIDGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-    return ((nsID*)key)->m0;        
+    return ((xptiHashEntry*)entry)->value->GetTheIID();
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_CompareIIDs(const void *v1, const void *v2)
+PR_STATIC_CALLBACK(PLDHashNumber)
+IIDHash(PLDHashTable *table, const void *key)
 {
-    return (PRIntn) ((const nsID*)v1)->Equals(*((const nsID*)v2));        
-}         
+    return (PLDHashNumber) ((const nsIID*)key)->m0;        
+}
+
+PR_STATIC_CALLBACK(PRBool)
+IIDMatch(PLDHashTable *table,
+         const PLDHashEntryHdr *entry,
+         const void *key)
+{
+    const nsIID* iid1 = ((xptiHashEntry*)entry)->value->GetTheIID();
+    const nsIID* iid2 = (const nsIID*)key;
+    
+    return iid1 == iid2 || iid1->Equals(*iid2);
+}       
+          
+static struct PLDHashTableOps IIDTableOps =
+{
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    IIDGetKey,
+    IIDHash,
+    IIDMatch,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub
+};
+
+/***************************************************************************/
+
+PR_STATIC_CALLBACK(const void*)
+NameGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    return ((xptiHashEntry*)entry)->value->GetTheName();
+}
+
+PR_STATIC_CALLBACK(PRBool)
+NameMatch(PLDHashTable *table,
+          const PLDHashEntryHdr *entry,
+          const void *key)
+{
+    const char* str1 = ((xptiHashEntry*)entry)->value->GetTheName();
+    const char* str2 = (const char*) key;
+    return str1 == str2 || 0 == PL_strcmp(str1, str2);
+}       
+
+static struct PLDHashTableOps NameTableOps =
+{
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    NameGetKey,
+    PL_DHashStringKey,
+    NameMatch,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub
+};
+
+/***************************************************************************/
 
 MOZ_DECL_CTOR_COUNTER(xptiWorkingSet)
 
@@ -69,14 +128,12 @@ xptiWorkingSet::xptiWorkingSet(nsISupportsArray* aDirectories)
       mStructArena(XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double),
                                 "xptiWorkingSet structs")),
       mDirectories(aDirectories),
-      mNameTable(PL_NewHashTable(XPTI_HASHTABLE_SIZE, PL_HashString,
-                                 PL_CompareStrings, PL_CompareValues,
-                                 nsnull, nsnull)),
-      mIIDTable(PL_NewHashTable(XPTI_HASHTABLE_SIZE, xpti_HashIID,
-                                xpti_CompareIIDs, PL_CompareValues,
-                                nsnull, nsnull)),
-    mFileMergeOffsetMap(nsnull),
-    mZipItemMergeOffsetMap(nsnull)
+      mNameTable(PL_NewDHashTable(&NameTableOps, nsnull, sizeof(xptiHashEntry),
+                                  XPTI_HASHTABLE_SIZE)),
+      mIIDTable(PL_NewDHashTable(&IIDTableOps, nsnull, sizeof(xptiHashEntry),
+                                 XPTI_HASHTABLE_SIZE)),
+      mFileMergeOffsetMap(nsnull),
+      mZipItemMergeOffsetMap(nsnull)
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
     // do nothing else...            
@@ -93,43 +150,40 @@ xptiWorkingSet::IsValid() const
             mIIDTable;          
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_Remover(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_Remover(PLDHashTable *table, PLDHashEntryHdr *hdr,
+             PRUint32 number, void *arg)
 {
-  return HT_ENUMERATE_REMOVE;
+    return PL_DHASH_REMOVE;
 }       
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_ReleaseAndRemover(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_Invalidator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                 PRUint32 number, void *arg)
 {
-  nsIInterfaceInfo* ii = (nsIInterfaceInfo*) he->value;
-  NS_RELEASE(ii);
-  return HT_ENUMERATE_REMOVE;
-}
- 
-
-PR_STATIC_CALLBACK(PRIntn)
-xpti_Invalidator(PLHashEntry *he, PRIntn i, void *arg)
-{
-  ((xptiInterfaceInfo*)he->value)->Invalidate();
-  return HT_ENUMERATE_NEXT;
+    xptiInterfaceEntry* entry = ((xptiHashEntry*)hdr)->value;
+    entry->LockedInvalidateInterfaceInfo();
+    return PL_DHASH_NEXT;
 }
 
 void 
 xptiWorkingSet::InvalidateInterfaceInfos()
 {
     if(mNameTable)
-        PL_HashTableEnumerateEntries(mNameTable, xpti_Invalidator, nsnull);
+    {
+        nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
+        PL_DHashTableEnumerate(mNameTable, xpti_Invalidator, nsnull);
+    }
 }        
 
 void 
 xptiWorkingSet::ClearHashTables()
 {
     if(mNameTable)
-        PL_HashTableEnumerateEntries(mNameTable, xpti_Remover, nsnull);
+        PL_DHashTableEnumerate(mNameTable, xpti_Remover, nsnull);
         
     if(mIIDTable)
-        PL_HashTableEnumerateEntries(mIIDTable, xpti_ReleaseAndRemover, nsnull);
+        PL_DHashTableEnumerate(mIIDTable, xpti_Remover, nsnull);
 }
 
 void 
@@ -161,10 +215,10 @@ xptiWorkingSet::~xptiWorkingSet()
     ClearHashTables();
 
     if(mNameTable)
-        PL_HashTableDestroy(mNameTable);
+        PL_DHashTableDestroy(mNameTable);
         
     if(mIIDTable)
-        PL_HashTableDestroy(mIIDTable);
+        PL_DHashTableDestroy(mIIDTable);
 
     if(mFileArray)
         delete [] mFileArray;
@@ -363,15 +417,15 @@ PRBool xptiWorkingSet::DirectoryAtMatchesPersistentDescriptor(PRUint32 i,
 
     nsCOMPtr<nsILocalFile> descDir;
     nsresult rv = NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(descDir));
-    if (NS_FAILED(rv))
+    if(NS_FAILED(rv))
         return PR_FALSE;
 
     rv = descDir->SetPersistentDescriptor(inDesc);
-    if (NS_FAILED(rv))
+    if(NS_FAILED(rv))
         return PR_FALSE;
     
     PRBool matches;
     rv = dir->Equals(descDir, &matches);
-    return (NS_SUCCEEDED(rv) && matches);
+    return NS_SUCCEEDED(rv) && matches;
 }
 

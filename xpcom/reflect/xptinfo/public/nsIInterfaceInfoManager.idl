@@ -55,6 +55,8 @@ interface nsIInterfaceInfoManager : nsISupports
     nsIEnumerator enumerateInterfaces();
 
     void autoRegisterInterfaces();
+
+    nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
 };
 
 %{C++

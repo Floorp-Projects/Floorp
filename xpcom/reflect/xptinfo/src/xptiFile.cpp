@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,7 +44,11 @@
 MOZ_DECL_CTOR_COUNTER(xptiFile)
 
 xptiFile::xptiFile()
-    :   mSize(),
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(nsnull),
+#endif
+        mSize(),
         mDate(),
         mName(nsnull),
         mGuts(nsnull),
@@ -56,10 +62,12 @@ xptiFile::xptiFile(const nsInt64&  aSize,
          const nsInt64&  aDate,
          PRUint32        aDirectory,
          const char*     aName,
-         xptiWorkingSet* aWorkingSet,
-         XPTHeader*      aHeader /*= nsnull */)
-
-    :   mSize(aSize),
+         xptiWorkingSet* aWorkingSet)
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(aWorkingSet),
+#endif
+        mSize(aSize),
         mDate(aDate),
         mName(aName),
         mGuts(nsnull),
@@ -68,15 +76,15 @@ xptiFile::xptiFile(const nsInt64&  aSize,
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), aName);
 
-    if(aHeader)
-        SetHeader(aHeader);
-
     MOZ_COUNT_CTOR(xptiFile);
 }
 
-xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet,
-                   PRBool cloneGuts)
-    :   mSize(r.mSize),
+xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet)
+    :   
+#ifdef DEBUG
+        mDEBUG_WorkingSet(aWorkingSet),
+#endif
+        mSize(r.mSize),
         mDate(r.mDate),
         mName(nsnull),
         mGuts(nsnull),
@@ -85,31 +93,21 @@ xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet,
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), r.mName);
 
-    if(cloneGuts && r.mGuts)
-        mGuts = r.mGuts->Clone();
-
     MOZ_COUNT_CTOR(xptiFile);
 }
 
 xptiFile::~xptiFile()
 {
-    if(mGuts)
-        delete mGuts;
-
     MOZ_COUNT_DTOR(xptiFile);
 }
 
 PRBool 
-xptiFile::SetHeader(XPTHeader* aHeader)
+xptiFile::SetHeader(XPTHeader* aHeader, xptiWorkingSet* aWorkingSet)
 {
     NS_ASSERTION(!mGuts,"bad state");
     NS_ASSERTION(aHeader,"bad param");
+    NS_ASSERTION(aWorkingSet,"bad param");
 
-    mGuts = new xptiTypelibGuts(aHeader);
-    if(mGuts && !mGuts->IsValid())
-    {
-        delete mGuts;
-        mGuts = nsnull;
-    } 
+    mGuts = xptiTypelibGuts::NewGuts(aHeader, aWorkingSet);
     return mGuts != nsnull;
 }

@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,7 +60,8 @@ static const int  g_VERSION_MINOR          = 0;
 
 /***************************************************************************/
 
-static PRBool GetCurrentAppDirString(xptiInterfaceInfoManager* aMgr, char** aStr)
+static PRBool 
+GetCurrentAppDirString(xptiInterfaceInfoManager* aMgr, char** aStr)
 {
     nsCOMPtr<nsILocalFile> appDir;
     aMgr->GetApplicationDir(getter_AddRefs(appDir));
@@ -67,53 +70,52 @@ static PRBool GetCurrentAppDirString(xptiInterfaceInfoManager* aMgr, char** aStr
     return PR_FALSE;
 }
 
-static PRBool CurrentAppDirMatchesPersistentDescriptor(xptiInterfaceInfoManager* aMgr, const char* inStr)
+static PRBool 
+CurrentAppDirMatchesPersistentDescriptor(xptiInterfaceInfoManager* aMgr, 
+                                         const char* inStr)
 {
     nsCOMPtr<nsILocalFile> appDir;
     aMgr->GetApplicationDir(getter_AddRefs(appDir));
 
     nsCOMPtr<nsILocalFile> descDir;
     nsresult rv = NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(descDir));
-    if (NS_FAILED(rv))
+    if(NS_FAILED(rv))
         return PR_FALSE;
 
     rv = descDir->SetPersistentDescriptor(inStr);
-    if (NS_FAILED(rv))
+    if(NS_FAILED(rv))
         return PR_FALSE;
     
     PRBool matches;
     rv = appDir->Equals(descDir, &matches);
-    return (NS_SUCCEEDED(rv) && matches);
+    return NS_SUCCEEDED(rv) && matches;
 }
 
-
-PR_STATIC_CALLBACK(PRIntn)
-xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_InterfaceWriter(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                     PRUint32 number, void *arg)
 {
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*) he->value;
+    xptiInterfaceEntry* entry = ((xptiHashEntry*)hdr)->value;
     PRFileDesc* fd = (PRFileDesc*)  arg;
 
-    if(!info->IsValid())
-        return HT_ENUMERATE_STOP;
-
-    char* iidStr = info->GetTheIID()->ToString();
+    char* iidStr = entry->GetTheIID()->ToString();
     if(!iidStr)
-        return HT_ENUMERATE_STOP;
+        return PL_DHASH_STOP;
 
-    const xptiTypelib& typelib = info->GetTypelibRecord();
+    const xptiTypelib& typelib = entry->GetTypelibRecord();
 
     PRBool success =  PR_fprintf(fd, "%d,%s,%s,%d,%d,%d\n",
-                                 (int) i,
-                                 info->GetTheName(),
+                                 (int) number,
+                                 entry->GetTheName(),
                                  iidStr,
                                  (int) typelib.GetFileIndex(),
                                  (int) (typelib.IsZip() ? 
                                  typelib.GetZipItemIndex() : -1),
-                                 (int) info->GetScriptableFlag());
+                                 (int) entry->GetScriptableFlag());
 
     nsCRT::free(iidStr);
 
-    return success ? HT_ENUMERATE_NEXT : HT_ENUMERATE_STOP;
+    return success ? PL_DHASH_NEXT : PL_DHASH_STOP;
 }
 
 
@@ -136,8 +138,7 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     if(NS_FAILED(tempFile->Append(g_TempManifestFilename)))
         return PR_FALSE;
 
-    // exist via "goto out;" from here on...
-
+    // All exits via "goto out;" from here on...
 
     if(NS_FAILED(tempFile->
                     OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
@@ -230,16 +231,16 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
 
     // write the Interfaces list
 
-    interfaceCount = aWorkingSet->mNameTable->nentries;
+    interfaceCount = aWorkingSet->mNameTable->entryCount;
 
     if(!PR_fprintf(fd, "\n[%s,%d]\n", 
                        g_TOKEN_Interfaces, 
                        (int) interfaceCount))
         goto out;
 
-    if(interfaceCount != 
-        PL_HashTableEnumerateEntries(aWorkingSet->mNameTable, 
-                                     xpti_InterfaceWriter, fd))
+    if(interfaceCount != (PRIntn)
+        PL_DHashTableEnumerate(aWorkingSet->mNameTable, 
+                               xpti_InterfaceWriter, fd))
         goto out;
 
 
@@ -318,7 +319,7 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     if (!whole)
         return nsnull;
 
-    // all exits from on here should be via 'goto out' 
+    // All exits from on here should be via 'goto out' 
 
     if(NS_FAILED(aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd)) || !fd)
         goto out;
@@ -463,6 +464,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     PRBool succeeded = PR_FALSE;
     PRUint32 flen;
     ManifestLineReader reader;
+    xptiHashEntry* hashEntry;
     int headerCount = 0;
     int dirCount = 0;
     int fileCount = 0;
@@ -481,7 +483,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 
     reader.Init(whole, flen);
 
-    // all exits from on here should be via 'goto out' 
+    // All exits from here on should be via 'goto out' 
     
     // Look for "Header" section
 
@@ -680,7 +682,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         int fileIndex;
         int zipItemIndex;
         nsIID iid;
-        xptiInterfaceInfo* info;
+        xptiInterfaceEntry* entry;
         xptiTypelib typelibRecord;
 
         if(!reader.NextLine())
@@ -723,23 +725,29 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             typelibRecord.Init(fileIndex);
         else
             typelibRecord.Init(fileIndex, zipItemIndex);
-        info = new xptiInterfaceInfo(values[1], iid, typelibRecord, aWorkingSet);
-        if(!info)
+        
+        entry = xptiInterfaceEntry::NewEntry(values[1], iid, typelibRecord, 
+                                             aWorkingSet);
+        if(!entry)
             goto out;    
         
-        NS_ADDREF(info);
-        if(!info->IsValid())
-        {
-            // XXX bad!
-            NS_RELEASE(info);
-            goto out;    
-        }
+        entry->SetScriptableFlag(flags==1);
 
-        info->SetScriptableFlag(flags==1);
+        // Add our entry to the iid hashtable.
 
-        // The name table now owns the reference we AddRef'd above
-        PL_HashTableAdd(aWorkingSet->mNameTable, info->GetTheName(), info);
-        PL_HashTableAdd(aWorkingSet->mIIDTable, info->GetTheIID(), info);
+        hashEntry = (xptiHashEntry*)
+            PL_DHashTableOperate(aWorkingSet->mNameTable, 
+                                 entry->GetTheName(), PL_DHASH_ADD);
+        if(hashEntry)
+            hashEntry->value = entry;
+    
+        // Add our entry to the name hashtable.
+
+        hashEntry = (xptiHashEntry*)
+            PL_DHashTableOperate(aWorkingSet->mIIDTable, 
+                                 entry->GetTheIID(), PL_DHASH_ADD);
+        if(hashEntry)
+            hashEntry->value = entry;
     }
 
     // success!

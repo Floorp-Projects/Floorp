@@ -11,19 +11,10 @@
   - verify that interface names are always one-to-one with iids    
 - check for truncated xpt files and version problems
   - http://bugzilla.mozilla.org/show_bug.cgi?id=33193
-- support xpt files in more than just the components dir; e.g. plugins?
-   - probably just another field in the manifest containing a number
-     i.e. '0' means components dir, '1' means plugins dir, etc.
 - TESTS!
    - e.g. verify the merge stuff really works for various inputs.
    - we really need a set of .xpt and .zip files and code that does an array 
      of autoreg and interfaceinof use activitities to test various corners
      of the system.
-- support #ifdef'ing out the zip #includes and uses
-   - this is needed if we want to remove the #include dependency on libjar
-   - most zip code is already in separate file. Only the places where it
-     finds and reads zips need #ifdefing - minimize the changes. 
-- switch to MoveTo for .dat file 
-   - depends on bug 33098 (stupidly marked [feature]!)
 - better autoreg logging
 - use only 32 bits for file size?

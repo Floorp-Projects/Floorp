@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -82,7 +84,7 @@
 
 #include "nsAutoLock.h"
 
-#include "plhash.h"
+#include "pldhash.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "prio.h"
@@ -104,11 +106,16 @@
 #define LOG_AUTOREG(x) xptiInterfaceInfoManager::WriteToLog x
 #endif
 
+#if 1 && defined(DEBUG_jband)
+#define SHOW_INFO_COUNT_STATS
+#endif
+
 /***************************************************************************/
 
 class xptiFile;
 class xptiInterfaceInfo;
 class xptiInterfaceInfoManager;
+class xptiInterfaceEntry;
 class xptiInterfaceGuts;
 class xptiTypelibGuts;
 class xptiWorkingSet;
@@ -142,24 +149,42 @@ private:
 
 /***************************************************************************/
 
+// No virtuals.
+// These are always constructed in the struct arena using placement new.
+// dtor need not be called.
+
 class xptiTypelibGuts
 {
 public:
-    xptiTypelibGuts(); // not implemented
-    xptiTypelibGuts(XPTHeader* aHeader);
-    ~xptiTypelibGuts();
+    static xptiTypelibGuts* NewGuts(XPTHeader* aHeader,
+                                    xptiWorkingSet* aWorkingSet);
 
-    PRBool      IsValid() const      {return mHeader != nsnull;}
-    XPTHeader*  GetHeader()          {return mHeader;}
-    PRUint16    GetInfoCount() const {return mHeader->num_interfaces;}
-    nsresult    SetInfoAt(PRUint16 i, xptiInterfaceInfo* ptr);
-    nsresult    GetInfoAt(PRUint16 i, xptiInterfaceInfo** ptr);
-    xptiInterfaceInfo* GetInfoAtNoAddRef(PRUint16 i);
-    xptiTypelibGuts* Clone();
+    XPTHeader*          GetHeader()           {return mHeader;}
+    PRUint16            GetEntryCount() const {return mHeader->num_interfaces;}
+    
+    void                SetEntryAt(PRUint16 i, xptiInterfaceEntry* ptr)
+    {
+        NS_ASSERTION(mHeader,"bad state!");
+        NS_ASSERTION(i < GetEntryCount(),"bad param!");
+        mEntryArray[i] = ptr;
+    }        
+
+    xptiInterfaceEntry* GetEntryAt(PRUint16 i) const
+    {
+        NS_ASSERTION(mHeader,"bad state!");
+        NS_ASSERTION(i < GetEntryCount(),"bad param!");
+        return mEntryArray[i];
+    }        
 
 private:
-    XPTHeader*          mHeader;    // hold pointer into arena
-    xptiInterfaceInfo** mInfoArray;
+    xptiTypelibGuts(); // not implemented
+    xptiTypelibGuts(XPTHeader* aHeader);
+    ~xptiTypelibGuts() {}
+    void* operator new(size_t, void* p) {return p;}
+
+private:
+    XPTHeader*           mHeader;        // hold pointer into arena
+    xptiInterfaceEntry*  mEntryArray[1]; // Always last. Sized to fit.
 };
 
 /***************************************************************************/
@@ -171,7 +196,7 @@ public:
     const nsInt64&          GetDate()      const {return mDate;}
     const char*             GetName()      const {return mName;}
     const PRUint32          GetDirectory() const {return mDirectory;}
-          xptiTypelibGuts*  GetGuts()       {return mGuts;}
+          xptiTypelibGuts*  GetGuts()            {return mGuts;}
 
     xptiFile();
 
@@ -179,15 +204,13 @@ public:
              const nsInt64&  aDate,
              PRUint32        aDirectory,
              const char*     aName,
-             xptiWorkingSet* aWorkingSet,
-             XPTHeader*      aHeader = nsnull);
+             xptiWorkingSet* aWorkingSet);
 
-    xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet, 
-             PRBool cloneGuts);
+    xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet);
 
     ~xptiFile();
 
-    PRBool SetHeader(XPTHeader* aHeader);
+    PRBool SetHeader(XPTHeader* aHeader, xptiWorkingSet* aWorkingSet);
 
     PRBool Equals(const xptiFile& r) const
     {
@@ -208,23 +231,29 @@ public:
 private:
     void CopyFields(const xptiFile& r)
     {
+#ifdef DEBUG
+        // If 'this' has a workingset then it better match that of the assigner. 
+        NS_ASSERTION(!mDEBUG_WorkingSet || 
+                     mDEBUG_WorkingSet == r.mDEBUG_WorkingSet,
+                     "illegal xptiFile assignment");
+        mDEBUG_WorkingSet = r.mDEBUG_WorkingSet;
+#endif
+
         mSize      = r.mSize;
         mDate      = r.mDate;
         mName      = r.mName;
         mDirectory = r.mDirectory;
-        if(mGuts)
-            delete mGuts;
-        if(r.mGuts)
-            mGuts = r.mGuts->Clone();
-        else
-            mGuts = nsnull;
+        mGuts      = r.mGuts;
     }
 
 private:
+#ifdef DEBUG
+    xptiWorkingSet*  mDEBUG_WorkingSet;
+#endif
     nsInt64          mSize;
     nsInt64          mDate;
     const char*      mName; // hold pointer into arena from initializer
-    xptiTypelibGuts* mGuts; // new/delete
+    xptiTypelibGuts* mGuts; // hold pointer into arena
     PRUint32         mDirectory;
 };
 
@@ -239,15 +268,13 @@ public:
     xptiZipItem();
 
     xptiZipItem(const char*     aName,
-                xptiWorkingSet* aWorkingSet,
-                XPTHeader*      aHeader = nsnull);
+                xptiWorkingSet* aWorkingSet);
 
-    xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet, 
-                PRBool cloneGuts);
+    xptiZipItem(const xptiZipItem& r, xptiWorkingSet* aWorkingSet);
 
     ~xptiZipItem();
 
-    PRBool SetHeader(XPTHeader* aHeader);
+    PRBool SetHeader(XPTHeader* aHeader, xptiWorkingSet* aWorkingSet);
 
     PRBool Equals(const xptiZipItem& r) const
     {
@@ -265,18 +292,24 @@ public:
 private:
     void CopyFields(const xptiZipItem& r)
     {
+#ifdef DEBUG
+        // If 'this' has a workingset then it better match that of the assigner. 
+        NS_ASSERTION(!mDEBUG_WorkingSet || 
+                     mDEBUG_WorkingSet == r.mDEBUG_WorkingSet,
+                     "illegal xptiFile assignment");
+        mDEBUG_WorkingSet = r.mDEBUG_WorkingSet;
+#endif
+
         mName = r.mName;
-        if(mGuts)
-            delete mGuts;
-        if(r.mGuts)
-            mGuts = r.mGuts->Clone();
-        else
-            mGuts = nsnull;
+        mGuts = r.mGuts;
     }
 
 private:
+#ifdef DEBUG
+    xptiWorkingSet*  mDEBUG_WorkingSet;
+#endif
     const char*      mName; // hold pointer into arena from initializer
-    xptiTypelibGuts* mGuts; // new/delete
+    xptiTypelibGuts* mGuts; // hold pointer into arena
 };
 
 /***************************************************************************/
@@ -411,27 +444,37 @@ private:
 
 public:
     // XXX make these private with accessors
-    PLHashTable*    mNameTable;
-    PLHashTable*    mIIDTable;
+    PLDHashTable*   mNameTable;
+    PLDHashTable*   mIIDTable;
     PRUint32*       mFileMergeOffsetMap;    // always in an arena
     PRUint32*       mZipItemMergeOffsetMap; // always in an arena
 };
 
 /***************************************************************************/
 
-// XXX could move this class to xptiInterfaceInfo.cpp.
-
 class xptiInterfaceGuts
 {
 public:
-
     uint16                      mMethodBaseIndex;
     uint16                      mConstantBaseIndex;
-    xptiInterfaceInfo*          mParent;
+    xptiInterfaceEntry*         mParent;
     XPTInterfaceDescriptor*     mDescriptor;
     xptiTypelib                 mTypelib;
     xptiWorkingSet*             mWorkingSet;
 
+    static xptiInterfaceGuts* NewGuts(XPTInterfaceDescriptor* aDescriptor,
+                                      const xptiTypelib&      aTypelib,
+                                      xptiWorkingSet*         aWorkingSet)
+    {
+        void* place = XPT_MALLOC(aWorkingSet->GetStructArena(),
+                                 sizeof(xptiInterfaceGuts));
+        if(!place)
+            return nsnull;
+        return new(place) xptiInterfaceGuts(aDescriptor, aTypelib, aWorkingSet);
+    }
+
+private:
+    void* operator new(size_t, void* p) {return p;}
     xptiInterfaceGuts(XPTInterfaceDescriptor* aDescriptor,
                       const xptiTypelib&      aTypelib,
                       xptiWorkingSet*         aWorkingSet)
@@ -442,8 +485,7 @@ public:
             mTypelib(aTypelib),
             mWorkingSet(aWorkingSet) {}
 
-    // method definition below to avoid use before declaring xptiInterfaceInfo
-    inline ~xptiInterfaceGuts();
+    ~xptiInterfaceGuts() {}
 };
 
 /***************************************************************************/
@@ -455,6 +497,9 @@ class xptiInfoFlags
 {
     enum {STATE_MASK = 3};
 public:
+    xptiInfoFlags(uint8 n) : mData(n) {}
+    xptiInfoFlags(const xptiInfoFlags& r) : mData(r.mData) {}
+
     static uint8 GetStateMask()
         {return uint8(STATE_MASK);}
     
@@ -485,30 +530,21 @@ private:
 
 /****************************************************/
 
-class xptiInterfaceInfo : public nsIInterfaceInfo
+// No virtual methods.
+// We always create in the struct arena and construct using "placement new".
+// No members need dtor calls.
+
+class xptiInterfaceEntry
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINTERFACEINFO
+    static xptiInterfaceEntry* NewEntry(const char* name,
+                                        const nsID& iid,
+                                        const xptiTypelib& typelib,
+                                        xptiWorkingSet* aWorkingSet);
 
-public:
-    xptiInterfaceInfo();  // not implemented
-
-    xptiInterfaceInfo(const char* name,
-                      const nsID& iid,
-                      const xptiTypelib& typelib,
-                      xptiWorkingSet* aWorkingSet);
-
-    xptiInterfaceInfo(const xptiInterfaceInfo& r,
-                      const xptiTypelib& typelib,
-                      xptiWorkingSet* aWorkingSet);
-
-    virtual ~xptiInterfaceInfo();
-
-    // We use mName[-1] (cast as a xptiInfoFlags) to hold the two bit state
-    // below and also the bit flags that follow. If the states ever grow beyond 
-    // 2 bits then these flags need to be adjusted along with STATE_MASK in
-    // xptiInfoFlags.
+    static xptiInterfaceEntry* NewEntry(const xptiInterfaceEntry& r,
+                                        const xptiTypelib& typelib,
+                                        xptiWorkingSet* aWorkingSet);
 
     enum {
         NOT_RESOLVED          = 0,
@@ -520,11 +556,7 @@ public:
     // Additional bit flags...
     enum {SCRIPTABLE = 4};
 
-    PRBool IsValid() const 
-        {return mName != nsnull;}
-
-    uint8 GetResolveState() const 
-        {return IsValid() ? GetFlags().GetState() : (uint8) RESOLVE_FAILED;}
+    uint8 GetResolveState() const {return mFlags.GetState();}
     
     PRBool IsFullyResolved() const 
         {return GetResolveState() == (uint8) FULLY_RESOLVED;}
@@ -536,43 +568,11 @@ public:
     const xptiTypelib&  GetTypelibRecord() const
         {return HasInterfaceRecord() ? mInterface->mTypelib : mTypelib;}
 
-    void   SetScriptableFlag(PRBool on)
-                {GetFlags().SetFlagBit(uint8(SCRIPTABLE),on);}
-    PRBool GetScriptableFlag() const
-                {return GetFlags().GetFlagBit(uint8(SCRIPTABLE));}
+    xptiInterfaceGuts*  GetInterfaceGuts() const
+        {return HasInterfaceRecord() ? mInterface : nsnull;}
 
-    const nsID* GetTheIID() const {return &mIID;}
-    const char* GetTheName() const {return mName;}
-
-    PRBool PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
-                                  xptiWorkingSet*          aWorkingSet);
-
-    void Invalidate();
-
-private:
-    void CopyName(const char* name,
-                  xptiWorkingSet* aWorkingSet);
-
-    xptiInfoFlags& GetFlags() const {return (xptiInfoFlags&) mName[-1];}    
-    xptiInfoFlags& GetFlags()       {return (xptiInfoFlags&) mName[-1];}    
-
-    void SetResolvedState(int state) 
-        {NS_ASSERTION(IsValid(),"bad state");
-         GetFlags().SetState(uint8(state));}
-
-    PRBool EnsureResolved(xptiWorkingSet* aWorkingSet = nsnull)
-        {return IsFullyResolved() ? PR_TRUE : Resolve(aWorkingSet);}
-    PRBool Resolve(xptiWorkingSet* aWorkingSet = nsnull);
-
-    // We only call these "*Locked" varients after locking. This is done to 
-    // allow reentrace as files are loaded and various interfaces resolved 
-    // without having to worry about the locked state.
-
-    PRBool EnsureResolvedLocked(xptiWorkingSet* aWorkingSet = nsnull)
-        {return IsFullyResolved() ? PR_TRUE : ResolveLocked(aWorkingSet);}
-    PRBool ResolveLocked(xptiWorkingSet* aWorkingSet = nsnull);
-
-    PRBool ScriptableFlagIsValid() const
+#ifdef DEBUG
+    PRBool DEBUG_ScriptableFlagIsValid() const
         {int s = (int) GetResolveState(); 
          if((s == PARTIALLY_RESOLVED || s == FULLY_RESOLVED) && mInterface)
             {
@@ -580,20 +580,190 @@ private:
                     return GetScriptableFlag();
                 return !GetScriptableFlag();
             }
-         else return PR_TRUE;
+         return PR_TRUE;
         }
-    
-    NS_IMETHOD GetTypeInArray(const nsXPTParamInfo* param,
-                              uint16 dimension,
-                              const XPTTypeDescriptor** type);
-private:
-    nsID   mIID;
-    char*  mName;   // This is in arena (not free'd) and mName[-1] is a flag.
+#endif
 
+    void   SetScriptableFlag(PRBool on)
+                {mFlags.SetFlagBit(uint8(SCRIPTABLE),on);}
+    PRBool GetScriptableFlag() const
+                {return mFlags.GetFlagBit(uint8(SCRIPTABLE));}
+
+    const nsID* GetTheIID()  const {return &mIID;}
+    const char* GetTheName() const {return mName;}
+
+    PRBool EnsureResolved(xptiWorkingSet* aWorkingSet = nsnull)
+        {return IsFullyResolved() ? PR_TRUE : Resolve(aWorkingSet);}
+
+    PRBool PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
+                                  xptiWorkingSet*          aWorkingSet);
+
+    nsresult GetInterfaceInfo(xptiInterfaceInfo** info);
+    PRBool   InterfaceInfoEquals(const xptiInterfaceInfo* info) const 
+        {return info == mInfo;}
+    
+    void     LockedInvalidateInterfaceInfo();
+    void     LockedInterfaceInfoDeathNotification() {mInfo = nsnull;}
+
+    //////////////////////
+    // These non-virtual methods handle the delegated nsIInterfaceInfo methods.
+
+    nsresult GetName(char * *aName);
+    nsresult GetIID(nsIID * *aIID);
+    nsresult IsScriptable(PRBool *_retval);
+    // Except this one.
+    //nsresult GetParent(nsIInterfaceInfo * *aParent);
+    nsresult GetMethodCount(PRUint16 *aMethodCount);
+    nsresult GetConstantCount(PRUint16 *aConstantCount);
+    nsresult GetMethodInfo(PRUint16 index, const nsXPTMethodInfo * *info);
+    nsresult GetMethodInfoForName(const char *methodName, PRUint16 *index, const nsXPTMethodInfo * *info);
+    nsresult GetConstant(PRUint16 index, const nsXPTConstant * *constant);
+    nsresult GetInfoForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIInterfaceInfo **_retval);
+    nsresult GetIIDForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIID * *_retval);
+    nsresult GetTypeForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, nsXPTType *_retval);
+    nsresult GetSizeIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, PRUint8 *_retval);
+    nsresult GetLengthIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, PRUint8 *_retval);
+    nsresult GetInterfaceIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint8 *_retval);
+    nsresult IsIID(const nsIID * IID, PRBool *_retval);
+    nsresult GetNameShared(const char **name);
+    nsresult GetIIDShared(const nsIID * *iid);
+    nsresult IsFunction(PRBool *_retval);
+    nsresult HasAncestor(const nsIID * iid, PRBool *_retval);
+
+    //////////////////////
+
+private:
+    xptiInterfaceEntry();   // not implemented
+
+    xptiInterfaceEntry(const char* name,
+                       size_t nameLength,
+                       const nsID& iid,
+                       const xptiTypelib& typelib);
+
+    xptiInterfaceEntry(const xptiInterfaceEntry& r,
+                       size_t nameLength,
+                       const xptiTypelib& typelib);
+    ~xptiInterfaceEntry();
+
+    void* operator new(size_t, void* p) {return p;}
+
+    void SetResolvedState(int state) 
+        {mFlags.SetState(uint8(state));}
+
+    PRBool Resolve(xptiWorkingSet* aWorkingSet = nsnull);
+
+    // We only call these "*Locked" variants after locking. This is done to 
+    // allow reentrace as files are loaded and various interfaces resolved 
+    // without having to worry about the locked state.
+
+    PRBool EnsureResolvedLocked(xptiWorkingSet* aWorkingSet = nsnull)
+        {return IsFullyResolved() ? PR_TRUE : ResolveLocked(aWorkingSet);}
+    PRBool ResolveLocked(xptiWorkingSet* aWorkingSet = nsnull);
+
+    // private helpers
+
+    nsresult GetEntryForParam(PRUint16 methodIndex, 
+                              const nsXPTParamInfo * param,
+                              xptiInterfaceEntry** entry);
+
+    nsresult GetTypeInArray(const nsXPTParamInfo* param,
+                            uint16 dimension,
+                            const XPTTypeDescriptor** type);
+
+private:
+    nsID                    mIID;
     union {
         xptiTypelib         mTypelib;     // Valid only until resolved.
         xptiInterfaceGuts*  mInterface;   // Valid only after resolved.
     };
+    xptiInterfaceInfo*      mInfo;        // May come and go.
+    xptiInfoFlags           mFlags;
+    char                    mName[1];     // Always last. Sized to fit.
+};
+
+struct xptiHashEntry : public PLDHashEntryHdr
+{
+    xptiInterfaceEntry* value;    
+};
+
+/****************************************************/
+
+class xptiInterfaceInfo : public nsIInterfaceInfo
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // Use delegation to implement (most!) of nsIInterfaceInfo.
+    NS_IMETHOD GetName(char * *aName) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetName(aName); }
+    NS_IMETHOD GetIID(nsIID * *aIID) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIID(aIID); }
+    NS_IMETHOD IsScriptable(PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsScriptable(_retval); }
+    // Except this one.
+    NS_IMETHOD GetParent(nsIInterfaceInfo * *aParent) 
+    {
+        if(!EnsureResolved() || !EnsureParent())
+            return NS_ERROR_UNEXPECTED;
+        NS_IF_ADDREF(*aParent = mParent);
+        return NS_OK;
+    }
+    NS_IMETHOD GetMethodCount(PRUint16 *aMethodCount) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodCount(aMethodCount); }
+    NS_IMETHOD GetConstantCount(PRUint16 *aConstantCount) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetConstantCount(aConstantCount); }
+    NS_IMETHOD GetMethodInfo(PRUint16 index, const nsXPTMethodInfo * *info) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodInfo(index, info); }
+    NS_IMETHOD GetMethodInfoForName(const char *methodName, PRUint16 *index, const nsXPTMethodInfo * *info) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodInfoForName(methodName, index, info); }
+    NS_IMETHOD GetConstant(PRUint16 index, const nsXPTConstant * *constant) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetConstant(index, constant); }
+    NS_IMETHOD GetInfoForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIInterfaceInfo **_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetInfoForParam(methodIndex, param, _retval); }
+    NS_IMETHOD GetIIDForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIID * *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIIDForParam(methodIndex, param, _retval); }
+    NS_IMETHOD GetTypeForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, nsXPTType *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetTypeForParam(methodIndex, param, dimension, _retval); }
+    NS_IMETHOD GetSizeIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, PRUint8 *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetSizeIsArgNumberForParam(methodIndex, param, dimension, _retval); }
+    NS_IMETHOD GetLengthIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint16 dimension, PRUint8 *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetLengthIsArgNumberForParam(methodIndex, param, dimension, _retval); }
+    NS_IMETHOD GetInterfaceIsArgNumberForParam(PRUint16 methodIndex, const nsXPTParamInfo * param, PRUint8 *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetInterfaceIsArgNumberForParam(methodIndex, param, _retval); }
+    NS_IMETHOD IsIID(const nsIID * IID, PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsIID(IID, _retval); }
+    NS_IMETHOD GetNameShared(const char **name) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetNameShared(name); }
+    NS_IMETHOD GetIIDShared(const nsIID * *iid) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIIDShared(iid); }
+    NS_IMETHOD IsFunction(PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsFunction(_retval); }
+    NS_IMETHOD HasAncestor(const nsIID * iid, PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->HasAncestor(iid, _retval); }
+
+public:
+    xptiInterfaceInfo(xptiInterfaceEntry* entry);
+
+    virtual ~xptiInterfaceInfo() ;
+
+    void Invalidate() 
+        {NS_IF_RELEASE(mParent); mEntry = nsnull;}
+
+#ifdef DEBUG
+    static void DEBUG_ShutdownNotification();
+#endif
+
+private:
+
+    // Note that mParent might still end up as nsnull if we don't have one.
+    PRBool EnsureParent(xptiWorkingSet* aWorkingSet = nsnull)
+    {
+        NS_ASSERTION(mEntry && mEntry->IsFullyResolved(), "bad EnsureParent call");
+        return mParent || !mEntry->GetInterfaceGuts()->mParent || BuildParent();
+    }
+    
+    PRBool EnsureResolved(xptiWorkingSet* aWorkingSet = nsnull)
+    {
+        return mEntry && mEntry->EnsureResolved(aWorkingSet);
+    }
+
+    PRBool BuildParent()
+    {
+        NS_ASSERTION(mEntry && 
+                     mEntry->IsFullyResolved() && 
+                     !mParent &&
+                     mEntry->GetInterfaceGuts()->mParent,
+                    "bad BuildParent call");
+        return NS_SUCCEEDED(mEntry->GetInterfaceGuts()->mParent->
+                                        GetInterfaceInfo(&mParent));
+    }
+
+    xptiInterfaceInfo();  // not implemented
+
+private:
+    xptiInterfaceEntry* mEntry;
+    xptiInterfaceInfo*  mParent;
 };
 
 /***************************************************************************/
@@ -609,6 +779,7 @@ public:
 
     static PRBool Delete(xptiInterfaceInfoManager* aMgr);
 
+private:
     xptiManifest(); // no implementation
 };
 
@@ -677,6 +848,8 @@ public:
 
     static PRBool IsZip(const char* name)
         {return GetType(name) == ZIP;}
+private:
+    xptiFileType(); // no implementation
 };
 
 /***************************************************************************/
@@ -746,6 +919,11 @@ public:
             return nsnull;
          return self->mAutoRegLock;}
 
+    static PRMonitor* GetInfoMonitor(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetInterfaceInfoManagerNoAddRef())) 
+            return nsnull;
+         return self->mInfoMonitor;}
+
     static void WriteToLog(const char *fmt, ...);
 
 private:
@@ -781,10 +959,10 @@ private:
                                              nsISupportsArray* aFileList,
                                              xptiWorkingSet* aWorkingSet);
 
-    PRBool VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet,
-                                      XPTInterfaceDirectoryEntry* iface,
-                                      const xptiTypelib& typelibRecord,
-                                      xptiInterfaceInfo** infoAdded);
+    PRBool VerifyAndAddEntryIfNew(xptiWorkingSet* aWorkingSet,
+                                  XPTInterfaceDirectoryEntry* iface,
+                                  const xptiTypelib& typelibRecord,
+                                  xptiInterfaceEntry** entryAdded);
 
     PRBool MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
                             xptiWorkingSet* aSrcWorkingSet);
@@ -804,6 +982,7 @@ private:
     PRFileDesc*                 mOpenLogFile;
     PRLock*                     mResolveLock;
     PRLock*                     mAutoRegLock;
+    PRMonitor*                  mInfoMonitor;
     nsCOMPtr<nsILocalFile>      mManifestDir;
     nsCOMPtr<nsISupportsArray>  mSearchPath;
 };
@@ -816,11 +995,5 @@ nsresult xptiCloneLocalFile(nsILocalFile*  aLocalFile,
 
 nsresult xptiCloneElementAsLocalFile(nsISupportsArray* aArray, PRUint32 aIndex,
                                      nsILocalFile** aLocalFile);
-
-/***************************************************************************/
-//inlines...
-
-inline xptiInterfaceGuts::~xptiInterfaceGuts() {NS_IF_RELEASE(mParent);}
-
 
 #endif /* xptiprivate_h___ */
