@@ -957,6 +957,8 @@ pref_CompareStrings (const void *v1, const void *v2)
 PR_IMPLEMENT(PRBool)
 pref_useDefaultPrefFile(void)
 {
+#ifdef PREF_BACKOUT
+
 #if defined(XP_UNIX)
   return PREF_Init("preferences.js");
 #elif defined(XP_MAC)
@@ -964,6 +966,12 @@ pref_useDefaultPrefFile(void)
 #else /* XP_WIN */
   return PREF_Init("prefs.js");
 #endif
+
+#else /* !PREF_BACKOUT */
+
+  return PR_FALSE;
+
+#endif /* PREF_BACKOUT */
 }
 
 

@@ -199,6 +199,7 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
 {
   /* temporary hack to load up pref files */
 
+#ifdef PREF_BACKOUT
   if (!aPrefInst)
     return;
 
@@ -217,6 +218,8 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
 #else /* XP_WIN */
   aPrefInst->Startup("prefs.js");
 #endif
+
+#endif /* PREF_BACKOUT */
 
   return;
 }
@@ -242,8 +245,24 @@ NS_IMPL_ISUPPORTS(nsPref, kIPrefIID);
 
 NS_IMETHODIMP nsPref::Startup(char *filename)
 {
-  return _convertRes(PREF_Init(filename));
+
+  if (!filename)
+    {
+#if defined(XP_UNIX)
+    return _convertRes(PREF_Init("preferences.js"));
+#elif defined(XP_MAC)
+    return _convertRes(PREF_Init("Netscape Preferences"));
+#else /* XP_WIN */
+    return _convertRes(PREF_Init("prefs.js"));
+#endif
+
+    }
+  else
+    {
+    return _convertRes(PREF_Init(filename));
+    }
 }
+
 NS_IMETHODIMP nsPref::Shutdown()
 {
   PREF_Cleanup();
