@@ -173,7 +173,7 @@ Attr* Element::getAttributeNode(const String& aName)
 Attr* Element::setAttributeNode(Attr* aNewAttr)
 {
     NSI_FROM_TX_NULL_CHECK(Element)
-    nsCOMPtr<nsIDOMAttr> newAttr(do_QueryInterface(aNewAttr->getNSObj()));
+    nsCOMPtr<nsIDOMAttr> newAttr(do_QueryInterface(GET_NSOBJ(aNewAttr)));
     nsCOMPtr<nsIDOMAttr> returnAttr;
 
     if (NS_SUCCEEDED(nsElement->SetAttributeNode(newAttr,
@@ -195,7 +195,7 @@ Attr* Element::setAttributeNode(Attr* aNewAttr)
 Attr* Element::removeAttributeNode(Attr* aOldAttr)
 {
     NSI_FROM_TX_NULL_CHECK(Element)
-    nsCOMPtr<nsIDOMAttr> oldAttr(do_QueryInterface(aOldAttr->getNSObj()));
+    nsCOMPtr<nsIDOMAttr> oldAttr(do_QueryInterface(GET_NSOBJ(aOldAttr)));
     nsCOMPtr<nsIDOMAttr> removedAttr;
     Attr* attrWrapper = NULL;
 

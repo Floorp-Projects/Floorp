@@ -77,7 +77,7 @@ Node* NamedNodeMap::getNamedItem(const String& aName)
 Node* NamedNodeMap::setNamedItem(Node* aNode)
 {
     NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
-    nsCOMPtr<nsIDOMNode> nsNode(do_QueryInterface(aNode->getNSObj()));
+    nsCOMPtr<nsIDOMNode> nsNode(do_QueryInterface(GET_NSOBJ(aNode)));
     nsCOMPtr<nsIDOMNode> node;
 
     if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(nsNode,
