@@ -52,9 +52,12 @@ UNAME=uname
 
 usage()
 {
-	echo "usage: $0 [-v] [-c] [S] [-3] [-b basedn] [-d debuglevel] [-h server] [-p ldap-port] [-P ldaps-port] [-W ssl-keyfile-passwd] [-L extra-lib-path ]" 2>&1
+	echo "usage: $0 [-v] [-c] [-s] [-3] [-C] [-b basedn] [-d debuglevel] [-h server] [-p ldap-port] [-P ldaps-port] [-W ssl-keyfile-passwd] [-L extra-lib-path ]" 2>&1
 	exit 2
 }
+
+# By default, SSL tests are done.  -s turns them off.
+TEST_SSL=yes
 
 # component dependencies
 NSS_RELEASE=nss/NSS_3_7_7_RTM
@@ -80,7 +83,7 @@ VERBOSE=0
 REALLY_VERBOSE=0
 LDAPDEBUG=""
 STOP_ON_ERRORS=1
-SKIP_SHLIB_COPY=0
+COPY_ROOT_CERT_LIB=0
 EXTRA_LIB_PATH=""
 EXTRA_SSL_ARGS=""
 
@@ -100,7 +103,7 @@ EXTRA_SSL_ARGS=""
 #	esac
 #done
 
-while getopts vcS3b:d:h:L:p:P:W: c; do
+while getopts vcCs3b:d:h:L:p:P:W: c; do
 	case $c in
 		v)	if [ $VERBOSE -eq 1 ]; then
 				REALLY_VERBOSE=1;
@@ -109,7 +112,8 @@ while getopts vcS3b:d:h:L:p:P:W: c; do
 			fi
 		;;
 		c)	STOP_ON_ERRORS=0;;
-		S)	SKIP_SHLIB_COPY=1;;
+		C)	COPY_ROOT_CERT_LIB=1;;
+		s)	TEST_SSL="no";;
 		3)	EXTRA_SSL_ARGS="$EXTRA_SSL_ARGS -3";;
 		b)	LDAPBASE=$OPTARG;;
 		d)	LDAPDEBUG=$OPTARG;;
@@ -124,12 +128,12 @@ while getopts vcS3b:d:h:L:p:P:W: c; do
 done
 shift `expr $OPTIND - 1`
 
-if [ -z "$KEYPASSWD" ]; then
+if [ -z "$KEYPASSWD" -a z$TEST_SSL = z"yes" ]; then
 	echo "Please provide the keyfile password (-W password)"
 	usage;
 fi
 
-if [ $# -gt 0 -o -z "$KEYPASSWD" ]; then
+if [ $# -gt 0 ]; then
 	usage;
 fi
 
@@ -193,7 +197,6 @@ else
 fi
 
 
-TEST_SSL=yes
 TEST_SSL_CLIENT_AUTH=yes
 TEST_SEARCHES=yes
 TEST_MODIFIES=yes
@@ -256,7 +259,7 @@ setup_shlib_access()
 	if [ z$TEST_SSL = z"yes" ]; then
 # Copy root cert shared library to cert DB location
 		ROOT_CERT_SO_DST_PATH=$CERTDB/$ROOT_CERT_SO
-		if [ "$SKIP_SHLIB_COPY" -eq 0 ]; then
+		if [ "$COPY_ROOT_CERT_LIB" -eq 0 ]; then
 			echo setup_shlib_access: cp -p $NSS_LIB_PATH/$ROOT_CERT_SO $ROOT_CERT_SO_DST_PATH
 			cp -p $NSS_LIB_PATH/$ROOT_CERT_SO $ROOT_CERT_SO_DST_PATH
 		fi
@@ -267,7 +270,7 @@ setup_shlib_access()
 # ROOT_CERT_SO_DST_PATH must be set
 cleanup_shlib_access()
 {
-	if [ "$SKIP_SHLIB_COPY" -eq 0 ]; then
+	if [ "$COPY_ROOT_CERT_LIB" -eq 0 ]; then
 		echo cleanup_shlib_access: rm $ROOT_CERT_SO_DST_PATH
 		rm $ROOT_CERT_SO_DST_PATH
 	fi
