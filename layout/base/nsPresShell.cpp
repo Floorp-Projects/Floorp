@@ -1779,7 +1779,10 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
   nsIContent* frameContent;
   PRBool      hasSameContent;
-   
+
+  NS_ASSERTION(aFrame, "No frame to search!");
+  if (!aFrame) return nsnull;   
+
   // See if the frame points to the same content object
   aFrame->GetContent(&frameContent);
   hasSameContent = (frameContent == aContent);
