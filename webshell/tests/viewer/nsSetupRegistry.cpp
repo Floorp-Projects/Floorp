@@ -57,6 +57,7 @@
 
 #include "nsIEditor.h"
 #include "nsIAllocator.h"
+#include "nsIGenericFactory.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -148,6 +149,7 @@
 // Class ID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
@@ -250,6 +252,7 @@ NS_SetupRegistry()
 {
   nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kGenericFactoryCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
