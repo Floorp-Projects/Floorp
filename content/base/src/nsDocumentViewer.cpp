@@ -4436,6 +4436,14 @@ nsresult rv;
           printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif /* DEBUG_dcone */
+
+          // if there is a frameset and we are printing silently then
+          // the default must be reset kFramesAsIs
+          if (printService && mPrt->mIsParentAFrameSet && aSilent) {
+            mPrt->mPrintFrameType = nsIPrintOptions::kFramesAsIs; 
+            printService->SetPrintFrameType(mPrt->mPrintFrameType);
+          }
+
           // Print listener setup...
           if (mPrt != nsnull) {
             mPrt->OnStartPrinting();    
