@@ -39,7 +39,7 @@ interface nsIFile;
 interface nsIInputStream;
 interface nsIOutputStream;
 
-[scriptable, uuid(1daf19f0-8ea7-11d3-93ad-00104ba0fd40)]
+[scriptable, uuid(ab7c3a84-d488-11d3-8cda-0060b0fc14a3)]
 interface nsIIOService : nsISupports
 {
     /**
@@ -125,6 +125,17 @@ interface nsIIOService : nsISupports
     readonly attribute wstring userAgent;
 
     /**
+     * Returns true if networking is in "offline" mode. When in offline mode, attempts
+     * to access the network will fail (although this is not necessarily corrolated with
+     * whether there is actually a network available -- that's hard to detect without
+     * causing the dialer to come up).
+     */
+    attribute boolean offline;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // URL parsing utilities
+
+    /**
      * Utility for protocol implementors -- extracts the scheme from a URL 
      * string, consistently and according to spec.
      * @param urlString - the URL string to parse
@@ -145,13 +156,30 @@ interface nsIIOService : nsISupports
                        out string scheme);
 
     /**
-     * Returns true if networking is in "offline" mode. When in offline mode, attempts
-     * to access the network will fail (although this is not necessarily corrolated with
-     * whether there is actually a network available -- that's hard to detect without
-     * causing the dialer to come up).
+     * Encode characters into % escaped hexcodes.
      */
-    attribute boolean offline;
+    string escape(in string str, in short mask);
 
+    /**
+     * Decode % escaped hex codes into character values.
+     */
+    string unescape(in string str);
+
+    /**
+     * Get port from string.
+     */
+    long extractPort(in string str);
+
+    /**
+     * Resolves a relative path string containing "." and ".."
+     * with respect to a base path (assumed to already be resolved). 
+     * For example, resolving "../../foo/./bar/../baz.html" w.r.t.
+     * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
+     * ascend above the base results in the NS_ERROR_MALFORMED_URI
+     * exception. If basePath is null, it treats it as "/".
+     */
+    string resolveRelativePath(in string relativePath,
+                               in string basePath);
 };
 
 %{C++

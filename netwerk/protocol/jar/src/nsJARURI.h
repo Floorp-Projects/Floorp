@@ -45,6 +45,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
+    nsresult FormatSpec(const char* entryPath, char* *result);
 
 protected:
     nsCOMPtr<nsIURI> mJARFile;
