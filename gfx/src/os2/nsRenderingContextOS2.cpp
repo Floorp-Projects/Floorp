@@ -1638,8 +1638,8 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
     FONTMETRICS fm;
     GFX (::GpiQueryFontMetrics ( data->mPS, sizeof (fm), &fm), FALSE);
     
-    font->mMaxAscent  = NSToCoordRound( fm.lMaxAscender * data->mP2T );
-    font->mMaxDescent = NSToCoordRound( fm.lMaxDescender * data->mP2T );
+    font->mMaxAscent  = NSToCoordRound( (fm.lMaxAscender-1) * data->mP2T );
+    font->mMaxDescent = NSToCoordRound( (fm.lMaxDescender+1) * data->mP2T );
   }
 
   // Our current state relatively to the _full_ string...
@@ -2086,10 +2086,14 @@ do_GetTextDimensions(const nsFontSwitch* aFontSwitch,
   
   data->mWidth += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
 
-  FONTMETRICS fm;
-  GFX (::GpiQueryFontMetrics (data->mPS, sizeof (fm), &fm), FALSE);
-  font->mMaxAscent  = NSToCoordRound( fm.lMaxAscender * data->mP2T );
-  font->mMaxDescent = NSToCoordRound( fm.lMaxDescender * data->mP2T );
+   // set mMaxAscent & mMaxDescent if not already set in nsFontOS2 struct
+  if( font->mMaxAscent == 0 )
+  {
+    FONTMETRICS fm;
+    GFX (::GpiQueryFontMetrics ( data->mPS, sizeof (fm), &fm), FALSE);
+    font->mMaxAscent  = NSToCoordRound( (fm.lMaxAscender-1) * data->mP2T );
+    font->mMaxDescent = NSToCoordRound( (fm.lMaxDescender+1) * data->mP2T );
+  }
 
   if (data->mAscent < font->mMaxAscent) {
     data->mAscent = font->mMaxAscent;

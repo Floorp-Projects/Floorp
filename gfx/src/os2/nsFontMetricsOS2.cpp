@@ -610,7 +610,7 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
             }
           }
         }
-      } /* endfor */
+      }
 
       points = curPoints;
       nsMemory::Free(pMetrics);
@@ -1251,31 +1251,6 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
     }
   }
   
-#if 0
-   // Generic case:  see if this family has a vector font matching the
-   // given style
-  USHORT flags = isBold ? FM_SEL_BOLD : 0;
-  flags |= isItalic ? FM_SEL_ITALIC : 0;
-
-  long lFonts = 0;
-  FONTMETRICS* pMetrics = getMetrics( lFonts, aFamilyname, aPS );
-
-  if( lFonts > 0 )
-  {
-    for( int i = 0; i < lFonts; i++ )
-    {
-      if( (pMetrics[i].fsDefn & FM_DEFN_OUTLINE)  &&
-          ((pMetrics[i].fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) == flags) )
-      {
-        PL_strcpy( alias, pMetrics[i].szFacename );
-        return PR_TRUE;
-      }
-    }
-  }
-  
-  nsMemory::Free(pMetrics);
-#endif
-
   return PR_FALSE;
 }
 
@@ -1363,28 +1338,22 @@ nsFontMetricsOS2::RealizeFont()
   float dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   
-   // Sometimes the fontmetrics for fonts don't add up as documented.
-   // Sometimes EmHeight + InternalLeading is greater than the MaxBaselineExt.
-   // This hack attempts to appease all fonts.  
-  if( fm.lMaxBaselineExt >= fm.lEmHeight + fm.lInternalLeading )
-  {
-    mMaxHeight = NSToCoordRound( fm.lMaxBaselineExt * dev2app );
-    mEmHeight = NSToCoordRound((fm.lMaxBaselineExt - fm.lInternalLeading) * dev2app );
-    mEmAscent = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app );
-  }
-  else
-  {
-    mMaxHeight = NSToCoordRound((fm.lEmHeight + fm.lInternalLeading) * dev2app );
-    mEmHeight = NSToCoordRound( fm.lEmHeight * dev2app);
-    mEmAscent = NSToCoordRound((fm.lEmHeight - fm.lMaxDescender) * dev2app );
-  } 
+  mMaxAscent  = NSToCoordRound( (fm.lMaxAscender-1) * dev2app );
+  mMaxDescent = NSToCoordRound( (fm.lMaxDescender+1) * dev2app );
+  mFontHandle->mMaxAscent = mMaxAscent;
+  mFontHandle->mMaxDescent = mMaxDescent;
 
-  mMaxAscent  = NSToCoordRound( fm.lMaxAscender * dev2app );
-  mMaxDescent = NSToCoordRound( fm.lMaxDescender * dev2app );
+  mInternalLeading = NSToCoordRound( fm.lInternalLeading * dev2app );
+  mExternalLeading = NSToCoordRound( fm.lExternalLeading * dev2app );
   
+  /* These two values aren't really used by mozilla */
+  mEmAscent = mMaxAscent - mInternalLeading;
+  mEmDescent  = mMaxDescent;
+
+  mMaxHeight  = mMaxAscent + mMaxDescent;
+  mEmHeight = mEmAscent + mEmDescent;
+
   mMaxAdvance = NSToCoordRound( fm.lMaxCharInc * dev2app );
-  mEmDescent  = NSToCoordRound( fm.lMaxDescender * dev2app );
-  mLeading    = NSToCoordRound( fm.lInternalLeading * dev2app );
   mXHeight    = NSToCoordRound( fm.lXHeight * dev2app );
 
   nscoord onePixel = NSToCoordRound(1 * dev2app);
@@ -1398,12 +1367,7 @@ nsFontMetricsOS2::RealizeFont()
   mStrikeoutPosition  = NSToCoordRound( mXHeight / 2.0f);
   mStrikeoutSize      = PR_MAX(onePixel, NSToCoordRound(fm.lStrikeoutSize * dev2app));
 
-   // Let there always be a minimum of one pixel space between the text
-   // and the underline
-  if( fm.lEmHeight < 10 )
-    mUnderlinePosition  = -NSToCoordRound( fm.lUnderscorePosition * dev2app );
-  else
-    mUnderlinePosition  = -PR_MAX(onePixel*2, NSToCoordRound( fm.lUnderscorePosition * dev2app));
+  mUnderlinePosition  = -NSToCoordRound( fm.lUnderscorePosition * dev2app );
   mUnderlineSize      = PR_MAX(onePixel, NSToCoordRound(fm.lUnderscoreSize * dev2app));
 
   mAveCharWidth       = PR_MAX(1, NSToCoordRound(fm.lAveCharWidth * dev2app));
@@ -1467,11 +1431,34 @@ NS_IMETHODIMP nsFontMetricsOS2::GetHeight( nscoord &aHeight)
    return NS_OK;
 }
 
+#ifdef FONT_LEADING_APIS_V2
+NS_IMETHODIMP
+nsFontMetricsOS2::GetInternalLeading(nscoord &aLeading)
+{
+  aLeading = mInternalLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetExternalLeading(nscoord &aLeading)
+{
+  aLeading = mExternalLeading;
+  return NS_OK;
+}
+#else
 NS_IMETHODIMP nsFontMetricsOS2::GetLeading( nscoord &aLeading)
 {
-   aLeading = mLeading;
+   aLeading = mInternalLeading;
    return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mInternalLeading;
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP nsFontMetricsOS2::GetMaxAscent( nscoord &aAscent)
 {
@@ -1512,13 +1499,6 @@ NS_IMETHODIMP nsFontMetricsOS2::GetLangGroup(nsIAtom** aLangGroup)
   *aLangGroup = mLangGroup;
   NS_IF_ADDREF(*aLangGroup);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontMetricsOS2::GetNormalLineHeight(nscoord &aHeight)
-{
-  aHeight = mEmHeight + mLeading;
   return NS_OK;
 }
 
@@ -1998,15 +1978,6 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     nsMiniFontMetrics* fm = &(font->metrics);
     printf( " %3d: %32s :", k, fm->szFamilyname );
     printf( " %32s", fm->szFacename );
-    
-#if 0
-    int length = font->name.Length();
-    int destLength = length * 3 + 1;
-    char* pstr = new char[destLength];
-    int convertedLength = WideCharToMultiByte( fm->usCodePage, font->name.get(),
-                                               length, pstr, destLength );
-    printf( " : %32s", pstr );                                               
-#endif
     
     if( fm->fsDefn & FM_DEFN_OUTLINE )
       printf( " : vector" );
