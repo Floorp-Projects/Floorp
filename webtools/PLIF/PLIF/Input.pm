@@ -146,6 +146,7 @@ sub getArgumentsAsString {
 sub getArgumentsFromString {
     my $self = shift;
     my($string) = @_;
+    $self->assert(defined($string), 1, 'Tried to expand an undefined string');
     if (ref($string) eq 'ARRAY') {
         $string = join(';', @$string);
     }
