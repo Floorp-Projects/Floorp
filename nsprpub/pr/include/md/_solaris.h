@@ -48,7 +48,13 @@
 #undef _PR_HAVE_ATOMIC_OPS
 #else
 #define _PR_HAVE_ATOMIC_OPS
+/*
+ * We have assembly language implementation of atomic
+ * stacks for the sparc architecture only.
+ */
+#ifdef sparc
 #define _PR_HAVE_ATOMIC_CAS
+#endif
 #endif
 
 #define _PR_POLL_AVAILABLE
