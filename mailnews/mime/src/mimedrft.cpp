@@ -520,7 +520,8 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 
   //It's possible we must treat the message body as attachment!
   PRBool bodyAsAttachment = PR_FALSE;
-  if (  mdd->messageBody->type && *mdd->messageBody->type &&
+  if (  mdd->messageBody &&
+        mdd->messageBody->type && *mdd->messageBody->type &&
         ( PL_strcasestr(mdd->messageBody->type, "text/html") == nsnull ) &&
         ( PL_strcasestr(mdd->messageBody->type, "text/plain") == nsnull ) &&
         ( PL_strcasecmp(mdd->messageBody->type, "text") != 0 )
