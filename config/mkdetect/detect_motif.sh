@@ -417,7 +417,7 @@ fi
 ##
 for d in $MOTIF_SEARCH_PATH
 do
-	if [ -d $d/include/Xm ]
+	if [ -d $d/include/Xm -a -f $d/include/Xm/Xm.h ]
 	then
 		MOTIF_INCLUDE_DIR=$d/include
 		break;

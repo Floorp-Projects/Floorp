@@ -358,7 +358,7 @@ fi
 ##
 for d in $X11_SEARCH_PATH
 do
-	if [ -d $d/include/X11 ]
+	if [ -d $d/include/X11 -a -f $d/include/X11/Xlib.h ]
 	then
 		X11_INCLUDE_DIR=$d/include
 		break;
