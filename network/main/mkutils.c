@@ -23,6 +23,10 @@
  * Home for utility functions and anything else that 
  * doesn't fit elsewhere.
  */
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
 
 #include "rosetta.h"
 #include "mkutils.h"
@@ -53,6 +57,12 @@
 #ifdef XP_MAC
 #include "MacBinSupport.h"
 #endif
+
+#ifdef TRUST_LABELS
+#include "mkaccess.h"
+#include "pics.h"
+#endif
+
 
 typedef struct {
   char *buffer;
@@ -1519,6 +1529,19 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 
 				if(!PL_strcasecmp(value, "NO-CACHE"))
 					URL_s->dont_cache = TRUE;
+#ifdef TRUST_LABELS
+			}
+ 			else if ( IsTrustLabelsEnabled() && !PL_strncasecmp(name,"PICS-LABEL:",11))
+ 			  {
+ 				/* we are looking for trust labels and a PICS-label was found
+ 				 * Parse the label to see if it is a trust label.  If it is a 
+ 				 * trust label then it will be added to the TrustList in URL_s.
+				 */
+ 				PICS_ExtractTrustLabel( URL_s, value );
+ 				/* Then when we are all done with the header the Set-Cookie fields
+ 				 * will be processed and matched to the trust labels.
+				 */
+#endif
               }
             break;
 
@@ -1603,7 +1626,11 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
             break;
 
         case 'S':
+#ifdef TRUST_LABELS
+            if( !IsTrustLabelsEnabled() && !PL_strncasecmp(name,"SET-COOKIE:",11))
+#else
             if(!PL_strncasecmp(name,"SET-COOKIE:",11))
+#endif
               {
 				found_one = TRUE;
                 NET_SetCookieStringFromHttp(outputFormat, URL_s, context, URL_s->address, value);
