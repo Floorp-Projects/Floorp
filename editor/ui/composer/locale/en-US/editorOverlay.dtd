@@ -121,7 +121,7 @@
 <!ENTITY formattingtb.accesskey "f">
 <!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
 <!ENTITY editmodetb.accesskey "e">
-<!ENTITY taskbarCmd.label "Statusbar">  
+<!ENTITY taskbarCmd.label "Status Bar">  
 <!ENTITY taskbarCmd.accesskey "s"> 
 <!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
