@@ -218,7 +218,6 @@ private:
 
 protected:
   nscolor					  mCurrentColor;
-  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics	  *mFontMetrics;
   HDC               mDC;
   HDC               mMainDC;

@@ -62,4 +62,23 @@ struct nsPoint {
   }
 };
 
+
+/** ---------------------------------------------------
+ *  A special type of point which also add the capability to tell if a point is on
+ *  the curve.. or off of the curve for a path
+ *	@update 03/29/00 dwc
+ */
+struct nsPathPoint: public nsPoint{
+
+  PRBool  mIsOnCurve;
+
+  // Constructors
+  nsPathPoint() {}
+  nsPathPoint(const nsPathPoint& aPoint) {x = aPoint.x; y = aPoint.y;mIsOnCurve=aPoint.mIsOnCurve;}
+  nsPathPoint(nscoord aX, nscoord aY) {x = aX; y = aY;mIsOnCurve=PR_TRUE;}
+  nsPathPoint(nscoord aX, nscoord aY,PRBool aIsOnCurve) {x = aX; y = aY;mIsOnCurve=aIsOnCurve;}
+
+};
+
+
 #endif /* NSPOINT_H */

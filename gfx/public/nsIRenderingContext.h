@@ -668,7 +668,7 @@ public:
    * @param aWidth tile width
    * @param aHeight tile height
    */
-  NS_IMETHOD DrawPath(nsPoint aPointArray[],PRInt32 aNumPts) = 0;
+  NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts) = 0;
 
   /**
    * Copy offscreen pixelmap to this RenderingContext.

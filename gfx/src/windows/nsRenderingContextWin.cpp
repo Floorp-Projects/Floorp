@@ -295,7 +295,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     NS_RELEASE(mDCOwner);
   }
 
-  mTMatrix = nsnull;
+  mTranMatrix = nsnull;
   mDC = NULL;
   mMainDC = NULL;
 }
@@ -465,7 +465,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   float app2dev;
 
   mContext->GetAppUnitsToDevUnits(app2dev);
-	mTMatrix->AddScale(app2dev, app2dev);
+	mTranMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
 
 #ifdef NS_DEBUG
@@ -678,7 +678,7 @@ NS_IMETHODIMP nsRenderingContextWin :: PushState(void)
     NS_IF_ADDREF(mStates->mNext->mFontMetrics);
   }
 
-  mTMatrix = &mStates->mMatrix;
+  mTranMatrix = &mStates->mMatrix;
 
   return NS_OK;
 }
@@ -701,7 +701,7 @@ NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
 
     if (nsnull != mStates)
     {
-      mTMatrix = &mStates->mMatrix;
+      mTranMatrix = &mStates->mMatrix;
 
       GraphicsState *pstate;
 
@@ -738,7 +738,7 @@ NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
       SetLineStyle(mStates->mLineStyle);
     }
     else
-      mTMatrix = nsnull;
+      mTranMatrix = nsnull;
   }
 
   aClipEmpty = retval;
@@ -759,7 +759,7 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCo
 
   mStates->mLocalClip = aRect;
 
-	mTMatrix->TransformCoord(&trect.x, &trect.y,
+	mTranMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
 
   RECT nr;
@@ -984,20 +984,20 @@ NS_IMETHODIMP nsRenderingContextWin :: GetFontMetrics(nsIFontMetrics *&aFontMetr
 // add the passed in translation to the current translation
 NS_IMETHODIMP nsRenderingContextWin :: Translate(nscoord aX, nscoord aY)
 {
-	mTMatrix->AddTranslation((float)aX,(float)aY);
+	mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
 // add the passed in scale to the current scale
 NS_IMETHODIMP nsRenderingContextWin :: Scale(float aSx, float aSy)
 {
-	mTMatrix->AddScale(aSx, aSy);
+	mTranMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  aTransform = mTMatrix;
+  aTransform = mTranMatrix;
   return NS_OK;
 }
 
@@ -1048,8 +1048,8 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-	mTMatrix->TransformCoord(&aX0,&aY0);
-	mTMatrix->TransformCoord(&aX1,&aY1);
+	mTranMatrix->TransformCoord(&aX0,&aY0);
+	mTranMatrix->TransformCoord(&aX1,&aY1);
 
   SetupPen();
 
@@ -1092,7 +1092,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRI
   {
 		pp->x = np->x;
 		pp->y = np->y;
-		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
   // Draw the polyline
@@ -1112,7 +1112,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawRect(const nsRect& aRect)
 	nsRect	tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 	nr.left = tr.x;
 	nr.top = tr.y;
 	nr.right = tr.x+tr.width;
@@ -1127,7 +1127,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord 
 {
   RECT nr;
 
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
 	nr.left = aX;
 	nr.top = aY;
 	nr.right = aX+aWidth;
@@ -1144,7 +1144,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillRect(const nsRect& aRect)
 	nsRect tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   ConditionRect(tr, nr);
   ::FillRect(mDC, &nr, SetupSolidBrush());
 
@@ -1156,7 +1156,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord 
   RECT nr;
 	nsRect	tr;
 
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
 	nr.left = aX;
 	nr.top = aY;
 	nr.right = aX+aWidth;
@@ -1173,7 +1173,7 @@ NS_IMETHODIMP nsRenderingContextWin :: InvertRect(const nsRect& aRect)
 	nsRect tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   ConditionRect(tr, nr);
   ::InvertRect(mDC, &nr);
 
@@ -1185,7 +1185,7 @@ NS_IMETHODIMP nsRenderingContextWin :: InvertRect(nscoord aX, nscoord aY, nscoor
   RECT nr;
 	nsRect	tr;
 
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
 	nr.left = aX;
 	nr.top = aY;
 	nr.right = aX+aWidth;
@@ -1213,7 +1213,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawPolygon(const nsPoint aPoints[], PRIn
   {
 		pp->x = np->x;
 		pp->y = np->y;
-		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
   // Outline the polygon - note we are implicitly ignoring the linestyle here
@@ -1247,7 +1247,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRIn
 	{
 		pp->x = np->x;
 		pp->y = np->y;
-		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
   // Fill the polygon
@@ -1277,7 +1277,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoo
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   SetupPen();
 
@@ -1296,7 +1296,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   SetupSolidPen();
   SetupSolidBrush();
@@ -1321,7 +1321,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord a
   PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
   float   anglerad, distance;
 
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   SetupPen();
   SetupSolidBrush();
@@ -1361,7 +1361,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord a
   PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
   float   anglerad, distance;
 
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   SetupSolidPen();
   SetupSolidBrush();
@@ -2285,9 +2285,9 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
     if (aLength > 500) {
       dx0 = new INT[aLength];
     }
-    mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
+    mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
-  mTMatrix->TransformCoord(&x, &y);
+  mTranMatrix->TransformCoord(&x, &y);
   ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
@@ -2322,7 +2322,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 
     PRInt32 x = aX;
     PRInt32 y = aY;
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
 
@@ -2367,7 +2367,7 @@ FoundFont:
               // coord where y is constant and transformed once
               x = aX;
               y = aY;
-              mTMatrix->TransformCoord(&x, &y);
+              mTranMatrix->TransformCoord(&x, &y);
               prevFont->DrawString(mDC, x, y, str, 1);
               aX += *aSpacing++;
               str++;
@@ -2425,7 +2425,7 @@ FoundFont:
           // coord where y is constant and transformed once
           x = aX;
           y = aY;
-          mTMatrix->TransformCoord(&x, &y);
+          mTranMatrix->TransformCoord(&x, &y);
           prevFont->DrawString(mDC, x, y, str, 1);
           aX += *aSpacing++;
           str++;
@@ -2742,10 +2742,10 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect&
   nsRect	sr,dr;
 
 	sr = aSRect;
-	mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
 
   dr = aDRect;
-	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+	mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   return aImage->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 }
@@ -2755,7 +2755,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect&
   nsRect	tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+	mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
   return aImage->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
@@ -2772,8 +2772,8 @@ nsRenderingContextWin::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord
 PRBool didtile = FALSE;
 
   // convert output platform, but no translation.. just scale
-  mTMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-  mTMatrix->TransformCoord(&aX1,&aY1);
+  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
 
   if ( PR_TRUE==CanTile(aWidth,aHeight) ) {    
     didtile = ((nsImageWin*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
@@ -2869,10 +2869,10 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
         oldPalette = ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_TRUE);
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-        mTMatrix->TransformCoord(&x, &y);
+        mTranMatrix->TransformCoord(&x, &y);
 
       if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-        mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+        mTranMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
 
       ::BitBlt(destdc, drect.x, drect.y,
                drect.width, drect.height,
@@ -3246,7 +3246,7 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
 
     PRInt32 x = aX;
     PRInt32 y = aY;
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
     nsFontMetricsWinA* metrics = (nsFontMetricsWinA*) mFontMetrics;
     nsFontSubset* prevFont = nsnull;
 
@@ -3296,7 +3296,7 @@ FoundFont:
               // coord where y is constant and transformed once
               x = aX;
               y = aY;
-              mTMatrix->TransformCoord(&x, &y);
+              mTranMatrix->TransformCoord(&x, &y);
               prevFont->DrawString(mDC, x, y, str, 1);
               aX += *aSpacing++;
               str++;
@@ -3331,7 +3331,7 @@ FoundFont:
           // coord where y is constant and transformed once
           x = aX;
           y = aY;
-          mTMatrix->TransformCoord(&x, &y);
+          mTranMatrix->TransformCoord(&x, &y);
           prevFont->DrawString(mDC, x, y, str, 1);
           aX += *aSpacing++;
           str++;
