@@ -858,11 +858,6 @@ JS_SetVersion(JSContext *cx, JSVersion version)
     }
 #endif /* !JS_BUG_FALLIBLE_EQOPS */
 
-#if JS_HAS_EXPORT_IMPORT
-    /* XXX this might fail due to low memory */
-    js_InitScanner(cx);
-#endif /* JS_HAS_EXPORT_IMPORT */
-
     return oldVersion;
 }
 
