@@ -688,7 +688,8 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
 
     if (result != nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
+        double d = SaveError( result );
+        LL_L2D(d, *aReturn);
         return NS_OK;
     }
     
