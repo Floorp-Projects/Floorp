@@ -74,10 +74,10 @@ nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr
         NS_GetComponentManager(getter_AddRefs(compMgr));
         if (!compMgr)
             return NS_ERROR_FAILURE;
-        nsresult status = compMgr->CreateInstanceByContractID(mContractID, 
-                                                              mOuter, 
-                                                              aIID, 
-                                                              aInstancePtr);
+        status = compMgr->CreateInstanceByContractID(mContractID,
+                                                     mOuter,
+                                                     aIID,
+                                                     aInstancePtr);
         if (NS_FAILED(status))
             *aInstancePtr = 0;
     }
