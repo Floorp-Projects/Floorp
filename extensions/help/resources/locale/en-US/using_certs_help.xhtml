@@ -139,7 +139,7 @@
 
 <p>To view all the web site certificates available to your browser, click the Web Sites tab at the top of the Certificate Manager window. 
 
-<p>To perform an action on one or more web site certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresonding action. 
+<p>To perform an action on one or more web site certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresponding action. 
 
 <p>The Edit button allows you to specify whether your browser will trust the selected web site certificates in the future.
 
@@ -309,7 +309,7 @@
 
 <p>However, in some circumstances system administrators or other knowledgeable persons may wish to adjust the SSL settings to fine-tune them for special security needs or to account for bugs in some older software products.
 
-<p>You shouldn't adust the SSL settings for your browser unless you know what you're doing or have the assistance of someone else who does. If you do need to adjust them for some reason, follow these steps:
+<p>You shouldn't adjust the SSL settings for your browser unless you know what you're doing or have the assistance of someone else who does. If you do need to adjust them for some reason, follow these steps:
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
@@ -341,9 +341,9 @@
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
-<p><a href="#How_Certificate_Validation_Works">How Certificate Validation Works</a></p>
+<p><a href="#How_Certificate_Validation_Works">How Validation Works</a></p>
 <p><a href="#Managing_CRLs">Managing CRLs</a></p>
-<p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring Certificate Manager for OCSP</a></p>
+<p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a></p>
 </td>
 </tr>
 </table>
@@ -354,9 +354,9 @@
 <a NAME="OCSP:aboutIDX"></a>
 <a NAME="CRLs:aboutIDX"></a>
 <a NAME="validation_of_certificates:aboutIDX"></a>
-<h2>How Certificate Validation Works</h2></a>
+<h2>How Validation Works</h2></a>
 
-<p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
+<p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
 
 <p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified has not been marked as untrusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
@@ -377,7 +377,7 @@
 	<li>Under the Privacy and Security category, choose Validation. (If no subcategories are visible, click to expand the list.)
 </ol>
 
-<p>Click the Manage CRLs in the Validation Settings panel to see a list of the CRLs available to Certificate Manager. To delete a CRL, select it, then click Delete.
+<p>Click Manage CRLs in the Validation Settings panel to see a list of the CRLs available to Certificate Manager. To delete a CRL, select it, then click Delete.
 
 
 
@@ -401,7 +401,7 @@
 
 
 <hr>
-<p><i>7/5/2001</i></p>
+<p><i>7/13/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
