@@ -26,22 +26,49 @@
 #include <windows.h>
 #endif 
 
-typedef struct _nsMsgStore
-{
-    nsCOMPtr<nsIMsgFolder> msgFolder;
-    nsMsgKeyArray keyArray;
-} nsMsgStore;
 
-typedef struct _nsCopyRequest 
+typedef enum _nsCopyRequestType
 {
-    nsCOMPtr<nsISupports> srcSupport; // a nsIMsgFolder or nsFileSpec
-    nsCOMPtr<nsIMsgFolder> dstFolder;
-    nsCOMPtr<nsITransactionManager> txnMgr;
-    nsCOMPtr<nsIMsgCopyServiceListener> listener;
-    nsCOMPtr<nsISupports> listenerData;
-    PRBool isMove;
-    nsVoidArray msgStoreArray; // array of nsMsgStore
-} nsCopyRequest;
+    nsCopyMessagesType = 0x0,
+    nsCopyFileMessageType = 0x1
+} nsCopyRequestType;
+
+class nsCopyRequest;
+
+class nsCopySource
+{
+public:
+    nsCopySource();
+    nsCopySource(nsIMsgFolder* srcFolder);
+    ~nsCopySource();
+    void AddMessage(nsIMessage* aMsg) { m_messageArray->AppendElement(aMsg); };
+
+    nsCOMPtr<nsIMsgFolder> m_msgFolder;
+    nsCOMPtr<nsISupportsArray> m_messageArray;
+    PRBool m_processed;
+};
+
+class nsCopyRequest 
+{
+public:
+    nsCopyRequest();
+    ~nsCopyRequest();
+
+    void Init(nsCopyRequestType type, nsISupports* aSupport,
+              PRBool bVal, nsIMsgCopyServiceListener* listener,
+              nsISupports* data, nsITransactionManager* txnMgr);
+    nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
+
+    nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
+    nsCOMPtr<nsIMsgFolder> m_dstFolder;
+    nsCOMPtr<nsITransactionManager> m_txnMgr;
+    nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
+    nsCOMPtr<nsISupports> m_listenerData;
+    nsCopyRequestType m_requestType;
+    PRBool m_isMoveOrDraft;
+    PRBool m_processed;
+    nsVoidArray m_copySourceArray; // array of nsCopySource
+};
 
 class nsMsgCopyService : public nsIMsgCopyService
 {
@@ -69,15 +96,90 @@ public:
                                nsITransactionManager* txnMgr);
 
 	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
-								nsIMsgFolder* dstFolder);
+								nsIMsgFolder* dstFolder,
+                                nsresult result);
 
 
 private:
 
     nsresult ClearRequest(nsCopyRequest* aRequest, nsresult rv);
-    void RemoveAll();
+    nsresult DoCopy(nsCopyRequest* aRequest);
+    nsresult DoNextCopy();
+    nsCopyRequest* FindRequest(nsISupports* aSupport, nsIMsgFolder* dstFolder);
+
     nsVoidArray m_copyRequests;
 };
+
+// ******************** nsCopySource ******************
+// 
+nsCopySource::nsCopySource() : m_processed(PR_FALSE)
+{
+    nsresult rv;
+    rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
+}
+
+nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
+    m_processed(PR_FALSE)
+{
+    nsresult rv;
+    rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
+    m_msgFolder = do_QueryInterface(srcFolder, &rv);
+}
+
+nsCopySource::~nsCopySource()
+{
+}
+
+// ************ nsCopyRequest *****************
+// 
+nsCopyRequest::nsCopyRequest() :
+    m_isMoveOrDraft(PR_FALSE), m_requestType(nsCopyMessagesType),
+    m_processed(PR_FALSE)
+{
+}
+
+nsCopyRequest::~nsCopyRequest()
+{
+    PRInt32 j;
+    nsCopySource* ncs;
+    
+    j = m_copySourceArray.Count();
+    while(j-- > 0)
+    {
+        ncs = (nsCopySource*) m_copySourceArray.ElementAt(j);
+        m_copySourceArray.RemoveElementAt(j);
+        delete ncs;
+    }
+}
+
+void
+nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
+                    PRBool bVal, nsIMsgCopyServiceListener* listener,
+                    nsISupports* data, nsITransactionManager* txnMgr)
+{
+    nsresult rv;
+    m_requestType = type;
+    m_srcSupport = do_QueryInterface(aSupport, &rv);
+    m_isMoveOrDraft = bVal;
+    if (listener)
+        m_listener = do_QueryInterface(listener, &rv);
+    if (data)
+        m_listenerData = do_QueryInterface(data, &rv);
+    if (txnMgr)
+        m_txnMgr = do_QueryInterface(txnMgr, &rv);
+}
+
+nsCopySource*
+nsCopyRequest::AddNewCopySource(nsIMsgFolder* srcFolder)
+{
+    nsCopySource* newSrc = new nsCopySource(srcFolder);
+    if (newSrc)
+        m_copySourceArray.AppendElement((void*) newSrc);
+    return newSrc;
+}
+
+// ************* nsMsgCopyService ****************
+// 
 
 nsMsgCopyService::nsMsgCopyService()
 {
@@ -86,45 +188,148 @@ nsMsgCopyService::nsMsgCopyService()
 
 nsMsgCopyService::~nsMsgCopyService()
 {
-    RemoveAll();
-}
-
-nsresult
-nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
-{
-    nsMsgStore* nms;
-    PRInt32 j;
-
-    if (aRequest)
-    {
-        j = aRequest->msgStoreArray.Count();
-        while(j-- > 0)
-        {
-            nms = (nsMsgStore*) aRequest->msgStoreArray.ElementAt(j);
-            aRequest->msgStoreArray.RemoveElementAt(j);
-            delete nms;
-        }
-        m_copyRequests.RemoveElement(aRequest);
-        if (aRequest->listener)
-            aRequest->listener->OnStopCopy(rv, aRequest->listenerData);
-        delete aRequest;
-    }
-    return rv;
-}
-
-void
-nsMsgCopyService::RemoveAll()
-{
     PRInt32 i;
-    nsCopyRequest* ncr;
+    nsCopyRequest* copyRequest;
     
     i = m_copyRequests.Count();
 
     while(i-- > 0)
     {
-        ncr = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-        ClearRequest(ncr, NS_ERROR_FAILURE);
+        copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+        ClearRequest(copyRequest, NS_ERROR_FAILURE);
     }
+}
+
+                              
+nsresult
+nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
+{
+    PR_CEnterMonitor(this);
+
+    if (aRequest)
+    {
+        m_copyRequests.RemoveElement(aRequest);
+        if (aRequest->m_listener)
+            aRequest->m_listener->OnStopCopy(rv, aRequest->m_listenerData);
+        delete aRequest;
+    }
+    
+    PR_CExitMonitor(this);
+
+    return rv;
+}
+
+nsresult 
+nsMsgCopyService::DoCopy(nsCopyRequest* aRequest)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+
+    if (aRequest)
+    {
+        PR_CEnterMonitor(this);
+        m_copyRequests.AppendElement((void*) aRequest);
+        PR_CExitMonitor(this);
+        rv = DoNextCopy();
+    }
+
+    return rv;
+}
+
+nsresult
+nsMsgCopyService::DoNextCopy()
+{
+    nsresult rv = NS_OK;
+    nsCopyRequest* copyRequest = nsnull;
+    nsCopySource* copySource = nsnull;
+    PRInt32 i, j, cnt, scnt;
+    PR_CEnterMonitor(this);
+
+    cnt = m_copyRequests.Count();
+    if (cnt > 0)
+    {
+        // ** jt -- always FIFO
+        for (i=0; i < cnt; i++)
+        {
+            copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+            scnt = copyRequest->m_copySourceArray.Count();
+            if (!copyRequest->m_processed)
+            {
+                if (scnt <= 0) goto found; // must be CopyFileMessage
+                for (j=0; j < scnt; j++)
+                {
+                    copySource = (nsCopySource*)
+                        copyRequest->m_copySourceArray.ElementAt(j);
+                    if (!copySource->m_processed) goto found;
+                }
+                if (j >= scnt) // all processed set the value
+                    copyRequest->m_processed = PR_TRUE;
+            }
+        }
+    found:
+        if (copyRequest && !copyRequest->m_processed)
+        {
+            if (copyRequest->m_requestType == nsCopyMessagesType &&
+                copySource)
+            {
+                rv = copyRequest->m_dstFolder->CopyMessages
+                    (copySource->m_msgFolder, copySource->m_messageArray,
+                     copyRequest->m_isMoveOrDraft, copyRequest->m_txnMgr);
+                copySource->m_processed = PR_TRUE;
+                                                                
+            }
+            else if (copyRequest->m_requestType == nsCopyFileMessageType)
+            {
+                nsCOMPtr<nsIFileSpec>
+                    aSpec(do_QueryInterface(copyRequest->m_srcSupport, &rv));
+                if (NS_SUCCEEDED(rv))
+                {
+                    // ** in case of saving draft/template; the very first
+                    // time we may not have the original message to replace
+                    // with; if we do we shall have an instance of copySource
+                    nsCOMPtr<nsIMessage> aMessage;
+                    if (copySource)
+                    {
+                        nsCOMPtr<nsISupports> aSupport;
+                        aSupport =
+                            getter_AddRefs(copySource->m_messageArray->ElementAt(0));
+                        aMessage = do_QueryInterface(aSupport, &rv);
+                        copySource->m_processed = PR_TRUE;
+                    }
+                    rv = copyRequest->m_dstFolder->CopyFileMessage
+                        (aSpec, aMessage, copyRequest->m_isMoveOrDraft,
+                         copyRequest->m_listenerData, copyRequest->m_txnMgr);
+                    copyRequest->m_processed = PR_TRUE;
+                }
+            }
+        }
+    }
+    
+    PR_CExitMonitor(this);
+    return rv;
+}
+
+nsCopyRequest*
+nsMsgCopyService::FindRequest(nsISupports* aSupport,
+                              nsIMsgFolder* dstFolder)
+{
+    nsCopyRequest* copyRequest = nsnull;
+    PRInt32 cnt, i;
+
+    PR_CEnterMonitor(this);
+
+    cnt = m_copyRequests.Count();
+    for (i=0; i < cnt; i++)
+    {
+        copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+        if (copyRequest->m_srcSupport.get() == aSupport &&
+            copyRequest->m_dstFolder.get() == dstFolder)
+            break;
+        else
+            copyRequest = nsnull;
+    }
+
+    PR_CExitMonitor(this);
+    return copyRequest;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsIMsgCopyService::GetIID())
@@ -138,29 +343,84 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
                                nsISupports* listenerData,
                                nsITransactionManager* txnMgr)
 {
-#if 0
-    nsCopyRequest* ncr;
-    nsMsgStore* nms;
+    nsCopyRequest* copyRequest;
+    nsCopySource* copySource = nsnull;
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsVoidArray msgArray;
     PRUint32 i, cnt;
-    nsCOMPtr<nsIMessage> msg;
+    nsIMessage* msg;
+    nsCOMPtr<nsIMsgFolder> curFolder;
+    nsCOMPtr<nsISupports> aSupport;
 
     if (!srcFolder || !messages || !dstFolder) return rv;
 
-    ncr = new nsCopyRequest;
-    if (!ncr) return rv;
+    copyRequest = new nsCopyRequest();
+    if (!copyRequest) return rv;
+    aSupport = do_QueryInterface(srcFolder, &rv);
 
-    nms = new nsMsgStore;
+    copyRequest->Init(nsCopyMessagesType, aSupport, isMove, listener, 
+                      listenerData, txnMgr);
 
-    cnt = messages->Count();
+    messages->Count(&cnt);
 
     // duplicate the message array so we could sort the messages by it's
     // folder easily
     for (i=0; i<cnt; i++)
         msgArray.AppendElement((void*) messages->ElementAt(i));
-#endif 
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    cnt = msgArray.Count();
+    while (cnt-- > 0)
+    {
+        msg = (nsIMessage*)msgArray.ElementAt(cnt);
+        rv = msg->GetMsgFolder(getter_AddRefs(curFolder));
+        if (NS_FAILED(rv)) goto done;
+        if (!copySource)
+        {
+            copySource = copyRequest->AddNewCopySource(curFolder);
+            if (!copySource)
+            {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                goto done;
+            }
+        }
+
+        if (curFolder == copySource->m_msgFolder)
+        {
+            copySource->AddMessage(msg);
+            msgArray.RemoveElementAt(cnt);
+            NS_RELEASE(msg);
+        }
+
+        if (cnt == 0)
+        {
+            cnt = msgArray.Count();
+            if (cnt > 0)
+                copySource = nsnull; // * force to create new one and
+                                     // * continue grouping the messages
+        }
+    }
+
+done:
+    
+    if (NS_FAILED(rv))
+    {
+        delete copyRequest;
+    }
+    else
+    {
+        rv = DoCopy(copyRequest);
+        if (NS_FAILED(rv)) delete copyRequest;
+    }
+    
+    cnt = msgArray.Count();
+    while(cnt-- > 0)
+    {
+        msg = (nsIMessage*) msgArray.ElementAt(cnt);
+        NS_RELEASE(msg);
+    }
+    msgArray.Clear();
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -172,14 +432,55 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsISupports* listenerData,
                                   nsITransactionManager* txnMgr)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsCopyRequest* copyRequest;
+    nsCopySource* copySource = nsnull;
+    nsCOMPtr<nsISupports> aSupport;
+
+    if (!fileSpec || !dstFolder) return rv;
+    copyRequest = new nsCopyRequest();
+    if (!copyRequest) return rv;
+    aSupport = do_QueryInterface(fileSpec, &rv);
+    if (NS_FAILED(rv)) goto done;
+
+    copyRequest->Init(nsCopyFileMessageType, aSupport, isDraft, listener,
+                      listenerData, txnMgr);
+    if (msgToReplace)
+    {
+        copySource = copyRequest->AddNewCopySource(dstFolder);
+        if (!copySource)
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
+        }
+        copySource->AddMessage(msgToReplace);
+    }
+
+done:
+    if (NS_FAILED(rv))
+    {
+        delete copyRequest;
+    }
+    else
+    {
+        rv = DoCopy(copyRequest);
+        if (NS_FAILED(rv)) delete copyRequest;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
-                                   nsIMsgFolder* dstFolder)
+                                   nsIMsgFolder* dstFolder,
+                                   nsresult result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
+    if (copyRequest)
+        ClearRequest(copyRequest, result);
+    rv = DoNextCopy();
+    return result;
 }
 
 nsresult
