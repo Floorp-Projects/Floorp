@@ -264,10 +264,9 @@ void nsWidget::OnDestroy()
     // dispatching of the event may cause the reference count to drop
     // to 0 and result in this object being destroyed. To avoid that,
     // add a reference and then release it after dispatching the event
-    nsrefcnt old = mRefCnt;
-    mRefCnt = 99;
+    mRefCnt += 100;
     DispatchStandardEvent(NS_DESTROY);
-    mRefCnt = old;
+    mRefCnt -= 100;
   }
 }
 
