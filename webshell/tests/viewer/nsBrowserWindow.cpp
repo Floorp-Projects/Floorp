@@ -349,7 +349,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.Append("/test");
       url.Append(ix, 10);
       url.Append(".html");
-      LoadURL(url);
+      mWebShell->LoadURL(url);
     }
     break;
   case JS_CONSOLE:
@@ -455,7 +455,7 @@ nsBrowserWindow::DoFileOpen()
     PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
 
     // Ask the Web widget to load the file URL
-    LoadURL(nsString(lpszFileURL));
+    mWebShell->LoadURL(nsString(lpszFileURL));
     delete lpszFileURL;
   }
 }
@@ -1072,13 +1072,7 @@ nsBrowserWindow::Close()
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
-{
-  return mApp->OpenWindow(aNewChromeMask, aNewWindow);
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::ChangeChrome(PRUint32 aChromeMask)
+nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
   // XXX write me
   mChromeMask = aChromeMask;
@@ -1090,12 +1084,6 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 {
   aChromeMaskResult = mChromeMask;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::LoadURL(const PRUnichar* aURL)
-{
-  return mWebShell->LoadURL(aURL, nsnull);
 }
 
 NS_IMETHODIMP
@@ -1171,15 +1159,6 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
 {
   if (mThrobber) {
     mThrobber->Stop();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
-{
-  if (nsnull != mStatus) {
-    mStatus->SetText(aURLSpec);
   }
   return NS_OK;
 }

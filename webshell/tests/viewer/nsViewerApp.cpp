@@ -434,7 +434,7 @@ nsViewerApp::OpenWindow()
     mCrawler->Start();
   }
   else {
-    bw->LoadURL(mStartURL);
+    bw->GoTo(mStartURL);
   }
 
   return NS_OK;
@@ -977,7 +977,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
           if (gWinData) {
             nsString urlStr(gTop100List[--gTop100Pointer]);
             mSiteLabel->SetLabel(urlStr);
-            gWinData->LoadURL(urlStr);
+            gWinData->GoTo(urlStr);
           }
         } else  {
           mSitePrevBtn->Enable(PR_FALSE);
@@ -991,7 +991,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
           if (gWinData) {
             nsString urlStr(gTop100List[gTop100Pointer]);
             mSiteLabel->SetLabel(urlStr);
-            gWinData->LoadURL(urlStr);
+            gWinData->GoTo(urlStr);
           }
           mSitePrevBtn->Enable(PR_TRUE);
         } else {
@@ -1126,7 +1126,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
   mSitePrevBtn->Enable(PR_FALSE);
   if (gWinData) {
     nsString urlStr(gTop100List[gTop100Pointer]);
-    gWinData->LoadURL(urlStr);
+    gWinData->GoTo(urlStr);
     mSiteLabel->SetLabel(urlStr);
   }
 

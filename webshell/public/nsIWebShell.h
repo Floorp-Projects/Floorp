@@ -56,10 +56,6 @@ typedef enum {
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
-  NS_IMETHOD SetTitle(const PRUnichar* aTitle) = 0;
-
-  NS_IMETHOD GetTitle(PRUnichar** aResult) = 0;
-
   // History control
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason) = 0;
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL) = 0;
@@ -68,13 +64,10 @@ public:
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax) = 0;
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus) = 0;
 
-  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec) = 0;
-
   //instances
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell) = 0;
 
-  // Chrome control
-// NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
+  // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
 
   // Link traversing control
 };
