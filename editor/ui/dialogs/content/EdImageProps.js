@@ -28,7 +28,7 @@ var insertNewIMap = true;
 var wasEnableAll  = false;
 var oldSourceInt  = 0;
 var imageElement;
-var imageMap;
+var imageMap = 0;
 var canRemoveImageMap = false;
 var imageMapDisabled = false;
 
@@ -62,6 +62,7 @@ function Startup()
   dialog.editImageMap      = document.getElementById( "editImageMap" );
   dialog.removeImageMap    = document.getElementById( "removeImageMap" );
   dialog.doConstrain = false;
+  dialog.isCustomSize = false;
   
   // Another version of button just for this dialog -- on same line as "More Properties"
   dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
@@ -109,28 +110,16 @@ function Startup()
     }
     else
     {
-      imageMap = editorShell.CreateElementWithDefaults("map");
       insertNewIMap = true;
+      globalMap = null;
     }
   }
   else
   {
-    imageMap = editorShell.CreateElementWithDefaults("map");
     insertNewIMap = true;
+    globalMap = null;
   }
 
-  if( !imageMap )
-  {
-    dump("Failed to get map element or create a new one!\n");
-    window.close();
-  }
-
-  // Make a copy to use for image map editor
-  if (insertNewIMap)
-    globalMap = imageMap.cloneNode(true);
-  else
-    globalMap = imageMap;
-  
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
   //   attribute on the MoreFewerButton button
@@ -183,8 +172,6 @@ function InitDialog()
 	    dialog.originalsizeRadio.checked = true;
 	  }
 
-    dump("custom size is: "+dialog.isCustomSize+"\n");
-    
 	  // set spacing editfields
 	  dialog.imagelrInput.value = globalElement.getAttribute("hspace");
 	  dialog.imagetbInput.value = globalElement.getAttribute("vspace");
@@ -351,8 +338,14 @@ function onMoreFewerImage()
 
 function doDimensionEnabling( doEnable )
 {
+  SetElementEnabledById( "originalsizeRadio", doEnable );
+  SetElementEnabledById( "customsizeRadio", doEnable);
+
   // Enabled only if "Custom" is checked
   var enable = (doEnable && dialog.customsizeRadio.checked);
+  
+  if ( !dialog.customsizeRadio.checked && !dialog.originalsizeRadio.checked)
+    dump("BUG!  neither radio button is checked!!!! \n");
 
   SetElementEnabledById( "widthInput", enable );
   SetElementEnabledById( "widthLabel", enable);
@@ -404,14 +397,12 @@ function doOverallEnabling()
   SetElementEnabledById( "AdvancedEditButton2", canEnableAll );
   SetElementEnabledById( "AdvancedEditButton3", canEnableAll );
 
+  SetElementEnabledById( "imagemapLabel", canEnableAll );
   SetElementEnabledById( "editImageMap", canEnableAll );
-  // TODO: ADD APPROPRIATE DISABLING BASED ON EXISTENCE OF IMAGE MAP
   SetElementEnabledById( "removeImageMap", canEnableAll && canRemoveImageMap);
 }
 
 // constrainProportions contribution by pete@postpagan.com
-// needs to handle pixels/percent
-
 function constrainProportions( srcID, destID )
 {
   srcElement = document.getElementById ( srcID );
@@ -445,6 +436,15 @@ function constrainProportions( srcID, destID )
 
 function editImageMap()
 {
+  // Make a copy to use for image map editor
+  if (insertNewIMap)
+  {
+    imageMap = editorShell.CreateElementWithDefaults("map");
+    globalMap = imageMap.cloneNode(true);
+  }
+  else
+    globalMap = imageMap;  
+  
   window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, globalMap);
 }
 
@@ -455,6 +455,8 @@ function removeImageMap()
     canRemoveImageMap = false;
     SetElementEnabledByID( "removeImageMap", false);
     editorShell.DeleteElement(imageMap);
+    insertNewIMap = true;
+    globalMap = null;
   }
 }
 
@@ -489,8 +491,6 @@ function ValidateData()
     dialog.isCustomSize = dialog.customsizeRadio.checked;
 		isPercentWidth = (dialog.widthUnitsMenulist.selectedIndex == 1);
 		isPercentHeight = (dialog.heightUnitsMenulist.selectedIndex == 1);
-		width = dialog.widthInput.value;
-		height = dialog.heightInput.value;
   }
   else /* can't SeeMore */
   {
@@ -510,11 +510,17 @@ function ValidateData()
       height = height.substring(0, tailindex);
   }
 
-  if ( dialog.isCustomSize )
+  if ( SeeMore && dialog.originalsizeRadio.checked )
+  {
+    // original size: don't do anything right now
+  }
+  else if ( (SeeMore && dialog.customsizeRadio.checked) 
+             || dialog.isCustomSize )
   {
 	  maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-    width = ValidateNumberString(width, 1, maxLimitWidth);
-    if (width == "") {
+    width = ValidateNumberString(dialog.widthInput.value, 1, maxLimitWidth);
+    if (width == "")
+    {
       if ( !SeeMore )
         onMoreFewerImage();
       dialog.widthInput.focus();
@@ -524,8 +530,9 @@ function ValidateData()
       width = width + "%";
 
 	  maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-    height = ValidateNumberString(height, 1, maxLimitHeight);
-    if (height == "") {
+    height = ValidateNumberString(dialog.heightInput.value, 1, maxLimitHeight);
+    if (height == "")
+    {
       if ( !SeeMore )
         onMoreFewerImage();
       dialog.heightInput.focus();
@@ -555,6 +562,7 @@ function ValidateData()
   var amount;
   if ( SeeMore )
   {
+    dump("SeeMore spacing attribs\n");
 	  if ( dialog.imagelrInput.value.length > 0 )
 	  {
 	    amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
@@ -612,15 +620,6 @@ function ValidateData()
 	    globalElement.setAttribute( "align", align );
   }
 
-  // Assign 
-  mapName = globalMap.getAttribute("name");
-  dump("mapName = "+mapName+"\n");
-  if (mapName != ""){
-    globalElement.setAttribute("usemap", ("#"+mapName));
-    if (globalElement.getAttribute("border") == "")
-      globalElement.setAttribute("border", 0);
-  }
-
   return true;
 }
 
@@ -629,6 +628,34 @@ function onOK()
   // handle insertion of new image
   if (ValidateData())
   {
+	  // Assign to map if there is one
+	  if ( globalMap )
+	  {
+      mapName = globalMap.getAttribute("name");
+      dump("mapName = "+mapName+"\n");
+      if (mapName != "")
+      {
+        globalElement.setAttribute("usemap", ("#"+mapName));
+        if (globalElement.getAttribute("border") == "")
+          globalElement.setAttribute("border", 0);
+      }
+
+      // Copy or insert image map
+      imageMap = globalMap.cloneNode(true);
+      if (insertNewIMap)
+      {
+        try
+        {
+          editorShell.editorDocument.body.appendChild(imageMap);
+        //editorShell.InsertElementAtSelection(imageMap, false);
+        }
+        catch (e)
+        {
+          dump("Exception occured in InsertElementAtSelection\n");
+        }
+      }
+    }
+
     // All values are valid - copy to actual element in doc or 
     //   element created to insert
     editorShell.CloneAttributes(imageElement, globalElement);
@@ -638,18 +665,6 @@ function onOK()
         // 'true' means delete the selection before inserting
         editorShell.InsertElementAtSelection(imageElement, true);
       } catch (e) {
-        dump("Exception occured in InsertElementAtSelection\n");
-      }
-    }
-
-    // Copy or insert image map
-    imageMap = globalMap.cloneNode(true);
-    if (insertNewIMap){
-      try {
-        editorShell.editorDocument.body.appendChild(imageMap);
-        //editorShell.InsertElementAtSelection(imageMap, false);
-      }
-      catch (e) {
         dump("Exception occured in InsertElementAtSelection\n");
       }
     }
