@@ -530,10 +530,12 @@ void printRange(nsIDOMRange *aDomRange)
   aDomRange->GetStartOffset(&startOffset);
   aDomRange->GetEndParent(getter_AddRefs(endNode));
   aDomRange->GetEndOffset(&endOffset);
+  /*
   printf("print DOMRANGE 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld \n",
          (unsigned long)aDomRange,
          (unsigned long)(nsIDOMNode*)startNode, (long)startOffset,
          (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
+         */
 }
 
 
@@ -1202,15 +1204,21 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   setFocus(aParentNode, aOffset);
 
 #ifdef DEBUG_SELECTION
-  nsCOMPtr<nsIContent>content;
-  content = do_QueryInterface(aParentNode);
-  nsIAtom *tag;
-  content->GetTag(tag);
-  nsString tagString;
-  tag->ToString(tagString);
-  char * tagCString = tagString.ToNewCString();
-  printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
-  delete [] tagCString;
+  if (aParentNode)
+  {
+    nsCOMPtr<nsIContent>content;
+    content = do_QueryInterface(aParentNode);
+    nsIAtom *tag;
+    content->GetTag(tag);
+    nsString tagString;
+    tag->ToString(tagString);
+    char * tagCString = tagString.ToNewCString();
+    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
+    delete [] tagCString;
+  }
+  else {
+    printf ("Sel. Collapse set to null parent.\n");
+  }
 #endif
 
 
@@ -1227,11 +1235,12 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 NS_IMETHODIMP
 nsRangeList::IsCollapsed(PRBool* aIsCollapsed)
 {
-  if (!mRangeArray)
+  if (!mRangeArray || (mRangeArray->Count() == 0))
   {
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
   }
+  
   if (mRangeArray->Count() != 1)
   {
     *aIsCollapsed = PR_FALSE;
