@@ -57,12 +57,12 @@ LIBS = \
 	-lsecfree \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
-	$(TK_LIBS) \
 	-lgfx$(MOZ_TOOLKIT)	\
 	-lraptorgfx	\
 	-lgfxps		\
 	-limg		\
 	-lmozutil	\
+	$(TK_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
