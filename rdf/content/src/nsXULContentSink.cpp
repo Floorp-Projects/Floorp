@@ -1001,7 +1001,7 @@ XULContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 NS_IMETHODIMP 
 XULContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 {
-    nsAutoString text = aNode.GetText();
+    nsAutoString text(aNode.GetText());
 
     if (aNode.GetTokenType() == eToken_entity) {
         char buf[12];
@@ -1371,7 +1371,7 @@ XULContentSinkImpl::ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo)
 
     // Split the tag into prefix and tag substrings.
     nsAutoString prefixStr;
-    nsAutoString tagStr = aText;
+    nsAutoString tagStr(aText);
     PRInt32 nsoffset = tagStr.FindChar(kNameSpaceSeparator);
     if (nsoffset >= 0) {
         tagStr.Left(prefixStr, nsoffset);
@@ -1406,7 +1406,7 @@ XULContentSinkImpl::ParseAttributeString(const nsString& aText, nsIAtom*& aAttr,
 
     // Split the attribute into prefix and tag substrings.
     nsAutoString prefixStr;
-    nsAutoString attrStr = aText;
+    nsAutoString attrStr(aText);
     PRInt32 nsoffset = attrStr.FindChar(kNameSpaceSeparator);
     if (nsoffset >= 0) {
         attrStr.Left(prefixStr, nsoffset);

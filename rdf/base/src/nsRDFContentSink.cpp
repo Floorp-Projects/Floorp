@@ -688,7 +688,7 @@ RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 {
-    nsAutoString text = aNode.GetText();
+    nsAutoString text(aNode.GetText());
 
     if (aNode.GetTokenType() == eToken_entity) {
         char buf[12];
@@ -1009,7 +1009,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
         // first thing that was specified and ignore the other.
         
         if (attr.get() == kAboutAtom) {
-            nsAutoString uri = aNode.GetValueAt(i);
+            nsAutoString uri(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(uri);
 
             rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, docURI)), uri);
@@ -1017,7 +1017,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
         else if (attr.get() == kIdAtom) {
-            nsAutoString name = aNode.GetValueAt(i);
+            nsAutoString name(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(name);
 
             // Enforce that this is a valid "XML Name" (see
@@ -1087,7 +1087,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
         // first thing that was specified and ignore the other.
 
         if (attr.get() == kResourceAtom) {
-            nsAutoString uri = aNode.GetValueAt(i);
+            nsAutoString uri(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(uri);
 
             // XXX Take the URI and make it fully qualified by
@@ -1135,7 +1135,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         nsAutoString v(aNode.GetValueAt(i));
         nsRDFParserUtils::StripAndConvert(v);
 
-        nsCAutoString propertyStr = nameSpaceURI;
+        nsCAutoString propertyStr(nameSpaceURI);
 
         const PRUnichar* attrName;
         attr->GetUnicode(&attrName);
@@ -1368,7 +1368,7 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
     nsCOMPtr<nsIAtom> tag;
     ParseTagString(aNode.GetText(), &nameSpaceURI, getter_AddRefs(tag));
 
-    nsCAutoString propertyStr = nameSpaceURI;
+    nsCAutoString propertyStr(nameSpaceURI);
 
     const PRUnichar *attrName;
     tag->GetUnicode(&attrName);
@@ -1582,7 +1582,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
         if (! IsXMLNSDirective(key, getter_AddRefs(prefix)))
             continue;
 
-        nsAutoString uri = aNode.GetValueAt(i);
+        nsAutoString uri(aNode.GetValueAt(i));
         nsRDFParserUtils::StripAndConvert(uri);
 
         // Open a local namespace

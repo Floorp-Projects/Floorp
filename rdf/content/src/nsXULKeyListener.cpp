@@ -610,10 +610,10 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   // Locate the key node and execute the JS on a match.
   PRBool handled = PR_FALSE;
   
-  nsCAutoString browserFile = "chrome://communicator/content/browserBindings.xul";
-  nsCAutoString editorFile = "chrome://communicator/content/editorBindings.xul";
-  nsCAutoString browserPlatformFile = "chrome://communicator/content/platformBrowserBindings.xul";
-  nsCAutoString editorPlatformFile = "chrome://communicator/content/platformEditorBindings.xul";
+  nsCAutoString browserFile("chrome://communicator/content/browserBindings.xul");
+  nsCAutoString editorFile("chrome://communicator/content/editorBindings.xul");
+  nsCAutoString browserPlatformFile("chrome://communicator/content/platformBrowserBindings.xul");
+  nsCAutoString editorPlatformFile("chrome://communicator/content/platformEditorBindings.xul");
 
   nsresult result;
 
@@ -1450,7 +1450,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         PRUnichar tempChar[2];
         tempChar[0] = theChar;
         tempChar[1] = 0;
-        nsAutoString tempChar2 = tempChar;
+        nsAutoString tempChar2(tempChar);
         //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
         // NOTE - convert theChar and keyName to upper
         keyName.ToUpperCase();

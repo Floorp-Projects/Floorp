@@ -6581,7 +6581,7 @@ nsXULTemplateBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory*
   nsAutoString nameSpace;
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
-  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
+  nsCAutoString progID(NS_ELEMENT_FACTORY_PROGID_PREFIX);
   progID.AppendWithConversion(nameSpace.GetUnicode());
 
   // Retrieve the appropriate factory.
