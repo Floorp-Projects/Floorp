@@ -70,7 +70,7 @@
           auto-detect<br>
         <input type="radio" name="contenttypemethod" value="list"> 
           select from list: <select name="contenttypeselection" onchange="this.form.contenttypemethod[1].checked = true;">
-            [% PROCESS attachment/contenttypes %]
+            [% PROCESS "attachment/content-types.html.tmpl" %]
           </select><br>
         <input type="radio" name="contenttypemethod" value="manual">
           enter manually: <input type="text" name="contenttypeentry" size="30" maxlength="200" onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">

@@ -22,8 +22,8 @@
 [%# INTERFACE:
   # form: hash; the form values submitted to the script
   # operations: array; bug activity since the user last displayed the bug form,
-  #   used by show/activity.html.tmpl to display recent changes that will be
-  #   overwritten if the user submits these changes.  See that template
+  #   used by bug/activity/table.html.tmpl to display recent changes that will
+  #   be overwritten if the user submits these changes.  See that template
   #   for further documentation.
   # start_at: number; the comment at which show/comments.tmpl should begin
   #   displaying comments, either the index of the last comment (if the user
@@ -41,7 +41,7 @@
 </p>
 
 <p>
-  [% PROCESS "show/activity.html.tmpl" incomplete_data=0 %]
+  [% PROCESS "bug/activity/table.html.tmpl" incomplete_data=0 %]
 </p>
           
 [% IF comments.size > start_at %]
@@ -72,4 +72,4 @@ You have the following choices:
   </li>
 </ul>
 
-[% PROCESS global/footer %]
+[% PROCESS global/footer.html.tmpl %]
