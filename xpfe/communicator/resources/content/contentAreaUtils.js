@@ -22,6 +22,25 @@
  */
 
   function openNewWindowWith( url ) {
+
+ // URL Loading Security Check
+    const nsIStandardURL = Components.interfaces.nsIStandardURL;
+    const nsIURI = Components.interfaces.nsIURI;
+    const stdURL = Components.classes["@mozilla.org/network/standard-url;1"];
+
+    var sourceURL = stdURL.createInstance(nsIStandardURL);
+    var focusedWindow = document.commandDispatcher.focusedWindow;
+    var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : window._content.location.href;
+    sourceURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, sourceWin, null);
+
+    var targetURL = stdURL.createInstance(nsIStandardURL);
+    targetURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, url, null);
+
+    const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+    var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
+                 QueryInterface(nsIScriptSecurityManager);
+    secMan.CheckLoadURI(sourceURL, targetURL, nsIScriptSecurityManager.STANDARD);
+
     var newWin;
     var wintype = document.firstChild.getAttribute('windowtype');
      
