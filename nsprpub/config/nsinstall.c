@@ -129,7 +129,7 @@ mkdirs(char *path, mode_t mode)
 	*cp = '\0';
     if (cp && cp != path) {
 	*cp = '\0';
-	if ((lstat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) &&
+	if ((stat(path, &sb) < 0 || !S_ISDIR(sb.st_mode)) &&
 	    mkdirs(path, mode) < 0) {
 	    return -1;
 	}
