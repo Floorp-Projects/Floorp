@@ -1,37 +1,94 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Jud Valeski
+ */
+
 #include "nsIInputStream.idl"
 #include "nsIStreamListener.idl"
 
-// The nsIStreamConverterService acts as a higher level stream converter factory
-// responsible for locating and creating the appropriate stream converters in order
-// to convert data from type X to type Z. It is responsible for any intermediary
-// conversion required in order to get from X to Z, if direct conversion is not
-// possible.
-//
+/**
+ * The nsIStreamConverterService is a higher level stream converter factory
+ * responsible for locating and creating stream converters (nsIStreamConverter).
+ *
+ * This service retrieves an interface that can convert data from a particular MIME
+ * type, to a particular MIME type. It is responsible for any intermediary
+ * conversion required in order to get from X to Z, assuming direct conversion is not
+ * possible.
+ *
+ * @author Jud Valeski
+ * @see nsIStreamConverter
+ */
 
 %{C++
-
-#define NS_STREAMCONVERTERSERVICE_CID                             \
+#define NS_STREAMCONVERTERSERVICE_CID                \
 { /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
     0x892ffeb0,                                      \
     0x3f80,                                          \
     0x11d3,                                          \
     {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
-
 #define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
 %}
 
 [scriptable, uuid(00362090-3B97-11d3-A16C-0050041CAF44)]
 interface nsIStreamConverterService : nsISupports {
 
+    /**
+     * <b>SYNCRONOUS VERSION</b>
+     * Converts a stream of one type, to a stream of another type.
+     *
+     * Use this method when you have a stream you want to convert.
+     *
+     * @param aFromStream   The stream representing the original/raw data.
+     * @param aFromType     The MIME type of aFromStream.
+     * @param aToType       The MIME type of the returned stream.
+     * @param aContext      Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     * @return              The converted stream. NOTE: The returned stream may not
+     *                      already be converted. An efficient stream converter
+     *                      implementation will converter data on demand rather than
+     *                      buffering the converted data until it is used.
+     */
     nsIInputStream Convert(in nsIInputStream aFromStream,
 						   in wstring aFromType,
 						   in wstring aToType,
                            in nsISupports aContext);
 
+    /**
+     * <b>ASYNCRONOUS VERSION</b>
+     * Retrieves a nsIStreamListener that receives the original/raw data via its
+     * nsIStreamListener::OnDataAvailable() callback, then converts and pushes 
+     * the data to aListener.
+     *
+     * Use this method when you want to proxy (and convert) nsIStreamListener callbacks
+     * asynchronously.
+     *
+     * @param aFromType     The MIME type of the original/raw data.
+     * @param aToType       The MIME type of the converted data.
+     * @param aListener     The listener who receives the converted data.
+     * @param aCtxt         Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     * @return              A nsIStreamListener that receives data via its OnDataAvailable() method.
+     */
     nsIStreamListener AsyncConvertData(in wstring aFromType, 
                                        in wstring aToType, 
                                        in nsIStreamListener aListener,
                                        in nsISupports aContext);
-
 };

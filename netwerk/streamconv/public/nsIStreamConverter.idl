@@ -1,56 +1,112 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Jud Valeski
+ */
+
 #include "nsIStreamListener.idl"
 #include "nsIInputStream.idl"
 #include "nsIURI.idl"
 
-////////////////////////////////////////////////////////////////////////////
-// STREAM CONVERTER USERS
-////////////////////////////////////////////////////////////////////////////
-
-// There are currently two ways to use a stream converter:
-// 1. SYNCHRONOUS. Stream to Stream.
-//    You can supply the service with a stream of type X
-//    and it will convert it to your desired output type and return
-//    a converted (blocking) stream to you.
-//
-// 2. ASYNCHRONOUS. nsIStreamListener to nsIStreamListener
-//    You can supply data directly to the converter by calling it's
-//    nsIStreamListener::OnDataAvailable() method. It will then
-//    convert that data from type X to your desired output type and
-//    return converted data to you via the nsIStreamListener you passed
-//    in by calling its OnDataAvailable() method.
-
-////////////////////////////////////////////////////////////////////////////
-// STREAM CONVERTER SUPPLIERS
-////////////////////////////////////////////////////////////////////////////
-
-// Registering a stream converter.
-// Stream converter registration is a two step process. First of all the stream
-// converter implementation must register itself with the component manager using
-// a progid in the format below. Second, the stream converter must add the progid
-// to the registry.
-//
-// Stream converter progid format (the stream converter root key is defined in this
-// file):
-//
-// Software/Netscape/streamconv/?from=FROM_MIME_TYPE?to=TO_MIME_TYPE
+/**
+ * nsIStreamConverter provides an interface to implement when you have code
+ * that converts data from one type to another.
+ *
+ * Suppose you had code that converted plain text into HTML. You could implement
+ * this interface to allow everyone else to use your conversion logic using a 
+ * standard api.
+ * <p>
+ * <b>STREAM CONVERTER USERS</b>
+ *
+ * There are currently two ways to use a stream converter:
+ * <ol>
+ * <li> <b>SYNCHRONOUS</b> Stream to Stream
+ *    You can supply the service with a stream of type X
+ *    and it will convert it to your desired output type and return
+ *    a converted (blocking) stream to you.</li>
+ *
+ * <li> <b>ASYNCHRONOUS</b> nsIStreamListener to nsIStreamListener
+ *    You can supply data directly to the converter by calling it's
+ *    nsIStreamListener::OnDataAvailable() method. It will then
+ *    convert that data from type X to your desired output type and
+ *    return converted data to you via the nsIStreamListener you passed
+ *    in by calling its OnDataAvailable() method.</li>
+ * </ol>
+ * <p>
+ *
+ * <b>STREAM CONVERTER SUPPLIERS</b>
+ *
+ * Registering a stream converter:
+ * Stream converter registration is a two step process. First of all the stream
+ * converter implementation must register itself with the component manager using
+ * a progid in the format below. Second, the stream converter must add the progid
+ * to the registry.
+ *
+ * Stream converter progid format (the stream converter root key is defined in this
+ * file):
+ *
+ * <pre>Software/Netscape/streamconv/?from=FROM_MIME_TYPE?to=TO_MIME_TYPE</pre>
+ *
+ * @author Jud Valeski
+ * @see nsIStreamConverterService
+ */
 
 [scriptable, uuid(46484B30-3BD2-11d3-A16C-0050041CAF44)]
 interface nsIStreamConverter : nsIStreamListener {
-	
-    // SYNCRONOUS VERSION
 
-	// Converts aFromStream of type aFromType, to a resulting stream of type aToType.
-	// Use this when you have a stream as input.
+    /**
+     * <b>SYNCRONOUS VERSION</b>
+     * Converts a stream of one type, to a stream of another type.
+     *
+     * Use this method when you have a stream you want to convert.
+     *
+     * @param aFromStream   The stream representing the original/raw data.
+     * @param aFromType     The MIME type of aFromStream.
+     * @param aToType       The MIME type of the returned stream.
+     * @param aCtxt         Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     * @return              The converted stream. NOTE: The returned stream may not
+     *                      already be converted. An efficient stream converter
+     *                      implementation will converter data on demand rather than
+     *                      buffering the converted data until it is used.
+     */
+	
     nsIInputStream Convert(in nsIInputStream aFromStream,
 						   in wstring aFromType,
 						   in wstring aToType,
                            in nsISupports aCtxt);
 
-	// ASYNCRONOUS VERSION
-
-	// Converts data arriving via the converter's nsIStreamListener::OnDataAvailable() method
-	// from type aFromType to aToType pushing the converted data out to the caller via
-	// aListener::OnDataAvailable().
+    /**
+     * <b>ASYNCRONOUS VERSION</b>
+     * Converts data arriving via the converter's nsIStreamListener::OnDataAvailable() 
+     * method from one type to another, pushing the converted data out to the caller 
+     * via aListener::OnDataAvailable().
+     *
+     * Use this method when you want to proxy (and convert) nsIStreamListener callbacks
+     * asynchronously.
+     *
+     * @param aFromType     The MIME type of the original/raw data.
+     * @param aToType       The MIME type of the converted data.
+     * @param aListener     The listener who receives the converted data.
+     * @param aCtxt         Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     */
 	void AsyncConvertData(in wstring aFromType,
 				 in wstring aToType,
 				 in nsIStreamListener aListener,
