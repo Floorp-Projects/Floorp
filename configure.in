@@ -911,9 +911,13 @@ case "$target" in
         AS_DASH_C_FLAG=''
         LD='-ilink'
         TARGET_MD_ARCH=os2
-        CFLAGS="/Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-"
-        CXXFLAGS="/Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-"
-        LDFLAGS="/FREE /DE /NOE /LINENUMBERS /nologo"
+        CFLAGS="/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9"
+        CXXFLAGS="/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9 /Gx+"
+        MOZ_DEBUG_FLAGS="/Ti+"
+        MOZ_OPTIMIZE_FLAGS="/O+ /Gl+ /qtune=pentium /qarch=pentium"
+        LDFLAGS="/NOL /M /L"
+        MOZ_DEBUG_LDFLAGS="/DE"
+        MOZ_OPTIMIZE_LDFLAGS="/OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
@@ -3116,6 +3120,7 @@ if test "$MOZ_OPTIMIZE"
 then
   CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
   CXXFLAGS="$CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
+  LDFLAGS="$LDFLAGS $MOZ_OPTIMIZE_LDFLAGS"
 fi
 
 dnl ========================================================
@@ -3149,9 +3154,6 @@ MOZ_DEBUG=1
 if test ! "$MOZ_DEBUG_FLAGS"
 then
     case "$target" in
-    *-*-os2_vacpp)
-        MOZ_DEBUG_FLAGS="/Ti+"
-        ;;
     *-irix*)
         if test "$GNU_CC"; then
             GCC_VERSION=`$CC -v 2>&1 | awk '/version/ { print $3 }'`
@@ -3189,6 +3191,11 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG"
 MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
 
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
+
+if test "$MOZ_DEBUG"
+then
+  LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
+fi
 
 dnl ========================================================
 dnl =
