@@ -1346,12 +1346,12 @@ nsDNSService::Run()
                 // convert InetHostInfo to nsHostEnt
                 lookup->ConvertHostEntry();
             }
-            lookup->ProcessRequests();
             if (lookup->IsNotCacheable()) {
                 EvictLookup(lookup);
             } else {
                 AddToEvictionQ(lookup);
             }
+            lookup->ProcessRequests();
             NS_RELEASE(lookup);
         }
         
@@ -1376,12 +1376,12 @@ nsDNSService::Run()
             // Got a request!!
             NS_ADDREF(lookup);      // keep the lookup while we process it
             lookup->DoSyncLookup();
-            lookup->ProcessRequests();
             if (lookup->IsNotCacheable()) {
                 EvictLookup(lookup);
             } else {
                 AddToEvictionQ(lookup);
             }
+            lookup->ProcessRequests();
             NS_RELEASE(lookup);
         } else {
             // Woken up without a request --> shutdown
@@ -1495,7 +1495,6 @@ nsDNSService::Lookup(const char*     hostName,
         if (NS_FAILED(rv))  goto exit;
 
         if (lookup->IsComplete()) {
-            lookup->ProcessRequests();      // releases and re-acquires dns lock
             if (lookup->IsNotCacheable()) {
                 // non-cacheable lookups are released here.
                 EvictLookup(lookup);
@@ -1505,6 +1504,7 @@ nsDNSService::Lookup(const char*     hostName,
                     AddToEvictionQ(lookup);
 #endif                        
             }
+            lookup->ProcessRequests();      // releases and re-acquires dns lock
         }
 
 exit:
@@ -1639,8 +1639,10 @@ nsDNSService::AbortLookups()
     while(lookup != &mPendingQ) {
         PR_REMOVE_AND_INIT_LINK(lookup);
         lookup->MarkComplete(NS_BINDING_ABORTED);
-        lookup->ProcessRequests();
+        NS_ADDREF(lookup);
         EvictLookup(lookup);
+        lookup->ProcessRequests();
+        NS_RELEASE(lookup);
         lookup = (nsDNSLookup *)PR_LIST_HEAD(&mPendingQ);
     }
     
@@ -1974,12 +1976,12 @@ nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     FreeMsgID(lookup->mMsgID);
 
     PR_REMOVE_AND_INIT_LINK(lookup);
-    lookup->ProcessRequests();
     if (lookup->IsNotCacheable()) {
         EvictLookup(lookup);
     } else {
         AddToEvictionQ(lookup);
     }
+    lookup->ProcessRequests();
     NS_RELEASE(lookup);
 
     return error ? -1 : 0;

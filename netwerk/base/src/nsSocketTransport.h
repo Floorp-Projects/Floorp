@@ -208,7 +208,7 @@ protected:
     nsresult doReadWrite(PRInt16 aSelectFlags);
     nsresult doResolveHost();
 
-    PRBool TryNextAddress();
+    PRBool OnConnectionFailed(PRBool tryNextAddress);
 
     void CompleteAsyncRead();
     void CompleteAsyncWrite();

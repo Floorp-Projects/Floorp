@@ -68,6 +68,8 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsStorageTransport.obj         \
         .\$(OBJDIR)\nsStreamListenerTee.obj        \
         .\$(OBJDIR)\nsURIChecker.obj               \
+        .\$(OBJDIR)\nsNativeConnectionHelper.obj   \
+        .\$(OBJDIR)\nsAutodialWin.obj              \
 	$(NULL)
 
 JSFILES = \
