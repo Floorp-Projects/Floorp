@@ -134,7 +134,6 @@ insert into components (value, program, initialowner, initialqacontact, descript
 
 insert into components (value, program, initialowner, initialqacontact) values ("Platform: Lesstif on Linux", "Mozilla", "ramiro@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Platform: Rhapsody", "Mozilla", "mcafee@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Platform: MFC/Win32 on Windows", "Mozilla", "blythe@netscape.com", "");
 
 
 insert into components (value, program, initialowner, initialqacontact, description) values ("ActiveX Wrapper", "NGLayout", "locka@iol.ie", "cpratt@netscape.com", "This is the active-x wrapper that is used when people want to embed gecko in their application on windows. This is an external developer's code to wrap gecko up as an activeX control to replace IE as the embedded HTML control.");
