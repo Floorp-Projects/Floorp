@@ -74,6 +74,12 @@ public:
   //scaling. default is 1.0 (no zoom)
   virtual void SetZoom(float aZoom) = 0;
   virtual float GetZoom() const = 0;
+
+  //get a low level drawing surface for rendering. the rendering context
+  //that is passed in is used to create the drawing surface if there isn't
+  //already one in the device context. the drawing surface is then cached
+  //in the device context for re-use.
+  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

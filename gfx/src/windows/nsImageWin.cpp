@@ -21,8 +21,6 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
-HDC nsImageWin::mOptimizeDC = nsnull;
-
 //------------------------------------------------------------
 
 nsImageWin :: nsImageWin()
@@ -140,7 +138,7 @@ PRUintn nsImageWin :: UsePalette(HDC* aHdc, PRBool bBackground)
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   PRUint32  value,error;
@@ -159,11 +157,19 @@ PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, P
   }
   else
   {
-    SelectObject(mOptimizeDC,mHBitmap);
+    nsIDeviceContext  *dx = aContext.GetDeviceContext();
+    HDC srcdc = dx->GetDrawingSurface(aContext);
+
+    if (NULL != srcdc)
+    {
+      SelectObject(srcdc, mHBitmap);
  
-    if (!::StretchBlt(the_hdc,aDX,aDY,aDWidth,aDHeight,mOptimizeDC,aSX,aSY,
-                      aSWidth,aSHeight,SRCCOPY))
-      error = ::GetLastError();
+      if (!::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
+                        aSWidth, aSHeight, SRCCOPY))
+        error = ::GetLastError();
+    }
+
+    NS_RELEASE(dx);
   }
 
   return PR_TRUE;
@@ -172,7 +178,8 @@ PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, P
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                          PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PRUint32  value,error;
   HDC   the_hdc = (HDC)aSurface;
@@ -191,13 +198,21 @@ PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRI
   }
   else
   {
-    SelectObject(mOptimizeDC,mHBitmap);
-    //if((aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
-    //BitBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,SRCCOPY);
+    nsIDeviceContext  *dx = aContext.GetDeviceContext();
+    HDC srcdc = dx->GetDrawingSurface(aContext);
+
+    if (NULL != srcdc)
+    {
+      SelectObject(srcdc, mHBitmap);
+      //if((aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
+      //BitBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,SRCCOPY);
     
-    if (!::StretchBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,
-                      mBHead->biWidth,mBHead->biHeight,SRCCOPY))
-      error = ::GetLastError();
+      if (!::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
+                        mBHead->biWidth, mBHead->biHeight, SRCCOPY))
+        error = ::GetLastError();
+    }
+
+    NS_RELEASE(dx);
   }
 
   return PR_TRUE;
@@ -422,16 +437,10 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
-  nsRenderingContextWin *therc = (nsRenderingContextWin*)aSurface;
-  HDC                   the_hdc;
+  HDC the_hdc = (HDC)aSurface;
 
-  if ((therc != nsnull) && !IsOptimized() && (mSizeImage > 0))
+  if ((the_hdc != NULL) && !IsOptimized() && (mSizeImage > 0))
   {
-    the_hdc = therc->getDrawingSurface();
-  
-    if (mOptimizeDC == nsnull)
-      mOptimizeDC = therc->CreateOptimizeSurface();
-
     mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead, DIB_RGB_COLORS);
 
     mIsOptimized = PR_TRUE;

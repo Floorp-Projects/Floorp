@@ -40,6 +40,8 @@ GetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object;
       if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectIID, (void**)&object)) {
@@ -62,6 +64,8 @@ SetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object;
       if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectIID, (void**)&object)) {
@@ -356,7 +360,6 @@ NodeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 nsresult NS_InitNodeIteratorClass(JSContext *aContext, JSObject **aPrototype)
 {
   // look in the global object for this class prototype
-  jsval vp;
   static JSObject *proto = nsnull;
 
   if (nsnull == proto) {

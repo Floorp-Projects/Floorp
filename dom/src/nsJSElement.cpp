@@ -42,6 +42,8 @@ GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object;
       if (NS_OK == element->QueryInterface(kIScriptObjectIID, (void**)&object)) {
@@ -64,6 +66,8 @@ SetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object = nsnull;
       if (NS_OK == element->QueryInterface(kIScriptObjectIID, (void**)&object)) {
@@ -417,7 +421,6 @@ nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype);
 nsresult NS_InitElementClass(JSContext *aContext, JSObject **aPrototype)
 {
   // look in the global object for this class prototype
-  jsval vp;
   static JSObject *proto = nsnull;
 
   if (nsnull == proto) {

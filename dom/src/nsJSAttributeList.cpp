@@ -40,6 +40,8 @@ GetAttributeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object;
       if (NS_OK == attributeList->QueryInterface(kIScriptObjectIID, (void**)&object)) {
@@ -62,6 +64,8 @@ SetAttributeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+    case 0: //this is just to keep the compiler from issuing a warning
+            //that there is a switch with only a default case. MMP
     default:
       nsIScriptObject *object;
       if (NS_OK == attributeList->QueryInterface(kIScriptObjectIID, (void**)&object)) {
