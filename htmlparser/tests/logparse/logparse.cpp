@@ -40,6 +40,8 @@ static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_IID);
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 
+//----------------------------------------------------------------------
+
 static void SetupRegistry()
 {
   NSRepository::RegisterFactory(kParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
@@ -48,55 +50,152 @@ static void SetupRegistry()
 
 //----------------------------------------------------------------------
 
+static const char* kWorkingDir = "s:/mozilla/htmlparser/tests/logparse";
+
+nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineFilename) {
+	nsresult result=NS_OK;
+
+	if(aSourceFilename && aBaselineFilename) {
+
+		fstream theInputStream(aSourceFilename,ios::in | ios::nocreate);
+
+		// Create a parser
+		nsIParser* parser;
+		nsresult rv = NSRepository::CreateInstance(kParserCID,nsnull,kIParserIID,(void**)&parser);
+		if (NS_OK != rv) {
+			cout << "Unable to create a parser (" << rv << ")" <<endl;
+			return -1;
+		}
+
+		// Create a sink
+		nsILoggingSink* sink;
+		rv = NSRepository::CreateInstance(kLoggingSinkCID,nsnull,kILoggingSinkIID,(void**)&sink);
+		if (NS_OK != rv) {
+			cout << "Unable to create a sink (" << rv << ")" <<endl;
+			return -1;
+		}
+
+		{
+			fstream theOutputStream(aBaselineFilename,ios::out);
+			sink->SetOutputStream(theOutputStream);
+
+			// Parse the document, having the sink write the data to fp
+			nsIDTD* dtd = nsnull;
+			NS_NewNavHTMLDTD(&dtd);
+			parser->RegisterDTD(dtd);
+			parser->SetContentSink(sink);
+			result = parser->Parse(theInputStream);
+			NS_RELEASE(parser);
+			NS_RELEASE(sink);
+		}
+
+	}
+  return (NS_OK == result) ? 0 : -1;
+}
+
+//----------------------------------------------------------------------
+
+PRBool CompareFiles(const char* aFilename1, const char* aFilename2) {
+	PRBool result=PR_TRUE;
+
+	fstream theFirstStream(aFilename1,ios::in | ios::nocreate);
+	fstream theSecondStream(aFilename2,ios::in | ios::nocreate);
+	
+	PRBool done=PR_FALSE;		
+	char   ch1,ch2;
+
+	while(!done) {
+		theFirstStream >> ch1;
+		theSecondStream >> ch2;
+		if(ch1!=ch2) {
+			result=PR_FALSE;
+			break;
+		}
+		done=PRBool((theFirstStream.ipfx(1)==0) || (theSecondStream.ipfx(1)==0));
+	}
+	return result;
+}
+
+//----------------------------------------------------------------------
+
+static const char* kAppName = "logparse ";
+static const char* kOption1 = "Compare baseline file-set";
+static const char* kOption2 = "Generate baseline ";
+static const char* kResultMsg[2] = {" does not match baseline."," matches baseline."};
+
+void ValidateBaselineFiles(const char* anIndexFilename) {
+
+	fstream theIndexFile(anIndexFilename,ios::in | ios::nocreate);
+	char		theFilename[500];
+	char		theBaselineFilename[500];
+	PRBool	done=PR_FALSE;
+
+	while(!done) {
+		theIndexFile >> theFilename;
+		theIndexFile >> theBaselineFilename;
+		if(theFilename[0] && theBaselineFilename[0]) {
+			char theTempFile[500];
+			sprintf(theTempFile,theBaselineFilename);
+			strcat(theTempFile,"x");
+			if(0==GenerateBaselineFile(theFilename,theTempFile)) {
+				PRBool matches=CompareFiles(theTempFile,theBaselineFilename);
+				cout << theFilename << kResultMsg[matches] << endl;
+			}
+		}
+		theFilename[0]=0;
+		theBaselineFilename[0]=0;
+		done=PRBool(theIndexFile.ipfx(1)==0);
+	}
+
+
+		// Now it's time to compare our output to the baseline...
+//	if(!CompareFiles(aBaselineFilename,aBaselineFilename)){
+//		cout << "File: \"" << aSourceFilename << "\" does not match baseline." << endl;
+//	}
+
+}
+
+
+//----------------------------------------------------------------------
+
 int main(int argc, char** argv)
 {
-  if (argc != 3) {
-    fprintf(stderr, "Usage: logparse in out\n");
+  if (argc < 2) {
+		cout << "Usage: " << kAppName << " [options] [filename]" << endl; 
+		cout << "       -c [filelist]   " << kOption1 << endl; 
+		cout << "       -g [in] [out]   " << kOption2 << endl; 
     return -1;
   }
 
-  fstream *in = new fstream();
-  in->open(argv[1], ios::in | ios::nocreate);
+	int result=0;
 
-  FILE* fp = fopen(argv[2], "wb");
-  if (nsnull == fp) {
-    fprintf(stderr, "can't create '%s'\n", argv[2]);
-    return -1;
-  }
+	SetupRegistry();
 
-  SetupRegistry();
+	if(0==strcmp("-c",argv[1])) {
 
-  // Create a parser
-  nsIParser* parser;
-  nsresult rv = NSRepository::CreateInstance(kParserCID,
-                                             nsnull,
-                                             kIParserIID,
-                                             (void**)&parser);
-  if (NS_OK != rv) {
-    fprintf(stderr, "Unable to create a parser (%x)\n", rv);
-    return -1;
-  }
+		if(argc>2) {
+			cout << kOption1 << "..." << endl;
 
-  // Create a sink
-  nsILoggingSink* sink;
-  rv = NSRepository::CreateInstance(kLoggingSinkCID,
-                                    nsnull,
-                                    kILoggingSinkIID,
-                                    (void**)&sink);
-  if (NS_OK != rv) {
-    fprintf(stderr, "Unable to create a sink (%x)\n", rv);
-    return -1;
-  }
-  sink->Init(fp);
+				//Open the master filelist, and read the filenames.
+				//Each line contains a source filename and a baseline filename, separated by a space.
+			ValidateBaselineFiles(argv[2]);
+		}
+		else {
+			cout << kAppName << ": Filelist missing for -c option -- nothing to do." << endl;
+		}
 
-  // Parse the document, having the sink write the data to fp
-  nsIDTD* dtd = nsnull;
-  NS_NewNavHTMLDTD(&dtd);
-  parser->RegisterDTD(dtd);
-  parser->SetContentSink(sink);
-  PRInt32 status = parser->Parse(*in);
-  NS_RELEASE(parser);
-  NS_RELEASE(sink);
-
-  return (NS_OK == status) ? 0 : -1;
+	}
+	else if(0==strcmp("-g",argv[1])) {
+		if(argc>3) {
+			cout << kOption2 << argv[3] << " from " << argv[2] << "..." << endl;
+			GenerateBaselineFile(argv[2],argv[3]);
+		}
+		else {
+			cout << kAppName << ": Filename(s) missing for -g option -- nothing to do." << endl;
+		}
+	}
+	else {
+			cout << kAppName << ": Unknown options -- nothing to do." << endl;
+	}
+	return result;
 }
