@@ -34,13 +34,17 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: emulate.c,v 1.1 2000/03/31 19:31:31 relyea%netscape.com Exp $
+ * $Id: emulate.c,v 1.2 2000/05/18 01:32:53 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
 
 #if defined( XP_UNIX )
 #include <fcntl.h>
+#endif
+#if defined(WIN32)
+#include <windef.h>
+#include <winbase.h>
 #endif
 #include <string.h>
 
@@ -490,7 +494,15 @@ ssl_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     else
         file_bytes = info.size - sfd->file_offset;
 
+#if defined(WIN32)
+    {
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo(&sysinfo);
+        pagesize = sysinfo.dwAllocationGranularity;
+    }
+#else
     pagesize = PR_GetPageSize();
+#endif
     /*
      * If the file is large, mmap and send the file in chunks so as
      * to not consume too much virtual address space
@@ -520,7 +532,7 @@ ssl_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd,
      * Map in (part of) file. Take care of zero-length files.
      */
     if (len > 0) {
-	mapHandle = PR_CreateFileMap(sfd->fd, mmap_len, PR_PROT_READONLY);
+	mapHandle = PR_CreateFileMap(sfd->fd, info.size, PR_PROT_READONLY);
 	if (!mapHandle) {
 	    count = -1;
 	    goto done;
