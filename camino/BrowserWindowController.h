@@ -156,7 +156,6 @@ class nsIDOMNode;
 -(CHBrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec;
-- (void)loadURLString:(NSString*)aStr;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateToolbarItems;
 - (void)focusURLBar;
