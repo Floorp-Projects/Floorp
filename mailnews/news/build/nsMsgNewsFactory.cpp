@@ -39,6 +39,7 @@
 #include "nsNNTPNewsgroupPost.h"
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPArticleList.h"
+#include "nsNNTPHost.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
@@ -51,6 +52,7 @@ static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupListCID, NS_NNTPNEWSGROUPLIST_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
+static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -221,10 +223,28 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
     
     if (NS_FAILED(rv) && folder) 
       delete folder;
-	} 
+	}
+ 	else if (mClassID.Equals(kNNTPHostCID)) 
+	{
+    nsNNTPHost *host = new nsNNTPHost();
+    if (host)
+      rv = host->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && host) 
+      delete host;
+	}  
 	else if (mClassID.Equals(kNntpIncomingServerCID)) 
 	{
-    rv = NS_NewNntpIncomingServer(nsISupports::GetIID(), aResult);
+    nsNntpIncomingServer *server = new nsNntpIncomingServer();
+    if (server)
+      rv = server->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && server) 
+      delete server;
 	}
 	else if (mClassID.Equals(kNewsMessageResourceCID)) 
  	{
@@ -292,8 +312,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                            nsIComponentManager::GetIID(), 
                            (nsISupports**)&compMgr);
 	if (NS_FAILED(rv)) return rv;
-
-	rv = compMgr->RegisterComponent(kNntpUrlCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
+  
+	rv = compMgr->RegisterComponent(kNntpUrlCID,
+                                  "NNTP Url",
+                                  "component://netscape/messenger/nntpurl",
+                                  path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Service", 
@@ -323,10 +346,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message",
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
-
-#ifdef NS_DEBUG
-	printf("news registering from %s\n",path);
-#endif
 
 	rv = compMgr->RegisterComponent(kNntpIncomingServerCID,
 									"Nntp Incoming Server",
@@ -365,8 +384,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
-
-
+  rv = compMgr->RegisterComponent(kNNTPHostCID,
+                                  "NNTP Host",
+                                  "component://netscape/messeneger/nntphost",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+  
 done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
 	return rv;
@@ -409,6 +432,12 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kNNTPNewsgroupListCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kNNTPArticleListCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kNNTPHostCID, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:

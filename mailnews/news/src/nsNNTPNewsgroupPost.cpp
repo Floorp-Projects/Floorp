@@ -240,15 +240,3 @@ nsNNTPNewsgroupPost::GetPostMessageFile(nsFilePath ** aFileName)
 		return NS_ERROR_NULL_POINTER;
 	}
 }
-
-NS_BEGIN_EXTERN_C
-
-nsresult NS_NewNewsgroupPost(nsINNTPNewsgroupPost **aPost)
-{
-    if (!aPost) return NS_ERROR_NULL_POINTER;
-    nsNNTPNewsgroupPost *post = new nsNNTPNewsgroupPost();
-    return post->QueryInterface(nsINNTPNewsgroupPost::GetIID(),
-                                (void **)aPost);
-}
-
-NS_END_EXTERN_C

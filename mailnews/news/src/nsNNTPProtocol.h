@@ -211,12 +211,12 @@ private:
 	nsFileSpec m_tempArticleFile;
 
 	// News Event Sinks
-    nsINNTPNewsgroupList	* m_newsgroupList;
+    nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
     nsCOMPtr <nsINNTPArticleList> m_articleList;
 
-	nsINNTPHost				* m_newsHost;
-	nsINNTPNewsgroup		* m_newsgroup;
-	nsIMsgOfflineNewsState  * m_offlineNewsState;
+	nsCOMPtr <nsINNTPHost>	 m_newsHost;
+	nsCOMPtr <nsINNTPNewsgroup>	m_newsgroup;
+	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
 	// Ouput stream for writing commands to the socket
 	nsITransport			* m_transport; 

@@ -22,11 +22,32 @@
 #include "nsINntpIncomingServer.h"
 #include "nscore.h"
 
-NS_BEGIN_EXTERN_C
+#include "nsMsgIncomingServer.h"
 
-nsresult
-NS_NewNntpIncomingServer(const nsIID& iid, void **result);
+#include "nsIPref.h"
 
-NS_END_EXTERN_C
+#include "prmem.h"
+#include "plstr.h"
+#include "prprf.h"
+
+/* get some implementation from nsMsgIncomingServer */
+class nsNntpIncomingServer : public nsMsgIncomingServer,
+                             public nsINntpIncomingServer
+                             
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+
+    nsNntpIncomingServer();
+    virtual ~nsNntpIncomingServer();
+    
+    NS_IMETHOD GetRootFolderPath(char **);
+    NS_IMETHOD SetRootFolderPath(char *);
+
+    NS_IMETHOD GetServerURI(char * *uri);
+    
+private:
+    char *m_rootFolderPath;
+};
 
 #endif

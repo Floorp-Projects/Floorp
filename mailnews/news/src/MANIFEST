@@ -26,3 +26,5 @@ nsNewsFolder.h
 nsNntpIncomingServer.h
 nsNewsUtils.h
 nsNNTPArticleList.h
+nsNNTPHost.h
+nsNNTPCategoryContainer.h

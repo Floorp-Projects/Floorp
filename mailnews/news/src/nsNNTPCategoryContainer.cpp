@@ -19,44 +19,23 @@
  /* This is a stub event sink for a NNTP Newsgroup introduced by mscott to test
    the NNTP protocol */
 
-#include "nsISupports.h" /* interface nsISupports */
-#include "nsINNTPCategoryContainer.h"
-#include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsNNTPCategoryContainer.h"
 
-#include "nscore.h"
-#include "plstr.h"
-#include "prmem.h"
-#include <stdio.h>
+NS_IMPL_ISUPPORTS(nsNNTPCategoryContainer, nsINNTPCategoryContainer::GetIID());
 
-class nsNNTPCategoryContainerStub : public nsISupports {
- public: 
-	nsNNTPCategoryContainerStub();
-	virtual ~nsNNTPCategoryContainerStub();
-	 
-	NS_DECL_ISUPPORTS
-	NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory);
-	NS_IMETHOD SetRootCategory(nsINNTPNewsgroup * aRootCategory);
-
- protected:
-	 nsINNTPNewsgroup * m_newsgroup;
-
-};
-
-NS_IMPL_ISUPPORTS(nsNNTPCategoryContainerStub, nsINNTPCategoryContainer::GetIID());
-
-nsNNTPCategoryContainerStub::nsNNTPCategoryContainerStub()
+nsNNTPCategoryContainer::nsNNTPCategoryContainer()
 {
 	NS_INIT_REFCNT();
 	m_newsgroup = nsnull;
 }
 
-nsNNTPCategoryContainerStub::~nsNNTPCategoryContainerStub()
+nsNNTPCategoryContainer::~nsNNTPCategoryContainer()
 {
 	printf("Destroying category container. \n");
 	NS_IF_RELEASE(m_newsgroup);
 }
 
-nsresult nsNNTPCategoryContainerStub::GetRootCategory(nsINNTPNewsgroup * *aRootCategory)
+nsresult nsNNTPCategoryContainer::GetRootCategory(nsINNTPNewsgroup * *aRootCategory)
 {
 	if (aRootCategory)
 	{
@@ -68,7 +47,13 @@ nsresult nsNNTPCategoryContainerStub::GetRootCategory(nsINNTPNewsgroup * *aRootC
 }
 
 
-nsresult nsNNTPCategoryContainerStub::SetRootCategory(nsINNTPNewsgroup * aRootCategory)
+nsresult nsNNTPCategoryContainer::Initialize(nsINNTPNewsgroup * aRootCategory)
+{
+    // for now, just set the root category.
+    return SetRootCategory(aRootCategory);
+}
+
+nsresult nsNNTPCategoryContainer::SetRootCategory(nsINNTPNewsgroup * aRootCategory)
 {
 	if (aRootCategory)
 	{
@@ -84,29 +69,3 @@ nsresult nsNNTPCategoryContainerStub::SetRootCategory(nsINNTPNewsgroup * aRootCa
 
 }
 
-extern "C" {
-
-nsresult NS_NewCategoryContainerFromNewsgroup(nsINNTPCategoryContainer ** aInstancePtr, nsINNTPNewsgroup* group)
-{
-	nsresult rv = NS_OK;
-	nsNNTPCategoryContainerStub * stub = nsnull;
-	if (aInstancePtr)
-	{
-		stub = new nsNNTPCategoryContainerStub();
-        if (stub) {
-            stub->SetRootCategory(group);
-            rv = stub->QueryInterface(nsINNTPCategoryContainer::GetIID(), (void **) aInstancePtr);
-        }
-        else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        if (NS_FAILED(rv) && stub) {
-            delete stub;
-        }
-	}
-
-	return rv;
-}
-
-}

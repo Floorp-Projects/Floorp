@@ -8,6 +8,7 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsrootidl.h" /* interface nsrootidl */
+class nsINNTPNewsgroup; /* forward decl */
 
 /* starting interface:    nsINNTPCategoryContainer */
 
@@ -24,6 +25,9 @@ class nsINNTPCategoryContainer : public nsISupports {
   /* attribute nsINNTPNewsgroup rootCategory; */
   NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory) = 0;
   NS_IMETHOD SetRootCategory(nsINNTPNewsgroup * aRootCategory) = 0;
+
+  /* void Initialize (in nsINNTPNewsgroup rootCategory); */
+  NS_IMETHOD Initialize(nsINNTPNewsgroup *rootCategory) = 0;
 };
 
 #endif /* __gen_nsINNTPCategoryContainer_h__ */

@@ -25,6 +25,9 @@ class nsINNTPHost : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPHOST_IID)
 
+  /* void Initialize (in string name, in long port); */
+  NS_IMETHOD Initialize(const char *name, PRInt32 port) = 0;
+
   /* attribute boolean supportsExtensions; */
   NS_IMETHOD GetSupportsExtensions(PRBool *aSupportsExtensions) = 0;
   NS_IMETHOD SetSupportsExtensions(PRBool aSupportsExtensions) = 0;

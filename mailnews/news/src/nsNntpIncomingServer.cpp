@@ -16,35 +16,7 @@
  * Reserved.
  */
 
-#include "nsINntpIncomingServer.h"
 #include "nsNntpIncomingServer.h"
-#include "nsMsgIncomingServer.h"
-
-#include "nsIPref.h"
-
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
-
-/* get some implementation from nsMsgIncomingServer */
-class nsNntpIncomingServer : public nsMsgIncomingServer,
-                             public nsINntpIncomingServer
-                             
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-
-    nsNntpIncomingServer();
-    virtual ~nsNntpIncomingServer();
-    
-    NS_IMETHOD GetRootFolderPath(char **);
-    NS_IMETHOD SetRootFolderPath(char *);
-
-    NS_IMETHOD GetServerURI(char * *uri);
-    
-private:
-    char *m_rootFolderPath;
-};
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
                             nsMsgIncomingServer,
@@ -82,14 +54,5 @@ nsNntpIncomingServer::GetServerURI(char **uri)
     return rv;
 }
 
-nsresult NS_NewNntpIncomingServer(const nsIID& iid,
-                                  void **result)
-{
-    nsNntpIncomingServer *server;
-    if (!result) return NS_ERROR_NULL_POINTER;
-    server = new nsNntpIncomingServer();
-
-    return server->QueryInterface(iid, result);
-}
 
 

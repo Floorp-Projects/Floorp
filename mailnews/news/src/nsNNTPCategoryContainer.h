@@ -22,12 +22,25 @@
 #include "nsINNTPCategoryContainer.h"
 #include "nsINNTPNewsgroup.h"
 
-NS_BEGIN_EXTERN_C
-nsresult
-NS_NewCategoryContainerFromNewsgroup(nsINNTPCategoryContainer **,
-                                     nsINNTPNewsgroup* );
+#include "nsISupports.h" /* interface nsISupports */
 
+#include "nscore.h"
+#include "plstr.h"
+#include "prmem.h"
+//#include <stdio.h>
 
-NS_END_EXTERN_C
+class nsNNTPCategoryContainer : public nsISupports {
+ public: 
+	nsNNTPCategoryContainer();
+	virtual ~nsNNTPCategoryContainer();
+	 
+	NS_DECL_ISUPPORTS
+	NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory);
+	NS_IMETHOD SetRootCategory(nsINNTPNewsgroup * aRootCategory);
+    NS_IMETHOD Initialize(nsINNTPNewsgroup * aRootCategory);
+    
+protected:
+    nsINNTPNewsgroup * m_newsgroup;
+};
 
 #endif

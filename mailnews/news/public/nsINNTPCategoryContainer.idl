@@ -19,8 +19,12 @@
 #include "nsISupports.idl"
 #include "nsINNTPNewsgroup.idl"
 
+interface nsINNTPNewsgroup;
+
 [scriptable, uuid(cb36d510-b249-11d2-b7ef-00805f05ffa5)]
 interface nsINNTPCategoryContainer : nsISupports {
 
   attribute nsINNTPNewsgroup rootCategory;
+
+  void Initialize(in nsINNTPNewsgroup rootCategory);
 };

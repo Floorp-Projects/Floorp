@@ -83,6 +83,7 @@ static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
+static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -362,16 +363,6 @@ nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH)
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
-	// release all of our event sinks
-	if (m_newsgroupList)
-		NS_RELEASE(m_newsgroupList);
-	if (m_newsHost)
-		NS_RELEASE(m_newsHost);
-	if (m_newsgroup)
-		NS_RELEASE(m_newsgroup);
-	if (m_offlineNewsState)
-		NS_RELEASE(m_offlineNewsState);
-
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
@@ -411,10 +402,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer
 	
 	// query the URL for a nsINNTPUrl
 	m_runningURL = nsnull; // initialize to NULL
-    m_newsgroupList = nsnull;
-	m_newsHost	  = nsnull;
-	m_newsgroup	  = nsnull;
-	m_offlineNewsState = nsnull; 
+    
 	m_displayConsumer = nsnull;
 
 	if (aURL)
@@ -424,11 +412,11 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
 			// it returns the interface to us...we'll release when we are done
-			m_runningURL->GetNewsgroupList(&m_newsgroupList);
+			m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
 			m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
-			m_runningURL->GetNntpHost(&m_newsHost);
-			m_runningURL->GetNewsgroup(&m_newsgroup);
-			m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
+			m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
+			m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
+			m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
 		}
         else {
             return rv;
@@ -525,11 +513,11 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 
 		  // okay, now fill in our event sinks...Note that each getter ref counts before
 		  // it returns the interface to us...we'll release when we are done
-		  m_runningURL->GetNewsgroupList(&m_newsgroupList);
+		  m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
 		  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
-		  m_runningURL->GetNntpHost(&m_newsHost);
-		  m_runningURL->GetNewsgroup(&m_newsgroup);
-		  m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
+		  m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
+		  m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
+		  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
 	  }
 	  else                      /* let rv fall through */
 		  NS_ASSERTION(0, "Invalid url type passed into NNTP Protocol Handler");
@@ -548,7 +536,7 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 	goto FAIL;
 
   // if we don't have a news host already, go get one...
-  if (m_newsHost == nsnull)
+  if (!m_newsHost)
   {
       char *colon = nsnull;
       PRUint32 port = 0;
@@ -558,15 +546,18 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
           *colon = '\0';  /* turn hostname:port into hostname */
           port = (PRUint32) strtol(colon + 1, (char **)nsnull, 10 /* base 10 */);
       }
+	  rv = nsComponentManager::CreateInstance(kNNTPHostCID,
+                                            nsnull,
+                                            nsINNTPHost::GetIID(),
+                                            getter_AddRefs(m_newsHost));
+                          
+      if (NS_FAILED(rv) || (!m_newsHost)) {
+          *status = -1;
+          goto FAIL;
+      }
       // at this point, hostAndPort is really just the hostname
       // because we put a '\0' in for the colon, if there was one
-
-	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
-
-	  if (NS_FAILED(rv) || (m_newsHost == nsnull)) {
-			*status = -1;
-			goto FAIL;
-	  }
+      m_newsHost->Initialize(hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
@@ -754,7 +745,7 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 #ifdef UNREADY_CODE
   if (m_typeWanted == ARTICLE_WANTED)
   {
-		uint32 number = 0;
+		PRUint32 number = 0;
         nsresult rv;
         PRBool articleIsOffline;
         rv = m_newsgroup->IsOfflineArticle(number,&articleIsOffline);
@@ -768,9 +759,18 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 			if (!articleIsOffline)
 				ce->format_out = CLEAR_CACHE_BIT(ce->format_out);
 			NET_SetCallNetlibAllTheTime(ce->window_id,"mknews");
-            rv = NS_NewOfflineNewState(&cd->offline_state,
-                                       cd->newsgroup, number);
+            
+            rv = nsComponentManager::CreateInstance(kMsgOfflineNewsStateCID,
+                                            nsnull,
+                                            nsIMsgOfflineNewsState::GetIID(),
+                                            getter_AddRefs(cd->offline_state));
 
+            if (NS_FAILED(rv) || ! cd->offline_state) {
+                goto FAIL;
+            }
+
+            rv = cd->offline_state->Initialize(cd->newsgroup, number);
+            if (NS_FAILED(rv)) goto FAIL;
 		}
   }
   if (cd->offline_state)
@@ -1619,13 +1619,13 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		PRUint32 number = 0;
 
 		nsresult rv;
-        nsINNTPNewsgroup *newsgroup;
-		if (m_newsHost == nsnull) {
+        nsCOMPtr <nsINNTPNewsgroup> newsgroup;
+		if (!m_newsHost) {
 			printf("m_newsHost is null, panic!\n");
 			return -1;
 		}
         rv = m_newsHost->GetNewsgroupAndNumberOfID(m_path,
-                                                   &newsgroup,
+                                                   getter_AddRefs(newsgroup),
                                                    &number);
 		if (NS_SUCCEEDED(rv) && newsgroup && number)
 		  {
@@ -1663,7 +1663,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         PRUint32 last_update;
         nsresult rv;
 		
-		if (m_newsHost == nsnull) {
+		if (!m_newsHost) {
 			printf("m_newsHost is null, panic!\n");
 			return -1;
 		}
@@ -1700,7 +1700,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		ClearFlag(NNTP_USE_FANCY_NEWSGROUP);
         PRUint32 last_update;
       	
-		if (m_newsHost == nsnull) {
+		if (!m_newsHost) {
 			printf("m_newsHost is null, panic!\n");
 			return -1;
 		}
@@ -1746,7 +1746,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         nsresult rv=NS_ERROR_NULL_POINTER;
 
         NET_SACopy(&command, "GROUP ");
-        if (m_newsgroup == nsnull) {
+        if (!m_newsgroup) {
 			printf("m_newsgroup is null, panic!\n");
 			return -1;
 		}
@@ -1769,7 +1769,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	{
 		nsresult rv;
 		PRBool searchable=PR_FALSE;
-		if (m_newsHost == nsnull) {
+		if (!m_newsHost) {
 			printf("m_newsHost is null, panic!\n");
 			return -1;
 		}
@@ -1796,7 +1796,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
             
 			/* for XPAT, we have to GROUP into the group before searching */
 			NET_SACopy(&command, "GROUP ");
-			if (m_newsgroup == nsnull) {
+			if (!m_newsgroup) {
 				printf("m_newsgroup is null, panic!\n");
 				return -1;
 			}
@@ -2562,7 +2562,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
           rv = m_newsHost->GetFirstGroupNeedingExtraInfo(&groupName);
 		  if (NS_SUCCEEDED(rv) && m_newsgroup)
 		  {
-                rv = m_newsHost->FindGroup(groupName, &m_newsgroup);
+                rv = m_newsHost->FindGroup(groupName, getter_AddRefs(m_newsgroup));
                 PR_ASSERT(NS_SUCCEEDED(rv));
 				m_nextState = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_NEWS
@@ -2800,13 +2800,13 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	  rv = m_newsgroup->GetName(&groupName);
       /* XXX - parse state stored in MSG_Pane cd->pane */
       if (NS_SUCCEEDED(rv))
-          rv = m_newsHost->GetNewsgroupList(groupName, &m_newsgroupList);
+          rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
       
 #ifdef DEBUG_NEWS
 	  printf("add to known articles:  %d - %d\n", m_firstArticle, m_lastArticle);
 #endif
 
-      if (NS_SUCCEEDED(rv) && m_newsgroupList != nsnull) {
+      if (NS_SUCCEEDED(rv) && m_newsgroupList) {
           rv = m_newsgroupList->AddToKnownArticles(m_firstArticle,
                                                  m_lastArticle);
       }
@@ -2828,13 +2828,13 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
     char *groupName = nsnull;
     
-	if (m_newsgroupList == nsnull) {
+	if (!m_newsgroupList) {
 	    rv = m_newsgroup->GetName(&groupName);
 		if (NS_SUCCEEDED(rv))
-			rv = m_newsHost->GetNewsgroupList(groupName, &m_newsgroupList);
+			rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
 	}
         
-    if (NS_SUCCEEDED(rv) && m_newsgroupList != nsnull) {
+    if (NS_SUCCEEDED(rv) && m_newsgroupList) {
         rv = m_newsgroupList->GetRangeOfArtsToDownload(m_firstPossibleArticle,
                                               m_lastPossibleArticle,
                                               m_numArticlesWanted -
@@ -2864,7 +2864,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	m_articleNumber = m_firstArticle;
 
     /* was MSG_InitXOVER() */
-    if (m_newsgroupList != nsnull) {
+    if (m_newsgroupList) {
         rv = m_newsgroupList->InitXOVER(m_firstArticle, m_lastArticle);
 	}
 
@@ -3021,7 +3021,7 @@ PRInt32 nsNNTPProtocol::ProcessXover()
 	PRInt32 status = 0;
 
     /* xover_parse_state stored in MSG_Pane cd->pane */
-	if (m_newsgroupList == nsnull) {
+	if (!m_newsgroupList) {
 		return NS_ERROR_NULL_POINTER;
 	}
 
@@ -4043,18 +4043,17 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
           if (m_typeWanted == NEW_GROUPS &&
               NS_SUCCEEDED(rv) && xactive)
 			{
-                // todo:  use nsCOMPtr
-                nsINNTPNewsgroup* old_newsgroup = m_newsgroup;
+                nsCOMPtr <nsINNTPNewsgroup> old_newsgroup;
+                old_newsgroup = m_newsgroup;
                 char *groupName;
                 
                 m_newsHost->GetFirstGroupNeedingExtraInfo(&groupName);
-                m_newsHost->FindGroup(groupName, &m_newsgroup);
+                m_newsHost->FindGroup(groupName, getter_AddRefs(m_newsgroup));
                 // see if we got a different group
                 if (old_newsgroup && m_newsgroup &&
-                    old_newsgroup != m_newsgroup)
+                    (old_newsgroup != m_newsgroup))
                 /* make sure we're not stuck on the same group */
                 {
-                    NS_RELEASE(old_newsgroup);
 #ifdef DEBUG_NEWS
 					printf("listing xactive for %s\n", groupName);
 #endif
@@ -4064,9 +4063,9 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 					return 0;
 				}
 				else
-				{
-                    NS_RELEASE(old_newsgroup);
-                    m_newsgroup = NULL;
+                {
+                    printf("set nsCOMPtr to null?\n");
+                    //m_newsgroup = NULL;
 				}
 			}
             PRBool listpname;
@@ -4697,15 +4696,13 @@ PRInt32 nsNNTPProtocol::CloseConnection()
      something.  So, tell libmsg there was an abnormal
      exit so that it can free its data. */
             
-	if (m_newsgroupList != NULL)
+	if (m_newsgroupList)
 	{
 		int status;
         nsresult rv;
        /* XXX - how/when to Release() this? */
         rv = m_newsgroupList->FinishXOVERLINE(status,&status);
 		PR_ASSERT(NS_SUCCEEDED(rv));
-		if (NS_SUCCEEDED(rv))
-			NS_RELEASE(m_newsgroupList);
 		if (NS_SUCCEEDED(rv) && status >= 0 && status < 0)
 					  status = status;
 	}
@@ -4723,8 +4720,6 @@ PRInt32 nsNNTPProtocol::CloseConnection()
     PR_FREEIF(m_path);
     PR_FREEIF(m_responseText);
     PR_FREEIF(m_dataBuf);
-
-    NS_IF_RELEASE(m_newsgroup);
 
 	PR_FREEIF (m_cancelID);
 	PR_FREEIF (m_cancelFromHdr);
