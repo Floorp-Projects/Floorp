@@ -1936,27 +1936,37 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
   }
 }
 
-// NOTE:  The first parameter *must* be passed by value.
-static PRBool
-WrappedLinesAreDirty(nsLineList::iterator aLine,
-                     const nsLineList::iterator aLineEnd)
+static void
+DirtyLineIfWrappedLinesAreDirty(const nsLineList::iterator& aLine,
+                                const nsLineList::iterator& aLineEnd)
 {
-  if (aLine->IsInline()) {
-    while (aLine->IsLineWrapped()) {
-      ++aLine;
-      if (aLine == aLineEnd) {
+  NS_PRECONDITION(!aLine->IsDirty(), "Must pass in clean line");
+  
+  if (aLine->IsInline() && aLine->IsLineWrapped()) {
+    nsLineList::iterator line(aLine);
+    PRBool hasDirtyContinuation = PR_FALSE;
+    do {
+      ++line;
+      if (line == aLineEnd) {
         break;
       }
 
-      NS_ASSERTION(!aLine->IsBlock(), "didn't expect a block line");
-      if (aLine->IsDirty()) {
+      NS_ASSERTION(!line->IsBlock(), "didn't expect a block line");
+      if (line->IsDirty()) {
         // we found a continuing line that is dirty
-        return PR_TRUE;
+        hasDirtyContinuation = PR_TRUE;
+        break;
       }
+    } while (line->IsLineWrapped());
+    
+    if (hasDirtyContinuation) {
+      // Mark all lines between aLine and line dirty
+      do {
+        --line;
+        line->MarkDirty();
+      } while (line != aLine);
     }
   }
-
-  return PR_FALSE;
 }
 
 static void PlaceFrameView(nsPresContext* aPresContext, nsIFrame* aFrame);
@@ -2079,12 +2089,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // If we're supposed to update our maximum width, then we'll also need to
     // reflow this line if it's line wrapped and any of the continuing lines
     // are dirty.
-    // XXXperf XXXldb Check that the previous line was not wrapped
-    // before doing this check (it's O(N^2) as written now).
-    if ((!line->IsDirty() &&
-         aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
-         ::WrappedLinesAreDirty(line, line_end))) {
-      line->MarkDirty();
+    if (!line->IsDirty() &&
+        aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
+      // Check whether we need to dirty this line by looking for a dirty
+      // continuation.  If we find one, mark this line and all lines up to that
+      // continuation dirty.
+      ::DirtyLineIfWrappedLinesAreDirty(line, line_end);
     }
 
     // Make sure |aState.mPrevBottomMargin| is at the correct position
