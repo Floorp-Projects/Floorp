@@ -122,6 +122,7 @@ nsSmtpServer::getPrefString(const char *pref, nsCAutoString& result)
 {
     result = "mail.smtpserver.";
     result += mKey;
+    result += ".";
     result += pref;
 
     return NS_OK;
