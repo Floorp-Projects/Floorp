@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.43 2003/12/03 00:09:04 wchang0222%aol.com Exp $
+ * $Id: cert.h,v 1.44 2004/01/28 21:51:09 wchang0222%aol.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -644,13 +644,6 @@ SECStatus
 CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     PRBool checkSig, SECCertUsage certUsage, int64 t,
 		     void *wincx, CERTVerifyLog *log);
-
-/*
-** This must only be called on a cert that is known to have an issuer
-** with an invalid time
-*/
-extern CERTCertificate *
-CERT_FindExpiredIssuer (CERTCertDBHandle *handle, CERTCertificate *cert);
 
 /*
 ** Read a base64 ascii encoded DER certificate and convert it to our
