@@ -137,7 +137,7 @@
     </treerow>
   </treehead>
 
-  <treechildren id="NC:BookmarksRoot" />
+  <treechildren id="NC:BookmarksRoot" open="true" />
 </tree>
 
 </xul:window>
