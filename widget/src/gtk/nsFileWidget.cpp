@@ -20,10 +20,19 @@
  * Contributor(s): 
  */
 
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
 #include "nsFileWidget.h"
 #include "nsIToolkit.h"
 
 NS_IMPL_ISUPPORTS1(nsFileWidget, nsIFileWidget)
+
+// TODO: using static leaks, need to release at dll unload
+static nsIUnicodeEncoder * gUnicodeEncoder = nsnull;
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //-------------------------------------------------------------------------
 //
@@ -113,7 +122,32 @@ PRBool nsFileWidget::Show()
     // make things shorter
     GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
 
-    gtk_file_selection_set_filename(fs, (const gchar*)nsAutoCString(mDefault));
+    nsresult rv;
+    char *buff = nsnull;
+
+    // convert from unicode to locale charset
+    PRInt32 inLength = mDefault.Length();
+    PRInt32 outLength;
+    NS_ASSERTION(gUnicodeEncoder, "no unicode converter");
+    rv = gUnicodeEncoder->GetMaxLength(mDefault.GetUnicode(), inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      buff = new char[outLength+1];
+      if (nsnull != buff) {
+        rv = gUnicodeEncoder->Convert(mDefault.GetUnicode(), &inLength, buff, &outLength);
+        if (NS_SUCCEEDED(rv)) {
+          buff[outLength] = '\0';
+          gtk_file_selection_set_filename(fs, (const gchar*) buff);
+#if defined(debug_nhotta)
+          printf("debug: file name is %s\n", buff);
+#endif
+          delete [] buff;
+        }
+        else
+          gtk_file_selection_set_filename(fs, (const gchar*)nsAutoCString(mDefault));
+      }
+    }
+    if (NS_FAILED(rv))
+      gtk_file_selection_set_filename(fs, (const gchar*)nsAutoCString(mDefault));
 
     if (mNumberOfFilters != 0)
     {
@@ -335,6 +369,8 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
                                    nsIToolkit *aToolkit,
                                    void *aInitData)
 {
+  nsresult rv = NS_OK;
+  
   mMode = aMode;
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
@@ -358,7 +394,31 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
     gtk_widget_hide((GTK_FILE_SELECTION(mWidget)->file_list)->parent);
   }
 
-  return NS_OK;
+  // Create an unicode converter for file system charset
+  if (nsnull == gUnicodeEncoder) {
+      nsAutoString localeCharset;
+
+      nsCOMPtr <nsIPlatformCharset> platformCharset;
+      rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                              NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+      if (NS_SUCCEEDED(rv)) {
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, localeCharset);
+      }
+
+      if (NS_FAILED(rv)) {
+        NS_ASSERTION(0, "error getting locale charset, using ISO-8859-1");
+        localeCharset.SetString("ISO-8859-1");
+        rv = NS_OK;
+      }
+
+      // get an unicode converter
+      NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+      if (NS_SUCCEEDED(rv)) {
+        rv = ccm->GetUnicodeEncoder(&localeCharset, &gUnicodeEncoder);
+      }
+  }
+
+  return rv;
 }
 
 gint
