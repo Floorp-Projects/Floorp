@@ -49,7 +49,7 @@
 <!ENTITY pageInfo.type.objects      "Generic Objects">
 <!ENTITY pageInfo.type.scripts      "Scripts">
 <!ENTITY pageInfo.humanReadable.label       "Policy">
-<!ENTITY pageInfo.humanReadable.accesskey   "l">
+<!ENTITY pageInfo.humanReadable.accesskey   "c">
 <!ENTITY pageInfo.machineReadable.label     "Summary">
 <!ENTITY pageInfo.machineReadable.accesskey "S">
 <!ENTITY pageInfo.optinoptout.label         "Options">
