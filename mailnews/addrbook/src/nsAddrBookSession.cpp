@@ -278,4 +278,6 @@ NS_IMETHODIMP nsAddrBookSession::GeneratePhoneticNameFromCard(nsIAbCard *aCard, 
     *aName = ToNewUnicode(lastName + firstName);
   else
     *aName = ToNewUnicode(firstName + lastName);
+
+  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
