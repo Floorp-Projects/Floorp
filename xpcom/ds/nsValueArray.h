@@ -83,6 +83,11 @@ class NS_COM nsValueArray {
 
     void Compact();
 
+    // Removes all elements from this array
+    inline void Clear() {
+        mCount = 0;
+    }
+
     //
     // Array access.
     //
