@@ -57,7 +57,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jslock.h"
 #include "jsobj.h"
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
@@ -1009,15 +1008,10 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
     return map;
 }
 
-JSObjectMap * JS_DLL_CALLBACK
-jsj_wrapper_dropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj)
+void JS_DLL_CALLBACK
+jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
 {
-    JS_ASSERT(map->nrefs > 0);
-    if (JS_ATOMIC_DECREMENT(&map->nrefs) == 0) {
-        JS_free(cx, map);
-        return NULL;
-    }
-    return map;
+    JS_free(cx, map);
 }
 
 jsval JS_DLL_CALLBACK
@@ -1043,7 +1037,7 @@ jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 JSObjectOps JavaObject_ops = {
     /* Mandatory non-null function pointer members. */
     jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_dropObjectMap,      /* dropObjectMap */
+    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaObject_lookupProperty,
     JavaObject_defineProperty,
     JavaObject_getPropertyById,     /* getProperty */

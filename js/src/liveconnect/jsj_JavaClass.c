@@ -545,7 +545,7 @@ done:
 JSObjectOps JavaClass_ops = {
     /* Mandatory non-null function pointer members. */
     jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_dropObjectMap,      /* dropObjectMap */
+    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaClass_lookupProperty,
     JavaClass_defineProperty,
     JavaClass_getPropertyById,      /* getProperty */
