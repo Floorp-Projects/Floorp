@@ -152,6 +152,9 @@ GetHorBorderPaddingWidth(const nsHTMLReflowState& aReflowState,
 /********************************************************************************
  ** nsTableFrame                                                               **
  ********************************************************************************/
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+static PRInt32 gRflCount = 0;
+#endif
 
 NS_IMETHODIMP
 nsTableFrame::GetFrameType(nsIAtom** aType) const
@@ -2011,10 +2014,6 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
   Invalidate(aPresContext, mRect);
 
   if (eReflowReason_Resize == aReflowState.reason) {
-    if (isPaginated && (NS_FRAME_COMPLETE == aStatus) && (reflowState.availSize.height > 0)) {
-      // Try and pull-up some children from a next-in-flow
-      rv = PullUpChildren(aPresContext, aDesiredSize, reflowState, aStatus);
-    }
     if (!DidResizeReflow()) {
       // XXX we need to do this in other cases as well, but it needs to be made more incremental
       aDoCollapse = PR_TRUE;
@@ -3155,133 +3154,6 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
   if (aReflowedAtLeastOne) {
     *aReflowedAtLeastOne = haveReflowedRowGroup;
   }
-  return rv;
-}
-
-/**
- * Try and pull-up frames from our next-in-flow
- *
- * @param   aPresContext presentation context to use
- * @param   aReflowState current inline state
- * @return  true if we successfully pulled-up all the children and false
- *            otherwise, e.g. child didn't fit
- */
-NS_METHOD 
-nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             nsTableReflowState&  aReflowState,
-                             nsReflowStatus&      aStatus)
-{
-  nsTableFrame* nextInFlow = (nsTableFrame*)mNextInFlow;
-  nsIFrame*     prevKidFrame = mFrames.LastChild();
-  nsresult      rv = NS_OK;
-
-  while (nextInFlow) {
-    nsHTMLReflowMetrics kidSize(nsnull);
-    kidSize.width = kidSize.height = kidSize.ascent = kidSize.descent=0;
-
-    // XXX change to use nsFrameList::PullFrame
-
-    // Get the next child
-    nsIFrame* kidFrame = nextInFlow->mFrames.FirstChild();
-
-    // Any more child frames?
-    if (nsnull == kidFrame) {
-      // No. Any frames on its overflow list?
-      nsIFrame* nextOverflowFrames = nextInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
-      if (nextOverflowFrames) {
-        // Move the overflow list to become the child list
-        nextInFlow->mFrames.AppendFrames(nsnull, nextOverflowFrames);
-        kidFrame = nextInFlow->mFrames.FirstChild();
-      } else {
-        // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
-        continue;
-      }
-    }
-
-    // See if the child fits in the available space. If it fits or
-    // it's splittable then reflow it. The reason we can't just move
-    // it is that we still need ascent/descent information
-    nsSize            kidFrameSize(0,0);
-    nsSplittableType  kidIsSplittable;
-
-    kidFrame->GetSize(kidFrameSize);
-    kidFrame->IsSplittable(kidIsSplittable);
-    if ((kidFrameSize.height > aReflowState.availSize.height) &&
-        NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
-      //XXX: Troy
-      aStatus = NS_FRAME_NOT_COMPLETE;
-      break;
-    }
-    nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
-                                      kidFrame, aReflowState.availSize,
-                                      eReflowReason_Resize);
-
-    rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState,
-                     0, aReflowState.y, 0, aStatus);
-
-    // Did the child fit?
-    if ((kidSize.height > aReflowState.availSize.height) && mFrames.NotEmpty()) {
-      // The child is too wide to fit in the available space, and it's
-      // not our first child
-      //XXX: Troy
-      aStatus = NS_FRAME_NOT_COMPLETE;
-      break;
-    }
-
-    const nsStyleDisplay *childDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (IsRowGroup(childDisplay->mDisplay)) {
-      PlaceChild(aPresContext, aReflowState, kidFrame, kidSize);
-    } else {
-      kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-    }
-
-    // Remove the frame from its current parent
-    nextInFlow->mFrames.RemoveFirstChild();
-
-    // Link the frame into our list of children
-    kidFrame->SetParent(this);
-
-    if (!prevKidFrame) {
-      mFrames.SetFrames(kidFrame);
-    } else {
-      prevKidFrame->SetNextSibling(kidFrame);
-    }
-    kidFrame->SetNextSibling(nsnull);
-
-    // Remember where we just were in case we end up pushing children
-    prevKidFrame = kidFrame;
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      // No the child isn't complete
-      nsIFrame* kidNextInFlow;
-       
-      kidFrame->GetNextInFlow(&kidNextInFlow);
-      if (nsnull == kidNextInFlow) {
-        // The child doesn't have a next-in-flow so create a
-        // continuing frame. The creation appends it to the flow and
-        // prepares it for reflow.
-        nsIFrame*     continuingFrame;
-        nsCOMPtr<nsIPresShell> presShell;
-        nsCOMPtr<nsIStyleSet>  styleSet;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        presShell->GetStyleSet(getter_AddRefs(styleSet));
-        styleSet->CreateContinuingFrame(aPresContext, kidFrame, this, &continuingFrame);
-
-        // Add the continuing frame to our sibling list and then push
-        // it to the next-in-flow. This ensures the next-in-flow's
-        // content offsets and child count are set properly. Note that
-        // we can safely assume that the continuation is complete so
-        // we pass PR_TRUE into PushChidren
-        kidFrame->SetNextSibling(continuingFrame);
-
-        PushChildren(aPresContext, continuingFrame, kidFrame);
-      }
-      break;
-    }
-  }
-
   return rv;
 }
 
@@ -4477,27 +4349,14 @@ PRInt32 nsTableFrame::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 
 
 /********************************************************************************
- ** DEBUG_TABLE_REFLOW  and  DEBUG_TABLE_REFLOW_TIMING                           **
+ ** DEBUG_TABLE_REFLOW  and  DEBUG_TABLE_REFLOW_TIMING                         **
  ********************************************************************************/
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#ifdef DEBUG
 
-static PRInt32 gRflCount = 0;
-#define INDENT_PER_LEVEL 1
-
-void PrettyUC(nscoord aSize,
-              char*   aBuf)
-{
-  if (NS_UNCONSTRAINEDSIZE == aSize) {
-    strcpy(aBuf, "UC");
-  }
-  else {
-    sprintf(aBuf, "%d", aSize);
-  }
-}
-
-PRBool GetFrameTypeName(nsIAtom* aFrameType,
-                        char*    aName)
+static PRBool 
+GetFrameTypeName(nsIAtom* aFrameType,
+                 char*    aName)
 {
   PRBool isTable = PR_FALSE;
   if (nsLayoutAtoms::tableOuterFrame == aFrameType) 
@@ -4519,6 +4378,23 @@ PRBool GetFrameTypeName(nsIAtom* aFrameType,
 
   return isTable;
 }
+#endif
+
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+
+#define INDENT_PER_LEVEL 1
+
+void PrettyUC(nscoord aSize,
+              char*   aBuf)
+{
+  if (NS_UNCONSTRAINEDSIZE == aSize) {
+    strcpy(aBuf, "UC");
+  }
+  else {
+    sprintf(aBuf, "%d", aSize);
+  }
+}
+
 
 #ifdef DEBUG_TABLE_REFLOW
 
@@ -4973,6 +4849,70 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sum;
   return NS_OK;
 }
+
+#define MAX_SIZE  128
+#define MIN_INDENT 30
+
+static 
+void DumpTableFramesRecur(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame,
+                          PRUint32        aIndent)
+{
+  char indent[MAX_SIZE + 1];
+  nsCRT::memset (indent, ' ', aIndent + MIN_INDENT);
+  indent[aIndent + MIN_INDENT] = 0;
+
+  char fName[MAX_SIZE];
+  nsCOMPtr<nsIAtom> fType;
+  aFrame->GetFrameType(getter_AddRefs(fType));
+  GetFrameTypeName(fType, fName);
+
+  printf("%s%s %p", indent, fName, aFrame);
+  nsIFrame* flowFrame;
+  aFrame->GetPrevInFlow(&flowFrame);
+  if (flowFrame) {
+    printf(" pif=%p", flowFrame);
+  }
+  aFrame->GetNextInFlow(&flowFrame);
+  if (flowFrame) {
+    printf(" nif=%p", flowFrame);
+  }
+  printf("\n");
+
+  if (nsLayoutAtoms::tableFrame         == fType.get() ||
+      nsLayoutAtoms::tableRowGroupFrame == fType.get() ||
+      nsLayoutAtoms::tableRowFrame      == fType.get() ||
+      nsLayoutAtoms::tableCellFrame     == fType.get()) {
+    nsIFrame* child;
+    aFrame->FirstChild(aPresContext, nsnull, &child);
+    while(child) {
+      DumpTableFramesRecur(aPresContext, child, aIndent+1);
+      child->GetNextSibling(&child);
+    }
+  }
+}
+  
+void
+nsTableFrame::DumpTableFrames(nsIPresContext* aPresContext,
+                              nsIFrame*       aFrame)
+{
+  nsTableFrame* tableFrame = nsnull;
+  nsCOMPtr<nsIAtom> fType;
+  aFrame->GetFrameType(getter_AddRefs(fType));
+
+  if (nsLayoutAtoms::tableFrame == fType.get()) { 
+    tableFrame = (nsTableFrame*)aFrame;
+  }
+  else {
+    nsTableFrame::GetTableFrame(aFrame, tableFrame);
+  }
+  tableFrame = (nsTableFrame*)tableFrame->GetFirstInFlow();
+  while (tableFrame) {
+    DumpTableFramesRecur(aPresContext, tableFrame, 0);
+    tableFrame->GetNextInFlow((nsIFrame**)&tableFrame);
+  }
+}
+
 #endif
 
 

@@ -293,11 +293,6 @@ protected:
                            PRBool                 aDirtyOnly,
                            nsTableRowFrame**      aFirstRowReflowed = nsnull);
 
-  /**
-   * Pull-up all the row frames from our next-in-flow
-   */
-  NS_METHOD PullUpAllRowFrames(nsIPresContext* aPresContext);
-
   nsresult SplitRowGroup(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
