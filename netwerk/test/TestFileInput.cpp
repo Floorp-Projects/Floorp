@@ -34,9 +34,21 @@
 #include "nsITransport.h"
 #include <stdio.h>
 
+#ifdef XP_PC
+#define XPCOM_DLL  "xpcom32.dll"
+#define NETLIB_DLL  "netwerk.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define XPCOM_DLL  "libxpcom.so"
+#define NETLIB_DLL  "libnetwerk.so"
+#endif
+#endif
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUE_CID);
 
 PRIntervalTime gDuration = 0;
 PRUint32 gVolume = 0;
@@ -46,7 +58,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Run() {
-//        printf("waiting\n");
+        printf("waiting\n");
         if (!mMonitor)
             return NS_ERROR_OUT_OF_MEMORY;
         PR_EnterMonitor(mMonitor);
@@ -54,7 +66,7 @@ public:
             PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
         PR_ExitMonitor(mMonitor);
 
-//        printf("running\n");
+        printf("running\n");
 
         // event loop
         mEventQueue->EventLoop();
@@ -62,7 +74,7 @@ public:
         while (PR_TRUE) {
 
         }
-//        printf("quitting\n");
+        printf("quitting\n");
         return NS_OK;
     }
 
@@ -86,7 +98,7 @@ public:
         PRThread* prthread;
         thread->GetPRThread(&prthread);
         PR_EnterMonitor(mMonitor);
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
           rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
         }
@@ -103,7 +115,7 @@ public:
 
     NS_IMETHOD OnStartBinding(nsISupports* context) {
         PR_EnterMonitor(mMonitor);
-//        printf("start binding\n"); 
+        printf("start binding\n"); 
         mStartTime = PR_IntervalNow();
         PR_ExitMonitor(mMonitor);
         return NS_OK;
@@ -118,8 +130,8 @@ public:
         while (aLength > 0) {
             PRUint32 amt;
             nsresult rv = aIStream->Read(buf, 1024, &amt);
-//            buf[amt] = '\0';
-//            printf(buf);
+            buf[amt] = '\0';
+            printf(buf);
             aLength -= amt;
             gVolume += amt;
         }
@@ -365,13 +377,14 @@ main(int argc, char* argv[])
     char* dirName = argv[1];
 
     // XXX why do I have to do this?!
+    nsComponentManager::RegisterComponent(kFileTransportServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                           "components");
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
     SerialReadTest(dirName);
     ParallelReadTest(dirName, fts);
 
@@ -384,4 +397,3 @@ main(int argc, char* argv[])
 
     return 0;
 }
-
