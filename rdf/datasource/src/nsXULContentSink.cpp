@@ -176,6 +176,7 @@ public:
     // nsIXULContentSink
     NS_IMETHOD Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource);
     NS_IMETHOD UnblockNextOverlay();
+    NS_IMETHOD UpdateOverlayCounters(PRInt32 aDelta);
 
 protected:
     static nsrefcnt             gRefCnt;
@@ -266,9 +267,10 @@ protected:
     nsIDocument* mChildDocument;
     nsIParser*   mParser;
     
-  nsVoidArray*       mOverlayArray;
-  PRInt32        mCurrentOverlay;
-  nsIXULContentSink* mParentContentSink;
+    PRInt32      mUnprocessedOverlayCount;
+    nsVoidArray*       mOverlayArray;
+    PRInt32        mCurrentOverlay;
+    nsIXULContentSink* mParentContentSink;
   
     nsString      mPreferredStyle;
     PRInt32       mStyleSheetCount;
@@ -301,9 +303,10 @@ XULContentSinkImpl::XULContentSinkImpl()
       mDocument(nsnull),
       mChildDocument(nsnull),
       mParser(nsnull),
+      mUnprocessedOverlayCount(0),
       mOverlayArray(nsnull),
-    mCurrentOverlay(0),
-    mParentContentSink(nsnull),
+      mCurrentOverlay(0),
+      mParentContentSink(nsnull),
       mStyleSheetCount(0),
       mCSSLoader(nsnull)
 {
@@ -675,6 +678,8 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
     NS_IF_RELEASE(resource);
 
+    PopNameSpaces();
+
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0) {
       mState = eXULContentSinkState_InEpilog;
@@ -683,22 +688,22 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
       // of our child overlays.
       PRInt32 count;
       if (mOverlayArray && (count = mOverlayArray->Count())) {
-        nsString* href = (nsString*)mOverlayArray->ElementAt(0);
-        ProcessOverlay(*href);
-        
         // Block the parser. It will only be unblocked after all
         // of our child overlays have finished parsing.
         rv = NS_ERROR_HTMLPARSER_BLOCK;
+
+        // All content sinks in a chain back to the root have 
+        // +count added to them.  Until all overlays are
+        // processed, they won't unblock.
+        UpdateOverlayCounters(count);
       }
-      
-      // Unblock the next sibling overlay. If there is no next sibling
-      // overlay, unblock our parent.
-      if (mParentContentSink) {
-        mParentContentSink->UnblockNextOverlay();
+      else if (mParentContentSink) {
+        // We had no overlays.  If we have a parent content sink,
+        // we need to notify them that this overlay completed.
+        mParentContentSink->UpdateOverlayCounters(-1);
       }
     }
 
-    PopNameSpaces();
     return rv;
 }
 
@@ -855,7 +860,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
     }
 #endif
     if (NS_OK != result) {
-      return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
+      return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
     }
 
     PRBool blockParser = PR_FALSE;
@@ -1923,23 +1928,56 @@ XULContentSinkImpl::PopNameSpaces(void)
 ////////////////
 
 NS_IMETHODIMP
-XULContentSinkImpl::UnblockNextOverlay() {
+XULContentSinkImpl::UnblockNextOverlay() 
+{
 	if (!mOverlayArray)
 		return NS_OK;
 	
 	PRInt32 count = mOverlayArray->Count();
-	mCurrentOverlay++;
-  nsresult result=NS_OK;
-	if (mCurrentOverlay == count) {
-		// Unblock ourselves
-		result=mParser->EnableParser(PR_TRUE);
-	}
-	else {
-		// Process the next overlay.
-		nsString* href = (nsString*)mOverlayArray->ElementAt(mCurrentOverlay);
-		ProcessOverlay(*href);
-	}
+	nsresult result=NS_OK;
+
+  // Process the next overlay.
+  nsString* href = (nsString*)mOverlayArray->ElementAt(mCurrentOverlay);
+	ProcessOverlay(*href);
+	
+  mCurrentOverlay++;
+  
 	return result;
+}
+
+NS_IMETHODIMP
+XULContentSinkImpl::UpdateOverlayCounters(PRInt32 aDelta)
+{
+  nsresult result = NS_OK;
+  if (!mOverlayArray)
+    return result;
+
+  PRInt32 count = mOverlayArray->Count();
+  PRInt32 remaining = count - mCurrentOverlay;
+  
+  mUnprocessedOverlayCount += aDelta;
+  
+  if (remaining && (remaining == mUnprocessedOverlayCount)) {
+    // The only overlays we have left are our own.
+    // Unblock the next overlay.
+    UnblockNextOverlay();
+  }
+
+  if (mParentContentSink)
+      mParentContentSink->UpdateOverlayCounters(aDelta);
+
+  if (count && mUnprocessedOverlayCount == 0) {
+    // We're done now, so we need to do a special
+    // extra notification.
+    if (mParentContentSink)
+      mParentContentSink->UpdateOverlayCounters(-1);
+    
+    // We can be unblocked and allowed to finish.
+    // XXX THIS CAUSES US TO BE DELETED. Why??
+    result=mParser->EnableParser(PR_TRUE);
+  }
+
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////
