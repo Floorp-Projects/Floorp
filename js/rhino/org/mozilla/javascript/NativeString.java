@@ -88,9 +88,9 @@ public class NativeString extends ScriptableObject implements Wrapper {
                                                        Object[] args, 
                                                        Function funObj)
     {
-        StringBuffer s = new java.lang.StringBuffer();
         if (args.length < 1)
             return "";
+        StringBuffer s = new java.lang.StringBuffer();
         for (int i=0; i < args.length; i++) {
             s.append(ScriptRuntime.toUint16(args[i]));
         }
