@@ -19,5 +19,5 @@ SeaMonkeyAll
 ## Note that this library is under the LGPL, not the MPL
 #mozilla/other-licenses/libart_lgpl
 ## You need the following two if you want to use calendar.
-#mozilla/calendar
-#mozilla/other-licenses/libical
+mozilla/calendar
+mozilla/other-licenses/libical
