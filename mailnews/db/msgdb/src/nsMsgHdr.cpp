@@ -663,9 +663,14 @@ NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(PRUnichar* *resultRecipients)
 	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetCharSet(nsString *result)
+NS_IMETHODIMP nsMsgHdr::GetCharset(char **aCharset)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, *result);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, aCharset);
+}
+
+NS_IMETHODIMP nsMsgHdr::SetCharset(const char *aCharset)
+{
+  return SetStringColumn(aCharset, m_mdb->m_messageCharSetColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetThreadParent(nsMsgKey inKey)

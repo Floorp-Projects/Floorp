@@ -1011,9 +1011,14 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       nsAutoString aCharset;
       nsAutoString decodedString;
       nsAutoString encodedCharset;  // we don't use this
+      nsXPIDLCString charset;
+
       char *aCString = nsnull;
     
-      rv = message->GetCharSet(&aCharset);
+      rv = message->GetCharset(getter_Copies(charset));
+
+      aCharset.AssignWithConversion(charset);
+
       if (NS_FAILED(rv)) return rv;
       rv = message->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;

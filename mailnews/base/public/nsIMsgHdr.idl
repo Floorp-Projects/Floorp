@@ -100,7 +100,7 @@ interface nsIMsgHdr : nsISupports
     readonly attribute wstring subjectCollationKey;
     readonly attribute wstring recipientsCollationKey;
     
-	[noscript] void getCharSet(in nsString result);
+	attribute string Charset;
 };
 
 [scriptable, uuid(B5212A60-F93F-11d2-951C-006097222B83)]

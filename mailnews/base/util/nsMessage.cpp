@@ -457,10 +457,18 @@ NS_IMETHODIMP nsMessage::GetStatusOffset(PRUint32 *result)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetCharSet(nsString *result)
+NS_IMETHODIMP nsMessage::GetCharset(char **aCharset)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetCharSet(result);
+		return mMsgHdr->GetCharset(aCharset);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::SetCharset(const char *aCharset)
+{
+	if(mMsgHdr)
+		return mMsgHdr->SetCharset(aCharset);
 	else
 		return NS_ERROR_FAILURE;
 }
