@@ -984,13 +984,10 @@ NS_IMETHODIMP nsWindow::Validate()
 	Rect macRect;
 	nsRectToMacRect(wRect, macRect);
 
-	StPortSetter portSetter(mWindowPtr);
-	Rect savePortRect;
-	::GetWindowPortBounds(mWindowPtr, &savePortRect);
-	::SetOrigin(0, 0);
+	StPortSetter    portSetter(mWindowPtr);
+	StOriginSetter  originSetter(mWindowPtr);
 
 	::ValidWindowRect(mWindowPtr, &macRect);
-	::SetOrigin(savePortRect.left, savePortRect.top);
 
 	return NS_OK;
 }
@@ -1028,10 +1025,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	nsRectToMacRect(wRect, macRect);
 
 	StPortSetter portSetter(mWindowPtr);
-
-	Rect savePortRect;
-	::GetWindowPortBounds(mWindowPtr, &savePortRect);
-	::SetOrigin(0, 0);
+    StOriginSetter  originSetter(mWindowPtr);
 
 #ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
@@ -1041,7 +1035,6 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	::InvalWindowRect(mWindowPtr, &macRect);
 	if ( aIsSynchronous )
 	  Update();
-	::SetOrigin(savePortRect.left, savePortRect.top);
 
 	return NS_OK;
 }
@@ -1071,11 +1064,8 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	this->CalcOffset(offX, offY);
 	::OffsetRgn(windowRgn, mBounds.x + offX, mBounds.y + offY);
 	
-	StPortSetter portSetter(mWindowPtr);
-
-	Rect savePortRect;
-	::GetWindowPortBounds(mWindowPtr, &savePortRect);
-	::SetOrigin(0, 0);
+	StPortSetter    portSetter(mWindowPtr);
+    StOriginSetter  originSetter(mWindowPtr);
 
 #ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
@@ -1085,7 +1075,6 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	::InvalWindowRgn(mWindowPtr, windowRgn);
 	if ( aIsSynchronous )
 	  Update();
-	::SetOrigin(savePortRect.left, savePortRect.top);
 
 	return NS_OK;
 }

@@ -622,11 +622,10 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	Point hitPointLocal = aMouseGlobal;
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 	nsGraphicsUtils::SafeSetPortWindowPort(wind);
-	Rect savePortRect;
-	::GetWindowPortBounds(wind, &savePortRect);
-	::SetOrigin(0, 0);
-	::GlobalToLocal(&hitPointLocal);
-	::SetOrigin(savePortRect.left, savePortRect.top);
+	{
+	    StOriginSetter  originSetter(wind);
+    	::GlobalToLocal(&hitPointLocal);
+	}
 	nsPoint widgetHitPoint(hitPointLocal.h, hitPointLocal.v);
 
 	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPointLocal);
@@ -1739,21 +1738,13 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	}
 
 	// get the widget hit and the hit point inside that widget
-	Point hitPoint = aOSEvent.where;
-  nsWindowType wtype;
-  mTopLevelWidget->GetWindowType(wtype);
-	PRBool topLevelIsAPopup = (wtype == eWindowType_popup);
-	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
-	nsGraphicsUtils::SafeSetPortWindowPort(wind);
-	Rect savePortRect;
-	::GetWindowPortBounds(wind, &savePortRect);
-	::SetOrigin(0, 0);
-	::GlobalToLocal(&hitPoint);
-	::SetOrigin(savePortRect.left, savePortRect.top);
-	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
+	nsWindowType wtype;
+	mTopLevelWidget->GetWindowType(wtype);
+	PRBool          topLevelIsAPopup = (wtype == eWindowType_popup);
+	WindowRef       eventTargetWindow = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 
-	WindowPtr windowThatHasEvent = nsnull;
-	short partCode = ::FindWindow ( aOSEvent.where, &windowThatHasEvent );
+	WindowPtr       windowThatHasEvent = nsnull;
+	ControlPartCode partCode = ::FindWindow(aOSEvent.where, &windowThatHasEvent);
 
 	// if the mouse button is still down, send events to the last widget hit unless the
 	// new event is in a popup window.
@@ -1761,23 +1752,36 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	nsWindow* widgetHit = nsnull;
 	if (lastWidgetHit)
 	{
-	  // make sure we in the same window as where we started before we go assuming
-	  // that we know where the event will go.
-	  WindowRef lastWind = reinterpret_cast<WindowRef>(lastWidgetHit->GetNativeData(NS_NATIVE_DISPLAY));
-	  PRBool eventInSameWindowAsLastEvent = (windowThatHasEvent == lastWind);
-	  if ( eventInSameWindowAsLastEvent || !topLevelIsAPopup ) {	  
- 		  if (::StillDown() || aMessage == NS_MOUSE_LEFT_BUTTON_UP)
-	  		widgetHit = lastWidgetHit;
-	  	else
-	  	{
-	 	  	// Some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
-	 	  	// In that case, stop considering this widget as being still hit.
-	 	  	gEventDispatchHandler.SetWidgetHit(nsnull);
-	  	}
-	  }
+        // make sure we in the same window as where we started before we go assuming
+        // that we know where the event will go.
+        WindowRef   lastWind = reinterpret_cast<WindowRef>(lastWidgetHit->GetNativeData(NS_NATIVE_DISPLAY));
+        PRBool      eventInSameWindowAsLastEvent = (windowThatHasEvent == lastWind);
+        if ( eventInSameWindowAsLastEvent || !topLevelIsAPopup ) {	  
+            if (::StillDown() || aMessage == NS_MOUSE_LEFT_BUTTON_UP)
+            {
+                widgetHit = lastWidgetHit;
+                eventTargetWindow = lastWind;   // make sure we use the correct window to fix the coords
+            }
+            else
+            {
+                // Some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
+                // In that case, stop considering this widget as being still hit.
+                gEventDispatchHandler.SetWidgetHit(nsnull);
+            }
+        }
 	}
 
-	// if the mouse is in the grow box, pretend like it has left the window
+	Point hitPoint = aOSEvent.where;
+	nsGraphicsUtils::SafeSetPortWindowPort(eventTargetWindow);
+
+	{
+	    StOriginSetter  originSetter(eventTargetWindow);
+    	::GlobalToLocal(&hitPoint);     // gives the mouse loc in local coords of the hit window
+	}
+	
+	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
+
+	// if the mouse is in the grow box, pretend that it has left the window
 	if ( partCode != inGrow ) {
 		if (! widgetHit)
 			widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
@@ -1792,33 +1796,33 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 		}
 	}
 
-  // if we haven't found anything and we're tracking the mouse for a popup, then
-  // it's probable that the coordinates are just negative and we were dispatched
-  // here just cuz we're the top window in the app right now. In that case, just
-  // set the widget hit to this one. It's harmless (I hope), and it avoids asserts
-  // in the view code about null widgets.
-  if ( !widgetHit && topLevelIsAPopup && (hitPoint.h < 0 || hitPoint.v < 0) )
-    widgetHit = mTopLevelWidget;
-	
-	// nsEvent
-	aMouseEvent.eventStructType = NS_MOUSE_EVENT;
-	aMouseEvent.message		= aMessage;
-	aMouseEvent.point			= widgetHitPoint;
-	aMouseEvent.time			= PR_IntervalNow();
+    // if we haven't found anything and we're tracking the mouse for a popup, then
+    // it's probable that the coordinates are just negative and we were dispatched
+    // here just cuz we're the top window in the app right now. In that case, just
+    // set the widget hit to this one. It's harmless (I hope), and it avoids asserts
+    // in the view code about null widgets.
+    if ( !widgetHit && topLevelIsAPopup && (hitPoint.h < 0 || hitPoint.v < 0) )
+        widgetHit = mTopLevelWidget;
+		
+    // nsEvent
+    aMouseEvent.eventStructType = NS_MOUSE_EVENT;
+    aMouseEvent.message     = aMessage;
+    aMouseEvent.point       = widgetHitPoint;
+    aMouseEvent.time        = PR_IntervalNow();
 
-	// nsGUIEvent
-	aMouseEvent.widget		= widgetHit;
-	aMouseEvent.nativeMsg	= (void*)&aOSEvent;
+    // nsGUIEvent
+    aMouseEvent.widget      = widgetHit;
+    aMouseEvent.nativeMsg   = (void*)&aOSEvent;
 
-	// nsInputEvent
-	aMouseEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
-	aMouseEvent.isControl	= ((aOSEvent.modifiers & controlKey) != 0);
-	aMouseEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
-	aMouseEvent.isMeta	= ((aOSEvent.modifiers & cmdKey) != 0);
+    // nsInputEvent
+    aMouseEvent.isShift     = ((aOSEvent.modifiers & shiftKey) != 0);
+    aMouseEvent.isControl   = ((aOSEvent.modifiers & controlKey) != 0);
+    aMouseEvent.isAlt       = ((aOSEvent.modifiers & optionKey) != 0);
+    aMouseEvent.isMeta      = ((aOSEvent.modifiers & cmdKey) != 0);
 
-	// nsMouseEvent
-	aMouseEvent.clickCount = sLastClickCount;
-	aMouseEvent.acceptActivation = PR_TRUE;
+    // nsMouseEvent
+    aMouseEvent.clickCount  = sLastClickCount;
+    aMouseEvent.acceptActivation = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -1841,13 +1845,13 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 {
 	thePoint->v = mIMEPos.y;
 	thePoint->h = mIMEPos.x;
-	printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+	//printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 	nsGraphicsUtils::SafeSetPortWindowPort(wind);
 	Rect savePortRect;
 	::GetWindowPortBounds(wind, &savePortRect);
 	::LocalToGlobal(thePoint);
-	printf("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+	//printf("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 
 	return PR_TRUE;
 }
