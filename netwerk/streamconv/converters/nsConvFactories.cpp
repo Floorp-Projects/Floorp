@@ -290,17 +290,16 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=deflate?to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
-#if 0
-	/* backed out.  see bug #34401 */
     { "NSTXTToHTMLConverter",
       NS_NSTXTTOHTMLCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html",
       CreateNewNSTXTToHTMLConvFactory
-	}
-#endif
-	{ "TXTToHTMLConverter", 
+	},
+	// This is not a real stream converter, it's just
+	// registering it's cid factory here.
+	{ "HACK-TXTToHTMLConverter", 
   	  MOZITXTTOHTMLCONV_CID,
-	  NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
+	  NS_ISTREAMCONVERTER_KEY, 
 	  CreateNewTXTToHTMLConvFactory
     }
 };
