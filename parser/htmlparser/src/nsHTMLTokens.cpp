@@ -696,11 +696,14 @@ nsresult CTextToken::ConsumeCharacterData(PRUnichar aChar,
       end.advance(termStrLen);
 
       if (CaseInsensitiveFindInReadable(theTerminalString,start,end) && 
-          end != endPos && (*end == '>'  || *end == ' '  || 
-                            *end == '\t' || *end == '\n' || 
-                            *end == '\r' || *end == '\b')) {
+          (end == endPos || (*end == '>'  || *end == ' '  || 
+                             *end == '\t' || *end == '\n' || 
+                             *end == '\r' || *end == '\b'))) {
         gtOffset = end;
-        if (FindCharInReadable(PRUnichar(kGreaterThan), gtOffset, endPos)) {
+        // Note that aIgnoreComments is only not set for <script>. We don't
+        // want to execute scripts that aren't in the form of: <script\s.*>
+        if ((end == endPos && aIgnoreComments) || 
+            FindCharInReadable(PRUnichar(kGreaterThan), gtOffset, endPos)) {
           found = PR_TRUE;
           theTermStrPos = start;
         }
