@@ -41,9 +41,18 @@ CSRCS		= \
 
 OS_LIBS		+= rpcrt4.lib
 
+MIDL_GENERATED_FILES = msgMapi.h msgMapi_p.c msgMapi_i.c dlldata.c
+
+GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
 
-msgMapi.h msgMapi_p.c msgMapi_i.c dlldata.c : msgMapi.idl
+export:: done_gen
+
+done_gen: msgMapi.idl
 	midl $(UNICODE_FLAGS) $<
+	touch $@
+
+$(MIDL_GENERATED_FILES): done_gen

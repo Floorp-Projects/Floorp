@@ -638,7 +638,7 @@ ifdef DIRS
 	done
 endif
 
-export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN)
+export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 #
@@ -879,6 +879,10 @@ endif
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
+
+ifeq ($(OS_ARCH),WINNT)
+$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+endif
 
 else # OS2
 ifdef SHARED_LIBRARY_LIBS
@@ -1477,7 +1481,7 @@ ifdef NO_JAR_AUTO_REG
 _JAR_AUTO_REG=-a
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_TARGET),WIN95)
 _NO_FLOCK=-l
 endif
 
@@ -1546,14 +1550,6 @@ endif
 
 else # ! COMPILER_DEPEND
 
-ifndef MOZ_NATIVE_MAKEDEPEND
-$(MKDEPEND_BUILTIN):
-ifneq ($(OS_ARCH),WINNT)
-	$(MAKE) -C $(DEPTH)/config nsinstall$(BIN_SUFFIX)
-endif
-	$(MAKE) -C $(MKDEPEND_DIR) mkdepend$(BIN_SUFFIX)
-endif
-
 ifndef MOZ_AUTO_DEPS
 
 define MAKE_DEPS_NOAUTO
@@ -1576,7 +1572,7 @@ $(MDDEPDIR)/%.pp: %.s
 	@$(MAKE_DEPS_NOAUTO)
 
 ifneq (,$(OBJS))
-depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MDDEPFILES)
+depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
 endif
@@ -1669,6 +1665,15 @@ FORCE:
 
 # Delete target if error occurs when building target
 .DELETE_ON_ERROR:
+
+# pdbfiles are written to by every file when debugging in enabled,
+# so the files must be built serially
+# This requires a recent version of gmake 
+ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(MOZ_DEBUG)$(MOZ_PROFILE))
+.NOTPARALLEL::
+endif
+endif
 
 tags: TAGS
 
