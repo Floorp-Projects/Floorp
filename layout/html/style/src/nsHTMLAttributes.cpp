@@ -117,7 +117,7 @@ struct HTMLAttribute {
     mValue = aValue;
   }
 
-  void Set(nsIAtom* aAttribute, const nsString& aValue)
+  void Set(nsIAtom* aAttribute, const nsAReadableString& aValue)
   {
     NS_IF_RELEASE(mAttribute);
     mAttribute = aAttribute;
