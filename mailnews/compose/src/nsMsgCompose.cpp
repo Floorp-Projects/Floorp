@@ -506,7 +506,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   // next stage of editorshell removal.
   PRUint32 flags = 0;
   m_editor->GetFlags(&flags);
-  flags &= !nsIPlaintextEditor::eEditorReadonlyMask;
+  flags &= ~nsIPlaintextEditor::eEditorReadonlyMask;
   m_editor->SetFlags(flags);
 
   m_editor->EnableUndo(PR_FALSE);
