@@ -108,8 +108,8 @@ class nsDocAccessible : public nsBlockAccessible,
     virtual nsIFrame* GetFrame();
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();
-    void AddScrollListener(nsIPresShell *aPresShell);
-    void RemoveScrollListener(nsIPresShell *aPresShell);
+    void AddScrollListener();
+    void RemoveScrollListener();
     void FireDocLoadFinished();
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);

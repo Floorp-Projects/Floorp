@@ -380,9 +380,25 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
 
+  if (!eventShell) {
+    return NS_OK;
+  }
+      
+  if (eventType.LowerCaseEqualsLiteral("unload")) {
+    // Only get cached accessible for unload -- so that we don't create it
+    // just to destroy it.
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(eventShell));
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
+    nsAccessNode::GetDocAccessibleFor(weakShell, getter_AddRefs(accessibleDoc));
+    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = do_QueryInterface(accessibleDoc);
+    if (privateAccDoc) {
+      privateAccDoc->Destroy();
+    }
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIAccessible> accessible;
-  if (!eventShell ||
-      NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
+  if (NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
                                                   getter_AddRefs(accessible))))
     return NS_OK;
   
@@ -429,14 +445,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
   
-  if (eventType.LowerCaseEqualsLiteral("unload")) {
-    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = 
-      do_QueryInterface(accessible);
-    if (privateAccDoc) {
-      privateAccDoc->Destroy();
-    }
-  }
-  else if (eventType.LowerCaseEqualsLiteral("focus") || 
+  if (eventType.LowerCaseEqualsLiteral("focus") || 
            eventType.LowerCaseEqualsLiteral("dommenuitemactive")) { 
     if (optionTargetNode &&
         NS_SUCCEEDED(mAccService->GetAccessibleInShell(optionTargetNode, eventShell,
@@ -505,14 +514,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.LowerCaseEqualsLiteral("unload")) {
-    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = 
-      do_QueryInterface(accessible);
-    if (privateAccDoc) {
-      privateAccDoc->Destroy();
-    }
-  }
-  else if (eventType.EqualsIgnoreCase("load")) {
+  if (eventType.EqualsIgnoreCase("load")) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(targetNode));
     if (htmlDoc) {
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, 
