@@ -32,12 +32,14 @@ CPPSRCS= \
 	nsCategoryImp.cpp	\
 	nsCaseConversionImp2.cpp	\
 	nsUnicharUtilFactory.cpp	\
+	nsHankakuToZenkaku.cpp	\
 	$(NULL)
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsCategoryImp.obj \
 	.\$(OBJDIR)\nsCaseConversionImp2.obj \
 	.\$(OBJDIR)\nsUnicharUtilFactory.obj \
+	.\$(OBJDIR)\nsHankakuToZenkaku.obj \
 	$(NULL)
 
 MODULE=unicharutil
@@ -54,6 +56,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 LLIBS= \
 	$(DIST)\lib\xpcom32.lib	\
 	$(DIST)\lib\plc3.lib	\
+	$(DIST)\lib\raptorbase.lib	\
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>
