@@ -321,7 +321,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsImageFrame", aReflowState.reason);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("enter nsImageFrame::Reflow: aMaxSize=%d,%d",
+                  ("enter nsImageFrame::Reflow: availSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
@@ -329,18 +329,22 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
   if (nsnull != aMetrics.maxElementSize) {
-    // If we have a percentage based width, then our maximum width is 0
-    if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit()) {
+    // If we have a percentage based width (and no height), then our MES width is 0
+    if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit() &&
+        eStyleUnit_Coord != aReflowState.mStylePosition->mHeight.GetUnit()) {
       aMetrics.maxElementSize->width = 0;
     } else {
       aMetrics.maxElementSize->width = aMetrics.width;
     }
     aMetrics.maxElementSize->height = aMetrics.height;
   }
+  if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    aMetrics.mMaximumWidth = aMetrics.width;
+  }
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsImageFrame::Reflow: size=%d,%d",
+                  ("exit nsImageFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   return NS_OK;
 }
