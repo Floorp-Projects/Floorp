@@ -22,7 +22,7 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(24d89a65-f598-481e-a297-23cc02599bbd)]
-interface LinkStyle : nsISupports
+interface nsIDOMLinkStyle : nsISupports
 {
   readonly attribute nsIDOMStyleSheet       sheet;
 };
