@@ -72,7 +72,7 @@ public:
     NS_IMPL_CLASS_GETSET_STR(Date, m_header[HEADER_DATE]);
     NS_IMPL_CLASS_GETSET_STR(Subject, m_header[HEADER_SUBJECT]);
     
-    NS_IMETHOD AddNewsgroup(char *newsgroupName);
+    NS_IMETHOD AddNewsgroup(const char *newsgroupName);
     NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_header[HEADER_NEWSGROUPS]);
     
     NS_IMETHOD GetMessageID(char * *aMessageID);
@@ -90,13 +90,13 @@ public:
     NS_IMPL_CLASS_GETSET_STR(Organization, m_header[HEADER_ORGANIZATION]);
     NS_IMPL_CLASS_GETSET_STR(Body, m_body);    
 
-    NS_IMETHOD AddReference(char *referenceID);
+    NS_IMETHOD AddReference(const char *referenceID);
     NS_IMPL_CLASS_GETTER_STR(GetReferences, m_header[HEADER_REFERENCES]);
 
 
     NS_IMETHOD isValid(PRBool *_retval);
     
-    NS_IMETHOD MakeControlCancel(char *messageID);
+    NS_IMETHOD MakeControlCancel(const char *messageID);
 
     NS_IMPL_CLASS_GETTER(GetIsControl, PRBool, m_isControl);
 
@@ -189,7 +189,7 @@ nsNNTPNewsgroupPost::isValid(PRBool *_retval)
 
 /* XXX - I'm just guessing at how this works, see RFC850 for more */
 nsresult
-nsNNTPNewsgroupPost::MakeControlCancel(char *messageID)
+nsNNTPNewsgroupPost::MakeControlCancel(const char *messageID)
 {
     char *new_subject = (char *)PR_Calloc(PL_strlen(messageID) +
                                           PL_strlen("CANCEL ") + 1,
@@ -272,13 +272,13 @@ nsNNTPNewsgroupPost::appendAndAlloc(char *string,
 }
 
 nsresult
-nsNNTPNewsgroupPost::AddNewsgroup(char *newsgroup)
+nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
 {
     m_header[HEADER_NEWSGROUPS]=appendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
     return NS_OK;
 }
 nsresult
-nsNNTPNewsgroupPost::AddReference(char *reference)
+nsNNTPNewsgroupPost::AddReference(const char *reference)
 {
     m_header[HEADER_REFERENCES]=appendAndAlloc(m_header[HEADER_REFERENCES], reference, PR_FALSE);
     return NS_OK;

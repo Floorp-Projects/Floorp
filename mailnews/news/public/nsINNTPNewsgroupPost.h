@@ -6,17 +6,11 @@
 #define __gen_nsINNTPNewsgroupPost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsINNTPNewsgroupPost */
 
@@ -50,7 +44,7 @@ class nsINNTPNewsgroupPost : public nsISupports {
   NS_IMETHOD SetDate(char * aDate) = 0;
 
   /* void AddNewsgroup (in string newsgroupName); */
-  NS_IMETHOD AddNewsgroup(char *newsgroupName) = 0;
+  NS_IMETHOD AddNewsgroup(const char *newsgroupName) = 0;
 
   /* readonly attribute string newsgroups; */
   NS_IMETHOD GetNewsgroups(char * *aNewsgroups) = 0;
@@ -90,7 +84,7 @@ class nsINNTPNewsgroupPost : public nsISupports {
   NS_IMETHOD SetExpires(char * aExpires) = 0;
 
   /* void AddReference (in string referenceID); */
-  NS_IMETHOD AddReference(char *referenceID) = 0;
+  NS_IMETHOD AddReference(const char *referenceID) = 0;
 
   /* readonly attribute string references; */
   NS_IMETHOD GetReferences(char * *aReferences) = 0;
@@ -112,7 +106,7 @@ class nsINNTPNewsgroupPost : public nsISupports {
   NS_IMETHOD SetBody(char * aBody) = 0;
 
   /* void MakeControlCancel (in string messageID); */
-  NS_IMETHOD MakeControlCancel(char *messageID) = 0;
+  NS_IMETHOD MakeControlCancel(const char *messageID) = 0;
 
   /* readonly attribute boolean isControl; */
   NS_IMETHOD GetIsControl(PRBool *aIsControl) = 0;
