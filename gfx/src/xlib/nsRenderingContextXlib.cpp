@@ -440,7 +440,6 @@ nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRect()\n"));
   nsRect trect = aRect;
-  Region rgn;
   mTranMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
   switch(aCombine) {
@@ -482,7 +481,6 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRegion()\n"));
-  Region rgn;
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:

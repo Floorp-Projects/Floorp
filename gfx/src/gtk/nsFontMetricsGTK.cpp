@@ -137,8 +137,8 @@ struct nsFontFamily
 
 struct nsFontFamilyName
 {
-  char* mName;
-  char* mXName;
+  const char* mName;
+  const char* mXName;
 };
 
 struct nsFontPropertyName
@@ -1045,7 +1045,7 @@ InitGlobals(nsIDeviceContext *aDevice)
   nsFontFamilyName* f = gFamilyNameTable;
   while (f->mName) {
     nsCStringKey key(f->mName);
-    gAliases->Put(&key, f->mXName);
+    gAliases->Put(&key, (void *)f->mXName);
     f++;
   }
   gWeights = new nsHashtable();
@@ -3174,11 +3174,13 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
   return AddToLoadedFontsList(font);
 }
 
+PR_BEGIN_EXTERN_C
 static int
 CompareSizes(const void* aArg1, const void* aArg2, void *data)
 {
   return (*((nsFontGTK**) aArg1))->mSize - (*((nsFontGTK**) aArg2))->mSize;
 }
+PR_END_EXTERN_C
 
 void
 nsFontStretch::SortSizes(void)
@@ -4953,6 +4955,7 @@ EnumerateNode(void* aElement, void* aData)
   return PR_TRUE; // continue
 }
 
+PR_BEGIN_EXTERN_C
 static int
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
@@ -4963,6 +4966,7 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 
   return nsCRT::strcmp(str1, str2);
 }
+PR_END_EXTERN_C
 
 static nsresult
 EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,

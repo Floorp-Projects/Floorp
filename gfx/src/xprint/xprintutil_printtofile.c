@@ -44,14 +44,12 @@
 #include <prthread.h>
 #else
 #include <pthread.h>
-#endif
-#else
-#ifdef __sun
-#include <wait.h>
-#endif /* __sun */
+#endif /* XPU_USE_NSPR */
 #endif /* XPU_USE_THREADS */
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 /* local prototypes */
 #ifdef DEBUG

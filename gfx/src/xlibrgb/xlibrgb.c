@@ -3973,8 +3973,7 @@ xxlib_rgb_ditherable (XlibRgbHandle *handle)
 Colormap
 xxlib_rgb_get_cmap (XlibRgbHandle *handle)
 {
-  /* xxlib_rgb_init (); */
-  return (handle)?(handle->cmap):(NULL);
+  return (handle)?(handle->cmap):(None);
 }
 
 Visual *
@@ -4084,7 +4083,7 @@ Bool xxlib_register_handle(const char *name, XlibRgbHandle *handle)
 Bool xxlib_deregister_handle(const char *name)
 {
   RegisteredHandle *entry;
-  if (entry = xxlib_find_registered_handle(name))
+  if ((entry = xxlib_find_registered_handle(name)) != NULL)
   {
     free((void *)entry->name);
     entry->name   = NULL;
