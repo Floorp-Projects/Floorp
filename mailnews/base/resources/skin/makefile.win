@@ -23,12 +23,12 @@ install::
 	$(MAKE_INSTALL) messenger.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folderPane.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) threadPane.css		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) closedMailFolder.gif	$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) openMailFolder.gif	$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) mailMessage.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) closedInbox.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) closedTrash.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) closedOutbox.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) open-mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) mail-message.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) inbox.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) trash.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) outbox.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) getmsg.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) newmsg.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) reply.gif			$(DIST)\bin\chrome\messenger\skin\default
@@ -38,7 +38,7 @@ install::
 	$(MAKE_INSTALL) check.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) dot.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) subscribe.css		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) folderHasMail.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-hasmail.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) readcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) readmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) unreadmail.gif		$(DIST)\bin\chrome\messenger\skin\default
@@ -48,56 +48,56 @@ install::
 	$(MAKE_INSTALL) flagcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) flaggedmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) Folder.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderDraft.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderDraftO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderDraftShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderDraftShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderFiled.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderFiledO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderInbox.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderInboxNew.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderInboxO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderInboxShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderInboxShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderMailServer.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNew.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewsgroup.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewsgroupNew.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderOutbox.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderOutboxO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderSent.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderSentO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderSentShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderSentShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderServer.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderServerO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTemplate.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTemplateO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTemplateShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTemplateShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTrash.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTrashO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTrashShare.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderTrashShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) Server.gif				$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) ServerNews.gif				$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) ServerNewsLock.gif				$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) ServerRemote.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-draft.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-draft-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-draft-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-draft-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-filed.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-filed-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-inbox.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-inbox-new.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-inbox-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-inbox-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-inbox-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-mailserver.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-new.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-new-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-newsgroup.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-newsgroup-new.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-outbox.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-outbox-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-sent.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-sent-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-sent-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-sent-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-server.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-server-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-template.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-template-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-template-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-template-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-trash.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-trash-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-trash-share.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-trash-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-news.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-news-lock.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-remote.gif				$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css
 	rm -f $(DIST)\chrome\messenger\skin\default\folderPane.css
 	rm -f $(DIST)\chrome\messenger\skin\default\threadPane.css
-	rm -f $(DIST)\chrome\messenger\skin\default\closedMailFolder.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\openMailFolder.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\mailMessage.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\closedInbox.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\closedTrash.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\closedOutbox.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\mailfolder.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\open-mailfolder.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\mail-message.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\inbox.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\trash.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\outbox.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\getmsg.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\newmsg.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\reply.gif
@@ -107,7 +107,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\check.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\dot.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\subscribe.css
-	rm -f $(DIST)\chrome\messenger\skin\default\folderHasMail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\folder-hasmail.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\readcol.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\readmail.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\unreadmail.gif

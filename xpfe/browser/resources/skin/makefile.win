@@ -30,16 +30,16 @@ install::
 	$(MAKE_INSTALL) .\contentframe.css $(DISTBROWSER)
 	$(MAKE_INSTALL) .\animthrob.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\animthrob_single.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Back.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Forward.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Home.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Location.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Location_mo.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Netscape.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Print.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Reload.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Search.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\TB_Stop.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\back.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\forward.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\home.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\location.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\location-hover.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\mynetscape.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\print.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\reload.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\search.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\stop.gif $(DISTBROWSER)
 
 
 clobber::
@@ -51,12 +51,12 @@ clobber::
   rm -f $(DISTBROWSER)\contentframe.css
   rm -f $(DISTBROWSER)\animthrob.gif
   rm -f $(DISTBROWSER)\animthrob_single.gif
-  rm -f $(DISTBROWSER)\TB_Back.gif
-  rm -f $(DISTBROWSER)\TB_Forward.gif
-  rm -f $(DISTBROWSER)\TB_Home.gif
-  rm -f $(DISTBROWSER)\TB_Location.gif
-  rm -f $(DISTBROWSER)\TB_Netscape.gif
-  rm -f $(DISTBROWSER)\TB_Print.gif
-  rm -f $(DISTBROWSER)\TB_Reload.gif
-  rm -f $(DISTBROWSER)\TB_Search.gif
-  rm -f $(DISTBROWSER)\TB_Stop.gif
+  rm -f $(DISTBROWSER)\back.gif
+  rm -f $(DISTBROWSER)\forward.gif
+  rm -f $(DISTBROWSER)\home.gif
+  rm -f $(DISTBROWSER)\location.gif
+  rm -f $(DISTBROWSER)\mynetscape.gif
+  rm -f $(DISTBROWSER)\print.gif
+  rm -f $(DISTBROWSER)\reload.gif
+  rm -f $(DISTBROWSER)\search.gif
+  rm -f $(DISTBROWSER)\stop.gif
