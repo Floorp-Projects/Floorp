@@ -24,19 +24,24 @@ include $(DEPTH)/config/autoconf.mk
 
 TARGETS = generated
 
-
 CPPSRCS = nsCSSProps.cpp nsCSSKeywords.cpp nsColorNames.cpp
 
-include $(topsrcdir)/config/config.mk
+HEADERS = nsCSSPropIDs.h nsCSSKeywordIDs.h nsColorNameIDs.h
 
-# XXX copy this to a shared config file for raptor
-#PERL = /usr/sbin/perl
 GENHASH_PL = $(srcdir)/genhash.pl
 GENHASH_INC = genhash.inc
 GENHASH = $(PERL) $(GENHASH_PL)
 
+include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+all:: $(CPPSRCS)
+
+export:: $(CPPSRCS)
+
+clobber::
+	rm -f $(CPPSRCS) $(HEADERS) nsColorNamesRGB.cpp
 
 nsCSSProps.cpp: $(GENHASH_PL) $(GENHASH_INC) CSSProps.txt Makefile
 	$(GENHASH) "1,2,6,8,12" "-r" nsCSSProps PROP_ CSSProps.txt nsCSSPropIDs.h > nsCSSProps.cpp

@@ -22,9 +22,15 @@ $prefix = @ARGV[3];
 $props = @ARGV[4];
 $ids = @ARGV[5];
 
+# print "/* klist=$klist */\n";
+# print "/* gperfopts=$gperfopts */\n";
+# print "/* clazz=$clazz */\n";
+# print "/* prefix=$prefix */\n";
+# print "/* props=$props */\n";
+# print "/* ids=$ids */\n";
 
 open(NAMES_FILE, "<$props");
-open(HASH, "|/tools/ns/bin/gperf -T -t -l $gperfopts -NHashFunc -p -k$klist,\$ > gperf.out.$$");
+open(HASH, "|gperf -7 -T -t -l $gperfopts -NHashFunc -p -k$klist,\$ > gperf.out.$$");
 
 # NOTE: the decl here needs to match the TAG_TABLE rules in genhash.inc!!!
 print HASH 'struct StaticNameTable { char *name; int id; };
@@ -62,9 +68,9 @@ unlink("gperf.out.$$");
 open(T, "<genhash.inc");
 
 while (<T>) {
-  if (/^@begin/) {
+  if (/^\@begin/) {
     ($name, $start, $end) =
-      m#@begin[ 	]*([A-Za-z0-9_]+)[ 	]*/([^/]*)/[ 	]*/([^/]*)/#;
+      m#\@begin[ 	]*([A-Za-z0-9_]+)[ 	]*/([^/]*)/[ 	]*/([^/]*)/#;
     $line = <C> until (eof(C) || $line =~ /$start/);
     if ($line =~ /$start/) {
       $template{$name} .= $line;
@@ -73,16 +79,16 @@ while (<T>) {
 	$template{$name} .= $line;
       } until ($line =~ /$end/ || eof(C));
     }
-  } elsif (/^@include/) {
-    ($name) = /@include[ 	]*(.*)$/;
+  } elsif (/^\@include/) {
+    ($name) = /\@include[ 	]*(.*)$/;
     print $template{$name};
-  } elsif (/^@sub/) {
+  } elsif (/^\@sub/) {
     ($name, $old, $new) =
-      m#@sub[ 	]*([A-Za-z0-9_]*)[ 	]/([^/]*)/([^/]*)/#;
+      m#\@sub[ 	]*([A-Za-z0-9_]*)[ 	]/([^/]*)/([^/]*)/#;
     $template{$name} =~ s/$old/$new/g;
-  } elsif (/^@classfunc/) {
-    print "PRInt32 $clazz::LookupName(const char* str)\n";
-  } elsif (/^@classincl/) {
+  } elsif (/^\@classfunc/) {
+    print "PRInt32 $clazz\:\:LookupName(const char* str)\n";
+  } elsif (/^\@classincl/) {
     print "#include \"$clazz.h\"\n";
   } elsif (/^@/) {
     ;
@@ -92,7 +98,7 @@ while (<T>) {
 }
 
 # Print out tag name table at the end
-print "\nconst $clazz::NameTableEntry $clazz::kNameTable[] = {\n";
+print "\nconst $clazz\:\:NameTableEntry $clazz\:\:kNameTable\[\] = {\n";
 for ($i = 0; $i < $nextval; $i++) {
   $val = $vals[$i];
   $newval = $val;
