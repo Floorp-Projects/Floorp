@@ -22,10 +22,12 @@
 
 */
 
-treeitem > treerow > treecell > titledbutton
+treeitem > treerow > treecell > .tree-button
 {
- border: none;
- font: inherit;
- color: inherit;
+  list-style-image: none;
+}
+
+treeitem > treerow > treecell > .tree-icon;
+{
  list-style-image: url("resource:/res/rdf/document.gif");
 }

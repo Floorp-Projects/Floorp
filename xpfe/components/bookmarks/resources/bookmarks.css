@@ -27,69 +27,69 @@ treecol[sortActive="true"]
  background-color: lightgray;
 }
 
-treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/personal-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/personal-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/iefavorite.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/article.gif");
 }
 
-treeitem[container="true"][open="true"] > treerow > treecell > titledbutton {
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon {
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[container="true"] > treerow > treecell > titledbutton {
+treeitem[container="true"] > treerow > treecell > .tree-icon {
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-titledbutton#bookmarks {
+#bookmarks {
  list-style-image:url("chrome://bookmarks/skin/bookmark-item.gif");
 }
