@@ -775,6 +775,7 @@ protected:
                            nsIContent*              aContent,
                            nsIFrame*                aParentFrame,
                            nsIStyleContext*         aStyleContext,
+                           PRBool                   aIsPositioned,
                            nsIFrame*                aNewFrame,
                            nsIFrame**               aNewBlockFrame,
                            nsIFrame**               aNextInlineFrame);
@@ -797,6 +798,8 @@ protected:
                              nsIFrame* aFrameList);
 
   nsresult ReframeContainingBlock(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+  nsresult StyleChangeReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIAtom* aAttribute);
 
   nsresult RecreateEntireFrameTree(nsIPresContext* aPresContext);
 

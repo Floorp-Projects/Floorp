@@ -37,6 +37,7 @@
  ******/
 
 HTML_ATOM(mozAnonymousBlock, ":-moz-anonymous-block")
+HTML_ATOM(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
 HTML_ATOM(mozFirstLineFixup, ":-moz-first-line-fixup")
 HTML_ATOM(mozLetterFrame, ":-moz-letter-frame")
 HTML_ATOM(mozLineFrame, ":-moz-line-frame")
