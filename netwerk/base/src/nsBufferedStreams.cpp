@@ -41,9 +41,9 @@ nsBufferedStream::~nsBufferedStream()
     Close();
 }
 
-NS_IMPL_ISUPPORTS2(nsBufferedStream, 
-                   nsIBaseStream,
-                   nsISeekableStream);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsBufferedStream, 
+                              nsIBaseStream,
+                              nsISeekableStream);
 
 nsresult
 nsBufferedStream::Init(nsIBaseStream* stream, PRUint32 bufferSize)
