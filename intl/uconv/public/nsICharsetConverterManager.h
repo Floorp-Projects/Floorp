@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "nsError.h"
 #include "nsISupports.h"
+#include "nsIAtom.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 
@@ -39,33 +40,19 @@
 // XXX change to NS_CHARSETCONVERTERMANAGER_PID
 #define NS_CHARSETCONVERTERMANAGER_PROGID "charset-converter-manager"
 
-
-#define NS_REGISTRY_UCONV_BASE "software/netscape/intl/uconv/"
+#define NS_REGISTRY_UCONV_BASE          "software/netscape/intl/uconv/"
+// XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
+#define NS_DATA_BUNDLE_REGISTRY_KEY     "software/netscape/intl/xuconv/data/"
+#define NS_TITLE_BUNDLE_REGISTRY_KEY    "software/netscape/intl/xuconv/titles/"
 
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
 
-#define SET_FOR_BROWSER(_val) (_val |= 0x00000001)
-#define SET_NOT_FOR_BROWSER(_val) (_val |= (!0x00000001))
-#define GET_FOR_BROWSER(_val) ((_val &= 0x00000001) != 0)
-
-#define SET_FOR_EDITOR(_val) (_val |= 0x00000001)
-#define SET_NOT_FOR_EDITOR(_val) (_val |= (!0x00000001))
-#define GET_FOR_EDITOR(_val) ((_val &= 0x00000001) != 0)
-
-#define SET_FOR_MAILNEWS(_val) (_val |= 0x00000002)
-#define SET_NOT_FOR_MAILNEWS(_val) (_val |= (!0x00000002))
-#define GET_FOR_MAILNEWS(_val) ((_val &= 0x00000002) != 0)
-
-#define SET_FOR_MAILNEWSEDITOR(_val) (_val |= 0x00000002)
-#define SET_NOT_FOR_MAILNEWSEDITOR(_val) (_val |= (!0x00000002))
-#define GET_FOR_MAILNEWSEDITOR(_val) ((_val &= 0x00000002) != 0)
-
 /**
  * Interface for a Manager of Charset Converters.
  * 
- * This Manager's data is a cacheing of Registry available stuff. But the 
- * access methods are also doing all the work to get it and provide it.
+ * This Manager's data is a cache of the stuff available directly through 
+ * Registry and Extensible String Bundles. Plus a set of convenient APIs.
  * 
  * Note: The term "Charset" used in the classes, interfaces and file names 
  * should be read as "Coded Character Set". I am saying "charset" only for 
@@ -76,6 +63,12 @@
  * A DECODER converts from a random encoding into Unicode.
  * An ENCODER converts from Unicode into a random encoding.
  * All our data structures and APIs are divided like that.
+ * However, when you have a charset data, you may have 3 cases:
+ * a) the data is charset-dependet, but it is common for encoders and decoders
+ * b) the data is different for the two of them, thus needing different APIs
+ * and different "aProp" identifying it.
+ * c) the data is relevant only for one: encoder or decoder; its nature making 
+ * the distinction.
  *
  * @created         15/Nov/1999
  * @author  Catalin Rotaru [CATA]
@@ -89,14 +82,18 @@ public:
       nsIUnicodeEncoder ** aResult) = 0;
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult) = 0;
+
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount) = 0;
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount) = 0;
-  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult) = 0;
-  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, 
-      nsString ** aResult) = 0;
+
   NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
       nsString ** aResult) = 0;
   NS_IMETHOD GetCharsetTitle(nsString * aCharset, nsString ** aResult) = 0;
+  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult) = 0;
+
+  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult) = 0;
+  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, 
+      nsString ** aResult) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */

@@ -116,6 +116,9 @@ private:
   nsresult AddItemToContainer(nsIRDFService * aRDFServ, 
       nsICharsetConverterManager * aCCMan, nsIRDFContainer * aContainer, 
       nsMenuItem * aItem);
+  nsresult AddFromStringToMenu(char * aCharsetList, 
+      nsIRDFService * aRDFServ, nsICharsetConverterManager * aCCMan, 
+      nsObjectArray * aObjectArray, nsIRDFContainer * aContainer);
   nsresult AddFromPrefsToMenu(nsIPref * aPref, nsIRDFService * aRDFServ, 
       nsICharsetConverterManager * aCCMan, nsObjectArray * aObjectArray, 
       nsIRDFContainer * aContainer, char * aKey);
@@ -532,6 +535,31 @@ nsresult nsCharsetMenu::AddItemToContainer(nsIRDFService * aRDFServ,
   return res;
 }
 
+nsresult nsCharsetMenu::AddFromStringToMenu(char * aCharsetList,
+                                            nsIRDFService * aRDFServ, 
+                                            nsICharsetConverterManager * aCCMan, 
+                                            nsObjectArray * aObjectArray, 
+                                            nsIRDFContainer * aContainer)
+{
+  char * p = aCharsetList;
+  char * q = p;
+  while (*p != 0) {
+    for (; (*q != ',') && (*q != ' ') && (*q != 0); q++);
+    char temp = *q;
+    *q = 0;
+
+    nsAutoString str(p);
+    nsresult res = AddItemToMenu(aRDFServ, aCCMan, aObjectArray, aContainer, &str);
+    NS_ASSERTION(NS_SUCCEEDED(res), "failed to add item to menu");
+
+    *q = temp;
+    for (; (*q == ',') || (*q == ' '); q++);
+    p=q;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsCharsetMenu::AddFromPrefsToMenu(nsIPref * aPref, 
                                            nsIRDFService * aRDFServ, 
                                            nsICharsetConverterManager * aCCMan, 
@@ -546,21 +574,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(nsIPref * aPref,
   if (NS_FAILED(res)) return res;
 
   if (value != NULL) {
-    char * p = value;
-    char * q = p;
-    while (*p != 0) {
-      for (; (*q != ',') && (*q != ' ') && (*q != 0); q++);
-      char temp = *q;
-      *q = 0;
-
-      nsAutoString str(p);
-      AddItemToMenu(aRDFServ, aCCMan, aObjectArray, aContainer, &str);
-
-      *q = temp;
-      for (; (*q == ',') || (*q == ' '); q++);
-      p=q;
-    }
-
+    res = AddFromStringToMenu(value, aRDFServ, aCCMan, aObjectArray, aContainer);
     nsAllocator::Free(value);
   }
 
