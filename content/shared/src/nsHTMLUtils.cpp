@@ -88,7 +88,7 @@ ConvertHostnameToUTF8(char* *targetSpec,
                                   nsnull, nsnull, getter_Copies(hostUTF8));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to extract Hostname part from URL");
   if (NS_FAILED(rv) || hostUTF8.IsEmpty())
-    return rv;
+    return NS_OK;  // spec may be relative, bailing out.
 
   // If hostname is pure ASCII, get out of here.
   if (nsCRT::IsAscii(hostUTF8.get()))
@@ -98,7 +98,7 @@ ConvertHostnameToUTF8(char* *targetSpec,
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), spec, nsnull, aIOService);
   if (NS_FAILED(rv))
-    return rv;
+    return NS_OK; // spec may be relative, bailing out
 
   // replace the original hostname with hostUTF8
   rv = uri->SetHost(hostUTF8.get());
