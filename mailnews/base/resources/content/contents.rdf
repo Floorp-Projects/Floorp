@@ -22,7 +22,6 @@
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-scripts.xul"/>
-    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/history/history.xul"/>
     <RDF:li resource="chrome://communicator/content/bookmarks/bookmarks.xul"/>
@@ -33,6 +32,7 @@
     <RDF:li resource="chrome://messenger/content/addressbook/addressbook.xul"/>
     <RDF:li resource="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul"/>
     <RDF:li resource="chrome://editor/content/editor.xul"/>
+    <RDF:li resource="chrome://editor/content/editorTasksOverlay.xul"/>
   </RDF:Seq>
 
 
@@ -52,7 +52,7 @@
   </RDF:Seq>
 
   <!-- messenger taskbar/tasks menu items -->
-  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
+  <RDF:Seq about="chrome://editor/content/editorTasksOverlay.xul">
     <RDF:li>chrome://messenger/content/mailTasksOverlay.xul</RDF:li>
   </RDF:Seq>
 
