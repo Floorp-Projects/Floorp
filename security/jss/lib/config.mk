@@ -49,8 +49,8 @@ SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
 DLLFLAGS += -DEF:jss.def
-#RES = $(OBJDIR)/jss.res
-#RESNAME = jss.rc
+RES = $(OBJDIR)/jss.res
+RESNAME = jss.rc
 
 EXTRA_SHARED_LIBS += \
     $(DIST)/lib/nss3.lib \

@@ -800,3 +800,12 @@ JSS_ByteArrayToSECItem(JNIEnv *env, jbyteArray byteArray)
 finish:
     return item;
 }
+
+
+/*
+ * External references to the rcs and sccsc ident information in 
+ * jssver.c. These are here to prevent the compiler from optimizing
+ * away the symbols in jssver.c
+ */
+extern const char __jss_base_rcsid[];
+extern const char __jss_base_sccsid[];

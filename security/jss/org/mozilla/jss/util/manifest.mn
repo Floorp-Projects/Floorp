@@ -45,6 +45,7 @@ PRIVATE_EXPORTS =   jssutil.h               \
 					jss_exceptions.h		\
 					java_ids.h				\
                     jss_bigint.h            \
+                    jssver.h                \
                     $(NULL)
 
 JNI_GEN =   										\
@@ -91,6 +92,7 @@ CLASSES =									\
 			$(NULL)
 
 CSRCS =     jssutil.c                    \
+            jssver.c                     \
             $(NULL)
 
 LIBRARY_NAME = jssutil
