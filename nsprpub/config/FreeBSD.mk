@@ -72,7 +72,6 @@ endif
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -Bshareable
-DSO_LDFLAGS		=
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 

@@ -193,7 +193,6 @@ endif
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 DSO_LDOPTS		= -b +h $(notdir $@)
-DSO_LDFLAGS		=
 
 # -fPIC or +Z generates position independent code for use in shared
 # libraries.

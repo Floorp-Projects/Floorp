@@ -64,7 +64,6 @@ ARCH                   = openbsd
 DLL_SUFFIX             = so.1.0
 
 DSO_CFLAGS             = -fPIC
-DSO_LDFLAGS            =
 DSO_LDOPTS             = -Bshareable
 ifeq ($(OS_TEST),alpha)
 DSO_LDOPTS             = -shared
