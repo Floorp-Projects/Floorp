@@ -130,7 +130,7 @@ protected:
 #endif
 
     // Our own helpers for constructing XBL prototype objects.
-    void ConstructBinding();
+    nsresult ConstructBinding();
     void ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber);
     void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
     void ConstructImplementation(const PRUnichar **aAtts);
