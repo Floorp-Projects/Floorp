@@ -585,7 +585,12 @@ set_objdir()
     DIST=$LOCALDIST
 
 #FIXME - test so PATH won't contai it double
-    PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+#FIXME - win2k problems with PATH containing : instead of ; as seperator
+    if [ "$O_WIN" = "ON" -a "$O_CYGNUS" != ON ] ; then
+        PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH"
+    else
+        PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+    fi
     PATH_CONTAINS_BIN="TRUE"
     export PATH_CONTAINS_BIN
     Debug "Path after set_objdir $PATH"
