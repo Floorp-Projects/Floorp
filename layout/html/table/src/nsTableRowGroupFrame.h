@@ -188,6 +188,19 @@ protected:
                            nsReflowStatus&      aStatus,
                            nsTableRowFrame *    aDeletedFrame);
 
+  NS_IMETHOD IR_RowGroupInserted(nsIPresContext&        aPresContext,
+                                 nsHTMLReflowMetrics&   aDesiredSize,
+                                 RowGroupReflowState&   aReflowState,
+                                 nsReflowStatus&        aStatus,
+                                 nsTableRowGroupFrame * aInsertedFrame,
+                                 PRBool                 aReplace);
+
+  NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&         aPresContext,
+                                nsHTMLReflowMetrics&    aDesiredSize,
+                                RowGroupReflowState&    aReflowState,
+                                nsReflowStatus&         aStatus,
+                                nsTableRowGroupFrame *  aDeletedFrame);
+
   NS_IMETHOD IR_StyleChanged(nsIPresContext&      aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
                              RowGroupReflowState& aReflowState,
