@@ -21,6 +21,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Christopher Aillon <christopher@aillon.com>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -315,9 +316,11 @@ sub ValidateBugID {
                  AND    cc.bug_id = bugs.bug_id
                 ");
         while (my ($ccwho) = FetchSQLData()) {
-            push @cclist , $ccwho;
+            # more efficient to just check the var here instead of
+            # creating a potentially huge array to grep against
+            return if ($userid == $ccwho);
         }
-        return if grep($userid == $_ , @cclist);
+
     }
 
     # The user did not pass any of the authorization tests, which means they

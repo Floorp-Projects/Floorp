@@ -21,6 +21,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Christopher Aillon <christopher@aillon.com>
 
 use diagnostics;
 use strict;
@@ -71,6 +72,16 @@ if (defined $::FORM{'id'}) {
 # representing an existing bug that the user is authorized to access.
 foreach my $id (@idlist) {
     ValidateBugID($id);
+}
+
+# If we are duping bugs, let's also make sure that we can change 
+# the original.  This takes care of issue A on bug 96085.
+if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
+    ValidateBugID($::FORM{'dup_id'});
+
+    # Also, let's see if the reporter has authorization to see the bug
+    # to which we are duping.  If not we need to prompt.
+    DuplicateUserConfirm();
 }
 
 # If the user has a bug list and is processing one bug, then after
@@ -334,10 +345,95 @@ empowered user, may make that change to the $f field.
     exit();
 }
 
-
+# Confirm that the reporter of the current bug can access the bug we are duping to.
+sub DuplicateUserConfirm {
+    my $dupe = trim($::FORM{'id'});
+    my $original = trim($::FORM{'dup_id'});
     
-    
+    SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
+    my $reporter = FetchOneColumn();
+    SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
+    my $reportergroupset = FetchOneColumn();
 
+    SendSQL("SELECT ((groupset & $reportergroupset) = groupset) , reporter , assigned_to , qa_contact , 
+                    reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
+             FROM   bugs 
+             WHERE  bug_id = $original");
+
+    my ($isauthorized, $originalreporter, $assignee, $qacontact, $reporter_accessible, 
+        $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
+
+    # If reporter is authorized via the database, or is the original reporter, assignee,
+    # or QA Contact, we'll automatically confirm they can be added to the cc list
+    if ($isauthorized 
+        || ($reporter_accessible && $originalreporter == $reporter)
+          || ($assignee_accessible && $assignee == $reporter)
+            || ($qacontact_accessible && $qacontact == $reporter)) {
+            
+        $::FORM{'confirm_add_duplicate'} = "1";
+        return;    
+    }
+
+    # Try to authorize the user one more time by seeing if they are on 
+    # the cc: list.  If so, finish validation and return.
+    if ($cclist_accessible ) {
+        my @cclist;
+        SendSQL("SELECT cc.who 
+                 FROM   bugs , cc
+                 WHERE  bugs.bug_id = $original
+                 AND    cc.bug_id = bugs.bug_id
+                ");
+        while (my ($ccwho) = FetchSQLData()) {
+            if ($reporter == $ccwho) {
+                $::FORM{'confirm_add_duplicate'} = "1";
+                return;
+            }
+        }
+    }
+
+    if (defined $::FORM{'confirm_add_duplicate'}) {
+        return;
+    }
+    
+    # Once in this part of the subroutine, the user has not been auto-validated
+    # and the duper has not chosen whether or not to add to CC list, so let's
+    # ask the duper what he/she wants to do.
+    
+    # First, will the user gain access to this bug immediately by being CC'd?
+    my $reporter_access = $cclist_accessible ? "will immediately" : "might, in the future,";
+
+    print "Content-type: text/html\n\n";
+    PutHeader("Duplicate Warning");
+    print "<P>
+When marking a bug as a duplicate, the reporter of the 
+duplicate is normally added to the CC list of the original. 
+The permissions on bug #$original (the original) are currently set 
+such that the reporter would not normally be able to see it. 
+<P><B>Adding the reporter to the CC list of bug #$original 
+$reporter_access allow him/her access to view this bug.</B>
+Do you wish to do this?</P>
+</P>
+";
+    print "<form method=post>\n\n";
+
+    foreach my $i (keys %::FORM) {
+        # Make sure we don't include the username/password fields in the
+        # HTML.  If cookies are off, they'll have to reauthenticate after
+        # hitting "submit changes anyway".
+        # see http://bugzilla.mozilla.org/show_bug.cgi?id=15980
+        if ($i !~ /^(Bugzilla|LDAP)_(login|password)$/) {
+            my $value = value_quote($::FORM{$i});
+            print qq{<input type=hidden name="$i" value="$value">\n};
+        }
+    }
+
+    print qq{<p><input type=radio name="confirm_add_duplicate" value="1"> Yes, add the reporter to CC list on bug $original</p>\n};
+    print qq{<p><input type=radio name="confirm_add_duplicate" value="0" checked="checked"> No, do not add the reporter to CC list on bug $original</p>\n};
+    print qq{\n<p><a href="show_bug.cgi?id=$dupe">Throw away my changes, and go revisit bug $dupe</a>\n};
+    print qq{\n<p><input type="submit" value="Submit"></p></form>\n};
+    PutFooter();
+    exit;
+} # end DuplicateUserConfirm()
 
 if (defined $::FORM{'id'} && Param('strictvaluechecks')) {
     # since this means that we were called from show_bug.cgi, now is a good
@@ -1261,8 +1357,9 @@ The changes made were:
         my $isreporter = FetchOneColumn();
         SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate) . " and who = $reporter");
         my $isoncc = FetchOneColumn();
-        unless ($isreporter || $isoncc) {
-            # The reporter is oblivious to the existance of the new bug... add 'em to the cc (and record activity)
+        unless ($isreporter || $isoncc || ! $::FORM{'confirm_add_duplicate'}) {
+            # The reporter is oblivious to the existance of the new bug and is permitted access
+            # ... add 'em to the cc (and record activity)
             my $ccid = GetFieldID("cc");
             my $whochange = DBNameToIdAndCheck($::FORM{'who'});
             SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,removed,added) VALUES " .
