@@ -44,7 +44,7 @@
 #include "nsIWebShellWindow.h"
 #include "prprf.h"
 
-#if defined(XP_UNIX) || defined(XP_MAC)
+#ifdef XP_PC
 #define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
 #endif
 
