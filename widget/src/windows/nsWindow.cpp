@@ -1504,6 +1504,18 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
       break;
 
+    case eCursor_crosshair:
+      newCursor = ::LoadCursor(NULL, IDC_CROSS);
+      break;
+               
+    case eCursor_move:
+      newCursor = ::LoadCursor(NULL, IDC_SIZEALL);
+      break;
+
+    case eCursor_help:
+      newCursor = ::LoadCursor(NULL, IDC_HELP);
+      break;
+
     default:
       NS_ASSERTION(0, "Invalid cursor type");
       break;
