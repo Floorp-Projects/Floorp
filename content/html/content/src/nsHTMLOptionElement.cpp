@@ -111,14 +111,34 @@ public:
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
   NS_IMETHOD GetValueOrText(nsAString& aValue);
 
+  // nsIContent
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, 
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+
 protected:
-  // Get the primary frame associated with this content
+  /**
+   * Get the primary frame associated with this content
+   * @return the primary frame associated with this content
+   */
   nsIFormControlFrame *GetSelectFrame() const;
 
-  // Get the select content element that contains this option, this
-  // intentionally does not return nsresult, all we care about is if
-  // there's a select associated with this option or not.
+  /**
+   * Get the select content element that contains this option, this
+   * intentionally does not return nsresult, all we care about is if
+   * there's a select associated with this option or not.
+   * @param aSelectElement the select element (out param)
+   */
   void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
+
+  /**
+   * Notify the frame that the option text or value or label has changed.
+   */
+  void NotifyTextChanged();
 
   PRPackedBool mIsInitialized;
   PRPackedBool mIsSelected;
@@ -365,20 +385,7 @@ nsHTMLOptionElement::SetLabel(const nsAString& aValue)
   // XXX Why does this only happen to the combobox?  and what about
   // when the text gets set and label is blank?
   if (NS_SUCCEEDED(result)) {
-    // No need to flush here, if the select element/frame doesn't
-    // exist yet we don't need to force it to be created only to
-    // notify it about this new label
-    nsIFormControlFrame* fcFrame = GetSelectFrame();
-
-    if (fcFrame) {
-      nsISelectControlFrame* selectFrame = nsnull;
-
-      CallQueryInterface(fcFrame, &selectFrame);
-
-      if (selectFrame) {
-        selectFrame->OnOptionTextChanged(this);
-      }
-    }
+    NotifyTextChanged();
   }
 
   return NS_OK;
@@ -589,24 +596,72 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
     }
   }
 
-  if (NS_SUCCEEDED(result)) {
-    // No need to flush here, if there's no frame yet we don't need to
-    // force it to be created just to update the selection in it.
-    nsIFormControlFrame* fcFrame = GetSelectFrame();
-
-    if (fcFrame) {
-      nsISelectControlFrame* selectFrame = nsnull;
-
-      CallQueryInterface(fcFrame, &selectFrame);
-
-      if (selectFrame) {
-        selectFrame->OnOptionTextChanged(this);
-      }
-    }
-  }
-
   return NS_OK;
 }
+
+void
+nsHTMLOptionElement::NotifyTextChanged()
+{
+  // No need to flush here, if there's no frame yet we don't need to
+  // force it to be created just to update the selection in it.
+  nsIFormControlFrame* fcFrame = GetSelectFrame();
+
+  if (fcFrame) {
+    nsISelectControlFrame* selectFrame = nsnull;
+
+    CallQueryInterface(fcFrame, &selectFrame);
+
+    if (selectFrame) {
+      selectFrame->OnOptionTextChanged(this);
+    }
+  }
+}
+
+//
+// Override nsIContent children changing methods so we can detect when our text
+// is changing
+//
+NS_IMETHODIMP
+nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                   PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,
+                                                             aNotify,
+                                                             aDeepSetDocument);
+  NotifyTextChanged();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+               PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv = nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex,
+                                                              aNotify,
+                                                              aDeepSetDocument);
+  NotifyTextChanged();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid,
+                                                             aNotify,
+                                                             aDeepSetDocument);
+  NotifyTextChanged();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex,
+                                                             aNotify);
+  NotifyTextChanged();
+  return rv;
+}
+
 
 // Options don't have frames - get the select content node
 // then call nsGenericHTMLElement::GetFormControlFrameFor()
