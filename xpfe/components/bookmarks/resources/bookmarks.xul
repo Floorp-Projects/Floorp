@@ -65,7 +65,7 @@
       <menuitem value="&menuitem.delete.label;" oncommand="return doDelete(true)" />
       <menuitem value="&menuitem.selectAll.label;" oncommand="return doSelectAll()" />
       <menuseparator/>
-      <menuitem value="&menuitem.find.label;" oncommand="return OpenSearch('find');"/>
+      <menuitem value="&menuitem.find.label;" oncommand="return OpenBookmarksFind();"/>
       <menuseparator/>
       <menuitem value="&menuitem.properties.label;" oncommand="return BookmarkProperties();"/>
 	  </menupopup>

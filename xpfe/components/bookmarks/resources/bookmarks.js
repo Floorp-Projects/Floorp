@@ -406,7 +406,6 @@ function doUnload()
 function BookmarkProperties()
 {
   var treeNode = document.getElementById('bookmarksTree');
-  //	var select_list = treeNode.getElementsByAttribute("selected", "true");
   var select_list = treeNode.selectedItems;
   
   if (select_list.length >= 1)
@@ -416,22 +415,18 @@ function BookmarkProperties()
       if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
         {
           window.openDialog("chrome://bookmarks/content/bm-props.xul",
-                            "_blank", "chrome,menubar",
+                            "_blank", "centerscreen,chrome,menubar",
                             select_list[0].getAttribute("id"));
         }
-    }
-  else
-    {
-      debug("nothing selected!\n"); 
     }
   return(true);
 }
 
 
 
-function OpenSearch(tabName)
+function OpenBookmarksFind()
 {
-	window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, "");
+	window.openDialog("chrome://bookmarks/content/bm-find.xul", "FindBookmarksWindow", "centerscreen,dialog=no,close,chrome,resizable");
 	return(true);
 }
 
