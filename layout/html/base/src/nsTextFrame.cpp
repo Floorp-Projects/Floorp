@@ -2586,8 +2586,10 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
 #endif
     aOffset = mContentOffset+GetLengthSlowly(*aRendContext, ts,paintBuffer.mBuffer,textLength,adjustedX);
     PRInt32 i;
+    PRInt32* ip = indexBuffer.mBuffer;
     for (i = 0;i <= mContentLength; i ++){
-      if (indexBuffer.mBuffer[i] >= aOffset){ //reverse mapping
+      if ((ip[i] >= aOffset) && //reverse mapping
+          (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
           aOffset = i + mContentOffset;
           break;
       }
@@ -2678,14 +2680,34 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     else {
       if (lastFont != aTextStyle.mNormalFont) {
         aRenderingContext.SetFont(aTextStyle.mNormalFont);
+      }
+
+      if (IS_HIGH_SURROGATE(ch) && aLength > 0 &&
+        IS_LOW_SURROGATE(*(aBuffer+1))) {
+      
+        // special handling for surrogate pair
+        aRenderingContext.GetWidth(aBuffer, 2, charWidth);
+        glyphWidth = charWidth + aTextStyle.mLetterSpacing;
+        // copy the surrogate low
+        *bp++ = ch;
+        --aLength;
+        aBuffer++;
+        ch = *aBuffer;
+        // put the width into the space buffer
+        width += glyphWidth;
+        *sp++ = glyphWidth;
+        // set the glyphWidth to 0 so the code later will 
+        // set a 0 for one element in space array for surrogate low to 0
+        glyphWidth = 0;
+      } else {
         aRenderingContext.GetWidth(ch, charWidth);
+        glyphWidth = charWidth + aTextStyle.mLetterSpacing;
+      }
+
+      if (lastFont != aTextStyle.mNormalFont) {
         aRenderingContext.SetFont(aTextStyle.mSmallFont);
       }
-      else {
-        aRenderingContext.GetWidth(ch, charWidth);
-      }
       nextFont = aTextStyle.mNormalFont;
-      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
@@ -3474,7 +3496,8 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
         //reusing wordBufMem
         PRInt32 i;
         for (i = 0;i <= mContentLength; i ++){
-          if (ip[i] >= aContentOffset){ //reverse mapping
+          if ((ip[i] >= aContentOffset) && //reverse mapping
+              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
               aContentOffset = i + mContentOffset;
               break;
           }
@@ -3995,7 +4018,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           mCtlObj = nsnull;
 #endif /* SUNCTL */
         for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
-          if (ip[i] < ip[aPos->mStartOffset - mContentOffset]){
+          if ((ip[i] < ip[aPos->mStartOffset - mContentOffset]) &&
+              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
+          {
             aPos->mContentOffset = i + mContentOffset;
             break;
           }
@@ -4037,7 +4062,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #endif /* SUNCTL */
 
         for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
-          if (ip[i] > ip[aPos->mStartOffset - mContentOffset]){
+          if ((ip[i] > ip[aPos->mStartOffset - mContentOffset]) &&
+              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
+          {
             aPos->mContentOffset = i + mContentOffset;
             break;
           }

@@ -46,6 +46,7 @@
 #include "prprf.h"
 #include "nsDrawingSurfaceWin.h"
 #include "nsGfxCIID.h"
+#include "nsUnicharUtils.h"
 
 //#define GFX_DEBUG
 
@@ -2293,7 +2294,18 @@ do_DrawString(const nsFontSwitch* aFontSwitch,
       x = data->mX;
       y = data->mY;
       data->mTranMatrix->TransformCoord(&x, &y);
-      fontWin->DrawString(data->mDC, x, y, str, 1);
+      if (IS_HIGH_SURROGATE(*str) && 
+          ((str+1)<end) && 
+          IS_LOW_SURROGATE(*(str+1))) 
+      {
+        // special case for surrogate pair
+        fontWin->DrawString(data->mDC, x, y, str, 2);
+        // we need to advance data->mX and str twice
+        data->mX += *data->mSpacing++;
+        ++str;
+      } else {
+        fontWin->DrawString(data->mDC, x, y, str, 1);
+      }
       data->mX += *data->mSpacing++;
       ++str;
     }

@@ -48,6 +48,7 @@
 #define TH_UNICODE
 #include "th_char.h"
 #include "rulebrk.h"
+#include "nsUnicharUtils.h"
 
 
 /* 
@@ -374,8 +375,6 @@ PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
    return this->GetClass(cur);
 }
 
-#define IS_HIGH_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xd800 && (PRUnichar)(u) <= (PRUnichar)0xdbff)
-#define IS_LOW_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xdc00 && (PRUnichar)(u) <= (PRUnichar)0xdfff)
 
 NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,

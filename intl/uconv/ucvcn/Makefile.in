@@ -33,6 +33,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsUCvCnModule
 REQUIRES	= xpcom \
 		  string \
+		  unicharutil \
 		  uconv \
 		  $(NULL)
 

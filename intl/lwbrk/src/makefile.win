@@ -46,6 +46,7 @@ LIBRARY_NAME=lwbrk
 MODULE_NAME=nsLWBrkModule
 REQUIRES	= xpcom \
 		  string \
+		  unicharutil \
 		  $(NULL)
 
 LLIBS= \
