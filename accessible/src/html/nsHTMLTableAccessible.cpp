@@ -40,6 +40,7 @@
 #include "nsHTMLTableAccessible.h"
 #include "nsWeakReference.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMElement.h"
 
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell)
@@ -47,9 +48,9 @@ nsBlockAccessible(aDomNode, aShell)
 }
 
 /* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *aResult)
 {
-  *_retval = ROLE_CELL;
+  *aResult = ROLE_CELL;
   return NS_OK;
 }
 
@@ -59,9 +60,35 @@ nsBlockAccessible(aDomNode, aShell)
 }
 
 /* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLTableAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTableAccessible::GetAccRole(PRUint32 *aResult)
 {
-  *_retval = ROLE_TABLE;
+  *aResult = ROLE_TABLE;
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLTableAccessible::GetAccState(PRUint32 *aResult)
+{
+  nsAccessible::GetAccState(aResult);
+  *aResult &= ~STATE_FOCUSABLE;   // Inherit all states except focusable state since tables cannot be focused
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAWritableString& aResult)
+{
+  aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if (element) {
+    nsCOMPtr<nsIDOMNodeList> captions;
+    element->GetElementsByTagName(NS_LITERAL_STRING("caption"), getter_AddRefs(captions));
+    if (captions) {
+      nsCOMPtr<nsIDOMNode> captionNode;
+      captions->Item(0, getter_AddRefs(captionNode));
+      if (captionNode) {
+        nsCOMPtr<nsIContent> captionContent(do_QueryInterface(captionNode));
+        AppendFlatStringFromSubtree(captionContent, &aResult);
+      }
+    }
+  }
+  return NS_OK;
+}
