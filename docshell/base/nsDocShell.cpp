@@ -395,7 +395,8 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     else if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
         nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mTreeOwner));
         if (prompter) {
-            prompter.swap((nsIPrompt*) *aSink);
+            *aSink = prompter;
+            NS_ADDREF((nsISupports *) * aSink);
             return NS_OK;
         }
         else
