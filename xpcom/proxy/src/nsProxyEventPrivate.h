@@ -57,8 +57,8 @@ public:
     NS_IMETHOD DelegatedQueryInterface(nsProxyEventObject* self, REFNSIID aIID, void** aInstancePtr);
     REFNSIID                 GetIID() const {return mIID;}
     nsIInterfaceInfo*        GetInterfaceInfo() const {return mInfo;}
-    nsProxyEventObject*      GetRootProxyObject(nsProxyEventObject* anObject);
-    nsProxyEventObject*      CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID);
+	nsresult				 GetRootProxyObject(nsProxyEventObject* anObject, nsProxyEventObject** result);
+	nsresult				 CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr);
     
     virtual ~nsProxyEventClass();
 private:
@@ -88,7 +88,7 @@ public:
 
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
-                                                 ProxyType proxyType,
+                                                 PRInt32 proxyType,
                                                  nsISupports *aObj,
                                                  REFNSIID aIID);
 
@@ -108,7 +108,7 @@ public:
 private:
     nsProxyEventObject();   // not implemented
     nsProxyEventObject(nsIEventQueue *destQueue,
-                       ProxyType proxyType,
+                       PRInt32 proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
@@ -138,14 +138,14 @@ public:
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
-                              ProxyType proxyType,
+                              PRInt32 proxyType,
                               void** aProxyObject);
     
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID, 
-                              ProxyType proxyType,
+                              PRInt32 proxyType,
                               void** aProxyObject);
     
     

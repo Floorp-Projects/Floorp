@@ -67,7 +67,7 @@ nsProxyObject::nsProxyObject()
 }
 
 
-nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -83,7 +83,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsIS
 }
 
 
-nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -154,10 +154,13 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     
     for (int index = 0; index < paramCount; index++)
     {
-        fullParam[index].flags = 0;
+		const nsXPTParamInfo& param = methodInfo->GetParam(index);
+        const nsXPTType& type = param.GetType();
+        
         fullParam[index].val   = params[index].val;
+		fullParam[index].type  = type;
+        fullParam[index].flags = 0;
     }
-    
     
     mDestQueue->EnterMonitor();
     
@@ -183,7 +186,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
                  EventHandler,
                  DestroyHandler);
    
-    if (mProxyType == PROXY_SYNC)
+    if (mProxyType & PROXY_SYNC)
     {
         mDestQueue->PostSynchronousEvent(event, nsnull);
         
@@ -199,7 +202,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         mDestQueue->ExitMonitor();
         return rv;
     }
-    else if (mProxyType == PROXY_ASYNC)
+    else if (mProxyType & PROXY_ASYNC)
     {
         mDestQueue->PostEvent(event);
         mDestQueue->ExitMonitor();
@@ -224,12 +227,12 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
     {
         nsXPTParamInfo paramInfo = methodInfo->GetParam(i);
 
-        if (paramInfo.GetType().TagPart() != nsXPTType::T_INTERFACE )
+        if (! paramInfo.GetType().IsInterfacePointer() )
             continue;
 
         if ( (convertType == convertOutParameters && paramInfo.IsOut())  || 
              (convertType == convertInParameters && paramInfo.IsIn())    || 
-             (convertType == convertAllParameters))
+             (convertType == convertAllParameters))  //TODO: need to remove.
         {
             // We found an out parameter which is a interface, check for proxy
             if (params[i].val.p == nsnull)
@@ -262,16 +265,56 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                                                    (nsISupports **)&manager);
         
                 if (NS_SUCCEEDED(rv))
-                {
-                    nsIID* iid;
+                {   
+                    const nsXPTType& type = paramInfo.GetType();
+                    nsIID* iid = nsnull;
+                    if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
+                    {
+                        uint8 arg_num = paramInfo.GetInterfaceIsArgNumber();
+                        const nsXPTParamInfo& param = methodInfo->GetParam(arg_num);
+                        const nsXPTType& currentType = param.GetType();
 
-                    interfaceInfo->GetIIDForParam((PRUint16)methodIndex, &paramInfo, &iid);
+                        if( !currentType.IsPointer() || 
+                            currentType.TagPart() != nsXPTType::T_IID ||
+                            !(iid = (nsIID*) nsAllocator::Clone(params[arg_num].val.p, sizeof(nsIID))))
+                        {
+                            // This is really bad that we are here.  
+                            rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER;
+                        }
+                    }
+                    else
+                    {
+                        interfaceInfo->GetIIDForParam((PRUint16)methodIndex, &paramInfo, &iid);
+                    }
+                    
+                    if (iid == nsnull)
+                    {
+                        // could not get a IID for the parameter that is in question!
 
-                    rv = manager->GetProxyObject(GetQueue(), 
-                                                 *iid,
-                                                 anInterface, 
-                                                 GetProxyType(), 
-                                                 (void**) &aProxyObject);
+#ifdef DEBUG
+                        char* interfaceName;
+
+                        interfaceInfo->GetName(&interfaceName);
+                        
+                        printf("**************************************************\n");
+                        printf("xpcom-proxy: could not invoke method: %s::%s().\n", interfaceName, methodInfo->GetName());
+                        printf("             could not find an IID for a parameter: %d\n", (paramInfo.type.type.interface - 1) );
+                        printf("**************************************************\n");
+
+                        nsAllocator::Free((void*)interfaceName);
+#endif /* DEBUG */
+
+
+                        rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER; //TODO: Change error code
+                    }
+                    else
+                    {
+                        rv = manager->GetProxyObject(GetQueue(), 
+                                                     *iid,
+                                                     anInterface, 
+                                                     GetProxyType(), 
+                                                     (void**) &aProxyObject);
+                   }
 
                     nsAllocator::Free((void*)iid);
                     NS_RELEASE(manager);
@@ -304,7 +347,7 @@ void DestroyHandler(PLEvent *self)
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     nsProxyObject* proxyObject = owner->GetProxyObject();
 
-    if (proxyObject->GetProxyType() == PROXY_ASYNC)
+    if (proxyObject->GetProxyType() & PROXY_ASYNC)
     {        
         delete owner;
     }

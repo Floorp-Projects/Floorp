@@ -72,7 +72,7 @@ NS_IMPL_ISUPPORTS(nsTestXPCFoo,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-    printf("Thread (%ld) Test Called successfully! Party on...\n", p1);
+    printf("Thread (%d) Test Called successfully! Party on...\n", p1);
     *retval = p1+p2;
     return NS_OK;
 }
@@ -133,7 +133,7 @@ NS_IMPL_ISUPPORTS(nsTestXPCFoo2,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-    printf("Thread (%ld) nsTestXPCFoo2::Test2() called successfully! Party on...\n", p1);
+    printf("Thread (%d) nsTestXPCFoo2::Test2() called successfully! Party on...\n", p1);
     *retval = 0;
     return NS_OK;
 }
@@ -175,7 +175,7 @@ void TestCase_TwoClassesOneInterface(void *arg)
                                   kProxyObjectManagerIID,
                                   (nsISupports **)&manager);
 
-    printf("ProxyObjectManager: %x \n", manager);
+    printf("ProxyObjectManager: %d \n", manager);
     
     PR_ASSERT(manager);
 
@@ -203,35 +203,35 @@ void TestCase_TwoClassesOneInterface(void *arg)
         nsresult rv;
         PRInt32 threadNumber = argsStruct->threadNumber;
         
-        printf("Deleting real Object (%ld)\n", threadNumber);
+        printf("Deleting real Object (%d)\n", threadNumber);
         NS_RELEASE(foo);
    
-        printf("Deleting real Object 2 (%ld)\n", threadNumber);
+        printf("Deleting real Object 2 (%d)\n", threadNumber);
         NS_RELEASE(foo2);
 
 
-        printf("Thread (%ld) Prior to calling proxyObject->Test.\n", threadNumber);
+        printf("Thread (%d) Prior to calling proxyObject->Test.\n", threadNumber);
         rv = proxyObject->Test(threadNumber, 0, &a);   
-        printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
+        printf("Thread (%d) error: %d.\n", threadNumber, rv);
 
 
-        printf("Thread (%ld) Prior to calling proxyObject->Test2.\n", threadNumber);
+        printf("Thread (%d) Prior to calling proxyObject->Test2.\n", threadNumber);
         rv = proxyObject->Test2();   
-        printf("Thread (%ld) error: %ld.\n", threadNumber, rv);
+        printf("Thread (%d) error: %d.\n", threadNumber, rv);
 
 
-        printf("Thread (%ld) Prior to calling proxyObject2->Test.\n", threadNumber);
+        printf("Thread (%d) Prior to calling proxyObject2->Test.\n", threadNumber);
         rv = proxyObject2->Test(threadNumber, 0, &a);   
-        printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
+        printf("Thread (%d) proxyObject2 error: %d.\n", threadNumber, rv);
 
-        printf("Thread (%ld) Prior to calling proxyObject2->Test2.\n", threadNumber);
+        printf("Thread (%d) Prior to calling proxyObject2->Test2.\n", threadNumber);
         rv = proxyObject2->Test2();   
-        printf("Thread (%ld) proxyObject2 error: %ld.\n", threadNumber, rv);
+        printf("Thread (%d) proxyObject2 error: %d.\n", threadNumber, rv);
 
-        printf("Deleting Proxy Object (%ld)\n", threadNumber );
+        printf("Deleting Proxy Object (%d)\n", threadNumber );
         NS_RELEASE(proxyObject);
 
-        printf("Deleting Proxy Object 2 (%ld)\n", threadNumber );
+        printf("Deleting Proxy Object 2 (%d)\n", threadNumber );
         NS_RELEASE(proxyObject2);
     }    
 
@@ -449,7 +449,7 @@ main(int argc, char **argv)
                                             PR_JOINABLE_THREAD,
                                             0 );
 
-        printf("\tThread (%ld) spawned\n", spawn);
+        printf("\tThread (%d) spawned\n", spawn);
 
         PR_Sleep( PR_MillisecondsToInterval(250) );
     }
@@ -462,9 +462,9 @@ main(int argc, char **argv)
     for (PRInt32 i = 0; i < numberOfThreads; i++)
     {
         PRStatus rv;
-        printf("Thread (%ld) Join...\n", i);
+        printf("Thread (%d) Join...\n", i);
         rv = PR_JoinThread(threads[i]);
-        printf("Thread (%ld) Joined. (error: %ld).\n", i, rv);
+        printf("Thread (%d) Joined. (error: %d).\n", i, rv);
     }
 
     PR_Interrupt(aEventThread);
