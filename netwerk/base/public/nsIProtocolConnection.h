@@ -38,6 +38,8 @@ class nsIProtocolConnection : public nsICancelable
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROTOCOLCONNECTION_IID);
 
+    NS_IMETHOD Open(void) = 0;
+
     // can be called after Open
     // freed by caller with delete[]
     NS_IMETHOD GetContentType(char* *contentType) = 0;
@@ -47,11 +49,6 @@ public:
 
     // blocking:
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result) = 0;
-
-    // bletch...
-    NS_IMETHOD AsyncWrite(nsIInputStream* data, PRUint32 count,
-                          nsresult (*callback)(void* closure, PRUint32 count),
-                          void* closure) = 0;
 
 };
 

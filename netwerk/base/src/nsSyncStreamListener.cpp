@@ -108,7 +108,7 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
     nsresult rv;
     PRUint32 amt;
     PRInt32 count = (PRInt32)aLength;
-    while (count > 0) {
+    while (count > 0) {   // this should only go around once since the output stream is blocking
         rv = mOutputStream->Write(aIStream, &amt);
         if (NS_FAILED(rv)) return rv;
         count -= amt;

@@ -26,6 +26,7 @@ EXPORTS =                         \
         nsINetService.h           \
         nsIProtocolConnection.h   \
         nsIProtocolHandler.h      \
+        nsISocketTransportService.h \
         nsIStreamListener.h       \
         nsIStreamObserver.h       \
         nsITransport.h            \
