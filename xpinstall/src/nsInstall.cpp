@@ -136,8 +136,9 @@ static NS_DEFINE_IID(kJARCID,  NS_JAR_CID);
 nsInstall::nsInstall()
 {
     mScriptObject           = nsnull;           // this is the jsobject for our context
-    mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()             
-    mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing 
+    mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()
+    mInstalledFiles         = nsnull;           // the list of installed objects
+    mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing
     mUIName                 = "";               // this is the name that will be displayed in UI.
 
     mUninstallPackage = PR_FALSE;
@@ -1217,6 +1218,13 @@ nsInstall::SetPackageFolder(const nsString& aFolder)
 PRInt32    
 nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegistryPackageName, const nsString& aVersion, PRInt32* aReturn)
 {
+    if ( aUserPackageName.Length() == 0 )
+    {
+        // There must be some pretty name for the UI and the uninstall list
+        *aReturn = SaveError(INVALID_ARGUMENTS);
+        return NS_OK;
+    }
+
     char szRegPackagePath[MAXREGPATHLEN];
     char* szRegPackageName = aRegistryPackageName.ToNewCString();
     
@@ -1232,13 +1240,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     ResetError();
         
     mUserCancelled = PR_FALSE; 
-    
-    if ( aRegistryPackageName.Equals("") )  
-    {
-        *aReturn = nsInstall::INVALID_ARGUMENTS;
-        return NS_OK;
-    }
-    
+     
     mUIName = aUserPackageName;
     
     *aReturn = GetQualifiedPackageName( aRegistryPackageName, mRegistryPackageName );
@@ -1786,7 +1788,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 PRInt32
 nsInstall::SanityCheck(void)
 {
-    if ( mRegistryPackageName == "" || mUIName == "") 
+    if ( mInstalledFiles == nsnull ) 
     {
         return INSTALL_NOT_STARTED;	
     }
