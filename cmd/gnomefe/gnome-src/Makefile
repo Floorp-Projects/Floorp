@@ -41,7 +41,8 @@ CSRCS		= g-bookmark-frame.c \
 		  g-paned-view.c \
 		  g-tagged.c \
 		  g-util.c \
-		  g-view.c
+		  g-view.c \
+	          g-font-select.c
 
 EXPORTS		= g-bookmark-frame.h \
 		  g-bookmark-view.h \
@@ -59,7 +60,8 @@ EXPORTS		= g-bookmark-frame.h \
 		  g-tagged.h \
 		  g-types.h \
 		  g-util.h \
-		  g-view.h
+		  g-view.h \
+		  g-font-select.h
 
 GNOME_CFLAGS := $(shell gnome-config --cflags gnomeui)
 INCLUDES	+= -I$(OBJDIR) -I.. -I. $(GNOME_CFLAGS)

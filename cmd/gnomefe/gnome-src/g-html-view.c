@@ -53,8 +53,6 @@
 
 #define C8to16(c)           ((((c) << 8) | (c)))
 
-static GdkFont *font;
-
 extern gint gnomefe_depth;
 extern GdkVisual *gnomefe_visual;
 
@@ -355,13 +353,39 @@ html_view_event_handler(GtkWidget *widget,
     {
     case GDK_EXPOSE:
       {
+        /* this is the wrong place, but I can't locate
+           the right event. GDK_CONFIGURE does not seem
+           to catch the scrolled_window resizing events
+        */
+        if (view->sw_width  != MOZ_VIEW(view)->subview_parent->allocation.width ||
+            view->sw_height != MOZ_VIEW(view)->subview_parent->allocation.height )
+          {
+            view->sw_width = MOZ_VIEW(view)->subview_parent->allocation.width;
+            view->sw_height = MOZ_VIEW(view)->subview_parent->allocation.height;
+            if (context->compositor)
+              CL_ResizeCompositorWindow(context->compositor,
+                                        view->sw_width,
+                                        view->sw_height);
+          }
 	moz_html_view_refresh_rect(view,
 				   event->expose.area.x,
 				   event->expose.area.y,
 				   event->expose.area.width,
 				   event->expose.area.height);
 	
-	break;
+
+        if (view->scrolled_window->allocation.width != 
+            view->s_width ||
+            view->scrolled_window->allocation.height !=
+            view->s_height) {
+          event->configure.width = view->s_width =
+            view->scrolled_window->allocation.width;
+          event->configure.height = view->s_height =
+            view->scrolled_window->allocation.height;
+				/* Fall thru... */
+	}
+	else
+	  break;
       }
     case GDK_CONFIGURE:
       printf ("configure %d,%d\n", event->configure.width, event->configure.height);
@@ -394,8 +418,6 @@ html_view_event_handler(GtkWidget *widget,
 void 
 moz_html_view_init(MozHTMLView *view, MozFrame *parent_frame, MWContext *context)
 {
-  GdkGCValues values;
-
   /* call our superclass's init */
   moz_view_init(MOZ_VIEW(view), parent_frame, context);
 
@@ -420,13 +442,14 @@ moz_html_view_init(MozHTMLView *view, MozFrame *parent_frame, MWContext *context
   view->scrolled_window = gtk_scrolled_window_new(GTK_ADJUSTMENT(view->hadj),
 						  GTK_ADJUSTMENT(view->vadj));
 
-  gtk_container_add(GTK_CONTAINER(view->scrolled_window), MOZ_VIEW(view)->subview_parent);
+  gtk_container_add(GTK_CONTAINER(view->scrolled_window),
+                    MOZ_VIEW(view)->subview_parent);
+
+  //  gtk_widget_show(GTK_WIDGET(view->scrolled_window));
+  
   gtk_widget_show(MOZ_VIEW(view)->subview_parent);
 
   moz_component_set_basewidget(MOZ_COMPONENT(view), view->scrolled_window);
-
-  if (!font)
-    font = gdk_font_load("-*-helvetica-*-r-normal-*-*-160-*-*-*-*-*-*");
 }
 
 void 
@@ -462,7 +485,7 @@ moz_html_view_create_grid_child(MozHTMLView *parent_htmlview,
   if (GTK_IS_FIXED(MOZ_VIEW(parent_htmlview)->subview_parent))
     {
       printf("moz_html_view_create_grid_child (empty)\n");
-}
+    }
 }
 
 void
@@ -497,7 +520,7 @@ moz_html_view_layout_new_document(MozHTMLView *view,
   printf ("\treturning (%d,%d)\n", *iWidth, *iHeight);
 }
 
-int
+void
 moz_html_view_erase_background(MozHTMLView *view,
 			       int32 x, int32 y,
 			       uint32 width, uint32 height,
@@ -531,15 +554,14 @@ moz_html_view_get_text_info(MozHTMLView *view,
 			    LO_TextInfo *info)
 {
   char *text_buf;
+  GdkFont *font = moz_get_font(text->text_attr);
 
   text_buf = (char*)malloc(text->text_len + 1);
 
   strncpy(text_buf, (char*)text->text, text->text_len);
   text_buf [ text->text_len ] = 0;
 
-#ifdef WANT_SPEW
-  printf ("moz_html_view_get_text_info (%s)... ", text_buf);
-#endif
+  //  printf ("moz_html_view_get_text_info (%s)... ", text_buf);
 
   info->max_width = gdk_string_width(font, text_buf);
 
@@ -548,9 +570,10 @@ moz_html_view_get_text_info(MozHTMLView *view,
   info->ascent = font->ascent;
   info->descent = font->descent;
 
-#ifdef WANT_SPEW
-  printf ("\t max_width = %d\n", info->max_width);
-#endif
+  /* These values *must* be set! */
+  info->lbearing = 0;
+  info->rbearing = 0;
+
   return 0;
 }
 
@@ -559,9 +582,6 @@ moz_html_view_set_doc_dimension(MozHTMLView *view,
 				int32 iWidth,
 				int32 iHeight)
 {
-#ifdef WANT_SPEW
-  printf ("moz_html_view_set_doc_dimension(%d,%d)\n", iWidth, iHeight);
-#endif
   gtk_widget_set_usize(MOZ_VIEW(view)->subview_parent,
 		       iWidth,
 		       iHeight);
@@ -589,6 +609,7 @@ moz_html_view_display_text(MozHTMLView *view,
   GdkColor color;
   char *text_to_display;
   int32 text_x, text_y;
+  GdkFont *font = moz_get_font(text->text_attr);
 
   color.red = C8to16(text->text_attr->fg.red);
   color.green = C8to16(text->text_attr->fg.green);
@@ -841,7 +862,8 @@ fe_copy_pixels(CL_Drawable *drawable_src,
   GdkDrawable *src = fe_drawable_src->drawable;
   GdkDrawable *dst = fe_drawable_dst->drawable;
 
-  printf ("in fe_copy_pixels\n");
+  printf ("fe_copy_pixels (src %p, dst %p, region %d\n",
+          drawable_src, drawable_dst, region);
 
 #if 0
   /* FIXME - for simple regions, it may be faster to iterate over
@@ -964,7 +986,6 @@ fe_lock_drawable(CL_Drawable *drawable, CL_DrawableState new_state)
 static void
 fe_set_drawable_dimensions(CL_Drawable *drawable, uint32 width, uint32 height)
 {
-  struct fe_MWContext_cons *cntx;
   fe_Drawable *fe_drawable = 
     (fe_Drawable*)CL_GetDrawableClientData(drawable);
 
@@ -987,6 +1008,9 @@ fe_set_drawable_dimensions(CL_Drawable *drawable, uint32 width, uint32 height)
 
     fe_backing_store_pixmap_serial_num++;
 
+    /* Crashes otherwise */
+    if (fe_drawable->drawable)
+      fe_drawable->drawable =NULL;
     fe_backing_store_pixmap = gdk_pixmap_new(fe_drawable->drawable,
 					     width, height,
 					     backing_store_depth);
@@ -1036,25 +1060,17 @@ moz_html_view_create_compositor(MozHTMLView *view)
   CL_Compositor *compositor;
   fe_Drawable *window_drawable, *backing_store_drawable;
   GdkWindow *window;
-  gint dummy;
   GdkVisual *visual;
 
   window = MOZ_VIEW(view)->subview_parent->window;
   visual = gnomefe_visual;
   backing_store_depth = gnomefe_depth;
 
-
-  gdk_window_get_geometry(window, &dummy, &dummy, &comp_width,
-                          &comp_height, &dummy);
-  
-  printf("moz_html_view_create_compositor: width %d, height %d\n",
-         comp_width, comp_height);
-
-  if(comp_width < 2) 
-    comp_width = 800;
-  if (comp_height < 2)
-    comp_height = 800;
-  
+  comp_width = MOZ_VIEW(view)->subview_parent->allocation.width;
+  comp_height = MOZ_VIEW(view)->subview_parent->allocation.height;
+  view->sw_height = comp_height;
+  view->sw_width = comp_width; 
+  printf ("width %d, height %d\n", comp_width, comp_height);
 #if 0
   if (CONTEXT_DATA(context)->vscroll && 
       XtIsManaged(CONTEXT_DATA(context)->vscroll))

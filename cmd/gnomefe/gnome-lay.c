@@ -30,12 +30,14 @@
 #include "layers.h"
 
 #include "g-util.h"
+#include "g-font-select.h"
 
 void
 FE_ReleaseTextAttrFeData(MWContext *context,
 			 LO_TextAttr *attr)
 {
   printf ("FE_ReleaseTextAttrFeData\n");
+  moz_font_release_text_attribute(attr);
 }
 
 PRBool

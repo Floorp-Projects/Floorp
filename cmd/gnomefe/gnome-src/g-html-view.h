@@ -47,8 +47,10 @@ struct _MozHTMLView {
 
   int32 doc_width, doc_height;
   int32 doc_x, doc_y;
+  int32 sw_width, sw_height;
 
   GtkWidget *scrolled_window;
+  int s_width, s_height;
 };
 
 extern void		moz_html_view_init(MozHTMLView *view, MozFrame *parent_frame, MWContext *context);
@@ -64,7 +66,7 @@ extern void moz_html_view_layout_new_document(MozHTMLView *view,
                                               int32 *mWidth,
                                               int32 *mHeight);
 
-extern int moz_html_view_erase_background(MozHTMLView *view,
+extern void moz_html_view_erase_background(MozHTMLView *view,
                                           int32 x, int32 y,
                                           uint32 width, uint32 height,
                                           LO_Color *bg);

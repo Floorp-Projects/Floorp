@@ -394,12 +394,12 @@ GNOMEFE_SetDocPosition (MWContext *context,
 		       int32 iY)
 {
   MozHTMLView *view = find_html_view(context);
-
+  
   if (!view) return; /* XXX */
 
   printf("GNOMEFE_SetDocPosition: X %d, y %d\n", iX, iY);
   
-  moz_html_view_set_doc_dimension(view, iX, iY);
+  moz_html_view_set_doc_position(view, iX, iY);
 }
 
 static void 

@@ -64,14 +64,13 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   uint8 img_depth;
   NI_PixmapHeader *img_header = &image->header;
   NI_PixmapHeader *mask_header = mask ? &mask->header : NULL;
-  Pixmap img_x_pixmap=0, mask_x_pixmap = 0;
   fe_PixmapClientData *img_client_data, *mask_client_data = NULL;
   MozHTMLView *view = 0;
   unsigned int visual_depth;
   fe_Drawable *fe_drawable;
 
   printf ("_IMGCB_NewPixmap (context %p, image %p, width %d, height %d)\n",
-	  context, image, width, height);
+	  context, image, (int) width, (int) height);
 
   /* Allocate the client data structures for the IL_Pixmaps. */
   img_client_data = XP_NEW_ZAP(fe_PixmapClientData);
@@ -186,7 +185,7 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
 
 
   printf ("_IMGCB_UpdatePixmap (context %p, image %p, width %d, height %d)\n",
-	  context, pixmap, width, height) ;
+	  context, pixmap, (int)width, (int)height) ;
 
   if (!context)
     return;
@@ -295,7 +294,7 @@ _IMGCB_DestroyPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap)
 JMC_PUBLIC_API(void)
 _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image, 
                      IL_Pixmap* mask, jint x, jint y, jint x_offset,
-                     jint y_offset, jint j, jint k, jint width, jint height)
+                     jint y_offset, jint width, jint height, jint j, jint k)
 {
 
   MWContext *context = (MWContext *)dpy_cx; /* XXX This should be the FE's
@@ -319,8 +318,8 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   XP_Bool tiling_required = FALSE;
   GdkWindow * window = (GdkWindow *)fe_drawable->drawable;
 
-  printf ("_IMGCB_DisplayPixmap (context %p, image %p, mask %p, width %d, height %d)\n",
-	  context, image, mask, width, height);
+  printf ("_IMGCB_DisplayPixmap (context %p, image %p, width %d, height %d)\n",
+	  context, image, (int)width, (int)height);
 
 				/* Check for zero display area. */
   if (width == 0 || height == 0)
@@ -362,25 +361,40 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
     
 
     gc = gdk_gc_new(window);
-    gdk_gc_set_ts_origin(gc, img_x_offset, img_y_offset);
     if (mask)
       gdk_gc_set_clip_mask(gc, mask_x_pixmap);
+
+    gdk_gc_set_ts_origin(gc, x_offset, y_offset);
     gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
     if (tiling_required)
       {
         gdk_gc_set_fill(gc, GDK_TILED);
         gdk_gc_set_tile(gc,img_x_pixmap);
       }
+
     if (fe_drawable->clip_region) { /* This is a bad hack */
       GdkRegionPrivate * hack = gdk_region_new();
       FE_CopyRegion((Region)fe_drawable->clip_region, 
                     hack->xregion );
       gdk_gc_set_clip_region(gc, hack);
       gdk_region_destroy(hack);
-    }    
-    gdk_draw_rectangle(drawable, gc, TRUE,
-                       rect_x_offset, rect_y_offset, width,
-                       height);
+    }
+
+    if (tiling_required) 
+      gdk_draw_rectangle(drawable, gc, TRUE,
+                         rect_x_offset, rect_y_offset, width,
+                         height);
+    else {
+      printf("draw_pixmap (xo %d, yo %d, rxo %d, ryo %d, w %d, h %d)\n",
+             x_offset, y_offset,
+             rect_x_offset, rect_y_offset,
+             width, height);
+      gdk_draw_pixmap(drawable, gc, img_x_pixmap,
+                      x_offset, y_offset,
+                      rect_x_offset, rect_y_offset,
+                      width, height);
+    }
+    
 				/* Clean up. */
     gdk_gc_destroy(gc);
 
