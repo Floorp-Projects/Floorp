@@ -3439,7 +3439,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
   {
     if (!IsInlineNode(node))  // skip over bold, italic, link, ect nodes
     {
-      if (IsTextNode(node))
+      if (IsTextNode(node) && IsEditable(node))
       {
         textNode = do_QueryInterface(node);
         textNode->GetLength(&strLength);
@@ -3449,7 +3449,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
           *aResult = nsString::IsSpace(tempString.First());
           return NS_OK;
         }
-        // else it's an empty text node, skip it.
+        // else it's an empty text node, or not editable; skip it.
       }
       else  // node is an image or some other thingy that doesn't count as whitespace
       {
@@ -3496,7 +3496,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
   {
     if (!IsInlineNode(node))  // skip over bold, italic, link, ect nodes
     {
-      if (IsTextNode(node))
+      if (IsTextNode(node) && IsEditable(node))
       {
         textNode = do_QueryInterface(node);
         textNode->GetLength(&strLength);
@@ -3506,7 +3506,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
           *aResult = nsString::IsSpace(tempString.First());
           return NS_OK;
         }
-        // else it's an empty text node, skip it.
+        // else it's an empty text node, or not editable; skip it.
       }
       else  // node is an image or some other thingy that doesn't count as whitespace
       {
