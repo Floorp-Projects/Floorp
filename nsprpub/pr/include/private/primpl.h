@@ -1805,7 +1805,7 @@ extern PRFileDesc *_pr_stderr;
 ** and functions with macros that expand to the native thread
 ** types and functions on each platform.
 */
-#if defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 #define _PR_ZONE_ALLOCATOR
 #endif
 
