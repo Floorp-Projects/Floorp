@@ -1029,9 +1029,18 @@ SEC_PKCS12AddCert(SEC_PKCS12ExportContext *p12ctxt, SEC_PKCS12SafeInfo *safe,
 	    	CERTCertificate *tempCert;
 
 		/* decode the certificate */
-	    	 tempCert = 
-			CERT_DecodeDERCertificate( &certList->certs[count], 
-					PR_FALSE, NULL);
+		/* XXX
+		 * This was rather silly.  The chain is constructed above
+		 * by finding all of the CERTCertificate's in the database.
+		 * Then the chain is put into a CERTCertificateList, which only
+		 * contains the DER.  Finally, the DER was decoded, and the
+		 * decoded cert was sent recursively back to this function.
+		 * Beyond being inefficent, this causes data loss (specifically,
+		 * the nickname).  Instead, for 3.4, we'll do a lookup by the
+		 * DER, which should return the cached entry.
+		 */
+		tempCert = CERT_FindCertByDERCert(CERT_GetDefaultCertDB(),
+		                                  &certList->certs[count]);
 	    	if(!tempCert) {
 		    CERT_DestroyCertificateList(certList);
 		    goto loser;
