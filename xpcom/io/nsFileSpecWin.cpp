@@ -237,24 +237,24 @@ void nsFileSpec::CreateDirectory(int /*mode*/)
 } // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
-void nsFileSpec::Delete(PRBool inRecursive)
+void nsFileSpec::Delete(PRBool inRecursive) const
 //----------------------------------------------------------------------------------------
 {
-  if (IsDirectory())
+    if (IsDirectory())
     {
 	    if (inRecursive)
         {
-          for (nsDirectoryIterator i(*this); i.Exists(); i++)
-            {
-              nsFileSpec& child = (nsFileSpec&)i;
-              child.Delete(inRecursive);
-            }		
+            for (nsDirectoryIterator i(*this); i.Exists(); i++)
+                {
+                    nsFileSpec& child = (nsFileSpec&)i;
+                    child.Delete(inRecursive);
+                }		
         }
 	    rmdir(mPath);
     }
 	else
     {
-      remove(mPath);
+        remove(mPath);
     }
 } // nsFileSpec::Delete
 
@@ -368,7 +368,7 @@ nsDirectoryIterator::nsDirectoryIterator(
 //----------------------------------------------------------------------------------------
 	: mCurrent(inDirectory)
 	, mDir(nsnull)
-	, mExists(false)
+	, mExists(PR_FALSE)
 {
     mDir = PR_OpenDir(inDirectory);
 	mCurrent += "dummy";
@@ -387,13 +387,13 @@ nsDirectoryIterator::~nsDirectoryIterator()
 nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 //----------------------------------------------------------------------------------------
 {
-	mExists = false;
+	mExists = PR_FALSE;
 	if (!mDir)
 		return *this;
-  PRDirEntry* entry = PR_ReadDir(mDir, PR_SKIP_BOTH); // Ignore '.' && '..'
+    PRDirEntry* entry = PR_ReadDir(mDir, PR_SKIP_BOTH); // Ignore '.' && '..'
 	if (entry)
     {
-      mExists = true;
+      mExists = PR_TRUE;
       mCurrent.SetLeafName(entry->name);
     }
 	return *this;

@@ -141,6 +141,17 @@ class FileImpl
 								        }
         NS_IMETHOD                      Flush();
 
+        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF)
+        						        {
+        						            *outAtEOF = mEOF;
+        						            return NS_OK;
+        						        }
+        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF)
+        						        {
+        						            mEOF = inAtEOF;
+        						            return NS_OK;
+        						        }
+
     protected:
     
         PRFileDesc*                             mFileDesc;

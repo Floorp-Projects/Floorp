@@ -20,6 +20,7 @@
 #include "nsFileStream.h"
 
 //#include "string.h"
+//void* operator new(size_t n) { return malloc(n); }
 
 struct FilesTest
 {
@@ -176,7 +177,7 @@ int FilesTest::IOStream(const char* relativePath)
 		    << nsEndl;
 		return -1;
 	}
-	char line[1000];
+	char line[5000]; // Use a buffer longer than the file!
 	testStream.seek(0); // check that the seek compiles
 	while (!testStream.eof())
 	{

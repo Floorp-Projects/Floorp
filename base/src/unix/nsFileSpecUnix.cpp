@@ -148,7 +148,7 @@ void nsFileSpec::CreateDirectory(int mode)
 } // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
-void nsFileSpec::Delete(PRBool inRecursive)
+void nsFileSpec::Delete(PRBool inRecursive) const
 // To check if this worked, call Exists() afterwards, see?
 //----------------------------------------------------------------------------------------
 {
@@ -186,7 +186,9 @@ nsresult nsFileSpec::Rename(const char* inNewName)
     return NS_OK;
 } // nsFileSpec::Rename
 
+//----------------------------------------------------------------------------------------
 static int CrudeFileCopy(const char* in, const char* out)
+//----------------------------------------------------------------------------------------
 {
 	struct stat in_stat;
 	int stat_result = -1;
