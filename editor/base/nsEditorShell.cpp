@@ -82,6 +82,7 @@
 #include "nsTextServicesCID.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
+
 ///////////////////////////////////////
 
 // Drag & Drop, Clipboard
@@ -129,29 +130,26 @@ NS_NewEditorShell(nsIEditorShell** aEditorShell)
 /////////////////////////////////////////////////////////////////////////
 
 nsEditorShell::nsEditorShell()
+:  mSuggestedWordIndex(0)
+,  mToolbarWindow(nsnull)
+,  mContentWindow(nsnull)
+,  mWebShellWin(nsnull)
+,  mWebShell(nsnull)
+,  mContentAreaWebShell(nsnull)
+,  mEditorType(eUninitializedEditorType)
+,  mWrapColumn(0)
 {
 #ifdef APP_DEBUG
   printf("Created nsEditorShell\n");
 #endif
-
-  mToolbarWindow        = nsnull;
-  mContentWindow        = nsnull;
-  mWebShellWin          = nsnull;
-  mWebShell             = nsnull;
-  mSuggestedWordIndex   = 0;
   
   NS_INIT_REFCNT();
 }
 
 nsEditorShell::~nsEditorShell()
 {
- // NS_IF_RELEASE(mToolbarScriptContext);
- // NS_IF_RELEASE(mContentScriptContext);
-
-  //NS_IF_RELEASE(mToolbarWindow);
-  //NS_IF_RELEASE(mContentWindow);
-  //NS_IF_RELEASE(mWebShellWin);
-  //NS_IF_RELEASE(mWebShell);
+  // the only references we hold are in nsCOMPtrs, so they'll take
+  // care of themselves.
 }
 
 NS_IMPL_ADDREF(nsEditorShell)
@@ -243,7 +241,6 @@ nsEditorShell::Init()
   nsAutoString    editorType = "html";      // default to creating HTML editor
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
-  mWrapColumn = 0;
 
   return NS_OK;
 }
@@ -364,7 +361,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
        delete [] errorMsgCString;
 #endif
   }
-  
+    
   return err;
 }
 
@@ -685,7 +682,38 @@ nsEditorShell::PrepareDocumentForEditing()
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return DoEditorMode(mContentAreaWebShell);
+  if (mEditor)
+  {
+    // Mmm, we have an editor already. That means that someone loaded more than
+    // one URL into the content area. Let's tear down what we have, and rip 'em a
+    // new one.
+    mEditorType = eUninitializedEditorType;
+    mEditor = 0;  // clear out the nsCOMPtr
+    
+    // and tell them that they are doing bad things
+    NS_WARNING("Multiple loads of the editor's document detected.");
+  }
+  
+  nsresult rv = DoEditorMode(mContentAreaWebShell);
+  if (NS_FAILED(rv))
+    return rv;
+  
+#if 0
+	// work in progress
+  // make the UI state maintainer
+  rv = NS_NewInterfaceState(mEditor, getter_AddRefs(mStateMaintainer));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  rv = GetEditorSelection(getter_AddRefs(domSelection));
+  if (NS_FAILED(rv))
+    return rv;
+
+  domSelection->AddSelectionListener(mStateMaintainer);
+#endif
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1682,6 +1710,27 @@ nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
   
   return NS_NOINTERFACE;
 }
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentStatus(PRInt32 *aDocumentStatus)
+{
+  if (!aDocumentStatus)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMDocument>  theDoc;
+  nsresult  rv = GetEditorDocument(getter_AddRefs(theDoc));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32  modCount = 0;
+  diskDoc->GetModCount(&modCount);
+
+  *aDocumentStatus = (modCount == 0) ? eDocumentStatusUnmodified : eDocumentStatusModified;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsEditorShell::InsertList(const PRUnichar *listType)
