@@ -175,7 +175,12 @@ pref("network.file_sort_method",            0);     // NAME 0, TYPE 1, SIZE 2, D
 pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
-pref("network.hosts.nntp_server",           "news");
+
+// sspitzer:  change this back to "news" when we get to beta.
+// for now, set this to news.mozilla.org because you can only
+// post to the server specified by this pref.
+pref("network.hosts.nntp_server",           "news.mozilla.org");
+
 pref("network.hosts.socks_server",          "");
 pref("network.hosts.socks_serverport",      1080);
 pref("network.hosts.socks_conf",            "");
