@@ -42,7 +42,7 @@
   
   function displayImageDialog()
   {
-    window.openDialog("chrome://pref/content/pref-advanced-imageblocking.xul", "", "chrome,resizable=no");
+    window.openDialog("chrome://pref/content/pref-imageblocking.xul", "", "chrome,resizable=no");
   }
 
   function updateImageFields( aInteger, aBoolean )
@@ -56,7 +56,7 @@
 
   function viewCookies() 
   {
-    window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
+    window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
   }  
 
   ]]>
