@@ -248,8 +248,6 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (mPos == 22+mCurrIcon*sizeof(mDirEntryArray)) {
       mCurrIcon++;
       ProcessDirEntry(e);
-      if (e.mReserved != 0)
-        return NS_ERROR_FAILURE; // This ICO is garbage.
       if ((e.mWidth == PREFICONSIZE && e.mHeight == PREFICONSIZE && e.mBitCount >= colorDepth)
            || (mCurrIcon == mNumIcons && mImageOffset == 0)) {
         mImageOffset = e.mImageOffset;
