@@ -1922,19 +1922,31 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsval id, PRUint32 mode,
                             jsval *vp, PRBool *_retval)
 {
-  if (mode == JSACC_WATCH) {
+  if ((mode == JSACC_WATCH || mode == JSACC_PROTO || mode == JSACC_PARENT) &&
+      sSecMan) {
     JSString *str = ::JS_ValueToString(cx, id);
 
     if (!str)
       return NS_ERROR_UNEXPECTED;
 
-    jsval dummy;
+    JSObject *real_obj = nsnull;
+    nsresult rv = wrapper->GetJSObject(&real_obj);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!::JS_GetUCProperty(cx, obj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), &dummy)) {
-      // We were unable to access the property, this most likely means
-      // that the security manager denied access to the property that
-      // the user tried to access (i.e. set a getter or setter on)
+    NS_ConvertUCS2toUTF8
+      prop_name(NS_REINTERPRET_CAST(const PRUnichar *,
+                                    ::JS_GetStringChars(str)),
+                ::JS_GetStringLength(str));
+
+    rv =
+      sSecMan->CheckPropertyAccess(cx, real_obj, sClassInfoData[mID].mName,
+                                   prop_name.get(),
+                                   nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+
+    if (NS_FAILED(rv)) {
+      // The security manager vetoed access to prop_name on real_obj,
+      // tell XPConnect about this so that XPConnect doesn't hide this
+      // error from the caller
       nsCOMPtr<nsIXPCNativeCallContext> cnccx;
 
       sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
@@ -2132,7 +2144,12 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
-  rv = sSecMan->CheckPropertyAccess(cx, obj, "Window",
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+
+  JSObject *global = sgo->GetGlobalJSObject();
+
+  rv = sSecMan->CheckPropertyAccess(cx, global, "Window",
                                     isLocation ? "location" : "scriptglobals",
                                     nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
@@ -2170,7 +2187,12 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
-  rv = sSecMan->CheckPropertyAccess(cx, obj, "Window",
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+
+  JSObject *global = sgo->GetGlobalJSObject();
+
+  rv = sSecMan->CheckPropertyAccess(cx, global, "Window",
                                     isLocation ? "location" : "scriptglobals",
                                     nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
