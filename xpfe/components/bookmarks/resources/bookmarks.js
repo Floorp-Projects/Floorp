@@ -26,16 +26,15 @@
 // window title state, etc. 
 function Startup()
 {
-  var bookmarksView = document.getElementById("bookmarks-view");
-
   const windowNode = document.getElementById("bookmark-window");
+  const bookmarksView = document.getElementById("bookmarks-view");
+  var titleString;
+
   // If we've been opened with a parameter, root the tree on it.
   if ("arguments" in window && window.arguments[0]) {
+    var title;
     var uri = window.arguments[0];
-
     bookmarksView.tree.setAttribute("ref", uri);
-
-    var title = "";
     if (uri.substring(0,5) == "find:") {
       title = bookmarksView._bundle.GetStringFromName("search_results_title");
       // Update the windowtype so that future searches are directed 
@@ -48,16 +47,24 @@ function Startup()
       var rName = bookmarksView.db.GetTarget(krRoot, krNameArc, true);
       title = rName.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
-    const titleString = bookmarksView._bundle.GetStringFromName("window_title");
-    windowNode.setAttribute("title", titleString.replace(/%folder_name%/gi, title));
+    titleString = bookmarksView._bundle.GetStringFromName("window_title");
+    titleString = titleString.replace(/%folder_name%/gi, title);
+    windowNode.setAttribute("title", titleString);
   }
   else {
-    var rootfoldername = bookmarksView._bundle.GetStringFromName("bookmarks_root");
     const kProfileContractID = "@mozilla.org/profile/manager;1";
     const kProfileIID = Components.interfaces.nsIProfile;
     const kProfile = Components.classes[kProfileContractID].getService(kProfileIID);
-    rootfoldername = rootfoldername.replace(/%user_name%/, kProfile.currentProfile);
-    windowNode.setAttribute("title", rootfoldername);
+    var length = {value:0};
+    var profileList = kProfile.getProfileList(length);
+    // unset the default BM title if the user has more than one profile
+    // or if he/she has changed the name of the default one.
+    // the profile "default" is not localizable.
+    if (length.value > 1 || kProfile.currentProfile.toLowerCase() != "default") {
+      titleString = bookmarksView._bundle.GetStringFromName("bookmarks_root");
+      titleString = titleString.replace(/%user_name%/, kProfile.currentProfile);
+      windowNode.setAttribute("title", titleString);
+    }
   }
  
   bookmarksView.treeBoxObject.selection.select(0);
