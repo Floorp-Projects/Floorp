@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,16 +24,19 @@
 package org.mozilla.webclient;
 
 
-public interface CurrentPage2 extends CurrentPage
-{
+public interface CurrentPage2 extends CurrentPage {
     public Selection getSelection();
-
+    
     public void highlightSelection(Selection selection);
-
+    
     public void clearAllSelections();
-
+    
     public void print();
-
+    
     public void printPreview(boolean preview);
+    
+    public boolean find(String stringToFind, boolean forward, boolean matchCase);
+
+    public boolean findNext();
 }
 // end of interface CurrentPage2

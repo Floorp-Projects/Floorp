@@ -142,12 +142,20 @@ public void clearAllSelections() {
 
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
 {
+    find(stringToFind, forward, matchCase);
+}
+
+public boolean find(String stringToFind, boolean forward, boolean matchCase)
+{
     ParameterCheck.nonNull(stringToFind);
     getWrapperFactory().verifyInitialized();
+    boolean result = false;
 
     synchronized(getBrowserControl()) {
-        nativeFindInPage(getNativeBrowserControl(), stringToFind, forward, matchCase);
+        result = nativeFind(getNativeBrowserControl(), stringToFind, forward, 
+			    matchCase);
     }
+    return result;
 }
 
 public void findNextInPage()
@@ -155,9 +163,21 @@ public void findNextInPage()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativeFindNextInPage(getNativeBrowserControl());
+        nativeFindNext(getNativeBrowserControl());
     }
 }
+
+public boolean findNext()
+{
+    getWrapperFactory().verifyInitialized();
+    boolean result = false;
+
+    synchronized(getBrowserControl()) {
+        result = nativeFindNext(getNativeBrowserControl());
+    }
+    return result;
+}
+
 
 public String getCurrentURL()
 {
@@ -304,9 +324,9 @@ native public void nativeHighlightSelection(int webShellPtr, Node startContainer
 
 native public void nativeClearAllSelections(int webShellPtr);
 
-native public void nativeFindInPage(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
+native public boolean nativeFind(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
 
-native public void nativeFindNextInPage(int webShellPtr);
+native public boolean nativeFindNext(int webShellPtr);
 
 native public String nativeGetCurrentURL(int webShellPtr);
 
@@ -339,7 +359,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.7 2004/09/09 20:17:16 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.8 2005/02/10 04:20:50 edburns%acm.org Exp $");
 
 }
 

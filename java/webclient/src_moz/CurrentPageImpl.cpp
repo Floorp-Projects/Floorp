@@ -131,10 +131,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
- * Method:    nativeFindInPage
+ * Method:    nativeFind
  * Signature: (Ljava/lang/String;ZZ)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindInPage
+JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFind
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jstring searchString, jboolean forward, jboolean matchCase)
 {
     
@@ -144,7 +144,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
     if (!searchStringGlobalRef) {
         ::util_ThrowExceptionToJava(env, "Exception: Can't create global ref for search string");
-        return;
+        return JNI_FALSE;
     }
     nsresult rv = NS_ERROR_NULL_POINTER;
     
@@ -160,7 +160,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     
     if (NS_FAILED(rv) || nsnull == findComponent)  {
         ::util_ThrowExceptionToJava(env, "Exception: Can't get find component");
-        return;
+        return JNI_FALSE;
     }
   
     PRUnichar * srchString = nsnull;
@@ -171,13 +171,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     if (nsnull == srchString) {
         ::util_DeleteGlobalRef(env, searchStringGlobalRef);
         
-        return;
+        return JNI_FALSE;
     }
 
     rv = findComponent->SetSearchString(srchString);
     if (NS_FAILED(rv))  {
         ::util_ThrowExceptionToJava(env, "Exception: Can't set search string.");
-        return;
+        return JNI_FALSE;
     }
     findComponent->SetFindBackwards((PRBool) forward == JNI_FALSE);
     findComponent->SetMatchCase((PRBool) matchCase == JNI_TRUE);
@@ -186,15 +186,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 
     ::util_ReleaseStringChars(env, searchStringGlobalRef, srchString);
     ::util_DeleteGlobalRef(env, searchStringGlobalRef);
+
+    return found ? JNI_TRUE : JNI_FALSE;
     
 }
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
- * Method:    nativeFindNextInPage
+ * Method:    nativeFindNext
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
+JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindNext
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
 
@@ -213,12 +215,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     
     if (NS_FAILED(rv) || nsnull == findComponent)  {
         ::util_ThrowExceptionToJava(env, "Exception: Can't get find component");
-        return;
+        return JNI_FALSE;
     }
   
     PRBool found = PR_TRUE;
     rv = findComponent->FindNext(&found);
 
+    return found ? JNI_TRUE : JNI_FALSE;
 }
 
 /*
