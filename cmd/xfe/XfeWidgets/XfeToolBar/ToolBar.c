@@ -120,19 +120,11 @@ static void 	Btn3Up				(Widget,XEvent *,char **,Cardinal *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Geometry functions													*/
+/* Layout functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredVertical		(Widget,Dimension *,Dimension *);
-static void		PreferredHorizontal		(Widget,Dimension *,Dimension *);
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Layout functions functions											*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void		LayoutHorizontal			(Widget);
-static void		LayoutVertical				(Widget);
+static void		LayoutHorizontal	(Widget,Boolean,Dimension *,Dimension *);
+static void		LayoutVertical		(Widget,Boolean,Dimension *,Dimension *);
 
 
 static Boolean	IsValidChild		(Widget);
@@ -359,13 +351,31 @@ static XtResource resources[] =
 		(XtPointer) False
     },
     { 
+		XmNnumColumns,
+		XmCNumColumns,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . num_columns),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+    { 
+		XmNnumRows,
+		XmCNumRows,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . num_rows),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+    { 
 		XmNmaxNumColumns,
 		XmCMaxNumColumns,
 		XmRCardinal,
 		sizeof(Cardinal),
 		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . max_num_columns),
 		XmRImmediate, 
-		(XtPointer) 10
+		(XtPointer) 1
     },
     { 
 		XmNmaxNumRows,
@@ -468,7 +478,7 @@ static XtResource constraint_resources[] =
 		sizeof(Boolean),
 		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_dimension_to_max),
 		XmRImmediate,
-		(XtPointer) True
+		(XtPointer) False
     },
 };   
 
@@ -1014,11 +1024,6 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 		}
 #endif
 
-#if 0
-		/* Update the children info */
-		_XfeManagerUpdateChildrenInfo(w);
-#endif
-
 		/* Obtain the preferred geometry to support the new child */
 		_XfeManagerPreferredGeometry(w,&pref_width,&pref_height);
 
@@ -1026,11 +1031,6 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 		_XfeWidth(child) = old_width;
 		_XfeHeight(child) = old_height;
 
-#if 0
-		/* Update the children info */
-		_XfeManagerUpdateChildrenInfo(w);
-#endif
-			
 #if 1
 		/* Restore our max children dimensions */
 		_XfemMaxDynamicWidth(w) = old_max_child_width;
@@ -1219,30 +1219,50 @@ DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 static void
 PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 {
+#ifdef DEBUG_ramiro
+	if (!strcmp(XtName(w),"Personal Toolbar"))
+	{
+		printf("PreferredGeometry(%s,%d,%d\n",
+			   XtName(w),
+			   _XfemBoundaryWidth(w),
+			   _XfemBoundaryHeight(w));
+	}
+#endif
+
 	/* Horizontal */
 	if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
 	{
-		PreferredHorizontal(w,width,height);
+		LayoutHorizontal(w,False,width,height);
 	}
 	/* Vertical */
 	else
 	{
-		PreferredVertical(w,width,height);
+		LayoutVertical(w,False,width,height);
 	}
 }
 /*----------------------------------------------------------------------*/
 static void
 LayoutDynamicChildren(Widget w)
 {
+#ifdef DEBUG_ramiro
+	if (!strcmp(XtName(w),"Personal Toolbar"))
+	{
+		printf("LayoutDynamicChildren(%s,%d,%d\n",
+			   XtName(w),
+			   _XfemBoundaryWidth(w),
+			   _XfemBoundaryHeight(w));
+	}
+#endif
+
 	/* Horizontal */
 	if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
 	{
-		LayoutHorizontal(w);
+		LayoutHorizontal(w,True,NULL,NULL);
 	}
 	/* Vertcial */
 	else
 	{
-		LayoutVertical(w);
+		LayoutVertical(w,True,NULL,NULL);
 	}
 	
 	/* The indicator requires the children to be layed out first */
@@ -1254,8 +1274,8 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 {
 	Widget						w = _XfeParent(child);
     XfeToolBarPart *			tp = _XfeToolBarPart(w);
-	Dimension					width = 0;
-	Dimension					height = 0;
+	int							width = 0;
+	int							height = 0;
 	XfeToolBarConstraintPart *	cp = _XfeToolBarConstraintPart(child);
 	Boolean						force_dimension;
 
@@ -1264,7 +1284,7 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 
 	if (cp->force_dimension_to_max)
 	{
-		force_dimension = AllowForceDimension(child);
+ 		force_dimension = AllowForceDimension(child);
 	}
 
 	/* Horizontal */
@@ -1327,6 +1347,17 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 			}
 		}
 	}
+
+	/* Make sure the dimenensions are never 0 */
+    if (width <= 0)
+    {
+		width = 2;
+    }
+	
+    if (height <= 0)
+    {
+		height = 2;
+    }
 
 	*width_out = width;
 	*height_out = height;
@@ -1661,135 +1692,47 @@ Btn3Up(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Geometry functions													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void
-PreferredVertical(Widget w,Dimension * width,Dimension * height)
-{
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
-
-	assert (_XfemDynamicChildren(w) != NULL );
-	
-	*height = 
-		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) +
-		2 * tp->raise_border_thickness;
-
-	*width  = 
-		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
-		2 * tp->raise_border_thickness;
-
-	if (_XfemNumDynamicChildren(w) > 0)
-	{
-		XfeLinkNode	node;
-
-		/* Traverse the dynamic children */
-		for (node = XfeLinkedHead(_XfemDynamicChildren(w));
-			 node != NULL;
-			 node = XfeLinkNodeNext(node))
-		{
-			/* Widget		child = layable_children[i]; */
-			Widget		child = (Widget) XfeLinkNodeItem(node);
-			Dimension	child_width = 0;
-			Dimension	child_height = 0;
-
-			if (_XfeChildIsShown(child))
-			{
-				/* Obtain the dimensions for the child */
-				GetChildDimensions(child,&child_width,&child_height);
-				
-/* 				assert( child_width > 0 ); */
-/* 				assert( child_height > 0 ); */
-				
-				*height += (child_height + _XfeOrientedSpacing(w));
-			}
-		}
-	}
-
-	*width += _XfemMaxDynamicWidth(w);
-
-	/* Indicator */
-	if (IndicatorIsShown(w) && tp->dynamic_indicator)
-	{
- 		*height += (_XfeHeight(tp->indicator) + _XfeOrientedSpacing(w));
-	}
-}
-/*----------------------------------------------------------------------*/
-static void
-PreferredHorizontal(Widget w,Dimension * width,Dimension * height)
-{
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
-
-	assert (_XfemDynamicChildren(w) != NULL );
-	
-	*height = 
-		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) + 
-		2 * tp->raise_border_thickness;
-
-	*width  = 
-		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
-		2 * tp->raise_border_thickness;
-
-#if 1
-	if (_XfemNumDynamicChildren(w) > 0)
-	{
-		XfeLinkNode	node;
-
-		/* Traverse the dynamic children */
-		for (node = XfeLinkedHead(_XfemDynamicChildren(w));
-			 node != NULL;
-			 node = XfeLinkNodeNext(node))
-		{
-			/* Widget		child = layable_children[i]; */
-			Widget		child = (Widget) XfeLinkNodeItem(node);
-			Dimension	child_width = 0;
-			Dimension	child_height = 0;
-
-			if (_XfeChildIsShown(child))
-			{
-				/* Obtain the dimensions for the child */
-				GetChildDimensions(child,&child_width,&child_height);
-				
-/* 				assert( child_width > 0 ); */
-/* 				assert( child_height > 0 ); */
-
-				*width += (child_width + _XfeOrientedSpacing(w));
-
-/* 				printf("%s: width = %d\n",XtName(child),child_width); */
-			}
-		}
-	}
-#endif
-
-	*height += _XfemMaxDynamicHeight(w);
-
-/*    	*width += _XfemTotalDynamicWidth(w); */
-
-	/* Indicator */
-	if (IndicatorIsShown(w) && tp->dynamic_indicator)
-	{
-		*width += (_XfeWidth(tp->indicator) + _XfeOrientedSpacing(w));
-	}
-}
-/*----------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Layout functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-LayoutHorizontal(Widget w)
+LayoutHorizontal(Widget			w,
+				 Boolean		configure,
+				 Dimension *	width_out,
+				 Dimension *	height_out)
 {
     XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Dimension			width = 0;
+	Dimension			height = 0;
 
 	assert (_XfemDynamicChildren(w) != NULL );
+
+	width  = 
+		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
+		2 * tp->raise_border_thickness;
+
+	height = 
+		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) +
+		2 * tp->raise_border_thickness;
+
+	/* Initialize the number of rows */
+	tp->num_rows = 1;
+	tp->num_columns = 1;
 
 	if (_XfemNumDynamicChildren(w) > 0)
 	{
 		XfeLinkNode	node;
-		Position	x = _XfemOffsetLeft(w) + tp->raise_border_thickness;
+
+		Position	min_x = 
+			_XfemOffsetLeft(w) + 
+			tp->raise_border_thickness;
+
+		Position	max_x = 
+			_XfeWidth(w) - 
+			_XfemOffsetRight(w) - 
+			tp->raise_border_thickness;
+		
+		Position	x = min_x;
 		Position	y = _XfemOffsetTop(w) + tp->raise_border_thickness;
 
 		/* Traverse the dynamic children */
@@ -1797,38 +1740,67 @@ LayoutHorizontal(Widget w)
 			 node != NULL;
 			 node = XfeLinkNodeNext(node))
 		{
-			/* Widget		child = layable_children[i]; */
 			Widget		child = (Widget) XfeLinkNodeItem(node);
-			Dimension	width = 0;
-			Dimension	height = 0;
-
-/*  		assert( _XfeChildIsShown(child) ); */
+			Dimension	child_width = 0;
+			Dimension	child_height = 0;
+			Dimension	max_row_height = 0;
 
 			if (_XfeChildIsShown(child))
 			{
 				/* Obtain the dimensions for the child */
-				GetChildDimensions(child,&width,&height);
-				
-/* 				assert( width > 0 ); */
-/* 				assert( height > 0 ); */
+				GetChildDimensions(child,&child_width,&child_height);
 
-				if ((width > 0) && (height > 0))
+				assert( child_width > 0 );
+				assert( child_height > 0 );
+
+				if (configure)
 				{
-					_XfeConfigureWidget(child,x,y,width,height);
+					_XfeConfigureWidget(child,
+										x,
+										y,
+										child_width,
+										child_height);
 				}
 				
-				x += (_XfeWidth(child) + _XfeOrientedSpacing(w));
+				width += (child_width + _XfeOrientedSpacing(w));
+				
+				x += (child_width + _XfeOrientedSpacing(w));
 			}
 		}
+	}
+
+  	height += _XfemMaxDynamicHeight(w);
+
+	if (width_out != NULL)
+	{
+		*width_out = width;
+	}
+
+	if (height_out != NULL)
+	{
+		*height_out = height;
 	}
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutVertical(Widget w)
+LayoutVertical(Widget		w,
+			   Boolean		configure,
+			   Dimension *	width_out,
+			   Dimension *	height_out)
 {
     XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Dimension			width = 0;
+	Dimension			height = 0;
 
 	assert (_XfemDynamicChildren(w) != NULL );
+
+	width  = 
+		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
+		2 * tp->raise_border_thickness;
+
+	height = 
+		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) +
+		2 * tp->raise_border_thickness;
 
 	if (_XfemNumDynamicChildren(w) > 0)
 	{
@@ -1842,27 +1814,43 @@ LayoutVertical(Widget w)
 			 node = XfeLinkNodeNext(node))
 		{
 			Widget		child = (Widget) XfeLinkNodeItem(node);
-			Dimension	width = 0;
-			Dimension	height = 0;
-			
-/*  		assert( _XfeChildIsShown(child) ); */
+			Dimension	child_width = 0;
+			Dimension	child_height = 0;
 
 			if (_XfeChildIsShown(child))
 			{
 				/* Obtain the dimensions for the child */
-				GetChildDimensions(child,&width,&height);
+				GetChildDimensions(child,&child_width,&child_height);
 
-/* 				assert( width > 0 ); */
-/* 				assert( height > 0 ); */
+				assert( child_width > 0 );
+				assert( child_height > 0 );
 
-				if ((width > 0) && (height > 0))
+				if (configure)
 				{
-					_XfeConfigureWidget(child,x,y,width,height);
+					_XfeConfigureWidget(child,
+										x,
+										y,
+										child_width,
+										child_height);
 				}
-
-				y += (_XfeHeight(child) + _XfeOrientedSpacing(w));
+				
+				height += (child_height + _XfeOrientedSpacing(w));
+				
+				y += (child_height + _XfeOrientedSpacing(w));
 			}
 		}
+	}
+
+	width += _XfemMaxDynamicWidth(w);
+
+	if (width_out != NULL)
+	{
+		*width_out = width;
+	}
+
+	if (height_out != NULL)
+	{
+		*height_out = height;
 	}
 }
 /*----------------------------------------------------------------------*/

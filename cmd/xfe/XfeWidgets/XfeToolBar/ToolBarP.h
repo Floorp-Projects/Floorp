@@ -118,6 +118,8 @@ typedef struct _XfeToolBarPart
 	Boolean				allow_wrap;				/* Allow wrap			*/
 	Cardinal			max_num_columns;		/* Max num columns		*/
 	Cardinal			max_num_rows;			/* Max num rows			*/
+	Cardinal			num_columns;			/* Num columns			*/
+	Cardinal			num_rows;				/* Num rows				*/
     
     /* Private data -- Dont even look past this comment -- */
 	Widget				indicator;				/* Indicator			*/
