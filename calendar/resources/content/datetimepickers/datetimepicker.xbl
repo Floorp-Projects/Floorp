@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley <garths@oeone.com>
+ *                 Mike Potter <mikep@oeone.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* DateTimePicker: datepicker + timepicker (+ timezone in future)
+
+   Used in calendar/content/eventDialog.xul
+
+   Requires:
+     <?xml-stylesheet
+      href="chrome://calendar/content/datetimepickers/datetimepicker.css" ?>
+   May require (probably until bug 58757 fixed):
+     <script type="application/x-javascript"
+      src="chrome://global/content/strres.js" />
+     <script type="application/x-javascript"
+      src="chrome://calendar/content/dateUtils.js"/>
+
+   At site, can provide id, and code to run when changed by picker.
+     <datetimepicker id="my-picker" onchange="myOnPick(this);"
+      disabled="false" datepickerdisabled="false" timepickerdisabled="false"/>
+
+   May get/set value with 
+     document.getElementById("my-picker").value = new Date();
+   May disable/enable from javascript with
+     document.getElementById("my-picker").disabled = true;
+   May also dis/enable datepicker and timepicker individually with 
+     document.getElementById("my-picker").datepickerdisabled = true;
+     document.getElementById("my-picker").timepickerdisabled = true;
+*/
+-->
+
+<!--  -->
+<bindings id="xulDateTimePicker"
+ xmlns="http://www.mozilla.org/xbl"
+ xmlns:xbl="http://www.mozilla.org/xbl"
+ xmlns:html="http://www.w3.org/TR/REC-html40"
+ xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="datetimepicker" extends="xul:box"
+   inherits="value,onchange,disabled,datepickerdisabled,timepickerdisabled">
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <!-- onchange was simply "onDatePick()" in Moz1.6, but stopped working in Moz1.7
+         so had to add navigation by parents. -->
+    <content id="content">
+      <xul:hbox flex="1" id="hbox">
+        <datepicker id="date-picker" onchange="this.parentNode.parentNode.onDatePick();"
+         xbl:inherits="value,disabled,disabled=datepickerdisabled" />
+        <timepicker id="time-picker" onchange="this.parentNode.parentNode.onTimePick();"
+         xbl:inherits="value,disabled,disabled=timepickerdisabled" />
+	<!-- timezonepicker -->
+      </xul:hbox>
+    </content>
+
+    <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+    <implementation>
+      <property name="value" 
+       onset="this.update(val,false)"
+       onget="return this.mValue"/>
+
+      <property name="disabled"
+       onget="return this.mDisabled;" 
+       onset="this.setDisabled( val );" />
+
+      <property name="datepickerdisabled"
+       onget="return this.kDatePicker.disabled;"
+       onset="this.kDatePicker.disabled = val;" />
+
+      <!-- timepicker may be disabled alone for all day events -->
+      <property name="timepickerdisabled"
+       onget="return this.kTimePicker.disabled;"
+       onset="this.kTimePicker.disabled = val;" />
+
+      <constructor><![CDATA[
+        //java.lang.System.err.println(">>datetime()");
+        this.kDatePicker =
+	  document.getAnonymousElementByAttribute(this, "id", "date-picker");
+        this.kTimePicker =
+	  document.getAnonymousElementByAttribute(this, "id", "time-picker");
+
+        // init this.mValue:
+	var val = this.getAttribute("value");
+	this.mValue = (val ? new Date(val)
+	               :     new Date());
+
+        // Make the function a member of the picker 
+	// so that 'this' will be the picker
+	val = this.getAttribute("onchange");
+	if (val) this.kCallback = function(){ eval( val ) };
+        //java.lang.System.err.println("<<datetime()"+this.mValue);
+      ]]></constructor>
+
+      <!-- update values.  If aRefresh is true, call user's onchange.
+           (aRefresh is false if externally set from user program,
+	    aRefresh is true if internally updated from gui.) -->
+      <method name="update">
+	<parameter name="aValue"/>
+	<parameter name="aRefresh"/>
+	<body><![CDATA[
+	  if (aValue != null) {
+	    this.mValue = aValue;
+	  }
+	  // set textBox.value property, not attribute
+	  this.kDatePicker.value = this.mValue;
+	  this.kTimePicker.value = this.mValue;
+
+	  if (aValue != null && this.kCallback && aRefresh != false) {
+	    this.kCallback();
+	  }
+	]]></body>
+      </method>
+
+      <!-- Date was changed by gui: update value. -->
+      <method name="onDatePick">
+	<body><![CDATA[
+	  var dateTime = new Date(this.mValue);
+	  var newDate = this.kDatePicker.value;
+	  dateTime.setFullYear(newDate.getFullYear());
+	  dateTime.setMonth(newDate.getMonth());
+	  dateTime.setDate(newDate.getDate());
+	  this.update(dateTime, true);
+	]]></body>
+      </method>
+
+      <!-- Time was changed by gui: update value -->
+      <method name="onTimePick">
+	<body><![CDATA[
+	  var dateTime = new Date(this.mValue);
+	  var newTime = this.kTimePicker.value;
+	  dateTime.setHours(newTime.getHours());
+	  dateTime.setMinutes(newTime.getMinutes());
+	  dateTime.setSeconds(newTime.getSeconds());
+	  this.update(dateTime, true);
+	]]></body>
+      </method>
+
+      <!-- Propagate aDisabled to datepicker and timepicker --> 
+      <method name="setDisabled">
+        <parameter name="aDisabled" />
+	<body><![CDATA[
+	  this.mDisabled = aDisabled;
+	  this.kDatePicker.disabled = aDisabled;
+	  this.kTimePicker.disabled = aDisabled;
+	]]></body>
+      </method>
+
+    </implementation>
+
+    <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+    <handlers>
+      <handler event="bindingattached" action="this.initialize();"/>
+    </handlers>
+
+  </binding>
+</bindings>
