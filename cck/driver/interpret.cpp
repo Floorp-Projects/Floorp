@@ -1342,6 +1342,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 		}
 		// This is an extra free...
 		//free(pcmd);
+		free(cmdList[i]);
 	}
 
 	return TRUE;
