@@ -1278,8 +1278,8 @@ nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
-  InstallSignal(aWidget,
-				"motion_notify_event",
+  InstallSignal((GtkWidget *)aWidget,
+				(gchar *)"motion_notify_event",
 				GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal));
 }
 
@@ -1289,7 +1289,7 @@ nsWidget::InstallDragLeaveSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-                "drag_leave",
+                (gchar *)"drag_leave",
                 GTK_SIGNAL_FUNC(nsWidget::DragLeaveSignal));
 }
 
@@ -1299,7 +1299,7 @@ nsWidget::InstallDragMotionSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-                "drag_motion",
+                (gchar *)"drag_motion",
                 GTK_SIGNAL_FUNC(nsWidget::DragMotionSignal));
 }
 
@@ -1309,7 +1309,7 @@ nsWidget::InstallDragBeginSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-                "drag_begin",
+                (gchar *)"drag_begin",
                 GTK_SIGNAL_FUNC(nsWidget::DragBeginSignal));
 }
 
@@ -1319,7 +1319,7 @@ nsWidget::InstallDragDropSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-                "drag_drop",
+                (gchar *)"drag_drop",
                 GTK_SIGNAL_FUNC(nsWidget::DragDropSignal));
 }
 
@@ -1330,7 +1330,7 @@ nsWidget::InstallEnterNotifySignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"enter_notify_event",
+				(gchar *)"enter_notify_event",
 				GTK_SIGNAL_FUNC(nsWidget::EnterNotifySignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1340,7 +1340,7 @@ nsWidget::InstallLeaveNotifySignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"leave_notify_event",
+				(gchar *)"leave_notify_event",
 				GTK_SIGNAL_FUNC(nsWidget::LeaveNotifySignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1350,7 +1350,7 @@ nsWidget::InstallButtonPressSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"button_press_event",
+				(gchar *)"button_press_event",
 				GTK_SIGNAL_FUNC(nsWidget::ButtonPressSignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1360,7 +1360,7 @@ nsWidget::InstallButtonReleaseSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"button_release_event",
+				(gchar *)"button_release_event",
 				GTK_SIGNAL_FUNC(nsWidget::ButtonReleaseSignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1370,7 +1370,7 @@ nsWidget::InstallFocusInSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"focus_in_event",
+				(gchar *)"focus_in_event",
 				GTK_SIGNAL_FUNC(nsWidget::FocusInSignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1380,7 +1380,7 @@ nsWidget::InstallFocusOutSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
-				"focus_out_event",
+				(gchar *)"focus_out_event",
 				GTK_SIGNAL_FUNC(nsWidget::FocusOutSignal));
 }
 //////////////////////////////////////////////////////////////////
@@ -1390,7 +1390,7 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   
   InstallSignal(aWidget,
-				"realize",
+				(gchar *)"realize",
 				GTK_SIGNAL_FUNC(nsWidget::RealizeSignal));
 }
 //////////////////////////////////////////////////////////////////
