@@ -306,10 +306,13 @@ void nsXIFConverter::AddContent(const nsString& aContent)
 
 void nsXIFConverter::AddComment(const nsString& aContent)
 {
-
-//  mBuffer.Append(mBeginComment);
-    mBuffer.Append(aContent);
-//  mBuffer.Append(mEndComment);
+  // For actual comments, don't want to include the begin and
+  // end tags; but commenting them out caused bug
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=7720
+  // so we'll have to look into this more deeply later.
+  mBuffer.Append(mBeginComment);
+  mBuffer.Append(aContent);
+  mBuffer.Append(mEndComment);
 }
 
 
