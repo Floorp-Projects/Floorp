@@ -99,7 +99,7 @@ public final class NativeCall extends ScriptableObject {
         return result;
     }
     
-    NativeCall getActivation(NativeFunction f) {
+    NativeCall getActivation(Function f) {
         NativeCall x = this;
         do {
             if (x.funObj == f)
@@ -109,7 +109,7 @@ public final class NativeCall extends ScriptableObject {
         return null;
     }
         
-    public NativeFunction getFunctionObject() {
+    public Function getFunctionObject() {
         return funObj;
     }
 

@@ -412,7 +412,8 @@ public abstract class IdScriptable extends ScriptableObject
             thisObj = thisObj.getPrototype();
             if (thisObj != null) { return thisObj; }
         }
-        throw NativeGlobal.typeError1("msg.incompat.call", f.methodName, f);
+        throw NativeGlobal.typeError1("msg.incompat.call", 
+                                      f.getFunctionName(), f);
     }
 
     protected IdFunction newIdFunction(int id) {

@@ -1211,7 +1211,7 @@ public class ScriptRuntime {
     {
         if (fun instanceof IdFunction) {
             IdFunction f = (IdFunction)fun;
-            String name = f.methodName;
+            String name = f.getFunctionName();
             Class cl = f.master.getClass();
             if (name.equals("eval") && cl == NativeGlobal.class) {
                 return NativeGlobal.evalSpecial(cx, scope, thisArg, args,

@@ -37,12 +37,8 @@
 
 package org.mozilla.javascript;
 
-public class IdFunction extends ScriptableObject implements Function
+public class IdFunction extends BaseFunction
 {
-    /** Indicates that native implementation was overwritten by script */
-    public static final 
-        IdFunction WAS_OVERWRITTEN = new IdFunction(null, "", 0);
-    
     public static final int FUNCTION_ONLY = 0;
 
     public static final int CONSTRUCTOR_ONLY = 1;
@@ -50,8 +46,8 @@ public class IdFunction extends ScriptableObject implements Function
     public static final int FUNCTION_AND_CONSTRUCTOR = 2;
 
     public IdFunction(IdFunctionMaster master, String name, int id) {
+        this.functionName = name;
         this.master = master;
-        this.methodName = name;
         this.methodId = id;
     }
     
@@ -63,54 +59,17 @@ public class IdFunction extends ScriptableObject implements Function
         functionType = type;
     }
     
-    public String getClassName() { return "Function"; }
-
-    public boolean has(String name, Scriptable start) {
-        return nameToId(name) != 0 || super.has(name, start);
-    }
-
-    public Object get(String name, Scriptable start) {
-        int id = nameToId(name);
-        return (0 != id) ? getField(id) : super.get(name, start);
-    }
-
-    public void put(String name, Scriptable start, Object value) {
-        if (nameToId(name) == 0) {
-            super.put(name, start, value);
+    public Scriptable getPrototype() {
+        // Lazy initialization of prototype: for native functions this
+        // may not be called at all
+        Scriptable proto = super.getPrototype(); 
+        if (proto == null) {
+            proto = getFunctionPrototype(getParentScope());
+            setPrototype(proto);
         }
+        return proto;
     }
 
-    public void delete(String name) {
-        // Let the super class throw exceptions for sealed objects
-        if (isSealed() || nameToId(name) == 0) {
-            super.delete(name);
-        }
-    }
-    
-    /**
-     * Implements the instanceof operator for JavaScript Function objects.
-     * <p>
-     * <code>
-     * foo = new Foo();<br>
-     * foo instanceof Foo;  // true<br>
-     * </code>
-     *
-     * @param instance The value that appeared on the LHS of the instanceof
-     *              operator
-     * @return true if the "prototype" property of "this" appears in
-     *              value's prototype chain
-     *
-     */
-    public boolean hasInstance(Scriptable instance) {
-        Object protoProp = ScriptableObject.getProperty(this, "prototype");
-        if (protoProp instanceof Scriptable && protoProp != Undefined.instance)
-        {
-            return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
-        }
-        throw NativeGlobal.typeError1
-            ("msg.instanceof.bad.prototype", this.methodName, instance);
-    }
-    
     public Object call(Context cx, Scriptable scope, Scriptable thisObj, 
                        Object[] args)
         throws JavaScriptException
@@ -139,36 +98,11 @@ public class IdFunction extends ScriptableObject implements Function
         }
     }
 
-    public Scriptable getPrototype() {
-        // Lazy initialization of prototype: for native functions this
-        // may not be called at all
-        Scriptable proto = super.getPrototype(); 
-        if (proto == null) {
-            proto = getFunctionPrototype(getParentScope());
-            setPrototype(proto);
-        }
-        return proto;
-    }
-
-    // Copied from NativeFunction
-    protected Scriptable getClassPrototype() {
-        Object protoVal = immunePrototypeProperty;
-        if (protoVal == NOT_FOUND) {
-            protoVal = super.get("prototype", this);
-        }
-        if (!(protoVal instanceof Scriptable)
-            || protoVal == Undefined.instance)
-        {
-            protoVal = getClassPrototype(this, "Object");
-        }
-        return (Scriptable) protoVal;
-    }
-
     public String decompile(Context cx, int indent, boolean justbody) {
         StringBuffer sb = new StringBuffer();
         if (!justbody) {
             sb.append("function ");
-            sb.append(methodName);
+            sb.append(getFunctionName());
             sb.append("() { ");
         }
         sb.append("[native code for ");
@@ -177,13 +111,23 @@ public class IdFunction extends ScriptableObject implements Function
             sb.append(smaster.getClassName());
             sb.append('.');
         }
-        sb.append(methodName);
+        sb.append(getFunctionName());
         sb.append(", arity=");
         sb.append(getArity());
         sb.append(justbody ? "]\n" : "] }\n");
         return sb.toString();
     }
     
+    public int getArity() {
+        int arity = master.methodArity(methodId);
+        if (arity < 0) { 
+            throw onBadMethodId(master, methodId);
+        }
+        return arity;
+    }
+    
+    public int getLength() { return getArity(); }
+
     /** Prepare to be used as constructor .
      ** @param scope constructor scope
      ** @param prototype DontEnum, DontDelete, ReadOnly prototype property 
@@ -194,32 +138,12 @@ public class IdFunction extends ScriptableObject implements Function
         setImmunePrototypeProperty(prototype);
     }
     
-    /** Make value as DontEnum, DontDelete, ReadOnly
-     ** prototype property of this native Function object
-     ** if not already set
-     */
-    protected void setImmunePrototypeProperty(Object value) {
-        if (immunePrototypeProperty == NOT_FOUND) {
-            immunePrototypeProperty = value;
-        }
-    }
-    
     static RuntimeException onBadMethodId(IdFunctionMaster master, int id) {
         // It is program error to call id-like methods for unknown or 
         // non-function id
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
     }
 
-
-
-    private int getArity() {
-        int arity = master.methodArity(methodId);
-        if (arity < 0) { 
-            throw onBadMethodId(master, methodId);
-        }
-        return arity;
-    }
-    
     // Copied from NativeFunction.construct
     private void postConstruction(Scriptable newObj) {
         if (newObj.getPrototype() == null) {
@@ -233,50 +157,8 @@ public class IdFunction extends ScriptableObject implements Function
         }
     }
 
-    private Object getField(int fieldId) {
-        switch (fieldId) {
-            case ID_ARITY: case ID_LENGTH: 
-                return new Integer(getArity());
-            case ID_NAME: 
-                return methodName;
-            case ID_PROTOTYPE:
-                return immunePrototypeProperty;
-        }
-        return null;
-    }
-    
-    private int nameToId(String s) {
-        int id = 0;
-        String guess = null;
-        switch (s.length()) {
-            case 4: guess = "name"; id = ID_NAME; break;
-            case 5: guess = "arity"; id = ID_ARITY; break;
-            case 6: guess = "length"; id = ID_LENGTH; break;
-            case 9: 
-                if (immunePrototypeProperty != NOT_FOUND) {
-                // Try to guess only if immunePrototypeProperty is defined, 
-                // delegate to ScriptableObject otherwise
-                    guess = "prototype"; id = ID_PROTOTYPE; 
-                }
-                break;
-            
-        }
-        return (guess != null && guess.equals(s)) ? id : 0;
-    }
-
-    private static final int 
-        ID_ARITY     = 1,
-        ID_LENGTH    = 2,
-        ID_NAME      = 3,
-        ID_PROTOTYPE = 4;
-        
     protected IdFunctionMaster master;
     protected int methodId;
-    
-    protected String methodName;
 
     protected int functionType = FUNCTION_ONLY;
-
-    // If != NOT_FOUND, represent script-immune prototype property
-    private Object immunePrototypeProperty = NOT_FOUND; 
 }
