@@ -43,6 +43,7 @@
 #include "nsIAtom.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
+#include "nsIURI.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"

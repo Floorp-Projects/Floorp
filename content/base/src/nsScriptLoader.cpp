@@ -52,6 +52,38 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 //
 //////////////////////////////////////////////////////////////
 
+static already_AddRefed<nsIPrincipal>
+IntersectPrincipalCerts(nsIPrincipal *aOld, nsIPrincipal *aNew)
+{
+  NS_PRECONDITION(aOld, "Null old principal!");
+  NS_PRECONDITION(aNew, "Null new principal!");
+
+  nsIPrincipal *principal = aOld;
+
+  PRBool hasCert;
+  aOld->GetHasCertificate(&hasCert);
+  if (hasCert) {
+    PRBool equal;
+    aOld->Equals(aNew, &equal);
+    if (!equal) {
+      nsCOMPtr<nsIURI> uri, domain;
+      aOld->GetURI(getter_AddRefs(uri));
+      aOld->GetDomain(getter_AddRefs(domain));
+
+      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri, &principal);
+      if (principal && domain) {
+        principal->SetDomain(domain);
+      }
+
+      return principal;
+    }
+  }
+
+  NS_ADDREF(principal);
+
+  return principal;
+}
+
 //////////////////////////////////////////////////////////////
 // Per-request data structure
 //////////////////////////////////////////////////////////////
@@ -412,17 +444,14 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     }
     
     // Check that the containing page is allowed to load this URI.
-    nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) {
-      return FireErrorNotification(rv, aElement, aObserver);
-    }
     nsCOMPtr<nsIURI> docURI;
     mDocument->GetDocumentURL(getter_AddRefs(docURI));
     if (!docURI) {
       return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
     }
-    rv = securityManager->CheckLoadURI(docURI, scriptURI, 
-                                       nsIScriptSecurityManager::ALLOW_CHROME);
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckLoadURI(docURI, scriptURI, nsIScriptSecurityManager::ALLOW_CHROME);
+
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);
     }
@@ -874,18 +903,22 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (channel) {
       nsCOMPtr<nsISupports> owner;
       channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> prin;
-      
-      if (owner) {
-        prin = do_QueryInterface(owner, &rv);
-      }
-      
-      rv = mDocument->AddPrincipal(prin);
-      if (NS_FAILED(rv)) {
-        mPendingRequests.RemoveObject(request);
-        FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
-        ProcessPendingReqests();
-        return NS_OK;
+      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
+
+      if (principal) {
+        nsCOMPtr<nsIPrincipal> docPrincipal;
+        rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIPrincipal> newPrincipal =
+              IntersectPrincipalCerts(docPrincipal, principal);
+
+          mDocument->SetPrincipal(newPrincipal);
+        } else {
+          mPendingRequests.RemoveObject(request);
+          FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
+          ProcessPendingReqests();
+          return NS_OK;
+        }
       }
     }
   }

@@ -53,12 +53,7 @@
 
 // For GetOrigin()
 
-#include "nsCOMPtr.h"
-#include "nsJSPrincipals.h"
-#include "nsSystemPrincipal.h"
-#include "nsCodebasePrincipal.h"
-#include "nsCertificatePrincipal.h"
-#include "nsScriptSecurityManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -135,31 +130,19 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
         }
     }
 
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(m_pPrincipal);
-    if (!codebase) 
+    nsXPIDLCString origin;
+    m_pPrincipal->GetOrigin(getter_Copies(origin));
+
+    PRInt32 originlen = origin.Length();
+    if (origin.IsEmpty() || originlen > buflen - 1) {
         return NS_ERROR_FAILURE;
-
-    char* origin=nsnull;
-    codebase->GetOrigin(&origin);
-
-    if (origin) {
-        PRInt32 originlen = (PRInt32) strlen(origin);
-        if (!buf || buflen<=originlen) {
-            if (origin) {
-                nsCRT::free(origin);
-            }
-            return NS_ERROR_FAILURE;
-        }
-
-        // Copy the string into to user supplied buffer. Is there a better
-        // way to do this?
-
-        memcpy(buf,origin,originlen);
-        buf[originlen]=nsnull; // Gotta terminate it.
-        nsCRT::free(origin);
-    } else {
-        *buf = nsnull;
     }
+
+    // Copy the string into to user supplied buffer. Is there a better
+    // way to do this?
+
+    memcpy(buf, origin, originlen);
+    buf[originlen] = nsnull; // Gotta terminate it.
 
     return NS_OK;
 }
@@ -167,7 +150,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
 NS_METHOD 
 nsCSecurityContext::GetCertificateID(char* buf, int buflen)
 {
-    nsCOMPtr<nsIPrincipal> principal = NULL;
+    nsCOMPtr<nsIPrincipal> principal;
   
     // Get the Script Security Manager.
 
@@ -176,27 +159,21 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
-
     secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-    nsCOMPtr<nsICertificatePrincipal> cprincipal = do_QueryInterface(principal);
-    if (!cprincipal) 
+    if (!principal) {
         return NS_ERROR_FAILURE;
-
-    char* certificate = nsnull;
-    cprincipal->GetCertificateID(&certificate);
-
-    if (certificate) {
-        PRInt32 certlen = (PRInt32) strlen(certificate);
-        if( buflen<=certlen ) {
-            nsCRT::free(certificate);
-            return NS_ERROR_FAILURE;
-        }
-        memcpy(buf,certificate,certlen);
-        buf[certlen]=nsnull;
-        nsCRT::free(certificate);
-    } else {
-        *buf = nsnull;
     }
+
+    nsXPIDLCString certificate;
+    principal->GetCertificateID(getter_Copies(certificate));
+
+    PRInt32 certlen = certificate.Length();
+    if (buflen <= certlen) {
+        return NS_ERROR_FAILURE;
+    }
+
+    memcpy(buf, certificate.get(), certlen);
+    buf[certlen] = nsnull;
 
     return NS_OK;
 }

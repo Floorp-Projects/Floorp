@@ -105,7 +105,7 @@ public:
 
     NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
-    NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
+    NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal);
 
     NS_IMETHOD SetContentType(const nsAString& aContentType);
 

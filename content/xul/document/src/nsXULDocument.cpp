@@ -68,7 +68,7 @@
 #include "nsDOMError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
-#include "nsICodebasePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
@@ -684,9 +684,9 @@ nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 }
 
 NS_IMETHODIMP
-nsXULDocument::AddPrincipal(nsIPrincipal *aPrincipal)
+nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
 {
-    NS_NOTREACHED("AddPrincipal");
+    NS_NOTREACHED("SetPrincipal");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -61,7 +61,7 @@
 #include "nsParserCIID.h"
 #include "nsIHTMLFragmentContentSink.h"
 #include "nsIEnumerator.h"
-#include "nsScriptSecurityManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIHTMLDocument.h"

@@ -42,6 +42,10 @@
 #include "nsIServiceManager.h"
 #include "nsISignatureVerifier.h"
 #include "nsIInputStream.h"
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
+#include "nsPICertNotification.h"
+
 
 #include "nsNetUtil.h"
 

@@ -249,6 +249,11 @@ public:
   {
     return sIOService;
   };
+
+  static nsIScriptSecurityManager* GetSecurityManager()
+  {
+    return sSecurityManager;
+  }
   
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    nsIStatefulFrame::SpecialStateID aID,

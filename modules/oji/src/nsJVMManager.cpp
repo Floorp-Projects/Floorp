@@ -68,14 +68,10 @@
 #include "nspr.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
-//#include "nsJSPrincipals.h"
-//#include "nsSystemPrincipal.h"
-//#include "nsCodebasePrincipal.h"
-#include "nsCertificatePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISignatureVerifier.h"
 
-//#include "nsScriptSecurityManager.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -956,7 +952,7 @@ nsJVMManager::IsAllPermissionGranted(
 {
     nsresult rv      = NS_OK;
 
-    nsIPrincipal* pIPrincipal = NULL;
+    nsCOMPtr<nsIPrincipal> pIPrincipal;
   
     // Get the Script Security Manager.
 
@@ -968,18 +964,12 @@ nsJVMManager::IsAllPermissionGranted(
     // The fingerprint is a one way hash of this certificate. It is used
     // as the key to store the principal in the principal database.
 
-    rv = secMan->GetCertificatePrincipal(lastFP, &pIPrincipal);
+    rv = secMan->GetCertificatePrincipal(lastFP, nsnull,
+                                         getter_AddRefs(pIPrincipal));
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    // Get the nsICertificatePrincipal interface so that we can set the
-    // common name. The common name is a user meaningful string.
-    
-    nsCOMPtr<nsICertificatePrincipal> pICertificate = do_QueryInterface(pIPrincipal, &rv);
-    if (NS_FAILED(rv) || !pICertificate) return PR_FALSE;
-
     // Set the common name.
-
-    rv = pICertificate->SetCommonName(lastCN);
+    rv = pIPrincipal->SetCommonName(lastCN);
 
     PRInt16 ret;
 

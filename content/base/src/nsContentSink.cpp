@@ -60,13 +60,13 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
-#include "nsIAggregatePrincipal.h"
 #include "nsIServiceManagerUtils.h"
-#include "nsICodebasePrincipal.h"
 #include "nsICharsetConverterManager.h"
+#include "nsContentUtils.h"
 #include "nsParserUtils.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
@@ -355,23 +355,18 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       return rv;
     }
 
-    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(docPrincipal, &rv));
-    // Document principal should always be an aggregate
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPrincipal> originalPrincipal;
-    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
-    nsCOMPtr<nsICodebasePrincipal> originalCodebase =
-      do_QueryInterface(originalPrincipal, &rv);
-    if (NS_FAILED(rv)) {
-      // Document's principal is not a codebase (may be system), so
-      // can't set cookies
-
+    nsCOMPtr<nsIPrincipal> systemPrincipal;
+    nsContentUtils::GetSecurityManager()->
+      GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+    NS_ASSERTION(systemPrincipal, "No system principal");
+    
+    if (docPrincipal == systemPrincipal) {
+      // Document's principal is not a codebase, so we can't set cookies
       return NS_OK;
     }
 
     nsCOMPtr<nsIURI> codebaseURI;
-    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    rv = docPrincipal->GetURI(getter_AddRefs(codebaseURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
