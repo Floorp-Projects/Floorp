@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,39 +13,36 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+FILES		= \
+		article.gif \
+		document.gif \
+		folder-closed.gif \
+		folder-open.gif \
+		loading.gif \
+		dom-test-1.xul \
+		dom-test-2.xul \
+		dom-test-3.xul \
+		dom-test-4.css \
+		dom-test-4.xul \
+		dom-test-5.xul \
+		dom-test-6.xul \
+		dom-test-7.xul \
+		dom-test-8.xul \
+		ignore-test.xul \
+		xpidl-test-1.xul \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-FILES = \
-	article.gif \
-	document.gif \
-	folder-closed.gif \
-	folder-open.gif \
-	loading.gif \
-	dom-test-1.xul			\
-	dom-test-2.xul			\
-	dom-test-3.xul			\
-	dom-test-4.css			\
-	dom-test-4.xul			\
-	dom-test-5.xul			\
-	dom-test-6.xul			\
-	dom-test-7.xul			\
-	dom-test-8.xul			\
-	ignore-test.xul			\
-	xpidl-test-1.xul		\
-	$(NULL)
-
-FILES := $(addprefix $(srcdir)/, $(FILES))
-
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/res/rdf
+	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/res/rdf
 
