@@ -20,6 +20,8 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetDetectorsOverlay.xul"?>
 
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
