@@ -126,5 +126,4 @@ public:
 };
 
 
-
 #endif //__nsProxiedServiceManager_h_
