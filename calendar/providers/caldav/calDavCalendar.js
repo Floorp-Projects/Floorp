@@ -53,7 +53,7 @@
 
 // XXXdmose deal with locking
 
-// XXXdmose observers or listeners first?
+// XXXdmose first listeners, then observers
 
 function calDavCalendar() {
     this.wrappedJSObject = this;
@@ -152,7 +152,7 @@ calDavCalendar.prototype = {
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
+        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -192,6 +192,8 @@ calDavCalendar.prototype = {
         newItem.generation = 1;
         newItem.makeImmutable();
 
+        // XXX deal with Location header
+
         dump("icalString = " + newItem.icalString + "\n");
         // XXX use if not exists
         // do WebDAV put
@@ -222,7 +224,7 @@ calDavCalendar.prototype = {
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
+        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -290,7 +292,7 @@ calDavCalendar.prototype = {
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
+        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -470,7 +472,7 @@ calDavCalendar.prototype = {
                         {
                             // there might be some recurrences here that we need to handle
                             var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, {});
-                            for (var i = 0; i < recs.length; i++) {
+                            for (i = 0; i < recs.length; i++) {
                                 itemsFound.push(recs[i]);
                             }
                         } else if (itemEndTime >= startTime) {
@@ -525,7 +527,7 @@ calDavCalendar.prototype = {
         // So we need a list of items to iterate over.  Should theoretically 
         // use search to find this out
         var eventDirUri = this.mUri.clone();
-        eventDirUri.spec = eventDirUri.spec + "calendar/events/";
+        eventDirUri.spec = eventDirUri.spec + "calendar/";
         var eventDirResource = new WebDavResource(eventDirUri);
 
         var propsToGet = ["DAV: getlastmodified"];
@@ -606,8 +608,8 @@ calDavCalendar.prototype = {
             // (think of the children!!)  This is a gross hack, but it'll go
             // away once we start using REPORT or SEARCH
             // 
-            if (aResource.path == 
-                eventDirUri.path.substr(0, eventDirUri.path.length-1)) {
+            if (aResource.path ==
+                eventDirUri.path.substr(0, eventDirUri.path.length)) {
                 return;
             }
 
