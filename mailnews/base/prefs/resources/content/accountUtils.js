@@ -39,13 +39,14 @@
 var returnmycall=false;
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
-
+var zeroIdCount = false; //If there is only one account and has no IDs
 // returns the first account with an invalid server or identity
 
 function getInvalidAccounts(accounts)
 {
     var numAccounts = accounts.Count();
     var invalidAccounts = new Array;
+    var numIdentities = 0;
     for (var i=0; i<numAccounts; i++) {
         var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
         try {
@@ -60,7 +61,7 @@ function getInvalidAccounts(accounts)
         }
 
         var identities = account.identities;
-        var numIdentities = identities.Count();
+        numIdentities = identities.Count();
 
         for (var j=0; j<numIdentities; j++) {
             var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
@@ -70,7 +71,8 @@ function getInvalidAccounts(accounts)
             }
         }
     }
-
+    if ((numAccounts == 1) && (numIdentities <= 0))
+      zeroIdCount = true;
     return invalidAccounts;
 }
 
@@ -163,7 +165,16 @@ function verifyAccounts(wizardcallback) {
             }
         }
 
-        if (openWizard || prefillAccount) {
+        //We are doing openWizard if  MessengerMigration returns some kind of error
+        //(including those cases where there is nothing to migrate).
+        //prefillAccount is valid, if there is an invalid account already 
+        //zeroIdCount is true when there is only one account and it has no identities
+        //usually that happens only when it is a local folder account
+        //wizardcallback is true only when verifyaccounts is called from compose window.
+        //the last condition in the if is so that we call account wizard only when the user
+        //has only a local folder and tries to compose mail.
+
+        if (openWizard || prefillAccount || (zeroIdCount && wizardcallback)) {
             MsgAccountWizard(prefillAccount);
 		        ret = false;
         }
