@@ -1404,6 +1404,14 @@ NS_IMETHODIMP nsViewManager2::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *a
 
 NS_IMETHODIMP nsViewManager2::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
+#ifdef DEBUG_mjudge
+  if (aView)
+  {
+    printf("capturing mouse events for view %x\n",aView);
+  }
+  printf("removing mouse capture from view %x\n",mMouseGrabber);
+#endif
+
 	mMouseGrabber = aView;
 	aResult = PR_TRUE;
 	return NS_OK;
