@@ -588,6 +588,9 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 {
     // Release the url parser that the stdurl is holding.
     nsStandardURL::ShutdownGlobalObjects();
+
+    // Release buffer cache
+    NS_IF_RELEASE(nsIOService::gBufferCache);
 }
 
 static const nsModuleComponentInfo gNetModuleInfo[] = {

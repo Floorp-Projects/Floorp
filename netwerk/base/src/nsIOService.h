@@ -55,6 +55,8 @@
 #include "nsWeakReference.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
+#define NS_NECKO_BUFFER_CACHE_COUNT (24)  // Max holdings: 24 * 4k = 96k
+#define NS_NECKO_15_MINS (15 * 60)
 
 static const char *gScheme[] = {"chrome", "file", "http", "jar", "resource"};
 
@@ -123,6 +125,11 @@ protected:
     nsCOMPtr<nsIURLParser>              mDefaultURLParser;
     nsAutoVoidArray                     mURLParsers;
     nsVoidArray                         mRestrictedPortList;
+
+public:
+    // Necko buffer cache. Used for all default buffer sizes that necko
+    // allocates.
+    static nsIMemory *gBufferCache;
 };
 
 #endif // nsIOService_h__

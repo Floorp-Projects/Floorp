@@ -42,6 +42,7 @@
 #include "nsIPipe.h"
 #include "nsAutoLock.h"
 #include "prlog.h"
+#include "nsIOService.h"
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gStreamListenerProxyLog;
@@ -395,11 +396,15 @@ nsStreamListenerProxy::Init(nsIStreamListener *listener,
     // The segment size must not exceed the maximum
     bufferSegmentSize = PR_MIN(bufferMaxSize, bufferSegmentSize);
 
+    // Use the necko buffer cache for the default buffers
+    nsIMemory *allocator = nsnull;
+    if (bufferSegmentSize == DEFAULT_BUFFER_SEGMENT_SIZE)
+        allocator = nsIOService::gBufferCache;
     nsresult rv = NS_NewPipe(getter_AddRefs(mPipeIn),
                              getter_AddRefs(mPipeOut),
                              bufferSegmentSize,
                              bufferMaxSize,
-                             PR_TRUE, PR_TRUE);
+                             PR_TRUE, PR_TRUE, allocator);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRequestObserver> observer = do_QueryInterface(listener);

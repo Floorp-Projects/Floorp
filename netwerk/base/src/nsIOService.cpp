@@ -65,6 +65,7 @@
 #include "nsITimelineService.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
+#include "nsIRecyclingAllocator.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
@@ -144,6 +145,9 @@ PRInt16 gBadPortList[] = {
 static const char kProfileChangeNetTeardownTopic[] = "profile-change-net-teardown";
 static const char kProfileChangeNetRestoreTopic[] = "profile-change-net-restore";
 
+// Necko buffer cache
+nsIMemory* nsIOService::gBufferCache = nsnull;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
@@ -151,6 +155,24 @@ nsIOService::nsIOService()
       mOfflineForProfileChange(PR_FALSE)
 {
     NS_INIT_REFCNT();
+
+    // Get the allocator ready
+    if (!gBufferCache)
+    {
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIRecyclingAllocator> recyclingAllocator =
+            do_CreateInstance(NS_RECYCLINGALLOCATOR_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return;
+        rv = recyclingAllocator->Init(NS_NECKO_BUFFER_CACHE_COUNT,
+                                      NS_NECKO_15_MINS, "necko");
+        if (NS_FAILED(rv))
+            return;
+
+        nsCOMPtr<nsIMemory> eyeMemory = do_QueryInterface(recyclingAllocator);
+        gBufferCache = eyeMemory.get();
+        NS_IF_ADDREF(gBufferCache);
+    }
 }
 
 nsresult
