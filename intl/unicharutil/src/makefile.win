@@ -29,11 +29,13 @@ CSRCS= \
 	$(NULL)
 
 CPPSRCS= \
+	nsCategoryImp.cpp	\
 	nsCaseConversionImp2.cpp	\
 	nsUnicharUtilFactory.cpp	\
 	$(NULL)
 
 CPP_OBJS= \
+	.\$(OBJDIR)\nsCategoryImp.obj \
 	.\$(OBJDIR)\nsCaseConversionImp2.obj \
 	.\$(OBJDIR)\nsUnicharUtilFactory.obj \
 	$(NULL)
