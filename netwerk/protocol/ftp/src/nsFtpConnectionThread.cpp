@@ -29,6 +29,7 @@
 #include "prcmon.h"
 #include "prprf.h"
 #include "netCore.h"
+#include "ftpCore.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);

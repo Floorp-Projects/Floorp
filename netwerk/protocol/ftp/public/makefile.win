@@ -22,6 +22,7 @@ DEPTH = ..\..\..\..
 EXPORTS =                           \
         nsIFtpEventSink.h          \
         nsIFtpProtocolConnection.h \
+	ftpCore.h			\
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
