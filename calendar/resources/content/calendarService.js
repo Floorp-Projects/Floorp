@@ -75,7 +75,7 @@ function CLineService()
 CLineService.prototype.commandLineArgument = "-webcal";
 CLineService.prototype.prefNameForStartup = "general.startup.webal";
 CLineService.prototype.chromeUrlForTask="chrome://calendar/content";
-CLineService.prototype.helpText = "Start with an Calendar client";
+CLineService.prototype.helpText = "Start with a Calendar client";
 CLineService.prototype.handlesArgs=false;
 CLineService.prototype.defaultArgs ="";
 CLineService.prototype.openWindowWithArgs=false;
