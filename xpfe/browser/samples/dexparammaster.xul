@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- Simple sample interface for bringing up a nonmodal dialog -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title = "Dialog creation sample">
+
+  <html:script>
+    <![CDATA[
+    var dialogWindow = null;
+
+    // show a nonmodal dialog, sending parameters as part of the URL
+    function MakeURLDialog() {
+      var newWin = window.open("resource://res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New");
+      return newWin;
+    }
+
+    // show a nonmodal dialog, sending parameters as part of the function call
+    function MakeParamDialog() {
+      var newWin = window.openDialog("resource://res/samples/dexparamdialog.xul",
+        "New", "chrome", {remind:true, prompt:"Give me your money and convertible bonds"});
+      return newWin;
+    }
+
+    // show a modal dialog (requires toolkit core for now)
+    function ModalDialog() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowModalDialog("resource://res/samples/dexparamdialog.xul",
+            window);
+    }
+
+    // find and load the toolkit core
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+
+    // dump the contents of a JS object
+    function Regurgitate(what, explain) {
+      dump("***regurgitating " + explain + ": " + what + "\n");
+      for (prop in what) {
+        dump("  property '" + prop + "' = '" + what[prop] + "'\n");
+        var subarg = what[prop];
+        dump("    length "+subarg.length+"\n");
+        for (subprop in subarg)
+          dump("    subarg property '"+subprop+"' = '"+subarg[subprop]+"'\n");
+      }
+      dump("regurgitated.\n");
+    }
+
+    // just list the properties of a JS object
+    function ListProperties(what) {
+      dump("**********************************************\n");
+      for (prop in what)
+        dump(prop + "\n");
+      dump("----------------------------------------------\n");
+    }
+
+    // display a bunch of possibly interesting properties of the last
+    // dialog window we saw
+    function DumpLastDialog() {
+      ListProperties(dialogWindow);
+      Regurgitate(dialogWindow.arguments, "sent arguments");
+      Regurgitate(dialogWindow.returnArguments, "returned arguments");
+    }
+    ]]>
+  </html:script>
+
+  <xul:toolbox> 
+    <xul:toolbar>
+      <!-- insert the next line should the bug where buttons don't show up
+           without an image specified ever return -->
+      <!-- src="resource:/res/toolbar/TB_Stop.gif" align="bottom" -->
+      <xul:titledbutton
+         value="URL Dialog" onclick="dialogWindow=MakeURLDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <xul:titledbutton
+         value="Param Dialog" onclick="dialogWindow=MakeParamDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <xul:titledbutton
+         value="Modal Dialog" onclick="ModalDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <xul:titledbutton
+         value="Dump Window" onclick="DumpLastDialog()"
+         style="background-color:rgb(192,192,192);"/>
+    </xul:toolbar>
+  </xul:toolbox>
+</xul:window>
