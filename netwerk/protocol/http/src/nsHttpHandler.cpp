@@ -1570,10 +1570,10 @@ nsHttpHandler::GetPrefBranch(nsIPrefBranch **result)
  *  1.0 amongst the number of languages present.
  *
  *  Ex: passing: "en, ja"
- *      returns: "en, ja;q=0.50"
+ *      returns: "en,ja;q=0.5"
  *
  *      passing: "en, ja, fr_CA"
- *      returns: "en, ja;q=0.66, fr_CA;q=0.33"
+ *      returns: "en,ja;q=0.7,fr_CA;q=0.3"
  */
 static nsresult
 PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLanguages)
@@ -1586,7 +1586,6 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
     char *p, *p2, *token, *q_Accept, *o_Accept;
     const char *comma;
     PRInt32 available;
-
 
     o_Accept = nsCRT::strdup(i_AcceptLanguages);
     if (nsnull == o_Accept)
@@ -1616,9 +1615,9 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
             *trim = '\0';
 
         if (*token != '\0') {
-            comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+            comma = n++ != 0 ? "," : ""; // delimiter if not first item
             if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s;q=0.%02u", comma, token, (unsigned) (q * 100.0));
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%01u", comma, token, QVAL_TO_UINT(q));
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1654,7 +1653,7 @@ nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages)
  *  comma delimited and with q values set for each charset in decending order.
  *
  *  Ex: passing: "euc-jp"
- *      returns: "euc-jp, utf-8;q=0.667, *;q=0.667"
+ *      returns: "euc-jp,utf-8;q=0.6,*;q=0.6"
  *
  *      passing: "UTF-8"
  *      returns: "UTF-8, *"
@@ -1713,9 +1712,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
             *trim = '\0';
 
         if (*token != '\0') {
-            comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+            comma = n++ != 0 ? "," : ""; // delimiter if not first item
             if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s;q=0.%02u", comma, token, (unsigned) (q * 100.0));
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%01u", comma, token, QVAL_TO_UINT(q));
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1725,9 +1724,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         }
     }
     if (add_utf) {
-        comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+        comma = n++ != 0 ? "," : ""; // delimiter if not first item
         if (q < 0.9995)
-            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%02u", comma, (unsigned) (q * 100.0));
+            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%01u", comma, QVAL_TO_UINT(q));
         else
             wrote = PR_snprintf(p2, available, "%sutf-8", comma);
         q -= dec;
@@ -1736,7 +1735,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         NS_ASSERTION(available > 0, "allocated string not long enough");
     }
     if (add_asterisk) {
-        comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+        comma = n++ != 0 ? "," : ""; // delimiter if not first item
 
         // keep q of "*" equal to the lowest q value
         // in the event of a tie between the q of "*" and a non-wildcard
@@ -1744,7 +1743,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
 
         q += dec;
         if (q < 0.9995) {
-            wrote = PR_snprintf(p2, available, "%s*;q=0.%02u", comma, (unsigned) (q * 100.0));
+            wrote = PR_snprintf(p2, available, "%s*;q=0.%01u", comma, QVAL_TO_UINT(q));
         }
         else
             wrote = PR_snprintf(p2, available, "%s*", comma);
