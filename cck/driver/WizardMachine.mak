@@ -1,15 +1,21 @@
-# Microsoft Developer Studio Generated NMAKE File, Based on WizardMachine.dsp
+# Microsoft Developer Studio Generated NMAKE File, Format Version 4.20
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (x86) Application" 0x0101
+
 !IF "$(CFG)" == ""
-CFG=WizardMachine - Win32 Release
-!MESSAGE No configuration specified. Defaulting to WizardMachine - Win32 Release.
+CFG=WizardMachine - Win32 Debug
+!MESSAGE No configuration specified.  Defaulting to WizardMachine - Win32\
+ Debug.
 !ENDIF 
 
-!IF "$(CFG)" != "WizardMachine - Win32 Release" && "$(CFG)" != "WizardMachine - Win32 Debug"
+!IF "$(CFG)" != "WizardMachine - Win32 Release" && "$(CFG)" !=\
+ "WizardMachine - Win32 Debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE You can specify a configuration when running NMAKE on this makefile
+!MESSAGE by defining the macro CFG on the command line.  For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Release"
+!MESSAGE NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -24,23 +30,31 @@ NULL=
 !ELSE 
 NULL=nul
 !ENDIF 
-
+################################################################################
+# Begin Project
+# PROP Target_Last_Scanned "WizardMachine - Win32 Debug"
 CPP=cl.exe
-MTL=midl.exe
+MTL=mktyplib.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "Release"
+# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release"
+# PROP Intermediate_Dir "Release"
+# PROP Target_Dir ""
 OUTDIR=.\Release
 INTDIR=.\Release
-# Begin Custom Macros
-OutDir=.\Release
-# End Custom Macros
 
 ALL : "$(OUTDIR)\WizardMachine.exe"
 
-
-CLEAN :
+CLEAN : 
 	-@erase "$(INTDIR)\ImageDialog.obj"
 	-@erase "$(INTDIR)\NavText.obj"
 	-@erase "$(INTDIR)\NewConfigDialog.obj"
@@ -59,28 +73,44 @@ CLEAN :
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP_PROJ=/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)\WizardMachine.pch" /Yu"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WizardMachine.res" /d "NDEBUG" /d "_AFXDLL" 
+# ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+CPP_PROJ=/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D\
+ "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/WizardMachine.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /c 
+CPP_OBJS=.\Release/
+CPP_SBRS=.\.
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+MTL_PROJ=/nologo /D "NDEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/WizardMachine.res" /d "NDEBUG" /d "_AFXDLL" 
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\WizardMachine.bsc" 
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/WizardMachine.bsc" 
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=/nologo /subsystem:windows /incremental:no /pdb:"$(OUTDIR)\WizardMachine.pdb" /machine:I386 /out:"$(OUTDIR)\WizardMachine.exe" 
+# ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
+# ADD LINK32 /nologo /subsystem:windows /machine:I386
+LINK32_FLAGS=/nologo /subsystem:windows /incremental:no\
+ /pdb:"$(OUTDIR)/WizardMachine.pdb" /machine:I386\
+ /out:"$(OUTDIR)/WizardMachine.exe" 
 LINK32_OBJS= \
-	"$(INTDIR)\WizardMachine.obj" \
-	"$(INTDIR)\StdAfx.obj" \
-	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\ImageDialog.obj" \
-	"$(INTDIR)\PropSheet.obj" \
-	"$(INTDIR)\WizardMachineDlg.obj" \
-	"$(INTDIR)\ProgressDialog.obj" \
-	"$(INTDIR)\ProgDlgThread.obj" \
+	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\NewConfigDialog.obj" \
 	"$(INTDIR)\NewDialog.obj" \
-	"$(INTDIR)\WizardUI.obj" \
-	"$(INTDIR)\WizardMachine.res"
+	"$(INTDIR)\ProgDlgThread.obj" \
+	"$(INTDIR)\ProgressDialog.obj" \
+	"$(INTDIR)\PropSheet.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\WizardMachine.obj" \
+	"$(INTDIR)\WizardMachine.res" \
+	"$(INTDIR)\WizardMachineDlg.obj" \
+	"$(INTDIR)\WizardUI.obj"
 
 "$(OUTDIR)\WizardMachine.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -89,16 +119,22 @@ LINK32_OBJS= \
 
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
 
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug"
+# PROP Intermediate_Dir "Debug"
+# PROP Target_Dir ""
 OUTDIR=.\Debug
 INTDIR=.\Debug
-# Begin Custom Macros
-OutDir=.\Debug
-# End Custom Macros
 
 ALL : "$(OUTDIR)\WizardMachine.exe" "$(OUTDIR)\WizardMachine.bsc"
 
-
-CLEAN :
+CLEAN : 
 	-@erase "$(INTDIR)\ImageDialog.obj"
 	-@erase "$(INTDIR)\ImageDialog.sbr"
 	-@erase "$(INTDIR)\NavText.obj"
@@ -115,8 +151,8 @@ CLEAN :
 	-@erase "$(INTDIR)\PropSheet.sbr"
 	-@erase "$(INTDIR)\StdAfx.obj"
 	-@erase "$(INTDIR)\StdAfx.sbr"
-	-@erase "$(INTDIR)\vc60.idb"
-	-@erase "$(INTDIR)\vc60.pdb"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\WizardMachine.obj"
 	-@erase "$(INTDIR)\WizardMachine.pch"
 	-@erase "$(INTDIR)\WizardMachine.res"
@@ -133,22 +169,34 @@ CLEAN :
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP_PROJ=/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)\\" /Fp"$(INTDIR)\WizardMachine.pch" /Yu"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-MTL_PROJ=/nologo /D "_DEBUG" /mktyplib203 /win32 
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WizardMachine.res" /d "_DEBUG" /d "_AFXDLL" 
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /c
+CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS"\
+ /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/WizardMachine.pch"\
+ /Yu"stdafx.h" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
+CPP_OBJS=.\Debug/
+CPP_SBRS=.\Debug/
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+MTL_PROJ=/nologo /D "_DEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/WizardMachine.res" /d "_DEBUG" /d "_AFXDLL" 
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\WizardMachine.bsc" 
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/WizardMachine.bsc" 
 BSC32_SBRS= \
-	"$(INTDIR)\WizardMachine.sbr" \
-	"$(INTDIR)\StdAfx.sbr" \
-	"$(INTDIR)\NavText.sbr" \
 	"$(INTDIR)\ImageDialog.sbr" \
-	"$(INTDIR)\PropSheet.sbr" \
-	"$(INTDIR)\WizardMachineDlg.sbr" \
-	"$(INTDIR)\ProgressDialog.sbr" \
-	"$(INTDIR)\ProgDlgThread.sbr" \
+	"$(INTDIR)\NavText.sbr" \
 	"$(INTDIR)\NewConfigDialog.sbr" \
 	"$(INTDIR)\NewDialog.sbr" \
+	"$(INTDIR)\ProgDlgThread.sbr" \
+	"$(INTDIR)\ProgressDialog.sbr" \
+	"$(INTDIR)\PropSheet.sbr" \
+	"$(INTDIR)\StdAfx.sbr" \
+	"$(INTDIR)\WizardMachine.sbr" \
+	"$(INTDIR)\WizardMachineDlg.sbr" \
 	"$(INTDIR)\WizardUI.sbr"
 
 "$(OUTDIR)\WizardMachine.bsc" : "$(OUTDIR)" $(BSC32_SBRS)
@@ -157,20 +205,24 @@ BSC32_SBRS= \
 <<
 
 LINK32=link.exe
-LINK32_FLAGS=/nologo /subsystem:windows /incremental:yes /pdb:"$(OUTDIR)\WizardMachine.pdb" /debug /machine:I386 /out:"$(OUTDIR)\WizardMachine.exe" 
+# ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
+# ADD LINK32 /nologo /subsystem:windows /debug /machine:I386
+LINK32_FLAGS=/nologo /subsystem:windows /incremental:yes\
+ /pdb:"$(OUTDIR)/WizardMachine.pdb" /debug /machine:I386\
+ /out:"$(OUTDIR)/WizardMachine.exe" 
 LINK32_OBJS= \
-	"$(INTDIR)\WizardMachine.obj" \
-	"$(INTDIR)\StdAfx.obj" \
-	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\ImageDialog.obj" \
-	"$(INTDIR)\PropSheet.obj" \
-	"$(INTDIR)\WizardMachineDlg.obj" \
-	"$(INTDIR)\ProgressDialog.obj" \
-	"$(INTDIR)\ProgDlgThread.obj" \
+	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\NewConfigDialog.obj" \
 	"$(INTDIR)\NewDialog.obj" \
-	"$(INTDIR)\WizardUI.obj" \
-	"$(INTDIR)\WizardMachine.res"
+	"$(INTDIR)\ProgDlgThread.obj" \
+	"$(INTDIR)\ProgressDialog.obj" \
+	"$(INTDIR)\PropSheet.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\WizardMachine.obj" \
+	"$(INTDIR)\WizardMachine.res" \
+	"$(INTDIR)\WizardMachineDlg.obj" \
+	"$(INTDIR)\WizardUI.obj"
 
 "$(OUTDIR)\WizardMachine.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -179,237 +231,449 @@ LINK32_OBJS= \
 
 !ENDIF 
 
-.c{$(INTDIR)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.c{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
 
-.cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.cpp{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
 
-.cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.cxx{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
 
-.c{$(INTDIR)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.c{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
 
-.cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.cpp{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
 
-.cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
+.cxx{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
 
+################################################################################
+# Begin Target
 
-!IF "$(NO_EXTERNAL_DEPS)" != "1"
-!IF EXISTS("WizardMachine.dep")
-!INCLUDE "WizardMachine.dep"
-!ELSE 
-!MESSAGE Warning: cannot find "WizardMachine.dep"
-!ENDIF 
-!ENDIF 
-
-
-!IF "$(CFG)" == "WizardMachine - Win32 Release" || "$(CFG)" == "WizardMachine - Win32 Debug"
-SOURCE=.\ImageDialog.cpp
+# Name "WizardMachine - Win32 Release"
+# Name "WizardMachine - Win32 Debug"
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
-
-"$(INTDIR)\ImageDialog.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\ImageDialog.obj"	"$(INTDIR)\ImageDialog.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
 
 !ENDIF 
 
-SOURCE=.\NavText.cpp
+################################################################################
+# Begin Source File
+
+SOURCE=.\ReadMe.txt
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
-
-"$(INTDIR)\NavText.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\NavText.obj"	"$(INTDIR)\NavText.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
 
 !ENDIF 
 
-SOURCE=.\NewConfigDialog.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-
-"$(INTDIR)\NewConfigDialog.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\NewConfigDialog.obj"	"$(INTDIR)\NewConfigDialog.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ENDIF 
-
-SOURCE=.\NewDialog.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-
-"$(INTDIR)\NewDialog.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\NewDialog.obj"	"$(INTDIR)\NewDialog.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ENDIF 
-
-SOURCE=.\ProgDlgThread.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-
-"$(INTDIR)\ProgDlgThread.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\ProgDlgThread.obj"	"$(INTDIR)\ProgDlgThread.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ENDIF 
-
-SOURCE=.\ProgressDialog.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-
-"$(INTDIR)\ProgressDialog.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\ProgressDialog.obj"	"$(INTDIR)\ProgressDialog.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ENDIF 
-
-SOURCE=.\PropSheet.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-
-"$(INTDIR)\PropSheet.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-
-"$(INTDIR)\PropSheet.obj"	"$(INTDIR)\PropSheet.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
-
-
-!ENDIF 
-
-SOURCE=.\StdAfx.cpp
-
-!IF  "$(CFG)" == "WizardMachine - Win32 Release"
-
-CPP_SWITCHES=/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)\WizardMachine.pch" /Yc"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\StdAfx.obj"	"$(INTDIR)\WizardMachine.pch" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)\\" /Fp"$(INTDIR)\WizardMachine.pch" /Yc"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\StdAfx.obj"	"$(INTDIR)\StdAfx.sbr"	"$(INTDIR)\WizardMachine.pch" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\WizardMachine.cpp
+DEP_CPP_WIZAR=\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
 
-"$(INTDIR)\WizardMachine.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardMachine.obj" : $(SOURCE) $(DEP_CPP_WIZAR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
 
 
-"$(INTDIR)\WizardMachine.obj"	"$(INTDIR)\WizardMachine.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardMachine.obj" : $(SOURCE) $(DEP_CPP_WIZAR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\WizardMachine.sbr" : $(SOURCE) $(DEP_CPP_WIZAR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\StdAfx.cpp
+DEP_CPP_STDAF=\
+	".\StdAfx.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D\
+ "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/WizardMachine.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\WizardMachine.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS"\
+ /D "_AFXDLL" /D "_MBCS" /FR"$(INTDIR)/" /Fp"$(INTDIR)/WizardMachine.pch"\
+ /Yc"stdafx.h" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\StdAfx.sbr" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\WizardMachine.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\WizardMachine.rc
+DEP_RSC_WIZARD=\
+	".\res\WizardMachine.ico"\
+	".\res\WizardMachine.rc2"\
+	
 
-"$(INTDIR)\WizardMachine.res" : $(SOURCE) "$(INTDIR)"
-	$(RSC) $(RSC_PROJ) $(SOURCE)
+"$(INTDIR)\WizardMachine.res" : $(SOURCE) $(DEP_RSC_WIZARD) "$(INTDIR)"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\NavText.cpp
+DEP_CPP_NAVTE=\
+	".\NavText.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\NavText.obj" : $(SOURCE) $(DEP_CPP_NAVTE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\NavText.obj" : $(SOURCE) $(DEP_CPP_NAVTE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\NavText.sbr" : $(SOURCE) $(DEP_CPP_NAVTE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ImageDialog.cpp
+DEP_CPP_IMAGE=\
+	".\ImageDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\ImageDialog.obj" : $(SOURCE) $(DEP_CPP_IMAGE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\ImageDialog.obj" : $(SOURCE) $(DEP_CPP_IMAGE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\ImageDialog.sbr" : $(SOURCE) $(DEP_CPP_IMAGE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\PropSheet.cpp
+DEP_CPP_PROPS=\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\PropSheet.obj" : $(SOURCE) $(DEP_CPP_PROPS) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\PropSheet.obj" : $(SOURCE) $(DEP_CPP_PROPS) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\PropSheet.sbr" : $(SOURCE) $(DEP_CPP_PROPS) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\WizardMachineDlg.cpp
+DEP_CPP_WIZARDM=\
+	".\ImageDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
 
-"$(INTDIR)\WizardMachineDlg.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardMachineDlg.obj" : $(SOURCE) $(DEP_CPP_WIZARDM) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
 
 
-"$(INTDIR)\WizardMachineDlg.obj"	"$(INTDIR)\WizardMachineDlg.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardMachineDlg.obj" : $(SOURCE) $(DEP_CPP_WIZARDM) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\WizardMachineDlg.sbr" : $(SOURCE) $(DEP_CPP_WIZARDM) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ProgressDialog.cpp
+DEP_CPP_PROGR=\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\ProgressDialog.obj" : $(SOURCE) $(DEP_CPP_PROGR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\ProgressDialog.obj" : $(SOURCE) $(DEP_CPP_PROGR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\ProgressDialog.sbr" : $(SOURCE) $(DEP_CPP_PROGR) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ProgDlgThread.cpp
+DEP_CPP_PROGD=\
+	".\ProgDlgThread.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\ProgDlgThread.obj" : $(SOURCE) $(DEP_CPP_PROGD) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\ProgDlgThread.obj" : $(SOURCE) $(DEP_CPP_PROGD) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\ProgDlgThread.sbr" : $(SOURCE) $(DEP_CPP_PROGD) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\NewConfigDialog.cpp
+DEP_CPP_NEWCO=\
+	".\NewConfigDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\NewConfigDialog.obj" : $(SOURCE) $(DEP_CPP_NEWCO) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\NewConfigDialog.obj" : $(SOURCE) $(DEP_CPP_NEWCO) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\NewConfigDialog.sbr" : $(SOURCE) $(DEP_CPP_NEWCO) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\NewDialog.cpp
+DEP_CPP_NEWDI=\
+	".\NewDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\NewDialog.obj" : $(SOURCE) $(DEP_CPP_NEWDI) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\NewDialog.obj" : $(SOURCE) $(DEP_CPP_NEWDI) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\NewDialog.sbr" : $(SOURCE) $(DEP_CPP_NEWDI) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\WizardUI.cpp
+DEP_CPP_WIZARDU=\
+	".\ImageDialog.h"\
+	".\NavText.h"\
+	".\NewConfigDialog.h"\
+	".\NewDialog.h"\
+	".\ProgDlgThread.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
 
-"$(INTDIR)\WizardUI.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardUI.obj" : $(SOURCE) $(DEP_CPP_WIZARDU) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
 
 
-"$(INTDIR)\WizardUI.obj"	"$(INTDIR)\WizardUI.sbr" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\WizardMachine.pch"
+"$(INTDIR)\WizardUI.obj" : $(SOURCE) $(DEP_CPP_WIZARDU) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\WizardUI.sbr" : $(SOURCE) $(DEP_CPP_WIZARDU) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
 
 
 !ENDIF 
 
-
-!ENDIF 
-
+# End Source File
+# End Target
+# End Project
+################################################################################
