@@ -24,6 +24,11 @@
 class nsTableColFrame : public nsFrame {
 public:
 
+  enum {eWIDTH_SOURCE_NONE          =0,   // no cell has contributed to the width style
+        eWIDTH_SOURCE_CELL          =1,   // a cell specified a width
+        eWIDTH_SOURCE_CELL_WITH_SPAN=2    // a cell implicitly specified a width via colspan
+  };
+
   void Init(PRInt32 aColIndex, PRInt32 aRepeat);
 
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
@@ -63,6 +68,9 @@ public:
   nscoord GetEffectiveMinColWidth();
   void SetEffectiveMinColWidth(nscoord aMinColWidth);
 
+  PRInt32 GetWidthSource();
+  void SetWidthSource(PRInt32 aMinColWidth);
+
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
@@ -83,6 +91,8 @@ protected:
 
   nscoord mMaxEffectiveColWidth;
   nscoord mMinEffectiveColWidth;
+
+  PRInt32 mWidthSource;
 
 };
 
@@ -129,5 +139,10 @@ inline nscoord nsTableColFrame::GetEffectiveMinColWidth()
 inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinColWidth)
 { mMinEffectiveColWidth = aMinColWidth; }
 
+inline PRInt32 nsTableColFrame::GetWidthSource()
+{ return mWidthSource; }
+
+inline void nsTableColFrame::SetWidthSource(PRInt32 aWidthSource)
+{ mWidthSource = aWidthSource; }
 #endif
 

@@ -464,7 +464,7 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
     // begin special Nav4 compatibility code
     if (0==cellWidth)
     {
-      cellWidth = aState.tableFrame->GetColumnWidth(cellColIndex);
+      cellWidth = availWidth;
     }
     // end special Nav4 compatibility code
 
@@ -537,6 +537,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     nsSize  kidAvailSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
     // See if there's a width constraint for the cell
+    /*
     const nsStylePosition* cellPosition = (const nsStylePosition*)
       kidSC->GetStyleData(eStyleStruct_Position);
     if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) 
@@ -544,7 +545,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       kidAvailSize.width = cellPosition->mWidth.GetCoordValue();
     }
     NS_RELEASE(kidSC);
-
+    */
     // Get the child's margins
     nsMargin  margin;
     nscoord   topMargin = 0;

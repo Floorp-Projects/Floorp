@@ -42,6 +42,7 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   mMinColWidth = 0;
   mMaxEffectiveColWidth = 0;
   mMinEffectiveColWidth = 0;
+  mWidthSource = eWIDTH_SOURCE_NONE;
 }
 
 

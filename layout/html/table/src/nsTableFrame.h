@@ -190,6 +190,12 @@ public:
     */
   virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame *aCell);
 
+  /** return the value of the COLS attribute, adjusted for the 
+    * actual number of columns in the table
+    */
+          PRInt32 GetEffectiveCOLSAttribute();
+
+
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
@@ -405,6 +411,8 @@ public: /* ----- Cell Map public methods ----- */
     * otherwise, the content is enumerated and the rows are counted.
     */
   virtual PRInt32 GetRowCount();
+
+  virtual PRInt32 GetColCount();
 
   nsTableColFrame * GetColFrame(PRInt32 aColIndex);
 
