@@ -35,7 +35,7 @@
 #define BASET_H
 
 #ifdef DEBUG
-static const char BASET_CVS_ID[] = "@(#) $RCSfile: baset.h,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:48:42 $ $Name:  $";
+static const char BASET_CVS_ID[] = "@(#) $RCSfile: baset.h,v $ $Revision: 1.3 $ $Date: 2001/09/19 20:20:05 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -98,6 +98,10 @@ typedef struct nssArenaMarkStr nssArenaMark;
 #endif /* ARENA_THREADMARK */
 
 #endif /* DEBUG */
+
+typedef struct nssListStr nssList;
+typedef struct nssListIteratorStr nssListIterator;
+typedef PRBool (* nssListCompareFunc)(void *a, void *b);
 
 /*
  * nssPointerTracker
