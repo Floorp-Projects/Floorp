@@ -167,7 +167,7 @@ public: // other env methods
   nsIMdbEnv* AsMdbEnv() { return mEnv_SelfAsMdbEnv; }
   static morkEnv* FromMdbEnv(nsIMdbEnv* ioEnv); // dynamic type checking
   
-  mork_u2 ErrorCode() const { return mEnv_ErrorCode; }
+  mork_u4 ErrorCode() const { return mEnv_ErrorCode; }
   
   mdb_err AsErr() const { return (mdb_err) mEnv_ErrorCode; }
   //mdb_err AsErr() const { return (mdb_err) ( mEnv_ErrorCount != 0 ); }

@@ -56,9 +56,10 @@ public:
 
 protected:
 
-	void			Init();
-	nsresult		ChangeChildCount(PRInt32 delta);
-	nsresult		ChangeUnreadChildCount(PRInt32 delta);
+	void				Init();
+	virtual nsresult	InitCachedValues();
+	nsresult			ChangeChildCount(PRInt32 delta);
+	nsresult			ChangeUnreadChildCount(PRInt32 delta);
 
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
@@ -66,6 +67,7 @@ protected:
 	PRUint32		m_flags;
     nsIMdbTable		*m_mdbTable;
 	nsIMdbRow		*m_metaRow;
+	PRBool			m_cachedValuesInitialized;
 
 
 

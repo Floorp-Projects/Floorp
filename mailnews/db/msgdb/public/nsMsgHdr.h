@@ -89,10 +89,11 @@ public:
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
 	nsMsgHdr();
+    virtual				~nsMsgHdr();
 
-    void		Init();
-	void		Init(nsMsgDatabase *db, nsIMdbRow *dbRow);
-    virtual		~nsMsgHdr();
+    void				Init();
+	void				Init(nsMsgDatabase *db, nsIMdbRow *dbRow);
+	virtual nsresult	InitCachedValues();
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -122,6 +123,7 @@ protected:
     // though I hope not.
     nsMsgDatabase	*m_mdb;
     nsIMdbRow		*m_mdbRow;
+	PRBool			m_cachedValuesInitialized;
 };
 
 #endif

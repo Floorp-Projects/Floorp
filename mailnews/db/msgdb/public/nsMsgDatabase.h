@@ -294,6 +294,8 @@ protected:
 	mdb_token			m_threadFlagsColumnToken;
 	mdb_token			m_threadChildrenColumnToken;
 	mdb_token			m_threadUnreadChildrenColumnToken;
+	mdb_token			m_messageThreadIdColumnToken;
+	mdb_token			m_numReferencesColumnToken;
 };
 
 #endif

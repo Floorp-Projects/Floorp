@@ -346,7 +346,9 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadFlagsColumnToken(0),
 	  m_threadIdColumnToken(0),
 	  m_threadChildrenColumnToken(0),
-	  m_threadUnreadChildrenColumnToken(0)
+	  m_threadUnreadChildrenColumnToken(0),
+	  m_messageThreadIdColumnToken(0),
+	  m_numReferencesColumnToken(0)
 {
 	NS_INIT_REFCNT();
 }
@@ -744,11 +746,12 @@ const char *kPriorityColumnName = "priority";
 const char *kStatusOffsetColumnName = "statusOfset";
 const char *kNumLinesColumnName = "numLines";
 const char *kCCListColumnName = "ccList";
+const char *kMessageThreadIdColumnName = "msgThreadId";
+const char *kNumReferencesColumnName = "numRefs";
 const char *kThreadFlagsColumnName = "threadFlags";
 const char *kThreadIdColumnName = "threadId";
 const char *kThreadChildrenColumnName = "children";
 const char *kThreadUnreadChildrenColumnName = "unreadChildren";
-
 struct mdbOid gAllMsgHdrsTableOID;
 
 // set up empty tables, dbFolderInfo, etc.
@@ -829,11 +832,12 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kCCListColumnName, &m_ccListColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMessageThreadIdColumnName, &m_messageThreadIdColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadIdColumnName, &m_threadIdColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadFlagsColumnName, &m_threadFlagsColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadChildrenColumnName, &m_threadChildrenColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadUnreadChildrenColumnName, &m_threadUnreadChildrenColumnToken);
-			
+			GetStore()->StringToToken(GetEnv(),  kNumReferencesColumnName, &m_numReferencesColumnToken);
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
 			if (err == NS_OK)
 				err = GetStore()->StringToToken(GetEnv(), kThreadTableKind, &m_threadTableKindToken);
@@ -2121,6 +2125,8 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	nsresult	err = NS_OK;
 	nsIMdbCell	*hdrCell;
 
+	if (uint32Result)
+		*uint32Result = 0;
 	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
 		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
@@ -2238,7 +2244,7 @@ nsMsgThread *nsMsgDatabase::GetThreadForReference(const char * msgID)
 	if (msgHdr != NULL)
 	{
 		// find thread header for header whose message id we matched.
-		thread = GetThreadForMsgKey(msgHdr->m_messageKey);
+		thread = GetThreadForThreadId(msgHdr->m_threadId);
 		msgHdr->Release();
 	}
 	return thread;
@@ -2367,10 +2373,35 @@ nsMsgThread *nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey)
 	return nsnull;
 }
 
+// caller needs to unrefer.
 nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 {
-	// not implemented yet. Need to iterate over the thread tables...
-	return nsnull;
+	// Iterate over the thread tables...
+	nsresult		rv;
+	nsMsgThread		*pThread;
+
+    nsIEnumerator* threads;
+    rv = EnumerateThreads(&threads);
+    if (NS_FAILED(rv))
+		return nsnull;
+	for (threads->First(); threads->IsDone() != NS_OK; threads->Next()) 
+	{
+        rv = threads->CurrentItem((nsISupports**)&pThread);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+        if (NS_FAILED(rv)) break;
+
+        nsMsgKey key = nsMsgKey_None;
+        (void)pThread->GetThreadKey(&key);
+		if (key == threadId)
+		{
+			NS_ADDREF(pThread);
+			break;
+		}
+//		NS_RELEASE(pThread);
+		pThread = nsnull;
+	}
+	NS_RELEASE(threads);
+	return pThread;
 }
 
 // make the passed in header a thread header
@@ -2432,12 +2463,14 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 
     nsIEnumerator* threads;
     rv = EnumerateThreads(&threads);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+		return rv;
 	for (threads->First(); threads->IsDone() != NS_OK; threads->Next()) 
 	{
         rv = threads->CurrentItem((nsISupports**)&pThread);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) break;
+        if (NS_FAILED(rv)) 
+			break;
 
 		if (threadIds)
 		{

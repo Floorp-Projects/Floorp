@@ -619,7 +619,28 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
 
   mork_column column = cellMid->mMid_Oid.mOid_Id;
   
-  if ( mParser_InMeta &&  ev->Good() ) // cell is in metainfo structure?
+  if ( mBuilder_Row && ev->Good() ) // this cell must be inside a row
+  {
+      // mBuilder_Cell = this->AddBuilderCell(ev, *cellMid, inChange);
+
+      if ( mBuilder_CellsVecFill >= morkBuilder_kCellsVecSize )
+        this->FlushBuilderCells(ev);
+      if ( ev->Good() )
+      {
+        if ( mBuilder_CellsVecFill < morkBuilder_kCellsVecSize )
+        {
+          mork_fill index = mBuilder_CellsVecFill++;
+          morkCell* cell =  mBuilder_CellsVec + index;
+          cell->SetColumnAndChange(column, inChange);
+          cell->mCell_Atom = 0;
+          mBuilder_Cell = cell;
+        }
+        else
+          ev->NewError("out of builder cells");
+      }
+  }
+
+  else if ( mParser_InMeta &&  ev->Good() ) // cell is in metainfo structure?
   {
     if ( scope == morkStore_kColumnSpaceScope )
     {
@@ -653,31 +674,6 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
     }
     else
       ev->NewWarning("expected column scope");
-  }
-  else if ( ev->Good() ) // this cell must be inside a row
-  {
-    if ( mBuilder_Row )
-    {
-      // mBuilder_Cell = this->AddBuilderCell(ev, *cellMid, inChange);
-
-      if ( mBuilder_CellsVecFill >= morkBuilder_kCellsVecSize )
-        this->FlushBuilderCells(ev);
-      if ( ev->Good() )
-      {
-        if ( mBuilder_CellsVecFill < morkBuilder_kCellsVecSize )
-        {
-          mork_fill index = mBuilder_CellsVecFill++;
-          morkCell* cell =  mBuilder_CellsVec + index;
-          cell->SetColumnAndChange(column, inChange);
-          cell->mCell_Atom = 0;
-          mBuilder_Cell = cell;
-        }
-        else
-          ev->NewError("out of builder cells");
-      }
-    }
-    else
-      this->NilBuilderRowError(ev);
   }
 }
 

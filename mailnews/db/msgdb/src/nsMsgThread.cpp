@@ -36,7 +36,10 @@ nsMsgThread::nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table)
 		db->AddRef();
 
 	if (table && db)
+	{
 		table->GetMetaRow(db->GetEnv(), nil, nil, &m_metaRow);
+		InitCachedValues();
+	}
 }
 
 void nsMsgThread::Init()
@@ -48,6 +51,7 @@ void nsMsgThread::Init()
 	m_mdbTable = nsnull;
 	m_mdbDB = nsnull;
 	m_metaRow = nsnull;
+	m_cachedValuesInitialized = PR_FALSE;
 	NS_INIT_REFCNT();
 }
 
@@ -60,6 +64,27 @@ nsMsgThread::~nsMsgThread()
 		m_mdbDB->Release();
 	if (m_metaRow)
 		m_metaRow->Release();
+}
+
+nsresult nsMsgThread::InitCachedValues()
+{
+	nsresult err = NS_OK;
+
+	if (!m_mdbDB || !m_metaRow)
+	    return NS_ERROR_NULL_POINTER;
+
+	if (!m_cachedValuesInitialized)
+	{
+		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
+	    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, &m_numChildren);
+		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
+	    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, &m_numUnreadChildren);
+
+		
+		if (NS_SUCCEEDED(err))
+			m_cachedValuesInitialized = PR_TRUE;
+	}
+	return err;
 }
 
 NS_IMETHODIMP		nsMsgThread::SetThreadKey(nsMsgKey threadKey)
@@ -86,13 +111,11 @@ NS_IMETHODIMP	nsMsgThread::GetThreadKey(nsMsgKey *result)
 
 NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
 {
-	nsresult ret;
-
 	if (result)
 	{
 		nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
 		*result = m_flags;
-		return NS_OK;
+		return res;
 	}
 	else
 		return NS_ERROR_NULL_POINTER;

@@ -120,6 +120,8 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 		}
 		if (err != NS_OK)
 		{
+			// this will make the db folder info release its ref to the mail db...
+			NS_RELEASE(mailDB->m_dbFolderInfo);
 			mailDB->Close(PR_TRUE);
 			if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 				summarySpec.Delete(PR_FALSE);

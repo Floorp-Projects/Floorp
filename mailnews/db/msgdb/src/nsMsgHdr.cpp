@@ -42,7 +42,7 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 
 void nsMsgHdr::Init()
 {
-
+	m_cachedValuesInitialized = PR_FALSE;
 	m_statusOffset = -1;
 	m_messageKey = nsMsgKey_None;
 	m_date = 0;
@@ -69,8 +69,37 @@ void nsMsgHdr::Init(nsMsgDatabase *db, nsIMdbRow *dbRow)
 	if(m_mdb)
 		m_mdb->AddRef();
 	m_mdbRow = dbRow;
+	InitCachedValues();
 }
 
+nsresult nsMsgHdr::InitCachedValues()
+{
+	nsresult err = NS_OK;
+
+	if (!m_mdb || !m_mdbRow)
+	    return NS_ERROR_NULL_POINTER;
+
+	if (!m_cachedValuesInitialized)
+	{
+		PRUint32 uint32Value;
+		mdbOid outOid;
+		if (m_mdbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
+			m_messageKey = outOid.mOid_Id;
+
+		err = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
+		err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
+	    err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
+		m_date = uint32Value;
+		err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
+		err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
+		if (NS_SUCCEEDED(err))
+			m_numReferences = (PRUint16) uint32Value;
+		
+		if (NS_SUCCEEDED(err))
+			m_cachedValuesInitialized = PR_TRUE;
+	}
+	return err;
+}
 
 nsMsgHdr::~nsMsgHdr()
 {
@@ -118,6 +147,7 @@ NS_IMETHODIMP nsMsgHdr::GetThreadId(nsMsgKey *result)
 NS_IMETHODIMP nsMsgHdr::SetThreadId(nsMsgKey inKey)
 {
 	m_threadId = inKey;
+	SetUInt32Column(m_threadId, m_mdb->m_messageThreadIdColumnToken);
 	return NS_OK;
 }
 
@@ -206,7 +236,7 @@ NS_IMETHODIMP nsMsgHdr::SetUint32Property(const char *propertyName, PRUint32 val
 
 NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 {
-    *result = 0;
+    *result = m_numReferences;
 	return NS_OK;
 }
 
@@ -265,6 +295,7 @@ NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 		
 		m_numReferences++;
 	}
+	SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
 
 	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
 }
