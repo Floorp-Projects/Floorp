@@ -533,18 +533,11 @@ BookmarksTree.prototype = {
 
   treeOpen: function (aEvent)
   {
-    if (!this.isValidOpenEvent(aEvent))
-      return;
-
-    var rdfNode = this.findRDFNode(aEvent.target, true);
-    if (rdfNode.getAttribute("container") == "true") {
-      if (this.openClickCount == 1)
-        rdfNode.setAttribute("open", rdfNode.getAttribute("open") != "true");
-      gSelectionTracker.clickCount = 0;
-      return;
+    if (this.isValidOpenEvent(aEvent)) {
+      var rdfNode = this.findRDFNode(aEvent.target, true);
+      if (rdfNode.getAttribute("container") != "true")
+        this.open(aEvent, rdfNode);
     }
-
-    this.open(aEvent, rdfNode);
   },
 
   /////////////////////////////////////////////////////////////////////////////
