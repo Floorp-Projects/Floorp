@@ -63,6 +63,9 @@ components/caps.xpt
 components/libchrome.so                   
 components/chrome.xpt                   
 
+; cookies
+components/libcookie.so                   
+
 ; docshell
 components/libdocshell.so                 
 components/docshell.xpt            
