@@ -48,7 +48,7 @@ int main( int argc, char *argv[] ) {
 
     // Initialize XPCOM
     nsIServiceManager *servMgr = NULL;
-    rv = NS_InitXPCOM(&servMgr);
+    rv = NS_InitXPCOM(&servMgr, NULL, NULL);
     if (NS_FAILED(rv))
     {
         // Cannot initialize XPCOM

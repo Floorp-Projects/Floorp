@@ -624,7 +624,7 @@ int main(int argc, char* argv[])
   if( !NS_CanRun() )
     return 1; 
   NS_ShowSplashScreen();
-  rv = NS_InitXPCOM(NULL);
+  rv = NS_InitXPCOM(NULL, NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
 

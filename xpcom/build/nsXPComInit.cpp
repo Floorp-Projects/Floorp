@@ -142,8 +142,10 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
 
 nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
+static nsFileSpec registryDirName;
 
-nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
+nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
+                             nsFileSpec *registryFile, nsFileSpec *componentDir)
 {
     nsresult rv = NS_OK;
 
@@ -170,6 +172,18 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
         if (compMgr == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
+
+        // Set the registry file
+        if (registryFile && registryFile->IsFile())
+        {
+            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry,
+                                          registryFile);
+        }
+        if (componentDir && componentDir->IsDirectory())
+        {
+            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory,
+                                          componentDir);
+        }
         rv = compMgr->Init();
         if (NS_FAILED(rv))
         {

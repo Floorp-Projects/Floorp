@@ -47,11 +47,17 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
 	HWND wnd;
 	WNDCLASSEX wndclass;
 
+	nsresult rv;
 	nsCOMPtr<nsIServiceManager> servMgr;
-	NS_InitXPCOM(getter_AddRefs(servMgr));
+	rv = NS_InitXPCOM(getter_AddRefs(servMgr), NULL, NULL);
+    if (NS_FAILED(rv))
+    {
+		ErrorBox("Failed to initalize xpcom.");
+		return -1;
+    }
+      
 	nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
-	nsresult rv;
 	NS_WITH_SERVICE(nsINativeApp, nativeAppService, kNativeAppCID, &rv);
 
 	if(NS_FAILED(rv))

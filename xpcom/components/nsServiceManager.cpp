@@ -419,7 +419,7 @@ nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
     nsresult rv = NS_OK;
     if (mGlobalServiceManager == NULL) {
         // XPCOM not initialized yet. Let us do initialization of our module.
-        rv = NS_InitXPCOM(NULL);
+        rv = NS_InitXPCOM(NULL, NULL, NULL);
     }
     // No ADDREF as we are advicing no release of this.
     if (NS_SUCCEEDED(rv)) *result = mGlobalServiceManager;

@@ -340,7 +340,7 @@ main(int argc, char* argv[])
         gVerbose = PR_TRUE;
     }
 
-    rv = NS_InitXPCOM(&servMgr);
+    rv = NS_InitXPCOM(&servMgr, NULL, NULL);
     if (NS_FAILED(rv)) return rv;
 
     rv = TestWriteSegments(NS_OK);
