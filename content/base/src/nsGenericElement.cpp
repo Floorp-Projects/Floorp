@@ -3354,8 +3354,6 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
   PRBool modification = PR_FALSE;
   nsAutoString oldValue;
 
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-
   if (!mAttributes) {
     mAttributes = new nsAutoVoidArray();
     NS_ENSURE_TRUE(mAttributes, NS_ERROR_OUT_OF_MEMORY);
@@ -3364,35 +3362,43 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
   nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
   PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
 
-  if (aNotify && (nsnull != mDocument)) {
-    mDocument->BeginUpdate();
-
-    mDocument->AttributeWillChange(this, nameSpaceID, name);
-  }
-
-  nsGenericAttribute* attr;
+  nsGenericAttribute* attr = nsnull;
   PRInt32 index;
   PRInt32 count = mAttributes->Count();
   for (index = 0; index < count; index++) {
     attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
     if (attr->mNodeInfo == aNodeInfo) {
+      if (attr->mValue.Equals(aValue)) {
+        // Do nothing if the value is not changing
+        return NS_OK;
+      }
+      // stash away the old value
       oldValue = attr->mValue;
-      modification = PR_TRUE;
-      attr->mValue = aValue;
-      rv = NS_OK;
       break;
     }
   }
 
-  if (index >= count) { // didn't find it
+  // Begin the update _before_ changing the attr value
+  if (aNotify && mDocument) {
+    mDocument->BeginUpdate();
+
+    mDocument->AttributeWillChange(this, nameSpaceID, name);
+  }
+
+  if (index < count) { // found our attr in the list
+    NS_ASSERTION(attr, "How did we get here with a null attr pointer?");
+    modification = PR_TRUE;
+    attr->mValue = aValue;
+  } else {  // didn't find it
     attr = new nsGenericAttribute(aNodeInfo, aValue);
     NS_ENSURE_TRUE(attr, NS_ERROR_OUT_OF_MEMORY);
 
-    mAttributes->AppendElement(attr);
-    rv = NS_OK;
+    if (!mAttributes->AppendElement(attr)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  if (mDocument && NS_SUCCEEDED(rv)) {
+  if (mDocument) {
     nsCOMPtr<nsIBindingManager> bindingManager;
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
@@ -3442,7 +3448,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
