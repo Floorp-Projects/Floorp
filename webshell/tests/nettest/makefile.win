@@ -71,7 +71,8 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 LCFLAGS=-DNETSCAPE
 LLIBS=$(LLIBS)				\
                 $(DIST)\lib\xpcom32.lib	\
-                $(DIST)\lib\netlib.lib
+                $(DIST)\lib\netlib.lib  \
+                $(DIST)\lib\libplc21.lib
 
 LINCS=$(LINCS)  -I. \
                 -I$(PUBLIC)\raptor   \
@@ -88,7 +89,7 @@ GARBAGE	= $(GARBAGE) _gen
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-export:: $(PROGRAM)
+install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
