@@ -194,4 +194,4 @@ static nsModuleComponentInfo components[] =
 		nsNativeScrollbarConstructor },
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetModule, components)
+NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
