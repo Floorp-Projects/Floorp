@@ -19,7 +19,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
-#include <gtk/gtktypeutils.h>
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
@@ -34,8 +33,6 @@
 
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
-
-#include "nsSelectionMgr.h"
 
 #include "stdio.h"
 
@@ -75,7 +72,7 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow()
+nsWindow::nsWindow() 
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
@@ -87,6 +84,8 @@ nsWindow::nsWindow()
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mBorderStyle = GTK_WINDOW_TOPLEVEL;
+  mIsDestroying = PR_FALSE;
+  mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
 }
 
@@ -97,6 +96,7 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  mIsDestroying = PR_TRUE;
   if (mShell)
   {
     if (GTK_IS_WIDGET(mShell))
@@ -143,14 +143,49 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
-gint handle_delete_event(GtkWidget *w, GdkEventAny *e, gpointer data)
+NS_METHOD nsWindow::Destroy()
 {
-  nsWindow *win = (nsWindow *)data;
-//  win->mIsDestroying = PR_TRUE;
-/* bug 2503 */
-/* we need to send the WM_DELETE_WINDOW event.  not sure how. */
+  // disconnect from the parent
 
-  return FALSE;
+
+  if (mIsDestroying == PR_TRUE) {
+    nsBaseWidget::Destroy();
+    if (PR_FALSE == mOnDestroyCalled)
+	OnDestroy();
+    if (mShell) {
+    	if (GTK_IS_WIDGET(mShell))
+     		gtk_widget_destroy(mShell);
+    	mShell = nsnull;
+    }
+  }
+
+  return NS_OK;
+}
+
+void nsWindow::OnDestroy()
+{
+    mOnDestroyCalled = PR_TRUE;
+
+    // release references to children, device context, toolkit, and app shell
+    nsBaseWidget::OnDestroy();
+
+    // dispatch the event
+    if (mIsDestroying == PR_TRUE) {
+      // dispatching of the event may cause the reference count to drop to 0
+      // and result in this object being destroyed. To avoid that, add a reference
+      // and then release it after dispatching the event
+      AddRef();
+      DispatchStandardEvent(NS_DESTROY);
+      Release();
+    }
+}
+
+
+gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
+{
+  win->SetIsDestroying( PR_TRUE );
+  win->Destroy();
+  return TRUE;
 }
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
@@ -232,7 +267,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      GTK_SIGNAL_FUNC(handle_delete_event),
                      this);
 
-    nsSelectionMgr::SetTopLevelWidget(mShell);
   }
 
   // Force cursor to default setting
