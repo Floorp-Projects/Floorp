@@ -2374,7 +2374,7 @@ enum regexp_tinyid {
     REGEXP_MULTILINE    = -5
 };
 
-#define REGEXP_PROP_ATTRS (JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED)
+#define REGEXP_PROP_ATTRS (JSPROP_PERMANENT | JSPROP_SHARED)
 
 static JSPropertySpec regexp_props[] = {
     {"source",     REGEXP_SOURCE,      REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
