@@ -668,3 +668,5 @@ fjds*/y//z")
 (js-pmetaparse "3lbs 3in 3 in 3_in 3_lbs")
 (js-pmetaparse "3a+in'a+b\\040\\077\\700\\150\\15A\\69\"de'\"'\"")
 |#
+
+(length (grammar-states *lg*))
