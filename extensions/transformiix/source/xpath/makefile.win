@@ -72,8 +72,11 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
 !if !defined(TX_EXE)
-	.\$(OBJDIR)\nsNodeSet.obj			\
-	.\$(OBJDIR)\XPathProcessor.obj		\
+	.\$(OBJDIR)\nsXPathEvaluator.obj	\
+	.\$(OBJDIR)\nsXPathException.obj	\
+	.\$(OBJDIR)\nsXPathExpression.obj	\
+	.\$(OBJDIR)\nsXPathNSResolver.obj	\
+	.\$(OBJDIR)\nsXPathResult.obj	\
 !endif
 	$(NULL)
 

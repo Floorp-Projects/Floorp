@@ -30,7 +30,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE	= transformiix
 
 XPIDLSRCS	= \
-		nsIXPathNodeSelector.idl \
 		nsISyncLoader.idl \
 		$(NULL)
 

@@ -92,7 +92,11 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\MultiplicativeExpr.obj \
 	..\source\xpath\$(OBJDIR)\NodeSet.obj \
 	..\source\xpath\$(OBJDIR)\NodeSetFunctionCall.obj \
-	..\source\xpath\$(OBJDIR)\nsNodeSet.obj \
+	..\source\xpath\$(OBJDIR)\nsXPathEvaluator.obj \
+	..\source\xpath\$(OBJDIR)\nsXPathException.obj \
+	..\source\xpath\$(OBJDIR)\nsXPathExpression.obj \
+	..\source\xpath\$(OBJDIR)\nsXPathNSResolver.obj \
+	..\source\xpath\$(OBJDIR)\nsXPathResult.obj \
 	..\source\xpath\$(OBJDIR)\NumberExpr.obj \
 	..\source\xpath\$(OBJDIR)\NumberFunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\NumberResult.obj \
@@ -108,7 +112,6 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\UnaryExpr.obj \
 	..\source\xpath\$(OBJDIR)\VariableRefExpr.obj \
 	..\source\xpath\$(OBJDIR)\XPathNames.obj \
-	..\source\xpath\$(OBJDIR)\XPathProcessor.obj \
 	..\source\xml\$(OBJDIR)\XMLUtils.obj \
 	..\source\xml\$(OBJDIR)\XMLDOMUtils.obj \
 	..\source\xml\parser\$(OBJDIR)\nsSyncLoader.obj \
