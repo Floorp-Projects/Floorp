@@ -261,6 +261,11 @@ nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
   
   seamonkeyRegistry->Append(NS_LITERAL_STRING("Mozilla"));
   seamonkeyRegistry->Append(NS_LITERAL_STRING("Application Registry"));
+#elif defined(XP_UNIX)
+  fileLocator->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(seamonkeyRegistry));
+  
+  seamonkeyRegistry->Append(NS_LITERAL_STRING(".mozilla"));
+  seamonkeyRegistry->Append(NS_LITERAL_STRING("appreg"));
 #endif
 
   return GetProfileDataFromRegistry(seamonkeyRegistry, mProfileNames, mProfileLocations);

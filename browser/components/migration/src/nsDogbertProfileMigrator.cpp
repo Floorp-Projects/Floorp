@@ -218,6 +218,8 @@ nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     nsresult rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
     if (NS_FAILED(rv)) return rv;
 
+    // XXXben - this is a little risky.. let's make this actually go and use the 
+    // 4.x registry instead... 
     // Our profile manager stores information about the set of Dogbert Profiles we have.
     nsCOMPtr<nsIProfileInternal> pmi(do_CreateInstance("@mozilla.org/profile/manager;1"));
     PRUnichar** profileNames = nsnull;

@@ -19,8 +19,8 @@
 <!ENTITY importFromOmniWeb.accesskey    "W">
 <!ENTITY importFromICab.label           "iCab">
 <!ENTITY importFromICab.accesskey       "i">
-<!ENTITY importFromKonquerror.label     "Konqueror">
-<!ENTITY importFromKonquerror.accesskey "K">
+<!ENTITY importFromKonqueror.label      "Konqueror">
+<!ENTITY importFromKonqueror.accesskey  "K">
 <!ENTITY importFromEpiphany.label       "Epiphany">
 <!ENTITY importFromEpiphany.accesskey   "E">
 <!ENTITY importFromGaleon.label         "Galeon">
