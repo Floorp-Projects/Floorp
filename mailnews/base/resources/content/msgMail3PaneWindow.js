@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jan Varga (varga@nixcorp.com)
+ *   Jan Varga (varga@ku.sk)
  *   Håkan Waara (hwaara@chello.se)
  *   Neil Rashbrook (neil@parkwaycc.co.uk)
  *   Seth Spitzer <sspitzer@netscape.com>

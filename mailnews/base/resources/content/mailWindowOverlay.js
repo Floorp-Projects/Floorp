@@ -24,7 +24,7 @@
  *   timeless
  *   slucy@objectivesw.co.uk
  *   Håkan Waara <hwaara@chello.se>
- *   Jan Varga <varga@nixcorp.com>
+ *   Jan Varga <varga@ku.sk>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   David Bienvenu <bienvenu@netscape.com>
  *
