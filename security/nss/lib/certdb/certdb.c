@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.60 2004/01/16 02:11:44 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.61 2004/01/22 22:04:54 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1213,26 +1213,37 @@ CERT_CheckKeyUsage(CERTCertificate *cert, unsigned int requiredUsage)
      * type in cert
      */
     if ( requiredUsage & KU_KEY_AGREEMENT_OR_ENCIPHERMENT ) {
-	SECKEYPublicKey *key = CERT_ExtractPublicKey(cert);
-	if (!key)
-	    return SECFailure;
-	if ( ( key->keyType == keaKey ) || ( key->keyType == fortezzaKey ) ||
-	     ( key->keyType == dhKey ) ) {
-	    requiredUsage |= KU_KEY_AGREEMENT;
-	} else {
-	    requiredUsage |= KU_KEY_ENCIPHERMENT;
-	} 
-
-	/* now turn off the special bit */
+	KeyType keyType = CERT_GetCertKeyType(&cert->subjectPublicKeyInfo);
+	/* turn off the special bit */
 	requiredUsage &= (~KU_KEY_AGREEMENT_OR_ENCIPHERMENT);
-	
-	SECKEY_DestroyPublicKey(key);
+
+	switch (keyType) {
+	case rsaKey:
+	    requiredUsage |= KU_KEY_ENCIPHERMENT;
+	    break;
+	case dsaKey:
+	    requiredUsage |= KU_DIGITAL_SIGNATURE;
+	    break;
+	case fortezzaKey:
+	case keaKey:
+	case dhKey:
+	    requiredUsage |= KU_KEY_AGREEMENT;
+	    break;
+	case ecKey:
+	    /* Accept either signature or agreement. */
+	    if (!(cert->keyUsage & (KU_DIGITAL_SIGNATURE | KU_KEY_AGREEMENT)))
+		 goto loser;
+	    break;
+	default:
+	    goto loser;
+	}
     }
 
-    if ( ( cert->keyUsage & requiredUsage ) != requiredUsage ) {
-	return(SECFailure);
-    }
-    return(SECSuccess);
+    if ( (cert->keyUsage & requiredUsage) == requiredUsage ) 
+    	return SECSuccess;
+loser:
+    PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return SECFailure;
 }
 
 
