@@ -1175,6 +1175,12 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
                                                          NULL,
                                                          &usage,
                                                          NULL);
+	    if (!cert) {
+		/* don't have a "for token" here yet... */
+		cert = NSSTrustDomain_FindCertificateByEmail(defaultTD, 
+		                                         (NSSASCII7 *)nickname,
+		                                          NULL, &usage, NULL);
+	    }
 	}
     } else {
 	/* search the whole trust domain */
@@ -1184,6 +1190,11 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
                                                   NULL,
                                                   &usage,
                                                   NULL);
+	if (!cert) {
+	    cert = NSSTrustDomain_FindCertificateByEmail(defaultTD, 
+		                                         (NSSASCII7 *)nickname,
+		                                          NULL, &usage, NULL);
+	}
     }
     if (cert) {
 	rvCert = STAN_GetCERTCertificate(cert);
