@@ -365,7 +365,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
                              PR_TRUE);
       }
       else {
-        mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("true"),
+        mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, NS_LITERAL_STRING("true"),
                              PR_TRUE);
       }
         
@@ -455,7 +455,7 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
   if (aActivateFlag) {
     // Highlight the menu.
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
   }
   else {
     // Unhighlight the menu.
@@ -496,7 +496,7 @@ nsMenuFrame::MarkAsGenerated()
     nsAutoString genVal;
     child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
     if (genVal.IsEmpty())
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
   return NS_OK;
@@ -583,9 +583,9 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     // Mark it as generated, which ensures a frame gets built.
     MarkAsGenerated();
 
-    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
+    domElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
   }
-  else domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
+  else domElement->RemoveAttribute(NS_LITERAL_STRING("open"));
 
   return NS_OK;
 }
@@ -888,7 +888,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::MarkChildrenStyleChange()
+nsMenuFrame::MarkChildrenStyleChange()  
 {
   nsresult rv = nsBoxFrame::MarkChildrenStyleChange();
   if (NS_FAILED(rv))
@@ -1196,7 +1196,9 @@ nsMenuFrame::Notify(nsITimer* aTimer)
       nsAutoString active;
       mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
       if (active.EqualsWithConversion("true")) {
-        // We're still the active menu.
+        // We're still the active menu. Make sure all submenus/timers are closed
+        // before opening this one
+        mMenuParent->KillPendingTimers();
         OpenMenu(PR_TRUE);
       }
     }
@@ -1393,7 +1395,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   PRBool prependPlus = PR_FALSE;
 
   nsAutoString xulkey;
-  keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"), xulkey);
+  keyElement->GetAttribute(NS_LITERAL_STRING("xulkey"), xulkey);
   if (xulkey.EqualsWithConversion("true"))
   {
     // Compiled-in defaults, in case we can't get LookAndFeel --
