@@ -206,7 +206,6 @@ test_concat_and_assign()
       }
 
 
-    
     {
       TestTimer timer;
       for ( int i=0; i<N; ++i )
@@ -220,7 +219,6 @@ test_concat_and_assign()
         s4 = s1 + s2;
     }
     cout << "s4 = s1 + s2" << endl;
-
 
     return kTestSucceeded;
   }
@@ -475,13 +473,13 @@ main()
 
     tests_failed += test_construction();
     tests_failed += test_concat();
-//  tests_failed += test_concat_and_assign();
+    tests_failed += test_concat_and_assign();
     tests_failed += test_compare();
     tests_failed += test_countchar();
     tests_failed += test_append_string();
     tests_failed += test_repeated_append_string();
     tests_failed += test_append_char();
-//  tests_failed += test_repeated_append_char();
+    tests_failed += test_repeated_append_char();
     tests_failed += test_insert_string();
 #ifndef TEST_STD_STRING
     tests_failed += test_find_string();
