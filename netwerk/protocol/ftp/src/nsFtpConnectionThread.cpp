@@ -1592,40 +1592,39 @@ nsFtpState::R_rest() {
 
 nsresult
 nsFtpState::S_stor() {
-    nsresult rv = NS_OK;
+    NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
+    if (!mWriteStream)
+        return NS_ERROR_FAILURE;
+
     nsCAutoString storStr(mPath.get());
     if (storStr.IsEmpty() || storStr.First() != '/')
         storStr.Insert(mPwd,0);
     storStr.Insert("STOR ",0);
     storStr.Append(CRLF);
 
-    rv = SendFTPCommand(storStr);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
-    if (!mWriteStream)
-        return NS_ERROR_FAILURE;
-
-    PRUint32 len;
-    mWriteStream->Available(&len);
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
-    return NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), 
-                                   mDPipe, 
-                                   mWriteStream, 0, len, 0, mDRequestForwarder);
+    return SendFTPCommand(storStr);
 }
 
 FTP_STATE
 nsFtpState::R_stor() {
-   if (mResponseCode/100 == 2) {
+    if (mResponseCode/100 == 2) {
         //(DONE)
         mNextState = FTP_COMPLETE;
         return FTP_COMPLETE;
     }
 
-   if (mResponseCode/100 == 1) {
+    if (mResponseCode/100 == 1) {
+        PRUint32 len;
+        mWriteStream->Available(&len);
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
+        nsresult rv = NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), 
+                                              mDPipe, 
+                                              mWriteStream, 0, len,
+                                              0, mDRequestForwarder);
+        if (NS_FAILED(rv)) return FTP_ERROR;
         return FTP_READ_BUF;
-   }  
- 
+    }
+
    return FTP_ERROR;
 }
 
@@ -1787,18 +1786,19 @@ nsFtpState::R_pasv() {
         return FTP_ERROR;
     }
 
-    if (mAction == PUT) {
-        NS_ASSERTION(!mRETRFailed, "Failed before uploading");
-        mDRequestForwarder->Uploading(PR_TRUE);
-        return FTP_S_STOR;
-    }
-   
+    // we need to get mDPipe going so tcp connection is made
     rv = mDPipe->AsyncRead(mDRequestForwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
     if (NS_FAILED(rv)){
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->AsyncRead failed (rv=%x)\n", this, rv));
         return FTP_ERROR;
     }
 
+    if (mAction == PUT) {
+        NS_ASSERTION(!mRETRFailed, "Failed before uploading");
+        mDRequestForwarder->Uploading(PR_TRUE);
+        return FTP_S_STOR;
+    }
+   
     if (mRETRFailed)
         return FTP_S_CWD;
 
@@ -2294,7 +2294,7 @@ nsFtpState::StopProcessing() {
         sink->OnStatus(nsnull, nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, nsnull);
 
     // Release the Observers
-    mWriteStream = 0;
+    mWriteStream = 0;  // should this call close before setting to null?
 
     mPrompter = 0;
     mAuthPrompter = 0;
