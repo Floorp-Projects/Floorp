@@ -91,10 +91,10 @@ class nsIEcho : public nsISupports {
   NS_IMETHOD SimpleCallNoEcho() = 0;
 
   /* void SendManyTypes (in octet p1, in short p2, in long p3, in long long p4, in octet p5, in unsigned short p6, in unsigned long p7, in unsigned long long p8, in float p9, in double p10, in boolean p11, in char p12, in wchar p13, in nsID p14, in string p15, in wstring p16); */
-  NS_IMETHOD SendManyTypes(PRUint8 p1, PRInt16 p2, PRInt32 p3, PRInt64 p4, PRUint8 p5, PRUint16 p6, PRUint32 p7, PRUint64 p8, float p9, double p10, PRBool p11, char p12, PRUint16 p13, nsID * p14, const char *p15, const PRUnichar *p16) = 0;
+  NS_IMETHOD SendManyTypes(PRUint8 p1, PRInt16 p2, PRInt32 p3, PRInt64 p4, PRUint8 p5, PRUint16 p6, PRUint32 p7, PRUint64 p8, float p9, double p10, PRBool p11, char p12, PRUnichar p13, nsID * p14, const char *p15, const PRUnichar *p16) = 0;
 
   /* void SendInOutManyTypes (inout octet p1, inout short p2, inout long p3, inout long long p4, inout octet p5, inout unsigned short p6, inout unsigned long p7, inout unsigned long long p8, inout float p9, inout double p10, inout boolean p11, inout char p12, inout wchar p13, inout nsID p14, inout string p15, inout wstring p16); */
-  NS_IMETHOD SendInOutManyTypes(PRUint8 *p1, PRInt16 *p2, PRInt32 *p3, PRInt64 *p4, PRUint8 *p5, PRUint16 *p6, PRUint32 *p7, PRUint64 *p8, float *p9, double *p10, PRBool *p11, char *p12, PRUint16 *p13, nsID * *p14, char **p15, PRUnichar **p16) = 0;
+  NS_IMETHOD SendInOutManyTypes(PRUint8 *p1, PRInt16 *p2, PRInt32 *p3, PRInt64 *p4, PRUint8 *p5, PRUint16 *p6, PRUint32 *p7, PRUint64 *p8, float *p9, double *p10, PRBool *p11, char *p12, PRUnichar *p13, nsID * *p14, char **p15, PRUnichar **p16) = 0;
 
   /* void MethodWithNative (in long p1, in voidStar p2); */
   NS_IMETHOD MethodWithNative(PRInt32 p1, void * p2) = 0;
@@ -106,7 +106,7 @@ class nsIEcho : public nsISupports {
   NS_IMETHOD FailInJSTest(PRInt32 fail) = 0;
 
   /* void SharedString ([shared, retval] out string str); */
-  NS_IMETHOD SharedString(char **str) = 0;
+  NS_IMETHOD SharedString(const char **str) = 0;
 
   /* void ReturnCode_NS_OK (); */
   NS_IMETHOD ReturnCode_NS_OK() = 0;

@@ -223,7 +223,7 @@ public:
                              double            p10,
                              PRBool            p11,
                              char              p12,
-                             PRUint16            p13,
+                             PRUnichar            p13,
                              nsID*             p14,
                              const char*       p15,
                              const PRUnichar*  p16);
@@ -239,10 +239,10 @@ public:
                                   double*  p10,
                                   PRBool*  p11,
                                   char*    p12,
-                                  PRUint16*  p13,
+                                  PRUnichar*  p13,
                                   nsID**   p14,
                                   char**   p15,
-                                  PRUint16** p16);
+                                  PRUnichar** p16);
     NS_IMETHOD MethodWithNative(int p1, void* p2);
 
     NS_IMETHOD ReturnCode(int code);
@@ -250,7 +250,7 @@ public:
     NS_IMETHOD FailInJSTest(int fail);
 
     /* void SharedTest ([shared, retval] out string str); */
-    NS_IMETHOD SharedString(char **str);
+    NS_IMETHOD SharedString(const char **str);
 
     /* void ReturnCode_NS_OK (); */
     NS_IMETHOD ReturnCode_NS_OK();
@@ -357,7 +357,7 @@ MyEcho::SendManyTypes(PRUint8              p1,
                       double            p10,
                       PRBool            p11,
                       char              p12,
-                      PRUint16            p13,
+                      PRUnichar            p13,
                       nsID*             p14,
                       const char*       p15,
                       const PRUnichar*  p16)
@@ -381,10 +381,10 @@ MyEcho::SendInOutManyTypes(PRUint8*    p1,
                            double*  p10,
                            PRBool*  p11,
                            char*    p12,
-                           PRUint16*  p13,
+                           PRUnichar*  p13,
                            nsID**   p14,
                            char**   p15,
-                           PRUint16** p16)
+                           PRUnichar** p16)
 {
     if(mReceiver)
         return mReceiver->SendInOutManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
@@ -413,7 +413,7 @@ MyEcho::FailInJSTest(int fail)
 }
 
 NS_IMETHODIMP
-MyEcho::SharedString(char **str)
+MyEcho::SharedString(const char **str)
 {
     *str = "a static string";
 /*
