@@ -598,7 +598,7 @@ nsMovemailService::GetCanDelete(PRBool *aCanDelete)
 }  
 
 NS_IMETHODIMP
-nsMoveMailService::GetCanGetMessages(PRBool *aCanGetMessages)
+nsMovemailService::GetCanGetMessages(PRBool *aCanGetMessages)
 {
     NS_ENSURE_ARG_POINTER(aCanGetMessages);
     *aCanGetMessages = PR_TRUE;
