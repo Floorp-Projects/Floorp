@@ -285,3 +285,9 @@ bin/chrome/chatzilla.jar
 ;       developers to create an installer.  Release builds contain 
 ;       a legitimate, working talkback.xpi.
 bin/components/nsSample.js
+
+[psm]
+bin/psm
+bin/start-psm
+bin/psmdata/*
+bin/libnssckbi.so
