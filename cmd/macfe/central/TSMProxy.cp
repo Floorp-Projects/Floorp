@@ -84,7 +84,7 @@ void HoldUpdatesProxy::DocumentChanged( int32 iStartY, int32 iHeight )
 }
 
 
-AEEventHandlerUPP		HTMLInlineTSMProxy::sAEHandler 			= NewAEEventHandlerProc( AEHandlerTSM );
+AEEventHandlerUPP	HTMLInlineTSMProxy::sAEHandler 		= NewAEEventHandlerProc( AEHandlerTSM );
 HTMLInlineTSMProxy	*HTMLInlineTSMProxy::sCurrentProxy 	= NULL;
 
 
@@ -329,12 +329,19 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 				Assert_( sCurrentProxy != NULL );
 				
 				StHandleLocker	lock(inAppleEvent->dataHandle);
-				LAESubDesc			appleEvent(*inAppleEvent);
-				LAEStream				replyStream;
+				AESubDesc 		appleEvent;
+				AEDescToSubDesc(inAppleEvent, &appleEvent);
+
+//				ThrowIf_(((Int32)(void *)sCurrentProxy) != appleEvent.KeyedItem(keyAETSMDocumentRefcon).ToInt32());
+				AESubDesc keySubDesc;
+				AEGetKeySubDesc( &appleEvent, keyAETSMDocumentRefcon, &keySubDesc );
+				long len;
+				void *tsmdocrefcon = AEGetSubDescData( &keySubDesc, &len );
+	
+				ThrowIf_(((Int32)(void *)sCurrentProxy) != ((Int32)tsmdocrefcon));
 				
-				ThrowIf_(((Int32)(void *)sCurrentProxy) != appleEvent.KeyedItem(keyAETSMDocumentRefcon).ToInt32());
-				
-				replyStream.OpenRecord();
+				AEStream		replyStream;
+				err = AEStream_OpenRecord( &replyStream, 'xxxx' );
 				
 				if ( sCurrentProxy != NULL )
 					{
@@ -364,7 +371,7 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 						
 					}
 				
-				replyStream.CloseRecord();
+				err = AEStream_CloseRecord( &replyStream );
 				
 				//	Transfer reply parameters to the real reply (hopefully MacOS 8 will have a way around this)
 				//	ie, can simply say:
@@ -372,12 +379,18 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 				//		replyStream.Close(outReply);
 				//
 				StAEDescriptor	reply;
-				replyStream.Close(reply);
-				LAESubDesc		replySD(reply);
+				err = AEStream_Close( &replyStream, reply );
+				AESubDesc 		replySD;
+				AEDescToSubDesc(reply, &replySD);
 				AEKeyword		key;
-				for (Int32 i = 1; i <= replySD.CountItems(); i++) {
+				
+				int32 upperBound = AECountSubDescItems( &replySD );
+				for (long i = 1; i <= upperBound; i++) {
 					StAEDescriptor	parm;
-					replySD.NthItem(i, &key).ToDesc(&parm.mDesc);
+					AESubDesc nthSubDesc;
+					err = AEGetNthSubDesc( &replySD, i, &key, &nthSubDesc );
+					err = AESubDescToDesc( &nthSubDesc, key, &parm.mDesc );
+//					replySD.NthItem(i, &key).ToDesc(&parm.mDesc);
 					err = ::AEPutParamDesc(outReply, key, &parm.mDesc);
 					ThrowIfOSErr_(err);
 				}		
@@ -408,8 +421,9 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 
 #if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
 void	HTMLInlineTSMProxy::AEUpdate(
-	const LAESubDesc	&inAppleEvent )
+	const AESubDesc	&inAppleEvent )
 {
+	OSErr	err;
 	CEditView::OutOfFocus(&mTextView);
 
 	HoldUpdatesProxy stopUpdatesProxy(mTextView);
@@ -422,14 +436,23 @@ void	HTMLInlineTSMProxy::AEUpdate(
 	}
 	
 	// get the text in the input hole
-	LAESubDesc	textSD(inAppleEvent.KeyedItem(keyAETheData), typeChar);
-	Ptr thedata = (const Ptr)textSD.GetDataPtr();
-	int32 len = textSD.GetDataLength();
+	AESubDesc keySubDesc;
+	AEGetKeySubDesc( &inAppleEvent, keyAETheData, &keySubDesc );
+	
+	int32 textlen;
+	Ptr thedata = (char *)AEGetSubDescData( &keySubDesc, &textlen );
+	ThrowIf_(((Int32)(void *)sCurrentProxy) != ((Int32)(void*)thedata));
+//	AESubDesc	textSD(inAppleEvent.KeyedItem(keyAETheData), typeChar);
 			
 	// fixLength is the number of characters which can be fixed into the buffer.
-	Int32	fixLength = inAppleEvent.KeyedItem(keyAEFixLength).ToInt32();
+	AESubDesc fixedLengthDesc;
+	AEGetKeySubDesc( &inAppleEvent, keyAEFixLength, &fixedLengthDesc );
+
+	Int32 fixLength, lengthlen;
+	fixLength = *(Int32 *)AEGetSubDescData( &fixedLengthDesc, &lengthlen );
+//	Int32	fixLength = inAppleEvent.KeyedItem(keyAEFixLength).ToInt32();
 	if (fixLength < 0)			// special signal to fix it all!!
-		fixLength = len;
+		fixLength = textlen;
 
 	mTextView.EraseCaret();
 	mTextView.HideCaret(true);
@@ -443,7 +466,7 @@ void	HTMLInlineTSMProxy::AEUpdate(
 		EDT_DeletePreviousChar(mContext);
 		
 		if (temp) {
-			if (len)	// if len == 0, then don't bother setting the character data because there is nothing left!
+			if (textlen)	// if len == 0, then don't bother setting the character data because there is nothing left!
 				EDT_SetCharacterData( mContext, temp );
 			EDT_FreeCharacterData( temp );
 		}
@@ -451,7 +474,7 @@ void	HTMLInlineTSMProxy::AEUpdate(
 		
 	// we will handle this special case because it makes the algorithm easier to understand.
 	// the input hole is going away because we are going to fix everything...
-	if (fixLength == len) 
+	if (fixLength == textlen) 
 	{
 		PasteFromPtr(thedata, fixLength, kRawText);		
 		mInputHoleActive = false;
@@ -466,9 +489,15 @@ void	HTMLInlineTSMProxy::AEUpdate(
 		mInputHoleStart = EDT_GetInsertPointOffset(mContext);	// a new starting point for our input hole
 	}
 
-	if (inAppleEvent.KeyExists(keyAEHiliteRange)) {
-		LAESubDesc	hiliteSD(inAppleEvent.KeyedItem(keyAEHiliteRange), typeTextRangeArray);
-		TextRangeArrayPtr	p = (TextRangeArrayPtr)hiliteSD.GetDataPtr();
+	AESubDesc hiliteRangeSubDesc;
+	err = AEGetKeySubDesc( &inAppleEvent, keyAEHiliteRange, &hiliteRangeSubDesc );
+	XP_ASSERT( hiliteRangeSubDesc != NULL && err == noErr );
+	
+	if ( err == noErr) {
+//	if (inAppleEvent.KeyExists(keyAEHiliteRange)) {
+//		AESubDesc	hiliteSD( hiliteRangeSubDesc, typeTextRangeArray );
+//		TextRangeArrayPtr	p = (TextRangeArrayPtr)hiliteSD.GetDataPtr();
+		TextRangeArrayPtr p = (TextRangeArrayPtr)AEGetSubDescData( &hiliteRangeSubDesc, &textlen );
 		for (Int32 i = 0; i < p->fNumOfRanges; i++) {
 		
 			TextRange	record;
@@ -493,18 +522,30 @@ void	HTMLInlineTSMProxy::AEUpdate(
 #define	keyAELeadingEdge	keyAELeftSide
 
 void	HTMLInlineTSMProxy::AEPos2Offset(
-	const LAESubDesc	&inAppleEvent,
-	LAEStream			&inStream) const
+	const AESubDesc	&inAppleEvent,
+	AEStream		&inStream) const
 {
 	//	input
 	Point	where;
-	Boolean	dragging = false;
+	Boolean	dragging;
+	long len;
+	OSErr err;
 
-	inAppleEvent.KeyedItem(keyAECurrentPoint).ToPtr(typeQDPoint, &where, sizeof(where));
+	AESubDesc subdesc;
+	err = AEGetKeySubDesc( &inAppleEvent, keyAECurrentPoint, &subdesc );
+	where = *(Point *)AEGetSubDescData( &subdesc, &len );
+//	inAppleEvent.KeyedItem(keyAECurrentPoint).ToPtr(typeQDPoint, &where, sizeof(where));
 
-	LAESubDesc	sd = inAppleEvent.KeyedItem(keyAEDragging);
-	if (sd.GetType() != typeNull)	//	keyAEdragging is optional
-		dragging = sd.ToBoolean();
+	
+	err = AEGetKeySubDesc( &inAppleEvent, keyAEDragging, &subdesc );
+	if ( AEGetSubDescType( &subdesc ) != typeNull )
+		dragging = *(Boolean *)AEGetSubDescData( &subdesc, &len );
+	else
+		dragging = false;
+	
+//	AESubDesc	sd = inAppleEvent.KeyedItem(keyAEDragging);
+//	if (sd.GetType() != typeNull)	//	keyAEdragging is optional
+//		dragging = sd.ToBoolean();
 	
 	//	process
 	CEditView::OutOfFocus(&mTextView);
@@ -521,13 +562,18 @@ void	HTMLInlineTSMProxy::AEPos2Offset(
 //		result.lo_hitElement.region != LO_HIT_ELEMENT_REGION_MIDDLE ||
 		result.lo_hitElement.position.element->type != LO_TEXT) {
 		
-			inStream.WriteKey(keyAEOffset);
+			err = AEStream_WriteKey( &inStream, keyAEOffset );
+//			inStream.WriteKey(keyAEOffset);
 			Int32	offset = -1;
-			inStream.WriteDesc(typeLongInteger, &offset, sizeof(offset));
 			
-			inStream.WriteKey(keyAERegionClass);
+			err = AEStream_WriteDesc( &inStream, typeLongInteger, &offset, sizeof(offset) );
+//			inStream.WriteDesc(typeLongInteger, &offset, sizeof(offset));
+			
+			err = AEStream_WriteKey( &inStream, keyAERegionClass );
+//			inStream.WriteKey(keyAERegionClass);
 			short	aShort = kTSMOutsideOfBody;
-			inStream.WriteDesc(typeShortInteger, &aShort, sizeof(aShort));
+			err = AEStream_WriteDesc( &inStream, typeShortInteger, &aShort, sizeof(aShort) );
+//			inStream.WriteDesc(typeShortInteger, &aShort, sizeof(aShort));
 			
 			return;
 		}
@@ -551,12 +597,15 @@ void	HTMLInlineTSMProxy::AEPos2Offset(
 	}
 
 	//	output
-	inStream.WriteKey(keyAEOffset);
+	err = AEStream_WriteKey( &inStream, keyAEOffset );
+//	inStream.WriteKey(keyAEOffset);
 	Int32	offset = newPosition;
 	offset -= mInputHoleStart;
-	inStream.WriteDesc(typeLongInteger, &offset, sizeof(offset));
+	err = AEStream_WriteDesc( &inStream, typeLongInteger, &offset, sizeof(offset) );
+//	inStream.WriteDesc(typeLongInteger, &offset, sizeof(offset));
 	
-	inStream.WriteKey(keyAERegionClass);
+	err = AEStream_WriteKey( &inStream, keyAERegionClass );
+//	inStream.WriteKey(keyAERegionClass);
 	short	aShort = kTSMOutsideOfBody;
 	
 	SDimension32 sizeImage;
@@ -572,16 +621,22 @@ void	HTMLInlineTSMProxy::AEPos2Offset(
 			aShort = kTSMInsideOfBody;
 		}
 
-	inStream.WriteDesc(typeShortInteger, &aShort, sizeof(aShort));
+	err = AEStream_WriteDesc( &inStream, typeShortInteger, &aShort, sizeof(aShort) );
+//	inStream.WriteDesc(typeShortInteger, &aShort, sizeof(aShort));
 }
 
 
 void	HTMLInlineTSMProxy::AEOffset2Pos(
-	const LAESubDesc	&inAppleEvent,
-	LAEStream			&inStream) const
+	const AESubDesc	&inAppleEvent,
+	AEStream		&inStream) const
 {
+	OSErr	err;
 	//	input
-	Int32	offset = inAppleEvent.KeyedItem(keyAEOffset).ToInt32();
+	AESubDesc subdesc;
+	err = AEGetKeySubDesc( &inAppleEvent, keyAEOffset, &subdesc );
+	long len;
+	Int32	offset = *(Int32 *)AEGetSubDescData( &subdesc, &len );
+//	Int32	offset = inAppleEvent.KeyedItem(keyAEOffset).ToInt32();
 	offset += mInputHoleStart;
 	
 	LO_Element * element;
@@ -599,7 +654,9 @@ void	HTMLInlineTSMProxy::AEOffset2Pos(
 	::LocalToGlobal(&where);
 	
 	//	output
-	inStream.WriteKey(keyAEPoint);
-	inStream.WriteDesc(typeQDPoint, &where, sizeof(where));
+	err = AEStream_WriteKey( &inStream, keyAEPoint );
+	err = AEStream_WriteDesc( &inStream, typeQDPoint, &where, sizeof(where) );
+//	inStream.WriteKey(keyAEPoint);
+//	inStream.WriteDesc(typeQDPoint, &where, sizeof(where));
 }
 #endif _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_

@@ -17,6 +17,9 @@
  */
 
 #include "CEditView.h"
+#define _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_ 1
+#include <AESubDescs.h>
+#include <AEStream.h>
 
 
 class HoldUpdatesProxy
@@ -62,11 +65,11 @@ class	HTMLInlineTSMProxy //: public VTSMProxy
 
 		protected:
 #if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
-			virtual void	AEUpdate( const LAESubDesc &inAppleEvent );
+			virtual void	AEUpdate( const AESubDesc &inAppleEvent );
 																					
-			virtual void	AEPos2Offset( const LAESubDesc	&inAppleEvent, LAEStream &inStream ) const;
+			virtual void	AEPos2Offset( const AESubDesc	&inAppleEvent, AEStream &inStream ) const;
 																					
-			virtual void	AEOffset2Pos( const LAESubDesc	&inAppleEvent, LAEStream &inStream ) const;
+			virtual void	AEOffset2Pos( const AESubDesc	&inAppleEvent, AEStream &inStream ) const;
 
 			void			PasteFromPtr( const Ptr thedata, int32 len, short hiliteStyle );
 #endif _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
