@@ -722,6 +722,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
+  nsIFrame* immediateParent = nsnull;
+  GetInsertionPoint(&immediateParent);
+  if (!immediateParent)
+    immediateParent = this;
+
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
@@ -731,7 +736,11 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
       currFrame->GetNextSibling(&currFrame);
     }
   }
-  else currFrame = mFrames.FirstChild();
+  else 
+    immediateParent->FirstChild(mPresContext,
+                                nsnull,
+                                &currFrame);
+
   
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
@@ -747,7 +756,9 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
     currFrame->GetNextSibling(&currFrame);
   }
 
-  currFrame = mFrames.FirstChild();
+  immediateParent->FirstChild(mPresContext,
+                              nsnull,
+                              &currFrame);
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != startFrame) {
@@ -773,16 +784,27 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 NS_IMETHODIMP
 nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
+  nsIFrame* immediateParent = nsnull;
+  GetInsertionPoint(&immediateParent);
+  if (!immediateParent)
+    immediateParent = this;
+
+  nsIFrame* first;
+  immediateParent->FirstChild(mPresContext,
+                              nsnull, &first);
+  nsFrameList frames(first);
+  
+                              
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
     aStart->QueryInterface(kIFrameIID, (void**)&currFrame);
     if (currFrame) {
       startFrame = currFrame;
-      currFrame = mFrames.GetPrevSiblingFor(currFrame);
+      currFrame = frames.GetPrevSiblingFor(currFrame);
     }
   }
-  else currFrame = mFrames.LastChild();
+  else currFrame = frames.LastChild();
 
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
@@ -795,10 +817,10 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
       NS_IF_ADDREF(*aResult);
       return NS_OK;
     }
-    currFrame = mFrames.GetPrevSiblingFor(currFrame);
+    currFrame = frames.GetPrevSiblingFor(currFrame);
   }
 
-  currFrame = mFrames.LastChild();
+  currFrame = frames.LastChild();
 
   // Still don't have anything. Try cycling from the end.
   while (currFrame && currFrame != startFrame) {
@@ -813,7 +835,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
       return NS_OK;
     }
 
-    currFrame = mFrames.GetPrevSiblingFor(currFrame);
+    currFrame = frames.GetPrevSiblingFor(currFrame);
   }
 
   // No luck. Just return our start value.
@@ -933,8 +955,16 @@ nsMenuPopupFrame::Enter()
 nsIMenuFrame*
 nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
 {
+
   // Enumerate over our list of frames.
-  nsIFrame* currFrame = mFrames.FirstChild();
+  nsIFrame* immediateParent = nsnull;
+  GetInsertionPoint(&immediateParent);
+  if (!immediateParent)
+    immediateParent = this;
+
+  nsIFrame* currFrame;
+  immediateParent->FirstChild(mPresContext, nsnull, &currFrame);
+
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
