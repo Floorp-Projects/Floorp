@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/04/25 23:55:30 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/04/26 00:06:18 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -141,6 +141,10 @@ $VERSION = '#tinder_version#';
 # adding an elment to the hash 'is_bonsai_default' which is set for
 # this tree.
 
+# If you are using bonsai you MUST use the local format for specifying
+# the CVS tree.  Bonsai expects the root to be a directory which
+# contains the CVS repository.
+
 #------------------------------------------------------------------
 
 
@@ -155,10 +159,12 @@ $VERSION = '#tinder_version#';
 
 
 %VC_TREE = (
+
 #	    SeaMonkey => {
 #			  root => ':pserver:anonymous@'.
 #			  	  'cvs-mirror.mozilla.org:'.
 #                                  '/cvsroot',
+# or
 #
 #                          root => '/devel/java_repository',
 #
@@ -166,11 +172,17 @@ $VERSION = '#tinder_version#';
 #			  branch => 'main',
 #                         dir_pattern => '^/mozilla',
 #                         is_bonsai_default => 1,
-
 #			 },
 
-	    # these are dummy trees for testing.	    
  
+	    'SeaMonkey' =>  {
+                   root => '/cvsroot',
+                   module => '',
+                   branch => 'HEAD',
+                  },
+
+	    # these are dummy trees for testing.	    
+
 	    'Project_A' =>  {
                    root => '/cvsroot',
                    module => '',
