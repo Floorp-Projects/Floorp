@@ -17,7 +17,7 @@
  */
 
   var appCore = null;
-  var useOldAppCore = true; // Set this to false to use new replacement for the browser app core.
+  var useOldAppCore = false; // Set this to true to use the old browser app core.
   var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
@@ -150,6 +150,12 @@ function UpdateBookmarksLastVisitiedDate(event)
 
   function Startup()
   {
+    // Position window.
+    var win = document.getElementById( "main-window" );
+    var x = win.getAttribute( "x" );
+    var y = win.getAttribute( "y" );
+    window.moveTo( x, y );
+
     if ( useOldAppCore ) {
         dump("Doing Startup...\n");
         dump("Creating browser app core\n");
@@ -186,6 +192,19 @@ function UpdateBookmarksLastVisitiedDate(event)
   }
 
   function Shutdown() {
+    // Get the current window position/size.
+    var x = window.screenX;
+    var y = window.screenY;
+    var h = window.outerHeight;
+    var w = window.outerWidth;
+
+    // Store these into the window attributes (for persistence).
+    var win = document.getElementById( "main-window" );
+    win.setAttribute( "x", x );
+    win.setAttribute( "y", y );
+    win.setAttribute( "height", h );
+    win.setAttribute( "width", w );
+
     // Close the app core.
     if ( appCore ) {
         appCore.close();
@@ -763,6 +782,25 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserClose()
   {
+    // This code replicates stuff in Shutdown().  It is here because
+    // window.screenX and window.screenY have real values.  We need
+    // to fix this eventually but by replicating the code here, we
+    // provide a means of saving position (it just requires that the
+    // user close the window via File->Close (vs. close box).
+
+    // Get the current window position/size.
+    var x = window.screenX;
+    var y = window.screenY;
+    var h = window.outerHeight;
+    var w = window.outerWidth;
+
+    // Store these into the window attributes (for persistence).
+    var win = document.getElementById( "main-window" );
+    win.setAttribute( "x", x );
+    win.setAttribute( "y", y );
+    win.setAttribute( "height", h );
+    win.setAttribute( "width", w );
+
   	 window.close();
   }
 
@@ -946,22 +984,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserViewSource()
   {
-    if ( useOldAppCore ) {
-        var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-        if (!toolkitCore) {
-          toolkitCore = new ToolkitCore();
-          if (toolkitCore) {
-            toolkitCore.Init("ToolkitCore");
-          }
-        }
-        if (toolkitCore) {
-          var url = window.content.location;
-          dump("Opening view of source for" + url + "\n");
-          toolkitCore.ShowWindowWithArgs("chrome://navigator/content/viewSource.xul", window, url);
-        }
-    } else {
-        window.openDialog( "chrome://navigator/content/viewSource.xul", null, "all,dialog=no", window.content.location );
-    }
+    window.openDialog( "chrome://navigator/content/viewSource.xul", null, "all,dialog=no", window.content.location );
   }
 
 
@@ -1043,5 +1066,6 @@ function OpenSearch(tabName, searchStr)
             dump( "meter value=" + meter.getAttribute("value") + "\n" );
         }
 
-
-
+function BrowserReload() {
+    dump( "Sorry, command not implemented: " + window.event.srcElement + "\n" );
+}
