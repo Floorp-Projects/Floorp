@@ -244,6 +244,13 @@
       </fileset>
     </delete>
 
+    <delete >
+      <fileset dir="${basedir}/src_moz">
+        <include name="*.ilk"/>
+      </fileset>
+    </delete>
+
+
     <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
     <delete file="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"/>
 

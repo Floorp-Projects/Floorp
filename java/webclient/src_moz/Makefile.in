@@ -22,6 +22,7 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/webclient/src_moz
 VPATH		= $(topsrcdir)/java/webclient/src_moz
 
+
 # IMPORTANT: on Linux, if building webclient with a non-debug mozilla
 # tree, the libwidget_gtk.so binary produced will not work with
 # webclient.  Namely, the symbol handle_gdk_event__FP9_GdkEventPv will
@@ -46,13 +47,6 @@ VPATH		= $(topsrcdir)/java/webclient/src_moz
 # to build WEBCLIENT_PACKAGE_BUILD on linux, grab libwidget_gtk.so from
 # the above URL and put it in the same directory as this file.
 
-# We don't need to build the stubs in the BAL case.
-ifeq ($(BAL_INTERFACE),)
-DIRS = gtk
-endif
-
-JAVAHOME        = $(JDKHOME)
-
 include $(DEPTH)/config/autoconf.mk
 
 ifneq ($(BAL_INTERFACE),)
@@ -64,6 +58,7 @@ endif
 REQUIRES	= xpcom \
 	layout \
 	shistory \
+	find \
 	appcomps \
 	appshell \
 	pref \
@@ -118,8 +113,40 @@ CPPSRCS = \
 	PreferencesImpl.cpp \
 	PreferencesActionEvents.cpp \
 	WrapperFactoryImpl.cpp \
+	$(NULL)
+
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += \
 	gtk/GtkBrowserControlCanvas.cpp \
 	$(NULL)
+DIRS = gtk
+else
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += \
+	win32/Win32BrowserControlCanvas.cpp \
+	$(NULL)
+else
+CPPSRCS += \
+	gtk/GtkBrowserControlCanvas.cpp \
+	$(NULL)
+DIRS = gtk
+endif
+endif
+
+
+EXTRA_LIBS		+= \
+			$(XPCOM_LIBS) \
+			$(NSPR_LIBS) \
+			$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+			$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS += \
+		$(DIST)/lib/wc_share.lib \
+		$(MOZ_JDKHOME)/jre/lib/jawt.lib \
+		$(NULL)
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 
@@ -127,14 +154,14 @@ ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-# Adding $(JDKHOME)/jre/lib/sparc because we need to link against 
+# Adding $(MOZ_JDKHOME)/jre/lib/sparc because we need to link against 
 # the libjawt.so shared library for the JAWT Native Interface
 # functionality to work correctly.
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -L$(JDKHOME)/jre/lib/i386 -ljawt -L/usr/X11R6/lib -lXt
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(MOZ_JDKHOME)/jre/lib/sparc -L$(MOZ_JDKHOME)/jre/lib/i386 -ljawt -L/usr/X11R6/lib -lXt
 else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -L$(JDKHOME)/jre/lib/i386 -ljawt -L/usr/X11R6/lib -lXt 
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(MOZ_JDKHOME)/jre/lib/sparc -L$(MOZ_JDKHOME)/jre/lib/i386 -ljawt -L/usr/X11R6/lib -lXt 
 endif
 endif
 
@@ -142,21 +169,25 @@ ifneq ($(BAL_INTERFACE),)
 CXXFLAGS += -DBAL_INTERFACE
 endif
 
- EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/lib -lxpcom
-
 ifneq ($(BAL_INTERFACE),)
 EXTRA_DSO_LDOPTS += -lwc_share_bal
 else
+ifneq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LDOPTS += -lwc_share
 endif
-
+endif
 
 ifeq ($(OS_ARCH),Linux)
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(INCLUDES) \
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux $(INCLUDES) \
        -I$(DEPTH)/widget/src/gtk -I../src_share
 else
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
+ifeq ($(OS_ARCH),WINNT)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 $(INCLUDES) \
+       -I../src_share -I.
+else
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES) \
 	-I$(DEPTH)/widget/src/gtk -I../src_share
+endif
 endif
 
 
