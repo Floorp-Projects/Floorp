@@ -2050,10 +2050,11 @@ int     login_UpdateFilesToNewLocation(const char * path,CWnd *pParent,BOOL bCop
 	}
 
 	CString csHist = theApp.GetProfileString("History","History File","");
+	CString csFilename = CString(XP_AppName) + ".hst";
 	if (!csHist.IsEmpty()) {
 		csTmp = path;
-		csTmp += "\\mozilla.hst";
-		pDlg->StartFileUpdate("General Files","mozilla.hst");
+		csTmp += CString("\\") + csFilename;
+		pDlg->StartFileUpdate("General Files", (char*)(const char*)csFilename);
 		if (bCopyDontMove) {
 			WFE_CopyFile(csHist,csTmp);
 		} else {
@@ -2063,8 +2064,8 @@ int     login_UpdateFilesToNewLocation(const char * path,CWnd *pParent,BOOL bCop
 	} else {
 		if (!csMain.IsEmpty()) {
 			csTmp = path;
-			csTmp += "\\mozilla.hst";
-			pDlg->StartFileUpdate("General Files","mozilla.hst");
+			csTmp += CString("\\") + csFilename;
+			pDlg->StartFileUpdate("General Files",(char*)(const char*)csFilename);
 			WFE_CopyFile(csMain + "\\mozilla.hst" ,csTmp);
 		}
 	}

@@ -1114,7 +1114,7 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 	case xpGlobalHistory:
 		newName = (char *) XP_ALLOC(_MAX_PATH);
 		// changed -- jonm to support multi-profile
-		sprintf(newName, "%s\\mozilla.hst", (const char *)theApp.m_UserDirectory);
+		sprintf(newName, "%s\\%s.hst", (const char *)theApp.m_UserDirectory, XP_AppName);
 		break;
     case xpGlobalHistoryList:
         newName = (char *) XP_ALLOC(_MAX_PATH);
