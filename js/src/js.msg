@@ -274,3 +274,5 @@ MSG_DEF(JSMSG_END_OF_XML_ENTITY,      191, 0, JSEXN_SYNTAXERR, "unexpected end o
 MSG_DEF(JSMSG_BAD_XML_QNAME,          192, 0, JSEXN_SYNTAXERR, "invalid XML qualified name")
 MSG_DEF(JSMSG_BAD_FOR_EACH_LOOP,      193, 0, JSEXN_SYNTAXERR, "invalid for each loop")
 MSG_DEF(JSMSG_BAD_XMLLIST_PUT,        194, 1, JSEXN_TYPEERR, "can't set property {0} in XMLList")
+MSG_DEF(JSMSG_UNKNOWN_XML_ENTITY,     195, 1, JSEXN_TYPEERR, "unknown XML entity {0}")
+MSG_DEF(JSMSG_BAD_XML_NCR,            196, 1, JSEXN_TYPEERR, "malformed XML character {0}")

@@ -851,9 +851,12 @@ js_AppendJSString(JSStringBuffer *sb, JSString *str)
 static JSBool
 GetXMLEntity(JSContext *cx, JSTokenStream *ts)
 {
-    ptrdiff_t offset, length;
-    int32 c;
-    jschar *bp;
+    ptrdiff_t offset, length, i;
+    int32 c, d;
+    JSBool ispair;
+    jschar *bp, digit;
+    char *bytes;
+    JSErrNum msg;
 
     /* Put the entity, including the '&' already scanned, in ts->tokenbuf. */
     offset = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar);
@@ -868,44 +871,98 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
         FastAppendChar(&ts->tokenbuf, (jschar) c);
     }
 
-    /* Now try to match one of the five XML 1.0 predefined entities. */
+    /* Let length be the number of jschars after the '&', including the ';'. */
     length = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar) - offset;
     bp = ts->tokenbuf.base + offset;
-    c = 0;
-    switch (length) {
-      case 3:
-        if (bp[2] == 't') {
-            if (bp[1] == 'l')
-                c = '<';
-            else if (bp[1] == 'g')
-                c = '>';
+    c = d = 0;
+    ispair = JS_FALSE;
+    if (length > 2 && bp[1] == '#') {
+        /* Match a well-formed XML Character Reference. */
+        i = 2;
+        if (length > 3 && (bp[i] | 0x20) == 'x') {
+            if (length > 9)     /* at most 6 hex digits allowed */
+                goto badncr;
+            while (++i < length) {
+                digit = bp[i];
+                if (!JS7_ISHEX(digit))
+                    goto badncr;
+                c = (c << 4) + JS7_UNHEX(digit);
+            }
+        } else {
+            while (i < length) {
+                digit = bp[i++];
+                if (!JS7_ISDEC(digit))
+                    goto badncr;
+                c = (c * 10) + JS7_UNDEC(digit);
+                if (c < 0)
+                    goto badncr;
+            }
         }
-        break;
-      case 4:
-        if (bp[1] == 'a' && bp[2] == 'm' && bp[3] == 'p')
-            c = '&';
-        break;
-      case 5:
-        if (bp[3] == 'o') {
-            if (bp[1] == 'a' && bp[2] == 'p' && bp[4] == 's')
-                c = '\'';
-            else if (bp[1] == 'q' && bp[2] == 'u' && bp[4] == 't')
-                c = '"';
-        }
-        break;
-    }
 
-    /* No match: return with the unconverted entity in ts->tokenbuf. */
-    if (c == 0) {
-        FastAppendChar(&ts->tokenbuf, ';');
-        return JS_TRUE;
+        if (0x10000 <= c && c <= 0x10FFFF) {
+            /* Form a surrogate pair (c, d) -- c is the high surrogate. */
+            d = 0xDC00 + (c & 0x3FF);
+            c = 0xD7C0 + (c >> 10);
+            ispair = JS_TRUE;
+        } else {
+            /* Enforce the http://www.w3.org/TR/REC-xml/#wf-Legalchar WFC. */
+            if (c != 0x9 && c != 0xA && c != 0xD &&
+                !(0x20 <= c && c <= 0xD7FF) &&
+                !(0xE000 <= c && c <= 0xFFFD)) {
+                goto badncr;
+            }
+        }
+    } else {
+        /* Try to match one of the five XML 1.0 predefined entities. */
+        switch (length) {
+          case 3:
+            if (bp[2] == 't') {
+                if (bp[1] == 'l')
+                    c = '<';
+                else if (bp[1] == 'g')
+                    c = '>';
+            }
+            break;
+          case 4:
+            if (bp[1] == 'a' && bp[2] == 'm' && bp[3] == 'p')
+                c = '&';
+            break;
+          case 5:
+            if (bp[3] == 'o') {
+                if (bp[1] == 'a' && bp[2] == 'p' && bp[4] == 's')
+                    c = '\'';
+                else if (bp[1] == 'q' && bp[2] == 'u' && bp[4] == 't')
+                    c = '"';
+            }
+            break;
+        }
+        if (c == 0) {
+            msg = JSMSG_UNKNOWN_XML_ENTITY;
+            goto bad;
+        }
     }
 
     /* If we matched, retract ts->tokenbuf and store the entity's value. */
     *bp++ = (jschar) c;
+    if (ispair)
+        *bp++ = (jschar) d;
     *bp = 0;
     ts->tokenbuf.ptr = bp;
     return JS_TRUE;
+
+badncr:
+    msg = JSMSG_BAD_XML_NCR;
+bad:
+    /* No match: throw a TypeError per 10.3.2.1 step 8(a). */
+    FastAppendChar(&ts->tokenbuf, ';');
+    bytes = js_DeflateString(cx, bp + 1,
+                             PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 2);
+    if (bytes) {
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+                                    msg, bytes);
+        JS_free(cx, bytes);
+    }
+    return JS_FALSE;
 }
 
 #endif /* JS_HAS_XML_SUPPORT */
