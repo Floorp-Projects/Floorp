@@ -90,15 +90,19 @@ typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 /**
  *
  */
-template <class T>
+
+// a type-safe shortcut for calling the |QueryReferent()| member function
+// T must inherit from nsIWeakReference, but the cast may be ambiguous.
+template <class T, class DestinationType>
 inline
 nsresult
-CallQueryReferent( nsIWeakReference* aSource, T** aDestination )
+CallQueryReferent( T* aSource, DestinationType** aDestination )
   {
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryReferent(NS_GET_IID(T), (void**)aDestination);
+    return aSource->QueryReferent(NS_GET_IID(DestinationType),
+                                  NS_REINTERPRET_CAST(void**, aDestination));
   }
 
 
