@@ -27,10 +27,10 @@
 	<!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY removeLastAttachmentCmd.label "Remove Selected Attachment">
 <!ENTITY sendNowCmd.label "Send">
-	<!ENTITY sendNowCmd.key "">
+	<!ENTITY sendNowCmd.keycode "VK_ENTER">
 	<!ENTITY sendNowCmd.accesskey "d">
 <!ENTITY sendLaterCmd.label "Send Later">
-	<!ENTITY sendLaterCmd.key "">
+	<!ENTITY sendLaterCmd.keycode "VK_ENTER">
 	<!ENTITY sendLaterCmd.accesskey "L">
 <!ENTITY printPreviewCmd.label ".Print Preview">
 	<!ENTITY printPreviewCmd.accesskey "v">
@@ -51,8 +51,8 @@
 <!ENTITY EditHtmlCmd.label ".Edit HTML Source...">
 
 <!-- View menu items -->
-<!ENTITY showComposeToolbarCmd.label "Show Message Toolbar">
-	<!ENTITY showComposeToolbarCmd.accesskey "M">
+<!ENTITY showComposeToolbarCmd.label "Show Mail Toolbar">
+	<!ENTITY showComposeToolbarCmd.accesskey "o">
 <!ENTITY showFormatToolbarCmd.label "Show Formatting Toolbar">
 	<!ENTITY showFormatToolbarCmd.accesskey "F">
 <!ENTITY showStatusbarCmd.label ".Show Statusbar">
