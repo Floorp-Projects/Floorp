@@ -108,6 +108,7 @@ sub setUser {
     if (defined($userID)) {
         $self->database($app)->execute('UPDATE user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?
                                         WHERE userID = ?', $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey, $userID);
+        return $userID;
     } else {
         return $self->database($app)->execute('INSERT INTO user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?',
                                               $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey)->MySQLID;
