@@ -47,14 +47,13 @@ LIBS = \
 	-lnetwork \
 	-lnetlib \
 	-lnetutil \
-	-lmailnewsbase \
 	-lreg	\
 	-lxpcom	\
 	-lpwcac \
 	-lmozdbm	\
 	-lxp	\
 	-lpref	\
-	-ljs	\
+	-lmozjs	\
 	-lraptorbase \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
