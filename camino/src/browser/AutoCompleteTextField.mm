@@ -47,7 +47,33 @@ static const int kFrameMargin = 1;
 {
   return YES;
 }
+
 @end
+
+#pragma mark -
+
+//
+// AutoCompleteTextCell
+//
+// Text cell subclass used to make room for the proxy icon inside the textview
+//
+@interface AutoCompleteTextCell : NSTextFieldCell
+@end
+
+@implementation AutoCompleteTextCell
+
+- (NSRect)drawingRectForBounds:(NSRect)theRect
+{
+  const float kProxIconOffset = 19.0;
+  
+  theRect.origin.x += kProxIconOffset;
+  theRect.size.width -= kProxIconOffset;
+  return [super drawingRectForBounds:theRect];
+}
+
+@end
+
+#pragma mark -
 
 class AutoCompleteListener : public nsIAutoCompleteListener
 {  
@@ -75,6 +101,8 @@ private:
 
 NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
+#pragma mark -
+
 ////////////////////////////////////////////////////////////////////////
 @interface AutoCompleteTextField(Private)
 - (void)cleanup;
@@ -82,6 +110,27 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 @end
 
 @implementation AutoCompleteTextField
+
++ (Class) cellClass
+{
+  return [AutoCompleteTextCell class];
+}
+
+// This method shouldn't be necessary according to the docs. The superclass's
+// constructors should read in the cellClass and build a properly configured
+// instance on their own. Instead they ignore cellClass and build a NSTextFieldCell.
+- (id)initWithCoder:(NSCoder *)coder
+{
+  [super initWithCoder:coder];
+  AutoCompleteTextCell* cell = [[[AutoCompleteTextCell alloc] initTextCell:@""] autorelease];
+  [cell setEditable:[self isEditable]];
+  [cell setDrawsBackground:[self drawsBackground]];
+  [cell setBordered:[self isBordered]];
+  [cell setBezeled:[self isBezeled]];
+  [cell setScrollable:YES];
+  [self setCell:cell];
+  return self;
+}
 
 - (void) awakeFromNib
 {
@@ -119,8 +168,15 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mTableView setTarget:self];
   [mTableView setAction:@selector(onRowClicked:)];
   
-  // Create the icon column if we have a proxy icon
+  // if we have a proxy icon
   if (mProxyIcon) {
+    // place the proxy icon on top of this view so we can see it
+    [mProxyIcon retain];
+    [mProxyIcon removeFromSuperviewWithoutNeedingDisplay];
+    [self addSubview:mProxyIcon];
+    [mProxyIcon release];
+    [mProxyIcon setFrameOrigin: NSMakePoint(3, 4)];
+    // Create the icon column
     column = [[[NSTableColumn alloc] initWithIdentifier:@"icon"] autorelease];
     [column setWidth:[mProxyIcon frame].origin.x + [mProxyIcon frame].size.width];
     dataCell = [[[NSImageCell alloc] initImageCell:nil] autorelease];

@@ -772,8 +772,8 @@ static NSArray* sToolbarDefaults = nil;
     [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
     [toolbarItem setView:mLocationToolbarView];
-    [toolbarItem setMinSize:NSMakeSize(128,20)];
-    [toolbarItem setMaxSize:NSMakeSize(2560,32)];
+    [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mLocationToolbarView frame]))];
+    [toolbarItem setMaxSize:NSMakeSize(2560, NSHeight([mLocationToolbarView frame]))];
 
     [menuFormRep setTarget:self];
     [menuFormRep setAction:@selector(performAppropriateLocationAction)];
