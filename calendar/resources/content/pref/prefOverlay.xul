@@ -35,13 +35,36 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE window [
+   <!ENTITY % calendarPrefsOverlayDTD SYSTEM "chrome://calendar/locale/calendarPrefs.dtd" >
+   %calendarPrefsOverlayDTD;
+]>
+
 <overlay id="calendarPrefOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+   <script type="application/x-javascript">
+   <![CDATA[
+    var panel;
+    if ((panel != undefined)&&(panel == "chrome://communicator/content/pref/pref-appearance.xul"))
+    {
+        _elementIDs.push("generalStartupCalendar");
+    }
+   ]]>
+   </script>         
+   
+   <!-- calendar startup toggle -->
+   <groupbox id="generalStartupPreferences">           
+      <checkbox id="generalStartupCalendar" wsm_persist="true" position="4"
+              label="&calendar.label;" accesskey="&calendar.accesskey;"
+              pref="true" preftype="bool" prefstring="general.startup.calendar"
+              prefattribute="checked"/>         
+   </groupbox>
+   
    <treechildren id="advancedChildren">
     <treeitem id="calendarPanel" container="false">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="Calendar" id="calendar"/>
+        <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
       </treerow>
     </treeitem>
   </treechildren>
