@@ -296,7 +296,7 @@ ResolveHTMLOptionElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLOptionElementClass = {
   "HTMLOptionElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLOptionElementProperty,
@@ -371,17 +371,14 @@ HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
 
   result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
-  if (NS_OK != result) {
-    NS_RELEASE(nativeThis);
-    return JS_FALSE;
-  }
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
 
-  result = initializer->Initialize(cx, argc, argv);
-  NS_RELEASE(initializer);
-
-  if (NS_OK != result) {
-    NS_RELEASE(nativeThis);
-    return JS_FALSE;
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
   }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);

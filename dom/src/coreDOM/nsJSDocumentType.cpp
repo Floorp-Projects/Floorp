@@ -175,7 +175,7 @@ ResolveDocumentType(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass DocumentTypeClass = {
   "DocumentType", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetDocumentTypeProperty,

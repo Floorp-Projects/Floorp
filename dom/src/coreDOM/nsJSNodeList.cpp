@@ -198,7 +198,7 @@ NodeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 JSClass NodeListClass = {
   "NodeList", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetNodeListProperty,

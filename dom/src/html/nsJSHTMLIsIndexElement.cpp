@@ -170,7 +170,7 @@ ResolveHTMLIsIndexElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLIsIndexElementClass = {
   "HTMLIsIndexElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLIsIndexElementProperty,

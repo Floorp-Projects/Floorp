@@ -515,7 +515,7 @@ ResolveHTMLObjectElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLObjectElementClass = {
   "HTMLObjectElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLObjectElementProperty,

@@ -154,7 +154,7 @@ ResolveHTMLHeadingElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLHeadingElementClass = {
   "HTMLHeadingElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLHeadingElementProperty,
