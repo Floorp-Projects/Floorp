@@ -156,9 +156,8 @@
   // check for recognized drag types
   contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
   if (contentIds) {
-    int i = 0;
     // drag type is chimera bookmarks
-    for (i = 0; i < [contentIds count]; ++i) {
+    for (unsigned int i = 0; i < [contentIds count]; ++i) {
       BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
       nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
 
