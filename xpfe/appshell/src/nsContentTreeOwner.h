@@ -70,6 +70,7 @@ protected:
    nsString          mWindowTitleModifier;
    nsString          mTitleSeparator;
    nsString          mTitlePreface;
+   nsString          mTitleDefault;
 
 private:
    PRUint32          mChromeFlags; // don't use directly! use GetChromeFlags()
