@@ -156,10 +156,7 @@ protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
-   * content and frame.  Do NOT call if you are not planning to target the
-   * mouse event at an element that is not the current target frame or a parent
-   * thereof--or if you do, fix the crash protection inside (for bug 185850)
-   * to work with other frames.
+   * content and frame.
    */
   void DispatchMouseEvent(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage, nsIContent* aTargetContent, nsIFrame* aTargetFrame, nsIContent* aRelatedContent);
   void MaybeDispatchMouseEventToIframe(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
@@ -235,6 +232,11 @@ protected:
 
   void GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 
+  // To be called before and after you fire an event, to update booleans and
+  // such
+  void BeforeDispatchEvent() { ++mDOMEventLevel; }
+  void AfterDispatchEvent();
+
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
@@ -290,7 +292,15 @@ protected:
 
   // For preferences handling
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
-  PRBool m_haveShutdown;
+  PRPackedBool m_haveShutdown;
+
+  // To inform people that dispatched events that frames have been cleared and
+  // they need to drop frame refs
+  PRPackedBool mClearedFrameRefsDuringEvent;
+
+  // The number of events we are currently nested in (currently just applies to
+  // those handlers that care about clearing frame refs)
+  PRInt32 mDOMEventLevel;
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
