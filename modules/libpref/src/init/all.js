@@ -412,6 +412,10 @@ pref("dom.disable_window_open_feature.status",      false);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
+pref("dom.disable_open_during_load",                false);
+pref("dom.popup_maximum",                           false);
+pref("dom.popup_allowed_events", "change click dblclick error reset submit");
+
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
@@ -767,8 +771,6 @@ pref("viewmanager.do_doublebuffering", true);
 pref("roaming.default.files", "bookmarks.html,abook.mab,cookies.txt");
 // display some general warning to the user about making backups, security etc.
 pref("roaming.showInitialWarning", true);
-
-pref("dom.disable_open_during_load",              false);
 
 // whether use prefs from system
 pref("config.use_system_prefs", false);
