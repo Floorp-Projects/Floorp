@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsHTMLFrame_h___
-#define nsHTMLFrame_h___
+#ifndef nsHTMLBase_h___
+#define nsHTMLBase_h___
 
 #include "nsIFrame.h"
 
 // This is a class whose purpose is to provide shared code that is
 // common to all html frames, including containers and leaf frames.
-class nsHTMLFrame {
+class nsHTMLBase {
 public:
   /**
    * Create a view for a frame if it needs one. A frame needs a view
@@ -35,4 +35,4 @@ public:
                                      PRBool           aForce);
 };
 
-#endif /* nsHTMLFrame_h___ */
+#endif /* nsHTMLBase_h___ */

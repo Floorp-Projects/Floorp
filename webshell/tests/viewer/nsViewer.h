@@ -30,10 +30,12 @@
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
+#define WEB_DLL    "raptorweb.dll"
 #else
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFXWIN_DLL "libgfxunix.so"
 #define VIEW_DLL   "libraptorview.so"
+#define WEB_DLL    "libraptorweb.so"
 #endif
 
 #define MAXPATHLEN 1024

@@ -31,6 +31,12 @@ class nsIScriptContext;
  { 0x02606880, 0x94e1, 0x11d1, \
    {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
+// XXX this doesn't belong here, but to put it elsewhere requires a new header
+// CID for the web widget
+#define NS_WEBWIDGET_CID    \
+{ 0xc552f181, 0x8d, 0x11d2, \
+   { 0x80, 0x32, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+
 // Interface to the web widget. The web widget is a container for web
 // content.
 class nsIWebWidget : public nsIDocumentWidget {

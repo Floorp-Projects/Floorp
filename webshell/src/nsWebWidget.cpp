@@ -39,9 +39,12 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsICSSParser.h"
 #include "nsIDOMDocument.h"
-
 #include "prprf.h"
 #include "prtime.h"
+
+#include "nscore.h"
+#include "nsIFactory.h"
+#include "nsISupports.h"
 
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -749,5 +752,137 @@ nsresult WebWidgetImpl::GetScriptObject(JSContext *aContext, void** aScriptObjec
   return res;
 }
 
+/*******************************************
+/*  nsWebWidgetFactory
+/*******************************************/
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCWebWidget, NS_WEBWIDGET_CID);
+
+class nsWebWidgetFactory : public nsIFactory
+{   
+  public:   
+    // nsISupports methods   
+    NS_IMETHOD QueryInterface(const nsIID &aIID,    
+                                       void **aResult);   
+    NS_IMETHOD_(nsrefcnt) AddRef(void);   
+    NS_IMETHOD_(nsrefcnt) Release(void);   
+
+    // nsIFactory methods   
+    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
+                              const nsIID &aIID,   
+                              void **aResult);   
+
+    NS_IMETHOD LockFactory(PRBool aLock);   
+
+    nsWebWidgetFactory(const nsCID &aClass);   
+    ~nsWebWidgetFactory();   
+
+  private:   
+    nsrefcnt  mRefCnt;   
+    nsCID     mClassID;
+};   
+
+nsWebWidgetFactory::nsWebWidgetFactory(const nsCID &aClass)   
+{   
+  mRefCnt = 0;
+  mClassID = aClass;
+}   
+
+nsWebWidgetFactory::~nsWebWidgetFactory()   
+{   
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+}   
+
+nsresult nsWebWidgetFactory::QueryInterface(const nsIID &aIID,   
+                                            void **aResult)   
+{   
+  if (aResult == NULL) {   
+    return NS_ERROR_NULL_POINTER;   
+  }   
+
+  // Always NULL result, in case of failure   
+  *aResult = NULL;   
+
+  if (aIID.Equals(kISupportsIID)) {   
+    *aResult = (void *)(nsISupports*)this;   
+  } else if (aIID.Equals(kIFactoryIID)) {   
+    *aResult = (void *)(nsIFactory*)this;   
+  }   
+
+  if (*aResult == NULL) {   
+    return NS_NOINTERFACE;   
+  }   
+
+  AddRef(); // Increase reference count for caller   
+  return NS_OK;   
+}   
+
+nsrefcnt nsWebWidgetFactory::AddRef()   
+{   
+  return ++mRefCnt;   
+}   
+
+nsrefcnt nsWebWidgetFactory::Release()   
+{   
+  if (--mRefCnt == 0) {   
+    delete this;   
+    return 0; // Don't access mRefCnt after deleting!   
+  }   
+  return mRefCnt;   
+}  
+
+nsresult nsWebWidgetFactory::CreateInstance(nsISupports *aOuter,  
+                                            const nsIID &aIID,  
+                                            void **aResult)  
+{  
+  if (aResult == NULL) {  
+    return NS_ERROR_NULL_POINTER;  
+  }  
+
+  *aResult = NULL;  
+  
+  WebWidgetImpl *inst = nsnull;
+
+  if (mClassID.Equals(kCWebWidget)) {
+    inst = new WebWidgetImpl();
+  }
+
+  if (inst == NULL) {  
+    return NS_ERROR_OUT_OF_MEMORY;  
+  }  
+
+  nsresult res = inst->QueryInterface(aIID, aResult);
+
+  if (res != NS_OK) {  
+    // We didn't get the right interface, so clean up  
+    delete inst;  
+  }  
+
+  return res;  
+}  
+
+nsresult nsWebWidgetFactory::LockFactory(PRBool aLock)  
+{  
+  // Not implemented in simplest case.  
+  return NS_OK;
+}  
+
+// return the proper factory to the caller
+extern "C" NS_WEB nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+{
+  if (nsnull == aFactory) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aFactory = new nsWebWidgetFactory(aClass);
+
+  if (nsnull == aFactory) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+}
 
 

@@ -30,7 +30,7 @@
 #include "nsCRT.h"
 #include "nsIReflowCommand.h"
 #include "nsIFontMetrics.h"
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "nsScrollFrame.h"
 
 #undef NOISY_REFLOW
@@ -1487,7 +1487,7 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
   }
   if (NS_OK == rv) {
     // Wrap the frame in a view if necessary
-    rv = nsHTMLFrame::CreateViewForFrame(mPresContext, kidFrame, kidSC,
+    rv = nsHTMLBase::CreateViewForFrame(mPresContext, kidFrame, kidSC,
                                          PR_FALSE);
     if (NS_OK != rv) {
       return rv;

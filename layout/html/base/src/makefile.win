@@ -31,11 +31,11 @@ CPPSRCS=			\
  nsGlobalVariables.cpp		\
  nsHRPart.cpp			\
  nsHTMLAtoms.cpp		\
+ nsHTMLBase.cpp		\
  nsHTMLBullet.cpp		\
  nsHTMLContainer.cpp		\
  nsHTMLContainerFrame.cpp	\
  nsHTMLContent.cpp		\
- nsHTMLFrame.cpp		\
  nsHTMLHead.cpp			\
  nsHTMLIIDs.cpp			\
  nsHTMLImage.cpp		\
@@ -65,11 +65,11 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
  .\$(OBJDIR)\nsHRPart.obj		\
  .\$(OBJDIR)\nsHTMLAtoms.obj		\
+ .\$(OBJDIR)\nsHTMLBase.obj		\
  .\$(OBJDIR)\nsHTMLBullet.obj		\
  .\$(OBJDIR)\nsHTMLContainer.obj	\
  .\$(OBJDIR)\nsHTMLContainerFrame.obj	\
  .\$(OBJDIR)\nsHTMLContent.obj		\
- .\$(OBJDIR)\nsHTMLFrame.obj		\
  .\$(OBJDIR)\nsHTMLHead.obj		\
  .\$(OBJDIR)\nsHTMLIIDs.obj		\
  .\$(OBJDIR)\nsHTMLImage.obj		\

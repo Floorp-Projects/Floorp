@@ -26,7 +26,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsBodyFrame.h"
-#include "nsHTMLFrame.h"
+#include "nsHTMLBase.h"
 #include "nsCSSLayout.h"
 
 #include "nsBodyFrame.h"
@@ -53,7 +53,7 @@ protected:
 nsScrollBodyFrame::nsScrollBodyFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsContainerFrame(aContent, aParent)
 {
-  nsHTMLFrame::CreateViewForFrame(nsnull, this, nsnull, PR_TRUE);
+  nsHTMLBase::CreateViewForFrame(nsnull, this, nsnull, PR_TRUE);
 }
 
 void
