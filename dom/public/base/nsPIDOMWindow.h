@@ -44,7 +44,6 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMLocation.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDocument.h"
 
@@ -80,6 +79,9 @@ public:
   NS_IMETHOD SetMutationListeners(PRUint32 aType) = 0;
 
   NS_IMETHOD GetRootFocusController(nsIFocusController** aResult) = 0;
+
+  // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
+  NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument) = 0;
 
   NS_IMETHOD ReallyCloseWindow() = 0;
 };

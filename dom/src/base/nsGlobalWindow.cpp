@@ -776,6 +776,15 @@ NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
   return NS_OK;
 }
 
+// like GetDocument, but merely fetches the document if it already exists
+NS_IMETHODIMP GlobalWindowImpl::GetExtantDocument(nsIDOMDocument** aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  *aDocument = mDocument;
+  NS_IF_ADDREF(*aDocument);
+  return NS_OK;
+}
+
 //*****************************************************************************
 // GlobalWindowImpl::nsIDOMWindowInternal
 //*****************************************************************************

@@ -181,6 +181,8 @@ public:
                                   PRBool* aResult);
   NS_IMETHOD SetMutationListeners(PRUint32 aEventType);
   NS_IMETHOD GetRootFocusController(nsIFocusController** aResult);
+  NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument);
+
   NS_IMETHOD ReallyCloseWindow();
 
   // nsIDOMViewCSS
