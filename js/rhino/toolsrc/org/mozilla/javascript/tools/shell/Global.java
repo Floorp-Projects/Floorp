@@ -62,7 +62,7 @@ public class Global extends ImporterTopLevel {
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand",
-                           "seal" };
+                           "seal", "readFile" };
         try {
             defineFunctionProperties(names, Global.class,
                                      ScriptableObject.DONTENUM);
@@ -509,6 +509,35 @@ public class Global extends ImporterTopLevel {
         }
     }
 
+    /**
+     * The readFile reads the given file context and convert it to a string
+     * using the specified encoding or default encoding if explicit encoding
+     * argument is not given.
+     * <p>
+     * Usage:
+     * <pre>
+     * readFile(filePath)
+     * readFile(filePath, encoding)
+     * </pre>
+     * The first form converts file's context to string using the default
+     * encoding.
+     */
+    public static Object readFile(Context cx, Scriptable thisObj, Object[] args,
+                                  Function funObj)
+        throws IOException
+    {
+        if (args.length == 0) {
+            throw reportRuntimeError("msg.shell.readFile.bad.args");
+        }
+        String path = ScriptRuntime.toString(args[0]);
+        String encoding = null;
+        if (args.length >= 2) {
+            encoding = ScriptRuntime.toString(args[1]);
+        }
+
+        return readFile(path, encoding);
+    }
+
     public InputStream getIn() {
         return inStream == null ? System.in : inStream;
     }
@@ -706,7 +735,7 @@ public class Global extends ImporterTopLevel {
             } else if (unwrapped instanceof byte[]) {
                 is = new ByteArrayInputStream((byte[])unwrapped);
             } else if (unwrapped instanceof Reader) {
-                s = readerToString((Reader)unwrapped);
+                s = readReader((Reader)unwrapped);
             } else if (unwrapped instanceof char[]) {
                 s = new String((char[])unwrapped);
             }
@@ -729,10 +758,43 @@ public class Global extends ImporterTopLevel {
         return os;
     }
 
-    private static String readerToString(Reader reader)
+    private static String readFile(String filePath, String encoding)
         throws IOException
     {
-        char[] buffer = new char[4096];
+        File f = new File(filePath);
+
+        long llength = f.length();
+        int length = (int)llength;
+        if (length != llength)
+            throw new IOException("Too big file size: "+llength);
+
+        if (length == 0) { return ""; }
+
+        FileInputStream fis = new FileInputStream(f);
+        try {
+            Reader r;
+            if (encoding == null) {
+                r = new InputStreamReader(fis);
+            } else {
+                r = new InputStreamReader(fis, encoding);
+            }
+            return readReader(r, length);
+
+        } finally {
+            fis.close();
+        }
+    }
+
+    private static String readReader(Reader reader)
+        throws IOException
+    {
+        return readReader(reader, 4096);
+    }
+
+    private static String readReader(Reader reader, int initialBufferSize)
+        throws IOException
+    {
+        char[] buffer = new char[initialBufferSize];
         int offset = 0;
         for (;;) {
             int n = reader.read(buffer, offset, buffer.length - offset);
