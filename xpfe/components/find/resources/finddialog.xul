@@ -66,6 +66,8 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
   <!-- used to store the find text -->
   <foo style="display:none;" id="fBLT" value="&findButton.label;"/>
 
+  <!-- Places to overlay common dialog buttons and keyset -->
   <box id="okCancelButtons"/>
+  <keyset id="keyset"/>
 
 </window>
