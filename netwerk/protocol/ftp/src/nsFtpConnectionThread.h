@@ -21,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
+#include "nsIUrl.h"
 
 #include "nsString2.h"
 #include "plevent.h"
@@ -109,13 +110,22 @@ private:
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
 
+    // Private members
+
 	PLEventQueue*		mEventQueue;        // used to communicate outside this thread
+    nsIUrl*             mUrl;
 
     FTP_STATE			mState;             // the current state
     FTP_STATE           mNextState;         // the next state
     FTP_ACTION          mAction;            // the higher level action
-    nsIInputStream*     mInStream;
-    nsIOutputStream*    mOutStream;
+
+    nsIInputStream*     mCInStream;         // command channel input
+    nsIOutputStream*    mCOutStream;        // command channel output
+
+    //nsString2           mDataAddress;       // the host:port combo for the data connection
+    nsIInputStream*     mDInStream;         // data channel input
+    nsIOutputStream*    mDOutStream;        // data channel output
+
     PRInt32             mResponseCode;      // the last command response code.
 	nsString2			mResponseMsg;       // the last command response text
     nsString2           mUsername;
@@ -130,7 +140,6 @@ private:
     PRBool              mConnected;
 	PRBool			    mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
-    nsIUrl*             mUrl;
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.

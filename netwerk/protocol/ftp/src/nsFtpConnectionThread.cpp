@@ -72,6 +72,7 @@ NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
     nsITransport* lCPipe = nsnull;
+    nsITransport* lDPipe = nsnull;
 
     mState = FTP_S_USER;
 
@@ -90,11 +91,11 @@ nsFtpConnectionThread::Run() {
     if (NS_FAILED(rv)) return rv;
 
     // get the output stream so we can write to the server
-    rv = lCPipe->OpenOutputStream(&mOutStream);
+    rv = lCPipe->OpenOutputStream(&mCOutStream);
     if (NS_FAILED(rv)) return rv;
 
     // get the input stream so we can read data from the server.
-    rv = lCPipe->OpenInputStream(&mInStream);
+    rv = lCPipe->OpenInputStream(&mCInStream);
     if (NS_FAILED(rv)) return rv;
 
 
@@ -144,7 +145,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -178,7 +179,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
                 // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
             
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -207,7 +208,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -246,7 +247,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -274,7 +275,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -304,7 +305,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -403,6 +404,102 @@ nsFtpConnectionThread::Run() {
 			    }
 			    // END: FTP_R_PWD
 
+
+//////////////////////////////
+//// DATA CONNECTION STATES
+//////////////////////////////
+            case FTP_S_PASV:
+                buffer = "PASV\r\n";
+                bufLen = PL_strlen(buffer);
+
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                mState = FTP_READ_BUF;
+                mNextState = FTP_R_PASV;
+                break;
+                // FTP: FTP_S_PASV
+
+            case FTP_R_PASV:
+                {
+                PRInt32 h0, h1, h2, h3, p0, p1;
+                PRInt32 port;
+
+                if (mResponseCode != 2)  {
+                    // failed. increment to port.
+                    mState = FTP_S_PORT;
+                    mUsePasv = PR_FALSE;
+                    break;
+                }
+
+                mUsePasv = PR_TRUE;
+
+                char *ptr = nsnull;
+                char *response = mResponseMsg.ToNewCString();
+                if (!response)
+                    return NS_ERROR_OUT_OF_MEMORY;
+
+                // The returned address string can be of the form
+                // (xxx,xxx,xxx,xxx,ppp,ppp) or
+                //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
+                ptr = response;
+                while (*ptr++) {
+                    if (*ptr == '(') {
+                        // move just beyond the open paren
+                        ptr++;
+                        break;
+                    }
+                    if (*ptr == ',') {
+                        ptr--;
+                        // backup to the start of the digits
+                        while ( (*ptr >= '0') && (*ptr <= '9'))
+                            ptr--;
+                        ptr++; // get back onto the numbers
+                        break;
+                    }
+                } // end while
+
+                PRInt32 fields = PR_sscanf(ptr, 
+#ifdef __alpha
+		            "%d,%d,%d,%d,%d,%d",
+#else
+		            "%ld,%ld,%ld,%ld,%ld,%ld",
+#endif
+		            &h0, &h1, &h2, &h3, &p0, &p1);
+
+                if (fields < 6) {
+                    // bad format. we'll try PORT, but it's probably over.
+                    mState = FTP_S_PORT;
+                    mUsePasv = PR_FALSE;
+                    break;
+                }
+
+                port = ((PRInt32) (p0<<8)) + p1;
+                char host[17];
+                PR_smprintf(host, "%ld.%ld.%ld.%ld", h0, h1, h2, h3);
+
+                // now we know where to connect our data channel
+                rv = sts->CreateTransport(host, port, &lDPipe); // the command channel
+                if (NS_FAILED(rv)) return rv;
+
+                if (mAction == GET) {
+                    // get the input stream so we can read data from the server.
+                    rv = lDPipe->OpenInputStream(&mDInStream);
+                    if (NS_FAILED(rv)) return rv;
+                } else {
+                    // get the output stream so we can write to the server
+                    rv = lDPipe->OpenOutputStream(&mDOutStream);
+                    if (NS_FAILED(rv)) return rv;
+                }
+
+                // we're connected figure out what type of transfer we're doing (ascii or binary)
+
+                break;
+                }
+                // FTP: FTP_R_PASV
+
 //////////////////////////////
 //// ACTION STATES
 //////////////////////////////
@@ -417,7 +514,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -450,7 +547,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -482,7 +579,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mOutStream->Write(buffer, bufLen, &bytes);
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -507,6 +604,9 @@ nsFtpConnectionThread::Run() {
 
         } // END: switch 
     } // END: event loop/message pump/while loop
+
+    // Close the data channel
+    NS_IF_RELEASE(lDPipe);
 
     // Close the command channel
     NS_RELEASE(lCPipe);
@@ -550,11 +650,11 @@ nsFtpConnectionThread::Read(void) {
     PRUint32 read, len;
     nsresult rv;
     char *buffer = nsnull;
-    rv = mInStream->GetLength(&len);
+    rv = mCInStream->GetLength(&len);
     if (NS_FAILED(rv)) return rv;
     buffer = new char[len+1];
     if (!buffer) return 0; // XXX need a better return code
-    rv = mInStream->Read(buffer, len, &read);
+    rv = mCInStream->Read(buffer, len, &read);
     if (NS_FAILED(rv)) {
         delete [] buffer;
         return rv;
