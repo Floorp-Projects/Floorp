@@ -47,12 +47,11 @@ function onLoad()
   // can folders contain both folders and messages?
   if (arguments.dualUseFolders) {
     dialog.folderType = FOLDERS | MESSAGES;
-  } else {
 
-    // show the section which allows us to select the folder type to create
+    // hide the section when folder contain both folders and messages.
     var newFolderTypeBox = document.getElementById("newFolderTypeBox");
-    newFolderTypeBox.removeAttribute("hidden");
-
+    newFolderTypeBox.setAttribute("hidden", "true");
+  } else {
     // set our folder type by calling the default selected type's oncommand
     var selectedFolderType = document.getElementById("folderGroup").selectedItem;
     eval(selectedFolderType.getAttribute("oncommand"));

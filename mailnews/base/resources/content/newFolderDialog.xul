@@ -54,7 +54,7 @@
 
     <menulist id="msgNewFolderPicker" oncommand="doEnabling();"/>
 
-    <vbox hidden="true" id="newFolderTypeBox">
+    <vbox id="newFolderTypeBox">
 
       <separator class="thin"/>
 
