@@ -26,11 +26,30 @@
 @import url(chrome://communicator/skin/);
 /*@import url(chrome://global/skin/global.css);*/
 
-
 window {
 
     width: 640px;
     height: 480px;
 
 }
+
+#back-button
+  {
+	  list-style-image      : url("chrome://embedding/browser/skin/back.gif");
+  }
+
+#forward-button
+  {
+	  list-style-image      : url("chrome://embedding/browser/skin/forward.gif");
+  }
+
+#stop-button 
+  {
+	  list-style-image      : url("chrome://embedding/browser/skin/stop.gif");
+  }
+
+#reload-button 
+  {
+	  list-style-image      : url("chrome://embedding/browser/skin/reload.gif");
+  }
 
