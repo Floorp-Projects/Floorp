@@ -50,7 +50,6 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 static NS_DEFINE_IID(kIScrollableFrameIID,             NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
