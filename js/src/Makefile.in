@@ -1,4 +1,4 @@
-#! gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,72 +13,78 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+FDLIBM_LIBRARY	= fdlibm/libfdm.a
+JSMATH_PRELINK	= jsmathtemp.o
+JS_SAFE_ARENA	= 1
 
+include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
+LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
+MODULE		= js
+
+SIMPLE_PROGRAMS	= jscpucfg
+
 ifdef MOZ_OJI
-DIRS = liveconnect
+DIRS		= liveconnect
 endif
 
-DIRS	+=	fdlibm
+DIRS		+= fdlibm xpconnect
 
-DIRS 	+=	xpconnect
+GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h
 
-LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
-
-ifeq ($(subst /,_,$(shell uname -s)),OS2)
+ifeq ($(OS_ARCH),OS2)
 ifndef XCFLAGS
-OS2_IMPLIB=1
-LIBRARY	= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
+OS2_IMPLIB	= 1
+LIBRARY		= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 DEF_FILE	= jsos2$(VERSION_NUMBER).def
 EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
 else
 EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
 endif
+OS_CFLAGS	+= -tm-
 endif
 
-MODULE		= js
-
-CSRCS		= 	jsapi.c		\
-			jsarena.c	\
-			jsarray.c	\
-			jsatom.c	\
-			jsbool.c	\
-			jscntxt.c	\
-			jsdate.c	\
-			jsdbgapi.c	\
-			jsdtoa.c	\
-			jsemit.c	\
-			jsexn.c		\
-			jsfun.c		\
-			jsgc.c		\
-			jshash.c	\
-			jsinterp.c	\
-			jslock.c	\
-			jslog2.c	\
-			jslong.c	\
-			jsmath.c	\
-			jsnum.c		\
-			jsobj.c		\
-			jsopcode.c      \
-			jsparse.c	\
-			jsprf.c		\
-			jsregexp.c	\
-			jsscan.c	\
-			jsscope.c	\
-			jsscript.c	\
-			jsstr.c		\
-			jsutil.c        \
-			jsxdrapi.c	\
-			prmjtime.c	\
-			$(NULL)
+CSRCS		= jsapi.c \
+		  jsarena.c \
+		  jsarray.c \
+		  jsatom.c \
+		  jsbool.c \
+		  jscntxt.c \
+		  jsdate.c \
+		  jsdbgapi.c \
+		  jsdtoa.c \
+		  jsemit.c \
+		  jsexn.c \
+		  jsfun.c \
+		  jsgc.c \
+		  jshash.c \
+		  jsinterp.c \
+		  jslock.c \
+		  jslog2.c \
+		  jslong.c \
+		  jsmath.c \
+		  jsnum.c \
+		  jsobj.c \
+		  jsopcode.c \
+		  jsparse.c \
+		  jsprf.c \
+		  jsregexp.c \
+		  jsscan.c \
+		  jsscope.c \
+		  jsscript.c \
+		  jsstr.c \
+		  jsutil.c \
+		  jsxdrapi.c \
+		  prmjtime.c \
+		  $(NULL)
 
 EXPORTS		= js.msg \
 		  jsapi.h \
@@ -122,56 +128,57 @@ EXPORTS		= js.msg \
 		  jsstddef.h \
 		  $(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-# when using gcc the assembly is inlined in the C-file (see jslock.c)
+# When using gcc the assembly is inlined in the C-file (see jslock.c)
 ifdef NS_USE_NATIVE
-ASFILES = $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
+ASFILES		= $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
 endif
-
-JS_SAFE_ARENA = 1
-
-ifdef JS_SAFE_ARENA
-DEFINES += -DJS_USE_SAFE_ARENA
-endif
-
-include $(topsrcdir)/config/rules.mk
 
 ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
 
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES	+= -I$(srcdir)
+
+# NSPR_LIBS abstracts nspr version, etc. nicely.
+LDFLAGS 	= $(NSPR_LIBS) -lm
+
+ifdef JS_SAFE_ARENA
+DEFINES		+= -DJS_USE_SAFE_ARENA
+endif
+
 ifdef JS_THREADSAFE
-DEFINES += -DJS_THREADSAFE
+DEFINES		+= -DJS_THREADSAFE
 endif
 
 ifdef JS_NO_THIN_LOCKS
-DEFINES += -DJS_USE_ONLY_NSPR_LOCKS
+DEFINES		+= -DJS_USE_ONLY_NSPR_LOCKS
 endif
 
 ifdef JS_VERSION
-DEFINES += -DJS_VERSION=$(JS_VERSION)
+DEFINES		+= -DJS_VERSION=$(JS_VERSION)
 endif
 
 ifeq ($(CPU_ARCH),sparc)
 
 ifndef JS_NO_ULTRA
-ULTRA_OPTIONS := -xarch=v8plus,-DULTRA_SPARC
-ULTRA_OPTIONSCC := -DULTRA_SPARC
+ULTRA_OPTIONS	:= -xarch=v8plus,-DULTRA_SPARC
+ULTRA_OPTIONSCC	:= -DULTRA_SPARC
 else
-ULTRA_OPTIONS := -xarch=v8
-ULTRA_OPTIONSCC :=
+ULTRA_OPTIONS	:= -xarch=v8
+ULTRA_OPTIONSCC	:=
 endif
 
 ifeq ($(shell uname -m),sun4u)
-ASFLAGS	+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
+ASFLAGS		+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
 else
-ASFLAGS	+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
+ASFLAGS		+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
 endif
 
 endif # sparc
-
-INCLUDES	+= -I$(srcdir)
 
 ifndef NSBUILDROOT
 JSJAVA_STUBHEADERS = -I$(topsrcdir)/sun-java/include/_gen \
@@ -185,31 +192,29 @@ JSJAVA_CFLAGS	= -I$(topsrcdir)/sun-java/md-include \
 		  -I$(topsrcdir)/sun-java/include \
 		  $(JSJAVA_STUBHEADERS)
 
-# NSPR_LIBS abstracts nspr version, etc. nicely.
-LDFLAGS 	= $(NSPR_LIBS) -lm
+DASH_R		= -r
 
-ifeq ($(OS_ARCH), OSF1)
-LDFLAGS += -lc_r
-endif
-ifeq ($(OS_ARCH), SunOS)
-LDFLAGS += -lposix4 -ldl -lnsl -lsocket
+ifeq ($(OS_ARCH), IRIX)
+LDFLAGS		+= -n32
 endif
 ifeq ($(OS_ARCH), Linux)
-LDFLAGS += -ldl
+LDFLAGS		+= -ldl
 endif
-
-FDLIBM_LIBRARY	= fdlibm/libfdm.a
-JSMATH_PRELINK	= jsmathtemp.o
+ifeq ($(OS_ARCH), OSF1)
+LDFLAGS		+= -lc_r
+endif
+ifeq ($(OS_ARCH), QNX)
+DASH_R		=
+endif
+ifeq ($(OS_ARCH), SunOS)
+LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+endif
 
 # special rule for jsmath.o since we want to incrementally link
 # against fdlibm to pull in only what is needed
 jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),IRIX)
-	$(LD) -n32 -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-else
-	$(LD) -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-endif
+	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 
 $(JSMATH_PRELINK): jsmath.c
 	@$(MAKE_OBJDIR)
@@ -218,8 +223,6 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
-
-ALL_TRASH += $(JSMATH_PRELINK)
 
 # ripped from $(topsrcdir)/config/rules.mk
 $(FDLIBM_LIBRARY):
@@ -230,48 +233,12 @@ $(FDLIBM_LIBRARY):
 	cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
 	set +e;
 
-js:
-	$(MAKE) $(OBJDIR)/js$(BIN_SUFFIX)
-
-.PHONY: js$(BIN_SUFFIX)
-
-ifneq ($(OS_ARCH),OS2)
-$(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $(OBJDIR)/js.o $(LIBRARY) $(LDFLAGS)
-else
-OS_CFLAGS += -tm-
-$(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
-	@$(MAKE_OBJDIR)
-	$(LINK_EXE) -OUT:$@ $(OBJDIR)/js.o  $(LIBRARIES) $(EXTRA_LIBS)
-endif
-
-# hardwire dependencies on jsopcode.tbl
 jsopcode.h jsopcode.c: jsopcode.tbl
 
-# Generate jsautocfg.h header
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	rm -f $@
-	$(OBJDIR)/jscpucfg > $@
-
-$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
-	$(CC) -o $@ $(OBJDIR)/jscpucfg.o
+	$< > $@
 
 export:: $(OBJDIR)/jsautocfg.h
-	$(INSTALL) -m 444 $(OBJDIR)/jsautocfg.h $(DIST)/include
+	$(INSTALL) -m 444 $< $(DIST)/include
 
-# Add to TARGETS so clobber rule works
-TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg $(OBJDIR)/jscpucfg.o
-
-# this section was put in the merged by danda into the
-# JAVA_*_MERGE section and normally would have
-# been removed.  However it looks like it shouldn't have
-# been put there in the first place, so we're leaving it
-# here until danda can confirm (we don't have OS/2 machines
-# to build on) - hshaw/sudu
-#
-ifeq ($(OS_ARCH),OS2)
-$(OBJDIR)/js.o: js.c
-	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(CFLAGS) $(JSJAVA_CFLAGS) js.c
-endif
