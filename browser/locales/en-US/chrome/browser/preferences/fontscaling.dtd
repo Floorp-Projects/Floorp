@@ -1,0 +1,6 @@
+<!-- screen calibration dialog -->
+<!ENTITY  calibrateDialog.title                   "Calibrate Resolution">
+<!ENTITY  calibrate.instructions                  "The length of the line above is:">
+<!ENTITY  units.inches                            "inches">
+<!ENTITY  units.centimetres                       "centimeters">
+

@@ -1,13 +1,13 @@
 function closeWindow(aClose)
 {
   var windowCount = 0;
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                      .getService(Components.interfaces.nsIWindowMediator);
   var e = wm.getEnumerator(null);
   
   while (e.hasMoreElements()) {
     var w = e.getNext();
-    ++windowCount;
-    if (windowCount == 2) 
+    if (++windowCount == 2) 
       break;
   }
 
@@ -26,19 +26,21 @@ function closeWindow(aClose)
 
 function canQuitApplication()
 {
-  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  if (os) {
-    try {
-      var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].createInstance(Components.interfaces.nsISupportsPRBool);
-      os.notifyObservers(cancelQuit, "quit-application-requested", null);
-      
-      // Something aborted the quit process. 
-      if (cancelQuit.data)
-        return false;
-    }
-    catch (ex) {
-    }
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  if (!os) return true;
+  
+  try {
+    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+                              .createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested", null);
+    
+    // Something aborted the quit process. 
+    if (cancelQuit.data)
+      return false;
   }
+  catch (ex) { }
+  os.notifyObservers(null, "quit-application-granted", null);
   return true;
 }
 

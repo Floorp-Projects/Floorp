@@ -88,6 +88,16 @@
           ]]>
         </getter>
       </property>
+      
+      <property name="strings">
+        <getter>
+          <![CDATA[
+            // Note: this is a sucky method name! Should be:
+            //       readonly attribute nsISimpleEnumerator strings;
+            return this.stringBundle.getSimpleEnumeration();
+          ]]>
+        </getter>
+      </property>
 
       <field name="_bundle">null</field>
 

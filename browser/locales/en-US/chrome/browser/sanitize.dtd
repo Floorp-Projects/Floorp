@@ -1,0 +1,11 @@
+<!ENTITY sanitizeDialog.title         "Sanitize &brandShortName;">
+
+<!ENTITY sanitizeItems.label          "Clear the following items now:">
+<!ENTITY itemHistory.label            "Browsing History">
+<!ENTITY itemFormData.label           "Saved Form Information">
+<!ENTITY itemPasswords.label          "Saved Passwords">
+<!ENTITY itemCookies.label            "Cookies">
+<!ENTITY itemCache.label              "Cache">
+<!ENTITY itemDownloads.label          "Download History">
+
+<!ENTITY promptOnSanitize.label       "Ask me before Sanitizing &brandShortName;">

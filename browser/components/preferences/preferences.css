@@ -1,0 +1,5 @@
+
+filefield {
+  -moz-binding: url("chrome://browser/content/preferences/preferences.xml#fileField");
+}
+

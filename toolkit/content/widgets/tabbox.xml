@@ -79,6 +79,7 @@
         <![CDATA[
           if (this._tabs)
             this._tabs.selectedIndex = val;
+          this.setAttribute("selectedIndex", val);
           return val;
         ]]>
         </setter>
@@ -114,10 +115,10 @@
       <![CDATA[({
         tabbox: this,
         handleEvent: function handleEvent(event) {
-	  if (!event.isTrusted) {
-	    // Don't let untrusted events mess with tabs.
-	    return;
-	  }
+          if (!event.isTrusted) {
+            // Don't let untrusted events mess with tabs.
+            return;
+          }
 
           switch (event.keyCode) {
             case event.DOM_VK_TAB:
@@ -196,7 +197,13 @@
           this.firstChild.setAttribute("first-tab", "true");
         if (this.lastChild)
           this.lastChild.setAttribute("last-tab", "true");
-        this.selectedIndex = 0;
+        
+        var selectedIndex = -1;
+        for (var parent = this.parentNode; parent; parent = parent.parentNode) {
+          if (parent.localName == "tabbox" && parent.hasAttribute("selectedIndex"))
+            selectedIndex = parseInt(parent.getAttribute("selectedIndex"));
+        }
+        this.selectedIndex = selectedIndex > 0 ? selectedIndex : 0;
         var o = this.getAttribute("orient");
         if (!o)
           this.setAttribute("orient", "horizontal");

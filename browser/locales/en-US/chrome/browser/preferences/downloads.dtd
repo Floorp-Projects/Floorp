@@ -1,0 +1,17 @@
+<!ENTITY askOnSave.label              "Download Folder">
+<!ENTITY alwaysAsk.label              "Ask me where to save every file">
+<!ENTITY neverAsk.label               "Save all files to this folder:">
+<!ENTITY desktop.label                "Desktop">
+<!ENTITY downloads.label              "My Downloads">
+<!ENTITY chooseFolderWin.label        "Browse...">
+<!ENTITY chooseFolderMac.label        "Choose...">
+
+<!ENTITY downloadManagerWindow.label  "Download Manager">
+<!ENTITY showWhenStarting.label       "Show Download Manager when a download begins">
+<!ENTITY closeWhenDone.label          "Close the Download Manager when all downloads are complete">
+
+<!ENTITY fileTypes.label              "Download Actions">
+<!ENTITY configureActions.label       "View &amp; Edit Actions...">
+<!ENTITY configureActions.accesskey   "V">
+<!ENTITY fileTypesDescription.label   "&brandShortName; can automatically download or open files of certain types.">
+

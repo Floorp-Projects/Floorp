@@ -58,10 +58,9 @@ DIRS = \
 	help \
 	migration \
 	history \
-	prefwindow \
+	preferences \
 	shell \
 	sidebar \
-	cookieviewer \
 	build \
 	$(NULL)
 

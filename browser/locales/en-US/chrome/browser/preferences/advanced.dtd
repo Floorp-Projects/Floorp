@@ -1,0 +1,60 @@
+
+<!ENTITY generalTab.label               "General">
+<!ENTITY accessibility.label            "Accessibility">
+<!ENTITY moveSystemCaret.label          "Allow text to be selected with the keyboard">
+<!ENTITY moveSystemCaret.accesskey      "k">
+<!ENTITY useTypeAheadFind.label         "Begin finding when you begin typing">
+<!ENTITY useTypeAheadFind.accesskey     "f">
+<!ENTITY browsing.label                 "Browsing">
+<!ENTITY enableAutoImageResizing.label  "Resize large images to fit in the browser window">
+<!ENTITY enableAutoImageResizing.accesskey "z">
+<!ENTITY useAutoScrolling.label         "Use autoscrolling">
+<!ENTITY useAutoScrolling.accesskey     "s">
+<!ENTITY useSmoothScrolling.label       "Use smooth scrolling">
+<!ENTITY useSmoothScrolling.accesskey   "m">
+
+<!ENTITY updateTab.label                "Update">
+<!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">
+<!ENTITY enableSmartUpdate.label        "&brandShortName;">
+<!ENTITY enableSmartUpdate.accesskey    "F">
+<!ENTITY enableAutoInstall.label        "automatically download updates">
+<!ENTITY enableAutoInstall.accesskey    "d">
+<!ENTITY updateAnd.label                "and:">
+<!ENTITY autoDownloadAndInstall.label   "install them">
+<!ENTITY autoDownloadAndInstall.accesskey "i">
+<!ENTITY autoDownloadAndPrompt.label    "prompt me when ready to install">
+<!ENTITY autoDownloadAndPrompt.accesskey "p">
+<!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
+<!ENTITY enableExtensionUpdate.accesskey "x">
+<!ENTITY checkNow.label                 "Check Now...">
+<!ENTITY appCheckNow.accesskey          "C">
+<!ENTITY extensionsCheckNow.accesskey   "h">
+
+<!ENTITY securityTab.label              "Security">
+<!ENTITY protocols.label                "Protocols">
+<!ENTITY useSSL2.label                  "Use SSL 2.0">
+<!ENTITY useSSL2.accesskey              "2">
+<!ENTITY useSSL3.label                  "Use SSL 3.0">
+<!ENTITY useSSL3.accesskey              "3">
+<!ENTITY useTLS1.label                  "Use TLS 1.0">
+<!ENTITY useTLS1.accesskey              "1">
+<!ENTITY certificates.label             "Certificates">
+<!ENTITY certselect.description         "When a web site requires a certificate:">
+<!ENTITY certselect.auto                "Select one automatically">
+<!ENTITY certselect.auto.accesskey      "e">
+<!ENTITY certselect.ask                 "Ask me every time">
+<!ENTITY certselect.ask.accesskey       "k">
+<!ENTITY viewCertificates.label         "View Certificates">
+<!ENTITY viewCertificates.accesskey     "C">
+<!ENTITY viewCRLs.label                 "Revocation Lists">
+<!ENTITY viewCRLs.accesskey             "R">
+<!ENTITY viewOCSP.label                 "Verification">
+<!ENTITY viewOCSP.accesskey             "V">
+<!ENTITY viewSecurityDevices.label      "Security Devices">
+<!ENTITY viewSecurityDevices.accesskey  "S">
+
+<!ENTITY languages.caption                  "Languages">
+<!ENTITY languagesInfo.label                "Choose Languages web pages are displayed in.">
+<!ENTITY showLanguages.label                "Edit Languages...">
+<!ENTITY showLanguages.accesskey            "L">
+

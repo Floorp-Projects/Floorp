@@ -278,7 +278,7 @@
     <content sizetopopup="pref">
       <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context" flex="1">
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
-                    xbl:inherits="value=label,disabled"/>
+                    xbl:inherits="value=label,disabled,readonly"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>

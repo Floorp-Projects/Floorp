@@ -47,8 +47,8 @@
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_browser_region" src="chrome://browser-region/locale/region.properties"/>
+    <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
   </stringbundleset>
 
   <commandset commandupdater="true"
@@ -161,6 +161,7 @@
                                                                 'chrome,dialog=no,resizable');"/>
     <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
     <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
+    <command id="Tools:Sanitize" oncommand="gSanitizeListener.sanitize(window || null);"/>
     
 #ifdef XP_MACOSX
     <command id="minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();" />
@@ -327,5 +328,6 @@
     <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
 #endif
 
+    <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
   </keyset>
 
