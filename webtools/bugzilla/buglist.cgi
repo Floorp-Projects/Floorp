@@ -1343,7 +1343,6 @@ my $bugproducts = {};
 my $bugstatuses = {};
 
 my @bugs; # the list of records
-my @bugnums; # the list of bug numbers
 
 while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
@@ -1368,7 +1367,6 @@ while (my @row = FetchSQLData()) {
 
     # Add the record to the list.
     push(@bugs, $bug);
-    push(@bugnums, $bug->{id});
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
@@ -1384,7 +1382,7 @@ SendSQL("USE $::db_name");
 # Define the variables and functions that will be passed to the UI template.
 
 $vars->{'bugs'} = \@bugs;
-$vars->{'buglist'} = join(',', @bugnums);
+$vars->{'buglist'} = join(',', map($_->{id}, @bugs));
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
