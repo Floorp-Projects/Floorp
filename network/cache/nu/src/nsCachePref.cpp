@@ -137,55 +137,15 @@ nsCachePref::BkgSleepTime(void)
     return BKG_THREAD_SLEEP; 
 }
 
-PRUint32 nsCachePref::DiskCacheSize()
-{
-    return m_DiskCacheSize;
-}
-
-void nsCachePref::DiskCacheSize(const PRUint32 i_Size)
-{
-    m_DiskCacheSize = i_Size;
-}
-
-PRBool nsCachePref::DiskCacheSSL(void)
-{
-    return m_bDiskCacheSSL;
-}
-
-void nsCachePref::DiskCacheSSL(PRBool bSet)
-{
-    m_bDiskCacheSSL = bSet;
-}
-
 const char* nsCachePref::DiskCacheDBFilename(void)
 {
     return "fat.db";
-}
-
-const char* nsCachePref::DiskCacheFolder(void)
-{
-    return "";
 }
 
 nsCachePref* nsCachePref::GetInstance()
 {
     PR_ASSERT(nsCacheManager::GetInstance()->GetPrefs());
     return nsCacheManager::GetInstance()->GetPrefs();
-}
-
-PRUint32 nsCachePref::MemCacheSize()
-{
-    return m_MemCacheSize;
-}
-
-void nsCachePref::MemCacheSize(const PRUint32 i_Size)
-{
-    m_MemCacheSize = i_Size;
-}
-
-PRBool nsCachePref::RevalidateInBkg(void)
-{
-    return m_bRevalidateInBkg;
 }
 
 /*
