@@ -404,7 +404,7 @@ nsHTMLDocument::GetAttrSheetType()
     return nsDocument::GetAttrSheetType();
   }
   
-  return nsStyleSet::ePresHintSheet;
+  return nsStyleSet::eHTMLPresHintSheet;
 }
 
 nsresult
