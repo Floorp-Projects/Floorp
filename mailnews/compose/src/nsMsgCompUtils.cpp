@@ -2165,7 +2165,8 @@ PRBool UseFormatFlowed(const char *charset)
   //
   // The problem is the SPACE format=flowed inserts at the end of
   // the line. Not all charsets like that.
-  if( nsMsgI18Nmultibyte_charset(charset))
+  if( nsCRT::strcasecmp(charset, "UTF-8") &&
+      nsMsgI18Nmultibyte_charset(charset))
     return PR_FALSE;
 
   return PR_TRUE;
