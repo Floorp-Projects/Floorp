@@ -828,7 +828,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
     if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
       inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
-      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL)
+      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP)
     {
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
