@@ -63,6 +63,10 @@
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsLayoutAtoms.h"
+#include "nsLayoutUtils.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeColumns.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
@@ -2047,6 +2051,8 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   return ret;
 }
 
+// Get coordinates relative to root view for element, 
+// first ensuring the element is onscreen
 void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
                                                nsPresContext *aPresContext,
                                                nsIPresShell *aPresShell, 
@@ -2056,34 +2062,94 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
   nsIFrame *frame = nsnull;
   aPresShell->GetPrimaryFrameFor(focusedContent, &frame);
   if (frame) {
-    nsIView *view;
-    frame->GetOffsetFromView(aPresContext, aTargetPt, &view);
-    float t2p;
-    t2p = aPresContext->TwipsToPixels();
+    aPresShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
+                                           NS_PRESSHELL_SCROLL_ANYWHERE);
+
+    nsPoint frameOrigin(0, 0);
+
+    // Get the frame's origin within its view
+    nsIView *view = frame->GetClosestView(&frameOrigin);
+    NS_ASSERTION(view, "No view for frame");
+
+    nsIViewManager* vm = aPresShell->GetViewManager();
+    nsIView *rootView = nsnull;
+    vm->GetRootView(rootView);
+    NS_ASSERTION(rootView, "No root view in pres shell");
+
+    // View's origin within its root view
+    frameOrigin += view->GetOffsetTo(rootView);
 
     // Start context menu down and to the right from top left of frame
     // use the lineheight. This is a good distance to move the context
     // menu away from the top left corner of the frame. If we always 
     // used the frame height, the context menu could end up far away,
     // for example when we're focused on linked images.
-    nsIViewManager* vm = aPresShell->GetViewManager();
-    if (vm) {
-      nsIScrollableView* scrollableView = nsnull;
-      vm->GetRootScrollableView(&scrollableView);
-      nscoord extraDistance;
-      if (scrollableView) {
-        scrollableView->GetLineHeight(&extraDistance);
+    // On the other hand, we want to use the frame height if it's less
+    // than the current line height, so that the context menu appears
+    // associated with the correct frame.
+    nscoord extra = frame->GetSize().height;
+    nsIScrollableView *scrollView =
+      nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
+    if (scrollView) {
+      nscoord scrollViewLineHeight;
+      scrollView->GetLineHeight(&scrollViewLineHeight);
+      if (extra > scrollViewLineHeight) {
+        extra = scrollViewLineHeight; 
       }
-      else {
-        // No scrollable view, use height of frame as fallback
-        extraDistance = frame->GetSize().height;
-      }
-      aTargetPt.x += extraDistance;
-      aTargetPt.y += extraDistance;
     }
-     // Convert to pixels using that scale
-    aTargetPt.x = NSTwipsToIntPixels(aTargetPt.x, t2p);
-    aTargetPt.y = NSTwipsToIntPixels(aTargetPt.y, t2p);
+
+    // Tree view special case (tree items have no frames)
+    // Get the focused row and add its coordinates, which are already in pixels
+    // XXX Boris, should we create a new interface so that event listener manager doesn't
+    // need to know about trees? Something like nsINodelessChildCreator which
+    // could provide the current focus coordinates?
+    PRInt32 extraPixelsY = 0;
+    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aCurrentEl));
+    if (xulElement) {
+      nsCOMPtr<nsIBoxObject> box;
+      xulElement->GetBoxObject(getter_AddRefs(box));
+      nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
+      if (treeBox) {
+        // Factor in focused row
+        nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+          do_QueryInterface(aCurrentEl);
+        NS_ASSERTION(multiSelect, "No multi select interface for tree");
+
+        PRInt32 currentIndex;
+        multiSelect->GetCurrentIndex(&currentIndex);
+        if (currentIndex >= 0) {
+          treeBox->EnsureRowIsVisible(currentIndex);
+          PRInt32 firstVisibleRow, rowHeight;
+          treeBox->GetFirstVisibleRow(&firstVisibleRow);
+          treeBox->GetRowHeight(&rowHeight);
+          extraPixelsY = (currentIndex - firstVisibleRow + 1) * rowHeight;
+          extra = 0;
+
+          nsCOMPtr<nsITreeColumns> cols;
+          treeBox->GetColumns(getter_AddRefs(cols));
+          if (cols) {
+            nsCOMPtr<nsITreeColumn> col;
+            cols->GetFirstColumn(getter_AddRefs(col));
+            if (col) {
+              nsCOMPtr<nsIDOMElement> colElement;
+              col->GetElement(getter_AddRefs(colElement));
+              nsCOMPtr<nsIContent> colContent(do_QueryInterface(colElement));
+              if (colContent) {
+                aPresShell->GetPrimaryFrameFor(colContent, &frame);
+                if (frame) {
+                  frameOrigin.y += frame->GetSize().height;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Convert from twips to pixels
+    float t2p = aPresContext->TwipsToPixels();
+    aTargetPt.x = NSTwipsToIntPixels(frameOrigin.x + extra, t2p);
+    aTargetPt.y = NSTwipsToIntPixels(frameOrigin.y + extra, t2p) + extraPixelsY;
   }
 }
 
