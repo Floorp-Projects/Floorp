@@ -156,8 +156,6 @@ nsCellMap::InsertRows(nsVoidArray& aRows,
     return;
   }
 
-  PRInt32 numMapRows = mRows.Count();
-
   // if any cells span into or out of the row being inserted, then rebuild
   PRBool spansCauseRebuild = CellsSpanInOrOut(aFirstRowIndex, aFirstRowIndex,
                                               0, numCols - 1);
@@ -446,7 +444,6 @@ nsCellMap::ExpandWithRows(nsVoidArray& aRowFrames,
   PRInt32 numNewRows  = aRowFrames.Count();;
   PRInt32 origNumCols = mCols.Count();
   PRInt32 endRowIndex = aStartRowIndex + numNewRows - 1;
-  PRInt32 numMapRows  = mRows.Count();
 
   // create the new rows first
   PRInt32 newRowIndex = 0;
@@ -639,7 +636,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellFrame& aCellFrame,
   PRInt32 rowX;
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
-    PRInt32 colX;
     for (colX = aColIndex; colX <= endColIndex; colX++) {
       row->RemoveElementAt(colX);
     }
@@ -650,12 +646,11 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellFrame& aCellFrame,
   }
 
   PRInt32 numCols = mCols.Count();
-  PRInt32 numRows = mRows.Count();
 
   // update the row and col info due to shifting
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
-    for (PRInt32 colX = aColIndex; colX < numCols - colSpan; colX++) {
+    for (colX = aColIndex; colX < numCols - colSpan; colX++) {
       CellData* data = (CellData*) row->ElementAt(colX);
       if (data) {
         if (data->mOrigCell) {
@@ -698,9 +693,9 @@ nsCellMap::RemoveUnusedCols(PRInt32 aMaxToRemove)
     }
     else { 
       // remove the col from the cols array
-      nsColInfo* colInfo = (nsColInfo *) mCols.ElementAt(colX);
-      delete colInfo;
+      colInfo = (nsColInfo *) mCols.ElementAt(colX);
       mCols.RemoveElementAt(colX);
+      delete colInfo;
 
       PRInt32 numMapRows = mRows.Count();
       // remove the col from each of the rows
@@ -725,19 +720,18 @@ nsCellMap::RebuildConsideringRows(PRInt32      aStartRowIndex,
                                   nsVoidArray* aRowsToInsert,
                                   PRBool       aNumRowsToRemove)
 {
-  PRInt32 numNewRows = 0;
   // copy the old cell map into a new array
   PRInt32 numOrigRows = mRows.Count();
   PRInt32 numOrigCols = mCols.Count();
   void** origRows = new void*[numOrigRows];
   if (!origRows) return;
-  PRInt32 rowX;
+  PRInt32 rowX, colX;
   // copy the orig rows
   for (rowX = 0; rowX < numOrigRows; rowX++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
     origRows[rowX] = row;
   }
-  for (PRInt32 colX = 0; colX < numOrigCols; colX++) {
+  for (colX = 0; colX < numOrigCols; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
     colInfo->mNumCellsOrig = 0;
   }
@@ -752,7 +746,7 @@ nsCellMap::RebuildConsideringRows(PRInt32      aStartRowIndex,
   for (rowX = 0; rowX < aStartRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 numCols = row->Count();
-    for (PRInt32 colX = 0; colX < numCols; colX++) {
+    for (colX = 0; colX < numCols; colX++) {
       // put in the original cell from the cell map
       CellData* data = (CellData*) row->ElementAt(colX);
       if (data && data->mOrigCell) {
@@ -792,7 +786,7 @@ nsCellMap::RebuildConsideringRows(PRInt32      aStartRowIndex,
   for (PRInt32 copyRowX = copyStartRowIndex; copyRowX <= copyEndRowIndex; copyRowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[copyRowX];
     PRInt32 numCols = row->Count();
-    for (PRInt32 colX = 0; colX < numCols; colX++) {
+    for (colX = 0; colX < numCols; colX++) {
       // put in the original cell from the cell map
       CellData* data = (CellData*) row->ElementAt(colX);
       if (data && data->mOrigCell) {
@@ -808,7 +802,7 @@ nsCellMap::RebuildConsideringRows(PRInt32      aStartRowIndex,
   for (rowX = 0; rowX < numOrigRows; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 len = row->Count();
-    for (PRInt32 colX = 0; colX < len; colX++) {
+    for (colX = 0; colX < len; colX++) {
       CellData* data = (CellData*) row->ElementAt(colX);
       delete data;
     }

@@ -433,7 +433,7 @@ nscoord GetConstrainedWidth(nsTableColFrame* colFrame,
 {
   nscoord conWidth = WIDTH_NOT_SET;
   if (aConsiderPct) {
-    nscoord conWidth = colFrame->GetPctWidth();
+    conWidth = colFrame->GetPctWidth();
   }
   if (conWidth <= 0 ) {
     conWidth = colFrame->GetFixWidth();
@@ -1267,8 +1267,6 @@ PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
   if (!spansPercent) {
     return PR_FALSE;
   }
-
-  nscoord spacingX = mTableFrame->GetCellSpacingX();
 
   for (colX = numCols - 1; colX >= 0; colX--) { 
     for (rowX = 0; rowX < numRows; rowX++) {

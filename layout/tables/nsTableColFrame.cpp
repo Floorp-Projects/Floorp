@@ -149,7 +149,6 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
 
 PRInt32 nsTableColFrame::GetSpan()
 {  
-  PRInt32 span = 1;
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return tableStyle->mSpan;
