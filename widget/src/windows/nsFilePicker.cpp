@@ -167,7 +167,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = MAX_PATH;
 
-    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
     if (!mDefaultExtension.IsEmpty()) {
       ofn.lpstrDefExt = mDefaultExtension.get();
