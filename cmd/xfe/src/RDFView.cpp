@@ -152,7 +152,7 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
   : XFE_View(toplevel, parent_view, context)
 {
   m_rdfview = NULL;
-
+  m_popup = NULL;
   
 
   if (!my_commands)
@@ -198,13 +198,19 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
   XtAddCallback(m_widget, XmNactivateCallback, activate_cb, this);
   XtAddCallback(m_widget, XmNresizeCallback, resize_cb, this);
   XtAddCallback(m_widget, XmNeditCallback, edit_cell_cb, this);
+  XtAddCallback(m_widget, XmNselectCallback, select_cb, this);
+  XtAddCallback(m_widget, XmNdeselectCallback, deselect_cb, this);
+  //XtInsertEventHandler(m_widget, ButtonPressMask, False, button_eh, this, XtListTail);
+  XtAddCallback(m_widget, XmNpopupCallback, popup_cb, this);
+
   //fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 
 }
 
 XFE_RDFView::~XFE_RDFView()
 {
-  //xxx what to delete?
+    if (m_popup)
+        delete m_popup;
 }
 
 
@@ -386,6 +392,51 @@ XFE_RDFView::edit_cell(XtPointer callData)
     }
 }
 
+void
+XFE_RDFView::select_cb(Widget,
+                       XtPointer clientData,
+                       XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+
+    D(fprintf(stderr,"select_cb(%d)\n",cbs->row););
+
+	obj->select_row(cbs->row);
+}
+
+void
+XFE_RDFView::select_row(int row)
+{
+  HT_Resource node = HT_GetNthItem(m_rdfview, row);
+
+  if (!node) return;
+
+  HT_SetSelection(node);
+}
+
+void
+XFE_RDFView::deselect_cb(Widget,
+                         XtPointer clientData,
+                         XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+
+    D(fprintf(stderr,"deselect_cb(%d)\n",cbs->row););
+
+	obj->deselect_row(cbs->row);
+}
+
+void
+XFE_RDFView::deselect_row(int row)
+{
+  HT_Resource node = HT_GetNthItem(m_rdfview, row);
+
+  if (!node) return;
+
+  HT_SetSelectedState(node,False);
+}
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFView::notify(HT_Notification ns, HT_Resource n, 
@@ -459,32 +510,6 @@ XFE_RDFView::setRDFView(HT_View htview)
   fill_tree();
 }
 //////////////////////////////////////////////////////////////////////
-void
-XFE_RDFView::doPopup(XEvent *event)
-{
-    HT_Cursor menu_cursor = HT_NewContextualMenuCursor(m_rdfview,
-                                                  (PRBool)FALSE,
-                                                  (PRBool)FALSE/*bgcmds*/);
-    if (menu_cursor)
-    {
-        // We have a cursor. Attempt to iterate
-        HT_MenuCmd menu_command; 
-        while (HT_NextContextMenuItem(menu_cursor, &menu_command))
-        {
-            char* menu_name = HT_GetMenuCmdName(menu_command);
-            if (menu_command == HT_CMD_SEPARATOR)
-            {
-                D(fprintf(stderr,"RDF popup: Seperator\n"););
-            }
-            else
-            {
-                D(fprintf(stderr,"RDF popup: Add command(%s)\n",menu_name););
-            }
-        }
-        HT_DeleteCursor(menu_cursor);
-    }
-}
-
 void
 XFE_RDFView::fill_tree()
 {
@@ -781,3 +806,66 @@ XFE_RDFView::activate_cb(Widget,
 	obj->activate_row(cbs->row);
 }
 
+//
+// Popup menu stuff
+//
+void 
+XFE_RDFView::popup_cb(Widget,
+                      XtPointer clientData,
+                      XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+ 
+    if (cbs->rowType != XmCONTENT)
+        return;
+
+	obj->doPopup(cbs->event);
+}
+
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFView::doPopup(XEvent * event)
+{
+	if (m_popup)
+	{
+        delete m_popup; //destroy the old one first
+    }
+    m_popup = new XFE_RDFPopupMenu("popup",
+                                   //getFrame(),
+                                   FE_GetToplevelWidget(),
+                                   m_rdfview,
+                                   FALSE, // not isWorkspace
+                                   FALSE); // no background commands for now
+		
+	m_popup->position(event);
+	m_popup->show();
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+
+XFE_RDFPopupMenu::XFE_RDFPopupMenu(String name, Widget parent,
+                                   HT_View view, 
+                                   Boolean isWorkspace, Boolean isBackground)
+    : XFE_SimplePopupMenu(name, parent)
+{
+    m_pane = HT_GetPane(view);
+
+    HT_Cursor cursor = HT_NewContextualMenuCursor(view, isWorkspace, isBackground);
+    HT_MenuCmd command;
+    while(HT_NextContextMenuItem(cursor, &command))
+    {
+        if (command == HT_CMD_SEPARATOR)
+            addSeparator();
+        else
+            addPushButton(HT_GetMenuCmdName(command), (XtPointer)command,
+                          HT_IsMenuCmdEnabled(m_pane, command));
+    }
+}
+
+void
+XFE_RDFPopupMenu::PushButtonActivate(Widget w, XtPointer userData)
+{
+    HT_DoMenuCmd(m_pane, (HT_MenuCmd)userData);
+}
