@@ -1,4 +1,4 @@
-#
+ #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -23,14 +23,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mime
-LIBRARY_NAME	= mime
-IS_COMPONENT	= 1
+LIBRARY_NAME	= mime_s
 
 CSRCS		= oldi18n.c
 
 CPPSRCS		= \
 		nsMimeURLUtils.cpp \
-		nsMimeFactory.cpp \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
 		nsMimeAddress.cpp \
@@ -77,6 +75,10 @@ EXPORTS		= \
 		nsMimeObjectClassAccess.h \
 		nsMimeStringResources.h \
 		nsMimeConverter.h \
+		nsMimeHeaders.h \
+		nsStreamConverter.h \
+		nsMimeURLUtils.h	\
+		nsMsgHeaderParser.h \
 		mimetext.h \
 		mimeleaf.h \
 		mimecth.h \
@@ -94,12 +96,8 @@ EXPORTS		= \
 		comi18n.h \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		-lxpcom \
-		$(NSPR_LIBS) \
-		$(NULL)
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
