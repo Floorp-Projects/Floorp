@@ -1893,7 +1893,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * We should find the scripted caller's function frame just below it, but
      * we code a loop out of paranoia.
      */
-    for (fp = cx->fp; fp->special && fp->down; fp = fp->down)
+    for (fp = cx->fp; (fp->flags & JSFRAME_SPECIAL) && fp->down; fp = fp->down)
         continue;
     obj = fp->varobj;
     fun = fp->fun;

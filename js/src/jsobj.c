@@ -1004,7 +1004,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         principals = NULL;
     }
 
-    fp->special |= JSFRAME_EVAL;
+    fp->flags |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              str->chars, str->length,
                                              file, line);
@@ -1022,8 +1022,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         scopeobj = caller->scopeChain;
     }
 #endif
-    ok = js_Execute(cx, scopeobj, script, caller, fp->special & JSFRAME_EVAL,
-                    rval);
+    ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
     JS_DestroyScript(cx, script);
 
 out:
@@ -1325,7 +1324,7 @@ Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     if (!obj) {
         JS_ASSERT(!argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0]));
-        if (cx->fp->constructing)
+        if (cx->fp->flags & JSFRAME_CONSTRUCTING)
             return JS_TRUE;
         obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
         if (!obj)
@@ -1484,7 +1483,7 @@ With(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         obj = js_NewObject(cx, &js_WithClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
@@ -2141,8 +2140,10 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                         format = js_CodeSpec[*cx->fp->pc].format;
                         if ((format & JOF_MODEMASK) != JOF_NAME)
                             flags |= JSRESOLVE_QUALIFIED;
-                        if (format & JOF_SET)
+                        if ((format & JOF_ASSIGNING) ||
+                            (cx->fp->flags & JSFRAME_ASSIGNING)) {
                             flags |= JSRESOLVE_ASSIGNING;
+                        }
                     }
                     obj2 = NULL;
                     JS_UNLOCK_OBJ(cx, obj);

@@ -2424,7 +2424,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     end = pc + cs->length;
     len = PTRDIFF(end, begin, jsbytecode);
 
-    if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT)) {
+    if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT | JOF_FOR)) {
         tmp = (jsbytecode *) JS_malloc(cx, len * sizeof(jsbytecode));
         if (!tmp)
             return NULL;
@@ -2446,12 +2446,22 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             } else if (mode == JOF_ELEM) {
                 tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
             } else {
+                /*
+                 * A zero mode means precisely that op is uncategorized for our
+                 * purposes, so we must write per-op special case code here.
+                 */
+                switch (op) {
+                  case JSOP_ENUMELEM:
+                    tmp[off] = JSOP_GETELEM;
+                    break;
 #if JS_HAS_LVALUE_RETURN
-                JS_ASSERT(op == JSOP_SETCALL);
-                tmp[off] = JSOP_CALL;
-#else
-                JS_ASSERT(0);
+                  case JSOP_SETCALL:
+                    tmp[off] = JSOP_CALL;
+                    break;
 #endif
+                  default:
+                    JS_ASSERT(0);
+                }
             }
         }
         begin = tmp;

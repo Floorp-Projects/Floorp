@@ -538,8 +538,8 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  *
  * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' paramter as
  * a jsval, and fp->argv[-2] must be the callee object reference, usually a
- * function object.  Also, fp->constructing must be set if we are preparing
- * for a constructor call.
+ * function object.  Also, fp->flags must contain JSFRAME_CONSTRUCTING if we
+ * are preparing for a constructor call.
  */
 static JSBool
 ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
@@ -553,7 +553,7 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
             return JS_FALSE;
 
         /* Default return value for a constructor is the new object. */
-        if (fp->constructing)
+        if (fp->flags & JSFRAME_CONSTRUCTING)
             fp->rval = OBJECT_TO_JSVAL(thisp);
     } else {
         /*
@@ -572,7 +572,7 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
          *
          * The alert should display "true".
          */
-        JS_ASSERT(!fp->constructing);
+        JS_ASSERT(!(fp->flags & JSFRAME_CONSTRUCTING));
         parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
         if (!parent) {
             thisp = cx->globalObject;
@@ -622,12 +622,16 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      * Once vp is set, control must flow through label out2: to return.
      * Set frame.rval early so native class and object ops can throw and
      * return false, causing a goto out2 with ok set to false.  Also set
-     * frame.constructing so we may test it anywhere below.
+     * frame.flags to 0 or to JSFRAME_CONSTRUCTING so we may test it
+     * anywhere below.
      */
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
-    frame.constructing = (JSPackedBool)(flags & JSINVOKE_CONSTRUCT);
+#if JSINVOKE_CONSTRUCT != JSFRAME_CONSTRUCTING
+# error "constructor invoke/frame flag mismatch!"
+#endif
+    frame.flags = (flags & JSINVOKE_CONSTRUCT);
 
     /* A callee must be an object reference. */
     if (JSVAL_IS_PRIMITIVE(v))
@@ -670,7 +674,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         minargs = nvars = 0;
 
         /* Try a call or construct native object op, using fun as fallback. */
-        native = frame.constructing ? ops->construct : ops->call;
+        native = (flags & JSINVOKE_CONSTRUCT) ? ops->construct : ops->call;
         if (!native)
             goto bad;
     } else {
@@ -703,8 +707,6 @@ have_fun:
     frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
-    frame.overrides = 0;
-    frame.special = 0;
     frame.dormantNext = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
@@ -864,7 +866,7 @@ out2:
     return ok;
 
 bad:
-    js_ReportIsNotFunction(cx, vp, frame.constructing);
+    js_ReportIsNotFunction(cx, vp, (flags & JSINVOKE_CONSTRUCT) != 0);
     ok = JS_FALSE;
     goto out2;
 }
@@ -958,9 +960,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sp = oldfp ? oldfp->sp : NULL;
     frame.spbase = NULL;
     frame.sharpDepth = 0;
-    frame.constructing = JS_FALSE;
-    frame.overrides = 0;
-    frame.special = (uint8) special;
+    frame.flags = special;
     frame.dormantNext = NULL;
 
     /*
@@ -1240,7 +1240,15 @@ js_Interpret(JSContext *cx, jsval *result)
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
 
-    /* Optimized Get and SetVersion for proper script language versioning. */
+    /*
+     * Optimized Get and SetVersion for proper script language versioning.
+     *
+     * If any native method or JSClass/JSObjectOps hook calls JS_SetVersion
+     * and changes cx->version, the effect will "stick" and we will stop
+     * maintaining currentVersion.  This is relied upon by testsuites, for
+     * the most part -- web browsers select version before compiling and not
+     * at run-time.
+     */
     currentVersion = script->version;
     originalVersion = cx->version;
     if (currentVersion != originalVersion)
@@ -1412,6 +1420,13 @@ js_Interpret(JSContext *cx, jsval *result)
                     ok &= js_PutArgsObject(cx, fp);
 #endif
 
+                /* Restore context version only if callee hasn't set version. */
+                if (cx->version == currentVersion) {
+                    currentVersion = ifp->callerVersion;
+                    if (currentVersion != cx->version)
+                        JS_SetVersion(cx, currentVersion);
+                }
+
                 /* Store the return value in the caller's operand frame. */
                 vp = fp->argv - 2;
                 *vp = fp->rval;
@@ -1432,12 +1447,6 @@ js_Interpret(JSContext *cx, jsval *result)
 
                 /* Store the generating pc for the return value. */
                 vp[-depth] = (jsval)pc;
-
-                /* Restore version and version control variable. */
-                if (script->version != currentVersion) {
-                    currentVersion = script->version;
-                    JS_SetVersion(cx, currentVersion);
-                }
 
                 /* Set remaining variables for 'goto advance_pc'. */
                 op = (JSOp) *pc;
@@ -1758,7 +1767,9 @@ js_Interpret(JSContext *cx, jsval *result)
                 VALUE_TO_OBJECT(cx, lval, obj);
 
                 /* Set the variable obj[id] to refer to rval. */
+                fp->flags |= JSFRAME_ASSIGNING;
                 ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
+                fp->flags &= ~JSFRAME_ASSIGNING;
                 if (!ok)
                     goto out;
                 break;
@@ -2696,10 +2707,12 @@ js_Interpret(JSContext *cx, jsval *result)
                                             cx->runtime->callHookData);
                 }
 
-                /* Switch to new version if necessary. */
-                if (script->version != currentVersion) {
+                /* Switch to new version if currentVersion wasn't overridden. */
+                newifp->callerVersion = cx->version;
+                if (cx->version == currentVersion) {
                     currentVersion = script->version;
-                    JS_SetVersion(cx, currentVersion);
+                    if (currentVersion != cx->version)
+                        JS_SetVersion(cx, currentVersion);
                 }
 
                 /* Push the frame and set interpreter registers. */
@@ -3126,7 +3139,7 @@ js_Interpret(JSContext *cx, jsval *result)
             atom = GET_ATOM(cx, script, pc);
             obj = fp->varobj;
             attrs = JSPROP_ENUMERATE;
-            if (!(fp->special & JSFRAME_EVAL))
+            if (!(fp->flags & JSFRAME_EVAL))
                 attrs |= JSPROP_PERMANENT;
             if (op == JSOP_DEFCONST)
                 attrs |= JSPROP_READONLY;
@@ -3791,7 +3804,7 @@ no_catch:
     fp->sp = fp->spbase;
     fp->spbase = NULL;
     js_FreeRawStack(cx, mark);
-    if (currentVersion != originalVersion)
+    if (cx->version == currentVersion && currentVersion != originalVersion)
         JS_SetVersion(cx, originalVersion);
     cx->interpLevel--;
     return ok;

@@ -141,7 +141,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
 	bval = JSVAL_FALSE;
     }
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
 	*rval = bval;
 	return JS_TRUE;
     }

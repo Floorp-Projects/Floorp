@@ -1359,7 +1359,7 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval *vector;
 
     /* If called without new, replace obj with a new Array object. */
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
 	obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
 	if (!obj)
 	    return JS_FALSE;

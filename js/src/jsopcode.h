@@ -78,6 +78,9 @@ typedef enum JSOp {
 #define JOF_INCDEC        0x0300  /* increment or decrement opcode */
 #define JOF_POST          0x0400  /* postorder increment or decrement */
 #define JOF_IMPORT        0x0800  /* import property op */
+#define JOF_FOR           0x1000  /* for-in property op */
+#define JOF_ASSIGNING     0x2000  /* hint for JSClass.resolve, used for ops
+                                     that do simplex assignment */
 
 /*
  * Immediate operand getters, setters, and bounds.

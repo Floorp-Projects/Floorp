@@ -672,13 +672,13 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSBool)
 JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->constructing;
+    return (fp->flags & JSFRAME_CONSTRUCTING) != 0;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->special & JSFRAME_DEBUGGER;
+    return (fp->flags & JSFRAME_DEBUGGER) != 0;
 }
 
 JS_PUBLIC_API(jsval)
