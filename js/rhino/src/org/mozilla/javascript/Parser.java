@@ -931,6 +931,12 @@ public class Parser
 
           case Token.THROW: {
             consumeToken();
+            if (peekTokenOrEOL(TokenStream.TSF_REGEXP) == Token.EOL) {
+                // ECMAScript does not allow new lines before throw expression,
+                // see bug 256617
+                reportError("msg.bad.throw.eol");
+            }
+
             int lineno = ts.getLineno();
             decompiler.addToken(Token.THROW);
             pn = nf.createThrow(expr(false), lineno);
