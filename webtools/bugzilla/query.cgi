@@ -292,8 +292,10 @@ foreach my $p (@::legal_product) {
     next;
   }
   push @::product_list, $p;
-  foreach my $c (@{$::components{$p}}) {
-    $component_set{$c} = 1;
+  if ($::components{$p}) {
+    foreach my $c (@{$::components{$p}}) {
+      $component_set{$c} = 1;
+    }
   }
   foreach my $v (@{$::versions{$p}}) {
     $version_set{$v} = 1;
