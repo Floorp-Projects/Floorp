@@ -70,6 +70,13 @@ public:
   virtual PRBool AppendChild(nsIContent* aKid) = 0;
   virtual PRBool RemoveChildAt(PRInt32 aIndex) = 0;
 
+  /**
+   * Test and see if this piece of content is synthetic. Synthetic content
+   * is content generated stylistically and should normally be ignored
+   * during content saving.
+   */
+  NS_IMETHOD IsSynthetic(PRBool& aResult) = 0;
+
   virtual nsIAtom* GetTag() const = 0;
 
   /**
