@@ -418,7 +418,7 @@ static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
-static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
+static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
 
 #ifdef XP_PC
@@ -865,7 +865,7 @@ quick_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -2734,7 +2734,7 @@ quick_batch_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -4348,7 +4348,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   nsITransaction *tx          = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -4542,7 +4542,7 @@ main (int argc, char *argv[])
 {
   nsresult result;
 
-  nsComponentManager::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
+  nsComponentManager::RegisterComponent(kCTransactionManagerCID, NULL, NULL,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 
   result = simple_test();
