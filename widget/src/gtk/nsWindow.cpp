@@ -2752,19 +2752,25 @@ nsWindow::GetMozArea()
 PRBool
 nsWindow::GrabInProgress(void)
 {
-  return nsWindow::sIsGrabbing;
+  // there is either an active grab or a passive grab because of a
+  // button motion event
+  return nsWindow::sIsGrabbing || nsWidget::sButtonMotionTarget;
 }
 
 /* static */
 nsWindow *
 nsWindow::GetGrabWindow(void)
 {
+  if (nsWidget::sButtonMotionTarget) {
+    return NS_STATIC_CAST(nsWindow *, sButtonMotionTarget);
+  }
+
   if (nsWindow::sIsGrabbing)
   {
     return sGrabWindow;
   }
-  else
-    return nsnull;
+  
+  return nsnull;
 }
 
 GdkWindow *
