@@ -463,15 +463,7 @@ public class FunctionObject extends BaseFunction {
             } else {
                 result = (Scriptable) call(cx, scope, null, args);
             }
-
-            if (result.getPrototype() == null)
-                result.setPrototype(getClassPrototype());
-            if (result.getParentScope() == null) {
-                Scriptable parent = getParentScope();
-                if (result != parent)
-                    result.setParentScope(parent);
-            }
-
+            initCallResultAsNewObject(result);
             return result;
         } else if (method != null && !isStatic) {
             Scriptable result;
@@ -487,14 +479,11 @@ public class FunctionObject extends BaseFunction {
             result.setParentScope(getParentScope());
 
             Object val = call(cx, scope, result, args);
-            if (val != null && val != Undefined.instance &&
-                val instanceof Scriptable)
-            {
-                return (Scriptable) val;
+            if (val instanceof Scriptable && val != Undefined.instance) {
+                result = (Scriptable) val;
             }
             return result;
         }
-
         return super.construct(cx, scope, args);
     }
 

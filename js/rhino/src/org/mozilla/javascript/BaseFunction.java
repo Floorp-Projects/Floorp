@@ -228,6 +228,19 @@ public class BaseFunction extends IdScriptable implements Function {
         return newInstance;
     }
 
+    final void initCallResultAsNewObject(Scriptable newObj)
+    {
+        if (newObj.getPrototype() == null) {
+            newObj.setPrototype(getClassPrototype());
+        }
+        if (newObj.getParentScope() == null) {
+            Scriptable parent = getParentScope();
+            if (newObj != parent) {
+                newObj.setParentScope(parent);
+            }
+        }
+    }
+
     /**
      * Decompile the source information associated with this js
      * function/script back into a string.

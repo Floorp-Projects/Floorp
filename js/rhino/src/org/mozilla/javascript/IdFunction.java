@@ -108,17 +108,22 @@ public class IdFunction extends BaseFunction
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        if (functionType != FUNCTION_ONLY) {
-            // It is program error not to return Scriptable from constructor
-            Scriptable result = (Scriptable)master.execMethod(methodId, this,
-                                                              cx, scope,
-                                                              null, args);
-            postConstruction(result);
-            return result;
-        }
-        else {
+        if (functionType == FUNCTION_ONLY) {
             return Undefined.instance;
         }
+        Object callResult = master.execMethod(methodId, this, cx, scope,
+                                              null, args);
+        if (!(callResult instanceof Scriptable)) {
+            // It is program error not to return Scriptable from
+            // IdFunctionMaster for IdFunction marked suitable for
+            // constructor call.
+            throw new IllegalStateException(
+                "Bad implementtaion of execMethod, id="+methodId+" in "
+                +master.getClass().getName());
+        }
+        Scriptable result = (Scriptable)callResult;
+        initCallResultAsNewObject(result);
+        return result;
     }
 
     public String decompile(Context cx, int indent, boolean justbody) {
@@ -165,19 +170,6 @@ public class IdFunction extends BaseFunction
         // It is program error to call id-like methods for unknown or
         // non-function id
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
-    }
-
-    // Copied from NativeFunction.construct
-    private void postConstruction(Scriptable newObj) {
-        if (newObj.getPrototype() == null) {
-            newObj.setPrototype(getClassPrototype());
-        }
-        if (newObj.getParentScope() == null) {
-            Scriptable parent = getParentScope();
-            if (newObj != parent) {
-                newObj.setParentScope(parent);
-            }
-        }
     }
 
     protected IdFunctionMaster master;
