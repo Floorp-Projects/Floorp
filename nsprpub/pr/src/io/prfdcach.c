@@ -115,14 +115,14 @@ finished:
     fd->dtor = NULL;
     fd->lower = fd->higher = NULL;
     fd->identity = PR_NSPR_IO_LAYER;
-    memset(fd->secret, 0, PRFILEPRIVATE_SIZE);
+    memset(fd->secret, 0, sizeof(PRFilePrivate));
     return fd;
 
 allocate:
     fd = PR_NEW(PRFileDesc);
     if (NULL != fd)
     {
-        fd->secret = (PRFilePrivate *) PR_MALLOC(PRFILEPRIVATE_SIZE);
+        fd->secret = PR_NEW(PRFilePrivate);
         if (NULL == fd->secret) PR_DELETE(fd);
     }
     if (NULL != fd) goto finished;

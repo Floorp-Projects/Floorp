@@ -224,7 +224,6 @@ static PRThread* pt_AttachThread(void)
         PR_ASSERT(0 == rv);
 
         thred->state = PT_THREAD_GLOBAL | PT_THREAD_FOREIGN;
-		thred->io_tq_index = -1;
         PR_Lock(pt_book.ml);
 
         /* then put it into the list */
@@ -362,8 +361,6 @@ static PRThread* _PR_CreateThread(
         }
         thred->stack->stackSize = stackSize;
         thred->stack->thr = thred;
-
-		thred->io_tq_index = -1;
 
 #ifdef PT_NO_SIGTIMEDWAIT
         pthread_mutex_init(&thred->suspendResumeMutex,NULL);
@@ -742,8 +739,6 @@ static void _pt_thread_death(void *arg)
     PR_Free(thred->privateData);
     if (NULL != thred->errorString)
         PR_Free(thred->errorString);
-    if (NULL != thred->io_cv)
-        PR_DestroyCondVar(thred->io_cv);
     PR_Free(thred->stack);
 #if defined(DEBUG)
     memset(thred, 0xaf, sizeof(PRThread));
@@ -808,8 +803,6 @@ void _PR_InitThreads(
     thred->stack->stackSize = 0;
     thred->stack->thr = thred;
 	_PR_InitializeStack(thred->stack);
-
-	thred->io_tq_index = -1;
 
     /*
      * Create a key for our use to store a backpointer in the pthread
