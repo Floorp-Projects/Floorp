@@ -405,10 +405,11 @@ function delayedStartup()
 #endif
 
   // now load bookmarks after a delay
-  BMSVC.ReadBookmarks();
+  var hasRead = BMSVC.ReadBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
-    bt.builder.rebuild();
+    if (hasRead)
+      bt.builder.rebuild();
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
   }
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
