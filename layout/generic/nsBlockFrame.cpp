@@ -296,7 +296,8 @@ public:
 
   nsresult FrameAppendedReflow(nsBlockReflowState& aState);
 
-  nsresult InsertNewFrame(nsBlockFrame* aParentFrame,
+  nsresult InsertNewFrame(nsIPresContext&  aPresContext,
+                          nsBlockFrame*    aParentFrame,
                           nsIFrame*        aNewFrame,
                           nsIFrame*        aPrevSibling);
   nsresult FrameInsertedReflow(nsBlockReflowState& aState);
@@ -1505,7 +1506,7 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
     const nsStyleList* styleList;
     GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
-      InsertNewFrame(this, mBullet, nsnull);
+      InsertNewFrame(aPresContext, this, mBullet, nsnull);
     }
   }
   return NS_OK;
@@ -1986,12 +1987,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     lastFrame->SetNextSibling(aNewFrame);
   }
   nsresult rv;
-#if 0
-  rv = WrapFrames(aPresContext, lastFrame, aNewFrame);
-  if (NS_OK != rv) {
-    return rv;
-  }
-#endif
 
   // Make sure that new inlines go onto the end of the lastLine when
   // the lastLine is mapping inline frames.
@@ -2021,11 +2016,11 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     PRBool isBlock =
       nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
 
-    // See if we need to move the frame outside of the flow, and insert in
-    // its place a placeholder frame
+    // See if we need to move the frame outside of the flow, and insert a
+    // placeholder frame in its place
     nsIFrame* placeholder;
     if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
-      // Adjust previous frame's next sibling pointer
+      // Reset the previous frame's next sibling pointer
       if (nsnull != prevFrame) {
         prevFrame->SetNextSibling(placeholder);
       }
@@ -2272,7 +2267,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
   aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
 
   // Insert the frame. This marks the line dirty...
-  InsertNewFrame(this, newFrame, prevSibling);
+  InsertNewFrame(aState.mPresContext, this, newFrame, prevSibling);
 
   LineData* line = mLines;
   while (nsnull != line->mNext) {
@@ -3409,12 +3404,11 @@ nsBlockFrame::DrainOverflowLines()
   return drained;
 }
 
-// XXX This code doesn't handle floating elements or absolutely positioned
-// elements...
 nsresult
-nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
-                             nsIFrame* aNewFrame,
-                             nsIFrame* aPrevSibling)
+nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
+                             nsBlockFrame*   aParentFrame,
+                             nsIFrame*       aNewFrame,
+                             nsIFrame*       aPrevSibling)
 {
   const nsStyleDisplay* display;
   aNewFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
@@ -3422,6 +3416,15 @@ nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
   aNewFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
   PRUint16 newFrameIsBlock = nsLineLayout::TreatFrameAsBlock(display, position)
                                ? LINE_IS_BLOCK : 0;
+
+  // See if we need to move the frame outside of the flow, and insert a
+  // placeholder frame in its place
+  nsIFrame* placeholder;
+  if (MoveFrameOutOfFlow(aPresContext, aNewFrame, display, position, placeholder)) {
+    // Add the placeholder frame to the flow
+    aNewFrame = placeholder;
+    newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
+  }
 
   // Insert/append the frame into flows line list at the right spot
   LineData* newLine;

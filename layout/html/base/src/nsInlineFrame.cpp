@@ -125,7 +125,9 @@ public:
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
-  void InsertNewFrame(nsIFrame* aNewFrame, nsIFrame* aPrevSibling);
+  void InsertNewFrame(nsIPresContext& aPresContext,
+                      nsIFrame*       aNewFrame,
+                      nsIFrame*       aPrevSibling);
 
   friend nsresult NS_NewInlineFrame(nsIContent* aContent,
                                     nsIFrame* aParentFrame,
@@ -184,6 +186,30 @@ nsresult
 nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
                                nsIFrame* aNewFrame)
 {
+  // Walk the list of new frames, and see if we need to move any of them
+  // out of the flow
+  nsIFrame* prevFrame = nsnull;
+  for (nsIFrame* frame = aNewFrame; nsnull != frame; frame->GetNextSibling(frame)) {
+    const nsStyleDisplay*  kidDisplay;
+    const nsStylePosition* kidPosition;
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
+    frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) kidPosition);
+
+    nsIFrame* placeholder;
+    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
+      // Reset the previous frame's next sibling pointer
+      if (nsnull == prevFrame) {
+        aNewFrame = placeholder;
+      } else {
+        prevFrame->SetNextSibling(placeholder);
+      }
+      frame = placeholder;
+    }
+
+    prevFrame = frame;
+  }
+
+  // Append the new frames to the child list
   nsIFrame* lastFrame;
   if (nsnull == mFirstChild) {
     lastFrame = nsnull;
@@ -192,7 +218,7 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
     lastFrame = LastFrame(mFirstChild);
     lastFrame->SetNextSibling(aNewFrame);
   }
-  return WrapFrames(aPresContext, lastFrame, aNewFrame);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -279,10 +305,25 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
 }
 
 void
-nsInlineFrame::InsertNewFrame(nsIFrame* aNewFrame, nsIFrame* aPrevSibling)
+nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
+                              nsIFrame*       aNewFrame,
+                              nsIFrame*       aPrevSibling)
 {
-  nsIFrame* nextSibling;
+  const nsStyleDisplay* kidDisplay;
+  aNewFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
+  const nsStylePosition* kidPosition;
+  aNewFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)kidPosition);
 
+  // See if we need to move the frame outside of the flow, and insert a
+  // placeholder frame in its place
+  nsIFrame* placeholder;
+  if (MoveFrameOutOfFlow(aPresContext, aNewFrame, kidDisplay, kidPosition, placeholder)) {
+    // Add the placeholder frame to the flow
+    aNewFrame = placeholder;
+  }
+
+  // Add the new frame to the child list
+  nsIFrame* nextSibling;
   if (nsnull == aPrevSibling) {
     nextSibling = mFirstChild;
     mFirstChild = aNewFrame;
@@ -370,7 +411,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
         // Link the new frame into the child list
         state.reflowCommand->GetChildFrame(newFrame);
         state.reflowCommand->GetPrevSiblingFrame(prevSibling);
-        InsertNewFrame(newFrame, prevSibling);
+        InsertNewFrame(state.mPresContext, newFrame, prevSibling);
         // XXX For now map into full reflow...
         rv = ResizeReflow(state, inlineReflow);
         break;
