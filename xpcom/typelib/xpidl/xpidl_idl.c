@@ -248,7 +248,7 @@ NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
         *lenp = end - data->point + 2;
         data->f_raw = 0;
     } else {
-        *lenp = data->len;
+        *lenp = data->buf + data->len - data->point;
         data->f_raw = 1;
     }
     return 1;
