@@ -188,16 +188,6 @@ class COtherDTD : public CNavDTD {
     virtual PRBool CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild)const;
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag is itself a container
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    virtual PRBool IsContainer(eHTMLTags aTags) const;
-
-    /**
      * This method does two things: 1st, help construct
      * our own internal model of the content-stack; and
      * 2nd, pass this message on to the sink.
@@ -577,7 +567,6 @@ private:
 
 protected:
 
-    PRBool  CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
     
 };
 

@@ -22,6 +22,7 @@
 #include "nsDebug.h"
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
+const char* kUnorderedStringError = "String argument must be ordered. Don't you read API's?";
 
 #ifdef __INCREMENTAL
 const int   kBufsize=1;
@@ -143,11 +144,11 @@ PRInt32 CScanner::RewindToMark(void){
  *  @return  
  */
 PRInt32 CScanner::Mark(void){
-  mMarkPos=mOffset;
-  if((mMarkPos>0) && (mMarkPos>eBufferSizeThreshold)) {
-    mBuffer.Cut(0,mMarkPos);   //delete chars up to mark position
-    mOffset-=mMarkPos;
+  if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
+    mBuffer.Cut(0,mOffset);   //delete chars up to mark position
+    mOffset=0;
   }
+  mMarkPos=mOffset;
   return 0;
 }
  
@@ -338,7 +339,7 @@ nsresult CScanner::SkipOver(PRUnichar aSkipChar){
  *  Skip over chars as long as they're in aSkipSet
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aSkipSet is an ordered string.
  *  @return  error code
  */
 nsresult CScanner::SkipOver(nsString& aSkipSet){
@@ -364,7 +365,8 @@ nsresult CScanner::SkipOver(nsString& aSkipSet){
  *  Skip over chars until they're in aValidSet
  *  
  *  @update  gess 3/25/98
- *  @param   aValid set contains chars you're looking for
+ *  @param   aValid set is an ordered string that 
+ *           contains chars you're looking for
  *  @return  error code
  */
 nsresult CScanner::SkipTo(nsString& aValidSet){
@@ -391,7 +393,8 @@ nsresult CScanner::SkipTo(nsString& aValidSet){
  *  Skip over chars as long as they're in aValidSet
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aValidSet is an ordered string containing the 
+ *           characters you want to skip
  *  @return  error code
  */
 nsresult CScanner::SkipPast(nsString& aValidSet){
@@ -404,19 +407,25 @@ nsresult CScanner::SkipPast(nsString& aValidSet){
  *  given validSet of input chars.
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aString will contain the result of this method
+ *  @param   aValidSet is an ordered string that contains the
+ *           valid characters
  *  @return  error code
  */
 nsresult CScanner::ReadWhile(nsString& aString,
                              nsString& aValidSet,
+                             PRBool anOrderedSet,
                              PRBool addTerminal){
+
+  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
+
   PRUnichar theChar=0;
   nsresult   result=NS_OK;
 
   while(NS_OK==result) {
     result=GetChar(theChar);
     if(NS_OK==result) {
-      PRInt32 pos=aValidSet.Find(theChar);
+      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.Find(theChar);
       if(kNotFound==pos) {
         if(addTerminal)
           aString+=theChar;
@@ -429,25 +438,30 @@ nsresult CScanner::ReadWhile(nsString& aString,
   return result;
 }
 
-
 /**
- *  Consume characters until you find one contained in given
+ *  Consume characters until you encounter one contained in given
  *  input set.
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aString will contain the result of this method
+ *  @param   aTerminalSet is an ordered string that contains
+ *           the set of INVALID characters
  *  @return  error code
  */
 nsresult CScanner::ReadUntil(nsString& aString,
                              nsString& aTerminalSet,
+                             PRBool anOrderedSet,
                              PRBool addTerminal){
+  
+  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
+
   PRUnichar theChar=0;
   nsresult  result=NS_OK;
 
   while(NS_OK == result) {
     result=GetChar(theChar);
     if(NS_OK==result) {
-      PRInt32 pos=aTerminalSet.Find(theChar);
+      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.Find(theChar);
       if(kNotFound!=pos) {
         if(addTerminal)
           aString+=theChar;
