@@ -7960,7 +7960,26 @@ ResDef(MK_SIGNON_PASSWORDS_FETCH, (XP_MSG_BASE + 1492), \
 "Fetch old password for %1$s at %2$s?")
 
 ResDef(MK_SIGNON_YOUR_SIGNONS, (XP_MSG_BASE + 1493),
-"Your Signons")
+"Saved sign-ons")
+
+ResDef(MK_SIGNON_YOUR_SIGNON_REJECTS, (XP_MSG_BASE + 1494),
+"Sign-ons that won't be saved")
+
+ResDef(MK_SIGNON_NOTIFICATION, (XP_MSG_BASE + 1495),
+"For your convenience, the browser can remember your user names \
+and passwords so that you won't have to re-type them when you \
+return to a site.  ")
+
+ResDef(MK_SIGNON_NOTIFICATION_1, (XP_MSG_BASE + 1496),
+"Your passwords will be obscured before being \
+saved on your hard drive.  Do you want this feature enabled?")
+
+ResDef(MK_SIGNON_NAG, (XP_MSG_BASE + 1497),
+"Do you want to save the user name and password contained on this form?")
+
+ResDef(MK_SIGNON_REMEMBER, (XP_MSG_BASE + 1498),
+"Do you want to remember this decision?")
+
 
 
 /* Location Independence XP Strings */
