@@ -33,14 +33,14 @@
 
   </menubar>
 
-  <toolbar id="tbInspectorPrimary">
+  <toolbar id="tbInspectorPrimary" class="chromeclass-toolbar">
 
     <hbox id="bxURLBar" flex="1">
       <toolbarbutton id="btnSelecting" type="checkbox" observes="cmd:selectByClick" 
-              tooltip="aTooltip" tooltiptext="&btnSelecting.tooltip;"/>
+              tooltiptext="&btnSelecting.tooltip;"/>
 
       <toolbarbutton id="btnFind" observes="cmd:find" 
-              tooltip="aTooltip" tooltiptext="&btnFind.tooltip;"/>
+              tooltiptext="&btnFind.tooltip;"/>
 
       <hbox id="bxURLBarContainer" flex="1">
         <hbox align="center" flex="1">
