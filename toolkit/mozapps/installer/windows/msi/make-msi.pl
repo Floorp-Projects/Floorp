@@ -12,6 +12,15 @@ if (!$win32) {
 }
 
 #--------------------------------------------------------------------------
+# If $ENV{PACKAGE_MSI} is not true, exit.
+#--------------------------------------------------------------------------
+
+if (!exists($ENV{PACKAGE_MSI}) or !defined($ENV{PACKAGE_MSI}) or ($ENV{PACKAGE_MSI} ne 1) ) {
+    printf("make-msi.pl: PACKAGE_MSI environment variable is not true.. exiting.\n");
+    exit;
+}
+
+#--------------------------------------------------------------------------
 # Find the MakeMSI mm.cmd program.
 #--------------------------------------------------------------------------
 
