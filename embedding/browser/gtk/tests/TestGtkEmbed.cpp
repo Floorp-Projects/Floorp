@@ -21,6 +21,7 @@
 
 #include "gtkmozembed.h"
 #include <gtk/gtk.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
