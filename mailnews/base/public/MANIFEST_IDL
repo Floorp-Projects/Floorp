@@ -37,3 +37,4 @@ nsIMsgHdr.idl
 nsIMsgStringService.idl
 nsIMsgPrintEngine.idl
 nsIMsgProgress.idl
+nsIMsgDBView.idl
