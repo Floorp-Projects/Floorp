@@ -26,6 +26,9 @@
 
 #define IsFlagSet(a,b) (a & b)
 
+#undef CHEAP_PERFORMANCE_MEASURMENT
+
+
 // Defining this will trace the allocation of images.  This includes
 // ctor, dtor and update.
 #undef TRACE_IMAGE_ALLOCATION
@@ -290,6 +293,10 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
   }
 }
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+static PRTime gConvertTime, gStartTime, gPixmapTime, gEndTime;
+#endif
+
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
 nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
@@ -347,6 +354,10 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   GC      gc;
   XGCValues gcv;
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+  gStartTime = gPixmapTime = PR_Now();
+#endif
+
   // Create gc clip-mask on demand
   if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
   {
@@ -403,6 +414,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+    gPixmapTime = PR_Now();
+#endif
   }
 
 #if 0
@@ -486,6 +500,16 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
     gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
   }
+
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+  gEndTime = PR_Now();
+  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, cvt=%lld\n",
+         this,
+         aWidth, aHeight,
+         gEndTime - gStartTime,
+         gPixmapTime - gStartTime,
+         gConvertTime - gPixmapTime);
+#endif
 
   return NS_OK;
 }
