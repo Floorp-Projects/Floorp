@@ -171,6 +171,15 @@ static JSValue load(Context *cx, const JSValues &argv)
     return result;
 }
 
+static bool goGeorge = false;
+
+static JSValue george(Context *cx, const JSValues &argv)
+{
+    goGeorge = !goGeorge;
+    
+    return JSValue(new JSString(goGeorge ? "George is going" : "George is taking a break"));
+}
+
 #if 0       // need a XP version of this, rip off from Monkey?
 #include <sys/timeb.h>
 static JSValue time(Context *cx, const JSValues &argv)
@@ -189,7 +198,7 @@ class Tracer : public Context::Listener {
     typedef InstructionStream::difference_type InstructionOffset;
     void listen(Context* context, Context::Event event)
     {
-        if (event & Context::EV_STEP) {
+        if (goGeorge && (event & Context::EV_STEP)) {
             ICodeModule *iCode = context->getICode();
             JSValues &registers = context->getRegisters();
             InstructionIterator pc = context->getPC();
@@ -212,7 +221,7 @@ class Tracer : public Context::Listener {
     }
 };
 
-//#define HAVE_GEORGE_TRACE_IT
+#define HAVE_GEORGE_TRACE_IT
 //#define TEST_XML_LOADER
 
 static void readEvalPrint(FILE *in, World &world)
@@ -225,6 +234,7 @@ static void readEvalPrint(FILE *in, World &world)
     global.defineNativeFunction(world.identifiers["print"], print);
     global.defineNativeFunction(world.identifiers["dump"], dump);
     global.defineNativeFunction(world.identifiers["load"], load);
+    global.defineNativeFunction(world.identifiers["george"], george);
 //   global.defineNativeFunction(world.identifiers["time"], time);
 
     String buffer;

@@ -50,7 +50,7 @@ namespace JSClasses {
     
 
     struct JSSlot {
-        typedef enum { kNoFlag = 0, kIsConstructor = 0x01 } SlotFlags;   // <-- readonly, enumerable etc
+        typedef enum { kNoFlag = 0, kIsConstructor = 0x01, kIsVirtual = 0x02 } SlotFlags;   // <-- readonly, enumerable etc
 
         // a slot may have a getter or a setter or both, but NOT either if mActual
         JSType* mType;
@@ -65,6 +65,7 @@ namespace JSClasses {
         }
 
         bool isConstructor() const          { return (mFlags & kIsConstructor) != 0; }
+        bool isVirtual() const              { return (mFlags & kIsVirtual) != 0; }
     };
 
     typedef gc_map_allocator(JSSlot) gc_slot_allocator;
@@ -104,9 +105,12 @@ namespace JSClasses {
         {
             if (superClass) {
                    // inherit superclass methods
-                JSMethods::iterator end = superClass->mMethods.end();
-                for (JSMethods::iterator i = superClass->mMethods.begin(); i != end; i++)
-                    mMethods.push_back(*i);
+                mMethods = JSMethods(superClass->mMethods);
+                   // and virtual fields
+                JSSlots::iterator sEnd = superClass->mSlots.end();
+                for (JSSlots::iterator si = superClass->mSlots.begin(); si != sEnd; si++)
+                    if (si->second.isVirtual())
+                        mSlots[si->first] = si->second;
             }    
         }
         
@@ -120,14 +124,14 @@ namespace JSClasses {
             return mScope;
         }
 
-        const JSSlot& defineSlot(const String& name, JSType* type, JSFunction* getter = 0, JSFunction* setter = 0)
+        const JSSlot& defineSlot(const String& name, JSType* type, JSSlot::SlotFlags flags = JSSlot::kNoFlag, JSFunction* getter = 0, JSFunction* setter = 0)
         {
             JSSlot& slot = mSlots[name];
-            ASSERT(slot.mType == 0);
             slot.mType = type;
             slot.mIndex = mSlotCount++; // starts at 0.
             slot.mSetter = setter;
             slot.mGetter = getter;
+            slot.mFlags = flags;
             if (setter || getter)
                 slot.mActual = false;
             return slot;
@@ -137,11 +141,13 @@ namespace JSClasses {
         {
             JSSlots::iterator slti = mSlots.find(name);
             if (slti == mSlots.end())
-                defineSlot(name, type, getter, 0);
+                defineSlot(name, type, JSSlot::kNoFlag, getter, 0);
             else {
-                ASSERT(!slti->second.mActual);
+                if (slti->second.mActual)
+                    ASSERT(slti->second.isVirtual());
                 ASSERT(slti->second.mGetter == 0);
                 slti->second.mGetter = getter;
+                slti->second.mActual = false;
             }
             mHasGetters = true;
         }
@@ -150,11 +156,14 @@ namespace JSClasses {
         {
             JSSlots::iterator slti = mSlots.find(name);
             if (slti == mSlots.end())
-                defineSlot(name, type, 0, setter);
+                defineSlot(name, type, JSSlot::kNoFlag, 0, setter);
             else {
-                ASSERT(!slti->second.mActual);
-                ASSERT(slti->second.mSetter == 0);
-                slti->second.mSetter = setter;
+                JSSlot &s = slti->second;
+                if (s.mActual)
+                    ASSERT(s.isVirtual());
+                ASSERT(s.mSetter == 0);
+                s.mSetter = setter;
+                s.mActual = false;
             }
             mHasSetters = true;
         }

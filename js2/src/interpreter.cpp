@@ -710,6 +710,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         ICodeModule *icm = target->getICode();
                         ArgumentList *args = op4(call);
 
+                        // if all the parameters are positional
+//                        if (icm->itsParameters->mPositionalCount == icm->itsParameters->size())
+
                         // the parameter count includes 'this' and any named rest parameter
                         //
                         uint32 pCount = icm->itsParameters->size() - 1;   // we won't be passing 'this' via the arg list array
