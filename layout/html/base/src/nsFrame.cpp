@@ -1326,6 +1326,34 @@ nsFrame::Invalidate(const nsRect& aDamageRect,
   NS_IF_RELEASE(viewManager);
 }
 
+#define MAX_REFLOW_DEPTH 500
+
+PRBool
+nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
+                            nsHTMLReflowMetrics& aMetrics)
+{
+  if (aReflowState.mReflowDepth > MAX_REFLOW_DEPTH) {
+    mState |= NS_FRAME_IS_UNFLOWABLE;
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    aMetrics.width = 0;
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+    aMetrics.mCarriedOutBottomMargin = 0;
+    aMetrics.mCombinedArea.x = 0;
+    aMetrics.mCombinedArea.y = 0;
+    aMetrics.mCombinedArea.width = 0;
+    aMetrics.mCombinedArea.height = 0;
+    if (aMetrics.maxElementSize) {
+      aMetrics.maxElementSize->width = 0;
+      aMetrics.maxElementSize->height = 0;
+    }
+    return PR_TRUE;
+  }
+  mState &= ~NS_FRAME_IS_UNFLOWABLE;
+  return PR_FALSE;
+}
+
 // Style sizing methods
 NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 {

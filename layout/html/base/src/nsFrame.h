@@ -302,6 +302,14 @@ public:
                                     nsStyleChangeList* aChangeList,
                                     PRInt32* aLocalChange);
 
+  // Helper function that tests if the frame tree is too deep; if it
+  // is it marks the frame as "unflowable" and zeros out the metrics
+  // and returns PR_TRUE. Otherwise, the frame is unmarked
+  // "unflowable" and the metrics are not touched and PR_FALSE is
+  // returned.
+  PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
+                            nsHTMLReflowMetrics& aMetrics);
+
 #ifdef NS_DEBUG
   /**
    * Tracing method that writes a method enter/exit routine to the
