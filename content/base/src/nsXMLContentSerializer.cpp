@@ -114,7 +114,8 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
     }
     
     if (frag->Is2b()) {
-      AppendToString(nsDependentString(frag->Get2b()+aStartOffset, length),
+      const PRUnichar *strStart = frag->Get2b() + aStartOffset;
+      AppendToString(Substring(strStart, strStart + length),
                      aStr,
                      aTranslateEntities,
                      aIncrColumn);
