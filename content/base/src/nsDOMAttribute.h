@@ -38,6 +38,7 @@
 #ifndef nsDOMAttribute_h___
 #define nsDOMAttribute_h___
 
+#include "nsIAttribute.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
@@ -48,19 +49,6 @@
 
 class nsIContent;
 class nsDOMAttribute;
-
-#define NS_IDOMATTRIBUTEPRIVATE_IID  \
- {0xa6cf90dd, 0x15b3, 0x11d2,        \
- {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-class nsIDOMAttributePrivate : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMATTRIBUTEPRIVATE_IID)
-
-  NS_IMETHOD DropReference() = 0;
-  NS_IMETHOD SetContent(nsIContent* aContent) = 0;
-  NS_IMETHOD GetContent(nsIContent** aContent) = 0;
-};
 
 // bogus child list for an attribute
 class nsAttributeChildList : public nsGenericDOMNodeList
@@ -83,7 +71,7 @@ protected:
 // object that implements nsIDOMAttr and nsIDOMNode
 class nsDOMAttribute : public nsIDOMAttr,
                        public nsIDOM3Node,
-                       public nsIDOMAttributePrivate
+                       public nsIAttribute
 {
 public:
   nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
@@ -101,10 +89,11 @@ public:
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR
  
-  // nsIDOMAttributePrivate interface
+  // nsIAttribute interface
   NS_IMETHOD DropReference();
   NS_IMETHOD SetContent(nsIContent* aContent);
   NS_IMETHOD GetContent(nsIContent** aContent);
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aNodeInfo);
 
 private:
   nsIContent* mContent;

@@ -34,6 +34,7 @@
 
 #ifndef TX_EXE
 #include "nsNetUtil.h"
+#include "nsIAttribute.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -153,27 +154,38 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
     // fails we QI to nsIDocument. If both those QI's fail we won't let
     // the caller access this unknown node.
     nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    nsCOMPtr<nsIAttribute> attr;
+    nsCOMPtr<nsIDocument> doc;
 
     if (!content) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
+        doc = do_QueryInterface(aNode);
 
         if (!doc) {
-            // aNode is neither a nsIContent nor an nsIDocument, something
-            // weird is going on...
+            attr = do_QueryInterface(aNode);
+            if (!attr) {
+                // aNode is not a nsIContent, a nsIAttribute or a nsIDocument,
+                // something weird is going on...
 
-            NS_ERROR("aNode is neither an nsIContent nor an nsIDocument!");
+                NS_ERROR("aNode is not a nsIContent, a nsIAttribute or a nsIDocument!");
 
-            return PR_FALSE;
+                return PR_FALSE;
+            }
         }
-        doc->GetPrincipal(getter_AddRefs(principal));
     }
-    else {
+
+    if (!doc) {
         nsCOMPtr<nsIDOMDocument> domDoc;
         aNode->GetOwnerDocument(getter_AddRefs(domDoc));
         if (!domDoc) {
             nsCOMPtr<nsINodeInfo> ni;
-            content->GetNodeInfo(*getter_AddRefs(ni));
+            if (content) {
+                content->GetNodeInfo(*getter_AddRefs(ni));
+            }
+            else {
+                attr->GetNodeInfo(*getter_AddRefs(ni));
+            }
+
             if (!ni) {
                 // aNode is not part of a document, let any caller access it.
 
@@ -181,20 +193,28 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
             }
 
             ni->GetDocumentPrincipal(getter_AddRefs(principal));
+
+            if (!principal) {
+              // we can't get to the principal so we'll give up and give the
+              // caller access
+
+              return PR_TRUE;
+            }
         }
         else {
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+            doc = do_QueryInterface(domDoc);
             NS_ASSERTION(doc, "QI to nsIDocument failed");
-            doc->GetPrincipal(getter_AddRefs(principal));
         }
     }
 
     if (!principal) {
-      // We can't get hold of the principal for this node. This should happen
-      // very rarely, like for textnodes out of the tree and <option>s created
-      // using 'new Option'.
-      // If we didn't allow access to nodes like this you wouldn't be able to
-      // insert these nodes into a document.
+        doc->GetPrincipal(getter_AddRefs(principal));
+    }
+
+    if (!principal) {
+        // We can't get hold of the principal for this node. This should happen
+        // very rarely, like for textnodes out of the tree and <option>s created
+        // using 'new Option'.
 
         return PR_TRUE;
     }
@@ -204,6 +224,5 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
 
     return NS_SUCCEEDED(rv);
 }
-
 
 #endif /* TX_EXE */

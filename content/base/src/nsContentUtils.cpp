@@ -61,6 +61,7 @@
 #include "nsParserCIID.h"
 #include "nsIParserService.h"
 #include "nsIServiceManager.h"
+#include "nsIAttribute.h"
 
 static const char *kJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -406,6 +407,79 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
   return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
 }
 
+// static
+nsresult
+nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
+                                        nsIDocument** aDocument,
+                                        nsIPrincipal** aPrincipal)
+{
+  // For performance reasons it's important to try to QI the node to
+  // nsIContent before trying to QI to nsIDocument since a QI miss on
+  // a node is potentially expensive.
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsIAttribute> attr;
+
+  if (!content) {
+    CallQueryInterface(aNode, aDocument);
+
+    if (!*aDocument) {
+      attr = do_QueryInterface(aNode);
+      if (!attr) {
+        // aNode is not a nsIContent, a nsIAttribute or a nsIDocument,
+        // something weird is going on...
+
+        NS_ERROR("aNode is not nsIContent, nsIAttribute or nsIDocument!");
+
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+  }
+
+  if (!*aDocument) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // if we can't get a doc then lets try to get principal through nodeinfo
+      // manager
+      nsCOMPtr<nsINodeInfo> ni;
+      if (content) {
+        content->GetNodeInfo(*getter_AddRefs(ni));
+      }
+      else {
+        attr->GetNodeInfo(*getter_AddRefs(ni));
+      }
+
+      if (!ni) {
+        // we can't get to the principal so we'll give up
+
+        return NS_OK;
+      }
+      
+      ni->GetDocumentPrincipal(aPrincipal);
+
+      if (!*aPrincipal) {
+        // we can't get to the principal so we'll give up
+
+        return NS_OK;
+      }
+    }
+    else {
+      CallQueryInterface(domDoc, aDocument);
+      if (!*aDocument) {
+        NS_ERROR("QI to nsIDocument failed");
+      
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+  }
+
+  if (!*aPrincipal) {
+    (*aDocument)->GetPrincipal(aPrincipal);
+  }
+
+  return NS_OK;
+}
+
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
  * considered 'safe' in that a user can operate on it and that it isn't
@@ -463,54 +537,22 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     }
   }
 
-
-  // For performance reasons it's important to try to QI the node to
-  // nsIContent before trying to QI to nsIDocument since a QI miss on
-  // a node is potentially expensive.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aUnTrustedNode);
-
   nsCOMPtr<nsIDocument> unTrustedDoc;
   nsCOMPtr<nsIPrincipal> unTrustedPrincipal;
 
-  if (!content) {
-    unTrustedDoc = do_QueryInterface(aUnTrustedNode);
+  nsresult rv = GetDocumentAndPrincipal(aUnTrustedNode,
+                                        getter_AddRefs(unTrustedDoc),
+                                        getter_AddRefs(unTrustedPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!unTrustedDoc) {
-      // aUnTrustedNode is neither a nsIContent nor an nsIDocument, something
-      // weird is going on...
+  if (!unTrustedDoc && !unTrustedPrincipal) {
+    // We can't get hold of the principal for this node. This should happen
+    // very rarely, like for textnodes out of the tree and <option>s created
+    // using 'new Option'.
+    // If we didn't allow access to nodes like this you wouldn't be able to
+    // insert these nodes into a document.
 
-      NS_ERROR("aUnTrustedNode is neither an nsIContent nor an nsIDocument!");
-
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-  else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aUnTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      // if we can't get a doc then lets try to get principal through nodeinfo
-      // manager
-      nsCOMPtr<nsINodeInfo> ni;
-      content->GetNodeInfo(*getter_AddRefs(ni));
-      if (!ni) {
-        // we can't get to the principal so we'll give up and give the caller
-        // access
-
-        return NS_OK;
-      }
-      
-      ni->GetDocumentPrincipal(getter_AddRefs(unTrustedPrincipal));
-
-      if (!unTrustedPrincipal) {
-        // we can't get to the principal so we'll give up and give the caller access
-
-        return NS_OK;
-      }
-    }
-    else {
-      unTrustedDoc = do_QueryInterface(domDoc);
-      NS_ASSERTION(unTrustedDoc, "QI to nsIDocument failed");
-    }
+    return NS_OK;
   }
 
   /*
@@ -527,19 +569,6 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       // If the trusted node doesn't have a principal we can't check security against it
 
       return NS_ERROR_DOM_SECURITY_ERR;
-    }
-  }
-
-  if (!unTrustedPrincipal) {
-    unTrustedDoc->GetPrincipal(getter_AddRefs(unTrustedPrincipal));
-    if (!unTrustedDoc) {
-      // We can't get hold of the principal for this node. This should happen
-      // very rarely, like for textnodes out of the tree and <option>s created
-      // using 'new Option'.
-      // If we didn't allow access to nodes like this you wouldn't be able to
-      // insert these nodes into a document.
-
-      return NS_OK;
     }
   }
 
@@ -572,48 +601,15 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return PR_TRUE;
   }
 
-  // Make sure that this is a real node. We do this by first QI'ing to
-  // nsIContent (which is important performance wise) and if that QI
-  // fails we QI to nsIDocument. If both those QI's fail we won't let
-  // the caller access this unknown node.
+  nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
-  if (!content) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
+  nsresult rv = GetDocumentAndPrincipal(aNode,
+                                        getter_AddRefs(document),
+                                        getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    if (!doc) {
-      // aNode is neither a nsIContent nor an nsIDocument, something
-      // weird is going on...
-
-      NS_ERROR("aNode is neither an nsIContent nor an nsIDocument!");
-
-      return PR_FALSE;
-    }
-    doc->GetPrincipal(getter_AddRefs(principal));
-  }
-  else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      nsCOMPtr<nsINodeInfo> ni;
-      content->GetNodeInfo(*getter_AddRefs(ni));
-      if (!ni) {
-        // aNode is not part of a document, let any caller access it.
-
-        return PR_TRUE;
-      }
-      
-      ni->GetDocumentPrincipal(getter_AddRefs(principal));
-    }
-    else {
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-      NS_ASSERTION(doc, "QI to nsIDocument failed");
-      doc->GetPrincipal(getter_AddRefs(principal));
-    }
-  }
-
-  if (!principal) {
+  if (!document && !principal) {
     // We can't get hold of the principal for this node. This should happen
     // very rarely, like for textnodes out of the tree and <option>s created
     // using 'new Option'.
@@ -623,8 +619,8 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return PR_TRUE;
   }
 
-  nsresult rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                           principal);
+  rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
+                                                  principal);
 
   return NS_SUCCEEDED(rv);
 }
