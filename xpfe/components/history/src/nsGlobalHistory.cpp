@@ -573,7 +573,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
-  if (NS_SUCCEEDED(rv) && row) {
+  if (NS_SUCCEEDED(rv)) {
 
     // update the database, and get the old info back
     PRInt64 oldDate;
@@ -866,8 +866,8 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
-  if (NS_FAILED(rv) || !row)
-    return NS_ERROR_UNEXPECTED;
+  if (NS_FAILED(rv))
+    return rv;
 
   // Get the old title so we can notify observers
   nsAutoString oldtitle;
@@ -912,7 +912,7 @@ nsGlobalHistory::RemovePage(const char *aURL)
   // find the old row, ignore it if we don't have it
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
-  if (NS_FAILED(rv) || !row) return NS_OK;
+  if (NS_FAILED(rv)) return NS_OK;
 
   // get the resource so we can do the notification
   nsCOMPtr<nsIRDFResource> oldRowResource;
@@ -922,11 +922,11 @@ nsGlobalHistory::RemovePage(const char *aURL)
   err = mTable->CutRow(mEnv, row);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
 
+  NotifyFindUnassertions(oldRowResource, row);
+
   // not a fatal error if we can't cut all column
   err = row->CutAllColumns(mEnv);
   NS_ASSERTION(err == 0, "couldn't cut all columns");
-
-  NotifyUnassert(kNC_HistoryRoot, kNC_child, oldRowResource);
 
   return NS_OK;
 }
@@ -1057,15 +1057,16 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
     if (err != 0)
       continue;
     
+    // Notify observers that the row is, er, history.
+    if (notify)
+      NotifyFindUnassertions(resource, row);
+    
     // possibly avoid leakage
     err = row->CutAllColumns(mEnv);
     NS_ASSERTION(err == 0, "couldn't cut all columns");
     // we'll notify regardless of whether we could successfully
     // CutAllColumns or not.
     
-    // Notify observers that the row is, er, history.
-    if (notify)
-      NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
     
   }
   
@@ -1091,7 +1092,7 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
-  if (NS_FAILED(rv)|| !row)
+  if (NS_FAILED(rv))
     *_retval = PR_FALSE;
   else
     *_retval = PR_TRUE;
@@ -1430,7 +1431,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     // the row in the database
     nsMdbPtr<nsIMdbRow> row(mEnv);
     rv = FindRow(kToken_URLColumn, uri, getter_Acquires(row));
-    if (NS_FAILED(rv) || !row) return NS_RDF_NO_VALUE;
+    if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
 
     mdb_err err;
     // ...and then depending on the property they want, we'll pull the
@@ -1690,7 +1691,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
 {
   // translate into an appropriate removehistory call
   nsresult rv;
-  if (aSource == kNC_HistoryRoot &&
+  if ((aSource == kNC_HistoryRoot || IsFindResource(aSource)) &&
       aProperty == kNC_child) {
 
     nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget, &rv);
@@ -2563,11 +2564,20 @@ nsGlobalHistory::FindRow(mdb_column aCol,
   err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
                         aCol, &yarn,
                         &rowId, getter_Acquires(row));
+
+
+  if (!row) return NS_ERROR_NOT_AVAILABLE;
+  
+  
+  // make sure it's actually stored in the main table
+  mdb_bool hasRow;
+  mTable->HasRow(mEnv, row, &hasRow);
+
+  if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
   *aResult = row;
-  if (*aResult)
-    (*aResult)->AddStrongRef(mEnv);
-
+  (*aResult)->AddStrongRef(mEnv);
+  
   return NS_OK;
 }
 
@@ -2583,7 +2593,7 @@ nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, url, getter_Acquires(row));
 
-  return (NS_SUCCEEDED(rv) && row) ? PR_TRUE : PR_FALSE;
+  return (NS_SUCCEEDED(rv)) ? PR_TRUE : PR_FALSE;
 }
 
 
@@ -2993,6 +3003,73 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   // 6) Hostname=<host> -> uri
   parentFindResource = childFindResource; // Hostname=<host>
   NotifyAssert(parentFindResource, kNC_child, aSource);
+
+  return NS_OK;
+}
+
+
+// simpler than NotifyFindAssertions - basically just notifies
+// unassertions from
+// 1) NC:HistoryRoot -> uri
+// 2) a&h -> uri
+// 3) h -> uri
+
+nsresult
+nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
+                                        nsIMdbRow* aRow)
+{
+  // 1) NC:HistoryRoot
+  NotifyUnassert(kNC_HistoryRoot, kNC_child, aSource);
+
+  //    first get age in days
+  PRInt64 lastVisited;
+  GetRowValue(aRow, kToken_LastVisitDateColumn, &lastVisited);
+  PRInt32 ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastVisited);
+  nsCAutoString ageString; ageString.AppendInt(ageInDays);
+
+  //    now get hostname
+  nsCAutoString hostname;
+  GetRowValue(aRow, kToken_HostnameColumn, hostname);
+
+  //    construct some terms
+  //    Hostname=<hostname>
+  searchTerm hostterm("history", sizeof("history")-1,
+                      "Hostname", sizeof("Hostname")-1,
+                      "is", sizeof("is")-1,
+                      hostname.get(), hostname.Length());
+  
+  //    AgeInDays=<age>
+  searchTerm ageterm("history", sizeof("history") -1,
+                     "AgeInDays", sizeof("AgeInDays")-1,
+                     "is", sizeof("is")-1,
+                     ageString.get(), ageString.Length());
+
+  searchQuery query;
+  query.groupBy = 0;
+  
+  nsCAutoString findUri;
+  nsCOMPtr<nsIRDFResource> findResource;
+  
+  // 2) AgeInDays=<age>&Hostname=<host>
+  query.terms.AppendElement((void *)&ageterm);
+  query.terms.AppendElement((void *)&hostterm);
+  GetFindUriPrefix(query, PR_FALSE, findUri);
+  
+  nsXPIDLCString sourceStr;
+  aSource->GetValueConst(getter_Shares(sourceStr));
+
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  
+  NotifyUnassert(findResource, kNC_child, aSource);
+
+  // 3) Hostname=<host>
+  query.terms.Clear();
+  
+  query.terms.AppendElement((void *)&hostterm);
+  GetFindUriPrefix(query, PR_FALSE, findUri);
+  
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  NotifyUnassert(findResource, kNC_child, aSource);
 
   return NS_OK;
 }
@@ -3562,7 +3639,6 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
 
   // describe the search results
   if (NS_SUCCEEDED(rv)) {
-    PRBool addedDefaultItem = PR_FALSE;
   
     results->SetSearchString(searchString);
     results->SetDefaultItemIndex(-1);
