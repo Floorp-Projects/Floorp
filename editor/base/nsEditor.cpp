@@ -1722,6 +1722,7 @@ nsEditor::ForceCompositionEnd()
            if(kb) {
                 res = kb->ResetInputState();
            }
+           NS_RELEASE(widget);
         }
       }
   }
@@ -3094,6 +3095,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
       { 
         // restart the search from the non-editable node we just found
         nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+        NS_IF_RELEASE(*aResultNode);
         return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
       }
     }
@@ -3133,6 +3135,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
     { 
       // restart the search from the non-editable node we just found
       nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+      NS_IF_RELEASE(*aResultNode);
       return GetNextNode(notEditableNode, aEditableNode, aResultNode);
     }
   }
@@ -3158,10 +3161,11 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
   *aResultNode = nsnull;  // init out-param
 
   // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
-  result = aCurrentNode->GetPreviousSibling(aResultNode);
-  if ((NS_SUCCEEDED(result)) && *aResultNode)
+  nsCOMPtr<nsIDOMNode> prevSibling;
+  result = aCurrentNode->GetPreviousSibling(getter_AddRefs(prevSibling));
+  if ((NS_SUCCEEDED(result)) && prevSibling)
   {
-    result = GetRightmostChild(*aResultNode, aResultNode);
+    result = GetRightmostChild(prevSibling, aResultNode);
     if (NS_FAILED(result)) { return result; }
     if (PR_FALSE==aEditableNode) {
       return result;
@@ -3172,6 +3176,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
     else 
     { // restart the search from the non-editable node we just found
       nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+      NS_IF_RELEASE(*aResultNode);
       return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
     }
   }
@@ -3198,6 +3203,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
         else 
         { // restart the search from the non-editable node we just found
           nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          NS_IF_RELEASE(*aResultNode);
           return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
         }
       }
@@ -3215,10 +3221,11 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
   nsresult result;
   *aResultNode = nsnull;
   // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
-  result = aCurrentNode->GetNextSibling(aResultNode);
-  if ((NS_SUCCEEDED(result)) && *aResultNode)
+  nsCOMPtr<nsIDOMNode> prevSibling;
+  result = aCurrentNode->GetNextSibling(getter_AddRefs(prevSibling));
+  if ((NS_SUCCEEDED(result)) && prevSibling)
   {
-    result = GetLeftmostChild(*aResultNode, aResultNode);
+    result = GetLeftmostChild(prevSibling, aResultNode);
     if (NS_FAILED(result)) { return result; }
     if (PR_FALSE==aEditableNode) {
       return result;
@@ -3256,6 +3263,7 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
         else 
         { // restart the search from the non-editable node we just found
           nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          NS_IF_RELEASE(*aResultNode);
           return GetNextNode(notEditableNode, aEditableNode, aResultNode);
         }
       }
@@ -4450,7 +4458,10 @@ nsEditor::DeleteSelectionImpl(EDirection aAction)
   res = CreateTxnForDeleteSelection(aAction, &txn);
   if (NS_FAILED(res)) return res;
   res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) {
+    NS_IF_RELEASE(txn);
+    return res;
+  }
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   if (NS_SUCCEEDED(res))  
@@ -4658,6 +4669,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
         result = CreateTxnForDeleteSelection(eNone, &delSelTxn);
         if (NS_SUCCEEDED(result) && delSelTxn) {
           (*aAggTxn)->AppendChild(delSelTxn);
+          NS_RELEASE(delSelTxn);
         }
       }
     }
@@ -4767,6 +4779,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
             {
               txn->Init(this, range);
               (*aTxn)->AppendChild(txn);
+              NS_RELEASE(txn);
             }
             else
               result = NS_ERROR_OUT_OF_MEMORY;
@@ -4858,6 +4871,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
           result = CreateTxnForDeleteText(priorNodeAsText, length-1, 1, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
+            NS_RELEASE(txn);
           }
         }
         else
@@ -4872,6 +4886,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         result = CreateTxnForDeleteElement(priorNode, &txn);
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
+          NS_RELEASE(txn);
         }
       }
     }
@@ -4895,6 +4910,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
           result = CreateTxnForDeleteText(nextNodeAsText, 0, 1, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
+            NS_RELEASE(txn);
           }
         }
         else
@@ -4909,6 +4925,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         result = CreateTxnForDeleteElement(nextNode, &txn);
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
+          NS_RELEASE(txn);
         }
       }
     }
@@ -4924,6 +4941,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       result = CreateTxnForDeleteText(nodeAsText, offset, 1, &txn);
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
+        NS_RELEASE(txn);
       }
     }
     else
@@ -4957,6 +4975,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
           if (NS_FAILED(result))  { return result; }
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delTextTxn);
+          NS_RELEASE(delTextTxn);
         }
         else
         {
@@ -4965,6 +4984,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
           if (NS_FAILED(result))  { return result; }
           if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delElementTxn);
+          NS_RELEASE(delElementTxn);
         }
       }
     }
