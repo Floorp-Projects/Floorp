@@ -1188,21 +1188,22 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
      * happening if we decide to execute
      */
     nsCOMPtr<nsIFile> fileToTest;
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToTest));
-    if (NS_SUCCEEDED(rv)) {
-      rv = fileToTest->Append(mSuggestedFileName);
-      if (NS_SUCCEEDED(rv)) {
-        PRBool isExecutable = PR_TRUE;
-        fileToTest->IsExecutable(&isExecutable);
-        if (isExecutable) {
-          action = nsIMIMEInfo::saveToDisk;
-        }
+    nsCOMPtr<nsIURI> garbageURI;
+    PRInt64 garbageTimestamp;
+    GetDownloadInfo(getter_AddRefs(garbageURI), &garbageTimestamp,
+                    getter_AddRefs(fileToTest));
+    if (fileToTest) {
+      PRBool isExecutable;
+      rv = fileToTest->IsExecutable(&isExecutable);
+      if ((NS_SUCCEEDED(rv) && isExecutable) ||
+          NS_FAILED(rv)) {  // Paranoia is good
+        action = nsIMIMEInfo::saveToDisk;
       }
-    }
-
-    if (NS_FAILED(rv)) {  // Paranoia is good
+    } else {   // Paranoia is good here too, though this really should not happen
+      NS_WARNING("GetDownloadInfo returned a null file after the temp file has been set up! ");
       action = nsIMIMEInfo::saveToDisk;
     }
+
 #endif
     if ( action == nsIMIMEInfo::saveToDisk )
     {
