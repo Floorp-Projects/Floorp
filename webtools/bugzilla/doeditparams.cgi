@@ -44,7 +44,7 @@ if (!UserInGroup("tweakparams")) {
 }
 
 
-PutHeader("Saving new parameters", undef, undef, undef, 1);
+PutHeader("Saving new parameters");
 
 foreach my $i (@::param_list) {
 #    print "Processing $i...<BR>\n";

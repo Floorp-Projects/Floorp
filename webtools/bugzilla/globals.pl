@@ -200,6 +200,15 @@ sub SendSQL {
     if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/ && $::dbwritesallowed) {
         $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
     }
+    # If we are shutdown, we don't want to run queries except in special cases
+    if (Param('shutdownhtml')) {
+        if ($0 =~ m:[\\/](do)?editparams.cgi$:) {
+            $::ignorequery = 0;
+        } else {
+            $::ignorequery = 1;
+            return;
+        }
+    }
     SqlLog($str);
     $::currentquery = $::db->prepare($str);
     $::currentquery->execute
@@ -221,6 +230,10 @@ sub SendSQL {
 }
 
 sub MoreSQLData {
+    # $::ignorequery is set in SendSQL
+    if ($::ignorequery) {
+        return 0;
+    }
     if (defined @::fetchahead) {
 	return 1;
     }
@@ -231,6 +244,10 @@ sub MoreSQLData {
 }
 
 sub FetchSQLData {
+    # $::ignorequery is set in SendSQL
+    if ($::ignorequery) {
+        return;
+    }
     if (defined @::fetchahead) {
 	my @result = @::fetchahead;
 	undef @::fetchahead;

@@ -44,7 +44,7 @@ if (!UserInGroup("tweakparams")) {
 
 
 
-PutHeader("Edit parameters", undef, undef, undef, 1);
+PutHeader("Edit parameters");
 
 print "This lets you edit the basic operating parameters of bugzilla.\n";
 print "Be careful!\n";

@@ -533,8 +533,7 @@ ENDSCRIPT
 
 PutHeader("Bugzilla Query Page", "Query", 
           "This page lets you search the database for recorded bugs.",
-          q{onLoad="selectProduct(document.forms[0]);"},
-          0, $jscript);
+          q{onLoad="selectProduct(document.forms[0]);"}, $jscript);
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 

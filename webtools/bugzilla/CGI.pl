@@ -962,7 +962,7 @@ Content-type: text/html
             exit();
         }
         print "Content-type: text/html\n\n";
-        PutHeader("Login", undef, undef, undef, 1);
+        PutHeader("Login");
         if(Param("useLDAP")) {
           print "I need a legitimate LDAP username and password to continue.\n";
         } else {
@@ -1059,7 +1059,7 @@ Content-type: text/html
 
 
 sub PutHeader {
-    my ($title, $h1, $h2, $extra, $ignoreshutdown, $jscript) = (@_);
+    my ($title, $h1, $h2, $extra, $jscript) = (@_);
 
     if (!defined $h1) {
 	$h1 = $title;
@@ -1071,6 +1071,16 @@ sub PutHeader {
 	$extra = "";
     }
     $jscript ||= "";
+    # If we are shutdown, we want a very basic page to give that
+    # information.  Also, the page title should indicate that
+    # we are down.  
+    if (Param('shutdownhtml')) {
+        $title = "Bugzilla is Down";
+        $h1 = "Bugzilla is currently down";
+        $h2 = "";
+        $extra = "";
+        $jscript = "";
+    }
 
     print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
     print Param("headerhtml") . "\n$jscript\n</HEAD>\n";
@@ -1094,7 +1104,10 @@ sub PutHeader {
     print "</TD></TR></TABLE>\n";
 
     if (Param("shutdownhtml")) {
-        if (!$ignoreshutdown) {
+        # If we are dealing with the params page, we want
+        # to ignore shutdownhtml
+        if ($0 !~ m:[\\/](do)?editparams.cgi$:) {
+            print "<p>\n";
             print Param("shutdownhtml");
             exit;
         }
