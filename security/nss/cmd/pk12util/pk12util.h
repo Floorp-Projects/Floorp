@@ -66,5 +66,4 @@ typedef struct p12uContextStr {
 	PRFileDesc  *file;        /* pointer to file */
 	PRBool       error;       /* error occurred? */
 	int          errorValue;  /* which error occurred? */
-	SECItem     *data;
 } p12uContext;
