@@ -288,7 +288,7 @@ function GetNextNMessages(folder)
 		dump("### nodeList is invalid\n");
 }
 
-function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder,
+function CreateNewSubfolder(chromeWindowURL, preselectedMsgFolder,
                             dualUseFolders)
 {
 	var preselectedURI;
@@ -305,9 +305,9 @@ function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder,
 				chromeWindowURL,
 				"",
 				"chrome,titlebar,modal",
-				{preselectedURI:preselectedURI, title:windowTitle,
-                                   dualUseFolders:dualUseFolders,
-				okCallback:NewFolder});
+				{preselectedURI:preselectedURI,
+	                         dualUseFolders:dualUseFolders,
+	                         okCallback:NewFolder});
 }
 
 function NewFolder(name,uri)
@@ -333,7 +333,7 @@ function NewFolder(name,uri)
 	}
 }
 
-function Subscribe(windowTitle, preselectedMsgFolder)
+function Subscribe(preselectedMsgFolder)
 {
 	var preselectedURI;
 
@@ -347,8 +347,8 @@ function Subscribe(windowTitle, preselectedMsgFolder)
 
 	window.openDialog("chrome://messenger/content/subscribe.xul",
 					  "subscribe", "chrome,modal,titlebar,resizable=yes",
-				{preselectedURI:preselectedURI, title:windowTitle,
-				okCallback:SubscribeOKCallback});
+				{preselectedURI:preselectedURI,
+				 okCallback:SubscribeOKCallback});
 }
 
 function SubscribeOKCallback(changeTable)

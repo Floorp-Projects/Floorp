@@ -18,10 +18,11 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY subscribeButton.label				"Subscribe">
-<!ENTITY unsubscribeButton.label			"Unsubscribe">
+<!ENTITY subscribeDialog.title        "Subscribe">
+<!ENTITY subscribeButton.label        "Subscribe">
+<!ENTITY unsubscribeButton.label      "Unsubscribe">
 <!ENTITY refreshButton.label          "Refresh">
 <!ENTITY stopButton.label             "Stop">
 <!ENTITY server.label                 "Server:">
-<!ENTITY subscribedHeader.label				"Subscribe">
+<!ENTITY subscribedHeader.label       "Subscribe">
 <!ENTITY messagesHeader.label         "Messages">

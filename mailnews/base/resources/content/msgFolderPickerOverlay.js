@@ -23,7 +23,6 @@
 
 var pickerBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
-
 // call this from dialog onload() to set the menu item to the correct value
 function MsgFolderPickerOnLoad(pickerID)
 {
@@ -79,28 +78,30 @@ function SetFolderPicker(uri,pickerID)
 	if (!msgfolder) return;
 
 	var selectedValue = null;
+	var serverName;
 
 	if (msgfolder.isServer)
 		selectedValue = msgfolder.name;
 	else {
 		if (msgfolder.server)
-            serverName = msgfolder.server.prettyName;
-        else {
-            dump("Cant' find server for " + uri + "\n");
-            serverName = "???";
-        }
+			serverName = msgfolder.server.prettyName;
+		else {
+			dump("Cant' find server for " + uri + "\n");
+			serverName = "???";
+		}
 
-        selectedValue =
-            pickerBundle.formatStringFromName("verboseFolderFormat",
-                                              [ msgfolder.name,
-                                              serverName ], 2);
+		selectedValue = pickerBundle.GetStringFromName("verboseFolderFormat")
+		                            .replace(/%folderName%/, msgfolder.name)
+		                            .replace(/%serverName%/, serverName);
 	}
 
 	picker.setAttribute("value",selectedValue);
 	picker.setAttribute("uri",uri);
 
-        if (pickerID == "msgNewFolderPicker") {
-        window.resizeTo(0,0);
-        window.sizeToContent();
-        }
+	if (pickerID == "msgNewFolderPicker") {
+		// XXX Ugly hack to make sizeToContent work, see bug 62987
+		window.resizeTo(0,0);
+
+		window.sizeToContent();
+	}
 }

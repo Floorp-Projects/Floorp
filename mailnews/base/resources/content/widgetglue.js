@@ -40,8 +40,6 @@ function ConvertDOMListToResourceArray(nodeList)
     return result;
 }
 
-
-
 function GetSelectedFolderURI()
 {
 	var uri = null;
@@ -85,13 +83,12 @@ function MsgRenameFolder()
 	var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
 	dump("preselectedURI = " + preselectedURI + "\n");
-	var windowTitle = Bundle.GetStringFromName("renameFolderDialogTitle");
 	var dialog = window.openDialog(
-                    "chrome://messenger/content/renameFolderNameDialog.xul",
-                    "newFolder",
-                    "chrome,titlebar,modal",
-	            {preselectedURI:preselectedURI, title:windowTitle,
-                    okCallback:RenameFolder, name:name});
+	             "chrome://messenger/content/renameFolderDialog.xul",
+	             "newFolder",
+	             "chrome,titlebar,modal",
+	             {preselectedURI: preselectedURI, 
+	              okCallback: RenameFolder, name: name});
 }
 
 function RenameFolder(name,uri)

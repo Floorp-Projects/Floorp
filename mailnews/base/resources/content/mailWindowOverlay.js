@@ -413,7 +413,6 @@ function MsgHome(url)
 
 function MsgNewFolder()
 {
-    var windowTitle = Bundle.GetStringFromName("newFolderDialogTitle");
     var preselectedFolder = GetFirstSelectedMsgFolder();
     var dualUseFolders = true;
     var server = null;
@@ -437,7 +436,7 @@ function MsgNewFolder()
         }
     }
 
-    CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, destinationFolder, dualUseFolders);
+    CreateNewSubfolder("chrome://messenger/content/newFolderDialog.xul", destinationFolder, dualUseFolders);
 }
 
 
@@ -487,9 +486,8 @@ function getDestinationFolder(preselectedFolder, server)
 
 function MsgSubscribe()
 {
-    var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    Subscribe(windowTitle, preselectedFolder);
+    Subscribe(preselectedFolder);
 }
 
 function MsgSaveAsFile() 
