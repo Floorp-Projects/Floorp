@@ -76,14 +76,60 @@ sub dispatch {
 sub registerServices {
     my $self = shift;
     $self->SUPER::registerServices(@_);
-    $self->registerDefaultServices();
+    $self->registerCoreServices();
+    $self->registerAppServices();
     $self->registerInstalledServices();
+    $self->registerFallbackServices();
 }
 
-sub registerDefaultServices {
+sub registerCoreServices {
     my $self = shift;
     # install the configuration system
-    $self->register(qw(PLIF::DataSource::Configuration PLIF::Database::ConfigurationFile));
+    $self->register(qw(
+        PLIF::DataSource::Configuration
+        PLIF::Database::ConfigurationFile
+        PLIF::Output::Generic
+        PLIF::Output::Generic::StdOut
+        PLIF::Service::XML
+        PLIF::Service::Coses
+        PLIF::Service::TemplateToolkit
+        PLIF::Service::GenericOutputs
+        PLIF::DataSource::FileStrings
+        PLIF::DataSource::DebugStrings
+        PLIF::Service::Components::AdminCommands
+    ));
+}
+
+sub registerAppServices {} # stub
+
+# utility function to be called by real application if needed
+sub registerWebServices {
+    my $self = shift;
+    # install the web-related services
+    $self->register(qw(
+        PLIF::Input::CGI::Get
+        PLIF::Input::CGI::Head
+        PLIF::Input::CGI::PostURLEncoded
+        PLIF::Input::CGI::PostMultipart
+        PLIF::Input::CGI::PostXMLRPC
+        PLIF::Database::DBI
+        PLIF::DatabaseHelper::DBI
+        PLIF::DataSource::Strings::MySQL
+        PLIF::DataSource::User::MySQL
+        PLIF::Service::XMLRPC
+        PLIF::Service::WWW
+        PLIF::Service::User
+        PLIF::Service::Passwords
+        PLIF::Service::UserField::String
+        PLIF::Service::UserField::Integer
+        PLIF::Service::UserFieldFactory
+        PLIF::Service::Components::Login
+        PLIF::Service::Components::CosesEditor
+        PLIF::Service::Components::UserPrefs
+        PLIF::Service::ContactMethod::Email
+        PLIF::ProtocolHelper::Logout::HTTP
+        PLIF::ProtocolHelper::UA::HTTP
+    ));
 }
 
 sub registerInstalledServices {
@@ -93,4 +139,13 @@ sub registerInstalledServices {
     if (defined($modules)) {
         $self->register(@$modules);
     }
+}
+
+sub registerFallbackServices {
+    my $self = shift;
+    # install the configuration system
+    $self->register(qw(
+        PLIF::Input::CommandLine
+        PLIF::Input::Default
+    ));
 }
