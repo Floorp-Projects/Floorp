@@ -750,7 +750,9 @@ public:
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
 
-    FunctionInstance *init;
+    FunctionInstance *init;                     // A procedure to call to initialize a newly created instance of this
+                                                // class or null if no special initialization is needed. 'init' is 
+                                                // called by 'construct'
 
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
@@ -1294,6 +1296,7 @@ public:
 
     NamespaceList namespaces;       // The set of namespaces contained in this attribute
     bool xplicit;                   // true if the explicit attribute has been given
+    bool enumerable;                // true if the enumerable attribute has been given
     bool dynamic;                   // true if the dynamic attribute has been given
     MemberModifier memberMod;       // if one of these attributes has been given; none if not.
     OverrideModifier overrideMod;   // if the override attribute  with one of these arguments was given; 

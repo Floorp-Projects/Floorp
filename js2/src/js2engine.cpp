@@ -966,7 +966,12 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
-        return OBJECT_TO_JS2VAL(new SimpleInstance(meta, c->prototype, c));
+        SimpleInstance *result = new SimpleInstance(meta, c->prototype, c);
+        DEFINE_ROOTKEEPER(rk, result);
+        if (c->init) {
+            meta->invokeFunction(c->init, OBJECT_TO_JS2VAL(result), NULL, 0);
+        }
+        return OBJECT_TO_JS2VAL(result);
     }
 
     // Save current engine state (pc, environment top) and

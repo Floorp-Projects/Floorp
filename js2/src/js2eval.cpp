@@ -290,30 +290,30 @@ namespace MetaData {
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 DEFINE_ROOTKEEPER(rk, runtimeFrame);
-                runtimeFrame->instantiate(env);
+                runtimeFrame->instantiate(fWrap->env);
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
-                Frame *oldTopFrame = env->getTopFrame();
+                Frame *oldTopFrame = fWrap->env->getTopFrame();
                 if (fInst->isMethodClosure)
-                    env->addFrame(objectType(thisValue));
-                env->addFrame(runtimeFrame);
+                    fWrap->env->addFrame(objectType(thisValue));
+                fWrap->env->addFrame(runtimeFrame);
                 ParameterFrame *oldPFrame = engine->parameterFrame;
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
                     engine->parameterFrame = runtimeFrame;
-                    result = engine->interpret(RunPhase, bCon, env);
+                    result = engine->interpret(RunPhase, bCon, fWrap->env);
                 }
                 catch (Exception &x) {
                     engine->pc = savePC;
                     restoreCompilationUnit(oldData);
-                    env->setTopFrame(oldTopFrame);
+                    fWrap->env->setTopFrame(oldTopFrame);
                     engine->parameterFrame = oldPFrame;
                     throw x;
                 }
                 engine->pc = savePC;
                 restoreCompilationUnit(oldData);
-                env->setTopFrame(oldTopFrame);
+                fWrap->env->setTopFrame(oldTopFrame);
                 engine->parameterFrame = oldPFrame;
             }
         }

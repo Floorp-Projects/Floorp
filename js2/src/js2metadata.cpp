@@ -101,23 +101,21 @@ namespace MetaData {
         try {
             env->addFrame(compileFrame);
             VariableBinding *pb = fnDef->parameters;
+            uint32 pCount = 0;
             if (pb) {
-                uint32 pCount = 0;
                 while (pb) {
                     pCount++;
                     pb = pb->next;
                 }
-                if (prototype)
-                    createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
-                result->fWrap->length = pCount;
                 pb = fnDef->parameters;
                 while (pb) {
-                    // XXX define a static binding for each parameter
                     FrameVariable *v = new FrameVariable(compileFrame->allocateSlot(), FrameVariable::Parameter);
                     pb->mn = defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
                     pb = pb->next;
                 }
             }
+            createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
+            result->fWrap->length = pCount;
             ValidateStmt(cxt, env, Plural, fnDef->body);
             env->removeTopFrame();
         }
@@ -524,74 +522,6 @@ namespace MetaData {
                                                         || (topFrame->kind == ParameterFrameKind));
                         validateStatic(cxt, env, &f->function, a, unchecked, hoisted, p->pos);
                     }
-                    
-                    
-/*                    
-                    bool prototype = unchecked || a->prototype;
-                    Attribute::MemberModifier memberMod = a->memberMod;
-                    if (topFrame->kind == ClassKind) {
-                        if (memberMod == Attribute::NoModifier)
-                            memberMod = Attribute::Virtual;
-                    }
-                    else {
-                        if (memberMod != Attribute::NoModifier)
-                            reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                    }
-                    if (prototype && ((f->function.prefix != FunctionName::normal) || (memberMod == Attribute::Constructor))) {
-                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                    }
-                    js2val compileThis = JS2VAL_VOID;
-                    if (prototype || (memberMod == Attribute::Constructor) 
-                                  || (memberMod == Attribute::Virtual) 
-                                  || (memberMod == Attribute::Final))
-                        compileThis = JS2VAL_INACCESSIBLE;
-
-                    switch (memberMod) {
-                    case Attribute::NoModifier:
-                    case Attribute::Static:
-                        {
-                            if (f->function.prefix != FunctionName::normal) {
-                                // XXX getter/setter --> ????
-                            }
-                            else {
-                                FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
-                                if (unchecked 
-                                        && (f->attributes == NULL)
-                                        && ((topFrame->kind == PackageKind)
-                                                        || (topFrame->kind == BlockFrameKind)
-                                                        || (topFrame->kind == ParameterFrameKind)) ) {
-                                    LocalMember *v = defineHoistedVar(env, f->function.name, p, false, OBJECT_TO_JS2VAL(fObj));
-                                }
-                                else {
-                                    Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fObj), true);
-                                    defineLocalMember(env, f->function.name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
-                                }
-                            }
-                        }
-                        break;
-                    case Attribute::Virtual:
-                    case Attribute::Final:
-                        {
-                            FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
-                            JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                            Multiname *mn = new Multiname(f->function.name, a->namespaces);
-                            InstanceMember *m;
-                            switch (f->function.prefix) {
-                            case FunctionName::normal:
-                                m = new InstanceMethod(mn, fObj, (memberMod == Attribute::Final), true);
-                                break;
-                            case FunctionName::Set:
-                                m = new InstanceSetter(mn, fObj, objectClass, (memberMod == Attribute::Final), true);
-                                break;
-                            case FunctionName::Get:
-                                m = new InstanceGetter(mn, fObj, objectClass, (memberMod == Attribute::Final), true);
-                                break;
-                            }                            
-                            defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, m, p->pos);
-                        }
-                        break;
-                    }
-*/
                 }
                 break;
             case StmtNode::Var:
@@ -1641,6 +1571,12 @@ namespace MetaData {
                         return ca;
                     }
                     else
+                    if (name == world.identifiers["enumerable"]) {
+                        ca = new CompoundAttribute();
+                        ca->enumerable = true;
+                        return ca;
+                    }
+                    else
                     if (name == world.identifiers["virtual"]) {
                         ca = new CompoundAttribute();
                         ca->memberMod = Attribute::Virtual;
@@ -1746,7 +1682,7 @@ namespace MetaData {
     }
 
     CompoundAttribute::CompoundAttribute() : Attribute(CompoundAttr),
-            namespaces(NULL), xplicit(false), dynamic(false), memberMod(NoModifier), 
+            namespaces(NULL), xplicit(false), enumerable(false), dynamic(false), memberMod(NoModifier), 
             overrideMod(NoOverride), prototype(false), unused(false) 
     { 
     }
