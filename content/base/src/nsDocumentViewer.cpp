@@ -69,7 +69,7 @@
 #include "nsIDOMRange.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
-#include "nsGenericHTMLElement.h"
+#include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsViewsCID.h"
