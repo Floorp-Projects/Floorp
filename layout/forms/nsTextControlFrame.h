@@ -291,6 +291,9 @@ protected:
 
 private:
   //helper methods
+  nsresult SetSelectionInternal(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
+                                nsIDOMNode *aEndNode, PRInt32 aEndOffset);
+  nsresult SelectAllContents();
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
   
 private:

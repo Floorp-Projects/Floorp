@@ -2189,9 +2189,15 @@ NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIA
     }
     else if (nsHTMLAtoms::select == aName && mSelCon)
     {
-      // select all the text
-      if (mEditor)
-        mEditor->SelectAll();
+      // Select all the text.
+      //
+      // XXX: This is lame, we can't call mEditor->SelectAll()
+      //      because that triggers AutoCopies in unix builds.
+      //      Instead, we have to call our own homegrown version
+      //      of select all which merely builds a range that selects
+      //      all of the content and adds that to the selection.
+
+      SelectAllContents();
     }
     mIsProcessing = PR_FALSE;
   }
@@ -2241,6 +2247,71 @@ nsTextControlFrame::GetTextLength(PRInt32* aTextLength)
 }
 
 nsresult
+nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
+                                         PRInt32 aStartOffset,
+                                         nsIDOMNode *aEndNode,
+                                         PRInt32 aEndOffset)
+{
+  // Create a new range to represent the new selection.
+  // Note that we use a new range to avoid having to do
+  // isIncreasing checks to avoid possible errors.
+
+  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+
+  nsresult rv = range->SetStart(aStartNode, aStartOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = range->SetEnd(aEndNode, aEndOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the selection, clear it and add the new range to it!
+
+  nsCOMPtr<nsISelection> selection;
+  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+
+  rv = selection->RemoveAllRanges();  
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return selection->AddRange(range);
+}
+
+nsresult
+nsTextControlFrame::SelectAllContents()
+{
+  if (!mEditor)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  nsresult rv = mEditor->GetRootElement(getter_AddRefs(rootElement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
+  PRInt32 numChildren = 0;
+  rv = rootContent->ChildCount(numChildren);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (numChildren > 0) {
+    // We never want to place the selection after the last
+    // br under the root node!
+    nsCOMPtr<nsIContent> child;
+    rv = rootContent->ChildAt(numChildren - 1, *getter_AddRefs(child));
+    if (NS_SUCCEEDED(rv) && child) {
+      nsCOMPtr<nsIAtom> tagName;
+      rv = child->GetTag(*getter_AddRefs(tagName));
+      if (NS_SUCCEEDED(rv) && tagName == nsHTMLAtoms::br)
+        --numChildren;
+    }
+  }
+
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+
+  return SetSelectionInternal(rootNode, 0, rootNode, numChildren);
+}
+
+nsresult
 nsTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
   NS_ASSERTION(aSelStart <= aSelEnd, "Invalid selection offsets!");
@@ -2271,32 +2342,7 @@ nsTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Create a new range to represent the new selection.
-  // Note that we use a new range to avoid having to do
-  // isIncreasing checks to avoid possible errors.
-
-  nsCOMPtr<nsIDOMRange> range;
-
-  range = do_CreateInstance(kRangeCID);
-  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
-
-  rv = range->SetStart(startNode, startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = range->SetEnd(endNode, endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the selection, clear it and add the new range to it!
-
-  nsCOMPtr<nsISelection> selection;
-  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  rv = selection->RemoveAllRanges();  
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return selection->AddRange(range);
+  return SetSelectionInternal(startNode, startOffset, endNode, endOffset);
 }
 
 NS_IMETHODIMP
