@@ -4738,60 +4738,37 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
     return;
   }
 
-  if (!gLastFocusedContent) {
-    return;
-  }
+  /**
+   * The last focus wasn't in this document, so we may be getting our position from the selection
+   * while the window focus is currently somewhere else such as the find dialog
+   */
 
-  // The last focus wasn't in this document, so we may be getting our position from the selection
-  // while the window focus is currently somewhere else such as the find dialog
+  nsCOMPtr<nsIFocusController> focusController(GetFocusControllerForDocument(mDocument));
+  if (!focusController)
+      return;
 
-  // Temporarily save the current focus globals so we can leave them undisturbed after this method
-  nsCOMPtr<nsIContent> lastFocusedContent(gLastFocusedContent);
-  nsCOMPtr<nsIDocument> lastFocusedDocument(gLastFocusedDocument);
-  nsCOMPtr<nsIContent> lastFocusInThisDoc(mCurrentFocus);
-  NS_IF_RELEASE(gLastFocusedDocument);
-  NS_IF_RELEASE(gLastFocusedContent);
-  gLastFocusedContent = mCurrentFocus;
-  gLastFocusedDocument = mDocument;
-  NS_IF_ADDREF(gLastFocusedDocument);
-  NS_IF_ADDREF(gLastFocusedContent);
+  // Get previous focus
+  nsCOMPtr<nsIDOMElement> oldFocusedElement;
+  focusController->GetFocusedElement(getter_AddRefs(oldFocusedElement));
+  nsCOMPtr<nsIContent> oldFocusedContent(do_QueryInterface(oldFocusedElement));
 
-  // Focus the content, but don't change the document
-  SendFocusBlur(mPresContext, aContent, PR_FALSE);
+  // Notify focus controller of new focus for this document
+  nsCOMPtr<nsIDOMElement> newFocusedElement(do_QueryInterface(aContent));
+  focusController->SetFocusedElement(newFocusedElement);
+
+  // Temporarily set mCurrentFocus so that esm::GetContentState() tells 
+  // layout system to show focus on this element. 
+  mCurrentFocus = aContent;  // Reset back to null at the end of this method.
   mDocument->BeginUpdate();
-  if (!lastFocusInThisDoc)
-    lastFocusInThisDoc = mCurrentFocus;
-  if (mCurrentFocus)
-    mDocument->ContentStatesChanged(lastFocusInThisDoc, mCurrentFocus,
-                                    NS_EVENT_STATE_FOCUS);
+  mDocument->ContentStatesChanged(oldFocusedContent, aContent, 
+                                  NS_EVENT_STATE_FOCUS);
   mDocument->EndUpdate();
-  FlushPendingEvents(mPresContext);
 
-  // Restore the global focus state
-  NS_IF_RELEASE(gLastFocusedDocument);
-  NS_IF_RELEASE(gLastFocusedContent);
-  gLastFocusedContent = lastFocusedContent;
-  gLastFocusedDocument = lastFocusedDocument;
-  NS_IF_ADDREF(gLastFocusedDocument);
-  NS_IF_ADDREF(gLastFocusedContent);
+  // Reset mCurrentFocus = nsnull for this doc, so when this document 
+  // does get focus next time via preHandleEvent() NS_GOTFOCUS,
+  // the old document gets blurred
+  mCurrentFocus = nsnull;
 
-  // Make sure our document's window's focus controller knows the focus has changed 
-  // That way when our window is activated (PreHandleEvent get NS_ACTIVATE), the correct element & doc get focused 
-  nsCOMPtr<nsIFocusController> focusController;
-  nsCOMPtr<nsIDOMElement> focusedElement(do_QueryInterface(mCurrentFocus));
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
-  NS_ASSERTION(win, "win is null.  this happens [often on xlib builds].  see bug #79213");
-  if (win) {
-    win->GetRootFocusController(getter_AddRefs(focusController));
-    if (focusController && focusedElement) 
-      focusController->SetFocusedElement(focusedElement);
-  }
-
-  if (mCurrentFocus)
-    TabIndexFrom(mCurrentFocus, &mCurrentTabIndex);
 }
 
 NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus)
