@@ -30,6 +30,10 @@ interface nsIDOMNSDocument : nsISupports
   readonly attribute DOMString            characterSet;
   readonly attribute nsIDOMPluginArray    plugins;
 
+  readonly attribute nsIDOMLocation       location;
+
+  readonly attribute
+
   nsIDOMRange               createRange();
   void                      load(in DOMString url);
 
