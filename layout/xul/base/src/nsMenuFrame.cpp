@@ -118,6 +118,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
     mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
+    mCreateHandlerSucceeded(PR_FALSE),
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
@@ -503,8 +504,10 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
     aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
     if (value.EqualsWithConversion("true"))
       OpenMenuInternal(PR_TRUE);
-    else
+    else {
       OpenMenuInternal(PR_FALSE);
+      mCreateHandlerSucceeded = PR_FALSE;
+    }
   } else if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
         UpdateMenuSpecialState(aPresContext);
@@ -543,6 +546,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     if (!OnCreate())
       return;
 
+    mCreateHandlerSucceeded = PR_TRUE;
+  
     // Set the focus back to our view's widget.
     if (nsMenuFrame::mDismissalListener)
       nsMenuFrame::mDismissalListener->EnableListener(PR_FALSE);
@@ -667,7 +672,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
     // Close the menu. 
     // Execute the ondestroy handler, but only if we're actually open
-    if ( !mMenuOpen || !OnDestroy() )
+    if ( !mCreateHandlerSucceeded || !OnDestroy() )
       return;
 
     // Set the focus back to our view's widget.
