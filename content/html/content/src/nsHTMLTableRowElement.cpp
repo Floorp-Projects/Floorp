@@ -521,9 +521,7 @@ nsHTMLTableRowElement::ParseAttribute(nsIAtom* aAttribute,
     return aResult.ParseIntWithBounds(aValue, 0);
   }
   if (aAttribute == nsHTMLAtoms::height) {
-    if (aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
   if (aAttribute == nsHTMLAtoms::width) {
     return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
