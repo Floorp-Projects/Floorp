@@ -216,8 +216,8 @@ function AddSelectedAddressesIntoBucket(prefix)
 
   for (var i = 0; i < count; i++) {
     AddCardIntoBucket(prefix, cards[i]);
-      }
-      }
+  }
+}
 
 function AddCardIntoBucket(prefix, card)
 {
