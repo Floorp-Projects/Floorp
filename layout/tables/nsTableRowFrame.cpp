@@ -282,6 +282,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
       nsRect damageArea;
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
       if (overlap) {
+        PRBool clipState;
         // Translate damage area into kid's coordinate system
         nsRect kidDamageArea(damageArea.x - kidRect.x,
                              damageArea.y - kidRect.y,
@@ -293,7 +294,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
           aRenderingContext.SetColor(NS_RGB(255,0,0));
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
-        aRenderingContext.PopState();
+        aRenderingContext.PopState(clipState);
       }
     }
     kid->GetNextSibling(kid);

@@ -253,7 +253,7 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
     rc.PushState();
     GetBounds(brect);
 
-    clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
+    rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
 
     if (clipres == PR_FALSE)
     {
@@ -291,7 +291,8 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                        nscoord(brect.width * 0.46f),
                        nscoord(brect.height * 0.46f));
 
-        bcolor = tcolor = rc.GetColor();
+        rc.GetColor(bcolor);
+        tcolor = bcolor;
 
         //this is inefficient, but compact...
 
@@ -319,12 +320,10 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       }
     }
 
-    clipres = rc.PopState();
+    rc.PopState(clipres);
 
     if (clipres == PR_FALSE)
-    {
-      clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
-    }
+      rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
   }
 
   aResult = clipres;
@@ -615,17 +614,17 @@ NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& re
 
   //don't clip if we have a widget
   if ((mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
-    clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
+    rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
 
   if (clipres == PR_FALSE)
   {
     nsView::Paint(rc, rect, aPaintFlags | NS_VIEW_FLAG_CLIP_SET, clipres);
   }
 
-  clipres = rc.PopState();
+  rc.PopState(clipres);
 
   if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
-    clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
+    rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
 
   aResult = clipres;
   return NS_OK;

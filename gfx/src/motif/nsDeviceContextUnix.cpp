@@ -136,7 +136,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarDimensions(float &aWidth, float
 
 NS_IMETHODIMP nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  aSurface = aContext.CreateDrawingSurface(nsnull, 0);
+  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
   return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

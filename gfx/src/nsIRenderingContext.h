@@ -90,13 +90,13 @@ public:
   /**
    * Reset the rendering context
    */
-  virtual void Reset() = 0;
+  NS_IMETHOD Reset(void) = 0;
 
   /**
    * Get the DeviceContext that this RenderingContext was initialized with
    * @result the device context
    */
-  virtual nsIDeviceContext * GetDeviceContext(void) = 0;
+  NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext) = 0;
 
   /**
    * Selects an offscreen drawing surface into the RenderingContext to draw to.
@@ -115,21 +115,21 @@ public:
   /**
    * Save a graphical state onto a stack.
    */
-  virtual void PushState(void) = 0;
+  NS_IMETHOD PushState(void) = 0;
 
   /**
    * Get and and set RenderingContext to this graphical state
    * @return if PR_TRUE, indicates that the clipping region after
    *         popping state is empty, else PR_FALSE
    */
-  virtual PRBool PopState(void) = 0;
+  NS_IMETHOD PopState(PRBool &aClipEmpty) = 0;
 
   /**
    * Tells if a given rectangle is visible within the rendering context
    * @param aRect is the rectangle that will be checked for visiblity
    * @result If true, that rectanglular area is visable.
    */
-  virtual PRBool IsVisibleRect(const nsRect& aRect) = 0;
+  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible) = 0;
 
   /**
    * Sets the clipping for the RenderingContext to the passed in rectangle
@@ -138,7 +138,7 @@ public:
    *        see the bottom of nsIRenderingContext.h
    * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine) = 0;
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
 
   /**
    * Gets the bounds of the clip region of the RenderingContext
@@ -147,7 +147,7 @@ public:
    * @return PR_TRUE if the rendering context has a local cliprect set
    *         else aRect is undefined
    */
-  virtual PRBool GetClipRect(nsRect &aRect) = 0;
+  NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aHasLocalClip) = 0;
 
   /**
    * Sets the line style for the RenderingContext 
@@ -170,7 +170,7 @@ public:
    *        see the bottom of nsIRenderingContext.h
    * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine) = 0;
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
 
   /**
    * Gets the current clipping region for the RenderingContext
@@ -178,65 +178,58 @@ public:
    *        if SetClipRegion() is called, do not assume that GetClipRegion()
    *        will return the same object.
    */
-  virtual void GetClipRegion(nsIRegion **aRegion) = 0;
+  NS_IMETHOD GetClipRegion(nsIRegion **aRegion) = 0;
 
   /**
    * Sets the forground color for the RenderingContext
    * @param aColor The color to set the RenderingContext to
    */
-  virtual void SetColor(nscolor aColor) = 0;
+  NS_IMETHOD SetColor(nscolor aColor) = 0;
 
   /**
    * Get the forground color for the RenderingContext
    * @return The current forground color of the RenderingContext
    */
-  virtual nscolor GetColor() const = 0;
+  NS_IMETHOD GetColor(nscolor &aColor) const = 0;
 
   /**
    * Sets the font for the RenderingContext
    * @param aFont The font to use in the RenderingContext
    */
-  virtual void SetFont(const nsFont& aFont) = 0;
+  NS_IMETHOD SetFont(const nsFont& aFont) = 0;
 
   /**
    * Sets the font for the RenderingContext
    * @param aFontMetric The font metrics representing the
    *        font to use in the RenderingContext
    */
-  virtual void SetFont(nsIFontMetrics *aFontMetrics) = 0;
-
-  /**
-   * Get the current font for the RenderingContext.
-   * If no font has been Set, the results are undefined.
-   * @return The current font of the RenderingContext
-   */
-  virtual const nsFont& GetFont() = 0;
+  NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics) = 0;
 
   /**
    * Get the current fontmetrics for the RenderingContext
    * @return The current font of the RenderingContext
    */
-  virtual nsIFontMetrics* GetFontMetrics() = 0;
+  NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics) = 0;
 
   /**
    *  Add in a translate to the RenderingContext's transformation matrix
    * @param aX The horizontal translation
    * @param aY The vertical translation
    */
-  virtual void Translate(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD Translate(nscoord aX, nscoord aY) = 0;
 
   /**
    *  Add in a scale to the RenderingContext's transformation matrix
    * @param aX The horizontal scale
    * @param aY The vertical scale
    */
-  virtual void Scale(float aSx, float aSy) = 0;
+  NS_IMETHOD Scale(float aSx, float aSy) = 0;
 
   /** 
    * Get the current transformation matrix for the RenderingContext
    * @return The transformation matrix for the RenderingContext
    */
-  virtual nsTransform2D * GetCurrentTransform() = 0;
+  NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform) = 0;
 
   /**
    * Create an offscreen drawing surface compatible with this RenderingContext.
@@ -248,13 +241,13 @@ public:
    * @param aSurfFlags see bottom of nsIRenderingContext.h
    * @return A nsDrawingSurface
    */
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags) = 0;
+  NS_IMETHOD CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface) = 0;
 
   /**
    * Destroy a drawing surface created by CreateDrawingSurface()
    * @param aDS A drawing surface to destroy
    */
-  virtual void DestroyDrawingSurface(nsDrawingSurface aDS) = 0;
+  NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS) = 0;
 
   /**
    * Draw a line
@@ -263,20 +256,20 @@ public:
    * @param aX1 end horiztonal coord in twips
    * @param aY1 end vertical coord in twips
    */
-  virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
+  NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
 
   /**
    * Draw a polyline
    * @param aPoints array of endpoints
    * @param aNumPonts number of points
    */
-  virtual void DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+  NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Draw a rectangle
    * @param aRect The rectangle to draw
    */
-  virtual void DrawRect(const nsRect& aRect) = 0;
+  NS_IMETHOD DrawRect(const nsRect& aRect) = 0;
 
   /**
    * Draw a rectangle
@@ -285,13 +278,13 @@ public:
    * @param aWidth Width of rectangle in twips
    * @param aHeight Height of rectangle in twips
    */
-  virtual void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Fill a rectangle in the current foreground color
    * @param aRect The rectangle to draw
    */
-  virtual void FillRect(const nsRect& aRect) = 0;
+  NS_IMETHOD FillRect(const nsRect& aRect) = 0;
 
   /**
    * Fill a rectangle in the current foreground color
@@ -300,27 +293,27 @@ public:
    * @param aWidth Width of rectangle in twips
    * @param aHeight Height of rectangle in twips
    */
-  virtual void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Draw a poly in the current foreground color
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon
    */
-  virtual void DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+  NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Fill a poly in the current foreground color
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon
    */
-  virtual void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+  NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Draw an ellipse in the current foreground color
    * @param aRect The rectangle define bounds of ellipse to draw
    */
-  virtual void DrawEllipse(const nsRect& aRect) = 0;
+  NS_IMETHOD DrawEllipse(const nsRect& aRect) = 0;
 
   /**
    * Draw an ellipse in the current foreground color
@@ -329,13 +322,14 @@ public:
    * @param aWidth Width of horizontal axis in twips
    * @param aHeight Height of vertical axis in twips
    */
-  virtual void DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Fill an ellipse in the current foreground color
    * @param aRect The rectangle define bounds of ellipse to draw
    */
-  virtual void FillEllipse(const nsRect& aRect) = 0;
+  NS_IMETHOD FillEllipse(const nsRect& aRect) = 0;
+
   /**
    * Fill an ellipse in the current foreground color
    * @param aX Horizontal left Coordinate in twips
@@ -343,15 +337,17 @@ public:
    * @param aWidth Width of horizontal axis in twips
    * @param aHeight Height of vertical axis in twips
    */
-  virtual void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+
   /**
    * Draw an arc in the current forground color
    * @param aRect The rectangle define bounds of ellipse to use
    * @param aStartAngle the starting angle of the arc, in the ellipse
    * @param aEndAngle The ending angle of the arc, in the ellipse
    */
-  virtual void DrawArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle) = 0;
+  NS_IMETHOD DrawArc(const nsRect& aRect,
+                     float aStartAngle, float aEndAngle) = 0;
+
   /**
    * Draw an arc in the current forground color
    * @param aX Horizontal left Coordinate in twips
@@ -361,16 +357,18 @@ public:
    * @param aStartAngle the starting angle of the arc, in the ellipse
    * @param aEndAngle The ending angle of the arc, in the ellipse
    */
-  virtual void DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle) = 0;
+  NS_IMETHOD DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                     float aStartAngle, float aEndAngle) = 0;
+
   /**
    * Fill an arc in the current forground color
    * @param aRect The rectangle define bounds of ellipse to use
    * @param aStartAngle the starting angle of the arc, in the ellipse
    * @param aEndAngle The ending angle of the arc, in the ellipse
    */
-  virtual void FillArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle) = 0;
+  NS_IMETHOD FillArc(const nsRect& aRect,
+                     float aStartAngle, float aEndAngle) = 0;
+
   /**
    * Fill an arc in the current forground color
    * @param aX Horizontal left Coordinate in twips
@@ -380,8 +378,8 @@ public:
    * @param aStartAngle the starting angle of the arc, in the ellipse
    * @param aEndAngle The ending angle of the arc, in the ellipse
    */
-  virtual void FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle) = 0;
+  NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                     float aStartAngle, float aEndAngle) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character
@@ -390,7 +388,7 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(char aC, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of a unicode character
@@ -399,7 +397,7 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an nsString
@@ -408,7 +406,7 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character string
@@ -417,7 +415,7 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth) = 0;
+  NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character string
@@ -427,8 +425,8 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength,
-                       nscoord& aWidth) = 0;
+  NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength,
+                      nscoord& aWidth) = 0;
 
   /**
    * Returns the width (in app units) of a Unicode character string
@@ -438,8 +436,8 @@ public:
    * @param aWidth out parameter for width
    * @return error status
    */
-  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                       nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength,
+                      nscoord &aWidth) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -450,10 +448,10 @@ public:
    * @param aWidth Width of the underline
    * @param aSpacing inter-character spacing to apply
    */
-  virtual void DrawString(const char *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing = nsnull) = 0;
+  NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -464,10 +462,10 @@ public:
    * @param aWidth length in twips of the underline
    * @param aSpacing inter-character spacing to apply
    */
-  virtual void DrawString(const PRUnichar *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing = nsnull) = 0;
+  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -477,16 +475,16 @@ public:
    * @param aWidth Width of the underline
    * @param aSpacing inter-character spacing to apply
    */
-  virtual void DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing = nsnull) = 0;
+  NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Copy an image to the RenderingContext
    * @param aX Horzontal left destination coordinate
    * @param aY Vertical top of destinatio coordinate
    */
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY) = 0;
 
   /**
    * Copy an image to the RenderingContext, scaling can occur if width/hieght does not match source
@@ -495,19 +493,21 @@ public:
    * @param aWidth Width of destination, 
    * @param aHeight Height of destination
    */
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight) = 0; 
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+                       nscoord aWidth, nscoord aHeight) = 0; 
+
   /**
    * Copy an image to the RenderingContext, scaling can occur if source/dest rects differ
    * @param aRect Destination rectangle to copy the image to
    */
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aRect) = 0;
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect) = 0;
+
   /**
    * Copy an image to the RenderingContext, scaling/clipping can occur if source/dest rects differ
    * @param aSRect Source rectangle to copy from
    * @param aDRect Destination rectangle to copy the image to
    */
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
 
   /**
    * Copy offscreen pixelmap to this RenderingContext.

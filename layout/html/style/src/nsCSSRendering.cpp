@@ -929,9 +929,10 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     PRIntn y = PRIntn(aDirtyRect.y / tileHeight);
     nscoord ypos = aBounds.y + y * tileHeight + anchor.y;
     PRIntn xstart = PRIntn(aDirtyRect.x / tileWidth);
+    PRBool clipState;
     nscoord xpostart = aBounds.x + xstart * tileWidth + anchor.x;
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
+    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect, clipState);
     for (; y <= yCount; ++y, ypos += tileHeight) {
       PRIntn x = xstart;
       nscoord xpos = xpostart;
@@ -939,7 +940,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
         aRenderingContext.DrawImage(image, xpos, ypos);
       }
     }
-    aRenderingContext.PopState();
+    aRenderingContext.PopState(clipState);
   } else {
     if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
       // XXX This step can be avoided if we have an image and it doesn't

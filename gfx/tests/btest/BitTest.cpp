@@ -605,7 +605,8 @@ SYSTEMTIME  thetime;
   milli = thetime.wMilliseconds;
 
   if(aOptimize==PR_TRUE) {
-    nsIDeviceContext* deviceContext = aSurface->GetDeviceContext();
+    nsIDeviceContext* deviceContext;
+    aSurface->GetDeviceContext(deviceContext);
     aTheImage->Optimize(deviceContext);
     NS_RELEASE(deviceContext);
   }

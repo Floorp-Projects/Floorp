@@ -4474,9 +4474,10 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
   PRBool hidden = PR_FALSE;
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect);
+                                  nsClipCombine_kIntersect, clipState);
     hidden = PR_TRUE;
   }
 
@@ -4518,7 +4519,8 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
   }
 
   if (hidden) {
-    aRenderingContext.PopState();
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
   }
 }
 
@@ -4572,7 +4574,8 @@ nsBlockFrame::PaintChild(nsIPresContext& aPresContext,
         aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
       }
 #endif
-      aRenderingContext.PopState();
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
     }
   }
 }

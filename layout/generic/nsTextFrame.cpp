@@ -2111,7 +2111,8 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
     // context has our font in it, not the font that aText is using.
     nscoord width;
     nsIRenderingContext& rc = *aReflowState.rendContext;
-    nsIFontMetrics* oldfm = rc.GetFontMetrics();
+    nsIFontMetrics* oldfm;
+    rc.GetFontMetrics(oldfm);
 
     TextStyle ts(aLineLayout.mPresContext, rc, sc);
     if (ts.mSmallCaps) {

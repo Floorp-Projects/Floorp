@@ -183,33 +183,33 @@ void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsR
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                          PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+  nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
   if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
     BuildImage(aSurface);
   } 
  
   if (nsnull == mImage)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     aSX,aSY,aDX,aDY,aDWidth,aDHeight);  
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, 
-                       nsDrawingSurface aSurface,
-                       PRInt32 aX, PRInt32 aY, 
-                       PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext, 
+                                  nsDrawingSurface aSurface,
+                                  PRInt32 aX, PRInt32 aY, 
+                                  PRInt32 aWidth, PRInt32 aHeight)
 {
-nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+  nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
   BuildImage(aSurface);
 
@@ -219,18 +219,17 @@ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
   } 
  
   if (nsnull == mImage)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     0,0,aX,aY,aWidth,aHeight);  
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
 
 void nsImageUnix::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
 {
-
 }
 
 //------------------------------------------------------------

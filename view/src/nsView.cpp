@@ -322,10 +322,10 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       crect.width = mClip.mRight - mClip.mLeft;
       crect.height = mClip.mBottom - mClip.mTop;
 
-      clipres = rc.SetClipRect(crect, nsClipCombine_kIntersect);
+      rc.SetClipRect(crect, nsClipCombine_kIntersect, clipres);
     }
     else if (this != pRoot)
-      clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
+      rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
     }
   }
 
@@ -341,7 +341,8 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     if (nsnull != mXForm)
     {
-      nsTransform2D *pXForm = rc.GetCurrentTransform();
+      nsTransform2D *pXForm;
+      rc.GetCurrentTransform(pXForm);
       pXForm->Concatenate(mXForm);
     }
 
@@ -405,6 +406,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         nsDrawingSurface    surf = nsnull;
         nsDrawingSurface    redsurf = nsnull;
         PRBool              hasTransparency;
+        PRBool              clipState;      //for when we want to throw away the clip state
 
         rc.PushState();
 
@@ -438,8 +440,8 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
               nsRect bitrect = nsRect(0, 0, width, height);
 
-              surf = localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS);
-              redsurf = localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS);
+              localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, surf);
+              localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, redsurf);
 
               if (nsnull != surf)
                 localcx->SelectOffScreenDrawingSurface(surf);
@@ -573,7 +575,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                 nsRect *trect = (nsRect *)rects->ElementAt(--idx);
                 delete trect;
 
-                localcx->PopState();
+                localcx->PopState(clipState);
                 isfirst = PR_FALSE;
               }
               else
@@ -586,7 +588,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                 delete trect;
 
                 //pop the state pushed on the front to back pass...
-                localcx->PopState();
+                localcx->PopState(clipState);
               }
             }
 
@@ -594,7 +596,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             delete views;
           }
 
-          localcx->PopState();
+          localcx->PopState(clipState);
         }
 
         if (nsnull != redsurf)
@@ -699,12 +701,12 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         }
 #endif
 
-        rc.PopState();
+        rc.PopState(clipState);
       }
     }
   }
 
-  clipres = rc.PopState();
+  rc.PopState(clipres);
 
   //now we need to exclude this view from the rest of the
   //paint process. only do this if this view is actually
@@ -726,10 +728,10 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       crect.width = mClip.mRight - mClip.mLeft;
       crect.height = mClip.mBottom - mClip.mTop;
 
-      clipres = rc.SetClipRect(crect, nsClipCombine_kSubtract);
+      rc.SetClipRect(crect, nsClipCombine_kSubtract, clipres);
     }
     else if (this != pRoot)
-      clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
+      rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
   }
 
   aResult = clipres;

@@ -202,6 +202,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
      
     kid->GetView(pView);
     if (nsnull == pView) {
+      PRBool clipState;
       nsRect kidRect;
       kid->GetRect(kidRect);
       nsRect damageArea(aDirtyRect);
@@ -215,7 +216,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.SetColor(NS_RGB(255,0,0));
         aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
       }
-      aRenderingContext.PopState();
+      aRenderingContext.PopState(clipState);
     }
     kid->GetNextSibling(kid);
   }

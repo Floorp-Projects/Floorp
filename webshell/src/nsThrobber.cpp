@@ -239,10 +239,11 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
       nsRect bounds;
       nsIImageRequest *imgreq;
       nsIImage *img;
+      PRBool clipState;
    
       pe->widget->GetBounds(bounds);
 
-      cx->SetClipRect(*pe->rect, nsClipCombine_kReplace);
+      cx->SetClipRect(*pe->rect, nsClipCombine_kReplace, clipState);
 
       cx->SetColor(NS_RGB(255, 255, 255));
       cx->DrawLine(0, bounds.height - 1, 0, 0);
@@ -269,7 +270,7 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
 
         cx->SetColor(NS_RGB(255, 255, 255));
         cx->SetFont(tfont);
-        met = cx->GetFontMetrics();
+        cx->GetFontMetrics(met);
         if (nsnull != met)
         {
           cx->GetWidth(str, w);
