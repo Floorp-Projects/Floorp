@@ -192,9 +192,9 @@ nsLocaleService::nsLocaleService(void)
 #if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
     nsCOMPtr<nsIPosixLocale> posixConverter = do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
 
-    nsAutoString xpLocale, platformLocale;
+    nsAutoString xpLocale;
     if (posixConverter) {
-        nsAutoString category, category_platform;
+        nsAutoString category;
         nsLocale* resultLocale;
         int i;
 
@@ -206,27 +206,19 @@ nsLocaleService::nsLocaleService(void)
             nsresult result;
             char* lc_temp = setlocale(posix_locale_category[i], "");
             category.AssignWithConversion(LocaleList[i]);
-            category_platform.AssignWithConversion(LocaleList[i]);
-            category_platform.Append(NS_LITERAL_STRING("##PLATFORM"));
             if (lc_temp != nsnull) {
                 result = posixConverter->GetXPLocale(lc_temp, xpLocale);
-                platformLocale.AssignWithConversion(lc_temp);
             } else {
                 char* lang = getenv("LANG");
-                if ( lang == nsnull ) {
-                    platformLocale.Assign(NS_LITERAL_STRING("en_US"));
+                if ( lang == nsnull )
                     result = posixConverter->GetXPLocale("en-US", xpLocale);
-            }
-                else {
+                else
                     result = posixConverter->GetXPLocale(lang, xpLocale); 
-                    platformLocale.AssignWithConversion(lang);
-                }
             }
             if (NS_FAILED(result)) {
                 return;
             }
             resultLocale->AddCategory(category, xpLocale);
-            resultLocale->AddCategory(category_platform, platformLocale);
         }
         mSystemLocale = do_QueryInterface(resultLocale);
         mApplicationLocale = do_QueryInterface(resultLocale);
