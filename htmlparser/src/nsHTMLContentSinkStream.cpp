@@ -360,7 +360,7 @@ nsHTMLContentSinkStream::InitEncoder()
   res = mUnicodeEncoder->Init(charsetCString,
                               nsISaveAsCharset::attr_EntityBeforeCharsetConv
                                 | nsISaveAsCharset::attr_FallbackDecimalNCR,
-								nsIEntityConverter::html40);
+                              nsIEntityConverter::html40);
   return res;
 }
 
@@ -379,9 +379,6 @@ nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
   // Initialize the encoder if we haven't already
   if (!mUnicodeEncoder)
     InitEncoder();
-
-//  if (mBuffer)
-//      nsAllocator::Free(mBuffer);
 
   if (mUnicodeEncoder)
   {
@@ -404,10 +401,11 @@ nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
       encodedBuffer = aSrc.ToNewCString();
   }
   mBufferLength = 0;
-  if (encodedBuffer) {
-	mBufferLength = nsCRT::strlen(encodedBuffer);
-	EnsureBufferSize(mBufferLength+1);
-	nsCRT::memcpy(mBuffer, encodedBuffer, mBufferLength+1);
+  if (encodedBuffer)
+  {
+    mBufferLength = nsCRT::strlen(encodedBuffer);
+    EnsureBufferSize(mBufferLength+1);
+    nsCRT::memcpy(mBuffer, encodedBuffer, mBufferLength+1);
   }
 }
 
