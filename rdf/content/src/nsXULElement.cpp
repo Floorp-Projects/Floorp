@@ -1443,8 +1443,12 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     nsresult rv = NS_OK;
 
     if (! mScriptObject) {
-        nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+        NS_ASSERTION(mDocument != nsnull, "element has no document");
+        if (! mDocument)
+            return NS_ERROR_NOT_INITIALIZED;
 
+        // The actual script object that we create will depend on our
+        // tag...
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
         if (Tag() == kTreeAtom) {
@@ -1457,25 +1461,13 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             fn = NS_NewScriptXULElement;
         }
 
-        rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
-
-        NS_RELEASE(global);
+        rv = fn(aContext, (nsIDOMXULElement*) this, mDocument, (void**) &mScriptObject);
 
         // Ensure that a reference exists to this element
-        if (mDocument) {
-            nsAutoString tag;
-            Tag()->ToString(tag);
+        nsAutoString tag;
+        Tag()->ToString(tag);
 
-            char buf[64];
-            char* p = buf;
-            if (tag.Length() >= PRInt32(sizeof buf))
-                p = (char *)nsAllocator::Alloc(tag.Length() + 1);
-
-            aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
-
-            if (p != buf)
-                nsCRT::free(p);
-        }
+        aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, nsCAutoString(tag));
     }
 
     *aScriptObject = mScriptObject;
