@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 #include "jsapi.h"
 
+class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIDOMHTMLCollection;
 
@@ -67,7 +68,7 @@ public:
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 
-  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc)=0;
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMDocument** aReturn)=0;
 
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
@@ -100,7 +101,7 @@ public:
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds);  \
   NS_IMETHOD    GetSelection(nsAWritableString& aReturn);  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
-  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMDocument** aReturn);  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Writeln(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Clear(JSContext* cx, jsval* argv, PRUint32 argc);  \
@@ -127,7 +128,7 @@ public:
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to GetEmbeds(aEmbeds); } \
   NS_IMETHOD    GetSelection(nsAWritableString& aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to NamedItem(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMDocument** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Write(cx, argv, argc); }  \
   NS_IMETHOD    Writeln(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Writeln(cx, argv, argc); }  \
   NS_IMETHOD    Clear(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Clear(cx, argv, argc); }  \
