@@ -40,7 +40,7 @@ import java.io.*;
  * This interface provides a means to store generated class and to
  * allow selective class loading.
  *
- * @see Context
+ * @see ClassNameHelper
  * @author Kemal Bayram
  */
 public interface ClassRepository {
@@ -51,5 +51,5 @@ public interface ClassRepository {
      * @return true if the class should be loaded, false otherwise.
      */
     public boolean storeClass(String className, byte[] classBytes,
-                           boolean isTopLevel) throws IOException;
+                              boolean isTopLevel) throws IOException;
 }

@@ -169,7 +169,7 @@ public class Context {
             }
         } else {
             if (cx.enterCount != 0) {
-                   // The suplied context must be the context for
+                // The suplied context must be the context for
                 // the current thread if it is already entered
                 if (cx != old) {
                     throw new RuntimeException
@@ -1344,142 +1344,111 @@ public class Context {
     }
 
     /**
-     * Get the current class name.
-     *
-     * @since 30/10/01 tip + patch (Kemal Bayram)
+     * @deprecated Use <tt>ClassNameHelper.get(cx).getClassName()</tt> instead.
+     * @see ClassNameHelper#getClassName
      */
     public String getClassName() {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         return nameHelper != null ? nameHelper.getClassName() : null;
     }
 
     /**
-     * Set the current class name.
-     *
-     * @since 30/10/01 tip + patch (Kemal Bayram)
+     * @deprecated Use <tt>ClassNameHelper.get(cx).setClassName(className)</tt> instead.
+     * @see ClassNameHelper#setClassName
      */
     public void setClassName(String className) {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         if (nameHelper != null)
               nameHelper.setClassName(className);
     }
 
     /**
-     * Get the current target class file name.
-     * <p>
-     * If nonnull, requests to compile source will result in one or
-     * more class files being generated.
-     * @since 1.3
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).getTargetClassFileName()</tt> instead.
+     * @see ClassNameHelper#getTargetClassFileName
      */
     public String getTargetClassFileName() {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         if (nameHelper != null) {
-                ClassRepository repository = nameHelper.getClassRepository();
-                if (repository instanceof FileClassRepository)
-                    return ((FileClassRepository)repository).getTargetClassFileName(nameHelper.getClassName());
-          }
-          return null;
-    }
-
-    /**
-     * Set the current target class file name.
-     * <p>
-     * If nonnull, requests to compile source will result in one or
-     * more class files being generated. If null, classes will only
-     * be generated in memory.
-     *
-     * @since 1.3
-     */
-    public void setTargetClassFileName(String classFileName) {
-        ClassNameHelper nameHelper = getNameHelper();
-        if (nameHelper != null) {
-            if (classFileName != null)
-                nameHelper.setClassRepository(
-                    new FileClassRepository(classFileName));
-            else
-                nameHelper.setClassName(null);
-        }
-    }
-
-    /**
-     * Get the current package to generate classes into.
-     *
-     * @since 1.3
-     */
-    public String getTargetPackage() {
-        ClassNameHelper nameHelper = getNameHelper();
-        return nameHelper != null ? nameHelper.getTargetPackage() : null;
-    }
-
-    /**
-     * Set the package to generate classes into.
-     *
-     * @since 1.3
-     */
-    public void setTargetPackage(String targetPackage) {
-        ClassNameHelper nameHelper = getNameHelper();
-        if (nameHelper != null)
-            nameHelper.setTargetPackage(targetPackage);
-    }
-
-    /**
-     * Get the current class repository.
-     *
-     * @see ClassRepository
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
-    public ClassRepository getClassRepository() {
-        ClassNameHelper nameHelper = getNameHelper();
-        return nameHelper != null ? nameHelper.getClassRepository() : null;
-    }
-
-    /**
-     * Set the current class repository.
-     *
-     * @see ClassRepository
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
-    public void setClassRepository(ClassRepository classRepository) {
-        ClassNameHelper nameHelper = getNameHelper();
-        if (nameHelper != null)
-            nameHelper.setClassRepository(classRepository);
-    }
-
-    /**
-     * Get the current interface to write class bytes into.
-     *
-     * @see ClassOutput
-     * @since 1.5 Release 2
-     */
-    public ClassOutput getClassOutput() {
-        ClassNameHelper nameHelper = getNameHelper();
-        if (nameHelper != null) {
-            ClassRepository repository = nameHelper.getClassRepository();
-            if ((repository != null) &&
-                (repository instanceof ClassOutputWrapper))
-            {
-                return ((ClassOutputWrapper)repository).classOutput;
-            }
+            return nameHelper.getTargetClassFileName();
         }
         return null;
     }
 
     /**
-     * Set the interface to write class bytes into.
-     * Unless setTargetClassFileName() has been called classOutput will be
-     * used each time the javascript compiler has generated the bytecode for a
-     * script class.
-     *
-     * @see ClassOutput
-     * @since 1.5 Release 2
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).setTargetClassFileName(classFileName)</tt> instead.
+     * @see ClassNameHelper#setTargetClassFileName
+     */
+    public void setTargetClassFileName(String classFileName) {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        if (nameHelper != null) {
+            nameHelper.setTargetClassFileName(classFileName);
+        }
+    }
+
+    /**
+     * @deprecated Use <tt>ClassNameHelper.get(cx).getTargetPackage()</tt> instead.
+     * @see ClassNameHelper#getTargetPackage
+     */
+    public String getTargetPackage() {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        return nameHelper != null ? nameHelper.getTargetPackage() : null;
+    }
+
+    /**
+     * @deprecated Use <tt>ClassNameHelper.get(cx).setTargetPackage(targetPackage)</tt>
+     * instead.
+     * @see ClassNameHelper#setTargetPackage
+     */
+    public void setTargetPackage(String targetPackage) {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        if (nameHelper != null)
+            nameHelper.setTargetPackage(targetPackage);
+    }
+
+    /**
+     * @deprecated Use <tt>ClassNameHelper.get(cx).getClassRepository()</tt> instead.
+     * @see ClassNameHelper#getClassRepository
+     */
+    public ClassRepository getClassRepository() {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        return nameHelper != null ? nameHelper.getClassRepository() : null;
+    }
+
+    /**
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).setClassRepository(classRepository)</tt> instead.
+     * @see ClassNameHelper#setClassRepository
+     */
+    public void setClassRepository(ClassRepository classRepository) {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        if (nameHelper != null)
+            nameHelper.setClassRepository(classRepository);
+    }
+
+    /**
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).getClassOutput()</tt> instead.
+     * @see ClassNameHelper#getClassOutput
+     */
+    public ClassOutput getClassOutput() {
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
+        if (nameHelper != null) {
+            return nameHelper.getClassOutput();
+        }
+        return null;
+    }
+
+    /**
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).setClassOutput(classOutput)</tt> instead.
+     * @see ClassNameHelper#setClassOutput
      */
     public void setClassOutput(ClassOutput classOutput) {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         if (nameHelper != null) {
-            if (classOutput != null)
-                nameHelper.setClassRepository(new ClassOutputWrapper(classOutput));
-            else
-                nameHelper.setClassRepository(null);
+            nameHelper.setClassOutput(classOutput);
         }
     }
 
@@ -1524,30 +1493,30 @@ public class Context {
         classShutter = shutter;
     }
 
-    ClassShutter getClassShutter() {
+    final ClassShutter getClassShutter() {
         return classShutter;
     }
 
     /**
-     * Set the class that the generated target will extend.
-     *
-     * @param extendsClass the class it extends
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).setTargetExtends(extendsClass)</tt> instead.
+     * @see ClassNameHelper#setTargetExtends
      */
     public void setTargetExtends(Class extendsClass) {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         if (nameHelper != null) {
             nameHelper.setTargetExtends(extendsClass);
         }
     }
 
     /**
-     * Set the interfaces that the generated target will implement.
-     *
-     * @param implementsClasses an array of Class objects, one for each
-     *                          interface the target will extend
+     * @deprecated Use
+     * <tt>ClassNameHelper.get(cx).setTargetImplements(implementsClasses)</tt>
+     * instead.
+     * @see ClassNameHelper#setTargetImplements
      */
     public void setTargetImplements(Class[] implementsClasses) {
-        ClassNameHelper nameHelper = getNameHelper();
+        ClassNameHelper nameHelper = ClassNameHelper.get(this);
         if (nameHelper != null) {
             nameHelper.setTargetImplements(implementsClasses);
         }
@@ -1568,7 +1537,7 @@ public class Context {
      * @param key the key used to lookup the value
      * @return a value previously stored using putThreadLocal.
      */
-    public Object getThreadLocal(Object key) {
+    public final Object getThreadLocal(Object key) {
         if (hashtable == null)
             return null;
         return hashtable.get(key);
@@ -1606,7 +1575,7 @@ public class Context {
      * This is useful for sharing functions across multiple scopes.
      * @since 1.5 Release 1
      */
-    public boolean hasCompileFunctionsWithDynamicScope() {
+    public final boolean hasCompileFunctionsWithDynamicScope() {
         return compileFunctionsWithDynamicScopeFlag;
     }
 
@@ -1644,8 +1613,7 @@ public class Context {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
             JavaMembers.classTable = new Hashtable();
-            if (savedNameHelper != null)
-                savedNameHelper.reset();
+            ClassNameHelper.clearCache();
         }
         isCachingEnabled = cachingEnabled;
         FunctionObject.setCachingEnabled(cachingEnabled);
@@ -1727,7 +1695,7 @@ public class Context {
      * @see org.mozilla.javascript.WrapHandler
      * @since 1.5 Release 4
      */
-    public WrapFactory getWrapFactory() {
+    public final WrapFactory getWrapFactory() {
         if (wrapFactory == null) {
             wrapFactory = new WrapFactory();
         }
@@ -1738,7 +1706,7 @@ public class Context {
      * Return the current debugger.
      * @return the debugger, or null if none is attached.
      */
-    public Debugger getDebugger() {
+    public final Debugger getDebugger() {
         return debugger;
     }
 
@@ -1746,7 +1714,7 @@ public class Context {
      * Return the debugger context data associated with current context.
      * @return the debugger data, or null if debugger is not attached
      */
-    public Object getDebuggerContextData() {
+    public final Object getDebuggerContextData() {
         return debuggerData;
     }
 
@@ -1981,7 +1949,6 @@ public class Context {
     }
 
     private static Class codegenClass;
-    private static ClassNameHelper savedNameHelper;
     static {
         try {
             codegenClass = Class.forName(
@@ -1989,26 +1956,6 @@ public class Context {
         } catch (ClassNotFoundException x) {
             // ...must be running lite, that's ok
             codegenClass = null;
-        }
-    }
-
-    private static ClassNameHelper getNameHelper() {
-        if (savedNameHelper != null)
-            return savedNameHelper;
-        if (codegenClass == null)
-            return null;
-        try {
-            Class nameHelperClass = Class.forName(
-                "org.mozilla.javascript.optimizer.OptClassNameHelper");
-            savedNameHelper = (ClassNameHelper)nameHelperClass.newInstance();
-            return savedNameHelper;
-        } catch (ClassNotFoundException x) {
-            // ...must be running lite, that's ok
-            return null;
-        } catch (IllegalAccessException x) {
-            return null;
-        } catch (InstantiationException x) {
-            return null;
         }
     }
 
@@ -2040,7 +1987,7 @@ public class Context {
                                : getCompiler();
         ClassNameHelper nameHelper = optimizationLevel == -1
                                      ? null
-                                     : getNameHelper();
+                                     : ClassNameHelper.get(this);
 
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(ts, nameHelper, scope);
@@ -2270,74 +2217,4 @@ public class Context {
     // For instruction counting (interpreter only)
     int instructionCount;
     int instructionThreshold;
-
-    // Implement class file saving here instead of inside codegen.
-    private class FileClassRepository implements ClassRepository {
-
-        FileClassRepository(String classFileName) {
-            int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
-            String initialName;
-            if (lastSeparator == -1) {
-                generatingDirectory = null;
-                initialName = classFileName;
-            } else {
-                generatingDirectory = classFileName.substring(0, lastSeparator);
-                initialName = classFileName.substring(lastSeparator+1);
-            }
-            if (initialName.endsWith(".class"))
-                initialName = initialName.substring(0, initialName.length()-6);
-            getNameHelper().setClassName(initialName);
-        }
-
-        public boolean storeClass(String className, byte[] bytes, boolean tl)
-            throws IOException
-        {
-            // no "elegant" way of getting file name from fully
-            // qualified class name.
-            String targetPackage = getNameHelper().getTargetPackage();
-            if ((targetPackage != null) && (targetPackage.length()>0) &&
-                className.startsWith(targetPackage+"."))
-            {
-                className = className.substring(targetPackage.length()+1);
-            }
-
-            FileOutputStream out = new FileOutputStream(getTargetClassFileName(className));
-            out.write(bytes);
-            out.close();
-
-            return false;
-        }
-
-        String getTargetClassFileName(String className) {
-            StringBuffer sb = new StringBuffer();
-            if (generatingDirectory != null) {
-                sb.append(generatingDirectory);
-                sb.append(File.separator);
-            }
-            sb.append(className);
-            sb.append(".class");
-            return sb.toString();
-        }
-
-        String generatingDirectory;
-    };
-
-    private static class ClassOutputWrapper implements ClassRepository {
-
-        ClassOutputWrapper(ClassOutput classOutput) {
-            this.classOutput = classOutput;
-        }
-
-        public boolean storeClass(String name, byte[] bytes, boolean tl)
-            throws IOException
-        {
-            OutputStream out = classOutput.getOutputStream(name, tl);
-            out.write(bytes);
-            out.close();
-
-            return true;
-        }
-
-        ClassOutput classOutput;
-    }
 }

@@ -76,7 +76,8 @@ public class Main {
      *
      */
     public static String[] processOptions(Context cx, String args[]) {
-        cx.setTargetPackage("");        // default to no package
+        ClassNameHelper nameHelper = ClassNameHelper.get(cx);
+        nameHelper.setTargetPackage("");        // default to no package
         cx.setGeneratingDebug(false);   // default to no symbols
         for (int i=0; i < args.length; i++) {
             String arg = args[i];
@@ -132,7 +133,7 @@ public class Main {
                         break;
                     }
                 }
-                cx.setTargetClassFileName(outFile);
+                nameHelper.setTargetClassFileName(outFile);
                 hasOutOption = true;
                 continue;
             }
@@ -163,13 +164,13 @@ public class Main {
                         continue;
                     }
                 }
-                cx.setTargetPackage(targetPackage);
+                nameHelper.setTargetPackage(targetPackage);
                 continue;
             }
             if (arg.equals("-extends") && ++i < args.length) {
                 String targetExtends = args[i];
                 try {
-                    cx.setTargetExtends(Class.forName(targetExtends));
+                    nameHelper.setTargetExtends(Class.forName(targetExtends));
                 } catch (ClassNotFoundException e) {
                     throw new Error(e.toString()); // TODO: better error
                 }
@@ -191,7 +192,7 @@ public class Main {
                 }
                 Class[] implementsClasses = new Class[v.size()];
                 v.copyInto(implementsClasses);
-                cx.setTargetImplements(implementsClasses);
+                nameHelper.setTargetImplements(implementsClasses);
                 continue;
             }
             usage(arg);
@@ -214,10 +215,11 @@ public class Main {
      *
      */
     public static void processSource(Context cx, String[] filenames) {
+        ClassNameHelper nameHelper = ClassNameHelper.get(cx);
         if (hasOutOption && filenames.length > 1) {
             cx.reportError(ToolErrorReporter.getMessage(
                 "msg.multiple.js.to.file",
-                cx.getTargetClassFileName()));
+                nameHelper.getTargetClassFileName()));
         }
         for (int i=0; i < filenames.length; i++) {
             String filename = filenames[i];
@@ -241,9 +243,9 @@ public class Main {
                 String className = getClassName(nojs) + ".class";
                 String out = f.getParent() == null ? className : f.getParent() +
                              File.separator + className;
-                cx.setTargetClassFileName(out);
+                nameHelper.setTargetClassFileName(out);
             }
-            if (cx.getTargetClassFileName() == null) {
+            if (nameHelper.getTargetClassFileName() == null) {
                 cx.reportError(ToolErrorReporter.getMessage("msg.no-opt"));
             }
             try {

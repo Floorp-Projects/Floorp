@@ -42,7 +42,7 @@ import org.mozilla.javascript.*;
 import java.io.*;
 import java.util.Hashtable;
 
-public class OptClassNameHelper implements ClassNameHelper {
+public class OptClassNameHelper extends ClassNameHelper {
 
     public OptClassNameHelper() {
         setClassName(null);
