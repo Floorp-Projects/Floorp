@@ -924,6 +924,80 @@ EnsureImageHlpInitialized()
   return gInitialized;
 } 
 
+/*
+ * Callback used by SymGetModuleInfoEspecial
+ */
+static BOOL CALLBACK callbackEspecial(LPSTR aModuleName, ULONG aModuleBase, ULONG aModuleSize, PVOID aUserContext)
+{
+    BOOL retval = TRUE;
+    DWORD addr = (DWORD)aUserContext;
+
+    /*
+     * You'll want to control this if we are running on an
+     *  architecture where the addresses go the other direction.
+     * Not sure this is even a realistic consideration.
+     */
+    const BOOL addressIncreases = TRUE;
+    
+    /*
+     * If it falls in side the known range, load the symbols.
+     */
+    if(addressIncreases
+       ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
+       : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
+        )
+    {
+        BOOL loadRes = FALSE;
+        HANDLE process = GetCurrentProcess();
+                
+        loadRes = _SymLoadModule(process, NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        PR_ASSERT(FALSE != loadRes);
+    }
+
+    return retval;
+}
+
+/*
+ * SymGetModuleInfoEspecial
+ *
+ * Attempt to determine the module information.
+ * Bug 112196 says this DLL may not have been loaded at the time
+ *  SymInitialize was called, and thus the module information
+ *  and symbol information is not available.
+ * This code rectifies that problem.
+ */
+BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo)
+{
+    BOOL retval = FALSE;
+
+    /*
+     * Give it a go.
+     * It may already be loaded.
+     */
+    retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+
+    if(FALSE == retval)
+    {
+        BOOL enumRes = FALSE;
+
+        /*
+         * Not loaded, here's the magic.
+         * Go through all the modules.
+         */
+        enumRes = EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)aAddr);
+        if(FALSE != enumRes)
+        {
+            /*
+             * One final go.
+             * If it fails, then well, we have other problems.
+             */
+            retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+        }
+    }
+
+    return retval;
+}
+
 PRBool
 EnsureSymInitialized()
 {  
@@ -1013,6 +1087,15 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 
     if (skip-- > 0)
       continue;
+
+    //
+    // Attempt to load module info before we attempt to reolve the symbol.
+    // This just makes sure we get good info if available.
+    //
+    IMAGEHLP_MODULE modInfo;
+    modInfo.SizeOfStruct = sizeof(modInfo);
+    BOOL modInfoRes = TRUE;
+    modInfoRes = SymGetModuleInfoEspecial(myProcess, frame.AddrPC.Offset, &modInfo);
 
     char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
     PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL) buf;
