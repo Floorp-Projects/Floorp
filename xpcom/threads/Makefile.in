@@ -40,11 +40,13 @@ CPPSRCS		= \
 		nsEventQueue.cpp \
 		nsEventQueueService.cpp \
 		nsThread.cpp \
+		nsProcessCommon.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsAutoLock.h \
 		plevent.h \
+		nsProcess.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
@@ -53,6 +55,7 @@ XPIDLSRCS	= \
 		nsIRunnable.idl \
 		nsIEventQueue.idl \
 		nsIEventQueueService.idl \
+		nsIProcess.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
