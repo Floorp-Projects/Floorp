@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: keydbi.h,v 1.3 2001/12/07 01:36:18 relyea%netscape.com Exp $
+ * $Id: keydbi.h,v 1.4 2002/08/02 21:41:01 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYDBI_H_
@@ -50,6 +50,7 @@ struct NSSLOWKEYDBHandleStr {
     DB *updatedb;		/* used when updating an old version */
     SECItem *global_salt;	/* password hashing salt for this db */
     int version;		/* version of the database */
+    char *appname;		/* multiaccess app name */
     char *dbname;		/* name of the openned DB */
     PRBool readOnly;		/* is the DB read only */
 };

@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.24 2002/06/25 23:00:57 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.25 2002/08/02 21:41:00 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -955,7 +955,9 @@ nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
 	goto loser;
     }
 
-    handle->dbname = PORT_Strdup(dbname);
+    handle->appname = appName ? PORT_Strdup(appName) : NULL ;
+    handle->dbname = appName ? PORT_Strdup(dbname) : 
+			(prefix ? PORT_Strdup(prefix) : NULL);
     handle->readOnly = readOnly;
    
     if (appName) {
@@ -1022,6 +1024,7 @@ nsslowkey_CloseKeyDB(NSSLOWKEYDBHandle *handle)
 	    (* handle->db->close)(handle->db);
 	}
 	if (handle->dbname) PORT_Free(handle->dbname);
+	if (handle->appname) PORT_Free(handle->appname);
 	if (handle->global_salt) {
 	    SECITEM_FreeItem(handle->global_salt,PR_TRUE);
 	}
@@ -2419,13 +2422,16 @@ nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle)
 	return SECFailure;
      }
 
-    PORT_Assert(handle->dbname != NULL);
-    if (handle->dbname == NULL) {
+    if (handle->appname == NULL && handle->dbname == NULL) {
 	return SECFailure;
     }
 
     (* handle->db->close)(handle->db);
-    handle->db = dbopen( handle->dbname, NO_CREATE, 0600, DB_HASH, 0 );
+    if (handle->appname) {
+	handle->db=rdbopen(handle->appname, handle->dbname, "key", NO_CREATE);
+    } else {
+	handle->db = dbopen( handle->dbname, NO_CREATE, 0600, DB_HASH, 0 );
+    }
     if (handle->db == NULL) {
 	/* set an error code */
 	return SECFailure;
