@@ -40,8 +40,6 @@ extern const nsIID kTableRowFrameCID;
  * @see nsTableFrame
  * @see nsTableRowGroupFrame
  * @see nsTableCellFrame
- *
- * @author  sclark
  */
 class nsTableRowFrame : public nsContainerFrame
 {
@@ -146,17 +144,23 @@ protected:
 
   //overrides 
 
-  void          PlaceChild( nsIPresContext* aPresContext,
-                            RowReflowState& aState,
-                            nsIFrame*       aKidFrame,
-                            const nsRect&   aKidRect,
-                            nsSize*         aMaxElementSize,
-                            nsSize*         aKidMaxElementSize);
+  void PlaceChild(nsIPresContext* aPresContext,
+                  RowReflowState& aState,
+                  nsIFrame*       aKidFrame,
+                  const nsRect&   aKidRect,
+                  nsSize*         aMaxElementSize,
+                  nsSize*         aKidMaxElementSize);
 
-  nsresult      IncrementalReflow(nsIPresContext*      aPresContext,
-                                  RowReflowState&      aState,
-                                  const nsReflowState& aReflowState,
-                                  nsSize*              aMaxElementSize);
+  nsresult IncrementalReflow(nsIPresContext*      aPresContext,
+                             RowReflowState&      aState,
+                             const nsReflowState& aReflowState,
+                             nsSize*              aMaxElementSize);
+
+  nscoord ComputeCellXOffset(const RowReflowState& aState,
+                             nsIFrame*             aKidFrame,
+                             const nsMargin&       aKidMargin) const;
+  nscoord ComputeCellAvailWidth(const RowReflowState& aState,
+                                nsIFrame*             aKidFrame) const;
 
   /**
    * Reflow the frames we've already created
