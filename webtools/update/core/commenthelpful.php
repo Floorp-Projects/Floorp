@@ -36,6 +36,10 @@
 //
 // ***** END LICENSE BLOCK *****
 
+//XXX -- Meta-Ratings not yet production ready. Disabled for Update 1.0. Bug 247144.
+exit("Meta-Ratings Disabled");
+
+
 //Submit Review/Rating Feedback to Table
 require"../core/config.php";
 

@@ -28,7 +28,7 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
 <h1>Updating comments list, please wait...</h1>
 <?php
 
-    //Process Post Data, Make Changes to User Table.
+    //Process Post Data, Make Changes to Feedback Table.
     //Begin General Updating
     for ($i=1; $i<=$_POST[maxid]; $i++) {
       if (!$_POST["selected_$i"]) {
@@ -75,9 +75,10 @@ $startpoint = ($pageid-1)*$items_per_page;
 
 $id = escape_string($_GET["id"]);
 
-$sql = "SELECT `Name` FROM `main` WHERE `ID`='$id' LIMIT 1";
+$sql = "SELECT `Type`,`Name` FROM `main` WHERE `ID`='$id' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
+    $type = $row["Type"];
     $name = $row["Name"];
 
 $sql = "SELECT CommentID FROM  `feedback` WHERE ID = '$id'";
@@ -250,6 +251,14 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
     $title = escape_string($_POST["title"]);
     $comments = escape_string($_POST["notes"]);
 
+    if ($_POST["type"]=="E") {
+        $type="extensions";
+    } else if ($_POST["type"]=="T") {
+        $type="themes";
+    }
+    
+    $name = "<a href=\"/$type/authorprofiles?id=$_SESSION[uid]\">$_SESSION[name]</a>";
+
     $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$id', '$name', NULL, '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if ($sql_result) {
@@ -270,6 +279,7 @@ Need to make a reply comment or answer a question somebody left who didn't provi
 <form name="addcoment" method="post" action="?id=<?php echo"$id"; ?>&action=addcomment#addcomment">
 <?writeFormKey();?>
   <input name="id" type="hidden" value="<?php echo"$id"; ?>">
+  <input name="type" type="hidden" value="<?php echo"$type"; ?>">
   <input name="name" type="hidden" value="<?php echo"$_SESSION[name]"; ?>">
   <strong>Title:</strong> <input name="title" type="text" size="30" maxlength="150" value=""><br>
   <strong>Comment:</strong><br>

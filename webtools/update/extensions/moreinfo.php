@@ -272,7 +272,26 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 ?>
 
 	<div id="mainContent">
-		<div class="rating">Rating: <img src="/images/stars-3-8.gif" width="90" height="20" title="3.8 Stars out of 5" alt="3.8 Stars"></div>
+    <?php
+     if ($rating != NULL) {
+    ?>
+		<div class="rating" title="<?php echo"$rating"; ?> Stars out of 5">Rating: <?php
+        for ($i = 1; $i <= floor($rating); $i++) {
+            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+        }
+
+        if ($rating>floor($rating)) {
+            $val = ($rating-floor($rating))*10;
+            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            $i++;
+        }
+
+        for ($i = $i; $i <= 5; $i++) {
+            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+        }
+        ?>
+        </div>
+    <?php } ?>
 		<h2 class="first"><strong><?php echo"$name"; ?></strong> - <?php echo ucwords("$application")." Extension"; ?></h2>
 		<p class="first"><?php echo"$name $version"; ?>, by <?php echo"$authors"; ?>, released on <?php echo"$releasedate"; ?></p>
 
@@ -402,6 +421,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 echo"<h4>$commenttitle by $commentname</h4>\n";
                 echo"<p class=\"opinions-date\"><a href=\"#permalink\">$commentdate</a></p>\n";
                 echo"<p class=\"opinions-text\">$commentnotes</P>\n";
+            if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
                     echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
@@ -410,6 +430,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
                 echo"</p>\n";
+            }
                 echo"</li>\n";
             }
 
@@ -572,6 +593,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 echo"<h4>$title by $name</h4>\n";
                 echo"<p class=\"opinions-date\"><a href=\"#$commentid\">$date</a></p>\n";
                 echo"<p class=\"opinions-text\">$notes</P>\n";
+            if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
                     echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
@@ -579,16 +601,19 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 for ($i = $i; $i <= 5; $i++) {
                 echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
-                if ($helpful_yes>0 or $helpful_no>0) {
-                $helpful_total=$helpful_yes+$helpful_no;
-                    echo"<br>$helpful_yes of $helpful_total people found this comment helpful.<br>\n";
-                }
 
-                echo"Was this comment helpful to you? <a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=yes\">Yes</a>&nbsp;&nbsp;&nbsp;<a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=no\">No</a>";
+                //XXX Meta-Ratings not Production Ready, disabled. Bug 247144.
+                //  if ($helpful_yes>0 or $helpful_no>0) {
+                //  $helpful_total=$helpful_yes+$helpful_no;
+                //      echo"<br>$helpful_yes of $helpful_total people found this comment helpful.<br>\n";
+                //  }
+
+                //echo"Was this comment helpful to you? <a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=yes\">Yes</a>&nbsp;&nbsp;&nbsp;<a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=no\">No</a>";
                 echo" <span style=\"font-size: xx-small\"><a href=\"../core/reportcomment.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=report\" ONCLICK=\"return confirm('Report this comment as inappropriate on the site?');\">(Report Comment)</a></span>";
                 echo"<BR>";
 
                 echo"</p>\n";
+            }
                 echo"</li>\n";
 
             }

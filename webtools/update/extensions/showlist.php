@@ -365,8 +365,26 @@ $datestring = "$datetitle $date";
 
 echo"<DIV class=\"item\">\n";
 
-echo"<div class=\"rating\">Rating: <img src=\"/images/stars-3-8.gif\" width=\"90\" height=\"20\" title=\"3.8 Stars out of 5\" alt=\"3.8 Stars\"></div>\n";
+     if ($rating != NULL) {
+        echo"<div class=\"rating\" title=\"$rating Stars out of 5\">Rating: ";
 
+        for ($i = 1; $i <= floor($rating); $i++) {
+            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+        }
+
+        if ($rating>floor($rating)) {
+            $val = ($rating-floor($rating))*10;
+            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            $i++;
+        }
+
+        for ($i = $i; $i <= 5; $i++) {
+            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+        }
+
+
+        echo"</div>\n";
+        }
 
 echo"<h2 class=\"first\"><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\">$name $version</A></h2>";
 
