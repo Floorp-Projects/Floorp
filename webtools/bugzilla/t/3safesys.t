@@ -47,11 +47,11 @@ foreach $file (@testitems) {
 	next if (!$file); # skip null entries
 	$command = "$perlapp -c -It/Support -MSystemexec $file 2>&1";
 	$loginfo=`$command`;
-	if ($loginfo =~ /arguments for Systemexec::system/im) {
-		ok(0,"$file DOES NOT use proper system calls");
+	if ($loginfo =~ /arguments for Systemexec::system|exec/im) {
+		ok(0,"$file DOES NOT use proper system or exec calls");
 		if ($verbose) { print STDERR $loginfo; }
 	} else {
-		ok(1,"$file uses proper system calls");
+		ok(1,"$file uses proper system and exec calls");
 	}
 }
 
