@@ -1248,17 +1248,17 @@ $(DIST)/bin/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DI
 
 ifndef NO_DIST_INSTALL
 export:: $(PREF_JS_EXPORTS) $(PREF_DIST_DIR)/$(PREF_DIR)
-	@$(EXIT_ON_ERROR)  \
+	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(PREF_DIST_DIR)/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(PREF_DIST_DIR)/$(PREF_DIR)/`basename $$i`; \
 	done
 
 ifdef GRE_MODULE
 ifndef _SKIP_OLD_GRE_INSTALL
 export:: $(PREF_JS_EXPORTS) $(DIST)/bin/$(PREF_DIR)
-	@$(EXIT_ON_ERROR)  \
+	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(DIST)/bin/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/$(PREF_DIR)/`basename $$i`; \
 	done
 endif
 endif
@@ -1266,9 +1266,9 @@ endif
 
 ifndef NO_INSTALL
 install:: $(PREF_JS_EXPORTS)
-	@$(EXIT_ON_ERROR)  \
+	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
 	done
 endif
 endif

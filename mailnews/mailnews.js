@@ -580,3 +580,25 @@ pref("mail.close_message_window.on_file", true);
 
 pref("mail.server_type_on_restart",         -1);
 #endif
+
+#ifdef XP_UNIX
+pref("mail.empty_trash", false);
+
+pref("mail.check_new_mail", true);
+pref("mail.signature_file", "~/.signature");
+pref("mail.default_fcc", "~/nsmail/Sent");
+pref("news.default_fcc", "~/nsmail/Sent");
+pref("mailnews.reply_with_extra_lines", 0);
+pref("mail.use_builtin_movemail", true);
+pref("mail.movemail_program", "");
+pref("mail.movemail_warn", false);
+pref("mail.sash_geometry", "");
+pref("news.cache_xover", false);
+pref("news.show_first_unread", false);
+pref("news.sash_geometry", "");
+pref("mail.signature_date", 0);
+
+// until bug #130581 is fixed, we need to override this on linux
+pref("mail.compose.max_recycled_windows", 0);
+#endif
+
