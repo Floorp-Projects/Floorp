@@ -898,7 +898,7 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   if (NS_FAILED(rv) || 
       NS_FAILED(prefs->GetBoolPref("imageblocker.enabled", &prefvalue)) ||
       !prefvalue) {
-    permission = PR_TRUE;
+    permission = (image_GetBehaviorPref() != COOKIE_DontUse);
     return NS_OK;
   }
 
@@ -1829,9 +1829,6 @@ permission_Save() {
   permission_HostStruct * hostStruct;
   permission_TypeStruct * typeStruct;
 
-  if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
-    return;
-  }
   if (!cookie_permissionsChanged) {
     return;
   }
@@ -2005,9 +2002,6 @@ cookie_Save() {
   cookie_CookieStruct * cookie_s;
   time_t cur_date = get_current_time();
   char date_string[36];
-  if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
-    return;
-  }
   if (!cookie_cookiesChanged) {
     return;
   }
