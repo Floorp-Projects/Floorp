@@ -18,5 +18,5 @@
 Evaluate % = ("{{SourceFile}}" =~ /(Å:)¨0Å/)
 
 MakeStub "{{SourceFile}}" -o "{{¨0}}::::dist:client_stubs:NavigatorDebugExtras" ¶
-	-fragname NavigatorDebugExtras ¶
+	-fragname Navigator ¶
 	-vercur 400 -verdef 400 -verimp 400
