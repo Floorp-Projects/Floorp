@@ -53,20 +53,28 @@
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    
    <script type="application/x-javascript">
-     <![CDATA[
-       function calendarPrefOnLoad()
-       {
-          var thisDateFormater = new DateFormater();
-             var Now = new Date();
-            var DateFormatLong = thisDateFormater.getLongFormatedDate( Now );
-            var DateFormatShort = thisDateFormater.getShortFormatedDate( Now );
-      
-            //set the menu items for the date format to their proper values.
-          
-            document.getElementById( "dateformat-long-menuitem" ).setAttribute( "label", DateFormatLong );
-      
-            document.getElementById( "dateformat-short-menuitem" ).setAttribute( "label", DateFormatShort );
-          }
+      var labelLong = "&pref.dateformat.long;";      
+      var labelShort = "&pref.dateformat.short;";
+
+      function calendarPrefOnLoad()
+      {
+         var now = new Date();
+         var dateFormatter = new DateFormater();
+         //
+         // create example dates using today's date
+         var dateFormattedLong = dateFormatter.getLongFormatedDate( now );
+         var dateFormattedShort = dateFormatter.getShortFormatedDate( now );
+         //
+         // menu items include examples of current date formats.
+         document.getElementById( "dateformat-long-menuitem" ).setAttribute( "label", labelLong+": "+dateFormattedLong);
+         document.getElementById( "dateformat-short-menuitem" ).setAttribute( "label", labelShort+": "+dateFormattedShort);
+         //
+         // deselect and reselect to update visible item title
+         var dateFormatMenuList = document.getElementById( "dateformat" );
+         var selectedIndex = dateFormatMenuList.selectedIndex;
+         dateFormatMenuList.selectedIndex = -1;
+         dateFormatMenuList.selectedIndex = selectedIndex;
+       }
       
       /* 
       ** NOTE: 
@@ -77,7 +85,6 @@
          "alarmplaysound", "alarmshow", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength",
          "reloadonlaunch", "categories"
        ];
-     ]]>
    </script>
 
    <groupbox align="start" orient="vertical">
