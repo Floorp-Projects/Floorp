@@ -171,6 +171,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
@@ -673,6 +674,7 @@ nsBulletFrame::GetListItemText(nsIPresContext& aCX,
 {
   switch (aListStyle.mListStyleType) {
     case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     default: // CSS2 say "A users  agent that does not recognize a numbering system
       // should use 'decimal'
       DecimalToText(mOrdinal, result);
@@ -834,6 +836,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     default:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:

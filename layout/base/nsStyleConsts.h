@@ -392,6 +392,7 @@
 #define NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN       20
 #define NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA       21
 #define NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA       22
+#define NS_STYLE_LIST_STYLE_OLD_DECIMAL           23
 #define NS_STYLE_LIST_STYLE_BASIC                 100  // not in css
 
 // See nsStyleList
