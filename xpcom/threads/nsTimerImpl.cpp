@@ -393,13 +393,15 @@ void* handleTimerEvent(TimerEventType* event)
 #endif
 
   if (gFireOnIdle) {
-    nsCOMPtr<nsIThread> currentThread, mainThread;
-    nsIThread::GetCurrent(getter_AddRefs(currentThread));
-    nsIThread::GetMainThread(getter_AddRefs(mainThread));
-    if (currentThread == mainThread) {
-      gIdleTimers->AppendElement(NS_STATIC_CAST(nsITimer*, NS_STATIC_CAST(nsTimerImpl*, event->e.owner)));
+    if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->GetPriority() < NS_PRIORITY_HIGHEST) {
+      nsCOMPtr<nsIThread> currentThread, mainThread;
+      nsIThread::GetCurrent(getter_AddRefs(currentThread));
+      nsIThread::GetMainThread(getter_AddRefs(mainThread));
+      if (currentThread == mainThread) {
+        gIdleTimers->AppendElement(NS_STATIC_CAST(nsITimer*, NS_STATIC_CAST(nsTimerImpl*, event->e.owner)));
 
-      return NULL;
+        return NULL;
+      }
     }
   }
 
