@@ -888,26 +888,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	    switch (op) {
 	      case JSOP_NOP:
 		/*
-		 * Check for extra user parenthesization, a do-while loop,
-		 * a for-loop with an empty initializer part, a labeled
-		 * statement, a function definition, or try/finally.
+                 * Check for a do-while loop, a for-loop with an empty
+                 * initializer part, a labeled statement, a function
+                 * definition, or try/finally.
 		 */
 		sn = js_GetSrcNote(jp->script, pc);
 		todo = -2;
 		switch (sn ? SN_TYPE(sn) : SRC_NULL) {
-		  case SRC_PAREN:
-		    /* Use last real op so PopOff adds parens if needed. */
-		    todo = PopOff(ss, lastop);
-
-		    /* Now add user-supplied parens only if PopOff did not. */
-		    cs    = &js_CodeSpec[lastop];
-		    topcs = &js_CodeSpec[ss->opcodes[ss->top]];
-		    if (topcs->prec >= cs->prec) {
-			todo = Sprint(&ss->sprinter, "(%s)",
-				      OFF2STR(&ss->sprinter, todo));
-		    }
-		    break;
-
 #if JS_HAS_DO_WHILE_LOOP
 		  case SRC_WHILE:
 		    js_printf(jp, "\tdo {\n");	/* balance} */
@@ -1032,6 +1019,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		  default:;
 		}
 		break;
+
+              case JSOP_GROUP:
+                /* Use last real op so PopOff adds parens if needed. */
+                todo = PopOff(ss, lastop);
+
+                /* Now add user-supplied parens only if PopOff did not. */
+                cs    = &js_CodeSpec[lastop];
+                topcs = &js_CodeSpec[ss->opcodes[ss->top]];
+                if (topcs->prec >= cs->prec) {
+                    todo = Sprint(&ss->sprinter, "(%s)",
+                                  OFF2STR(&ss->sprinter, todo));
+                }
+                break;
 
 	      case JSOP_PUSH:
 	      case JSOP_PUSHOBJ:

@@ -2392,20 +2392,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * The node for (e) has e as its kid, enabling users who want to nest
          * assignment expressions in conditions to avoid the error correction
          * done by Condition (from x = y to x == y) by double-parenthesizing.
-         *
-         * We also emit an annotated NOP so we can decompile user parentheses,
-         * but that's just a nicety (the decompiler does not preserve comments
-         * or white space, and it parenthesizes for correct precedence anyway,
-         * so this nop nicety should be considered with a cold eye, especially
-         * if another srcnote type is needed).
          */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
-
-        if (js_NewSrcNote(cx, cg, SRC_PAREN) < 0 ||
-            js_Emit1(cx, cg, JSOP_NOP) < 0) {
+        if (js_Emit1(cx, cg, JSOP_GROUP) < 0)
             return JS_FALSE;
-        }
         break;
 
       case TOK_NAME:
@@ -2467,7 +2458,7 @@ JS_FRIEND_DATA(const char *) js_SrcNoteName[] = {
     "pcdelta",
     "assignop",
     "cond",
-    "paren",
+    "reserved0",
     "hidden",
     "pcbase",
     "label",
@@ -2499,7 +2490,7 @@ uint8 js_SrcNoteArity[] = {
     1,  /* SRC_PCDELTA */
     0,  /* SRC_ASSIGNOP */
     0,  /* SRC_COND */
-    0,  /* SRC_PAREN */
+    0,  /* SRC_RESERVED0 */
     0,  /* SRC_HIDDEN */
     1,  /* SRC_PCBASE */
     1,  /* SRC_LABEL */

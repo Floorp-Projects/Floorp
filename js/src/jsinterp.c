@@ -1207,6 +1207,10 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_NOP:
             break;
 
+          case JSOP_GROUP:
+            obj = NULL;
+            break;
+
           case JSOP_PUSH:
             PUSH_OPND(JSVAL_VOID);
             break;
@@ -1347,12 +1351,11 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 
           case JSOP_TOOBJECT:
-            rval = POP();
             SAVE_SP(fp);
-            ok = js_ValueToObject(cx, rval, &obj);
+            ok = js_ValueToObject(cx, sp[-1], &obj);
             if (!ok)
                 goto out;
-            PUSH(OBJECT_TO_JSVAL(obj));
+            sp[-1] = OBJECT_TO_JSVAL(obj);
             break;
 
 #define POP_ELEMENT_ID(id) {                                                  \
@@ -1373,7 +1376,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_IN_OPERATOR
           case JSOP_IN:
             rval = POP();
-            if (!JSVAL_IS_OBJECT(rval) || rval == JSVAL_NULL) {
+            if (JSVAL_IS_PRIMITIVE(rval)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_IN_NOT_OBJECT);
                 ok = JS_FALSE;
@@ -2507,7 +2510,7 @@ js_Interpret(JSContext *cx, jsval *result)
                         PUSH_OPND(JSVAL_VOID);
                         goto advance_pc;
                     }
-                    if (op2 != JSOP_NOP)
+                    if (op2 != JSOP_GROUP)
                         break;
                 }
                 js_ReportIsNotDefined(cx, ATOM_BYTES(atom));
