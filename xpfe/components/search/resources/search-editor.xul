@@ -42,7 +42,8 @@
 	onload="doLoad()" onunload="doUnload()"
 	>
 
-	<html:script src="chrome://search/content/search-editor.js" />
+	<html:script language="Javascript" src="chrome://global/content/globalOverlay.js"/>  
+	<html:script language="Javascript" src="chrome://search/content/search-editor.js" />
 
 	<titledbox orient="vertical" flex="1" >
 		<box align="horizontal" flex="100%" autostretch="never">
@@ -89,8 +90,8 @@
 			<box align="vertical" flex="100%" class="button-group">
 				<spring align="vertical" flex="100%" />
 
-				<button id="add-button" onclick="return AddEngine()" value="&add.label;" />
-				<button id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" />
+				<titledbutton id="add-button" onclick="return AddEngine()" value="&add.label;" class="dialog toolbar-non-iconic" />
+				<titledbutton id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" class="dialog toolbar-non-iconic" />
 
 				<spring align="vertical" flex="100%" />
 
@@ -128,9 +129,9 @@
 		</box>
 
 		<box align="horizontal" class="button-group">
-			<button id="new-category-button" onclick="NewCategory()" value="&new.category.label;" />
-			<button id="rename-category-button" onclick="RenameCategory()" value="&rename.category.label;" />
-			<button id="remove-category.buttom" onclick="RemoveCategory()" value="&remove.category.label;" />
+			<titledbutton id="new-category-button" onclick="NewCategory()" value="&new.category.label;" class="dialog toolbar-non-iconic" />
+			<titledbutton id="rename-category-button" onclick="RenameCategory()" value="&rename.category.label;" class="dialog toolbar-non-iconic" />
+			<titledbutton id="remove-category.buttom" onclick="RemoveCategory()" value="&remove.category.label;" class="dialog toolbar-non-iconic" />
 			<spring align="horizontal" flex="100%" />
 		</box>
 	</titledbox>
