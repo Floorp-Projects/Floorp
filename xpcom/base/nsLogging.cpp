@@ -726,7 +726,7 @@ nsFileLogEventSink::Flush(nsILog* log)
 PR_IMPLEMENT(nsILog*)
 NS_GetLog(const char* name, PRUint32 controlFlags)
 {
-    return NULL:
+    return nsnull;
 }
 
 #endif // NS_ENABLE_LOGGING
