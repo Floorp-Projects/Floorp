@@ -26,7 +26,8 @@ CSRCS		= \
 
 EXPORTS= cstream.h strmutil.h
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img jtools
+REQUIRES	= network nspr2 dbm util pref js java fileurl security \
+	layer img jtools netcnvts
 
 include $(DEPTH)/config/rules.mk
 
