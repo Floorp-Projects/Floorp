@@ -111,15 +111,15 @@ PRUint32
 nsCacheMetaData::Size(void)
 {
     PRUint32 size = 0;
-    nsAutoString ucsKey;
+    const char *key;
 
     // XXX this should be computed in SetElement
 
     MetaElement * elem = mData;
     while (elem) {
-        elem->mKey->ToString(ucsKey);
+        elem->mKey->GetUTF8String(&key);
 
-        size += (2 + ucsKey.Length() + strlen(elem->mValue));
+        size += (2 + strlen(key) + strlen(elem->mValue));
 
         elem = elem->mNext;
     }
@@ -129,16 +129,14 @@ nsCacheMetaData::Size(void)
 nsresult
 nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
 {
-    nsAutoString ucsKey;
-    nsCAutoString key;
+    const char *key;
     PRUint32 metaSize = 0;
 
     MetaElement * elem = mData;
     while (elem) {
-        elem->mKey->ToString(ucsKey);
-        CopyUCS2toASCII(ucsKey, key); // XXX consider a custom ASCII atom table
+        elem->mKey->GetUTF8String(&key);
 
-        PRUint32 keySize = 1 + key.Length();
+        PRUint32 keySize = 1 + strlen(key);
         PRUint32 valSize = 1 + strlen(elem->mValue);
         if ((metaSize + keySize + valSize) > bufSize) {
             // not enough space to copy key/value pair
@@ -146,7 +144,7 @@ nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
             return NS_ERROR_OUT_OF_MEMORY;
         }
         
-        memcpy(buffer, key.get(), keySize);
+        memcpy(buffer, key, keySize);
         buffer += keySize;
         memcpy(buffer, elem->mValue, valSize);
         buffer += valSize;
@@ -183,16 +181,14 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
 nsresult
 nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
 {
-    nsAutoString ucsKey;
-    nsCAutoString key;
+    const char *key;
 
     MetaElement * elem = mData;
     while (elem) {
-        elem->mKey->ToString(ucsKey);
-        CopyUCS2toASCII(ucsKey, key); // XXX consider a custom ASCII atom table
+        elem->mKey->GetUTF8String(&key);
 
         PRBool keepGoing;
-        nsresult rv = visitor->VisitMetaDataElement(key.get(), elem->mValue, &keepGoing);
+        nsresult rv = visitor->VisitMetaDataElement(key, elem->mValue, &keepGoing);
 
         if (NS_FAILED(rv) || !keepGoing)
             break;
