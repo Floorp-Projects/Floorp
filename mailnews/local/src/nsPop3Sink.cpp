@@ -152,6 +152,7 @@ nsPop3Sink::EndMailDelivery()
     }
 	if (m_newMailParser)
 	{
+		m_newMailParser->OnStopBinding(nsnull, NS_OK, nsnull);
 		delete m_newMailParser;
 		m_newMailParser = NULL;
 	}
