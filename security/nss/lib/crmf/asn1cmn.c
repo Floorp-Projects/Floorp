@@ -33,6 +33,7 @@
 
 #include "cmmf.h"
 #include "cmmfi.h"
+#include "nssrenam.h"
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 SEC_ASN1_MKSUB(SEC_AnyTemplate)
