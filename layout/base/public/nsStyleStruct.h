@@ -19,15 +19,16 @@
 #define nsStyleStruct_h___
 
 enum nsStyleStructID {
-  eStyleStruct_Font     = 1,
-  eStyleStruct_Color    = 2,
-  eStyleStruct_Spacing  = 3,
-  eStyleStruct_List     = 4,
-  eStyleStruct_Position = 5,
-  eStyleStruct_Text     = 6,
-  eStyleStruct_Display  = 7,
-  eStyleStruct_Table    = 8,
-  eStyleStruct_Content  = 9
+  eStyleStruct_Font           = 1,
+  eStyleStruct_Color          = 2,
+  eStyleStruct_Spacing        = 3,
+  eStyleStruct_List           = 4,
+  eStyleStruct_Position       = 5,
+  eStyleStruct_Text           = 6,
+  eStyleStruct_Display        = 7,
+  eStyleStruct_Table          = 8,
+  eStyleStruct_Content        = 9,
+  eStyleStruct_UserInterface  = 10
 };
 
 

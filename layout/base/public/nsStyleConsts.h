@@ -264,6 +264,7 @@
 #define NS_STYLE_DISPLAY_TABLE_ROW              15
 #define NS_STYLE_DISPLAY_TABLE_CELL             16
 #define NS_STYLE_DISPLAY_TABLE_CAPTION          17
+#define NS_STYLE_DISPLAY_MENU                   18
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0

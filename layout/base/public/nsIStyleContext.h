@@ -81,6 +81,8 @@ struct nsStyleSpacing: public nsStyleStruct {
 
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
+  PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
+
   PRBool GetMargin(nsMargin& aMargin) const;
   PRBool GetPadding(nsMargin& aPadding) const;
   PRBool GetBorder(nsMargin& aBorder) const;
@@ -145,6 +147,7 @@ struct nsStylePosition : public nsStyleStruct {
   nsStyleCoord  mHeight;                // [reset] coord, percent, auto, inherit
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, inherit
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null, inherit
+  PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
 
   nsStyleCoord  mZIndex;                // [reset] 
 
@@ -278,6 +281,18 @@ protected:
 
   PRUint32            mQuotesCount;
   nsString*           mQuotes;
+};
+
+struct nsStyleUserInterface: public nsStyleStruct {
+  PRUint8   mUserInput;       // [inherited]
+  PRUint8   mModifyContent;   // [inherited]
+  PRUint8   mSelectionStyle;  // [reset]
+  PRUint8   mAutoSelect;      // [inherited]
+  PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
+  PRUint8   mAutoTab;         // [inherited]
+  PRUint8   mResizer;         // [reset]
+protected:
+  nsStyleUserInterface(void);
 };
 
 #define BORDER_PRECEDENT_EQUAL  0
