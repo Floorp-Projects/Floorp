@@ -51,6 +51,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
+#include "nsLayoutCID.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -83,6 +84,8 @@ static char kStyleSheetPI[] = "xml-stylesheet";
 static char kXSLType[] = "text/xsl";
 #endif
 
+static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
+
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -101,6 +104,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 #endif
 
+nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
+PRUint32 nsXMLContentSink::gRefCnt = 0;
 
 static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
 
@@ -144,6 +149,14 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 nsXMLContentSink::nsXMLContentSink()
 {
   NS_INIT_REFCNT();
+  gRefCnt++;
+  if (gRefCnt == 1) {
+     nsresult rv = nsServiceManager::GetService(kNameSpaceManagerCID,
+                                          NS_GET_IID(nsINameSpaceManager),
+                                          (nsISupports**) &gNameSpaceManager);
+     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
+  }
+
   mDocument = nsnull;
   mDocumentURL = nsnull;
   mDocumentBaseURL = nsnull;
@@ -167,6 +180,11 @@ nsXMLContentSink::nsXMLContentSink()
 
 nsXMLContentSink::~nsXMLContentSink()
 {
+  gRefCnt--;
+  if (gRefCnt == 0) {
+    NS_IF_RELEASE(gNameSpaceManager);
+  }
+
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mDocumentBaseURL);
@@ -663,11 +681,11 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
   nsAutoString tag;
-  nsIAtom* nameSpacePrefix;
+  nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool pushContent = PR_TRUE;
-  nsIContent *content;
+  nsCOMPtr<nsIContent> content;
 
   // XXX Hopefully the parser will flag this before we get
   // here. If we're in the epilog, there should be no
@@ -679,7 +697,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   mState = eXMLContentSinkState_InDocumentElement;
 
   tag = aNode.GetText();
-  nameSpacePrefix = CutNameSpacePrefix(tag);
+  nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
 
   // We must register namespace declarations found in the attribute list
   // of an element before creating the element. This is because the
@@ -691,30 +709,39 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (isHTML) {
-    nsIAtom* tagAtom = NS_NewAtom(tag);
-    if (nsHTMLAtoms::script == tagAtom) {
+    nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tag));
+    if (nsHTMLAtoms::script == tagAtom.get()) {
       result = ProcessStartSCRIPTTag(aNode);
     }
-    NS_RELEASE(tagAtom);
-
-    nsIHTMLContent *htmlContent = nsnull;
-    result = NS_CreateHTMLElement(&htmlContent, tag);
-    content = (nsIContent *)htmlContent;
+    
+    nsCOMPtr<nsIHTMLContent> htmlContent;
+    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), tag);
+    content = do_QueryInterface(htmlContent);
   }
   else {
-    nsIAtom *tagAtom = NS_NewAtom(tag);
-    nsIXMLContent *xmlContent;
-    result = NS_NewXMLElement(&xmlContent, tagAtom);
-    NS_RELEASE(tagAtom);
-    // For XML elements, set the namespace
-    if (NS_OK == result) {
-      xmlContent->SetNameSpacePrefix(nameSpacePrefix);
-      xmlContent->SetNameSpaceID(nameSpaceID);
+    // The first step here is to see if someone has provided their
+    // own content element implementation (e.g., XUL or MathML).  
+    // This is done based off a progid/namespace scheme.
+    nsCOMPtr<nsIElementFactory> elementFactory;
+    GetElementFactory(nameSpaceID, getter_AddRefs(elementFactory));
+    if (elementFactory) {
+      // Create the content element using the element factory.
+      elementFactory->CreateInstanceByTag(tag, getter_AddRefs(content));
     }
-    content = (nsIContent *)xmlContent;
+    else {
+      nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tag));
+      nsCOMPtr<nsIXMLContent> xmlContent;
+      result = NS_NewXMLElement(getter_AddRefs(xmlContent), tagAtom);
+    
+      // For XML elements, set the namespace
+      if (NS_OK == result) {
+        xmlContent->SetNameSpacePrefix(nameSpacePrefix);
+        xmlContent->SetNameSpaceID(nameSpaceID);
+      }
+      content = do_QueryInterface(xmlContent);
+    }
   }
-  NS_IF_RELEASE(nameSpacePrefix);
-
+  
   if (NS_OK == result) {
     content->SetDocument(mDocument, PR_FALSE);
 
@@ -786,7 +813,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       if (mDocElement == content) {
         mState = eXMLContentSinkState_InEpilog;
       }
-      NS_RELEASE(content);
     }
     else {
       // XXX Again, the parser should catch unmatched tags and
@@ -1919,3 +1945,19 @@ XMLElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIContent** aR
   return rv; 
 }
 
+void 
+nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
+{
+  nsresult rv;
+  nsAutoString nameSpace;
+  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
+
+  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
+  progID += nameSpace;
+
+  // Retrieve the appropriate factory.
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+
+  *aResult = elementFactory;
+  NS_IF_ADDREF(*aResult);
+}
