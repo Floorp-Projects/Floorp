@@ -3352,7 +3352,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(Border), aHighestNode);
   }
 
-  border->RecalcData();
+  border->RecalcData(mPresContext);
   return border;
 }
   
@@ -3510,7 +3510,7 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(Outline), aHighestNode);
   }
 
-  outline->RecalcData();
+  outline->RecalcData(mPresContext);
   return outline;
 }
 

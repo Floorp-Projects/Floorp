@@ -1332,7 +1332,7 @@ nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
     myBorder.mBorder.SetBottom(coord);
     coord.SetCoordValue(borderWidth.left);
     myBorder.mBorder.SetLeft(coord);
-    myBorder.RecalcData();
+    myBorder.RecalcData(&aPresContext);
 
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,

@@ -341,7 +341,7 @@ struct nsStyleBorder: public nsStyleStruct {
   void Destroy(nsPresContext* aContext);
 
   PRBool IsBorderSideVisible(PRUint8 aSide) const;
-  void RecalcData();
+  void RecalcData(nsPresContext* aContext);
   nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
 #ifdef DEBUG
   static nsChangeHint MaxDifference();
@@ -467,9 +467,6 @@ protected:
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] the colors to use for a simple border.  not used
                                   // if -moz-border-colors is specified
-  
-  // XXX remove with deprecated methods
-  nscoord       mBorderWidths[3];
 };
 
 
@@ -514,7 +511,7 @@ struct nsStyleOutline: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleOutline), this);
   };
 
-  void RecalcData();
+  void RecalcData(nsPresContext* aContext);
   nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
 #ifdef DEBUG
   static nsChangeHint MaxDifference();
@@ -587,9 +584,6 @@ protected:
   nscoord       mCachedOutlineOffset;
 
   nscolor       mOutlineColor;    // [reset] 
-
-  // XXX remove with deprecated methods
-  nscoord       mBorderWidths[3];
 
   PRPackedBool  mHasCachedOutline;
   PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
