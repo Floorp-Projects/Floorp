@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.5 2004/06/01 17:29:53 mconnor%myrealbox.com Exp $
+## $Id: mozilla.in,v 1.6 2004/06/03 16:46:36 mconnor%myrealbox.com Exp $
 ## 
 ## Usage:
 ##
@@ -70,7 +70,7 @@ moz_pis_startstop_scripts()
 }
 
 #uncomment for debugging
-set -x
+#set -x
 
 moz_libdir=%MOZAPPDIR%
 MRE_HOME=%MREDIR%
