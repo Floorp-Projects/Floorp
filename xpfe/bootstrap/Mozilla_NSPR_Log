@@ -1,0 +1,2 @@
+ENV:NSPR_LOG_MODULES=nsComponentManager:5
+ENV:NSPR_LOG_FILE=xpcom.log
