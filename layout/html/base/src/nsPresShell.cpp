@@ -103,6 +103,8 @@
 #include "nsIFrameDebug.h"
 #endif
 
+#include "nsIReflowCallback.h"
+
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -572,6 +574,12 @@ struct nsAttributeChangeRequest
   nsAttributeChangeRequest* next;
 };
 
+struct nsCallbackEventRequest
+{
+  nsIReflowCallback* callback;
+  nsCallbackEventRequest* next;
+};
+
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
                   public nsISelectionController,
@@ -651,6 +659,12 @@ public:
                                  const nsString& aValue,
                                  PRBool aNotify,
                                  nsAttributeChangeType aType);
+
+  /**
+   * Post a callback that should be handled after reflow has finished.
+   */
+  NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback);
+
   /**
    * Reflow batching
    */   
@@ -792,6 +806,7 @@ protected:
 
   void HandlePostedDOMEvents();
   void HandlePostedAttributeChanges();
+  void HandlePostedReflowCallbacks();
 
   /** notify all external reflow observers that reflow of type "aData" is about
     * to begin.
@@ -866,6 +881,8 @@ protected:
   nsDOMEventRequest* mLastDOMEventRequest;
   nsAttributeChangeRequest* mFirstAttributeRequest;
   nsAttributeChangeRequest* mLastAttributeRequest;
+  nsCallbackEventRequest* mFirstCallbackEventRequest;
+  nsCallbackEventRequest* mLastCallbackEventRequest;
 
   // subshell map
   nsDST*            mSubShellMap;  // map of content/subshell pairs
@@ -993,7 +1010,9 @@ PresShell::PresShell():mStackArena(nsnull),
                        mFirstDOMEventRequest(nsnull),
                        mLastDOMEventRequest(nsnull),
                        mFirstAttributeRequest(nsnull),
-                       mLastAttributeRequest(nsnull)
+                       mLastAttributeRequest(nsnull),
+                       mFirstCallbackEventRequest(nsnull),
+                       mLastCallbackEventRequest(nsnull)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
@@ -1881,6 +1900,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   mViewManager->CacheWidgetChanges(PR_FALSE);
   HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
+  HandlePostedReflowCallbacks();
 
   //Send resize event from here.
   nsEvent event;
@@ -3105,6 +3125,29 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
   return rv;
 }
 
+// Post a request to handle an arbitrary callback after reflow has finished.
+NS_IMETHODIMP
+PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
+{
+  nsCallbackEventRequest* request = nsnull;
+  void* result = nsnull;
+  AllocateFrame(sizeof(nsCallbackEventRequest), &result);
+  request = (nsCallbackEventRequest*)result;
+
+  request->callback = aCallback;
+  NS_ADDREF(aCallback);
+  request->next = nsnull;
+
+  if (mLastCallbackEventRequest) {
+    mLastCallbackEventRequest = mLastCallbackEventRequest->next = request;
+  } else {
+    mFirstCallbackEventRequest = request;
+    mLastCallbackEventRequest = request;
+  }
+ 
+  return NS_OK;
+}
+
 /**
 * Post a request to handle a DOM event after Reflow has finished.
 * The event must have been created with the "new" operator.
@@ -3173,6 +3216,28 @@ PresShell::PostAttributeChange(nsIContent* aContent,
   }
 
   return NS_OK;
+}
+
+void
+PresShell::HandlePostedReflowCallbacks()
+{
+   PRBool shouldFlush = PR_FALSE;
+   nsCallbackEventRequest* node = mFirstCallbackEventRequest;
+   while(node)
+   {
+      nsIReflowCallback* callback = node->callback;
+      nsCallbackEventRequest* toFree = node;
+      node = node->next;
+      mFirstCallbackEventRequest = node;
+      FreeFrame(sizeof(nsCallbackEventRequest), toFree);
+      callback->ReflowFinished(this, &shouldFlush); 
+      NS_RELEASE(callback);
+   }
+
+   mFirstCallbackEventRequest = mLastCallbackEventRequest = nsnull;
+
+   if (shouldFlush)
+     FlushPendingNotifications();
 }
 
 void
@@ -4197,6 +4262,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
   HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
+  HandlePostedReflowCallbacks();
   return NS_OK;
 }
 

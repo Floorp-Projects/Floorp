@@ -51,6 +51,7 @@ EXPORTS =				\
 	nsIPresContext.h		\
 	nsIPresShell.h			\
 	nsIPresState.h          \
+  nsIReflowCallback.h \
 	nsIReflowCommand.h		\
 	nsIFrameSelection.h		\
 	nsISpaceManager.h		\

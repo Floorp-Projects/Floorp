@@ -65,6 +65,7 @@ class nsIFrameSelection;
 class nsIFrameManager;
 class nsILayoutHistoryState;
 class nsIArena;
+class nsIReflowCallback;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -270,6 +271,8 @@ public:
                                  const nsString& aValue,
                                  PRBool aNotify,
                                  nsAttributeChangeType aType) = 0;
+
+  NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
 
  /**
    * Reflow batching
