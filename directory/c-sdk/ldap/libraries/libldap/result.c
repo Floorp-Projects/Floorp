@@ -458,6 +458,12 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 }
 
 
+
+#define NSLDAPI_REQUEST_COMPLETE( lr )				\
+	( (lr)->lr_outrefcnt <= 0 && 				\
+	  (lr)->lr_res_msgtype != LDAP_RES_SEARCH_ENTRY &&	\
+	  (lr)->lr_res_msgtype != LDAP_RES_SEARCH_REFERENCE )
+
 /*
  * read1msg() should be called with LDAP_CONN_LOCK and LDAP_REQ_LOCK locked.
  */
@@ -621,21 +627,21 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 				merge_error_info( ld, lr->lr_parent, lr );
 
 				lr = lr->lr_parent;
-				if ( --lr->lr_outrefcnt > 0 ) {
-					break;	/* not completely done yet */
+				--lr->lr_outrefcnt;
+				if ( !NSLDAPI_REQUEST_COMPLETE(lr)) {
+					break;
 				}
 			}
 
 			/*
-			 * we recognize a request as complete when:
-			 *  1) it has no outstanding referrals
-			 *  2) it is not a child request
+			 * we recognize a request as fully complete when:
+			 *  1) it is not a child request (NULL parent)
+			 *  2) it has no outstanding referrals
 			 *  3) we have received a result for the request (i.e.,
 			 *     something other than an entry or a reference).
 			 */
-			if ( lr->lr_outrefcnt <= 0 && lr->lr_parent == NULL &&
-			    lr->lr_res_msgtype != LDAP_RES_SEARCH_ENTRY &&
-			    lr->lr_res_msgtype != LDAP_RES_SEARCH_REFERENCE ) {
+			if ( lr->lr_parent == NULL
+			    && NSLDAPI_REQUEST_COMPLETE(lr)) {
 				id = lr->lr_msgid;
 				tag = lr->lr_res_msgtype;
 				LDAPDebug( LDAP_DEBUG_TRACE,
