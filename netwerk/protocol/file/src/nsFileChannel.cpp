@@ -85,7 +85,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
     rv = mURI->GetSpec(&url);
     if (NS_FAILED(rv)) return rv;
     nsFileURL fileURL(url);
-    nsCRT::free(url);
+    delete [] url;
     mSpec = fileURL;
 
     mEventQueue = queue;
@@ -501,7 +501,7 @@ nsFileChannel::GetContentType(char * *aContentType)
     PRInt32 extLoc = specStr.RFind('.');
     if (-1 != extLoc) {
         specStr.Right(extStr, specStr.Length() - extLoc - 1);
-        PRUnichar *ext = extStr.ToNewUnicode();
+        char *ext = extStr.ToNewCString();
 
         NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
