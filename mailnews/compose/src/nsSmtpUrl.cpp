@@ -65,6 +65,7 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	m_userName = nsnull;
 	m_userPassword = nsnull;
+	m_fileName = nsnull;
  
 	// nsIURL specific state
     m_protocol = nsnull;
@@ -93,6 +94,7 @@ nsSmtpUrl::~nsSmtpUrl()
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
+	PR_FREEIF(m_fileName); 
     if (nsnull != m_URL_s) 
 	{
 //        NET_DropURLStruct(m_URL_s);
@@ -542,10 +544,16 @@ nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 		}
 		else 
 		{
-			PRInt32 hlen = cp - cp0;
-			m_toPart = (char*) PR_Malloc(hlen + 1);
-			PL_strncpy(m_toPart, cp0, hlen);
-			m_toPart[hlen] = 0;
+			// host name came first....the recipients are really just after
+			// the host name....so cp points to "/recip1,recip2,..."
+			if (*cp == '/')
+				cp++;
+			if (cp)
+				m_toPart = PL_strdup(cp);
+//			PRInt32 hlen = cp - cp0;
+//			m_toPart = (char*) PR_Malloc(hlen + 1);
+//			PL_strncpy(m_toPart, cp0, hlen);
+//			m_toPart[hlen] = 0;
 		}
 	}
 
@@ -687,29 +695,7 @@ nsresult nsSmtpUrl::GetMessageContents(const char ** aToPart, const char ** aCcP
 nsresult nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
 {
 	if (aRecipientsList)
-		*aRecipientsList = nsnull;
-	return NS_OK;
-}
-
-// all headers are separated by new lines...
-nsresult nsSmtpUrl::GetHeaders(const char ** aHeadersList)
-{
-	if (aHeadersList)
-		*aHeadersList = nsnull;
-
-	return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetBody (const char ** aBody)
-{
-	if (aBody)
-		*aBody = nsnull;
-	return NS_OK;
-}
-nsresult nsSmtpUrl::GetBodySize(PRUint32 * aBodySize)
-{
-	if (aBodySize)
-		*aBodySize = 0;
+		*aRecipientsList = m_toPart ? PL_strdup(m_toPart) : nsnull;
 	return NS_OK;
 }
 
@@ -725,6 +711,29 @@ nsresult nsSmtpUrl::IsPostMessage(PRBool * aPostMessage)
 nsresult nsSmtpUrl::SetPostMessage(PRBool aPostMessage)
 {
 	return NS_OK;
+}
+
+// the message can be stored in a file....allow accessors for getting and setting
+// the file name to post...
+nsresult nsSmtpUrl::SetPostMessageFile(const char * aFileName)
+{
+	nsresult rv = NS_OK;
+	if (aFileName)
+	{
+		PR_FREEIF(m_fileName);
+		m_fileName = nsCRT::strdup(aFileName);
+	}
+
+	return rv;
+}
+
+nsresult nsSmtpUrl::GetPostMessageFile(const char ** aFileName)
+{
+	nsresult rv = NS_OK;
+	if (aFileName)
+		*aFileName = m_fileName;
+	
+	return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

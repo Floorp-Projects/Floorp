@@ -75,16 +75,17 @@ public:
 	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
 	// recipients to send the email to. each name is NULL terminated...
 	NS_IMETHOD GetAllRecipients(char ** aRecipientsList);
-	// all headers are separated by new lines...
-	NS_IMETHOD GetHeaders(const char ** aHeadersList);
-	NS_IMETHOD GetBody (const char ** aBody);
-	NS_IMETHOD GetBodySize(PRUint32 * aBodySize);
 
 	// is the url a post message url or a bring up the compose window url? 
 	NS_IMETHOD IsPostMessage(PRBool * aPostMessage); 
 	
 	// used to set the url as a post message url...
 	NS_IMETHOD SetPostMessage(PRBool aPostMessage);
+
+	// the message can be stored in a file....allow accessors for getting and setting
+	// the file name to post...
+	NS_IMETHOD SetPostMessageFile(const char * aFileName);
+	NS_IMETHOD GetPostMessageFile(const char ** aFileName);
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// SMTP Url instance specific getters and setters --> info the protocol needs
@@ -157,6 +158,8 @@ protected:
 	/* Smtp specific event sinks */
 	char		* m_userPassword;
 	char		* m_userName;
+
+	char		* m_fileName; /* if the message to post is a file, we store the file name here...*/
 
 	void ReconstructSpec(void);
 	// it is possible to encode the message to parse in the form of a url.
