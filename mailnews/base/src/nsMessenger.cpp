@@ -72,7 +72,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsIMessage.h"
 
-#include "nsMsgStatusFeedback.h"
+#include "nsIMsgStatusFeedback.h"
 #include "nsMsgRDFUtils.h"
 
 // compose
