@@ -285,7 +285,6 @@ private:
                                nsPresContext*           aPresContext,
                                nsFrameConstructorState& aState,
                                nsIContent*              aContent,
-                               nsIFrame*                aGeometricParent,
                                nsIFrame*                aContentParent,
                                nsStyleContext*          aStyleContext,
                                nsTableCreator&          aTableCreator,

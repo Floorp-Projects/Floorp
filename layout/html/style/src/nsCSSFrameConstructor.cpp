@@ -2395,7 +2395,7 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(nsIPresShell*            aPresShel
   // construct the pseudo outer and inner as part of the pseudo frames
   nsFrameItems items;
   rv = ConstructTableFrame(aPresShell, aPresContext, aState, parentContent,
-                           parentFrame, parentFrame, childStyle, aTableCreator,
+                           parentFrame, childStyle, aTableCreator,
                            PR_TRUE, items, pseudoOuter.mFrame, 
                            pseudoInner.mFrame);
 
@@ -2901,7 +2901,6 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
                                            nsPresContext*           aPresContext,
                                            nsFrameConstructorState& aState,
                                            nsIContent*              aContent,
-                                           nsIFrame*                aGeometricParent,
                                            nsIFrame*                aContentParent,
                                            nsStyleContext*          aStyleContext,
                                            nsTableCreator&          aTableCreator,
@@ -2911,19 +2910,18 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
                                            nsIFrame*&               aNewInnerFrame)
 {
   nsresult rv = NS_OK;
-  if (!aPresShell || !aPresContext || !aGeometricParent) return rv;
 
   // Create the outer table frame which holds the caption and inner table frame
   aTableCreator.CreateTableOuterFrame(&aNewOuterFrame);
 
-  nsIFrame* parentFrame = aGeometricParent;
+  nsIFrame* parentFrame = aContentParent;
   nsFrameItems* frameItems = &aChildItems;
   // We may need to push a float containing block
   nsFrameConstructorSaveState floatSaveState;
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     PRBool hasPseudoParent = PR_FALSE;
-    GetParentFrame(aPresShell, aPresContext, aTableCreator, *aGeometricParent, 
+    GetParentFrame(aPresShell, aPresContext, aTableCreator, *parentFrame, 
                    nsLayoutAtoms::tableOuterFrame, aState, parentFrame, hasPseudoParent);
     if (!hasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aChildItems);
@@ -3568,7 +3566,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       // construct the table frame
       nsIFrame* innerTableFrame;
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aChildContent,
-                               aParentFrame, aParentFrame, childStyleContext,
+                               aParentFrame, childStyleContext,
                                aTableCreator, PR_FALSE, aChildItems,
                                childFrame, innerTableFrame);
       if (NS_SUCCEEDED(rv) && pageBreakAfter) {
@@ -6588,8 +6586,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       }
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
-                               aState.GetGeometricParent(aDisplay,
-                                                         adjParentFrame),
                                adjParentFrame, aStyleContext,
                                tableCreator, PR_FALSE, aFrameItems, newFrame,
                                innerTable);
@@ -6879,7 +6875,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     nsIFrame* innerTable;
     nsMathMLmtableCreator mathTableCreator(aPresShell);
     rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
-                             blockFrame, blockFrame, tableContext,
+                             blockFrame, tableContext,
                              mathTableCreator, PR_FALSE, tempItems, outerTable,
                              innerTable);
     // Note: table construction function takes care of initializing the frame,
