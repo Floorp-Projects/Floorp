@@ -23,7 +23,6 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsIPref.idl"
 #include "nsIURIContentListener.idl"
 #include "nsIURI.idl"
 
