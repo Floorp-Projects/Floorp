@@ -371,6 +371,8 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sImgLoader);
+  NS_IF_RELEASE(sPrefBranch);
+  NS_IF_RELEASE(sPref);
 }
 
 // static
