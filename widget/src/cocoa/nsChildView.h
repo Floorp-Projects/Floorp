@@ -246,7 +246,7 @@ protected:
     // is converted to Cocoa). This MUST be overridden if CreateCocoaView()
     // does not create something that inherits from NSQuickDrawView!
   virtual GrafPtr GetQuickDrawPort() ;
-  
+
 protected:
 #if DEBUG
   const char*       gInstanceClassName;
