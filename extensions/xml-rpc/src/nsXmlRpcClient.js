@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.2 $
+ *  Version: $Revision: 1.3 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.2 2000/05/08 10:38:26 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.3 2000/05/08 14:00:12 mj%digicool.com Exp $
  */
 
 /*
@@ -163,18 +163,19 @@ nsXmlRpcClient.prototype = {
             debug('Parse finished');
             debug('Fault? ' + this._fault);
             debug('Result? ' + this._result);
-            if (this._fault)
-                throw Components.Exception('XML-RPC Fault', null, null,
-                    this._fault);
-            else
-                return this._result;
         } catch(ex) {
             this._status = ex.result;
             this._errorMsg = ex.message;
-            ctxt.listener.onError(this, ctxt.context, ex.result, ex.message);
+            throw ex;
         } finally {
             this._inProgress = false;
         }
+
+        if (this._fault)
+            throw Components.Exception('XML-RPC Fault', null, null,
+                this._fault);
+        else
+            return this._result;
     },
 
     // Internal copy of the status, so's we can throw it to the syncnronous
