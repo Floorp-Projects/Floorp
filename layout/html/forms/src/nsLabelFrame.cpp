@@ -125,7 +125,7 @@ protected:
 };
 
 nsresult
-NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -135,6 +135,12 @@ NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  // set the state flags (if any are provided)
+  nsFrameState state;
+  it->GetFrameState( &state );
+  state |= aStateFlags;
+  it->SetFrameState( state );
+
   *aNewFrame = it;
   return NS_OK;
 }
@@ -421,9 +427,14 @@ nsLabelFrame::SetInitialChildList(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
+  const nsStylePosition* position;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
+
+  PRUint32 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
+
+  flags |= position->IsAbsolutelyPositioned() ? NS_BLOCK_SPACE_MGR : 0;
 
   nsIFrame* areaFrame;
   NS_NewAreaFrame(shell, &areaFrame, flags);
@@ -462,23 +473,27 @@ void LabelHack(nsHTMLReflowState& aReflowState, char* aMessage)
 {
   if (aReflowState.mComputedWidth == 0) {
     aReflowState.mComputedWidth = aReflowState.availableWidth;
+    NS_ASSERTION(0, "LabelHack: Path #1");
   }
   if ((aReflowState.mComputedWidth != NS_INTRINSICSIZE) &&
       (aReflowState.mComputedWidth > aReflowState.availableWidth) &&
       (aReflowState.availableWidth > 0)) {
-//    printf("BUG - %s has a computed width = %d, available width = %d \n", 
-//    aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth);
+    printf("BUG - %s has a computed width = %d, available width = %d \n", 
+           aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth);
     aReflowState.mComputedWidth = aReflowState.availableWidth;
+    NS_ASSERTION(0, "LabelHack: Path #2");
   }
   if (aReflowState.mComputedHeight == 0) {
     aReflowState.mComputedHeight = aReflowState.availableHeight;
+    NS_ASSERTION(0, "LabelHack: Path #3");
   }
   if ((aReflowState.mComputedHeight != NS_INTRINSICSIZE) &&
       (aReflowState.mComputedHeight > aReflowState.availableHeight) &&
       (aReflowState.availableHeight > 0)) {
-//    printf("BUG - %s has a computed height = %d, available height = %d \n", 
-//    aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight);
+    printf("BUG - %s has a computed height = %d, available height = %d \n", 
+           aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight);
     aReflowState.mComputedHeight = aReflowState.availableHeight;
+    NS_ASSERTION(0, "LabelHack: Path #4");
   }
 }
 
@@ -577,7 +592,7 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   // get border and padding
   const nsStyleSpacing* spacing =
