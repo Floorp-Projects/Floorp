@@ -822,6 +822,8 @@ layout/base/public/Makefile
 content/base/public/Makefile
 dom/src/base/Makefile
 modules/oji/public/Makefile
+gfx2/public/Makefile
+embedding/components/windowwatcher/public/Makefile
 "
 
 MAKEFILES_inspector="
