@@ -736,6 +736,7 @@ InMemoryResourceCursor::InMemoryResourceCursor(InMemoryDataSource* ds)
     : mDataSource(ds),
       mNext(-1)
 {
+    NS_INIT_REFCNT();
     mDataSource = ds;
     NS_ADDREF(ds);
 
