@@ -412,7 +412,7 @@ Contributor(s): ______________________________________. -->
   <splitter id="sidebar-splitter" chromeclass="extrachrome" />
   
   <box id="appcontent" align="vertical" flex="100%"
-    onclick="if (event.button==2) browserLoadClipboardURL();"
+    onclick="if (event.button==2) browserLoadClipboardURL(event.target);"
     ondragover="return DragOverContentArea(event);"
     ondragdrop="return DropOnContentArea(event);">
 
