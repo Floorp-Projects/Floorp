@@ -5887,24 +5887,21 @@ PRBool nsImapProtocol::TryToLogon()
 	// get the password and user name for the current incoming server...
 	if (m_server)
 	{
-		rv = m_server->GetPassword(&password);
+		// we are in the imap thread so *NEVER* try to extract the password with UI
+		rv = m_server->GetPassword(PR_FALSE, &password);
 		rv = m_server->GetUsername(&userName);
 
 	}
 
-	if (userName && !password && m_imapMiscellaneousSink)
+	if (userName && (!password || !*password) && m_imapServerSink)
 	{
-        m_imapMiscellaneousSink->GetPasswordForUser(this, userName);
-		WaitForFEEventCompletion();
-		rv = m_server->GetPassword(&password);
+        m_imapServerSink->PromptForPassword(&password);
 	}
 	do
 	{
-		if (userName && !password && m_imapMiscellaneousSink)
+		if (userName && (!password || !*password) && m_imapServerSink)
 		{
-			m_imapMiscellaneousSink->GetPasswordForUser(this, userName);
-			WaitForFEEventCompletion();
-			rv = m_server->GetPassword(&password);
+			m_imapServerSink->PromptForPassword(&password);
 		}
 	    PRBool imapPasswordIsNew = PR_FALSE;
 
