@@ -21,6 +21,7 @@
 #include "nsIFormManager.h"
 #include "nsBlockFrame.h"
 #include "nsVoidArray.h"
+#include "nsIFileSpec.h"
 
 class  nsString;
 class  nsIContent;
@@ -78,18 +79,15 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
   void RemoveRadioGroups();
-  void ProcessAsURLEncoded(PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
-  void ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame);
+  nsresult ProcessAsURLEncoded(PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
+  nsresult ProcessAsMultipart(nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame);
   static const char* GetFileNameWithinPath(char* aPathName);
-
-  // the following are temporary until nspr and/or netlib provide them
-  static PRBool Temp_GetTempDir(char* aTempDirName);
-  static char* Temp_GenerateTempFileName(PRInt32 aMaxSize, char* aBuffer);
-  static void  Temp_GetContentType(char* aPathName, char* aContentType);
-
-  // XXX Hack to get document from parent html frame.  Should Document do this?
-  nsIDocument* GetParentHTMLFrameDocument(nsIDocument* doc);
+  nsresult GetContentType(char* aPathName, char** aContentType);
   
+  // i18n helper routines
+  nsString* URLEncode(nsString& aString, nsIUnicodeEncoder* encoder);
+  char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder);
+
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
   void GetSubmitCharset(nsString& oCharset);
 
