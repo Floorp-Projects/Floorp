@@ -190,8 +190,12 @@ $(PROGRAM): $(SPLASH_XPM)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-# don't let us build with "-dynamiclib"
-EXTRA_DSO_LDOPTS = -execute
+EXTRA_DSO_LDOPTS := $(subst -dynamiclib,-execute,$(EXTRA_DSO_LDOPTS))
+
+ifdef BUILD_STATIC_LIBS
+LDFLAGS	+= -framework QuickTime
+endif
+
 endif
 
 # This code removes the console from release builds

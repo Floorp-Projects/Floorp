@@ -220,5 +220,5 @@ static const nsModuleComponentInfo components[] =
 #endif // IBMBIDI
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetModule, components)
+NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
 
