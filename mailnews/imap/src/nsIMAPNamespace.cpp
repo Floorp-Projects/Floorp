@@ -169,7 +169,15 @@ int nsIMAPNamespaceList::AddNewNamespace(nsIMAPNamespace *ns)
 		for (nodeIndex=m_NamespaceList.Count()-1; nodeIndex >= 0; nodeIndex--)
 		{
 			nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);
-			if (nspace && nspace->GetIsNamespaceFromPrefs())
+			// if we find existing namespace(s) that matches the 
+			// new one, we'll just remove the old ones and let the
+			// new one get added when we've finished checking for
+			// matching namespaces or namespaces that came from prefs.
+			if (nspace &&
+                            (nspace->GetIsNamespaceFromPrefs() ||
+                            (!PL_strcmp(ns->GetPrefix(), nspace->GetPrefix()) &&
+			     ns->GetType() == nspace->GetType() &&
+			     ns->GetDelimiter() == nspace->GetDelimiter())))
 			{
 				m_NamespaceList.RemoveElementAt(nodeIndex);
 				delete nspace; 
