@@ -1788,7 +1788,9 @@ PRBool nsListControlFrame::CheckIfAllFramesHere()
   PRInt32 numContentItems = 0;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   if (node) {
-    mIsAllFramesHere = NS_OK == CountAllChild(node, numContentItems);
+    // XXX Need to find a fail proff way to determine that
+    // all the frames are there
+    mIsAllFramesHere = PR_TRUE;//NS_OK == CountAllChild(node, numContentItems);
   }
   // now make sure we have a frame each piece of content
 
