@@ -20,7 +20,23 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-REQUIRES	= xpcom string layout content dom pref docshell view intl locale necko htmlparser webshell uconv unicharutil gfx
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  content \
+		  dom \
+		  pref \
+		  docshell \
+		  view \
+		  intl \
+		  locale \
+		  necko \
+		  htmlparser \
+		  webshell \
+		  uconv \
+		  unicharutil \
+		  gfx \
+		  $(NULL)
 
 LIBRARY_NAME = raptorbasewidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT

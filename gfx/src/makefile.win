@@ -24,7 +24,24 @@ DEPTH=..\..
 DIRS = windows
 
 MODULE=gfx
-REQUIRES	= xpcom string widget util dom locale view necko pref timer uriloader gfx2 imglib2 intl mimetype content layout
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  util \
+		  dom \
+		  locale \
+		  view \
+		  necko \
+		  pref \
+		  timer \
+		  uriloader \
+		  gfx2 \
+		  imglib2 \
+		  intl \
+		  mimetype \
+		  content \
+		  layout \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=gkgfx
