@@ -1228,7 +1228,7 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   nsAutoString docTypeStr(aNode.GetText()); 
   nsAutoString str, name, publicId, systemId;
 
-  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_FALSE, 10)) {
+  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_FALSE, 9)) {
     docTypeStr.Right(str, docTypeStr.Length()-9);
   }
 
