@@ -74,3 +74,5 @@ pref("accessibility.typeaheadfind.linksonly", false);
 
 // image resizing
 pref("browser.enable_automatic_image_resizing", true);
+
+pref("browser.chrome.favicons", false);
