@@ -17,9 +17,7 @@
 
 #
 
-
 NODEPEND=1
-IGNORE_MANIFEST = 1
 
 #//------------------------------------------------------------------------
 #//
@@ -47,13 +45,8 @@ MAKE_OBJ_TYPE=DLL
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=$(ZIPDLL)
-#PDBFILE=$(MOD_ZIP).pdb
+DLLNAME=zip$(MOZ_BITS)$(VERSION_NUMBER)
 MAPFILE=$(MOD_ZIP).map
-!if "$(MOZ_BITS)" == "16"
-DEFFILE=zip16.def
-!endif
-#RESFILE=zip.res
 
 #//------------------------------------------------------------------------
 #// 
@@ -84,7 +77,7 @@ OBJS=                                   \
 #//
 #//------------------------------------------------------------------------
 
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MAPFILE= $(MOD_ZIP).map
 
 
@@ -111,5 +104,7 @@ LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 include <$(DEPTH)/config/rules.mak>
 
 export:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MOD_ZIP).lib $(DIST)\lib
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+    

@@ -51,8 +51,7 @@ MAKE_OBJ_TYPE=DLL
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=netlib.dll
-PDBFILE=netlib.pdb
+DLLNAME=netlib
 MAPFILE=netlib.map
 DEFFILE=net.def
 
@@ -84,7 +83,7 @@ OBJS=                                   \
 #//
 #//------------------------------------------------------------------------
 
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -166,7 +165,7 @@ include <$(DEPTH)/config/rules.mak>
 $(DLL): $(NETLIBS)
 
 libs:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\netlib.lib $(DIST)\lib
     $(MAKE_INSTALL) .\res\gopher-audio.gif   $(DIST)\bin\res\network
     $(MAKE_INSTALL) .\res\gopher-binary.gif  $(DIST)\bin\res\network
