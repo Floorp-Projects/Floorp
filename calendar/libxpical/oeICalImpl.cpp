@@ -300,7 +300,7 @@ oeICalImpl::~oeICalImpl()
         m_observerlist[i]->Release();
     }
     m_observerlist.clear();
-    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+    for( i=0; i<m_todoobserverlist.size(); i++ ) {
         m_todoobserverlist[i]->Release();
     }
     m_todoobserverlist.clear();
@@ -773,7 +773,7 @@ oeICalImpl::SetServer( const char *str ) {
         }
         #endif
     }
-    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+    for( i=0; i<m_todoobserverlist.size(); i++ ) {
         nsresult rv;
         rv = m_todoobserverlist[i]->OnLoad();
         #ifdef ICAL_DEBUG
@@ -837,7 +837,7 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
             }
 
         }
-        for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) 
+        for( i=0; i<m_todoobserverlist.size(); i++ ) 
         {
             if( m_batchMode ) {
                 nsresult rv;
