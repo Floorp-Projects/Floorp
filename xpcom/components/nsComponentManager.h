@@ -45,9 +45,10 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManagerObsolete.h"
+#include "nsIComponentLoaderManager.h"
+#include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
-#include "nsRegistry.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "pldhash.h"
@@ -63,12 +64,6 @@ class nsFactoryEntry;
 class nsDll;
 class nsIServiceManager;
 
-// Registry Factory creation function defined in nsRegistry.cpp
-// We hook into this function locally to create and register the registry
-// Since noone outside xpcom needs to know about this and nsRegistry.cpp
-// does not have a local include file, we are putting this definition
-// here rather than in nsIRegistry.h
-extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 
 // Predefined loader types. Do not change the numbers.
 // NATIVE should be 0 as it is being used as the first array index.
@@ -82,6 +77,11 @@ extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Array of Loaders and their type strings
+struct nsLoaderdata {
+    nsIComponentLoader *loader;
+    const char *type;
+};
 
 class nsComponentManagerImpl
     : public nsIComponentManager,
@@ -89,6 +89,7 @@ class nsComponentManagerImpl
       public nsIComponentRegistrar,
       public nsSupportsWeakReference,
       public nsIInterfaceRequestor,
+      public nsIComponentLoaderManager,
       public nsIServiceManagerObsolete,
       public nsIComponentManagerObsolete
 {
@@ -127,6 +128,7 @@ public:
     
     NS_DECL_NSISERVICEMANAGER
     NS_DECL_NSISERVICEMANAGEROBSOLETE
+    NS_DECL_NSICOMPONENTLOADERMANAGER
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -134,7 +136,13 @@ public:
 
     static nsComponentManagerImpl* gComponentManager;
     nsresult Init(void);
-    nsresult PlatformPrePopulateRegistry();
+
+    nsresult WritePersistentRegistry();
+    nsresult ReadPersistentRegistry();
+private:
+    nsresult WriteCategoryManagerToRegistry(PRFileDesc* fd);
+public:
+
     nsresult Shutdown(void);
 
     nsresult FreeServices();
@@ -153,18 +161,14 @@ protected:
                                      const char *aRegistryName,
                                      PRBool aReplace, PRBool aPersist,
                                      const char *aType);
-    nsresult AddComponentToRegistry(const nsCID &aCID, const char *aClassName,
-                                    const char *aContractID,
-                                    const char *aRegistryName,
-                                    const char *aType);
     nsresult GetLoaderForType(int aType, 
                               nsIComponentLoader **aLoader);
     nsresult FindFactory(const char *contractID, nsIFactory **aFactory) ;
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
 
-    nsFactoryEntry *GetFactoryEntry(const char *aContractID, int checkRegistry = -1);
-    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, int checkRegistry = -1);
-    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey, int checkRegistry = -1);
+    nsFactoryEntry *GetFactoryEntry(const char *aContractID);
+    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass);
+    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey);
 
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
@@ -178,16 +182,6 @@ protected:
 
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
     
-    // The following functions are the only ones that operate on the persistent
-    // registry
-    nsresult PlatformInit(void);
-    nsresult PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey);
-    nsresult PlatformRegister(const char *cidString, const char *className, const char *contractID, nsDll *dll);
-    nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
-    nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
-    nsresult PlatformContractIDToCLSID(const char *aContractID, nsCID *aClass);
-    nsresult PlatformCLSIDToContractID(const nsCID *aClass, char* *aClassName, char* *aContractID);
-
     // Convert a loader type string into an index into the loader data
     // array. Empty loader types are converted to NATIVE. Returns -1 if
     // loader type cannot be determined.
@@ -206,12 +200,6 @@ protected:
     PLDHashTable        mContractIDs;
     PRMonitor*          mMon;
 
-    nsIRegistry*        mRegistry;
-    nsRegistryKey       mXPCOMKey;
-    nsRegistryKey       mClassesKey;
-    nsRegistryKey       mCLSIDKey;
-    PRBool              mPrePopulationDone;
-    nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
     nsIComponentLoader  *mStaticComponentLoader;
     nsCOMPtr<nsIFile>   mComponentsDir;
@@ -223,15 +211,13 @@ protected:
     #define NS_SHUTDOWN_COMPLETE 2
     PRUint32 mShuttingDown;
 
-    // Array of Loaders and their type strings
-    struct nsLoaderdata {
-        nsIComponentLoader *loader;
-        const char *type;
-    };
-
     nsLoaderdata *mLoaderData;
     int mNLoaderData;
     int mMaxNLoaderData;
+
+    PRBool              mRegistryDirty;
+    nsVoidArray         mAutoRegEntries;
+    nsCOMPtr<nsICategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
 };
@@ -350,5 +336,21 @@ struct nsContractIDTableEntry : public PLDHashEntryHdr {
     char           *mContractID;
     nsFactoryEntry *mFactoryEntry;    
 };
+class AutoRegEntry
+{
+public:
+    AutoRegEntry(){};
+    AutoRegEntry(const char* name, PRInt64* modDate);
+    virtual ~AutoRegEntry();
 
+    char*   GetName() {return mName;}
+    PRInt64 GetDate() {return mModDate;}
+    void    SetDate(PRInt64 *date) { mModDate = *date;}
+    PRBool  Modified(PRInt64 *date);
+
+private:
+    char*   mName;
+    PRInt64 mModDate;
+};
 #endif // nsComponentManager_h__
+

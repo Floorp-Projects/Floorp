@@ -49,14 +49,6 @@
 #include "nsILocalFileMac.h"
 #endif
 
-#define PRINT_CRITICAL_ERROR_TO_SCREEN 1
-#define USE_REGISTRY 1
-#undef OBSOLETE_MODULE_LOADING
-
-#ifdef OBSOLETE_MODULE_LOADING
-#include "nsObsoleteModuleLoading.h"
-#endif
-
 // Logging of debug output
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
@@ -65,7 +57,7 @@
 extern PRLogModuleInfo *nsComponentManagerLog;
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
-    mRegistry(nsnull), mCompMgr(nsnull), mDllStore(nsnull)
+    mCompMgr(nsnull), mDllStore(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -80,7 +72,6 @@ nsDll_Destroy(nsHashKey *aKey, void *aData, void* closure)
 
 nsNativeComponentLoader::~nsNativeComponentLoader()
 {
-    mRegistry = nsnull;
     mCompMgr = nsnull;
 
     delete mDllStore;
@@ -103,8 +94,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 
     /* Should this all live in xcDll? */
     nsDll *dll;
-    PRInt64 mod = LL_Zero(), size = LL_Zero();
-    rv = CreateDll(nsnull, aLocation, &mod, &size, &dll);
+    rv = CreateDll(nsnull, aLocation, &dll);
     if (NS_FAILED(rv))
         return rv;
 
@@ -167,82 +157,15 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 NS_IMETHODIMP
 nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
-    nsresult rv;
-
     mCompMgr = aCompMgr;
-    mRegistry = do_QueryInterface(aReg);
-    if (!mCompMgr || !mRegistry)
+    if (!mCompMgr)
         return NS_ERROR_INVALID_ARG;
 
-    rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomComponentsKeyName,
-                               &mXPCOMKey);
-    if (NS_FAILED(rv))
-        return rv;
-
-
-    NS_ASSERTION(!mDllStore, "Init must not be called more than once");
-
-    mDllStore = new nsObjectHashtable(nsnull, 
-                                      nsnull,    // never copy
-                                      nsDll_Destroy, 
-                                      nsnull,
-                                      256,
-                                      PR_TRUE); // thread safe
+    mDllStore = new nsObjectHashtable(nsnull, nsnull, // never copy
+                                      nsDll_Destroy, nsnull,
+                                      256, /* Thead Safe */ PR_TRUE);
     if (!mDllStore)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    // Read in all dll entries and populate the mDllStore
-    nsCOMPtr<nsIEnumerator> dllEnum;
-    rv = mRegistry->EnumerateSubtrees( mXPCOMKey, getter_AddRefs(dllEnum));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = dllEnum->First();
-    for (; NS_SUCCEEDED(rv) && (dllEnum->IsDone() != NS_OK); (rv = dllEnum->Next()))
-    {
-        nsCOMPtr<nsISupports> base;
-        rv = dllEnum->CurrentItem(getter_AddRefs(base));
-        if (NS_FAILED(rv))  continue;
-
-        // Get specific interface.
-        nsIID nodeIID = NS_IREGISTRYNODE_IID;
-        nsCOMPtr<nsIRegistryNode> node;
-        rv = base->QueryInterface( nodeIID, getter_AddRefs(node) );
-        if (NS_FAILED(rv)) continue;
-
-        // Get library name
-        nsXPIDLCString library;
-        rv = node->GetNameUTF8(getter_Copies(library));
-
-        if (NS_FAILED(rv)) continue;
-
-        char* uLibrary;
-        char* eLibrary = (char*)library.operator const char*();
-        PRUint32 length = strlen(eLibrary);
-        rv = mRegistry->UnescapeKey((PRUint8*)eLibrary, 1, &length, (PRUint8**)&uLibrary);
-        
-        if (NS_FAILED(rv)) continue;
-
-        if (uLibrary == nsnull)
-            uLibrary = eLibrary;
-
-        // Get key associated with library
-        nsRegistryKey libKey;
-        rv = node->GetKey(&libKey);
-        if (NS_SUCCEEDED(rv)) //  Cannot continue here, because we have to free unescape
-        {
-            // Create nsDll with this name
-            nsDll *dll = NULL;
-            PRInt64 lastModTime;
-            PRInt64 fileSize;
-            GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
-            rv = CreateDll(NULL, uLibrary, &lastModTime, &fileSize, &dll);
-        }
-        if (uLibrary && (uLibrary != eLibrary))
-            nsMemory::Free(uLibrary);
-
-        if (NS_FAILED(rv)) continue;
-    }
-
     return NS_OK;
 }
 
@@ -471,11 +394,11 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
            ("nsNativeComponentLoader: Loaded \"%s\".", dll->GetDisplayPath()));
 
     // Tell the module to self register
+    nsCOMPtr<nsIFile> fs;
     nsCOMPtr<nsIModule> mobj;
     res = dll->GetModule(mCompMgr, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
     {
-        nsCOMPtr<nsIFile> fs;
         /*************************************************************
          * WARNING: Why are use introducing 'res2' here and then     *
          * later assigning it to 'res' rather than just using 'res'? *
@@ -519,13 +442,20 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
     // able to register on some later autoreg, after another component has been
     // installed.
     if (res != NS_ERROR_FACTORY_REGISTER_AGAIN) {
-        dll->Sync();
+        PRInt64 modTime;
+        if (!fs)
+            return res;
         
-        PRInt64 modTime, size;
-        dll->GetLastModifiedTime(&modTime);
-        dll->GetSize(&size);
-
-        SetRegistryDllInfo(registryLocation, &modTime, &size);
+        fs->GetLastModifiedTime(&modTime);
+        nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr);
+        if (!manager)
+            return NS_ERROR_FAILURE;
+        
+        nsCOMPtr<nsIFile> fs;
+        res = dll->GetDllSpec(getter_AddRefs(fs));
+        if (NS_FAILED(res)) return res;
+        
+        manager->SaveFileInfo(fs, registryLocation, modTime);
     }
 
     return res;
@@ -698,15 +628,19 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     }
 
     nsDll *dll = NULL;
-    PRInt64 mod = LL_Zero(), size = LL_Zero();
-    rv = CreateDll(component, persistentDescriptor, &mod, &size, &dll);
+    rv = CreateDll(component, persistentDescriptor, &dll);
     if (NS_FAILED(rv) || dll == NULL) return rv;
 
     rv = SelfUnregisterDll(dll);
 
     // Remove any autoreg info about this dll
-    if (NS_SUCCEEDED(rv))
-        RemoveRegistryDllInfo(persistentDescriptor);
+    nsCStringKey key(persistentDescriptor);
+    mDllStore->RemoveAndDelete(&key);
+    
+    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+    manager->RemoveFileInfo(component, nsnull);
 
     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
            ("nsNativeComponentLoader: AutoUnregistration for %s %s.",
@@ -812,8 +746,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
     // Get the registry representation of the dll, if any
     nsDll *dll;
-    PRInt64 mod = LL_Zero(), size = LL_Zero();
-    rv = CreateDll(component, persistentDescriptor, &mod, &size, &dll);
+    rv = CreateDll(component, persistentDescriptor, &dll);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1016,98 +949,6 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
     return NS_OK;
 }
 
-nsresult
-nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
-                                            PRInt64 *lastModifiedTime,
-                                            PRInt64 *fileSize)
-{
-    nsresult rv;
-    PRUint32 length = strlen(aLocation);
-    char* eLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
-    if (rv != NS_OK)
-    {
-    return rv;
-    }
-    if (eLocation == nsnull)    //  No escaping required
-    eLocation = (char*)aLocation;
-
-
-    nsRegistryKey key;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, eLocation, &key);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = GetRegistryDllInfo(key, lastModifiedTime, fileSize);
-    if (aLocation != eLocation)
-        nsMemory::Free(eLocation);
-    return rv;
-}
-
-nsresult
-nsNativeComponentLoader::GetRegistryDllInfo(nsRegistryKey key,
-                                            PRInt64 *lastModifiedTime,
-                                            PRInt64 *fileSize)
-{
-    PRInt64 lastMod;
-    nsresult rv = mRegistry->GetLongLong(key, lastModValueName, &lastMod);
-    if (NS_FAILED(rv)) return rv;
-    *lastModifiedTime = lastMod;
-        
-    PRInt64 fsize;
-    rv = mRegistry->GetLongLong(key, fileSizeValueName, &fsize);
-    if (NS_FAILED(rv)) return rv;
-        *fileSize = fsize;
-    return NS_OK;
-}
-
-nsresult
-nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
-                                            PRInt64 *lastModifiedTime,
-                                            PRInt64 *fileSize)
-{
-    nsresult rv;
-    PRUint32 length = strlen(aLocation);
-    char* eLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eLocation == nsnull)    //  No escaping required
-    eLocation = (char*)aLocation;
-
-    nsRegistryKey key;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, eLocation, &key);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mRegistry->SetLongLong(key, lastModValueName, lastModifiedTime);
-    if (NS_FAILED(rv)) return rv;
-    rv = mRegistry->SetLongLong(key, fileSizeValueName, fileSize);
-    if (aLocation != eLocation)
-        nsMemory::Free(eLocation);
-    return rv;
-}
-
-nsresult
-nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
-{
-    nsresult rv;
-    PRUint32 length = strlen(aLocation);
-    char* eLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eLocation == nsnull)    //  No escaping required
-    eLocation = (char*)aLocation;
-
-    rv = mRegistry->RemoveSubtree(mXPCOMKey, eLocation);
-    if (aLocation != eLocation)
-        nsMemory::Free(eLocation);
-    return rv;
-}
-
 //
 // CreateDll
 // The only way to create a dll or get it from the dll cache. This will
@@ -1127,8 +968,8 @@ nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
 //    registry along with its    lastModTime and fileSize.
 //    {NULL, rel:libpref.so, 8985659, 20987}
 nsresult
-nsNativeComponentLoader::CreateDll(nsIFile *aSpec, const char *aLocation,
-                                   PRInt64 *modificationTime, PRInt64 *fileSize,
+nsNativeComponentLoader::CreateDll(nsIFile *aSpec, 
+                                   const char *aLocation,
                                    nsDll **aDll)
 {
     nsDll *dll;
@@ -1167,21 +1008,10 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec, const char *aLocation,
 
     if (!dll)
     {
-        PR_ASSERT(modificationTime != NULL);
-        PR_ASSERT(fileSize != NULL);
-
-        PRInt64 zit = LL_Zero();
-        
-        if (LL_EQ(*modificationTime,zit) && LL_EQ(*fileSize,zit))
-        {
-            // Get the modtime and filesize from the registry
-            rv = GetRegistryDllInfo(aLocation, modificationTime, fileSize);
-        }
-        dll = new nsDll(spec, aLocation, modificationTime, fileSize);
+        dll = new nsDll(spec, aLocation);
+        if (!dll)
+            return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    if (!dll)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     *aDll = dll;
     mDllStore->Put(&key, dll);
@@ -1210,27 +1040,5 @@ nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
                                                     nsIServiceManager *aServMgr,
                                                     nsIFactory **aFactory)
 {
-#ifdef OBSOLETE_MODULE_LOADING
-    nsFactoryProc getFactory =
-        (nsFactoryProc) aDll->FindSymbol("NSGetFactory");
-
-    if (!getFactory)
-        return NS_ERROR_FACTORY_NOT_LOADED;
-    
-    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-           ("nsNativeComponentLoader: %s using OBSOLETE NSGetFactory()\n",
-            aDll->GetDisplayPath()));
-
-    /*
-     * There was a time when CLSIDToContractID was used to get className
-     * and contractID, but that day is long past.  This code is not long
-     * for this earth, so we just pass nsnull.
-     */
-
-    return getFactory(aServMgr, aCID, nsnull /*className */,
-                      nsnull /* contractID */, aFactory);
-
-#else /* !OBSOLETE_MODULE_LOADING */
     return NS_ERROR_FACTORY_NOT_LOADED;
-#endif /* OBSOLETE_MODULE_LOADING */
 }

@@ -73,13 +73,12 @@ interface nsICategoryManager : nsISupports
      */
     nsISimpleEnumerator enumerateCategory(in string aCategory);
 
+
     /**
-     * Get all the category contents.
+     * Enumerate the entries in a category.
+     * @param aCategory The category to be enumerated.
      */
-    void getCategoryContents(in string category,
-			     [array, size_is(count)] out string entries,
-			     [array, size_is(count)] out string values,
-			     [retval] out unsigned long count);
+    nsISimpleEnumerator enumerateCategories();
 
     const long OVERRIDE   = 0;
     const long FALLBACK   = 1;

@@ -2,6 +2,7 @@ nsICategoryHandler.idl
 nsICategoryManager.idl
 nsIClassInfo.idl
 nsIComponentLoader.idl
+nsIComponentLoaderManager.idl
 nsIComponentManager.idl
 nsIComponentManagerObsolete.idl
 nsIComponentRegistrar.idl

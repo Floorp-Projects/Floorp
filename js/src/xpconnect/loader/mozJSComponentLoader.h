@@ -19,6 +19,7 @@
 #include "plhash.h"
 #include "jsapi.h"
 #include "nsIComponentLoader.h"
+#include "nsIComponentLoaderManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
 #include "nsIRegistry.h"
@@ -58,9 +59,10 @@ public:
     nsIModule *ModuleForLocation(const char *aLocation, nsIFile *component);
     PRBool HasChanged(const char *registryLocation, nsIFile *component);
     nsresult SetRegistryInfo(const char *registryLocation, nsIFile *component);
-    nsresult RemoveRegistryInfo(const char *registryLocation);
+    nsresult RemoveRegistryInfo(nsIFile *component, const char *registryLocation);
 
-    nsIComponentManager* mCompMgr; // weak ref, should make it strong?
+    nsCOMPtr<nsIComponentManager> mCompMgr;
+    nsCOMPtr<nsIComponentLoaderManager> mLoaderManager;
     nsCOMPtr<nsIRegistry> mRegistry;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
 #ifndef XPCONNECT_STANDALONE

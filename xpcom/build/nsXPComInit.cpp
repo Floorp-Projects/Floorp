@@ -105,6 +105,14 @@
 #include "nsLeakDetector.h"
 #endif
 
+// Registry Factory creation function defined in nsRegistry.cpp
+// We hook into this function locally to create and register the registry
+// Since noone outside xpcom needs to know about this and nsRegistry.cpp
+// does not have a local include file, we are putting this definition
+// here rather than in nsIRegistry.h
+extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
+
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -158,26 +166,6 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
     return iim->QueryInterface(aIID, aInstancePtr);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XPCOM initialization
-//
-// To Control the order of initialization of these key components I am putting
-// this function.
-//
-//  - nsServiceManager
-//    - nsComponentManager
-//      - nsRegistry
-//
-// Here are key points to remember:
-//  - A global of all these need to exist. nsServiceManager is an independent object.
-//    nsComponentManager uses both the globalServiceManager and its own registry.
-//
-//  - A static object of both the nsComponentManager and nsServiceManager
-//    are in use. Hence InitXPCOM() gets triggered from both
-//    NS_GetGlobale{Service/Component}Manager() calls.
-//
-//  - There exists no global Registry. Registry can be created from the component manager.
-//
 
 static nsresult
 RegisterGenericFactory(nsIComponentManager* compMgr,
@@ -425,6 +413,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     //    clients can create new objects.
 
     // Registry
+
     nsIFactory *registryFactory = NULL;
     rv = NS_RegistryGetFactory(&registryFactory);
     if (NS_FAILED(rv)) return rv;
@@ -436,6 +425,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                                   NS_REGISTRY_CONTRACTID,
                                   registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
+
     if (NS_FAILED(rv)) return rv;
 
     // Category Manager
@@ -457,10 +447,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     for (int i = 0; i < components_length; i++)
         RegisterGenericFactory(compMgr, &components[i]);
 
-    // Prepopulate registry for performance
-    // Ignore return value. It is ok if this fails.
-    nsComponentManagerImpl::gComponentManager->PlatformPrePopulateRegistry();
-
+    rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
+#ifdef DEBUG    
+    if (NS_FAILED(rv)) {
+        printf("No Persistent Registry Found.\n");        
+    }
+#endif
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
