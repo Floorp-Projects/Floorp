@@ -69,7 +69,7 @@ NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
 
 NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString);
 
-nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **result);
+NS_MSG_BASE nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **result);
 
 #endif
 
