@@ -29,4 +29,4 @@ nsISmtpService.h
 MsgCompGlue.h
 nsIComposer.h
 nsIMsgSendLater.h
-nsIMsgSendLaterFact.h
+nsMsgSendLaterFact.h
