@@ -352,13 +352,6 @@ export::
     @$(W95MAKE) export $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
-install:: w95libs $(LIBRARY)
-
-w95libs::
-!ifdef DIRS
-     @$(W95MAKE) libs $(MAKEDIR) $(DIRS)
-!endif # DIRS
-
 install::
 !ifdef DIRS
     @$(W95MAKE) install $(MAKEDIR) $(DIRS)
