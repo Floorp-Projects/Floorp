@@ -167,6 +167,12 @@ nsHashPropertyBag::GetEnumerator(nsISimpleEnumerator* *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
+    if (!mPropertyHash.IsInitialized()) {
+        // we can only assume that Init will fail only due to OOM.
+        if (!mPropertyHash.Init())
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsresult rv;
 
     nsCOMPtr<nsIMutableArray> propertyArray;
