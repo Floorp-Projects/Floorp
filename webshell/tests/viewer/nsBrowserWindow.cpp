@@ -125,10 +125,12 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #define THROBBING_N
 
 #define CLEANUP_WIDGET(_widget, _txt) \
+  if(_widget) {            \
   DestroyWidget((_widget)); \
   refCnt = (_widget)->Release(); \
   (_widget) = nsnull; \
-  NS_ASSERTION(refCnt == 0, (_txt));
+  NS_ASSERTION(refCnt == 0, (_txt)); \
+  }
 
 
 // XXX greasy constants
