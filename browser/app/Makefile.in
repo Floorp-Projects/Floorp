@@ -28,17 +28,17 @@ EXTRA_LIBS = \
 	$(TK_LIBS) \
 	$(NULL)
 
-$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 RCINCLUDE = splash.res
 ifndef MOZ_DEBUG
-MOZ_WINCONSOLE = 0
+MOZ_NOCONSOLE = 1
 endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 mozbrowser:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
