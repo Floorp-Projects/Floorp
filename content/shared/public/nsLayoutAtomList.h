@@ -108,6 +108,7 @@ LAYOUT_ATOM(tableFrame, "TableFrame")
 LAYOUT_ATOM(tableOuterFrame, "TableOuterFrame")
 LAYOUT_ATOM(tableRowGroupFrame, "TableRowGroupFrame")
 LAYOUT_ATOM(tableRowFrame, "TableRowFrame")
+LAYOUT_ATOM(textInputFrame,"TextInputFrame")
 LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
