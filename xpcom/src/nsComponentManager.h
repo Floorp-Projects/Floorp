@@ -26,7 +26,6 @@
 #include "prmon.h"
 
 class nsFactoryEntry;
-class nsDllStore;
 class nsDll;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +169,7 @@ protected:
     nsHashtable*  mFactories;
     nsHashtable*  mProgIDs;
     PRMonitor*    mMon;
-    nsDllStore*   mDllStore;
+    nsHashtable*   mDllStore;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
@@ -231,7 +230,7 @@ public:
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
-    nsresult Init(nsDllStore* store, const nsCID &aClass, const char *aLibrary,
+    nsresult Init(nsHashtable* dllHashtable, const nsCID &aClass, const char *aLibrary,
                   PRTime lastModTime, PRUint32 fileSize);
 
     nsCID cid;

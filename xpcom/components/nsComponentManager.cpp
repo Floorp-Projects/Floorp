@@ -47,7 +47,7 @@
 #include "prlink.h"
 #include "prsystem.h"
 #include "prprf.h"
-#include "xcDllStore.h"
+#include "xcDll.h"
 #include "prlog.h"
 #include "prerror.h"
 
@@ -83,7 +83,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
 }
 
 nsresult
-nsFactoryEntry::Init(nsDllStore* dllCollection, 
+nsFactoryEntry::Init(nsHashtable* dllCollection, 
                      const nsCID &aClass, const char *aLibrary,
                      PRTime lastModTime, PRUint32 fileSize)
 {
@@ -92,9 +92,11 @@ nsFactoryEntry::Init(nsDllStore* dllCollection,
     }
     cid = aClass;
   
+	nsProgIDKey key(aLibrary);
+
     // If dll not already in dllCollection, add it.
     // PR_EnterMonitor(mMon);
-    dll = dllCollection->Get(aLibrary);
+    dll = (nsDll *) dllCollection->Get(&key);
     // PR_ExitMonitor(mMon);
 	
     if (dll == NULL) {
@@ -118,7 +120,7 @@ nsFactoryEntry::Init(nsDllStore* dllCollection,
                     aLibrary));
 
             // PR_EnterMonitor(mMon);
-            dllCollection->Put(aLibrary, dll);
+            dllCollection->Put(&key, (void *)dll);
             // PR_ExitMonitor(mMon);
         }
     }
@@ -161,7 +163,7 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mDllStore == NULL) {
-        mDllStore = new nsDllStore();
+        mDllStore = new nsHashtable();
         if (mDllStore == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1752,7 +1754,8 @@ nsComponentManagerImpl::SyncComponentsInFile(const char *fullname)
     }
 	
     // Check if dll is one that we have already seen
-    nsDll *dll = mDllStore->Get(fullname);
+	nsProgIDKey key(fullname);
+    nsDll *dll = (nsDll *) mDllStore->Get(&key);
     nsresult rv = NS_OK;
     if (dll == NULL)
     {
@@ -1851,7 +1854,7 @@ nsComponentManagerImpl::SyncComponentsInFile(const char *fullname)
         dll = new nsDll(fullname);
         if (dll == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
-        mDllStore->Put(fullname, dll);
+        mDllStore->Put(&key, (void *) dll);
     } // dll == NULL
 	
     // Either we are seeing the dll for the first time or the dll has
