@@ -201,7 +201,7 @@ static void GetWindowsFolder(int folder, nsFileSpec& outDirectory)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    outDirectory =strdup(pBuffer);
+    outDirectory = pBuffer;
 
 Clean:
     // Clean up. 
