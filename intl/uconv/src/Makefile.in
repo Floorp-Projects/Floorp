@@ -60,7 +60,8 @@ include $(topsrcdir)/config/rules.mk
 CFLAGS		+= -DUSE_NSREG
 
 # Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
-ifeq (,$(filter AIX OpenVMS,$(OS_ARCH)))
+# QNX simply objects to the way it's being redefined.
+ifeq (,$(filter AIX OpenVMS QNX,$(OS_ARCH)))
 CFLAGS		+= -D__STDC__
 endif
 
