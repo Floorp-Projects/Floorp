@@ -177,7 +177,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
 
 		const char* canonicalPath = p.Path();
 		if(err == B_OK)
-			mPath = (char*)&canonicalPath;
+			mPath = (char*)canonicalPath;
 		else
 			return NS_ERROR_FAILURE;
     }
