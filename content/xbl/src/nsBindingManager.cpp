@@ -1434,11 +1434,11 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
           }
           if (!inserted) {
             // None of our previous siblings are in here... just stick
-            // ourselves in.
+            // ourselves in at the beginning of the insertion point.
             // XXXbz if we ever start doing the filter thing right, this may be
             // no good, since we may _still_ have anonymous kids in there and
             // may need to get the ordering with those right.
-            point->AddChild(aChild);
+            point->InsertChildAt(0, aChild);
           }
           SetInsertionParent(aChild, ins);
           break;
