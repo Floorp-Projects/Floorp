@@ -675,7 +675,7 @@ nsWebScriptsAccess::IsPublicService(const char* aHost, PRBool* aReturn)
                                  getter_Copies(value));
     
     if (NS_FAILED(rv) || value.IsEmpty())
-      return rv;
+      return NS_OK;
       
     nsACString::const_iterator begin, end, curr;
     nsACString::const_iterator uri_begin, uri_end;
