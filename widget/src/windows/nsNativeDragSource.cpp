@@ -44,49 +44,53 @@
  * class nsNativeDragSource
  */
 nsNativeDragSource::nsNativeDragSource()
+  : m_cRef(0)
 {
-	 m_cRef     = 0;
 }
 
 nsNativeDragSource::~nsNativeDragSource()
 {
 }
 
-STDMETHODIMP nsNativeDragSource::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP
+nsNativeDragSource::QueryInterface(REFIID riid, void** ppv)
 {
-    *ppv=NULL;
+  *ppv=NULL;
 
-    if (IID_IUnknown==riid || IID_IDropSource==riid)
-        *ppv=this;
+  if (IID_IUnknown==riid || IID_IDropSource==riid)
+    *ppv=this;
 
-	 if (NULL!=*ppv) {
-        ((LPUNKNOWN)*ppv)->AddRef();
-        return NOERROR;
-	 }
+  if (NULL!=*ppv) {
+    ((LPUNKNOWN)*ppv)->AddRef();
+    return NOERROR;
+  }
 
-    return ResultFromScode(E_NOINTERFACE);
+  return ResultFromScode(E_NOINTERFACE);
 }
 
 
-STDMETHODIMP_(ULONG) nsNativeDragSource::AddRef(void)
+STDMETHODIMP_(ULONG)
+nsNativeDragSource::AddRef(void)
 {
-    ++m_cRef;
-    NS_LOG_ADDREF(this, m_cRef, "nsNativeDragSource", sizeof(*this));
+  ++m_cRef;
+  NS_LOG_ADDREF(this, m_cRef, "nsNativeDragSource", sizeof(*this));
+  return m_cRef;
+}
+
+STDMETHODIMP_(ULONG)
+nsNativeDragSource::Release(void)
+{
+  --m_cRef;
+  NS_LOG_RELEASE(this, m_cRef, "nsNativeDragSource");
+  if (0 != m_cRef)
     return m_cRef;
+
+  delete this;
+  return 0;
 }
 
-STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
-{
-    --m_cRef;
-    NS_LOG_RELEASE(this, m_cRef, "nsNativeDragSource");
-    if (0 != m_cRef)
-        return m_cRef;
-
-    delete this;
-    return 0;
-}
-
-STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
+STDMETHODIMP
+nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
 #ifdef DEBUG
   //printf("QueryContinueDrag: ");
@@ -104,14 +108,15 @@ STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 #endif
     return ResultFromScode(DRAGDROP_S_DROP);
   }
-  
+
 #ifdef DEBUG
   //printf("NOERROR\n");
 #endif
 	return NOERROR;
 }
 
-STDMETHODIMP nsNativeDragSource::GiveFeedback(DWORD dwEffect)
+STDMETHODIMP
+nsNativeDragSource::GiveFeedback(DWORD dwEffect)
 {
 #ifdef DEBUG
   //printf("GiveFeedback\n");

@@ -74,9 +74,9 @@ static POINTL gDragLastPoint;
 // construction
 //-----------------------------------------------------
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-: m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE)
+  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE)
 {
-  mHWnd    = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
+  mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
 
   /*
    * Create/Get the DragService that we have implemented
@@ -96,49 +96,54 @@ nsNativeDragTarget::~nsNativeDragTarget()
 //-----------------------------------------------------
 // IUnknown methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP
+nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
 {
-    *ppv=NULL;
+  *ppv=NULL;
 
-	 if (IID_IUnknown == riid || IID_IDropTarget == riid)
-        *ppv=this;
+  if (IID_IUnknown == riid || IID_IDropTarget == riid)
+    *ppv=this;
 
-	 if (NULL!=*ppv) {
-        ((LPUNKNOWN)*ppv)->AddRef();
-        return NOERROR;
-	 }
+  if (NULL!=*ppv) {
+    ((LPUNKNOWN)*ppv)->AddRef();
+    return NOERROR;
+  }
 
-    return ResultFromScode(E_NOINTERFACE);
+  return ResultFromScode(E_NOINTERFACE);
 }
 
 
 //-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsNativeDragTarget::AddRef(void)
+STDMETHODIMP_(ULONG)
+nsNativeDragTarget::AddRef(void)
 {
-    ++m_cRef;
-    NS_LOG_ADDREF(this, m_cRef, "nsNativeDragTarget", sizeof(*this));
-    return m_cRef;
+  ++m_cRef;
+  NS_LOG_ADDREF(this, m_cRef, "nsNativeDragTarget", sizeof(*this));
+  return m_cRef;
 }
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsNativeDragTarget::Release(void)
 {
-    --m_cRef;
-    NS_LOG_RELEASE(this, m_cRef, "nsNativeDragTarget");
-    if (0 != m_cRef)
-        return m_cRef;
+  --m_cRef;
+  NS_LOG_RELEASE(this, m_cRef, "nsNativeDragTarget");
+  if (0 != m_cRef)
+    return m_cRef;
 
-    delete this;
-    return 0;
+  delete this;
+  return 0;
 }
 
 
 //-----------------------------------------------------
-void nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState, LPDWORD pdwEffect, PRUint32 * aGeckoAction) 
+void
+nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState,
+                                       LPDWORD pdwEffect,
+                                       PRUint32 * aGeckoAction)
 {
   // Check if we can link from this data object as well.
   PRBool canLink = PR_FALSE;
-  if ( pData )
+  if (pData)
     canLink = (S_OK == ::OleQueryLinkFromData(pData) ? PR_TRUE : PR_FALSE);
 
   // Default is move if we can, in fact drop here,
@@ -165,18 +170,17 @@ void nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyStat
 }
 
 
-PRBool IsKeyDown ( char key ) ;
-
 inline
-PRBool IsKeyDown ( char key )
+PRBool
+IsKeyDown(char key)
 {
   return GetKeyState(key) < 0;
 }
 
 
 //-----------------------------------------------------
-void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, 
-                                               POINTL   aPT)
+void
+nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, POINTL aPT)
 {
   nsEventStatus status;
   nsMouseEvent event(aEventType, mWindow);
@@ -206,11 +210,12 @@ void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType,
 }
 
 //-----------------------------------------------------
-void nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
-                                     PRUint32     aEventType, 
-                                     DWORD        grfKeyState,
-												             POINTL       pt, 
-                                     DWORD*       pdwEffect)
+void
+nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
+                                PRUint32     aEventType,
+                                DWORD        grfKeyState,
+                                POINTL       pt,
+                                DWORD*       pdwEffect)
 {
   // Before dispatching the event make sure we have the correct drop action set
   PRUint32 geckoAction;
@@ -218,14 +223,14 @@ void nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
 
   // Set the current action into the Gecko specific type
   nsCOMPtr<nsIDragSession> currSession;
-  mDragService->GetCurrentSession ( getter_AddRefs(currSession) );
+  mDragService->GetCurrentSession(getter_AddRefs(currSession));
   currSession->SetDragAction(geckoAction);
 
   // Dispatch the event into Gecko
   DispatchDragDropEvent(aEventType, pt);
 
   // Now get the cached Drag effect from the drag service
-  // the data memeber should have been set by who ever handled the 
+  // the data memeber should have been set by who ever handled the
   // nsGUIEvent or nsIDOMEvent
   PRBool canDrop;
   currSession->GetCanDrop(&canDrop);
@@ -242,100 +247,101 @@ void nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
 //-----------------------------------------------------
 
 
-STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, 
-                                           DWORD        grfKeyState,
-												                   POINTL       pt, 
-                                           DWORD*       pdwEffect)
+STDMETHODIMP
+nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
+                              DWORD        grfKeyState,
+                              POINTL       pt,
+                              DWORD*       pdwEffect)
 {
   if (DRAG_DEBUG) printf("DragEnter\n");
 
-	if (mDragService) {
-
-    // tell the drag service about this drag (it may have come from an
-    // outside app).
-    mDragService->StartDragSession();
-
-    // Remember if this operation allows a move.
-    mCanMove = (*pdwEffect) & DROPEFFECT_MOVE;
-
-    // Set the native data object into drag service
-    //
-    // This cast is ok because in the constructor we created a 
-    // the actual implementation we wanted, so we know this is
-    // a nsDragService. It should be a private interface, though.
-    nsDragService * winDragService = NS_STATIC_CAST(nsDragService *, mDragService);
-    winDragService->SetIDataObject(pIDataSource);
-
-    // Now process the native drag state and then dispatch the event
-    ProcessDrag(pIDataSource, NS_DRAGDROP_ENTER, grfKeyState, pt, pdwEffect);
-
-		return S_OK;
-	}
-  else
+	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
+
+  // tell the drag service about this drag (it may have come from an
+  // outside app).
+  mDragService->StartDragSession();
+
+  // Remember if this operation allows a move.
+  mCanMove = (*pdwEffect) & DROPEFFECT_MOVE;
+
+  // Set the native data object into drag service
+  //
+  // This cast is ok because in the constructor we created a
+  // the actual implementation we wanted, so we know this is
+  // a nsDragService. It should be a private interface, though.
+  nsDragService * winDragService =
+    NS_STATIC_CAST(nsDragService *, mDragService);
+  winDragService->SetIDataObject(pIDataSource);
+
+  // Now process the native drag state and then dispatch the event
+  ProcessDrag(pIDataSource, NS_DRAGDROP_ENTER, grfKeyState, pt, pdwEffect);
+
+  return S_OK;
 }
 
 
 //-----------------------------------------------------
-STDMETHODIMP nsNativeDragTarget::DragOver(DWORD   grfKeyState, 
-                                          POINTL  pt, 
-                                          LPDWORD pdwEffect)
+STDMETHODIMP
+nsNativeDragTarget::DragOver(DWORD   grfKeyState,
+                             POINTL  pt,
+                             LPDWORD pdwEffect)
 {
   if (DRAG_DEBUG) printf("DragOver\n");
-	if (mDragService) {
-    // Now process the native drag state and then dispatch the event
-    ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
-		return S_OK;
-	} 
-  else
+	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
+
+  // Now process the native drag state and then dispatch the event
+  ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
+  return S_OK;
 }
 
 
 //-----------------------------------------------------
-STDMETHODIMP nsNativeDragTarget::DragLeave() {
-
-  if (DRAG_DEBUG) printf("DragLeave\n");
-	if (mDragService) {
-
-    // dispatch the event into Gecko
-    DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
-
-    // tell the drag service that we're done with it
-    mDragService->EndDragSession();
-		return S_OK;
-	} 
-  else
-		return ResultFromScode(E_FAIL);
-
-}
-
-
-//-----------------------------------------------------
-STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pData, 
-                                      DWORD        grfKeyState,
-										                  POINTL       aPT, 
-                                      LPDWORD      pdwEffect)
+STDMETHODIMP
+nsNativeDragTarget::DragLeave()
 {
-	if (mDragService) {
-    // Set the native data object into the drag service
-    //
-    // This cast is ok because in the constructor we created a 
-    // the actual implementation we wanted, so we know this is
-    // a nsDragService (but it should still be a private interface)
-    nsDragService * winDragService = NS_STATIC_CAST(nsDragService *, mDragService);
-    winDragService->SetIDataObject(pData);
+  if (DRAG_DEBUG) printf("DragLeave\n");
 
-    // Now process the native drag state and then dispatch the event
-    ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
-
-    // tell the drag service we're done with the session
-    mDragService->EndDragSession();
-    return S_OK;
-	} 
-  else
+	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
 
+  // dispatch the event into Gecko
+  DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
+
+  // tell the drag service that we're done with it
+  mDragService->EndDragSession();
+  return S_OK;
 }
 
 
+//-----------------------------------------------------
+STDMETHODIMP
+nsNativeDragTarget::Drop(LPDATAOBJECT pData,
+                         DWORD        grfKeyState,
+                         POINTL       aPT,
+                         LPDWORD      pdwEffect)
+{
+	if (!mDragService) {
+		return ResultFromScode(E_FAIL);
+  }
+
+  // Set the native data object into the drag service
+  //
+  // This cast is ok because in the constructor we created a
+  // the actual implementation we wanted, so we know this is
+  // a nsDragService (but it should still be a private interface)
+  nsDragService * winDragService =
+    NS_STATIC_CAST(nsDragService *, mDragService);
+  winDragService->SetIDataObject(pData);
+
+  // Now process the native drag state and then dispatch the event
+  ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
+
+  // tell the drag service we're done with the session
+  mDragService->EndDragSession();
+  return S_OK;
+}
