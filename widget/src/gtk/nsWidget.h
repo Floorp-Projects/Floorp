@@ -113,7 +113,7 @@ public:
 
   virtual void LoseFocus(void);
 
-  PRBool OnResize(nsSizeEvent event);
+  PRBool OnResize(nsSizeEvent *event);
   virtual PRBool OnResize(nsRect &aRect);
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 

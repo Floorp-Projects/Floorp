@@ -2810,7 +2810,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     // XXX fix this
     sevent.time = 0;
     AddRef();
-    OnResize(sevent);
+    OnResize(&sevent);
     Release();
     delete sevent.windowSize;
   }
@@ -2999,7 +2999,7 @@ nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
     // XXX fix this
     sevent.time = 0;
     AddRef();
-    OnResize(sevent);
+    OnResize(&sevent);
     Release();
     delete sevent.windowSize;
   }

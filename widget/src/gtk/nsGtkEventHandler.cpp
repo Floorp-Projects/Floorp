@@ -475,7 +475,7 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 
   InitAllocationEvent(alloc, p, event, NS_SIZE);
   NS_ADDREF(widget);
-  widget->OnResize(event);
+  widget->OnResize(&event);
   NS_RELEASE(widget);
 
   delete event.windowSize;
