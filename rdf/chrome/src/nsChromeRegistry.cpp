@@ -87,6 +87,7 @@
 #include "nsIDocShell.h"
 #include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsICSSLoader.h"
 #include "nsIDocumentObserver.h"
 #include "nsIXULDocument.h"
@@ -1458,33 +1459,29 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       if (NS_FAILED(rv)) return rv;
       if (styleSet) {
         // Reload only the chrome URL agent style sheets.
-        nsCOMPtr<nsISupportsArray> agents;
-        rv = NS_NewISupportsArray(getter_AddRefs(agents));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISupportsArray> newAgentSheets;
-        rv = NS_NewISupportsArray(getter_AddRefs(newAgentSheets));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMArray<nsIStyleSheet> newAgentSheets;
 
         PRInt32 bc = styleSet->GetNumberOfAgentStyleSheets();
         for (PRInt32 l = 0; l < bc; l++) {
-          nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(l));
+          nsCOMPtr<nsIStyleSheet> sheet = dont_AddRef(styleSet->GetAgentStyleSheetAt(l));
           nsCOMPtr<nsIURI> uri;
           rv = sheet->GetURL(*getter_AddRefs(uri));
           if (NS_FAILED(rv)) return rv;
 
           if (IsChromeURI(uri)) {
             // Reload the sheet.
-            nsCOMPtr<nsICSSStyleSheet> newSheet;
-            rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
+            // XXXbz What if it's not a CSS sheet?
+            nsCOMPtr<nsICSSStyleSheet> newCSSSheet;
+            rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newCSSSheet));
             if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIStyleSheet> newSheet = do_QueryInterface(newCSSSheet);
             if (newSheet) {
-              rv = newAgentSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
+              rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;
               if (NS_FAILED(rv)) return rv;
             }
           }
           else {  // Just use the same sheet.
-            rv = newAgentSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
+            rv = newAgentSheets.AppendObject(sheet) ? NS_OK : NS_ERROR_FAILURE;
             if (NS_FAILED(rv)) return rv;
           }
         }

@@ -66,6 +66,7 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsAutoLock.h"
 #include "nsEnumeratorUtils.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
@@ -295,7 +296,7 @@ protected:
     PLDHashTable mForwardArcs; 
     PLDHashTable mReverseArcs; 
 
-    nsCOMPtr<nsISupportsArray> mObservers;  
+    nsCOMArray<nsIRDFObserver> mObservers;  
     PRUint32                   mNumObservers;
 
     static PLDHashOperator PR_CALLBACK
@@ -909,12 +910,6 @@ InMemoryDataSource::Init()
                       sizeof(Entry),
                       PL_DHASH_MIN_SIZE);
 
-    // allocate "mObservers" at Init() time so
-    // don't have to null-check it before usage later
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-    if (NS_FAILED(rv)) return rv;
-
 #ifdef MOZ_THREADSAFE_RDF
     mLock = PR_NewLock();
     if (! mLock)
@@ -1402,15 +1397,14 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
 
     // notify observers
     for (PRInt32 i = (PRInt32)mNumObservers - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+        nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
-        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        NS_ASSERTION(obs, "observer array corrupted!");
         if (! obs)
           continue;
 
         obs->OnAssert(this, aSource, aProperty, aTarget);
-        NS_RELEASE(obs);
         // XXX ignore return value?
     }
 
@@ -1555,15 +1549,14 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+        nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
-        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        NS_ASSERTION(obs, "observer array corrupted!");
         if (! obs)
           continue;
 
         obs->OnUnassert(this, aSource, aProperty, aTarget);
-        NS_RELEASE(obs);
         // XXX ignore return value?
     }
 
@@ -1610,15 +1603,14 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+        nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
-        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        NS_ASSERTION(obs, "observer array corrupted!");
         if (! obs)
           continue;
 
         obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
-        NS_RELEASE(obs);
         // XXX ignore return value?
     }
 
@@ -1665,15 +1657,14 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+        nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
-        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        NS_ASSERTION(obs, "observer array corrupted!");
         if (! obs)
           continue;
 
         obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
-        NS_RELEASE(obs);
         // XXX ignore return value?
     }
 
@@ -1689,8 +1680,8 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* aObserver)
         return NS_ERROR_NULL_POINTER;
 
     NS_AUTOLOCK(mLock);
-    mObservers->AppendElement(aObserver);
-    (void)mObservers->Count(&mNumObservers);
+    mObservers.AppendObject(aObserver);
+    mNumObservers = mObservers.Count();
 
     return NS_OK;
 }
@@ -1703,10 +1694,10 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
         return NS_ERROR_NULL_POINTER;
 
     NS_AUTOLOCK(mLock);
-    mObservers->RemoveElement(aObserver);
+    mObservers.RemoveObject(aObserver);
     // note: use Count() instead of just decrementing
     // in case aObserver wasn't in list, for example
-    (void)mObservers->Count(&mNumObservers);
+    mNumObservers = mObservers.Count();
 
     return NS_OK;
 }
@@ -2016,7 +2007,8 @@ InMemoryDataSource::Sweep()
         if (!(as->mHashEntry))
         {
             for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
-                nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+                nsIRDFObserver* obs = mObservers[i];
+                // XXXbz other loops over mObservers null-check |obs| here!
                 obs->OnUnassert(this, as->mSource, as->u.as.mProperty, as->u.as.mTarget);
                 // XXX ignore return value?
             }
