@@ -235,6 +235,9 @@ PERL = $(MOZ_TOOLS)\perl5\perl.exe
 PERL = perl.exe
 !endif
 
+# use find
+FIND = $(MOZ_TOOLS)\bin\find.exe
+
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
 !if "$(WINOS)" == "WIN95"
