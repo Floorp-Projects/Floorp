@@ -658,10 +658,13 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   }
 
   PRBool lastItemIsSelected = PR_FALSE;
-  nsCOMPtr<nsIDOMNode> node;
-  if (NS_SUCCEEDED(selectNSElement->Item(focusedIndex, getter_AddRefs(node)))) {
-    nsCOMPtr<nsIDOMHTMLOptionElement> domOpt(do_QueryInterface(node));
-    domOpt->GetSelected(&lastItemIsSelected);
+  if (focusedIndex != kNothingSelected) {
+    nsCOMPtr<nsIDOMNode> node;
+    if (NS_SUCCEEDED(selectNSElement->Item(focusedIndex, getter_AddRefs(node)))) {
+      nsCOMPtr<nsIDOMHTMLOptionElement> domOpt(do_QueryInterface(node));
+      NS_ASSERTION(domOpt, "Something has gone seriously awry.  This should be an option element!");
+      domOpt->GetSelected(&lastItemIsSelected);
+    }
   }
 
   // set up back stop colors and then ask L&F service for the real colors
