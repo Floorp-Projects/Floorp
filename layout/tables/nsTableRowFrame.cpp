@@ -1426,8 +1426,9 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   }
   cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
+  cf->SetRowIndex(GetRowIndex());
 
-  // Create a continuing frame for each table cell
+  // Create a continuing frame for each table cell frame
   nsIFrame* newChildList;
   for (nsIFrame* kidFrame = mFirstChild;
        nsnull != kidFrame;

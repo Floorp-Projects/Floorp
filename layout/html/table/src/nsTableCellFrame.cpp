@@ -433,6 +433,7 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   }
   cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
+  cf->InitCellFrame(GetColIndex());
   aContinuingFrame = cf;
 
   // Create a continuing body frame
