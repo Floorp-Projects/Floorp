@@ -2721,14 +2721,8 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
     {
       ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
 	    &uniChar,sizeof(uniChar));
-
-      // space is a special case, since shift+space isn't a
-      // different character, and the app may want to use that
-      // combo for something (e.g. page up)
-      if (virtualKeyCode != 0x20)
-        mIsShiftDown = PR_FALSE;
-
       virtualKeyCode = 0;
+      mIsShiftDown = PR_FALSE;
     }
   }
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode, 0);
@@ -3257,7 +3251,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-
             if(WM_SYSCHAR==msg)
             {
                 mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
@@ -3344,7 +3337,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                    (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
 #endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-
             if(WM_SYSKEYDOWN==msg)
             {
                 mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
