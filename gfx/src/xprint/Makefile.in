@@ -62,7 +62,7 @@ XLIB_LCPPSRCS	= \
 
 # nsDrawingSurfaceXlib only required for staticbuild 
 CPPSRCS		= \
-		$(XLIB_CPPSRCS) \
+		$(XLIB_LCPPSRCS) \
 		nsDeviceContextXP.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
