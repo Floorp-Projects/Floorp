@@ -884,24 +884,24 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 	  
   PRBool prependPlus = PR_FALSE;
 
-  if(commandValue != "") {
+  if(commandValue != "" && commandValue != "false") {
     prependPlus = PR_TRUE;
 	  aAccelString += "Ctrl"; // Hmmm. Kinda defeats the point of having an abstraction.
   }
 
-  if(controlValue != "") {
+  if(controlValue != "" && controlValue != "false") {
     prependPlus = PR_TRUE;
 	  aAccelString += "Ctrl";
   }
 
-  if(shiftValue != "") {
+  if(shiftValue != "" && shiftValue != "false") {
     if (prependPlus)
       aAccelString += "+";
     prependPlus = PR_TRUE;
     aAccelString += "Shift";
   }
 
-  if (altValue != "") {
+  if (altValue != "" && altValue != "false") {
 	  if (prependPlus)
       aAccelString += "+";
     prependPlus = PR_TRUE;
