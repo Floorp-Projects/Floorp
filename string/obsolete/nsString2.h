@@ -582,7 +582,6 @@ class NS_COM NS_ConvertASCIItoUCS2
     public:
       explicit NS_ConvertASCIItoUCS2( const char* );
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
-      explicit NS_ConvertASCIItoUCS2( char );
 
 #if 0
       operator const nsDependentString() const
@@ -609,12 +608,6 @@ class NS_COM NS_ConvertUTF8toUCS2
       NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
         {
           Init( aCString, aLength );
-        }
-
-      explicit
-      NS_ConvertUTF8toUCS2( char aChar )
-        {
-          Init( &aChar, 1 );
         }
 
     protected:
