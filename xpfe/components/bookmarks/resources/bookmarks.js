@@ -1188,17 +1188,11 @@ function doContextCmd(cmdName)
 
         // get the parent's URI
         var parentURI = "";
-        var theParent = node;
-        while (theParent)
+        var theParent = node.parentNode.parentNode;
+        parentURI = theParent.getAttribute("ref");
+        if ((!parentURI) || (parentURI == ""))
         {
-            theParent = theParent.parentNode;
-
-            parentURI = theParent.getAttribute("ref");
-            if ((!parentURI) || (parentURI == ""))
-            {
                 parentURI = theParent.getAttribute("id");
-            }
-            if (parentURI != "") break;
         }
         if (parentURI == "") return false;
 
