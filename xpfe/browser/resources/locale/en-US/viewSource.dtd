@@ -9,7 +9,7 @@
 <!ENTITY newMenu.label "New">
 <!ENTITY newMailCmd.label "Mail Message">
 <!ENTITY newChatCmd.label "Chat Window">
-<!ENTITY newBlankPageCmd.label "Chat Window">
+<!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
 <!ENTITY openCmd.label "Open">
