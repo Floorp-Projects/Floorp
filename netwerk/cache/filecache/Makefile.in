@@ -56,9 +56,5 @@ EXTRA_LIBS	= $(NSPR_LIBS)
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-ifeq ($(OS_ARCH),HP-UX)
-OS_CXXFLAGS += +u1
-endif
-
 include $(topsrcdir)/config/rules.mk
 

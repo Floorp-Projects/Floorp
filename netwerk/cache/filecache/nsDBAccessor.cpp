@@ -113,13 +113,14 @@ nsDBAccessor::Init(nsIFile* dbfile)
 
   if(status == 0) {
     // get the last session id
-    PRInt16 *old_ID = NS_STATIC_CAST(PRInt16*, db_data.data) ;
-    if(*old_ID < ini_sessionID) {
+    PRInt16 old_ID;
+    memcpy(&old_ID, db_data.data, sizeof(PRInt16));
+    if(old_ID < ini_sessionID) {
       NS_ERROR("ERROR: Bad Session ID in database, corrupted db.") ;
       return NS_ERROR_FAILURE ;
     }
 
-    mSessionID = *old_ID + 1 ;
+    mSessionID = old_ID + 1 ;
   } 
   else if(status == 1) {
     // must be a new db
@@ -254,7 +255,7 @@ nsDBAccessor::GetID(const char* key, PRUint32 length, PRInt32* aID)
   int status = (*mDB->get)(mDB, &db_key, &db_data, 0) ;
   if(status == 0) {
     // found recordID
-    *aID = *(NS_REINTERPRET_CAST(PRInt32*, db_data.data)) ;
+    memcpy(aID, db_data.data, sizeof(PRInt32));
     return NS_OK ;
   }
   else if(status == 1) {
