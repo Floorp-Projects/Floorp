@@ -1036,7 +1036,11 @@ void nsCaret::DrawCaret()
     if (!mCachedOffsetValid) 
     {
       mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &mCachedFrameOffset);
-      mCachedOffsetValid = PR_TRUE;
+      // XXX: The following line was commented out to disable the
+      //      offset caching code because it causes bad caret
+      //      placement. (bug 194774)
+      //
+      // mCachedOffsetValid = PR_TRUE;
     }
 
     caretRect += mCachedFrameOffset;
