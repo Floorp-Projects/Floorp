@@ -137,8 +137,6 @@ private:
 LiteralImpl::LiteralImpl(const PRUnichar* s)
     : mValue(s)
 {
-    MOZ_COUNT_CTOR(RDF_LiteralImpl);
-
     NS_INIT_REFCNT();
     gRDFService->RegisterLiteral(this);
     NS_ADDREF(gRDFService);
@@ -146,7 +144,6 @@ LiteralImpl::LiteralImpl(const PRUnichar* s)
 
 LiteralImpl::~LiteralImpl()
 {
-    MOZ_COUNT_DTOR(RDF_LiteralImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: LiteralImpl\n", gInstanceCount);
@@ -247,14 +244,11 @@ private:
 DateImpl::DateImpl(const PRTime s)
     : mValue(s)
 {
-    MOZ_COUNT_CTOR(RDF_DateImpl);
-
     NS_INIT_REFCNT();
 }
 
 DateImpl::~DateImpl()
 {
-    MOZ_COUNT_DTOR(RDF_DateImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: DateImpl\n", gInstanceCount);
@@ -352,14 +346,11 @@ private:
 IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
-    MOZ_COUNT_CTOR(RDF_IntImpl);
-
     NS_INIT_REFCNT();
 }
 
 IntImpl::~IntImpl()
 {
-    MOZ_COUNT_DTOR(RDF_IntImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: IntImpl\n", gInstanceCount);
@@ -452,8 +443,6 @@ rdf_CompareWideStrings(const void* v1, const void* v2)
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_RDFServiceImpl);
-
     NS_INIT_REFCNT();
 }
 
@@ -503,7 +492,6 @@ RDFServiceImpl::Init()
 
 RDFServiceImpl::~RDFServiceImpl()
 {
-    MOZ_COUNT_DTOR(RDF_RDFServiceImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: RDFServiceImpl\n", gInstanceCount);
