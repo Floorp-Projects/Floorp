@@ -139,12 +139,6 @@
       </treechildren>
     </treeitem>
 
-    <treeitem container="true" open="true" id="offlineItem">
-      <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
-      </treerow>
-    </treeitem>
-
     <treeitem container="true" open="true" id="debugItem">
       <treerow>       
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
@@ -165,6 +159,13 @@
         
       </treechildren>
     </treeitem>
+
+    <treeitem container="false" id="offlineItem">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
+      </treerow>
+    </treeitem>
+
   </treechildren>
 
 </tree>

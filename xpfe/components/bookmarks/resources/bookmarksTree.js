@@ -367,7 +367,9 @@ BookmarksTree.prototype = {
   {
     var selectedItem = this.getBestItem();
     if (!selectedItem) return "NC:BookmarksRoot";
-    while (selectedItem) {
+    // If we don't check for localName we walk the DOM tree up to the window node,
+    // which is Bad.
+    while (selectedItem.localName == "treeitem") {
       if (selectedItem.getAttribute("container") == "true")
         return NODE_ID(selectedItem);
       selectedItem = selectedItem.parentNode.parentNode;

@@ -48,6 +48,7 @@
   <!-- The order of loading of these script files is IMPORTANT -->
 
   <!-- Shared Libraries -->
+  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
@@ -102,7 +103,7 @@
     <key id="key_cut"/>
     <key id="key_copy"/>
     <key id="key_paste"/>
-    <key id="key_delete"/>
+    <key id="key_bm_delete" keycode="VK_DELETE" observes="cmd_bm_delete"/>
     <key id="key_selectAll"/>
     <key id="bm_key_find"  
          key="&edit.find.keybinding;"  
@@ -235,7 +236,7 @@
       <button class="button-toolbar" id="rename" label="&command.rename.label;"
               observes="cmd_rename"/>
       <button class="button-toolbar" id="delete" label="&command.delete.label;"
-              observes="cmd_delete"/>
+              observes="cmd_bm_delete"/>
     </toolbar>
   </toolbox>
   

@@ -61,7 +61,7 @@
   <popupset id="popupset"/>
   
   <!-- bookmarks string bundle -->
-  <stringbundleset id="bookmarksStringBundles"/>
+  <stringbundleset id="stringbundleset"/>
   
   <!-- bookmarks & edit commands -->
   <commandset id="bookmarksItems"/>
