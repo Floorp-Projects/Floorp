@@ -378,9 +378,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifdef MOZ_XUL
   // tree event
   if (treeItemAccessible && (eventType.EqualsIgnoreCase("DOMMenuItemActive") ||
-      eventType.EqualsIgnoreCase("select"))) {
+      eventType.EqualsIgnoreCase("select") ||
+      eventType.EqualsIgnoreCase("focus"))) {
+    FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
     privAcc = do_QueryInterface(treeItemAccessible);
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
+                              treeItemAccessible, nsnull);
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION, 
                               treeItemAccessible, nsnull);
     return NS_OK;
   }
