@@ -721,7 +721,7 @@ public:
   
 protected:
   nsCOMPtr<nsIMediaList> mMedia;
-  nsISupportsArray* mRules;
+  nsCOMPtr<nsISupportsArray> mRules;
   CSSGroupRuleRuleListImpl* mRuleCollection;
 };
 
@@ -758,7 +758,7 @@ CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
   }
 
   if (aCopy.mRules) {
-    NS_NewISupportsArray(&mRules);
+    NS_NewISupportsArray(getter_AddRefs(mRules));
     if (mRules) {
       aCopy.mRules->EnumerateForwards(CloneRuleInto, mRules);
     }
@@ -767,7 +767,6 @@ CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
 
 CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
 {
-  NS_IF_RELEASE(mRules);
   if (mMedia) {
     mMedia->DropReference();
   }
@@ -958,10 +957,10 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::AppendStyleRule(nsICSSRule* aRule)
 {
   nsresult result = NS_OK;
-  if (nsnull == mRules) {
-    result = NS_NewISupportsArray(&mRules);
+  if (!mRules) {
+    result = NS_NewISupportsArray(getter_AddRefs(mRules));
   }
-  if (NS_SUCCEEDED(result) && (nsnull != mRules)) {
+  if (NS_SUCCEEDED(result) && mRules) {
     mRules->AppendElement(aRule);
     aRule->SetStyleSheet(mSheet);
     if (mSheet) {
@@ -1164,8 +1163,13 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::InsertRule(nsAReadableString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
   NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
   
+  if (!mRules) {
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mRules));
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   PRUint32 count;
   mRules->Count(&count);
   if (aIndex > count)
@@ -1178,7 +1182,9 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::DeleteRule(PRUint32 aIndex)
 {
   NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
+  if (!mRules)  {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
   
   PRUint32 count;
   mRules->Count(&count);
