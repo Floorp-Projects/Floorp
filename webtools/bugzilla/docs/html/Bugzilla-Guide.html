@@ -56,11 +56,14 @@ CLASS="author"
 NAME="AEN9"
 ></A
 >The Bugzilla Team</H3
+><P
+CLASS="pubdate"
+>2003-01-02<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
 ><A
-NAME="AEN13"
+NAME="AEN14"
 ></A
 ><P
 ></P
@@ -82,6 +85,11 @@ TARGET="_top"
 >mozilla.org's Bugzilla</A
 >.
       </P
+><P
+>This is a development version of this guide.  Information in it
+        is subject to change before the 2.18 release of this guide
+        (which will correspond with the 2.18 release of Bugzilla).
+        </P
 ><P
 ></P
 ></DIV
@@ -369,21 +377,36 @@ CLASS="LOT"
 ></DT
 ><DT
 >4-1. <A
-HREF="#AEN1035"
+HREF="#AEN1032"
 >Installing ActivePerl ppd Modules on Microsoft
             Windows</A
 ></DT
 ><DT
 >4-2. <A
-HREF="#AEN1048"
+HREF="#AEN1045"
 >Installing OpenInteract ppd Modules manually on Microsoft
             Windows</A
 ></DT
 ><DT
 >4-3. <A
-HREF="#AEN1214"
+HREF="#AEN1211"
 >Removing encrypt() for Windows NT Bugzilla version 2.12 or
           earlier</A
+></DT
+><DT
+>5-1. <A
+HREF="#upgrade-cvs"
+>Upgrading using CVS</A
+></DT
+><DT
+>5-2. <A
+HREF="#upgrade-tarball"
+>Upgrading using the tarball</A
+></DT
+><DT
+>5-3. <A
+HREF="#upgrade-patches"
+>Upgrading using patches</A
 ></DT
 ></DL
 ></DIV
@@ -403,7 +426,7 @@ NAME="copyright"
 ></A
 >1.1. Copyright Information</H1
 ><A
-NAME="AEN31"
+NAME="AEN33"
 ></A
 ><TABLE
 BORDER="0"
@@ -463,7 +486,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN38"
+NAME="AEN40"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -928,7 +951,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN128"
+NAME="AEN130"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -1013,40 +1036,34 @@ NAME="newversions"
 ></A
 >1.3. New Versions</H1
 ><P
->&#13;      This is the 2.16 version of The Bugzilla Guide. It is so named 
-      to match the current version of Bugzilla. If you are
+>&#13;      This is the 2.17.3 version of The Bugzilla Guide. It is so named 
+      to match the current version of Bugzilla. 
+      
+        This version of the guide, like its associated Bugzilla version is a
+        development version. Information is subject to change between now and
+        when 2.18 is released.
+      
+      If you are
       reading this from any source other than those below, please
       check one of these mirrors to make sure you are reading an
       up-to-date version of the Guide.
     </P
 ><P
->&#13;      This document can be found in the following places:
-    </P
-><P
->&#13;      <P
-></P
-><UL
-><LI
-><P
->&#13;	    <A
-HREF="http://www.bugzilla.org/"
+>&#13;      The newest version of this guide can always be found at <A
+HREF="http://www.bugzilla.org"
 TARGET="_top"
 >bugzilla.org</A
->
-	  </P
-></LI
-><LI
+>; including
+      documentation for past releases and the current development version.
+    </P
 ><P
->&#13;	    <A
-HREF="http://www.linuxdoc.org/"
+>&#13;      The documentation for the most recent stable release of Bugzilla can also
+      be found at
+      <A
+HREF="http://www.tldp.org"
 TARGET="_top"
->The Linux
-	      Documentation Project</A
->
-	  </P
-></LI
-></UL
->
+>The Linux Documentation Project</A
+>.
     </P
 ><P
 >&#13;      The latest version of this document can always be checked out via CVS.
@@ -1162,7 +1179,7 @@ NAME="conventions"
 ><DIV
 CLASS="informaltable"
 ><A
-NAME="AEN178"
+NAME="AEN175"
 ></A
 ><P
 ></P
@@ -2212,7 +2229,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN434"
+NAME="AEN431"
 ></A
 >3.2.1. Autolinkification</H2
 ><P
@@ -2360,7 +2377,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN463"
+NAME="AEN460"
 ></A
 >3.2.5. Filing Bugs</H2
 ><P
@@ -2517,7 +2534,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN492"
+NAME="AEN489"
 ></A
 >4.1.1. Introduction</H2
 ><P
@@ -2537,7 +2554,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN496"
+NAME="AEN493"
 ></A
 >4.1.2. Package List</H2
 ><DIV
@@ -2588,7 +2605,7 @@ HREF="http://www.mysql.com/"
 TARGET="_top"
 >MySQL database server</A
 >
-    (3.23.6 or greater)
+    (3.23.41 or greater)
   </P
 ></LI
 ><LI
@@ -2734,7 +2751,7 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->&#13;        GD::Chart
+>&#13;        GD::Graph
         (any) for bug charting
       </P
 ></LI
@@ -3299,7 +3316,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN650"
+NAME="AEN647"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -3314,7 +3331,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN653"
+NAME="AEN650"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -3328,7 +3345,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN656"
+NAME="AEN653"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -3354,7 +3371,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN661"
+NAME="AEN658"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -3370,7 +3387,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN664"
+NAME="AEN661"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -3425,7 +3442,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN671"
+NAME="AEN668"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -3440,7 +3457,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN674"
+NAME="AEN671"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
@@ -3456,7 +3473,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN677"
+NAME="AEN674"
 ></A
 >4.1.6. HTTP Server</H2
 ><P
@@ -3634,7 +3651,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN696"
+NAME="AEN693"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -3804,7 +3821,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN721"
+NAME="AEN718"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -3977,7 +3994,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN757"
+NAME="AEN754"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -4130,7 +4147,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN789"
+NAME="AEN786"
 ></A
 >4.1.10. Securing MySQL</H2
 ><P
@@ -4408,7 +4425,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN855"
+NAME="AEN852"
 ></A
 >4.1.11. Configuring Bugzilla</H2
 ><P
@@ -4434,7 +4451,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN861"
+NAME="AEN858"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -4498,7 +4515,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN876"
+NAME="AEN873"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -4557,7 +4574,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN889"
+NAME="AEN886"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -5478,7 +5495,7 @@ CLASS="command"
 ><DIV
 CLASS="example"
 ><A
-NAME="AEN1035"
+NAME="AEN1032"
 ></A
 ><P
 ><B
@@ -5538,7 +5555,7 @@ TARGET="_top"
           <DIV
 CLASS="example"
 ><A
-NAME="AEN1048"
+NAME="AEN1045"
 ></A
 ><P
 ><B
@@ -6564,7 +6581,7 @@ VALIGN="TOP"
 ><P
 >From Andrew Pearson: 
         <A
-NAME="AEN1202"
+NAME="AEN1199"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -6649,7 +6666,7 @@ VALIGN="TOP"
         <DIV
 CLASS="example"
 ><A
-NAME="AEN1214"
+NAME="AEN1211"
 ></A
 ><P
 ><B
@@ -6847,7 +6864,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1248"
+NAME="AEN1245"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -6872,7 +6889,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1253"
+NAME="AEN1250"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -8730,7 +8747,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1613"
+NAME="AEN1610"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -8845,7 +8862,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1632"
+NAME="AEN1629"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -8927,7 +8944,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1642"
+NAME="AEN1639"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -8989,7 +9006,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1655"
+NAME="AEN1652"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -9354,41 +9371,496 @@ NAME="upgrading"
 ></A
 >5.9. Upgrading to New Releases</H1
 ><P
->A plain Bugzilla is fairly easy to upgrade from one version to a
-    newer one. Always read the release notes to see if there are any issues
-    that you might need to take note of. It is recommended that you take a 
-    backup of your database and your entire Bugzilla installation before attempting an
-    upgrade. You can upgrade a 'clean' installation by untarring a new
-    tarball over the old installation. If you are upgrading from 2.12 or
-    later, and have cvs installed, you can type <TT
-CLASS="filename"
->cvs -z3 update</TT
->, 
-    and resolve conflicts if there are any.
+>Upgrading Bugzilla is something we all want to do from time to time,
+    be it to get new features or pick up the latest security fix. How easy
+    it is to update depends on a few factors.
     </P
 ><P
->However, things get a bit more complicated if you've made
-    changes to Bugzilla's code. In this case, you may have to re-make or
-    reapply those changes. One good method is to take a diff of your customized
-    version against the original, so you can survey all that you've changed.
-    Hopefully, templatization will reduce the need for
-    this in the future.</P
+></P
+><UL
+><LI
 ><P
->From version 2.8 onward, Bugzilla databases can be automatically
-    carried forward during an upgrade. However, because the developers of
-    Bugzilla are constantly adding new
-    tables, columns and fields, you'll probably get SQL errors if you just
-    update the code and attempt to use Bugzilla. Always run the
+>If the new version is a revision or a new point release</P
+></LI
+><LI
+><P
+>How many, if any, local changes have been made</P
+></LI
+></UL
+><P
+>There are also three different methods to upgrade your installation.
+    </P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Using CVS (<A
+HREF="#upgrade-cvs"
+>Example 5-1</A
+>)</P
+></LI
+><LI
+><P
+>Downloading a new tarball (<A
+HREF="#upgrade-tarball"
+>Example 5-2</A
+>)</P
+></LI
+><LI
+><P
+>Applying the relevant patches (<A
+HREF="#upgrade-patches"
+>Example 5-3</A
+>)</P
+></LI
+></OL
+><P
+>Which options are available to you may depend on how large a jump
+    you are making and/or your network configuration.
+    </P
+><P
+>Revisions are normally released to fix security vulnerabilities
+    and are distinguished by an increase in the third number. For example,
+    when 2.16.2 was released, it was a revision to 2.16.1.
+    </P
+><P
+>Point releases are normally released when the Bugzilla team feels
+    that there has been a significant amount of progress made between the
+    last point release and the current time. These are often proceeded by a
+    stabilization period and release candidates, however the use of 
+    development versions or release candidates is beyond the scope of this
+    document. Point releases can be distinguished by an increase in the
+    second number, or minor version. For example, 2.16.2 is a newer point
+    release than 2.14.5.
+    </P
+><P
+>The examples in this section are written as if you were updating
+    to version 2.16.2.  The procedures are the same regardless if you are
+    updating to a new point release or a new revision.  However, the chance
+    of running into trouble increases when upgrading to a new point release,
+    escpecially if you've made local changes.
+    </P
+><P
+>These examples also assume that your Bugzilla installation is at
     <TT
 CLASS="filename"
->checksetup.pl</TT
-> 
-    script whenever you upgrade your installation.</P
+>/var/www/html/bugzilla</TT
+>. If that is not the case,
+    simply substitute the proper paths where appropriate.
+    </P
+><DIV
+CLASS="example"
+><A
+NAME="upgrade-cvs"
+></A
 ><P
->If you are running Bugzilla version 2.8 or lower, and wish to
-    upgrade to the latest version, please consult the file,
-    "UPGRADING-pre-2.8" in the Bugzilla root directory after untarring the
-    archive.</P
+><B
+>Example 5-1. Upgrading using CVS</B
+></P
+><P
+>Every release of Bugzilla, whether it is a revision or a point
+      release, is tagged in CVS.  Also, every tarball we have distributed
+      since version 2.12 has been primed for using CVS. This does, however,
+      require that you are able to access cvs-mirror.mozilla.org on port
+      2401.
+
+        <DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you can do this, updating using CVS is probably the most
+          painless method, especially if you have a lot of local changes.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;bash$ <B
+CLASS="command"
+>cd /var/www/html/bugzilla</B
+>
+bash$ <B
+CLASS="command"
+>cvs login</B
+>
+Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
+CVS password: <B
+CLASS="command"
+>anonymous</B
+>
+bash$ <B
+CLASS="command"
+>cvs -q update -r BUGZILLA-2_16_2 -dP</B
+>
+P checksetup.pl
+P collectstats.pl
+P globals.pl
+P docs/rel_notes.txt
+P template/en/default/list/quips.html.tmpl
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        <DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If a line in the output from <B
+CLASS="command"
+>cvs update</B
+>
+          begins with a <TT
+CLASS="computeroutput"
+>C</TT
+> that represents a
+          file with local changes that CVS was unable to properly merge. You
+          need to resolve these conflicts manually before Bugzilla (or at
+          least the portion using that file) will be usable.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+
+        <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>You also need to run <B
+CLASS="command"
+>./checksetup.pl</B
+>
+          before your Bugzilla upgrade will be complete.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+></DIV
+><DIV
+CLASS="example"
+><A
+NAME="upgrade-tarball"
+></A
+><P
+><B
+>Example 5-2. Upgrading using the tarball</B
+></P
+><P
+>If you are unable or unwilling to use CVS, another option that's
+      always available is to download the latest tarball. This is the most
+      difficult option to use, especially if you have local changes.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;bash$ <B
+CLASS="command"
+>cd /var/www/html</B
+>
+bash$ <B
+CLASS="command"
+>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.2.tar.gz</B
+>
+<EM
+>Output omitted</EM
+>
+bash$ <B
+CLASS="command"
+>tar xzvf bugzilla-2.16.2.tar.gz</B
+>
+bugzilla-2.16.2/
+bugzilla-2.16.2/.cvsignore
+bugzilla-2.16.2/1x1.gif
+<EM
+>Output truncated</EM
+>
+bash$ <B
+CLASS="command"
+>cd bugzilla-2.16.2</B
+>
+bash$ <B
+CLASS="command"
+>cp ../bugzilla/localconfig* .</B
+>
+bash$ <B
+CLASS="command"
+>cp -r ../bugzilla/data .</B
+>
+bash$ <B
+CLASS="command"
+>cd ..</B
+>
+bash$ <B
+CLASS="command"
+>mv bugzilla bugzilla.old</B
+>
+bash$ <B
+CLASS="command"
+>mv bugzilla-2.16.2 bugzilla</B
+>
+bash$ <B
+CLASS="command"
+>cd bugzilla</B
+>
+bash$ <B
+CLASS="command"
+>./checksetup.pl</B
+>
+<EM
+>Output omitted</EM
+>
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        <DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The <B
+CLASS="command"
+>cp</B
+> commands both end with periods which
+          is a very important detail, it tells the shell that the destination
+          directory is the current working directory. Also, the period at the
+          beginning of the <B
+CLASS="command"
+>./checksetup.pl</B
+> is important and
+          can not be omitted.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+
+        <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>You will now have to reapply any changes you have made to your
+          local installation manually.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+></DIV
+><DIV
+CLASS="example"
+><A
+NAME="upgrade-patches"
+></A
+><P
+><B
+>Example 5-3. Upgrading using patches</B
+></P
+><P
+>The Bugzilla team will normally make a patch file available for
+      revisions to go from the most recent revision to the new one. You could
+      also read the release notes and grab the patches attached to the
+      mentioned bug, but it is safer to use the released patch file as
+      sometimes patches get changed before they get checked in (for minor
+      spelling fixes and the like). It is also theorectically possible to
+      scour the fixed bug list and pick and choose which patches to apply
+      from a point release, but this is not recommended either as what you'll
+      end up with is a hodge podge Bugzilla that isn't really any version.
+      This would also make it more difficult to upgrade in the future.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;bash$ <B
+CLASS="command"
+>cd /var/www/html/bugzilla</B
+>
+bash$ <B
+CLASS="command"
+>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.1-to-2.16.2.diff.gz</B
+>
+<EM
+>Output omitted</EM
+>
+bash$ <B
+CLASS="command"
+>gunzip bugzilla-2.16.1-to-2.16.2.diff.gz</B
+>
+bash$ <B
+CLASS="command"
+>patch -p1 &#60; bugzilla-2.16.1-to-2.16.2.diff</B
+>
+patching file checksetup.pl
+patching file collectstats.pl
+patching file globals.pl
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        <DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you do this, beware that this doesn't change the entires in
+          your <TT
+CLASS="filename"
+>CVS</TT
+> directory so it may make
+          updates using CVS (<A
+HREF="#upgrade-cvs"
+>Example 5-1</A
+>) more difficult in the
+          future.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -9532,64 +10004,64 @@ HREF="#faq-general"
 ><DL
 ><DT
 >A.1.1. <A
-HREF="#AEN1742"
+HREF="#AEN1813"
 >&#13;	    Where can I find information about Bugzilla?</A
 ></DT
 ><DT
 >A.1.2. <A
-HREF="#AEN1748"
+HREF="#AEN1819"
 >&#13;	    What license is Bugzilla distributed under?
 	  </A
 ></DT
 ><DT
 >A.1.3. <A
-HREF="#AEN1754"
+HREF="#AEN1825"
 >&#13;	    How do I get commercial support for Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.4. <A
-HREF="#AEN1763"
+HREF="#AEN1834"
 >&#13;	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
 	  </A
 ></DT
 ><DT
 >A.1.5. <A
-HREF="#AEN1787"
+HREF="#AEN1858"
 >&#13;	    Who maintains Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.6. <A
-HREF="#AEN1793"
+HREF="#AEN1864"
 >&#13;	    How does Bugzilla stack up against other bug-tracking databases?
 	  </A
 ></DT
 ><DT
 >A.1.7. <A
-HREF="#AEN1799"
+HREF="#AEN1870"
 >&#13;	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </A
 ></DT
 ><DT
 >A.1.8. <A
-HREF="#AEN1806"
+HREF="#AEN1877"
 >&#13;	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 	  </A
 ></DT
 ><DT
 >A.1.9. <A
-HREF="#AEN1815"
+HREF="#AEN1886"
 >&#13;	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
 	    "/usr/bin/perl" or something else?
 	  </A
 ></DT
 ><DT
 >A.1.10. <A
-HREF="#AEN1821"
+HREF="#AEN1892"
 >&#13;	    Is there an easy way to change the Bugzilla cookie name?
 	  </A
 ></DT
@@ -9604,41 +10076,41 @@ HREF="#faq-phb"
 ><DL
 ><DT
 >A.2.1. <A
-HREF="#AEN1831"
+HREF="#AEN1902"
 >&#13;	    Is Bugzilla web-based, or do you have to have specific software or
 	    a specific operating system on your machine?
 	  </A
 ></DT
 ><DT
 >A.2.2. <A
-HREF="#AEN1836"
+HREF="#AEN1907"
 >&#13;	    Can Bugzilla integrate with
 	    Perforce (SCM software)?
 	  </A
 ></DT
 ><DT
 >A.2.3. <A
-HREF="#AEN1841"
+HREF="#AEN1912"
 >&#13;	    Does Bugzilla allow the user to track multiple projects?
 	  </A
 ></DT
 ><DT
 >A.2.4. <A
-HREF="#AEN1846"
+HREF="#AEN1917"
 >&#13;	    If I am on many projects, and search for all bugs assigned to me, will
 	    Bugzilla list them for me and allow me to sort by project, severity etc?
 	  </A
 ></DT
 ><DT
 >A.2.5. <A
-HREF="#AEN1851"
+HREF="#AEN1922"
 >&#13;	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
 	    are there any that are NOT allowed?
 	  </A
 ></DT
 ><DT
 >A.2.6. <A
-HREF="#AEN1856"
+HREF="#AEN1927"
 >&#13;	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
 	    the choice of acceptable values?
@@ -9646,35 +10118,35 @@ HREF="#AEN1856"
 ></DT
 ><DT
 >A.2.7. <A
-HREF="#AEN1863"
+HREF="#AEN1934"
 >&#13;	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
 	  </A
 ></DT
 ><DT
 >A.2.8. <A
-HREF="#AEN1870"
+HREF="#AEN1941"
 >&#13;	    Is there email notification and if so, what do you see when you get an
 	    email?
 	  </A
 ></DT
 ><DT
 >A.2.9. <A
-HREF="#AEN1875"
+HREF="#AEN1946"
 >&#13;	    Can email notification be set up to send to multiple
 	    people, some on the To List, CC List, BCC List etc?
 	  </A
 ></DT
 ><DT
 >A.2.10. <A
-HREF="#AEN1880"
+HREF="#AEN1951"
 >&#13;	    Do users have to have any particular
 	    type of email application?
 	  </A
 ></DT
 ><DT
 >A.2.11. <A
-HREF="#AEN1887"
+HREF="#AEN1958"
 >&#13;	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
 	    imported into "matching" fields? If I wanted to take the results of a query
@@ -9683,28 +10155,28 @@ HREF="#AEN1887"
 ></DT
 ><DT
 >A.2.12. <A
-HREF="#AEN1899"
+HREF="#AEN1970"
 >&#13;	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
 	  </A
 ></DT
 ><DT
 >A.2.13. <A
-HREF="#AEN1906"
+HREF="#AEN1977"
 >&#13;	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
 	  </A
 ></DT
 ><DT
 >A.2.14. <A
-HREF="#AEN1911"
+HREF="#AEN1982"
 >&#13;	    Does Bugzilla have the ability to search by word, phrase, compound
 	    search?
 	  </A
 ></DT
 ><DT
 >A.2.15. <A
-HREF="#AEN1916"
+HREF="#AEN1987"
 >&#13;	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
 	    or how are they notified?
@@ -9712,19 +10184,19 @@ HREF="#AEN1916"
 ></DT
 ><DT
 >A.2.16. <A
-HREF="#AEN1921"
+HREF="#AEN1992"
 >&#13;	    Are there any backup features provided?
 	  </A
 ></DT
 ><DT
 >A.2.17. <A
-HREF="#AEN1927"
+HREF="#AEN1998"
 >&#13;	    Can users be on the system while a backup is in progress?
 	  </A
 ></DT
 ><DT
 >A.2.18. <A
-HREF="#AEN1932"
+HREF="#AEN2003"
 >&#13;	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
@@ -9734,7 +10206,7 @@ HREF="#AEN1932"
 ></DT
 ><DT
 >A.2.19. <A
-HREF="#AEN1938"
+HREF="#AEN2009"
 >&#13;	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
 	    install and a couple of hours per week to maintain and customize or is this
@@ -9744,7 +10216,7 @@ HREF="#AEN1938"
 ></DT
 ><DT
 >A.2.20. <A
-HREF="#AEN1943"
+HREF="#AEN2014"
 >&#13;	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
 	  </A
@@ -9760,20 +10232,20 @@ HREF="#faq-security"
 ><DL
 ><DT
 >A.3.1. <A
-HREF="#AEN1950"
+HREF="#AEN2021"
 >&#13;	    How do I completely disable MySQL security if it's giving me problems
 	    (I've followed the instructions in the installation section of this guide)?
 	  </A
 ></DT
 ><DT
 >A.3.2. <A
-HREF="#AEN1956"
+HREF="#AEN2027"
 >&#13;	    Are there any security problems with Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.3.3. <A
-HREF="#AEN1961"
+HREF="#AEN2032"
 >&#13;	    I've implemented the security fixes mentioned in Chris Yeh's security
 	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
 	    problems with MySQL no longer working correctly.
@@ -9790,48 +10262,48 @@ HREF="#faq-email"
 ><DL
 ><DT
 >A.4.1. <A
-HREF="#AEN1968"
+HREF="#AEN2039"
 >&#13;	    I have a user who doesn't want to receive any more email from Bugzilla.
 	    How do I stop it entirely for this user?
 	  </A
 ></DT
 ><DT
 >A.4.2. <A
-HREF="#AEN1974"
+HREF="#AEN2045"
 >&#13;	    I'm evaluating/testing Bugzilla, and don't want it to send email to
 	    anyone but me. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.3. <A
-HREF="#AEN1979"
+HREF="#AEN2050"
 >&#13;	    I want whineatnews.pl to whine at something more, or other than, only new
 	    bugs. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.4. <A
-HREF="#AEN1985"
+HREF="#AEN2056"
 >&#13;	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
 	    What alternatives do I have?
 	  </A
 ></DT
 ><DT
 >A.4.5. <A
-HREF="#AEN1992"
+HREF="#AEN2063"
 >&#13;	    How do I set up the email interface to submit/change bugs via email?
 	  </A
 ></DT
 ><DT
 >A.4.6. <A
-HREF="#AEN1997"
+HREF="#AEN2068"
 >&#13;	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
 	  </A
 ></DT
 ><DT
 >A.4.7. <A
-HREF="#AEN2004"
+HREF="#AEN2075"
 >&#13;	     How come email from Bugzilla changes never reaches me?
 	  </A
 ></DT
@@ -9846,33 +10318,33 @@ HREF="#faq-db"
 ><DL
 ><DT
 >A.5.1. <A
-HREF="#AEN2012"
+HREF="#AEN2083"
 >&#13;	    I've heard Bugzilla can be used with Oracle?
 	  </A
 ></DT
 ><DT
 >A.5.2. <A
-HREF="#AEN2017"
+HREF="#AEN2088"
 >&#13;	    I think my database might be corrupted, or contain invalid entries. What
 	    do I do?
 	  </A
 ></DT
 ><DT
 >A.5.3. <A
-HREF="#AEN2025"
+HREF="#AEN2096"
 >&#13;	    I want to manually edit some entries in my database. How?
 	  </A
 ></DT
 ><DT
 >A.5.4. <A
-HREF="#AEN2033"
+HREF="#AEN2104"
 >&#13;	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
 	  </A
 ></DT
 ><DT
 >A.5.5. <A
-HREF="#AEN2041"
+HREF="#AEN2112"
 >&#13;	    How do I synchronize bug information among multiple different Bugzilla
 	    databases?
 	  </A
@@ -9888,26 +10360,26 @@ HREF="#faq-nt"
 ><DL
 ><DT
 >A.6.1. <A
-HREF="#AEN2050"
+HREF="#AEN2121"
 >&#13;	    What is the easiest way to run Bugzilla on Win32 (Win98+/NT/2K)?
 	  </A
 ></DT
 ><DT
 >A.6.2. <A
-HREF="#AEN2055"
+HREF="#AEN2126"
 >&#13;	    Is there a "Bundle::Bugzilla" equivalent for Win32?
 	  </A
 ></DT
 ><DT
 >A.6.3. <A
-HREF="#AEN2060"
+HREF="#AEN2131"
 >&#13;	    CGI's are failing with a "something.cgi is not a valid Windows NT
 	    application" error. Why?
 	  </A
 ></DT
 ><DT
 >A.6.4. <A
-HREF="#AEN2068"
+HREF="#AEN2139"
 >&#13;	    I'm having trouble with the perl modules for NT not being able to talk to
 	    to the database.
 	  </A
@@ -9923,33 +10395,33 @@ HREF="#faq-use"
 ><DL
 ><DT
 >A.7.1. <A
-HREF="#AEN2089"
+HREF="#AEN2160"
 >&#13;	    How do I change my user name (email address) in Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.7.2. <A
-HREF="#AEN2094"
+HREF="#AEN2165"
 >&#13;	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </A
 ></DT
 ><DT
 >A.7.3. <A
-HREF="#AEN2099"
+HREF="#AEN2170"
 >&#13;	    I'm confused by the behavior of the "accept" button in the Show Bug form.
 	    Why doesn't it assign the bug to me when I accept it?
 	  </A
 ></DT
 ><DT
 >A.7.4. <A
-HREF="#AEN2109"
+HREF="#AEN2180"
 >&#13;	    I can't upload anything into the database via the "Create Attachment"
 	    link.  What am I doing wrong?
 	  </A
 ></DT
 ><DT
 >A.7.5. <A
-HREF="#AEN2114"
+HREF="#AEN2185"
 >&#13;	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </A
 ></DT
@@ -9964,26 +10436,26 @@ HREF="#faq-hacking"
 ><DL
 ><DT
 >A.8.1. <A
-HREF="#AEN2121"
+HREF="#AEN2192"
 >&#13;	    What kind of style should I use for templatization?
 	  </A
 ></DT
 ><DT
 >A.8.2. <A
-HREF="#AEN2129"
+HREF="#AEN2200"
 >&#13;	    What bugs are in Bugzilla right now?
 	  </A
 ></DT
 ><DT
 >A.8.3. <A
-HREF="#AEN2138"
+HREF="#AEN2209"
 >&#13;	    How can I change the default priority to a null value?  For instance, have the default
 	    priority be "---" instead of "P2"?
 	  </A
 ></DT
 ><DT
 >A.8.4. <A
-HREF="#AEN2144"
+HREF="#AEN2215"
 >&#13;	    What's the best way to submit patches?  What guidelines should I follow?
 	  </A
 ></DT
@@ -10003,7 +10475,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1742"
+NAME="AEN1813"
 ></A
 ><B
 >A.1.1. </B
@@ -10031,7 +10503,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1748"
+NAME="AEN1819"
 ></A
 ><B
 >A.1.2. </B
@@ -10060,7 +10532,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1754"
+NAME="AEN1825"
 ></A
 ><B
 >A.1.3. </B
@@ -10106,7 +10578,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1763"
+NAME="AEN1834"
 ></A
 ><B
 >A.1.4. </B
@@ -10212,7 +10684,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1787"
+NAME="AEN1858"
 ></A
 ><B
 >A.1.5. </B
@@ -10242,7 +10714,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1793"
+NAME="AEN1864"
 ></A
 ><B
 >A.1.6. </B
@@ -10280,7 +10752,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1799"
+NAME="AEN1870"
 ></A
 ><B
 >A.1.7. </B
@@ -10320,7 +10792,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1806"
+NAME="AEN1877"
 ></A
 ><B
 >A.1.8. </B
@@ -10365,7 +10837,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1815"
+NAME="AEN1886"
 ></A
 ><B
 >A.1.9. </B
@@ -10398,7 +10870,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1821"
+NAME="AEN1892"
 ></A
 ><B
 >A.1.10. </B
@@ -10460,7 +10932,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1831"
+NAME="AEN1902"
 ></A
 ><B
 >A.2.1. </B
@@ -10486,7 +10958,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1836"
+NAME="AEN1907"
 ></A
 ><B
 >A.2.2. </B
@@ -10512,7 +10984,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1841"
+NAME="AEN1912"
 ></A
 ><B
 >A.2.3. </B
@@ -10537,7 +11009,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1846"
+NAME="AEN1917"
 ></A
 ><B
 >A.2.4. </B
@@ -10562,7 +11034,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1851"
+NAME="AEN1922"
 ></A
 ><B
 >A.2.5. </B
@@ -10591,7 +11063,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1856"
+NAME="AEN1927"
 ></A
 ><B
 >A.2.6. </B
@@ -10628,7 +11100,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1863"
+NAME="AEN1934"
 ></A
 ><B
 >A.2.7. </B
@@ -10666,7 +11138,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1870"
+NAME="AEN1941"
 ></A
 ><B
 >A.2.8. </B
@@ -10693,7 +11165,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1875"
+NAME="AEN1946"
 ></A
 ><B
 >A.2.9. </B
@@ -10718,7 +11190,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1880"
+NAME="AEN1951"
 ></A
 ><B
 >A.2.10. </B
@@ -10777,7 +11249,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1887"
+NAME="AEN1958"
 ></A
 ><B
 >A.2.11. </B
@@ -10839,7 +11311,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1899"
+NAME="AEN1970"
 ></A
 ><B
 >A.2.12. </B
@@ -10877,7 +11349,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1906"
+NAME="AEN1977"
 ></A
 ><B
 >A.2.13. </B
@@ -10902,7 +11374,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1911"
+NAME="AEN1982"
 ></A
 ><B
 >A.2.14. </B
@@ -10928,7 +11400,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1916"
+NAME="AEN1987"
 ></A
 ><B
 >A.2.15. </B
@@ -10955,7 +11427,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1921"
+NAME="AEN1992"
 ></A
 ><B
 >A.2.16. </B
@@ -10985,7 +11457,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1927"
+NAME="AEN1998"
 ></A
 ><B
 >A.2.17. </B
@@ -11011,7 +11483,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1932"
+NAME="AEN2003"
 ></A
 ><B
 >A.2.18. </B
@@ -11046,7 +11518,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1938"
+NAME="AEN2009"
 ></A
 ><B
 >A.2.19. </B
@@ -11079,7 +11551,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1943"
+NAME="AEN2014"
 ></A
 ><B
 >A.2.20. </B
@@ -11113,7 +11585,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1950"
+NAME="AEN2021"
 ></A
 ><B
 >A.3.1. </B
@@ -11142,7 +11614,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1956"
+NAME="AEN2027"
 ></A
 ><B
 >A.3.2. </B
@@ -11170,7 +11642,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1961"
+NAME="AEN2032"
 ></A
 ><B
 >A.3.3. </B
@@ -11206,7 +11678,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1968"
+NAME="AEN2039"
 ></A
 ><B
 >A.4.1. </B
@@ -11236,7 +11708,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1974"
+NAME="AEN2045"
 ></A
 ><B
 >A.4.2. </B
@@ -11262,7 +11734,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1979"
+NAME="AEN2050"
 ></A
 ><B
 >A.4.3. </B
@@ -11294,7 +11766,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1985"
+NAME="AEN2056"
 ></A
 ><B
 >A.4.4. </B
@@ -11312,7 +11784,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1989"
+NAME="AEN2060"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -11333,7 +11805,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1992"
+NAME="AEN2063"
 ></A
 ><B
 >A.4.5. </B
@@ -11358,7 +11830,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1997"
+NAME="AEN2068"
 ></A
 ><B
 >A.4.6. </B
@@ -11393,7 +11865,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2004"
+NAME="AEN2075"
 ></A
 ><B
 >A.4.7. </B
@@ -11433,7 +11905,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2012"
+NAME="AEN2083"
 ></A
 ><B
 >A.5.1. </B
@@ -11461,7 +11933,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2017"
+NAME="AEN2088"
 ></A
 ><B
 >A.5.2. </B
@@ -11508,7 +11980,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2025"
+NAME="AEN2096"
 ></A
 ><B
 >A.5.3. </B
@@ -11549,7 +12021,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2033"
+NAME="AEN2104"
 ></A
 ><B
 >A.5.4. </B
@@ -11610,7 +12082,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2041"
+NAME="AEN2112"
 ></A
 ><B
 >A.5.5. </B
@@ -11656,7 +12128,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2050"
+NAME="AEN2121"
 ></A
 ><B
 >A.6.1. </B
@@ -11681,7 +12153,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2055"
+NAME="AEN2126"
 ></A
 ><B
 >A.6.2. </B
@@ -11707,7 +12179,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2060"
+NAME="AEN2131"
 ></A
 ><B
 >A.6.3. </B
@@ -11730,7 +12202,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN2065"
+NAME="AEN2136"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -11755,7 +12227,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2068"
+NAME="AEN2139"
 ></A
 ><B
 >A.6.4. </B
@@ -11832,7 +12304,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2089"
+NAME="AEN2160"
 ></A
 ><B
 >A.7.1. </B
@@ -11857,7 +12329,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2094"
+NAME="AEN2165"
 ></A
 ><B
 >A.7.2. </B
@@ -11883,7 +12355,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2099"
+NAME="AEN2170"
 ></A
 ><B
 >A.7.3. </B
@@ -11938,7 +12410,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2109"
+NAME="AEN2180"
 ></A
 ><B
 >A.7.4. </B
@@ -11965,7 +12437,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2114"
+NAME="AEN2185"
 ></A
 ><B
 >A.7.5. </B
@@ -11999,7 +12471,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2121"
+NAME="AEN2192"
 ></A
 ><B
 >A.8.1. </B
@@ -12058,7 +12530,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2129"
+NAME="AEN2200"
 ></A
 ><B
 >A.8.2. </B
@@ -12104,7 +12576,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2138"
+NAME="AEN2209"
 ></A
 ><B
 >A.8.3. </B
@@ -12136,7 +12608,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2144"
+NAME="AEN2215"
 ></A
 ><B
 >A.8.4. </B
@@ -12360,7 +12832,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2187"
+NAME="AEN2258"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -12476,7 +12948,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2214"
+NAME="AEN2285"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -13046,7 +13518,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2300"
+NAME="AEN2371"
 ></A
 >0-9, high ascii</H1
 ><DL
