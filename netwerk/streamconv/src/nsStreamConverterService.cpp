@@ -26,6 +26,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIStreamConverter.h"
+#include "nsIComponentManager.h"
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
@@ -384,6 +385,10 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
                 curVertexState->distance = headVertexState->distance + 1;
                 curVertexState->predecessor = currentHead->Clone();
                 grayQ->Push(curVertex);
+            } else {
+                delete curVertex; // if this vertex has already been discovered, we don't want
+                                  // to leak it. (non-discovered vertex's get cleaned up when
+                                  // they're popped).
             }
         }
         headVertexState->color = black;
@@ -433,7 +438,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
 
         // build out the PROGID.
         nsString2 *newProgID = new nsString2(ProgIDPrefix, eOneByte);
-        newProgID->Append("from=");
+        newProgID->Append("?from=");
 
         char *from = predecessorData->keyString->ToNewCString();
         newProgID->Append(from);
@@ -510,14 +515,36 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         nsIInputStream *convertedData = nsnull;
         NS_ADDREF(dataToConvert);
 
-        for (int i = 0; i < edgeCount; i++) {
+        for (PRInt32 i = edgeCount-1; i > 0; i--) {
             nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
             char * lProgID = progIDStr->ToNewCString();
+            const char *x = lProgID;
 
-            if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
-            rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
-            //NS_ASSERTION(NS_SUCCEEDED(rv), "registration problem. someone registered a progid w/ the registry, but didn/'t register it with the component manager");
+            nsIComponentManager *comMgr;
+            rv = NS_GetGlobalComponentManager(&comMgr);
             if (NS_FAILED(rv)) return rv;
+
+
+            nsCID cid;
+            rv = comMgr->ProgIDToCLSID(x, &cid);
+            if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
+//            rv = nsComponentManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+            rv = comMgr->CreateInstance(cid,
+                                                    nsnull,
+                                                    nsCOMTypeInfo<nsIStreamConverter>::GetIID(),
+                                                    (void**)&converter);
+
+            //NS_ASSERTION(NS_SUCCEEDED(rv), "registration problem. someone registered a progid w/ the registry, but didn/'t register it with the component manager");
+            if (NS_FAILED(rv)) {
+                // clean up the array.
+                nsString2 *progID;
+                while ( (progID = (nsString2*)converterChain->ElementAt(0)) ) {
+                    delete progID;
+                    converterChain->RemoveElementAt(0);
+                }
+                delete converterChain;                
+                return rv;
+            }
 
             nsString2 fromStr(eOneByte), toStr(eOneByte);
             rv = ParseFromTo(lProgID, fromStr, toStr);
@@ -528,7 +555,12 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
-            rv = conv->Convert(dataToConvert, fromStr.GetUnicode(), toStr.GetUnicode(), nsnull, &convertedData);
+
+            PRUnichar *fromUni = fromStr.ToNewUnicode();
+            PRUnichar *toUni   = toStr.ToNewUnicode();
+            rv = conv->Convert(dataToConvert, fromUni, toUni, nsnull, &convertedData);
+            nsAllocator::Free(fromUni);
+            nsAllocator::Free(toUni);
             NS_RELEASE(conv);
             NS_RELEASE(dataToConvert);
             dataToConvert = convertedData;
