@@ -1218,7 +1218,7 @@ nsBookmarksService::ReadBookmarks()
 	PRBool	foundIERoot = PR_FALSE;
 #ifdef	XP_WIN
 	nsCOMPtr<nsIRDFResource>	ieFolder;
-	const char			*ieFavoritesURL;
+	char				*ieFavoritesURL = nsnull;
 #endif
 	{ // <-- scope the stream to get the open/close automatically.
 		nsInputFileStream strm(bookmarksFile);
@@ -1239,7 +1239,11 @@ nsBookmarksService::ReadBookmarks()
 #ifdef	XP_WIN
 		nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
 		nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
-		ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
+		const char			*favoritesURL = ieFavoritesURLSpec.GetAsString();
+		if (favoritesURL)
+		{
+			ieFavoritesURL = strdup(favoritesURL);
+		}
 		parser.SetIEFavoritesRoot(ieFavoritesURL);
 #endif
 
@@ -1316,6 +1320,11 @@ nsBookmarksService::ReadBookmarks()
 			rv = container->AppendElement(ieFolder);
 			if (NS_FAILED(rv)) return rv;
 		}
+	}
+	if (ieFavoritesURL)
+	{
+		free(ieFavoritesURL);
+		ieFavoritesURL = nsnull;
 	}
 #endif
 
