@@ -1807,31 +1807,29 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       mIsWriting = 1;
       
       if (NS_OK == result) { 
-        nsIHTMLContentSink* sink;
-        nsIWebShell* webShell = nsnull;
+        nsCOMPtr<nsIHTMLContentSink> sink;
+        nsCOMPtr<nsIWebShell> webShell;
         
         // Get the webshell of our primary presentation shell
         nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-        if (nsnull != shell) {
+        if (shell) {
           nsCOMPtr<nsIPresContext> cx;
           shell->GetPresContext(getter_AddRefs(cx));
-          nsISupports* container;
-          if (NS_OK == cx->GetContainer(&container)) {
-            if (nsnull != container) {
-              container->QueryInterface(kIWebShellIID, (void**) &webShell);
+          nsCOMPtr<nsISupports> container;
+          if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
+            if (container) {
+              webShell = do_QueryInterface(container);
             }
           }
         }
 
-        result = NS_NewHTMLContentSink(&sink, this, aSourceURL, webShell);
-        NS_IF_RELEASE(webShell);
-        
+        result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
+
         if (NS_OK == result) {
           nsIDTD* theDTD=0;
           NS_NewNavHTMLDTD(&theDTD);
           mParser->RegisterDTD(theDTD);
           mParser->SetContentSink(sink); 
-          NS_RELEASE(sink);
         }
       }
     }
