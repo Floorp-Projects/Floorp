@@ -46,8 +46,6 @@ public:
     nsRDFContentSink();
     virtual ~nsRDFContentSink();
 
-    virtual nsresult Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
-
     // nsISupports
     NS_DECL_ISUPPORTS
 
@@ -75,6 +73,7 @@ public:
     // nsIRDFContentSink
     NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
     NS_IMETHOD GetDataSource(nsIRDFDataSource*& ds);
+    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
 
 protected:
     // Text management

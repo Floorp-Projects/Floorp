@@ -301,29 +301,6 @@ nsRDFContentSink::~nsRDFContentSink()
 
 ////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsRDFContentSink::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
-{
-    NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
-    if ((! aURL) || (! aNameSpaceManager))
-        return NS_ERROR_NULL_POINTER;
-
-    mDocumentURL = aURL;
-    NS_ADDREF(aURL);
-
-    mNameSpaceManager = aNameSpaceManager;
-    NS_ADDREF(mNameSpaceManager);
-
-    nsresult rv;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mResourceMgr)))
-        return rv;
-
-    mState = eRDFContentSinkState_InProlog;
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
@@ -587,6 +564,29 @@ nsRDFContentSink::AddEntityReference(const nsIParserNode& aNode)
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContentSink interface
+
+NS_IMETHODIMP
+nsRDFContentSink::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
+{
+    NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
+    if ((! aURL) || (! aNameSpaceManager))
+        return NS_ERROR_NULL_POINTER;
+
+    mDocumentURL = aURL;
+    NS_ADDREF(aURL);
+
+    mNameSpaceManager = aNameSpaceManager;
+    NS_ADDREF(mNameSpaceManager);
+
+    nsresult rv;
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
+                                                    kIRDFResourceManagerIID,
+                                                    (nsISupports**) &mResourceMgr)))
+        return rv;
+
+    mState = eRDFContentSinkState_InProlog;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsRDFContentSink::SetDataSource(nsIRDFDataSource* ds)
