@@ -194,7 +194,7 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
    // if the index changed hide the old element and make the now element visible
-  if (aAttribute == nsHTMLAtoms::index) {
+  if (aAttribute == nsXULAtoms::selectedIndex) {
     IndexChanged(aPresContext);
   }
 
@@ -285,7 +285,7 @@ nsDeckFrame::GetSelectedIndex()
 
   // get the index attribute
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::index, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::selectedIndex, value))
   {
     PRInt32 error;
 

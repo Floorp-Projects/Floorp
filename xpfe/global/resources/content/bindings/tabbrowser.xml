@@ -239,7 +239,7 @@
       <method name="updateCurrentBrowser">
         <body>
           <![CDATA[
-            var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.index];
+            var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.selectedIndex];
             if (this.mCurrentBrowser)
               this.mCurrentBrowser.setAttribute("type", "content");
             
@@ -431,7 +431,7 @@
 
             var index = -1;
             if (this.mCurrentTab == aTab)
-              index = this.mPanelContainer.index;
+              index = this.mPanelContainer.selectedIndex;
             else {
               // Find and locate the tab in our list.
               for (var i = 0; i < l; i++)
@@ -451,7 +451,7 @@
             oldBrowser.setAttribute("type", "content");
 
             // Now select the new tab before nuking the old one.
-            var currentIndex = this.mPanelContainer.index;
+            var currentIndex = this.mPanelContainer.selectedIndex;
             
             var newIndex = -1;
             if (currentIndex > index)

@@ -184,7 +184,7 @@ function Startup()
       currentPanel = CellPanel;
 
       //Set index for starting panel on the <tabpanels> element
-      TabPanels.setAttribute("index", CellPanel);
+      TabPanels.setAttribute("selectedIndex", CellPanel);
 
       // Trigger setting of style for the tab widgets
       CellTab.setAttribute("selected", "true");
@@ -763,7 +763,7 @@ function SwitchToValidatePanel()
   if (currentPanel != validatePanel)
   {
     //Set index for starting panel on the <tabpanels> element
-    TabPanels.setAttribute("index", validatePanel);
+    TabPanels.setAttribute("selectedIndex", validatePanel);
     if (validatePanel == CellPanel)
     {
       // Trigger setting of style for the tab widgets

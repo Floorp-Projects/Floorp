@@ -117,7 +117,7 @@
               <menulist id="AddHTMLAttributeNameInput" editable="true" flex="1"
                         oninput="onInputHTMLAttributeName();"
                         onchange="onChangeHTMLAttribute();"/>
-              <deck id="AddHTMLAttributeValueDeck" flex="1" index="0">
+              <deck id="AddHTMLAttributeValueDeck" flex="1" selectedIndex="0">
                 <textbox id="AddHTMLAttributeValueTextbox" flex="1"
                          oninput="onInputHTMLAttributeValue();"/>
                 <menulist id="AddHTMLAttributeValueMenulist" editable="true" flex="1"

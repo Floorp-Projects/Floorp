@@ -27,13 +27,13 @@
     function onStopPicking()
     {
       var stk = document.getElementById("dkStartStop");
-      stk.setAttribute("index", 0);
+      stk.setAttribute("selectedIndex", 0);
     }    
 
     function startPicking()
     {
       var stk = document.getElementById("dkStartStop");
-      stk.setAttribute("index", 1);
+      stk.setAttribute("selectedIndex", 1);
       
       viewer.startPickColor(window);
     }
@@ -41,7 +41,7 @@
     function stopPicking()
     {
       var stk = document.getElementById("dkStartStop");
-      stk.setAttribute("index", 0);
+      stk.setAttribute("selectedIndex", 0);
 
       viewer.stopPickColor();
     }
