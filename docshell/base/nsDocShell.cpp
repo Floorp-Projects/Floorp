@@ -3932,21 +3932,30 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
         }
     }
 
-    // skip a leading '"' or '\''
+    // skip a leading '"' or '\''.
+
+    PRBool isQuotedURI = PR_FALSE;
     if (tokenStart != doneIterating && (*tokenStart == '"' || *tokenStart == '\''))
+    {
+        isQuotedURI = PR_TRUE;
         ++tokenStart;
+    }
 
     // set iter to start of URI
     iter = tokenStart;
 
     // tokenStart here points to the beginning of URI
 
-    // skip anything which isn't whitespace
-    while (iter != doneIterating && !nsCRT::IsAsciiSpace(*iter))
+    // grab the rest of the URI
+    while (iter != doneIterating)
+    {
+        if (isQuotedURI && (*iter == '"' || *iter == '\''))
+            break;
         ++iter;
+    }
 
     // move iter one back if the last character is a '"' or '\''
-    if (iter != tokenStart) {
+    if (iter != tokenStart && isQuotedURI) {
         --iter;
         if (!(*iter == '"' || *iter == '\''))
             ++iter;
@@ -3964,6 +3973,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     }
     else {
         uriAttrib = Substring(tokenStart, iter);
+        // NS_NewURI takes care of any whitespace surrounding the URL
         rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, nsnull, aBaseURI);
         specifiesURI = PR_TRUE;
     }
