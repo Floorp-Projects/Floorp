@@ -1822,6 +1822,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               // Use page title as suggested name for new document
               if (fileName.Length() == 0 && title.Length() > 0)
               {
+                // Strip out quote character
+                PRUnichar quote = (PRUnichar)'\"';
+                title.StripChar(quote);
+
                 //Replace "bad" filename characteres with "_"
                 PRUnichar space = (PRUnichar)' ';
                 PRUnichar dot = (PRUnichar)'.';
