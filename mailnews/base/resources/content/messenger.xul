@@ -136,7 +136,7 @@ Rights Reserved.
 
 		<box orient="vertical" flex="1">
      
-			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"  focusring="false"/>
+			<tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"  focusring="false"/>
 
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"
@@ -144,7 +144,7 @@ Rights Reserved.
         <grippy/>
       </splitter>
 			
-			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed" class="window-focusborder" focusring="false">
+			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false">
 				<toolbox id="msgHeaderView"/>
     
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
