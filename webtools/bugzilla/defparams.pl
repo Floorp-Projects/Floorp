@@ -150,13 +150,13 @@ sub check_loginmethod {
 }
 
 sub check_languages {
-    my @languages = split /,/, trim($_);
+    my @languages = split /[,\s]+/, trim($_[0]);
     if(!scalar(@languages)) {
        return "You need to specify a language tag."
     }
     foreach my $language (@languages) {
-       if(   ! -d 'template/'.trim($language).'/custom' 
-          && ! -d 'template/'.trim($language).'/default') {
+       if(   ! -d "template/$language/custom" 
+          && ! -d "template/$language/default") {
           return "The template directory for $language does not exist";
        }
     }
