@@ -3860,9 +3860,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
   nsCSSSelector* selector = aSelector;
   RuleProcessorData* prevdata = &aPrevData;
   while (selector) { // check compound selectors
-    // For the appropriate content (whether parent or previous sibling)
-    // to check next, if we don't already have a RuleProcessorData
-    // for it, create one.
+    // If we don't already have a RuleProcessorData for the next
+    // appropriate content (whether parent or previous sibling), create
+    // one.
 
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
