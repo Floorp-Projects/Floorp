@@ -2094,28 +2094,39 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_FOCUSCHANGED:
+          {
+          PRBool isMozWindowTakingFocus = PR_TRUE;
           if( SHORT1FROMMP( mp2 ) || mWnd == WinQueryFocus(HWND_DESKTOP) )
           {
-            result = DispatchStandardEvent( NS_GOTFOCUS );
+            result = DispatchFocus( NS_GOTFOCUS, isMozWindowTakingFocus );
             // Only sending an Activate event when we get a WM_ACTIVATE message
             // isn't good enough; need to do this every time we gain focus.
             if( !gJustGotActivate )
             {
               gJustGotActivate = PR_TRUE;
-              result = DispatchStandardEvent( NS_ACTIVATE );
+              if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == mNextCmdID == 1)
+                 result = DispatchFocus( NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus );
+              else
+                 result = DispatchFocus( NS_ACTIVATE, isMozWindowTakingFocus );
               gJustGotActivate = PR_FALSE;
             }
           }
           else
           {
-            result = DispatchStandardEvent( NS_LOSTFOCUS );
+            char className[19];
+            ::WinQueryClassName((HWND)mp1, 19, className);
+            if (strcmp(className, WindowClass()))
+               isMozWindowTakingFocus = PR_FALSE;
+
             if( gJustGotDeactivate )
             {
               gJustGotDeactivate = PR_FALSE;
-              result = DispatchStandardEvent( NS_DEACTIVATE );
+              result = DispatchFocus( NS_DEACTIVATE, isMozWindowTakingFocus );
             }
+            result = DispatchFocus( NS_LOSTFOCUS, isMozWindowTakingFocus );
           }
           break;
+          }
     
         case WM_WINDOWPOSCHANGED: 
           result = OnReposition( (PSWP) mp1);
@@ -2559,6 +2570,52 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   g_bHandlingMouseClick = TRUE;
   NS_RELEASE(event.widget);
   return result;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Deal with focus messages
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus)
+{
+  // call the event callback 
+  if (mEventCallback) {
+    nsFocusEvent event;
+    event.eventStructType = NS_FOCUS_EVENT;
+    InitEvent(event, aEventType);
+
+    //focus and blur event should go to their base widget loc, not current mouse pos
+    event.point.x = 0;
+    event.point.y = 0;
+
+    event.isMozWindowTakingFocus = isMozWindowTakingFocus;
+
+    nsPluginEvent pluginEvent;
+
+    switch (aEventType)//~~~
+    {
+      case NS_GOTFOCUS:
+        pluginEvent.event = WM_SETFOCUS;
+        break;
+      case NS_LOSTFOCUS:
+        pluginEvent.event = WM_FOCUSCHANGED;
+        break;
+      case NS_PLUGIN_ACTIVATE:
+        pluginEvent.event = WM_FOCUSCHANGED;
+        break;
+      default:
+        break;
+    }
+
+    event.nativeMsg = (void *)&pluginEvent;
+
+    PRBool result = DispatchWindowEvent(&event);
+    NS_RELEASE(event.widget);
+    return result;
+  }
+  return PR_FALSE;
 }
 
 
