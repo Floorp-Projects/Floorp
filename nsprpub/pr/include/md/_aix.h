@@ -243,4 +243,6 @@ struct _MDCPU {
 #define _MD_POLL	poll
 #endif
 
+extern void _MD_aix_map_sendfile_error(int err);
+
 #endif /* nspr_aix_defs_h___ */

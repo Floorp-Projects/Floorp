@@ -784,5 +784,7 @@ PR_END_EXTERN_C
 
 #endif /* _PR_GLOBAL_THREADS_ONLY */
 
+extern void _MD_solaris_map_sendfile_error(int err);
+
 #endif /* nspr_solaris_defs_h___ */
 
