@@ -80,6 +80,18 @@ interface nsIHttpChannel : nsIChannel
     void   visitResponseHeaders(in nsIHttpHeaderVisitor visitor);
 
     /**
+     * True if the server sent a "Cache-control: no-store" response header.
+     */
+    boolean isNoStoreResponse();
+
+    /**
+     * True if the server sent the equivalent of a "Cache-control: no-cache"
+     * response header.  Other equivalent response headers include: "Pragma:
+     * no-cache" and "Expires" with a date-value in the past.
+     */
+    boolean isNoCacheResponse();
+
+    /**
      * Get the charset for the response, which may be NULL if not specified
      * by the server (ie. the Content-Type header may not specify a charset).
      */

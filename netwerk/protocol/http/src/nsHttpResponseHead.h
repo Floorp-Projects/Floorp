@@ -38,7 +38,13 @@ class nsHttpResponseHead
 public:
     nsHttpResponseHead() : mVersion(NS_HTTP_VERSION_1_1)
                          , mStatus(200)
-                         , mContentLength(-1) {}
+                         , mStatusText(nsnull)
+                         , mContentLength(-1)
+                         , mContentType(nsnull)
+                         , mContentCharset(nsnull)
+                         , mCacheControlNoStore(PR_FALSE)
+                         , mCacheControlNoCache(PR_FALSE)
+                         , mPragmaNoCache(PR_FALSE) {}
    ~nsHttpResponseHead() {}
     
     nsHttpHeaderArray &Headers()        { return mHeaders; }
@@ -48,13 +54,15 @@ public:
     PRInt32            ContentLength()  { return mContentLength; }
     const char        *ContentType()    { return mContentType; }
     const char        *ContentCharset() { return mContentCharset; }
+    PRBool             NoStore()        { return mCacheControlNoStore; }
+    PRBool             NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
 
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
-    nsresult SetHeader(nsHttpAtom h, const char *v) { return mHeaders.SetHeader(h, v); }
+    nsresult SetHeader(nsHttpAtom h, const char *v);
     nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
-    void     SetContentType(const char *s) { mContentType.Adopt(s ? nsCRT::strdup(s) : 0); }
+    void     SetContentType(const char *s) { CRTFREEIF(mContentType); mContentType = (s ? nsCRT::strdup(s) : 0); }
     void     SetContentLength(PRInt32);
 
     // write out the response status line and headers as a single text block,
@@ -75,7 +83,12 @@ public:
     // cache validation support methods
     nsresult ComputeFreshnessLifetime(PRUint32 *);
     nsresult ComputeCurrentAge(PRUint32 now, PRUint32 requestTime, PRUint32 *result);
-    PRBool   MustRevalidate();
+    PRBool   MustValidate();
+    PRBool   MustValidateIfExpired();
+
+    // returns true if the Expires header has a value in the past relative to the
+    // value of the Date header.
+    PRBool   ExpiresInPast();
 
     // update headers...
     nsresult UpdateHeaders(nsHttpHeaderArray &headers); 
@@ -93,16 +106,21 @@ public:
 
 private:
     void     ParseVersion(const char *);
-    nsresult ParseContentType(char *);
+    void     ParseContentType(char *);
+    void     ParseCacheControl(const char *);
+    void     ParsePragma(const char *);
 
 private:
     nsHttpHeaderArray mHeaders;
     nsHttpVersion     mVersion;
     PRUint16          mStatus;
-    nsXPIDLCString    mStatusText;
+    char             *mStatusText;
     PRInt32           mContentLength;
-    nsXPIDLCString    mContentType;
-    nsXPIDLCString    mContentCharset;
+    char             *mContentType;
+    char             *mContentCharset;
+    PRPackedBool      mCacheControlNoStore;
+    PRPackedBool      mCacheControlNoCache;
+    PRPackedBool      mPragmaNoCache;
 };
 
 #endif // nsHttpResponseHead_h__

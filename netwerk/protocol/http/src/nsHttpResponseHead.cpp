@@ -31,6 +31,21 @@
 // nsHttpResponseHead <public>
 //-----------------------------------------------------------------------------
 
+nsresult
+nsHttpResponseHead::SetHeader(nsHttpAtom hdr, const char *val)
+{
+    nsresult rv = mHeaders.SetHeader(hdr, val);
+    if (NS_FAILED(rv)) return rv;
+
+    // response to changes in these headers
+    if (hdr == nsHttp::Cache_Control)
+        ParseCacheControl(val);
+    else if (hdr == nsHttp::Pragma)
+        ParsePragma(val);
+
+    return NS_OK;
+}
+
 void
 nsHttpResponseHead::SetContentLength(PRInt32 len)
 {
@@ -143,7 +158,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     
     if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
         mStatus = 200;
-        mStatusText.Adopt(nsCRT::strdup("OK"));
+        mStatusText = nsCRT::strdup("OK");
     }
     else {
         // Status-Code
@@ -156,14 +171,14 @@ nsHttpResponseHead::ParseStatusLine(char *line)
         // Reason-Phrase is whatever is remaining of the line
         if (!(line = PL_strchr(line, ' '))) {
             LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
-            mStatusText.Adopt(nsCRT::strdup("OK"));
+            mStatusText = nsCRT::strdup("OK");
         }
         else
-            mStatusText.Adopt(nsCRT::strdup(++line));
+            mStatusText = nsCRT::strdup(++line);
     }
 
     LOG(("Have status line [version=%u status=%u statusText=%s]\n",
-        PRUintn(mVersion), PRUintn(mStatus), mStatusText.get()));
+        PRUintn(mVersion), PRUintn(mStatus), mStatusText));
 }
 
 void
@@ -179,6 +194,10 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
         mContentLength = atoi(val);
     else if (hdr == nsHttp::Content_Type)
         ParseContentType(val);
+    else if (hdr == nsHttp::Cache_Control)
+        ParseCacheControl(val);
+    else if (hdr == nsHttp::Pragma)
+        ParsePragma(val);
 }
 
 // From section 13.2.3 of RFC2616, we compute the current age of a cached
@@ -280,47 +299,33 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
 }
 
 PRBool
-nsHttpResponseHead::MustRevalidate()
+nsHttpResponseHead::MustValidate()
 {
     const char *val;
 
-    LOG(("nsHttpResponseHead::MustRevalidate ??\n"));
+    LOG(("nsHttpResponseHead::MustValidate ??\n"));
 
-    // If the must-revalidate directive is present in the cached response, data
-    // must always be revalidated with the server, even if the user has
-    // configured validation to be turned off (See RFC 2616, section 14.9.4).
-    val = PeekHeader(nsHttp::Cache_Control);
-    if (val && PL_strcasestr(val, "must-revalidate")) {
-        LOG(("Must revalidate based on \"%s\" header\n", val));
+    // The no-cache response header indicates that we must validate this
+    // cached response before reusing.
+    if (NoCache()) {
+        LOG(("Must validate since response contains 'no-cache' header\n"));
         return PR_TRUE;
     }
-    // The no-cache directive within the 'Cache-Control:' header indicates
-    // that we must validate this cached response before reusing.
-    if (val && PL_strcasestr(val, "no-cache")) {
-        LOG(("Must revalidate based on \"%s\" header\n", val));
-        return PR_TRUE;
-    }
-    // XXX we are not quite handling no-cache correctly in this case.  We really
-    // should check for field-names and only force validation if they match
-    // existing response headers.  See RFC2616 section 14.9.1 for details.
 
-    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
-    // a request header), caching is inhibited when this header is present so
-    // as to match existing Navigator behavior.
-    val = PeekHeader(nsHttp::Pragma);
-    if (val && PL_strcasestr(val, "no-cache")) {
-        LOG(("Must revalidate based on \"%s\" header\n", val));
+    // Likewise, if the response is no-store, then we must validate this
+    // cached response before reusing.  NOTE: it may seem odd that a no-store
+    // response may be cached, but indeed all responses are cached in order
+    // to support File->SaveAs, View->PageSource, and other browser features.
+    if (NoStore()) {
+        LOG(("Must validate since response contains 'no-store' header\n"));
         return PR_TRUE;
     }
 
     // Compare the Expires header to the Date header.  If the server sent an
     // Expires header with a timestamp in the past, then we must validate this
     // cached response before reusing.
-    PRUint32 expiresVal, dateVal;
-    if (NS_SUCCEEDED(GetExpiresValue(&expiresVal)) &&
-        NS_SUCCEEDED(GetDateValue(&dateVal)) &&
-        expiresVal < dateVal) {
-        LOG(("Must revalidate since Expires < Date\n"));
+    if (ExpiresInPast()) {
+        LOG(("Must validate since Expires < Date\n"));
         return PR_TRUE;
     }
 
@@ -339,12 +344,34 @@ nsHttpResponseHead::MustRevalidate()
     if (val && (PL_strstr(val, "*") ||
                 PL_strcasestr(val, "accept-charset") ||
                 PL_strcasestr(val, "accept-language"))) {
-        LOG(("Must revalidate based on \"%s\" header\n", val));
+        LOG(("Must validate based on \"%s\" header\n", val));
         return PR_TRUE;
     }
 
-    LOG(("no mandatory revalidation requirement\n"));
+    LOG(("no mandatory validation requirement\n"));
     return PR_FALSE;
+}
+
+PRBool
+nsHttpResponseHead::MustValidateIfExpired()
+{
+    // according to RFC2616, section 14.9.4:
+    //
+    //  When the must-revalidate directive is present in a response received by a   
+    //  cache, that cache MUST NOT use the entry after it becomes stale to respond to 
+    //  a subsequent request without first revalidating it with the origin server.
+    //
+    const char *val = PeekHeader(nsHttp::Cache_Control);
+    return val && PL_strcasestr(val, "must-revalidate");
+}
+
+PRBool
+nsHttpResponseHead::ExpiresInPast()
+{
+    PRUint32 expiresVal, dateVal;
+    return NS_SUCCEEDED(GetExpiresValue(&expiresVal)) &&
+           NS_SUCCEEDED(GetDateValue(&dateVal)) &&
+           expiresVal < dateVal;
 }
 
 nsresult
@@ -410,10 +437,13 @@ nsHttpResponseHead::Reset()
 
     mVersion = NS_HTTP_VERSION_1_1;
     mStatus = 200;
-    mStatusText.Adopt(0);
     mContentLength = -1;
-    mContentType.Adopt(0);
-    mContentCharset.Adopt(0);
+    mCacheControlNoStore = PR_FALSE;
+    mCacheControlNoCache = PR_FALSE;
+    mPragmaNoCache = PR_FALSE;
+    CRTFREEIF(mStatusText);
+    CRTFREEIF(mContentType);
+    CRTFREEIF(mContentCharset);
 }
 
 nsresult
@@ -510,14 +540,19 @@ nsHttpResponseHead::ParseVersion(const char *str)
 // This code is duplicated in nsMultiMixedConv.cpp.  If you change it
 // here, change it there, too!
 
-nsresult
+void
 nsHttpResponseHead::ParseContentType(char *type)
 {
     LOG(("nsHttpResponseHead::ParseContentType [type=%s]\n", type));
 
     // don't bother with an empty content-type header - bug 83465
     if (!*type)
-        return NS_OK;
+        return;
+
+    // a response could have multiple content type headers... we'll honor
+    // the last one.
+    CRTFREEIF(mContentCharset);
+    CRTFREEIF(mContentType);
 
     // we don't care about comments (although they are invalid here)
     char *p = PL_strchr(type, '(');
@@ -541,7 +576,7 @@ nsHttpResponseHead::ParseContentType(char *type)
             } while ((*p3 == ' ') || (*p3 == '\t'));
             *++p3 = 0; // overwrite first char after the charset field
 
-            mContentCharset.Adopt(nsCRT::strdup(p2));
+            mContentCharset = nsCRT::strdup(p2);
         }
     }
     else
@@ -556,7 +591,47 @@ nsHttpResponseHead::ParseContentType(char *type)
     while (--p >= type)
         *p = nsCRT::ToLower(*p);
 
-    mContentType.Adopt(nsCRT::strdup(type));
+    mContentType = nsCRT::strdup(type);
+}
 
-    return NS_OK;
+void
+nsHttpResponseHead::ParseCacheControl(const char *val)
+{
+    if (!val) {
+        // clear no-cache flag
+        mCacheControlNoCache = PR_FALSE;
+        return;
+    }
+    else if (!*val)
+        return;
+
+    const char *s = val;
+
+    // search header value for occurance(s) of "no-cache" but ignore
+    // occurance(s) of "no-cache=blah"
+    while (s = PL_strcasestr(s, "no-cache")) {
+        s += (sizeof("no-cache") - 1);
+        if (*s != '=')
+            mCacheControlNoCache = PR_TRUE;
+    }
+
+    // search header value for occurance of "no-store" 
+    if (PL_strcasestr(val, "no-store"))
+        mCacheControlNoStore = PR_TRUE;
+}
+
+void
+nsHttpResponseHead::ParsePragma(const char *val)
+{
+    if (!val) {
+        // clear no-cache flag
+        mPragmaNoCache = PR_FALSE;
+        return;
+    }
+
+    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+    // a request header), caching is inhibited when this header is present so
+    // as to match existing Navigator behavior.
+    if (*val && !PL_strcasestr(val, "no-cache"))
+        mPragmaNoCache = PR_TRUE;
 }

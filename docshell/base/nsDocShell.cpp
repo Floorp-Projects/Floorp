@@ -5162,8 +5162,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsIURI> referrerURI;
     nsCOMPtr<nsISupports> cacheKey;
     nsCOMPtr<nsISupports> cacheToken;
-    PRPackedBool expired = PR_FALSE;
-    nsXPIDLCString val;
+    PRBool expired = PR_FALSE;
+    PRBool discardLayoutState = PR_FALSE;
     if (aChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(aChannel));
@@ -5183,7 +5183,16 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             httpChannel->GetReferrer(getter_AddRefs(referrerURI));
-            httpChannel->GetResponseHeader("Cache-Control", getter_Copies(val));
+
+            // figure out if SH should be saving layout state (see bug 112564)
+            nsCOMPtr<nsISupports> securityInfo;
+            PRBool noStore = PR_FALSE, noCache = PR_FALSE;
+
+            httpChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+            httpChannel->IsNoStoreResponse(&noStore);
+            httpChannel->IsNoCacheResponse(&noCache);
+
+            discardLayoutState = noStore || (noCache && securityInfo);
         }
     }
 
@@ -5199,15 +5208,15 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
      * HistoryLayoutState. By default, SH will set this
      * flag to PR_TRUE and save HistoryLayoutState.
      */    
-    if (val && (PL_strcasestr(val, "no-store") || PL_strcasestr(val, "no-cache"))) {
+    if (discardLayoutState) {
         entry->SetSaveLayoutStateFlag(PR_FALSE);
     }
     if (cacheToken) {
         // Check if the page has expired from cache 
-        nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
-        if (cacheEntryDesc) {        
+        nsCOMPtr<nsICacheEntryInfo> cacheEntryInfo(do_QueryInterface(cacheToken));
+        if (cacheEntryInfo) {        
             PRUint32 expTime;         
-            cacheEntryDesc->GetExpirationTime(&expTime);         
+            cacheEntryInfo->GetExpirationTime(&expTime);         
             PRUint32 now = PRTimeToSeconds(PR_Now());                  
             if (expTime <=  now)            
                 expired = PR_TRUE;         

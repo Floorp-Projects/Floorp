@@ -742,7 +742,7 @@ nsHttpChannel::UpdateExpirationTime()
 
     NS_ENSURE_TRUE(mResponseHead, NS_ERROR_FAILURE);
 
-    if (!mResponseHead->MustRevalidate()) {
+    if (!mResponseHead->MustValidate()) {
         nsresult rv;
         PRUint32 freshnessLifetime, currentAge;
 
@@ -841,33 +841,36 @@ nsHttpChannel::CheckCache()
     if (mLoadFlags & LOAD_FROM_CACHE) {
         LOG(("NOT validating based on LOAD_FROM_CACHE load flag\n"));
         doValidation = PR_FALSE;
-        goto end;
     }
-
     // If the VALIDATE_ALWAYS flag is set, any cached data won't be used until
     // it's revalidated with the server.
-    if (mLoadFlags & VALIDATE_ALWAYS) {
+    else if (mLoadFlags & VALIDATE_ALWAYS) {
         LOG(("Validating based on VALIDATE_ALWAYS load flag\n"));
         doValidation = PR_TRUE;
-        goto end;
     }
-
-    // check revalidation is strictly required.
-    if (mCachedResponseHead->MustRevalidate()) {
+    // Even if the VALIDATE_NEVER flag is set, there are still some cases in
+    // which we must validate the cached response with the server.
+    else if (mLoadFlags & VALIDATE_NEVER) {
+        LOG(("VALIDATE_NEVER set\n"));
+        // if no-store or if no-cache and ssl, validate cached response (see
+        // bug 112564 for an explanation of this logic)
+        if (mCachedResponseHead->NoStore() ||
+           (mCachedResponseHead->NoCache() && mConnectionInfo->UsingSSL())) {
+            LOG(("Validating based on (no-store || (no-cache && ssl)) logic\n"));
+            doValidation = PR_TRUE;
+        }
+        else {
+            LOG(("NOT validating based on VALIDATE_NEVER load flag\n"));
+            doValidation = PR_FALSE;
+        }
+    }
+    // check if validation is strictly required...
+    else if (mCachedResponseHead->MustValidate()) {
+        LOG(("Validating based on MustValidate() returning TRUE\n"));
         doValidation = PR_TRUE;
-        goto end;
     }
-
-    // delay checking this flag until we've verified that the response headers
-    // do not require mandatory revalidation.
-    if (mLoadFlags & VALIDATE_NEVER) {
-        LOG(("Not validating based on VALIDATE_NEVER flag\n"));
-        doValidation = PR_FALSE;
-        goto end;
-    }
-
     // Check if the cache entry has expired...
-    {
+    else {
         PRUint32 time = 0; // a temporary variable for storing time values...
 
         rv = mCacheEntry->GetExpirationTime(&time);
@@ -875,6 +878,8 @@ nsHttpChannel::CheckCache()
 
         if (NowInSeconds() <= time)
             doValidation = PR_FALSE;
+        else if (mCachedResponseHead->MustValidateIfExpired())
+            doValidation = PR_TRUE;
         else if (mLoadFlags & VALIDATE_ONCE_PER_SESSION) {
             // If the cached response does not include expiration infor-
             // mation, then we must validate the response, despite whether
@@ -894,7 +899,6 @@ nsHttpChannel::CheckCache()
                 // has been accessed in this session, and validate if so.
                 doValidation = (nsHttpHandler::get()->SessionStartTime() > time);
             }
-
         }
         else
             doValidation = PR_TRUE;
@@ -902,10 +906,11 @@ nsHttpChannel::CheckCache()
         LOG(("%salidating based on expiration time\n", doValidation ? "V" : "Not v"));
     }
 
-end:
     mCachedContentIsValid = !doValidation;
 
-    if (doValidation) {
+    // add validation headers unless the cached response is marked no-store...
+    // this'll force no-store content to be refetched each time from the server.
+    if (doValidation && !mCachedResponseHead->NoStore()) {
         const char *val;
         // Add If-Modified-Since header if a Last-Modified was given
         val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
@@ -1016,7 +1021,6 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
 nsresult
 nsHttpChannel::InitCacheEntry()
 {
-    const char *val;
     nsresult rv;
 
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_UNEXPECTED);
@@ -1029,16 +1033,10 @@ nsHttpChannel::InitCacheEntry()
     LOG(("nsHttpChannel::InitCacheEntry [this=%x entry=%x]\n",
         this, mCacheEntry.get()));
 
-    // XXX blow away any existing cache meta data
-
     // The no-store directive within the 'Cache-Control:' header indicates
-    // that we should not store the response in the cache.
-    val = mResponseHead->PeekHeader(nsHttp::Cache_Control);
-    if (val && PL_strcasestr(val, "no-store")) {
-        LOG(("Inhibiting caching because of \"%s\"\n", val));
-        CloseCacheEntry(NS_ERROR_ABORT);
-        return NS_OK;
-    }
+    // that we must not store the response in a persistent cache.
+    if (mResponseHead->NoStore())
+        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
     // For HTTPS transactions, the storage policy will already be IN_MEMORY.
     // We are concerned instead about load attributes which may have changed.
@@ -1077,16 +1075,6 @@ nsHttpChannel::FinalizeCacheEntry()
     LOG(("nsHttpChannel::FinalizeCacheEntry [this=%x]\n", this));
 
     if (mResponseHead && mResponseHeadersModified) {
-        // The no-store directive within the 'Cache-Control:' header indicates
-        // that we should not store the response in the cache.
-        // XXX this should probably be done from within SetResponseHeader.
-        const char *val = mResponseHead->PeekHeader(nsHttp::Cache_Control);
-        if (val && PL_strcasestr(val, "no-store")) {
-            LOG(("Dooming cache entry because of \"%s\"\n", val));
-            mCacheEntry->Doom();
-            return NS_OK;
-        }
-
         // Set the expiration time for this cache entry
         nsresult rv = UpdateExpirationTime();
         if (NS_FAILED(rv)) return rv;
@@ -2279,6 +2267,26 @@ nsHttpChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
     return mResponseHead->Headers().VisitHeaders(visitor);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::IsNoStoreResponse(PRBool *value)
+{
+    if (!mResponseHead)
+        return NS_ERROR_NOT_AVAILABLE;
+    *value = mResponseHead->NoStore();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::IsNoCacheResponse(PRBool *value)
+{
+    if (!mResponseHead)
+        return NS_ERROR_NOT_AVAILABLE;
+    *value = mResponseHead->NoCache();
+    if (!*value)
+        *value = mResponseHead->ExpiresInPast();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
