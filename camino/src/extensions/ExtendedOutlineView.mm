@@ -107,6 +107,12 @@
         return;
       }
     }
+    else if (c == NSEnterCharacter
+              || ([aEvent modifierFlags] & NSCommandKeyMask && c == NSDownArrowFunctionKey)) {
+      // on enter or cmd-downArrow, open the item as a double-click
+      [NSApp sendAction:[self doubleAction] to:[self target] from:self];
+      return;
+    }
     else if (c == NSLeftArrowFunctionKey || c == NSRightArrowFunctionKey)
     {
       BOOL expand = (c == NSRightArrowFunctionKey);
