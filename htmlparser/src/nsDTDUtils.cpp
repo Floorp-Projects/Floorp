@@ -431,6 +431,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
 
 static PRUint32 crc_table[256];
 
+static
 void gen_crc_table() {
  /* generate the table of CRC remainders for all possible bytes */
   int i, j;  
