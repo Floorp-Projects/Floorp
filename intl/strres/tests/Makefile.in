@@ -24,6 +24,9 @@ include $(DEPTH)/config/autoconf.mk
 CPPSRCS		= StringBundleTest.cpp
 
 LIBS		= \
+	-lraptorgfx	\
+	-lgfx$(MOZ_TOOLKIT) \
+	-lgfxps \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \
@@ -41,9 +44,10 @@ LIBS		= \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
+	-limg \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
-	-lreg \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
