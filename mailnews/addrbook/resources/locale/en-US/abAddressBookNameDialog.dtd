@@ -20,3 +20,4 @@ Rights Reserved.
 
 <!-- Labels -->
 	<!ENTITY name.label			"Address Book Name">
+	<!ENTITY title.label			"New Address Book">
