@@ -6,60 +6,61 @@
 </head>
 <script type="application/x-javascript" language="Javascript">
 
-const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
+const nsILayoutDebuggingTools = Components.interfaces.nsILayoutDebuggingTools;
+var gDebugTools;
+
+function Init()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  gDebugTools = Components.classes["@mozilla.org/layout-debug/layout-debuggingtools;1"].createInstance(nsILayoutDebuggingTools);
+  gDebugTools.init(window);
+}
 
 function SetShowFrameBorders(inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.showFrameBorders = inShow;
+  gDebugTools.visualDebugging = inShow;
 }
 
 function SetShowEventTargetBorders(inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.showEventTargetFrameBorder = inShow;
+  gDebugTools.visualEventDebugging = inShow;
 }
 
-function SetShowReflowStats(theWindow, inShow)
+function SetShowReflowStats(inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.setShowReflowStats(theWindow, inShow);
+  gDebugTools.reflowCounts = inShow;
 }
 
 function DumpFrames()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.dumpFrames(window, null);
+  gDebugTools.dumpFrames();
 }
 
 function DumpContent()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.dumpContent(window, null);
+  gDebugTools.dumpContent();
 }
 
 function DumpViews()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.dumpViews(window, null);
+  gDebugTools.dumpViews();
 }
 
 function DumpWebShells()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
-  debugObject.dumpWebShells(window, null);
+  gDebugTools.dumpWebShells();
 }
 
 </script>
 
-<body>
+<body onload="Init()">
 <h1>Layout Debug Utils</h1>
 
 <p>Note that these only work in debug builds</h1>
@@ -87,7 +88,7 @@ function DumpWebShells()
 <input type="checkbox"
     id="showReflowStatsCheck"
     name="showReflowStatsCheck"
-    onchange="SetShowReflowStats(window, document.windowform.showReflowStatsCheck.checked)"></input>
+    onchange="SetShowReflowStats(document.windowform.showReflowStatsCheck.checked)"></input>
 <label for="showReflowStatsCheck">Show Reflow Stats</label>
 </form>
 
