@@ -38,7 +38,7 @@
           <menuseparator/>
 
           <menu value="&walletMenu.label;">
-            <menupopup  id="strings"
+            <menupopup  id="personalManagers"
                         PasswordNotChanged = "&PasswordNotChanged;"
                         PasswordExpired = "&PasswordExpired;"
                         PasswordNotExpired = "&PasswordNotExpired;"
