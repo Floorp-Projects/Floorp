@@ -337,6 +337,13 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                const PRUnichar *aMsg ) {
     nsresult rv = NS_OK;
 
+    // If an error occurred, shut down.
+    if ( NS_FAILED( aStatus ) ) {
+        this->Stop();
+        // XXX need to use aMsg when it is provided
+        this->OnError( kOpAsyncWrite, aStatus );
+    }
+
     // Close the output stream.
     if ( mOutputStream ) {
         rv = mOutputStream->Close();
