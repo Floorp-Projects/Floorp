@@ -502,6 +502,9 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
         eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+        if (!domWindow) {
+          break;
+        }
         nsCOMPtr<nsIFocusController> focusController;
         piWin->GetRootFocusController(getter_AddRefs(focusController));
         if (focusController) {
