@@ -29,6 +29,10 @@
 
 #pragma once
 
+#ifndef CALL_NOT_IN_CARBON
+	#define CALL_NOT_IN_CARBON 1
+#endif
+
 #include "jni.h"
 #include "JManager.h"
 

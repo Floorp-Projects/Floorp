@@ -33,6 +33,7 @@
 #include "MRJConsole.h"
 #include "MRJMonitor.h"
 
+#include <ControlDefinitions.h>
 #include <string.h>
 #include <Memory.h>
 #include <Files.h>

@@ -27,6 +27,10 @@
 	by Patrick C. Beard.
  */
 
+#ifndef CALL_NOT_IN_CARBON
+	#define CALL_NOT_IN_CARBON 1
+#endif
+
 #include "nsIJVMConsole.h"
 #include "nsIEventHandler.h"
 #include "SupportsMixin.h"
