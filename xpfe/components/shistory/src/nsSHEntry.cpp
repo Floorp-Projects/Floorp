@@ -35,6 +35,16 @@ nsSHEntry::nsSHEntry()
 
 nsSHEntry::~nsSHEntry() 
 {
+  // Release the references to any child entries...
+  PRInt32 i, childCount = mChildren.Count();
+  for (i=0; i<childCount; i++) {
+    nsISHEntry* child;
+
+    child = (nsISHEntry*) mChildren.ElementAt(i);
+    NS_IF_RELEASE(child);
+  }
+
+  mChildren.Clear();
 }
 
 //*****************************************************************************
