@@ -10,6 +10,7 @@ xul.css
 dialogs.css
 navigator.css
 navigator.xul
+navigaor.js
 unknownContent.xul
 viewSource.xul
 downloadProgress.xul
