@@ -51,7 +51,7 @@ public:
 	
 protected:
 
-	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue);
 	nsresult AddSubNode(nsAutoString name, nsIAbCard **childDir);
 
 protected:

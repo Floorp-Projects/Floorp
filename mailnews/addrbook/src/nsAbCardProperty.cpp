@@ -85,44 +85,44 @@ nsAbCardProperty::nsAbCardProperty(void)
 {
 	NS_INIT_REFCNT();
 
-	m_pFirstName = nsnull;
-	m_pLastName = nsnull;
-	m_pDisplayName = nsnull;
-	m_pNickName = nsnull;
-	m_pPrimaryEmail = nsnull;
-	m_pSecondEmail = nsnull;
-	m_pWorkPhone = nsnull;
-	m_pHomePhone = nsnull;
-	m_pFaxNumber = nsnull;
-	m_pPagerNumber = nsnull;
-	m_pCellularNumber = nsnull;
+	m_FirstName = "";
+	m_LastName = "";
+	m_DisplayName = "";
+	m_NickName = "";
+	m_PrimaryEmail = "";
+	m_SecondEmail = "";
+	m_WorkPhone = "";
+	m_HomePhone = "";
+	m_FaxNumber = "";
+	m_PagerNumber = "";
+	m_CellularNumber = "";
 
-	m_pHomeAddress = nsnull;
-	m_pHomeAddress2 = nsnull;
-	m_pHomeCity = nsnull;
-	m_pHomeState = nsnull;
-	m_pHomeZipCode = nsnull;
-	m_pHomeCountry = nsnull;
-	m_pWorkAddress = nsnull;
-	m_pWorkAddress2 = nsnull;
-	m_pWorkCity = nsnull;
-	m_pWorkState = nsnull;
-	m_pWorkZipCode = nsnull;
-	m_pWorkCountry = nsnull;
-	m_pJobTitle = nsnull;
-	m_pDepartment = nsnull;
-	m_pCompany = nsnull;
-	m_pWebPage1 = nsnull;
-	m_pWebPage2 = nsnull;
-	m_pBirthYear = nsnull;
-	m_pBirthMonth = nsnull;
-	m_pBirthDay = nsnull;
-	m_pCustom1 = nsnull;
-	m_pCustom2 = nsnull;
-	m_pCustom3 = nsnull;
-	m_pCustom4 = nsnull;
-	m_pNote = nsnull;
-	m_pLastModDate = nsnull;
+	m_HomeAddress = "";
+	m_HomeAddress2 = "";
+	m_HomeCity = "";
+	m_HomeState = "";
+	m_HomeZipCode = "";
+	m_HomeCountry = "";
+	m_WorkAddress = "";
+	m_WorkAddress2 = "";
+	m_WorkCity = "";
+	m_WorkState = "";
+	m_WorkZipCode = "";
+	m_WorkCountry = "";
+	m_JobTitle = "";
+	m_Department = "";
+	m_Company = "";
+	m_WebPage1 = "";
+	m_WebPage2 = "";
+	m_BirthYear = "";
+	m_BirthMonth = "";
+	m_BirthDay = "";
+	m_Custom1 = "";
+	m_Custom2 = "";
+	m_Custom3 = "";
+	m_Custom4 = "";
+	m_Note = "";
+	m_LastModDate = 0;
 
 	m_bSendPlainText = PR_FALSE;
 
@@ -139,44 +139,6 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
-	PR_FREEIF(m_pFirstName);
-	PR_FREEIF(m_pLastName);
-	PR_FREEIF(m_pDisplayName);
-	PR_FREEIF(m_pNickName);
-	PR_FREEIF(m_pPrimaryEmail);
-	PR_FREEIF(m_pSecondEmail);
-	PR_FREEIF(m_pWorkPhone);
-	PR_FREEIF(m_pHomePhone);
-	PR_FREEIF(m_pFaxNumber);
-	PR_FREEIF(m_pPagerNumber);
-	PR_FREEIF(m_pCellularNumber);
-	PR_FREEIF(m_pHomeAddress);
-	PR_FREEIF(m_pHomeAddress2);
-	PR_FREEIF(m_pHomeCity);
-	PR_FREEIF(m_pHomeState);
-	PR_FREEIF(m_pHomeZipCode);
-	PR_FREEIF(m_pHomeCountry);
-	PR_FREEIF(m_pWorkAddress);
-	PR_FREEIF(m_pWorkAddress2);
-	PR_FREEIF(m_pWorkCity);
-	PR_FREEIF(m_pWorkState);
-	PR_FREEIF(m_pWorkZipCode);
-	PR_FREEIF(m_pWorkCountry);
-	PR_FREEIF(m_pJobTitle);
-	PR_FREEIF(m_pDepartment);
-	PR_FREEIF(m_pCompany);
-	PR_FREEIF(m_pWebPage1);
-	PR_FREEIF(m_pWebPage2);
-	PR_FREEIF(m_pBirthYear);
-	PR_FREEIF(m_pBirthMonth);
-	PR_FREEIF(m_pBirthDay);
-	PR_FREEIF(m_pCustom1);
-	PR_FREEIF(m_pCustom2);
-	PR_FREEIF(m_pCustom3);
-	PR_FREEIF(m_pCustom4);
-	PR_FREEIF(m_pNote);
-	PR_FREEIF(m_pLastModDate);
-
 	if (m_pAnonymousStrAttributes)
 		RemoveAnonymousList(m_pAnonymousStrAttributes);
 	if (m_pAnonymousIntAttributes)
@@ -233,29 +195,25 @@ NS_IMETHODIMP nsAbCardProperty::QueryInterface(REFNSIID aIID, void** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsAbCardProperty::GetAttributeName(char **aName, char* pValue)
+nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)
 	{
-		if (pValue)
-			*aName = nsCRT::strdup(pValue);
+		*aName = value.ToNewUnicode();
+		if (!(*aName)) 
+			return NS_ERROR_OUT_OF_MEMORY;
 		else
-			*aName = nsCRT::strdup("");
-		return NS_OK;
+			return NS_OK;
 	}
 	else
-		return NS_RDF_NO_VALUE;
+		return NS_ERROR_NULL_POINTER;
 
 }
 
-nsresult nsAbCardProperty::SetAttributeName(char *aName, char **arrtibute)
+nsresult nsAbCardProperty::SetAttributeName(PRUnichar *aName, nsString& arrtibute)
 {
 	if (aName)
-	{
-		char *pValue = *arrtibute;
-		nsCRT::free(pValue);
-		*arrtibute = nsCRT::strdup(aName);
-	}
+		arrtibute = aName;
 	return NS_OK;
 }
 
@@ -295,7 +253,7 @@ NS_IMETHODIMP nsAbCardProperty::SetDbRowID(PRUint32 aDbRowID)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, char **value)
+NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **value)
 {
     if (!PL_strcmp(attrname, kFirstNameColumn))
 		GetFirstName(value);
@@ -368,86 +326,86 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, char **value)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const char *value)
+NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnichar *value)
 {
 	if (!attrname && !value)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsAutoString cardValue(value);
-	char* valueStr = cardValue.ToNewCString();
 
     if (!PL_strcmp(attrname, kFirstNameColumn))
-		rv = SetFirstName(valueStr);
+		rv = SetFirstName((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kLastNameColumn))
-		rv = SetLastName(valueStr);
+		rv = SetLastName((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kDisplayNameColumn))
-		rv = SetDisplayName(valueStr);
+		rv = SetDisplayName((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kNicknameColumn))
-		rv = SetNickName(valueStr);
+		rv = SetNickName((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kPriEmailColumn))
-		rv = SetPrimaryEmail(valueStr);
+		rv = SetPrimaryEmail((PRUnichar *)value);
     else if (!PL_strcmp(attrname, k2ndEmailColumn))
-		rv = SetSecondEmail(valueStr);
+		rv = SetSecondEmail((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkPhoneColumn))
-		rv = SetWorkPhone(valueStr);
+		rv = SetWorkPhone((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomePhoneColumn))
-		rv = SetHomePhone(valueStr);
+		rv = SetHomePhone((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kFaxColumn))
-		rv = SetFaxNumber(valueStr);
+		rv = SetFaxNumber((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kPagerColumn))
-		rv = SetPagerNumber(valueStr);
+		rv = SetPagerNumber((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCellularColumn))
-		rv = SetCellularNumber(valueStr);
+		rv = SetCellularNumber((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeAddressColumn))
-		rv = SetHomeAddress(valueStr);
+		rv = SetHomeAddress((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeAddress2Column))
-		rv = SetHomeAddress2(valueStr);
+		rv = SetHomeAddress2((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeCityColumn))
-		rv = SetHomeCity(valueStr);
+		rv = SetHomeCity((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeStateColumn))
-		rv = SetHomeState(valueStr);
+		rv = SetHomeState((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
-		rv = SetHomeZipCode(valueStr);
+		rv = SetHomeZipCode((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kHomeCountryColumn))
-		rv = SetHomeCountry(valueStr);
+		rv = SetHomeCountry((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkAddressColumn))
-		rv = SetWorkAddress(valueStr);
+		rv = SetWorkAddress((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkAddress2Column))
-		rv = SetWorkAddress2(valueStr);
+		rv = SetWorkAddress2((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkCityColumn))
-		rv = SetWorkCity(valueStr);
+		rv = SetWorkCity((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkStateColumn))
-		rv = SetWorkState(valueStr);
+		rv = SetWorkState((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
-		rv = SetWorkZipCode(valueStr);
+		rv = SetWorkZipCode((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWorkCountryColumn))
-		rv = SetWorkCountry(valueStr);
+		rv = SetWorkCountry((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWebPage1Column))
-		rv = SetWebPage1(valueStr);
+		rv = SetWebPage1((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kWebPage2Column))
-		rv = SetWebPage2(valueStr);
+		rv = SetWebPage2((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kBirthYearColumn))
-		rv = SetBirthYear(valueStr);
+		rv = SetBirthYear((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kBirthMonthColumn))
-		rv = SetBirthMonth(valueStr);
+		rv = SetBirthMonth((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kBirthDayColumn))
-		rv = SetBirthDay(valueStr);
+		rv = SetBirthDay((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCustom1Column))
-		rv = SetCustom1(valueStr);
+		rv = SetCustom1((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCustom2Column))
-		rv = SetCustom2(valueStr);
+		rv = SetCustom2((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCustom3Column))
-		rv = SetCustom3(valueStr);
+		rv = SetCustom3((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCustom4Column))
-		rv = SetCustom4(valueStr);
+		rv = SetCustom4((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kNotesColumn))
-		rv = SetNotes(valueStr);
+		rv = SetNotes((PRUnichar *)value);
 	else
-		rv = SetAnonymousStringAttribute(attrname, value);
-
-	delete[] valueStr;
-
+	{
+		nsAutoString cardValue(value);
+		char* valueStr = cardValue.ToNewCString();
+		rv = SetAnonymousStringAttribute(attrname, valueStr);
+		delete[] valueStr;
+	}
 	return rv;
 }
 
@@ -723,7 +681,7 @@ NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 
 NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
 {
-	char *str = nsnull;
+	PRUnichar *str = nsnull;
 	srcCard->GetFirstName(&str);
 	SetFirstName(str);
 	PR_FREEIF(str);

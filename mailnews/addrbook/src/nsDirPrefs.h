@@ -22,6 +22,11 @@
 class nsVoidArray;
 class nsIPref;
 
+PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength, 
+							  void** uniBuffer, PRInt32* uniLength);
+PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, 
+								const PRInt32 uniLength, char** aBuffer);
+
 #define kPreviousListVersion   2
 #define kCurrentListVersion    3
 #define PREF_LDAP_GLOBAL_TREE_NAME "ldap_2"
@@ -232,7 +237,7 @@ nsVoidArray* DIR_GetDirectories();
 nsresult DIR_GetDirServers();
 nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 
-nsresult DIR_AddNewAddressBook(const char *dirName, const char *fileName, DIR_Server** pServer);
+nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, DIR_Server** pServer);
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *);

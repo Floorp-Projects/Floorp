@@ -31,8 +31,8 @@
 [scriptable, uuid(1920E485-0709-11d3-A2EC-001083003D0C)]
 interface nsIAbDirectory : nsISupports {
 
-    attribute string DirName;
-    attribute string LastModifiedDate;
+    attribute wstring DirName;
+    attribute unsigned long  LastModifiedDate;
     attribute DIR_Server server;
 
 	void GetDirFilePath(out string dbPath);
@@ -45,7 +45,7 @@ interface nsIAbDirectory : nsISupports {
 	void HasCard(in nsIAbCard cards, out boolean hasCard);
 	void HasDirectory(in nsIAbDirectory dir, out boolean hasDir);
 	void GetMailingList(out nsIEnumerator mailingList);
-	void CreateNewDirectory(in string dirName, in string fileName);
+	void CreateNewDirectory(in wstring dirName, in string fileName);
 	void GetDirUri(out string uri);
 
 };

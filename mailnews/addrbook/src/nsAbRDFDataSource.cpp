@@ -111,8 +111,8 @@ nsresult nsAbRDFDataSource::NotifyObservers(nsIRDFResource *subject,
 }
 
 nsresult nsAbRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  const char *oldValue, const char *newValue)
+												nsIRDFResource *propertyResource,
+												const PRUnichar *oldValue, const PRUnichar *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
 	nsString newValueStr = newValue;

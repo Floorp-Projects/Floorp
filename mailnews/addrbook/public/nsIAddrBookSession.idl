@@ -39,8 +39,8 @@ interface nsIAddrBookSession : nsISupports {
   void RemoveAddressBookListener(in nsIAbListener listener);
   void NotifyItemPropertyChanged(in nsISupports item,
                                  in string property,
-                                 in string oldValue,
-                                 in string newValue);
+                                 in wstring oldValue,
+                                 in wstring newValue);
   void NotifyDirectoryItemAdded(in nsIAbDirectory directory, in nsISupports item);
   void NotifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
 

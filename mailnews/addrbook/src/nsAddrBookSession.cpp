@@ -61,7 +61,7 @@ NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * liste
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
-(nsISupports *item, const char *property, const char* oldValue, const char* newValue)
+(nsISupports *item, const char *property, const PRUnichar* oldValue, const PRUnichar* newValue)
 {
 	PRInt32 i;
 	PRInt32 count = mListeners->Count();

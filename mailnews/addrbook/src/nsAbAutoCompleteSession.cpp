@@ -24,6 +24,7 @@
 #include "nsIRDFService.h"
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -87,17 +88,24 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
     nsCOMPtr<nsIAbCard> card(do_QueryInterface(i, &rv));
     if (NS_FAILED(rv)) break;
     
-    rv=card->GetDisplayName(&m_searchNameCompletionEntryTable[m_numEntries].userName);
+	/* card holds unicode string, convert to utf8 String for autocomplete*/
+	nsXPIDLString pUnicodeStr;
+	PRInt32 unicharLength = 0;
+	rv=card->GetDisplayName(getter_Copies(pUnicodeStr));
     if (NS_FAILED(rv)) {
       m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
       break;
     }
+	unicharLength = nsCRT::strlen(pUnicodeStr);
+	INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].userName);
     
-    rv=card->GetPrimaryEmail(&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
+    rv=card->GetPrimaryEmail(getter_Copies(pUnicodeStr));
     if (NS_FAILED(rv)) {
       m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
       break;
     }
+	unicharLength = nsCRT::strlen(pUnicodeStr);
+	INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
     
     rv = cards->Next();
     m_numEntries++;

@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsIAddrBookSession.h"
+#include "nsICharsetConverterManager.h"
 
 
 #include "plstr.h"
@@ -35,6 +36,7 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 #define LDAP_PORT 389
 #define LDAPS_PORT 636
@@ -259,6 +261,89 @@ void DIR_SetFileName(char** filename, const char* leafName);
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
 
+PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
+                                      void** uniBuffer, PRInt32* uniLength)
+{
+	nsresult res;
+
+	if (nsnull == aBuffer) 
+	{
+		return -1;
+	}
+
+	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+	if(NS_SUCCEEDED(res) && (nsnull != ccm)) 
+	{
+		nsString aCharset("UTF-8");
+		nsIUnicodeDecoder* decoder = nsnull;
+		PRUnichar *unichars;
+		PRInt32 unicharLength;
+
+		// convert to unicode
+		res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+		if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
+		{
+			PRInt32 srcLen = aLength;
+			res = decoder->GetMaxLength(aBuffer, srcLen, &unicharLength);
+			// allocale an output buffer
+			unichars = (PRUnichar *) PR_Malloc((unicharLength + 1) * sizeof(PRUnichar));
+			if (unichars != nsnull) 
+			{
+				res = decoder->Convert(aBuffer, &srcLen, unichars, &unicharLength);
+				unichars[unicharLength] = 0;
+				*uniBuffer = (void *) unichars;
+				*uniLength = unicharLength;
+			}
+			else 
+			{
+				res = NS_ERROR_OUT_OF_MEMORY;
+			}
+			NS_IF_RELEASE(decoder);
+		}
+	}  
+	return NS_SUCCEEDED(res) ? 0 : -1;
+}
+
+PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, const PRInt32 uniLength, char** aBuffer)
+{
+	nsresult res;
+
+	if (nsnull == uniBuffer) 
+	{
+		return -1;
+	}
+
+	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+	if(NS_SUCCEEDED(res) && (nsnull != ccm)) 
+	{
+		nsString aCharset("UTF-8");
+		nsIUnicodeEncoder* encoder = nsnull;
+
+		// convert from unicode
+		res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+		if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
+		{
+			const PRUnichar *unichars = (const PRUnichar *) uniBuffer;
+			PRInt32 unicharLength = uniLength;
+			PRInt32 dstLength;
+			res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+			// allocale an output buffer
+			*aBuffer = (char *) PR_Malloc(dstLength + 1);
+			if (*aBuffer != nsnull) 
+			{
+				res = encoder->Convert(unichars, &unicharLength, *aBuffer, &dstLength);
+				(*aBuffer)[dstLength] = '\0';
+			}
+			else 
+			{
+				res = NS_ERROR_OUT_OF_MEMORY;
+			}
+			NS_IF_RELEASE(encoder);
+		}
+	}
+	return NS_SUCCEEDED(res) ? 0 : -1;
+}
+
 /*****************************************************************************
  * Functions for creating the new back end managed DIR_Server list.
  */
@@ -403,7 +488,7 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 	return NS_OK;
 }
 
-nsresult DIR_AddNewAddressBook(const char *dirName, const char *fileName, DIR_Server** pServer)
+nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, DIR_Server** pServer)
 {
 	DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
 	DIR_InitServerWithType (server, PABDirectory);
@@ -412,7 +497,10 @@ nsresult DIR_AddNewAddressBook(const char *dirName, const char *fileName, DIR_Se
 	if (dir_ServerList)
 	{
 		PRInt32 count = dir_ServerList->Count();
-		server->description = PL_strdup(dirName);
+		nsString descString(dirName);
+		PRInt32 unicharLength = descString.Length();
+
+		INTL_ConvertFromUnicode(dirName, unicharLength, &server->description);
 		server->position = count + 1;
 
 		if (fileName)

@@ -53,7 +53,7 @@ protected:
 	void createNode(PRUint32 value, nsIRDFNode **node);
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
-									const char *oldValue, const char *newValue);
+									const PRUnichar *oldValue, const PRUnichar *newValue);
 
 	nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 							 nsIRDFNode *object, PRBool assert);

@@ -74,27 +74,29 @@ NS_IMETHODIMP nsAbCard::OnCardEntryChange
 		card->GetDbRowID(&rowID);
 		if (m_dbTableID == tableID && m_dbRowID == rowID)
 		{
-			char* pNewStr = nsnull;
-			card->GetDisplayName(&pNewStr);
-			if (pNewStr)
-				NotifyPropertyChanged("DisplayName", nsnull, pNewStr);
-			PR_FREEIF(pNewStr);
+			nsXPIDLString pDisplayName;
+			card->GetDisplayName(getter_Copies(pDisplayName));
+			if (pDisplayName)
+				NotifyPropertyChanged("DisplayName", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pDisplayName));
 
-			card->GetPrimaryEmail(&pNewStr);
-			if (pNewStr)
-				NotifyPropertyChanged("PrimaryEmail", nsnull, pNewStr);
-			PR_FREEIF(pNewStr);
+			nsXPIDLString pEmail;
+			card->GetPrimaryEmail(getter_Copies(pEmail));
+			if (pEmail)
+				NotifyPropertyChanged("PrimaryEmail", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pEmail));
 
-			card->GetWorkPhone(&pNewStr);
-			if (pNewStr)
-				NotifyPropertyChanged("WorkPhone", nsnull, pNewStr);
-			PR_FREEIF(pNewStr);
+			nsXPIDLString pWorkPhone;
+			card->GetWorkPhone(getter_Copies(pWorkPhone));
+			if (pWorkPhone)
+				NotifyPropertyChanged("WorkPhone", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pWorkPhone));
 		}
 	}
 	return NS_OK;
 }
 
-nsresult nsAbCard::NotifyPropertyChanged(char *property, char* oldValue, char* newValue)
+nsresult nsAbCard::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))

@@ -33,7 +33,7 @@ interface nsIDOMWindow;
 interface nsIAddressBook : nsISupports {
 
     void DeleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
-	void NewAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in string name);
+	void NewAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in wstring name);
     void DeleteAddressBooks(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
     void PrintCard();
     void PrintAddressbook();

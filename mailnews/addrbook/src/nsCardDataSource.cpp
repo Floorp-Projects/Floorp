@@ -349,7 +349,7 @@ NS_IMETHODIMP nsAbCardDataSource::OnItemRemoved(nsISupports *parentDirectory, ns
 }
 
 NS_IMETHODIMP nsAbCardDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
-														   const char *oldValue, const char *newValue)
+													const PRUnichar *oldValue, const PRUnichar *newValue)
 
 {
 	
@@ -378,7 +378,7 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
                                           nsIRDFResource* property,
                                           nsIRDFNode** target)
 {
-  char *name = nsnull;
+  PRUnichar *name = nsnull;
   nsresult rv = NS_RDF_NO_VALUE;
   
   if ((kNC_DisplayName == property))

@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsAbDirProperty::nsAbDirProperty(void)
-  : m_DirName(nsnull), m_LastModifiedDate(nsnull),
+  : m_DirName(""), m_LastModifiedDate(0),
 	m_DbPath(nsnull), m_Server(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -49,8 +49,6 @@ nsAbDirProperty::nsAbDirProperty(void)
 
 nsAbDirProperty::~nsAbDirProperty(void)
 {
-	PR_FREEIF(m_DirName);
-	PR_FREEIF(m_LastModifiedDate);
 	PR_FREEIF(m_DbPath);
 	// m_Server will free with the list
 }
@@ -96,50 +94,43 @@ NS_IMETHODIMP nsAbDirProperty::GetDirFilePath(char **dbPath)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsAbDirProperty::GetDirName(char **name)
+NS_IMETHODIMP nsAbDirProperty::GetDirName(PRUnichar **aDirName)
 {
-	if (name)
+	if (aDirName)
 	{
-		if (m_DirName)
-			*name = PL_strdup(m_DirName);
+		*aDirName = m_DirName.ToNewUnicode();
+		if (!(*aDirName)) 
+			return NS_ERROR_OUT_OF_MEMORY;
 		else
-			*name = PL_strdup("");
-		return NS_OK;
+			return NS_OK;
 	}
 	else
-		return NS_RDF_NO_VALUE;
+		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbDirProperty::SetDirName(char * name)
+NS_IMETHODIMP nsAbDirProperty::SetDirName(PRUnichar * aDirName)
 {
-	if (name)
-	{
-		PR_FREEIF(m_DirName);
-		m_DirName = PL_strdup(name);
-	}
+	if (aDirName)
+		m_DirName = aDirName;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbDirProperty::GetLastModifiedDate(char * *aLastModifiedDate)
+NS_IMETHODIMP nsAbDirProperty::GetLastModifiedDate(PRUint32 *aLastModifiedDate)
 {
 	if (aLastModifiedDate)
 	{
-		if (m_DirName)
-			*aLastModifiedDate = PL_strdup(m_LastModifiedDate);
-		else
-			*aLastModifiedDate = PL_strdup("");
+		*aLastModifiedDate = m_LastModifiedDate;
 		return NS_OK;
 	}
 	else
 		return NS_RDF_NO_VALUE;
 }
 
-NS_IMETHODIMP nsAbDirProperty::SetLastModifiedDate(char * aLastModifiedDate)
+NS_IMETHODIMP nsAbDirProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 {
 	if (aLastModifiedDate)
 	{
-		PR_FREEIF(m_LastModifiedDate);
-		m_LastModifiedDate = PL_strdup(aLastModifiedDate);
+		m_LastModifiedDate = aLastModifiedDate;
 	}
 	return NS_OK;
 }

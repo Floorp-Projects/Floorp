@@ -45,10 +45,10 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIAbDirectory methods:
-	NS_IMETHOD GetDirName(char **name);
-	NS_IMETHOD SetDirName(char * name);
-	NS_IMETHOD GetLastModifiedDate(char * *aLastModifiedDate);
-	NS_IMETHOD SetLastModifiedDate(char * aLastModifiedDate);
+	NS_IMETHOD GetDirName(PRUnichar **aDirName);
+	NS_IMETHOD SetDirName(PRUnichar * aDirName);
+	NS_IMETHOD GetLastModifiedDate(PRUint32 *aLastModifiedDate);
+	NS_IMETHOD SetLastModifiedDate(PRUint32 aLastModifiedDate);
 	NS_IMETHOD GetServer(DIR_Server * *aServer);
 	NS_IMETHOD SetServer(DIR_Server * aServer);
 	NS_IMETHOD GetDirFilePath(char **dbPath);
@@ -62,13 +62,13 @@ public:
 	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard) { return NS_OK; }
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir) { return NS_OK; }
 	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList) { return NS_OK; }
-	NS_IMETHOD CreateNewDirectory(const char *dirName, const char *fileName) { return NS_OK; }
+	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName) { return NS_OK; }
 	NS_IMETHOD GetDirUri(char **uri) { return NS_OK; }
 
 protected:
 
-	char* m_DirName;
-	char* m_LastModifiedDate;
+	nsString m_DirName;
+	PRUint32 m_LastModifiedDate;
 	nsFileSpec* m_DbPath;
 	DIR_Server* m_Server;
 };

@@ -157,8 +157,14 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 
 				if (childDir)
 				{
-					childDir->SetDirName(server->description);
+					PRUnichar *unichars = nsnull;
+					PRInt32 unicharLength = 0;
+					PRInt32 descLength = PL_strlen(server->description);
+					INTL_ConvertToUnicode((const char *)server->description, 
+						descLength, (void**)&unichars, &unicharLength);
+					childDir->SetDirName(unichars);
 					childDir->SetServer(server);
+					PR_FREEIF(unichars);
 				}
 			}
 		}
@@ -217,7 +223,7 @@ NS_IMETHODIMP nsAbDirectory::GetMailingList(nsIEnumerator **mailingList)
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const char *dirName, const char *fileName)
+NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const char *fileName)
 {
 	if (!dirName)
 		return NS_ERROR_NULL_POINTER;
@@ -233,7 +239,7 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const char *dirName, const char 
 		PR_smprintf_free(uri);
 		if (NS_SUCCEEDED(rv) && newDir)
 		{
-			newDir->SetDirName(server->description);
+			newDir->SetDirName((PRUnichar *)dirName);
 			newDir->SetServer(server);
 
 //			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir, &rv));
@@ -447,7 +453,7 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 	return rv;
 }
 
-nsresult nsAbDirectory::NotifyPropertyChanged(char *property, char* oldValue, char* newValue)
+nsresult nsAbDirectory::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
   return NS_OK;
 }

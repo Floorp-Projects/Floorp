@@ -614,7 +614,6 @@ nsIAddrDatabase *GetAddressBookFromUri( const char *pUri)
 nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 {
 	nsresult			rv = NS_OK;
-	nsString			theName = name;
 
 	if (!makeNew) {
 		// FIXME: How do I get the list of address books and look for a
@@ -654,10 +653,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 			if (parentUri)
 				PR_smprintf_free(parentUri);
 			if (parentDir) {
-				char *pName = theName.ToNewCString();
 				char *fileName = (*dbPath).GetLeafName();
-				parentDir->CreateNewDirectory( pName, fileName);
-				nsCRT::free( pName);
+				parentDir->CreateNewDirectory( name, fileName);
 				nsCRT::free( fileName);
 			}
 		}

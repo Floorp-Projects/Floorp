@@ -116,15 +116,16 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 						}
 						else
 						{
-							nsCAutoString senderFromEmail(curAddress);
+							nsAutoString senderFromEmail(curAddress);
 							PRInt32 atSignIndex = senderFromEmail.FindChar('@');
 							if (atSignIndex > 0)
 							{
 								senderFromEmail.Truncate(atSignIndex + 1);
-								senderCard->SetDisplayName(senderFromEmail);
+								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.GetUnicode());
 							}
 						}
-						senderCard->SetPrimaryEmail(curAddress);
+						nsAutoString email(curAddress);
+						senderCard->SetPrimaryEmail((PRUnichar*)email.GetUnicode());
 						senderCard->AddCardToDatabase("abdirectory://history.mab");
 					}
 				}
@@ -228,19 +229,29 @@ nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pP
 
 nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
 {
+	PRUnichar *unicodeFirstName = nsnull;
 	char *firstName = nsnull;
 	char *lastName = nsnull;
+	PRUnichar *unicodeStr = nsnull;
+	PRInt32 unicharLength = 0;
 
-	nsresult rv = senderCard->GetFirstName(&firstName);
+	nsresult rv = senderCard->GetFirstName(&unicodeFirstName);
 	if (NS_SUCCEEDED(rv) && firstName)
 	{
 	}
-	senderCard->SetDisplayName((char *) fullName);
+
+	INTL_ConvertToUnicode((const char *)fullName, nsCRT::strlen(fullName), (void**)&unicodeStr, &unicharLength);
+	senderCard->SetDisplayName(unicodeStr);
+	PR_Free(unicodeStr);
 	rv = SplitFullName (fullName, &firstName, &lastName);
 	if (NS_SUCCEEDED(rv))
 	{
-		senderCard->SetFirstName(firstName);
-		senderCard->SetLastName(lastName);
+		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr, &unicharLength);
+		senderCard->SetFirstName(unicodeStr);
+		PR_Free(unicodeStr);
+		INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr, &unicharLength);
+		senderCard->SetLastName(unicodeStr);
+		PR_Free(unicodeStr);
 	}
 	PR_FREEIF(firstName);
 	PR_FREEIF(lastName);

@@ -155,7 +155,7 @@ NS_IMETHODIMP nsAddressBook::DeleteCards
 }
 
 NS_IMETHODIMP nsAddressBook::NewAddressBook
-(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const char *name)
+(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const PRUnichar *name)
 {
 	if(!db || !srcDirectory || !name)
 		return NS_ERROR_NULL_POINTER;
@@ -184,7 +184,7 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if(NS_FAILED(rv))
 		return NS_ERROR_OUT_OF_MEMORY;
-	nsString nameStr = name;
+	nsString nameStr(name);
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
 
 	rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
@@ -373,11 +373,13 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
     if (! file)
         return NS_ERROR_NULL_POINTER;
 
+	/* Get database file name */
 	char *leafName = nsnull;
+	nsString fileString;
 	if (mFileSpec)
 	{
 		mFileSpec->GetLeafName(&leafName);
-		nsString fileString(leafName);
+		fileString = leafName;
 		if (-1 != fileString.Find(kTabExtension))
 			mFileType = TABFile;
 		else if (-1 != fileString.Find(kLdifExtension))
@@ -408,6 +410,7 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
+	/* create address book database  */
 	if (dbPath)
 	{
 		(*dbPath) += fileName;
@@ -423,9 +426,12 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
     mLine.Truncate();
 
 	if (mFileType == TABFile)
-		ParseTabFile(file);
+		rv = ParseTabFile(file);
 	if (mFileType == LDIFFile)
-		ParseLdifFile(file);
+		rv = ParseLdifFile(file);
+
+	if(NS_FAILED(rv))
+		return rv;
 
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_FAILED(rv))
@@ -439,7 +445,7 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
 	if (parentUri)
 		PR_smprintf_free(parentUri);
 
-	parentDir->CreateNewDirectory(leafName, fileName);
+	parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName);
 
 	if (leafName)
 		nsCRT::free(leafName);

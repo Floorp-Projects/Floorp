@@ -24,6 +24,6 @@ interface nsIAbListener : nsISupports {
 
 	void OnItemAdded(in nsISupports parentDir, in nsISupports item);
 	void OnItemRemoved(in nsISupports parentDir, in nsISupports item);
-	void OnItemPropertyChanged(in nsISupports item, in string property, in string oldValue, in string newValue);
+	void OnItemPropertyChanged(in nsISupports item, in string property, in wstring oldValue, in wstring newValue);
 
 };

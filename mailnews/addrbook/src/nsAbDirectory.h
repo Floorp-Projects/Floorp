@@ -54,7 +54,7 @@ public:
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList);
-	NS_IMETHOD CreateNewDirectory(const char *dirName, const char *fileName);
+	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName);
 	NS_IMETHOD GetDirUri(char **uri);
 
 	// nsIAddrDBListener methods:
@@ -62,7 +62,7 @@ public:
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 
 protected:
-	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue);
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 	nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);

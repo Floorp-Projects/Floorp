@@ -497,7 +497,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 }
 
 NS_IMETHODIMP nsAbDirectoryDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
-														   const char *oldValue, const char *newValue)
+														   const PRUnichar *oldValue, const PRUnichar *newValue)
 
 {
 	nsresult rv;
@@ -531,7 +531,7 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
-  char *name;
+  PRUnichar *name = nsnull;
   nsresult rv = directory->GetDirName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
@@ -564,8 +564,8 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 nsresult
 nsAbDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
                                              nsIRDFNode **target)
-{
-  char *name;
+{ 
+  PRUnichar *name;
   nsresult rv = directory->GetDirName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
@@ -626,10 +626,8 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 	{
 		PRUnichar *name;
 		literal->GetValue(&name);
-		nsString tempStr = name;
-		nsAutoCString nameStr(tempStr);
 
-		rv = directory->CreateNewDirectory(nameStr, nsnull);
+		rv = directory->CreateNewDirectory(name, nsnull);
 	}
 	return rv;
 }
