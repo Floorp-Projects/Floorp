@@ -60,7 +60,14 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
-  
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD NotifyError(const nsParserError* aError);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
@@ -77,12 +84,7 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(const nsParserError* aError);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+
   NS_IMETHOD DoFragment(PRBool aFlag);
 
   // nsIHTMLFragmentContentSink
@@ -487,6 +489,17 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+/**
+ *  This gets called by the parser when it encounters
+ *  a DOCTYPE declaration in the HTML document.
+ */
+
+NS_IMETHODIMP
+nsHTMLFragmentContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 {
   return NS_OK;
 }

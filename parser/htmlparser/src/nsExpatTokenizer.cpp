@@ -56,6 +56,8 @@ static NS_DEFINE_IID(kINetServiceIID,     NS_INETSERVICE_IID);
 static CTokenRecycler* gTokenRecycler=0;
 static nsDeque* gTokenDeque=0;
 static XML_Parser gExpatParser=0;
+static const char* kXMLDeclPrefix = "<?xml";
+static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -125,7 +127,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
     XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
     XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
-    XML_SetDefaultHandler(mExpatParser, nsnull);
+    XML_SetDefaultHandler(mExpatParser, HandleDefault);
     XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
@@ -473,7 +475,27 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
 }
 
 void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
-//  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleDefault() not yet implemented.");
+  nsString str = (PRUnichar*) s;
+  CToken* token = nsnull;
+
+  str.StripWhitespace();
+  if (0 == str.Find(kXMLDeclPrefix)) {
+    // Create the XML decl token
+    token = gTokenRecycler->CreateTokenOfType(eToken_xmlDecl, eHTMLTag_unknown);
+    nsString& tokenStr = token->GetStringValueXXX();
+    tokenStr.Append((PRUnichar*) s);
+  }
+  else if (0 == str.Find(kDocTypeDeclPrefix)) {
+    // Create the DOCTYPE decl token
+    token = gTokenRecycler->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown);
+    nsString& tokenStr = token->GetStringValueXXX();
+    tokenStr.Append((PRUnichar*) s);
+  }
+  
+  // If a token was created, add it to the token queue
+  if (token)
+    AddToken(token, NS_OK, *gTokenDeque, gTokenRecycler);
+
 }
 
 void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData, 

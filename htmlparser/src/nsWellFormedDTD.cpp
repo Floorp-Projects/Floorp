@@ -550,6 +550,12 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
         result = mSink->NotifyError(errTok->GetError());
       }
       break;
+    case eToken_xmlDecl:
+      // result = mSink->AddXMLDecl(theNode);
+      break;
+    case eToken_doctypeDecl:
+      result = mSink->AddDocTypeDecl(theNode);
+      break;
     case eToken_style:
     case eToken_skippedcontent:
     default:

@@ -590,6 +590,17 @@ nsHTMLToTXTSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
 }
 
 /**
+ *  This gets called by the parser when it encounters
+ *  a DOCTYPE declaration in the HTML document.
+ */
+
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::AddDocTypeDecl(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+/**
  *  This gets called by the parser when you want to add
  *  a comment node to the current container in the content
  *  model.
