@@ -246,6 +246,11 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   folder.setAttribute('ref', "");
+   if ( uri.substring(0,6) == "news:/" )
+       SetNewsFolderColumns(true);
+   else
+       SetNewsFolderColumns(false);
+
 
   var column = FindThreadPaneColumnBySortResource(sortID);
 
@@ -292,6 +297,32 @@ function SetSentFolderColumns(isSentFolder)
 
 
 }
+
+function SetNewsFolderColumns(isNewsFolder)
+{
+	var sizeColumn = document.getElementById("SizeColumnHeader");
+        var sizeColumnTemplate = document.getElementById("SizeColumnTemplate");
+
+        var memoryColumnHeader = document.getElementById("MemoryColumn");
+
+        if (isNewsFolder)
+        { 
+               sizeColumn.setAttribute("value",Bundle.GetStringFromName("linesColumnHeader"));
+               sizeColumn.setAttribute("onclick", "return top.MsgSortByLines();");
+               sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Lines");
+               memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Lines");
+        }
+        else
+        {
+               sizeColumn.setAttribute("value", Bundle.GetStringFromName("sizeColumnHeader"));
+               sizeColumn.setAttribute("onclick", "return top.MsgSortBySize();");
+               sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Size");
+               memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Size");
+        }
+
+} 
+        
+        
 
 function UpdateStatusMessageCounts(folder)
 {
@@ -392,7 +423,9 @@ function FindThreadPaneColumnBySortResource(sortID)
 	else if(sortID == "http://home.netscape.com/NC-rdf#Priority")
 		return "PriorityColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#Size")
-		return "SizeColumn";
+		return "MemoryColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Lines")
+		return "MemoryColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#IsUnread")
 		return "UnreadButtonColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#TotalUnreadMessages")
@@ -483,6 +516,12 @@ function UpdateSortIndicator(column,sortDirection)
 		column = "SenderColumn";
 	}
 
+//Similary for the Size/Lines column 
+
+        if(column == "MemoryColumn"){
+                column = "SizeColumn";
+        }
+
 	var id = column + "Header";
 	
 	if (treerow)
@@ -519,7 +558,7 @@ function UpdateSortMenu(currentSortColumn)
 	UpdateSortMenuitem(currentSortColumn, "sortByOrderReceivedMenuitem", "OrderReceivedColumn");
 	UpdateSortMenuitem(currentSortColumn, "sortByPriorityMenuitem", "PriorityColumn");
 	UpdateSortMenuitem(currentSortColumn, "sortBySenderMenuitem", "AuthorColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "SizeColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "MemoryColumn");
 	UpdateSortMenuitem(currentSortColumn, "sortByStatusMenuitem", "StatusColumn");
 	UpdateSortMenuitem(currentSortColumn, "sortBySubjectMenuitem", "SubjectColumn");
 	UpdateSortMenuitem(currentSortColumn, "sortByUnreadMenuitem", "UnreadButtonColumn");
@@ -659,10 +698,26 @@ function OnClickThreadAndMessagePaneSplitter()
 	dump("We are in OnClickThreadAndMessagePaneSplitter()\n");
 	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
 	//collapsed is the previous state so we know we are opening.
-	if(collapsed)
+	if(collapsed){
 		LoadSelectionIntoMessagePane();	
+                setTimeout("PositionThreadPane();",0);
+        }
+                
 }
 
+function PositionThreadPane()
+{
+       var tree = GetThreadTree();
+  
+       var selArray = tree.selectedItems;
+           
+       if ( selArray && (selArray.length > 0))
+       try { 
+       tree.ensureElementIsVisible(selArray[0]);
+       }
+       catch(e) { }
+
+}
 
 //takes the selection from the thread pane and loads it into the message pane
 function LoadSelectionIntoMessagePane()
