@@ -52,21 +52,17 @@ sub collect_stats {
     my $product = shift;
     my $when = localtime (time);
 
-    my $query = "select count(bug_status) from bugs where (bug_status='NEW' or  bug_status='ASSIGNED' or bug_status='REOPENED') and product='$product' group by bug_status";
 
     $product =~ s/\//-/gs;
     my $file = join '/', $dir, $product;
     my $exists = -f $file;
 
     if (open DATA, ">>$file") {
-        SendSQL ($query);
-
-        my %count;
         push my @row, &today;
 
-        while (my @n = FetchSQLData())
-        {
-            push @row, @n;
+        foreach my $status ('NEW', 'ASSIGNED', 'REOPENED') {
+            SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+            push @row, FetchOneColumn();
         }
 
         if (! $exists)
