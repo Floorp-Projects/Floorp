@@ -10,7 +10,8 @@
     
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList"];
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
+                       "wrapLength", "sendDefaultCharsetList", "mailWarnOnSendAccelKey"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
 
@@ -80,6 +81,12 @@
     <checkbox id="strictlyMime" label="&useMIME.label;"
               prefstring="mail.strictly_mime"
               accesskey="&useMIME.accesskey;"/>
+
+    <hbox align="center">
+      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+                prefstring="mail.warn_on_send_accel_key"
+                accesskey="&warnOnSendAccelKey.accesskey;" />
+    </hbox>
     
 	<hbox align="center">
         <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>

@@ -40,6 +40,8 @@ Rights Reserved.
 <!ENTITY belowQuote.accesskey                 "b">
 <!ENTITY selectAndQuote.label                 "select the quoted text">
 <!ENTITY selectAndQuote.accesskey             "e">
+<!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
+<!ENTITY warnOnSendAccelKey.accesskey         "C">
 
 <!ENTITY readingMessagesHeader.label          "For incoming messages">
 <!ENTITY messageWrapping.label                "Message Wrapping">
