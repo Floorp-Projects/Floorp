@@ -98,6 +98,8 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_BN_CLICKED(IDC_STOP, OnStop)
 	ON_COMMAND(ID_FILE_SAVEAS, OnFileSaveAs)
 	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
+	ON_COMMAND(ID_DEBUG_VISIBLE, OnDebugVisible)
+	ON_UPDATE_COMMAND_UI(ID_DEBUG_VISIBLE, OnUpdateDebugVisible)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -890,4 +892,31 @@ void CBrowseDlg::OnFileSaveAs()
 void CBrowseDlg::OnFilePrint() 
 {
 	ExecOleCommand(NULL, OLECMDID_PRINT);
+}
+
+void CBrowseDlg::OnDebugVisible() 
+{
+    VARIANT_BOOL visible = VARIANT_TRUE;
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+       	CIPtr(IWebBrowserApp) cpWebBrowser = pIWebBrowser;
+        cpWebBrowser->get_Visible(&visible);
+        cpWebBrowser->put_Visible(visible == VARIANT_TRUE ? VARIANT_FALSE : VARIANT_TRUE);
+		pIWebBrowser->Release();
+	}
+}
+
+void CBrowseDlg::OnUpdateDebugVisible(CCmdUI* pCmdUI) 
+{
+    VARIANT_BOOL visible = VARIANT_TRUE;
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+       	CIPtr(IWebBrowserApp) cpWebBrowser = pIWebBrowser;
+		cpWebBrowser->get_Visible(&visible);
+		pIWebBrowser->Release();
+	}
+
+    pCmdUI->SetCheck(visible == VARIANT_TRUE ? 1 : 0);
 }

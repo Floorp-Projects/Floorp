@@ -22,9 +22,7 @@ static char THIS_FILE[] = __FILE__;
 
 BEGIN_MESSAGE_MAP(CBrowseApp, CWinApp)
 	//{{AFX_MSG_MAP(CBrowseApp)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
-	//}}AFX_MSG
+	//}}AFX_MSG_MAP
 	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
@@ -202,4 +200,21 @@ BOOL CBrowseApp::InitATL()
 	}	
 
 	return TRUE;
+}
+
+int CBrowseApp::Run() 
+{
+    int rv = 1;
+    try {
+        rv = CWinApp::Run();
+    }
+    catch (CException *e)
+    {
+        ASSERT(0);
+    }
+    catch (...)
+    {
+        ASSERT(0);
+    }
+    return rv;
 }

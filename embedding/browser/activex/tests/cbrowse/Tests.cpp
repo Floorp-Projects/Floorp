@@ -147,6 +147,100 @@ TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 }
 
 
+TestResult __cdecl tstBody(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+
+    CIPtr(IHTMLElement) cpBody;
+    cpDocElement->get_body(&cpBody);
+    if (cpBody == NULL)
+    {
+        cInfo.OutputString(_T("Error: No Body"));
+        return trFailed;
+    }
+
+	return trPassed;
+}
+
+TestResult __cdecl tstPutInnerHTML(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+
+    CIPtr(IHTMLElement) cpBody;
+    cpDocElement->get_body(&cpBody);
+    if (cpBody == NULL)
+    {
+        cInfo.OutputString(_T("Error: No Body"));
+        return trFailed;
+    }
+
+    CComBSTR bstr("<p>Hello world!<p><a href=\"http://www.mozilla.org\">Click here to visit our sponsor</a>");
+    if (FAILED(cpBody->put_innerHTML(bstr)))
+    {
+        cInfo.OutputString(_T("Error: put_innerHTML returned error"));
+        return trFailed;
+    }
+
+	return trPassed;
+}
+
+TestResult __cdecl tstGetInnerHTML(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+	
+	CIPtr(IHTMLElement) cpBody;
+	HRESULT hr = cpDocElement->get_body( &cpBody );
+	if (hr == S_OK)
+	{
+        CComBSTR html;
+        if (FAILED(cpBody->get_innerHTML(&html)))
+        {
+            cInfo.OutputString(_T("Error: get_innerHTML returned error"));
+            return trFailed;
+        }
+	}
+
+	return trPassed;
+}
+
+TestResult __cdecl tstSetBgColor(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+
+    CComVariant v("red");
+    if (FAILED(cpDocElement->put_bgColor(v)))
+    {
+		cInfo.OutputString(_T("Error: put_bgColor returned an error"));
+        return trFailed;
+    }
+
+	return trPassed;
+}
+
 TestResult __cdecl tstCollectionEnum(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
@@ -300,29 +394,6 @@ TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 	if (hr == S_OK)
 	{
 		tstDrillerLevel(cInfo, cpColl, 0);
-	}
-
-	return trPassed;
-}
-
-
-TestResult __cdecl tstInnerHTML(BrowserInfo &cInfo)
-{
-	CIPtr(IHTMLDocument2) cpDocElement;
-	cInfo.GetDocument(&cpDocElement);
-	if (cpDocElement == NULL)
-	{
-		cInfo.OutputString(_T("Error: No document"));
-		return trFailed;
-	}
-	
-	CIPtr(IHTMLElement) cpBody;
-	HRESULT hr = cpDocElement->get_body( &cpBody );
-	if (hr == S_OK)
-	{
-        BSTR html = NULL;
-        cpBody->get_innerHTML(&html);
-        SysFreeString(html);
 	}
 
 	return trPassed;
@@ -516,9 +587,12 @@ Test aBrowsing[] =
 Test aDHTML[] =
 {
 	{ _T("IWebBrowser::get_Document"), _T("Test if browser has a top level element"), tstDocument },
+    { _T("IHTMLDocument::get_Body"), _T("Test if the body element can be retrieved"), tstBody},
+    { _T("IHTMLElement::put_innerHTML"), _T("Test if the innerHTML attribute works"), tstPutInnerHTML },
+    { _T("IHTMLElement::get_innerHTML"), _T("Dump the innerHTML for the BODY element"), tstGetInnerHTML },
+    { _T("IHTMLElement::put_bgColor"), _T("Set the document background color to red"), tstSetBgColor },
 	{ _T("IHTMLElementCollection::get__newEnum"), _T("Test if element collections return enumerations"), tstCollectionEnum },
-	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller },
-    { _T("innerHTML"), _T("Dump the innerHTML for the BODY element"), tstInnerHTML }
+	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller }
 };
 
 
