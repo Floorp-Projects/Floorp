@@ -490,6 +490,14 @@ nsFontMetricsWin::Destroy()
   return NS_OK;
 }
 
+// The following flag is not defined by MS in the vc include files
+// This flag is document in the following document
+// HOWTO: Display Graphic Chars on Chinese & Korean Windows (Q171153)
+// http://support.microsoft.com/default.aspx?scid=kb;EN-US;q171153
+// According to the document, this flag will only impact Korean and
+// Chinese window
+#define CLIP_TURNOFF_FONTASSOCIATION 0x40
+
 void
 nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   PRBool aSizeOnly, PRBool aSkipZoom)
@@ -536,7 +544,7 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
     ? TRUE : FALSE;
   logFont->lfCharSet        = mIsUserDefined ? ANSI_CHARSET : DEFAULT_CHARSET;
   logFont->lfOutPrecision   = OUT_TT_PRECIS;
-  logFont->lfClipPrecision  = CLIP_DEFAULT_PRECIS;
+  logFont->lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
   logFont->lfQuality        = DEFAULT_QUALITY;
   logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
   logFont->lfWeight = aWeight;
