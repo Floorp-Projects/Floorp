@@ -38,5 +38,6 @@
 expander {
   -moz-binding: url("chrome://messenger/content/expanderBindings.xml#expander");
   -moz-box-orient: vertical;
+   display: -moz-groupbox;
 }
 

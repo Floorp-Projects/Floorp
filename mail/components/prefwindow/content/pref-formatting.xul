@@ -36,7 +36,7 @@
 
   <description>&sendMaildesc.label;</description>
 
-  <groupbox flex="1">
+  <groupbox>
     <caption label="&sendMail.title;"/>
 
     <hbox class="indent" align="center" id="thenBox">

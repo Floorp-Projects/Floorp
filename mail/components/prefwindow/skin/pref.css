@@ -96,20 +96,6 @@
   min-width: 8em;
 }
 
-/** Privacy Panel Expander Box **/
-#privacyCategories {
-  margin: 5px;
-  padding: 5px;
-}
-
-.settingsContainer {
-  padding: 3px 5px 5px 20px;
-}
-
-.expanderButton {
-  cursor: pointer;
-}
-
 /* Themes/Extensions Items */
 .themesLink {
   margin-left: 5px;

@@ -1,0 +1,367 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Sean Su <ssu@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/content/expanderBindings.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/pref-advanced.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://messenger/locale/pref-receipts.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd" > %dtd3;
+]>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      onload="onLoad();"
+      headertitle="&pane.title;">
+  
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-advanced.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
+
+  <script type="application/x-javascript">
+  <![CDATA[
+
+    function onLoad()
+    {
+      createDirectoriesList(true);
+      parent.initPanel('chrome://messenger/content/pref-advanced.xul');   
+    }
+
+    var _elementIDs = [ // labels
+                       "label1TextBox", "label1Color", "label2TextBox", "label2Color", "label3TextBox", 
+                       "label3Color", "label4TextBox", "label4Color", "label5TextBox", "label5Color",
+                       
+                       // return receipts
+                       "alwaysRequest", "receiptFolder", "receiptSend", "notInToCcPref", "outsideDomainPref", "otherCasesPref",
+                       "mailPaneConfig",
+                       
+                       // addressing prefs
+                       "emailCollectionOutgoing", "addressingAutocomplete", "autocompleteLDAP",
+                       "localDirectoriesList", "directoriesList",
+                       
+                       // connection
+                       "networkProxyType",
+                       "networkProxyHTTP", "networkProxyHTTP_Port", 
+                       "networkProxySOCKS", "networkProxySOCKS_Port",
+                       "networkProxySOCKSVersion",
+                       "networkProxySSL", "networkProxySSL_Port", 
+                       "networkProxyNone", "networkProxyAutoconfigURL"];
+  ]]>
+  </script>
+
+  <vbox id="expanderCategories" class="listBox" flex="1" style="overflow: auto;">
+    
+    <!-- Labels -->
+    <expander class="prefExpander" id="labels" label="&labelsSettings.label;" persist="open"> 
+      <label class="expanderDescription" value="&displayText.label;" flex="1"/>
+      <hbox align="top">
+        <vbox>
+          <!-- label color: 1 (default red) -->
+          <hbox class="indent" align="center">
+            <textbox id="label1TextBox" pref="true" preftype="localizedstring" 
+                     prefstring="mailnews.labels.description.1" prefattribute="value"/>
+            <colorpicker class="small-margin" type="button" id="labelColorPicker1"
+                         palettename="standard" onchange="setColorWell(this);"/>
+            <data id="label1Color" pref="true" preftype="color" prefstring="mailnews.labels.color.1"
+                  prefattribute="value" wsm_attributes="value"/>
+          </hbox>    
+
+          <!-- label color: 2 (default orange) -->
+          <hbox class="indent" align="center">
+            <textbox id="label2TextBox" pref="true" preftype="localizedstring"
+                     prefstring="mailnews.labels.description.2" prefattribute="value"/>
+            <colorpicker class="small-margin" type="button" id="labelColorPicker2"
+                         palettename="standard" onchange="setColorWell(this);"/>
+            <data id="label2Color" pref="true" preftype="color" prefstring="mailnews.labels.color.2"
+                  prefattribute="value" wsm_attributes="value"/>
+          </hbox>    
+
+          <!-- label color: 3 (default green) -->
+          <hbox class="indent" align="center">
+            <textbox id="label3TextBox" pref="true" preftype="localizedstring" 
+                     prefstring="mailnews.labels.description.3" prefattribute="value"/>
+            <colorpicker class="small-margin" type="button" id="labelColorPicker3"
+                         palettename="standard" onchange="setColorWell(this);"/>
+            <data id="label3Color" pref="true" preftype="color" prefstring="mailnews.labels.color.3"
+                  prefattribute="value" wsm_attributes="value"/>
+          </hbox>    
+        </vbox>
+
+        <vbox>
+          <!-- label color: 4 (default blue) -->
+          <hbox class="indent" align="center">
+            <textbox id="label4TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.4" prefattribute="value"/>
+            <colorpicker class="small-margin" type="button" id="labelColorPicker4" palettename="standard" onchange="setColorWell(this);"/>
+            <data id="label4Color" pref="true" preftype="color" prefstring="mailnews.labels.color.4" prefattribute="value" wsm_attributes="value"/>
+          </hbox>    
+
+          <!-- label color: 5 (default purple) -->
+          <hbox class="indent" align="center">
+            <textbox id="label5TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.5" prefattribute="value"/>
+            <colorpicker class="small-margin" type="button" id="labelColorPicker5" palettename="standard" onchange="setColorWell(this);"/>
+            <data id="label5Color" pref="true" preftype="color" prefstring="mailnews.labels.color.5" prefattribute="value" wsm_attributes="value"/>
+          </hbox>    
+
+          <hbox pack="end">
+            <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" oncommand="restoreColorAndDescriptionToDefaults();">
+            </button>
+          </hbox>  
+        </vbox>
+      </hbox>
+    </expander>
+
+    <!-- Email Collection (commented out for now until I can figure out why the abs aren't showing up)
+    <expander id="emailCollection" class="prefExpander" label="&emailCollectiontitle.label;" persist="open">
+      <label class="expanderDescription" value="&emailCollectiontext.label;" flex="1"/>
+      <hbox align="center">
+        <checkbox id="emailCollectionOutgoing" label="&emailCollectionPicker.label;" prefstring="mail.collect_email_address_outgoing"/>
+        <menulist id="localDirectoriesList" flex="1" preftype="string" prefstring="mail.collect_addressbook">
+          <menupopup id="abPopup-menupopup" pref="moz-abdirectory://" datasources="rdf:addressdirectory" sortActive="true"
+                     sortDirection="ascending" sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+            <template>
+              <rule nc:IsWriteable="false"/>
+              <rule nc:IsMailList="false">
+                <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#DirName" value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+              </rule>
+            </template>
+          </menupopup>
+        </menulist>
+      </hbox>
+    </expander>
+
+     -->
+
+    <!-- Address Autocomplete -->
+    <expander id="addressAutocompletion" class="prefExpander" label="&addressingTitle.label;" persist="open">
+      <label class="expanderDescription" value="&autocompleteText.label;" flex="1"/>
+      <hbox align="center">
+        <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
+                  prefstring="mail.enable_autocomplete"
+                  accesskey="&addressingEnable.accesskey;"/>
+      </hbox>
+      <hbox align="center">
+        <checkbox id="autocompleteLDAP" label="&directories.label;" 
+                  prefstring="ldap_2.autoComplete.useDirectory" 
+                  oncommand="enableAutocomplete();"
+                  accesskey="&directories.accesskey;"/>
+       <menulist id="directoriesList" flex="1"
+                  preftype="string" 
+                  prefstring="ldap_2.autoComplete.directoryServer">
+          <menupopup id="directoriesListPopup" 
+            onpopupshowing="createDirectoriesList(true);">
+          </menupopup>
+       </menulist>
+       <button id="editButton" label="&editDirectories.label;" 
+               prefstring="pref.ldap.disable_button.edit_directories" 
+               oncommand="onEditDirectories();"
+               accesskey="&editDirectories.accesskey;"/>
+      </hbox>
+    </expander>
+    
+    <!-- Window Settings -->
+    <expander id="windowSettings" class="prefExpander" label="&windowSettings.label;" persist="open">
+      <label class="expanderDescription" value="&selectWindowLayout.label;" control="mailPaneConfig" flex="1"/>
+      <hbox align="center" class="indent">
+        <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
+          <radio class="iconic" value="0" id="classic"/>
+          <radio class="iconic" value="1" id="wide"/>
+        </radiogroup>
+      </hbox> 
+    </expander>
+
+    <!-- Return Receipts -->
+    <expander id="returnReceipts" class="prefExpander" label="&receiptSettings.label;" persist="open"> 
+      
+      <label class="expanderDescription" value="&returnReceiptsDescription.label;" flex="1"/>
+
+      <vbox id="returnReceiptSettings" class="indent">
+        <checkbox id="alwaysRequest" label="&requestReceipt.label;"
+                  prefstring="mail.receipt.request_return_receipt_on"
+                  accesskey="&requestReceipt.accesskey;"/>
+
+        <vbox id="receiptArrive">
+          <description>&receiptArrive.label;</description>
+          <radiogroup id="receiptFolder" prefstring="mail.incorporate.return_receipt">
+            <radio value="0" label="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
+            <radio value="1" label="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/> 
+          </radiogroup>
+        </vbox>
+
+        <vbox id="receiptRequest">
+          <description>&requestMDN.label;</description>
+          <radiogroup id="receiptSend" preftype="bool" prefstring="mail.mdn.report.enabled" oncommand="EnableDisableAllowedReceipts();">
+            <radio value="false" label="&never.label;" accesskey="&never.accesskey;"/>
+            <radio value="true" label="&returnSome.label;" accesskey="&returnSome.accesskey;"/> 
+          </radiogroup>
+
+          <hbox id="receiptSendIf" class="indent">
+            <grid>
+              <columns><column/><column/></columns>
+              <rows>
+                <row align="center">
+                  <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" 
+                         control="notInToCcPref" value="&notInToCc.label;"/>
+                  <menulist id="notInToCcPref" prefstring="mail.mdn.report.not_in_to_cc">
+                    <menupopup>
+                      <menuitem value="0" label="&neverSend.label;"/>
+                      <menuitem value="1" label="&alwaysSend.label;"/>
+                      <menuitem value="2" label="&askMe.label;"/>
+                    </menupopup>
+                  </menulist>
+                </row>
+                <row align="center">
+                  <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;"
+                         control="outsideDomainPref" value="&outsideDomain.label;"/>
+                  <menulist id="outsideDomainPref" prefstring="mail.mdn.report.outside_domain">
+                    <menupopup>
+                      <menuitem value="0" label="&neverSend.label;"/>
+                      <menuitem value="1" label="&alwaysSend.label;"/>
+                      <menuitem value="2" label="&askMe.label;"/>
+                    </menupopup>
+                  </menulist>
+                </row>
+                <row align="center">
+                  <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref"
+                         value="&otherCases.label;"/>
+                  <menulist id="otherCasesPref" prefstring="mail.mdn.report.other">
+                    <menupopup>
+                      <menuitem value="0" label="&neverSend.label;"/>
+                      <menuitem value="1" label="&alwaysSend.label;"/>
+                      <menuitem value="2" label="&askMe.label;"/>
+                    </menupopup>
+                  </menulist>
+                </row>
+              </rows>
+            </grid>
+          </hbox>
+        </vbox>
+      </vbox>
+    </expander>
+
+    <!-- Connections -->
+    <expander id="connections" class="prefExpander" label="&lHeader.label;" persist="open">     
+      <label class="expanderDescription" value="&proxyTitle.label;" flex="1"/>      
+      <radiogroup id="networkProxyType" prefstring="network.proxy.type">
+          <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+          <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        
+        <grid class="indent" flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+        
+          <rows>
+            <row align="center">
+              <hbox align="center" pack="end">
+                <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
+                         flex="1"/>
+                <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
+                <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
+                         size="5"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox align="center" pack="end">
+                <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
+                         flex="1"/>
+                <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
+                <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
+                         size="5"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox align="center" pack="end">
+                <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"
+                         flex="1"/>
+              <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
+                <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
+                         size="5"/>
+              </hbox>
+            </row>
+            <row>
+              <spacer/>
+              <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
+                          prefstring="network.proxy.socks_version">
+                  <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
+                  <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
+              </radiogroup>
+            </row>
+
+            <row align="center"> 
+              <hbox align="center" pack="end">
+                <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+              </hbox>
+              <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on"/>
+            </row>
+            <row>
+              <spacer/>
+              <label value="&noproxyExplain.label;" control="networkProxyNone"/>
+            </row>
+          </rows>
+        </grid>
+
+        <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <hbox class="indent" flex="1" align="center">
+          <textbox id="networkProxyAutoconfigURL" flex="1" 
+                   preftype="string" prefstring="network.proxy.autoconfig_url"/>
+          <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
+                  oncommand="ReloadPAC();"
+                  prefstring="pref.advanced.proxies.disable_button.reload"/>
+        </hbox>
+      </radiogroup>
+    </expander>
+  
+  </vbox>
+</page>
+

@@ -38,8 +38,6 @@ Contributor(s):
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
 
-<!-- temporarily remove mailPaneConfig from the element IDs list -->
-
   <script type="application/x-javascript">
   <![CDATA[
 
@@ -84,32 +82,12 @@ Contributor(s):
                control="mailnewsStartPageUrl"/>
         <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
                  prefstring="mailnews.start_page.url"/>
-      </hbox>
-
-    <hbox pack="end">
-      <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
+        <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');">
-        <observes element="mailnewsStartPageUrl" attribute="disabled"/>
-      </button>
-     </hbox>
+          <observes element="mailnewsStartPageUrl" attribute="disabled"/>
+        </button>
+      </hbox>
   </groupbox>
-
-<!-- Temporarily hide the window setting for the alternate 3-pane until we can 
-     create more room for it in the prefs panel. 
-
-  <groupbox>
-    <caption label="&windowSettings.label;"/>
-    
-    <hbox align="center">
-      <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
-      <spacer flex="1"/>
-      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
-        <radio class="iconic" value="0" id="classic"/>
-        <radio class="iconic" value="1" id="wide"/>
-      </radiogroup>
-    </hbox>
-  </groupbox>
--->
 
   <groupbox>
     <caption label="&newMessagesArrive.label;"/>

@@ -44,10 +44,17 @@
 
   <binding id="expander" display="xul:vbox">
     <content>
-      <xul:hbox align="center">
-        <xul:button type="disclosure" class="expanderButton" anonid="disclosure" xbl:inherits="disabled" mousethrough="always"/>
-        <xul:label class="header expanderButton" anonid="label" xbl:inherits="value=label,disabled" mousethrough="always" flex="1"/>
+      <xul:hbox align="center" pack="start">
+        <xul:box class="expander-caption">
+          <xul:button type="disclosure" class="expanderButton" anonid="disclosure" xbl:inherits="disabled" mousethrough="always"/>
+          <xul:label class="expanderButton" anonid="label" xbl:inherits="default,value=label,crop,disabled" mousethrough="always" flex="1"/>
+        </xul:box>
       </xul:hbox>
+      
+      <xul:hbox>
+        <children includes="label"/>
+      </xul:hbox>
+
       <xul:vbox flex="1" anonid="settings" class="settingsContainer" collapsed="true">
         <children/>
       </xul:vbox>

@@ -7,7 +7,6 @@ messenger.jar:
     content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
     content/messenger/pref-advanced.js                                 (content/pref-advanced.js)
     content/messenger/pref-privacy.xul                                 (content/pref-privacy.xul)
-    content/messenger/pref-privacy.js                                  (content/pref-privacy.js)
 *   content/messenger/expanderBindings.xml                             (content/expanderBindings.xml)
 *   content/messenger/expanderBindings.css                             (content/expanderBindings.css)
 
@@ -29,3 +28,4 @@ en-US.jar:
 
 classic.jar:
     skin/classic/communicator/pref/pref.css                            (skin/pref.css)
++   skin/classic/messenger/prefPanels.css                              (skin/prefPanels.css)
