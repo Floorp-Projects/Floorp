@@ -1058,6 +1058,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     if (0 == finalDeltaY) {
       aDamageRect->Empty();
     } else {
+      aLine->GetCombinedArea(&lineCombinedArea);
       aDamageRect->UnionRect(oldCombinedArea, lineCombinedArea);
     }
   }
