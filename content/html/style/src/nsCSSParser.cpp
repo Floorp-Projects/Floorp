@@ -76,7 +76,6 @@ struct SelectorList {
 #endif
 
   nsCSSSelector*  mSelectors;
-  nsAutoString    mSourceString;
   PRInt32         mWeight;
   SelectorList*   mNext;
 };
@@ -195,7 +194,7 @@ protected:
 
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
   PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList*& aListHead);
-  PRBool ParseSelector(PRInt32& aErrorCode, nsCSSSelector& aSelectorResult, nsString& aSource);
+  PRBool ParseSelector(PRInt32& aErrorCode, nsCSSSelector& aSelectorResult);
   nsICSSDeclaration* ParseDeclarationBlock(PRInt32& aErrorCode,
                                            PRBool aCheckForBraces);
   PRBool ParseDeclaration(PRInt32& aErrorCode,
@@ -1284,7 +1283,6 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
       rule->SetLineNumber(linenum);
       rule->SetDeclaration(declaration);
       rule->SetWeight(list->mWeight);
-      rule->SetSourceSelectorText(list->mSourceString); // capture the original input (need this for namespace prefixes)
 //      rule->List();
       AppendRule(rule);
       NS_RELEASE(rule);
@@ -1393,14 +1391,13 @@ static PRBool IsOutlinerPseudoElement(nsIAtom* aPseudo)
 PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
                                          SelectorList*& aList)
 {
-  nsAutoString  sourceBuffer;
   SelectorList* list = nsnull;
   PRUnichar     combinator = PRUnichar(0);
   PRInt32       weight = 0;
   PRBool        havePseudoElement = PR_FALSE;
   for (;;) {
     nsCSSSelector selector;
-    if (! ParseSelector(aErrorCode, selector, sourceBuffer)) {
+    if (! ParseSelector(aErrorCode, selector)) {
       break;
     }
     if (nsnull == list) {
@@ -1410,7 +1407,6 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
         return PR_FALSE;
       }
     }
-    sourceBuffer.Append(PRUnichar(' '));
     list->AddSelector(selector);
     nsCSSSelector* listSel = list->mSelectors;
 
@@ -1468,8 +1464,6 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
           (('+' == mToken.mSymbol) || ('>' == mToken.mSymbol))) {
         combinator = mToken.mSymbol;
         list->mSelectors->SetOperator(combinator);
-        sourceBuffer.Append(combinator);
-        sourceBuffer.Append(PRUnichar(' '));
       }
       else {
         UngetToken(); // give it back to selector
@@ -1495,8 +1489,6 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
   }
   aList = list;
   if (nsnull != list) {
-    sourceBuffer.Truncate(sourceBuffer.Length() - 1); // kill trailing space
-    list->mSourceString = sourceBuffer;
     list->mWeight = weight;
   }
   return PRBool(nsnull != aList);
@@ -1515,8 +1507,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
  * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
  */
 PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
-                                    nsCSSSelector& aSelector,
-                                    nsString& aSource)
+                                    nsCSSSelector& aSelector)
 {
   PRInt32       dataMask = 0;
   nsAutoString  buffer;
@@ -1526,9 +1517,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
     return PR_FALSE;
   }
   if (mToken.IsSymbol('*')) {  // universal element selector, or universal namespace
-    mToken.AppendToString(aSource);
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
-      mToken.AppendToString(aSource);
       dataMask |= SEL_MASK_NSPACE;
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // namespace wildcard
 
@@ -1536,7 +1525,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         REPORT_UNEXPECTED_EOF();
         return PR_FALSE;
       }
-      mToken.AppendToString(aSource);
       if (eCSSToken_Ident == mToken.mType) {  // element name
         dataMask |= SEL_MASK_ELEM;
         if (mCaseSensitive) {
@@ -1578,11 +1566,9 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
     }
   }
   else if (eCSSToken_Ident == mToken.mType) {    // element name or namespace name
-    mToken.AppendToString(aSource);
     buffer = mToken.mIdent; // hang on to ident
 
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
-      mToken.AppendToString(aSource);
       dataMask |= SEL_MASK_NSPACE;
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
@@ -1603,7 +1589,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         REPORT_UNEXPECTED_EOF();
         return PR_FALSE;
       }
-      mToken.AppendToString(aSource);
       if (eCSSToken_Ident == mToken.mType) {  // element name
         dataMask |= SEL_MASK_ELEM;
         if (mCaseSensitive) {
@@ -1651,7 +1636,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
     }
   }
   else if (mToken.IsSymbol('|')) {  // No namespace
-    mToken.AppendToString(aSource);
     dataMask |= SEL_MASK_NSPACE;
     aSelector.SetNameSpace(kNameSpaceID_None);  // explicit NO namespace
 
@@ -1660,7 +1644,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       REPORT_UNEXPECTED_EOF();
       return PR_FALSE;
     }
-    mToken.AppendToString(aSource);
     if (eCSSToken_Ident == mToken.mType) {  // element name
       dataMask |= SEL_MASK_ELEM;
       if (mCaseSensitive) {
@@ -1688,7 +1671,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
   for (;;) {
     if (eCSSToken_ID == mToken.mType) {   // #id
       if (0 < mToken.mIdent.Length()) { // verify is legal ID
-        mToken.AppendToString(aSource);
         dataMask |= SEL_MASK_ID;
         aSelector.AddID(mToken.mIdent);
       }
@@ -1700,7 +1682,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
     }
     else if (mToken.IsSymbol('.')) {  // .class
-      mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
         REPORT_UNEXPECTED_EOF();
         return PR_FALSE;
@@ -1710,12 +1691,10 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         UngetToken();
         return PR_FALSE;
       }
-      mToken.AppendToString(aSource);
       dataMask |= SEL_MASK_CLASS;
       aSelector.AddClass(mToken.mIdent);  // class always case sensitive
     }
     else if (mToken.IsSymbol(':')) { // :pseudo
-      mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
         REPORT_UNEXPECTED_EOF();
         return PR_FALSE;
@@ -1732,7 +1711,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         }
 #endif
       }
-      mToken.AppendToString(aSource);
       buffer.Truncate();
       buffer.AppendWithConversion(':');
       buffer.Append(mToken.mIdent);
@@ -1783,24 +1761,20 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
     }
     else if (mToken.IsSymbol('[')) {  // attribute
-      mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         REPORT_UNEXPECTED_EOF();
         return PR_FALSE;
       }
-      mToken.AppendToString(aSource);
 
       PRInt32 nameSpaceID = kNameSpaceID_None;
       nsAutoString  attr;
       if (mToken.IsSymbol('*')) { // wildcard namespace
         nameSpaceID = kNameSpaceID_Unknown;
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
-          mToken.AppendToString(aSource);
           if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
             REPORT_UNEXPECTED_EOF();
             return PR_FALSE;
           }
-          mToken.AppendToString(aSource);
           if (eCSSToken_Ident == mToken.mType) { // attr name
             attr = mToken.mIdent;
           }
@@ -1821,7 +1795,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           REPORT_UNEXPECTED_EOF();
           return PR_FALSE;
         }
-        mToken.AppendToString(aSource);
         if (eCSSToken_Ident == mToken.mType) { // attr name
           attr = mToken.mIdent;
         }
@@ -1834,7 +1807,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
         attr = mToken.mIdent; // hang on to it
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
-          mToken.AppendToString(aSource);
           nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpace) {
             nsIAtom* prefix;
@@ -1852,7 +1824,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             REPORT_UNEXPECTED_EOF();
             return PR_FALSE;
           }
-          mToken.AppendToString(aSource);
           if (eCSSToken_Ident == mToken.mType) { // attr name
             attr = mToken.mIdent;
           }
@@ -1883,7 +1854,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           (eCSSToken_Beginsmatch == mToken.mType) ||
           (eCSSToken_Endsmatch == mToken.mType) ||
           (eCSSToken_Containsmatch == mToken.mType)) {
-        mToken.AppendToString(aSource);
         PRUint8 func;
         if (eCSSToken_Includes == mToken.mType) {
           func = NS_ATTR_FUNC_INCLUDES;
@@ -1920,14 +1890,12 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             return PR_FALSE;
           }
           if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
-            mToken.AppendToString(aSource);
             nsAutoString  value(mToken.mIdent);
             if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
               REPORT_UNEXPECTED_EOF();
               return PR_FALSE;
             }
             if (mToken.IsSymbol(']')) {
-              mToken.AppendToString(aSource);
               dataMask |= SEL_MASK_ATTRIB;
               aSelector.AddAttribute(nameSpaceID, attr, func, value, mCaseSensitive);
             }
