@@ -87,7 +87,11 @@ public:
   // set default namespace for sheet (may be overridden by @namespace)
   NS_IMETHOD  SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID) = 0;
 
-  NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
+  NS_IMETHOD  Clone(nsICSSStyleSheet* aCloneParent,
+                    nsICSSImportRule* aCloneOwnerRule,
+                    nsIDocument* aCloneDocument,
+                    nsIDOMNode* aCloneOwningNode,
+                    nsICSSStyleSheet** aClone) const = 0;
 
   NS_IMETHOD  IsModified(PRBool* aModified) const = 0; // returns the mDirty status of the sheet
   NS_IMETHOD  SetModified(PRBool aModified) = 0;

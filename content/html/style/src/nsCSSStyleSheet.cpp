@@ -845,7 +845,11 @@ public:
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const;
   NS_IMETHOD  SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID);
 
-  NS_IMETHOD Clone(nsICSSStyleSheet*& aClone) const;
+  NS_IMETHOD Clone(nsICSSStyleSheet* aCloneParent,
+                   nsICSSImportRule* aCloneOwnerRule,
+                   nsIDocument* aCloneDocument,
+                   nsIDOMNode* aCloneOwningNode,
+                   nsICSSStyleSheet** aClone) const;
 
   NS_IMETHOD IsModified(PRBool* aSheetModified) const;
   NS_IMETHOD SetModified(PRBool aModified);
@@ -864,7 +868,13 @@ public:
   // nsIDOMCSSStyleSheet interface
   NS_DECL_NSIDOMCSSSTYLESHEET
 
-private: 
+private:
+  CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy,
+                    nsICSSStyleSheet* aParentToUse,
+                    nsICSSImportRule* aOwnerRuleToUse,
+                    nsIDocument* aDocumentToUse,
+                    nsIDOMNode* aOwningNodeToUse);
+  
   // These are not supported and are not implemented! 
   CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy); 
   CSSStyleSheetImpl& operator=(const CSSStyleSheetImpl& aCopy); 
@@ -1603,19 +1613,23 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
   mInner = new CSSStyleSheetInner(this);
 }
 
-CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
+CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy,
+                                     nsICSSStyleSheet* aParentToUse,
+                                     nsICSSImportRule* aOwnerRuleToUse,
+                                     nsIDocument* aDocumentToUse,
+                                     nsIDOMNode* aOwningNodeToUse)
   : nsICSSStyleSheet(),
     mRefCnt(0),
     mTitle(aCopy.mTitle), 
     mMedia(nsnull),
     mFirstChild(nsnull), 
     mNext(nsnull),
-    mParent(aCopy.mParent),
-    mOwnerRule(aCopy.mOwnerRule),
+    mParent(aParentToUse),
+    mOwnerRule(aOwnerRuleToUse),
     mImportsCollection(nsnull), // re-created lazily
     mRuleCollection(nsnull), // re-created lazily
-    mDocument(aCopy.mDocument),
-    mOwningNode(aCopy.mOwningNode),
+    mDocument(aDocumentToUse),
+    mOwningNode(aOwningNodeToUse),
     mDisabled(aCopy.mDisabled),
     mDirty(PR_FALSE),
     mInner(aCopy.mInner),
@@ -1641,7 +1655,10 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     CSSStyleSheetImpl*  otherChild = aCopy.mFirstChild;
     CSSStyleSheetImpl** ourSlot = &mFirstChild;
     do {
-      CSSStyleSheetImpl* child = new CSSStyleSheetImpl(*otherChild);
+      // XXX This is wrong; we should be keeping @import rules and
+      // sheets in sync!
+      CSSStyleSheetImpl* child = new CSSStyleSheetImpl(*otherChild, this,
+                                                       nsnull, nsnull, nsnull);
       if (child) {
         NS_ADDREF(child);
         (*ourSlot) = child;
@@ -2239,13 +2256,21 @@ CSSStyleSheetImpl::EnsureUniqueInner(void)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::Clone(nsICSSStyleSheet*& aClone) const
+CSSStyleSheetImpl::Clone(nsICSSStyleSheet* aCloneParent,
+                         nsICSSImportRule* aCloneOwnerRule,
+                         nsIDocument* aCloneDocument,
+                         nsIDOMNode* aCloneOwningNode,
+                         nsICSSStyleSheet** aClone) const
 {
-  // XXX no, really need to clone
-  CSSStyleSheetImpl* clone = new CSSStyleSheetImpl(*this);
+  NS_PRECONDITION(aClone, "Null out param!");
+  CSSStyleSheetImpl* clone = new CSSStyleSheetImpl(*this,
+                                                   aCloneParent,
+                                                   aCloneOwnerRule,
+                                                   aCloneDocument,
+                                                   aCloneOwningNode);
   if (clone) {
-    aClone = (nsICSSStyleSheet*)clone;
-    NS_ADDREF(aClone);
+    *aClone = NS_STATIC_CAST(nsICSSStyleSheet*, clone);
+    NS_ADDREF(*aClone);
   }
   return NS_OK;
 }

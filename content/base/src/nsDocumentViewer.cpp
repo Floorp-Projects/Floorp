@@ -1251,10 +1251,10 @@ NS_IMETHODIMP
 DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 {
   NS_ASSERTION(aUAStyleSheet, "unexpected null pointer");
-  if (aUAStyleSheet) {
-    nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
+  nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
+  if (sheet) {
     nsCOMPtr<nsICSSStyleSheet> newSheet;
-    sheet->Clone(*getter_AddRefs(newSheet));
+    sheet->Clone(nsnull, nsnull, nsnull, nsnull, getter_AddRefs(newSheet));
     mUAStyleSheet = newSheet;
   }
   return NS_OK;
