@@ -20,11 +20,13 @@ DEPTH = ../..
 MODULE = raptor
 
 EXPORTS =					\
+        nsIBrowserWindow.h			\
         nsIContentViewer.h			\
         nsIContentViewerContainer.h		\
         nsIDocumentLoader.h			\
         nsIDocumentViewer.h			\
 	nsILinkHandler.h			\
+	nsIThrobber.h				\
 	nsIWebShell.h				\
 	nsweb.h					\
 	$(NULL)
