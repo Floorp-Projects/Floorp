@@ -64,10 +64,7 @@ else
 	}
 
 ConnectToDatabase();
-
-# $::FORM{'product'} = "Mozilla";
-# &show_chart(); 
-# exit;
+GetVersionTable();
 
 if (! defined $::FORM{'product'})
 	{
@@ -112,9 +109,8 @@ FIN
 
 sub choose_product
 	{
-	GetVersionTable();
-	
 	my $product_popup = make_options (\@::legal_product, $::legal_product[0]);
+	my $charts = (-d $dir) ? "<option value=\"show_chart\">Bug Charts" : "";
 
 	print <<FIN;
 <center>
@@ -134,13 +130,14 @@ $product_popup
 <td align=center>
 <select name="output">
 <option value="most_doomed">Bug Counts
-<option value="show_chart">Bug Charts
+$charts
 </select>
 <tr>
 <td align=center><b>Switches:</b></td>
 <td align=left>
 <input type=checkbox name=links value=1>&nbsp;Links to Bugs<br>
 <input type=checkbox name=nobanner value=1>&nbsp;No Banner<br>
+<input type=checkbox name=quip value=1>&nbsp;Include Quip<br>
 </td>
 </tr>
 <tr>
@@ -196,6 +193,7 @@ FIN
 	
 	my $c = 0;
 
+	my $quip = "Summary";
 	my $bugs_count = 0;
 	my $bugs_new_this_week = 0;
 	my $bugs_reopened = 0;
@@ -224,12 +222,26 @@ FIN
 		$bugs_totals{$who}{$st} ++;
 		}
 
+	if ($::FORM{'quip'})
+		{
+		if (open (COMMENTS, "<data/comments")) 
+			{
+    	my @cdata;
+			while (<COMMENTS>) 
+				{
+				push @cdata, $_;
+				}
+			close COMMENTS;
+			$quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
+			}
+		} 
+
 	#########################
 	# start painting report #
 	#########################
 
 	print <<FIN;
-<h1>Summary</h1>
+<h1>$quip</h1>
 <table border=1 cellpadding=5>
 <tr>
 <td align=right><b>New Bugs This Week</b></td>
@@ -363,6 +375,12 @@ FIN
 FIN
 	}
 
+sub is_legal_product
+	{
+	my $product = shift;
+	return grep { $_ eq $product} @::legal_product;
+	}
+
 sub header
 	{
 	print <<FIN;
@@ -376,6 +394,11 @@ FIN
 sub show_chart
 	{
   my $when = localtime (time);
+
+	if (! is_legal_product ($::FORM{'product'}))
+		{
+		&die_politely ("Unknown product: $::FORM{'product'}");
+		}
 
   print <<FIN;
 <center>
@@ -428,7 +451,6 @@ FIN
 		"title" => "Bug Charts for $::FORM{'product'}",
 		"x_label" => "Dates",
 		"y_label" => "Bug Count",
-		"grey_background" => 1,
 		"legend_labels" => \@labels,
 		);
 	
