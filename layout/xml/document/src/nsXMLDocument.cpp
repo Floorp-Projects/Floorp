@@ -656,6 +656,7 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
   // XXX TBI
   *aDocumentType = nsnull;
   return NS_OK;
+//  return nsDocument::GetDoctype(aDocumentType); 
 }
  
 NS_IMETHODIMP    
@@ -815,8 +816,16 @@ NS_IMETHODIMP
 nsXMLDocument::GetElementById(const nsString& aElementId,
                               nsIDOMElement** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsCOMPtr<nsIContent> cont;
+  nsresult rv = GetContentById(aElementId,getter_AddRefs(cont));
+  if (NS_SUCCEEDED(rv) && cont) {
+    rv = cont->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
+  }
+
+  return rv;
 }
 
 // nsIXMLDocument interface
