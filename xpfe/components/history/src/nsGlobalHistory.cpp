@@ -481,7 +481,7 @@ NS_IMPL_ISUPPORTS6(nsGlobalHistory,
 
 
 NS_IMETHODIMP
-nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDate)
+nsGlobalHistory::AddPage(const char *aURL)
 {
   NS_ENSURE_ARG_POINTER(aURL);
   NS_ENSURE_ARG_POINTER(mEnv);
@@ -492,7 +492,7 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   rv = SaveLastPageVisited(aURL);
   if (NS_FAILED(rv)) return rv;
 
-  rv = AddPageToDatabase(aURL, aReferrerURL, aDate);
+  rv = AddPageToDatabase(aURL, GetNow());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -500,7 +500,6 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
 
 nsresult
 nsGlobalHistory::AddPageToDatabase(const char *aURL,
-                                   const char *aReferrerURL,
                                    PRInt64 aDate)
 {
   nsresult rv;
@@ -555,7 +554,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
   }
   else {
-    AddNewPageToDatabase(aURL, aReferrerURL, aDate);
+    AddNewPageToDatabase(aURL, aDate);
     
     // Notify observers
     rv = NotifyAssert(url, kNC_Date, date);
@@ -597,7 +596,6 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
 
 nsresult
 nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
-                                      const char *aReferrerURL,
                                       PRInt64 aDate)
 {
   nsresult rv;
@@ -618,10 +616,6 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 
   // Set the URL
   SetRowValue(row, kToken_URLColumn, aURL);
-  
-  // Set the referrer, if one is provided
-  if (aReferrerURL)
-    SetRowValue(row, kToken_ReferrerColumn, aReferrerURL);
   
   // Set the date.
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
@@ -1011,7 +1005,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
+nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
 {
   NS_PRECONDITION(aURL != nsnull, "null ptr");
   if (! aURL)
@@ -1022,12 +1016,10 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
-  if (NS_FAILED(rv)|| !row) {
-    *_retval = LL_ZERO;
-    return NS_OK;
-  }
-  
-  return GetRowValue(row, kToken_LastVisitDateColumn, _retval);
+  if (NS_FAILED(rv)|| !row)
+    *_retval = PR_FALSE;
+  else
+    *_retval = PR_TRUE;
 
   return NS_OK;
 }

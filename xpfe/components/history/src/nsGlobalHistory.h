@@ -43,6 +43,10 @@
 #include "nsAWritableString.h"
 #include "nsITimer.h"
 
+// {9491C382-E3C4-11D2-BDBE-0050040A9B44}
+#define NS_GLOBALHISTORY_CID \
+{ 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
+
 //----------------------------------------------------------------------
 //
 //  nsMdbTableEnumerator
@@ -221,14 +225,12 @@ protected:
   // AddPage-oriented stuff
   //
   nsresult AddPageToDatabase(const char *aURL,
-                             const char *aReferrerURL,
                              PRInt64 aDate);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
   nsresult AddNewPageToDatabase(const char *aURL,
-                                const char *aReferrerURL,
                                 PRInt64 aDate);
   //
   // generic routines for setting/retrieving various datatypes

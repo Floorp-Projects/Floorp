@@ -30,6 +30,13 @@
 interface nsIBrowserHistory : nsISupports
 {
     /**
+     * setPageTitle
+     * set the page title for the given url. Ignores urls that are not
+     * already in the history
+     */
+    void setPageTitle(in string aURL, in wstring aTitle);
+
+    /**
      * removePage
      * Remove the specified page from the global history
      */
