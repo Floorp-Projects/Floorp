@@ -1459,7 +1459,6 @@
 				3F44AC3E05BDFB9E00CB4B08,
 				3F44AC3F05BDFB9E00CB4B08,
 				3F44AC4005BDFB9E00CB4B08,
-				3F44AC4405BDFB9E00CB4B08,
 				3F44AC4605BDFB9E00CB4B08,
 				3F44AC4705BDFB9E00CB4B08,
 				3F44AC4805BDFB9E00CB4B08,
@@ -1484,8 +1483,6 @@
 				3F44AC5C05BDFB9E00CB4B08,
 				3F44AC5D05BDFB9E00CB4B08,
 				3F44AC5E05BDFB9E00CB4B08,
-				3F44AC5F05BDFB9E00CB4B08,
-				3F44AC6005BDFB9E00CB4B08,
 				3F44AC6105BDFB9E00CB4B08,
 				3F44AC6205BDFB9E00CB4B08,
 				3F44AC6305BDFB9E00CB4B08,
@@ -1670,12 +1667,6 @@
 			settings = {
 			};
 		};
-		3F44AC4405BDFB9E00CB4B08 = {
-			fileRef = F5DAB15302698D5401A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AC4605BDFB9E00CB4B08 = {
 			fileRef = F5F94BEF0338E8C501026D5D;
 			isa = PBXBuildFile;
@@ -1816,18 +1807,6 @@
 		};
 		3F44AC5E05BDFB9E00CB4B08 = {
 			fileRef = F5566DC3038E075F01A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC5F05BDFB9E00CB4B08 = {
-			fileRef = F583E3B503B8204901A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC6005BDFB9E00CB4B08 = {
-			fileRef = F583E3B603B8204901A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5421,7 +5400,6 @@
 				3F44AE7705BDFBA000CB4B08,
 				3F44AE7805BDFBA000CB4B08,
 				3F44AE7905BDFBA000CB4B08,
-				3F44AE7D05BDFBA000CB4B08,
 				3F44AE7F05BDFBA000CB4B08,
 				3F44AE8005BDFBA000CB4B08,
 				3F44AE8105BDFBA000CB4B08,
@@ -5446,8 +5424,6 @@
 				3F44AE9505BDFBA000CB4B08,
 				3F44AE9605BDFBA000CB4B08,
 				3F44AE9705BDFBA000CB4B08,
-				3F44AE9805BDFBA000CB4B08,
-				3F44AE9905BDFBA000CB4B08,
 				3F44AE9A05BDFBA000CB4B08,
 				3F44AE9B05BDFBA000CB4B08,
 				3F44AE9C05BDFBA000CB4B08,
@@ -5632,12 +5608,6 @@
 			settings = {
 			};
 		};
-		3F44AE7D05BDFBA000CB4B08 = {
-			fileRef = F5DAB15302698D5401A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AE7F05BDFBA000CB4B08 = {
 			fileRef = F5F94BEF0338E8C501026D5D;
 			isa = PBXBuildFile;
@@ -5778,18 +5748,6 @@
 		};
 		3F44AE9705BDFBA000CB4B08 = {
 			fileRef = F5566DC3038E075F01A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AE9805BDFBA000CB4B08 = {
-			fileRef = F583E3B503B8204901A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AE9905BDFBA000CB4B08 = {
-			fileRef = F583E3B603B8204901A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9036,8 +8994,6 @@
 				3FAD95540461E43700A80005,
 				F5A112C902DF270F01026D5D,
 				F55B6BF402EF1F7E01026D5D,
-				F583E3B503B8204901A80166,
-				F583E3B603B8204901A80166,
 				F5F415E303B97C6101A80166,
 				3003B89C044514B600B85BF3,
 				3003B89D044514B600B85BF3,
@@ -10605,7 +10561,6 @@
 				F5568A900217CA82010001CA,
 				F5568A8E0217C7F5010001CA,
 				F55714A1023B4898010001CA,
-				F5DAB15302698D5401A80166,
 				F541496202714F9A01A80166,
 				F5179422028275B801A967DF,
 			);
@@ -11118,22 +11073,6 @@
 			path = PreferencePanes/Privacy/PrivacyPane.mm;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
-		};
-		F583E3B503B8204901A80166 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			name = disclosureArrowDown.tiff;
-			path = app/disclosureArrowDown.tiff;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		F583E3B603B8204901A80166 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			name = disclosureArrowRight.tiff;
-			path = app/disclosureArrowRight.tiff;
-			refType = 4;
-			sourceTree = "<group>";
 		};
 		F583E3BB03B820AC01A80166 = {
 			children = (
@@ -11818,14 +11757,6 @@
 			lastKnownFileType = text;
 			name = "installed-chrome.txt";
 			path = "../dist/Embed/chrome/installed-chrome.txt";
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F5DAB15302698D5401A80166 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			name = edit_on.tif;
-			path = resources/images/toolbar/edit_on.tif;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
