@@ -23,6 +23,7 @@
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <ccharabaruk@meldstar.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -129,8 +130,7 @@ function loadCalendarServerDialog()
 
    document.getElementById( "server-password-textbox" ).value = gCalendarObject.password;
 
-   document.getElementById( "server-publish-checkbox" ).checked = gCalendarObject.publishAutomatically;
-   
+   document.getElementById( "server-publish-checkbox" ).setAttribute( "checked", gCalendarObject.publishAutomatically );
    // start focus on title
    
    var firstFocus = document.getElementById( "server-name-textbox" );
