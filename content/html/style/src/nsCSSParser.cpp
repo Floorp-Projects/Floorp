@@ -2451,15 +2451,9 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
   }
   nsCSSDeclaration* declaration = nsnull;
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
-    PRInt32 count = 0;
-    PRBool dropDeclaration = PR_FALSE;
     for (;;) {
       nsChangeHint hint = NS_STYLE_HINT_NONE;
-      if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces, hint)) {
-        count++;  // count declarations
-      }
-      else {
-      	dropDeclaration = (aErrorCode == NS_CSS_PARSER_DROP_DECLARATION);
+      if (!ParseDeclaration(aErrorCode, declaration, aCheckForBraces, hint)) {
         if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
         }
@@ -2470,12 +2464,6 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
         }
         // Since the skipped declaration didn't end the block we parse
         // the next declaration.
-      }
-    }
-    if (dropDeclaration) {
-      if (nsnull != declaration) {
-        declaration->RuleAbort();
-        declaration = nsnull;
       }
     }
   }
@@ -2986,7 +2974,6 @@ PRBool CSSParserImpl::TranslateDimension(PRInt32& aErrorCode,
       case eCSSKeyword_ms:    units = eCSSUnit_Milliseconds;  type = VARIANT_TIME;  break;
       default:
         // unknown unit
-        aErrorCode = NS_ERROR_ILLEGAL_VALUE;
         return PR_FALSE;
     }
   } else {
@@ -3007,6 +2994,10 @@ PRBool CSSParserImpl::TranslateDimension(PRInt32& aErrorCode,
     else if ((VARIANT_TIME & aVariantMask) != 0) {
       units = eCSSUnit_Seconds;
       type = VARIANT_TIME;
+    }
+    else {
+      NS_ERROR("Variant mask does not include dimension; why were we called?");
+      return PR_FALSE;
     }
   }
   if ((type & aVariantMask) != 0) {
@@ -3091,7 +3082,12 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
   }
   if (((aVariantMask & (VARIANT_LENGTH | VARIANT_ANGLE | VARIANT_FREQUENCY | VARIANT_TIME)) != 0) && 
       tk->IsDimension()) {
-    return TranslateDimension(aErrorCode, aValue, aVariantMask, tk->mNumber, tk->mIdent);
+    if (TranslateDimension(aErrorCode, aValue, aVariantMask, tk->mNumber, tk->mIdent)) {
+      return PR_TRUE;
+    }
+    // Put the token back; we didn't parse it, so we shouldn't consume it
+    UngetToken();
+    return PR_FALSE;
   }
   if (((aVariantMask & VARIANT_PERCENT) != 0) &&
       (eCSSToken_Percentage == tk->mType)) {
@@ -3386,11 +3382,6 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
         if (ParseSingleValueProperty(aErrorCode, aValues[index], aPropIDs[index])) {
           found |= bit;
         }
-        if (aErrorCode == NS_ERROR_ILLEGAL_VALUE) { // bug 47138
-          aErrorCode = NS_OK;
-          found = 0;
-          goto done;
-        }
       }
     }
     if (found == hadFound) {  // found nothing new
@@ -3425,7 +3416,6 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
       }
     }
   }
-done:
   SetParsingCompoundProperty(PR_FALSE);
   return found;
 }
@@ -3491,10 +3481,6 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
   PRInt32 index;
   for (index = 0; index < 4; index++) {
     if (! ParseSingleValueProperty(aErrorCode, values[index], aPropIDs[index])) {
-      if (aErrorCode == NS_ERROR_ILLEGAL_VALUE) { // bug 47138
-        aErrorCode = NS_OK;
-        count = 0;
-      }
       break;
     }
     count++;
@@ -3690,6 +3676,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_right:
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
+  case eCSSProperty__moz_border_radius:
   case eCSSProperty_clip:
   case eCSSProperty_content:
   case eCSSProperty__moz_counter_increment:
@@ -3702,6 +3689,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_margin:
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline:
+  case eCSSProperty__moz_outline_radius:
 #endif
   case eCSSProperty_padding:
   case eCSSProperty_pause:
@@ -3886,7 +3874,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
 					case NS_STYLE_DISPLAY_RUN_IN:		 // bug 2056
 					case NS_STYLE_DISPLAY_COMPACT:       // bug 14983
 					case NS_STYLE_DISPLAY_INLINE_TABLE:  // bug 18218
-						//aErrorCode = NS_CSS_PARSER_DROP_DECLARATION;  // bug 15432 (commented out for bug 46562 and 38397)
 						return PR_FALSE;
 				}
 			}
