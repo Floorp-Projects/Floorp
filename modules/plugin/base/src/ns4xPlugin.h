@@ -33,20 +33,14 @@
  * right calling conventions on Win16.
  */
 
-#ifdef XP_WIN16
-#define NP_EXPORT __export
-#elif defined(XP_OS2)
-#define NP_EXPORT _System
-#else
 #define NP_EXPORT
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 
 // XXX These are defined in platform specific FE directories right now :-/
 
 //BTW: this sucks rocks.
-#ifdef XP_WIN
+#ifdef XP_PC
 #define PLUGIN_ENTRYPOINT_CALL_TYPE __stdcall
 #else
 #define PLUGIN_ENTRYPOINT_CALL_TYPE

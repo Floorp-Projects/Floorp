@@ -24,6 +24,7 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIJVMPluginTagInfo.h"
 
+
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer,
                                  public nsIPluginTagInfo2,
                                  public nsIJVMPluginTagInfo

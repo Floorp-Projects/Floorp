@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
+#include "nsIOutputStream.h"
 
 nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
 {
@@ -44,14 +46,14 @@ nsPluginInstancePeerImpl :: ~nsPluginInstancePeerImpl()
   }
 }
 
-NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
-NS_IMPL_RELEASE(nsPluginInstancePeerImpl);
-
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
+NS_IMPL_RELEASE(nsPluginInstancePeerImpl);
 
 nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** instance)
 {
@@ -120,10 +122,158 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMode(nsPluginMode *result)
     return NS_ERROR_FAILURE;
 }
 
+// nsPluginStreamToFile
+// --------------------
+// Used to handle NPN_NewStream() - writes the stream as received by the plugin
+// to a file and at completion (NPN_DestroyStream), tells the browser to load it into
+// a plugin-specified target
+
+static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+
+class nsPluginStreamToFile : public nsIOutputStream
+{
+public:
+
+	nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner);
+	~nsPluginStreamToFile();
+
+	NS_DECL_ISUPPORTS
+
+	// nsIOutputStream interface
+ 
+	NS_IMETHOD
+	Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount);
+
+	// nsIBaseStream interface
+
+    NS_IMETHOD
+	Close(void);
+
+protected:
+	
+	char* mTarget;
+	char* mFileURL;
+	char* mFilename;
+	FILE* mStreamFile;
+	nsIPluginInstanceOwner* mOwner;
+};
+
+nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner)
+{
+	mTarget = PL_strdup(target);
+	mOwner = owner;
+
+	// open the file and prepare it for writing
+	char buf[400], tpath[300];
+#ifdef XP_PC
+	::GetTempPath(sizeof(tpath), tpath);
+	PRInt32 len = PL_strlen(tpath);
+
+	if((len > 0) && (tpath[len-1] != '\\'))
+	{
+		tpath[len] = '\\';
+		tpath[len+1] = 0;
+	}
+#elif defined (XP_UNIX)
+	PL_strcpy(tpath, "/tmp/");
+#else
+	tpath[0] = 0;
+#endif // XP_PC
+
+	// create the file
+	PR_snprintf(buf, sizeof(buf), "%s%08X.html", tpath, this);
+	mStreamFile = fopen(buf, "w");
+	fclose(mStreamFile);
+
+	mFilename = PL_strdup(buf);
+
+	// construct the URL we'll use later in calls to GetURL()
+	mFileURL = (char*)PR_Malloc((PL_strlen(buf)+PL_strlen("file://")+1) * sizeof(char));	
+	if(mFileURL == nsnull)
+		return;
+
+	PL_strcpy(mFileURL, "file://");
+	PL_strcat(mFileURL, buf);
+
+	// swap \ with / for the file URL
+	PRInt32 i = 0;
+	while(mFileURL[i] != 0)
+	{
+		if(mFileURL[i] == '\\')
+			mFileURL[i] = '/';
+		++i;
+	}
+
+	printf("File URL = %s\n", mFileURL);
+}
+
+nsPluginStreamToFile::~nsPluginStreamToFile()
+{
+	if(nsnull != mTarget)
+		PL_strfree(mTarget);
+
+	if(nsnull != mFileURL)
+		PL_strfree(mFileURL);
+
+	if(nsnull != mFilename)
+		PL_strfree(mFilename);
+}
+
+
+NS_IMPL_ADDREF(nsPluginStreamToFile)
+NS_IMPL_RELEASE(nsPluginStreamToFile)
+
+nsresult nsPluginStreamToFile::QueryInterface(const nsIID& aIID,
+                                              void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+
+  if (nsnull == aInstancePtrResult)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIID.Equals(kIOutputStreamIID))
+  {
+    *aInstancePtrResult = (void *)((nsIOutputStream *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+{
+	// write the data to the file and update the target
+	if(nsnull != mFilename)
+	{
+		mStreamFile = fopen(mFilename, "a");
+		fwrite(aBuf, 1, aCount, mStreamFile);
+		fclose(mStreamFile);
+		mOwner->GetURL(mFileURL, mTarget, nsnull);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::Close(void)
+{
+	mOwner->GetURL(mFileURL, mTarget, nsnull);
+
+	return NS_OK;
+}
+
+// end of nsPluginStreamToFile
+
 NS_IMETHODIMP nsPluginInstancePeerImpl :: NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result)
 {
-printf("instance peer newstream called\n");
-  return NS_OK;
+  nsresult rv;
+  nsPluginStreamToFile*  stream = new nsPluginStreamToFile(target, mOwner);
+
+  rv = stream->QueryInterface(kIOutputStreamIID, (void **)result);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
@@ -633,3 +783,4 @@ nsresult nsPluginInstancePeerImpl :: GetOwner(nsIPluginInstanceOwner *&aOwner)
   else
     return NS_ERROR_FAILURE;
 }
+
