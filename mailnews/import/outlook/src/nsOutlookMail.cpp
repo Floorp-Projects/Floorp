@@ -832,7 +832,7 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
 							nsCRT::free( a->description);
 							nsCString	str("Attachment ");
 							str.AppendInt( (PRInt32) i);
-							a->description = nsCRT::strdup( (const char *)str);
+							a->description = ToNewCString( str);
 						}
 						a->pAttachment = pSpec;
 						m_attachments.AppendElement( a);

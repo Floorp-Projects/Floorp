@@ -161,7 +161,7 @@ nsMessengerWinIntegration::Init()
   mShellDllPath.Append(SHELL32_DLL);
 
   // load shell dll. If no such dll found, return 
-  HMODULE hModule = ::LoadLibrary(mShellDllPath);
+  HMODULE hModule = ::LoadLibrary(mShellDllPath.get());
   if (!hModule)
     return NS_OK;
 

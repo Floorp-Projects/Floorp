@@ -1015,7 +1015,7 @@ nsresult nsEudoraMailbox::ExamineAttachment( SimpleBufferTonyRCopiedOnce& data)
 
 PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 {
-	IMPORT_LOG1( "Found attachment: %s\n", (const char *)fileName);
+	IMPORT_LOG1( "Found attachment: %s\n", fileName.get());
 
 	nsIFileSpec *	pSpec;
 	nsresult 	rv  = NS_NewFileSpec( &pSpec);
@@ -1023,7 +1023,7 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 		return( PR_FALSE);
 
 	nsCString	mimeType;
-	if (NS_FAILED( GetAttachmentInfo( fileName, pSpec, mimeType))) {
+	if (NS_FAILED( GetAttachmentInfo( fileName.get(), pSpec, mimeType))) {
 		NS_RELEASE( pSpec);
 		return( PR_FALSE);
 	}

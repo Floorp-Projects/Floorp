@@ -111,7 +111,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     nsCAutoString entry ;
     nsCAutoString stub ;
 
-    mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery, stub, entry) ;
+    mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery.get(), stub, entry) ;
     if (mAbWinType == nsAbWinType_Unknown) {
         PRINTF(("Huge problem URI=%s.\n", mURINoQuery)) ;
         return NS_ERROR_INVALID_ARG ;
@@ -421,7 +421,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
     buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uri) ;
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
-    retCode = gRDFService->GetResource(uri, getter_AddRefs(resource)) ;
+    retCode = gRDFService->GetResource(uri.get(), getter_AddRefs(resource)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     nsCOMPtr<nsIAbDirectory> newList(do_QueryInterface(resource, &retCode)) ;
     
@@ -429,7 +429,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
     if (!didCopy) {
         retCode = newList->CopyMailList(aMailList) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
-        retCode = newList->EditMailListToDatabase(mURINoQuery) ;
+        retCode = newList->EditMailListToDatabase(mURINoQuery.get()) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
     }
     m_AddressList->AppendElement(newList) ;
@@ -873,7 +873,7 @@ nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArg
 			nsCOMPtr<nsISupports> bogusInterface (do_QueryInterface(aCard, &retCode)) ;
 
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
-			newValue = new nsAbDirectoryQueryPropertyValue (cPropName, bogusInterface) ;
+			newValue = new nsAbDirectoryQueryPropertyValue (cPropName.get(), bogusInterface) ;
 		}
 		else if (cPropName.EqualsWithConversion ("card:URI")) {
 			nsCOMPtr<nsIRDFResource> rdfResource (do_QueryInterface(aCard, &retCode)) ;
@@ -889,7 +889,7 @@ nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArg
         else {
 			nsXPIDLString value ;
 
-			retCode = aCard->GetCardValue(cPropName, getter_Copies(value)) ;
+			retCode = aCard->GetCardValue(cPropName.get(), getter_Copies(value)) ;
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
             if (value.get() && nsCRT::strlen(value.get()) != 0) {
                 newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), value.get()) ;
@@ -1123,7 +1123,7 @@ nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards,
         cardEntries.mEntries [card].ToString(entryId) ;
         buildAbWinUri(kOutlookCardScheme, mAbWinType, uriName) ;
         uriName.Append(entryId) ;
-        retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
+        retCode = gRDFService->GetResource(uriName.get(), getter_AddRefs(resource)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
         cards->AppendElement(resource) ;
     }
@@ -1156,7 +1156,7 @@ nsresult nsAbOutlookDirectory::GetChildNodes(nsISupportsArray **aNodes)
         nodeEntries.mEntries [node].ToString(entryId) ;
         buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uriName) ;
         uriName.Append(entryId) ;
-        retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
+        retCode = gRDFService->GetResource(uriName.get(), getter_AddRefs(resource)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
         nodes->AppendElement(resource) ;
     }
@@ -1304,7 +1304,7 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
     
-    retCode = gRDFService->GetResource(uri, getter_AddRefs(resource)) ;
+    retCode = gRDFService->GetResource(uri.get(), getter_AddRefs(resource)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     nsCOMPtr<nsIAbCard> newCard(do_QueryInterface(resource, &retCode)) ;
     
@@ -1312,7 +1312,7 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     if (!didCopy) {
         retCode = newCard->Copy(aData) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
-        retCode = newCard->EditCardToDatabase(mURINoQuery) ;
+        retCode = newCard->EditCardToDatabase(mURINoQuery.get()) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
     }
     *aNewCard = newCard ;

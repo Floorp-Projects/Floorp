@@ -88,7 +88,7 @@ nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& 
 
    mimeDatabaseKey += aMimeType;
    
-   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, mimeDatabaseKey, 0, KEY_QUERY_VALUE, &hKey);
+   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, mimeDatabaseKey.get(), 0, KEY_QUERY_VALUE, &hKey);
    if (err == ERROR_SUCCESS)
    {
       LPBYTE pBytes = GetValueBytes( hKey, "Extension");
@@ -115,7 +115,7 @@ nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFile
    nsCAutoString command ("Software\\Netscape\\Netscape Navigator\\Suffixes");
    nsresult rv = NS_OK;
    HKEY hKey;
-   LONG err = ::RegOpenKeyEx( HKEY_CURRENT_USER, command, 0, KEY_QUERY_VALUE, &hKey);
+   LONG err = ::RegOpenKeyEx( HKEY_CURRENT_USER, command.get(), 0, KEY_QUERY_VALUE, &hKey);
    if (err == ERROR_SUCCESS)
    {
       LPBYTE pBytes = GetValueBytes( hKey, aMimeType);
@@ -296,7 +296,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
 
   // o.t. try to get an entry from the windows registry.
    HKEY hKey;
-   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse, 0, KEY_QUERY_VALUE, &hKey);
+   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
    if (err == ERROR_SUCCESS)
    {
       LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
@@ -367,7 +367,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMI
 
   // now look up based on the file extension.
   if (!fileExtension.IsEmpty())
-    return GetFromExtension(fileExtension, _retval);
+    return GetFromExtension(fileExtension.get(), _retval);
   else
    rv = NS_ERROR_FAILURE;
 

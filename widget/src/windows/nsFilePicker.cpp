@@ -230,7 +230,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
       NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-      file->InitWithPath(mFile);
+      file->InitWithPath(mFile.get());
 
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
@@ -258,7 +258,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  file->InitWithPath(mFile);
+  file->InitWithPath(mFile.get());
 
   NS_ADDREF(*aFile = file);
 
@@ -270,7 +270,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-  file->InitWithPath(mFile);
+  file->InitWithPath(mFile.get());
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), file);

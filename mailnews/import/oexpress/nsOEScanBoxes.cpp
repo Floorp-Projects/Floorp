@@ -110,7 +110,7 @@ PRBool nsOEScanBoxes::Find50Mail( nsIFileSpec *pWhere)
 			key += (const char *)pBytes;
 			nsOERegUtil::FreeValueBytes( pBytes);
 			key += "\\Software\\Microsoft\\Outlook Express\\5.0";
-			if (::RegOpenKeyEx( HKEY_CURRENT_USER, key, 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
+			if (::RegOpenKeyEx( HKEY_CURRENT_USER, key.get(), 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
 				pBytes = nsOERegUtil::GetValueBytes( sKey, "Store Root");
 				if (pBytes) {
 					pWhere->SetNativePath((char *)pBytes);
@@ -722,7 +722,7 @@ void nsOEScanBoxes::BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PR
 			if (pBox->fileName.Length() > 0) {
 				pID->GetFileSpec( &file);
 				file->FromFileSpec( root);
-				file->AppendRelativeUnixPath( (const char *)pBox->fileName);
+				file->AppendRelativeUnixPath( pBox->fileName.get());
 				size = 0;
 				file->GetFileSize( &size);
 				pID->SetSize( size);

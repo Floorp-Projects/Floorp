@@ -92,11 +92,11 @@ public:
 
 	// Retrieve info for message
 	BOOL		BodyIsHtml( void) { return( m_bodyIsHtml);}
-	const char *GetFromLine( int& len) { if (m_fromLine.IsEmpty()) return( NULL); else { len = m_fromLine.Length(); return( (const char *)m_fromLine);}}
-	const char *GetHeaders( int& len) { if (m_headers.IsEmpty()) return( NULL); else { len = m_headers.Length(); return( (const char *)m_headers);}}
-	const char *GetBody( int& len) { if (m_body.IsEmpty()) return( NULL); else { len = m_body.Length(); return( (const char *)m_body);}}
-	const char *GetBody( void) { return( (const char *)m_body);}
-	const char *GetHeaders( void) { return( (const char *)m_headers);}
+	const char *GetFromLine( int& len) { if (m_fromLine.IsEmpty()) return( NULL); else { len = m_fromLine.Length(); return( m_fromLine.get());}}
+	const char *GetHeaders( int& len) { if (m_headers.IsEmpty()) return( NULL); else { len = m_headers.Length(); return( m_headers.get());}}
+	const char *GetBody( int& len) { if (m_body.IsEmpty()) return( NULL); else { len = m_body.Length(); return( m_body.get());}}
+	const char *GetBody( void) { return( m_body.get());}
+	const char *GetHeaders( void) { return( m_headers.get());}
 	PRInt32		GetBodyLen( void) { return( m_body.Length());}
 	PRInt32		GetHeaderLen( void) { return( m_headers.Length());}
 
@@ -104,14 +104,14 @@ public:
 	BOOL		IsMultipart( void);
 	BOOL		HasContentHeader( void) { return( !m_mimeContentType.IsEmpty());}
 	BOOL		HasMimeVersion( void) { return( m_bMimeVersion);}
-	const char *GetMimeContent( void) { return( (const char *)m_mimeContentType);}
-	const char *GetMimeBoundary( void) { return( (const char *)m_mimeBoundary);}
+	const char *GetMimeContent( void) { return( m_mimeContentType.get());}
+	const char *GetMimeBoundary( void) { return( m_mimeBoundary.get());}
 	void		GenerateBoundary( void);
 
 	BOOL		GetAttachFileLoc( nsIFileSpec *pLoc);
 
-	const char *GetMimeType( void) { return( (const char *) m_attachMimeType);}
-	const char *GetFileName( void) { return( (const char *) m_attachFileName);}
+	const char *GetMimeType( void) { return( m_attachMimeType.get());}
+	const char *GetFileName( void) { return( m_attachFileName.get());}
 
 protected:
 	BOOL		IterateAttachTable( void);

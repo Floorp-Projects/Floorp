@@ -139,7 +139,7 @@ NS_IMETHODIMP nsAbOutlookDirFactory::CreateDirectory(PRUint32 aNbProperties,
         buildAbWinUri(kOutlookDirectoryScheme, abType, uri) ;
         uri.Append(entryId) ;
         
-        retCode = rdf->GetResource(uri, getter_AddRefs(resource)) ;
+        retCode = rdf->GetResource(uri.get(), getter_AddRefs(resource)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
         directories->AppendElement(resource) ;
     }

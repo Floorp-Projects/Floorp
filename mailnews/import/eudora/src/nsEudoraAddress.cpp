@@ -536,22 +536,22 @@ void DumpAliasArray( nsVoidArray& a)
 	IMPORT_LOG1( "Alias list size: %ld\n", cnt);
 	for (PRInt32 i = 0; i < cnt; i++) {
 		pEntry = (CAliasEntry *)a.ElementAt( i);
-		IMPORT_LOG1( "\tAlias: %s\n", (const char *)pEntry->m_name);
+		IMPORT_LOG1( "\tAlias: %s\n", pEntry->m_name.get());
 		if (pEntry->m_list.Count() > 1) {
 			IMPORT_LOG1( "\tList count #%ld\n", pEntry->m_list.Count());
 			for (PRInt32 j = 0; j < pEntry->m_list.Count(); j++) {
 				pData = (CAliasData *) pEntry->m_list.ElementAt( j);
 				IMPORT_LOG0( "\t\t--------\n");
-				IMPORT_LOG1( "\t\temail: %s\n", (const char *)pData->m_email);
-				IMPORT_LOG1( "\t\trealName: %s\n", (const char *)pData->m_realName);
-				IMPORT_LOG1( "\t\tnickName: %s\n", (const char *)pData->m_nickName);
+				IMPORT_LOG1( "\t\temail: %s\n", pData->m_email.get());
+				IMPORT_LOG1( "\t\trealName: %s\n", pData->m_realName.get());
+				IMPORT_LOG1( "\t\tnickName: %s\n", pData->m_nickName.get());
 			}
 		}
 		else {
 			pData = (CAliasData *) pEntry->m_list.ElementAt( 0);
-			IMPORT_LOG1( "\t\temail: %s\n", (const char *)pData->m_email);
-			IMPORT_LOG1( "\t\trealName: %s\n", (const char *)pData->m_realName);
-			IMPORT_LOG1( "\t\tnickName: %s\n", (const char *)pData->m_nickName);
+			IMPORT_LOG1( "\t\temail: %s\n", pData->m_email.get());
+			IMPORT_LOG1( "\t\trealName: %s\n", pData->m_realName.get());
+			IMPORT_LOG1( "\t\tnickName: %s\n", pData->m_nickName.get());
 		}	
 	}
 }
@@ -563,7 +563,7 @@ CAliasEntry *nsEudoraAddress::ResolveAlias( nsCString& name)
 	CAliasEntry *pEntry;
 	for (PRInt32 i = 0; i < max; i++) {
 		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
-		if (!name.CompareWithConversion( pEntry->m_name, PR_TRUE))
+		if (!name.CompareWithConversion( pEntry->m_name.get(), PR_TRUE))
 			return( pEntry);
 	}
 	
@@ -583,7 +583,7 @@ void nsEudoraAddress::ResolveEntries( nsCString& name, nsVoidArray& list, nsVoid
 	for (i = 0; i < max; i++) {
 		pData = (CAliasData *)list.ElementAt( i);
 		// resolve the email to an existing alias!
-		if (name.CompareWithConversion( (const char *)pData->m_email, PR_TRUE) && ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
+		if (name.CompareWithConversion( pData->m_email.get(), PR_TRUE) && ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
 			// This new entry has all of the entries for this puppie.
 			// Resolve all of it's entries!
 			ResolveEntries( pEntry->m_name, pEntry->m_list, result);

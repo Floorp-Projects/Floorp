@@ -298,7 +298,7 @@ BOOL CMapiMessage::GetAttachFileLoc( nsIFileSpec * pLoc)
 {
 	if (m_attachPath.IsEmpty())
 		return( FALSE);
-	pLoc->SetNativePath( (const char *) m_attachPath);
+	pLoc->SetNativePath( m_attachPath.get());
 	m_ownsAttachFile = FALSE;
 	return( TRUE);
 }
@@ -416,7 +416,7 @@ void CMapiMessage::ProcessHeaders( void)
 	m_bHasFrom = FALSE;
 	m_bHasDate = FALSE;
 
-	PC_S8		pChar = (PC_S8) m_headers;
+	PC_S8		pChar = (PC_S8) m_headers.get();
 	int			start = 0;
 	int			len = 0;
 	nsCString	line;
@@ -577,7 +577,7 @@ BOOL CMapiMessage::IterateAttachTable( void)
 void CMapiMessage::ClearTempAttachFile( void)
 {
 	if (m_ownsAttachFile && !m_attachPath.IsEmpty()) {
-		nsFileSpec	spec( (const char *)m_attachPath);
+		nsFileSpec	spec( m_attachPath.get());
 		spec.Delete( PR_FALSE);
 	}
 	m_ownsAttachFile = FALSE;	
@@ -642,7 +642,7 @@ BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 		lpAttachStream->Release();
 	lpStreamFile->Release();
 	if (!bResult) {
-		nsFileSpec	spec( (const char *)m_attachPath);
+		nsFileSpec	spec( m_attachPath.get());
 		spec.Delete( PR_FALSE);
 	}
 	else

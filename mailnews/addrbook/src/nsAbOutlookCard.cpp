@@ -197,7 +197,7 @@ nsresult nsAbOutlookCard::Init(const char *aUri)
         if (cardType == MAPI_DISTLIST) {
             buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, normalChars) ;
             normalChars.Append(entry) ;
-            SetMailListURI(normalChars) ;
+            SetMailListURI(normalChars.get()) ;
         }
     }
     nsAutoString unichar ;

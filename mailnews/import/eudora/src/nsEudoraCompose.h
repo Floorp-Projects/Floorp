@@ -129,7 +129,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		ConvertSysToUnicode( hVal, val);
+		ConvertSysToUnicode( hVal.get(), val);
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);

@@ -196,7 +196,7 @@ HKEY OESettings::Find50Key( void)
 			key += (const char *)pBytes;
 			nsOERegUtil::FreeValueBytes( pBytes);
 			key += "\\Software\\Microsoft\\Outlook Express\\5.0";
-			if (::RegOpenKeyEx( HKEY_CURRENT_USER, key, 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
+			if (::RegOpenKeyEx( HKEY_CURRENT_USER, key.get(), 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
 				return( sKey);
 			}
 		}

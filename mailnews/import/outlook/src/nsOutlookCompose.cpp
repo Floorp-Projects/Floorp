@@ -844,7 +844,7 @@ nsresult nsOutlookCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec
 	}
 	
 	PRInt32 written;
-	rv = pDst->Write( fromLine, fromLine.Length(), &written);
+	rv = pDst->Write( fromLine.get(), fromLine.Length(), &written);
 
 	// well, isn't this a hoot!
 	// Read the headers from the new message, get the ones we like
@@ -990,28 +990,28 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 
 	do {
 		GetNthHeader( m_pHeaders, m_headerLen, n, header, val, PR_FALSE);
-		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header, val, PR_FALSE);
+		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header.get(), val, PR_FALSE);
 		if (header.Length()) {
-			if ((specialHeader = IsSpecialHeader( header)) != -1) {
+			if ((specialHeader = IsSpecialHeader( header.get())) != -1) {
 				header.Append( ':');
-				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header, val, PR_FALSE);
+				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
 				header.Truncate( header.Length() - 1);
 				specials[specialHeader] = PR_TRUE;
 			}
-			else if (IsReplaceHeader( header)) {
+			else if (IsReplaceHeader( header.get())) {
 				replaceVal.Truncate( 0);
 				header.Append( ':');
-				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header, replaceVal, PR_FALSE);
+				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), replaceVal, PR_FALSE);
 				header.Truncate( header.Length() - 1);
 				if (replaceVal.Length())
 					val = replaceVal;
 			}
 			if (val.Length()) {
-				rv = pDst->Write( (const char *)header, header.Length(), &written);
+				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);
 				if (NS_SUCCEEDED( rv))
-					rv = pDst->Write( (const char *)val, val.Length(), &written);
+					rv = pDst->Write( val.get(), val.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( "\x0D\x0A", 2, &written);
 
@@ -1024,14 +1024,14 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 		if (!specials[i]) {
 			header = gSpecialHeaders[i];
 			header.Append( ':');
-			GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header, val, PR_FALSE);
+			GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
 			header.Truncate( header.Length() - 1);
 			if (val.Length()) {
-				rv = pDst->Write( (const char *)header, header.Length(), &written);
+				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);
 				if (NS_SUCCEEDED( rv))
-					rv = pDst->Write( (const char *)val, val.Length(), &written);
+					rv = pDst->Write( val.get(), val.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( "\x0D\x0A", 2, &written);
 			}

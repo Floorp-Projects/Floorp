@@ -82,7 +82,7 @@ BOOL CMimeTypes::GetMimeTypeFromReg( const nsCString& ext, LPBYTE *ppBytes)
 
 
 	*ppBytes = NULL;
-	if (GetKey( HKEY_CLASSES_ROOT, ext, &extensionKey)) {
+	if (GetKey( HKEY_CLASSES_ROOT, ext.get(), &extensionKey)) {
 		result = GetValueBytes( extensionKey, "Content Type", ppBytes);
 		RegCloseKey( extensionKey);
 	}

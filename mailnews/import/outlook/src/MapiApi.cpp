@@ -1164,7 +1164,7 @@ BOOL CMapiApi::GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsString& va
 {
 	nsCString	result;
 	if (GetLargeStringProperty( pProp, tag, result)) {
-		CStrToUnicode( result, val);
+		CStrToUnicode( result.get(), val);
 		return( TRUE);
 	}
 
