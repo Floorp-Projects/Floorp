@@ -251,7 +251,7 @@ nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
   PRInt32 initialHeight = 100, initialWidth = 100;
-#if XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   const char* hiddenWindowURL = "chrome://global/content/hiddenWindow.xul";
   PRUint32    chromeMask = 0;
 #else
@@ -270,7 +270,7 @@ nsAppShellService::CreateHiddenWindow()
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
 
-#if XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       // hide the hidden window by launching it into outer space. This
       // way, we can keep it visible and let the OS send it activates
       // to keep menus happy. This will cause it to show up in window
@@ -514,7 +514,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       zlevel = nsIXULWindow::raisedZ;
     else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
       zlevel = nsIXULWindow::loweredZ;
-#ifdef XP_MAC
+#ifdef defined(XP_MAC) || defined(XP_MACOSX)
     /* Platforms on which modal windows are always application-modal, not
        window-modal (that's just the Mac, right?) want modal windows to
        be stacked on top of everyone else. */
@@ -712,7 +712,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 
   if (!windowsRemain) {
       
-#if XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     // if no hidden window is available (perhaps due to initial
     // Profile Manager window being cancelled), then just quit. We don't have
     // to worry about focussing the hidden window, because it will get activated

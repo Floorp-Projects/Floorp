@@ -323,7 +323,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
 
   //#59405, on windows and unix, the coordinate for IME need to be view (nearest native window) related.
   if (aRelativeToType == eIMECoordinates)
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
    aRelativeToType = eTopLevelWindowCoordinates; 
 #else
    aRelativeToType = eRenderingViewCoordinates; 

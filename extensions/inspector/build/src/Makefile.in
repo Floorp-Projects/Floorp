@@ -54,6 +54,8 @@ CPPSRCS 	= \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../base/src
 
+# Linking against a part of another library is evil.  It also currently
+# prevents building on Mac OS X (DARWIN).
 EXTRA_DSO_LIBS = rdfutil_s gkgfx gkconshared_s
 
 SHARED_LIBRARY_LIBS = \

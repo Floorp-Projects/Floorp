@@ -108,7 +108,7 @@ void nsMenuBarListener::InitAccessKey()
 
   // Compiled-in defaults, in case we can't get LookAndFeel --
   // mac doesn't have menu shortcuts, other platforms use alt.
-#ifndef XP_MAC
+#if !(defined(XP_MAC) || defined(XP_MACOSX))
   mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
 #else
   mAccessKey = 0;

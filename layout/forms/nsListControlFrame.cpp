@@ -1318,7 +1318,7 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
   PRBool isShift;
   PRBool isControl;
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   mouseEvent->GetMetaKey(&isControl);
 #else
   mouseEvent->GetCtrlKey(&isControl);
@@ -2229,12 +2229,12 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDispl
     widgetData.mWindowType  = eWindowType_popup;
     widgetData.mBorderStyle = eBorderStyle_default;
     
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
     aView->CreateWidget(kCPopUpCID, &widgetData, nsnull);
 #else
-   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-   aView->CreateWidget(kCChildCID, &widgetData, nsnull);
+    static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
+    aView->CreateWidget(kCChildCID, &widgetData, nsnull);
 #endif   
     return NS_OK;
   } else {
