@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -1456,7 +1457,7 @@ nsGlobalHistory::Init()
 
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::GetIID(),
+                                      NS_GET_IID(nsIRDFService),
                                       (nsISupports**) &gRDFService);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -1935,7 +1936,7 @@ nsGlobalHistoryModule::GetClassObject(nsIComponentManager *aCompMgr,
       // one.
       rv = aCompMgr->CreateInstance(kGenericFactoryCID,
                                     nsnull,
-                                    nsIGenericFactory::GetIID(),
+                                    NS_GET_IID(nsIGenericFactory),
                                     getter_AddRefs(mFactory));
 
       if (NS_FAILED(rv)) return rv;
@@ -2031,7 +2032,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     }
 
     // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
     if (NS_FAILED(rv)) {
         delete m;
         m = nsnull;
