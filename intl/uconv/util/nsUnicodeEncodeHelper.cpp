@@ -59,6 +59,10 @@ public:
   NS_IMETHOD ConvertByTables(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
+
+  NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
+      char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
+      uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
 };
 
 //----------------------------------------------------------------------
@@ -118,13 +122,28 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTable(const PRUnichar * aSrc,
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTables(const PRUnichar * aSrc, 
-                                                    PRInt32 * aSrcLength, 
-                                                    char * aDest, 
-                                                    PRInt32 * aDestLength, 
-                                                    PRInt32 aTableCount, 
-                                                    uShiftTable ** aShiftTable, 
-                                                    uMappingTable  ** aMappingTable)
+NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTables(
+                                     const PRUnichar * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     char * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     PRInt32 aTableCount, 
+                                     uShiftTable ** aShiftTable, 
+                                     uMappingTable  ** aMappingTable)
+{
+  // XXX deprecated
+  return ConvertByMultiTable(aSrc, aSrcLength, aDest, aDestLength, aTableCount,
+      aShiftTable, aMappingTable);
+}
+
+NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByMultiTable(
+                                     const PRUnichar * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     char * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     PRInt32 aTableCount, 
+                                     uShiftTable ** aShiftTable, 
+                                     uMappingTable  ** aMappingTable)
 {
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
