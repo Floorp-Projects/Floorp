@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.29 2001/01/22 09:39:55 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.30 2001/01/22 15:53:06 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.29 $ $Date: 2001/01/22 09:39:55 $
+ * @version $Revision: 1.30 $ $Date: 2001/01/22 15:53:06 $
 **/
 
 /**
@@ -1069,7 +1069,7 @@ void XSLTProcessor::processAction
 #ifdef MOZ_XSL
                         // XXX (pvdb) Check if we need to set a new default namespace?
                         String nameSpaceURI;
-                        ps->getNameSpaceURI(name, nameSpaceURI);
+                        ps->getResultNameSpaceURI(name, nameSpaceURI);
                         // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
                         if (ps->getOutputFormat()->isHTMLOutput()) {
                             name.toLowerCase();
@@ -1318,7 +1318,7 @@ void XSLTProcessor::processAction
                 }
 
                 String nameSpaceURI;
-                ps->getNameSpaceURI(nodeName, nameSpaceURI);
+                ps->getResultNameSpaceURI(nodeName, nameSpaceURI);
                 // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
                 if (ps->getOutputFormat()->isHTMLOutput()) {
                     nodeName.toLowerCase();
