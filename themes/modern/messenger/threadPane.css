@@ -283,7 +283,7 @@ outlinerchildren:-moz-outliner-image(subjectCol, news, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }
 
-outlinerchildren:-moz-outliner-image(subjectCol, news, attach) {
+outlinerchildren:-moz-outliner-image(subjectCol, news, new, attach) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/message-news-new-attach.gif");
 }
