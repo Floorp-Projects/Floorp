@@ -21,6 +21,10 @@
 
 nsIAtom* nsCSSAtoms::activePseudo;
 
+nsIAtom* nsCSSAtoms::disabledPseudo;
+
+nsIAtom* nsCSSAtoms::enabledPseudo;
+
 nsIAtom* nsCSSAtoms::firstChildPseudo;
 nsIAtom* nsCSSAtoms::focusPseudo;
 
@@ -30,6 +34,9 @@ nsIAtom* nsCSSAtoms::langPseudo;
 nsIAtom* nsCSSAtoms::linkPseudo;
 
 nsIAtom* nsCSSAtoms::outOfDatePseudo;
+
+nsIAtom* nsCSSAtoms::selectedPseudo;
+nsIAtom* nsCSSAtoms::selectionPseudo;
 
 nsIAtom* nsCSSAtoms::universalSelector;
 
@@ -43,6 +50,10 @@ void nsCSSAtoms::AddrefAtoms()
   if (0 == gRefCnt) {
     activePseudo = NS_NewAtom(":active");
 
+    disabledPseudo = NS_NewAtom(":disabled");
+
+    enabledPseudo = NS_NewAtom(":enabled");
+
     firstChildPseudo = NS_NewAtom(":first-child");
     focusPseudo = NS_NewAtom(":focus");
 
@@ -52,6 +63,9 @@ void nsCSSAtoms::AddrefAtoms()
     linkPseudo = NS_NewAtom(":link");
 
     outOfDatePseudo = NS_NewAtom(":out-of-date");
+
+    selectedPseudo = NS_NewAtom(":selected");
+    selectionPseudo = NS_NewAtom(":selection");
 
     universalSelector = NS_NewAtom("*");
 
@@ -66,6 +80,10 @@ void nsCSSAtoms::ReleaseAtoms()
   if (--gRefCnt == 0) {
     NS_RELEASE(activePseudo);
 
+    NS_RELEASE(disabledPseudo);
+
+    NS_RELEASE(enabledPseudo);
+
     NS_RELEASE(firstChildPseudo);
     NS_RELEASE(focusPseudo);
 
@@ -77,6 +95,9 @@ void nsCSSAtoms::ReleaseAtoms()
     NS_RELEASE(outOfDatePseudo);
 
     NS_RELEASE(universalSelector);
+
+    NS_RELEASE(selectedPseudo);
+    NS_RELEASE(selectionPseudo);
 
     NS_RELEASE(visitedPseudo);
   }
