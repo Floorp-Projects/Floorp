@@ -323,7 +323,6 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-	//END DEBUGGING
 	nsresult folderOpen;
 	if(!NS_SUCCEEDED(folderOpen = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_FALSE)) &&
 			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
@@ -335,8 +334,6 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 	if(mMailDatabase)
 	{
-		//if(strcmp(path.GetLeafName(), "test3") != 0)
-		//	return mMailDatabase->EnumerateMessages(result);
 
 		mMailDatabase->AddListener(this);
 
@@ -1020,7 +1017,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * 
 }
 
 //nsICopyMessageListener
-NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy()
+NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
 {
 
 	PRBool isLocked;
@@ -1038,6 +1035,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy()
 	//Before we continue we should verify that there is enough diskspace.
 	//XXX How do we do this?
 	mCopyState->fileStream = new nsOutputFileStream(path, PR_WRONLY | PR_CREATE_FILE);
+	//The new key is the end of the file
+	mCopyState->fileStream->seek(PR_SEEK_END, 0);
+	mCopyState->dstKey = mCopyState->fileStream->tell();
+
+	mCopyState->message = message;
+	if(mCopyState->message)	
+		mCopyState->message->AddRef();
 	return NS_OK;
 }
 
@@ -1068,17 +1072,31 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy()
+NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
-	mCopyState->fileStream->close();
-	delete mCopyState->fileStream;
+	//Copy the header to the new database
+	if(copySucceeded && mCopyState->message)
+	{
+		nsIMessage *newHdr;
+		mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, mCopyState->message, &newHdr);
+		NS_IF_RELEASE(newHdr);
+	}
+
+	if(mCopyState->fileStream)
+	{
+		mCopyState->fileStream->close();
+		delete mCopyState->fileStream;
+	}
+	
+	if(mCopyState->message)
+		mCopyState->message->Release();
 	delete mCopyState;
 	mCopyState = nsnull;
 
 	//we finished the copy so someone else can write to us.
 	PRBool haveSemaphore;
 	nsresult rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &haveSemaphore);
-	if(rv && haveSemaphore)
+	if(NS_SUCCEEDED(rv) && haveSemaphore)
 		ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
 
 	return NS_OK;

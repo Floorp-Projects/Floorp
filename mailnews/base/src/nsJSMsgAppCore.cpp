@@ -451,7 +451,7 @@ static nsresult CopyMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 									argv[2]);
 
 		
-    if (!rBool || NS_OK != nativeThis->CopyMessages(srcFolder, dstFolder, messages, PR_FALSE)) {
+    if (!rBool || NS_OK != nativeThis->CopyMessages(srcFolder, dstFolder, messages, isMove)) {
       return NS_ERROR_FAILURE;
     }
 

@@ -164,7 +164,8 @@
       </menu>
       <menuitem name="Edit Message as New" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="Move Message" datasources="rdf:mailnews" id="mailbox:/" open="true">
+      <menu name="Move Message" datasources="rdf:mailnews" id="mailbox:/" open="true"
+			onclick="MsgMoveMessage(event.target)">
       </menu>
       <menu name="Copy Message" datasources="rdf:mailnews" id="mailbox:/" open="true"
 			onclick="MsgCopyMessage(event.target)">

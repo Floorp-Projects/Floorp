@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIInputStream.h" /* interface nsIInputStream */
+#include "nsIMessage.h" /* interface nsIMessage */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -27,14 +28,14 @@ class nsICopyMessageListener : public nsISupports {
     return iid;
   }
 
-  /* void BeginCopy (); */
-  NS_IMETHOD BeginCopy() = 0;
+  /* void BeginCopy (in nsIMessage message); */
+  NS_IMETHOD BeginCopy(nsIMessage *message) = 0;
 
   /* void CopyData (in nsIInputStream aIStream, in long aLength); */
   NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength) = 0;
 
-  /* void EndCopy (); */
-  NS_IMETHOD EndCopy() = 0;
+  /* void EndCopy (in boolean copySucceeded); */
+  NS_IMETHOD EndCopy(PRBool copySucceeded) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

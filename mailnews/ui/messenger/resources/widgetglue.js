@@ -204,7 +204,6 @@ function MsgPreviousFlaggedMessage() {}
 function MsgGoBack() {}
 function MsgGoForward() {}
 function MsgEditMessageAsNew() {}
-function MsgMoveMessage() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 function MsgMarkMsgAsRead() {}

@@ -34,6 +34,8 @@
 
 typedef struct {
 	nsOutputFileStream *fileStream;
+	nsIMessage *message;
+	nsMsgKey dstKey;
 } nsLocalMailCopyState;
 
 class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder,
@@ -124,9 +126,9 @@ public:
 	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
 
 	//nsICopyMessageListener
-	NS_IMETHOD BeginCopy();
+	NS_IMETHOD BeginCopy(nsIMessage *message);
 	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
-	NS_IMETHOD EndCopy();
+	NS_IMETHOD EndCopy(PRBool copySucceeded);
 
 
 protected:
