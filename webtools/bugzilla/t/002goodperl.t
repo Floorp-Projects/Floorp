@@ -107,7 +107,7 @@ foreach my $file (@testitems) {
     my $lineno = 0;
     my $error = 0;
     
-    while (my $file_line = <FILE>) {
+    while (!$error && (my $file_line = <FILE>)) {
         $lineno++;
         if ($file_line =~ /Throw.*Error\("(.*?)"/) {
             if ($1 =~ /\s/) {
