@@ -8,6 +8,7 @@ use Getopt::Long;
 
 $showhelp = 0;
 $verbose = 0;
+$nodefaults = 0;
 $appname = "Gecko public header list generator";
 
 # Configuration
@@ -22,17 +23,23 @@ else {
 }
 
 GetOptions('verbose!' => \$verbose,
+	   'nodefaults' => \$nodefaults,
            'mozpath=s' => \$moz,
 	   'deptool=s' => \$makedepexe,
+	   'include=s' => \@cmd_incs,
+	   'dir=s' => \@cmd_dirs,
 	   'help' => \$showhelp);
 
 if ($showhelp) {
   print STDERR "$appname\n",
                "Usage:\n",
-	       "--help            Show this help\n",
+               "--help            Show this help\n",
                "--verbose         Print out more information\n",
-	       "--mozpath <path>  Specify the path to Mozilla\n",
-	       "--deptool <exe>   Specify the dependency tool path\n";
+               "--nodefaults      Don't use the default include and directory settings\n",
+               "--mozsrc  <path>  Specify the path to Mozilla source code (e.g. /usr/src/mozilla)\n",
+               "--deptool <exe>   Specify the dependency tool path\n",
+               "--include <path>  Add an include path\n",
+               "--dir     <path>  Add a directory to be inspected\n";
   exit 1;
 }
 
@@ -40,27 +47,43 @@ print STDERR "$appname\n",
              "Path to mozilla is \"$moz\"\n",
              "Dependency tool is \"$makedepexe\"\n" unless !$verbose;
 
-# List of Mozilla include directories
-@incdirs = (
+# List of default include directories
+@default_incs = (
   "$moz/dist/include/nspr",
   "$moz/dist/include",
 );
 
-# List of embedding sample/wrapper app directories
-%embeddirs = (
-  "winEmbed", "$moz/embedding/tests/winEmbed",
-  "mfcEmbed", "$moz/embedding/tests/mfcembed",
-  "gtkEmbed", "$moz/embedding/tests/gtkEmbed",
-  "activex", "$moz/embedding/browser/activex/src/control",
-  "powerplant", "$moz/embedding/browser/powerplant/source",
-  "gtk", "$moz/embedding/browser/gtk/src"
+# List of default directories to analyze
+@default_dirs = (
+  "$moz/embedding/tests/winEmbed",
+  "$moz/embedding/tests/mfcembed",
+  "$moz/embedding/tests/gtkEmbed",
+  "$moz/embedding/browser/activex/src/control",
+  "$moz/embedding/browser/powerplant/source",
+  "$moz/embedding/browser/gtk/src"
 );
 
 @deps = ();
 
+if ($nodefaults) {
+  @incs = ( @cmd_incs );
+  @dirs = ( @cmd_dirs );
+}
+else {
+  @incs = ( @default_incs, @cmd_incs );
+  @dirs = ( @default_dirs, @cmd_dirs );
+}
+
+if ($verbose) {
+  print "Include paths:\n";
+  foreach $inc (@incs) {
+    print "  ", $inc, "\n";
+  }
+}
+
 # Analyze each embedding project in turn
-while (($prjname,$prjpath) = each %embeddirs) {
-  makedep($prjname, $prjpath);
+foreach $dir (@dirs) {
+  makedep($dir);
 }
 
 # Remove duplicate dependencies & sort alphabetically
@@ -71,7 +94,7 @@ $prev = 'nonesuch';
 foreach $h (@out) {
   $printinfo{$h} = 0;
 }
-foreach $i (@incdirs) {
+foreach $i (@incs) {
   $i =~ s/\\/\//g; # Back slash to forward slash
   foreach $h (@out) {
     # Compare lowercase portion of header to include dir
@@ -86,23 +109,23 @@ foreach $i (@incdirs) {
 }
 
 sub makedep {
-  my($prjname, $prjpath) = @_;
+  my($dir) = @_;
 
-  print STDERR "Analyzing dependencies for $prjname ...\n" unless !$verbose;
+  print STDERR "Analyzing dependencies for \"$dir\" ...\n" unless !$verbose;
 
-  chdir $prjpath
-    or die "Cannot change directory to \"$prjpath\"";
+  chdir $dir
+    or die "Cannot change directory to \"$dir\"";
 
   # Search for .c, .cpp and .h files
   opendir(THISDIR, ".")
-    or die "Cannot open directory \"$prjpath\"";
+    or die "Cannot open directory \"$dir\"";
   @srcfiles = grep(/\.(cpp|c|h)$/i, readdir(THISDIR));
   closedir(THISDIR);
 
   # Construct the arguments for the dependency tool
   if ($win32) {
     @args = ($makedepexe);
-    foreach $inc (@incdirs) {
+    foreach $inc (@incs) {
       push(@args, "-I$inc");
     }
     foreach $src (@srcfiles) {
@@ -113,7 +136,7 @@ sub makedep {
     @args = ($makedepexe);
     push(@args, "-f-"); # To stdout
     push(@args, "-w1"); # width = 1 forces one dependency per line
-    foreach $inc (@incdirs) {
+    foreach $inc (@incs) {
       push(@args, "-I$inc");
     }
     foreach $src (@srcfiles) {
@@ -134,7 +157,7 @@ sub makedep {
 
   # Filter out all lines not containing ".h"
   while (<DATA>) {
-    foreach $inc (@incdirs) {
+    foreach $inc (@incs) {
       if (/\.h/i) {
         # Remove whitespace and trailing backslash, newline
         chomp;
