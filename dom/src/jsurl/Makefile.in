@@ -17,22 +17,22 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsurl
 LIBRARY_NAME	= jsurl
 
-CSRCS		= \
-	mkmocha.c	\
+CPPSRCS = \
+	jsurl.cpp	\
 	$(NULL)
 
 EXPORTS= $(srcdir)/jsurl.h
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl \
-	security layer img httpurl lay parse style
+REQUIRES	= network dbm util pref js java fileurl \
+	security layer img httpurl lay parse style dom raptor netlib xpcom
 
 include $(topsrcdir)/config/rules.mk
 

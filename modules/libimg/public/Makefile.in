@@ -50,11 +50,14 @@ EXPORTS		= il_types.h \
 		  ilINetReader.h \
 		  ilIURL.h \
 		  dummy_nc.h \
+		  $(NULL)
+endif
+
+EXPORTS		+= \
 		  $(JMC_GEN_DIR)/MIMGCBIF.h \
 		  $(JMC_GEN_DIR)/MIMGCB.h \
 		  $(JMC_GEN_DIR)/MPSIMGCB.h \
 		  $(NULL)
-endif
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 

@@ -27,14 +27,12 @@ CPPSRCS		= RegFactory.cpp TestFactory.cpp
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG
-INCLUDES	= -I$(srcdir)/../public -I$(DIST)/include
+DEFINES		+= -DUSE_NSREG
+INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
 
 EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
 		  $(NULL)
-
-OS_LIBS		+= $(NSPR_LIBS)
 
 PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
@@ -43,11 +41,11 @@ TARGETS		= $(PROGS)
 ifeq ($(OS_ARCH),Rhapsody)
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
 else
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
 endif
 
 install:: $(PROGS)
