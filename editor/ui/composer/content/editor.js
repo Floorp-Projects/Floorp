@@ -51,7 +51,6 @@ const kDisplayModeSource = 2;
 const kDisplayModePreview = 3;
 const kDisplayModeMenuIDs = ["viewNormalMode", "viewAllTagsMode", "viewSourceMode", "viewPreviewMode"];
 const kDisplayModeTabIDS = ["NormalModeButton", "TagModeButton", "SourceModeButton", "PreviewModeButton"];
-const kBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
@@ -367,9 +366,6 @@ var gEditorDocumentObserver =
 
         try {
           editor.QueryInterface(nsIEditorStyleSheets);
-
-          // Add the base sheets for editor cursor etc.
-          editor.addOverrideStyleSheet(kBaseEditorStyleSheet);
 
           //  and extra styles for showing anchors, table borders, smileys, etc
           editor.addOverrideStyleSheet(kNormalStyleSheet);
