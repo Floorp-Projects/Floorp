@@ -103,6 +103,9 @@
 #include "prtime.h"
 #include "prlong.h"
 
+// SubShell map
+#include "nsDST.h"
+
 // local management of the style watch:
 //  aCtlValue should be set to all actions desired (bitwise OR'd together)
 //  aStyleSet cannot be null
@@ -332,6 +335,10 @@ public:
                                 nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
+  NS_IMETHOD GetSubShellFor(nsIContent*   aContent,
+                            nsISupports** aResult) const;
+  NS_IMETHOD SetSubShellFor(nsIContent*  aContent,
+                            nsISupports* aSubShell);
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
@@ -517,6 +524,9 @@ protected:
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
 
+  // subshell map
+  nsDST*            mSubShellMap;  // map of content/subshell pairs
+  nsDST::NodeArena* mDSTNodeArena; // weak link. DST owns (mSubShellMap object)
 
 #ifdef DEBUG_nisheeth
   PRInt32 mReflows;
@@ -652,6 +662,7 @@ PresShell::PresShell()
   mReflows = 0;
   mDiscardedReflowCommands = 0;
 #endif
+  mSubShellMap = nsnull;
 }
 
 NS_IMPL_ADDREF(PresShell)
@@ -705,6 +716,13 @@ PresShell::~PresShell()
 
   // Clobber weak leaks in case of re-entrancy during tear down
   mHistoryState = nsnull;
+
+  // kill subshell map, if any.  It holds only weak references
+  if (mSubShellMap)
+  {
+    delete mSubShellMap;
+    mSubShellMap = nsnull;
+  }
 
   NS_IF_RELEASE(mCurrentEventContent);
 
@@ -2780,6 +2798,57 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
     }
   }
   return result;
+}
+
+  
+NS_IMETHODIMP
+PresShell::GetSubShellFor(nsIContent*   aContent,
+                          nsISupports** aResult) const
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  if (mSubShellMap) {
+    mSubShellMap->Search(aContent, 0, (void**)aResult);
+    if (*aResult) {
+      NS_ADDREF(*aResult);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetSubShellFor(nsIContent*  aContent,
+                          nsISupports* aSubShell)
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+
+  // If aSubShell is NULL, then remove the mapping
+  if (!aSubShell) {
+    if (mSubShellMap) {
+      mSubShellMap->Remove(aContent);
+    }
+  } else {
+    // Create a new DST if necessary
+    if (!mSubShellMap) {
+      if (!mDSTNodeArena) {
+        mDSTNodeArena = nsDST::NewMemoryArena();
+        if (!mDSTNodeArena) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mSubShellMap = new nsDST(mDSTNodeArena);
+      if (!mSubShellMap) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
+    // Add a mapping to the hash table
+    mSubShellMap->Insert(aContent, (void*)aSubShell, nsnull);
+  }
+  return NS_OK;
 }
   
 
