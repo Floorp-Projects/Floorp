@@ -1553,9 +1553,11 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     initialized = TRUE;
 
     if (InstallFiles(hDlg)) {
+#if WINTEGRATION_PAGE
       if (dwSetupType == ST_RADIO0) 
         PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
       else
+#endif
         PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
 
       break;
@@ -1686,7 +1688,7 @@ BOOL InstallFiles(HWND hDlg)
   return TRUE;
 }
 
-#if 0
+#if WINTEGRATION_PAGE
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: WINTEGRATION
 //         Not actually used yet!
@@ -2069,7 +2071,7 @@ void InitSequence(HINSTANCE hInstance)
     pages[count++]        = CreatePropertySheetPage(&psp);
   }
 
-#if 0
+#if WINTEGRATION_PAGE
   // Windows Integration Page
   if (diWindowsIntegration.bShowDialog) {
     psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
