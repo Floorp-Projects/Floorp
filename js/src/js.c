@@ -842,7 +842,7 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-int
+static int
 DumpAtom(JSHashEntry *he, int i, void *arg)
 {
     FILE *fp = arg;
@@ -859,7 +859,7 @@ DumpAtom(JSHashEntry *he, int i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
-int
+static int
 DumpSymbol(JSHashEntry *he, int i, void *arg)
 {
     FILE *fp = arg;
@@ -875,7 +875,7 @@ DumpSymbol(JSHashEntry *he, int i, void *arg)
 
 extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
 
-void
+static void
 DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
 {
     JSScope *scope;
@@ -897,8 +897,8 @@ DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
 }
 
 /* These are callable from gdb. */
-void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
-void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
+static void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
+static void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 
 static JSBool
 DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
