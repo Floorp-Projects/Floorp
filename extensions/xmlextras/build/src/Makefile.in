@@ -65,7 +65,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../soap/src \
 		-I$(srcdir)/../../schema/src \
-		-I$(srcdir)/../../wsdl/src
+		-I$(srcdir)/../../wsdl/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
