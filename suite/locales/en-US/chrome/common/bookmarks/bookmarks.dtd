@@ -1,0 +1,27 @@
+<!-- extracted from ./bookmarks.xul -->
+
+<!ENTITY menu.file.label            "File">
+<!ENTITY menuitem.newWindow.label     "New Window">
+<!ENTITY menuitem.newBookmark.label   "New Bookmark">
+<!ENTITY menuitem.newFolder.label     "New Folder">
+<!ENTITY menuitem.newSeparator.label  "New Separator">
+<!ENTITY menuitem.close.label         "Close">
+<!ENTITY menu.edit.label            "Edit">
+<!ENTITY menuitem.undo.label          "Undo">
+<!ENTITY menuitem.redo.label          "Redo">
+<!ENTITY menuitem.cut.label           "Cut">
+<!ENTITY menuitem.copy.label          "Copy">
+<!ENTITY menuitem.paste.label         "Paste">
+<!ENTITY menuitem.delete.label        "Delete">
+<!ENTITY menuitem.selectAll.label     "Select All">
+<!ENTITY menuitem.find.label          "Find in Bookmarks...">
+<!ENTITY menuitem.findAgain.label     "Find Again">
+<!ENTITY menuitem.properties.label    "Bookmark Properties...">
+<!ENTITY tree.header.name.label           "Name">
+<!ENTITY tree.header.url.label            "URL">
+<!ENTITY tree.header.shortcut.label       "Shortcut URL">
+<!ENTITY tree.header.addedon.label       "Added On">
+<!ENTITY tree.header.lastmod.label       "Last Modified">
+<!ENTITY tree.header.lastvisit.label     "Last Visit">
+<!ENTITY tree.header.description.label  "Description">
+<!ENTITY bookmarksWindowTitle.label	"Bookmarks">

@@ -1,0 +1,9 @@
+<!-- extracted from ./bm-props.xul -->
+
+<!ENTITY bookmarks.title.label        "Bookmarks Properties">
+<!ENTITY bookmarks.name.label         "Name:">
+<!ENTITY bookmarks.location.label     "Location:">
+<!ENTITY bookmarks.shortcut.label     "Shortcut:">
+<!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.ok.label           "Ok">
+<!ENTITY bookmarks.cancel.label       "Cancel">

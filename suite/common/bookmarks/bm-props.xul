@@ -20,17 +20,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY bookmarks.title.label        "Bookmarks Properties">
-<!ENTITY bookmarks.name.label         "Name:">
-<!ENTITY bookmarks.location.label     "Location:">
-<!ENTITY bookmarks.shortcut.label     "Shortcut:">
-<!ENTITY bookmarks.description.label  "Description:">
-<!ENTITY bookmarks.ok.label           "Ok">
-<!ENTITY bookmarks.cancel.label       "Cancel">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/bm-props.dtd" >
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
