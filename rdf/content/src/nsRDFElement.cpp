@@ -261,6 +261,7 @@ public:
     NS_DECL_IDOMXULELEMENT
 
     // Implementation methods
+	nsresult GetIdResource(nsIRDFResource** aResult);
     nsresult GetRefResource(nsIRDFResource** aResult);
 
     nsresult EnsureContentsGenerated(void) const;
@@ -1387,10 +1388,10 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
         NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
         if (rdfdoc) {
-            // Need to do a GetResource() here, because changing the document
+            // Need to do a GetIdResource() here, because changing the document
             // may actually change the element's URI.
             nsCOMPtr<nsIRDFResource> resource;
-            GetResource(getter_AddRefs(resource));
+            GetIdResource(getter_AddRefs(resource));
 
             // Remove this element from the RDF resource-to-element map in
             // the old document.
@@ -1429,10 +1430,10 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
         NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
         if (rdfdoc) {
-            // Need to do a GetResource() here, because changing the document
+            // Need to do a GetIdResource() here, because changing the document
             // may actually change the element's URI.
             nsCOMPtr<nsIRDFResource> resource;
-            GetResource(getter_AddRefs(resource));
+            GetIdResource(getter_AddRefs(resource));
 
             // Add this element to the RDF resource-to-element map in the
             // new document.
@@ -2495,19 +2496,16 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 NS_IMETHODIMP
 RDFElementImpl::GetResource(nsIRDFResource** aResource)
 {
-    if (mAttributes) {
-        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
-            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
-            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == kIdAtom)) {
-                return gRDFService->GetUnicodeResource(attr->mValue.GetUnicode(), aResource);
-            }
-        }
-    }
+	nsresult rv;
+	rv = GetRefResource(aResource);
+	if (NS_FAILED(rv)) return rv;
 
-    // No resource associated with this element.
-    *aResource = nsnull;
-    return NS_OK;
+	if (! *aResource) {
+		rv = GetIdResource(aResource);
+		if (NS_FAILED(rv)) return rv;
+	}
+
+	return NS_OK;
 }
 
 
@@ -2542,6 +2540,25 @@ RDFElementImpl::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
+
+nsresult
+RDFElementImpl::GetIdResource(nsIRDFResource** aResource)
+{
+    if (mAttributes) {
+        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
+            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
+            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
+                (attr->mName == kIdAtom)) {
+                return gRDFService->GetUnicodeResource(attr->mValue.GetUnicode(), aResource);
+            }
+        }
+    }
+
+    // No resource associated with this element.
+    *aResource = nsnull;
+    return NS_OK;
+}
+
 
 nsresult
 RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
