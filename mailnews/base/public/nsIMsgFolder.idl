@@ -176,7 +176,9 @@ interface nsIMsgNewsFolder : nsISupports {
 interface nsIMsgImapMailFolder : nsISupports {
 
   void RemoveSubFolder(in nsIMsgFolder folder);
-  void CreateSubfolder2(in string folderName);
+  void CreateClientSubfolderInfo(in string folderName);
+  attribute boolean verifiedAsOnlineFolder;
+  attribute boolean explicitlyVerify;
 };
 
 
