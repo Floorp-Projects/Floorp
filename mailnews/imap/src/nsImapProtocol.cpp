@@ -2521,12 +2521,13 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
        PRUint32 count = 0;
        char * line = downloadLineDontDelete->adoptedMessageLine;
 	   m_channelOutputStream->Write(line, PL_strlen(line), &count);
-		if (m_imapMessageSink && downloadLineDontDelete)
-		{
-			m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
-				downloadLineDontDelete->uidOfMessage);
-		}
     }
+	else if (m_imapMessageSink && downloadLineDontDelete)
+	{
+		m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
+			downloadLineDontDelete->uidOfMessage);
+	}
+
 
     // ***** We need to handle the psuedo interrupt here *****
 }
@@ -2673,7 +2674,7 @@ void nsImapProtocol::NormalMessageEndDownload()
 			m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
 		// need to know if we're downloading for display or not.
 		if (m_imapMessageSink)
-			m_imapMessageSink->NormalEndMsgWriteStream();
+			m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());
     }
 
 }

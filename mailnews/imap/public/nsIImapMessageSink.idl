@@ -47,7 +47,7 @@ interface nsIImapMessageSink : nsISupports {
 
     void ParseAdoptedMsgLine(in string adoptedMsgLine, in nsMsgKey uidOfMsg);
     
-    void NormalEndMsgWriteStream();
+    void NormalEndMsgWriteStream(in nsMsgKey uidOfMessage);
     
     void AbortMsgWriteStream();
     

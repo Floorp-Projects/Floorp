@@ -2229,7 +2229,7 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
 }
     
 NS_IMETHODIMP
-nsImapMailFolder::NormalEndMsgWriteStream()
+nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage)
 {
 	nsresult res = NS_OK;
 	if (m_tempMessageStream)
@@ -2240,6 +2240,7 @@ nsImapMailFolder::NormalEndMsgWriteStream()
 	}
 	nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
+	m_curMsgUid = uidOfMessage;
 	res = GetMessageHeader(getter_AddRefs(msgHdr));
 	if (NS_SUCCEEDED(res))
 		msgHdr->MarkRead(PR_TRUE);
