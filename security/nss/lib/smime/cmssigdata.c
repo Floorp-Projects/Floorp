@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.11 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.12 2001/11/02 00:03:32 ddrinan%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -737,16 +737,29 @@ NSS_CMSSignedData_SetDigestValue(NSSCMSSignedData *sigd,
     SECItem *digest = NULL;
     PLArenaPool *poolp;
     void *mark;
-    int n;
+    int n, cnt;
 
     poolp = sigd->cmsg->poolp;
 
     mark = PORT_ArenaMark(poolp);
 
+   
     if (digestdata) {
+        digest = (SECItem *) PORT_ArenaZAlloc(poolp,sizeof(SECItem));
+
 	/* copy digestdata item to arena (in case we have it and are not only making room) */
 	if (SECITEM_CopyItem(poolp, digest, digestdata) != SECSuccess)
 	    goto loser;
+    }
+
+    /* now allocate one (same size as digestAlgorithms) */
+    if (sigd->digests == NULL) {
+        cnt = NSS_CMSArray_Count((void **)sigd->digestAlgorithms);
+        sigd->digests = PORT_ArenaZAlloc(sigd->cmsg->poolp, (cnt + 1) * sizeof(SECItem *));
+        if (sigd->digests == NULL) {
+	        PORT_SetError(SEC_ERROR_NO_MEMORY);
+	        return SECFailure;
+        }
     }
 
     n = -1;
