@@ -98,8 +98,9 @@ void GetCacheSession(nsIURI *aURI, nsICacheSession **_retval)
 
   nsCOMPtr<nsICacheSession> newSession;
   cacheService->CreateSession(isChrome ? "image-chrome" : "image",
+                              nsICache::STORE_IN_MEMORY,
                               nsICache::NOT_STREAM_BASED,
-                              PR_FALSE, getter_AddRefs(newSession));
+                              getter_AddRefs(newSession));
 
   if (!newSession) {
     NS_WARNING("Unable to create a cache session");
