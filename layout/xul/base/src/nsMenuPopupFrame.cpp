@@ -1454,14 +1454,21 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
    * 
    * Should clicks outside of a popup be eaten?
    *
-   *       Menus     Autocomplete     Comboboxes
-   * Mac     Eat           No              Eat
-   * Win     No            No              Eat     
-   * Unix    Eat           No              Eat
+   *            Menubar menus    Context menu   Autocomplete    Comboboxes
+   * Win          No                 No            No              Eat    
+   * Mac/Unix     Eat                Eat           No              Eat    
    *
    */
 
+  // Set default behavior, in case we don't find 
+  // a defined behavior for the popup's parent.
+  // This can be the case for a context menu, where we 
+  // can have many kinds of parent.
+#ifdef XP_WIN
+  aConsumeOutsideClicks = PR_FALSE;
+#else
   aConsumeOutsideClicks = PR_TRUE;
+#endif
 
   nsCOMPtr<nsIContent> parentContent;
   mContent->GetParent(*getter_AddRefs(parentContent));
@@ -1469,22 +1476,22 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
   if (parentContent) {
     nsCOMPtr<nsIAtom> parentTag;
     parentContent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag == nsXULAtoms::menulist)
-      return NS_OK;  // Consume outside clicks for combo boxes on all platforms
-    if (parentTag == nsXULAtoms::menu || parentTag == nsXULAtoms::popupset) {
 #ifdef XP_WIN
-      // Don't consume outside clicks for menus in Windows
-      aConsumeOutsideClicks = PR_FALSE;
-#endif
-      return NS_OK;
+    if (parentTag == nsXULAtoms::menulist) {
+      // Always eat outside clicks for combo box
+      // Must switch behavior from default on Windows
+      aConsumeOutsideClicks = PR_TRUE;
     }
+#else
     if (parentTag == nsXULAtoms::textbox) {
-      // Don't consume outside clicks for autocomplete widget
       nsAutoString typeString;
       parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, typeString);
       if (typeString.EqualsIgnoreCase("autocomplete"))
+        // Never consume outside clicks for autocomplete widget
+        // Must switch behavior from default on Mac/Linux
         aConsumeOutsideClicks = PR_FALSE;
     }
+#endif
   }
 
   return NS_OK;
