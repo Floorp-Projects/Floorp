@@ -231,7 +231,8 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     // Add additional plugins dirs
     // No error checking here since this is optional in some embeddings
 
-    (void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
+    // Temporarily commented out; see bug 109893.
+    //(void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
 
     NS_ADDREF(*aPath = searchPath);
