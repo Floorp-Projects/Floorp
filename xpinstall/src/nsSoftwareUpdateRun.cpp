@@ -634,6 +634,7 @@ extern "C" void RunInstallOnThread(void *data)
         // force zip archive closed before other cleanup
         hZip = 0;
     }
+    }
     else
     {
         // no path to local jar archive
