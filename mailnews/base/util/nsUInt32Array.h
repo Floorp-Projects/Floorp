@@ -44,6 +44,7 @@ public:
 	PRUint32          GetSize() const;
 	PRBool            SetSize(PRUint32 nNewSize, PRBool AdjustGrowth=PR_FALSE, PRUint32 nGrowBy = 0);
   PRBool            AllocateSpace(PRUint32 nNewSize) {
+                      if (nNewSize == 0) return PR_TRUE;
                       PRUint32 saveSize = m_nSize;
                       nsresult rv = SetSize(nNewSize);
                       m_nSize = saveSize;

@@ -20,7 +20,7 @@ public:
 	PRInt32 GetSize() const;
 	PRInt32 GetUpperBound() const;
 	void SetSize(PRInt32 nNewSize, PRInt32 nGrowBy = -1);
-  void AllocateSpace(PRUint32 nNewSize) { PRInt32 saveSize = m_nSize; SetSize(nNewSize); m_nSize = saveSize;};
+  void AllocateSpace(PRUint32 nNewSize) { if (nNewSize == 0) return; PRInt32 saveSize = m_nSize; SetSize(nNewSize); m_nSize = saveSize;};
 
 // Operations
 	// Clean up

@@ -166,9 +166,9 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 {
 	PRInt32	numAdded = 0;
   // Allocate enough space first to avoid memory allocation/deallocation.
-  m_keys.AllocateSpace(numKeysToAdd);
-  m_flags.AllocateSpace(numKeysToAdd);
-  m_levels.AllocateSpace(numKeysToAdd);
+  m_keys.AllocateSpace(numKeysToAdd+m_keys.GetSize());
+  m_flags.AllocateSpace(numKeysToAdd+m_flags.GetSize());
+  m_levels.AllocateSpace(numKeysToAdd+m_levels.GetSize());
 	for (PRInt32 i = 0; i < numKeysToAdd; i++)
 	{
 		PRInt32 threadFlag = pFlags[i];
