@@ -1231,7 +1231,7 @@ nsProfileAccess::SetPREGInfo(const char* pregInfo)
 
 //Get the for PREG info.
 void 
-nsProfileAccess::GetPREGInfo(const PRUnichar *profileName, char **info)
+nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
 {
     NS_ASSERTION(profileName, "Invalid profile name");
     NS_ASSERTION(info, "Invalid info pointer");

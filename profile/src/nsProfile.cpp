@@ -56,9 +56,8 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsICookieService.h"
-#include "nsIMsgAccountManager.h"
-#include "nsMsgBaseCID.h"
-#include "nsIMsgAccount.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -76,40 +75,12 @@
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
-// Activation cookie formats
-#define NS_ACTIVATION_COOOKIE          "NS_C5A_REG"
-#define NS_ACTIVATION_USERNAME         "NS_C5A_PN"
-#define NS_ACTIVATION_USEREMAIL        "NS_C5A_E"
-#define NS_ACTIVATION_DENIAL           "NS_C5A_DNY"
-
-// JavaScript and Cookies prefs in the all.js
-#define JAVASCRIPT_PREF                "javascript.enabled"
-#define COOKIES_PREF                   "network.accept_cookies"
-#define NEVER_ACCEPT_COOKIES           2
-
 // hack for copying panels.rdf into migrated profile dir
 #define PANELS_RDF_FILE                "panels.rdf"
 
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME           "default"
 
-// Use PregUrlPref to extract the activation url
-#define PREG_URL_PREF                  "browser.registration.url"
-#define ACTIVATION_SERVER_URL          "browser.registration.domain"
-#define ACTIVATION_ACCEPT_DOMAIN       "browser.registration.acceptdomain"
-#define ACTIVATION_AIM_PREF            "aim.session.screenname"
-#define ACTIVATION_EMAIL_SERVER_NAME   "browser.registration.mailservername"
-#define ACTIVATION_EMAIL_SERVER_TYPE   "browser.registration.mailservertype"
-#define ACTIVATION_COOKIE_EXPIRE_STR   "expires=31-Dec-1971 23:59:59 GMT"
-#define SEMICOLON_DELIMITER            ";"
-#define DOMAIN_STR                     "domain="
-#define PATH_STR                       "path="
-#define EXPIRES_STR                    "expires="
-
-#define ACTIVATION_WINDOW_WIDTH        480 
-#define ACTIVATION_WINDOW_HEIGHT       480 
-
-#define ACTIVATION_FRAME_URL           "chrome://communicator/content/profile/activation.xul"
 #define PROFILE_SELECTION_URL          "chrome://communicator/content/profile/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
 #define PROFILE_MANAGER_URL            "chrome://communicator/content/profile/profileSelection.xul?manage=true"
@@ -204,7 +175,6 @@ nsProfile::~nsProfile()
     printf("~nsProfile \n");
 #endif
 
-    CleanUp();
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry();
     
@@ -223,8 +193,6 @@ NS_IMPL_RELEASE(nsProfile)
 NS_INTERFACE_MAP_BEGIN(nsProfile)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProfile)
     NS_INTERFACE_MAP_ENTRY(nsIProfile)
-    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 NS_INTERFACE_MAP_END
 
 /*
@@ -300,9 +268,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool pregEnabled = PR_FALSE;
-    rv = prefs->GetBoolPref(PREG_PREF, &pregEnabled);
-
     if (profileURLStr.Length() == 0)
     {
         // This means that there was no command-line argument to force
@@ -310,20 +275,15 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         // are no profiles yet, or if there is more than one.
         if (numProfiles == 0)
         {
-            if (pregEnabled)
-            {
-                rv = CreateDefaultProfile();
-                if (NS_FAILED(rv)) return rv;
+            rv = CreateDefaultProfile();
+            if (NS_FAILED(rv)) return rv;
                 
-                GetProfileCount(&numProfiles);
-                profileURLStr = "";
+            GetProfileCount(&numProfiles);
+            profileURLStr = "";
 
-                mCurrentProfileAvailable = PR_TRUE;
-                // Need to load new profile prefs.
-                rv = LoadNewProfilePrefs();
-            }
-            else
-                profileURLStr = PROFILE_WIZARD_URL;
+            mCurrentProfileAvailable = PR_TRUE;
+            // Need to load new profile prefs.
+            rv = LoadNewProfilePrefs();
         }
         else if (numProfiles > 1)
             profileURLStr = PROFILE_SELECTION_URL;
@@ -387,8 +347,31 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     }
     mCurrentProfileAvailable = PR_TRUE;
 
-    if (pregEnabled)
-        TriggerActivation(currentProfileStr);
+    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_PROGID, &rv);
+
+    if(NS_SUCCEEDED(rv) && catman) 
+    {
+        nsCOMPtr<nsISimpleEnumerator> enumItem;
+        rv = catman->EnumerateCategory(NS_PROFILE_STARTUP_CATEGORY, getter_AddRefs(enumItem));
+        if(NS_SUCCEEDED(rv) && enumItem) 
+        {
+           while (PR_TRUE) 
+           {
+               nsCOMPtr<nsISupportsString> progid;
+
+               rv = enumItem->GetNext(getter_AddRefs(progid));
+               if (NS_FAILED(rv) || !progid) break;
+
+               nsXPIDLCString progidString;
+               progid->ToString (getter_Copies(progidString));
+        
+               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(progidString, &rv);
+        
+               if (listener) 
+                   listener->OnProfileStartup(currentProfileStr);
+	   }
+	}
+    }
 
     // Now we have the right profile, read the user-specific prefs.
     rv = prefs->ReadUserPrefs();
@@ -1357,282 +1340,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     return rv;
 }
 
-
-NS_IMETHODIMP nsProfile::GetCookie(char **cookie)
-{
-    NS_ENSURE_ARG_POINTER(cookie);
-
-    nsresult rv = NS_OK;
-    nsAutoString aCookie;
-
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString pregURL;
-    rv = prefs->CopyCharPref(ACTIVATION_SERVER_URL, 
-                             getter_Copies(pregURL));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURI> pregURI;
-    rv = NS_NewURI(getter_AddRefs(pregURI), pregURL);
-
-    NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
-    if ((NS_OK == rv) && (nsnull != service) && (nsnull != pregURI)) {
-        rv = service->GetCookieString(pregURI, aCookie);
-        *cookie = nsCRT::strdup(nsCAutoString(aCookie).GetBuffer());
-    }
-    return rv;
-}
-
-NS_IMETHODIMP nsProfile::ProcessPRegCookie()
-{
-    nsresult rv = NS_OK;
-
-    char *aCookie = nsnull;
-    GetCookie(&aCookie);
-    rv = ProcessPREGInfo(aCookie);
-
-    // We processed the cookie. Remove it from cookies file.
-    if (aCookie) {
-        if (PL_strlen(aCookie) > 0) {
-            RemoveCookie(aCookie);
-        }
-    }
-
-    CRTFREEIF(aCookie);
-    
-    return rv;
-}
-
-NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
-{
-    NS_ENSURE_ARG_POINTER(data);
-
-    nsresult rv = NS_OK;
-  
-    char *pregCookie = nsnull;
-    char *profileName = nsnull;
-    char *userEmail = nsnull;
-    char *service_denial = nsnull;
-
-    pregCookie = PL_strstr(data, NS_ACTIVATION_COOOKIE);
-
-    if (pregCookie)
-    {
-        profileName = PL_strstr(nsUnescape(pregCookie), 
-                                NS_ACTIVATION_USERNAME);
-        userEmail = PL_strstr(pregCookie, NS_ACTIVATION_USEREMAIL);
-        service_denial = PL_strstr(pregCookie, NS_ACTIVATION_DENIAL);
-    }
-    else
-    {
-        // cookie information is not available
-        return NS_ERROR_FAILURE;
-    }
-
-    nsAutoString pName; pName.AssignWithConversion(profileName);
-    nsAutoString emailAddress; emailAddress.AssignWithConversion(userEmail);
-    nsAutoString serviceState; serviceState.AssignWithConversion(service_denial);
-
-    PRInt32 profileNameIndex, serviceIndex, delimIndex;
-
-    nsAutoString userProfileName, userServiceDenial, userEmailAddress;
-
-    if (pName.Length())
-    {
-        profileNameIndex = pName.Find("=", 0);
-        delimIndex    = pName.Find("[-]", profileNameIndex-1);
-    
-        pName.Mid(userProfileName, profileNameIndex+1,delimIndex-(profileNameIndex+1));
-#if defined(DEBUG_profile)  
-        printf("\nProfiles : PREG Cookie user profile name = %s\n", nsCAutoString(userProfileName).GetBuffer());
-#endif
-    }
-
-    if (emailAddress.Length())
-    {
-        PRInt32 emailIndex;
-        emailIndex = emailAddress.Find("=", 0);
-        delimIndex = emailAddress.Find("[-]", emailIndex-1);
-    
-        emailAddress.Mid(userEmailAddress, emailIndex+1,delimIndex-(emailIndex+1));
-#if defined(DEBUG_profile)  
-        printf("\nProfiles : PREG Cookie user email = %s\n", nsCAutoString(userEmailAddress).GetBuffer());
-#endif
-    }
-
-    if (serviceState.Length())
-    {
-        serviceIndex  = serviceState.Find("=", 0);
-        delimIndex    = serviceState.Find("[-]", serviceIndex-1);
-
-        serviceState.Mid(userServiceDenial, serviceIndex+1,delimIndex-(serviceIndex+1));
-
-#if defined(DEBUG_profile)  
-        printf("\nProfiles : PREG Cookie netcenter service option = %s\n", nsCAutoString(userServiceDenial).GetBuffer());
-#endif
-    }
-
-    // User didn't provide any information.
-    // No Netcenter info is available.
-    // User will hit the Preg info screens on the next run.
-    if ((userProfileName.mLength == 0) && (userServiceDenial.mLength == 0))
-        return NS_ERROR_FAILURE;
-
-    // If user denies registration, ignore the information entered.
-    if (userServiceDenial.mLength > 0)
-        userProfileName.SetLength(0);
-
-    nsXPIDLString curProfile;
-    rv = GetCurrentProfile(getter_Copies(curProfile));
-    if (NS_FAILED(rv)) return rv;
-
-    nsFileSpec dirSpec;
-    rv = GetProfileDir(curProfile, &dirSpec);
-    if (NS_FAILED(rv)) return rv;
-
-    if (userProfileName.mLength > 0)
-    {
-        // BETA1 FIX for bug 31409
-        //rv = CloneProfile(userProfileName.GetUnicode());
-        //if (NS_FAILED(rv)) return rv;
-
-        // Saving netcenter profile name for AIM and Mail settings
-        // This is required for the work around described below
-        nsAutoString netcenterProfileName(userProfileName);
-
-        // XXX Setting the name to curProfile. Not renaming for BETA1.
-        userProfileName.Assign( NS_STATIC_CAST(const PRUnichar*, curProfile) );
-
-        ProfileStruct*    aProfile;
-
-        rv = gProfileDataAccess->GetValue(userProfileName.GetUnicode(), &aProfile);
-        if (NS_FAILED(rv)) return rv;
-
-        aProfile->NCProfileName = netcenterProfileName;
-
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        prefs->SetCharPref(ACTIVATION_AIM_PREF, 
-                           nsCAutoString(netcenterProfileName).GetBuffer());
-        
-        if ((userEmailAddress.Length()) > 0)
-        {
-            aProfile->NCEmailAddress = userEmailAddress;
-
-            PRBool validDomain = PR_FALSE;
-            nsAutoString domain;
-            PRInt32 domainSep = userEmailAddress.FindChar('@');
-            userEmailAddress.Mid(domain, domainSep+1, -1); // -1 means "the rest" 
-                
-            if (domain.Length())
-            {
-                //Check if it is a valid domain
-                CheckDomain(&validDomain, nsCAutoString(domain).GetBuffer());
-            }
-
-            if (validDomain)
-            {
-                nsXPIDLCString serverName;
-                nsXPIDLCString serverType;
-
-                rv = prefs->CopyCharPref(ACTIVATION_EMAIL_SERVER_NAME, 
-                                         getter_Copies(serverName));
-                if (NS_FAILED(rv)) return rv;
-                rv = prefs->CopyCharPref(ACTIVATION_EMAIL_SERVER_TYPE, 
-                                         getter_Copies(serverType));
-                if (NS_FAILED(rv)) return rv;
-
-                if (!serverName || !serverType)
-                    return NS_ERROR_FAILURE;
-                if ( (PL_strlen(serverName) == 0) || (PL_strlen(serverType) == 0) )
-                    return NS_ERROR_FAILURE;
-
-                NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, 
-                                NS_MSGACCOUNTMANAGER_PROGID, &rv);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                // create a fresh identity
-                nsCOMPtr<nsIMsgIdentity> identity;
-                rv = accountManager->CreateIdentity(getter_AddRefs(identity));
-                if (NS_FAILED(rv)) return rv;
-
-                // Set Email address to the new identity
-                rv = identity->SetEmail(nsCAutoString(aProfile->NCEmailAddress).GetBuffer());
-                if (NS_FAILED(rv)) return rv;
-                
-                // Set the identity's valid attribute to FALSE, so that account 
-                // wizard picks up the imcomplete account
-                rv = identity->SetValid(PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-
-                // create the server
-                nsCOMPtr<nsIMsgIncomingServer> server;
-                rv = accountManager->CreateIncomingServer(
-                                       nsCAutoString(aProfile->NCProfileName).GetBuffer(),
-                                       serverName,
-                                       serverType, 
-                                       getter_AddRefs(server));
-                if (NS_FAILED(rv)) return rv;
-
-                // Set the IncomingServer's valid attribute to FALSE, so that account 
-                // wizard picks up the imcomplete account
-                rv = server->SetValid(PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-
-                // create the account
-                nsCOMPtr<nsIMsgAccount> account;
-                rv = accountManager->CreateAccount(getter_AddRefs(account));
-                if (NS_FAILED(rv)) return rv;
-
-                // Assign server and add newly created identity to the account
-                rv = account->SetIncomingServer(server);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = account->AddIdentity(identity);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-        aProfile->NCHavePregInfo.AssignWithConversion(REGISTRY_YES_STRING);
-
-        gProfileDataAccess->SetValue(aProfile);
-        gProfileDataAccess->SetCurrentProfile(userProfileName.GetUnicode());
-
-		delete aProfile;
-    }
-    else if (userServiceDenial.mLength > 0)
-    {
-        ProfileStruct*    aProfile;
-
-        rv = gProfileDataAccess->GetValue(curProfile, &aProfile);
-        if (NS_FAILED(rv)) return rv;
-
-        aProfile->NCDeniedService = userServiceDenial;
-        aProfile->NCHavePregInfo.AssignWithConversion(REGISTRY_YES_STRING);
-
-        gProfileDataAccess->SetValue(aProfile);
-
-        delete aProfile;
-    }
-    
-    gProfileDataAccess->SetPREGInfo(REGISTRY_YES_STRING);
-
-    gProfileDataAccess->mProfileDataChanged=PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
-
-    return rv;
-}
-
-NS_IMETHODIMP nsProfile::IsPregCookieSet(const PRUnichar *profileName, char **pregSet)
-{
-    NS_ENSURE_ARG_POINTER(profileName);   
-    NS_ENSURE_ARG_POINTER(pregSet);
-
-    gProfileDataAccess->GetPREGInfo(profileName, pregSet);
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsProfile::ProfileExists(const PRUnichar *profileName, PRBool *exists)
 {
     NS_ENSURE_ARG_POINTER(profileName); 
@@ -1775,122 +1482,6 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 }
 
 nsresult
-nsProfile::TriggerActivation(const PRUnichar *profileName)
-{
-    NS_ASSERTION(profileName, "Invalid profileName");   
-
-    nsresult rv = NS_OK;
-
-    nsXPIDLCString isPregInfoSet;
-    
-    IsPregCookieSet(profileName, getter_Copies(isPregInfoSet)); 
-
-    if (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0)
-    {
-        // fire up an instance of the cookie manager.
-        // I'm doing this using the serviceManager for convenience's sake.
-        // Presumably an application will init it's own cookie service a 
-        // different way (this way works too though).
-        nsCOMPtr<nsICookieService> cookieService 
-                  = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        // quiet the compiler
-        (void)cookieService;
-
-        PRBool acceptCookies = PR_TRUE;
-        cookieService->CookieEnabled(&acceptCookies);
-
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        // Check if the javascript is enabled....
-        PRBool javascriptEnabled = PR_TRUE;
-        rv = prefs->GetBoolPref(JAVASCRIPT_PREF, &javascriptEnabled);
-
-        // Check if cookies are accepted....
-        // PRInt32 acceptCookies = 0;
-        // rv = prefs->GetIntPref(COOKIES_PREF, &acceptCookies);
-
-        // Set the boolean based on javascript and cookies prefs 
-        PRBool requiredPrefsEnabled = PR_TRUE;
-
-        if ((!(javascriptEnabled)) || (!acceptCookies))
-            requiredPrefsEnabled = PR_FALSE;
-    
-        if (requiredPrefsEnabled)
-        {
-            /*
-             * Create the Application Shell instance...
-             */
-            NS_WITH_SERVICE(nsIAppShellService, pregAppShell, kAppShellServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-			
-            nsCOMPtr<nsIURI> registrationURL;
-            rv = NS_NewURI(getter_AddRefs(registrationURL), ACTIVATION_FRAME_URL);
-
-            if (NS_FAILED(rv)) return rv;
-
-            rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL, 
-                                                    PR_TRUE, PR_TRUE, 
-                                                    nsIWebBrowserChrome::allChrome, 
-                                                    ACTIVATION_WINDOW_WIDTH,   // width 
-                                                    ACTIVATION_WINDOW_HEIGHT,  // height 
-                                                    getter_AddRefs(mPregWindow));
-
-            if (NS_FAILED(rv)) return rv;
-
-            // be sure to register ourself as the parent content listener on the
-            // webshell window we are creating.
-            nsCOMPtr<nsIDocShell> docShellForWindow;
-            NS_ENSURE_SUCCESS(mPregWindow->GetDocShell(
-                                           getter_AddRefs(docShellForWindow)), 
-                                           NS_ERROR_FAILURE);
-            nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docShellForWindow));
-
-            ctnListener->SetParentContentListener(NS_STATIC_CAST(nsIURIContentListener *, this));
-
-            /*
-             * Start up the main event loop...
-             */	
-            rv = pregAppShell->Run();
-        }
-
-        ProcessPRegCookie();
-    }
-    return rv;
-}
-
-nsresult
-nsProfile::CleanUp()
-{
-    nsresult rv = NS_OK;
-
-    if (sHaveRedundantDirectory)
-        DeleteUserDirectories(sRedundantDirectory);
-
-    return rv;
-}
-
-nsresult
-nsProfile::CheckDomain(PRBool *valid, const char* domain)
-{
-    NS_ASSERTION(valid, "Invalid valid pointer");
-    NS_ASSERTION(domain, "Invalid domain");
-
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString domainPref;
-    rv = prefs->CopyCharPref(ACTIVATION_ACCEPT_DOMAIN, getter_Copies(domainPref));
-    
-    if (PL_strcasecmp(domainPref, domain) == 0)
-        *valid = PR_TRUE;
-
-    return rv;
-}
-
-nsresult
 nsProfile::CreateDefaultProfile(void)
 {
     nsresult rv = NS_OK;
@@ -1920,183 +1511,43 @@ nsProfile::CreateDefaultProfile(void)
     return rv;
 }
 
-// The following implementations of nsIURIContentListener and nsIInterfaceRequestor are 
-// required if the profile manageris going to bring up a dialog for registration directly
-// before we've actually created the hidden window or an application window...
+NS_IMETHODIMP 
+nsProfile::UpdateRegistry(void)
+{
+   nsresult rv = NS_OK;
+
+   gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+   rv= gProfileDataAccess->UpdateRegistry();
+
+   return rv;
+}
 
 NS_IMETHODIMP 
-nsProfile::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+nsProfile::SetRegString(const PRUnichar* profileName, const PRUnichar* regString)
 {
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-    return QueryInterface(aIID, aInstancePtr);
+   nsresult rv = NS_OK;
+
+   ProfileStruct*    aProfile;
+
+   rv = gProfileDataAccess->GetValue(profileName, &aProfile);
+   if (NS_FAILED(rv)) return rv;
+   
+   aProfile->NCHavePregInfo = regString;
+
+   gProfileDataAccess->SetValue(aProfile);
+
+   delete aProfile;
+
+   return rv;
 }
 
-// nsIURIContentListener support
-NS_IMETHODIMP nsProfile::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
+NS_IMETHODIMP 
+nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
 {
-   return NS_OK;
-}
+    NS_ENSURE_ARG_POINTER(profileName);   
+    NS_ENSURE_ARG_POINTER(regString);
 
-NS_IMETHODIMP
-nsProfile::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-    NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aProtocolHandler);
-
-    *aProtocolHandler = nsnull;
+    gProfileDataAccess->CheckRegString(profileName, regString);
     return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsProfile::GetParentContentListener(nsIURIContentListener** aParent)
-{
-    NS_ENSURE_ARG_POINTER(aParent);
-    *aParent = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsProfile::SetParentContentListener(nsIURIContentListener* aParent)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsProfile::GetLoadCookie(nsISupports ** aLoadCookie)
-{
-    NS_ENSURE_ARG_POINTER(aLoadCookie);
-    *aLoadCookie = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsProfile::SetLoadCookie(nsISupports * aLoadCookie)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsProfile::IsPreferred(const char * aContentType,
-                        nsURILoadCommand aCommand,
-                        const char * aWindowTarget,
-                        char ** aDesiredContentType,
-                        PRBool * aCanHandleContent)
-
-{
-    NS_ENSURE_ARG_POINTER(aContentType);
-    NS_ENSURE_ARG_POINTER(aWindowTarget);
-    NS_ENSURE_ARG_POINTER(aDesiredContentType);
-    NS_ENSURE_ARG_POINTER(aCanHandleContent);
-
-    return CanHandleContent(aContentType, aCommand, aWindowTarget, 
-                            aDesiredContentType, aCanHandleContent);
-}
-
-NS_IMETHODIMP 
-nsProfile::CanHandleContent(const char * aContentType,
-                            nsURILoadCommand aCommand,
-                            const char * aWindowTarget,
-                            char ** aDesiredContentType,
-                            PRBool * aCanHandleContent)
-
-{
-    // the chrome window the profile manager is bringing up for registration
-    // needs to say that it handles ANY Content type because we haven't
-    // actually started to run any of the applications yet (which means
-    // that none of the applications are up and ready to handle any content).
-
-    if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
-        *aDesiredContentType = nsCRT::strdup("text/xul");
-
-    // since we explicilty loaded the url, we always want to handle it!
-    *aCanHandleContent = PR_TRUE;
-    return NS_OK;
-} 
-
-NS_IMETHODIMP 
-nsProfile::DoContent(const char * aContentType,
-                        nsURILoadCommand aCommand,
-                        const char * aWindowTarget,
-                        nsIChannel * aOpenedChannel,
-                        nsIStreamListener ** aContentHandler,
-                        PRBool * aAbortProcess)
-{
-    NS_ENSURE_ARG_POINTER(aContentType);
-    NS_ENSURE_ARG_POINTER(aWindowTarget);
-    NS_ENSURE_ARG_POINTER(aOpenedChannel);
-    NS_ENSURE_ARG_POINTER(aContentHandler);
-    NS_ENSURE_ARG_POINTER(aAbortProcess);
-
-    nsresult rv = NS_OK;
-
-    // if we are currently showing a chromeless window for the registration stuff,
-    // then forward the call to the webshell window...then we are done...
-    if (mPregWindow)
-    {
-        nsCOMPtr<nsIDocShell> docshell;
-        NS_ENSURE_SUCCESS(mPregWindow->GetDocShell(
-                            getter_AddRefs(docshell)), NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docshell));
-        NS_ENSURE_TRUE(ctnListener, NS_ERROR_FAILURE);
-
-        return ctnListener->DoContent(aContentType, aCommand, 
-                                      aWindowTarget, aOpenedChannel, 
-                                      aContentHandler, aAbortProcess);
-    }
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP nsProfile::RemoveCookie(const char *cookie)
-{
-    NS_ENSURE_ARG_POINTER(cookie);
-
-    nsresult rv = NS_OK;
-    nsAutoString inputCookie; inputCookie.AssignWithConversion(PL_strstr(cookie, NS_ACTIVATION_COOOKIE));
-    nsAutoString actvCookie;
-    
-    inputCookie.Mid(actvCookie, 0, inputCookie.Find(SEMICOLON_DELIMITER, 0));
-
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString pregURL;
-    rv = prefs->CopyCharPref(ACTIVATION_SERVER_URL, 
-                             getter_Copies(pregURL));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURI> pregURI;
-    rv = NS_NewURI(getter_AddRefs(pregURI), pregURL);
-
-    nsXPIDLCString host;
-    nsXPIDLCString path;
-
-    pregURI->GetHost(getter_Copies(host));
-    nsAutoString domain; domain.AssignWithConversion(PL_strchr(host, '.'));
-
-    pregURI->GetPath(getter_Copies(path));
-
-    // Add domain
-    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
-    actvCookie.AppendWithConversion(DOMAIN_STR);
-    actvCookie += domain;
-
-    // Add path
-    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
-    actvCookie.AppendWithConversion(PATH_STR);
-    actvCookie.AppendWithConversion(path);
-	
-    // Add expires string
-    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
-    actvCookie.AppendWithConversion(ACTIVATION_COOKIE_EXPIRE_STR);
-
-    NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
-    if ((NS_OK == rv) && (nsnull != service) && (nsnull != pregURI)) {
-        rv = service->SetCookieString(pregURI, actvCookie);
-    }
-    return rv;
 }
 
