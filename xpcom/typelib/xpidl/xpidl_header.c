@@ -23,7 +23,7 @@ interface(TreeState *state)
     if (!process_node(state))
 	return FALSE;
 
-    fprintf(state->file, "\n}\n");
+    fprintf(state->file, "\n};\n");
 
     return TRUE;
 }
