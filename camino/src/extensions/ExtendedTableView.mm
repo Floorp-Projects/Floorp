@@ -85,13 +85,13 @@
     if (![self isRowSelected:rowIndex]) {
       if ([delegate respondsToSelector:@selector(tableView:shouldSelectRow:)]) {
         if (![delegate tableView:self shouldSelectRow:rowIndex])
-          return nil;
+          return [self menu];
       }
     }
     if ([delegate respondsToSelector:@selector(tableView:contextMenuForRow:)])
       return [delegate tableView:self contextMenuForRow:rowIndex];
   }
-  return nil;
+  return [self menu];
 }
 
 //

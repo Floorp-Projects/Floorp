@@ -253,7 +253,7 @@ typedef enum
 - (IBAction)manageBookmarks: (id)aSender;
 - (IBAction)manageHistory: (id)aSender;
 - (IBAction)toggleSidebar:(id)aSender;
-- (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection;
+- (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection allowMultipleSelection:(BOOL)allowMultipleSelection;
 
 - (void)createNewTab:(ENewTabContents)contents;
 
