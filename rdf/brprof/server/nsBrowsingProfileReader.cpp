@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#define FORCE_PR_LOG
+
 #if defined(WIN32)
 #include <strstrea.h>
 #else
@@ -38,6 +40,7 @@
 #include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
+#include "prlog.h"
 #include "rdf.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -60,6 +63,10 @@ DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, narrow);
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, catid);
 
 ////////////////////////////////////////////////////////////////////////
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* gLog;
+#endif
 
 const char kInstanceName[] = "BRPROF";
 
@@ -115,6 +122,10 @@ nsBrowsingProfileReader::nsBrowsingProfileReader(const char *object_name, int ar
       mRDFService(nsnull),
       mDirectory(nsnull)
 {
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsBrowsingProfileReader");
+#endif
 }
 
 
@@ -131,6 +142,10 @@ long
 nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
 {
     static const char kBrowsingProfileCookiePrefix[] = "BP=";
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("(%p) start processing request", aSession));
+
     // Process an HTTP request
     char *cookie = nsnull;
     if ((WAISPISuccess == aSession->getCookie(cookie)) && (nsnull != cookie)) {
@@ -141,6 +156,12 @@ nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
             // skip over the "BP=" so we can point directly to the hex
             // digits.
             browsingProfileCookie += sizeof(kBrowsingProfileCookiePrefix) - 1;
+
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("(%p) browsing profile cookie is set", aSession));
+
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("(%p) %s", aSession, browsingProfileCookie));
 
             // create a cookie object into which we'll try to stuff the
             // hex digits (i.e., let the cookie object do the parsing).
@@ -153,10 +174,16 @@ nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
 
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create profile");
             if (NS_SUCCEEDED(rv)) {
+                PR_LOG(gLog, PR_LOG_DEBUG,
+                       ("(%p) constructed profile", aSession));
+
                 rv = profile->SetCookieString(browsingProfileCookie);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set cookie");
 
                 if (NS_SUCCEEDED(rv)) {
+                    PR_LOG(gLog, PR_LOG_DEBUG,
+                           ("(%p) set cookie string", aSession));
+
                     // now pull out the browsing profile vector and write
                     // it back as fancy HTML.
                     nsBrowsingProfileVector vector;
@@ -164,6 +191,9 @@ nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get vector");
 
                     if (NS_SUCCEEDED(rv)) {
+                        PR_LOG(gLog, PR_LOG_DEBUG,
+                               ("(%p) got profile vector", aSession));
+
                         rv = WriteVector(aSession, vector);
                     }
                 }
@@ -179,6 +209,9 @@ nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
     else {
         WriteError(aSession, "No profile cookie.");
     }
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("(%p) done processing request", aSession));
 
     return 0;
 }
@@ -257,6 +290,12 @@ nsBrowsingProfileReader::WriteVector(WAIServerRequest_ptr aSession,
     out << "<br></br>" << endl;
 
     // version
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("(%p) cookie version %d.%d",
+            aSession,
+            aVector.mHeader.mInfo.mMajorVersion,
+            aVector.mHeader.mInfo.mMinorVersion));
+
     out << "<b>Version:</b> ";
     out << aVector.mHeader.mInfo.mMajorVersion << ".";
     out << aVector.mHeader.mInfo.mMinorVersion << "<br></br>" << endl;
@@ -275,16 +314,14 @@ nsBrowsingProfileReader::WriteVector(WAIServerRequest_ptr aSession,
         if (aVector.mCategory[i].mID == 0)
             break;
 
-        out << "  <tr>" << endl;
-
         nsresult rv = GetCategory(aVector.mCategory[i].mID, category);
         if (NS_SUCCEEDED(rv)) {
+            out << "  <tr>" << endl;
             out << "    <td>" << (const char*) category                     << "</td>" << endl;
             out << "    <td>" << (PRInt32) aVector.mCategory[i].mVisitCount << "</td>" << endl;
             out << "    <td>" << (PRInt32) aVector.mCategory[i].mFlags      << "</td>" << endl;
+            out << "  </tr>" << endl;
         }
-
-        out << "  </tr>" << endl;
     }
     out << "</table>" << endl;
 
@@ -337,9 +374,16 @@ nsBrowsingProfileReader::GetCategory(PRInt32 aCategoryID, nsXPIDLCString& aCateg
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find topic for category");
     if (NS_FAILED(rv)) return rv;
 
+    // if we didn't actually find a value, then GetCategory() failed.
+    if (rv != NS_OK)
+        return NS_ERROR_FAILURE;
+
     rv = topic->GetValue(getter_Copies(aCategory));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get category URI");
     if (NS_FAILED(rv)) return rv;
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("  %d ==> %s", aCategoryID, (const char*) aCategory));
 
     return NS_OK;
 }
