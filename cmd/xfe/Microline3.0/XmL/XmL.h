@@ -411,7 +411,8 @@ typedef struct _XmLGridCallbackStruct
 #define XmCR_DESELECT_ROW    928
 
 	/* xfe added callback reason */
-#define XmCR_RESIZE_GRID 929
+#define XmCR_RESIZE_GRID     929
+#define XmCR_SHOW_POPUP      930
 
 /* Grid defines */
 

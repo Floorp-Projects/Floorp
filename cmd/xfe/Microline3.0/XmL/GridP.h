@@ -328,6 +328,7 @@ typedef struct _XmLGridPart
 	XtCallbackList resizeCallback, scrollCallback;
 
         /* XFE Additions */
+      XtCallbackList popupCallback;
       Boolean hideUnhideButtons;
       Widget hideButton;
       Widget unhideButton;

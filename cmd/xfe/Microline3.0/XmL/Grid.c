@@ -210,6 +210,7 @@ static void DropStart(Widget w, XtPointer clientData, XtPointer callData);
 static void DropTransfer(Widget w, XtPointer clientData, Atom *selType,
 	Atom *type, XtPointer value, unsigned long *length, int *format);
 static void Select(Widget w, XEvent *event, String *, Cardinal *);
+static void PopupSelect(Widget w, XEvent *event, String *, Cardinal *);
 static void TextActivate(Widget w, XtPointer clientData, XtPointer callData);
 static void TextFocus(Widget w, XtPointer clientData, XtPointer callData);
 static void TextMapped(Widget w, XtPointer closure, XEvent *event,
@@ -307,6 +308,7 @@ static XtActionsRec actions[] =
 	{ "XmLGridEditCancel",   EditCancel   },
 	{ "XmLGridEdit",         Edit         },
 	{ "XmLGridSelect",       Select       },
+	{ "XmLGridPopupSelect",  PopupSelect  },
 	{ "XmLGridDragStart",    DragStart    },
 	{ "XmLGridTraverse",     Traverse     },
 	/* XFE Additions */
@@ -374,6 +376,9 @@ static char translations[] =
 Ctrl ~Shift <Btn1Down>:  XmLGridSelect(TOGGLE)\n\
 <Btn1Up>:                XmLGridSelect(END)\n\
 <Btn2Down>:              XmLGridDragStart()\n\
+~Ctrl ~Shift <Btn3Down>: XmLGridPopupSelect(BEGIN)\n\
+~Ctrl Shift <Btn3Down>:  XmLGridPopupSelect(EXTEND)\n\
+Ctrl ~Shift <Btn3Down>:  XmLGridPopupSelect(TOGGLE)\n\
 <EnterWindow>:           ManagerEnter()\n\
 <LeaveWindow>:           ManagerLeave()\n\
 <FocusOut>:              ManagerFocusOut()\n\
@@ -865,6 +870,13 @@ static XtResource resources[] =
 		XmRScrollBarDisplayPolicy, sizeof(unsigned char),
 		XtOffset(XmLGridWidget, grid.vsbDisplayPolicy),
 		XmRImmediate, (XtPointer)XmAS_NEEDED,
+		},
+        /* Xfe Additions*/
+		{
+		XmNpopupCallback, XmCCallback,
+		XmRCallback, sizeof(XtCallbackList),
+		XtOffset(XmLGridWidget, grid.popupCallback),
+		XmRImmediate, (XtPointer)0,
 		},
 		/* Row Resources */
 		{
@@ -7608,6 +7620,72 @@ Select(Widget w,
 			(XtPointer)&cbs);
 		}
 	}
+
+/*
+ * Selection policy when posting a context menu.
+ *   If over a current selection, leave the selection alone.
+ *   Otherwise, change the selection the same as Select(),
+ *   except do not allow dragging to extend the selection.
+ */
+static void
+PopupSelect(Widget w,
+       XEvent *event,
+       String *params,
+       Cardinal *nparam)
+{
+	XmLGridWidget g;
+	int row, col;
+	XButtonEvent *be;
+	XmLGridRow rowp;
+	XmLGridCallbackStruct cbs;
+
+	if (*nparam != 1)
+		return;
+
+	if (XmLIsGrid(w))
+		g = (XmLGridWidget)w;
+	else
+		g = (XmLGridWidget)XtParent(w);
+
+	be = 0;
+	if (event->type == KeyPress || event->type == KeyRelease)
+    {
+		row = g->grid.focusRow;
+		col = g->grid.focusCol;
+    }
+	else /* Button */
+    {
+		be = (XButtonEvent *)event;
+		if (XYToRowCol(g, be->x, be->y, &row, &col) == -1)
+        {
+			row = -1;
+			col = -1;
+        }
+    }
+    if (RowPosToType(g, row) == XmCONTENT)
+    {
+        XmLGridRow rowp;
+        rowp = (XmLGridRow)XmLArrayGet(g->grid.rowArray, row);
+        if (rowp && !XmLGridRowIsSelected(rowp))
+        {
+            String end_params[1];
+            end_params[0] = "END";
+            Select(w, event, params, nparam);
+            Select(w, event, end_params, nparam);
+        }
+    }
+    if (XtHasCallbacks(w, XmNpopupCallback) == XtCallbackHasSome)
+    {
+		cbs.reason = XmCR_SHOW_POPUP;
+		cbs.event = event;
+		cbs.columnType = ColPosToType(g, col);
+		cbs.column = ColPosToTypePos(g, cbs.columnType, col);
+		cbs.rowType = RowPosToType(g, row);
+		cbs.row = RowPosToTypePos(g, cbs.rowType, row);
+		XtCallCallbackList((Widget)g, g->grid.popupCallback,
+                           (XtPointer)&cbs);
+    }
+}
 
 static void
 Traverse(Widget w,
