@@ -14,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Epstein <depstein@netscape.com> 
+ *   David Epstein <depstein@netscape.com>
  *   Dharma Sirnapalli <dsirnapalli@netscape.com>
  *	 Ashish Bhatt <ashishbhatt@netscape.com>
  *
@@ -60,11 +60,9 @@
 #include "selection.h"
 #include "nsProfile.h"
 #include "nsIClipboardCmd.h"
-
 #include "nsIObserServ.h"
-
 #include "nsIFile.h"
-
+#include "nsIWebBrow.h"
 
 #include "QaUtils.h"
 #include <stdio.h>
@@ -141,7 +139,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTIONLANGUAGECHANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_TOSTRING, OnInterfacesNsiselection)
 
-	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)	
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CLONEPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CREATENEWPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_DELETEPROFILE, OnInterfacesNsiprofile)
@@ -153,7 +151,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE, OnInterfacesNsiprofile)
 
-	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)	
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETINDEX, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETMAXLENGTH, OnInterfacesNsishistory)
@@ -241,7 +239,7 @@ CTests::CTests(nsIWebBrowser* mWebBrowser,
 	qaWebNav = mWebNav;
 
 	qaBrowserImpl = mpBrowserImpl;
-}	
+}
 
 CTests::~CTests()
 {
@@ -252,11 +250,11 @@ CTests::~CTests()
 // *********************************************************
 // *********************************************************
 
-void CTests::OnTestsChangeUrl() 
+void CTests::OnTestsChangeUrl()
 {
 	char *theUrl = "http://www.aol.com/";
 	CUrlDialog myDialog;
-	//nsresult rv;  
+	//nsresult rv;
 
 
 	if (!qaWebNav)
@@ -269,13 +267,13 @@ void CTests::OnTestsChangeUrl()
 	{
 		QAOutput("Begin Change URL test.", 1);
 		strcpy(theUrl, myDialog.m_urlfield);
-		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(),
 						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY,
             nsnull,
             nsnull,
             nsnull);
 	    RvTestResult(rv, "rv LoadURI() test", 1);
-		FormatAndPrintOutput("The url = ", theUrl, 2); 
+		FormatAndPrintOutput("The url = ", theUrl, 2);
 
 /*
 		nsCAutoString uriString;
@@ -294,7 +292,7 @@ void CTests::OnTestsChangeUrl()
 		AfxMessageBox("Start URL validation test().");
 		if (strcmp(uriString, theUrl) == 0)
 		{
-			QAOutput("Url loaded successfully. Test Passed.", 2);	
+			QAOutput("Url loaded successfully. Test Passed.", 2);
 		}
 		else
 		{
@@ -310,7 +308,7 @@ void CTests::OnTestsChangeUrl()
 
 // *********************************************************
 
-void CTests::OnTestsGlobalHistory() 
+void CTests::OnTestsGlobalHistory()
 {
 	// create instance of myHistory object. Call's XPCOM
 	// service manager to pass the contract ID.
@@ -319,8 +317,8 @@ void CTests::OnTestsGlobalHistory()
 	CUrlDialog myDialog;
 
 	PRBool theRetVal = PR_FALSE;
-    
-	//nsresult rv; 
+
+	//nsresult rv;
 
 
 	nsCOMPtr<nsIGlobalHistory> myHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
@@ -342,7 +340,7 @@ void CTests::OnTestsGlobalHistory()
 		// see if url is already in the GH file (pre-AddPage() test)
 		rv = myHistory->IsVisited(theUrl, &theRetVal);
 	    RvTestResult(rv, "rv IsVisited() test", 1);
-		FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1); 
+		FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1);
 
 		if (theRetVal)
 			QAOutput("URL has been visited. Won't execute AddPage().", 2);
@@ -379,9 +377,9 @@ void CTests::OnTestsGlobalHistory()
 
 // *********************************************************
 
-void CTests::OnTestsCreateFile() 
+void CTests::OnTestsCreateFile()
 {
-   	//nsresult rv;  
+   	//nsresult rv;
 	PRBool exists;
     nsCOMPtr<nsILocalFile> theTestFile(do_GetService(NS_LOCAL_FILE_CONTRACTID));
 
@@ -404,13 +402,13 @@ void CTests::OnTestsCreateFile()
 
 // *********************************************************
 
-void CTests::OnTestsCreateprofile() 
+void CTests::OnTestsCreateprofile()
 {
     CProfilesDlg    myDialog;
     nsresult        rv;
 
 	if (myDialog.DoModal() == IDOK)
-    {       
+    {
 //      NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
 		nsCOMPtr<nsIProfile> theProfServ(do_GetService(NS_PROFILE_CONTRACTID,&rv));
 		if (NS_FAILED(rv))
@@ -429,7 +427,7 @@ void CTests::OnTestsCreateprofile()
     }
 	else
 	   QAOutput("Profile switch test not executed.", 2);
-	
+
 }
 
 // *********************************************************
@@ -439,7 +437,7 @@ void CTests::OnTestsAddWebProgListener()
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
-	
+
 	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
 
 /*
@@ -470,7 +468,7 @@ void CTests::OnTestsAddHistoryListener()
 	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
 }
 
-void CTests::OnTestsRemovehistorylistener() 
+void CTests::OnTestsRemovehistorylistener()
 {
   // RemoveSHistoryListener test
 	nsWeakPtr weakling(
@@ -484,7 +482,7 @@ void CTests::OnTestsRemovehistorylistener()
 //					TOOLS to help us
 
 
-void CTests::OnToolsRemoveGHPage() 
+void CTests::OnToolsRemoveGHPage()
 {
 	char *theUrl = "http://www.bogussite.com/";
 	CUrlDialog myDialog;
@@ -528,7 +526,7 @@ void CTests::OnToolsRemoveGHPage()
 void CTests::OnToolsRemoveAllGH()
 {
 
-	//nsresult rv; 
+	//nsresult rv;
 
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 	if (!myGHistory)
@@ -546,7 +544,7 @@ void CTests::OnToolsRemoveAllGH()
 
 	rv = myHistory->RemoveAllPages();
 	RvTestResult(rv, "removeAllPages(). Test .", 2);
-	
+
 	QAOutput("End removal of all pages from the GH file.", 2);
 
 	// removeAllPages()
@@ -587,23 +585,23 @@ void CTests::OnToolsTestYourMethod()
 		rv = qaWBFind->GetSearchString(getter_Copies(stringBuf));
 		RvTestResult(rv, "nsIWebBrowserFind::GetSearchString() test", 2);
 		csSearchStr = stringBuf.get();
-		FormatAndPrintOutput("The searched string value = ", csSearchStr, 2); 
+		FormatAndPrintOutput("The searched string value = ", csSearchStr, 2);
 	}
 	// FindNext()
 	didFind = PR_TRUE;
 	rv = qaWBFind->FindNext(&didFind);
 	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFind = ", didFind, 2); 
+	FormatAndPrintOutput("returned didFind = ", didFind, 2);
 
 	didFind = PR_FALSE;
 	rv = qaWBFind->FindNext(&didFind);
 	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didFind = ", didFind, 2); 
+	FormatAndPrintOutput("returned didFind = ", didFind, 2);
 
 	// SetFindBackwards()
 	didFindBackwards = PR_TRUE;
 	rv = qaWBFind->SetFindBackwards(didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_TRUE) object test", 2); 
+	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_TRUE) object test", 2);
 
 	didFindBackwards = PR_FALSE;
 	rv = qaWBFind->SetFindBackwards(didFindBackwards);
@@ -613,12 +611,12 @@ void CTests::OnToolsTestYourMethod()
 	didFindBackwards = PR_TRUE;
 	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
 	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2); 
+	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2);
 
 	didFindBackwards = PR_FALSE;
 	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
 	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2); 
+	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2);
 
 	// SetWrapFind()
 	didWrapFind = PR_TRUE;
@@ -633,12 +631,12 @@ void CTests::OnToolsTestYourMethod()
 	didWrapFind = PR_TRUE;
 	rv = qaWBFind->GetWrapFind(&didWrapFind);
 	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2); 
+	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2);
 
 	didWrapFind = PR_FALSE;
 	rv = qaWBFind->GetWrapFind(&didWrapFind);
 	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2); 
+	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2);
 
 	// SetEntireWord()
 	didEntireWord = PR_TRUE;
@@ -653,12 +651,12 @@ void CTests::OnToolsTestYourMethod()
 	didEntireWord = PR_TRUE;
 	rv = qaWBFind->GetEntireWord(&didEntireWord);
 	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2); 
+	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2);
 
 	didEntireWord = PR_FALSE;
 	rv = qaWBFind->GetEntireWord(&didEntireWord);
 	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2); 
+	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2);
 
 	// SetMatchCase()
 	didMatchCase = PR_TRUE;
@@ -673,13 +671,13 @@ void CTests::OnToolsTestYourMethod()
 	didMatchCase = PR_TRUE;
 	rv = qaWBFind->GetMatchCase(&didMatchCase);
 	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2); 
+	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
 
 	didMatchCase = PR_FALSE;
 	rv = qaWBFind->GetMatchCase(&didMatchCase);
 	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_FALSE) object test", 2);
 	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
-	
+
 	// SetSearchFrames()
 	didSearchFrames = PR_TRUE;
 	rv = qaWBFind->SetSearchFrames(didSearchFrames);
@@ -693,7 +691,7 @@ void CTests::OnToolsTestYourMethod()
 	didSearchFrames = PR_TRUE;
 	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
 	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2); 
+	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2);
 
 	didSearchFrames = PR_FALSE;
 	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
@@ -718,7 +716,7 @@ void CTests::OnToolsTestYourMethod2()
 
 		// addWebProgListener
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
-	rv = qaWebProgress->AddProgressListener(listener);
+	rv = qaWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
 	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
 
 		// removeWebProgListener
@@ -732,68 +730,69 @@ void CTests::OnToolsTestYourMethod2()
 		QAOutput("Didn't get DOM Window object.", 2);
 	else
 		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
+
 }
 
 // ***********************************************************************
 // ***************** Bug Verifications ******************
 // ***********************************************************************
 
-void CTests::OnVerifybugs70228() 
+void CTests::OnVerifybugs70228()
 {
-	nsCOMPtr<nsIHelperAppLauncherDialog> 
+	nsCOMPtr<nsIHelperAppLauncherDialog>
 			myHALD(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
 	if (!myHALD)
 		QAOutput("Object not created. It should be. It's a component!", 2);
 	else
-		QAOutput("Object is created. It's a component!", 2);	
+		QAOutput("Object is created. It's a component!", 2);
 
 /*
-nsCOMPtr<nsIHelperAppLauncher> 
+nsCOMPtr<nsIHelperAppLauncher>
 			myHAL(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
 
 	rv = myHALD->show(myHal, nsnull);
-*/	
+*/
 }
 
-BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
-   // To handle Menu handlers add here. Don't have to do if not handling 
+   // To handle Menu handlers add here. Don't have to do if not handling
    // menu handlers
 	nCommandID = nID ;
 
 	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
-void CTests::OnInterfacesNsirequest() 
+void CTests::OnInterfacesNsirequest()
 {
 	CNsIRequest oNsIRequest(qaWebBrowser,/*qaBaseWindow,qaWebNav,*/ qaBrowserImpl);
 	oNsIRequest.OnStartTests(nCommandID);
 }
 
-void CTests::OnInterfacesNsidirectoryservice() 
+void CTests::OnInterfacesNsidirectoryservice()
 {
 	CNsIDirectoryService oNsIDirectoryService;
 	oNsIDirectoryService.StartTests(nCommandID);
 }
 
-void CTests::OnInterfacesNsidomwindow() 
+void CTests::OnInterfacesNsidomwindow()
 {
 	CDomWindow oDomWindow(qaWebBrowser) ;
-	oDomWindow.OnStartTests(nCommandID);		
+	oDomWindow.OnStartTests(nCommandID);
 }
 
-void CTests::OnInterfacesNsiselection() 
+void CTests::OnInterfacesNsiselection()
 {
 	CSelection oSelection(qaWebBrowser);
 	oSelection.OnStartTests(nCommandID);
 }
 
-void CTests::OnVerifybugs90195() 
+void CTests::OnVerifybugs90195()
 {
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
-	
+
 	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);
 
 /*	nsCOMPtr<nsITooltipTextProvider> oTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID) ;
@@ -802,41 +801,41 @@ void CTests::OnVerifybugs90195()
 */
 }
 
-void CTests::OnInterfacesNsiprofile() 
+void CTests::OnInterfacesNsiprofile()
 {
 	CProfile oProfile(qaWebBrowser);
-	oProfile.OnStartTests(nCommandID);	
+	oProfile.OnStartTests(nCommandID);
 }
 
-void CTests::OnInterfacesNsishistory() 
+void CTests::OnInterfacesNsishistory()
 {
 	CNsIHistory oHistory(qaWebNav);
-	oHistory.OnStartTests(nCommandID);	
+	oHistory.OnStartTests(nCommandID);
 }
 
 
-void CTests::OnInterfacesNsiwebnav() 
+void CTests::OnInterfacesNsiwebnav()
 {
 	CNsIWebNav oWebNav(qaWebNav);
-	oWebNav.OnStartTests(nCommandID);	
-}		
+	oWebNav.OnStartTests(nCommandID);
+}
 
 
-void CTests::OnInterfacesNsiclipboardcommands() 
+void CTests::OnInterfacesNsiclipboardcommands()
 {
 	CNsIClipBoardCmd  oClipCmd(qaWebBrowser) ;
 	oClipCmd.OnStartTests(nCommandID);
 }
 
 
-void CTests::OnInterfacesNsiobserverservice() 
+void CTests::OnInterfacesNsiobserverservice()
 {
 	CnsIObserServ oObserv  ;
 	oObserv.OnStartTests(nCommandID);
 }
 
 
-void CTests::OnInterfacesNsifile() 
+void CTests::OnInterfacesNsifile()
 {
 	CNsIFile oFile ;
 	oFile.OnStartTests(nCommandID);
@@ -844,7 +843,6 @@ void CTests::OnInterfacesNsifile()
 
 void CTests::OnInterfacesNsiwebbrowser()
 {
-
-	CNsIWebBrowser oWebBrowser;
+	CNsIWebBrowser oWebBrowser(qaWebBrowser, qaBrowserImpl);
 	oWebBrowser.OnStartTests(nCommandID);
 }

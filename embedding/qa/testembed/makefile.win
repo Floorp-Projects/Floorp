@@ -43,6 +43,8 @@ REQUIRES = \
 	content \
 	webbrowserpersist \
 	xpinstall \
+	composer \
+	commandhandler \
 	$(NULL)
 
 DIRS=components \
@@ -87,7 +89,7 @@ OBJS =                           \
     .\$(OBJDIR)\nsIClipBoardCmd.obj \
     .\$(OBJDIR)\nsIObserServ.obj \
     .\$(OBJDIR)\nsIFile.obj \
-    .\$(OBJDIR)\nsIWebBrowser.obj \
+    .\$(OBJDIR)\nsIWebBrow.obj \
     $(NULL)
 
 LLIBS=					\
