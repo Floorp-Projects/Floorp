@@ -263,6 +263,28 @@
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
   </script>
 
+  <keyset id="defaultKeySet">
+    <key id="acmdkey" disabled="false" shift="false" command="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
+    <key id="bcmdkey" disabled="false" shift="false" command="true" alt="false" key="b" onkeypress="EditorToggleStyle('bold')"/>
+    <key id="ccmdkey" disabled="false" shift="false" command="true" alt="false" key="c" onkeypress="EditorCopy()" />
+    <key id="fcmdkey" disabled="false" shift="false" command="true" alt="false" key="f" onkeypress="EditorFind()" />
+    <key id="gcmdkey" disabled="false" shift="false" command="true" alt="false" key="g" onkeypress="EditorFindNext()" />
+    <key id="icmdkey" disabled="false" shift="false" command="true" alt="false" key="i" onkeypress="EditorToggleStyle('italic')"/>
+    <key id="kcmdkey" disabled="false" shift="false" command="true" alt="false" key="k" onkeypress="CheckSpelling()" />
+    <key id="ncmdkey" disabled="false" shift="false" command="true" alt="false" key="n" onkeypress="EditorNew()" />
+    <key id="ocmdkey" disabled="false" shift="false" command="true" alt="false" key="o" onkeypress="EditorOpen()" />
+    <key id="pcmdkey" disabled="false" shift="false" command="true" alt="false" key="p" onkeypress="EditorPrint()" />
+    <key id="qcmdkey" disabled="false" shift="false" command="true" alt="false" key="q" onkeypress="EditorExit()" />
+    <key id="ucmdkey" disabled="false" shift="false" command="true" alt="false" key="u" onkeypress="EditorToggleStyle('underline')"/>
+    <key id="vcmdkey" disabled="false" shift="false" command="true" alt="false" key="v" onkeypress="EditorPaste()" />
+    <key id="wcmdkey" disabled="false" shift="false" command="true" alt="false" key="w" onkeypress="EditorClose()" />
+    <key id="xcmdkey" disabled="false" shift="false" command="true" alt="false" key="x" onkeypress="EditorCut()" />
+    <key id="ycmdkey" disabled="false" shift="false" command="true" alt="false" key="y" onkeypress="EditorRedo()" />
+    <key id="zcmdkey" disabled="false" shift="false" command="true" alt="false" key="z" onkeypress="EditorUndo()" />
+
+<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+  </keyset>
+
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>
   
