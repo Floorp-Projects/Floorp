@@ -340,8 +340,6 @@ viewer:Components:msgImportText.shlb
 viewer:Components:msgImportEudora.shlb
 viewer:Components:msgImportComm4xM.shlb
 viewer:Components:msgImportComm4xM.xpt
-viewer:Components:AbSyncSvc.shlb 
-viewer:Components:AbSyncSvc.xpt
 viewer:Components:nsLDAPPrefsService.js 
 viewer:Components:msgsmime.shlb
 viewer:Components:msgsmime.xpt
