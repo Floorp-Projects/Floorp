@@ -207,6 +207,8 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 			DisposePtr((Ptr)extractedFile);
 		
 		currCoreFile++;
+		if (gWPtr)
+			IdleControls(gWPtr);	// progress bar (roll the barber poll)
 	}
 	
 cleanup:							

@@ -22,7 +22,6 @@
 
 #include "MacInstallWizard.h"
 
-
 #define XP_MAC 1
 #include "xpistub.h"
 
@@ -64,21 +63,121 @@ if (NS_FAILED(rv))				\
 #else
 #define XPISTUB_DLL "\pxpistub.shlb"
 #endif
- 
+
+static Boolean bMaxDiscovered = false;
 
 void 		
 xpicbStart(const char *URL, const char* UIName)
 {
-	// TO DO
-	// SysBeep(10);
+	Rect	r;
+	Str255	installingStr;
+	
+	if (gControls->tw->progressMsg)
+	{
+		HLock((Handle)gControls->tw->progressMsg);
+		SetRect(&r, (*gControls->tw->progressMsg)->viewRect.left,
+				(*gControls->tw->progressMsg)->viewRect.top,
+				(*gControls->tw->progressMsg)->viewRect.right,
+				(*gControls->tw->progressMsg)->viewRect.bottom );
+		HUnlock((Handle)gControls->tw->progressMsg);
+		
+		/* Installing <UIName> */
+		GetIndString(installingStr, rStringList, sInstalling);
+		
+		EraseRect(&r);
+		if (installingStr[0] > 0)
+			TESetText(&installingStr[1], installingStr[0], gControls->tw->progressMsg);
+		if (UIName)
+			TEInsert(UIName, strlen(UIName), gControls->tw->progressMsg);
+		TEUpdate(&r, gControls->tw->progressMsg);
+	}
+	
 	return;
 }
 
 void 	
 xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 {
-	// TO DO
-	// SysBeep(10);
+	Boolean indeterminateFlag = false;
+	Rect	r;
+	Str255	installingStr, fileStr, ofStr;
+	char	*valStr, *maxStr;
+	GrafPtr oldPort;
+	GetPort(&oldPort);
+	
+	if (gWPtr)
+	{
+		SetPort(gWPtr);
+		if (gControls->tw->progressBar)
+		{
+			if (max!=0 && !bMaxDiscovered)
+			{
+				SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+								sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+				SetControlMaximum(gControls->tw->progressBar, max);
+				bMaxDiscovered = true;
+			}
+			else if (!bMaxDiscovered)
+			{
+				if (gWPtr)
+					IdleControls(gWPtr);
+				if (gControls->tw->xpiProgressMsg)
+				{	
+					HLock((Handle)gControls->tw->xpiProgressMsg);
+					SetRect(&r, (*gControls->tw->xpiProgressMsg)->viewRect.left,
+								(*gControls->tw->xpiProgressMsg)->viewRect.top,
+								(*gControls->tw->xpiProgressMsg)->viewRect.right,
+								(*gControls->tw->xpiProgressMsg)->viewRect.bottom );
+					HUnlock((Handle)gControls->tw->xpiProgressMsg);
+					if (msg)
+					{
+						EraseRect(&r);
+						TESetText(msg, strlen(msg), gControls->tw->xpiProgressMsg);
+						TEUpdate(&r, gControls->tw->xpiProgressMsg);
+					}
+				}
+			}
+			
+			if (bMaxDiscovered)
+			{
+				SetControlValue(gControls->tw->progressBar, val);
+				
+				if (gControls->tw->xpiProgressMsg)
+				{
+					GetIndString(installingStr, rStringList, sInstalling);
+					GetIndString(fileStr, rStringList, sFileSp);
+					GetIndString(ofStr, rStringList, sSpOfSp);
+					HLock((Handle)gControls->tw->xpiProgressMsg);
+					SetRect(&r, (*gControls->tw->xpiProgressMsg)->viewRect.left,
+								(*gControls->tw->xpiProgressMsg)->viewRect.top,
+								(*gControls->tw->xpiProgressMsg)->viewRect.right,
+								(*gControls->tw->xpiProgressMsg)->viewRect.bottom );
+					HUnlock((Handle)gControls->tw->xpiProgressMsg);
+									
+					valStr = ltoa(val);
+					maxStr = ltoa(max);
+				
+					EraseRect(&r);
+					if (valStr && maxStr)
+					{
+						TESetText(&installingStr[1], installingStr[0], gControls->tw->xpiProgressMsg);
+						TEInsert(&fileStr[1], fileStr[0], gControls->tw->xpiProgressMsg);
+						TEInsert(valStr, strlen(valStr), gControls->tw->xpiProgressMsg);
+						TEInsert(&ofStr[1], ofStr[0], gControls->tw->xpiProgressMsg);
+						TEInsert(maxStr, strlen(maxStr), gControls->tw->xpiProgressMsg);
+						TEUpdate(&r, gControls->tw->xpiProgressMsg);
+					}
+					
+					if (valStr)
+						free(valStr);
+					if (maxStr)
+						free(maxStr);
+				}
+			}
+		}
+	}
+	
+	SetPort(oldPort);
 	return;
 }
 
@@ -87,6 +186,8 @@ xpicbFinal(const char *URL, PRInt32 finalStatus)
 {
 	// TO DO
 	// SysBeep(10);
+	
+	bMaxDiscovered = false;
 	return;
 }
 
