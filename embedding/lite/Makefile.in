@@ -37,6 +37,10 @@ REQUIRES	= xpcom \
 		  appcomps \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES	+= history
+endif
+
 CPPSRCS         = \
                 nsEmbedChromeRegistry.cpp \
 				nsEmbedGlobalHistory.cpp \
