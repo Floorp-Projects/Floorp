@@ -1795,10 +1795,6 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**        aFrame)
 {   
-
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return NS_ERROR_FAILURE;
-
   if (!mRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
@@ -1869,7 +1865,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   }
 
   // if no kids were hit then select us
-  if (vis->IsVisible()) {
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND && vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
   }
