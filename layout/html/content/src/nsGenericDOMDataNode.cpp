@@ -645,7 +645,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
 nsresult 
 nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
 {
-#if 0  // lazy allocation of range list
+  // lazy allocation of range list
   if (nsnull == mRangeList) {
     mRangeList = new nsVoidArray();
   }
@@ -656,27 +656,24 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
   PRBool rv = mRangeList->AppendElement(&aRange);
   if (rv)  return NS_OK;
   return NS_ERROR_FAILURE;
-#endif
-  return NS_OK;
 }
 
 
 nsresult 
 nsGenericDOMDataNode::RangeRemove(nsIDOMRange& aRange)
 {
-#if 0  if (mRangeList) {
+  if (mRangeList) {
     // dont need to release - this call is made by the range object itself
     PRBool rv = mRangeList->RemoveElement(&aRange);
     if (rv) {
       if (mRangeList->Count() == 0) {
         delete mRangeList;
+        mRangeList = nsnull;
       }
       return NS_OK;
     }
   }
   return NS_ERROR_FAILURE;
-#endif
-  return NS_OK;
 }
 
 

@@ -27,16 +27,19 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
 #include "nsContentIterator.h"
 #include "nsIDOMNodeList.h"
 
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+nsVoidArray* nsRange::mStartAncestors = nsnull;      
+nsVoidArray* nsRange::mEndAncestors = nsnull;        
+nsVoidArray* nsRange::mStartAncestorOffsets = nsnull; 
+nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
+
 
 /******************************************************
  * non members
@@ -46,7 +49,7 @@ nsresult
 NS_NewRange(nsIDOMRange** aInstancePtrResult)
 {
   nsRange * range = new nsRange();
-  return range->QueryInterface(kIRangeIID, (void**) aInstancePtrResult);
+  return range->QueryInterface(nsIDOMRange::IID(), (void**) aInstancePtrResult);
 }
 
 
@@ -83,19 +86,11 @@ nsRange::nsRange()
   mStartOffset = 0;
   mEndParent = nsnull;
   mEndOffset = 0;
-  mStartAncestors = new nsVoidArray();
-  mStartAncestorOffsets = new nsVoidArray();
-  mEndAncestors = new nsVoidArray();
-  mEndAncestorOffsets = new nsVoidArray();
 } 
 
 nsRange::~nsRange() 
 {
   DoSetRange(nsnull,0,nsnull,0); // we want the side effects (releases and list removals)
-  delete mStartAncestors;
-  delete mEndAncestors;
-  delete mStartAncestorOffsets;
-  delete mEndAncestorOffsets;
 } 
 
 /******************************************************
@@ -117,7 +112,7 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIRangeIID)) {
+  if (aIID.Equals(nsIDOMRange::IID())) {
     *aInstancePtrResult = (void*)(nsIDOMRange*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -125,13 +120,42 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
   return !NS_OK;
 }
 
-
 /******************************************************
  * Private helper routines
  ******************************************************/
 
 PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 {
+  PRBool retval = PR_FALSE;
+  nsIContent *cN1 = nsnull;
+  nsIContent *cN2 = nsnull;
+  
+  nsresult res = GetContentFromDOMNode(aNode1, &cN1);
+  if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
+  res = GetContentFromDOMNode(aNode2, &cN2);
+  if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
+  
+  nsIDocument *doc1 = nsnull;
+  nsIDocument *doc2 = nsnull;
+
+  res = cN1->GetDocument(doc1);
+  if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
+  res = cN2->GetDocument(doc2);
+  if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
+
+
+  // Now compare the two documents: is direct comparison safe?
+  if (doc1 == doc2)
+    retval = PR_TRUE;
+  
+inSameDoc_err_label:
+  NS_IF_RELEASE(cN1);
+  NS_IF_RELEASE(cN2);
+  NS_IF_RELEASE(doc1);
+  NS_IF_RELEASE(doc2);
+  return retval;
+
+/* Beats me why GetOwnerDocument always returns not succeeded...
   nsresult res;
   nsIDOMDocument* document1;
   res = aNode1->GetOwnerDocument(&document1);
@@ -156,6 +180,7 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   NS_IF_RELEASE(document2);
 
   return retval;
+*/
 }
 
 
@@ -168,7 +193,7 @@ nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
   
   nsIContent *cN;
 
-  nsresult res = aNode->QueryInterface(kIContentIID, (void**)&cN);
+  nsresult res = aNode->QueryInterface(nsIContent::IID(), (void**)&cN);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::AddToListOf");
@@ -191,7 +216,7 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
   
   nsIContent *cN;
 
-  nsresult res = aNode->QueryInterface(kIContentIID, (void**)&cN);
+  nsresult res = aNode->QueryInterface(nsIContent::IID(), (void**)&cN);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::RemoveFromListOf");
@@ -204,7 +229,7 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
   return res;
 }
 
-// It's important that all setting of the range start/end pionts 
+// It's important that all setting of the range start/end points 
 // go through this function, which will do all the right voodoo
 // for both refcounting and content notification of range ownership  
 // Calling DoSetRange with either parent argument null will collapse
@@ -212,6 +237,18 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
 nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
+  //if only one endpoint is null, set it to the other one
+  if (aStartN && !aEndN) 
+  {
+    aEndN = aStartN;
+    aEndOffset = aStartOffset;
+  }
+  if (aEndN && !aStartN)
+  {
+    aStartN = aEndN;
+    aStartOffset = aEndOffset;
+  }
+  
   if (mStartParent != aStartN)
   {
     if (mStartParent) // if it had a former start node, take it off it's list
@@ -244,20 +281,6 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   }
   mEndOffset = aEndOffset;
 
-  if (mStartParent && (mEndParent == 0))
-  {
-    NS_ADDREF(mStartParent);
-    mEndParent = mStartParent;
-    mEndOffset = mStartOffset;
-  }
-
-  if (mEndParent && (mStartParent == 0))
-  {
-    NS_ADDREF(mEndParent);
-    mStartParent = mEndParent;
-    mStartOffset = mEndOffset;
-  }
-
   if (mStartParent) mIsPositioned = PR_TRUE;
   else mIsPositioned = PR_FALSE;
   
@@ -285,6 +308,19 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     else return PR_TRUE;
   }
   
+  // lazy allocation of static arrays
+  if (!mStartAncestors)
+  {
+    mStartAncestors = new nsVoidArray();
+    mStartAncestorOffsets = new nsVoidArray();
+    mEndAncestors = new nsVoidArray();
+    mEndAncestorOffsets = new nsVoidArray();
+  }
+
+  // XXX Threading alert - these array structures are shared across all ranges
+  // access to ranges is assumed to be from only one thread.  Add monitors (or
+  // stop sharing these) if that changes
+
   // refresh ancestor data
   mStartAncestors->Clear();
   mStartAncestorOffsets->Clear();
@@ -385,14 +421,14 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
   }
   
   // convert node and parent to nsIContent, so that we can find the child index
-  res = parentNode->QueryInterface(kIContentIID, (void**)&contentParent);
+  res = parentNode->QueryInterface(nsIContent::IID(), (void**)&contentParent);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::IndexOf");
     NS_IF_RELEASE(contentParent);
     return 0;
   }
-  res = aChildNode->QueryInterface(kIContentIID, (void**)&contentChild);
+  res = aChildNode->QueryInterface(nsIContent::IID(), (void**)&contentChild);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::IndexOf");
@@ -447,7 +483,7 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
   
   // callers responsibility to make sure args are non-null and proper type
 
-  res = aNode->QueryInterface(kIContentIID, (void**)&contentNode);
+  res = aNode->QueryInterface(nsIContent::IID(), (void**)&contentNode);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::GetAncestorsAndOffsets");
@@ -555,14 +591,27 @@ errorLabel:
   return nsnull;
 }
 
-nsresult nsRange::GetDOMNodeFromContent(nsIContent* aParentNode, nsIDOMNode** domNode)
+nsresult nsRange::GetDOMNodeFromContent(nsIContent* inContentNode, nsIDOMNode** outDomNode)
 {
-  *domNode = nsnull;
-  nsresult res = aParentNode->QueryInterface(kIDOMNodeIID, (void**)domNode);
+  *outDomNode = nsnull;
+  nsresult res = inContentNode->QueryInterface(nsIDOMNode::IID(), (void**)outDomNode);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::GetDOMNodeFromContent");
-    NS_IF_RELEASE(*domNode);
+    NS_IF_RELEASE(*outDomNode);
+    return res;
+  }
+  return NS_OK;
+}
+
+nsresult nsRange::GetContentFromDOMNode(nsIDOMNode* inDomNode, nsIContent** outContentNode)
+{
+  *outContentNode = nsnull;
+  nsresult res = inDomNode->QueryInterface(nsIContent::IID(), (void**)outContentNode);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::GetContentFromDOMNode");
+    NS_IF_RELEASE(*outContentNode);
     return res;
   }
   return NS_OK;
@@ -838,13 +887,13 @@ nsresult nsRange::DeleteContents()
   nsIContent *cEnd;
   
   // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(kIContentIID, (void**)&cStart);
+  nsresult res = mStartParent->QueryInterface(nsIContent::IID(), (void**)&cStart);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
     return NS_ERROR_UNEXPECTED;
   }
-  res = mEndParent->QueryInterface(kIContentIID, (void**)&cEnd);
+  res = mEndParent->QueryInterface(nsIContent::IID(), (void**)&cEnd);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
@@ -886,7 +935,7 @@ nsresult nsRange::DeleteContents()
     else // textnode, or somesuch.  offsets refer to data in node
     {
       nsIDOMText *textNode;
-      res = mStartParent->QueryInterface(kIDOMTextIID, (void**)&textNode);
+      res = mStartParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
       if (!NS_SUCCEEDED(res)) // if it's not a text node, punt
       {
         NS_NOTREACHED("nsRange::DeleteContents");
@@ -1215,13 +1264,13 @@ nsresult nsRange::ToString(nsString& aReturn)
   aReturn.Truncate();
   
   // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(kIContentIID, (void**)&cStart);
+  nsresult res = mStartParent->QueryInterface(nsIContent::IID(), (void**)&cStart);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::ToString");
     return NS_ERROR_UNEXPECTED;
   }
-  res = mEndParent->QueryInterface(kIContentIID, (void**)&cEnd);
+  res = mEndParent->QueryInterface(nsIContent::IID(), (void**)&cEnd);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::ToString");
@@ -1233,7 +1282,7 @@ nsresult nsRange::ToString(nsString& aReturn)
   if (cStart == cEnd)
   {
     nsIDOMText *textNode;
-    res = mStartParent->QueryInterface(kIDOMTextIID, (void**)&textNode);
+    res = mStartParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
     if (!NS_SUCCEEDED(res)) // if it's not a text node, skip to iterator approach
     {
        goto toStringComplexLabel;
@@ -1267,7 +1316,7 @@ toStringComplexLabel:
   while (NS_COMFALSE == iter.IsDone())
   {
     nsIDOMText *textNode;
-    res = cN->QueryInterface(kIDOMTextIID, (void**)&textNode);
+    res = cN->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
     if (NS_SUCCEEDED(res)) // if it's a text node, get the text
     {
       if (cN == cStart) // only include text past start offset

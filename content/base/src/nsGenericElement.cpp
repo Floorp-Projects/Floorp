@@ -1061,6 +1061,7 @@ nsGenericElement::RangeRemove(nsIDOMRange& aRange)
     if (rv) {
       if (mDOMSlots->mRangeList->Count() == 0) {
         delete mDOMSlots->mRangeList;
+        mDOMSlots->mRangeList = nsnull;
         if ( (mDOMSlots->mScriptObject == nsnull) &&
              (mDOMSlots->mChildNodes == nsnull) &&
              (mDOMSlots->mStyle == nsnull) ) {
