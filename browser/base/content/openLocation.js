@@ -45,9 +45,6 @@ function onLoad()
    
   dialog.openWhereList.selectedItem = dialog.openTopWindow;
 
-  // change OK button text to 'open'
-  dialog.open.label = dialog.bundle.getString("openButtonLabel");
-
   if (pref) {
     try {
       var value = pref.getIntPref("general.open_location.last_window_choice");
