@@ -475,10 +475,26 @@ PRBool nsRange::IsIncreasing(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
   commonNodeStartOffset = (PRInt32)mStartAncestorOffsets->ElementAt(numStartAncestors);
   commonNodeEndOffset   = (PRInt32)mEndAncestorOffsets->ElementAt(numEndAncestors);
   
-  if (commonNodeStartOffset>commonNodeEndOffset) 
+  if (commonNodeStartOffset > commonNodeEndOffset) 
     return PR_FALSE;
-  else  
+  else if (commonNodeStartOffset < commonNodeEndOffset) 
     return PR_TRUE;
+  else 
+  {
+    // The offsets are equal.  This can happen when one endpoint parent is the common parent
+    // of both endpoints.  In this case, we compare the depth of the ancestor tree to determine
+    // the ordering.
+    if (numStartAncestors < numEndAncestors)
+      return PR_TRUE;
+    else if (numStartAncestors > numEndAncestors)
+      return PR_FALSE;
+    else
+    {
+      // whoa nelly. shouldn't get here.
+      NS_NOTREACHED("nsRange::IsIncreasing");
+      return PR_FALSE;
+    }
+  }
 }
 
 nsresult nsRange::IsPointInRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRBool* aResult)
@@ -648,55 +664,43 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   
   // no null nodes please
   if (!aNode1 || !aNode2) 
-    return nsCOMPtr<nsIDOMNode>();  // moral equiv of nsnull
+    return theParent;  // moral equiv of nsnull
   
   // shortcut for common case - both nodes are the same
   if (aNode1 == aNode2)
   {
-    return aNode1;
+    theParent = aNode1; // this forces an AddRef
+    return theParent;
   }
 
   // otherwise traverse the tree for the common ancestor
   // For now, a pretty dumb hack on computing this
-  nsVoidArray *array1 = new nsVoidArray();
-  nsVoidArray *array2 = new nsVoidArray();
+  nsVoidArray array1;
+  nsVoidArray array2;
   PRInt32     i=0, j=0;
   
-  // out of mem? out of luck!
-  if (!array1 || !array2)
-  {
-    NS_NOTREACHED("nsRange::CommonParent");
-    delete array1;
-    delete array2;
-    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
-  }
-  
   // get ancestors of each node
-  i = FillArrayWithAncestors(array1,aNode1);
-  j = FillArrayWithAncestors(array2,aNode2);
+  i = FillArrayWithAncestors(&array1,aNode1);
+  j = FillArrayWithAncestors(&array2,aNode2);
   
   // sanity test (for now) - FillArrayWithAncestors succeeded
   if ((i==-1) || (j==-1))
   {
     NS_NOTREACHED("nsRange::CommonParent");
-    delete array1;
-    delete array2;
-    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
+    return theParent; // moral equiv of nsnull
   }
   
   // sanity test (for now) - the end of each array
   // should match and be the root
-  if (array1->ElementAt(i) != array2->ElementAt(j))
+  if (array1.ElementAt(i) != array2.ElementAt(j))
   {
     NS_NOTREACHED("nsRange::CommonParent");
-    delete array1;
-    delete array2;
-    return nsCOMPtr<nsIDOMNode>(); // moral equiv of nsnull
+    return theParent; // moral equiv of nsnull
   }
   
   // back through the ancestors, starting from the root, until
   // first different ancestor found.  
-  while (array1->ElementAt(i) == array2->ElementAt(j))
+  while (array1.ElementAt(i) == array2.ElementAt(j))
   {
     --i;
     --j;
@@ -708,8 +712,8 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
   i++;
-  nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1->ElementAt(i));
-  node->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(theParent));
+  nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1.ElementAt(i));
+  theParent = do_QueryInterface(node);
   return theParent;  
 }
 
@@ -867,6 +871,7 @@ nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
 nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
 { 
   *aCommonParent = CommonParent(mStartParent,mEndParent);
+  NS_IF_ADDREF(*aCommonParent);
   return NS_OK;
 }
 
@@ -1388,70 +1393,47 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 
 nsresult nsRange::ToString(nsString& aReturn)
 { 
-  nsIContent *cStart;
-  nsIContent *cEnd;
+  nsCOMPtr<nsIContent> cStart( do_QueryInterface(mStartParent) );
+  nsCOMPtr<nsIContent> cEnd( do_QueryInterface(mEndParent) );
   
   // clear the string
   aReturn.Truncate();
   
-  // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(nsIContent::GetIID(), (void**)&cStart);
-  if (!NS_SUCCEEDED(res)) 
-  {
-    NS_NOTREACHED("nsRange::ToString");
+  if (!cStart || !cEnd)
     return NS_ERROR_UNEXPECTED;
-  }
-  res = mEndParent->QueryInterface(nsIContent::GetIID(), (void**)&cEnd);
-  if (!NS_SUCCEEDED(res)) 
-  {
-    NS_NOTREACHED("nsRange::ToString");
-    NS_IF_RELEASE(cStart);
-    return NS_ERROR_UNEXPECTED;
-  }
-  
+    
   // effeciency hack for simple case
   if (cStart == cEnd)
   {
-    nsIDOMText *textNode;
-    res = mStartParent->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
-    if (!NS_SUCCEEDED(res)) // if it's not a text node, skip to iterator approach
+    nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(mStartParent) );
+    
+    if (textNode)
     {
-       goto toStringComplexLabel;
+      // grab the text
+      if (!NS_SUCCEEDED(textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn)))
+        return NS_ERROR_UNEXPECTED;
+      return NS_OK;
     }
-    // grab the text
-    res = textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn);
-    if (!NS_SUCCEEDED(res)) 
-    {
-      NS_NOTREACHED("nsRange::ToString");
-      NS_IF_RELEASE(cStart);
-      NS_IF_RELEASE(cEnd);
-      NS_IF_RELEASE(textNode);
-      return res;
-    }
-    NS_IF_RELEASE(textNode);
-    return NS_OK;
   } 
   
-toStringComplexLabel:
   /* complex case: cStart != cEnd, or cStart not a text node
      revisit - there are potential optimizations here and also tradeoffs.
   */
 
   nsCOMPtr<nsIContentIterator> iter;
-  res = NS_NewContentIterator(getter_AddRefs(iter));
+  NS_NewContentIterator(getter_AddRefs(iter));
   iter->Init(this);
   
   nsString tempString;
-  nsIContent *cN;
+  nsCOMPtr<nsIContent> cN;
  
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
-  res = iter->CurrentNode(&cN);
+  iter->CurrentNode(getter_AddRefs(cN));
   while (NS_COMFALSE == iter->IsDone())
   {
-    nsIDOMText *textNode;
-    res = cN->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
-    if (NS_SUCCEEDED(res)) // if it's a text node, get the text
+    nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
+    if (textNode) // if it's a text node, get the text
     {
       if (cN == cStart) // only include text past start offset
       {
@@ -1470,15 +1452,10 @@ toStringComplexLabel:
         textNode->GetData(tempString);
         aReturn += tempString;
       }
-      NS_IF_RELEASE(textNode);
     }
     iter->Next();
-    NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
-    res = iter->CurrentNode(&cN);
+    iter->CurrentNode(getter_AddRefs(cN));
   }
-
-  NS_IF_RELEASE(cStart);
-  NS_IF_RELEASE(cEnd);
   return NS_OK;
 }
 
