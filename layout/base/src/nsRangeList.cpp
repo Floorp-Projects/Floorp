@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -557,7 +558,7 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
   if (NS_FAILED(rv)) return rv;
   if (mIndex >=0 && mIndex < (PRInt32)cnt){
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mDomSelection->mRangeArray->ElementAt(mIndex));
-    return indexIsupports->QueryInterface(nsIDOMRange::GetIID(),(void **)aItem);
+    return indexIsupports->QueryInterface(NS_GET_IID(nsIDOMRange),(void **)aItem);
   }
   return NS_ERROR_FAILURE;
 }
@@ -584,12 +585,12 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIEnumerator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEnumerator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -683,13 +684,13 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIFrameSelection::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFrameSelection))) {
     nsIFrameSelection* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     // use *first* base class for ISupports
     nsIFrameSelection* tmp1 = this;
     nsISupports* tmp2 = tmp1;
@@ -1066,7 +1067,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_OK;
   nsCOMPtr<nsIContent> content;
-  result = aNode->QueryInterface(nsIContent::GetIID(),getter_AddRefs(content));
+  result = aNode->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(content));
   if (NS_SUCCEEDED(result) && content)
   {
     nsCOMPtr<nsIContent> parent;
@@ -1075,7 +1076,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
     {
       result = parent->IndexOf(content, *aChildOffset);
       if (NS_SUCCEEDED(result))
-        result = parent->QueryInterface(nsIDOMNode::GetIID(),(void **)aParent);
+        result = parent->QueryInterface(NS_GET_IID(nsIDOMNode),(void **)aParent);
     }
   }
   return result;
@@ -1919,13 +1920,13 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIDOMSelection *temp = (nsIDOMSelection *)this;
     *aInstancePtr = (void*)(nsISupports *)temp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMSelection::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMSelection))) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1933,14 +1934,14 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
     /* The following clause needs to go away, as soon as we've caught any offending callers */
-  if (aIID.Equals(nsIEnumerator::GetIID())
-   || aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEnumerator))
+   || aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
   	NS_ASSERTION(0, "(tell scc or mjudge) -- Error: Get new enumerators with |GetEnumerator|, not |QueryInterface|!  Caller must be fixed");
   	return NS_NOINTERFACE;
   }
 
 
-  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -2178,7 +2179,7 @@ nsDOMSelection::RemoveItem(nsIDOMRange *aItem)
   {
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(i));
     nsCOMPtr<nsISupports> isupp;
-    aItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),getter_AddRefs(isupp));
+    aItem->QueryInterface(NS_GET_IID(nsISupports),getter_AddRefs(isupp));
     if (isupp.get() == indexIsupports.get())
     {
       mRangeArray->RemoveElementAt(i);
@@ -2346,12 +2347,12 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsIContentIterator> inneriter;
   nsresult result = nsComponentManager::CreateInstance(kCSubtreeIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
+                                              NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result))
     return result;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
+                                              NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(inneriter));
   if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {

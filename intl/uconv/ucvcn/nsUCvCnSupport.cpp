@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "pratom.h"
@@ -373,7 +374,7 @@ nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(nsICharRepresentable::GetIID())) {                                          
+  if (aIID.Equals(NS_GET_IID(nsICharRepresentable))) {                                          
     *aInstancePtr = (void*) ((nsICharRepresentable*)this); 
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIAttributeContent.h"
 #include "nsGenericElement.h"
@@ -219,7 +220,7 @@ NS_NewAttributeContent(nsIContent** aContent)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return NS_SUCCEEDED(it->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(), (void **)aContent)) ?
+  return NS_SUCCEEDED(it->QueryInterface(NS_GET_IID(nsIContent), (void **)aContent)) ?
          NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -271,25 +272,25 @@ nsresult nsAttributeContent::QueryInterface(const nsIID& aIID, void** aInstanceP
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIContent>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIContent))) {
     *aInstancePtr = (void*) ((nsIContent*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsITextContent>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
     *aInstancePtr = (void*) ((nsITextContent*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIAttributeContent>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIAttributeContent))) {
     *aInstancePtr = (void*) ((nsIAttributeContent*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*) ((nsISupports*)(nsIContent*)this);
     NS_ADDREF_THIS();
     return NS_OK;

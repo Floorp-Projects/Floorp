@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCSSFrameConstructor.h"
@@ -3098,7 +3099,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // if a select is being created with zero options we need to create 
         // a special pseudo frame so it can be sized as best it can 
         nsCOMPtr<nsIDOMHTMLSelectElement> selectElement; 
-        nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(), 
+        nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement), 
                                                      (void**)getter_AddRefs(selectElement)); 
         if (NS_SUCCEEDED(result) && selectElement) { 
           PRUint32 numOptions = 0; 
@@ -3250,7 +3251,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
     // if a select is being created with zero options we need to create
     // a special pseudo frame so it can be sized as best it can
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-    nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+    nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                  (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(result) && selectElement) {
       PRUint32 numOptions = 0;
@@ -5561,11 +5562,11 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
     // What is unclear here, is if any of this fails, should it return
     // the nsComboboxControlFrame or null?
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-    nsresult res = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+    nsresult res = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                  (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(res) && selectElement) {
       nsIComboboxControlFrame * comboboxFrame;
-      res = frame->QueryInterface(nsCOMTypeInfo<nsIComboboxControlFrame>::GetIID(),
+      res = frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),
                                                (void**)&comboboxFrame);
       nsIFrame * listFrame;
       if (NS_SUCCEEDED(res) && comboboxFrame) {
@@ -5574,7 +5575,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
           listFrame->FirstChild(aPresContext, nsnull, &frame);
         }
       } else {
-        res = frame->QueryInterface(nsCOMTypeInfo<nsIListControlFrame>::GetIID(),
+        res = frame->QueryInterface(NS_GET_IID(nsIListControlFrame),
                                                  (void**)&listFrame);
         if (NS_SUCCEEDED(res) && listFrame) {
           frame->FirstChild(aPresContext, nsnull, &frame);
@@ -6611,7 +6612,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     // so if the select now has a single item 
     // we need to go in and removed the dummy frame
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-    nsresult result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+    nsresult result = aContainer->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                  (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(result) && selectElement) {
       RemoveDummyFrameFromSelect(aPresContext, shell, aContainer, aChild, selectElement);
@@ -6838,7 +6839,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   nsresult result = NS_ERROR_FAILURE;
   if (aContainer && childFrame) {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-    result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+    result = aContainer->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(result) && selectElement) {
       PRUint32 numOptions = 0;
@@ -7605,7 +7606,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // the style tag has its own interpretation based on aHint 
   if (NS_STYLE_HINT_UNKNOWN == aHint) { 
     nsIStyledContent* styledContent;
-    result = aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent);
+    result = aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent);
 
     if (NS_OK == result) { 
       // Get style hint from HTML content object. 
@@ -10144,15 +10145,15 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
     nsIFrameDebug*  frameDebug;
 
     printf("nsCSSFrameConstructor::ConstructInline:\n");
-    if (NS_SUCCEEDED(aNewFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(aNewFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       printf("  ==> leading inline frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
-    if (NS_SUCCEEDED(blockFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(blockFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       printf("  ==> block frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
-    if (NS_SUCCEEDED(inlineFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(inlineFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       printf("  ==> trailing inline frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }

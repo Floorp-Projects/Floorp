@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
@@ -277,7 +278,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
   nsresult result = GetPrimaryFrame(fcFrame);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
       PRInt32 indx;
       result = GetIndex(&indx);
@@ -310,7 +311,7 @@ nsHTMLOptionElement::SetLabel(const nsString& aValue)
     result = GetPrimaryFrame(fcFrame);
     if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
       nsIComboboxControlFrame* selectFrame = nsnull;
-      result = fcFrame->QueryInterface(nsIComboboxControlFrame::GetIID(),(void **) &selectFrame);
+      result = fcFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void **) &selectFrame);
       if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
         selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
       }
@@ -552,7 +553,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
     result = GetPrimaryFrame(fcFrame);
     if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
       nsIComboboxControlFrame* selectFrame = nsnull;
-      result = fcFrame->QueryInterface(nsIComboboxControlFrame::GetIID(),(void **) &selectFrame);
+      result = fcFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void **) &selectFrame);
       if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
         selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
       }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 //
@@ -223,7 +224,7 @@ nsToolboxFrame::Init(nsIPresContext*  aPresContext,
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), nsIDOMDragListener::GetIID());
+  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), NS_GET_IID(nsIDOMDragListener));
 
   return rv;
 }
@@ -799,7 +800,7 @@ nsToolboxFrame::DragEnter(nsIDOMEvent* aDragEvent)
 {
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
+                                             NS_GET_IID(nsIDragService),
                                              (nsISupports **)&dragService);
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
@@ -827,7 +828,7 @@ nsToolboxFrame::DragOver(nsIDOMEvent* aDragEvent)
 {
   // now tell the drag session whether we can drop here
   nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, nsIDragService::GetIID(),
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, NS_GET_IID(nsIDragService),
                                               (nsISupports **)&dragService);
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
@@ -868,7 +869,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
   // Create drag service for getting state of drag
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
+                                             NS_GET_IID(nsIDragService),
                                              (nsISupports **)&dragService);
   if (NS_OK == rv) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
@@ -878,7 +879,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
       // Create transferable for getting the drag data
       nsCOMPtr<nsITransferable> trans;
       rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), 
+                                              NS_GET_IID(nsITransferable), 
                                               (void**) getter_AddRefs(trans));
       if ( NS_SUCCEEDED(rv) && trans ) {
         // Add the toolbar Flavor to the transferable, because that is the only type of data we are

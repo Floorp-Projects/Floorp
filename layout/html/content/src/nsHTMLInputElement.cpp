@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -260,7 +261,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMNSHTMLInputElement::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLInputElement))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLInputElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -71,7 +72,7 @@ nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,
   else if (aIID.Equals(kIDateTimeFormatIID)) {
      NS_NEWXPCOM(inst, nsDateTimeFormatUnix);
   }
-  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+  else if (aIID.Equals(NS_GET_IID(nsIScriptableDateFormat))) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else if (mClassID.Equals(kScriptableDateFormatCID)) {

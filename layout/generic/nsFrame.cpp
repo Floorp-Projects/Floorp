@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
@@ -251,7 +252,7 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kClassIID, kIFrameIID);
 
 #ifdef DEBUG
-  if (aIID.Equals(nsIFrameDebug::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
     *aInstancePtr = (void*)(nsIFrameDebug*)this;
     return NS_OK;
   }
@@ -769,15 +770,15 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 #else
             nsIDragService* dragService; 
             nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                                       nsIDragService::GetIID(), 
+                                                       NS_GET_IID(nsIDragService), 
                                                        (nsISupports **)&dragService); 
             if (NS_OK == rv) { 
               nsCOMPtr<nsITransferable> trans; 
               rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                        nsITransferable::GetIID(), getter_AddRefs(trans)); 
+                                                        NS_GET_IID(nsITransferable), getter_AddRefs(trans)); 
               nsCOMPtr<nsITransferable> trans2; 
               rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                        nsITransferable::GetIID(), getter_AddRefs(trans2)); 
+                                                        NS_GET_IID(nsITransferable), getter_AddRefs(trans2)); 
               if ( trans && trans2 ) {
                 nsString textPlainFlavor ( "text/plain" );
                 trans->AddDataFlavor(&textPlainFlavor);
@@ -1843,7 +1844,7 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
       while (nsnull != kid) {
         nsIFrameDebug*  frameDebug;
 
-        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->DumpRegressionData(aPresContext, out, aIndent);
         }
         kid->GetNextSibling(&kid);
@@ -2028,7 +2029,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
    nsresult result;
   nsCOMPtr<nsILineIterator> it; 
-  result = aBlockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+  result = aBlockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
   if (NS_FAILED(result) || !it)
     return result;
   PRInt32 searchingLine = aLineStart;
@@ -2100,7 +2101,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
     {
       nsCOMPtr<nsILineIterator> newIt; 
       //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
-      result = resultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(newIt));
+      result = resultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(newIt));
       if (NS_SUCCEEDED(result) && newIt)
       {
         aPos->mResultFrame = resultFrame;
@@ -2276,13 +2277,13 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = blockFrame->GetParent(&blockFrame);
         if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
           return result;
-        result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
         while (NS_FAILED(result) && blockFrame)
         {
           thisBlock = blockFrame;
           result = blockFrame->GetParent(&blockFrame);
           if (NS_SUCCEEDED(result) && blockFrame){
-            result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+            result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
           }
         }
         //this block is now one child down from blockframe
@@ -2314,7 +2315,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           else
             doneLooping = PR_TRUE; //do not continue with while loop
           if (NS_SUCCEEDED(result) && aPos->mResultFrame){
-            result = aPos->mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+            result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
             if (NS_SUCCEEDED(result) && it)//we have struck another block element!
             {
               doneLooping = PR_FALSE;
@@ -2345,13 +2346,13 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       result = blockFrame->GetParent(&blockFrame);
       if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
         return result;
-      result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
       while (NS_FAILED(result) && blockFrame)
       {
         thisBlock = blockFrame;
         result = blockFrame->GetParent(&blockFrame);
         if (NS_SUCCEEDED(result) && blockFrame){
-          result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+          result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
         }
       }
       //this block is now one child down from blockframe
@@ -2445,7 +2446,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
     if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
     }
     else
       blockFrame = nsnull;
@@ -2475,7 +2476,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
     if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
     }
     else
       blockFrame = nsnull;

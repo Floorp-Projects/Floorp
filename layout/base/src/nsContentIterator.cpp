@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -168,7 +169,7 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentIterator();
   if (iter)
-    return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+    return iter->QueryInterface(NS_GET_IID(nsIContentIterator), (void**) aInstancePtrResult);
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -194,13 +195,13 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-/*  if (aIID.Equals(nsIEnumerator::GetIID())) 
+/*  if (aIID.Equals(NS_GET_IID(nsIEnumerator))) 
   {
     *aInstancePtrResult = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }  */
-  if (aIID.Equals(nsIContentIterator::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsIContentIterator))) 
   {
     *aInstancePtrResult = (void*)(nsIContentIterator*)this;
     NS_ADDREF_THIS();
@@ -718,7 +719,7 @@ nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
     return NS_ERROR_FAILURE;
   if (mIsDone) 
     return NS_ERROR_FAILURE;
-  return mCurNode->QueryInterface(nsIContent::GetIID(), (void**) aNode);
+  return mCurNode->QueryInterface(NS_GET_IID(nsIContent), (void**) aNode);
 }
 
 
@@ -788,7 +789,7 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentSubtreeIterator();
   if (iter)
-    return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+    return iter->QueryInterface(NS_GET_IID(nsIContentIterator), (void**) aInstancePtrResult);
   return NS_ERROR_OUT_OF_MEMORY;
 }
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -1353,7 +1354,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPref>     prefs;
   PRInt32 prefInt = 0;
   rv = nsServiceManager::GetService(kPrefCID, 
-                                    nsIPref::GetIID(), 
+                                    NS_GET_IID(nsIPref), 
                                     (nsISupports**)&prefs); 
   PRBool outofstylehandled = PR_FALSE;
   if (NS_SUCCEEDED(rv) && prefs) 
@@ -1983,7 +1984,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       nsCOMPtr<nsIPref>     prefs;
       PRInt32 prefInt = 0;
       rv = nsServiceManager::GetService(kPrefCID, 
-                                        nsIPref::GetIID(), 
+                                        NS_GET_IID(nsIPref), 
                                         (nsISupports**)&prefs); 
       PRBool outofstylehandled = PR_FALSE;
       if (NS_SUCCEEDED(rv) && prefs) 
@@ -2636,7 +2637,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPref>     mPrefs;
     PRInt32 prefInt = 0;
     rv = nsServiceManager::GetService(kPrefCID, 
-                                               nsIPref::GetIID(), 
+                                               NS_GET_IID(nsIPref), 
                                                (nsISupports**)&mPrefs); 
 
     if (NS_SUCCEEDED(rv) && mPrefs) 

@@ -18,6 +18,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -361,7 +362,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // Check to see if we are really the 'core' of the ancestor, not just a sibling of the core
   if (hasEmbellishAncestor && embellishAncestor) {
     hasEmbellishAncestor = PR_FALSE;
-    rv = embellishAncestor->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    rv = embellishAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     if (NS_SUCCEEDED(rv) && aMathMLFrame) {
       nsEmbellishData embellishData;
       aMathMLFrame->GetEmbellishData(embellishData);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIFrameManager.h"
 #include "nsIFrame.h"
@@ -315,7 +316,7 @@ NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(nsIFrameManager::GetIID(), (void **)aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIFrameManager), (void **)aInstancePtrResult);
 }
 
 FrameManager::FrameManager()
@@ -827,7 +828,7 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
     nsAutoString  name;
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(name);
       fputs(name, stdout);
     }
@@ -1372,7 +1373,7 @@ CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
   // See if the frame is stateful.
   // Frames are not ref-counted so no addref/release is required on statefulFrame.
   nsIStatefulFrame* statefulFrame = nsnull;
-  aFrame->QueryInterface(nsIStatefulFrame::GetIID(), (void**) &statefulFrame);
+  aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
     // If so, get the content ID, state type and the state and
     // add an association between (ID, type) and (state) to the
@@ -1434,7 +1435,7 @@ RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
   // See if the frame is stateful.
   // Frames are not ref-counted so no addref/release is required on statefulFrame.
   nsIStatefulFrame* statefulFrame = nsnull;
-  aFrame->QueryInterface(nsIStatefulFrame::GetIID(), (void**) &statefulFrame);
+  aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
     // If so, get the content ID, state type and the frame state and
     // ask the frame object to restore its state.    

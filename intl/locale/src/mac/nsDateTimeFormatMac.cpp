@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIServiceManager.h"
@@ -276,14 +277,14 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIMacLocale> macLocale;
     res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
-                                             nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+                                             NS_GET_IID(nsIMacLocale), getter_AddRefs(macLocale));
     if (NS_SUCCEEDED(res)) {
       res = macLocale->GetPlatformLocale(&mLocale, &mScriptcode, &mLangcode, &mRegioncode);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset;
     res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);

@@ -18,6 +18,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -354,7 +355,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
 	
   aBoundingMetrics.Clear();
   nsIMathMLFrame* aMathMLFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
   if (NS_SUCCEEDED(rv) && aMathMLFrame) {
     aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
 #if 0
@@ -405,7 +406,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 
     if (childFrame) {
       nsIMathMLFrame* aMathMLFrame = nsnull;
-      rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Something is wrong somewhere");
       if (NS_SUCCEEDED(rv) && aMathMLFrame) {
         nsHTMLReflowMetrics aReflowMetrics(nsnull);
@@ -503,7 +504,7 @@ nsMathMLContainerFrame::FinalizeReflow(PRInt32              aDirection,
     PRBool parentWillFireStretch = PR_FALSE;
     nsEmbellishData parentData;
     nsIMathMLFrame* aMathMLFrame = nsnull;
-    nsresult rv = mParent->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    nsresult rv = mParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     if (NS_SUCCEEDED(rv) && aMathMLFrame) {
       aMathMLFrame->GetEmbellishData(parentData);
       if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN(parentData.flags) ||
@@ -577,7 +578,7 @@ nsMathMLContainerFrame::EmbellishOperator()
     mEmbellishData.firstChild = firstChild;
     // Cache also the inner-most embellished frame at the core of the hierarchy
     nsIMathMLFrame* aMathMLFrame = nsnull;
-    nsresult rv = firstChild->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    nsresult rv = firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
     nsEmbellishData embellishData;
     aMathMLFrame->GetEmbellishData(embellishData);
@@ -613,7 +614,7 @@ nsMathMLContainerFrame::IsEmbellishOperator(nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "null arg");
   if (!aFrame) return PR_FALSE;
   nsIMathMLFrame* aMathMLFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
   if (NS_FAILED(rv) || !aMathMLFrame) return PR_FALSE;
   nsEmbellishData aEmbellishData;
   aMathMLFrame->GetEmbellishData(aEmbellishData);
@@ -663,7 +664,7 @@ nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
     if (!IsOnlyWhitespace(childFrame)) {
       if (0 >= aIndex--) {
         nsIMathMLFrame* aMathMLFrame = nsnull;
-        nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        nsresult rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
         if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
           // update
       	  aMathMLFrame->UpdatePresentationData(aScriptLevelIncrement, aDisplayStyle);
@@ -717,7 +718,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
 
       // see if the child frame implements the nsIMathMLFrame interface
       nsIMathMLFrame* aMathMLFrame = nsnull;
-      rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       if (nsnull != aMathMLFrame && NS_SUCCEEDED(rv)) {
 
         // get the scriptlevel of the child
@@ -877,7 +878,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
             aMathMLFrame->GetEmbellishData(embellishData);
             if (0 != embellishData.flags && nsnull != embellishData.firstChild) {
               do { // walk the hierarchy in a bottom-up manner
-                rv = lastFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+                rv = lastFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
                 NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
                 if (NS_FAILED(rv) || !aMathMLFrame) break;
                 embellishData.firstChild = childFrame;
@@ -959,7 +960,7 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   mEmbellishData.firstChild = nsnull;
 
   nsIMathMLFrame* aMathMLFrame = nsnull;
-  nsresult res = aParent->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  nsresult res = aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
   if (NS_SUCCEEDED(res) && nsnull != aMathMLFrame) {
     nsPresentationData parentData;
     aMathMLFrame->GetPresentationData(parentData);
@@ -1053,7 +1054,7 @@ nsMathMLContainerFrame::GetDesiredStretchSize(nsIPresContext*      aPresContext,
         // We have encountered an embellished operator...
         // It is treated as if the embellishments were not there!
         nsIMathMLFrame* aMathMLFrame = nsnull;
-        rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
         NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
         if (NS_SUCCEEDED(rv) && aMathMLFrame) {
           nsEmbellishData embellishData;
@@ -1264,7 +1265,7 @@ nsMathMLContainerFrame::ReflowChildren(PRInt32                  aDirection,
         // We have encountered an embellished operator...
         // It is treated as if the embellishments were not there!
         nsIMathMLFrame* aMathMLFrame = nsnull;
-        rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
         NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
         if (NS_SUCCEEDED(rv) && aMathMLFrame) {
 
@@ -1347,7 +1348,7 @@ nsMathMLContainerFrame::StretchChildren(nsIPresContext*      aPresContext,
     }
     else {
       nsIMathMLFrame* aMathMLFrame;
-      nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      nsresult rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       if (NS_SUCCEEDED(rv) && aMathMLFrame) {
         // retrieve the metrics that was stored at the ReflowChildren pass
         childFrame->GetRect(rect);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
@@ -182,7 +183,7 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMNSHTMLTextAreaElement::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLTextAreaElement))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLTextAreaElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;

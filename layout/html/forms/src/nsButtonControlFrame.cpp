@@ -302,6 +302,11 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
   aDesiredWidgetSize.height= aDesiredLayoutSize.height;
 }
 
+/*
+ * FIXME: this ::GetIID() method has no meaning in life and should be
+ * removed.
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ */
 const nsIID&
 nsButtonControlFrame::GetIID()
 {

@@ -82,7 +82,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsProxyStream, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(nsProxyStream, NS_GET_IID(nsIInputStream));
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -184,7 +184,7 @@ nsXBLService::nsXBLService(void)
     // Register the XBL namespace.
     nsresult rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                      nsnull,
-                                                     nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
+                                                     NS_GET_IID(nsINameSpaceManager),
                                                      (void**) &gNameSpaceManager);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
     if (NS_FAILED(rv)) return;
@@ -395,7 +395,7 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
   // Create the XML document
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = nsComponentManager::CreateInstance(kXMLDocumentCID, nsnull,
-                                                   nsIDocument::GetIID(),
+                                                   NS_GET_IID(nsIDocument),
                                                    getter_AddRefs(doc));
 
   if (NS_FAILED(rv)) return rv;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
@@ -1016,7 +1017,7 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsITableCellLayout::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
     *aInstancePtr = (void*) (nsITableCellLayout *)this;
     return NS_OK;
   } else {

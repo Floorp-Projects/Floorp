@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsString.h"
 #include "nsIUnicodeEncoder.h"
@@ -62,7 +63,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
   rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
-                                    nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+                                    NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoder(&charsetStr, &encoder);

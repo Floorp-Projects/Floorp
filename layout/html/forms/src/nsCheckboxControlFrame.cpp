@@ -122,7 +122,11 @@ nsCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-
+/*
+ * FIXME: this ::GetIID() method has no meaning in life and should be
+ * removed.
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ */
 const nsIID&
 nsCheckboxControlFrame::GetIID()
 {

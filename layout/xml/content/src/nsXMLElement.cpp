@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsXMLElement.h"
@@ -88,7 +89,7 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(nsIBindableContent::GetIID())) {
+  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
     nsIBindableContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();

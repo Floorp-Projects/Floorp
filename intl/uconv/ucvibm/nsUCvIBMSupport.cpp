@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * IBM Corporation
+ *   IBM Corporation
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
@@ -386,7 +387,7 @@ nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(nsICharRepresentable::GetIID())) {                                          
+  if (aIID.Equals(NS_GET_IID(nsICharRepresentable))) {                                          
     *aInstancePtr = (void*) ((nsICharRepresentable*)this); 
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -1173,7 +1174,7 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  if (aIID.Equals(nsILineIterator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsILineIterator))) {
     nsLineIterator* it = new nsLineIterator;
     if (!it) {
       *aInstancePtr = nsnull;
@@ -1282,7 +1283,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
       while (nsnull != kid) {
         nsIFrameDebug*  frameDebug;
 
-        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->List(aPresContext, out, aIndent + 1);
         }
         kid->GetNextSibling(&kid);
@@ -5925,9 +5926,9 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsIFocusTracker> tracker;
-    result = shell->QueryInterface(nsIFocusTracker::GetIID(),getter_AddRefs(tracker));
+    result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
 
-    result = mainframe->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+    result = mainframe->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
     nsIView* parentWithView;
     nsPoint origin;
 
@@ -5988,7 +5989,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
                                           );
       
       if (NS_SUCCEEDED(result) && pos.mResultFrame){
-        result = pos.mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));//if this fails thats ok
+        result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));//if this fails thats ok
         resultFrame = pos.mResultFrame;
         mainframe = resultFrame;
       }

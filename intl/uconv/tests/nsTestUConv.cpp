@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -262,7 +263,7 @@ nsresult testEncoder(nsIUnicodeEncoder * aEnc,
   
 #ifdef TEST_IS_REPRESENTABLE
   nsICharRepresentable* rp = nsnull;
-  res = aEnc->QueryInterface(nsICharRepresentable::GetIID(),(void**) &rp);
+  res = aEnc->QueryInterface(NS_GET_IID(nsICharRepresentable),(void**) &rp);
   if(NS_SUCCEEDED(res))  {
     PRUint32 *info= (PRUint32*)PR_Calloc((0x10000 >> 5), 4);
     rp->FillInfo(info);

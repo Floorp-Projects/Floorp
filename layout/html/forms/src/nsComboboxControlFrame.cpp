@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsComboboxControlFrame.h"
@@ -158,7 +159,7 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void *)(nsIStatefulFrame*)this;
     return NS_OK;
-  } else if (aIID.Equals(nsCOMTypeInfo<nsIRollupListener>::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIRollupListener))) {
     *aInstancePtr = (void*)(nsIRollupListener*)this;
     return NS_OK;
   }
@@ -623,7 +624,7 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
       viewOffset.x += po.x;
       viewOffset.y += po.y;
       nsIScrollableView * scrollView;
-      if (NS_OK == containingView->QueryInterface(nsIScrollableView::GetIID(), (void **)&scrollView)) {
+      if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
         nscoord x;
         nscoord y;
         scrollView->GetScrollPosition(x, y);

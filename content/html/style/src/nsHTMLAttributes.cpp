@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIHTMLAttributes.h"
@@ -379,12 +380,12 @@ nsHTMLMappedAttributes::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(nsIHTMLMappedAttributes::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLMappedAttributes))) {
     *aInstancePtrResult = (void*) ((nsIHTMLMappedAttributes*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIStyleRule::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1379,7 +1380,7 @@ HTMLAttributesImpl::Clone(nsIHTMLAttributes** aInstancePtrResult) const
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return clone->QueryInterface(nsIHTMLAttributes::GetIID(), (void **) aInstancePtrResult);
+  return clone->QueryInterface(NS_GET_IID(nsIHTMLAttributes), (void **) aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -1499,7 +1500,7 @@ extern NS_HTML nsresult
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(nsIHTMLAttributes::GetIID(), (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLAttributes), (void **) aInstancePtrResult);
 }
 
 

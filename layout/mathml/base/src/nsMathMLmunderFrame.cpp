@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -141,7 +142,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       if (NS_SUCCEEDED(rv) && aMathMLFrame) {
         aMathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
@@ -153,12 +154,12 @@ XXX The winner is the outermost setting in conflicting settings like these:
   
   // see if the underscriptFrame is <mo> or an embellished operator
   if (underscriptFrame) {
-    rv = underscriptFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&underscriptMathMLFrame);
+    rv = underscriptFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&underscriptMathMLFrame);
     if (NS_SUCCEEDED(rv) && underscriptMathMLFrame) {
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
         if (NS_SUCCEEDED(rv) && aMathMLFrame) {
           aMathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
@@ -1761,7 +1762,7 @@ StyleContextImpl::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(nsIStyleContext::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleContext))) {
     *aInstancePtr = (void*)(nsIStyleContext*)this;
     NS_ADDREF_THIS();
     return NS_OK;

@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * IBM Corporation
+ *   IBM Corporation
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
@@ -241,7 +242,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
   }
 
   // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
   if (NS_FAILED(rv)) {
     delete m;
     m = nsnull;
@@ -253,7 +254,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
 //----------------------------------------------------------------------------
 // Class nsConverterFactory [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterFactory, nsCOMTypeInfo<nsIFactory>::GetIID());
+NS_IMPL_ISUPPORTS(nsConverterFactory, NS_GET_IID(nsIFactory));
 
 nsConverterFactory::nsConverterFactory(FactoryData * aData) 
 {
@@ -302,7 +303,7 @@ NS_IMETHODIMP nsConverterFactory::LockFactory(PRBool aLock)
 //----------------------------------------------------------------------------
 // Class nsConverterModule [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterModule, nsIModule::GetIID())
+NS_IMPL_ISUPPORTS(nsConverterModule, NS_GET_IID(nsIModule))
 
 nsConverterModule::nsConverterModule()
 : mInitialized(PR_FALSE)
@@ -382,7 +383,7 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-      nsIRegistry::GetIID(), (nsISupports**)&registry);
+      NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
   // open the registry

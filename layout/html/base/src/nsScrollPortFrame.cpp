@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -584,7 +585,7 @@ nsScrollPortFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLRef
 
   // if it does ask it for its BoxSize and we are done
   nsIBox* ibox;
-  if (NS_SUCCEEDED(aFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
+  if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
      return NS_OK;
   }   
@@ -664,7 +665,7 @@ nsScrollPortFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& 
   nsIFrame* childFrame = mFrames.FirstChild(); 
     
   nsIBox* ibox;
-  if (NS_SUCCEEDED(childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+  if (NS_SUCCEEDED(childFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
       ibox->Dirty(aPresContext, aReflowState, incrementalChild);
   else {
       incrementalChild = frame;

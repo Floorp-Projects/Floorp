@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIHTMLCSSStyleSheet.h"
@@ -418,7 +419,7 @@ nsresult HTMLCSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIStyleRuleProcessor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
     *aInstancePtrResult = (void*) ((nsIStyleRuleProcessor*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -454,7 +455,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   nsIStyledContent* styledContent;
 
   // just get the one and only style rule from the content's STYLE attribute
-  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
     PRUint32 index = 0;
     aResults->Count(&index);
     if (NS_SUCCEEDED(styledContent->GetInlineStyleRules(aResults))) {

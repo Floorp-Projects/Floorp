@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
 #include <iostream.h>
@@ -173,7 +174,7 @@ static void TestCollation(nsILocale *locale)
    
    res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                                             NULL,
-                                            nsICollationFactory::GetIID(),
+                                            NS_GET_IID(nsICollationFactory),
                                             (void**) &f);
            
    cout << "Test 1 - CreateInstance():\n";
@@ -185,7 +186,7 @@ static void TestCollation(nsILocale *locale)
 
    res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                                             NULL,
-                                            nsICollationFactory::GetIID(),
+                                            NS_GET_IID(nsICollationFactory),
                                             (void**) &f);
    if(NS_FAILED(res) || ( f == NULL ) ) {
      cout << "\t2nd CreateInstance failed\n";
@@ -569,7 +570,7 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
 
   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                                            NULL,
-                                           nsICollationFactory::GetIID(),
+                                           NS_GET_IID(nsICollationFactory),
                                            (void**) &factoryInst);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
@@ -689,7 +690,7 @@ static void TestDateTimeFormat(nsILocale *locale)
   nsIScriptableDateFormat *aScriptableDateFormat;
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                            NULL,
-                                           nsIScriptableDateFormat::GetIID(),
+                                           NS_GET_IID(nsIScriptableDateFormat),
                                            (void**) &aScriptableDateFormat);
   if(NS_FAILED(res) || ( aScriptableDateFormat == NULL ) ) {
     cout << "\tnsIScriptableDateFormat CreateInstance failed\n";
@@ -735,7 +736,7 @@ static void TestDateTimeFormat(nsILocale *locale)
   nsIDateTimeFormat *t = NULL;
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                            NULL,
-                                           nsIDateTimeFormat::GetIID(),
+                                           NS_GET_IID(nsIDateTimeFormat),
                                            (void**) &t);
        
   cout << "Test 1 - CreateInstance():\n";
@@ -747,7 +748,7 @@ static void TestDateTimeFormat(nsILocale *locale)
 
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                            NULL,
-                                           nsIDateTimeFormat::GetIID(),
+                                           NS_GET_IID(nsIDateTimeFormat),
                                            (void**) &t);
        
   if(NS_FAILED(res) || ( t == NULL ) ) {

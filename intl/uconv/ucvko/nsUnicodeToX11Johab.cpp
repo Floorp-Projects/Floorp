@@ -19,8 +19,9 @@
  * <jshin@pantheon.yale.edu>
  *
  * Contributor(s):
- * Deogtae Kim <dtkim@calab.kaist.ac.kr> (99/08/28)
- * Jungshik Shin <jshin@pantheon.yale.edu>
+ *   Deogtae Kim <dtkim@calab.kaist.ac.kr> (99/08/28)
+ *   Jungshik Shin <jshin@pantheon.yale.edu>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * - Purposes:
  *   1. Enable displaying all 11,172 Modern hangul syllables with Hanterm
@@ -73,7 +74,7 @@ nsresult nsUnicodeToX11Johab::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsICharRepresentable::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsICharRepresentable))) {
     *aInstancePtr = (void*) ((nsICharRepresentable*)this);
     NS_ADDREF_THIS();
     return NS_OK;

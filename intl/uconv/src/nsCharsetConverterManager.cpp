@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -170,7 +171,7 @@ nsConverterInfo::~nsConverterInfo()
 //----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsICharsetConverterManager::GetIID());
+NS_IMPL_ISUPPORTS(nsCharsetConverterManager, NS_GET_IID(nsICharsetConverterManager));
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 :mDataBundle(NULL), mTitleBundle(NULL)
@@ -264,7 +265,7 @@ void nsCharsetConverterManager::FillInfoArrays()
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-    nsIRegistry::GetIID(), (nsISupports**)&registry);
+    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
   // open registry if necessary

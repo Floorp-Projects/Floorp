@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsGfxTextControlFrame.h"
@@ -273,15 +274,15 @@ nsGfxTextControlFrame::CreateEditor()
 
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> contentER;
-    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(contentER));
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(contentER));
     if NS_FAILED(result) { return result; }
     if (contentER) 
     {
       nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
-      mListenerForContent->QueryInterface(nsIDOMDragListener::GetIID(), getter_AddRefs(dragListenerForContent));
+      mListenerForContent->QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListenerForContent));
       if (dragListenerForContent)
       {
-        result = contentER->AddEventListenerByIID(dragListenerForContent, nsIDOMDragListener::GetIID());
+        result = contentER->AddEventListenerByIID(dragListenerForContent, NS_GET_IID(nsIDOMDragListener));
         if NS_FAILED(result) { return result; }
       }
     }
@@ -296,9 +297,9 @@ nsGfxTextControlFrame::CreateEditor()
     NS_ADDREF(mFocusListenerForDisplayContent);
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> er;
-    result = mDisplayContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+    result = mDisplayContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
     if (NS_SUCCEEDED(result) && er) 
-      result = er->AddEventListenerByIID(mFocusListenerForDisplayContent, nsIDOMFocusListener::GetIID());
+      result = er->AddEventListenerByIID(mFocusListenerForDisplayContent, NS_GET_IID(nsIDOMFocusListener));
     // should check to see if mDisplayContent or mContent has focus and call CreateSubDoc instead if it does
     // do something with result
   }
@@ -306,7 +307,7 @@ nsGfxTextControlFrame::CreateEditor()
   nsCOMPtr<nsIHTMLEditor> theEditor;
   result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                               nsnull,
-                                              nsIHTMLEditor::GetIID(), getter_AddRefs(theEditor));
+                                              NS_GET_IID(nsIHTMLEditor), getter_AddRefs(theEditor));
   if (NS_FAILED(result)) { return result; }
   if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
   mEditor = do_QueryInterface(theEditor);
@@ -355,10 +356,10 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   if (mDisplayContent && mFocusListenerForDisplayContent)
   {
     nsCOMPtr<nsIDOMEventReceiver> er;
-    result = mDisplayContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+    result = mDisplayContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
     if (NS_SUCCEEDED(result) && er) 
     {
-      er->RemoveEventListenerByIID(mFocusListenerForDisplayContent, nsIDOMFocusListener::GetIID());
+      er->RemoveEventListenerByIID(mFocusListenerForDisplayContent, NS_GET_IID(nsIDOMFocusListener));
     }
     mFocusListenerForDisplayContent->SetFrame(nsnull);
     NS_RELEASE(mFocusListenerForDisplayContent);
@@ -370,14 +371,14 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     // checking errors below does not good, I'm in a void method
     // I only check the minimum required to be sure it all works right
     nsCOMPtr<nsIDOMEventReceiver> contentER;
-    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(contentER));
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(contentER));
     if (NS_SUCCEEDED(result) && contentER) 
     {
       nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
-      mListenerForContent->QueryInterface(nsIDOMDragListener::GetIID(), getter_AddRefs(dragListenerForContent));
+      mListenerForContent->QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListenerForContent));
       if (dragListenerForContent)
       {
-        contentER->RemoveEventListenerByIID(dragListenerForContent, nsIDOMDragListener::GetIID());
+        contentER->RemoveEventListenerByIID(dragListenerForContent, NS_GET_IID(nsIDOMDragListener));
       }
     }
     mListenerForContent->SetFrame(nsnull);
@@ -405,24 +406,24 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
       if (NS_SUCCEEDED(result) && domDoc)
       {
         nsCOMPtr<nsIDOMEventReceiver> er;
-        result = domDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+        result = domDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
         if (NS_SUCCEEDED(result) && er) 
         {
           // remove key listener
           nsCOMPtr<nsIDOMKeyListener>keyListener;
           keyListener = do_QueryInterface(mEventListener);
           if (keyListener)
-            er->RemoveEventListenerByIID(keyListener, nsIDOMKeyListener::GetIID());
+            er->RemoveEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
           // remove mouse listener
           nsCOMPtr<nsIDOMMouseListener>mouseListener;
           mouseListener = do_QueryInterface(mEventListener);
           if (mouseListener)
-            er->RemoveEventListenerByIID(mouseListener, nsIDOMMouseListener::GetIID());
+            er->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
           // remove focus listener
           nsCOMPtr<nsIDOMFocusListener>focusListener;
           focusListener = do_QueryInterface(mEventListener);
           if (focusListener)
-            er->RemoveEventListenerByIID(focusListener, nsIDOMFocusListener::GetIID());
+            er->RemoveEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
         }
       }
     }
@@ -2108,7 +2109,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
           mContent->AppendChildTo(content, PR_FALSE);
 
           // set the value of the text node
-          content->QueryInterface(nsITextContent::GetIID(), getter_AddRefs(mDisplayContent));
+          content->QueryInterface(NS_GET_IID(nsITextContent), getter_AddRefs(mDisplayContent));
           if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
           nsAutoString value;
           GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
@@ -2426,7 +2427,7 @@ nsGfxTextControlFrame::GetWidthInCharacters() const
 {
   // see if there's a COL attribute, if so it wins
   nsCOMPtr<nsIHTMLContent> content;
-  nsresult result = mContent->QueryInterface(nsIHTMLContent::GetIID(), getter_AddRefs(content));
+  nsresult result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), getter_AddRefs(content));
   if (NS_SUCCEEDED(result) && content)
   {
     nsHTMLValue resultValue;
@@ -2553,7 +2554,7 @@ nsGfxTextControlFrame::InstallEventListeners()
 
   // get the DOM event receiver
   nsCOMPtr<nsIDOMEventReceiver> er;
-  result = mDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+  result = mDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
   if (!er) { result = NS_ERROR_NULL_POINTER; }
 
   // get the view from the webshell
@@ -2568,7 +2569,7 @@ nsGfxTextControlFrame::InstallEventListeners()
   vm->GetRootScrollableView(&sv);
   if (!sv) { return NS_ERROR_NULL_POINTER; }
   nsIView *view;
-  sv->QueryInterface(nsIView::GetIID(), (void **)&view);
+  sv->QueryInterface(NS_GET_IID(nsIView), (void **)&view);
   if (!view) { return NS_ERROR_NULL_POINTER; }
 
   // we need to hook up our listeners before the editor is initialized
@@ -2582,17 +2583,17 @@ nsGfxTextControlFrame::InstallEventListeners()
 
   nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
   if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
-  result = er->AddEventListenerByIID(keyListener, nsIDOMKeyListener::GetIID());
+  result = er->AddEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(result)) { return result; }
 
   nsCOMPtr<nsIDOMMouseListener> mouseListener = do_QueryInterface(mEventListener);
   if (!mouseListener) { return NS_ERROR_NO_INTERFACE; }
-  result = er->AddEventListenerByIID(mouseListener, nsIDOMMouseListener::GetIID());
+  result = er->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(result)) { return result; }
   
   nsCOMPtr<nsIDOMFocusListener> focusListener = do_QueryInterface(mEventListener);
   if (!focusListener) { return NS_ERROR_NO_INTERFACE; }
-  result = er->AddEventListenerByIID(focusListener, nsIDOMFocusListener::GetIID());
+  result = er->AddEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
   if (NS_FAILED(result)) { return result; }
 
   // add the selection listener
@@ -2878,7 +2879,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
       flags |= nsIHTMLEditor::eEditorPasswordMask;
     }
     nsCOMPtr<nsIContent> content;
-    result = mContent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(content));
+    result = mContent->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(content));
     if (NS_SUCCEEDED(result) && content)
     {
       PRInt32 nameSpaceID;
@@ -3049,7 +3050,7 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
             if (rootFrame) {
               nsIFrameDebug*  frameDebug;
 
-              if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+              if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
                 frameDebug->List(aPresContext, out, aIndent + 1);
               }
               nsCOMPtr<nsIDocument> doc;
@@ -3076,7 +3077,7 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
       IndentBy(out, aIndent);
       nsAutoString tmp;
       fputs("<\n", out);
-      if (NS_SUCCEEDED(mDisplayFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(mDisplayFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
         frameDebug->List(aPresContext, out, aIndent + 1);
       }
       IndentBy(out, aIndent);
@@ -3305,7 +3306,7 @@ NS_NewEnderEventListener(nsIEnderEventListener ** aInstancePtr)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(nsIEnderEventListener::GetIID(), (void **) aInstancePtr);   
+  return it->QueryInterface(NS_GET_IID(nsIEnderEventListener), (void **) aInstancePtr);   
 }
 
 NS_IMPL_ADDREF(nsEnderEventListener)
@@ -3363,27 +3364,27 @@ nsEnderEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   
-  if (aIID.Equals(nsIDOMKeyListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMMouseListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMFocusListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMFocusListener))) {
     *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMSelectionListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
     *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEnderEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEnderEventListener))) {
     *aInstancePtr = (void*)(nsIEnderEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -4043,7 +4044,7 @@ nsEnderFocusListenerForDisplayContent::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIDOMFocusListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMFocusListener))) {
     *aInstancePtr = (void*) ((nsIDOMFocusListener*)this);
     AddRef();
     return NS_OK;

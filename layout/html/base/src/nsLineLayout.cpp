@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsLineLayout.h"
@@ -82,7 +83,7 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
     nsAutoString tmp;
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(text->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(text->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
       fputs(tmp, out);
     }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIComponentManager.h"
@@ -173,7 +174,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 
   nsIComponentManager* compMgr;
   rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
+                           NS_GET_IID(nsIComponentManager), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
@@ -236,7 +237,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
   nsIComponentManager* compMgr;
   rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
+                           NS_GET_IID(nsIComponentManager), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 

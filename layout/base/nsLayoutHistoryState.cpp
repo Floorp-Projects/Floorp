@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsILayoutHistoryState.h"
@@ -107,7 +108,7 @@ nsLayoutHistoryState::~nsLayoutHistoryState()
 }
 
 NS_IMPL_ISUPPORTS(nsLayoutHistoryState, 
-                  nsILayoutHistoryState::GetIID());
+                  NS_GET_IID(nsILayoutHistoryState));
 
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
