@@ -39,11 +39,11 @@ MODULE = pipnss
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-DLLNAME       = pipnss
-PDBFILE       = $(DLLNAME).pdb
-MAPFILE       = $(DLLNAME).map
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
+LIBRARY_NAME   = pipnss
+PDBFILE        = $(LIBRARY_NAME).pdb
+MAPFILE        = $(LIBRARY_NAME).map
+MODULE_NAME = NSS
+META_COMPONENT = crypto
 
 include <$(DEPTH)/config/config.mak>
 
@@ -55,11 +55,11 @@ LINCS = $(LINCS)     \
     -I$(XPDIST)/private/security \
     $(NULL)
 
-LLIBS   = \
+
+SUB_LIBRARIES   = \
     $(DIST)/lib/crmf.lib \
     $(DIST)/lib/ssl.lib \
     $(DIST)/lib/nss.lib \
-    $(DIST)/lib/ssl.lib \
     $(DIST)/lib/certhi.lib \
     $(DIST)/lib/cryptohi.lib \
     $(DIST)/lib/pk11wrap.lib \
@@ -70,6 +70,9 @@ LLIBS   = \
     $(DIST)/lib/freebl.lib \
     $(DIST)/lib/secutil.lib \
     $(DIST)/lib/dbm.lib \
+    $(NULL)
+
+LLIBS   = \
     $(LIBNSPR) \
     $(DIST)\lib\xpcom.lib \
     $(DIST)\lib\js3250.lib \
@@ -100,6 +103,5 @@ OBJS = \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
 

@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pipnss
 LIBRARY_NAME	= pipnss
 IS_COMPONENT	= 1
+MODULE_NAME	= NSS
+EXPORT_LIBRARY	= 1
+META_COMPONENT	= crypto
 
 EXPORTS = 			\
 	$(NULL)
