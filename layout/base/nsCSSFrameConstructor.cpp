@@ -152,6 +152,14 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
+//#define XULTREE
+#ifdef XULTREE
+#include "nsXULTreeFrame.h"
+#include "nsXULTreeGroupFrame.h"
+#include "nsXULTreeSliceFrame.h"
+#include "nsXULTreeCellFrame.h"
+#endif
+
 #define NEWGFX_LIST_SCROLLFRAME
 //------------------------------------------------------------------
 
@@ -5090,9 +5098,11 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
+#ifndef XULTREE
   if (aTag == nsXULAtoms::treecell)
     return NS_OK; // Don't even allow the XBL check.  The inner cell frame throws it off.
                   // There's a separate special method for XBL treecells.
+#endif
 
   nsCOMPtr<nsIStyleContext> styleContext;
   aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
@@ -5361,10 +5371,20 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // BOX CONSTRUCTION
     if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || 
         aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol ||
-        aTag == nsXULAtoms::radiogroup) {
+        aTag == nsXULAtoms::radiogroup 
+#ifdef XULTREE
+        || aTag == nsXULAtoms::treecell  
+#endif
+        ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewBoxFrame(aPresShell, &newFrame);
+
+#ifdef XULTREE
+      if (aTag == nsXULAtoms::treecell)
+        rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
+      else
+#endif
+        rv = NS_NewBoxFrame(aPresShell, &newFrame);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5476,12 +5496,22 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } 
 
     // ------- Begin Grid ---------
+#ifdef XULTREE
+    else if (aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
+#else
     else if (aTag == nsXULAtoms::grid) {
+#endif
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewGridLayout(aPresShell, layout);
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+
+#ifdef XULTREE
+      if (aTag == nsXULAtoms::tree)
+        rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
+      else
+#endif
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5504,14 +5534,30 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } //------- End Grid ------
 
     // ------- Begin Rows/Columns ---------
-    else if (aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns) {
+    else if (aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns
+#ifdef XULTREE      
+             || aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treecolgroup ||
+             aTag == nsXULAtoms::treehead || aTag == nsXULAtoms::treerows || 
+             aTag == nsXULAtoms::treecols || aTag == nsXULAtoms::treeitem
+#endif
+      ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      PRBool isHorizontal = (aTag == nsXULAtoms::columns);
+      PRBool isHorizontal = (aTag == nsXULAtoms::columns)
+#ifdef XULTREE
+        || (aTag == nsXULAtoms::treecolgroup) || (aTag == nsXULAtoms::treecols) 
+#endif
+        ;
 
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewTempleLayout(aPresShell, layout);
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
+
+#ifdef XULTREE
+      if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treerows || aTag == nsXULAtoms::treeitem)
+        rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+      else
+#endif
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5534,13 +5580,23 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } //------- End Grid ------
 
     // ------- Begin Row/Column ---------
-    else if (aTag == nsXULAtoms::row || aTag == nsXULAtoms::column) {
+    else if (aTag == nsXULAtoms::row || aTag == nsXULAtoms::column
+#ifdef XULTREE      
+             || aTag == nsXULAtoms::treerow || aTag == nsXULAtoms::treecol
+#endif
+      ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       PRBool isHorizontal = (aTag == nsXULAtoms::row);
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewObeliskLayout(aPresShell, layout);
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
+
+#ifdef XULTREE
+      if (aTag == nsXULAtoms::treerow)
+        rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
+      else
+#endif
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5629,6 +5685,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
     }
   
+#ifndef XULTREE
     // TREE CONSTRUCTION
     // The following code is used to construct a tree view from the XUL content
     // model.  
@@ -5702,22 +5759,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     }
     else if (aTag == nsXULAtoms::treecell)
     {
-      // We could be in a hidden column.
-      // XXX This is so disgusting.
-      if (nsTreeCellFrame::ShouldBuildCell(aParentFrame, aContent)) {
-        // We make a tree cell frame and process the children.
-        nsIFrame* innerCell;
-        PRBool pseudoParent;
-        rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
-                                     aParentFrame, aStyleContext, treeCreator, 
-                                     PR_FALSE, aFrameItems, newFrame, innerCell, pseudoParent);
-        if (!pseudoParent) {
-          aFrameItems.AddChild(newFrame);
-        }
+      nsIFrame* innerCell;
+      PRBool pseudoParent;
+      rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
+                                   aParentFrame, aStyleContext, treeCreator, 
+                                   PR_FALSE, aFrameItems, newFrame, innerCell, pseudoParent);
+      if (!pseudoParent) {
+        aFrameItems.AddChild(newFrame);
       }
-      else aHaltProcessing = PR_TRUE;
+      
       return rv;
     }
+#endif
     else if (aTag == nsXULAtoms::treeindentation)
     {
       rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
@@ -7756,6 +7809,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
+#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -7817,6 +7871,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     }
   }
 #endif // INCLUDE_XUL
+#endif
 
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -8068,6 +8123,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   }
 #endif
 
+#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -8155,7 +8211,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     }
   }
 #endif // INCLUDE_XUL
-
+#endif
+  
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsresult rv = NS_OK;
@@ -8738,6 +8795,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     } 
   }
 
+#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -8785,6 +8843,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     }
   }
 #endif // INCLUDE_XUL
+#endif
 
   if (childFrame) {
     // Get the childFrame's parent frame
