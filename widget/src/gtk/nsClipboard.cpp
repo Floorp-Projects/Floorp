@@ -303,7 +303,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
 
   GdkAtom selectionAtom = GetSelectionAtom(aWhichClipboard);
-  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+  nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
 
   // make sure we have a good transferable
   if (nsnull == transferable) {
@@ -744,7 +744,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 
   // make sure we have a good transferable
 
-  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+  nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
 
   if (nsnull == transferable) {
     return NS_ERROR_FAILURE;
@@ -866,7 +866,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 #ifdef DEBUG_CLIPBOARD
   g_print("  whichClipboard = %d\n", whichClipboard);
 #endif
-  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(cb->GetTransferable(whichClipboard)));
+  nsCOMPtr<nsITransferable> transferable(cb->GetTransferable(whichClipboard));
 
   // Make sure we have a transferable:
   if (!transferable) {
@@ -1161,7 +1161,6 @@ nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
     transferable = mSelectionTransferable;
     break;
   }
-  NS_IF_ADDREF(transferable);
   return transferable;
 }
 
@@ -1269,7 +1268,7 @@ void nsClipboard::SetCutBuffer()
   PRUint32 dataLength;
   nsresult rv;
 
-  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(kGlobalClipboard)));
+  nsCOMPtr<nsITransferable> transferable(GetTransferable(kGlobalClipboard));
 
   // Make sure we have a transferable:
   if (!transferable) {

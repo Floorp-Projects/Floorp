@@ -207,7 +207,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 	//printf("  nsClipboard::SetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
-  	nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+  	nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
 
 	// make sure we have a good transferable
 	if (nsnull == transferable) 
@@ -416,9 +416,9 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 #endif /* DEBUG_CLIPBOARD */
 
   	// make sure we have a good transferable
-  	nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+  	nsITransferable *transferable = GetTransferable(aWhichClipboard);
 
-  	if (nsnull == transferable) 
+  	if (!transferable) 
  		return NS_ERROR_FAILURE;
 
   	return NS_OK;
@@ -523,7 +523,6 @@ nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
   case kSelectionClipboard:
     break;
   }
-  NS_IF_ADDREF(transferable);
   return transferable;
 }
 
