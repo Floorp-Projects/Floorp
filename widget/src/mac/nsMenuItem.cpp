@@ -365,13 +365,11 @@ nsMenuItem :: UncheckRadioSiblings ( nsIContent* inCheckedContent )
     return;
 
   // loop over siblings
-  PRInt32 count;
-  parent->ChildCount(count);
-  for ( PRInt32 i = 0; i < count; ++i ) {
-    nsCOMPtr<nsIContent> sibling;
-    parent->ChildAt(i, getter_AddRefs(sibling));
+  PRUint32 count = parent->GetChildCount();
+  for ( PRUint32 i = 0; i < count; ++i ) {
+    nsIContent *sibling = parent->GetChildAt(i);
     if ( sibling ) {      
-      if ( sibling.get() != inCheckedContent ) {                    // skip this node
+      if ( sibling != inCheckedContent ) {                    // skip this node
         // if the current sibling is in the same group, clear it
         nsAutoString currGroupName;
         sibling->GetAttr(kNameSpaceID_None, nsWidgetAtoms::name, currGroupName);
