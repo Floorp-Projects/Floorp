@@ -354,6 +354,24 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus) = 0;
 
+  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus) = 0;
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus) = 0;
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus) = 0;
+
+  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
+                              nsGUIEvent*     aEvent,
+                              nsIFrame *      aNewFrame,
+                              PRUint32&       aAcutalContentOffset) = 0;
+
+
   /**
    * Get the cursor for a given point in the frame tree. The
    * call returns the desired cursor (or NS_STYLE_CURSOR_INHERIT if
