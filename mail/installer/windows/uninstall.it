@@ -1,0 +1,166 @@
+[General]
+; Run Mode values:
+;   Normal - Shows all dialogs.  Requires user input.
+;   Auto   - Shows some dialogs, but none requiring user input.  It will
+;            automatically uninstall the product using default values.
+;   Silent - Show no dialogs at all.  It will uninstall product using default
+;            values.
+Run Mode=Normal
+
+Company Name=$CompanyName$
+Product Name=$ProductName$
+
+; Valid Path values:
+;   PROGRAMFILESDIR
+;   WINDISK
+;   WINDIR
+;   WINSYSDIR
+;   COMMON_STARTUP
+;   COMMON_PROGRAMS
+;   COMMON_STARTMENU
+;   COMMON_DESKTOP
+;
+;   PERSONAL_STARTUP
+;   PERSONAL_PROGRAMS
+;   PERSONAL_STARTMENU
+;   PERSONAL_DESKTOP
+;
+;   PERSONAL_APPDATA
+;   PERSONAL_CACHE
+;   PERSONAL_COOKIES
+;   PERSONAL_FAVORITES
+;   PERSONAL_FONTS
+;   PERSONAL_HISTORY
+;   PERSONAL_NETHOOD
+;   PERSONAL_PERSONAL
+;   PERSONAL_PRINTHOOD (supported only under Windows NT)
+;   PERSONAL_RECENT
+;   PERSONAL_SENDTO
+;   PERSONAL_TEMPLATES
+;
+;   PROGRAMFILESDIR
+;   COMMONFILESDIR
+;   MEDIAPATH
+;   CONFIGPATH (supported only under Windows95 and Windows98)
+;   DEVICEPATH
+
+; This provides information on where in the Windows Registry to locate the Uninstall log files
+;
+Main Root Key=HKEY_LOCAL_MACHINE
+Main Key=[Product WinRegKey]
+Decrypt Main Key=TRUE
+
+Root Key=HKEY_LOCAL_MACHINE
+Key=[Product CurrentVersion]\Uninstall
+Decrypt Key=TRUE
+
+Uninstall Filename=$UninstallFile$
+
+[Check Instance0]
+Class Name=MozillaMessageWindow
+Window Name=
+Process Name=$MainExeFile$
+Pretty Name=$ProductNameInternal$
+;*** LOCALIZE ME BABY ***
+Message=$ProductNameInternal$ is detected to be currently running.  Please quit $ProductNameInternal$ before continuing.  Click OK to exit $ProductNameInternal$ automatically and proceed with uninstallation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down $ProductNameInternal$.  Please wait...
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Mozilla requires a way to shut down it's turbo mode.
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
+
+[Check Instance1]
+Class Name=Netscape6MessageWindow
+Window Name=
+Process Name=Netscp.exe
+Pretty Name=Netscape
+;*** LOCALIZE ME BABY ***
+Message=Netscape is detected to be currently running.  Please quit Netscape before continuing.  Click OK to exit Netscape automatically and proceed with uninstallation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down Netscape.  Please wait...
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Netscape 6 requires a way to shut down it's turbo mode.
+; This will stop at the first one that succeeds (key and file found).
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp6.exe
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
+
+Extra Cmd1 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd1 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp.exe
+Extra Cmd1 Reg Name=
+Extra Cmd1 Parameter=-kill
+
+
+[Dialog Uninstall]
+FONTNAME=MS Sans Serif
+FONTSIZE=8
+CHARSET=0
+;Here is a partial list CHAR_SETS
+;  ANSI_CHARSET = 0
+;  DEFAULT_CHARSET = 1
+;  SYMBOL_CHARSET = 2
+;  SHIFTJIS_CHARSET = 128
+;  GB2312_CHARSET = 134
+;  HANGEUL_CHARSET = 129
+;  CHINESEBIG5_CHARSET = 136
+;  OEM_CHARSET 255
+Show Dialog=TRUE
+Title=$ProductName$ Uninstaller
+Message0=Are you sure you want to completely remove %s and all of its components?
+
+Uninstall=&Uninstall
+Cancel=&Cancel
+Message1=Uninstall has detected that the following shared file is no longer used by any programs.  If any programs still require the shared file and it is removed, those programs may no longer function.  Are you sure you want to remove this shared file?
+Message2=Leaving this file will not harm your system.  If you are not sure, it is recommended that the shared file be not removed from the system.
+FileName=File name:
+No=&No
+NoToAll=N&o to all
+Yes=&Yes
+YesToAll=Y&es to all
+
+; This section attempts to restore/undo the desktop integration performed by the browser/mail
+[Restore Desktop Integration]
+Enabled=TRUE
+
+; This section attempts to cleanup the UnreadMail registry keys set up by mail.
+[Cleanup Mail Integration]
+Enabled=TRUE
+
+[Messages]
+ERROR_DLL_LOAD=Could not load %s
+ERROR_STRING_LOAD=Could not load string resource ID %d
+ERROR_STRING_NULL=Null pointer encountered.
+ERROR_GLOBALALLOC=Memory allocation error.
+ERROR_FAILED=%s failed.
+ERROR_DIALOG_CREATE=Could not create %s dialog.
+DLGQUITTITLE=Question
+DLGQUITMSG=Are you sure you want to cancel?
+ERROR_GET_SYSTEM_DIRECTORY_FAILED=GetSystemDirectory() failed.
+ERROR_GET_WINDOWS_DIRECTORY_FAILED=GetWindowsDirectory() failed.
+ERROR_CREATE_TEMP_DIR=Uninstall was not able to create the TEMP directory: %s
+ERROR_SETUP_REQUIREMENT=Windows95 or greater Operating System is required!  Exiting Uninstall...
+MB_WARNING_STR=Warning
+ERROR_UNINSTALL_LOG_FOLDER=Uninstall log folder not found:%s
+MB_MESSAGE_STR=Message
+DLG_REMOVE_FILE_TITLE=Remove File?
+ERROR_GETVERSION=GetVersionEx() failed!
+MB_ATTENTION_STR=Attention
+MSG_FORCE_QUIT_PROCESS=Uninstall has detected that %s (%s) is still running.  Click OK to quit %s and proceed with uninstallation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with uninstallation.
+MSG_FORCE_QUIT_PROCESS_FAILED=Uninstall will now exit.  Uninstall could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Uninstall again.
+MSG_DELETE_INSTALLATION_PATH=Not all files were uninstalled from the installation directory:\n\n  %s\n\nDo you want to completely delete this directory?
+MSG_INSTALLATION_PATH_WITHIN_WINDIR=Uninstall has detected that the installation path of $ProductNameInternal$ is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
+
