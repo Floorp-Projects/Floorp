@@ -80,9 +80,9 @@
          (production :$next-input-element ($div (:next-input-element div)) $next-input-element-div
            (lex (lex :next-input-element)))
          (production :$next-input-element ($string-to-number :string-numeric-literal) $next-input-element-string-to-number
-           (lex (lex-number :string-numeric-literal)))
+           (lex (lex :string-numeric-literal)))
          (production :$next-input-element ($parse-float :string-decimal-literal) $next-input-element-parse-float
-           (lex (lex-number :string-decimal-literal))))
+           (lex (lex :string-decimal-literal))))
        
        (%text nil "The lexer" :apostrophe "s start symbols are: "
               (:grammar-symbol (:next-input-element num)) " if the previous input element was a number; "
@@ -210,10 +210,10 @@
              ((lex input-element))
          (production :identifier-or-keyword (:identifier-name) identifier-or-keyword-identifier-name
            (lex (begin
-                 (const id string (lex-name :identifier-name))
+                 (const id string (lex :identifier-name))
                  (if (and (set-in id (list-set "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                                               "exclude" "export" "extends" "false" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
-                                               "include" "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
+                                               "export" "extends" "false" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
+                                               "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
                                                "set" "super" "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use"
                                                "var" "volatile" "while" "with"))
                           (not (contains-escapes :identifier-name)))
@@ -222,19 +222,19 @@
        (%print-actions)
        
        (rule :identifier-name
-             ((lex-name string) (contains-escapes boolean))
+             ((lex string) (contains-escapes boolean))
          (production :identifier-name (:initial-identifier-character-or-escape) identifier-name-initial
-           (lex-name (vector (lex-char :initial-identifier-character-or-escape)))
+           (lex (vector (lex :initial-identifier-character-or-escape)))
            (contains-escapes (contains-escapes :initial-identifier-character-or-escape)))
          (production :identifier-name (:null-escapes :initial-identifier-character-or-escape) identifier-name-initial-null-escapes
-           (lex-name (vector (lex-char :initial-identifier-character-or-escape)))
+           (lex (vector (lex :initial-identifier-character-or-escape)))
            (contains-escapes true))
          (production :identifier-name (:identifier-name :continuing-identifier-character-or-escape) identifier-name-continuing
-           (lex-name (append (lex-name :identifier-name) (vector (lex-char :continuing-identifier-character-or-escape))))
+           (lex (append (lex :identifier-name) (vector (lex :continuing-identifier-character-or-escape))))
            (contains-escapes (or (contains-escapes :identifier-name)
                                  (contains-escapes :continuing-identifier-character-or-escape))))
          (production :identifier-name (:identifier-name :null-escape) identifier-name-null-escape
-           (lex-name (lex-name :identifier-name))
+           (lex (lex :identifier-name))
            (contains-escapes true)))
        
        (production :null-escapes (:null-escape) null-escapes-one)
@@ -243,31 +243,31 @@
        (production :null-escape (#\\ #\_) null-escape-underscore)
        
        (rule :initial-identifier-character-or-escape
-             ((lex-char char16) (contains-escapes boolean))
+             ((lex char16) (contains-escapes boolean))
          (production :initial-identifier-character-or-escape (:initial-identifier-character) initial-identifier-character-or-escape-ordinary
-           (lex-char ($default-action :initial-identifier-character))
+           (lex ($default-action :initial-identifier-character))
            (contains-escapes false))
          (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
-           (lex-char (begin 
-                      (const ch char16 (lex-char :hex-escape))
-                      (if (is-initial-identifier-character ch)
-                        (return ch)
-                        (throw syntax-error))))
+           (lex (begin 
+                 (const ch char16 (lex :hex-escape))
+                 (if (is-initial-identifier-character ch)
+                   (return ch)
+                   (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :initial-identifier-character)
        
        (rule :continuing-identifier-character-or-escape
-             ((lex-char char16) (contains-escapes boolean))
+             ((lex char16) (contains-escapes boolean))
          (production :continuing-identifier-character-or-escape (:continuing-identifier-character) continuing-identifier-character-or-escape-ordinary
-           (lex-char ($default-action :continuing-identifier-character))
+           (lex ($default-action :continuing-identifier-character))
            (contains-escapes false))
          (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
-           (lex-char (begin
-                      (const ch char16 (lex-char :hex-escape))
-                      (if (is-continuing-identifier-character ch)
-                        (return ch)
-                        (throw syntax-error))))
+           (lex (begin
+                 (const ch char16 (lex :hex-escape))
+                 (if (is-continuing-identifier-character ch)
+                   (return ch)
+                   (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :continuing-identifier-character)
@@ -349,30 +349,30 @@
        
        (rule :numeric-literal ((lex token))
          (production :numeric-literal ((:decimal-literal no-leading-zeros)) numeric-literal-decimal
-           (lex (new number-token (real-to-float64 (lex-number :decimal-literal)))))
+           (lex (new number-token (real-to-float64 (lex :decimal-literal)))))
          (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
-           (lex (new number-token (real-to-float64 (lex-number :hex-integer-literal)))))
+           (lex (new number-token (real-to-float64 (lex :hex-integer-literal)))))
          (production :numeric-literal ((:decimal-literal no-leading-zeros) :letter-f) numeric-literal-single
-           (lex (new number-token (real-to-float32 (lex-number :decimal-literal)))))
+           (lex (new number-token (real-to-float32 (lex :decimal-literal)))))
          (production :numeric-literal (:integer-literal :letter-l) numeric-literal-long
            (lex (begin
-                 (const i integer (lex-number :integer-literal))
+                 (const i integer (lex :integer-literal))
                  (cond
                   ((<= i (- (expt 2 63) 1)) (return (new number-token (new long i))))
                   ((= i (expt 2 63)) (return negated-min-long))
                   (nil (throw range-error))))))
          (production :numeric-literal (:integer-literal :letter-u :letter-l) numeric-literal-unsigned-long
            (lex (begin
-                 (const i integer (lex-number :integer-literal))
+                 (const i integer (lex :integer-literal))
                  (if (<= i (- (expt 2 64) 1))
                    (return (new number-token (new u-long i)))
                    (throw range-error))))))
        
-       (rule :integer-literal ((lex-number integer))
+       (rule :integer-literal ((lex integer))
          (production :integer-literal ((:decimal-integer-literal no-leading-zeros)) integer-literal-decimal
-           (lex-number (lex-number :decimal-integer-literal)))
+           (lex (lex :decimal-integer-literal)))
          (production :integer-literal (:hex-integer-literal) integer-literal-hex
-           (lex-number (lex-number :hex-integer-literal))))
+           (lex (lex :hex-integer-literal))))
        (%charclass :letter-f)
        (%charclass :letter-l)
        (%charclass :letter-u)
@@ -380,75 +380,74 @@
        
        (grammar-argument :zeta no-leading-zeros allow-leading-zeros)
        
-       (rule (:decimal-literal :zeta) ((lex-number rational))
+       (rule (:decimal-literal :zeta) ((lex rational))
          (production (:decimal-literal :zeta) ((:mantissa :zeta)) decimal-literal
-           (lex-number (lex-number :mantissa)))
+           (lex (lex :mantissa)))
          (production (:decimal-literal :zeta) ((:mantissa :zeta) :letter-e :signed-integer) decimal-literal-exponent
-           (lex-number (rat* (lex-number :mantissa) (expt 10 (lex-number :signed-integer))))))
+           (lex (rat* (lex :mantissa) (expt 10 (lex :signed-integer))))))
        
        (%charclass :letter-e)
        
-       (rule (:mantissa :zeta) ((lex-number rational))
+       (rule (:mantissa :zeta) ((lex rational))
          (production (:mantissa :zeta) ((:decimal-integer-literal :zeta)) mantissa-integer
-           (lex-number (lex-number :decimal-integer-literal)))
+           (lex (lex :decimal-integer-literal)))
          (production (:mantissa :zeta) ((:decimal-integer-literal :zeta) #\.) mantissa-integer-dot
-           (lex-number (lex-number :decimal-integer-literal)))
+           (lex (lex :decimal-integer-literal)))
          (production (:mantissa :zeta) ((:decimal-integer-literal :zeta) #\. :fraction) mantissa-integer-dot-fraction
-           (lex-number (rat+ (lex-number :decimal-integer-literal)
-                             (lex-number :fraction))))
+           (lex (rat+ (lex :decimal-integer-literal) (lex :fraction))))
          (production (:mantissa :zeta) (#\. :fraction) mantissa-dot-fraction
-           (lex-number (lex-number :fraction))))
+           (lex (lex :fraction))))
        
-       (rule (:decimal-integer-literal :zeta) ((lex-number integer))
+       (rule (:decimal-integer-literal :zeta) ((lex integer))
          (production (:decimal-integer-literal no-leading-zeros) (#\0) decimal-integer-literal-0
-           (lex-number 0))
+           (lex 0))
          (production (:decimal-integer-literal no-leading-zeros) (:non-zero-decimal-digits) decimal-integer-literal-nonzero
-           (lex-number (lex-number :non-zero-decimal-digits)))
+           (lex (lex :non-zero-decimal-digits)))
          (production (:decimal-integer-literal allow-leading-zeros) (:decimal-digits) decimal-integer-literal-decimal-digits
-           (lex-number (lex-number :decimal-digits))))
+           (lex (lex :decimal-digits))))
        
-       (rule :non-zero-decimal-digits ((lex-number integer))
+       (rule :non-zero-decimal-digits ((lex integer))
          (production :non-zero-decimal-digits (:non-zero-digit) non-zero-decimal-digits-first
-           (lex-number (decimal-value :non-zero-digit)))
+           (lex (decimal-value :non-zero-digit)))
          (production :non-zero-decimal-digits (:non-zero-decimal-digits :a-s-c-i-i-digit) non-zero-decimal-digits-rest
-           (lex-number (+ (* 10 (lex-number :non-zero-decimal-digits)) (decimal-value :a-s-c-i-i-digit)))))
+           (lex (+ (* 10 (lex :non-zero-decimal-digits)) (decimal-value :a-s-c-i-i-digit)))))
        
        (%charclass :non-zero-digit)
        
-       (rule :fraction ((lex-number rational))
+       (rule :fraction ((lex rational))
          (production :fraction (:decimal-digits) fraction-decimal-digits
-           (lex-number (rat/ (lex-number :decimal-digits)
-                             (expt 10 (n-digits :decimal-digits))))))
+           (lex (rat/ (lex :decimal-digits)
+                      (expt 10 (n-digits :decimal-digits))))))
        (%print-actions)
        
-       (rule :signed-integer ((lex-number integer))
+       (rule :signed-integer ((lex integer))
          (production :signed-integer (:optional-sign :decimal-digits) signed-integer-sign-and-digits
-           (lex-number (* (lex-sign :optional-sign) (lex-number :decimal-digits)))))
+           (lex (* (lex :optional-sign) (lex :decimal-digits)))))
        
-       (rule :optional-sign ((lex-sign (integer-list -1 1)))
+       (rule :optional-sign ((lex (integer-list -1 1)))
          (production :optional-sign () optional-sign-none
-           (lex-sign 1))
+           (lex 1))
          (production :optional-sign (#\+) optional-sign-plus
-           (lex-sign 1))
+           (lex 1))
          (production :optional-sign (#\-) optional-sign-minus
-           (lex-sign -1)))
+           (lex -1)))
        (%print-actions)
        
        (rule :decimal-digits
-             ((lex-number integer) (n-digits integer))
+             ((lex integer) (n-digits integer))
          (production :decimal-digits (:a-s-c-i-i-digit) decimal-digits-first
-           (lex-number (decimal-value :a-s-c-i-i-digit))
+           (lex (decimal-value :a-s-c-i-i-digit))
            (n-digits 1))
          (production :decimal-digits (:decimal-digits :a-s-c-i-i-digit) decimal-digits-rest
-           (lex-number (+ (* 10 (lex-number :decimal-digits)) (decimal-value :a-s-c-i-i-digit)))
+           (lex (+ (* 10 (lex :decimal-digits)) (decimal-value :a-s-c-i-i-digit)))
            (n-digits (+ (n-digits :decimal-digits) 1))))
        (%print-actions)
        
-       (rule :hex-integer-literal ((lex-number integer))
+       (rule :hex-integer-literal ((lex integer))
          (production :hex-integer-literal (#\0 :letter-x :hex-digit) hex-integer-literal-first
-           (lex-number (hex-value :hex-digit)))
+           (lex (hex-value :hex-digit)))
          (production :hex-integer-literal (:hex-integer-literal :hex-digit) hex-integer-literal-rest
-           (lex-number (+ (* 16 (lex-number :hex-integer-literal)) (hex-value :hex-digit)))))
+           (lex (+ (* 16 (lex :hex-integer-literal)) (hex-value :hex-digit)))))
        (%charclass :letter-x)
        (%charclass :hex-digit)
        (%print-actions)
@@ -458,65 +457,67 @@
        (grammar-argument :theta single double)
        (rule :string-literal ((lex token))
          (production :string-literal (#\' (:string-chars single) #\') string-literal-single
-           (lex (new string-token (lex-string :string-chars))))
+           (lex (new string-token (lex :string-chars))))
          (production :string-literal (#\" (:string-chars double) #\") string-literal-double
-           (lex (new string-token (lex-string :string-chars)))))
+           (lex (new string-token (lex :string-chars)))))
        (%print-actions)
        
-       (rule (:string-chars :theta) ((lex-string string))
+       (rule (:string-chars :theta) ((lex string))
          (production (:string-chars :theta) () string-chars-none
-           (lex-string ""))
+           (lex ""))
          (production (:string-chars :theta) ((:string-chars :theta) (:string-char :theta)) string-chars-some
-           (lex-string (append (lex-string :string-chars)
-                               (vector (lex-char :string-char)))))
+           (lex (append (lex :string-chars)
+                        (vector (lex :string-char)))))
          (production (:string-chars :theta) ((:string-chars :theta) :null-escape) string-chars-null-escape
-           (lex-string (lex-string :string-chars))))
+           (lex (lex :string-chars))))
        
-       (rule (:string-char :theta) ((lex-char char16))
+       (rule (:string-char :theta) ((lex char16))
          (production (:string-char :theta) ((:literal-string-char :theta)) string-char-literal
-           (lex-char ($default-action :literal-string-char)))
+           (lex ($default-action :literal-string-char)))
          (production (:string-char :theta) (#\\ :string-escape) string-char-escape
-           (lex-char (lex-char :string-escape))))
+           (lex (lex :string-escape))))
        
        (%charclass (:literal-string-char single))
        (%charclass (:literal-string-char double))
        (%print-actions)
        
-       (rule :string-escape ((lex-char char16))
+       (rule :string-escape ((lex char16))
          (production :string-escape (:control-escape) string-escape-control
-           (lex-char (lex-char :control-escape)))
+           (lex (lex :control-escape)))
          (production :string-escape (:zero-escape) string-escape-zero
-           (lex-char (lex-char :zero-escape)))
+           (lex (lex :zero-escape)))
          (production :string-escape (:hex-escape) string-escape-hex
-           (lex-char (lex-char :hex-escape)))
+           (lex (lex :hex-escape)))
          (production :string-escape (:identity-escape) string-escape-non-escape
-           (lex-char ($default-action :identity-escape))))
+           (lex ($default-action :identity-escape))))
        (%charclass :identity-escape)
        (%print-actions)
        
-       (rule :control-escape ((lex-char char16))
-         (production :control-escape (#\b) control-escape-backspace (lex-char #?0008))
-         (production :control-escape (#\f) control-escape-form-feed (lex-char #?000C))
-         (production :control-escape (#\n) control-escape-new-line (lex-char #?000A))
-         (production :control-escape (#\r) control-escape-return (lex-char #?000D))
-         (production :control-escape (#\t) control-escape-tab (lex-char #?0009))
-         (production :control-escape (#\v) control-escape-vertical-tab (lex-char #?000B)))
+       (rule :control-escape ((lex char16))
+         (production :control-escape (#\b) control-escape-backspace (lex #?0008))
+         (production :control-escape (#\f) control-escape-form-feed (lex #?000C))
+         (production :control-escape (#\n) control-escape-new-line (lex #?000A))
+         (production :control-escape (#\r) control-escape-return (lex #?000D))
+         (production :control-escape (#\t) control-escape-tab (lex #?0009))
+         (production :control-escape (#\v) control-escape-vertical-tab (lex #?000B)))
        (%print-actions)
        
-       (rule :zero-escape ((lex-char char16))
+       (rule :zero-escape ((lex char16))
          (production :zero-escape (#\0 (:- :a-s-c-i-i-digit)) zero-escape-zero
-           (lex-char #?0000)))
+           (lex #?0000)))
        (%print-actions)
        
-       (rule :hex-escape ((lex-char char16))
+       (rule :hex-escape ((lex char16))
          (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
-           (lex-char (integer-to-char16 (+ (* 16 (hex-value :hex-digit 1))
-                                           (hex-value :hex-digit 2)))))
+           (lex (integer-to-char16 (+ (* 16 (hex-value :hex-digit 1))
+                                      (hex-value :hex-digit 2)))))
          (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
-           (lex-char (integer-to-char16 (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
-                                                 (* 256 (hex-value :hex-digit 2)))
-                                              (* 16 (hex-value :hex-digit 3)))
-                                           (hex-value :hex-digit 4))))))
+           (lex (integer-to-char16 (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
+                                            (* 256 (hex-value :hex-digit 2)))
+                                         (* 16 (hex-value :hex-digit 3)))
+                                      (hex-value :hex-digit 4)))))
+         (production :hex-escape (#\U :hex-digit :hex-digit :hex-digit :hex-digit :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-8
+           (lex (todo))))
        
        (%print-actions)
        
@@ -524,32 +525,31 @@
        
        (rule :reg-exp-literal ((lex token))
          (production :reg-exp-literal (:reg-exp-body :reg-exp-flags) reg-exp-literal
-           (lex (new regular-expression (lex-string :reg-exp-body) (lex-string :reg-exp-flags)))))
+           (lex (new regular-expression (lex :reg-exp-body) (lex :reg-exp-flags)))))
        
-       (rule :reg-exp-flags ((lex-string string))
+       (rule :reg-exp-flags ((lex string))
          (production :reg-exp-flags () reg-exp-flags-none
-           (lex-string ""))
+           (lex ""))
          (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character-or-escape) reg-exp-flags-more
-           (lex-string (append (lex-string :reg-exp-flags) (vector (lex-char :continuing-identifier-character-or-escape)))))
+           (lex (append (lex :reg-exp-flags) (vector (lex :continuing-identifier-character-or-escape)))))
          (production :reg-exp-flags (:reg-exp-flags :null-escape) reg-exp-flags-null-escape
-           (lex-string (lex-string :reg-exp-flags))))
+           (lex (lex :reg-exp-flags))))
        
-       (rule :reg-exp-body ((lex-string string))
+       (rule :reg-exp-body ((lex string))
          (production :reg-exp-body (#\/ (:- #\*) :reg-exp-chars #\/) reg-exp-body
-           (lex-string (lex-string :reg-exp-chars))))
+           (lex (lex :reg-exp-chars))))
        
-       (rule :reg-exp-chars ((lex-string string))
+       (rule :reg-exp-chars ((lex string))
          (production :reg-exp-chars (:reg-exp-char) reg-exp-chars-one
-           (lex-string (lex-string :reg-exp-char)))
+           (lex (lex :reg-exp-char)))
          (production :reg-exp-chars (:reg-exp-chars :reg-exp-char) reg-exp-chars-more
-           (lex-string (append (lex-string :reg-exp-chars)
-                               (lex-string :reg-exp-char)))))
+           (lex (append (lex :reg-exp-chars) (lex :reg-exp-char)))))
        
-       (rule :reg-exp-char ((lex-string string))
+       (rule :reg-exp-char ((lex string))
          (production :reg-exp-char (:ordinary-reg-exp-char) reg-exp-char-ordinary
-           (lex-string (vector ($default-action :ordinary-reg-exp-char))))
+           (lex (vector ($default-action :ordinary-reg-exp-char))))
          (production :reg-exp-char (#\\ :non-terminator) reg-exp-char-escape
-           (lex-string (vector #\\ ($default-action :non-terminator)))))
+           (lex (vector #\\ ($default-action :non-terminator)))))
        
        (%charclass :ordinary-reg-exp-char)
        (%print-actions)
@@ -565,21 +565,21 @@
        
        (%heading 2 "ToGeneralNumber Conversion")
        
-       (rule :string-numeric-literal ((lex-number extended-rational))
+       (rule :string-numeric-literal ((lex extended-rational))
          (production :string-numeric-literal (:string-white-space) string-numeric-literal-white-space
-           (lex-number +zero))
+           (lex +zero))
          (production :string-numeric-literal (:string-white-space :signed-decimal-literal :string-white-space) string-numeric-literal-signed-decimal-literal
-           (lex-number (lex-number :signed-decimal-literal)))
+           (lex (lex :signed-decimal-literal)))
          (production :string-numeric-literal (:string-white-space :optional-sign :hex-integer-literal :string-white-space) string-numeric-literal-hex-integer-literal
-           (lex-number (combine-with-sign (lex-sign :optional-sign) (lex-number :hex-integer-literal)))))
+           (lex (combine-with-sign (lex :optional-sign) (lex :hex-integer-literal)))))
        
-       (rule :signed-decimal-literal ((lex-number extended-rational))
+       (rule :signed-decimal-literal ((lex extended-rational))
          (production :signed-decimal-literal (:optional-sign (:decimal-literal allow-leading-zeros)) signed-decimal-literal-decimal-literal
-           (lex-number (combine-with-sign (lex-sign :optional-sign) (lex-number :decimal-literal))))
+           (lex (combine-with-sign (lex :optional-sign) (lex :decimal-literal))))
          (production :signed-decimal-literal (:optional-sign #\I #\n #\f #\i #\n #\i #\t #\y) signed-decimal-literal-infinity
-           (lex-number (if (> (lex-sign :optional-sign) 0) +infinity -infinity)))
+           (lex (if (> (lex :optional-sign) 0) +infinity -infinity)))
          (production :signed-decimal-literal (#\N #\a #\N) signed-decimal-literal-nan
-           (lex-number nan)))
+           (lex nan)))
        (%print-actions)
        
        (define (combine-with-sign (sign (integer-list -1 1)) (q rational)) extended-rational
@@ -590,9 +590,9 @@
        
        (%heading 2 "parseFloat Conversion")
        
-       (rule :string-decimal-literal ((lex-number extended-rational))
+       (rule :string-decimal-literal ((lex extended-rational))
          (production :string-decimal-literal (:string-white-space :signed-decimal-literal) string-decimal-literal-signed-decimal-literal
-           (lex-number (lex-number :signed-decimal-literal))))
+           (lex (lex :signed-decimal-literal))))
        (%print-actions)
        
        (%heading 2 "White Space")
