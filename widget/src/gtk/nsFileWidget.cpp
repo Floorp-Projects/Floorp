@@ -78,7 +78,7 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 
 static void filter_item_activated(GtkWidget *w, gpointer data)
 {
-  nsFileWidget *f = (nsFileWidget*)data;
+  //  nsFileWidget *f = (nsFileWidget*)data;
   gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
   g_print("filter_item_activated(): %s\n", foo);
 }
