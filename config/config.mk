@@ -449,12 +449,10 @@ MOZ_NEO=1
 endif
 
 ifdef EDITOR
-ifdef MOZ_ENDER
 #
 # Enable HTMLArea form element support.
 #
 DEFINES		+= -DENDER
-endif
 endif
 
 ifdef MOZ_GOLD
