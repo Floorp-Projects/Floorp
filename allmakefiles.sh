@@ -368,12 +368,9 @@ netwerk/base/public/Makefile
 netwerk/base/src/Makefile
 netwerk/build/Makefile
 netwerk/build2/Makefile
-netwerk/cache/build/Makefile
-netwerk/cache/filecache/Makefile
 netwerk/cache/Makefile
-netwerk/cache/memcache/Makefile
-netwerk/cache/mgr/Makefile
 netwerk/cache/public/Makefile
+netwerk/cache/src/Makefile
 netwerk/dns/Makefile
 netwerk/dns/public/Makefile
 netwerk/dns/src/Makefile
@@ -468,8 +465,6 @@ rdf/datasource/Makefile
 rdf/datasource/public/Makefile
 rdf/datasource/src/Makefile
 rdf/tests/Makefile
-rdf/tests/domds/Makefile
-rdf/tests/domds/resources/Makefile
 rdf/tests/localfile/Makefile
 rdf/tests/rdfsink/Makefile
 rdf/tests/rdfcat/Makefile
