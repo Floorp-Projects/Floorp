@@ -3926,7 +3926,7 @@ PR_STATIC_CALLBACK(PRBool) FillArray(nsHashKey* aKey, void* aData,
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRBool) AppendRuleToArray(nsISupports* aElement, void* aData)
+static PRBool AppendRuleToArray(nsISupports* aElement, void* aData)
 {
   nsISupportsArray* ruleArray = NS_STATIC_CAST(nsISupportsArray*, aData);
   ruleArray->AppendElement(aElement);
