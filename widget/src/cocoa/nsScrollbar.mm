@@ -69,8 +69,6 @@ nsScrollbar::nsScrollbar()
 
 nsScrollbar::~nsScrollbar()
 {
-  printf("-- scrollbar going away!\n");
-
 }
 
 
@@ -107,7 +105,6 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
 NSView*
 nsScrollbar::CreateCocoaView ( )
 {
-printf("++ creating native scrollbar\n");
   // Cocoa sets the orientation of a scrollbar at creation time by looking
   // at its frame and taking the longer side to be the orientation. Since
   // chances are good at this point gecko just wants us to be 1x1, use

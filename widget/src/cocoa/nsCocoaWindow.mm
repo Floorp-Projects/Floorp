@@ -1759,7 +1759,6 @@ void StopResizing ( )
 
 - (void)windowDidMove:(NSNotification *)aNotification
 {
-  printf("did move\n");
 }
 
 @end
