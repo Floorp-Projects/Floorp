@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<!ENTITY PickQualityLabel "Choose the quality for this image:">
-<!ENTITY HighQualityLabel "High Quality (bigger image file size, longest time to view)">
-<!ENTITY MediumQualityLabel "Medium Quality">
-<!ENTITY LowQualityLabel "Low Quality (smaller image file size, shortest time to view)">
-<!ENTITY HelpButton "Help">
-<!ENTITY CancelButton "Cancel">
-<!ENTITY OKButton "OK">

@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<!ENTITY WarningIconLocation "image">
-<!ENTITY ContainsLinkSentence "The selected text contains one or more links.">
-<!ENTITY LinkWillBeErasedSentence "Removing all text styles will also erase the links.">
-<!ENTITY CancelButton "Cancel">
-<!ENTITY OKButton "OK">
