@@ -303,9 +303,9 @@ layout/xul/Makefile
 layout/xul/base/Makefile
 layout/xul/base/public/Makefile
 layout/xul/base/src/Makefile
-layout/xul/base/src/outliner/Makefile
-layout/xul/base/src/outliner/src/Makefile
-layout/xul/base/src/outliner/public/Makefile
+layout/xul/base/src/tree/Makefile
+layout/xul/base/src/tree/src/Makefile
+layout/xul/base/src/tree/public/Makefile
 "
 
 MAKEFILES_mpfilelocprovider="
