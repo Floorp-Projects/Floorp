@@ -1002,11 +1002,6 @@ nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 {
   aFlex = 0;
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
-    return NS_OK;
-
   GetDefaultFlex(aFlex);
   nsIBox::AddCSSFlex(aState, this, aFlex);
 
