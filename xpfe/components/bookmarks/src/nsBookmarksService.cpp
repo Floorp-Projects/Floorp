@@ -46,9 +46,40 @@
 #include "rdf.h"
 #include "xp_core.h"
 #include "prlong.h"
-
+#include "prtime.h"
 #include "nsEnumeratorUtils.h"
 #include "nsEscape.h"
+#include "nsITimer.h"
+#include "nsIAtom.h"
+
+//#include "nsISound.h"
+//#include "nsICommonDialogs.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+#include "nsAppShellCIDs.h"
+#include "nsIAppShellService.h"
+#include "nsIWebShellWindow.h"
+#include "nsIWebShell.h"
+#include "nsIBrowserWindow.h"
+#include "nsWidgetsCID.h"
+#include "nsIAppShell.h"
+
+#include "nsIURL.h"
+#include "nsNeckoUtil.h"
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
+#include "nsHTTPEnums.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
+#include "nsIBuffer.h"
+#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
+#include "nsIStreamListener.h"
+#include "nsIHTTPHeader.h"
+
+#define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
+// #define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +92,14 @@ static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,          NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+
+//static NS_DEFINE_CID(kNSCOMMONDIALOGSCID,       NS_CommonDialog_CID);
+//static NS_DEFINE_IID(kNSCOMMONDIALOGSIID,       NS_ICOMMONDIALOGS_IID);
+static NS_DEFINE_CID(kNetSupportDialogCID,      NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kAppShellCID,              NS_APPSHELL_CID);
+static NS_DEFINE_IID(kIAppShellIID,             NS_IAPPSHELL_IID);
+
 
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
@@ -96,6 +135,12 @@ nsIRDFResource		*kNC_URL;
 nsIRDFResource		*kRDF_type;
 nsIRDFResource		*kWEB_LastModifiedDate;
 nsIRDFResource		*kWEB_LastVisitDate;
+nsIRDFResource		*kWEB_Schedule;
+nsIRDFResource		*kWEB_Status;
+nsIRDFResource		*kWEB_LastPingDate;
+nsIRDFResource		*kWEB_LastPingETag;
+nsIRDFResource		*kWEB_LastPingModDate;
+nsIRDFResource		*kWEB_LastPingContentLen;
 
 nsIRDFResource		*kNC_Parent;
 
@@ -127,30 +172,37 @@ bm_AddRefGlobals()
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
 		if (NS_FAILED(rv)) return rv;
 
-		gRDF->GetResource(kURINC_BookmarksRoot,         &kNC_BookmarksRoot);
-		gRDF->GetResource(kURINC_IEFavoritesRoot,       &kNC_IEFavoritesRoot);
-		gRDF->GetResource(kURINC_PersonalToolbarFolder, &kNC_PersonalToolbarFolder);
+		gRDF->GetResource(kURINC_BookmarksRoot,                   &kNC_BookmarksRoot);
+		gRDF->GetResource(kURINC_IEFavoritesRoot,                 &kNC_IEFavoritesRoot);
+		gRDF->GetResource(kURINC_PersonalToolbarFolder,           &kNC_PersonalToolbarFolder);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "Bookmark",          &kNC_Bookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkAddDate",   &kNC_BookmarkAddDate);
-		gRDF->GetResource(NC_NAMESPACE_URI "Description",       &kNC_Description);
-		gRDF->GetResource(NC_NAMESPACE_URI "Folder",            &kNC_Folder);
-		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",        &kNC_IEFavorite);
-		gRDF->GetResource(NC_NAMESPACE_URI "Name",              &kNC_Name);
-		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",       &kNC_ShortcutURL);
-		gRDF->GetResource(NC_NAMESPACE_URI "URL",               &kNC_URL);
-		gRDF->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastModifiedDate);
-		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",    &kWEB_LastVisitDate);
+		gRDF->GetResource(NC_NAMESPACE_URI "Bookmark",            &kNC_Bookmark);
+		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkSeparator",   &kNC_BookmarkSeparator);
+		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkAddDate",     &kNC_BookmarkAddDate);
+		gRDF->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
+		gRDF->GetResource(NC_NAMESPACE_URI "Folder",              &kNC_Folder);
+		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",          &kNC_IEFavorite);
+		gRDF->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
+		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",         &kNC_ShortcutURL);
+		gRDF->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
+		gRDF->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate",   &kWEB_LastModifiedDate);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",      &kWEB_LastVisitDate);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "parent",            &kNC_Parent);
+		gRDF->GetResource(WEB_NAMESPACE_URI "Schedule",           &kWEB_Schedule);
+		gRDF->GetResource(WEB_NAMESPACE_URI "status",             &kWEB_Status);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingDate",       &kWEB_LastPingDate);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingETag",       &kWEB_LastPingETag);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingModDate",    &kWEB_LastPingModDate);
+		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingContentLen", &kWEB_LastPingContentLen);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newbookmark",    &kNC_BookmarkCommand_NewBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newfolder",    &kNC_BookmarkCommand_NewFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newseparator", &kNC_BookmarkCommand_NewSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmark", &kNC_BookmarkCommand_DeleteBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmarkfolder", &kNC_BookmarkCommand_DeleteBookmarkFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "parent",              &kNC_Parent);
+
+		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newbookmark",             &kNC_BookmarkCommand_NewBookmark);
+		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newfolder",               &kNC_BookmarkCommand_NewFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newseparator",            &kNC_BookmarkCommand_NewSeparator);
+		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmark",          &kNC_BookmarkCommand_DeleteBookmark);
+		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmarkfolder",    &kNC_BookmarkCommand_DeleteBookmarkFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmarkseparator", &kNC_BookmarkCommand_DeleteBookmarkSeparator);
 	}
 	return NS_OK;
@@ -190,7 +242,12 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kRDF_type);
 		NS_IF_RELEASE(kWEB_LastModifiedDate);
 		NS_IF_RELEASE(kWEB_LastVisitDate);
-
+		NS_IF_RELEASE(kWEB_Schedule);
+		NS_IF_RELEASE(kWEB_Status);
+		NS_IF_RELEASE(kWEB_LastPingDate);
+		NS_IF_RELEASE(kWEB_LastPingETag);
+		NS_IF_RELEASE(kWEB_LastPingModDate);
+		NS_IF_RELEASE(kWEB_LastPingContentLen);
 		NS_IF_RELEASE(kNC_Parent);
 
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewBookmark);
@@ -325,12 +382,18 @@ static const char kCloseDL[]    = "</DL>";
 
 static const char kOpenDD[]     = "<DD>";
 
-static const char kTargetEquals[]       = "TARGET=\"";
-static const char kAddDateEquals[]      = "ADD_DATE=\"";
-static const char kLastVisitEquals[]    = "LAST_VISIT=\"";
-static const char kLastModifiedEquals[] = "LAST_MODIFIED=\"";
-static const char kShortcutURLEquals[]  = "SHORTCUTURL=\"";
-static const char kIDEquals[]           = "ID=\"";
+static const char kTargetEquals[]          = "TARGET=\"";
+static const char kAddDateEquals[]         = "ADD_DATE=\"";
+static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
+static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
+static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
+static const char kScheduleEquals[]        = "SCHEDULE=\"";
+static const char kLastPingEquals[]        = "LAST_PING=\"";
+static const char kPingETagEquals[]        = "PING_ETAG=\"";
+static const char kPingLastModEquals[]     = "PING_LAST_MODIFIED=\"";
+static const char kPingContentLenEquals[]  = "PING_CONTENT_LEN=\"";
+static const char kPingStatusEquals[]      = "PING_STATUS=\"";
+static const char kIDEquals[]              = "ID=\"";
 
 
 
@@ -556,7 +619,6 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 
 	// 4. Parse the addition date
 	PRInt32 addDate = 0;
-
 	{
 		nsAutoString s;
 		ParseAttribute(aLine, kAddDateEquals, sizeof(kAddDateEquals) - 1, s);
@@ -567,9 +629,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	}
 
 	// 5. Parse the last visit date
-
 	PRInt32 lastVisitDate = 0;
-
 	{
 		nsAutoString s;
 		ParseAttribute(aLine, kLastVisitEquals, sizeof(kLastVisitEquals) - 1, s);
@@ -580,9 +640,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	}
 
 	// 6. Parse the last modified date
-
-	PRInt32 lastModifiedDate;
-
+	PRInt32 lastModifiedDate = 0;
 	{
 		nsAutoString s;
 		ParseAttribute(aLine, kLastModifiedEquals, sizeof(kLastModifiedEquals) - 1, s);
@@ -593,39 +651,163 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	}
 
 	// 7. Parse the shortcut URL
-
 	nsAutoString	shortcut;
 	ParseAttribute(aLine, kShortcutURLEquals, sizeof(kShortcutURLEquals) -1, shortcut);
 
+	// 8. Parse the schedule
+	nsAutoString	schedule;
+	ParseAttribute(aLine, kScheduleEquals, sizeof(kScheduleEquals) -1, schedule);
+
+	// 9. Parse the last ping date
+	PRInt32 lastPingDate = 0;
+	{
+		nsAutoString s;
+		ParseAttribute(aLine, kLastPingEquals, sizeof(kLastPingEquals) - 1, s);
+		if (s.Length() > 0) {
+			PRInt32 err;
+			lastPingDate = s.ToInteger(&err); // ignored.
+		}
+	}
+
+	// 10. Parse the ping ETag
+	nsAutoString	pingETag;
+	ParseAttribute(aLine, kPingETagEquals, sizeof(kPingETagEquals) -1, pingETag);
+
+	// 11. Parse the ping LastMod date
+	nsAutoString	pingLastMod;
+	ParseAttribute(aLine, kPingLastModEquals, sizeof(kPingLastModEquals) -1, pingLastMod);
+
+	// 12. Parse the Ping Content Length
+	nsAutoString	pingContentLength;
+	ParseAttribute(aLine, kPingContentLenEquals, sizeof(kPingContentLenEquals) -1, pingContentLength);
+
+	// 13. Parse the Ping Status
+	nsAutoString	pingStatus;
+	ParseAttribute(aLine, kPingStatusEquals, sizeof(kPingStatusEquals) -1, pingStatus);
 
 	// Dunno. 4.5 did it, so will we.
 	if (!lastModifiedDate)
 		lastModifiedDate = lastVisitDate;
 
-	// XXX There was some other cruft here to deal with aliases, but
-	// since I have no clue what those are, I'll punt.
+	// There was some other cruft here to deal with aliases, but we ignore them thanks for RDF
 
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY; // in case ToNewCString() fails
 
 	char *cURL = url.ToNewCString();
-	if (cURL) {
-		char *cShortcutURL = shortcut.ToNewCString();
-		if (cShortcutURL) {
-			rv = AddBookmark(aContainer,
-					 cURL,
-					 name.GetUnicode(),
-					 addDate,
-					 lastVisitDate,
-					 lastModifiedDate,
-					 cShortcutURL,
-					 nodeType,
-					 bookmarkNode);
-		}
-		nsCRT::free(cShortcutURL);
-	}
-	nsCRT::free(cURL);
+	if (cURL)
+	{
+		char *cShortcutURL = shortcut.ToNewCString();	// Note: can be null
 
-	return rv;
+		rv = AddBookmark(aContainer, cURL, name.GetUnicode(), addDate, lastVisitDate,
+				lastModifiedDate, cShortcutURL, nodeType, bookmarkNode);
+
+		if (NS_SUCCEEDED(rv))
+		{
+			// save schedule
+			if (schedule.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	scheduleLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(schedule.GetUnicode(),
+								    getter_AddRefs(scheduleLiteral))))
+				{
+					rv = mDataSource->Assert(*bookmarkNode, kWEB_Schedule, scheduleLiteral, PR_TRUE);
+					if (rv != NS_RDF_ASSERTION_ACCEPTED)
+					{
+						NS_ERROR("unable to set bookmark schedule");
+					}
+				}
+				else
+				{
+					NS_ERROR("unable to get literal for bookmark schedule");
+				}
+			}
+
+			// last ping date
+			AssertTime(*bookmarkNode, kWEB_LastPingDate, lastPingDate);
+				
+			// save ping ETag
+			if (pingETag.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	pingLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(pingETag.GetUnicode(),
+								    getter_AddRefs(pingLiteral))))
+				{
+					rv = mDataSource->Assert(*bookmarkNode, kWEB_LastPingETag, pingLiteral, PR_TRUE);
+					if (rv != NS_RDF_ASSERTION_ACCEPTED)
+					{
+						NS_ERROR("unable to set ping etag");
+					}
+				}
+				else
+				{
+					NS_ERROR("unable to get literal for ping etag");
+				}
+			}
+
+			// save ping Last Mod date
+			if (pingLastMod.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	pingLastModLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(pingLastMod.GetUnicode(),
+								    getter_AddRefs(pingLastModLiteral))))
+				{
+					rv = mDataSource->Assert(*bookmarkNode, kWEB_LastPingModDate, pingLastModLiteral, PR_TRUE);
+					if (rv != NS_RDF_ASSERTION_ACCEPTED)
+					{
+						NS_ERROR("unable to set ping last mod");
+					}
+				}
+				else
+				{
+					NS_ERROR("unable to get literal for ping last mod");
+				}
+			}
+
+			// save ping Content Length date
+			if (pingContentLength.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	pingContentLengthLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(pingContentLength.GetUnicode(),
+								    getter_AddRefs(pingContentLengthLiteral))))
+				{
+					rv = mDataSource->Assert(*bookmarkNode, kWEB_LastPingContentLen, pingContentLengthLiteral, PR_TRUE);
+					if (rv != NS_RDF_ASSERTION_ACCEPTED)
+					{
+						NS_ERROR("unable to set ping content length");
+					}
+				}
+				else
+				{
+					NS_ERROR("unable to get literal for ping content length");
+				}
+			}
+
+			// save ping status
+			if (pingStatus.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	pingStatusLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(pingStatus.GetUnicode(),
+								    getter_AddRefs(pingStatusLiteral))))
+				{
+					rv = mDataSource->Assert(*bookmarkNode, kWEB_Status, pingStatusLiteral, PR_TRUE);
+					if (rv != NS_RDF_ASSERTION_ACCEPTED)
+					{
+						NS_ERROR("unable to set ping status");
+					}
+				}
+				else
+				{
+					NS_ERROR("unable to get literal for ping status");
+				}
+			}
+		}
+		if (cShortcutURL)
+		{
+			nsCRT::free(cShortcutURL);
+		}
+		nsCRT::free(cURL);
+	}
+	return(rv);
 }
 
 
@@ -648,7 +830,7 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
-		return rv;
+		return(rv);
 	}
 
 	if (bookmarkNode)
@@ -669,7 +851,7 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 	if (rv != NS_RDF_ASSERTION_ACCEPTED)
 	{
 		NS_ERROR("unable to add bookmark to data source");
-		return rv;
+		return(rv);
 	}
 
 	if ((nsnull != aOptionalTitle) && (*aOptionalTitle != PRUnichar('\0')))
@@ -678,14 +860,14 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 		if (NS_FAILED(rv = gRDF->GetLiteral(aOptionalTitle, getter_AddRefs(literal))))
 		{
 			NS_ERROR("unable to create literal for bookmark name");
-			return rv;
 		}
-
-		rv = mDataSource->Assert(bookmark, kNC_Name, literal, PR_TRUE);
-		if (rv != NS_RDF_ASSERTION_ACCEPTED)
+		if (NS_SUCCEEDED(rv))
 		{
-			NS_ERROR("unable to set bookmark name");
-			return rv;
+			rv = mDataSource->Assert(bookmark, kNC_Name, literal, PR_TRUE);
+			if (rv != NS_RDF_ASSERTION_ACCEPTED)
+			{
+				NS_ERROR("unable to set bookmark name");
+			}
 		}
 	}
 
@@ -700,9 +882,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 						    getter_AddRefs(shortcutLiteral))))
 		{
 			NS_ERROR("unable to get literal for bookmark shortcut URL");
-			return(rv);
 		}
-		if (rv != NS_RDF_NO_VALUE)
+		if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
 		{
 			rv = mDataSource->Assert(bookmark,
 						 kNC_ShortcutURL,
@@ -712,18 +893,14 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 			if (rv != NS_RDF_ASSERTION_ACCEPTED)
 			{
 				NS_ERROR("unable to set bookmark shortcut URL");
-				return(rv);
 			}
 		}
 	}
 
-	// XXX The last thing we do is add the bookmark to the
-	// container. This ensures the minimal amount of reflow.
+	// The last thing we do is add the bookmark to the container. This ensures the minimal amount of reflow.
 	rv = aContainer->AppendElement(bookmark);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
-	if (NS_FAILED(rv)) return rv;
-
-	return(NS_OK);
+	return(rv);
 }
 
 
@@ -930,9 +1107,17 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 			NS_ERROR("unable to get date literal for time");
 			return(rv);
 		}
-
-		rv = mDataSource->Assert(aSource, aLabel, dateLiteral, PR_TRUE);
-		NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert time");
+		nsCOMPtr<nsIRDFNode>	currentNode;
+		if (NS_SUCCEEDED(rv = mDataSource->GetTarget(aSource, aLabel, PR_TRUE,
+			getter_AddRefs(currentNode))) && (rv != NS_RDF_NO_VALUE))
+		{
+			rv = mDataSource->Change(aSource, aLabel, currentNode, dateLiteral);
+		}
+		else
+		{
+			rv = mDataSource->Assert(aSource, aLabel, dateLiteral, PR_TRUE);
+		}
+		NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new time");
 	}
 	return(rv);
 }
@@ -946,10 +1131,19 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 
 class nsBookmarksService : public nsIBookmarksService,
 			   public nsIRDFDataSource,
-			   public nsIRDFRemoteDataSource
+			   public nsIRDFRemoteDataSource,
+			   public nsIStreamListener
 {
 protected:
-	nsCOMPtr<nsIRDFDataSource> mInner;
+	nsCOMPtr<nsIRDFDataSource>	mInner;
+	nsCOMPtr<nsITimer>		mTimer;
+	PRBool				busySchedule;
+	nsCOMPtr<nsIRDFResource>	busyResource;
+	PRUint32			htmlSize;
+
+static	void	FireTimer(nsITimer* aTimer, void* aClosure);
+nsresult	ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
+nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
 	nsresult ReadBookmarks();
@@ -959,7 +1153,7 @@ protected:
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
-	PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
+	PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
 	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFResource **argValue);
 	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
@@ -975,6 +1169,12 @@ protected:
 	nsBookmarksService();
 	virtual ~nsBookmarksService();
 	nsresult Init();
+
+	// nsIStreamObserver methods:
+	NS_DECL_NSISTREAMOBSERVER
+
+	// nsIStreamListener methods:
+	NS_DECL_NSISTREAMLISTENER
 
 	friend NS_IMETHODIMP
 	NS_NewBookmarksService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -1080,9 +1280,7 @@ public:
 			     nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
 	// nsIRDFRemoteDataSource
-	NS_IMETHOD Init(const char* aURI);
-	NS_IMETHOD Refresh(PRBool aBlocking);
-	NS_IMETHOD Flush();
+	NS_DECL_NSIRDFREMOTEDATASOURCE
 };
 
 
@@ -1124,7 +1322,759 @@ nsBookmarksService::Init()
 	rv = gRDF->RegisterDataSource(this, PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
+	busyResource = null_nsCOMPtr();
+
+	if (!mTimer)
+	{
+		busySchedule = PR_FALSE;
+
+		rv = NS_NewTimer(getter_AddRefs(mTimer));
+		if (NS_FAILED(rv)) return rv;
+
+		// by default, fire the timer once a minute (unit is milliseconds)
+		mTimer->Init(nsBookmarksService::FireTimer, this, /* repeat, */ BOOKMARK_TIMEOUT);
+		// the timer will hold a reference to the bookmark service, so AddRef
+		NS_ADDREF(this);
+	}
+
 	return NS_OK;
+}
+
+
+
+nsresult
+nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag)
+{
+	examineFlag = PR_FALSE;
+	
+	nsresult	rv = NS_OK;
+
+	nsCOMPtr<nsIRDFNode>	scheduleNode;
+	if (NS_FAILED(rv = mInner->GetTarget(theBookmark, kWEB_Schedule, PR_TRUE,
+		getter_AddRefs(scheduleNode))) || (rv == NS_RDF_NO_VALUE))
+		return(rv);
+	
+	nsCOMPtr<nsIRDFLiteral>	scheduleLiteral = do_QueryInterface(scheduleNode);
+	if (!scheduleLiteral)	return(NS_ERROR_NO_INTERFACE);
+	
+	const PRUnichar		*scheduleUni = nsnull;
+	if (NS_FAILED(rv = scheduleLiteral->GetValueConst(&scheduleUni)))
+		return(rv);
+	if (!scheduleUni)	return(NS_ERROR_NULL_POINTER);
+
+	nsAutoString		schedule(scheduleUni);
+	if (schedule.Length() < 1)	return(NS_ERROR_UNEXPECTED);
+
+	// convert the current date/time from microseconds (PRTime) to seconds
+	// Note: don't change now64, as its used later in the function
+	PRTime		now64 = PR_Now(), temp64, million;
+	LL_I2L(million, PR_USEC_PER_SEC);
+	LL_DIV(temp64, now64, million);
+	PRInt32		now32;
+	LL_L2I(now32, temp64);
+
+	PRExplodedTime	nowInfo;
+	PR_ExplodeTime(now64, PR_LocalTimeParameters, &nowInfo);
+	
+	// XXX Do we need to do this?
+	PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);
+
+	nsAutoString	dayNum;
+	dayNum.Append(nowInfo.tm_wday, 10);
+
+	// a schedule string has the following format:
+	// Check Monday, Tuesday, and Friday | 9 AM thru 5 PM | every five minutes | change bookmark icon
+	// 125|9-17|5|icon
+
+	nsAutoString	notificationMethod;
+	PRInt32		startHour = -1, endHour = -1, duration = -1;
+
+	// should we be checking today?
+	PRInt32		slashOffset;
+	if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
+	{
+		nsAutoString	daySection;
+		schedule.Left(daySection, slashOffset);
+		schedule.Cut(0, slashOffset+1);
+		if (daySection.Find(dayNum) >= 0)
+		{
+			// ok, we should be checking today.  Within hour range?
+			if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
+			{
+				nsAutoString	hourRange;
+				schedule.Left(hourRange, slashOffset);
+				schedule.Cut(0, slashOffset+1);
+
+				// now have the "hour-range" segment of the string
+				// such as "9-17" or "9-12" from the examples above
+				PRInt32		dashOffset;
+				if ((dashOffset = hourRange.FindChar(PRUnichar('-'))) >= 1)
+				{
+					nsAutoString	startStr, endStr;
+
+					hourRange.Right(endStr, hourRange.Length() - dashOffset - 1);
+					hourRange.Left(startStr, dashOffset);
+
+					PRInt32		errorCode2 = 0;
+					startHour = startStr.ToInteger(&errorCode2);
+					if (errorCode2)	startHour = -1;
+					endHour = endStr.ToInteger(&errorCode2);
+					if (errorCode2)	endHour = -1;
+					
+					if ((startHour >=0) && (endHour >=0))
+					{
+						if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
+						{
+							nsAutoString	durationStr;
+							schedule.Left(durationStr, slashOffset);
+							schedule.Cut(0, slashOffset+1);
+
+							// get duration
+							PRInt32		errorCode = 0;
+							duration = durationStr.ToInteger(&errorCode);
+							if (errorCode)	duration = -1;
+							
+							// what's left is the notification options
+							notificationMethod = schedule;
+						}
+					}
+				}
+			}
+		}
+	}
+		
+
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+	char *methodStr = notificationMethod.ToNewCString();
+	if (methodStr)
+	{
+		printf("Start Hour: %d    End Hour: %d    Duration: %d mins    Method: '%s'\n",
+			startHour, endHour, duration, methodStr);
+		delete [] methodStr;
+		methodStr = nsnull;
+	}
+#endif
+
+	if ((startHour <= nowInfo.tm_hour) && (endHour >= nowInfo.tm_hour) &&
+		(duration >= 1) && (notificationMethod.Length() > 0))
+	{
+		// OK, we're with the start/end time range, check the duration
+		// against the last time we've "pinged" the server (if ever)
+
+		examineFlag = PR_TRUE;
+
+		nsCOMPtr<nsIRDFNode>	pingNode;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(theBookmark, kWEB_LastPingDate,
+			PR_TRUE, getter_AddRefs(pingNode))) && (rv != NS_RDF_NO_VALUE))
+		{
+			nsCOMPtr<nsIRDFDate>	pingLiteral = do_QueryInterface(pingNode);
+			if (pingLiteral)
+			{
+				PRInt64		lastPing;
+				if (NS_SUCCEEDED(rv = pingLiteral->GetValue(&lastPing)))
+				{
+					PRInt64		diff64, sixty;
+					LL_SUB(diff64, now64, lastPing);
+					
+					// convert from milliseconds to seconds
+					LL_DIV(diff64, diff64, million);
+					// convert from seconds to minutes
+					LL_I2L(sixty, 60L);
+					LL_DIV(diff64, diff64, sixty);
+
+					PRInt32		diff32;
+					LL_L2I(diff32, diff64);
+					if (diff32 < duration)
+					{
+						examineFlag = PR_FALSE;
+
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+						printf("Skipping URL, its too soon.\n");
+#endif
+					}
+				}
+			}
+		}
+	}
+	return(rv);
+}
+
+
+
+nsresult
+nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
+{
+	nsresult	rv = NS_OK;
+
+	*theBookmark = nsnull;
+
+	nsCOMPtr<nsISimpleEnumerator>	srcList;
+	if (NS_FAILED(rv = GetSources(kRDF_type, kNC_Bookmark, PR_TRUE, getter_AddRefs(srcList))))
+		return(rv);
+
+	nsCOMPtr<nsISupportsArray>	bookmarkList;
+	if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(bookmarkList))))
+		return(rv);
+
+	// build up a list of potential bookmarks to check
+	PRBool	hasMoreSrcs = PR_TRUE;
+	while(NS_SUCCEEDED(rv = srcList->HasMoreElements(&hasMoreSrcs))
+		&& (hasMoreSrcs == PR_TRUE))
+	{
+		nsCOMPtr<nsISupports>	aSrc;
+		if (NS_FAILED(rv = srcList->GetNext(getter_AddRefs(aSrc))))
+			break;
+		nsCOMPtr<nsIRDFResource>	aSource = do_QueryInterface(aSrc);
+		if (!aSource)	continue;
+
+		// does the bookmark have a schedule, and if so,
+		// are we within its bounds for checking the URL?
+
+		PRBool	examineFlag = PR_FALSE;
+		if (NS_FAILED(rv = ExamineBookmarkSchedule(aSource, examineFlag))
+			|| (examineFlag == PR_FALSE))	continue;
+
+		bookmarkList->AppendElement(aSource);
+	}
+
+	// pick a random entry from the list of bookmarks to check
+	PRUint32	numBookmarks;
+	if (NS_SUCCEEDED(rv = bookmarkList->Count(&numBookmarks)) && (numBookmarks > 0))
+	{
+		PRInt32		randomNum;
+		LL_L2I(randomNum, PR_Now());
+		PRUint32	randomBookmark = (numBookmarks-1) % randomNum;
+
+		nsCOMPtr<nsISupports>	iSupports;
+		if (NS_SUCCEEDED(rv = bookmarkList->GetElementAt(randomBookmark,
+			getter_AddRefs(iSupports))))
+		{
+			nsCOMPtr<nsIRDFResource>	aBookmark = do_QueryInterface(iSupports);
+			if (aBookmark)
+			{
+				*theBookmark = aBookmark;
+				NS_ADDREF(*theBookmark);
+			}
+		}
+	}
+	return(rv);
+}
+
+
+
+void
+nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
+{
+	// XXX Any lifetime issues we need to deal with here???
+	nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
+	if (!bmks)	return;
+
+	bmks->mTimer = nsnull;
+
+	if (bmks->busySchedule == PR_FALSE)
+	{
+		nsresult			rv;
+		nsCOMPtr<nsIRDFResource>	bookmark;
+		if (NS_SUCCEEDED(rv = bmks->GetBookmarkToPing(getter_AddRefs(bookmark))) && (bookmark))
+		{
+			bmks->busyResource = bookmark;
+			const char		*url = nsnull;
+			bookmark->GetValueConst(&url);
+
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+			printf("nsBookmarksService::FireTimer - Pinging '%s'\n", url);
+#endif
+
+			nsresult		rv;
+			nsCOMPtr<nsIURI>	uri;
+			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(uri), url)))
+			{
+#if 0
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, bmks), nsnull, uri, nsnull);
+#else
+				nsCOMPtr<nsIChannel>	channel;
+				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
+				{
+					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+					if (httpChannel)
+					{
+						bmks->busySchedule = PR_TRUE;
+						bmks->htmlSize = 0;
+
+//						httpChannel->SetRequestMethod(HM_HEAD);
+						httpChannel->SetRequestMethod(HM_GET);
+						rv = channel->AsyncRead(0, -1, nsnull, bmks);
+					}
+				}
+#endif
+			}
+		}
+	}
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+else
+	{
+	printf("nsBookmarksService::FireTimer - busy pinging.\n");
+	}
+#endif
+
+
+	// reschedule the timer unless bookmarks service is going away
+	nsrefcnt	refcnt;
+	NS_RELEASE2(bmks, refcnt);
+	if (0 != refcnt)
+	{
+		nsresult rv = NS_NewTimer(getter_AddRefs(bmks->mTimer));
+		if (NS_FAILED(rv)) return;
+
+		// by default, fire the timer once a minute (unit is milliseconds)
+		bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, /* repeat, */ BOOKMARK_TIMEOUT);
+		// the timer will hold a reference to the bookmark service, so AddRef
+		NS_ADDREF(bmks);
+	}
+}
+
+
+
+// stream observer methods
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+{
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *aIStream,
+					  PRUint32 sourceOffset, PRUint32 aLength)
+{
+	// calculate html page size if server doesn't tell us in headers
+	htmlSize += aLength;
+
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+					nsresult status, const PRUnichar *errorMsg) 
+{
+	nsresult		rv;
+
+	const char		*uri = nsnull;
+	if (NS_SUCCEEDED(rv = busyResource->GetValueConst(&uri)) && (uri))
+	{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+		printf("Finished polling '%s'\n", uri);
+#endif
+	}
+
+	nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+	if (httpChannel)
+	{
+		nsAutoString			eTagValue, lastModValue, contentLengthValue;
+		nsCOMPtr<nsISimpleEnumerator>	enumerator;
+		if (NS_SUCCEEDED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
+		{
+			PRBool			bMoreHeaders;
+
+			while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
+				&& (bMoreHeaders == PR_TRUE))
+			{
+				nsCOMPtr<nsISupports>   item;
+				enumerator->GetNext(getter_AddRefs(item));
+				nsCOMPtr<nsIHTTPHeader>	header = do_QueryInterface(item);
+				NS_ASSERTION(header, "nsBookmarksService::OnStopRequest - Bad HTTP header.");
+				if (header)
+				{
+					nsCOMPtr<nsIAtom>       headerAtom;
+					header->GetField(getter_AddRefs(headerAtom));
+					nsAutoString		headerStr;
+					headerAtom->ToString(headerStr);
+
+					char	*val = nsnull;
+					
+					if (headerStr.EqualsIgnoreCase("eTag"))
+					{
+						header->GetValue(&val);
+						if (val)
+						{
+							eTagValue = val;
+							nsCRT::free(val);
+						}
+					}
+					else if (headerStr.EqualsIgnoreCase("Last-Modified"))
+					{
+						header->GetValue(&val);
+						if (val)
+						{
+							lastModValue = val;
+							nsCRT::free(val);
+						}
+					}
+					else if (headerStr.EqualsIgnoreCase("Content-Length"))
+					{
+						header->GetValue(&val);
+						if (val)
+						{
+							contentLengthValue = val;
+							nsCRT::free(val);
+						}
+					}
+				}
+			}
+		}
+
+		PRBool		changedFlag = PR_FALSE;
+
+		PRUint32	respStatus;
+		if (NS_SUCCEEDED(rv = httpChannel->GetResponseStatus(&respStatus)))
+		{
+			if ((respStatus >= 200) && (respStatus <= 299))
+			{
+				if (eTagValue.Length() > 0)
+				{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+					const char *eTagVal = nsCAutoString(eTagValue);
+					printf("eTag: '%s'\n", eTagVal);
+#endif
+					nsCOMPtr<nsIRDFNode>	currentETagNode;
+					if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingETag,
+						PR_TRUE, getter_AddRefs(currentETagNode))) && (rv != NS_RDF_NO_VALUE))
+					{
+						nsCOMPtr<nsIRDFLiteral>	currentETagLit = do_QueryInterface(currentETagNode);
+						if (currentETagLit)
+						{
+							const PRUnichar	*currentETagStr = nsnull;
+							currentETagLit->GetValueConst(&currentETagStr);
+							if ((currentETagStr) && (!eTagValue.EqualsIgnoreCase(currentETagStr)))
+							{
+								changedFlag = PR_TRUE;
+							}
+							nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
+							if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagValue.GetUnicode(),
+								getter_AddRefs(newETagLiteral))))
+							{
+								rv = mInner->Change(busyResource, kWEB_LastPingETag,
+									currentETagNode, newETagLiteral);
+							}
+						}
+					}
+					else
+					{
+						nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
+						if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagValue.GetUnicode(),
+							getter_AddRefs(newETagLiteral))))
+						{
+							rv = mInner->Assert(busyResource, kWEB_LastPingETag,
+								newETagLiteral, PR_TRUE);
+						}
+					}
+				}
+			}
+		}
+
+		if ((changedFlag == PR_FALSE) && (lastModValue.Length() > 0))
+		{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+			const char *lastModVal = nsCAutoString(lastModValue);
+			printf("Last-Modified: '%s'\n", lastModVal);
+#endif
+			nsCOMPtr<nsIRDFNode>	currentLastModNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingModDate,
+				PR_TRUE, getter_AddRefs(currentLastModNode))) && (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	currentLastModLit = do_QueryInterface(currentLastModNode);
+				if (currentLastModLit)
+				{
+					const PRUnichar	*currentLastModStr = nsnull;
+					currentLastModLit->GetValueConst(&currentLastModStr);
+					if ((currentLastModStr) && (!lastModValue.EqualsIgnoreCase(currentLastModStr)))
+					{
+						changedFlag = PR_TRUE;
+					}
+					nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
+					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModValue.GetUnicode(),
+						getter_AddRefs(newLastModLiteral))))
+					{
+						rv = mInner->Change(busyResource, kWEB_LastPingModDate,
+							currentLastModNode, newLastModLiteral);
+					}
+				}
+			}
+			else
+			{
+				nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModValue.GetUnicode(),
+					getter_AddRefs(newLastModLiteral))))
+				{
+					rv = mInner->Assert(busyResource, kWEB_LastPingModDate,
+						newLastModLiteral, PR_TRUE);
+				}
+			}
+		}
+
+		if ((changedFlag == PR_FALSE) && (contentLengthValue.Length() > 0))
+		{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+			const char *contentLengthVal = nsCAutoString(contentLengthValue);
+			printf("Content-Length: '%s'\n", contentLengthVal);
+#endif
+			nsCOMPtr<nsIRDFNode>	currentContentLengthNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingContentLen,
+				PR_TRUE, getter_AddRefs(currentContentLengthNode))) && (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	currentContentLengthLit = do_QueryInterface(currentContentLengthNode);
+				if (currentContentLengthLit)
+				{
+					const PRUnichar	*currentContentLengthStr = nsnull;
+					currentContentLengthLit->GetValueConst(&currentContentLengthStr);
+					if ((currentContentLengthStr) && (!contentLengthValue.EqualsIgnoreCase(currentContentLengthStr)))
+					{
+						changedFlag = PR_TRUE;
+					}
+					nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
+					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLengthValue.GetUnicode(),
+						getter_AddRefs(newContentLengthLiteral))))
+					{
+						rv = mInner->Change(busyResource, kWEB_LastPingContentLen,
+							currentContentLengthNode, newContentLengthLiteral);
+					}
+				}
+			}
+			else
+			{
+				nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLengthValue.GetUnicode(),
+					getter_AddRefs(newContentLengthLiteral))))
+				{
+					rv = mInner->Assert(busyResource, kWEB_LastPingContentLen,
+						newContentLengthLiteral, PR_TRUE);
+				}
+			}
+		}
+
+		// update last poll date
+		nsCOMPtr<nsIRDFDate>	dateLiteral;
+		if (NS_SUCCEEDED(rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral))))
+		{
+			nsCOMPtr<nsIRDFNode>	lastPingNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingDate, PR_TRUE,
+				getter_AddRefs(lastPingNode))) && (rv != NS_RDF_NO_VALUE))
+			{
+				rv = mInner->Change(busyResource, kWEB_LastPingDate, lastPingNode, dateLiteral);
+			}
+			else
+			{
+				rv = mInner->Assert(busyResource, kWEB_LastPingDate, dateLiteral, PR_TRUE);
+			}
+			NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new time");
+
+			// XXX For the moment, do an immediate flush.
+			if (NS_SUCCEEDED(rv))
+			{
+				Flush();
+			}
+
+		}
+		else
+		{
+			NS_ERROR("unable to get date literal for now");
+		}
+
+		// If its changed, set the appropriate info
+		if (changedFlag == PR_TRUE)
+		{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+			printf("URL has changed!\n\n");
+#endif
+
+			nsAutoString		schedule;
+
+			nsCOMPtr<nsIRDFNode>	scheduleNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_Schedule, PR_TRUE,
+				getter_AddRefs(scheduleNode))) && (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	scheduleLiteral = do_QueryInterface(scheduleNode);
+				if (scheduleLiteral)
+				{
+					const PRUnichar		*scheduleUni = nsnull;
+					if (NS_SUCCEEDED(rv = scheduleLiteral->GetValueConst(&scheduleUni))
+						&& (scheduleUni))
+					{
+						schedule = scheduleUni;
+					}
+				}
+			}
+
+			// update icon?
+			if (schedule.Find(nsAutoString("icon"), PR_TRUE, 0) >= 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	statusLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(nsAutoString("new").GetUnicode(), getter_AddRefs(statusLiteral))))
+				{
+					nsCOMPtr<nsIRDFNode>	currentStatusNode;
+					if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_Status, PR_TRUE,
+						getter_AddRefs(currentStatusNode))) && (rv != NS_RDF_NO_VALUE))
+					{
+						rv = mInner->Change(busyResource, kWEB_Status, currentStatusNode, statusLiteral);
+					}
+					else
+					{
+						rv = mInner->Assert(busyResource, kWEB_Status, statusLiteral, PR_TRUE);
+					}
+					NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert changed status");
+				}
+			}
+			
+			// play a sound?
+			if (schedule.Find(nsAutoString("sound"), PR_TRUE, 0) >= 0)
+			{
+/*
+				nsCOMPtr<nsISound>	soundInterface;
+				rv = nsComponentManager::CreateInstance(kSoundCID,
+						nsnull, nsISound::GetIID(),
+						getter_AddRefs(soundInterface));
+				if (NS_SUCCEEDED(rv))
+				{
+					// XXX for the moment, just beep
+					soundInterface->Beep();
+				}
+*/
+			}
+			
+			PRBool		openURLFlag = PR_FALSE;
+
+			// show an alert?
+			if (schedule.Find(nsAutoString("alert"), PR_TRUE, 0) >= 0)
+			{
+				NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+				if (NS_SUCCEEDED(rv))
+				{
+					// XXX localization (for the hard-coded strings below)
+
+					nsAutoString	promptStr;
+					promptStr += "The following web page has been updated:\n\n";
+					nsCOMPtr<nsIRDFNode>	nameNode;
+					if (NS_SUCCEEDED(mInner->GetTarget(busyResource, kNC_Name,
+						PR_TRUE, getter_AddRefs(nameNode))))
+					{
+						nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
+						if (nameLiteral)
+						{
+							PRUnichar	*nameUni = nsnull;
+							if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&nameUni))
+								&& (nameUni))
+							{
+								promptStr += "Title: ";
+								promptStr += nameUni;
+								promptStr += "\nURL: ";
+							}
+						}
+					}
+					promptStr += uri;
+					promptStr += "\n\nWould you like to display it?";
+					
+					PRBool		stopCheckingFlag = PR_FALSE;
+					rv = dialog->ConfirmCheck(promptStr.GetUnicode(),
+						nsAutoString("Stop checking for updates on this web page").GetUnicode(),
+						&stopCheckingFlag, &openURLFlag);
+					if (NS_FAILED(rv))
+					{
+						openURLFlag = PR_FALSE;
+						stopCheckingFlag = PR_FALSE;
+					}
+					if (stopCheckingFlag == PR_TRUE)
+					{
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+						printf("\nStop checking this URL.\n");
+#endif
+						rv = mInner->Unassert(busyResource, kWEB_Schedule, scheduleNode);
+						NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert kWEB_Schedule");
+					}
+				}
+			}
+			
+			// open the URL in a new window?
+			if ((openURLFlag == PR_TRUE) ||
+				(schedule.Find(nsAutoString("open"), PR_TRUE, 0) >= 0))
+			{
+				NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+				if (NS_SUCCEEDED(rv))
+				{
+					nsCOMPtr<nsIURI> urlObj;
+					const char *chromeURLStr = "chrome://navigator/content";
+					if (NS_SUCCEEDED(rv))
+					{
+						nsCOMPtr<nsIURI>	url;
+						if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), chromeURLStr)))
+						{
+							appShell->PushThreadEventQueue();
+
+							nsCOMPtr<nsIWebShellWindow>	window;
+							if (NS_SUCCEEDED(rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_FALSE,
+								NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT, getter_AddRefs(window))))
+							{
+								nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(window));
+								if (browser)
+									browser->SetChrome(NS_CHROME_ALL_CHROME);
+
+								// Spin into the modal loop.
+								nsIAppShell *subshell;
+								rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
+								if (NS_SUCCEEDED(rv))
+								{
+									subshell->Create(0, nsnull);
+									subshell->Spinup(); // Spin up 
+
+									// Specify that we want the window to remain locked until the chrome has loaded.
+									window->LockUntilChromeLoad();
+									PRBool locked = PR_FALSE;
+									nsresult looprv = NS_OK;
+									window->GetLockedState(locked);
+									while (NS_SUCCEEDED(looprv) && locked)
+									{
+										void      *data;
+										PRBool    isRealEvent;
+
+										looprv = subshell->GetNativeEvent(isRealEvent, data);
+										subshell->DispatchNativeEvent(isRealEvent, data);
+
+										window->GetLockedState(locked);
+									}
+									subshell->Spindown();
+									NS_RELEASE(subshell);
+								}
+								appShell->PopThreadEventQueue();
+
+								nsCOMPtr<nsIWebShell>	content;
+								if (NS_SUCCEEDED(rv = window->GetContentShellById(nsAutoString("content"),
+									getter_AddRefs(content))))
+								{
+									content->LoadURL(nsAutoString(uri).GetUnicode() /* , "view" */);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+#ifdef	DEBUG_BOOKMARK_PING_OUTPUT
+		else
+		{
+			printf("URL has not changed status.\n\n");
+		}
+#endif
+	}
+
+	busyResource = null_nsCOMPtr();
+	busySchedule = PR_FALSE;
+
+	return(NS_OK);
 }
 
 
@@ -1233,8 +2183,8 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	PRInt32		now32;
 	LL_L2I(now32, now64);
 
-	rv = parser.AddBookmark(container, aURI, aOptionalTitle,
-				now32, 0L, 0L, nsnull, kNC_Bookmark, nsnull);
+	rv = parser.AddBookmark(container, aURI, aOptionalTitle, now32,
+				0L, 0L, nsnull, kNC_Bookmark, nsnull);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -1276,6 +2226,15 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 				else
 				{
 					rv = mInner->Assert(bookmark, kWEB_LastVisitDate, now, PR_TRUE);
+				}
+
+				// also update bookmark's "status"!
+				nsCOMPtr<nsIRDFNode>	currentStatusNode;
+				if (NS_SUCCEEDED(rv = mInner->GetTarget(bookmark, kWEB_Status, PR_TRUE,
+					getter_AddRefs(currentStatusNode))) && (rv != NS_RDF_NO_VALUE))
+				{
+					rv = mInner->Unassert(bookmark, kWEB_Status, currentStatusNode);
+					NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to Unassert changed status");
 				}
 				
 				// XXX For the moment, do an immediate flush.
@@ -1645,14 +2604,6 @@ nsBookmarksService::ChangeURL(nsIRDFResource *aSource, nsIRDFResource *aProperty
 				break;
 		}
 	}
-
-#ifdef	DEBUG
-	if (NS_SUCCEEDED(rv))
-	{
-		printf("ChangeURL success.\n");
-	}
-#endif
-
 	return(rv);
 }
 
@@ -2413,13 +3364,31 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 							// output LAST_VISIT
 							WriteBookmarkProperties(ds, strm, child, kWEB_LastVisitDate, kLastVisitEquals, PR_FALSE);
-								
+
 							// output LAST_MODIFIED
 							WriteBookmarkProperties(ds, strm, child, kWEB_LastModifiedDate, kLastModifiedEquals, PR_FALSE);
-								
+
 							// output SHORTCUTURL
 							WriteBookmarkProperties(ds, strm, child, kNC_ShortcutURL, kShortcutURLEquals, PR_FALSE);
-								
+
+							// output SCHEDULE
+							WriteBookmarkProperties(ds, strm, child, kWEB_Schedule, kScheduleEquals, PR_FALSE);
+
+							// output LAST_PING
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingDate, kLastPingEquals, PR_FALSE);
+
+							// output PING_ETAG
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingETag, kPingETagEquals, PR_FALSE);
+
+							// output PING_LAST_MODIFIED
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingModDate, kPingLastModEquals, PR_FALSE);
+
+							// output PING_CONTENT_LEN
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingContentLen, kPingContentLenEquals, PR_FALSE);
+
+							// output PING_STATUS
+							WriteBookmarkProperties(ds, strm, child, kWEB_Status, kPingStatusEquals, PR_FALSE);
+
 							strm << ">";
 							// output title
 							if (name)	strm << name;
@@ -2586,7 +3555,8 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 		 (aProperty == kNC_URL) ||
 		 (aProperty == kWEB_LastModifiedDate) ||
 		 (aProperty == kWEB_LastVisitDate) ||
-		 (aProperty == kNC_BookmarkAddDate)) {
+		 (aProperty == kNC_BookmarkAddDate) ||
+		 (aProperty == kWEB_Schedule)) {
 		return PR_TRUE;
 	}
 	else {

@@ -1,9 +1,50 @@
 <!-- extracted from ./bm-props.xul -->
 
-<!ENTITY bookmarks.title.label        "Bookmarks Properties">
+<!ENTITY bookmarks.title.label        "Bookmark Properties">
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">
-<!ENTITY bookmarks.shortcut.label     "Shortcut:">
+<!ENTITY bookmarks.shortcut.label     "Nickname:">
 <!ENTITY bookmarks.description.label  "Description:">
-<!ENTITY bookmarks.ok.label           "Ok">
+<!ENTITY bookmarks.ok.label           "OK">
 <!ENTITY bookmarks.cancel.label       "Cancel">
+
+<!ENTITY checkforupdates.legend.label "Check web page for updates:">
+<!ENTITY check.label                  "Check: ">
+<!ENTITY every.label                  "every ">
+<!ENTITY from.label                   "from ">
+<!ENTITY to.label                     " to ">
+<!ENTITY minutes.label                " minute(s)">
+<!ENTITY notifications.legend.label   "Notification:">
+
+<!ENTITY checknever.label             "Never">
+<!ENTITY checkeveryday.label          "Every day">
+<!ENTITY checkweekdays.label          "Weekdays">
+<!ENTITY checkweekends.label          "Weekends">
+<!ENTITY checkmondays.label           "Mondays">
+<!ENTITY checktuesdays.label          "Tuesdays">
+<!ENTITY checkwednesdays.label        "Wednesdays">
+<!ENTITY checkthursdays.label         "Thursdays">
+<!ENTITY checkfridays.label           "Fridays">
+<!ENTITY checksaturdays.label         "Saturdays">
+<!ENTITY checksundays.label           "Sundays">
+
+<!ENTITY midnight.label               "Midnight">
+<!ENTITY noon.label                   "Noon">
+<!ENTITY am.label                     "AM">
+<!ENTITY pm.label                     "PM">
+<!ENTITY one.label                    "1">
+<!ENTITY two.label                    "2">
+<!ENTITY three.label                  "3">
+<!ENTITY four.label                   "4">
+<!ENTITY five.label                   "5">
+<!ENTITY six.label                    "6">
+<!ENTITY seven.label                  "7">
+<!ENTITY eight.label                  "8">
+<!ENTITY nine.label                   "9">
+<!ENTITY ten.label                    "10">
+<!ENTITY eleven.label                 "11">
+
+<!ENTITY notification.icon.label      "Change the bookmark's icon">
+<!ENTITY notification.sound.label     "Play a sound">
+<!ENTITY notification.alert.label     "Display an alert">
+<!ENTITY notification.window.label    "Open web page in a new window">
