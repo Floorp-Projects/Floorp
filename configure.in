@@ -1638,6 +1638,9 @@ if test -n "$CROSS_COMPILE"; then
     HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
 fi
 
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
 AC_C_CONST
@@ -3001,6 +3004,19 @@ then
     esac
 fi
 dnl ========================================================
+
+dnl ========================================================
+dnl =
+dnl = --enable-elf-dynstr-gc
+dnl = 
+dnl ========================================================
+USE_ELF_DYNSTR_GC=
+
+MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
+[  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector],
+  USE_ELF_DYNSTR_GC=1)
+
+AC_SUBST(USE_ELF_DYNSTR_GC)
 
 dnl ========================================================
 dnl =
