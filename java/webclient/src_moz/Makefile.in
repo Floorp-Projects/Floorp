@@ -22,6 +22,8 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/webclient/src_moz
 VPATH		= $(topsrcdir)/java/webclient/src_moz
 
+DIRS = motif
+
 JAVAHOME        = $(JDKHOME)
 
 include $(DEPTH)/config/autoconf.mk
