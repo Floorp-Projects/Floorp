@@ -382,7 +382,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
   //nsCOMPtr<nsIBox> ibox = do_QueryInterface(aFrame);
 
   // if it does ask it for its BoxSize and we are done
-  nsIBox* ibox;
+  nsIBox* ibox = nsnull;
   if (NS_SUCCEEDED(aFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
      // add in the border, padding, width, min, max
@@ -1728,7 +1728,7 @@ nsBoxFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflow
         // clear the spring so it is recalculated on the flow
         info->Clear();
         // can't use nsCOMPtr on non-refcounted things like frames
-        nsIBox* ibox;
+        nsIBox* ibox = nsnull;
         if (NS_SUCCEEDED(info->frame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
             ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         else 
