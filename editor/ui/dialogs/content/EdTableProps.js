@@ -74,7 +74,7 @@ From C++:
  3 TABLESELECTION_COLUMN All cells are in 1 or more columns
 */
 
-var selectedCellCount = 0;
+var gSelectedCellCount = 0;
 var error = 0;
 var ApplyUsed = false;
 // What should these be?
@@ -160,7 +160,7 @@ function Startup()
   var tagNameObj = new Object;
   var countObj = new Object;
   var tableOrCellElement = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
-  selectedCellCount = countObj.value;
+  gSelectedCellCount = countObj.value;
 
   if (tagNameObj.value == "td")
   {
@@ -178,7 +178,7 @@ function Startup()
 
     // Be sure at least 1 cell is selected.
     // (If the count is 0, then we were inside the cell.)
-    if (selectedCellCount == 0)
+    if (gSelectedCellCount == 0)
       DoCellSelection();
 
     // Get location in the cell map
@@ -361,7 +361,7 @@ function InitCellPanel()
       previousValue != dialog.CellAlignCharInput.value;
 
     previousIndex = dialog.CellStyleList.selectedIndex;
-    dialog.CellStyleList.selectedIndex = (globalCellElement.nodeName.toLowerCase == "th") ? 1 : 0;
+    dialog.CellStyleList.selectedIndex = (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
     dialog.CellStyleCheckbox.checked = AdvancedEditUsed && previousIndex != dialog.CellStyleList.selectedIndex;
 
     previousIndex = dialog.TextWrapList.selectedIndex;
@@ -726,13 +726,13 @@ function DoCellSelection()
   tagNameObj.value = "";
   var tableOrCellElement = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
   if (tagNameObj.value == "td")
-    selectedCellCount = countObj.value;
+    gSelectedCellCount = countObj.value;
   else
-    selectedCellCount = 0;
+    gSelectedCellCount = 0;
   
   // Currently, we can only allow advanced editing on ONE cell element at a time
   //   else we ignore CSS, JS, and HTML attributes not already in dialog
-  SetElementEnabledById("AdvancedEditButton2", selectedCellCount == 1);
+  SetElementEnabledById("AdvancedEditButton2", gSelectedCellCount == 1);
 }
 
 function SetSelectionButtons()
@@ -1238,11 +1238,22 @@ function ApplyCellAttributes()
   if (!selectedCell)
     return;
 
-  if (selectedCellCount == 1)
+  if (gSelectedCellCount == 1)
   {
     // When only one cell is selected, simply clone entire element,
     //  thus CSS and JS from Advanced edit is copied    
     editorShell.CloneAttributes(selectedCell, globalCellElement);
+
+    if (dialog.CellStyleCheckbox.checked)
+    {
+      var currentStyleIndex = (selectedCell.nodeName.toLowerCase() == "th") ? 1 : 0;
+      if (dialog.CellStyleList.selectedIndex != currentStyleIndex)
+      {
+        // Switch cell types 
+        // (replaces with new cell and copies attributes and contents)
+        selectedCell = editorShell.SwitchTableCellHeaderType(selectedCell);
+      }
+    }
   }
   else 
   {
@@ -1293,7 +1304,6 @@ function ApplyAttributesToOneCell(destElement)
       // Switch cell types 
       // (replaces with new cell and copies attributes and contents)
       destElement = editorShell.SwitchTableCellHeaderType(destElement);
-      CurrentStyleIndex = newStyleIndex;
     }
   }
 
