@@ -1021,12 +1021,17 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 		    "chase_one_referral: using port (%d) from original "
 		    "request on new request\n",
 		    srv->lsrv_port, 0, 0);
-	} else {
+	} else if ( ludp->lud_port != 0 ) {
 		srv->lsrv_port = ludp->lud_port;
 		LDAPDebug( LDAP_DEBUG_TRACE,
 		    "chase_one_referral: using port (%d) as specified on "
 		    "new request\n",
 		    srv->lsrv_port, 0, 0);
+	} else {
+		srv->lsrv_port = secure ? LDAPS_PORT : LDAP_PORT;
+		LDAPDebug( LDAP_DEBUG_TRACE,
+		    "chase_one_referral: using default port (%d)\n",
+			srv->lsrv_port, 0, 0 );
 	}
 
 	if ( secure ) {
