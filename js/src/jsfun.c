@@ -1077,7 +1077,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSScopeProperty *sprop;
     jsid userid;
     JSAtom *atom;
-    uintN i, dupflag;
+    uintN i, n, dupflag;
     uint32 type;
 #ifdef DEBUG
     uintN nvars = 0, nargs = 0;
@@ -1111,38 +1111,59 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     /* do arguments and local vars */
     if (fun->object) {
+        n = fun->nargs + fun->nvars;
         if (xdr->mode == JSXDR_ENCODE) {
-            JSScope *scope = OBJ_SCOPE(fun->object);
+            JSScope *scope;
+            JSScopeProperty **spvec, *auto_spvec[8];
+            void *mark;
 
+            if (n <= sizeof auto_spvec / sizeof auto_spvec[0]) {
+                spvec = auto_spvec;
+                mark = NULL;
+            } else {
+                mark = JS_ARENA_MARK(&cx->tempPool);
+                JS_ARENA_ALLOCATE_CAST(spvec, JSScopeProperty **, &cx->tempPool,
+                                       n * sizeof(JSScopeProperty *));
+                if (!spvec) {
+                    JS_ReportOutOfMemory(cx);
+                    return JS_FALSE;
+                }
+            }
+            scope = OBJ_SCOPE(fun->object);
             for (sprop = SCOPE_LAST_PROP(scope); sprop;
                  sprop = sprop->parent) {
-                JSPropertyOp getter = sprop->getter;
-
-                if (getter == js_GetArgument) {
-                    type = JSXDR_FUNARG;
+                if (sprop->getter == js_GetArgument) {
                     JS_ASSERT(nargs++ <= fun->nargs);
-                } else if (getter == js_GetLocalVariable) {
-                    type = (sprop->attrs & JSPROP_READONLY)
-                           ? JSXDR_FUNCONST
-                           : JSXDR_FUNVAR;
+                    spvec[sprop->shortid] = sprop;
+                } else if (sprop->getter == js_GetLocalVariable) {
                     JS_ASSERT(nvars++ <= fun->nvars);
-                } else {
-                    continue;
+                    spvec[fun->nargs + sprop->shortid] = sprop;
                 }
+            }
+            for (i = 0; i < n; i++) {
+                sprop = spvec[i];
                 JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+                type = (i < fun->nargs)
+                       ? JSXDR_FUNARG
+                       : (sprop->attrs & JSPROP_READONLY)
+                       ? JSXDR_FUNCONST
+                       : JSXDR_FUNVAR;
                 userid = INT_TO_JSVAL(sprop->shortid);
                 propname = ATOM_BYTES((JSAtom *)sprop->id);
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, (uint32 *)&userid) ||
                     !JS_XDRCString(xdr, &propname)) {
+                    if (mark)
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
                     return JS_FALSE;
                 }
             }
+            if (mark)
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
         } else {
             JSPropertyOp getter, setter;
 
-            i = fun->nvars + fun->nargs;
-            while (i--) {
+            for (i = n; i != 0; i--) {
                 uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
                 if (!JS_XDRUint32(xdr, &type) ||
@@ -1962,7 +1983,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     if (!fun)
         return NULL;
     if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, OBJECT_TO_JSVAL(fun->object),
-                             NULL, NULL, attrs, NULL)) {
+                             NULL, NULL, attrs & ~JSFUN_FLAGS_MASK, NULL)) {
         return NULL;
     }
     return fun;

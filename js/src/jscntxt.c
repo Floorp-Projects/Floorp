@@ -658,7 +658,8 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
     if (onError) {
         JSDebugErrorHook hook = cx->runtime->debugErrorHook;
         if (hook &&
-            !hook(cx, cx->lastMessage, reportp, cx->runtime->debugErrorHookData)) {
+            !hook(cx, cx->lastMessage, reportp,
+                  cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }

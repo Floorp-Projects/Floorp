@@ -1735,6 +1735,10 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     if (!FindConstructor(cx, parent, clasp->name, &cval))
         return NULL;
+    if (JSVAL_IS_PRIMITIVE(cval)) {
+        js_ReportIsNotFunction(cx, &cval, JS_TRUE);
+        return NULL;
+    }
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
