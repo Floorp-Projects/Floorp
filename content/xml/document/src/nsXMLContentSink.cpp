@@ -678,6 +678,10 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   if (aType.EqualsIgnoreCase(kXSLType) ||
       aType.EqualsIgnoreCase(kXMLTextContentType) ||
       aType.EqualsIgnoreCase(kXMLApplicationContentType)) {
+    if (aAlternate) {
+      // don't load alternate XSLT
+      return NS_OK;
+    }
     // LoadXSLStyleSheet needs a mWebShell.
     if (!mWebShell)
       return NS_OK;
