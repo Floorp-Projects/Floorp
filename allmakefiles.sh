@@ -336,13 +336,8 @@ netwerk/protocol/resource/src/Makefile
 netwerk/mime/Makefile
 netwerk/mime/public/Makefile
 netwerk/mime/src/Makefile
-netwerk/security/Makefile
-netwerk/security/browser/Makefile
-netwerk/security/psm/Makefile
 netwerk/socket/Makefile
 netwerk/socket/base/Makefile
-netwerk/socket/ssl/Makefile
-netwerk/socket/tests/Makefile
 netwerk/streamconv/Makefile
 netwerk/streamconv/converters/Makefile
 netwerk/streamconv/public/Makefile
