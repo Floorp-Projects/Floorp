@@ -1,4 +1,4 @@
-#! /usr/bin/env perl
+#! /usr/bonsaitools/bin/perl
 
 use FileHandle;
 use FileNameFind;
