@@ -31,6 +31,7 @@
 // Interfaces Needed
 #include "nsIDocShellLoadInfo.h"
 #include "nsIURI.h"
+#include "nsISHEntry.h"
 
 class nsDocShellLoadInfo : public nsIDocShellLoadInfo
 {
@@ -48,6 +49,7 @@ protected:
    PRBool                           mReplaceSessionHistorySlot;
    PRBool                           mRefresh;
    nsCOMPtr<nsISupports>            mOwner;
+   nsCOMPtr<nsISHEntry>             mSHEntry;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */

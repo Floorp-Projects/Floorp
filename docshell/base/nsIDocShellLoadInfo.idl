@@ -29,6 +29,8 @@
  */
  
 interface nsIURI;
+interface nsISHEntry;
+
 
 [scriptable, uuid(33636F98-0635-11d4-9877-00C04FA0D27A)]
 interface nsIDocShellLoadInfo : nsISupports
@@ -55,4 +57,9 @@ interface nsIDocShellLoadInfo : nsISupports
       causing the load to occur. This should be a nsIPrincipal typically.
     */
     attribute nsISupports owner;
+
+	/*
+	   SHEntry for this page
+	 */
+	 attribute nsISHEntry SHEntry;
 };

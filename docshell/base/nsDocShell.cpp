@@ -3133,6 +3133,180 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
    return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
+{
+    if (OSHE) {
+		nsCOMPtr<nsISHContainer> container(do_QueryInterface(OSHE));
+		if (container)
+           return container->GetChildAt(aChildOffset, aResult);
+	}
+    return NS_ERROR_FAILURE;
+
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCurrentSHE(PRInt32 mOffset, nsISHEntry ** aResult)
+{
+	NS_ENSURE_ARG_POINTER(aResult);
+
+    if (LSHE) {
+       return GetSHEForChild(mOffset, aResult);
+	}
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::PersistLayoutHistoryState()
+{
+	nsresult rv;
+	if (OSHE) {
+      nsCOMPtr<nsIPresShell> shell;
+
+      rv = GetPresShell(getter_AddRefs(shell));            
+      if (NS_SUCCEEDED(rv) && shell) {
+         nsCOMPtr<nsILayoutHistoryState> layoutState;
+         rv = shell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
+         if (NS_SUCCEEDED(rv) && layoutState) {
+             rv = OSHE->SetLayoutHistoryState(layoutState);
+         }
+      }
+
+	}
+	return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry)
+{
+	nsresult rv;
+    if (LSHE) {
+      /* You get here if you are currently building a 
+	   * hierarchy ie.,you just visited a frameset page
+	   */
+      nsCOMPtr<nsISHContainer>  container(do_QueryInterface(LSHE));
+      if(container)
+		  rv = container->AddChild(aNewEntry);
+
+	}
+	else if (mSessionHistory) {
+		/* You are currently in the rootDocShell.
+		 * You will get here when a subframe has a new url
+		 * to load and you have walked up the tree all the 
+		 * way to the top  
+		 */
+		PRInt32 index=-1;
+        nsCOMPtr<nsISHEntry> currentEntry;
+		mSessionHistory->GetIndex(&index);
+		if (index < 0)
+			return NS_ERROR_FAILURE;
+        mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(currentEntry));
+		if (currentEntry) {
+           nsCOMPtr<nsISHEntry> result(do_CreateInstance(NS_SHENTRY_PROGID));
+		   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+		   rv = CloneAndReplace(currentEntry, aCloneRef, aNewEntry, result);
+           if (!NS_SUCCEEDED(rv))
+			   return NS_ERROR_FAILURE;
+		   NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(result, PR_TRUE),
+							NS_ERROR_FAILURE);
+		}
+	}
+	else {
+       /* You will get here when you are in a subframe and
+	    * a new url has been loaded on you. 
+		* The OSHE in this subframe will be the previous url's
+		* OSHE. This OSHE will be used as the identification
+		* for this subframe in the  CloneAndReplace function.
+		*/
+		
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mParent));
+        if (!webNav)
+			return NS_ERROR_FAILURE;
+        if (aCloneRef)
+		  webNav->AddChildSHEntry(aCloneRef, aNewEntry);
+		else
+		  webNav->AddChildSHEntry(OSHE, aNewEntry);
+
+	}
+	return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
+							nsISHEntry * replaceEntry, nsISHEntry * dest)
+{
+	nsresult result;
+	if (!src || !replaceEntry || !cloneRef || !dest)
+		return NS_ERROR_FAILURE;
+//    NS_ENSURE_ARG_POINTER(dest, NS_ERROR_FAILURE);
+//	static  PRBool firstTime = PR_TRUE;
+//	static nsISHEntry * rootSHEntry = nsnull;
+  
+	if (src == cloneRef) {
+		// release the original object before assigning a new one.
+	   NS_RELEASE(dest);
+       dest = replaceEntry;
+	}
+	else {
+    nsCOMPtr<nsIURI> uri;
+	nsCOMPtr<nsIInputStream> postdata;
+	nsCOMPtr<nsILayoutHistoryState> LHS;
+	PRUnichar * title=nsnull;
+	nsCOMPtr<nsISHEntry> parent;
+
+	src->GetURI(getter_AddRefs(uri));
+	src->GetPostData(getter_AddRefs(postdata));
+	src->GetTitle(&title);
+	src->GetLayoutHistoryState(getter_AddRefs(LHS));
+	//XXX Is this correct? parent is a weak ref in nsISHEntry
+	src->GetParent(getter_AddRefs(parent));
+
+	// XXX do we care much about valid values for these uri, title etc....
+	dest->SetURI(uri);
+	dest->SetPostData(postdata);
+	dest->SetLayoutHistoryState(LHS);
+	dest->SetTitle(title);
+	dest->SetParent(parent);
+	}
+	/*
+	if (firstTime) {
+		// Save the root of the hierarchy in the result parameter
+		rootSHEntry = dest;
+		firstTime = PR_FALSE;
+	}
+    */
+	PRInt32 childCount= 0;
+
+	nsCOMPtr<nsISHContainer> srcContainer(do_QueryInterface(src));
+	if (!srcContainer)
+		return NS_ERROR_FAILURE;
+	nsCOMPtr<nsISHContainer> destContainer(do_QueryInterface(dest));
+	if (!destContainer)
+		return NS_ERROR_FAILURE;
+	srcContainer->GetChildCount(&childCount);
+	for(PRInt32 i = 0; i<childCount; i++) {
+		nsCOMPtr<nsISHEntry> srcChild;
+		srcContainer->GetChildAt(i, getter_AddRefs(srcChild));
+		if (!srcChild)
+			return NS_ERROR_FAILURE;
+		nsCOMPtr<nsISHEntry>  destChild(do_CreateInstance(NS_SHENTRY_PROGID));
+		if (!destChild)
+			return NS_ERROR_FAILURE;
+		result = destContainer->AddChild(destChild);
+		if (!NS_SUCCEEDED(result))
+			return result;
+		result = CloneAndReplace(srcChild, cloneRef, replaceEntry, destChild);
+		if (!NS_SUCCEEDED(result))
+			return result;
+	}
+
+    
+	return result;
+
+}
+
+
 //*****************************************************************************
 // nsDocShell: Global History
 //*****************************************************************************   
