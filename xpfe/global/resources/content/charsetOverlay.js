@@ -4,8 +4,8 @@ function MultiplexHandler(event)
     var name = node.getAttribute('name');
 
     if (name == 'detectorGroup') {
-        SetForcedDetector();
-        SelectDetector(event, true);
+        SetForcedDetector(true);
+        SelectDetector(event, false);
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
@@ -113,9 +113,9 @@ function ComposerSelectDetector(event)
     }
 }
 
-function SetForcedDetector()
+function SetForcedDetector(doReload)
 {
-    BrowserSetForcedDetector();
+    BrowserSetForcedDetector(doReload);
 }
 
 function SetForcedCharset(charset)

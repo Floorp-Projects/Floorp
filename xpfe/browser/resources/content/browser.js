@@ -292,9 +292,11 @@ function BrowserSetForcedCharacterSet(aCharset)
   BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
-function BrowserSetForcedDetector()
+function BrowserSetForcedDetector(doReload)
 {
   getBrowser().documentCharsetInfo.forcedDetector = true;
+  if (doReload)
+    BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
 function BrowserFind()
