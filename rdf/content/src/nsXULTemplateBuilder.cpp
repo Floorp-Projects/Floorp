@@ -862,7 +862,7 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
     // remember that it needs to be re-generated next time around.
 	rv = aElement->SetAttribute(kNameSpaceID_None,
                                 kLazyContentAtom,
-                                "true",
+                                nsAutoString("true"),
                                 PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
@@ -898,7 +898,7 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
     // remember that it needs to be re-generated next time around.
 	rv = aElement->SetAttribute(kNameSpaceID_None,
                                 kLazyContentAtom,
-                                "true",
+                                nsAutoString("true"),
                                 PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
@@ -1069,7 +1069,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
                                        contentsGenerated);
 			if (NS_FAILED(rv)) return rv;
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and append the new
@@ -1084,7 +1084,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
             if (NS_FAILED(rv)) return rv;
 
             if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! empty.Equals("false"))) {
-                rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, "false", PR_TRUE);
+                rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, nsAutoString("false"), PR_TRUE);
                 if (NS_FAILED(rv)) return rv;
             }
         }
@@ -1180,7 +1180,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
                                        contentsGenerated);
             if (NS_FAILED(rv)) return rv;
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and remove the
@@ -1199,7 +1199,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
                 if (NS_FAILED(rv)) return rv;
 
                 if ((rv != NS_CONTENT_ATTR_HAS_VALUE) && (! empty.Equals("true"))) {
-                    rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, "true", PR_TRUE);
+                    rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, nsAutoString("true"), PR_TRUE);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -1299,7 +1299,7 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
                                        contentsGenerated);
             if (NS_FAILED(rv)) return rv;
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and remove the
@@ -1595,22 +1595,22 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
 		if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) {
 			// check and see if aChild is a container
 			PRBool isContainer = IsContainer(aRule, aChild);
-			if (isContainer && (!value.EqualsIgnoreCase("true"))) {
+			if (isContainer && (!value.Equals("true"))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
-			else if (!isContainer && (!value.EqualsIgnoreCase("false"))) {
+			else if (!isContainer && (!value.Equals("false"))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
 		}
         else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsEmptyAtom)) {
             PRBool isEmpty = IsEmpty(aRule, aChild);
-            if (isEmpty && (!value.EqualsIgnoreCase("true"))) {
+            if (isEmpty && (!value.Equals("true"))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
-            else if (!isEmpty && (!value.EqualsIgnoreCase("false"))) {
+            else if (!isEmpty && (!value.Equals("false"))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
@@ -1788,7 +1788,7 @@ RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
             aResult.Truncate();
         }
     }
-    else if (aSubstitution.EqualsIgnoreCase("...")) {
+    else if (aSubstitution.Equals("...")) {
         const char *uri = nsnull;
         aResource->GetValueConst(&uri);
         aResult = uri;
@@ -1855,7 +1855,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                    idValue);
         if (NS_FAILED(rv)) return rv;
 
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (idValue.EqualsIgnoreCase("..."))) {
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (idValue.Equals("..."))) {
             isResourceElement = PR_TRUE;
             aIsUnique = PR_FALSE;
 		}
@@ -1880,7 +1880,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // recursion.
                 rv = realKid->SetAttribute(kNameSpaceID_None,
                                            kTemplateContentsGeneratedAtom,
-                                           "true",
+                                           nsAutoString("true"),
                                            PR_FALSE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set contents-generated attribute");
                 if (NS_FAILED(rv)) return rv;
@@ -1895,11 +1895,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             if (IsContainer(realKid, aChild)) {
-                rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, "true", PR_FALSE);
+                rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, nsAutoString("true"), PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // test to see if the container has contents
-                char* isEmpty = IsEmpty(realKid, aChild) ? (char *)"true" : (char *)"false";
+                nsAutoString isEmpty = IsEmpty(realKid, aChild) ? (const char *)"true" : (const char *)"false";
                 rv = realKid->SetAttribute(kNameSpaceID_None, kEmptyAtom, isEmpty, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -1948,7 +1948,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
             // mark it as a container so that its contents get
             // generated. Bogus as all git up.
-            rv = realKid->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE);
+            rv = realKid->SetAttribute(kNameSpaceID_None, kLazyContentAtom, nsAutoString("true"), PR_FALSE);
             if (NS_FAILED(rv)) return rv;
 
             // set natural order hint
@@ -2003,7 +2003,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // We'll _already_ have added the unique elements.
             if (! aIsUnique) {
                 // Add into content model, special casing treeitems.
-                if ((nsnull != gXULSortService) && (isResourceElement) && (tag.get() == kTreeItemAtom)) {
+                //
+                // XXX I've hacked insertion sorting to be OFF for
+                // now, until I can figure out how to make the
+                // insertion sort go a bit faster.
+                if (PR_FALSE && (nsnull != gXULSortService) && (isResourceElement) && (tag.get() == kTreeItemAtom)) {
                     rv = gXULSortService->InsertContainerNode(aRealNode, realKid, aNotify);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element via sort service");
                 }
@@ -2058,11 +2062,6 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                                 nsIRDFNode* aValue)
 {
 	nsresult rv;
-
-	PRInt32 nameSpaceID;
-	nsCOMPtr<nsIAtom> tag;
-	rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
-	if (NS_FAILED(rv)) return rv;
 
 	// check all attributes on the template node; if they reference a resource,
 	// update the equivalent attribute on the content node
@@ -2130,7 +2129,7 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                         contentsGenerated);
     if (NS_FAILED(rv)) return rv;
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (contentsGenerated.EqualsIgnoreCase("true"))) {
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (contentsGenerated.Equals("true"))) {
         PRInt32 count;
         rv = aTemplateNode->ChildCount(count);
         if (NS_FAILED(rv)) return rv;
@@ -2233,14 +2232,14 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test container-contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Equals("true")))
         return NS_RDF_ELEMENT_WAS_CREATED;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
     rv = aElement->SetAttribute(kNameSpaceID_None,
                                 kContainerContentsGeneratedAtom,
-                                "true",
+                                nsAutoString("true"),
                                 PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set container-contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
@@ -2324,14 +2323,14 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test template-contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Equals("true")))
         return NS_OK;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
     rv = aElement->SetAttribute(kNameSpaceID_None,
                                 kTemplateContentsGeneratedAtom,
-                                "true",
+                                nsAutoString("true"),
                                 PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set template-contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
@@ -2657,7 +2656,7 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value.EqualsIgnoreCase("true"))
+        if (value.Equals("true"))
             return PR_TRUE;
     }
 
