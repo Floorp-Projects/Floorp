@@ -159,6 +159,7 @@ function PutDescription() {
 
   <form action="buglist.cgi" method="get" target="somebugs">
     <input type="hidden" name="format" value="simple">
+    <input type="hidden" name="order" value="relevance desc">
     <input type="hidden" name="bug_status" value="__open__">
     <input type="hidden" name="product" value="[% product FILTER html %]">
     <input type="text" name="content" size="40">

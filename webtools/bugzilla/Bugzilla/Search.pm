@@ -429,12 +429,9 @@ sub init {
              # The term to use in the WHERE clause.
              $term = $term1;
 
-             # In order to sort by relevance, we SELECT the relevance value
-             # and give it an alias so we can add it to the SORT BY clause
-             # when we build that clause in buglist.cgi.  We also flag the
-             # query in Bugzilla with the "sorted_by_relevance" flag
-             # so buglist.cgi knows to sort by relevance instead of anything
-             # else the user selected.
+             # In order to sort by relevance (in case the user requests it),
+             # we SELECT the relevance value and give it an alias so we can
+             # add it to the SORT BY clause when we build it in buglist.cgi.
              #
              # Note: MySQL calculates relevance for each comment separately,
              # so we need to do some additional calculations to get an overall
@@ -446,8 +443,19 @@ sub init {
              # Note: We should be calculating the average relevance of all
              # comments for a bug, not just matching comments, but that's hard
              # (see http://bugzilla.mozilla.org/show_bug.cgi?id=145588#c35).
-             push(@fields, "(SUM($term1)/COUNT($term1) + $term2) AS relevance");
-             $self->{'sorted_by_relevance'} = 1;
+             my $select_term =
+               "(SUM($term1)/COUNT($term1) + $term2) AS relevance";
+
+             # Users can specify to display the relevance field, in which case
+             # it'll show up in the list of fields being selected, and we need
+             # to replace that occurrence with our select term.  Otherwise
+             # we can just add the term to the list of fields being selected.
+             if (grep($_ eq "relevance", @fields)) {
+                 @fields = map($_ eq "relevance" ? $select_term : $_ , @fields);
+             }
+             else {
+                 push(@fields, $select_term);
+             }
          },
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";

@@ -151,6 +151,19 @@ if ($::buffer =~ /&cmd-/) {
     exit;
 }
 
+# Figure out whether or not the user is doing a fulltext search.  If not,
+# we'll remove the relevance column from the lists of columns to display
+# and order by, since relevance only exists when doing a fulltext search.
+my $fulltext = 0;
+if ($::FORM{'content'}) { $fulltext = 1 }
+my @charts = map(/^field(\d-\d-\d)$/ ? $1 : (), keys %::FORM);
+foreach my $chart (@charts) {
+    if ($::FORM{"field$chart"} eq 'content' && $::FORM{"value$chart"}) {
+        $fulltext = 1;
+        last;
+    }
+}
+
 ################################################################################
 # Utilities
 ################################################################################
@@ -437,6 +450,9 @@ DefineColumn("estimated_time"    , "bugs.estimated_time"        , "Estimated Hou
 DefineColumn("remaining_time"    , "bugs.remaining_time"        , "Remaining Hours"  );
 DefineColumn("actual_time"       , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
 DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
+DefineColumn("relevance"         , "relevance"                  , "Relevance"        );
+
+
 ################################################################################
 # Display Column Determination
 ################################################################################
@@ -503,6 +519,12 @@ if (!UserInGroup(Param("timetrackinggroup"))) {
    @displaycolumns = grep($_ ne 'percentage_complete', @displaycolumns);
 }
 
+# Remove the relevance column if the user is not doing a fulltext search.
+if (grep('relevance', @displaycolumns) && !$fulltext) {
+    @displaycolumns = grep($_ ne 'relevance', @displaycolumns);
+}
+
+
 ################################################################################
 # Select Column Determination
 ################################################################################
@@ -559,18 +581,38 @@ if ($::COOKIE{'LASTORDER'} && (!$order || $order =~ /^reuse/i)) {
 
 my $db_order = "";  # Modified version of $order for use with SQL query
 if ($order) {
-
     # Convert the value of the "order" form field into a list of columns
     # by which to sort the results.
     ORDER: for ($order) {
-        /\./ && do {
+        /^Bug Number$/ && do {
+            $order = "bugs.bug_id";
+            last ORDER;
+        };
+        /^Importance$/ && do {
+            $order = "bugs.priority, bugs.bug_severity";
+            last ORDER;
+        };
+        /^Assignee$/ && do {
+            $order = "map_assigned_to.login_name, bugs.bug_status, bugs.priority, bugs.bug_id";
+            last ORDER;
+        };
+        /^Last Changed$/ && do {
+            $order = "bugs.delta_ts, bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+            last ORDER;
+        };
+        do {
+            my @order;
             my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
             # A custom list of columns.  Make sure each column is valid.
             foreach my $fragment (split(/,/, $order)) {
                 $fragment = trim($fragment);
                 # Accept an order fragment matching a column name, with
                 # asc|desc optionally following (to specify the direction)
-                if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
+                if (grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
+                    next if $fragment =~ /\brelevance\b/ && !$fulltext;
+                    push(@order, $fragment);
+                }
+                else {
                     my $vars = { fragment => $fragment };
                     if ($order_from_cookie) {
                         $cgi->send_cookie(-name => 'LASTORDER',
@@ -582,57 +624,43 @@ if ($order) {
                     }
                 }
             }
+            $order = join(",", @order);
             # Now that we have checked that all columns in the order are valid,
             # detaint the order string.
             trick_taint($order);
-            last ORDER;
         };
-        /Number/ && do {
-            $order = "bugs.bug_id";
-            last ORDER;
-        };
-        /Import/ && do {
-            $order = "bugs.priority, bugs.bug_severity";
-            last ORDER;
-        };
-        /Assign/ && do {
-            $order = "map_assigned_to.login_name, bugs.bug_status, bugs.priority, bugs.bug_id";
-            last ORDER;
-        };
-        /Changed/ && do {
-            $order = "bugs.delta_ts, bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
-            last ORDER;
-        };
-        # DEFAULT
-        $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }
-    foreach my $fragment (split(/,/, $order)) {
-        $fragment = trim($fragment);
-        if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
-            # Add order columns to selectnames
-            # The fragment has already been validated
-            $fragment =~ s/\s+(asc|desc)$//;
-            $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
-            push @selectnames, $fragment;
-        }
-    }
-
-    $db_order = $order;  # Copy $order into $db_order for use with SQL query
-
-    # If we are sorting by votes, sort in descending order if no explicit
-    # sort order was given
-    $db_order =~ s/bugs.votes\s*(,|$)/bugs.votes desc$1/i;
-
-    # the 'actual_time' field is defined as an aggregate function, but 
-    # for order we just need the column name 'actual_time'
-    my $aggregate_search = quotemeta($columns->{'actual_time'}->{'name'});
-    $db_order =~ s/$aggregate_search/actual_time/g;
-
-    # the 'percentage_complete' field is defined as an aggregate too
-    $aggregate_search = quotemeta($columns->{'percentage_complete'}->{'name'});
-    $db_order =~ s/$aggregate_search/percentage_complete/g;
-
 }
+else {
+    # DEFAULT
+    $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+}
+
+foreach my $fragment (split(/,/, $order)) {
+    $fragment = trim($fragment);
+    if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
+        # Add order columns to selectnames
+        # The fragment has already been validated
+        $fragment =~ s/\s+(asc|desc)$//;
+        $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+        push @selectnames, $fragment;
+    }
+}
+
+$db_order = $order;  # Copy $order into $db_order for use with SQL query
+
+# If we are sorting by votes, sort in descending order if no explicit
+# sort order was given
+$db_order =~ s/bugs.votes\s*(,|$)/bugs.votes desc$1/i;
+                             
+# the 'actual_time' field is defined as an aggregate function, but 
+# for order we just need the column name 'actual_time'
+my $aggregate_search = quotemeta($columns->{'actual_time'}->{'name'});
+$db_order =~ s/$aggregate_search/actual_time/g;
+
+# the 'percentage_complete' field is defined as an aggregate too
+$aggregate_search = quotemeta($columns->{'percentage_complete'}->{'name'});
+$db_order =~ s/$aggregate_search/percentage_complete/g;
 
 # Generate the basic SQL query that will be used to generate the bug list.
 my $search = new Bugzilla::Search('fields' => \@selectnames, 
@@ -646,16 +674,11 @@ if ($db_order =~ /bugs.target_milestone/) {
     $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
 }
 
-# Even more disgusting hack: if we are doing a full text search,
-# order by relevance instead of anything else, and limit to 200 results.
-if ($search->{'sorted_by_relevance'}) {
-    $db_order = $order = "relevance DESC LIMIT 200";
-    $vars->{'sorted_by_relevance'} = 1;
-}
-
-
-
 $query .= " ORDER BY $db_order " if ($order);
+
+if ($fulltext) {
+    $query .= " LIMIT 200";
+}
 
 
 ################################################################################
