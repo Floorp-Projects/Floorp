@@ -42,7 +42,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables,
+  NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
+				nsISupportsArray * anArrayTransferables,
                                 nsIScriptableRegion * aRegion,
                                 PRUint32 aActionType);
   NS_IMETHOD StartDragSession();

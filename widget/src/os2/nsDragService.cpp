@@ -106,7 +106,8 @@ nsDragService::~nsDragService()
    WinDestroyWindow( mDragWnd);
 }
 
-nsresult nsDragService::InvokeDragSession( nsISupportsArray *aTransArray,
+nsresult nsDragService::InvokeDragSession( nsIDOMNode       *aDOMNode,
+					   nsISupportsArray *aTransArray,
                                            nsIRegion        *aRegion,
                                            PRUint32          aActionType)
 {

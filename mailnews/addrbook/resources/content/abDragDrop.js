@@ -127,7 +127,7 @@ function BeginDragResultTree(event)
 	}
 
 	var nsIDragService = Components.interfaces.nsIDragService;
-	dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+	dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
 		nsIDragService.DRAGDROP_ACTION_MOVE );
 	dragStarted = true;
 

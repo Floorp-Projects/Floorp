@@ -97,7 +97,8 @@ NS_IMETHODIMP nsDragService::EndDragSession()
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *aTransferableArray,
+NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
+						nsISupportsArray *aTransferableArray,
                                                 nsIScriptableRegion *aRegion,
                                                 PRUint32 aActionType)
 {

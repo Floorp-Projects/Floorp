@@ -196,7 +196,7 @@ function BeginDrag( event)
 	var nsIDragService = Components.interfaces.nsIDragService;
 	top.dragStart = true;
 
-	dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
+	dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
 	
 
 	return( false);  // don't propagate the event if a drag has begun
