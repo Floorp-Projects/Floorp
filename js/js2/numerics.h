@@ -28,6 +28,7 @@
 using std::abs;
 using std::floor;
 using std::ceil;
+using std::fmod;
 using std::sqrt;
 using std::sin;
 using std::cos;
