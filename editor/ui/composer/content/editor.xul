@@ -38,6 +38,7 @@
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
         onclose="return EditorCanClose()"
+        contenttitlesettting="true"
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:html"
