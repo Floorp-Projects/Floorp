@@ -113,13 +113,18 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
         pTestCon->SetResponse(m_pResponse);
     }
-
+    //
+    // Parse the status line and the response headers from the server
+    //
     if (!m_bHeadersDone) {
         nsCOMPtr<nsIBuffer> pBuffer;
 
         rv = bufferInStream->GetBuffer(getter_AddRefs(pBuffer));
         if (NS_FAILED(rv)) return rv;
-
+        //
+        // Parse the status line from the server.  This is always the 
+        // first line of the response...
+        //
         if (!m_bFirstLineParsed) {
             rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
             i_Length -= actualBytesRead;
@@ -127,7 +132,10 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
         PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
-
+        //
+        // Parse the response headers as long as there is more data and
+        // the headers are not done...
+        //
         while (NS_SUCCEEDED(rv) && i_Length && !m_bHeadersDone) {
             rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
 			NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
@@ -135,26 +143,16 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         }
 
         if (NS_FAILED(rv)) return rv;
-
+        //
+        // All the headers have been read.  Check the status code of the 
+        // response to see if any special action should be taken.
+        //
         if (m_bHeadersDone) {
-            PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-                   ("\tOnDataAvailable [this=%x]. Finished parsing Headers\n", 
-                    this));
-
-            ProcessStatusCode();
-            //
-            // Fire the OnStartRequest notification - now that user data is available
-            //
-            if (m_pConsumer) {
-                rv = m_pConsumer->OnStartRequest(m_pConnection, m_ResponseContext);
-                if (NS_FAILED(rv)) return rv;
-
-                FireOnHeadersAvailable();
-            } 
+            rv = FinishedResponseHeaders();
         }
     }
 
-    if (m_pConsumer) {
+    if (NS_SUCCEEDED(rv) && m_pConsumer) {
         if (i_Length) {
             PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
@@ -207,10 +205,25 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
                                       nsresult i_Status,
                                       const PRUnichar* i_pMsg)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPResponseListener::OnStopRequest [this=%x].\n", this));
+
+    if (NS_SUCCEEDED(rv) && !m_bHeadersDone) {
+        //
+        // Oh great!!  The server has closed the connection without sending 
+        // an entity.  Assume that it has sent all the response headers and
+        // process them - in case the status indicates that some action should
+        // be taken (ie. redirect).
+        //
+        // Ignore the return code, since the request is being completed...
+        //
+        m_bHeadersDone = PR_TRUE;
+        if (m_pResponse) {
+            (void)FinishedResponseHeaders();
+        }
+    }
 
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
@@ -579,6 +592,36 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
   rv = m_pResponse->SetHeaderInternal(headerKey.GetBuffer(), m_HeaderBuffer.GetBuffer());
 
   m_HeaderBuffer.Truncate();
+
+  return rv;
+}
+
+
+nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
+{
+  nsresult rv = NS_OK;
+
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("nsHTTPResponseListener::FinishedResponseHeaders [this=%x].\n",
+          this));
+  //
+  // Check the status code to see if any special processing is necessary.
+  //
+  // If a redirect (ie. 30x) occurs, the m_pConsumer is released and a new
+  // request is issued...
+  //
+  rv = ProcessStatusCode();
+
+  //
+  // Fire the OnStartRequest notification - now that user data is available
+  //
+  if (NS_SUCCEEDED(rv) && m_pConsumer) {
+    rv = m_pConsumer->OnStartRequest(m_pConnection, m_ResponseContext);
+    if (NS_FAILED(rv)) return rv;
+
+    // Notify the consumer that headers are available...
+    FireOnHeadersAvailable();
+  } 
 
   return rv;
 }
