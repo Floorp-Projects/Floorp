@@ -1954,7 +1954,7 @@ UpdateLinenoNotes(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
-    JSBool ok, useful;
+    JSBool ok, useful, wantval;
     JSStmtInfo *stmt, stmtInfo;
     ptrdiff_t top, off, tmp, beq, jmp;
     JSParseNode *pn2, *pn3, *pn4;
@@ -3305,9 +3305,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * expression statement as the script's result, despite the fact
              * that it appears useless to the compiler.
              */
-            useful = !cx->fp->fun ||
-                     cx->fp->fun->native ||
-                     (cx->fp->flags & JSFRAME_SPECIAL);
+            useful = wantval = !cx->fp->fun ||
+                               cx->fp->fun->native ||
+                               (cx->fp->flags & JSFRAME_SPECIAL);
             if (!useful) {
                 if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
                     return JS_FALSE;
@@ -3323,7 +3323,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             } else {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_POPV) < 0)
+                if (js_Emit1(cx, cg, wantval ? JSOP_POPV : JSOP_POP) < 0)
                     return JS_FALSE;
             }
         }
