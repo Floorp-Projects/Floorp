@@ -221,10 +221,12 @@ protected:
     public:
         NameSpaceEntry(nsIAtom* aPrefix, const char* aNameSpaceURI)
             : mPrefix(aPrefix), mNext(nsnull) {
+            MOZ_COUNT_CTOR(RDFContentSinkImpl::NameSpaceEntry);
             mNameSpaceURI = PL_strdup(aNameSpaceURI);
         }
 
         ~NameSpaceEntry() {
+            MOZ_COUNT_DTOR(RDFContentSinkImpl::NameSpaceEntry);
             PL_strfree(mNameSpaceURI);
         }
 
@@ -282,6 +284,8 @@ protected:
 
     nsIURI*      mDocumentURL;
 };
+
+MOZ_DECL_CTOR_COUNTER(RDFContentSinkState::NameSpaceEntry);
 
 PRInt32         RDFContentSinkImpl::gRefCnt = 0;
 nsIRDFService*  RDFContentSinkImpl::gRDFService;
@@ -1566,6 +1570,11 @@ RDFContentSinkImpl::IsXMLNSDirective(const nsString& aAttributeKey, nsIAtom** aP
 nsresult
 RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
+    // Remember the current top of the stack as the namespace
+    // scope. When popping namespaces, we'll remove stack elements
+    // until we hit this.
+    mNameSpaceScopes.AppendElement(mNameSpaceStack);
+
     PRInt32 count = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < count; ++i) {
         const nsString& key = aNode.GetKeyAt(i);
@@ -1591,21 +1600,22 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
             sink->AddNameSpace(prefix, uri);
     }
 
-    mNameSpaceScopes.AppendElement(mNameSpaceStack);
     return NS_OK;
 }
 
 nsresult
 RDFContentSinkImpl::PopNameSpaces()
 {
-    PRInt32 i = mNameSpaceScopes.Count() - 1;
-    if (i < 0)
+    // Close a namespace scope by removing the topmost entries from
+    // the namespace stack.
+    PRInt32 top = mNameSpaceScopes.Count() - 1;
+    if (top < 0)
         return NS_ERROR_UNEXPECTED; // XXX huh?
 
-    NameSpaceEntry* ns = NS_STATIC_CAST(NameSpaceEntry*, mNameSpaceScopes[i]);
-    mNameSpaceScopes.RemoveElementAt(i);
+    NameSpaceEntry* ns = NS_STATIC_CAST(NameSpaceEntry*, mNameSpaceScopes[top]);
+    mNameSpaceScopes.RemoveElementAt(top);
 
-    while (mNameSpaceStack && ns != mNameSpaceStack) {
+    while (mNameSpaceStack && mNameSpaceStack != ns) {
         NameSpaceEntry* doomed = mNameSpaceStack;
         mNameSpaceStack = mNameSpaceStack->mNext;
         delete doomed;
