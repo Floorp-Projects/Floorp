@@ -276,14 +276,27 @@ NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
 						nsIRDFResource* predicate,
 						nsIRDFNode* object)
 {
-	return NS_OK;
+	if (mObservers) {
+    for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+        obs->OnAssert(subject, predicate, object);
+    }
+    }
+    return NS_OK;
+
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
                           nsIRDFResource* predicate,
                           nsIRDFNode* object)
 {
-	return NS_OK;
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnUnassert(subject, predicate, object);
+        }
+    }
+    return NS_OK;
 }
 
 
