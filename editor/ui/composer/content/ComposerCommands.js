@@ -3049,26 +3049,29 @@ var nsSetSmiley =
   doCommandParams: function(aCommand, aParams, aRefCon)
   {
     var smileyCode = aParams.getCStringValue("state_attribute");
-    
+
     var strSml;
     switch(smileyCode)
     {
-        case ":-)": strSml="s1"; 
+        case ":-)": strSml="s1";
         break;
         case ":-(": strSml="s2";
         break;
         case ";-)": strSml="s3";
         break;
-        case ":-P": strSml="s4";
+        case ":-P":
+        case ":-p":
+        case ":-b": strSml="s4";
         break;
         case ":-D": strSml="s5";
         break;
         case ":-[": strSml="s6";
         break;
-        case ":-\\": 
+        case ":-\\":
         case ":\\": strSml="s7";
         break;
-        case "=-O": strSml="s8";
+        case "=-O":
+        case "=-o": strSml="s8";
         break;
         case ":-*": strSml="s9";
         break;
@@ -3081,17 +3084,19 @@ var nsSetSmiley =
         break;
         case ":-!": strSml="s13";
         break;
-        case "O:-)": strSml="s14";
+        case "O:-)":
+        case "o:-)": strSml="s14";
         break;
         case ":'(": strSml="s15";
         break;
-        case ":-X": strSml="s16";
+        case ":-X":
+        case ":-x": strSml="s16";
         break;
         default:	strSml="";
         break;
     }
 
-    try 
+    try
     {
       var editor = GetCurrentEditor();
       var selection = editor.selection;
@@ -3666,7 +3671,7 @@ var nsDeleteTableCellContentsCommand =
   doCommand: function(aCommand)
   {
     try {
-      GetCurrentTableEditor().deleteTableCellContents();   
+      GetCurrentTableEditor().deleteTableCellContents();
     } catch (e) {}
     window.content.focus();
   }
