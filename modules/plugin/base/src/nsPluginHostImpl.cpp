@@ -58,11 +58,6 @@
 #include "prprf.h"
 #include "gui.h"
 
-#ifdef USE_CACHE
-#include "nsCacheManager.h"
-#include "nsDiskModule.h"
-#endif
-
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
 #include "winbase.h"
@@ -662,7 +657,7 @@ nsPluginStreamInfo::GetURL(const char** result)
 NS_IMETHODIMP
 nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
 {
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // local methods
@@ -704,8 +699,6 @@ nsPluginStreamInfo::SetURL(const char* url)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-class nsPluginCacheListener;
 
 class nsPluginStreamListenerPeer : public nsIStreamListener
                                  , public nsIProgressEventSink
@@ -759,19 +752,6 @@ private:
   PRUint32                mLength;
   nsPluginStreamType      mStreamType;
   nsIPluginHost           *mHost;
-  PRBool                  mGotProgress;
-  PRBool				  mOnStartRequest;
-
-  PRBool				  mCacheDone;
-  PRBool				  mOnStopRequest;
-  nsresult				  mStatus;
-
-#ifdef USE_CACHE
-  nsCacheObject*		  mCachedFile;
-#else
-  FILE*					  mStreamFile;
-  char*                   mFileName;
-#endif
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -788,15 +768,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
 private:
-
- nsPluginStreamListenerPeer* mListener;
-
-#ifdef USE_CACHE
-  nsCacheObject*		  mCachedFile;
-#else
-  FILE*					  mStreamFile;
-  char*                   mFileName;
-#endif
+  nsPluginStreamListenerPeer* mListener;
 };
 
 nsPluginCacheListener::nsPluginCacheListener(nsPluginStreamListenerPeer* aListener)
@@ -805,36 +777,11 @@ nsPluginCacheListener::nsPluginCacheListener(nsPluginStreamListenerPeer* aListen
 
   mListener = aListener;
   NS_ADDREF(mListener);
-
-#ifdef USE_CACHE
-  mCachedFile = nsnull;
-#else
-  mStreamFile = nsnull;
-  mFileName = nsnull;
-#endif
 }
 
 nsPluginCacheListener::~nsPluginCacheListener()
 {
-
   NS_IF_RELEASE(mListener);
-
-#ifdef USE_CACHE
-  if (nsnull != mCachedFile)
-  {
-	delete mCachedFile;
-	mCachedFile = nsnull;
-  }
-#else // USE_CACHE
-  if(nsnull != mStreamFile)
-  {
-	  fclose(mStreamFile);
-	  mStreamFile = nsnull;
-  }
-
-  if(nsnull != mFileName)
-	  PL_strfree(mFileName);
-#endif // USE_CACHE
 }
 
 NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
@@ -842,33 +789,7 @@ NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIChannel* channel, nsISupports* ctxt)
 {
-	char* aContentType = nsnull;
-	nsIURI* aURL = nsnull;
-	nsresult rv = NS_OK;
-    rv = channel->GetContentType(&aContentType);
-    if (NS_FAILED(rv)) return rv;
-    rv = channel->GetURI(&aURL);
-    if (NS_FAILED(rv)) return rv;
-	// I have delibrately left out the remaining processing. 
-	// which should just be copied over from the other version of 
-	// OnStartRequest.
-
-	if (aContentType)
-		nsCRT::free(aContentType);
-
-#ifdef USE_CACHE
-    // i still need to learn how to use the cache object
-#else
-    mFileName = strdup("/tmp/plugin.data");
-    if (!mFileName)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    mStreamFile = fopen(mFileName, "w+");
-    if (!mStreamFile)
-      return NS_ERROR_FAILURE;
-#endif // USE_CACHE
-
-	return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -878,27 +799,20 @@ nsPluginCacheListener::OnDataAvailable(nsIChannel* channel, nsISupports* ctxt,
                                        PRUint32 aLength)
 {
 
-	PRUint32 readlen;
-	char* buffer = (char*) PR_Malloc(aLength);
-    
-	if(buffer)
-		aIStream->Read(buffer, aLength, &readlen);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+  PRUint32 readlen;
+  char* buffer = (char*) PR_Malloc(aLength);
 
-	NS_ASSERTION(aLength == readlen, "nsCacheListener->OnDataAvailable: "
-                 "readlen != aLength");
+  // if we don't read from the stream, OnStopRequest will never be called
+  if(!buffer)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef USE_CACHE
-	if(nsnull != mCachedFile)
-		mCachedFile->Write((char*)buffer, readlen);
-#else
-	if(nsnull != mStreamFile)
-		fwrite(buffer, sizeof(char), readlen, mStreamFile);
-#endif // USE_CACHE
-	PR_Free(buffer);
+  nsresult rv = aIStream->Read(buffer, aLength, &readlen);
 
-	return NS_OK;
+  NS_ASSERTION(aLength == readlen, "nsCacheListener->OnDataAvailable: "
+               "readlen != aLength");
+
+  PR_Free(buffer);
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -907,38 +821,7 @@ nsPluginCacheListener::OnStopRequest(nsIChannel* channel,
                                      nsresult aStatus, 
                                      const PRUnichar* aMsg)
 {
-#ifdef USE_CACHE
-	if (nsnull != mCachedFile)
-		{
-		PRInt32 len;
-		nsCachePref* cachePref = nsCachePref::GetInstance();
-
-		const char* cachePath = cachePref->DiskCacheFolder();
-		const char* filename = mCachedFile->Filename();
-
-		// we need to pass the whole path and filename to the plugin
-		len = PL_strlen(cachePath) + PL_strlen(filename) + 1;
-		char* pathAndFilename = (char*)PR_Malloc(len * sizeof(char));
-		pathAndFilename = PL_strcpy(pathAndFilename, cachePath);
-		pathAndFilename = PL_strcat(pathAndFilename, filename);
-
-		const char* urlString;
-		aURL->GetSpec(&urlString);
-
-		if (mListener)
-		  mListener->OnFileAvailable(pathAndFilename);
-		}
-#else // USE_CACHE
-	if(nsnull != mStreamFile)
-		{
-		fclose(mStreamFile);
-		mStreamFile = nsnull;
-
-		if (mListener)
-		  mListener->OnFileAvailable(mFileName);
-		}
-#endif // USE_CACHE
-	return NS_OK;
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -954,13 +837,7 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mPluginStreamInfo = nsnull;
   mSetUpListener = PR_FALSE;
   mHost = nsnull;
-  mGotProgress = PR_FALSE;
-  mOnStartRequest = PR_FALSE;
   mStreamType = nsPluginStreamType_Normal;
-
-  mOnStopRequest = PR_FALSE;
-  mCacheDone = PR_FALSE;
-  mStatus = NS_OK;
 }
 
 nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
@@ -1068,6 +945,7 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
 
   if(aInstance != nsnull)
   {
+    NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeEmbeded mInstance != nsnull");
 	  mInstance = aInstance;
 	  NS_ADDREF(mInstance);
   }
@@ -1094,6 +972,7 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
   printf("Inside nsPluginStreamListenerPeer::InitializeFullPage...\n");
 #endif
 
+  NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeFullPage mInstance != nsnull");
   mInstance = aInstance;
   NS_ADDREF(mInstance);
 
@@ -1163,7 +1042,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aCo
   rv = SetUpStreamListener(aURL);
   if (NS_FAILED(rv)) return rv;
 
-  mOnStartRequest = PR_TRUE;
   return rv;
 }
 
@@ -1195,8 +1073,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel,
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
-  char* url;
-
   if(!mPStreamListener)
 	  return NS_ERROR_FAILURE;
 
@@ -1209,13 +1085,16 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel,
   // call OnDataAvailable
   if(mStreamType != nsPluginStreamType_AsFileOnly)
   {
-    aURL->GetSpec(&url);
-	// Where is this url being used?
-	nsCRT::free(url); 
+    // It's up to the plugin to read from the stream 
+    //  If it doesn't, OnStopRequest will never be called
     rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aIStream, aLength);
+    // if a plugin returns an error, the peer must kill the stream
+    //   else the stream and PluginStreamListener leak
+    if (NS_FAILED(rv))
+      channel->Cancel(rv);
   }
   else
-    {
+  {
     // if we don't read from the stream, OnStopRequest will never be called
     char* buffer = new char[aLength];
     PRUint32 amountRead;
@@ -1234,23 +1113,33 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-  // nsPluginReason  reason = nsPluginReason_NoReason;
 
   if(nsnull != mPStreamListener)
   {
     char* urlString;
-	aURL->GetSpec(&urlString);
-	mPluginStreamInfo->SetURL(urlString);
-    nsCRT::free(urlString);
+    nsCOMPtr<nsIFile> localFile;
+    nsresult rv = channel->GetLocalFile(getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+    {
+      char* pathAndFilename;
+      rv = localFile->GetPath(&pathAndFilename);
+      if (NS_SUCCEEDED(rv))
+      {
+        OnFileAvailable(pathAndFilename);
+        nsMemory::Free(pathAndFilename);
+      }
+    }
 
-	// tell the plugin that the stream has ended only if the cache is done
-    //	if(mCacheDone)
+    rv = aURL->GetSpec(&urlString);
+    if (NS_SUCCEEDED(rv)) 
+    {
+      mPluginStreamInfo->SetURL(urlString);
+      nsCRT::free(urlString);
+    }
+
     mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
-    //	else // otherwise, we store the status so we can report it later in OnFileAvailable
-    //		mStatus = aStatus;
   }
 
-  mOnStopRequest = PR_TRUE;
   return rv;
 }
 
@@ -1294,13 +1183,13 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
   if(rv == NS_OK)
-	{
-	mPStreamListener->GetStreamType(&mStreamType);
-	// check to see if we need to cache the file as well
-	if ((mStreamType == nsPluginStreamType_AsFile) || 
+  {
+    mPStreamListener->GetStreamType(&mStreamType);
+    // check to see if we need to cache the file as well
+    if ((mStreamType == nsPluginStreamType_AsFile) || 
         (mStreamType == nsPluginStreamType_AsFileOnly))
-		rv = SetUpCache(aURL);
-	}
+    rv = SetUpCache(aURL);
+  }
 
   return rv;
 }
@@ -1308,21 +1197,12 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
 nsresult
 nsPluginStreamListenerPeer::OnFileAvailable(const char* aFilename)
 {
-	nsresult rv;
-	if (!mPStreamListener)
-		return NS_ERROR_FAILURE;
-	
-	if((rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aFilename)) != NS_OK)
-		return rv;
+  nsresult rv;
+  if (!mPStreamListener)
+    return NS_ERROR_FAILURE;
 
-	// if OnStopRequest has already been called, we need to make 
-    // sure the plugin gets notified we do this here because 
-    // OnStopRequest must always be called after OnFileAvailable
-	if(mOnStopRequest)
-		rv = mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, mStatus);
-
-	mCacheDone = PR_TRUE;
-	return rv;
+  rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aFilename);
+  return rv;
 }
 
 nsILoadGroup*
@@ -1770,8 +1650,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   rv = pti2->GetTagType(&tagType);
 
   // PENDING(edburns): do we need to check for nsPluginTagType_Object?
-  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed) ||
-                        (tagType == nsPluginTagType_Applet))) {
+  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed)
+                   || (tagType == nsPluginTagType_Applet))) {
     return rv;
   }
 
@@ -1818,6 +1698,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     // for <embed> tag leaving <object> to play with its alt content.
     // but before we return an error let's see if this is an <embed>
     // tag and try to launch the default plugin
+
     nsresult result;
 
     result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
