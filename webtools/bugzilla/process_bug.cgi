@@ -710,7 +710,7 @@ foreach my $field ("estimated_time", "remaining_time") {
         my $er_time = trim($::FORM{$field});
         if ($er_time ne $::FORM{'dontchange'}) {
             if ($er_time > 99999.99) {
-                ThrowUserError("value_out_of_range", {variable => $field});
+                ThrowUserError("value_out_of_range", {field => $field});
             }
             if ($er_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
                 DoComma();
@@ -1199,7 +1199,7 @@ foreach my $id (@idlist) {
     $timestamp = FetchOneColumn();
 
     if ($::FORM{'work_time'} > 99999.99) {
-        ThrowUserError("value_out_of_range", {variable => 'work_time'});
+        ThrowUserError("value_out_of_range", {field => 'work_time'});
     }
     if (defined $::FORM{'comment'} || defined $::FORM{'work_time'}) {
         if ($::FORM{'work_time'} != 0 && 
