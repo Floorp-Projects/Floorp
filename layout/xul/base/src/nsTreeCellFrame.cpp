@@ -23,8 +23,13 @@
 #include "nsTreeFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsCSSRendering.h"
+#include "nsXULAtoms.h"
+
 
 // Constants (styles used for selection rendering)
 const char * kNormal        = "";
@@ -74,7 +79,7 @@ NS_NewTreeCellFrame (nsIFrame*& aNewFrame)
 
 // Constructor
 nsTreeCellFrame::nsTreeCellFrame()
-:nsTableCellFrame() { mIsHeader = PR_FALSE; }
+:nsTableCellFrame() { mIsHeader = PR_FALSE; mBeenReflowed = PR_FALSE; }
 
 // Destructor
 nsTreeCellFrame::~nsTreeCellFrame()
@@ -114,8 +119,46 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   }
 
   mNormalContext = aContext;
+  
+  nsresult rv = nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext);
 
-  return nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext);
+  return rv;
+}
+
+NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext& aPresContext,
+                                   nsHTMLReflowMetrics& aDesiredSize,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsReflowStatus& aStatus)
+{
+	PRBool isSelected = PR_FALSE;
+	if (!mBeenReflowed)
+	{
+		/*
+		mBeenReflowed = PR_TRUE; // XXX Eventually move this to Init()
+		nsIAtom * selectedPseudo = NS_NewAtom(":TREE-SELECTION");
+		mSelectedContext = aPresContext.ResolvePseudoStyleContextFor(mContent, selectedPseudo, mStyleContext);
+		NS_RELEASE(selectedPseudo); 
+
+		// Find out if we're selected or not.
+	    nsString attrValue;
+	    nsIAtom* kSelectedAtom = NS_NewAtom("selected");
+	    nsresult result = mContent->GetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, attrValue);
+	    attrValue.ToLowerCase();
+	    isSelected =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+							 (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+		if (isSelected)
+			mTreeFrame->SetSelection(aPresContext, this);
+
+	    NS_RELEASE(kSelectedAtom);
+		*/
+	}
+
+	//if (isSelected)
+	//	mTreeFrame->SetSelection(aPresContext, this);
+
+	nsresult rv = nsTableCellFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -142,9 +185,11 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
 
   if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
 
-    aEventStatus = nsEventStatus_eConsumeNoDefault;
+    aEventStatus = nsEventStatus_eConsumeDoDefault;
 	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
 		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+	else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
+		HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
   }
 
   return NS_OK;
@@ -162,23 +207,103 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
   else
   {
     // Perform a selection
-	if (mSelectedContext == nsnull)
-	{
-		nsIAtom * selectedPseudo = NS_NewAtom(":TREE-SELECTION");
-		mSelectedContext = aPresContext.ResolvePseudoStyleContextFor(mContent, selectedPseudo, mStyleContext);
-		NS_RELEASE(selectedPseudo); 
-	}
 	mTreeFrame->SetSelection(aPresContext, this);
   }
   return NS_OK;
 }
 
+nsresult
+nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext, 
+									    nsGUIEvent*     aEvent,
+									    nsEventStatus&  aEventStatus)
+{
+  if (!mIsHeader)
+  {
+    // Perform an expand/collapse
+	// Iterate up the chain to the row and then to the item.
+	nsIContent* pRowContent;
+	nsIContent* pTreeItemContent;
+	mContent->GetParent(pRowContent);
+	pRowContent->GetParent(pTreeItemContent);
+
+	// Take the tree item content and toggle the value of its open attribute.
+	nsString attrValue;
+    nsIAtom* kOpenAtom = NS_NewAtom("open");
+    nsresult result = pTreeItemContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
+    attrValue.ToLowerCase();
+    PRBool isExpanded =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+						 (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+    if (isExpanded)
+	{
+		// We're collapsing and need to remove frames from the flow.
+		pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_FALSE);
+	}
+	else
+	{
+		// We're expanding and need to add frames to the flow.
+		pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_FALSE);
+	}
+
+	// Ok, try out the hack of doing frame reconstruction
+	nsIPresShell* pShell = aPresContext.GetShell();
+	nsIStyleSet* pStyleSet = pShell->GetStyleSet();
+	nsIDocument* pDocument = pShell->GetDocument();
+	nsIContent* pRoot = pDocument->GetRootContent();
+	
+	if (pRoot) {
+		nsIFrame*   docElementFrame;
+		nsIFrame*   parentFrame;
+    
+		// Get the frame that corresponds to the document element
+		pShell->GetPrimaryFrameFor(pRoot, docElementFrame);
+		if (nsnull != docElementFrame) {
+		  docElementFrame->GetParent(parentFrame);
+      
+		  pShell->EnterReflowLock();
+		  pStyleSet->ReconstructFrames(&aPresContext, pRoot,
+									   parentFrame, docElementFrame);
+		  pShell->ExitReflowLock();
+		}
+    }
+
+	NS_RELEASE(pShell);
+	NS_RELEASE(pStyleSet);
+	NS_RELEASE(pDocument);
+	NS_IF_RELEASE(pRoot);
+
+	NS_RELEASE(kOpenAtom);
+    NS_RELEASE(pTreeItemContent);
+	NS_RELEASE(pRowContent);
+  }
+  return NS_OK;
+}
+
+
 void
 nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected)
 {
+	nsIAtom * selectedPseudo = NS_NewAtom(":TREE-SELECTION");
+	mSelectedContext = aPresContext.ResolvePseudoStyleContextFor(mContent, selectedPseudo, mStyleContext);
+	NS_RELEASE(selectedPseudo); 
+
 	if (isSelected)
 		SetStyleContext(&aPresContext, mSelectedContext);
 	else SetStyleContext(&aPresContext, mNormalContext);
 		
 	ForceDrawFrame(this);
+
+    nsIAtom* kSelectedAtom = NS_NewAtom("selected");
+    if (isSelected)
+	{
+		// We're selecting the node.
+		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_FALSE);
+		
+	}
+	else
+	{
+		// We're unselecting the node.
+		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, PR_FALSE);
+	}
+
+	NS_RELEASE(kSelectedAtom);
 }

@@ -38,6 +38,11 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext); // Overridden to set whether we're a column header 
 
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
+
   void Select(nsIPresContext& presContext, PRBool isSelected);
 
 protected:
@@ -48,6 +53,10 @@ protected:
 								nsGUIEvent*     aEvent,
 							    nsEventStatus&  aEventStatus);
 
+  nsresult HandleDoubleClickEvent(nsIPresContext& aPresContext, 
+								  nsGUIEvent*     aEvent,
+							      nsEventStatus&  aEventStatus);
+
   
 protected:
   // Data members
@@ -55,4 +64,6 @@ protected:
   nsIStyleContext* mSelectedContext; // The style context to use when the tree item is selected
   nsIStyleContext* mNormalContext; // The style context to use normally.
   nsTreeFrame* mTreeFrame; // Our parent tree frame.
+
+  PRBool mBeenReflowed; // Hack for now.
 }; // class nsTableCellFrame
