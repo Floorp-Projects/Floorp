@@ -1603,15 +1603,16 @@ function FillInHTMLTooltip ( tipElement )
   var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
   if ( tipNode ) {
     try {
-      while ( tipNode.hasChildNodes() ) {
+      while ( tipNode.hasChildNodes() )
         tipNode.removeChild( tipNode.firstChild );
-      }
         
       var titleText = "";
       var XLinkTitleText = "";
       var summaryText = "";
+      var linkTarget = "";
+      var linkRealHREF = "";
       
-      while ( titleText == "" && summaryText == "" && XLinkTitleText == "" && tipElement ) {
+      while ( !titleText && !summaryText && !XLinkTitleText && !linkTarget && tipElement ) {
         if ( tipElement.nodeType == 1 ) {
           titleText = tipElement.getAttributeNS(HTMLNS, "title");
           XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
@@ -1619,20 +1620,21 @@ function FillInHTMLTooltip ( tipElement )
               && tipElement.tagName.toLowerCase() == "table" ) {
             summaryText = tipElement.getAttributeNS(HTMLNS, "summary");
           }
+          if (tipElement.tagName.toLowerCase() == "a" &&
+              tipElement.getAttributeNS(HTMLNS, "target") != "")
+            linkTarget = bundle.GetStringFromName("linkTargetLabel") + " " + tipElement.getAttributeNS(HTMLNS, "target"); 
+          if (tipElement.tagName.toLowerCase() == "a" &&
+              tipElement.getAttributeNS(HTMLNS, "href") != "")
+            linkRealHREF = bundle.GetStringFromName("linkHREFLabel") + " " + tipElement.getAttributeNS(HTMLNS, "href"); 
         }
         tipElement = tipElement.parentNode;
       }
       
-      var texts = [ titleText, summaryText, XLinkTitleText ];
+      var texts = [ titleText, summaryText, XLinkTitleText, linkTarget, linkRealHREF ];
       
       for (var i = 0; i < texts.length; i++) {
         var t = texts[i];
         if ( t.search(/\S/) >= 0 ) {
-          if ( tipNode.hasChildNodes() ) {
-            var blankLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
-            tipNode.appendChild(blankLineElem);
-          }
-          
           var tipLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
           tipLineElem.setAttribute("value", t);
           tipNode.appendChild(tipLineElem);
