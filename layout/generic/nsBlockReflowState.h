@@ -2484,9 +2484,10 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       /* XXX get the height right! */
       availHeight = aState.mAvailSpaceRect.height;
     }
+    PRBool impactedByFloaters = 0 != aState.mCurrentBand.GetFloaterCount();
     nsLineLayout* lineLayout = aState.mLineLayout;
     lineLayout->BeginLineReflow(x, aState.mY, availWidth, availHeight,
-                                x != borderPadding.left,
+                                impactedByFloaters,
                                 PR_FALSE /*XXX isTopOfPage*/);
 
     // Notify observers that we are about to reflow the line
@@ -2554,7 +2555,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       //
       // What we do is to advance past the first floater we find and
       // then reflow the line all over again.
-      NS_ASSERTION(aState.mAvailSpaceRect.width != aState.mContentArea.width,
+      NS_ASSERTION(aState.mCurrentBand.GetFloaterCount(),
                    "redo line on totally empty line");
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
                    "unconstrained height on totally empty line");
