@@ -48,6 +48,46 @@
 #include "pkitm.h"
 #include "pki3hack.h"
 
+PRBool
+CERT_MatchNickname(char *name1, char *name2) {
+    char *nickname1= NULL;
+    char *nickname2 = NULL;
+    char *token1;
+    char *token2;
+    char *token = NULL;
+    int len;
+
+    /* first deal with the straight comparison */
+    if (PORT_Strcmp(name1, name2) == 0) {
+	return PR_TRUE;
+    }
+    /* we need to handle the case where one name has an explicit token and the other
+     * doesn't */
+    token1 = PORT_Strchr(name1,':');
+    token2 = PORT_Strchr(name2,':');
+    if ((token1 && token2) || (!token1 && !token2)) {
+	/* either both token names are specified or neither are, not match */
+	return PR_FALSE;
+    }
+    if (token1) {
+	token=name1;
+	nickname1=token1;
+	nickname2=name2;
+    } else {
+	token=name2;
+	nickname1=token2;
+	nickname2=name1;
+    }
+    len = nickname1-token;
+    nickname1++;
+    if (PORT_Strcmp(nickname1,nickname2) != 0) {
+	return PR_FALSE;
+    }
+    /* compare the other token with the internal slot here */
+    return PR_TRUE;
+}
+
+
 /*
  * Find all user certificates that match the given criteria.
  * 
@@ -148,7 +188,7 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
 
 	    /* find matching nickname index */
 	    for ( n = 0; n < nn; n++ ) {
-		if ( PORT_Strcmp(nnptr[n], node->cert->nickname) == 0 ) {
+		if ( CERT_MatchNickname(nnptr[n], node->cert->nickname) ) {
 		    /* We found a match.  If this is the first one, then
 		     * set the flag and move on to the next cert.  If this
 		     * is not the first one then delete it from the list.
