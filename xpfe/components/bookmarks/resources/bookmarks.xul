@@ -169,7 +169,7 @@
                     label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"		  
                     key="key_paste" command="cmd_bm_paste"/>
           <menuitem id="menu_bm_delete"	
-                    label="&deleteCmd.label;" accesskey="&deleteCmd.label;"		  
+                    label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"		  
                     key="key_bm_delete" command="cmd_bm_delete"/>
           <menuseparator/>
           <menuitem id="menu_bm_selectAll" 
