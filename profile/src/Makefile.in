@@ -31,6 +31,7 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= 	nsProfile.cpp	\
 			nsProfileFactory.cpp	\
+			nsProfileAccess.cpp	\
 			$(NULL)
 
 EXTRA_DSO_LDOPTS = \

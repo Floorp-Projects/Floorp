@@ -89,6 +89,7 @@ LLIBS   = \
 OBJS =                          \
     .\$(OBJDIR)\nsProfile.obj   \
     .\$(OBJDIR)\nsProfileFactory.obj   \
+    .\$(OBJDIR)\nsProfileAccess.obj   \
     $(NULL)
 
 #//------------------------------------------------------------------------
