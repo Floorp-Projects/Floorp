@@ -143,6 +143,7 @@ public:
     void MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const;
     void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
     void DoPaintWidgets(RgnHandle	aTheRegion);
+    void DoResizeWidgets(nsSizeEvent &aEvent);
     PRBool RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
 
   	void LocalToWindowCoordinate(nsPoint& aPoint);
