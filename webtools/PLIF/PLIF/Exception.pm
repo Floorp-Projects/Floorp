@@ -68,6 +68,8 @@ require Exporter;
 #
 #     report MyException;
 #
+# The report method also returns a valid exception, should you wish to
+# later raise it for real.
 
 # constants for stringifying exceptions
 sub seMaxLength() { 80 }
@@ -134,10 +136,12 @@ sub init {
         $exception = $exception->create(@data);
     }
     # set up the exception and return it
-    my($filename, $line, $stacktrace) = stacktrace;
-    $exception->{'filename'} = $filename;
-    $exception->{'line'} = $line;
-    $exception->{'stacktrace'} = $stacktrace;
+    if (not defined($exception->{'stacktrace'})) {
+        my($filename, $line, $stacktrace) = stacktrace;
+        $exception->{'filename'} = $filename;
+        $exception->{'line'} = $line;
+        $exception->{'stacktrace'} = $stacktrace;
+    }
     return $exception;
 }
 
@@ -151,7 +155,9 @@ sub raise {
 sub report {
     my($exception, @data) = @_;
     syntaxError "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
-    warn $exception->init(@data);
+    $exception = $exception->init(@data);
+    warn $exception;
+    return $exception;
 }
 
 sub try(&;$) {
@@ -258,37 +264,52 @@ sub fallthrough() {
 
 sub stringify {
     my $self = shift;
-    my $stacktrace = '';
+    my $value;
+    if (defined($self->{'message'})) {
+        $value = "$self->{'message'} at $self->{'filename'} line $self->{'line'}\n";
+    } else {
+        $value = ref($self) . " exception raised at $self->{'filename'} line $self->{'line'}\n";
+    }
+    $value .= "\nStack Trace:\n";
     foreach my $frame (@{$self->{'stacktrace'}}) {
-        # XXX this should be made better
+        my $where;
+        if ($frame->{'filename'} =~ m/^\(eval [0-9]+\)$/os) {
+            $where = "line $frame->{'line'} of eval '...' created in $frame->{'package'} context";
+        } else {
+            $where = "$frame->{'filename'} line $frame->{'line'}";
+        }
         if ($frame->{'subroutine'} eq 'PLIF::Exception::try') {
-            $stacktrace .= "  try { ... } in $frame->{'filename'} line $frame->{'line'}\n";
+            $value .= "  try { ... } in $where";
+        } elsif ($frame->{'subroutine'} =~ m/^(.+)::__ANON__$/os) {
+            $value .= "  sub { ... } in $1 in $where";
         } elsif ($frame->{'subroutine'} eq '(eval)') {
             if ($frame->{'is_require'}) {
-                $stacktrace .= "  require $frame->{'evaltext'} in $frame->{'filename'} line $frame->{'line'}\n";
+                $value .= "  require $frame->{'evaltext'} in $where";
             } elsif (defined($frame->{'evaltext'})) {
                 my $eval = $frame->{'evaltext'};
                 $eval =~ s/([\\\'])/\\$1/gos;
                 if (length($eval) > seMaxLength) {
                     substr($eval, seMaxLength) = seEllipsis;
                 }
-                $stacktrace .= "  eval '$eval' in $frame->{'filename'} line $frame->{'line'}\n";
+                $value .= "  eval '$eval' in $where";
             } else {
-                $stacktrace .= "  eval {...} in $frame->{'filename'} line $frame->{'line'}\n";
+                $value .= "  eval { ... } in $where";
             }
         } elsif ($frame->{'hasargs'}) {
             my @arguments = arguments(0, @{$frame->{'arguments'}});
             local $" = ', ';
-            $stacktrace .= "  $frame->{'subroutine'}(@arguments) called from $frame->{'filename'} line $frame->{'line'}\n";
+            $value .= "  $frame->{'subroutine'}(@arguments) called from $where";
         } else {
-            $stacktrace .= "  $frame->{'subroutine'}() called from $frame->{'filename'} line $frame->{'line'}\n";
+            $value .= "  $frame->{'subroutine'}() called from $where";
         }
+        $value .= "\n";
     }
-    if (defined($self->{'message'})) {
-        return "$self->{'message'} at $self->{'filename'} line $self->{'line'}\n$stacktrace";
-    } else {
-        return ref($self) . " exception raised at $self->{'filename'} line $self->{'line'}\n$stacktrace";
+    $value .= "\nEnvironment:\n";
+    foreach my $key (sort keys %ENV) {
+        $value .= "  $key = $ENV{$key}\n";
     }
+    $value .= "\n";
+    return $value;
 }
 
 sub arguments($@) {
@@ -299,55 +320,33 @@ sub arguments($@) {
         my $argument;
         if (ref($value)) {
             # some object
-            if ($value =~ m/    ^           # start of the string
-                          (?:  (.+)         # the class                  "PLIF::Exception" (optional)
-                                 =      )?  # an equals sign             "="    (if there is a class)
-                            ([^(=:)]+)      # the type of reference      "HASH"
-                         \(0x([0-9a-f]+)\)  # the address of the object  "(0x12345678)"
-                                 $          # end of the string
-                                   /osx) {
-                my $class = $1;
-                my $ref = $2;
-                my $address = "0x$3";
-                if (UNIVERSAL::isa($value, 'UNIVERSAL')) {
-                    $argument = "$class object at $address";
-                    if ($ref ne 'HASH') {
-                        $argument .= " ($ref)";
+            if (UNIVERSAL::isa($value, 'UNIVERSAL')) {
+                $argument = ref($value) . ' object';
+            } elsif (ref($value) eq 'ARRAY' and $depth < seMaxDepth) {
+                my @items = arguments($depth, @$value);
+                local $" = ', ';
+                $argument = "[@items]";
+            } elsif (ref($value) eq 'HASH' and $depth < seMaxDepth) {
+                my @items;
+                my $count = 0;
+                foreach my $key (sort keys %$value) {
+                    if (++$count > seMaxArguments) {
+                        push(@items, seEllipsis);
+                        last;
                     }
-                } elsif (ref($value) eq 'ARRAY' and $depth < seMaxDepth) {
-                    my @items = arguments($depth, @$value);
-                    local $" = ', ';
-                    $argument = "[@items] at $address";
-                } elsif (ref($value) eq 'HASH' and $depth < seMaxDepth) {
-                    my @items;
-                    my $count = 0;
-                    foreach my $key (sort keys %$value) {
-                        if (++$count > seMaxArguments) {
-                            push(@items, seEllipsis);
-                            last;
-                        }
-                        my($keyName, $valueName) = arguments($depth, $key, $value->{$key});
-                        push(@items, "$keyName => $valueName");
-                    }
-                    local $" = ', ';
-                    $argument = "@items";
-                    $argument = "{$argument} at $address";
-                } elsif (ref($value) eq 'SCALAR') {
-                    my @items = arguments($depth, $$value);
-                    $argument = "\\@items";
-                } elsif (ref($value) eq 'CODE') {
-                    $argument = "sub { ... } at $address";
-                } else {
-                    if (defined($class)) {
-                        # !!!
-                        $argument = "$ref at $address blessed as $class but not a class (!)";
-                    } else {
-                        # deeply nested HASH or ARRAY, probably
-                        $argument = "$ref at $address";
-                    }
+                    my($keyName, $valueName) = arguments($depth, $key, $value->{$key});
+                    push(@items, "$keyName => $valueName");
                 }
+                local $" = ', ';
+                $argument = "{@items}";
+            } elsif (ref($value) eq 'SCALAR') {
+                my @items = arguments($depth, $$value);
+                $argument = "\\@items";
+            } elsif (ref($value) eq 'CODE') {
+                $argument = 'sub { ... }';
             } else {
-                $argument = "$value (!)";
+                # deeply nested HASH or ARRAY, probably
+                $argument = ref($value);
             }
         } else {
             # scalar
@@ -358,6 +357,8 @@ sub arguments($@) {
             } else {
                 $argument = $value;
                 $argument =~ s/([\\\'])/\\$1/gos;
+                $argument =~ s/\n/\\n/gos;
+                $argument =~ s/([\x00-\x1f])/'\\x' . sprintf('%04x', $1)/gose;
                 if (length($argument) > seMaxLength) {
                     substr($argument, seMaxLength) = seEllipsis;
                 }
