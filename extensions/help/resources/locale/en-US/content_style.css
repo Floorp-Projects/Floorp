@@ -15,7 +15,7 @@ IMG, SPAN { display: inline }
 
 
 
-LI { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5 }
+LI { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5px; }
 
 
 
@@ -75,7 +75,7 @@ UL, DIR { list-style: disc }
 
 UL { margin-left: -1em }
 
-UL { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5 }
+UL { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5px }
 
 
 
@@ -83,7 +83,7 @@ OL { list-style: decimal }
 
 OL { margin-left: -1em }
 
-OL { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5 }
+OL { font-family: arial, helvetica, sans-serif; font-size: 12px; margin-top: 0; margin-bottom: 5px }
 
 
 
@@ -143,7 +143,7 @@ HR { border-top: solid }        /* 'border-bottom' could also have been used */
   font-family: helvetica, arial;
   font-size: 12px;
   text-decoration: none;
-  margin-top: -6;
+  margin-top: -6px;
   margin-bottom: 0;
   }
   
@@ -158,28 +158,28 @@ HR { border-top: solid }        /* 'border-bottom' could also have been used */
 .container {
   font-family: helvetica, arial;
    font-size: 10px;
-    margin-top: 12;
-    margin-bottom: 4;
-  color: 000000;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  color: #000000;
   font-weight:bold;
   }
   
 .unselectedItem {
   font-family: helvetica, arial;
    font-size: 12px;
-    margin-left: 4;
-    margin-top: 8;
-    margin-bottom: 4;
-  color: 6600ff;
+    margin-left: 4px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  color: #6600ff;
   }
   
 .selectedItem {
   font-family: helvetica, arial;
    font-size: 12px;
-    margin-left: 4;
-    margin-top: 8;
-    margin-bottom: 4;
-  color: 6600ff;
+    margin-left: 4px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  color: #6600ff;
   font-weight: bold;
   }
   
@@ -187,8 +187,8 @@ HR { border-top: solid }        /* 'border-bottom' could also have been used */
   font-family: helvetica, arial;
    font-size: 12px;
     margin-top: 0;
-    margin-bottom: 4;
-  color: 000000;
+    margin-bottom: 4px;
+  color: #000000;
   }
   
 .inthissection {
@@ -202,7 +202,7 @@ HR { border-top: solid }        /* 'border-bottom' could also have been used */
     font-size: 12px;
   line-height: 1;
     margin-top: 0;
-    margin-bottom: 4;
+    margin-bottom: 4px;
   }
 
 .banner {
