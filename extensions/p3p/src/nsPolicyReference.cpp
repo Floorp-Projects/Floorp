@@ -373,7 +373,6 @@ nsPolicyReference::ProcessExpiryElement(nsIDOMNodeList* aNodeList)
 {
   NS_ENSURE_ARG_POINTER(aNodeList);
   
-  nsresult result = NS_OK;
   PRUint32 count;
   aNodeList->GetLength(&count);
   if (count > 0) {
