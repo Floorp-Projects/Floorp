@@ -134,7 +134,7 @@ private:
     if (mLastCompositedFrameIndex == mCurrentAnimationFrameIndex)
       return mCompositingFrame;
 
-    return mFrames[mCurrentAnimationFrameIndex];
+    return mFrames.SafeObjectAt(mCurrentAnimationFrameIndex);
   }
 
   /** Function for doing the frame compositing of animations
