@@ -3714,6 +3714,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           break;
         }
       }
+      previous = child;
       child->GetNextSibling(&child);
     }
 
