@@ -54,16 +54,7 @@ sub WriteParams {
             }
         }
     }
-    # If Bugzilla has been upgraded since the last time parameters were edited,
-    # and some parameters have been removed in the new version of Bugzilla,
-    # remove them from the parameters file.
-    foreach my $item (keys %::param) {
-        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
-            print "The <em>$item</em> parameter is no longer used in Bugzilla
-              and has been removed from your parameters file.<br>";
-            delete $::param{$item};
-        }
-    }
+
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
     my $v = $::param{'version'};

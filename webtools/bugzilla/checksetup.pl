@@ -903,20 +903,25 @@ if (-e "data/params") {
     require "data/params";
     require "defparams.pl";
     use vars @::param_list;
+    my @oldparams;
+    
     open(PARAMFILE, ">>old-params.txt") 
       || die "$0: Can't open old-params.txt for writing: $!\n";
       
     foreach my $item (keys %::param) {
         if (!grep($_ eq $item, @::param_list) && $item ne "version") {
-            print "The $item parameter is no longer used in Bugzilla,
-                   so it has been removed from your parameters file and
-                   written to old-params.txt.\n";
-            
-            print PARAMFILE "\n\n$item:\n";
-            print PARAMFILE $::param{$item};
+            push (@oldparams, $item);
+            print PARAMFILE "\n\n$item:\n$::param{$item}\n";
                 
             delete $::param{$item};
         }
+    }
+    
+    if (@oldparams) {
+        print "The following parameters are no longer used in Bugzilla, " .
+              "and so have been\nremoved from your parameters file and " .
+              "appended to old-params.txt:\n";
+        print join(", ", @oldparams) . "\n\n";               
     }
     
     close PARAMFILE;
