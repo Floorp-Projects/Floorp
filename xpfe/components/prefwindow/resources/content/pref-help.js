@@ -58,9 +58,10 @@ var fm = {
   "chrome://communicator/content/pref/pref-debug2.xul": "debug_network",
   "chrome://communicator/content/pref/pref-http.xul": "advanced_http_networking",
   "chrome://communicator/content/pref/pref-inspector.xul": "inspector",
+  "chrome://communicator/content/pref/pref-download.xul": "navigator_pref_downloads",
   "chrome://communicator/content/pref/pref-mousewheel.xul": "advanced_pref_mouse_wheel",
   "chrome://communicator/content/pref/pref-smartupdate.xul": "advanced_pref_installation",
-  "chrome://communicator/content/pref/pref-tabs": "navigator_pref_tabbed_browsing",
+  "chrome://communicator/content/pref/pref-tabs.xul": "nav_doc_tabbed",
   "chrome://communicator/content/pref/pref-winhooks.xul": "advanced_pref_system",
   "chrome://communicator/content/pref/pref-proxies.xul": "advanced_pref_proxies"
 } 
