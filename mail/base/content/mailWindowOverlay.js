@@ -2155,6 +2155,11 @@ function HandleMDNResponse(aUrl)
 	if (IsNewsMessage(msgURI))
 		return;
 
+  // if the message is marked as junk, do NOT attempt to process a return receipt
+  // in order to better protect the user
+  if (SelectedMessagesAreJunk())
+    return;
+
   var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
   var mimeHdr = aUrl.mimeHeaders;
     
