@@ -157,7 +157,7 @@ static nsIAtom* gZHTW = nsnull;
 static nsIAtom* gZHCN = nsnull;
 
 static int gInitialized = 0;
-
+static PRBool gDoingLineheightFixup = PR_FALSE;
 static PRUint16* gUserDefinedCCMap = nsnull;
 
 static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
@@ -298,6 +298,15 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
+
+  // if we do not include/compensate external leading in calculating normal 
+  // line height, we don't set gDoingLineheightFixup either to keep old behavior.
+  // These code should be eliminated in future when we choose to stay with 
+  // one normal lineheight calculation method.
+  PRInt32 intPref;
+  if (NS_SUCCEEDED(gPref->GetIntPref(
+      "browser.display.normal_lineheight_calc_control", &intPref)))
+    gDoingLineheightFixup = (intPref != 0);
 
   nsCOMPtr<nsILanguageAtomService> langService;
   langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
@@ -3262,7 +3271,10 @@ nsFontMetricsWin::RealizeFont()
     mStrikeoutSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
-    mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
+    if (gDoingLineheightFixup)
+      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition, oMetrics.otmDescent) * dev2app);
+    else
+      mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
 
     // Begin -- section of code to get the real x-height with GetGlyphOutline()
     GLYPHMETRICS gm;
@@ -3287,7 +3299,8 @@ nsFontMetricsWin::RealizeFont()
     mUnderlineOffset = -NSToCoordRound((float)metrics.tmDescent * dev2app * 0.30f); // 30% of descent
   }
 
-  mLeading = NSToCoordRound(metrics.tmInternalLeading * dev2app);
+  mInternalLeading = NSToCoordRound(metrics.tmInternalLeading * dev2app);
+  mExternalLeading = NSToCoordRound(metrics.tmExternalLeading * dev2app);
   mEmHeight = NSToCoordRound((metrics.tmHeight - metrics.tmInternalLeading) *
                              dev2app);
   mEmAscent = NSToCoordRound((metrics.tmAscent - metrics.tmInternalLeading) *
@@ -3361,19 +3374,35 @@ nsFontMetricsWin::GetHeight(nscoord &aHeight)
   return NS_OK;
 }
 
+#ifdef FONT_LEADING_APIS_V2
 NS_IMETHODIMP
-nsFontMetricsWin::GetNormalLineHeight(nscoord &aHeight)
+nsFontMetricsWin::GetInternalLeading(nscoord &aLeading)
 {
-  aHeight = mEmHeight + mLeading;
+  aLeading = mInternalLeading;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin::GetLeading(nscoord &aLeading)
+nsFontMetricsWin::GetExternalLeading(nscoord &aLeading)
 {
-  aLeading = mLeading;
+  aLeading = mExternalLeading;
   return NS_OK;
 }
+#else
+NS_IMETHODIMP
+nsFontMetricsWin::GetLeading(nscoord &aLeading)
+{
+  aLeading = mInternalLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mInternalLeading;
+  return NS_OK;
+}
+#endif //FONT_LEADING_APIS_V2
 
 NS_IMETHODIMP
 nsFontMetricsWin::GetEmHeight(nscoord &aHeight)
@@ -4973,6 +5002,7 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
 
   //do it for last part of the string
   fontSwitch.mFontWin = currSubset;
+  NS_ASSERTION(currSubset, "invalid font here. ");
   (*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData);
 
   return NS_OK;

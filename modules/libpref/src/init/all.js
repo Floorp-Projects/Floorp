@@ -79,6 +79,10 @@ pref("browser.display.use_system_colors",   false);
 pref("browser.display.foreground_color",    "#000000");
 pref("browser.display.background_color",    "#FFFFFF");
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
+// 0 = no external leading, 
+// 1 = use external leading only when font provides, 
+// 2 = add extra leading both internal leading and external leading are zero
+pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");

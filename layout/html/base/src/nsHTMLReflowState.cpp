@@ -65,8 +65,16 @@
 #include "nsIFormManager.h"
 
 // Prefs-driven control for |text-decoration: blink|
-static PRPackedBool sBlinkPrefIsLoaded = PR_FALSE;
+static PRPackedBool sPrefIsLoaded = PR_FALSE;
 static PRPackedBool sBlinkIsAllowed = PR_TRUE;
+
+enum eNormalLineHeightControl {
+  eUninitialized = -1,
+  eNoExternalLeading = 0,   // does not include external leading 
+  eIncludeExternalLeading,  // use whatever value font vendor provides
+  eCompensateLeading        // compensate leading if leading provided by font vendor is not enough
+};
+static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 
 #ifdef DEBUG
 const char*
@@ -1574,12 +1582,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
 // Prefs callback to pick up changes
 static int PR_CALLBACK PrefsChanged(const char *aPrefName, void *instance)
 {
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) {
     PRBool boolPref;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs && NS_SUCCEEDED(prefs->GetBoolPref("browser.blink_allowed", 
-                                                 &boolPref)))
-        sBlinkIsAllowed = boolPref;
-    return 0; /* PREF_OK */
+    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.blink_allowed", &boolPref)))
+      sBlinkIsAllowed = boolPref;
+  }
+  return 0; /* PREF_OK */
 }
 
 // Check to see if |text-decoration: blink| is allowed.  The first time
@@ -1587,16 +1596,33 @@ static int PR_CALLBACK PrefsChanged(const char *aPrefName, void *instance)
 // just use the cached value.
 static PRBool BlinkIsAllowed(void)
 {
-    if (!sBlinkPrefIsLoaded) {
-        // Set up a listener and check the initial value
-        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-        if (prefs) 
-            prefs->RegisterCallback("browser.blink_allowed", PrefsChanged, 
-                                    nsnull);
-        PrefsChanged(nsnull, nsnull);
-        sBlinkPrefIsLoaded = PR_TRUE;
+  if (!sPrefIsLoaded) {
+    // Set up a listener and check the initial value
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+      prefs->RegisterCallback("browser.blink_allowed", PrefsChanged, 
+                              nsnull);
     }
-    return sBlinkIsAllowed;
+    PrefsChanged(nsnull, nsnull);
+    sPrefIsLoaded = PR_TRUE;
+  }
+  return sBlinkIsAllowed;
+}
+
+static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
+{
+  if (sNormalLineHeightControl == eUninitialized) {
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    PRInt32 intPref;
+    // browser.display.normal_lineheight_calc_control is not user changable, so 
+    // no need to register callback for it.
+    if (prefs && NS_SUCCEEDED(prefs->GetIntPref(
+                 "browser.display.normal_lineheight_calc_control", &intPref)))
+      sNormalLineHeightControl = NS_STATIC_CAST(eNormalLineHeightControl, intPref);
+    else
+      sNormalLineHeightControl = eNoExternalLeading;
+  }
+  return sNormalLineHeightControl;
 }
 
 // XXX refactor this code to have methods for each set of properties
@@ -2189,8 +2215,53 @@ nsHTMLReflowState::UseComputedHeight()
   return useComputedHeight;
 }
 
+#ifdef NEW_FONT_HEIGHT_APIS
+#define NORMAL_LINE_HEIGHT_FACTOR 1.2f    // in term of emHeight 
+// For "normal" we use the font's normal line height (em height + leading).
+// If both internal leading and  external leading specified by font itself
+// are zeros, we should compensate this by creating extra (external) leading 
+// in eCompensateLeading mode. This is necessary because without this 
+// compensation, normal line height might looks too tight. 
+
+// For risk management, we use preference to control the behavior, and 
+// eNoExternalLeading is the old behavior.
 static nscoord
-ComputeLineHeight(nsIRenderingContext* aRenderingContext,
+GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
+{
+  NS_PRECONDITION(nsnull != aFontMetrics, "no font metrics");
+
+  nscoord normalLineHeight;
+  nscoord emHeight;
+
+#ifdef FONT_LEADING_APIS_V2
+  nscoord externalLeading, internalLeading;
+  aFontMetrics->GetExternalLeading(externalLeading);
+  aFontMetrics->GetInternalLeading(internalLeading);
+  aFontMetrics->GetEmHeight(emHeight);
+  switch (GetNormalLineHeightCalcControl()) {
+  case eIncludeExternalLeading:
+    normalLineHeight = emHeight+ internalLeading + externalLeading;
+    break;
+  case eCompensateLeading:
+    if (!internalLeading && !externalLeading)
+      normalLineHeight = NSToCoordRound(emHeight * NORMAL_LINE_HEIGHT_FACTOR);
+    else
+      normalLineHeight = emHeight+ internalLeading + externalLeading;
+    break;
+  default:
+    //case eNoExternalLeading:
+    normalLineHeight = emHeight + internalLeading;
+  }
+#else
+  aFontMetrics->GetNormalLineHeight(normalLineHeight);
+#endif // FONT_LEADING_APIS_V2
+  return normalLineHeight;
+}
+#endif // NEW_FONT_HEIGHT_APIS
+
+static nscoord
+ComputeLineHeight(nsIPresContext* aPresContext,
+                  nsIRenderingContext* aRenderingContext,
                   nsIStyleContext* aStyleContext)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
@@ -2206,17 +2277,10 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
   
   nsStyleUnit unit = text->mLineHeight.GetUnit();
 
-  if (eStyleUnit_Coord == unit) {
+  if (unit == eStyleUnit_Coord) {
     // For length values just use the pre-computed value
     lineHeight = text->mLineHeight.GetCoordValue();
-  }
-  else {
-    // For "normal" or factor units the computed value of the
-    // line-height property is found by multiplying the factor by the
-    // font's <b>actual</b> em height. For "normal" we use the font's
-    // normal line height (em height + leading).
-    nscoord emHeight = -1;
-    nscoord normalLineHeight = -1;
+  } else {
     nsCOMPtr<nsIDeviceContext> deviceContext;
     aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
     nsCOMPtr<nsIAtom> langGroup;
@@ -2225,33 +2289,35 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     }
     nsCOMPtr<nsIFontMetrics> fm;
     deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
-#ifdef NEW_FONT_HEIGHT_APIS
-    if (fm) {
-      fm->GetEmHeight(emHeight);
-      fm->GetNormalLineHeight(normalLineHeight);
-    }
-#endif
-    float factor;
-    if (eStyleUnit_Factor == unit) {
+
+    if (unit == eStyleUnit_Factor) {
+      // For factor units the computed value of the line-height property 
+      // is found by multiplying the factor by the font's <b>actual</b> 
+      // em height. 
+      float factor;
       factor = text->mLineHeight.GetFactorValue();
-    }
-    else {
+      // Note: we normally use the actual font height for computing the
+      // line-height raw value from the style context. On systems where
+      // they disagree the actual font height is more appropriate. This
+      // little hack lets us override that behavior to allow for more
+      // precise layout in the face of imprecise fonts.
+      nscoord emHeight = font->mFont.size;
+#ifdef NEW_FONT_HEIGHT_APIS
+      if (!nsHTMLReflowState::UseComputedHeight()) {
+        fm->GetEmHeight(emHeight);
+      }
+#endif
+      lineHeight = NSToCoordRound(factor * emHeight);
+    } else {
       NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
-      factor = (((float) normalLineHeight) / PR_MAX(1, emHeight));
+      lineHeight = font->mFont.size;
+#ifdef NEW_FONT_HEIGHT_APIS
+      if (!nsHTMLReflowState::UseComputedHeight()) {
+        lineHeight = GetNormalLineHeight(fm);
+      }
+#endif
     }
-
-    // Note: we normally use the actual font height for computing the
-    // line-height raw value from the style context. On systems where
-    // they disagree the actual font height is more appropriate. This
-    // little hack lets us override that behavior to allow for more
-    // precise layout in the face of imprecise fonts.
-    if (nsHTMLReflowState::UseComputedHeight()) {
-      emHeight = font->mFont.size;
-    }
-
-    lineHeight = NSToCoordRound(factor * emHeight);
   }
-
   return lineHeight;
 }
 
@@ -2264,7 +2330,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
   nsCOMPtr<nsIStyleContext> sc;
   aFrame->GetStyleContext(getter_AddRefs(sc));
   if (sc) {
-    lineHeight = ComputeLineHeight(aRenderingContext, sc);
+    lineHeight = ComputeLineHeight(aPresContext, aRenderingContext, sc);
   }
   if (lineHeight < 0) {
     // Negative line-heights are not allowed by the spec. Translate
@@ -2280,7 +2346,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
       aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
 #ifdef NEW_FONT_HEIGHT_APIS
       if (fm) {
-        fm->GetNormalLineHeight(lineHeight);
+        lineHeight = GetNormalLineHeight(fm);
       }
 #endif
     }
