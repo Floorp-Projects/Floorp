@@ -75,7 +75,7 @@ public:
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile) = 0;
-
+ 
 protected:
   nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
 

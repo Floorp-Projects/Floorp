@@ -36,66 +36,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
-
-NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool * aCanHandleContent)
-{
-  // once we have user over ride stuff working, we need to first call up to our base class
-  // and ask the base class if we can handle the content. This will take care of looking for user specified 
-  // apps for content types.
-  
-  // for now we only have defaults to worry about...
-  // go look up in the windows registry to see if there is a handler for this mime type...if there is return TRUE...
-
-  *aCanHandleContent = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
-                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
-{
-   nsresult rv = NS_OK;
-  
-  // see if we have user specified information for handling this content type by giving the base class
-  // first crack at it...
-  
-  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
-  
-  // this is important!! if do content for the base class returned any success code, then assume we are done
-  // and don't even play around with 
-  if (NS_SUCCEEDED(rv)) return NS_OK;
-  
-  // there is no registry on linux (like there is on win32)
-  // so we can only make up a dummy mime type for this content....
-  nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
-  nsCAutoString fileExtension;
-
-  *aStreamListener = nsnull;
-  if (aURI)
-  {
-    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-    if (url) {
-      nsXPIDLCString extenion;
-      url->GetFileExtension(getter_Copies(extenion));
-    
-      fileExtension = ".";  
-      fileExtension.Append(extenion);
-    }
-  }
-
-  if (mimeInfo)
-  {  
-    if (!fileExtension.IsEmpty())
-      mimeInfo->SetFileExtensions(fileExtension);
-    mimeInfo->SetMIMEType(aMimeContentType);
-
-    // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
-    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
 {
   nsresult rv = NS_OK;
