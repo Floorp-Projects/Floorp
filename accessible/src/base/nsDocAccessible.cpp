@@ -994,6 +994,9 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible;
   GetEventDocAccessible(subTreeToInvalidate, getter_AddRefs(docAccessible));
+  if (!docAccessible)
+    return;
+
   nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
     do_QueryInterface(docAccessible);
 
