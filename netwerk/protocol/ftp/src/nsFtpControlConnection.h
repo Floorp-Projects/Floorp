@@ -87,7 +87,6 @@ private:
 
     nsCOMPtr<nsIRequest>         mReadRequest;
     nsCOMPtr<nsISocketTransport> mCPipe;
-    nsCOMPtr<nsIInputStream>     mInStream;
     nsCOMPtr<nsIOutputStream>    mOutStream;
     nsCOMPtr<nsIStreamListener>  mListener;
 };
