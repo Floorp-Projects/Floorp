@@ -56,6 +56,7 @@
 #include "nsGUIEvent.h"
 #include "nsIPref.h"
 #include "nsRegion.h"
+#include "nsInt64.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -108,7 +109,7 @@ struct DisplayListElement2 {
   nsRect        mBounds;      // coordinates relative to the view manager root
   nscoord       mAbsX, mAbsY; // coordinates relative to the view that we're Refreshing 
   PRUint32      mFlags;       // see above
-  PRInt32       mZIndex;      // temporary used during z=index processing (see below)
+  nsInt64       mZIndex;      // temporary used during z-index processing (see below)
 };
 
 /*
@@ -881,6 +882,10 @@ static void ApplyZOrderStableSort(nsVoidArray &aBuffer, nsVoidArray &aMergeTmp, 
   }
 }
 
+static nsInt64 BuildExtendedZIndex(nsView* aView) {
+  return (nsInt64(aView->GetZIndex()) << 1) | nsInt64(aView->IsTopMost() ? 1 : 0);
+}
+
 // The display-element (indirect) children of aNode are extracted and appended to aBuffer in
 // z-order, with the bottom-most elements first.
 // Their z-index is set to the z-index they will have in aNode's parent.
@@ -888,13 +893,11 @@ static void ApplyZOrderStableSort(nsVoidArray &aBuffer, nsVoidArray &aMergeTmp, 
 // their z-indices will all be equal to the z-index value of aNode's view.
 static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidArray &aMergeTmp, PRBool aForceSort) {
   PRBool autoZIndex = PR_TRUE;
-  PRInt32 explicitZIndex = 0;
+  nsInt64 explicitZIndex = 0;
 
   if (nsnull != aNode->mView) {
     autoZIndex = aNode->mView->GetZIndexIsAuto();
-    if (!autoZIndex) {
-      explicitZIndex = aNode->mView->GetZIndex();
-    }
+    explicitZIndex = BuildExtendedZIndex(aNode->mView);
   }
 
   if (nsnull == aNode->mZChild) {
@@ -968,10 +971,13 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
     ApplyZOrderStableSort(aBuffer, aMergeTmp, childStartIndex, childEndIndex);
   }
 
-  if (!autoZIndex) {
-    for (PRInt32 i = childStartIndex; i < childEndIndex; i++) {
-      DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, aBuffer.ElementAt(i));
+  for (PRInt32 i = childStartIndex; i < childEndIndex; i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, aBuffer.ElementAt(i));
+    if (!autoZIndex) {
       element->mZIndex = explicitZIndex;
+    } else if (aNode->mView->IsTopMost()) {
+      // promote children to topmost if this view is topmost
+      element->mZIndex |= nsInt64(1);
     }
   }
 }
@@ -2173,39 +2179,45 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
 
   if ((nsnull != parent) && (nsnull != child))
     {
-      nsView *kid = parent->GetFirstChild();
-      nsView *prev = nsnull;
+      // if aAfter is set, we will insert the child after 'prev' (i.e. after 'kid' in document
+      // order, otherwise after 'kid' (i.e. before 'kid' in document order).
 
-      //verify that the sibling exists...
-
-#if 0 // This is the correct code, but we can't activate it yet without breaking things.
-      // We will turn this on when event handling and everything else has been
-      // brainfixed to understand z-indexes.
-      while (nsnull != kid)
-        {
-          if (kid == sibling)
-            break;
-
+#if 1
+      if (nsnull == aSibling) {
+        if (aAfter) {
+          // insert at end of document order, i.e., before first view
+          // this is the common case, by far
+          parent->InsertChild(child, nsnull);
+        } else {
+          // insert at beginning of document order, i.e., after last view
+          nsView *kid = parent->GetFirstChild();
+          nsView *prev = nsnull;
+          while (kid != nsnull) {
+            prev = kid;
+            kid = kid->GetNextSibling();
+          }
+          // prev is last view or null if there are no children
+          parent->InsertChild(child, prev);
+        }
+      } else {
+        nsView *kid = parent->GetFirstChild();
+        nsView *prev = nsnull;
+        while (nsnull != kid && sibling != kid) {
           //get the next sibling view
-
           prev = kid;
           kid = kid->GetNextSibling();
         }
-
-      // either kid == sibling and prev is the child before sibling, or null
-      // if sibling is the first child,
-      // OR kid == null, the sibling was null or not there, and prev == last child view
-      // The following code works in both cases.
-
-      if (PR_TRUE == aAfter)
-        // the child views are ordered in REVERSE document order;
-        // LAST view in document order is the FIRST child
-        // so we insert the new view just in front of sibling, or as the first child
-        // if sibling is null
-        parent->InsertChild(child, prev);
-      else
-        parent->InsertChild(child, kid);
-#else // for now, don't keep consistent document order, but order things by z-index instead
+        NS_ASSERTION(kid != nsnull,
+                     "couldn't find sibling in child list");
+        if (aAfter) {
+          // insert after 'kid' in document order, i.e. before in view order
+          parent->InsertChild(child, prev);
+        } else {
+          // insert before 'kid' in document order, i.e. after in view order
+          parent->InsertChild(child, kid);
+        }
+      }
+#else // don't keep consistent document order, but order things by z-index instead
       // essentially we're emulating the old InsertChild(parent, child, zindex)
       PRInt32 zIndex = child->GetZIndex();
       while (nsnull != kid)
@@ -2264,55 +2276,10 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
 
 NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRInt32 aZIndex)
 {
-  nsView* parent = NS_STATIC_CAST(nsView*, aParent);
-  nsView* child = NS_STATIC_CAST(nsView*, aChild);
-
-  NS_PRECONDITION(nsnull != parent, "null ptr");
-  NS_PRECONDITION(nsnull != child, "null ptr");
-
-  if ((nsnull != parent) && (nsnull != child))
-    {
-      nsView *kid = parent->GetFirstChild();
-      nsView *prev = nsnull;
-
-      //find the right insertion point...
-
-      while (nsnull != kid)
-        {
-          PRInt32 idx = kid->GetZIndex();
-
-          if (CompareZIndex(aZIndex, child->IsTopMost(), child->GetZIndexIsAuto(), 
-                            idx, kid->IsTopMost(), kid->GetZIndexIsAuto()) >= 0) {
-            break;
-          }
-
-          //get the next sibling view
-
-          prev = kid;
-          kid = kid->GetNextSibling();
-        }
-
-      //in case this hasn't been set yet... maybe we should not do this? MMP
-
-      child->SetZIndex(child->GetZIndexIsAuto(), aZIndex, child->IsTopMost());
-      parent->InsertChild(child, prev);
-
-      UpdateTransCnt(nsnull, child);
-
-      // if the parent view is marked as "floating", make the newly added view float as well.
-      PRBool isFloating = PR_FALSE;
-      parent->GetFloating(isFloating);
-      if (isFloating)
-        child->SetFloating(isFloating);
-
-      //and mark this area as dirty if the view is visible...
-      nsViewVisibility  visibility;
-      child->GetVisibility(visibility);
-
-      if (nsViewVisibility_kHide != visibility)
-        UpdateView(child, NS_VMREFRESH_NO_SYNC);
-    }
-  return NS_OK;
+  // no-one really calls this with anything other than aZIndex == 0 on a fresh view
+  // XXX this method should simply be eliminated and its callers redirected to the real method
+  SetViewZIndex(aChild, PR_FALSE, aZIndex, PR_FALSE);
+  return InsertChild(aParent, aChild, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
@@ -3728,7 +3695,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
           newnestcnt++;
         }
 
-        if (flags & VIEW_RENDERED)
+        if (flags & VIEW_RENDERED) 
           printf("VIEW_RENDERED ");
 
         if (flags & VIEW_ISSCROLLED)

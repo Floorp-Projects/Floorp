@@ -190,6 +190,22 @@ public:
         return *this;
     }
 
+    /**
+     * Shift a 64-bit integer left.
+     */
+    nsInt64& operator <<=(int aCount) {
+        LL_SHL(mValue, mValue, aCount);
+        return *this;
+    }
+
+    /**
+     * Shift a 64-bit signed integer right.
+     */
+    nsInt64& operator >>=(int aCount) {
+        LL_SHR(mValue, mValue, aCount);
+        return *this;
+    }
+
     // Comparison operators
     friend inline PRBool operator ==(const nsInt64& aObject1, const nsInt64& aObject2);
     friend inline PRBool operator !=(const nsInt64& aObject1, const nsInt64& aObject2);
@@ -273,6 +289,22 @@ operator /(const nsInt64& aObject1, const nsInt64& aObject2) {
 inline const nsInt64
 operator %(const nsInt64& aObject1, const nsInt64& aObject2) {
     return nsInt64(aObject1) %= aObject2;
+}
+
+/**
+ * Shift left a 64-bit integer
+ */
+inline const nsInt64
+operator <<(const nsInt64& aObject, int aCount) {
+    return nsInt64(aObject) <<= aCount;
+}
+
+/**
+ * Shift right a signed 64-bit integer
+ */
+inline const nsInt64
+operator >>(const nsInt64& aObject, int aCount) {
+    return nsInt64(aObject) >>= aCount;
 }
 
 /**
