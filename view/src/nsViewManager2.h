@@ -48,7 +48,7 @@ public:
   NS_IMETHOD  Init(nsIDeviceContext* aContext);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
-  NS_IMETHOD  SetRootView(nsIView *aView);
+  NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget=nsnull);
 
   NS_IMETHOD  GetFrameRate(PRUint32 &aRate);
   NS_IMETHOD  SetFrameRate(PRUint32 frameRate);
@@ -128,6 +128,10 @@ public:
 
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
+
+  NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
+  NS_IMETHOD GetWidget(nsIWidget **aWidget);
+  NS_IMETHOD ForceUpdate();
 
 protected:
   virtual ~nsViewManager2();
