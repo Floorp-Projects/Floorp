@@ -358,13 +358,6 @@ nsresult nsExternalHelperAppService::InitDataSource()
   return rv;
 }
 
-// boolean canHandleContent (in string aMimeContentType);
-NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval)
-{
-  *_retval = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsISupports *aWindowContext,
