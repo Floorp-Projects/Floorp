@@ -237,8 +237,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
 #if defined(XP_WIN16) || defined(XP_OS2)
   const PRUint32 MAX_LEN = 8;
 #elif defined(XP_MAC)
-  // mac sucks.  32 has to cover name + sbdSep.
-  const PRUint32 MAX_LEN = 28;
+  const PRUint32 MAX_LEN = 25;
 #elif defined(XP_UNIX) || defined(XP_PC)
   const PRUint32 MAX_LEN = 55;
 #else
