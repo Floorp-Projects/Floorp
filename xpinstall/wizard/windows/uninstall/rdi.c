@@ -26,6 +26,85 @@
 #include "extra.h"
 #include "ifuncns.h"
 
+HKEY hkUnreadMailRootKey = HKEY_CURRENT_USER;
+char szUnreadMailKey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+
+/* structure for use with UnreadMail registry keys */
+typedef struct sKeyNode skn;
+struct sKeyNode
+{
+  char  szKey[MAX_BUF];
+  skn   *Next;
+  skn   *Prev;
+};
+
+/* Function that creates an instance of skn */
+skn *CreateSknNode()
+{
+  skn *sknNode;
+
+  if((sknNode = NS_GlobalAlloc(sizeof(struct sKeyNode))) == NULL)
+    exit(1);
+
+  sknNode->Next      = sknNode;
+  sknNode->Prev      = sknNode;
+
+  return(sknNode);
+}
+
+/* Function that inserts a skn structure into a linked list */
+void SknNodeInsert(skn **sknHead, skn *sknTemp)
+{
+  if(*sknHead == NULL)
+  {
+    *sknHead          = sknTemp;
+    (*sknHead)->Next  = *sknHead;
+    (*sknHead)->Prev  = *sknHead;
+  }
+  else
+  {
+    sknTemp->Next           = *sknHead;
+    sknTemp->Prev           = (*sknHead)->Prev;
+    (*sknHead)->Prev->Next  = sknTemp;
+    (*sknHead)->Prev        = sknTemp;
+  }
+}
+
+/* Function that removes a skn structure from a skn linked list.
+ * and frees memory. */
+void SknNodeDelete(skn *sknTemp)
+{
+  if(sknTemp != NULL)
+  {
+    sknTemp->Next->Prev = sknTemp->Prev;
+    sknTemp->Prev->Next = sknTemp->Next;
+    sknTemp->Next       = NULL;
+    sknTemp->Prev       = NULL;
+
+    FreeMemory(&sknTemp);
+  }
+}
+
+/* Function that traverses a skn linked list and deletes each node. */
+void DeInitSknList(skn **sknHeadNode)
+{
+  skn *sknTemp;
+  
+  if(*sknHeadNode == NULL)
+    return;
+
+  sknTemp = (*sknHeadNode)->Prev;
+
+  while(sknTemp != *sknHeadNode)
+  {
+    SknNodeDelete(sknTemp);
+    sknTemp = (*sknHeadNode)->Prev;
+  }
+
+  SknNodeDelete(sknTemp);
+  *sknHeadNode = NULL;
+}
+
 /* This function parses takes as input a registry key path string beginning
  * with HKEY_XXXX (root key) and parses out the sub key path and the root
  * key.
@@ -199,5 +278,221 @@ BOOL UndoDesktopIntegration(void)
   }
 
   return(0);
+}
+
+
+/* Function that retrieves the app name (including path) that is going to be
+ * uninstalled.  The return string is in upper case. */
+int GetUninstallAppPathName(char *szAppPathName, DWORD dwAppPathNameSize)
+{
+  char szKey[MAX_BUF];
+  HKEY hkRoot;
+
+  if(*ugUninstall.szUserAgent != '\0')
+  {
+    hkRoot = ugUninstall.hWrMainRoot;
+    lstrcpy(szKey, ugUninstall.szWrMainKey);
+    AppendBackSlash(szKey, sizeof(szKey));
+    lstrcat(szKey, ugUninstall.szUserAgent);
+    AppendBackSlash(szKey, sizeof(szKey));
+    lstrcat(szKey, "Main");
+  }
+  else
+  {
+    return(CMI_APP_PATHNAME_NOT_FOUND);
+  }
+
+  GetWinReg(hkRoot, szKey, "PathToExe", szAppPathName, dwAppPathNameSize);
+  strupr(szAppPathName);
+  return(CMI_OK);
+}
+
+/* Function to delete the UnreadMail keys that belong to the app that is being
+ * uninstalled.  The skn list that is passed in should only contain UnreadMail
+ * subkeys to be deleted. */
+void DeleteUnreadMailKeys(skn *sknHeadNode)
+{
+  skn   *sknTempNode;
+  char  szUnreadMailDeleteKey[MAX_BUF];
+  DWORD dwLength;
+  
+  if(sknHeadNode == NULL)
+    return;
+
+  sknTempNode = sknHeadNode;
+
+  do
+  {
+    /* build the full UnreadMail key to be deleted */
+    dwLength = sizeof(szUnreadMailDeleteKey) > lstrlen(szUnreadMailKey) ?
+                      lstrlen(szUnreadMailKey) + 1: sizeof(szUnreadMailDeleteKey);
+    lstrcpyn(szUnreadMailDeleteKey, szUnreadMailKey, dwLength);
+    AppendBackSlash(szUnreadMailDeleteKey, sizeof(szUnreadMailDeleteKey));
+    if((unsigned)(lstrlen(sknTempNode->szKey) + 1) <
+       (sizeof(szUnreadMailDeleteKey) - lstrlen(szUnreadMailKey) + 1))
+    {
+      lstrcat(szUnreadMailDeleteKey, sknTempNode->szKey);
+
+      /* delete the UnreadMail key (even if it has subkeys) */
+      DeleteWinRegKey(hkUnreadMailRootKey, szUnreadMailDeleteKey, TRUE);
+    }
+
+    /* get the next key to delete */
+    sknTempNode = sknTempNode->Next;
+
+  }while(sknTempNode != sknHeadNode);
+}
+
+/* Function that builds a list of UnreadMail subkey names that only belong to
+ * the app that is being uninstalled.  The list is a linked list of skn
+ * structures. */
+BOOL GetUnreadMailKeyList(char *szUninstallAppPathName, skn **sknWinRegKeyList)
+{
+  HKEY  hkSubKeyHandle;
+  HKEY  hkHandle;
+  DWORD dwErr = ERROR_SUCCESS;
+  DWORD dwTotalSubKeys;
+  DWORD dwSubKeySize;
+  DWORD dwIndex;
+  DWORD dwBufSize;
+  BOOL  bFoundAtLeastOne = FALSE;
+  char  szSubKey[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szNewKey[MAX_BUF];
+  skn   *sknTempNode;
+
+  /* open the UnreadMail key so we can enumerate its subkeys */
+  dwErr = RegOpenKeyEx(hkUnreadMailRootKey,
+                       szUnreadMailKey,
+                       0,
+                       KEY_READ|KEY_QUERY_VALUE,
+                       &hkHandle);
+  if(dwErr == ERROR_SUCCESS)
+  {
+    dwTotalSubKeys = 0;
+    RegQueryInfoKey(hkHandle,
+                    NULL,
+                    NULL,
+                    NULL,
+                    &dwTotalSubKeys,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL);
+
+    if(dwTotalSubKeys != 0)
+    {
+      dwIndex = 0;
+      do
+      {
+        /* For each UnreadMail subkey, parse it's 'Application' var name for
+         * the app we're uninstalling (full path).  Compare against both long
+         * path name and short path name.  If match found, add to linked list
+         * of skn structures.
+         *
+         * No key deletion is performed at this time! */
+
+        sknTempNode = NULL; /* reset temporaty node pointer */
+        dwSubKeySize = sizeof(szSubKey);
+        if((dwErr = RegEnumKeyEx(hkHandle,
+                                 dwIndex,
+                                 szSubKey,
+                                 &dwSubKeySize,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL)) == ERROR_SUCCESS)
+        {
+          lstrcpy(szNewKey, szUnreadMailKey);
+          AppendBackSlash(szNewKey, sizeof(szNewKey));
+          lstrcat(szNewKey, szSubKey);
+
+          if(RegOpenKeyEx(hkUnreadMailRootKey,
+                          szNewKey,
+                          0,
+                          KEY_READ,
+                          &hkSubKeyHandle) == ERROR_SUCCESS)
+          {
+            dwBufSize = sizeof(szBuf);
+            if(RegQueryValueEx(hkSubKeyHandle,
+                               "Application",
+                               NULL,
+                               NULL,
+                               szBuf,
+                               &dwBufSize) == ERROR_SUCCESS)
+            {
+              strupr(szBuf);
+              if(strstr(szBuf, szUninstallAppPathName) != NULL)
+              {
+                bFoundAtLeastOne = TRUE;
+                sknTempNode = CreateSknNode();
+                lstrcpyn(sknTempNode->szKey, szSubKey, dwSubKeySize + 1);
+              }
+              else
+              {
+                char szUninstallAppPathNameShort[MAX_BUF];
+
+                GetShortPathName(szUninstallAppPathName,
+                                 szUninstallAppPathNameShort,
+                                 sizeof(szUninstallAppPathNameShort));
+                if(strstr(szBuf, szUninstallAppPathNameShort) != NULL)
+                {
+                  bFoundAtLeastOne = TRUE;
+                  sknTempNode = CreateSknNode();
+                  lstrcpyn(sknTempNode->szKey, szSubKey, dwSubKeySize + 1);
+                }
+              }
+            }
+            RegCloseKey(hkSubKeyHandle);
+          }
+        }
+
+        if(sknTempNode)
+          SknNodeInsert(sknWinRegKeyList, sknTempNode);
+
+        ++dwIndex;
+      } while(dwErr != ERROR_NO_MORE_ITEMS);
+    }
+    RegCloseKey(hkHandle);
+  }
+  return(bFoundAtLeastOne);
+}
+
+/* Main function that deals with cleaning up the UnreadMail subkeys belonging
+ * to the app were currently uninstalling. */
+int CleanupMailIntegration(void)
+{
+  char szCMISection[] = "Cleanup Mail Integration";
+  char szUninstallApp[MAX_BUF];
+  char szBuf[MAX_BUF];
+  skn  *sknWinRegKeyList = NULL;
+
+  /* Check to see if uninstall.ini has indicated to cleanup
+   * the mail integration performed by mail */
+  GetPrivateProfileString(szCMISection,
+                          "Enabled",
+                          "",
+                          szBuf,
+                          sizeof(szBuf),
+                          szFileIniUninstall);
+  if(lstrcmpi(szBuf, "TRUE") != 0)
+    return(CMI_OK);
+
+  /* Get the full app name we're going to uninstall */
+  if(GetUninstallAppPathName(szUninstallApp, sizeof(szUninstallApp)) != CMI_OK)
+    return(CMI_APP_PATHNAME_NOT_FOUND);
+
+  /* Build a list of UnreadMail subkeys that needs to be deleted */
+  if(GetUnreadMailKeyList(szUninstallApp, &sknWinRegKeyList))
+    /* Delete the UnreadMail subkeys using the list built by
+     * GetUnreadMailKeyList() */
+    DeleteUnreadMailKeys(sknWinRegKeyList);
+
+  /* Clean up the linked list */
+  DeInitSknList(&sknWinRegKeyList);
+  return(CMI_OK);
 }
 

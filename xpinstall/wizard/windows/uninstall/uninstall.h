@@ -76,6 +76,10 @@ typedef int PRInt32;
 #define WIZ_OK                          0
 #define WIZ_MEMORY_ALLOC_FAILED         1
 
+/* CMI: Cleanup Mail Integration */
+#define CMI_OK                          0
+#define CMI_APP_PATHNAME_NOT_FOUND      1
+
 /* FO: File Operation */
 #define FO_OK                           0
 #define FO_SUCCESS                      0

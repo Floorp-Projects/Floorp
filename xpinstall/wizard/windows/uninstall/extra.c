@@ -1256,7 +1256,7 @@ HRESULT GetUninstallLogPath()
   }
 
   /* if the DisplayName was not found in the windows registry,
-   * use the description from read in from config.ini file */
+   * use the description read in from config.ini file */
   if(*ugUninstall.szDescription == '\0')
     lstrcpy(ugUninstall.szDescription, ugUninstall.szUninstallKeyDescription);
 

@@ -37,12 +37,13 @@ void ParseAllUninstallLogs()
   DWORD dwFileFound;
   DWORD dwRv = 0;
 
+  UndoDesktopIntegration();
+  CleanupMailIntegration();
   dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
   while(dwFileFound)
   {
     if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
     {
-      UndoDesktopIntegration();
       FileDelete(szFileInstallLog);
       dwRv = Uninstall(silFile);
       DeInitSilNodes(&silFile);
