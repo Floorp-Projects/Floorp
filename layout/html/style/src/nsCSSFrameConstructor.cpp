@@ -7375,6 +7375,13 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 }
 
 
+inline PRBool
+IsRootBoxFrame(nsIFrame *aFrame)
+{
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  return (frameType == nsLayoutAtoms::rootFrame);
+}
 
 NS_IMETHODIMP
 nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresContext)
@@ -7413,27 +7420,48 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
       state.mFrameManager->ClearPlaceholderFrameMap();
       state.mFrameManager->ClearUndisplayedContentMap();
 
-      // If we're in a XUL document, then we need to crawl up to the
-      // RootBoxFrame and remove _its_ child.
-      if (docElementFrame) {
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-        if (xuldoc) {
-          docElementFrame->GetParent(&docElementFrame);
-          NS_ASSERTION(docElementFrame, "expected to find a ScrollBoxFrame");
-          if (docElementFrame) {
-            docElementFrame->GetParent(&docElementFrame);
-            NS_ASSERTION(docElementFrame, "expected to find a GfxScroll");
-          }
-        }
-      }
-
       // Take the docElementFrame, and remove it from its parent. For
       // HTML, we'll be removing the Area frame from the Canvas; for
-      // XUL, we'll remove the GfxScroll frome the RootBoxFrame.
+      // XUL, we'll remove the GfxScroll or Box from the RootBoxFrame.
+      //
+      // The three possible structures (at least the ones observed so
+      // far, see bugs 70258 and 93558) are:
+      //
+      // (HTML)
+      //    ScrollBoxFrame(html)<
+      //     ScrollPortFrame(html)<
+      //      Canvas(-1)<
+      //       Area(html)<
+      //        (etc.)
+      //
+      // (XUL #1)
+      //    RootBoxFrame(window)<
+      //     GfxScroll<
+      //      ScrollBoxFrame(window)<
+      //       ScrollPortFrame(window)<
+      //        (etc.)
+      //
+      // (XUL #2)
+      //    RootBox<
+      //     Box<
+      //      (etc.)
+      //
       if (docElementFrame) {
         nsIFrame* docParentFrame;
         docElementFrame->GetParent(&docParentFrame);
 
+        // If we're in a XUL document, then we need to crawl up to the
+        // RootBoxFrame and remove _its_ child.
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+        if (xuldoc) {
+          nsCOMPtr<nsIAtom> frameType;
+          while (docParentFrame && !IsRootBoxFrame(docParentFrame)) {
+            docElementFrame = docParentFrame;
+            docParentFrame->GetParent(&docParentFrame);
+          }
+        }
+
+        NS_ASSERTION(docParentFrame, "should have a parent frame");
         if (docParentFrame) {
           // Remove the old document element hieararchy
           rv = state.mFrameManager->RemoveFrame(aPresContext, *shell,
