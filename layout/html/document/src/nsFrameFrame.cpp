@@ -210,6 +210,8 @@ public:
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
   /**
     * @see nsIFrame::Paint
     */
@@ -253,8 +255,6 @@ protected:
   nsresult ShowDocShell(nsIPresContext* aPresContext);
   nsresult CreateViewAndWidget(nsIPresContext* aPresContext,
                                nsIWidget**     aWidget);
-
-  virtual ~nsHTMLFrameInnerFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -693,7 +693,8 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
 {
 }
 
-nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
 {
   if (mFrameLoader) {
     // Get the content viewer through the docshell, but don't call
@@ -721,6 +722,8 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 
     mFrameLoader->Destroy();
   }
+
+  return nsLeafFrame::Destroy(aPresContext);
 }
 
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
