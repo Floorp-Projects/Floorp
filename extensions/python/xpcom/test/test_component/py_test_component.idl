@@ -188,8 +188,8 @@ interface nsIPythonTestInterfaceExtra : nsIPythonTestInterface
 [scriptable, uuid(657ae651-a973-4818-8c06-f4b948b3d758)]
 interface nsIPythonTestInterfaceDOMStrings : nsIPythonTestInterfaceExtra
 {
-    DOMString GetDOMStringResult();
-    void GetDOMStringOut([retval] out DOMString s);
+    DOMString GetDOMStringResult(in PRInt32 length);
+    void GetDOMStringOut(in PRInt32 length, [retval] out DOMString s);
     PRUint32 GetDOMStringLength(in DOMString s);
     PRUint32 GetDOMStringRefLength(in DOMStringRef s);
     PRUint32 GetDOMStringPtrLength(in DOMStringPtr s);
