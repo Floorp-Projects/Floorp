@@ -80,6 +80,11 @@
       <treechildren id="messengerChildren">
         <treeitem>
           <treerow>
+            <treecell url="chrome://messenger/content/pref-windows.xul" label="&windows.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
             <treecell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
           </treerow>
         </treeitem>

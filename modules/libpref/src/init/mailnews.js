@@ -390,9 +390,11 @@ pref("mailnews.append_preconfig_accounts.version",1);
 pref("mail.append_preconfig_smtpservers.version",1);
 
 pref("mail.biff.play_sound",true);
+// 0 == default system sound, 1 == user specified wav
+pref("mail.biff.play_sound.type",0);
 // _moz_mailbeep is a magic key, for the default sound.
 // otherwise, this needs to be a file url
-pref("mail.biff.play_sound.url","_moz_mailbeep");
+pref("mail.biff.play_sound.url","");
 pref("mail.biff.show_alert", true);
 
 pref("mail.content_disposition_type", 0);

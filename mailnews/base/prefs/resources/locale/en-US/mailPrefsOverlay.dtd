@@ -12,8 +12,9 @@
 
 <!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
-<!ENTITY address.label "Addressing">
+<!ENTITY windows.label "Windows">
 <!ENTITY viewingMessages.label "Message Display">
+<!ENTITY address.label "Addressing">
 <!ENTITY composingMessages.label "Composition">
 <!ENTITY format.label "Send Format">
 <!ENTITY return.label "Return Receipts">
