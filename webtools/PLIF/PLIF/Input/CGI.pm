@@ -30,13 +30,19 @@ package PLIF::Input::CGI;
 use strict;
 use vars qw(@ISA);
 use PLIF::Input::Arguments;
-use MIME::Base64; # DEPENDENCY
 @ISA = qw(PLIF::Input::Arguments);
 1;
 
 # Don't forget to put this module ABOVE the "CommandLine" module!  
 # The CommandLine module can't tell the difference between a keyword
 # query and real command line.
+
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    require MIME::Base64; import MIME::Base64; # DEPENDENCY
+    $self->SUPER::init(@_);
+}
 
 sub applies {
     return defined($ENV{'GATEWAY_INTERFACE'});

@@ -30,9 +30,10 @@ package PLIF::Database::ResultsFrame::DBI;
 use strict;
 use vars qw(@ISA);
 use PLIF;
-use DBI; # DEPENDENCY
 @ISA = qw(PLIF);
 1;
+
+# DEPENDENCY: This assumes the DBI module is already loaded
 
 sub init {
     my $self = shift;

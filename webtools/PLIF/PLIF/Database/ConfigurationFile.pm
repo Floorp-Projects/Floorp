@@ -30,7 +30,6 @@ package PLIF::Database::ConfigurationFile;
 use strict;
 use vars qw(@ISA);
 use PLIF::Database;
-use Data::Dumper; # DEPENDENCY
 @ISA = qw(PLIF::Database);
 1;
 
@@ -42,8 +41,9 @@ use Data::Dumper; # DEPENDENCY
 
 sub init {
     my $self = shift;
-    $self->SUPER::init(@_);
     my($app) = @_;
+    $self->SUPER::init(@_);
+    require Data::Dumper; import Data::Dumper; # DEPENDENCY
     $self->{'_FILENAME'} = $app->getService('dataSource.configuration')->configurationFilename;
 }
 

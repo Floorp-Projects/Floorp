@@ -31,7 +31,6 @@ use strict;
 use vars qw(@ISA);
 use PLIF::Database;
 use PLIF::Database::ResultsFrame::DBI;
-use DBI; # DEPENDENCY
 @ISA = qw(PLIF::Database);
 1;
 
@@ -49,6 +48,7 @@ sub class {
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
+    require DBI; import DBI; # DEPENDENCY
     $self->openDB(@_);
 }
 

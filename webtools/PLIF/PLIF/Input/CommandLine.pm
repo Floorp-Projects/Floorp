@@ -30,9 +30,15 @@ package PLIF::Input::CommandLine;
 use strict;
 use vars qw(@ISA);
 use PLIF::Input::Arguments;
-use Term::ReadLine; # DEPENDENCY
 @ISA = qw(PLIF::Input::Arguments);
 1;
+
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    $self->SUPER::init(@_);
+    require Term::ReadLine; import Term::ReadLine; # DEPENDENCY
+}
 
 sub applies {
     return @ARGV > 0;
@@ -92,7 +98,6 @@ sub createArgument {
         if ($self->getArgument('batch')) {
             $self->SUPER::createArgument(@_);
         } else {
-            $self->warn(8, "going to request '$argument' from user!");
             $self->app->output->request(@_);
             # get input from user
             my $term = Term::ReadLine->new($self->app->name);

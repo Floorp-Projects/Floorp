@@ -30,17 +30,7 @@ package PLIF::Output::Generic::AIM;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
-use Net::AIM; # DEPENDENCY
 @ISA = qw(PLIF::Service);
-
-# work around a bug in some releases of Net::AIM::Connection
-if (not Net::AIM::Connection->can('handler')) {
-    eval {
-        package Net::AIM::Connection;
-        sub handler { }
-    }
-}
-
 1;
 
 # XXX This protocol should check if the user is actually online, and
@@ -61,6 +51,16 @@ sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
+    # Load AIM Module
+    require Net::AIM; import Net::AIM; # DEPENDENCY
+    if (not Net::AIM::Connection->can('handler')) {
+        # work around a bug in some releases of Net::AIM::Connection
+        eval {
+            package Net::AIM::Connection;
+            sub handler { }
+        };
+    }
+    # Apply Configuration
     eval {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.aim');
     };

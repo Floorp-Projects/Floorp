@@ -30,7 +30,6 @@ package PLIF::Service::XML;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
-use XML::Parser; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
@@ -38,6 +37,13 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'service.xml' or $class->SUPER::provides($service));
+}
+
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    $self->SUPER::init(@_);
+    require XML::Parser; import XML::Parser; # DEPENDENCY
 }
 
 sub parse {

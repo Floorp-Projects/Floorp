@@ -30,7 +30,6 @@ package PLIF::Output::Generic::Email;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
-use Net::SMTP; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
@@ -48,6 +47,7 @@ sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
+    require Net::SMTP; import New::SMTP; # DEPENDENCY
     eval {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.email');
     };

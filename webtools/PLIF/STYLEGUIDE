@@ -108,16 +108,20 @@ only if they are well commented.
 13. When creating a new dependency, make sure you mark it with the
     magic string 'DEPENDENCY', as in:
 
-     package PLIF::Coses;
-     use strict;
-     use vars qw(@ISA);
-     use PLIF::Service;
-     use XML::Parser; # DEPENDENCY
-     @ISA = qw(PLIF::Service);
-     1;
+    sub init {
+        my $self = shift;
+        my($app) = @_;
+        $self->SUPER::init(@_);
+        require Some::Module; import Some::Module; # DEPENDENCY
+    }
 
     This allows for an easy listing of each dependency using 'find'
-    and 'grep'.
+    and 'grep'. Note also the way that dependencies are generally
+    imported inside service constructors and imported using 'require'
+    and 'import' instead of 'use'. This is to make sure that the
+    overhead of importing the relevant code is not hit unless the
+    module is used. Please make sure that 'import' doesn't end up
+    being called more than once, of course.
 
 
 14. The order for declaring methods should be something along the

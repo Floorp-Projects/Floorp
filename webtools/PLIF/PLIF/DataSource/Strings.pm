@@ -30,8 +30,6 @@ package PLIF::DataSource::Strings;
 use strict;
 use vars qw(@ISA);
 use PLIF::DataSource;
-use HTTP::Negotiate; # DEPENDENCY
-use HTTP::Headers; # DEPENDENCY
 @ISA = qw(PLIF::DataSource);
 1;
 
@@ -52,6 +50,8 @@ sub provides {
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
+    require HTTP::Negotiate; import HTTP::Negotiate; # DEPENDENCY
+    require HTTP::Headers; import HTTP::Headers; # DEPENDENCY
     $self->variantsCache({});
     $self->stringsCache({});
     $self->enabled(1);

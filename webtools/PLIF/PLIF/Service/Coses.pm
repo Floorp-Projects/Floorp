@@ -30,7 +30,6 @@ package PLIF::Service::Coses;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
-use HTML::Entities; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
@@ -43,6 +42,13 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'string.expander.COSES' or $class->SUPER::provides($service));
+}
+
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    $self->SUPER::init(@_);
+    require HTML::Entities; import HTML::Entities; # DEPENDENCY
 }
 
 sub expand {
