@@ -33,6 +33,10 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
+static GtkTargetEntry targets[] = {
+  { "strings n stuff", GDK_SELECTION_TYPE_STRING, GDK_SELECTION_TYPE_STRING }
+};
+
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
@@ -183,11 +187,13 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
   // Register all the target types we handle:
-  gtk_selection_add_target(mWidget, GDK_SELECTION_PRIMARY,
-                           GDK_SELECTION_TYPE_STRING,
-			   GDK_SELECTION_TYPE_STRING);
-  // Need to add entries for whatever it is that emacs uses
-  // Need to add entries for XIF and HTML
+
+  gtk_selection_add_targets(w, GDK_SELECTION_PRIMARY,
+                           targets,
+                           1);
+
+
+
 
 }
 
