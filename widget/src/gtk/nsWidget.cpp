@@ -43,6 +43,7 @@
 #include "nsGtkIMEHelper.h"
 
 
+
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -121,15 +122,20 @@ nsresult nsWidget::UpdateICSpot()
    compEvent.theReply.mCursorPosition.y=-1;
    DispatchEvent(&compEvent, status);
    // set SpotLocation
-   if((compEvent.theReply.mCursorPosition.x == -1) &&
-      (compEvent.theReply.mCursorPosition.y == -1))
-     return NS_ERROR_ABORT;
+   if((compEvent.theReply.mCursorPosition.x <= 0) &&
+      (compEvent.theReply.mCursorPosition.y <= 0))
+     return NS_ERROR_FAILURE;
    if((compEvent.theReply.mCursorPosition.x != oldx)||
       (compEvent.theReply.mCursorPosition.y != oldy))
    {
-       SetXICSpotLocation(compEvent.theReply.mCursorPosition);
-       oldx = compEvent.theReply.mCursorPosition.x;
-       oldy = compEvent.theReply.mCursorPosition.y;
+       nsPoint spot;
+       spot.x = compEvent.theReply.mCursorPosition.x;
+       spot.y = compEvent.theReply.mCursorPosition.y + 
+                compEvent.theReply.mCursorPosition.height;
+       SetXICBaseFontSize( compEvent.theReply.mCursorPosition.height - 1);
+       SetXICSpotLocation(spot);
+       oldx = spot.x;
+       oldy = spot.y;
    } 
    return NS_OK;
 }
@@ -2063,6 +2069,7 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+      UpdateICSpot();
       PrimeICSpotTimer();
     }
     else
@@ -2706,7 +2713,12 @@ NS_IMETHODIMP nsWidget::ResetInputState()
           //-------------------------------------------------------
           // finally, we update the preedit position
           //-------------------------------------------------------
-          SetXICSpotLocation(compEvent.theReply.mCursorPosition);
+          nsPoint spot;
+          spot.x = compEvent.theReply.mCursorPosition.x;
+          spot.y = compEvent.theReply.mCursorPosition.y + 
+                compEvent.theReply.mCursorPosition.height;
+          SetXICBaseFontSize( compEvent.theReply.mCursorPosition.height - 1);
+          SetXICSpotLocation(spot);
         }
       }
       XFree(uncommitted_text);
@@ -2791,6 +2803,7 @@ gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
       // reason is when I use hanIM the font creation failed in ko locale
       // so far it does not have problem w/ xcin since xcin only support 
       // root window.
+      mXICFontSize = 16;
 
       //gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
 
@@ -2885,6 +2898,34 @@ nsWidget::GetXYFromPosition(unsigned long *aX,
   return;
 }
 
+void
+nsWidget::SetXICBaseFontSize(int height)
+{
+  if (height == mXICFontSize)
+    return;
+  if(mIMEEnable == PR_FALSE)
+  {
+    return;
+  }
+  if (!mIC) GetXIC();
+  if (mIC)
+  {
+    char xlfdbase[128];
+    sprintf(xlfdbase, "-*-*-*-*-*-*-%d-*-*-*-*-*-*-*", height);
+    GdkFont *gfontset = gdk_fontset_load(xlfdbase);
+    
+    if(gfontset) {
+       GdkICAttr *attr = gdk_ic_attr_new();
+       if(attr) {
+         attr->preedit_fontset = gfontset;
+         GdkICAttributesType attrMask = GDK_IC_PREEDIT_FONTSET;
+         gdk_ic_set_attr((GdkIC*)mIC, attr, attrMask);
+         gdk_ic_attr_destroy(attr);
+       }
+    }
+    mXICFontSize = height;
+  }
+}
 void
 nsWidget::SetXICSpotLocation(nsPoint aPoint)
 {

@@ -1415,7 +1415,9 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   result = ps->GetCaret(getter_AddRefs(caretP));
   if (NS_SUCCEEDED(result) && caretP) {
     if (aReply) {
-      caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+      caretP->GetWindowRelativeCoordinates(
+		aReply->mCursorPosition,
+		aReply->mCursorIsCollapsed);
     }
   }
   return result;

@@ -3732,7 +3732,8 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   candForm.dwIndex = 0;
   candForm.dwStyle = CFS_CANDIDATEPOS;
   candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
-  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
+  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
+                          + event.theReply.mCursorPosition.height ;
 
   printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 
@@ -3762,7 +3763,8 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	candForm.dwIndex = 0;
 	candForm.dwStyle = CFS_CANDIDATEPOS;
 	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
-	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
+	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
+	                        + event.theReply.mCursorPosition.height;
 #ifdef DEBUG_IME2
 	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif

@@ -62,7 +62,7 @@ public:
    *  If the selection is not collapsed, this returns the location of the focus pos,
    *    and false in outIsCollapsed.
    */
-  NS_IMETHOD GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed) = 0;
+  NS_IMETHOD GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed) = 0;
 
   /** ClearFrameRefs
    *  The caret stores a reference to the frame that the caret was last drawn in.

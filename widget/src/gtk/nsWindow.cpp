@@ -888,6 +888,7 @@ nsWindow::SetFocus(void)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+      UpdateICSpot();
       PrimeICSpotTimer();
     }
     else
@@ -951,6 +952,7 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+      UpdateICSpot();
       PrimeICSpotTimer();
     }
     else

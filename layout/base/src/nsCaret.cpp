@@ -174,7 +174,7 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed)
+NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed)
 {
 	if (!mPresShell)
 		return NS_ERROR_NOT_INITIALIZED;
@@ -190,6 +190,8 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	// fill in defaults for failure
 	outCoordinates.x = -1;
 	outCoordinates.y = -1;
+	outCoordinates.width = -1;
+	outCoordinates.height = -1;
 	outIsCollapsed = PR_FALSE;
 	
 	err = domSelection->GetIsCollapsed(&outIsCollapsed);
@@ -270,11 +272,12 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	nsRect          frameRect;
 	theFrame->GetRect(frameRect);
 	
-	// add the frame height, to get the bottom of the frame
-	framePos.y += frameRect.height;	
 	// now add the frame offset to the view offset, and we're done
 	viewOffset += framePos;
-	outCoordinates = viewOffset;
+	outCoordinates.x = viewOffset.x;
+	outCoordinates.y = viewOffset.y;
+	outCoordinates.height = frameRect.height;
+	outCoordinates.width  = frameRect.width;
 	
 	return NS_OK;
 }

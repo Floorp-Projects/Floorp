@@ -299,6 +299,7 @@ public:
   PRUnichar*        mIMECompositionUniString;
   PRInt32           mIMECompositionUniStringSize;
   void              SetXICSpotLocation(nsPoint aPoint);
+  void              SetXICBaseFontSize(int height);
 
 protected:
 
@@ -421,13 +422,14 @@ protected:
 
   nsITimer* mICSpotTimer;
   static void ICSpotCallback(nsITimer* aTimer, void* aClosure);
-  nsresult UpdateICSpot();
 public:
   nsresult KillICSpotTimer();
   nsresult PrimeICSpotTimer();
+  nsresult UpdateICSpot();
 
 
 private:
+  int    mXICFontSize;
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 
