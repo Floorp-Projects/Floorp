@@ -104,11 +104,11 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 $(DEPTH)/build/build_number: FORCE
 	@$(MAKE_OBJDIR)
 	$(RM) $@
-	$(PERL) bdate.pl > $@
-	$(PERL) aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
+	$(PERL) $(srcdir)/bdate.pl > $@
+	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
-	$(PERL) set-timebomb.pl 0 30
+	$(PERL) $(srcdir)/set-timebomb.pl 0 30
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
