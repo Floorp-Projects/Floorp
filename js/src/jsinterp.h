@@ -147,6 +147,7 @@ typedef union JSPropertyCacheEntry {
 typedef struct JSPropertyCache {
     JSPropertyCacheEntry table[PROPERTY_CACHE_SIZE];
     JSBool               empty;
+    JSBool               disabled;
     uint32               fills;
     uint32               recycles;
     uint32               tests;
@@ -156,20 +157,22 @@ typedef struct JSPropertyCache {
 
 #define PROPERTY_CACHE_FILL(cx, cache, obj, id, prop)                         \
     JS_BEGIN_MACRO                                                            \
-	uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);               \
-	JSPropertyCache *_cache = (cache);                                    \
-	JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];              \
-	JSPropertyCacheEntry _entry;                                          \
-	JSProperty *_pce_prop;                                                \
-	PCE_LOAD(_cache, _pce, _entry);                                       \
-	_pce_prop = PCE_PROPERTY(_entry);                                     \
-	if (_pce_prop && _pce_prop != prop)                                   \
-	    _cache->recycles++;                                               \
-	PCE_OBJECT(_entry) = obj;                                             \
-	PCE_PROPERTY(_entry) = prop;                                          \
-	_cache->empty = JS_FALSE;                                             \
-	_cache->fills++;                                                      \
-	PCE_STORE(_cache, _pce, _entry);                                      \
+        JSPropertyCache *_cache = (cache);                                    \
+        if (!_cache->disabled) {                                              \
+            uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);           \
+            JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];          \
+            JSPropertyCacheEntry _entry;                                      \
+            JSProperty *_pce_prop;                                            \
+            PCE_LOAD(_cache, _pce, _entry);                                   \
+            _pce_prop = PCE_PROPERTY(_entry);                                 \
+            if (_pce_prop && _pce_prop != prop)                               \
+                _cache->recycles++;                                           \
+            PCE_OBJECT(_entry) = obj;                                         \
+            PCE_PROPERTY(_entry) = prop;                                      \
+            _cache->empty = JS_FALSE;                                         \
+            _cache->fills++;                                                  \
+            PCE_STORE(_cache, _pce, _entry);                                  \
+        }                                                                     \
     JS_END_MACRO
 
 #define PROPERTY_CACHE_TEST(cache, obj, id, prop)                             \
@@ -197,6 +200,12 @@ js_FlushPropertyCache(JSContext *cx);
 
 extern void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
+
+extern void
+js_DisablePropertyCache(JSContext *cx);
+
+extern void
+js_EnablePropertyCache(JSContext *cx);
 
 extern JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp);

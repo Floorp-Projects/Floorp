@@ -84,16 +84,19 @@ nsXPCException::IterateNSResults(nsresult* rv,
     ResultMap* p = (ResultMap*) *iterp;
     if(!p)
         p = map;
-    NS_ASSERTION(p->name, "iterated off the end of the array");
-    if(rv)
-        *rv = p->rv;
-    if(name)
-        *name = p->name;
-    if(format)
-        *format = p->format;
-    p++;
+    else
+        p++;
     if(!p->name)
         p = nsnull;
+    else
+    {
+        if(rv)
+            *rv = p->rv;
+        if(name)
+            *name = p->name;
+        if(format)
+            *format = p->format;
+    }
     *iterp = p;
     return p;
 }

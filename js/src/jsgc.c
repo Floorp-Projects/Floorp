@@ -1102,6 +1102,7 @@ js_GC(JSContext *cx, uintN gcflags)
     rt->gcMallocBytes = 0;
 
     /* Drop atoms held by the property cache, and clear property weak links. */
+    js_DisablePropertyCache(cx);
     js_FlushPropertyCache(cx);
 restart:
     rt->gcNumber++;
@@ -1275,6 +1276,9 @@ restart:
     /* Terminate the new freelist. */
     *flp = NULL;
 
+    if (rt->gcCallback)
+        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+
 out:
     JS_LOCK_GC(rt);
     if (rt->gcLevel > 1) {
@@ -1282,6 +1286,7 @@ out:
         JS_UNLOCK_GC(rt);
         goto restart;
     }
+    js_EnablePropertyCache(cx);
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;
     rt->gcRunning = JS_FALSE;
