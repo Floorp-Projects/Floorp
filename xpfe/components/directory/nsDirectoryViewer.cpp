@@ -1,4 +1,4 @@
-on/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -369,7 +369,7 @@ nsHTTPIndexParser::GetInterface(const nsIID &anIID, void **aResult )
         *aResult = NS_STATIC_CAST(nsIFTPEventSink*, this);
         NS_ADDREF(this);
         return NS_OK;
-    } 
+    }
 
     if (anIID.Equals(NS_GET_IID(nsIPrompt))) {
         
