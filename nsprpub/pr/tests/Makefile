@@ -37,7 +37,6 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS =             \
-	acceptread.c    \
 	accept.c		\
 	alarm.c			\
 	atomic.c		\
