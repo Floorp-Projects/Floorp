@@ -32,6 +32,14 @@ interface nsISocketTransport : nsISupports
 	 * needed by HTTP/1.1
 	 */
 	attribute long bytesExpected;
+	attribute unsigned long reuseCount;
 
+	/**
+	 * Checks if the socket is still alive
+	 *
+	 * @param seconds	amount of time after which the socket is always deemed to be
+	 *					dead (no further checking is done in this case); seconds = 0
+	 *					will cause it not to do timeout checking at all
+	 */
 	boolean	isAlive (in unsigned long seconds);
 };
