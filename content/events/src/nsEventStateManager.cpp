@@ -53,6 +53,7 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -140,14 +141,6 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
-
-// Tab focus model bit field:
-enum nsTabFocusModel {
-//eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
-  eTabFocus_formElementsMask = (1<<1),  // non-text form elements
-  eTabFocus_linksMask = (1<<2),         // links
-  eTabFocus_any = 1 + (1<<1) + (1<<2)   // everything that can be focused
-};
 
 enum nsTextfieldSelectModel {
   eTextfieldSelect_unset = -1,
@@ -3522,35 +3515,18 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
       PRInt32 tabIndex = -1;
       PRBool disabled = PR_TRUE;
-      PRBool hidden = PR_FALSE;
 
       nsIAtom *tag = child->Tag();
       if (child->IsContentOfType(nsIContent::eHTML)) {
         if (tag == nsHTMLAtoms::input) {
           nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
           if (nextInput) {
-            nextInput->GetDisabled(&disabled);
             nextInput->GetTabIndex(&tabIndex);
-
-            // The type attribute is unreliable; use the actual input type
-            nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(child));
-            NS_ASSERTION(formControl, "DOMHTMLInputElement must QI to nsIFormControl!");
-            switch (formControl->GetType()) {
-              case NS_FORM_INPUT_TEXT:
-              case NS_FORM_INPUT_PASSWORD:
-                disabled = PR_FALSE;
-                break;
-              case NS_FORM_INPUT_HIDDEN:
-                hidden = PR_TRUE;
-                break;
-              case NS_FORM_INPUT_FILE:
-                disabled = PR_TRUE;
-                break;
-              default:
-                disabled =
-                  disabled || !(sTabFocusModel & eTabFocus_formElementsMask);
-                break;
-            }
+            nsCOMPtr<nsIDOMNSHTMLInputElement> nextInputNS(do_QueryInterface(child));
+            NS_ASSERTION(nextInputNS, "DOMHTMLInputElement must QI to nsIDOMNSHTMLInputElement!");
+            PRBool isTabbable;
+            nextInputNS->GetTabbable(&isTabbable);
+            disabled = !isTabbable;
           }
         }
         else if (tag == nsHTMLAtoms::select) {
@@ -3737,8 +3713,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
       //TabIndex not set (-1) treated at same level as set to 0
       tabIndex = tabIndex < 0 ? 0 : tabIndex;
 
-      if (!disabled && !hidden && (aIgnoreTabIndex ||
-                                   mCurrentTabIndex == tabIndex) &&
+      if (!disabled && (aIgnoreTabIndex || mCurrentTabIndex == tabIndex) &&
           child != aStartContent) {
         *aResultNode = child;
         NS_IF_ADDREF(*aResultNode);
@@ -5154,6 +5129,11 @@ nsEventStateManager::ResetBrowseWithCaret()
   }
 }
 
+NS_IMETHODIMP nsEventStateManager::GetTabbable(PRInt32 aTabFocusType, PRBool *aIsTabbable)
+{
+ *aIsTabbable = (sTabFocusModel & aTabFocusType) != 0;
+ return NS_OK;
+}
 
 //--------------------------------------------------------------------------------
 //-- DocShell Focus Traversal Methods

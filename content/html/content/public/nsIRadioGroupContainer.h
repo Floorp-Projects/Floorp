@@ -74,13 +74,26 @@ public:
                                    nsIDOMHTMLInputElement* aRadio) = 0;
 
   /**
-   * Set the current radio button in a group
+   * Get the current radio button in a group
    * @param aName the group name
    * @param aRadio the currently selected radio button [OUT]
    */
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement** aRadio) = 0;
 
+  /**
+   * Set the next/prev radio button in a group
+   * @param aName the group name
+   * @param aPrevious, true gets previous radio button, false gets next
+   * @param aFocusedRadio the currently focused radio button
+   * @param aRadio the currently selected radio button [OUT]
+   */
+  NS_IMETHOD GetNextRadioButton(const nsAString& aName,
+                                const PRBool aPrevious,
+                                nsIDOMHTMLInputElement*  aFocusedRadio,
+                                nsIDOMHTMLInputElement** aRadio) = 0;
+
+  /**
   /**
    * Add radio button to radio group
    *

@@ -111,7 +111,6 @@
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
-
 //
 // Accessors for mBitField
 //
@@ -1498,6 +1497,38 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               } // case
             } // switch
           }
+          if (aEvent->message == NS_KEY_PRESS && mType == NS_FORM_INPUT_RADIO &&
+              !keyEvent->isAlt && !keyEvent->isControl && !keyEvent->isMeta) {
+            PRBool isMovingBack = PR_FALSE;
+            switch (keyEvent->keyCode) {
+              case NS_VK_UP: 
+              case NS_VK_LEFT:
+                isMovingBack = PR_TRUE;
+              case NS_VK_DOWN:
+              case NS_VK_RIGHT:
+              // Arrow key pressed, focus+select prev/next radio button
+              nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+              if (container) {
+                nsAutoString name;
+                if (GetNameIfExists(name)) {
+                  container->GetNextRadioButton(name, isMovingBack, this,
+                                                getter_AddRefs(selectedRadioButton));
+                  nsCOMPtr<nsIContent> radioContent =
+                    do_QueryInterface(selectedRadioButton);
+                  if (radioContent) {
+                    rv = selectedRadioButton->Focus();
+                    if (NS_SUCCEEDED(rv)) {
+                      nsEventStatus status = nsEventStatus_eIgnore;
+                      nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+                      rv = radioContent->HandleDOMEvent(aPresContext, &event,
+                                                        nsnull, NS_EVENT_FLAG_INIT, 
+                                                        &status);
+                    }
+                  }
+                }
+              }
+            }
+          }
 
           /*
            * If this is input type=text, and the user hit enter, fire onChange
@@ -2600,6 +2631,62 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
     }
     container->RemoveFromRadioGroup(name,
                                     NS_STATIC_CAST(nsIFormControl*, this));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetTabbable(PRBool *isTabbable)
+{
+  *isTabbable = PR_TRUE;
+
+  PRBool disabled;
+  GetDisabled(&disabled);
+  // XXX aaronlev: when fix for bug 171366 goes in we'll need to check 
+  // for negative tabIndex, which indicates something is not tabbable.
+  // PRInt32 tabIndex;
+  // GetTabIndex(&tabIndex);
+
+  if (disabled || /* tabIndex < 0 || */ mType == NS_FORM_INPUT_HIDDEN || 
+      mType == NS_FORM_INPUT_FILE) {
+    // Sub controls of file input are tabbable, not the file input itself.
+    *isTabbable = PR_FALSE;
+    return NS_OK;
+  }
+
+  if (mType != NS_FORM_INPUT_TEXT && mType != NS_FORM_INPUT_PASSWORD) {
+    nsCOMPtr<nsIPresContext> presContext;
+    GetPresContext(this, getter_AddRefs(presContext));
+    if (presContext) {
+      nsIEventStateManager *esm = presContext->EventStateManager();
+      esm->GetTabbable(eTabFocus_formElementsMask, isTabbable);
+    }
+  }
+
+  if (mType != NS_FORM_INPUT_RADIO) {
+    return NS_OK;
+  }
+
+  PRBool checked;
+  GetChecked(&checked);
+  if (checked) {
+    // Selected radio buttons are tabbable
+    return NS_OK;
+  }
+
+  // Current radio button is not selected.
+  // But make it tabbable if nothing in group is selected.
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  nsAutoString name;
+  if (!container || !GetNameIfExists(name)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLInputElement> currentRadio;
+  container->GetCurrentRadioButton(name, getter_AddRefs(currentRadio));
+  if (currentRadio) {
+    *isTabbable = PR_FALSE;
   }
 
   return NS_OK;
