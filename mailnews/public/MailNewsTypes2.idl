@@ -53,6 +53,8 @@ interface nsMsgPriority {
     const nsMsgPriorityValue highest = 6;
 };
 
+typedef unsigned long nsMsgLabelValue;
+
 typedef long nsMsgViewSortOrderValue;
 typedef long nsMsgViewSortTypeValue;
 typedef long nsMsgViewTypeValue;
