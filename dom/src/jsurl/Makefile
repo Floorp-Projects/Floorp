@@ -21,7 +21,7 @@ MODULE		= jsurl
 LIBRARY_NAME	= jsurl
 
 CPPSRCS = \
-	mkmocha.cpp	\
+	jsurl.cpp	\
 	$(NULL)
 
 EXPORTS= jsurl.h
