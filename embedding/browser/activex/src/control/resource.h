@@ -8,6 +8,9 @@
 #define IDR_POPUP_PAGE                  202
 #define IDR_POPUP_LINK                  203
 #define IDR_POPUP_CLIPBOARD             204
+#define IDS_LOCATEMOZILLA               1000
+#define IDS_LOCATEMOZILLATITLE          1001
+#define IDS_CANNOTCREATEPREFS           1002
 #define ID_BROWSE_BACK                  32768
 #define ID_BROWSE_FORWARD               32769
 #define ID_FILE_REFRESH                 32772
