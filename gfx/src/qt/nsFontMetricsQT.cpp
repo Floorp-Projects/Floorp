@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
+ *		Jean Claude Batista <jcb@macadamian.com>
  *
  */
 
@@ -35,6 +36,7 @@
 #include "nsHashtable.h"
 #include "nsDrawingSurfaceQT.h"
 #include "nsRenderingContextQT.h"
+#include "nsILanguageAtomService.h"
 
 #include <qapplication.h>
 #include <qfont.h>
@@ -73,19 +75,22 @@ static nsHashtable *gSpecialCharSets = nsnull;
 
 static nsIAtom *gUnicode = nsnull;
 static nsIAtom *gUserDefined = nsnull;
+static nsIAtom *gUsersLocale = nsnull;
 
 static NS_DEFINE_IID(kIFontMetricsIID,NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kCharSetManagerCID,NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID,NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID,NS_SAVEASCHARSET_CID);
 
+#define NSQ_DOUBLEBYTE 1
+
 struct nsFontCharSetInfo
 {
-  const char             *mCharSet;
-  nsFontCharSetConverter Convert;
-  PRUint32               *mMap;
-  nsIUnicodeEncoder      *mConverter;
-  nsIAtom                *mLangGroup;
+  const char *mCharSet;
+  nsIAtom *mCharsetAtom;
+  nsIAtom *mLangGroup;
+  PRUint32 *mMap;
+  PRUint8 mType;
 };
 
 struct nsFontCharSetMap
@@ -94,107 +99,105 @@ struct nsFontCharSetMap
   nsFontCharSetInfo *mInfo;
 };
 
-static int SingleByteConvert(nsFontCharSetInfo *aSelf,
-                             QFontMetrics *aFontMetrics,
-                             const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                             char *aDestBuf,PRInt32 aDestLen);
-static int DoubleByteConvert(nsFontCharSetInfo *aSelf,
-                             QFontMetrics *aFontMetrics,
-                             const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                             char *aDestBuf,PRInt32 aDestLen);
-static int ISO10646Convert(nsFontCharSetInfo *aSelf,
-                           QFontMetrics *aFontMetrics,
-                           const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                           char *aDestBuf,PRInt32 aDestLen);
-
-static nsFontCharSetInfo Unknown = { nsnull };
-static nsFontCharSetInfo Special = { nsnull };
+static nsFontCharSetInfo Unknown =
+  { nsnull, nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo Special =
+  { nsnull, nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo ISO106461 =
+  { nsnull, nsnull, nsnull, nsnull, 0 };
  
 static nsFontCharSetInfo CP1251 =
-  { "windows-1251", SingleByteConvert };
+  { "windows-1251", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88591 =
-  { "ISO-8859-1", SingleByteConvert };
+  { "ISO-8859-1", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88592 =
-  { "ISO-8859-2", SingleByteConvert };
+  { "ISO-8859-2", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88593 =
-  { "ISO-8859-3", SingleByteConvert };
+  { "ISO-8859-3", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88594 =
-  { "ISO-8859-4", SingleByteConvert };
+  { "ISO-8859-4", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88595 =
-  { "ISO-8859-5", SingleByteConvert };
+  { "ISO-8859-5", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88596 =
-  { "ISO-8859-6", SingleByteConvert };
+  { "ISO-8859-6", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88597 =
-  { "ISO-8859-7", SingleByteConvert };
+  { "ISO-8859-7", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88598 =
-  { "ISO-8859-8", SingleByteConvert };
-// change from
-// { "ISO-8859-8", SingleByteConvertReverse };
-// untill we fix the layout and ensure we only call this with pure RTL text
+  { "ISO-8859-8", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO88599 =
-  { "ISO-8859-9", SingleByteConvert };
+  { "ISO-8859-9", nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo ISO885913 =
+  { "ISO-8859-13", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo ISO885915 =
-  { "ISO-8859-15", SingleByteConvert };
+  { "ISO-8859-15", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo JISX0201 =
-  { "jis_0201", SingleByteConvert };
+  { "jis_0201", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo KOI8R =
-  { "KOI8-R", SingleByteConvert };
+  { "KOI8-R", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo KOI8U =
-  { "KOI8-U", SingleByteConvert };
+  { "KOI8-U", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo TIS620 =
-  { "TIS-620", SingleByteConvert };
+  { "TIS-620", nsnull, nsnull, nsnull, 0 };
  
 static nsFontCharSetInfo Big5 =
-  { "x-x-big5", DoubleByteConvert };
+  { "x-x-big5", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116431 =
-  { "x-cns-11643-1", DoubleByteConvert };
+  { "x-cns-11643-1", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116432 =
-  { "x-cns-11643-2", DoubleByteConvert };
+  { "x-cns-11643-2", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116433 =
-  { "x-cns-11643-3", DoubleByteConvert };
+  { "x-cns-11643-3", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116434 =
-  { "x-cns-11643-4", DoubleByteConvert };
+  { "x-cns-11643-4", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116435 =
-  { "x-cns-11643-5", DoubleByteConvert };
+  { "x-cns-11643-5", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116436 =
-  { "x-cns-11643-6", DoubleByteConvert };
+  { "x-cns-11643-6", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo CNS116437 =
-  { "x-cns-11643-7", DoubleByteConvert };
+  { "x-cns-11643-7", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo GB2312 =
-  { "gb_2312-80", DoubleByteConvert };
+  { "gb_2312-80", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
+static nsFontCharSetInfo GB18030_0 =
+  { "gb18030.2000-0", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
+static nsFontCharSetInfo GB18030_1 =
+  { "gb18030.2000-1", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo GBK =
-  { "x-gbk", DoubleByteConvert};
+  { "x-gbk", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
+static nsFontCharSetInfo HKSCS =
+  { "hkscs-1", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo JISX0208 =
-  { "jis_0208-1983", DoubleByteConvert };
+  { "jis_0208-1983", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo JISX0212 =
-  { "jis_0212-1990", DoubleByteConvert };
+  { "jis_0212-1990", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo KSC5601 =
-  { "ks_c_5601-1987", DoubleByteConvert };
+  { "ks_c_5601-1987", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
 static nsFontCharSetInfo X11Johab =
-  { "x-x11johab", DoubleByteConvert };
- 
-static nsFontCharSetInfo ISO106461 =
-  { nsnull, ISO10646Convert };
+  { "x-x11johab", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
+static nsFontCharSetInfo Johab =
+  { "x-johab", nsnull, nsnull, nsnull, NSQ_DOUBLEBYTE };
  
 static nsFontCharSetInfo AdobeSymbol =
-   { "Adobe-Symbol-Encoding", SingleByteConvert };
- 
-static nsFontCharSetInfo CMCMEX =
-   { "x-t1-cmex", SingleByteConvert };
-static nsFontCharSetInfo CMCMSY =
-   { "x-t1-cmsy", SingleByteConvert };
+   { "Adobe-Symbol-Encoding", nsnull, nsnull, nsnull, 0 };
  
 #ifdef MOZ_MATHML
+static nsFontCharSetInfo CMCMEX =
+   { "x-t1-cmex", nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo CMCMSY =
+   { "x-t1-cmsy", nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo CMCMR =
+   { "x-t1-cmr", nsnull, nsnull, nsnull, 0 };
+static nsFontCharSetInfo CMCMMI =
+   { "x-t1-cmmi", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo Mathematica1 =
-   { "x-mathematica1", SingleByteConvert };
+   { "x-mathematica1", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo Mathematica2 =
-   { "x-mathematica2", SingleByteConvert };
+   { "x-mathematica2", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo Mathematica3 =
-   { "x-mathematica3", SingleByteConvert };
+   { "x-mathematica3", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo Mathematica4 =
-   { "x-mathematica4", SingleByteConvert };
+   { "x-mathematica4", nsnull, nsnull, nsnull, 0 };
 static nsFontCharSetInfo Mathematica5 =
-   { "x-mathematica5", SingleByteConvert };
+   { "x-mathematica5", nsnull, nsnull, nsnull, 0 };
 #endif
 
 static nsFontCharSetMap gCharSetMap[] =
@@ -228,6 +231,13 @@ static nsFontCharSetMap gCharSetMap[] =
   { "cns11643.1992-6",    &CNS116436     },
   { "cns11643.1992.7-0",  &CNS116437     },
   { "cns11643.1992-7",    &CNS116437     },
+  { "cns11643-1",         &CNS116431     },
+  { "cns11643-2",         &CNS116432     },
+  { "cns11643-3",         &CNS116433     },
+  { "cns11643-4",         &CNS116434     },
+  { "cns11643-5",         &CNS116435     },
+  { "cns11643-6",         &CNS116436     },
+  { "cns11643-7",         &CNS116437     },
   { "cp1251-1",           &CP1251        },
   { "dec-dectech",        &Unknown       },
   { "dtsymbol-1",         &Unknown       },
@@ -235,6 +245,10 @@ static nsFontCharSetMap gCharSetMap[] =
   { "gb2312.1980-0",      &GB2312        },
   { "gb2312.1980-1",      &GB2312        },
   { "gb13000.1993-1",     &GBK           },
+  { "gb18030.2000-0",     &GB18030_0     },
+  { "gb18030.2000-1",     &GB18030_1     },
+  { "gbk-0",     	  &GBK           },
+  { "hkscs-1",     	  &HKSCS         },
   { "hp-japanese15",      &Unknown       },
   { "hp-japaneseeuc",     &Unknown       },
   { "hp-roman8",          &Unknown       },
@@ -255,6 +269,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "ibm-udctw",          &Unknown       },
   { "iso646.1991-irv",    &Unknown       },
   { "iso8859-1",          &ISO88591      },
+  { "iso8859-13",         &ISO885913     },
   { "iso8859-15",         &ISO885915     },
   { "iso8859-1@cn",       &Unknown       },
   { "iso8859-1@kr",       &Unknown       },
@@ -280,6 +295,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabs-1",           &X11Johab      },
   { "johabsh-1",          &X11Johab      },
   { "ksc5601.1987-0",     &KSC5601       },
+  { "ksc5601.1992-3",     &Johab         },
   { "microsoft-cp1251",   &CP1251        },
   { "misc-fontspecific",  &Unknown       },
   { "sgi-fontspecific",   &Unknown       },
@@ -287,6 +303,10 @@ static nsFontCharSetMap gCharSetMap[] =
   { "sunolcursor-1",      &Unknown       },
   { "sunolglyph-1",       &Unknown       },
   { "tis620.2529-1",      &TIS620        },
+  { "tis620.2533-0",      &TIS620        },
+  { "tis620.2533-1",      &TIS620        },
+  { "tis620-0",           &TIS620        },
+  { "iso8859-11",         &TIS620        },
   { "ucs2.cjk-0",         &Unknown       },
   { "ucs2.cjk_japan-0",   &Unknown       },
   { "ucs2.cjk_taiwan-0",  &Unknown       },
@@ -297,10 +317,13 @@ static nsFontCharSetMap gCharSetMap[] =
 static nsFontCharSetMap gSpecialCharSetMap[] =
 {
   { "symbol-adobe-fontspecific", &AdobeSymbol  },
-  { "cmex10-adobe-fontspecific", &CMCMEX  },
-  { "cmsy10-adobe-fontspecific", &CMCMSY  },
  
 #ifdef MOZ_MATHML
+  { "cmex10-adobe-fontspecific", &CMCMEX  },
+  { "cmsy10-adobe-fontspecific", &CMCMSY  },
+  { "cmr10-adobe-fontspecific", &CMCMR  },
+  { "cmmi10-adobe-fontspecific", &CMCMMI  },
+
   { "math1-adobe-fontspecific", &Mathematica1 },
   { "math2-adobe-fontspecific", &Mathematica2 },
   { "math3-adobe-fontspecific", &Mathematica3 },
@@ -372,7 +395,7 @@ public:
   virtual ~nsFontQTSubstitute();
  
   virtual QFont *GetQFont(void);
-  virtual PRBool GetQFontIs10646(void);
+   virtual int SupportsChar(PRUnichar aChar);
   virtual int GetWidth(const PRUnichar *aString,PRUint32 aLength);
   virtual int DrawString(nsRenderingContextQT *aContext,
                          nsDrawingSurfaceQT *aSurface,nscoord aX,
@@ -385,7 +408,7 @@ public:
 #endif
   virtual PRUint32 Convert(const PRUnichar *aSrc,PRUint32 aSrcLen,
                            PRUnichar *aDest,PRUint32 aDestLen);
- 
+
   nsFontQT *mSubstituteFont;
  
   static int gCount;
@@ -401,6 +424,7 @@ public:
   nsFontQTUserDefined();
   virtual ~nsFontQTUserDefined();
  
+  virtual PRUint32 *GetCharSetMap() { return mMap; };
   virtual PRBool Init(nsFontQT *aFont);
   virtual int GetWidth(const PRUnichar *aString,PRUint32 aLength);
   virtual int DrawString(nsRenderingContextQT *aContext,
@@ -414,6 +438,8 @@ public:
 #endif
   virtual PRUint32 Convert(const PRUnichar *aSrc,PRInt32 aSrcLen,
                            char *aDest,PRInt32 aDestLen);
+
+  PRUint32 *mMap;
 };
  
 QFontDatabase *nsFontMetricsQT::mQFontDB = nsnull;
@@ -423,9 +449,8 @@ FreeCharSet(nsHashKey *aKey,void *aData,void *aClosure)
 {
   nsFontCharSetInfo *charset = (nsFontCharSetInfo*)aData;
 
-  NS_IF_RELEASE(charset->mConverter);
+  NS_IF_RELEASE(charset->mCharsetAtom);
   NS_IF_RELEASE(charset->mLangGroup);
-  PR_FREEIF(charset->mMap);
   return PR_TRUE;
 }
 
@@ -448,6 +473,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gUnicode);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
+  NS_IF_RELEASE(gUsersLocale);
 }
 
 static nsresult
@@ -504,73 +530,21 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   memset(gUserDefinedMap,0,sizeof(gUserDefinedMap)); 
+
+  nsCOMPtr<nsILanguageAtomService> langService;
+  langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  if (langService) {
+    langService->GetLocaleLanguageGroup(&gUsersLocale);
+  }
+  if (!gUsersLocale) {
+    gUsersLocale = NS_NewAtom("x-western");
+  }
+  if (!gUsersLocale) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   gInitialized = 1;
   return NS_OK;
-}
-
-static int
-SingleByteConvert(nsFontCharSetInfo *aSelf,QFontMetrics *aFontMetrics,
-                  const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                  char *aDestBuf,PRInt32 aDestLen)
-{
-  int count = 0;
-  if (aSelf->mConverter) {
-    aSelf->mConverter->Convert(aSrcBuf,&aSrcLen,aDestBuf,&aDestLen);
-    count = aDestLen;
-  }
-  return count;
-}
- 
-static int
-DoubleByteConvert(nsFontCharSetInfo *aSelf,QFontMetrics *aFontMetrics,
-                  const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                  char *aDestBuf,PRInt32 aDestLen)
-{
-  int count = 0;
-
-  if (aSelf->mConverter) {
-    aSelf->mConverter->Convert(aSrcBuf,&aSrcLen,aDestBuf,&aDestLen);
-    count = aDestLen;
-    if (count > 0) {
-      if ((aDestBuf[0] & 0x80) && !aFontMetrics->inFont(QChar(aDestBuf[0]))) {
-//JCG      if ((aDestBuf[0] & 0x80) && (!(aFont->max_byte1 & 0x80))) {
-        for (PRInt32 i = 0; i < aDestLen; i++) {
-          aDestBuf[i] &= 0x7F;
-        }
-      }
-      else if (!(aDestBuf[0] & 0x80)
-               && !aFontMetrics->inFont(QChar(aDestBuf[0]))) {
-//JCG      else if (!(aDestBuf[0] & 0x80) && (aFont->min_byte1 & 0x80)) {
-        for (PRInt32 i = 0; i < aDestLen; i++) {
-          aDestBuf[i] |= 0x80;
-        }
-      }
-    }
-  }
-  return count;
-}
- 
-static int
-ISO10646Convert(nsFontCharSetInfo *aSelf,QFontMetrics *aFontMetrics,
-                const PRUnichar *aSrcBuf,PRInt32 aSrcLen,
-                char *aDestBuf,PRInt32 aDestLen)
-{
-#if 0 //JCG
-  aDestLen /= 2;
-  if (aSrcLen > aDestLen) {
-    aSrcLen = aDestLen;
-  }
-  if (aSrcLen < 0) {
-    aSrcLen = 0;
-  }
-  XChar2b *dest = (XChar2b*)aDestBuf;
-  for (PRInt32 i = 0; i < aSrcLen; i++) {
-    dest[i].byte1 = (aSrcBuf[i] >> 8);
-    dest[i].byte2 = (aSrcBuf[i] & 0xFF);
-  }
-  return (int)aSrcLen * 2;
-#endif //JCG
-  return 0;
 }
 
 static void ParseFontPref(nsCAutoString &aPrefValue,QString &aFontName,
@@ -749,6 +723,24 @@ FontEnumCallback(const nsString &aFamily,PRBool aGeneric,void *aData)
   return PR_TRUE; // continue
 }
 
+#if (QT_VERSION >= 230)
+static int use_qt_xft()
+{
+  static int use_xft = 0;
+  static int chkd_env = 0;
+
+  if (!chkd_env) {
+    char *e = getenv ("QT_XFT");
+    if (e && (*e == '1' || *e == 'y' || *e == 'Y'
+              || *e == 't' || *e == 'T' ))
+      use_xft = 1;
+    chkd_env = 1;
+  }
+  return use_xft;
+
+}
+#endif
+
 NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
                                     nsIDeviceContext *aContext)
 {
@@ -773,7 +765,15 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
   aContext->GetTextZoom(textZoom);
   mPixelSize = NSToIntRound(a2d * textZoom * mFont->size); 
   if (mFont->style == NS_FONT_STYLE_NORMAL) {
+#if (QT_VERSION >= 230)
+    if (use_qt_xft())
+      mQStyle = new QString("Regular");
+    else
+#endif
     mQStyle = new QString("Normal");
+  }
+  else if (mFont->style == NS_FONT_STYLE_OBLIQUE) {
+    mQStyle = new QString("Oblique");
   }
   else {
     mQStyle = new QString("Italic");
@@ -1084,14 +1084,13 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
 {
   nsFontQT *newFont = nsnull;
   QFont *qFont;
-  PRUint32 *map;
   nsIUnicodeEncoder *converter;
 
   nsCStringKey charSetKey(aCharSet.latin1());
 
   nsFontCharSetInfo *charSetInfo
      = (nsFontCharSetInfo*)gCharSets->Get(&charSetKey);
-
+ 
   // indirection for font specific charset encoding
   if (charSetInfo == &Special) {
     nsCAutoString familyCharSetName(aName.latin1());
@@ -1110,7 +1109,8 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
     else {
 #ifdef NOISY_FONTS
 #ifdef DEBUG
-      printf("cannot find charset %s-%s\n",aName.latin1(),aCharSet.latin1());
+      printf("cannot find charset %s-%s\n",aName.latin1(),
+             aCharSet.latin1());
 #endif
 #endif
       return nsnull;
@@ -1118,163 +1118,158 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
   }
   if (charSetInfo->mCharSet) {
     if (charSetInfo->mMap) {
-      map = charSetInfo->mMap;
       for (int i = 0; i < mLoadedFontsCount; i++) {
-        if (mLoadedFonts[i]->mMap == map) {
+        if (mLoadedFonts[i]->GetCharSetMap() == charSetInfo->mMap) {
           return nsnull;
         }
       }
     }
     else {
+      nsresult res;
+      if (!charSetInfo->mCharsetAtom) {
+        res
+         = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
+                                            &charSetInfo->mCharsetAtom);
+        if (NS_FAILED(res)) {
+#ifdef NOISY_FONTS
+#ifdef DEBUG
+        printf("=== cannot get Charset Atom for %s\n",
+               charSetInfo->mCharSet);
+#endif
+#endif
+          return nsnull;
+        }
+      }
+      if (!charSetInfo->mLangGroup) {
+        res
+         = gCharSetManager->GetCharsetLangGroup(charSetInfo->mCharsetAtom,
+                                                &charSetInfo->mLangGroup);
+        if (NS_FAILED(res)) {
+#ifdef NOISY_FONTS
+#ifdef DEBUG
+          printf("=== cannot get lang group for %s\n",
+                 charSetInfo->mCharSet);
+#endif
+#endif
+          return nsnull;
+        }
+      }
+      nsCOMPtr<nsIAtom> charsetAtom
+         = getter_AddRefs(NS_NewAtom(charSetInfo->mCharSet));
+      if (!charsetAtom) {
+        NS_WARNING("cannot get atom");
+        return nsnull;
+      }
+      res = gCharSetManager->GetUnicodeEncoder(charsetAtom,&converter);
+      if (NS_FAILED(res)) {
+        NS_WARNING("cannot get Unicode converter");
+        return nsnull;
+      }
+      res = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
+                                              nsnull,'?');
+      nsCOMPtr<nsICharRepresentable> mapper
+                                      = do_QueryInterface(converter);
+      if (!mapper) {
+        NS_WARNING("cannot get nsICharRepresentable");
+        return nsnull;
+      }
       charSetInfo->mMap = (PRUint32*)PR_Calloc(2048,4);
       if (nsnull == charSetInfo->mMap) {
         return nsnull;
       }
-      nsCOMPtr<nsIAtom> charset;
-      nsresult res = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
-                                                      getter_AddRefs(charset));
-      if (NS_SUCCEEDED(res)) {
-        res = gCharSetManager->GetCharsetLangGroup(charset,
-                                                   &charSetInfo->mLangGroup);
-        if (NS_FAILED(res)) {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-          printf("=== cannot get lang group for %s\n",charSetInfo->mCharSet);
-#endif
-#endif
-          PR_Free(charSetInfo->mMap);
-          charSetInfo->mMap = nsnull;
-          return nsnull;
-        }
-      }
-      else {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-        printf("=== cannot get Charset Atom for %s\n",charSetInfo->mCharSet);
-#endif
-#endif
-        PR_Free(charSetInfo->mMap);
-        charSetInfo->mMap = nsnull;
-        return nsnull;
-      }
-      nsCOMPtr<nsIAtom> charsetAtom
-         = getter_AddRefs(NS_NewAtom(charSetInfo->mCharSet));
-      if (charsetAtom) {
-        res = gCharSetManager->GetUnicodeEncoder(charsetAtom, &converter);
-        if (NS_SUCCEEDED(res)) {
-          charSetInfo->mConverter = converter;
-          res = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
-                                                  nsnull, '?');
-          nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
-          if (mapper) {
-            res = mapper->FillInfo(charSetInfo->mMap);
+      res = mapper->FillInfo(charSetInfo->mMap);
  
-            /*
-             * XXX This is a bit of a hack. Documents containing the CP1252
-             * extensions of Latin-1 (e.g. smart quotes) will display with
-             * those special characters way too large. This is because they
-             * happen to be in these large double byte fonts. So, we disable
-             * those characters here. Revisit this decision later.
-             */
-            if (charSetInfo->Convert == DoubleByteConvert) {
-              map = charSetInfo->mMap;
+      /*
+       * XXX This is a bit of a hack. Documents containing the CP1252
+       * extensions of Latin-1 (e.g. smart quotes) will display with
+       * those special characters way too large. This is because they
+       * happen to be in these large double byte fonts. So, we disable
+       * those characters here. Revisit this decision later.
+       */
+      if (charSetInfo->mType == NSQ_DOUBLEBYTE) {
+        PRUint32 *map = charSetInfo->mMap;
 #undef REMOVE_CHAR
-#define REMOVE_CHAR(map,c)  (map)[(c) >> 5] &= ~(1L << ((c) & 0x1f))
-              REMOVE_CHAR(map,0x20AC);
-              REMOVE_CHAR(map,0x201A);
-              REMOVE_CHAR(map,0x0192);
-              REMOVE_CHAR(map,0x201E);
-              REMOVE_CHAR(map,0x2026);
-              REMOVE_CHAR(map,0x2020);
-              REMOVE_CHAR(map,0x2021);
-              REMOVE_CHAR(map,0x02C6);
-              REMOVE_CHAR(map,0x2030);
-              REMOVE_CHAR(map,0x0160);
-              REMOVE_CHAR(map,0x2039);
-              REMOVE_CHAR(map,0x0152);
-              REMOVE_CHAR(map,0x017D);
-              REMOVE_CHAR(map,0x2018);
-              REMOVE_CHAR(map,0x2019);
-              REMOVE_CHAR(map,0x201C);
-              REMOVE_CHAR(map,0x201D);
-              REMOVE_CHAR(map,0x2022);
-              REMOVE_CHAR(map,0x2013);
-              REMOVE_CHAR(map,0x2014);
-              REMOVE_CHAR(map,0x02DC);
-              REMOVE_CHAR(map,0x2122);
-              REMOVE_CHAR(map,0x0161);
-              REMOVE_CHAR(map,0x203A);
-              REMOVE_CHAR(map,0x0153);
-              REMOVE_CHAR(map,0x017E);
-              REMOVE_CHAR(map,0x0178);
-            }
-          }
-          else {
-            NS_WARNING("cannot get nsICharRepresentable");
-            PR_Free(charSetInfo->mMap);
-            charSetInfo->mMap = nsnull;
-            return nsnull; 
-          }
-        }
-        else {
-          NS_WARNING("cannot get Unicode converter");
-          PR_Free(charSetInfo->mMap);
-          charSetInfo->mMap = nsnull;
-          return nsnull; 
-        }
+#define REMOVE_CHAR(map,c) (map)[(c) >> 5] &= ~(1L << ((c) & 0x1f))
+        REMOVE_CHAR(map,0x20AC);
+        REMOVE_CHAR(map,0x201A);
+        REMOVE_CHAR(map,0x0192);
+        REMOVE_CHAR(map,0x201E);
+        REMOVE_CHAR(map,0x2026);
+        REMOVE_CHAR(map,0x2020);
+        REMOVE_CHAR(map,0x2021);
+        REMOVE_CHAR(map,0x02C6);
+        REMOVE_CHAR(map,0x2030);
+        REMOVE_CHAR(map,0x0160);
+        REMOVE_CHAR(map,0x2039);
+        REMOVE_CHAR(map,0x0152);
+        REMOVE_CHAR(map,0x017D);
+        REMOVE_CHAR(map,0x2018);
+        REMOVE_CHAR(map,0x2019);
+        REMOVE_CHAR(map,0x201C);
+        REMOVE_CHAR(map,0x201D);
+        REMOVE_CHAR(map,0x2022);
+        REMOVE_CHAR(map,0x2013);
+        REMOVE_CHAR(map,0x2014);
+        REMOVE_CHAR(map,0x02DC);
+        REMOVE_CHAR(map,0x2122);
+        REMOVE_CHAR(map,0x0161);
+        REMOVE_CHAR(map,0x203A);
+        REMOVE_CHAR(map,0x0153);
+        REMOVE_CHAR(map,0x017E);
+        REMOVE_CHAR(map,0x0178);
       }
-      else {
-        NS_WARNING("cannot get atom");
-        PR_Free(charSetInfo->mMap);
-        charSetInfo->mMap = nsnull;
-        return nsnull; 
-      }
+    }
+    if (!FONT_HAS_GLYPH(charSetInfo->mMap,aChar)) {
+      return nsnull;
     }
   }
-  if ((charSetInfo == &Unknown && mIsUserDefined)
-      || (charSetInfo->mMap && FONT_HAS_GLYPH(charSetInfo->mMap,aChar))) {
-    qFont = LoadQFont(aName,aCharSet);
-    if (qFont) {
-      if (mLoadedFontsCount == mLoadedFontsAlloc) {
-        int newSize;
-        if (mLoadedFontsAlloc) {
-          newSize = (2 * mLoadedFontsAlloc);
-        }
-        else {
-          newSize = 1;
-        }
-        nsFontQT **newPointer = (nsFontQT**)PR_Realloc(mLoadedFonts,
-                                                  newSize * sizeof(nsFontQT*));
-        if (newPointer) {
-          mLoadedFonts = newPointer;
-          mLoadedFontsAlloc = newSize;
-        }
-        else {
-          delete qFont;
-          return nsnull;
-        }
-      }
-      newFont = new nsFontQTNormal(qFont);
-      if (!newFont) {
-        delete qFont;
+  qFont = LoadQFont(aName,aCharSet);
+  if (qFont) {
+    newFont = new nsFontQTNormal(qFont);
+    if (!newFont) {
+      delete qFont;
+      return nsnull;
+    }
+    if (charSetInfo == &ISO106461) {
+      if (!newFont->HasChar(aChar)) {
+        delete newFont;
         return nsnull;
       }
-      if (charSetInfo == &Unknown) {
-        mUserDefinedFont = new nsFontQTUserDefined();
-        if (nsnull == mUserDefinedFont) {
-          delete newFont;
-          return nsnull;
-        }
-        mUserDefinedFont->Init(newFont);
-        newFont = mUserDefinedFont;
+    }
+    if (mLoadedFontsCount == mLoadedFontsAlloc) {
+      int newSize;
+      if (mLoadedFontsAlloc) {
+        newSize = (2 * mLoadedFontsAlloc);
       }
       else {
-        newFont->mCharSetInfo = charSetInfo;
-        newFont->mMap = charSetInfo->mMap;
+        newSize = 1;
       }
-      mLoadedFonts[mLoadedFontsCount++] = newFont; 
+      nsFontQT **newPointer
+                  = (nsFontQT**)PR_Realloc(mLoadedFonts,
+                                           newSize * sizeof(nsFontQT*));
+      if (newPointer) {
+        mLoadedFonts = newPointer;
+        mLoadedFontsAlloc = newSize;
+      }
+      else {
+        delete newFont;
+        return nsnull;
+      }
     }
-  } 
+    if (mIsUserDefined) {
+      mUserDefinedFont = new nsFontQTUserDefined();
+      if (nsnull == mUserDefinedFont) {
+        delete newFont;
+        return nsnull;
+      }
+      mUserDefinedFont->Init(newFont);
+      newFont = mUserDefinedFont;
+    }
+    else {
+      newFont->mCharSetInfo = charSetInfo;
+    }
+    mLoadedFonts[mLoadedFontsCount++] = newFont; 
+  }
   return newFont;
 }
 
@@ -1418,47 +1413,97 @@ PrefEnumCallback(const char *aName,void *aClosure)
 }
 
 nsFontQT*
-nsFontMetricsQT::FindGenericFont(PRUnichar aChar)
+nsFontMetricsQT::FindLangGroupPrefFont(nsIAtom *aLangGroup,
+                                       PRUnichar aChar)
 {
-  if (mTriedAllGenerics) {
-    return nsnull;
-  }
-  QString fontName,foundryName,charSetName;
+  nsFontQT *font = nsnull;
   nsCAutoString prefix("font.name.");
+
   prefix.Append(*mGeneric);
-  if (mLangGroup) {
+  if (aLangGroup) {
+    // check user set pref
     nsCAutoString pref = prefix;
-    pref.Append(char('.'));
     const PRUnichar *langGroup = nsnull;
-    mLangGroup->GetUnicode(&langGroup);
-    pref.AppendWithConversion(langGroup);
     char *value = nsnull;
-    gPref->CopyCharPref(pref.get(),&value);
     nsCAutoString str;
-    nsFontQT *font = nsnull;
+    nsCAutoString str_user;
+
+    pref.Append(char('.'));
+    aLangGroup->GetUnicode(&langGroup);
+    pref.AppendWithConversion(langGroup);
+    gPref->CopyCharPref(pref.get(), &value);
     if (value) {
       str = value;
+      str_user = value;
       nsMemory::Free(value);
       value = nsnull;
       font = LookUpFontPref(str,aChar);
+      if (font) {
+        NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
+        return font;
+      }
     }
-    if (!font) {
-      value = nsnull;
-      gPref->CopyDefaultCharPref(pref.get(),&value);
-      if (value) {
-        str = value;
+    value = nsnull;
+    // check factory set pref
+    gPref->CopyDefaultCharPref(pref.get(), &value);
+    if (value) {
+      str = value;
+      // check if we already tried this name
+      if (str != str_user) {
         nsMemory::Free(value);
         value = nsnull;
         font = LookUpFontPref(str,aChar);
+        if (font) {
+          NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
+          return font;
+        }
       }
     }
-    if (font)
-      return(font);
   }
+  return nsnull;
+}
+
+nsFontQT*
+nsFontMetricsQT::FindGenericFont(PRUnichar aChar)
+{
+  nsFontQT *font = nsnull;
+
+  if (mTriedAllGenerics) {
+    return nsnull;
+  }
+  if (mLangGroup) {
+    font = FindLangGroupPrefFont(mLangGroup,aChar);
+    if (font) {
+      NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
+      return(font);
+    }
+  }
+  if (mLangGroup != gUsersLocale) {
+    font = FindLangGroupPrefFont(gUsersLocale,aChar);
+    if (font) {
+      NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
+      return(font);
+    }
+  }
+  nsCAutoString prefix("font.name.");
   nsFontSearch search = { this,aChar,nsnull };
+
+  prefix.Append(*mGeneric);
   gPref->EnumerateChildren(prefix.get(),PrefEnumCallback,&search);
   if (search.mFont) {
-      return search.mFont;
+    NS_ASSERTION(search.mFont->SupportsChar(aChar), "font supposed to support this char");
+    return search.mFont;
+  }
+  //
+  // Search all font prefs
+  //
+  // find based on all prefs (no generic part (eg: sans-serif))
+  nsCAutoString allPrefs("font.name.");
+  search.mFont = nsnull;
+  gPref->EnumerateChildren(allPrefs.get(), PrefEnumCallback, &search);
+  if (search.mFont) {
+    NS_ASSERTION(search.mFont->SupportsChar(aChar), "font supposed to support this char");
+    return search.mFont;
   }
   mTriedAllGenerics = 1;
   return nsnull;
@@ -1510,7 +1555,7 @@ nsFontMetricsQT::FindSubstituteFont(PRUnichar aChar)
 { 
   if (!mSubstituteFont) {
     for (int i = 0; i < mLoadedFontsCount; i++) {
-      if (FONT_HAS_GLYPH(mLoadedFonts[i]->mMap,'a')) {
+      if (mLoadedFonts[i]->SupportsChar('a')) {
         mSubstituteFont = new nsFontQTSubstitute(mLoadedFonts[i]);
         break;
       }
@@ -1625,19 +1670,31 @@ nsFontQT::~nsFontQT()
     mFontMetrics = nsnull;
   }
 }
+
+PRUint32 *nsFontQT::GetCharSetMap()
+{
+  return mCharSetInfo->mMap;
+}
  
 QFont*
 nsFontQT::GetQFont(void)
 {
   return mFont;
 }
- 
-PRBool
-nsFontQT::GetQFontIs10646(void)
-{
-  return((PRBool)(mCharSetInfo == &ISO106461));
-} 
 
+int nsFontQT::SupportsChar(PRUnichar aChar)
+{
+  if (IsUnicodeFont())
+    return HasChar(aChar);
+  else
+    return (mFont && FONT_HAS_GLYPH(GetCharSetMap(),aChar));
+}
+
+PRBool nsFontQT::IsUnicodeFont()
+{
+  return(mCharSetInfo == &ISO106461);
+}
+ 
 nsFontQTNormal::nsFontQTNormal() 
 {
 }
@@ -1702,10 +1759,6 @@ nsFontQTNormal::GetBoundingMetrics(const PRUnichar *aString,
     return NS_ERROR_FAILURE;
   }
   if (aString && 0 < aLength) {
-    char strBuf[1024];
-    int len = mCharSetInfo->Convert(mCharSetInfo,mFontMetrics,aString,
-                                    aLength,strBuf,sizeof(strBuf));
-
     QChar *buf = new QChar[aLength + 1];
  
     for (int i = 0; i < aLength; i++) {
@@ -1832,15 +1885,15 @@ nsFontQTSubstitute::GetQFont(void)
 {
   return mSubstituteFont->GetQFont();
 }
- 
-PRBool
-nsFontQTSubstitute::GetQFontIs10646(void)
-{
-  return mSubstituteFont->GetQFontIs10646();
-}
 
+int nsFontQTSubstitute::SupportsChar(PRUnichar aChar)
+{
+  return mSubstituteFont->SupportsChar(aChar);
+}
+ 
 nsFontQTUserDefined::nsFontQTUserDefined()
 {
+  mMap = nsnull;
 }
  
 nsFontQTUserDefined::~nsFontQTUserDefined()
@@ -1852,6 +1905,8 @@ PRBool
 nsFontQTUserDefined::Init(nsFontQT *aFont)
 {
   mFont = aFont->GetQFont();
+  mFontInfo = new QFontInfo(*mFont);
+  mFontMetrics = new QFontMetrics(*mFont);
   mMap = gUserDefinedMap;
   return PR_TRUE;
 } 
@@ -2002,24 +2057,25 @@ static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
         continue;
       }
       if (aLangGroup != gUnicode) {
-        nsCOMPtr<nsIAtom> charset;
-        nsIAtom *langGroup;
         nsresult res;
 
-        res = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
-                                               getter_AddRefs(charset));
-        if (NS_SUCCEEDED(res)) {
-          res = gCharSetManager->GetCharsetLangGroup(charset,
-                                                     &langGroup);
+        if (!charSetInfo->mCharsetAtom) {
+          res = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
+                                                 &charSetInfo->mCharsetAtom);
           if (NS_FAILED(res)) {
             continue;
           }
         }
-        if (aLangGroup != langGroup) {
-          NS_IF_RELEASE(langGroup);
+        if (!charSetInfo->mLangGroup) {
+          res = gCharSetManager->GetCharsetLangGroup(charSetInfo->mCharsetAtom,
+                                                     &charSetInfo->mLangGroup);
+          if (NS_FAILED(res)) {
+            continue;
+          }
+        }
+        if (aLangGroup != charSetInfo->mLangGroup) {
           continue;
         }
-        NS_IF_RELEASE(langGroup);
       }
       nsCAutoString name((*famIt).latin1());
       FontEnumNode *node = (FontEnumNode*)nsMemory::Alloc(sizeof(FontEnumNode));
