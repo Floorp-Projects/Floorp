@@ -218,8 +218,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 
 NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return SetJSStatus(aLink);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
