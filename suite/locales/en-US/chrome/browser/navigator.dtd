@@ -212,10 +212,11 @@
 <!ENTITY xptk3Cmd.label "Tree">
 <!ENTITY xptk4Cmd.label "Dialog">
 <!ENTITY xptk5Cmd.label "Dialog w/ animation">
-<!ENTITY xptk6Cmd.label "Tab">
-<!ENTITY xptk7Cmd.label "Beep">
-<!ENTITY xptk8Cmd.label "Sound">
-<!ENTITY xptk9Cmd.label "XP Menus">
+<!ENTITY xptk6Cmd.label "Dialog chrome">
+<!ENTITY xptk7Cmd.label "Tab">
+<!ENTITY xptk8Cmd.label "Beep">
+<!ENTITY xptk9Cmd.label "Sound">
+<!ENTITY xptk10Cmd.label "XP Menus">
 
 <!-- L10n BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY strresCmd.label "StringBundle Test">

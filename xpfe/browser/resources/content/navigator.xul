@@ -434,10 +434,11 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&xptk3Cmd.label;" onaction="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
         <menuitem value="&xptk4Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
         <menuitem value="&xptk5Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
-        <menuitem value="&xptk6Cmd.label;" onaction="BrowserReallyReload(0)"/>
-        <menuitem value="&xptk7Cmd.label;" onaction="window.content.location.href='resource:/res/samples/beeptest.html'"/>
-        <menuitem value="&xptk8Cmd.label;" onaction="window.content.location.href='resource:/res/samples/soundtest.html'"/>
-        <menuitem value="&xptk9Cmd.label;" onaction="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
+        <menuitem value="&xptk6Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
+        <menuitem value="&xptk7Cmd.label;" onaction="BrowserReallyReload(0)"/>
+        <menuitem value="&xptk8Cmd.label;" onaction="window.content.location.href='resource:/res/samples/beeptest.html'"/>
+        <menuitem value="&xptk9Cmd.label;" onaction="window.content.location.href='resource:/res/samples/soundtest.html'"/>
+        <menuitem value="&xptk10Cmd.label;" onaction="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
        </menupopup>
 	  </menu>
      </menupopup>
