@@ -34,9 +34,46 @@ function clicked(event, target) {
     return(true);
   } else {
     if (event.clickCount == 2 && event.button == 1) {
-      top.OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
+      OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
       return(true);
     }
   }
   return(false);
 }
+
+function OpenBookmarkURL(node, datasources)
+{
+    if (node.getAttribute('container') == "true") {
+        return false;
+    }
+
+	var url = node.getAttribute('id');
+	try {
+		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf && datasources) {
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = datasources.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
+		}
+	}
+	catch(ex) {
+	}
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+        return false;
+    }
+	// Check if we have a browser window
+	if (window.content == null) {
+		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
+	}
+	else {
+        window.content.location = url;
+  	}
+}
+
