@@ -56,7 +56,7 @@ static PRBool GetState(PRFileDesc *fd, PRBool *readReady, PRBool *writeReady, PR
 extern void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout);
 extern void DoneWaitingOnThisThread(PRThread *thread);
 
-#ifdef TARGET_CARBON
+#if TARGET_CARBON
 OTClientContextPtr  clientContext = NULL;
 
 OTNotifyUPP	DNSNotifierRoutineUPP;
@@ -97,7 +97,7 @@ void _MD_InitNetAccess()
         
     PR_ASSERT(hasOTTCPIP == PR_TRUE);
 
-#ifdef TARGET_CARBON
+#if TARGET_CARBON
     DNSNotifierRoutineUPP	=  NewOTNotifyUPP(DNSNotifierRoutine);
     notifierRoutineUPP		=  NewOTNotifyUPP(NotifierRoutine);
 
@@ -150,7 +150,7 @@ pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode code, OTResult re
 		dnsContext.cookie = cookie;
 		if (_PR_MD_GET_INTSOFF()) {
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-			dnsContext.thread->md.notifyPending = PR_TRUE;
+			dnsContext.thread->md.missedIONotify = PR_TRUE;
 			return;
 		}
 		DoneWaitingOnThisThread(dnsContext.thread);
@@ -383,7 +383,7 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
 		thread->md.osErrCode = result;
 		if (_PR_MD_GET_INTSOFF()) {
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-			thread->md.notifyPending = PR_TRUE;
+			thread->md.missedIONotify = PR_TRUE;
 			return;
 		}
 		DoneWaitingOnThisThread(thread);

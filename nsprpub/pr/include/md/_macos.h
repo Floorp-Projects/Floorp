@@ -55,7 +55,9 @@ struct _MDThread {
     int          osErrCode;
 	PRLock *     asyncIOLock;
 	PRCondVar *  asyncIOCVar;
-    PRBool       notifyPending;
+    PRBool       missedIONotify;
+    PRBool       missedAsyncNotify;
+    PRBool       asyncNotifyPending;
 };
 
 struct _MDThreadStack {

@@ -249,6 +249,7 @@ PRStatus _MD_wait(PRThread *thread, PRIntervalTime timeout)
 	return PR_SUCCESS;
 }
 
+
 void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout)
 {
     intn is;
@@ -261,7 +262,7 @@ void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout)
 	    while ((thread->io_pending) && (status == PR_SUCCESS))
 	        status = PR_WaitCondVar(thread->md.asyncIOCVar, PR_INTERVAL_NO_TIMEOUT);
 	} else {
-	    while ((thread->io_pending) && ((PRIntervalTime)(PR_IntervalNow() - timein) < timeout))
+	    while ((thread->io_pending) && ((PRIntervalTime)(PR_IntervalNow() - timein) < timeout) && (status == PR_SUCCESS))
 	        status = PR_WaitCondVar(thread->md.asyncIOCVar, timeout);
 	}
 	if ((status == PR_FAILURE) && (PR_GetError() == PR_PENDING_INTERRUPT_ERROR)) {
@@ -273,6 +274,7 @@ void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout)
 	PR_Unlock(thread->md.asyncIOLock);
 	_PR_FAST_INTSON(is);
 }
+
 
 void DoneWaitingOnThisThread(PRThread *thread)
 {
@@ -286,6 +288,62 @@ void DoneWaitingOnThisThread(PRThread *thread)
 	PR_Unlock(thread->md.asyncIOLock);
 	_PR_FAST_INTSON(is);
 }
+
+
+PR_IMPLEMENT(void) PR_Mac_WaitForAsyncNotify(PRIntervalTime timeout)
+{
+    intn is;
+    PRIntervalTime timein = PR_IntervalNow();
+	PRStatus status = PR_SUCCESS;
+    PRThread *thread = _PR_MD_CURRENT_THREAD();
+
+	_PR_INTSOFF(is);
+	PR_Lock(thread->md.asyncIOLock);
+	if (timeout == PR_INTERVAL_NO_TIMEOUT) {
+	    while ((!thread->md.asyncNotifyPending) && (status == PR_SUCCESS))
+	        status = PR_WaitCondVar(thread->md.asyncIOCVar, PR_INTERVAL_NO_TIMEOUT);
+	} else {
+	    while ((!thread->md.asyncNotifyPending) && ((PRIntervalTime)(PR_IntervalNow() - timein) < timeout) && (status == PR_SUCCESS))
+	        status = PR_WaitCondVar(thread->md.asyncIOCVar, timeout);
+	}
+	if ((status == PR_FAILURE) && (PR_GetError() == PR_PENDING_INTERRUPT_ERROR)) {
+		thread->md.osErrCode = kEINTRErr;
+	} else if (!thread->md.asyncNotifyPending) {
+		thread->md.osErrCode = kETIMEDOUTErr;
+		PR_SetError(PR_IO_TIMEOUT_ERROR, kETIMEDOUTErr);
+	}
+	thread->md.asyncNotifyPending = PR_FALSE;
+	PR_Unlock(thread->md.asyncIOLock);
+	_PR_FAST_INTSON(is);
+}
+
+
+void AsyncNotify(PRThread *thread)
+{
+    intn is;
+	
+	_PR_INTSOFF(is);
+	PR_Lock(thread->md.asyncIOLock);
+    thread->md.asyncNotifyPending = PR_TRUE;
+	/* let the waiting thread know that async IO completed */
+	PR_NotifyCondVar(thread->md.asyncIOCVar);	// let thread know that async IO completed
+	PR_Unlock(thread->md.asyncIOLock);
+	_PR_FAST_INTSON(is);
+}
+
+
+PR_IMPLEMENT(void) PR_Mac_PostAsyncNotify(PRThread *thread)
+{
+	_PRCPU *  cpu = _PR_MD_CURRENT_CPU();
+	
+	if (_PR_MD_GET_INTSOFF()) {
+		cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
+		thread->md.missedAsyncNotify = PR_TRUE;
+	} else {
+		AsyncNotify(thread);
+	}
+}
+
 
 //##############################################################################
 //##############################################################################
