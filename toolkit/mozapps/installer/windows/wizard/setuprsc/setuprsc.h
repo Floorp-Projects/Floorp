@@ -28,7 +28,7 @@
 #define IDC_STATUS_URL                  1001
 #define IDCONTINUE                      1001
 #define IDC_GAUGE                       1002
-#define IDC_GAUGE_FILE                  1002
+#define IDC_PROGRESS_FILE               1002
 #define ID_IGNORE                       1002
 #define IDSKIP                          1002
 #define IDC_STATUS2                     1003
@@ -38,7 +38,7 @@
 #define IDC_STATUS3                     1005
 #define ID_YES_TO_ALL                   1005
 #define IDC_STATUS_URL3                 1005
-#define IDC_GAUGE_ARCHIVE               1006
+#define IDC_PROGRESS_ARCHIVE            1006
 #define IDC_EDIT_DESTINATION            1009
 #define IDC_BUTTON_BROWSE               1010
 #define IDC_EDIT_COMPONENT1             1013

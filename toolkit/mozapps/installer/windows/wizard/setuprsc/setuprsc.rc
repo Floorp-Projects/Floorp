@@ -224,10 +224,12 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "",IDC_STATUS0,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
                     WS_GROUP,11,64,295,8
-    CONTROL         "",IDC_GAUGE_ARCHIVE,"GaugeArchive",0x0,11,77,295,11
     CONTROL         "",IDC_STATUS3,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
                     WS_GROUP,11,98,295,8
-    CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,11,110,295,11
+    CONTROL         "Progress1",IDC_PROGRESS_ARCHIVE,"msctls_progress32",
+                    WS_BORDER,11,77,295,11
+    CONTROL         "Progress1",IDC_PROGRESS_FILE,"msctls_progress32",
+                    WS_BORDER,11,110,295,11
 END
 
 DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -339,7 +341,7 @@ BEGIN
     CONTROL         "",IDC_STATUS_FILE,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,51,72,254,8
     LTEXT           "",IDC_PERCENTAGE,283,115,20,8,SS_NOPREFIX
-    CONTROL         "",IDC_GAUGE_FILE,"msctls_progress32",WS_BORDER,11,85,
+    CONTROL         "",IDC_PROGRESS_FILE,"msctls_progress32",WS_BORDER,11,85,
                     295,11
 END
 

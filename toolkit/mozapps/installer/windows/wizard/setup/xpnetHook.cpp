@@ -1347,7 +1347,7 @@ UpdateGaugeFileProgressBar(double value)
     // Only paint if we need to display more bars
     if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
     {
-      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_PROGRESS_FILE);
       RECT	rect;
 
       // Update the gauge state before painting

@@ -452,7 +452,7 @@ char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
   return(szCurrentDownloadFile);
 }
 
-void UpdateGREAppInstallerProgress(int percent)
+void UpdateGREInstallProgress(int percent)
 {
   if (lpfnProgressUpd)
     lpfnProgressUpd(GRE_INSTALLER_ID, percent);
@@ -5351,6 +5351,8 @@ HRESULT ParseComponentAttributes(char *szAttribute, DWORD dwAttributes, BOOL bOv
       dwAttributes |= SIC_IGNORE_XPINSTALL_ERROR;
     if(strstr(szBuf, "UNCOMPRESS"))
       dwAttributes |= SIC_UNCOMPRESS;
+    if(strstr(szBuf, "MAIN_COMPONENT"))
+      dwAttributes |= SIC_MAIN_COMPONENT;
   }
 
   if(strstr(szBuf, "UNSELECTED"))
@@ -7756,7 +7758,11 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "BROWSE_", "", sgInstallGui.szBrowse_, sizeof(sgInstallGui.szBrowse_), szFileIniInstall);
   GetPrivateProfileString("General", "DOWNLOADSIZE", "", sgInstallGui.szDownloadSize, sizeof(sgInstallGui.szDownloadSize), szFileIniInstall);
   GetPrivateProfileString("General", "CURRENTSETTINGS", "", sgInstallGui.szCurrentSettings, sizeof(sgInstallGui.szCurrentSettings), szFileIniInstall);
-  GetPrivateProfileString("General", "INSTALL_", "", sgInstallGui.szInstall_, sizeof(sgInstallGui.szInstall_), szFileIniInstall);
+  GetPrivateProfileString("General", "INSTALLFOLDER", "", sgInstallGui.szInstallFolder, sizeof(sgInstallGui.szInstallFolder), szFileIniInstall);
+  GetPrivateProfileString("General", "ADDTLCOMPWRAPPER", "", sgInstallGui.szAddtlCompWrapper, sizeof(sgInstallGui.szAddtlCompWrapper), szFileIniInstall);
+  GetPrivateProfileString("General", "PRIMCOMPNOOTHERS", "", sgInstallGui.szPrimCompNoOthers, sizeof(sgInstallGui.szPrimCompNoOthers), szFileIniInstall);
+  GetPrivateProfileString("General", "PRIMCOMPOTHERS", "", sgInstallGui.szPrimCompOthers, sizeof(sgInstallGui.szPrimCompOthers), szFileIniInstall);
+    GetPrivateProfileString("General", "INSTALL_", "", sgInstallGui.szInstall_, sizeof(sgInstallGui.szInstall_), szFileIniInstall);
   GetPrivateProfileString("General", "DELETE_", "", sgInstallGui.szDelete_, sizeof(sgInstallGui.szDelete_), szFileIniInstall);
   GetPrivateProfileString("General", "CONTINUE_", "", sgInstallGui.szContinue_, sizeof(sgInstallGui.szContinue_), szFileIniInstall);
   GetPrivateProfileString("General", "SKIP_", "", sgInstallGui.szSkip_, sizeof(sgInstallGui.szSkip_), szFileIniInstall);
