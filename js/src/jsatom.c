@@ -191,7 +191,6 @@ js_alloc_atom(void *priv, const void *key)
     atom->entry.key = key;
     atom->entry.value = NULL;
     atom->flags = 0;
-    atom->kwindex = -1;
     atom->number = state->number++;
     return &atom->entry;
 }

@@ -58,23 +58,25 @@ JS_BEGIN_EXTERN_C
 
 struct JSAtom {
     JSHashEntry         entry;          /* key is jsval, value keyword info */
-    uint8               flags;          /* pinned, interned, and mark flags */
-    int8                kwindex;        /* keyword index, -1 if not keyword */
+    uint32              flags;          /* pinned, interned, and mark flags */
     jsatomid            number;         /* atom serial number and hash code */
 };
 
-#define ATOM_KEY(atom)           ((jsval)(atom)->entry.key)
-#define ATOM_IS_OBJECT(atom)     JSVAL_IS_OBJECT(ATOM_KEY(atom))
-#define ATOM_TO_OBJECT(atom)     JSVAL_TO_OBJECT(ATOM_KEY(atom))
-#define ATOM_IS_INT(atom)        JSVAL_IS_INT(ATOM_KEY(atom))
-#define ATOM_TO_INT(atom)        JSVAL_TO_INT(ATOM_KEY(atom))
-#define ATOM_IS_DOUBLE(atom)     JSVAL_IS_DOUBLE(ATOM_KEY(atom))
-#define ATOM_TO_DOUBLE(atom)     JSVAL_TO_DOUBLE(ATOM_KEY(atom))
-#define ATOM_IS_STRING(atom)     JSVAL_IS_STRING(ATOM_KEY(atom))
-#define ATOM_TO_STRING(atom)     JSVAL_TO_STRING(ATOM_KEY(atom))
-#define ATOM_IS_BOOLEAN(atom)    JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
-#define ATOM_TO_BOOLEAN(atom)    JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
-#define ATOM_BYTES(atom)         JS_GetStringBytes(ATOM_TO_STRING(atom))
+#define ATOM_KEY(atom)            ((jsval)(atom)->entry.key)
+#define ATOM_IS_OBJECT(atom)      JSVAL_IS_OBJECT(ATOM_KEY(atom))
+#define ATOM_TO_OBJECT(atom)      JSVAL_TO_OBJECT(ATOM_KEY(atom))
+#define ATOM_IS_INT(atom)         JSVAL_IS_INT(ATOM_KEY(atom))
+#define ATOM_TO_INT(atom)         JSVAL_TO_INT(ATOM_KEY(atom))
+#define ATOM_IS_DOUBLE(atom)      JSVAL_IS_DOUBLE(ATOM_KEY(atom))
+#define ATOM_TO_DOUBLE(atom)      JSVAL_TO_DOUBLE(ATOM_KEY(atom))
+#define ATOM_IS_STRING(atom)      JSVAL_IS_STRING(ATOM_KEY(atom))
+#define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
+#define ATOM_IS_BOOLEAN(atom)     JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
+#define ATOM_TO_BOOLEAN(atom)     JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
+#define ATOM_BYTES(atom)          JS_GetStringBytes(ATOM_TO_STRING(atom))
+
+#define ATOM_KEYWORD(atom)        ((struct keyword *)(atom)->entry.value)
+#define ATOM_SET_KEYWORD(atom,kw) ((atom)->entry.value = (kw))
 
 struct JSAtomListElement {
     JSHashEntry         entry;

@@ -336,9 +336,6 @@ struct JSContext {
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
 
-    /* Delay JS_SetVersion scanner effects until they're needed. */
-    JSVersion           scannerVersion;
-
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
