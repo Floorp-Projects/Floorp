@@ -2790,6 +2790,9 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect&
 
 	sr = aSRect;
 	mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	sr.x = aSRect.x;
+	sr.y = aSRect.y;
+	mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   dr = aDRect;
 	mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);

@@ -1401,6 +1401,9 @@ nsRenderingContextXP :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
 
    sr = aSRect;
    mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+   sr.x = aSRect.x;
+   sr.y = aSRect.y;
+   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
    dr = aDRect;
    mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);

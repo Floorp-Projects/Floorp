@@ -1390,6 +1390,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& a
 	nsRect sr = aSRect;
 	nsRect dr = aDRect;
 	mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+	sr.x -= mTranMatrix->GetXTranslationCoord();
+	sr.y -= mTranMatrix->GetYTranslationCoord();
 	mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
 
 	return aImage->Draw(*this, mCurrentSurface, sr.x, sr.y, sr.width, sr.height,

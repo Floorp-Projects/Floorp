@@ -1234,6 +1234,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage,
 	sr = aSRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y,
                             &sr.width, &sr.height);
+  sr.x = aSRect.x;
+  sr.y = aSRect.y;
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 	
 	dr = aDRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y,

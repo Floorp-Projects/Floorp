@@ -357,14 +357,63 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
            aDX, aDY, aDWidth, aDHeight);
 #endif
 
+  if (aSX < mDecodedX1) {
+    aSWidth -= mDecodedX1 - aSX;
+    aDX += mDecodedX1 - aSX;
+    aSX += mDecodedX1 - aSX;
+  }
+  if (aSX + aSWidth > mDecodedX2) {
+    aSWidth -= aSX + aSWidth - mDecodedX2;
+  }
+  if (aSY < mDecodedY1) {
+    aSHeight -= mDecodedY1 - aSY;
+    aDY += mDecodedY1 - aSY;
+    aSY += mDecodedY1 - aSY;
+  }
+  if (aSY + aSHeight > mDecodedY2) {
+    aSHeight -= (aSY + aSHeight) - mDecodedY2;
+  }
+
+  if ((mAlphaDepth==8) && mAlphaValid) {
+    DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight);
+    return NS_OK;
+  }
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
-  gdk_draw_rgb_image (drawing->GetDrawable(),
-                      ((nsRenderingContextGTK&)aContext).GetGC(),
-                      aDX, aDY, aDWidth, aDHeight,
-                      GDK_RGB_DITHER_MAX,
-                      mImageBits + mRowBytes * aSY + 3 * aDX,
-                      mRowBytes);
+  if (mAlphaDepth == 1)
+    CreateAlphaBitmap(mWidth, mHeight);
+
+  GdkGC *copyGC;
+  if (mAlphaPixmap) {
+    if (mGC) {
+      copyGC = gdk_gc_ref(mGC);
+    } else {
+      mGC = gdk_gc_new(drawing->GetDrawable());
+      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+      gdk_gc_copy(mGC, gc);
+      gdk_gc_unref(gc); // unref the one we got
+      copyGC = gdk_gc_ref(mGC);
+    }
+    
+    SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
+  } else {
+    // don't make a copy... we promise not to change it
+    copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
+  }
+
+  gdk_window_copy_area(drawing->GetDrawable(),      // dest window
+                       copyGC,                      // gc
+                       aDX,                         // xdest
+                       aDY,                         // ydest
+                       mImagePixmap,                // source window
+                       aSX,                         // xsrc
+                       aSY,                         // ysrc
+                       aSWidth,                     // width
+                       aSHeight);                   // height
+ 
+  gdk_gc_unref(copyGC);
+  mFlags = 0;
 
   return NS_OK;
 }
@@ -696,7 +745,8 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
 void
 nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
                            nsDrawingSurface aSurface,
-                           PRInt32 aX, PRInt32 aY,
+                           PRInt32 aSX, PRInt32 aSY,
+                           PRInt32 aDX, PRInt32 aDY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
   if ((aWidth==0) || (aHeight==0))
@@ -715,23 +765,23 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   int readX, readY;
   unsigned readWidth, readHeight, destX, destY;
 
-  if ((aY>=(int)surfaceHeight) || (aX>=(int)surfaceWidth) ||
-      (aY+aHeight<=0) || (aX+aWidth<=0)) {
+  if ((aDY>=(int)surfaceHeight) || (aDX>=(int)surfaceWidth) ||
+      (aDY+aHeight<=0) || (aDX+aWidth<=0)) {
     // This should never happen if the layout engine is sane,
     // as it means we're trying to draw an image which is outside
     // the drawing surface.  Bulletproof gfx for now...
     return;
   }
 
-  if (aX<0) {
-    readX = 0;   readWidth = aWidth+aX;    destX = -aX;
+  if (aDX<0) {
+    readX = 0;   readWidth = aWidth+aDX;    destX = aSX-aDX;
   } else {
-    readX = aX;  readWidth = aWidth;       destX = 0;
+    readX = aDX;  readWidth = aWidth;       destX = aSX;
   }
-  if (aY<0) {
-    readY = 0;   readHeight = aHeight+aY;  destY = -aY;
+  if (aDY<0) {
+    readY = 0;   readHeight = aHeight+aDY;  destY = aSY-aDY;
   } else {
-    readY = aY;  readHeight = aHeight;     destY = 0;
+    readY = aDY;  readHeight = aHeight;     destY = aSY;
   }
 
   if (readX+readWidth > surfaceWidth)
@@ -739,11 +789,13 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   if (readY+readHeight > surfaceHeight)
     readHeight = surfaceHeight-readY;
 
+  if ((readHeight <= 0) || (readWidth <= 0))
+    return;
 
-//  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
-//  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
-//  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
-//          readX, readY, readWidth, readHeight, destX, destY);
+  //  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
+  //  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
+  //  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
+  //          readX, readY, readWidth, readHeight, destX, destY);
 
   XImage *ximage = XGetImage(dpy, drawable,
                              readX, readY, readWidth, readHeight, 
@@ -795,6 +847,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
   XDestroyImage(ximage);
   delete [] readData;
+  mFlags = 0;
 }
 
 void nsImageGTK::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
@@ -921,7 +974,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
   if ((mAlphaDepth==8) && mAlphaValid) {
-    DrawComposited(aContext, aSurface, aX, aY, aWidth, aHeight);
+    DrawComposited(aContext, aSurface, 0, 0, aX, aY, aWidth, aHeight);
     return NS_OK;
   }
 
@@ -1014,11 +1067,11 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   // copy our offscreen pixmap onto the window.
   gdk_window_copy_area(drawing->GetDrawable(),      // dest window
                        copyGC,                      // gc
-                       validX+aX,                   // xsrc
-                       validY+aY,                   // ysrc
+                       validX+aX,                   // xdest
+                       validY+aY,                   // ydest
                        mImagePixmap,                // source window
-                       validX,                      // xdest
-                       validY,                      // ydest
+                       validX,                      // xsrc
+                       validY,                      // ysrc
                        validWidth,                  // width
                        validHeight);                // height
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
