@@ -425,6 +425,7 @@ static void pt_poll_now_with_select(pt_Continuation *op)
 	fd_set rd, wr, *rdp, *wrp;
 	struct timeval tv;
 	PRIntervalTime epoch, now, elapsed, remaining;
+	PRBool wait_for_remaining;
     PRThread *self = PR_GetCurrentThread();
     
 	PR_ASSERT(PR_INTERVAL_NO_WAIT != op->timeout);
@@ -504,9 +505,12 @@ static void pt_poll_now_with_select(pt_Continuation *op)
 				} else
 					wrp = NULL;
 
+    			wait_for_remaining = PR_TRUE;
     			msecs = (PRInt32)PR_IntervalToMilliseconds(remaining);
-				if (msecs > PT_DEFAULT_POLL_MSEC)
+				if (msecs > PT_DEFAULT_POLL_MSEC) {
+					wait_for_remaining = PR_FALSE;
 					msecs = PT_DEFAULT_POLL_MSEC;
+				}
 				tv.tv_sec = msecs/PR_MSEC_PER_SEC;
 				tv.tv_usec = (msecs % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC;
 				rv = select(op->arg1.osfd + 1, rdp, wrp, NULL, &tv);
@@ -533,9 +537,12 @@ static void pt_poll_now_with_select(pt_Continuation *op)
 
 				} else if ((rv == 0) ||
 						((errno == EINTR) || (errno == EAGAIN))) {
-					if (rv == 0)	/* select timed out */
-						now += PR_MillisecondsToInterval(msecs);
-					else
+					if (rv == 0) {	/* select timed out */
+						if (wait_for_remaining)
+							now += remaining;
+						else
+							now += PR_MillisecondsToInterval(msecs);
+					} else
 						now = PR_IntervalNow();
 					elapsed = (PRIntervalTime) (now - epoch);
 					if (elapsed >= op->timeout) {
@@ -561,6 +568,7 @@ static void pt_poll_now(pt_Continuation *op)
 {
     PRInt32 msecs;
 	PRIntervalTime epoch, now, elapsed, remaining;
+	PRBool wait_for_remaining;
     PRThread *self = PR_GetCurrentThread();
     
 	PR_ASSERT(PR_INTERVAL_NO_WAIT != op->timeout);
@@ -637,9 +645,13 @@ static void pt_poll_now(pt_Continuation *op)
 				tmp_pfd.fd = op->arg1.osfd;
 				tmp_pfd.events = op->event;
 
+    			wait_for_remaining = PR_TRUE;
     			msecs = (PRInt32)PR_IntervalToMilliseconds(remaining);
 				if (msecs > PT_DEFAULT_POLL_MSEC)
+				{
+					wait_for_remaining = PR_FALSE;
 					msecs = PT_DEFAULT_POLL_MSEC;
+				}
 				rv = poll(&tmp_pfd, 1, msecs);
 				
 				if (self->state & PT_THREAD_ABORTED)
@@ -673,7 +685,12 @@ static void pt_poll_now(pt_Continuation *op)
 				} else if ((rv == 0) ||
 						((errno == EINTR) || (errno == EAGAIN))) {
 					if (rv == 0)	/* poll timed out */
-						now += PR_MillisecondsToInterval(msecs);
+					{
+						if (wait_for_remaining)
+							now += remaining;
+						else
+							now += PR_MillisecondsToInterval(msecs);
+					}
 					else
 						now = PR_IntervalNow();
 					elapsed = (PRIntervalTime) (now - epoch);

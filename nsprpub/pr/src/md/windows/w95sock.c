@@ -474,6 +474,7 @@ static PRInt32 socket_io_wait(
     struct timeval tv;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRIntervalTime elapsed, remaining;
+    PRBool wait_for_remaining;
     fd_set rd_wr, ex;
     int err, len;
 
@@ -560,8 +561,10 @@ static PRInt32 socket_io_wait(
                  * so that there is an upper limit on the delay
                  * before the interrupt bit is checked.
                  */
+                wait_for_remaining = PR_TRUE;
                 tv.tv_sec = PR_IntervalToSeconds(remaining);
                 if (tv.tv_sec > _PR_INTERRUPT_CHECK_INTERVAL_SECS) {
+                    wait_for_remaining = PR_FALSE;
                     tv.tv_sec = _PR_INTERRUPT_CHECK_INTERVAL_SECS;
                     tv.tv_usec = 0;
                 } else {
@@ -631,8 +634,12 @@ static PRInt32 socket_io_wait(
                  */
                 if (rv == 0 )
                 {
-                    elapsed = PR_SecondsToInterval(tv.tv_sec) 
-                                + PR_MicrosecondsToInterval(tv.tv_usec);
+                    if (wait_for_remaining) {
+                        elapsed = remaining;
+                    } else {
+                        elapsed = PR_SecondsToInterval(tv.tv_sec) 
+                                    + PR_MicrosecondsToInterval(tv.tv_usec);
+                    }
                     if (elapsed >= remaining) {
                         PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                         rv = -1;

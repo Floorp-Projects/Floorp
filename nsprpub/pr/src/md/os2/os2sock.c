@@ -113,6 +113,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
     PRInt32 rv = -1;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRIntervalTime epoch, now, elapsed, remaining;
+    PRBool wait_for_remaining;
     PRInt32 syserror;
 #ifdef BSD_SELECT
     struct timeval tv;
@@ -176,8 +177,10 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                  * before the interrupt bit is checked.
                  */
 #ifdef BSD_SELECT
+                wait_for_remaining = PR_TRUE;
                 tv.tv_sec = PR_IntervalToSeconds(remaining);
                 if (tv.tv_sec > _PR_INTERRUPT_CHECK_INTERVAL_SECS) {
+                    wait_for_remaining = PR_FALSE;
                     tv.tv_sec = _PR_INTERRUPT_CHECK_INTERVAL_SECS;
                     tv.tv_usec = 0;
                 } else {
@@ -191,9 +194,12 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                 else
                     rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, NULL, &tv);
 #else
+                wait_for_remaining = PR_TRUE;
                 lTimeout = PR_IntervalToMilliseconds(remaining);
-                if (lTimeout > _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000)
+                if (lTimeout > _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000) {
+                    wait_for_remaining = PR_FALSE;
                     lTimeout = _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000;
+                }
                 socks[0] = osfd;
                 if (fd_type == READ_FD)
                     rv = _MD_SELECT(socks, 1, 0, 0, lTimeout);
@@ -224,12 +230,16 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                      * PR_IntervalNow() call.
                      */
                     if (rv == 0) {
+                        if (wait_for_remaining) {
+                            now += remaining;
+                        } else {
 #ifdef BSD_SELECT
-                        now += PR_SecondsToInterval(tv.tv_sec)
-                            + PR_MicrosecondsToInterval(tv.tv_usec);
+                            now += PR_SecondsToInterval(tv.tv_sec)
+                                + PR_MicrosecondsToInterval(tv.tv_usec);
 #else
-                        now += PR_MillisecondsToInterval(lTimeout);
+                            now += PR_MillisecondsToInterval(lTimeout);
 #endif
+                        }
                     } else {
                         now = PR_IntervalNow();
                     }
