@@ -687,7 +687,7 @@ __get_page(HTAB *hashp,
 {
 	register int fd, page;
 	size_t size;
-	ssize_t rsize;
+	int rsize;
 	uint16 *bp;
 
 	fd = hashp->fp;
@@ -823,7 +823,7 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 {
 	register int fd, page;
 	size_t size;
-	ssize_t wsize;
+	int wsize;
 
 	size = hashp->BSIZE;
 	if ((hashp->fp == -1) && open_temp(hashp))
