@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *    Simon Fraser (sfraser@netscape.com)
+ *    Ryan Cassin (rcassin@supernova.org)
  */
 
 /* Implementations of nsIControllerCommand for composer commands */
@@ -40,6 +41,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_newEditor",     nsNewEditorCommand);
 
   gComposerCommandManager.registerCommand("cmd_open",          nsOpenCommand);
+  gComposerCommandManager.registerCommand("cmd_save",          nsSaveCommand);
+  gComposerCommandManager.registerCommand("cmd_saveAs",        nsSaveAsCommand);
   gComposerCommandManager.registerCommand("cmd_saveAsCharset", nsSaveAsCharsetCommand);
   gComposerCommandManager.registerCommand("cmd_revert",        nsRevertCommand);
   gComposerCommandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
@@ -202,6 +205,42 @@ dump("*** nsOpenCommand: doCommand\n");
 };
 
 //-----------------------------------------------------------------------------------
+var nsSaveCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return window.editorShell && 
+      (window.editorShell.documentModified || window.editorShell.editorDocument.location == "about:blank");
+  },
+  
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource(); // In editor.js
+      var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
+      return window.editorShell.saveDocument(doSaveAs, false);
+    }
+  }
+}
+
+var nsSaveAsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+      return window.editorShell.saveDocument(true, false);
+    }
+  }
+}
+
 var nsSaveAsCharsetCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
