@@ -1149,7 +1149,8 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 // Position the window behind the given window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsCocoaWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
+NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                     nsIWidget *aWidget, PRBool aActivate)
 {
 #if 0
   if (aWidget) {

@@ -129,7 +129,8 @@ public:
     NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
                                               PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
+    NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                        nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
     void                    CalculateAndSetZoomedSize();
 

@@ -121,7 +121,8 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD SetFocus(PRBool aRaise);
    NS_IMETHOD GetBounds(nsRect &aRect);
    NS_IMETHOD IsVisible( PRBool &aState);
-   NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
+   NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                          nsIWidget *aWidget, PRBool aActivate);
 
    NS_IMETHOD CaptureMouse(PRBool aCapture);
 

@@ -214,6 +214,12 @@ enum nsContentType {
   eContentTypeContent = 1     // eContentTypeUI must equal 1
 };
 
+enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
+  eZPlacementBottom = 0,  // bottom of the window stack
+  eZPlacementBelow,       // just below another widget
+  eZPlacementTop          // top of the window stack
+};
+
 /**
  * Basic struct for widget initialization data.
  * @see Create member function of nsIWidget
@@ -450,9 +456,15 @@ class nsIWidget : public nsISupports {
      * Position this widget just behind the given widget. (Used to
      * control z-order for top-level widgets. Get/SetZIndex by contrast
      * control z-order for child widgets of other widgets.)
-     * null aWidget means put on top.
+     * @param aPlacement top, bottom, or below a widget
+     *                   (if top or bottom, param aWidget is ignored)
+     * @param aWidget    widget to place this widget behind
+     *                   (only if aPlacement is eZPlacementBelow).
+     *                   null is equivalent to aPlacement of eZPlacementTop
+     * @param aActivate  true to activate the widget after placing it
      */
-    NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate) = 0;
+    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                           nsIWidget *aWidget, PRBool aActivate) = 0;
 
     /**
      * Minimize, maximize or normalize the window size.
