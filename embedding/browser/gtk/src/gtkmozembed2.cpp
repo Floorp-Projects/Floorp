@@ -603,12 +603,12 @@ gtk_moz_embed_realize(GtkWidget *widget)
   gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
 				 "focus_in_event",
 				 GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-				 embed,
+				 embedPrivate,
 				 GTK_OBJECT(child_widget));
   gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
 				 "focus_out_event",
 				 GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-				 embed,
+				 embedPrivate,
 				 GTK_OBJECT(child_widget));
 #endif /* MOZ_WIDGET_GTK2 */
 }
