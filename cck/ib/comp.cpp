@@ -137,8 +137,7 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			_chdir(linuxinstDirPath);
 			tnscpxpilinuxPath.Replace("\\","/");
 			tnscpxpilinuxPath.Replace(":","");
-			tnscpxpilinuxPath.Insert(0,"//");
-
+			tnscpxpilinuxPath.Insert(0,"/cygdrive/");
 			CString command = "gzip -d " + tarfile;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 			command = "tar -xvf " + tarfile1 + " -C " + tnscpxpilinuxPath;

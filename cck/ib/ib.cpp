@@ -1126,7 +1126,7 @@ void CreateLinuxInstaller()
 	templinuxPath = tempPath;
 	templinuxPath.Replace("\\", "/");
 	templinuxPath.Replace(":","");
-	templinuxPath.Insert(0,"//");
+	templinuxPath.Insert(0,"/cygdrive/");
 	DeleteFile(tarfile1);
 	DeleteFile(tarfile);
 	CString command = "tar -cvf " + tarfile1 + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;    
