@@ -1372,7 +1372,9 @@ nsPresContext::LoadImage(const nsString& aURL,
   doc->GetBaseURL(getter_AddRefs(baseURI));
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aURL, nsnull, baseURI);
+  nsCOMPtr<nsIIOService> ioService;
+  GetIOService(getter_AddRefs(ioService));
+  NS_NewURI(getter_AddRefs(uri), aURL, nsnull, baseURI, ioService);
 
   if (!loader) {
     nsCOMPtr<nsIContent> content;
