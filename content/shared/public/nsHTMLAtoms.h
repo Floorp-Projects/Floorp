@@ -142,6 +142,7 @@ public:
   static nsIAtom* start;
   static nsIAtom* suppress;
 
+  static nsIAtom* table;
   static nsIAtom* tabstop;
   static nsIAtom* target;
   static nsIAtom* text;

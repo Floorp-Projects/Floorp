@@ -110,6 +110,7 @@ nsIAtom* nsHTMLAtoms::size;
 nsIAtom* nsHTMLAtoms::src;
 nsIAtom* nsHTMLAtoms::start;
 nsIAtom* nsHTMLAtoms::suppress;
+nsIAtom* nsHTMLAtoms::table;
 nsIAtom* nsHTMLAtoms::tabstop;
 nsIAtom* nsHTMLAtoms::target;
 nsIAtom* nsHTMLAtoms::text;
@@ -227,6 +228,7 @@ void nsHTMLAtoms::AddrefAtoms()
     src = NS_NewAtom("SRC");
     start = NS_NewAtom("START");
     suppress = NS_NewAtom("SUPPRESS");
+    table = NS_NewAtom("TABLE");
     tabstop = NS_NewAtom("TABSTOP");
     target = NS_NewAtom("TARGET");
     text = NS_NewAtom("TEXT");
@@ -345,6 +347,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(src);
     NS_RELEASE(start);
     NS_RELEASE(suppress);
+    NS_RELEASE(table);
     NS_RELEASE(tabstop);
     NS_RELEASE(target);
     NS_RELEASE(text);
