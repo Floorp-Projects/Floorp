@@ -1818,6 +1818,8 @@ PresShell::Destroy()
     mViewManager = nsnull;
   }
 
+  mStyleSet->BeginShutdown(mPresContext);
+
   // This shell must be removed from the document before the frame
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
@@ -1832,7 +1834,7 @@ PresShell::Destroy()
   }
 
   // Let the style set do its cleanup.
-  mStyleSet->Shutdown();
+  mStyleSet->Shutdown(mPresContext);
   mStyleSet = nsnull;
 
   // We hold a reference to the pres context, and it holds a weak link back

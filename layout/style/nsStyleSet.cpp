@@ -170,7 +170,10 @@ public:
                       nsIAtom* aPseudoTag,
                       nsStyleContext* aParentContext);
 
-  NS_IMETHOD Shutdown();
+  NS_IMETHOD BeginShutdown(nsIPresContext* aPresContext);
+  NS_IMETHOD Shutdown(nsIPresContext* aPresContext);
+  NS_IMETHOD NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
+                                         nsStyleContext* aStyleContext);
 
   // The following two methods can be used to tear down and reconstruct a rule tree.  The idea
   // is to first call BeginRuleTreeReconstruct, which will set aside the old rule
@@ -368,6 +371,10 @@ protected:
   nsRuleWalker* mRuleWalker;   // This is an instance of a rule walker that can be used
                                // to navigate through our tree.
 
+  PRBool mInShutdown;
+  PRInt32 mDestroyedCount;
+  nsVoidArray mRoots; // style contexts with no parent
+
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 
 #ifdef MOZ_PERF_METRICS
@@ -384,7 +391,9 @@ StyleSetImpl::StyleSetImpl()
     mQuirkStyleSheet(nsnull),
     mRuleTree(nsnull),
     mOldRuleTree(nsnull),
-    mRuleWalker(nsnull)
+    mRuleWalker(nsnull),
+    mInShutdown(PR_FALSE),
+    mDestroyedCount(0)
 #ifdef MOZ_PERF_METRICS
     ,mTimerEnabled(PR_FALSE)
 #endif
@@ -1016,9 +1025,12 @@ StyleSetImpl::GetContext(nsIPresContext* aPresContext,
     fprintf(stdout, "+++ NewSC %d +++\n", ++gNewCount);
 #endif
 
-  if (!result)
+  if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, ruleNode,
                                 aPresContext).get();
+    if (!aParentContext && result)
+      mRoots.AppendElement(result);
+  }
 
   return result;
 }
@@ -1355,7 +1367,15 @@ PRBool PR_CALLBACK DeleteRuleNodeLists(nsHashKey* aKey, void* aData, void* aClos
 }
 
 NS_IMETHODIMP
-StyleSetImpl::Shutdown()
+StyleSetImpl::BeginShutdown(nsIPresContext* aPresContext)
+{
+  mInShutdown = PR_TRUE;
+  mRoots.Clear(); // no longer valid, since we won't keep it up to date
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::Shutdown(nsIPresContext* aPresContext)
 {
   delete mRuleWalker;
   if (mRuleTree)
@@ -1363,6 +1383,43 @@ StyleSetImpl::Shutdown()
     mRuleTree->Destroy();
     mRuleTree = nsnull;
   }
+  return NS_OK;
+}
+
+static const PRInt32 kGCInterval = 1000;
+
+NS_IMETHODIMP
+StyleSetImpl::NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
+                                          nsStyleContext* aStyleContext)
+{
+  if (mInShutdown)
+    return NS_OK;
+
+  if (!aStyleContext->GetParent()) {
+    mRoots.RemoveElement(aStyleContext);
+  }
+
+  if (++mDestroyedCount == kGCInterval) {
+    mDestroyedCount = 0;
+
+    // Mark the style context tree by marking all roots, which will mark
+    // all descendants.  This will reach style contexts in the
+    // undisplayed map and "additional style contexts" since they are
+    // descendants of the root.
+    for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
+      NS_STATIC_CAST(nsStyleContext*,mRoots[i])->Mark();
+    }
+
+    // Sweep the rule tree.
+    if (mRuleTree->Sweep()) {
+      // On the rare occasion that we have no style contexts, the root
+      // will be destroyed, so delete it.
+      mRuleTree = nsnull;
+      delete mRuleWalker;
+      mRuleWalker = nsnull;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1440,26 +1497,22 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
   NS_ASSERTION(aStyleContext, "must have style context");
 
   if (aPresContext && aStyleContext) {
-    nsStyleContext* oldParent = aStyleContext->GetParent();
-
-    if (oldParent == aNewParentContext) {
+    if (aStyleContext->GetParent() == aNewParentContext) {
       aStyleContext->AddRef();
       return aStyleContext;
     }
     else {  // really a new parent
-      nsStyleContext*  newChild = nsnull;
       nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
 
       nsRuleNode* ruleNode;
       aStyleContext->GetRuleNode(&ruleNode);
-      if (aNewParentContext)
-        newChild = aNewParentContext->FindChildWithRules(pseudoTag, ruleNode).get();
-      if (newChild) // new parent already has one
-        return newChild;
-      else {  // need to make one in the new parent
-        return NS_NewStyleContext(aNewParentContext, pseudoTag, ruleNode,
-                                  aPresContext);
-      }
+      EnsureRuleWalker(aPresContext);
+      mRuleWalker->SetCurrentNode(ruleNode);
+
+      already_AddRefed<nsStyleContext> result =
+          GetContext(aPresContext, aNewParentContext, pseudoTag);
+      mRuleWalker->Reset();
+      return result;
     }
   }
   return nsnull;

@@ -358,6 +358,9 @@ private:
   nsRuleList* ChildrenList() {
     return NS_REINTERPRET_CAST(nsRuleList*, mChildrenTaggedPtr);
   }
+  nsRuleList** ChildrenListPtr() {
+    return NS_REINTERPRET_CAST(nsRuleList**, &mChildrenTaggedPtr);
+  }
   PLDHashTable* ChildrenHash() {
     return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));
   }
@@ -570,6 +573,15 @@ public:
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID, 
                                     nsStyleContext* aContext,
                                     PRBool aComputeData);
+
+  /*
+   * Garbage collection.  Mark walks up the tree, marking any unmarked
+   * ancestors until it reaches a marked one.  Sweep recursively sweeps
+   * the children, destroys any that are unmarked, and clears marks,
+   * returning true if the node on which it was called was destroyed.
+   */
+  void Mark();
+  PRBool Sweep();
 };
 
 #endif

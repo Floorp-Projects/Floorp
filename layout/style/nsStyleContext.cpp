@@ -92,6 +92,14 @@ nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
+  nsIPresContext *presContext = mRuleNode->PresContext();
+
+  nsCOMPtr<nsIPresShell> shell;
+  presContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIStyleSet> set;
+  shell->GetStyleSet(getter_AddRefs(set));
+  set->NotifyStyleContextDestroyed(presContext, this);
+
   if (mParent) {
     mParent->RemoveChild(this);
     mParent->Release();
@@ -99,8 +107,6 @@ nsStyleContext::~nsStyleContext()
 
   // Free up our data structs.
   if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mRuleNode->GetPresContext(getter_AddRefs(presContext));
     mCachedStyleData.Destroy(mBits, presContext);
   }
 }
@@ -683,6 +689,30 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
     }
   }
   return hint;
+}
+
+void
+nsStyleContext::Mark()
+{
+  // Mark our rule node.
+  mRuleNode->Mark();
+
+  // Mark our children (i.e., tell them to mark their rule nodes, etc.).
+  if (mChild) {
+    nsStyleContext* child = mChild;
+    do {
+      child->Mark();
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  
+  if (mEmptyChild) {
+    nsStyleContext* child = mEmptyChild;
+    do {
+      child->Mark();
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
 }
 
 #ifdef DEBUG
