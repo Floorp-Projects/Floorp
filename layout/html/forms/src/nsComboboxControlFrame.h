@@ -74,12 +74,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext,
-                                   PRInt32 aParentChange,
-                                   nsStyleChangeList* aChangeList,
-                                   PRInt32* aLocalChange);
-
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);

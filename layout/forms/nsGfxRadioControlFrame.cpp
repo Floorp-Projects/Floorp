@@ -58,6 +58,41 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 
 //--------------------------------------------------------------
 
+NS_IMETHODIMP
+nsGfxRadioControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                                  nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aStyleContext = nsnull;
+  switch (aIndex) {
+  case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
+    *aStyleContext = mRadioButtonFaceStyle;
+    NS_ADDREF(*aStyleContext);
+    break;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                                  nsIStyleContext* aStyleContext)
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  switch (aIndex) {
+  case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
+    NS_IF_RELEASE(mRadioButtonFaceStyle);
+    mRadioButtonFaceStyle = aStyleContext;
+    NS_IF_ADDREF(aStyleContext);
+    break;
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsGfxRadioControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
