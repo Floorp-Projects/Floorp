@@ -80,25 +80,28 @@ function getReferrer(doc)
 // - A linked document using Save Link As...
 // - A linked document using Alt-click Save Link As...
 //
-function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache)
+function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache, aSkipPrompt)
 {
-  saveInternal(aURL, null, aFileName, aFilePickerTitleKey, aShouldBypassCache);
+  saveInternal(aURL, null, aFileName, aFilePickerTitleKey, aShouldBypassCache, aSkipPrompt);
 }
 
-function saveDocument(aDocument)
+function saveDocument(aDocument, aSkipPrompt)
 {
   // In both cases here, we want to use cached data because the 
   // document is currently visible. 
   if (aDocument) 
-    saveInternal(aDocument.location.href, aDocument, false);
+    saveInternal(aDocument.location.href, aDocument, false, aSkipPrompt);
   else
-    saveInternal(_content.location.href, null, false);
+    saveInternal(_content.location.href, null, false, aSkipPrompt);
 }
 
 function saveInternal(aURL, aDocument, 
                       aFileName, aFilePickerTitleKey,
-                      aShouldBypassCache)
+                      aShouldBypassCache, aSkipPrompt)
 {
+  if (aSkipPrompt == undefined)
+    aSkipPrompt = false;
+
   var data = {
     url: aURL,
     fileName: aFileName,
@@ -107,10 +110,10 @@ function saveInternal(aURL, aDocument,
     bypassCache: aShouldBypassCache,
     window: window
   };
-  var sniffer = new nsHeaderSniffer(aURL, foundHeaderInfo, data);
+  var sniffer = new nsHeaderSniffer(aURL, foundHeaderInfo, data, aSkipPrompt);
 }
 
-function foundHeaderInfo(aSniffer, aData)
+function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
 {
   var contentType = aSniffer.contentType;
   var contentEncodingType = aSniffer.contentEncodingType;
@@ -154,8 +157,6 @@ function foundHeaderInfo(aSniffer, aData)
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;                              
   var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
-  if (isDocument) 
-    prefs.setIntPref("save_converter_index", fp.filterIndex);
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
   try {
@@ -165,11 +166,9 @@ function foundHeaderInfo(aSniffer, aData)
   }
 
   const lfContractID = "@mozilla.org/file/local;1";
-
-  var prompt = prefs.getBoolPref("promptWithFilepicker");
   var filterIndex = 0;
   var file;
-  if (prompt) {
+  if (!aSkipPrompt) {
     var fp = makeFilePicker();
     var titleKey = aData.filePickerTitle || "SaveLinkTitle";
     var bundle = getStringBundle();
@@ -204,6 +203,9 @@ function foundHeaderInfo(aSniffer, aData)
     dir.append(defaultString);
     file = dir;
   }
+
+  if (isDocument) 
+    prefs.setIntPref("save_converter_index", filterIndex);
 
   // If we're saving a document, and are saving either in complete mode or 
   // as converted text, pass the document to the web browser persist component.
@@ -267,10 +269,11 @@ function foundHeaderInfo(aSniffer, aData)
   }
 }
 
-function nsHeaderSniffer(aURL, aCallback, aData)
+function nsHeaderSniffer(aURL, aCallback, aData, aSkipPrompt)
 {
   this.mCallback = aCallback;
   this.mData = aData;
+  this.mSkipPrompt = aSkipPrompt;
   
   this.uri = makeURL(aURL);
   
@@ -400,7 +403,7 @@ nsHeaderSniffer.prototype = {
         }
       }
     }
-    this.mCallback(this, this.mData);
+    this.mCallback(this, this.mData, this.mSkipPrompt);
   },
 
   // ------------------------------------------------
