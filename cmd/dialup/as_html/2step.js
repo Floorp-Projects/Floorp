@@ -30,15 +30,15 @@ function checkData()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	globals.debug( "checkData" );
+	//globals.debug( "checkData" );
 	// * skip if we're in edit mode
 	if ( globals.document.vars.editMode.value != "yes" )
 	{
-		globals.debug( "not editing" );
+		//globals.debug( "not editing" );
 		
 		if ( document.forms != null && document.forms[ 0 ] != null && document.forms[ 0 ].popList != null )
 		{
-			globals.debug( "top case" );
+			//globals.debug( "top case" );
 			selectedIndex = document.forms[ 0 ].popList.selectedIndex;
 		}
 		else
@@ -46,8 +46,8 @@ function checkData()
 			selectedIndex = -1;
 		}
 		
-		globals.debug( "selectedISP: " + globals.selectedISP );
-		globals.debug( "selectedIndex: " + selectedIndex );		
+		//globals.debug( "selectedISP: " + globals.selectedISP );
+		//globals.debug( "selectedIndex: " + selectedIndex );		
 
 		// * check for toll calls when not in international mode
 		if ( globals.document.vars.intlMode.value != "yes" )
@@ -56,17 +56,17 @@ function checkData()
 			areaCode = globals.getAreaCode( ispPhoneNumber );
 			if ( areaCode != "" )
 			{
-				globals.debug( "areaCode: " + areaCode );s
+				//globals.debug( "areaCode: " + areaCode );s
 				if ( areaCode != "800" && areaCode != "888" )
 					if ( confirm( "The area code to call this ISP is " + areaCode + ".  This might be a toll call from your area code.  Do you wish to continue?" ) == false )
 						return false;
 			}
 		}
 
-		globals.debug( "calling createConfigIAS" );
+		//globals.debug( "calling createConfigIAS" );
 		plugin.CreateConfigIAS( globals.selectedISP, selectedIndex );
 		
-		globals.debug( "opening support window" );
+		//globals.debug( "opening support window" );
 	
 		if (	!globals.supportWindow || globals.supportWindow == null || 
 				!globals.supportWindow.document || globals.supportWindow.document == null ||
