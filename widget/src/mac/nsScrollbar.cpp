@@ -229,9 +229,9 @@ NS_METHOD nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
  */
 NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-	if (aPos < 0)
+	if ((PRInt32)aPos < 0)
 		aPos = 0;
-	mValue = ((int)aPos) > mMaxRange ? (mMaxRange - 1) : ((int)aPos);
+	mValue = ((int)aPos) > mMaxRange ? mMaxRange : ((int)aPos);
 	return (NS_OK);
 }
 
