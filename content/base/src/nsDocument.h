@@ -29,11 +29,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
 
-#if XP_NEW_SELECTION
 class nsICollection;
-#else
-class nsISelection;
-#endif
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
 
@@ -190,11 +186,7 @@ public:
   /**
     * Returns the Selection Object
    */
-#if XP_NEW_SELECTION
   NS_IMETHOD GetSelection(nsICollection ** aSelection);
-#else
-  NS_IMETHOD GetSelection(nsISelection *& aSelection);
-#endif
   /**
     * Selects all the Content
    */
@@ -305,11 +297,7 @@ protected:
   virtual ~nsDocument(); 
   nsresult Init();
 
-#if XP_NEW_SELECTION
   nsICollection * mSelection;
-#else
-  nsISelection * mSelection;
-#endif
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURL* mDocumentURL;
