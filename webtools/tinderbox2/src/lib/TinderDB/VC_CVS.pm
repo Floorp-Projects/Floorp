@@ -126,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -326,7 +326,11 @@ sub apply_db_updates {
           die("CVS reported time: $time ".gmtime($time).
               " which is more then a year away from now.\n")
         }
-        $author =~ m/(\w+)/;
+
+        # At mozilla.org authors are email addresses with the "\@"
+        # replaced by "\%" they have one user with a + in his name
+
+        $author =~ m/([a-zA-Z0-9\.\%\+]+)/;
         $author = $1;      
       }
       
@@ -355,12 +359,12 @@ sub status_table_legend {
   my ($out)='';
 
 # print all the possible tree states in a cell with the color
-
+  $out .= "\t<td align=right valign=top>\n";
   $out .= "\t<table $TinderDB::LEGEND_BORDER>\n";
   
   $out .= ("\t\t<thead><tr><td align=center>".
            "VC Cell Colors".
-           "</td><tr></thead>\n");
+           "</td></tr></thead>\n");
 
   foreach $state (TreeData::get_all_tree_states()) {
     my $color = TreeData::TreeState2color($state);
@@ -369,6 +373,7 @@ sub status_table_legend {
   }
 
   $out .= "\t</table>\n";
+  $out .= "\t</td>\n";
 
 
   return ($out);  
