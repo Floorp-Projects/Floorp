@@ -55,7 +55,7 @@ nsWindowRoot::~nsWindowRoot()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsWindowRoot, nsIDOMEventReceiver, nsIChromeEventHandler, nsPIWindowRoot)
+NS_IMPL_ISUPPORTS4(nsWindowRoot, nsIDOMEventReceiver, nsIChromeEventHandler, nsPIWindowRoot, nsIDOMEventTarget)
 
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
