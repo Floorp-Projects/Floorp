@@ -43,7 +43,7 @@ Subject: [% flag.type.name %] [%+ subject_status %]: [Bug [% flag.target.bug.id 
 [%+ USE wrap -%]
 [%- FILTER bullet = wrap(80) -%]
 
-[% user.realname %] <[% user.login %]> has [% statuses.${flag.status} %] [%+ to_identity %] for [% flag.type.name %]:
+[% user.identity %] has [% statuses.${flag.status} %] [%+ to_identity %] for [% flag.type.name %]:
 
 Bug [% bugidsummary %]
 [% END %]
@@ -58,7 +58,7 @@ Attachment [% attidsummary %]
 [%- FILTER bullet = wrap(80) %]
 
 [% IF form.comment.length > 0 %]
-------- Additional Comments from [% user.realname %] <[% user.login %]>
+------- Additional Comments from [% user.identity %]
 [%+ form.comment %]
 [% END %]
 

@@ -219,20 +219,17 @@ sub validate {
             && trim($data->{"requestee_type-$id"}))
         {
             my $requestee_email = trim($data->{"requestee_type-$id"});
-            my $requestee_id = &::DBname_to_id($requestee_email);
 
             # We know the requestee exists because we ran
             # Bugzilla::User::match_field before getting here.
-            # ConfirmGroup makes sure their group settings
-            # are up-to-date or calls DeriveGroups to update them.
-            &::ConfirmGroup($requestee_id);
+            my $requestee = Bugzilla::User->new_from_login($requestee_email);
 
             # Throw an error if the user can't see the bug.
-            if (!&::CanSeeBug($bug_id, $requestee_id))
+            if (!&::CanSeeBug($bug_id, $requestee->id))
             {
                 ThrowUserError("flag_requestee_unauthorized",
                                { flag_type => $flag_type,
-                                 requestee => new Bugzilla::User($requestee_id),
+                                 requestee => $requestee,
                                  bug_id    => $bug_id,
                                  attach_id => $attach_id });
             }
@@ -240,13 +237,13 @@ sub validate {
             # Throw an error if the target is a private attachment and
             # the requestee isn't in the group of insiders who can see it.
             if ($attach_id
-                && &::Param("insidergroup")
+                && Param("insidergroup")
                 && $data->{'isprivate'}
-                && !&::UserInGroup(&::Param("insidergroup"), $requestee_id))
+                && !$requestee->in_group(Param("insidergroup")))
             {
                 ThrowUserError("flag_requestee_unauthorized_attachment",
                                { flag_type => $flag_type,
-                                 requestee => new Bugzilla::User($requestee_id),
+                                 requestee => $requestee,
                                  bug_id    => $bug_id,
                                  attach_id => $attach_id });
             }

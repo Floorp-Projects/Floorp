@@ -116,7 +116,7 @@
                         id="requestee-[% flag.id %]" 
                         name="requestee-[% flag.id %]"
                         [% IF flag.status == "?" && flag.requestee %]
-                          value="[% flag.requestee.email FILTER html %]"
+                          value="[% flag.requestee.login FILTER html %]"
                         [% END %]
                  >)
               </span>

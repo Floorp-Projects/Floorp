@@ -53,19 +53,21 @@ ConnectToDatabase();
 
 my $cgi = Bugzilla->cgi;
 
-my $userid = 0;
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    $userid = confirm_login();
+    confirm_login();
 } else {
-    $userid = quietly_check_login();
+    quietly_check_login();
 }
+
+my $user = Bugzilla->user;
+my $userid = $user ? $user->id : 0;
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
 # and nuke the cookie. This is required for Bugzilla 2.8 and earlier.
-if ($userid) {
+if ($user) {
     my @oldquerycookies;
     foreach my $i (keys %::COOKIE) {
         if ($i =~ /^QUERY_(.*)$/) {
@@ -97,7 +99,7 @@ if ($userid) {
 }
 
 if ($::FORM{'nukedefaultquery'}) {
-    if ($userid) {
+    if ($user) {
         SendSQL("DELETE FROM namedqueries " .
                 "WHERE userid = $userid AND name = '$::defaultqueryname'");
     }
@@ -105,7 +107,7 @@ if ($::FORM{'nukedefaultquery'}) {
 }
 
 my $userdefaultquery;
-if ($userid) {
+if ($user) {
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = '$::defaultqueryname'");
     $userdefaultquery = FetchOneColumn();
@@ -308,7 +310,6 @@ $vars->{'rep_platform'} = \@::legal_platform;
 $vars->{'op_sys'} = \@::legal_opsys;
 $vars->{'priority'} = \@::legal_priority;
 $vars->{'bug_severity'} = \@::legal_severity;
-$vars->{'userid'} = $userid;
 
 # Boolean charts
 my @fields;
@@ -362,7 +363,7 @@ for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
 $default{'charts'} = \@charts;
 
 # Named queries
-if ($userid) {
+if ($user) {
     my @namedqueries;
     SendSQL("SELECT name FROM namedqueries " .
             "WHERE userid = $userid AND name != '$::defaultqueryname' " .

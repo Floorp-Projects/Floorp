@@ -19,19 +19,6 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[%# INTERFACE:
-  # user: hash. Information about the user. If the user is not logged in,
-  #       user.login is undefined.
-  #   login: string. The user's Bugzilla login email address.
-  #   showmybugslink: boolean. True if user wants My Bugs in the footer.
-  #   queries: list of strings. The names of those of the user's named
-  #     queries which should be displayed in the footer.
-  #   groups: hash. Keys are group names, values are true if user in that group.
-  #     The keys used in this template are
-  #     tweakparams, editcomponents, creategroups, editkeywords, confirm,
-  #     editbugs, editusers. 
-  #%]
-
 [%# Migration note: this whole file corresponds to the old %commandmenu% 
     substitution param in 'footerhtml' %]
 
@@ -51,14 +38,14 @@
         
         <a href="report.cgi">Reports</a> 
         
-        [% IF user.login %]
+        [% IF user %]
           [% email = user.login FILTER url_quote %]
           | <a href="request.cgi?requester=[% email %]&amp;requestee=[% email %]&amp;do_union=1&amp;group=type">My Requests</a>
         [% ELSE %]
           | <a href="request.cgi">Requests</a>
         [% END %]
         
-        [% IF user.login && Param('usevotes') %]
+        [% IF user && Param('usevotes') %]
           | <a href="votes.cgi?action=show_user">My Votes</a>
         [% END %]      
       </td>
@@ -72,7 +59,7 @@
         [% ', <a href="editparams.cgi">parameters</a>' 
                                                    IF user.groups.tweakparams %]
         [% ', <a href="editusers.cgi">users</a>'     IF user.groups.editusers 
-                                                  || user.canblessany %]
+                                                  || user.can_bless %]
         [% ', <a href="editproducts.cgi">products</a>' 
                                                 IF user.groups.editcomponents %]
         [% ', <a href="editflagtypes.cgi">flags</a>'
@@ -91,9 +78,14 @@
     [%# Preset queries %]
     
     [% preset_queries = user.showmybugslink %]
-    [% FOREACH q = user.queries %]
-      [% SET preset_queries = 1 IF q.linkinfooter %]
-    [% END %]
+    [% IF NOT preset_queries %]
+       [% FOREACH q = user.queries %]
+         [% IF q.linkinfooter %]
+           [% preset_queries = 1 %]
+           [% LAST %]
+         [% END %]
+       [% END %]
+     [% END %]
       
     <tr>
       [% IF preset_queries %]

@@ -202,53 +202,6 @@ sub quietly_check_login {
     return Bugzilla->login($_[0] ? LOGIN_OPTIONAL : LOGIN_NORMAL);
 }
 
-# Populate a hash with information about this user. 
-sub GetUserInfo {
-    my ($userid) = (@_);
-    my %user;
-    my @queries;
-    my %groups;
-    my @groupids;
-    
-    # No info if not logged in
-    return \%user if ($userid == 0);
-    
-    $user{'login'} = $::COOKIE{"Bugzilla_login"};
-    $user{'userid'} = $userid;
-    
-    SendSQL("SELECT mybugslink, realname " . 
-            "FROM profiles WHERE userid = $userid");
-    ($user{'showmybugslink'}, $user{'realname'}) = FetchSQLData();
-
-    SendSQL("SELECT name, query, linkinfooter FROM namedqueries " .
-            "WHERE userid = $userid");
-    while (MoreSQLData()) {
-        my %query;
-        ($query{'name'}, $query{'query'}, $query{'linkinfooter'}) = 
-                                                                 FetchSQLData();
-        push(@queries, \%query);    
-    }
-
-    $user{'queries'} = \@queries;
-
-    $user{'canblessany'} = UserCanBlessAnything();
-
-    SendSQL("SELECT DISTINCT id, name FROM groups, user_group_map " .
-            "WHERE groups.id = user_group_map.group_id " .
-            "AND user_id = $userid " .
-            "AND NOT isbless");
-    while (MoreSQLData()) {
-        my ($id, $name) = FetchSQLData();    
-        push(@groupids,$id);
-        $groups{$name} = 1;
-    }
-
-    $user{'groups'} = \%groups;
-    $user{'groupids'} = \@groupids;
-
-    return \%user;
-}
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');

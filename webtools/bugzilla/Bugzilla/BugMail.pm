@@ -111,14 +111,6 @@ sub Send($;$) {
     # require abuse we do.
     GetVersionTable();
 
-    # Since any email recipients must be rederived if the user has not
-    # been rederived since the most recent group change, figure out when that
-    # is once and determine the need to rederive users using the same DB 
-    # access that gets the user's email address each time a person is 
-    # processed.
-    SendSQL("SELECT MAX(last_changed) FROM groups");
-    ($last_changed) = FetchSQLData();
-
     # Make sure to clean up _all_ package vars here. Yuck...
     $nametoexclude = $recipients->{'changer'} || "";
     @{$force{'CClist'}} = (exists $recipients->{'cc'} && 
@@ -710,18 +702,12 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
       return;
     }
 
-        
-    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($last_changed) . 
-            ") FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid, $current) = (FetchSQLData());
+    # This routine should really get passed a userid
+    # This rederives groups as a side effect
+    my $user = Bugzilla::User->new_from_login($person);
+    my $userid = $user->id;
 
     $seen{$person} = 1;
-
-    detaint_natural($userid);
-
-    if (!$current) {
-        DeriveGroup($userid);
-    }
 
     # if this person doesn't have permission to see info on this bug, 
     # return.
@@ -732,12 +718,11 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     # quietly disappear from their radar.
     #
     return unless CanSeeBug($id, $userid);
-    
 
     #  Drop any non-insiders if the comment is private
-     return if (Param("insidergroup") && 
+    return if (Param("insidergroup") && 
                ($anyprivate != 0) && 
-               (!UserInGroup(Param("insidergroup"), $userid)));
+               (!$user->groups->{Param("insidergroup")}));
 
     # We shouldn't send changedmail if this is a dependency mail, and any of 
     # the depending bugs is not visible to the user.
@@ -761,8 +746,8 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         }
         # Don't send estimated_time if user not in the group, or not enabled
         if ($f ne 'estimated_time' ||
-            UserInGroup(Param('timetrackinggroup'), $userid)) { 
-             
+            $user->groups->{Param('timetrackinggroup')}) {
+
             my $desc = $fielddescription{$f};
             $head .= FormatDouble($desc, $value);
         }
@@ -781,7 +766,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
          ($diff->{'fieldname'} eq 'estimated_time' ||
          $diff->{'fieldname'} eq 'remaining_time' ||
          $diff->{'fieldname'} eq 'work_time')) {
-            if (UserInGroup(Param("timetrackinggroup"), $userid)) {
+            if ($user->groups->{Param("timetrackinggroup")}) {
                 $add_diff = 1;
             }
         } else {

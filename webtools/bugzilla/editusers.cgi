@@ -34,6 +34,8 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla::User;
+
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
@@ -241,7 +243,7 @@ print Bugzilla->cgi->header();
 $editall = UserInGroup("editusers");
 
 if (!$editall) {
-    if (!UserCanBlessAnything()) {
+    if (!Bugzilla->user->can_bless) {
         PutHeader("Not allowed");
         print "Sorry, you aren't a member of the 'editusers' group, and you\n";
         print "don't have permissions to put people in or out of any group.\n";
@@ -483,7 +485,7 @@ if ($action eq 'new') {
     print "OK, done.<br>\n";
     SendSQL("SELECT last_insert_id()");
     my ($newuserid) = FetchSQLData();
-    DeriveGroup($newuserid);
+
     print "To change ${user}'s permissions, go back and <a href=\"editusers.cgi?action=edit&user=" . url_quote($user)."\">edit this user</A>";
     print "<p>\n";
     PutTrailer($localtrailer,
@@ -682,7 +684,9 @@ if ($action eq 'edit') {
     my ($thisuserid, $realname, $disabledtext) = FetchSQLData();
 
     if ($thisuserid > 0) {
-        DeriveGroup($thisuserid);
+        # Force groups to be up to date
+        my $changeduser = new Bugzilla::User($thisuserid);
+        $changeduser->derive_groups();
     }
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
@@ -844,7 +848,8 @@ if ($action eq 'update') {
 
         print "Updated user's name.<BR>\n";
     }
-    DeriveGroup($thisuserid);
+    my $changeduser = new Bugzilla::User($thisuserid);
+    $changeduser->derive_groups();
 
     PutTrailer($localtrailer);
     exit;

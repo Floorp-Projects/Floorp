@@ -34,9 +34,6 @@ sub ThrowUserError {
 
     $vars->{error} = $error;
 
-    # Need to do this until User.pm goes in, so that the footer is correct
-    $vars->{user} = $::vars->{user};
-
     Bugzilla->dbh->do("UNLOCK TABLES") if $unlock_tables;
 
     print Bugzilla->cgi->header();

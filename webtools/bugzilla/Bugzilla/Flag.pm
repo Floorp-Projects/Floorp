@@ -177,18 +177,14 @@ sub validate {
             if ($requestee_email ne $flag->{'requestee'}->{'email'}) {
                 # We know the requestee exists because we ran
                 # Bugzilla::User::match_field before getting here.
-                # ConfirmGroup makes sure their group settings
-                # are up-to-date or calls DeriveGroups to update them.
-                my $requestee_id = &::DBname_to_id($requestee_email);
-                &::ConfirmGroup($requestee_id);
+                my $requestee = Bugzilla::User->new_from_login($requestee_email);
 
                 # Throw an error if the user can't see the bug.
-                if (!&::CanSeeBug($bug_id, $requestee_id))
+                if (!&::CanSeeBug($bug_id, $requestee->id))
                 {
                     ThrowUserError("flag_requestee_unauthorized",
                                    { flag_type => $flag->{'type'},
-                                     requestee =>
-                                       new Bugzilla::User($requestee_id),
+                                     requestee => $requestee,
                                      bug_id => $bug_id,
                                      attach_id =>
                                        $flag->{target}->{attachment}->{id} });
@@ -198,13 +194,12 @@ sub validate {
                 # the requestee isn't in the group of insiders who can see it.
                 if ($flag->{target}->{attachment}->{exists}
                     && $data->{'isprivate'}
-                    && &::Param("insidergroup")
-                    && !&::UserInGroup(&::Param("insidergroup"), $requestee_id))
+                    && Param("insidergroup")
+                    && !$requestee->in_group(Param("insidergroup")))
                 {
                     ThrowUserError("flag_requestee_unauthorized_attachment",
                                    { flag_type => $flag->{'type'},
-                                     requestee =>
-                                       new Bugzilla::User($requestee_id),
+                                     requestee => $requestee,
                                      bug_id    => $bug_id,
                                      attach_id =>
                                       $flag->{target}->{attachment}->{id} });
@@ -236,7 +231,7 @@ sub process {
     my @old_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "($flag->{'requestee'}->{'email'})" if $flag->{'requestee'};
+        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
         push(@old_summaries, $summary);
     }
     
@@ -275,7 +270,7 @@ sub process {
     my @new_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "($flag->{'requestee'}->{'email'})" if $flag->{'requestee'};
+        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
         push(@new_summaries, $summary);
     }
 
@@ -307,7 +302,7 @@ sub create {
     
     # Insert a record for the flag into the flags table.
     my $attach_id = $flag->{'target'}->{'attachment'}->{'id'} || "NULL";
-    my $requestee_id = $flag->{'requestee'} ? $flag->{'requestee'}->{'id'} : "NULL";
+    my $requestee_id = $flag->{'requestee'} ? $flag->{'requestee'}->id : "NULL";
     &::SendSQL("INSERT INTO flags (id, type_id, 
                                       bug_id, attach_id, 
                                       requestee_id, setter_id, status, 
@@ -317,7 +312,7 @@ sub create {
                         $flag->{'target'}->{'bug'}->{'id'}, 
                         $attach_id,
                         $requestee_id,
-                        $flag->{'setter'}->{'id'}, 
+                        " . $flag->{'setter'}->id . ",
                         '$flag->{'status'}', 
                         $timestamp,
                         $timestamp)");
@@ -380,7 +375,7 @@ sub modify {
                                         # the flag isn't specifically requestable
               || $status ne "?"         # or the flag isn't being requested
               || ($flag->{'requestee'}  # or the requestee hasn't changed
-                  && ($requestee_email eq $flag->{'requestee'}->{'email'})));
+                  && ($requestee_email eq $flag->{'requestee'}->login)));
         
         # Since the status is validated, we know it's safe, but it's still
         # tainted, so we have to detaint it before using it in a query.
@@ -568,14 +563,15 @@ sub notify {
     {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
-            my $user_id = &::DBname_to_id($cc) || next;
-            # re-derive permissions if necessary
-            &::ConfirmGroup($user_id, TABLES_ALREADY_LOCKED);
+            my $ccuser = Bugzilla::User->new_from_login($cc,
+                                                        TABLES_ALREADY_LOCKED)
+              || next;
+
             next if $flag->{'target'}->{'bug'}->{'restricted'}
-              && !&::CanSeeBug($flag->{'target'}->{'bug'}->{'id'}, $user_id);
+              && !&::CanSeeBug($flag->{'target'}->{'bug'}->{'id'}, $ccuser->id);
             next if $flag->{'target'}->{'attachment'}->{'isprivate'}
               && Param("insidergroup")
-              && !&::UserInGroup(Param("insidergroup"), $user_id);
+              && !$ccuser->in_group(Param("insidergroup"));
             push(@new_cc_list, $cc);
         }
         $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
@@ -646,7 +642,7 @@ sub perlify_record {
         id        => $id ,
         type      => Bugzilla::FlagType::get($type_id) ,
         target    => GetTarget($bug_id, $attach_id) , 
-        requestee => new Bugzilla::User($requestee_id) ,
+        requestee => $requestee_id ? new Bugzilla::User($requestee_id) : undef,
         setter    => new Bugzilla::User($setter_id) ,
         status    => $status , 
       };

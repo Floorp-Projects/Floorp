@@ -926,28 +926,31 @@ sub init {
     # Make sure we create a legal SQL query.
     @andlist = ("1 = 1") if !@andlist;
    
+    my $user = Bugzilla->user;
+
     my $query = "SELECT " . join(', ', @fields) .
                 " FROM $suppstring" .
                 " LEFT JOIN bug_group_map " .
                 " ON bug_group_map.bug_id = bugs.bug_id ";
 
-    if (defined @{$::vars->{user}{groupids}} && @{$::vars->{user}{groupids}} > 0) {
-        $query .= " AND bug_group_map.group_id NOT IN (" . join(',', @{$::vars->{user}{groupids}}) . ") ";
-    }
+    if ($user) {
+        if (%{$user->groups}) {
+            $query .= " AND bug_group_map.group_id NOT IN (" . join(',', values(%{$user->groups})) . ") ";
+        }
 
-    if ($::vars->{user}{userid}) {
-        $query .= " LEFT JOIN cc ON cc.bug_id = bugs.bug_id AND cc.who = $::userid ";
+        $query .= " LEFT JOIN cc ON cc.bug_id = bugs.bug_id AND cc.who = " . $user->id;
     }
 
     $query .= " WHERE " . join(' AND ', (@wherepart, @andlist)) .
               " AND ((bug_group_map.group_id IS NULL)";
 
-    if ($::vars->{user}{userid}) {
-        $query .= "    OR (bugs.reporter_accessible = 1 AND bugs.reporter = $::userid) " .
+    if ($user) {
+        my $userid = $user->id;
+        $query .= "    OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) " .
               "    OR (bugs.cclist_accessible = 1 AND cc.who IS NOT NULL) " .
-              "    OR (bugs.assigned_to = $::userid) ";
+              "    OR (bugs.assigned_to = $userid) ";
         if (Param('useqacontact')) {
-            $query .= "OR (bugs.qa_contact = $::userid) ";
+            $query .= "OR (bugs.qa_contact = $userid) ";
         }
     }
 

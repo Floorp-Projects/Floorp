@@ -77,17 +77,15 @@ sub login {
 
         # Compat stuff
         $::userid = $userid;
-        &::ConfirmGroup($userid);
 
         # Evil compat hack. The cookie stores the id now, not the name, but
         # old code still looks at this to get the current user's email
         # so it needs to be set.
-        $::COOKIE{'Bugzilla_login'} = $_user->{email};
-
-        $::vars->{'user'} = &::GetUserInfo($userid);
+        $::COOKIE{'Bugzilla_login'} = $_user->login;
     } else {
         # Old compat stuff
 
+        undef $_user;
         $::userid = 0;
         delete $::COOKIE{'Bugzilla_login'};
         delete $::COOKIE{'Bugzilla_logincookie'};
@@ -97,7 +95,12 @@ sub login {
         # - use Bugzilla->user instead!
     }
 
-    return $userid || 0;
+    return $_user;
+}
+
+sub logout {
+    undef $_user;
+    $::userid = 0;
 }
 
 my $_dbh;
@@ -257,8 +260,16 @@ or if the login code has not yet been run.
 
 =item C<login>
 
-Logs in a user, returning the userid, or C<0> if there is no logged in user. 
-See L<Bugzilla::Auth>.
+Logs in a user, returning a C<Bugzilla::User> object, or C<undef> if there is
+no logged in user. See L<Bugzilla::Auth|Bugzilla::Auth> and
+L<Bugzilla::User|Bugzilla::User>.
+
+=item C<logout>
+
+Logs out the current user. For the moment, this will just cause calls to
+C<user> to return C<undef>. Eventually this will handle deleting cookies from
+the browser and values from the database, which is currently all handled
+by C<relogin.cgi>.
 
 =item C<dbh>
 

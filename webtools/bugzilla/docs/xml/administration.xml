@@ -1385,7 +1385,7 @@ skip-networking
       positive check, which returns 1 (allow) if certain conditions are true,
       or a negative check, which returns 0 (deny.) E.g.:
       <programlisting>    if ($field eq "qacontact") {
-        if (UserInGroup("quality_assurance")) {
+        if (Bugzilla->user->groups("quality_assurance")) {
             return 1;
         } 
         else {
@@ -1395,7 +1395,7 @@ skip-networking
       This says that only users in the group "quality_assurance" can change
       the QA Contact field of a bug. Getting more weird:
       <programlisting>    if (($field eq "priority") &&
-        ($vars->{'user'}{'login'} =~ /.*\@example\.com$/))
+        (Bugzilla->user->email =~ /.*\@example\.com$/))
     {
         if ($oldvalue eq "P1") {
             return 1;

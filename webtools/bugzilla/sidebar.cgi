@@ -35,26 +35,6 @@ my $cgi = Bugzilla->cgi;
 # Main Body Execution
 ###############################################################################
 
-$vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
-
-if (defined $::COOKIE{'Bugzilla_login'}) {
-    SendSQL("SELECT mybugslink, userid FROM profiles " .
-            "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-    my ($mybugslink, $userid) = (FetchSQLData());
-    $vars->{'userid'} = $userid;
-    $vars->{'canblessanything'} = UserCanBlessAnything();
-    if ($mybugslink) {
-        my $mybugstemplate = Param("mybugstemplate");
-        my %substs = ( 'userid' => url_quote($::COOKIE{'Bugzilla_login'}) );
-        $vars->{'mybugsurl'} = PerformSubsts($mybugstemplate, \%substs);
-    }
-    SendSQL("SELECT name FROM namedqueries WHERE userid = $userid AND linkinfooter");
-    while (MoreSQLData()) {
-        my ($name) = FetchSQLData();
-        push(@{$vars->{'namedqueries'}}, $name);
-    }
-}
-
 # This sidebar is currently for use with Mozilla based web browsers.
 # Internet Explorer 6 is supposed to have a similar feature, but it
 # most likely won't support XUL ;)  When that does come out, this

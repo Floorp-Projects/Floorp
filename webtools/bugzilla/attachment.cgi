@@ -693,11 +693,11 @@ sub update
           "flaginclusions AS i READ, flagexclusions AS e READ, " . 
           # cc, bug_group_map, user_group_map, and groups are in here so we
           # can check the permissions of flag requestees and email addresses
-          # on the flag type cc: lists via the ConfirmGroup and CanSeeBug
-          # function calls in Flag::notify.  group_group_map is in here in case
-          # ConfirmGroup needs to call DeriveGroup.  profiles and user_group_map
-          # would be READ locks instead of WRITE locks if it weren't for
-          # DeriveGroup, which needs to write to those tables.
+          # on the flag type cc: lists via the CanSeeBug
+          # function call in Flag::notify. group_group_map is in here in case
+          # Bugzilla::User needs to rederive groups. profiles and 
+          # user_group_map would be READ locks instead of WRITE locks if it
+          # weren't for derive_groups, which needs to write to those tables.
           "bugs READ, profiles WRITE, " . 
           "cc READ, bug_group_map READ, user_group_map WRITE, " . 
           "group_group_map READ, groups READ");

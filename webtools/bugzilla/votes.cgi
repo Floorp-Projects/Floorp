@@ -127,7 +127,7 @@ sub show_user {
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     my $bug_id = $::FORM{'bug_id'} || "";
         
-    my $name = $::FORM{'user'} || $::COOKIE{'Bugzilla_login'};
+    my $name = $::FORM{'user'} || Bugzilla->user->login;
     my $who = DBname_to_id($name);
     
     # After DBNameToIdAndCheck is templatised and prints a Content-Type, 
@@ -135,7 +135,7 @@ sub show_user {
     # special error handling should go away.
     $who || ThrowUserError("invalid_username", {name => $name});
     
-    my $canedit = 1 if ($name eq $::COOKIE{'Bugzilla_login'});
+    my $canedit = 1 if ($name eq Bugzilla->user->login);
     
     SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
              cc READ, bug_group_map READ, user_group_map READ,
@@ -270,7 +270,7 @@ sub record_votes {
 
     GetVersionTable();
 
-    my $who = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+    my $who = Bugzilla->user->id;
 
     # If the user is voting for bugs, make sure they aren't overstuffing
     # the ballot box.

@@ -59,7 +59,9 @@ $cgi->send_cookie(-name => "Bugzilla_logincookie",
 delete $::COOKIE{"Bugzilla_login"};
 
 $vars->{'message'} = "logged_out";
-$vars->{'user'} = {};
+
+# This entire script should eventually just become a call to Bugzilla->logout
+Bugzilla->logout;
 
 print $cgi->header();
 $template->process("global/message.html.tmpl", $vars)

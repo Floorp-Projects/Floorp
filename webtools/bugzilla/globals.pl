@@ -510,10 +510,9 @@ sub CanEditProductId {
     my $query = "SELECT group_id FROM group_control_map " .
                 "WHERE product_id = $productid " .
                 "AND canedit != 0 "; 
-    if ((defined @{$::vars->{user}{groupids}}) 
-        && (@{$::vars->{user}{groupids}} > 0)) {
+    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
-                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+                   join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
     $query .= "LIMIT 1";
     PushGlobalSQLState();
@@ -533,10 +532,9 @@ sub CanEnterProduct {
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id " .
                 "AND group_control_map.entry != 0 ";
-    if ((defined @{$::vars->{user}{groupids}}) 
-        && (@{$::vars->{user}{groupids}} > 0)) {
+    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
-                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+                   join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
     $query .= "WHERE products.name = " . SqlQuote($productname) . " LIMIT 1";
     PushGlobalSQLState();
@@ -566,10 +564,9 @@ sub GetSelectableProducts {
         $query .= "AND group_control_map.membercontrol = " .
                   CONTROLMAPMANDATORY . " ";
     }
-    if ((defined @{$::vars->{user}{groupids}}) 
-        && (@{$::vars->{user}{groupids}} > 0)) {
+    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
-                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+                   join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
     $query .= "WHERE group_id IS NULL ORDER BY name";
     PushGlobalSQLState();
@@ -721,99 +718,6 @@ sub Crypt {
     # Return the crypted password.
     return $cryptedpassword;
 }
-
-# ConfirmGroup(userid) is called prior to any activity that relies
-# on user_group_map to ensure that derived group permissions are up-to-date.
-# Permissions must be rederived if ANY groups have a last_changed newer
-# than the profiles.refreshed_when value.
-sub ConfirmGroup {
-    my ($user, $locked) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT userid FROM profiles, groups WHERE userid = $user " .
-            "AND profiles.refreshed_when <= groups.last_changed ");
-    my $ret = FetchSQLData();
-    PopGlobalSQLState();
-    if ($ret) {
-        DeriveGroup($user, $locked);
-    }
-}
-
-# DeriveGroup removes and rederives all derived group permissions for
-# the specified user.  If $locked is true, Bugzilla has already locked
-# the necessary tables as part of a larger transaction, so this function
-# shouldn't lock them again (since then tables not part of this function's
-# lock will get unlocked).
-sub DeriveGroup {
-    my ($user, $locked) = (@_);
-    PushGlobalSQLState();
-
-    SendSQL("LOCK TABLES profiles WRITE, user_group_map WRITE, group_group_map READ, groups READ")
-      unless $locked;
-
-    # avoid races,  we are only as up to date as the BEGINNING of this process
-    SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
-    my ($login, $starttime) = FetchSQLData();
-    
-    # first remove any old derived stuff for this user
-    SendSQL("DELETE FROM user_group_map WHERE user_id = $user " .
-            "AND isderived = 1");
-
-    my %groupidsadded = ();
-    # add derived records for any matching regexps
-    SendSQL("SELECT id, userregexp FROM groups WHERE userregexp != ''");
-    while (MoreSQLData()) {
-        my ($groupid, $rexp) = FetchSQLData();
-        if ($login =~ m/$rexp/i) {        
-            PushGlobalSQLState();
-            $groupidsadded{$groupid} = 1;
-            SendSQL("INSERT INTO user_group_map " .
-                    "(user_id, group_id, isbless, isderived) " .
-                    "VALUES ($user, $groupid, 0, 1)");
-            PopGlobalSQLState();
-
-        }
-    }
-
-    # Get a list of the groups of which the user is a member.
-    my %groupidschecked = ();
-    my @groupidstocheck = ();
-    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $user
-             AND NOT isbless");
-    while (MoreSQLData()) {
-        my ($groupid) = FetchSQLData();
-        push(@groupidstocheck,$groupid);
-    }
-
-    # Each group needs to be checked for inherited memberships once.
-    while (@groupidstocheck) {
-        my $group = shift @groupidstocheck;
-        if (!defined($groupidschecked{"$group"})) {
-            $groupidschecked{"$group"} = 1;
-            SendSQL("SELECT grantor_id FROM group_group_map WHERE"
-                 . " member_id = $group AND NOT isbless");
-            while (MoreSQLData()) {
-                my ($groupid) = FetchSQLData();
-                if (!defined($groupidschecked{"$groupid"})) {
-                    push(@groupidstocheck,$groupid);
-                }
-                if (!$groupidsadded{$groupid}) {
-                    $groupidsadded{$groupid} = 1;
-                    PushGlobalSQLState();
-                    SendSQL("INSERT INTO user_group_map"
-                         . " (user_id, group_id, isbless, isderived)"
-                         . " VALUES ($user, $groupid, 0, 1)");
-                    PopGlobalSQLState();
-                }
-            }
-        }
-    }
-            
-    SendSQL("UPDATE profiles SET refreshed_when = " .
-            SqlQuote($starttime) . "WHERE userid = $user");
-    SendSQL("UNLOCK TABLES");
-    PopGlobalSQLState();
-};
-
 
 sub DBID_to_real_or_loginname {
     my ($id) = (@_);
@@ -1189,23 +1093,8 @@ sub SplitEnumType {
     return @result;
 }
 
-# UserInGroup returns information aboout the current user if no second 
-# parameter is specified
 sub UserInGroup {
-    my ($groupname, $userid) = (@_);
-    if (!$userid) {
-        return $::vars->{'user'}{'groups'}{$_[0]};
-    }
-    PushGlobalSQLState();
-    $userid ||= $::userid;
-    SendSQL("SELECT groups.id FROM groups, user_group_map 
-        WHERE groups.id = user_group_map.group_id 
-        AND user_group_map.user_id = $userid
-        AND isbless = 0
-        AND groups.name = " . SqlQuote($groupname));
-    my $result = FetchOneColumn();
-    PopGlobalSQLState();
-    return defined($result);
+    return defined Bugzilla->user && defined Bugzilla->user->groups->{$_[0]};
 }
 
 sub UserCanBlessGroup {
@@ -1236,32 +1125,6 @@ sub UserCanBlessGroup {
     $result = FetchOneColumn();
     PopGlobalSQLState();
     return $result; 
-}
-
-sub UserCanBlessAnything {
-    PushGlobalSQLState();
-    # check if user explicitly can bless a group
-    SendSQL("SELECT group_id FROM user_group_map 
-        WHERE user_id = $::userid AND isbless = 1");
-    my $result = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($result) {
-        return 1;
-    }
-    PushGlobalSQLState();
-    # check if user is a member of a group that can bless this group
-    SendSQL("SELECT groups.id FROM groups, user_group_map, 
-        group_group_map 
-        WHERE groups.id = grantor_id 
-        AND user_group_map.user_id = $::userid
-        AND group_group_map.isbless = 1
-        AND user_group_map.group_id = member_id");
-    $result = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($result) {
-        return 1;
-    }
-    return 0;
 }
 
 sub BugInGroup {

@@ -123,7 +123,8 @@
         [% END %]
       </td>
     </tr>
-    [% IF (user.userid != bugassignee_id) AND UserInGroup("editbugs") %]
+
+    [% IF (user.id != bugassignee_id) AND user.groups.editbugs %]
       <tr>
         <th>Reassignment:</th>
         <td>

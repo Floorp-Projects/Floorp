@@ -19,6 +19,8 @@
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
 #                 Erik Stambaugh <not_erik@dasbistro.com>
+#                 Bradley Baetz <bbaetz@acm.org>
+#                 Joel Peshkin <bugreport@peshkin.net> 
 
 ################################################################################
 # Module Initialization
@@ -30,57 +32,311 @@ use strict;
 # This module implements utilities for dealing with Bugzilla users.
 package Bugzilla::User;
 
+use Bugzilla::Config;
+use Bugzilla::Util;
+
 ################################################################################
 # Functions
 ################################################################################
 
-my $user_cache = {};
 sub new {
-    # Returns a hash of information about a particular user.
+    my $invocant = shift;
+    return $invocant->_create("userid=?", @_);
+}
 
+# This routine is sort of evil. Nothing except the login stuff should
+# be dealing with addresses as an input, and they can get the id as a
+# side effect of the other sql they have to do anyway.
+# Bugzilla::BugMail still does this, probably as a left over from the
+# pre-id days. Provide this as a helper, but don't document it, and hope
+# that it can go away.
+# The request flag stuff also does this, but it really should be passing
+# in the id its already had to validate (or the User.pm object, of course)
+sub new_from_login {
+    my $invocant = shift;
+    return $invocant->_create("login_name=?", @_);
+}
+
+# Internal helper for the above |new| methods
+# $cond is a string (including a placeholder ?) for the search
+# requirement for the profiles table
+sub _create {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
-  
-    my $exists = 1;
-    my ($id, $name, $email) = @_;
-    
-    return undef if !$id;
-    return $user_cache->{$id} if exists($user_cache->{$id});
-    
-    my $self = { 'id' => $id };
-    
-    bless($self, $class);
-    
-    if (!$name && !$email) {
-        &::PushGlobalSQLState();
-        &::SendSQL("SELECT 1, realname, login_name FROM profiles WHERE userid = $id");
-        ($exists, $name, $email) = &::FetchSQLData();
-        &::PopGlobalSQLState();
-    }
-    
-    $self->{'name'} = $name;
-    $self->{'email'} = $email || "__UNKNOWN__";
-    $self->{'exists'} = $exists;
-        
-    # Generate a string to identify the user by name + email if the user
-    # has a name or by email only if she doesn't.
-    $self->{'identity'} = $name ? "$name <$email>" : $email;
 
-    # Generate a user "nickname" -- i.e. a shorter, not-necessarily-unique name 
-    # by which to identify the user.  Currently the part of the user's email
-    # address before the at sign (@), but that could change, especially if we
-    # implement usernames not dependent on email address.
-    my @email_components = split("@", $email);
-    $self->{'nick'} = $email_components[0];
-    
-    $user_cache->{$id} = $self;
-    
+    my $cond = shift;
+    my $val = shift;
+
+    # We're checking for validity here, so any value is OK
+    trick_taint($val);
+
+    my $tables_locked_for_derive_groups = shift;
+
+    my $dbh = Bugzilla->dbh;
+
+    my ($id,
+        $login,
+        $name,
+        $mybugslink) = $dbh->selectrow_array(qq{SELECT userid,
+                                                       login_name,
+                                                       realname,
+                                                       mybugslink
+                                                  FROM profiles
+                                                 WHERE $cond},
+                                             undef,
+                                             $val);
+
+    return undef unless defined $id;
+
+    my $self = { id => $id,
+                 name => $name,
+                 login => $login,
+                 showmybugslink => $mybugslink,
+               };
+
+    bless ($self, $class);
+
+    # Now update any old group information if needed
+    my $result = $dbh->selectrow_array(q{SELECT 1
+                                           FROM profiles, groups
+                                          WHERE userid=?
+                                            AND profiles.refreshed_when <=
+                                                  groups.last_changed},
+                                       undef,
+                                       $id);
+
+    if ($result) {
+        $self->derive_groups($tables_locked_for_derive_groups);
+    }
+
     return $self;
+}
+
+# Accessors for user attributes
+sub id { $_[0]->{id}; }
+sub login { $_[0]->{login}; }
+sub email { $_[0]->{login}; }
+sub name { $_[0]->{name}; }
+sub showmybugslink { $_[0]->{showmybugslink}; }
+
+# Generate a string to identify the user by name + email if the user
+# has a name or by email only if she doesn't.
+sub identity {
+    my $self = shift;
+
+    if (!defined $self->{identity}) {
+        $self->{identity} = 
+          $self->{name} ? "$self->{name} <$self->{login}>" : $self->{login};
+    }
+
+    return $self->{identity};
+}
+
+sub nick {
+    my $self = shift;
+
+    if (!defined $self->{nick}) {
+        $self->{nick} = (split(/@/, $self->{login}, 2))[0];
+    }
+
+    return $self->{nick};
+}
+
+sub queries {
+    my $self = shift;
+
+    return $self->{queries} if defined $self->{queries};
+
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare(q{  SELECT name, query, linkinfooter
+                                  FROM namedqueries
+                                 WHERE userid=?
+                              ORDER BY UPPER(name)});
+    $sth->execute($self->{id});
+
+    my @queries;
+    while (my $row = $sth->fetch) {
+        push (@queries, {
+                          name         => $row->[0],
+                          query        => $row->[1],
+                          linkinfooter => $row->[2],
+                        });
+    }
+    $self->{queries} = \@queries;
+
+    return $self->{queries};
+}
+
+sub flush_queries_cache {
+    my $self = shift;
+
+    delete $self->{queries};
+}
+
+sub groups {
+    my $self = shift;
+
+    return $self->{groups} if defined $self->{groups};
+
+    my $dbh = Bugzilla->dbh;
+    my $groups = $dbh->selectcol_arrayref(q{SELECT DISTINCT groups.name, group_id
+                                              FROM groups, user_group_map
+                                             WHERE groups.id=user_group_map.group_id
+                                               AND user_id=?
+                                               AND isbless=0},
+                                          { Columns=>[1,2] },
+                                          $self->{id});
+
+    # The above gives us an arrayref [name, id, name, id, ...]
+    # Convert that into a hashref
+    my %groups = @$groups;
+    $self->{groups} = \%groups;
+
+    return $self->{groups};
+}
+
+sub in_group {
+    my ($self, $group) = @_;
+
+    # If we already have the info, just return it.
+    return defined($self->{groups}->{$group}) if defined $self->{groups};
+
+    # Otherwise, go check for it
+
+    my $dbh = Bugzilla->dbh;
+
+    my $res = $dbh->selectrow(q{SELECT 1
+                                  FROM groups, user_group_map
+                                 WHERE groups.id=user_group_map.group_id
+                                   AND user_group_map.user_id=?
+                                   AND isbless=0
+                                   AND groups.name=?},
+                              undef,
+                              $self->id,
+                              $group);
+
+    return defined($res);
+}
+
+sub derive_groups {
+    my ($self, $already_locked) = @_;
+
+    my $id = $self->id;
+
+    my $dbh = Bugzilla->dbh;
+
+    my $sth;
+
+    $dbh->do(q{LOCK TABLES profiles WRITE,
+                           user_group_map WRITE,
+                           group_group_map READ,
+                           groups READ}) unless $already_locked;
+
+    # avoid races, we are only up to date as of the BEGINNING of this process
+    my $time = $dbh->selectrow_array("SELECT NOW()");
+
+    # first remove any old derived stuff for this user
+    $dbh->do(q{DELETE FROM user_group_map
+                      WHERE user_id = ?
+                        AND isderived = 1},
+             undef,
+             $id);
+
+    my %groupidsadded = ();
+    # add derived records for any matching regexps
+
+    $sth = $dbh->prepare("SELECT id, userregexp FROM groups WHERE userregexp != ''");
+    $sth->execute;
+
+    my $group_insert;
+    while (my $row = $sth->fetch) {
+        if ($self->{login} =~ m/$row->[1]/i) {
+            $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
+                                              (user_id, group_id, isbless, isderived)
+                                              VALUES (?, ?, 0, 1)});
+            $groupidsadded{$row->[0]} = 1;
+            $group_insert->execute($id, $row->[0]);
+        }
+    }
+
+    # Get a list of the groups of which the user is a member.
+    my %groupidschecked = ();
+
+    my @groupidstocheck = @{$dbh->selectcol_arrayref(q{SELECT group_id
+                                                         FROM user_group_map
+                                                        WHERE user_id=?},
+                                                     undef,
+                                                     $id)};
+
+    # Each group needs to be checked for inherited memberships once.
+    my $group_sth;
+    while (@groupidstocheck) {
+        my $group = shift @groupidstocheck;
+        if (!defined($groupidschecked{"$group"})) {
+            $groupidschecked{"$group"} = 1;
+            $group_sth ||= $dbh->prepare(q{SELECT grantor_id
+                                             FROM group_group_map
+                                            WHERE member_id=?
+                                              AND isbless=0});
+            $group_sth->execute($group);
+            while (my $groupid = $group_sth->fetchrow_array) {
+                if (!defined($groupidschecked{"$groupid"})) {
+                    push(@groupidstocheck,$groupid);
+                }
+                if (!$groupidsadded{$groupid}) {
+                    $groupidsadded{$groupid} = 1;
+                    $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
+                                                      (user_id, group_id, isbless, isderived)
+                                                      VALUES (?, ?, 0, 1)});
+                    $group_insert->execute($id, $groupid);
+                }
+            }
+        }
+    }
+
+    $dbh->do(q{UPDATE profiles
+                  SET refreshed_when = ?
+                WHERE userid=?},
+             undef,
+             $time,
+             $id);
+    $dbh->do("UNLOCK TABLES") unless $already_locked;
+}
+
+sub can_bless {
+    my $self = shift;
+
+    return $self->{can_bless} if defined $self->{can_bless};
+
+    my $dbh = Bugzilla->dbh;
+    # First check if the user can explicitly bless a group
+    my $res = $dbh->selectrow_arrayref(q{SELECT 1
+                                           FROM user_group_map
+                                          WHERE user_id=?
+                                            AND isbless=1},
+                                       undef,
+                                       $self->{id});
+    if (!$res) {
+        # Now check if user is a member of a group that can bless a group
+        $res = $dbh->selectrow_arrayref(q{SELECT 1
+                                            FROM user_group_map, group_group_map
+                                           WHERE user_group_map.user_id=?
+                                             AND user_group_map.group_id=member_id
+                                             AND group_group_map.isbless=1},
+                                        undef,
+                                        $self->{id});
+    }
+
+    $self->{can_bless} = $res ? 1 : 0;
+
+    return $self->{can_bless};
 }
 
 sub match {
     # Generates a list of users whose login name (email address) or real name
     # matches a substring or wildcard.
+    # This is also called if matches are disabled (for error checking), but
+    # in this case only the exact match code will end up running.
 
     # $str contains the string to match, while $limit contains the
     # maximum number of records to retrieve.
@@ -99,7 +355,8 @@ sub match {
 
     my $wildstr = $str;
 
-    if ($wildstr =~ s/\*/\%/g) {   # don't do wildcards if no '*' in the string
+    if ($wildstr =~ s/\*/\%/g && # don't do wildcards if no '*' in the string
+        Param('usermatchmode') ne 'off') { # or if we only want exact matches
 
         # Build the query.
         my $sqlstr = &::SqlQuote($wildstr);
@@ -159,7 +416,7 @@ sub match {
 
     # order @users by alpha
 
-    @users = sort { uc($a->{'email'}) cmp uc($b->{'email'}) } @users;
+    @users = sort { uc($a->login) cmp uc($b->login) } @users;
 
     return \@users;
 }
@@ -251,9 +508,6 @@ sub match_field {
     }
     $fields = $expanded_fields;
 
-    # Skip all of this if the option has been turned off
-    return 1 if (&::Param('usermatchmode') eq 'off');
-
     for my $field (keys %{$fields}) {
 
         # Tolerate fields that do not exist.
@@ -312,14 +566,14 @@ sub match_field {
 
             # skip confirmation for exact matches
             if ((scalar(@{$users}) == 1)
-                && (@{$users}[0]->{'email'} eq $query))
+                && (@{$users}[0]->{'login'} eq $query))
             {
                 # delimit with spaces if necessary
                 if ($vars->{'form'}->{$field}) {
                     $vars->{'form'}->{$field} .= " ";
                 }
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'};
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'};
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'login'};
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'login'};
                 next;
             }
 
@@ -333,8 +587,8 @@ sub match_field {
                 if ($vars->{'form'}->{$field}) {
                     $vars->{'form'}->{$field} .= " ";
                 }
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'};
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'};
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'login'};
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'login'};
                 $need_confirm = 1 if &::Param('confirmuniqueusermatch');
 
             }
@@ -443,3 +697,159 @@ sub email_prefs {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Bugzilla::User - Object for a Bugzilla user
+
+=head1 SYNOPSIS
+
+  use Bugzilla::User;
+
+  my $user = new Bugzilla::User($id);
+
+=head1 DESCRIPTION
+
+This package handles Bugzilla users. Data obtained from here is read-only;
+there is currently no way to modify a user from this package.
+
+Note that the currently logged in user (if any) is available via
+L<Bugzilla-E<gt>user|Bugzilla/"user">.
+
+=head1 METHODS
+
+=over 4
+
+=item C<new($userid)>
+
+Creates a new C<Bugzilla::User> object for the given user id. Returns
+C<undef> if no matching user is found.
+
+=begin undocumented
+
+=item C<new_from_login($login)>
+
+Creates a new C<Bugzilla::User> object given the provided login. Returns
+C<undef> if no matching user is found.
+
+This routine should not be required in general; most scripts should be using
+userids instead.
+
+This routine and C<new> both take an extra optional argument, which is
+passed as the argument to C<derive_groups> to avoid locking. See that
+routine's documentation for details.
+
+=end undocumented
+
+=item C<id>
+
+Returns the userid for this user.
+
+=item C<login>
+
+Returns the login name for this user.
+
+=item C<email>
+
+Returns the user's email address. Currently this is the same value as the
+login.
+
+=item C<name>
+
+Returns the 'real' name for this user, if any.
+
+=item C<showmybugslink>
+
+Returns C<1> if the user has set his preference to show the 'My Bugs' link in
+the page footer, and C<0> otherwise.
+
+=item C<identity>
+
+Retruns a string for the identity of the user. This will be of the form
+C<name E<lt>emailE<gt>> if the user has specified a name, and C<email>
+otherwise.
+
+=item C<nick>
+
+Returns a user "nickname" -- i.e. a shorter, not-necessarily-unique name by
+which to identify the user. Currently the part of the user's email address
+before the at sign (@), but that could change, especially if we implement
+usernames not dependent on email address.
+
+=item C<queries>
+
+Returns an array of the user's named queries, sorted in a case-insensitive
+order by name. Each entry is a hash with three keys:
+
+=over
+
+=item *
+
+name - The name of the query
+
+=item *
+
+query - The text for the query
+
+=item *
+
+linkinfooter - Whether or not the query should be displayed in the footer.
+
+=back
+
+=item C<flush_queries_cache>
+
+Some code modifies the set of stored queries. Because C<Bugzilla::User> does
+not handle these modifications, but does cache the result of calling C<queries>
+internally, such code must call this method to flush the cached result.
+
+=item C<groups>
+
+Returns a hashref of group names for groups the user is a member of. The keys
+are the names of the groups, whilst the values are the respective group ids.
+(This is so that a set of all groupids for groups the user is in can be
+obtained by C<values(%{$user->groups})>.)
+
+=item C<in_group>
+
+Determines whether or not a user is in the given group. This method is mainly
+intended for cases where we are not looking at the currently logged in user,
+and only need to make a quick check for the group, where calling C<groups>
+and getting all of the groups would be overkill.
+
+=item C<derive_groups>
+
+Bugzilla allows for group inheritance. When data about the user (or any of the
+groups) changes, the database must be updated. Handling updated groups is taken
+care of by the constructor. However, when updating the email address, the
+user may be placed into different groups, based on a new email regexp. This
+method should be called in such a case to force reresolution of these groups.
+
+=begin undocumented
+
+This routine takes an optional argument. If true, then this routine will not
+lock the tables, but will rely on the caller to ahve done so itsself.
+
+This is required because mysql will only execute a query if all of the tables
+are locked, or if none of them are, not a mixture. If the caller has already
+done some locking, then this routine would fail. Thus the caller needs to lock
+all the tables required by this method, and then C<derive_groups> won't do
+any locking.
+
+This is a really ugly solution, and when Bugzilla supports transactions
+instead of using the explicit table locking we were forced to do when thats
+all MySQL supported, this will go away.
+
+=end undocumented
+
+=item C<can_bless>
+
+Returns C<1> if the user can bless at least one group. Otherwise returns C<0>.
+
+=back
+
+=head1 SEE ALSO
+
+L<Bugzilla|Bugzilla>

@@ -272,15 +272,9 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::FORM{'namedcmd'});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
-        # Now remove this query from the footer
-        my $count = 0;
-        foreach my $q (@{$::vars->{'user'}{'queries'}}) {
-            if ($q->{'name'} eq $::FORM{'namedcmd'}) {
-                splice(@{$::vars->{'user'}{'queries'}}, $count, 1);
-                last;
-            }
-            $count++;
-        }
+
+        # Now reset the cached queries
+        Bugzilla->user->flush_queries_cache();
 
         print $cgi->header();
         # Generate and return the UI (HTML page) from the appropriate template.
@@ -317,6 +311,14 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
 
         my $tofooter = $::FORM{'tofooter'} ? 1 : 0;
 
+        $vars->{'message'} = "buglist_new_named_query";
+
+        # We want to display the correct message. Check if it existed before
+        # we insert, because ->queries may fetch from the db anyway
+        if (grep { $_->{name} eq $name } @{Bugzilla->user->queries()}) {
+            $vars->{'message'} = "buglist_updated_named_query";
+        }
+
         SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
         if (FetchOneColumn()) {
             SendSQL("UPDATE  namedqueries
@@ -327,28 +329,11 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
             SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
-        
-        my $new_in_footer = $tofooter;
-        $vars->{'message'}   = "buglist_new_named_query";
-        
-        # Don't add it to the list if they are reusing an existing query name.
-        foreach my $query (@{$vars->{'user'}{'queries'}}) {
-            if ($query->{'name'} eq $name) {
-                $vars->{'message'} = "buglist_updated_named_query";
-                if ($query->{'linkinfooter'} == 1) {
-                    $new_in_footer = 0;
-                }
-                last;
-            }
-        }        
-        
-        if ($new_in_footer) {
-            my %query = (name => $name,
-                         query => $::buffer, 
-                         linkinfooter => $tofooter);
-            push(@{$vars->{'user'}{'queries'}}, \%query);
-        }
-        
+
+        # Make sure to invalidate any cached query data, so that the footer is
+        # correctly displayed
+        Bugzilla->user->flush_queries_cache();
+
         $vars->{'queryname'} = $name;
     }
 }

@@ -44,6 +44,8 @@ quietly_check_login('permit_anonymous');
 # token-related tasks.
 use Token;
 
+use Bugzilla::User;
+
 ################################################################################
 # Data Validation / Security Authorization
 ################################################################################
@@ -248,7 +250,10 @@ sub changeEmail {
     SendSQL("DELETE FROM tokens WHERE userid = $userid 
                                   AND tokentype = 'emailnew'");
     SendSQL("UNLOCK TABLES");
-    DeriveGroup($userid);
+
+    # The email address has been changed, so we need to rederive the groups
+    my $user = new Bugzilla::User($userid);
+    $user->derive_groups;
 
     # Return HTTP response headers.
     print Bugzilla->cgi->header();
@@ -283,7 +288,16 @@ sub cancelChangeEmail {
                  SET      login_name = $quotedoldemail
                  WHERE    userid = $userid");
             SendSQL("UNLOCK TABLES");
-            DeriveGroup($userid);
+
+            # email has changed, so rederive groups
+            # Note that this is done _after_ the tables are unlocked
+            # This is sort of a race condition (given the lack of transactions)
+            # but the user had access to it just now, so it's not a security
+            # issue
+
+            my $user = new Bugzilla::User($userid);
+            $user->derive_groups;
+
             $vars->{'message'} = "email_change_cancelled_reinstated";
         } 
     } 

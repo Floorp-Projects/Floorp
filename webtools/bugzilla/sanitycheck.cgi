@@ -106,12 +106,16 @@ if (exists $::FORM{'rederivegroups'}) {
 }
 
 # rederivegroupsnow is REALLY only for testing.
+# If it wasn't, then we'd do this the faster way as a per-group
+# thing rather than per-user for group inheritance
 if (exists $::FORM{'rederivegroupsnow'}) {
+    require Bugzilla::User;
     Status("OK, now rederiving groups.");
     SendSQL("SELECT userid FROM profiles");
     while ((my $id) = FetchSQLData()) {
-        DeriveGroup($id);
-        Status("Group $id");
+        my $user = new Bugzilla::User($id);
+        $user->derive_groups();
+        Status("User $id");
     }
 }
 

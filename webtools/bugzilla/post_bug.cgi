@@ -54,7 +54,7 @@ sub sillyness {
 use vars qw($vars $template);
 
 ConnectToDatabase();
-my $whoid = confirm_login();
+my $user = confirm_login();
 
 my $cgi = Bugzilla->cgi;
 
@@ -454,7 +454,7 @@ if (UserInGroup("editbugs")) {
                         "($id, $i)");
                 push(@all_deps, $i); # list for mailing dependent bugs
                 # Log the activity for the other bug:
-                LogActivityEntry($i, $me, "", $id, $whoid, $timestamp);
+                LogActivityEntry($i, $me, "", $id, $user->id, $timestamp);
             }
             my $tmp = $me;
             $me = $target;

@@ -256,7 +256,10 @@ sub create {
             # Generic linear search function
             'lsearch' => \&Bugzilla::Util::lsearch,
 
-            # UserInGroup - you probably want to cache this
+            # Currently logged in user, if any
+            'user' => sub { return Bugzilla->user; },
+
+            # UserInGroup. Deprecated - use the user.* functions instead
             'UserInGroup' => \&::UserInGroup,
 
             # SendBugMail - sends mail about a bug, using Bugzilla::BugMail.pm

@@ -314,8 +314,13 @@ sub SaveFooter {
     SendSQL("UPDATE profiles SET mybugslink = " . 
             SqlQuote($::FORM{'mybugslink'}) . " WHERE userid = $userid");
 
-    # Regenerate cached info about queries in footer.            
-    $vars->{'user'} = GetUserInfo($::userid);
+    # Make sure that cached queries in the user object are invalidated
+    # so that the footer is correct
+    my $user = Bugzilla->user;
+    $user->flush_queries_cache();
+
+    # Also need to update showmybugslink
+    $user->{showmybugslink} = $::FORM{'mybugslink'} ? 1 : 0;
 }
     
     

@@ -35,7 +35,7 @@
   <p>
     <font color="red">
       Your quip '<tt>[% added_quip FILTER html %]</tt>' has been added.
-      [% IF Param("enablequips") == "approved" AND !UserInGroup('admin') %]
+      [% IF Param("enablequips") == "approved" AND !user.groups.admin %]
         It will be used as soon as it gets approved.
       [% END %]
     </font>
@@ -58,7 +58,7 @@
   Bugzilla will pick a random quip for the headline on each bug list, and 
   you can extend the quip list. Type in something clever or funny or boring 
   (but not obscene or offensive, please) and bonk on the button.
-  [% IF Param("enablequips") == "approved" AND !UserInGroup('admin') %]
+  [% IF Param("enablequips") == "approved" AND !user.groups.admin %]
     Note that your quip has to be approved before it is used.
   [% END %]
 </p>

@@ -57,7 +57,8 @@ use vars qw(%versions
            );
 
 ConnectToDatabase();
-my $whoid = confirm_login();
+my $user = confirm_login();
+my $whoid = $user->id;
 
 my $cgi = Bugzilla->cgi;
 
@@ -1093,9 +1094,10 @@ foreach my $id (@idlist) {
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, flags $write, duplicates $write," .
             # user_group_map would be a READ lock except that Flag::process
-            # may call Flag::notify, which calls ConfirmGroup, which might
-            # call DeriveGroup, which wants a WRITE lock on that table.
-            # group_group_map is in here at all because DeriveGroups needs it.
+            # may call Flag::notify, which creates a new user object,
+            # which might call derive_groups, which wants a WRITE lock on that
+            # table. group_group_map is in here at all because derive_groups
+            # needs it.
             "user_group_map $write, group_group_map READ, flagtypes READ, " . 
             "flaginclusions AS i READ, flagexclusions AS e READ, " .
             "keyworddefs READ, groups READ, attachments READ, " .
