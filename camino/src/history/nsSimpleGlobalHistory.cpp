@@ -2068,11 +2068,16 @@ nsSimpleGlobalHistory::Commit(eCommitType commitType)
       err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
     } while ((err == 0) && !broken && !done);
   }
+
+#ifdef DEBUG_HISTORY
+  if (err != 0)
+    fprintf(stderr, "HISTORY DEBUG: Commit() encountered error 0x08%x\n", err);
+#endif
+
   if (err != 0) // mork doesn't return NS error codes. Yet.
     return NS_ERROR_FAILURE;
-  else
-    return NS_OK;
 
+  return NS_OK;
 }
 
 // if notify is true, we'll notify rdf of deleted rows.
@@ -2153,6 +2158,9 @@ nsSimpleGlobalHistory::CloseDB()
 
   ExpireEntries(PR_FALSE /* don't notify */);
   err = Commit(kSessionCommit);
+#ifdef DEBUG_HISTORY
+  fprintf(stderr, "HISTORY DEBUG: Commit() in CloseDB() returned error 0x%08x\n", err);
+#endif
 
   // order is important here - logically smallest objects first
   mMetaRow = nsnull;
@@ -2165,7 +2173,9 @@ nsSimpleGlobalHistory::CloseDB()
   if (mEnv)
     mEnv->Release();
 
-  mTable = nsnull; mEnv = nsnull; mStore = nsnull;
+  mTable = nsnull;
+  mEnv = nsnull;
+  mStore = nsnull;
 
   return NS_OK;
 }
