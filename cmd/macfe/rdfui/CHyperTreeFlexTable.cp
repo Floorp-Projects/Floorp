@@ -41,16 +41,16 @@
 #include "CInlineEditField.h"
 #include "CContextMenuAttachment.h"
 
-#include "CBrowserWindow.h"		// needed for finding toplevel context
-#include "CNSContext.h"
-
 #include <vector.h>
 #include <algorithm>
 
 
-const ResIDT cFolderIconID = -3999;		// use the OS Finder folder icon
+extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
+
+
+const ResIDT cFolderIconID = kGenericFolderIconResource;
 const ResIDT cItemIconID = 15313;
-const ResIDT cFileIconID = 15408;
+const ResIDT cFileIconID = kGenericDocumentIconResource;
 
 
 #pragma mark -- class CHyperTreeFlexTable --
@@ -244,7 +244,6 @@ CHyperTreeFlexTable :: DoHiliteRect ( const Rect & inHiliteRect ) const
 
 
 //
-
 // HiliteSelection
 //
 // Overload the LTableView class' version of this routine to hilite the selected items
@@ -255,20 +254,17 @@ void
 CHyperTreeFlexTable :: HiliteSelection( Boolean	inActively, Boolean	/*inHilite*/)
 {
 	if (FocusExposed()) {
-		RgnHandle	hiliteRgn = ::NewRgn();
+		StRegion hiliteRgn;
 		GetHiliteRgn(hiliteRgn);
         StColorPenState saveColorPen;   // Preserve color & pen state
 		StColorPenState::Normalize();
 		
-		if (inActively) {
-			::InvertRgn(hiliteRgn);
-			
-		} else {
+		if (inActively)
+			::InvertRgn(hiliteRgn);			
+		else {
 			::PenMode(srcXor);
 			::FrameRgn(hiliteRgn);
 		}
-
-		::DisposeRgn(hiliteRgn);
 	}
 	
 } // HiliteSelection
@@ -295,42 +291,151 @@ CHyperTreeFlexTable :: SyncSelectionWithHT ( )
 
 
 //
+// ListenToMessage
+//
+// Listen for the update of the background image so we can redraw.
+//
+void
+CHyperTreeFlexTable :: ListenToMessage ( const MessageT inMessage, void* ioData )
+{
+	if ( inMessage == CIconContext::msg_ImageReadyToDraw )
+		Refresh();
+
+} // ListenToMessage
+
+
+//
+// DrawStandby
+//
+// Draw something reasonable when the background image has not yet been loaded or if the bg image
+// cannot be found
+//
+void
+CHyperTreeFlexTable :: DrawStandby ( const Point & /*inTopLeft*/, const IconTransformType /*inTransform*/ ) const
+{
+	EraseTableBackground();
+	
+} // DrawStandby
+
+
+//
+// EraseTableBackground
+//
+// Erase the background of the table with the specified color from HT or with the appropriate
+// AppearanceManager colors
+//
+void
+CHyperTreeFlexTable :: EraseTableBackground ( ) const
+{
+	// draw the unsorted column color all the way down. The sort column can redraw it cell by cell
+	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
+	Rect backRect = { 0, 0, viewHeight, mImageSize.width };
+	
+	URDFUtilities::SetupBackgroundColor ( HT_TopNode(GetHTView()), gNavCenter->treeBGColor, 
+											kThemeListViewBackgroundBrush );
+	::EraseRect(&backRect);
+	
+} // EraseTableBackground
+
+
+//
+// DrawSelf
+//
+// Overridden to draw the background image, if one is present on the current view
+//
+void
+CHyperTreeFlexTable :: DrawSelf ( )
+{
+	mHasBackgroundImage = false;
+	Point topLeft = { 0, 0 };
+	HT_Resource topNode = HT_TopNode(GetHTView());
+	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
+	if ( topNode ) {
+		char* url = NULL;
+		PRBool success = HT_GetNodeData ( topNode, gNavCenter->treeBGURL, HT_COLUMN_STRING, &url );
+		if ( success && url ) {
+			// draw the background image tiled to fill the whole pane
+			mHasBackgroundImage = true;
+			SetImageURL ( url );
+			DrawImage ( topLeft, kTransformNone, mImageSize.width, viewHeight );
+			FocusDraw();
+		}
+		else
+			EraseTableBackground();
+		
+		CStandardFlexTable::DrawSelf();
+	}
+
+} // DrawSelf
+
+
+//
+// EraseCellBackground
+//
+// Make the backdrop of the cell look like the Finder in OS8 or whatever the user has explicitly
+// set via HT properties. If there is a background image, of course, don't draw the background. The
+// default list background has already been painted, so only do something if there is a difference.
+//
+void
+CHyperTreeFlexTable :: EraseCellBackground ( const STableCell& inCell, const Rect& inLocalRect )
+{
+	StColorPenState saved;
+	
+	if ( !mHasBackgroundImage )
+	{
+		PaneIDT columnPane;		
+		CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
+		Assert_(header != NULL);
+
+		// only need to draw if this column in sorted
+		if ( inCell.col == header->GetSortedColumn(columnPane) ) {
+			Rect backRect = inLocalRect;
+			backRect.bottom--;				// leave a one pixel line on the bottom as separator
+			backRect.right++;				// cover up vertical dividing line on right side
+			
+			URDFUtilities::SetupBackgroundColor ( HT_TopNode(GetHTView()), gNavCenter->sortColumnBGColor,
+													kThemeListViewSortColumnBackgroundBrush );
+			::EraseRect(&backRect);		
+		} // if this column is sorted
+	} // if no bg image
+
+	// draw the separator line, even if there is a background image
+	URDFUtilities::SetupBackgroundColor ( HT_TopNode(GetHTView()), gNavCenter->dividerColor,
+											kThemeListViewSeparatorBrush );
+	Rect divider = { inLocalRect.bottom - 1, inLocalRect.left, inLocalRect.bottom, inLocalRect.right };
+	::EraseRect ( &divider );
+
+} // EraseCellBackground
+
+
+//
 // DrawCellContents
 //
 // Draw what goes inside each cell, naturally
 //
-void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inLocalRect)
+void
+CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inLocalRect)
 {
 	PaneIDT	cellType = GetCellDataType(inCell);
 
 	// Get info for column
+	PaneIDT columnPane;		
 	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
 	Assert_(header != NULL);
 	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(inCell.col - 1);
-
-	//
-	// make the backdrop of the cell look like the Finder in OS8. Color/pen state is already
-	// restored for us by CStandardFlexTable::DrawCell() so we don't have to worry about reseting
-	// the bg color later.
-	//
-	{
-		PaneIDT columnPane;
-		
-		Rect backRect = inLocalRect;
-		backRect.bottom--;				// leave a one pixel line on the bottom as separator
-		backRect.right++;				// cover up vertical dividing line on right side
-		ThemeBrush backColor = inCell.col == header->GetSortedColumn(columnPane) ? 
-							kThemeListViewSortColumnBackgroundBrush : kThemeListViewBackgroundBrush;
-		::SetThemeBackground( backColor, 8, false );
-		::EraseRect(&backRect);
-	}
-		
-	::SetThemeTextColor ( kThemeListViewTextColor, 8, false );
+	
+	// setup the text color based on if this cell is in the sorted column. Note that while
+	// HT has the concept of a different fg color for sorted columns, AM does not. 
+	if ( inCell.col == header->GetSortedColumn(columnPane) )
+		URDFUtilities::SetupForegroundTextColor ( HT_TopNode(GetHTView()), gNavCenter->sortColumnFGColor, 
+													kThemeListViewTextColor );
+	else
+		URDFUtilities::SetupForegroundTextColor ( HT_TopNode(GetHTView()), gNavCenter->treeFGColor, 
+													kThemeListViewTextColor );
 	
 	// Get cell data
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
-	if (node)
-	{
+	if (node) {
 		if ( HT_IsSeparator(node) ) {
 			
 			Uint16 left = inLocalRect.left;
@@ -340,15 +445,22 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 				left += CStandardFlexTable::kDistanceFromIconToText;
 			}
 			
+			// setup the color based on if this cell is in the sorted column. Note that while
+			// HT has the concept of a different fg color for sorted columns, AM does not. 
 			StColorPenState saved;
-			::SetThemePen( kThemeListViewTextColor, 8, false );
+			if ( inCell.col == header->GetSortedColumn(columnPane) )
+				URDFUtilities::SetupForegroundColor ( HT_TopNode(GetHTView()), gNavCenter->sortColumnFGColor, 
+															kThemeListViewTextColor );
+			else
+				URDFUtilities::SetupForegroundColor ( HT_TopNode(GetHTView()), gNavCenter->treeFGColor, 
+															kThemeListViewTextColor );
 			
 			::MoveTo ( left,
 						inLocalRect.top + ((inLocalRect.bottom - inLocalRect.top) / 2) );
 			::PenSize ( 2, 2 );
 			::PenPat ( &qd.gray );
 			::Line ( inLocalRect.right - left, 0 );
-		}
+		} // if is a separator
 		else {
 			void* data;
 			char* str;
@@ -375,9 +487,10 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 				}
 				DrawTextString(str, &mTextFontInfo, 0, localRect);
 			}
-		}
-	}
-}
+		} // else a normal item
+	} // if node valid
+	
+} // DrawCellContents
 
 
 Boolean	CHyperTreeFlexTable::CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const
@@ -647,16 +760,8 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inRow) );
 	if (node) {
 	
-		// try to get a context for HT_Launch()
-		MWContext* currentContext = NULL;
-		CWindowMediator* theMediator = CWindowMediator::GetWindowMediator();
-		CBrowserWindow* theTopWindow =
-				dynamic_cast<CBrowserWindow*>(theMediator->FetchTopWindow(WindowType_Browser, regularLayerType, false));
-		if (theTopWindow)
-			currentContext = *(theTopWindow->GetWindowContext());
-	
 		// we can ignore the click if it is a container.
-		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) && !HT_Launch(node, currentContext) )
+		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) && !URDFUtilities::LaunchNode(node) )
 			CFrontApp::DoGetURL( HT_GetNodeURL(node) );
 					
 	} // if valid node
@@ -692,10 +797,11 @@ CHyperTreeFlexTable::RowCanAcceptDrop ( DragReference inDragRef, TableIndexT inD
 Boolean 
 CHyperTreeFlexTable::RowCanAcceptDropBetweenAbove( DragReference inDragRef, TableIndexT inDropRow )
 {
-	if ( inDropRow > mRows ) 
+	if ( inDropRow > mRows )
 		return NodeCanAcceptDrop ( inDragRef, HT_TopNode(GetHTView()) );
 		
-	HT_Resource targetNode = HT_GetParent( HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inDropRow)) );
+	HT_Resource rowNode = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inDropRow));
+	HT_Resource targetNode = HT_GetParent(rowNode);
 	return NodeCanAcceptDrop ( inDragRef, targetNode );
 	
 } // CStandardFlexTable::RowCanAcceptDropBetweenAbove
@@ -729,6 +835,9 @@ CHyperTreeFlexTable :: HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove
 {
 	if (inRow == LArray::index_Bad)
 		return;
+
+	StColorState savedPen;
+	StColorState::Normalize();
 
 	STableCell cell(inRow, GetHiliteColumn());
 	if ( mIsInternalDrop && CellIsSelected(cell) )
@@ -822,10 +931,15 @@ CHyperTreeFlexTable :: HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove
 // point, is fairly moot and will be checked in RowCanAcceptDrop*() routines.
 //
 Boolean
-CHyperTreeFlexTable :: ItemIsAcceptable ( DragReference /*inDragRef*/, ItemReference /*inItemRef*/ )
+CHyperTreeFlexTable :: ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef )
 {
-	return HT_CanDropURLOn ( HT_TopNode(GetHTView()), "http://foo.com" );
+	FlavorType ignored;
 	
+	bool paneAllowsDrop = HT_CanDropURLOn ( HT_TopNode(GetHTView()), "http://foo.com" );
+	bool acceptableFlavorFound = FindBestFlavor ( inDragRef, inItemRef, ignored );
+	
+	return paneAllowsDrop && acceptableFlavorFound;
+
 } // ItemIsAcceptable
 
 
@@ -1062,82 +1176,6 @@ CHyperTreeFlexTable :: HandleDropOfText ( const char* /*inTextData*/ )
 
 
 //
-// NodeCanAcceptDrop
-//
-// Check each item in the drop to see if it can be dropped on the particular node given in |inTargetNode|.
-//
-Boolean
-CHyperTreeFlexTable :: NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource inTargetNode )
-{
-	Uint16 itemCount;
-	::CountDragItems(inDragRef, &itemCount);
-	Boolean acceptableDrop = false;
-	bool targetIsContainer = HT_IsContainer ( inTargetNode );
-	
-	for ( Uint16 item = 1; item <= itemCount; item++ ) {
-		ItemReference itemRef;
-		::GetDragItemReferenceNumber(inDragRef, item, &itemRef);
-
-		try {
-			FlavorType useFlavor;
-			FindBestFlavor ( inDragRef, itemRef, useFlavor );
-			switch ( useFlavor ) {
-			
-				case emHTNodeDrag:
-				{
-					HT_Resource draggedNode = NULL;
-					Size theDataSize = sizeof(HT_Resource);
-					ThrowIfOSErr_(::GetFlavorData( inDragRef, itemRef, emHTNodeDrag, &draggedNode, &theDataSize, 0 ));
-					if ( targetIsContainer )
-						acceptableDrop |= HT_CanDropHTROn ( inTargetNode, draggedNode );		// FIX TO CHANGE CURSOR
-					else
-						acceptableDrop |= HT_CanDropHTRAtPos ( inTargetNode, draggedNode, PR_TRUE );				
-				}
-				break;
-					
-				case emBookmarkDrag:
-				{
-					// We don't care what kind of url it is, just that it is a url so pass a 
-					// bogus url to the backend.
-					if ( targetIsContainer )
-						acceptableDrop |= HT_CanDropURLOn ( inTargetNode, "http://foo.com" );	// FIX TO CHANGE CURSOR
-					else
-						acceptableDrop |= HT_CanDropURLAtPos ( inTargetNode, "http://foo.com", PR_TRUE );
-				}
-				break;
-					
-				case flavorTypeHFS:
-				case flavorTypePromiseHFS:
-				{
-					// We don't care what kind of url it is, just that it is a url so pass a 
-					// bogus url to the backend.
-					if ( targetIsContainer )
-						acceptableDrop |= HT_CanDropURLOn ( inTargetNode, "file://foo" );	// FIX TO CHANGE CURSOR....
-					else
-						acceptableDrop |= HT_CanDropURLAtPos ( inTargetNode, "file://foo", PR_TRUE );
-				}
-				break;
-					
-				case 'TEXT':
-					break;
-				
-				default:
-					// throw? 
-					break;
-			}
-		}
-		catch ( ... ) {
-			DebugStr("\pDrag with no recognized flavors; g");
-		}
-
-	} // for each file
-
-	return acceptableDrop;
-
-} // NodeCanAcceptDrop
-
-
-//
 // InlineEditorDone
 //
 // Called when the user hits return/enter or clicks outside of the inline editor. Tell RDF about the
@@ -1304,6 +1342,21 @@ CHyperTreeFlexTable::AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inE
 								static_cast<void*>(const_cast<EventRecord*>(&inEvent)));
 
 }
+
+
+//
+// TableSupportsNaturalOrderSort
+//
+// Ask HT if this view does natural order sorting now (can the user drop in the 
+// middle of the table).
+//
+Boolean
+CHyperTreeFlexTable :: TableSupportsNaturalOrderSort ( ) const
+{
+	return HT_ContainerSupportsNaturalOrderSort(HT_TopNode(GetHTView()));
+
+} // TableSupportsNaturalOrderSort
+
 
 #pragma mark -- class CHyperTreeSelector --
 

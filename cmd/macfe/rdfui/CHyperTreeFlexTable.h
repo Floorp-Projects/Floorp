@@ -35,16 +35,17 @@
 #include "LTableRowSelector.h"
 #include "CDynamicTooltips.h"
 #include "CURLDragHelper.h"
+#include "CImageIconMixin.h"
 
 // STL Headers
 #include <vector.h>
-
 
 #pragma mark -- class CHyperTreeFlexTable --
 
 
 class CHyperTreeFlexTable :
-	public CStandardFlexTable, public CDynamicTooltipMixin, public CHTAwareURLDragMixin
+	public CStandardFlexTable, public CDynamicTooltipMixin, public CHTAwareURLDragMixin,
+		public CTiledImageMixin
 {
 public:
 		enum {
@@ -67,7 +68,13 @@ public:
 	bool			IsViewSameAsBeforeDrag() const { return mViewBeforeDrag == mHTView; }
 
 protected:
-
+		
+		// Background image tiling stuff
+	virtual void DrawStandby ( const Point & inTopLeft, 
+								const IconTransformType inTransform ) const;
+	virtual void DrawSelf ( ) ;
+	virtual void ListenToMessage ( const MessageT inMessage, void* ioData ) ;
+	virtual void EraseTableBackground ( ) const;
 	
 		// CStandardFlexTable Overrides
 	virtual void OpenRow ( TableIndexT inRow ) ;
@@ -75,14 +82,15 @@ protected:
 	virtual Boolean CellSelects ( const STableCell& inCell ) const;
 	virtual Boolean RowCanAcceptDrop ( DragReference inDragRef, TableIndexT inDropRow ) ;
 	virtual Boolean RowCanAcceptDropBetweenAbove( DragReference inDragRef, TableIndexT inDropRow ) ;
-	virtual Boolean NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource inTargetNode ) ;
 	virtual void HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove ) ;
 	virtual Boolean	RowIsContainer ( const TableIndexT & /* inRow */ ) const ;
 	virtual void DrawCellContents( const STableCell &inCell, const Rect &inLocalRect);
+	virtual void EraseCellBackground( const STableCell& inCell, const Rect& inLocalRect);
 	virtual ResIDT GetIconID(TableIndexT inRow) const;		
 	virtual UInt16 GetNestedLevel(TableIndexT inRow) const;
 	virtual void SetCellExpansion( const STableCell& inCell, Boolean inExpand);
 	virtual Boolean	CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const;
+	virtual Boolean TableSupportsNaturalOrderSort ( ) const ;
 		
 		// Stuff related to hiliting
 	virtual TableIndexT	GetHiliteColumn() const { return 1; } ;
@@ -134,7 +142,9 @@ protected:
 	HT_View					mViewBeforeDrag;
 	HT_Resource				mDropNode;			// the HT node that corresponds to mDropRow
 
-	STableCell				mTooltipCell;		// tracks where mouse is for tooltips	
+	STableCell				mTooltipCell;		// tracks where mouse is for tooltips
+
+	bool					mHasBackgroundImage;	// is there a background image to be drawn?
 
 }; // class CHyperTreeFlexTable
 
