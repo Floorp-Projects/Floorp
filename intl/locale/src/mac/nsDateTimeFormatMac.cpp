@@ -40,27 +40,33 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Intl1Hndl GetItl1Resource(short scriptcode)
+static Intl1Hndl GetItl1Resource(short scriptcode, short regioncode)
 {
-	// get itlb from currenty system script
-	ItlbRecord **ItlbRecordHandle;
-	ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
-	
-	// get itl1 number from itlb resource, if possible
-	// otherwise, use the one return from script manager, 
-	// (Script manager won't update itl1 number when the change on the fly )
 	long itl1num;
-	if(ItlbRecordHandle != NULL)
+
+	if (smRoman == scriptcode)
 	{
-		if(*ItlbRecordHandle == NULL)
-			::LoadResource((Handle)ItlbRecordHandle);
-			
-		if(*ItlbRecordHandle != NULL)
-			itl1num = (*ItlbRecordHandle)->itlbDate;
-		else
+		itl1num = regioncode;	// if smRoman, use regioncode to differenciate
+	} else {
+		// get itlb from currenty system script
+		ItlbRecord **ItlbRecordHandle;
+		ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
+		
+		// get itl1 number from itlb resource, if possible
+		// otherwise, use the one return from script manager, 
+		// (Script manager won't update itl1 number when the change on the fly )
+		if(ItlbRecordHandle != NULL)
+		{
+			if(*ItlbRecordHandle == NULL)
+				::LoadResource((Handle)ItlbRecordHandle);
+				
+			if(*ItlbRecordHandle != NULL)
+				itl1num = (*ItlbRecordHandle)->itlbDate;
+			else
+				itl1num = ::GetScriptVariable(scriptcode, smScriptDate);
+		} else {	// Use this as fallback
 			itl1num = ::GetScriptVariable(scriptcode, smScriptDate);
-	} else {	// Use this as fallback
-		itl1num = ::GetScriptVariable(scriptcode, smScriptDate);
+		}
 	}
 	
 	// get itl1 resource 
@@ -69,27 +75,33 @@ static Intl1Hndl GetItl1Resource(short scriptcode)
 	return Itl1RecordHandle;
 }
 
-static Intl0Hndl GetItl0Resource(short scriptcode)
+static Intl0Hndl GetItl0Resource(short scriptcode, short regioncode)
 {
-	// get itlb from currenty system script
-	ItlbRecord **ItlbRecordHandle;
-	ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
-	
-	// get itl0 number from itlb resource, if possible
-	// otherwise, use the one return from script manager, 
-	// (Script manager won't update itl1 number when the change on the fly )
 	long itl0num;
-	if(ItlbRecordHandle != NULL)
+
+	if (smRoman == scriptcode)
 	{
-		if(*ItlbRecordHandle == NULL)
-			::LoadResource((Handle)ItlbRecordHandle);
-			
-		if(*ItlbRecordHandle != NULL)
-			itl0num = (*ItlbRecordHandle)->itlbNumber;
-		else
+		itl0num = regioncode;	// if smRoman, use regioncode to differenciate
+	} else {
+		// get itlb from currenty system script
+		ItlbRecord **ItlbRecordHandle;
+		ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
+		
+		// get itl0 number from itlb resource, if possible
+		// otherwise, use the one return from script manager, 
+		// (Script manager won't update itl1 number when the change on the fly )
+		if(ItlbRecordHandle != NULL)
+		{
+			if(*ItlbRecordHandle == NULL)
+				::LoadResource((Handle)ItlbRecordHandle);
+				
+			if(*ItlbRecordHandle != NULL)
+				itl0num = (*ItlbRecordHandle)->itlbNumber;
+			else
+				itl0num = ::GetScriptVariable(scriptcode, smScriptNumber);
+		} else {	// Use this as fallback
 			itl0num = ::GetScriptVariable(scriptcode, smScriptNumber);
-	} else {	// Use this as fallback
-		itl0num = ::GetScriptVariable(scriptcode, smScriptNumber);
+		}
 	}
 	
 	// get itl1 resource 
@@ -224,6 +236,8 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   Str255 timeString, dateString;
   int32 dateTime;	
   short scriptcode = smSystemScript;
+  short langcode = langEnglish;
+  short regioncode = verUS;
   nsString aCharset("ISO-8859-1");	//TODO: should be "MacRoman", need to get this from locale
   nsresult res;
 
@@ -270,16 +284,17 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       aLocale.SetString(aLocaleUnichar);
       //TODO: Get a charset name from a script code.
       nsCOMPtr <nsIMacLocale> macLocale;
-      short langcode, regioncode;
       res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, getter_AddRefs(macLocale));
       if (NS_SUCCEEDED(res)) {
         res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode);
       }
     }    
   }
+  if (smJapanese == scriptcode)
+  	aCharset.SetString("Shift_JIS");	//Temporary until bug5561 fix: make Japanese testable.
 
-  Handle itl1Handle = (Handle) GetItl1Resource(scriptcode);
-  Handle itl0Handle = (Handle) GetItl0Resource(scriptcode);
+  Handle itl1Handle = (Handle) GetItl1Resource(scriptcode, regioncode);
+  Handle itl0Handle = (Handle) GetItl0Resource(scriptcode, regioncode);
   NS_ASSERTION(itl1Handle && itl0Handle, "failed to get itl handle");
 
   // get time string
