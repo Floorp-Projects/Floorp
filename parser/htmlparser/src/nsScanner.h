@@ -59,6 +59,8 @@
 #include "nsScannerString.h"
 #include "nsIInputStream.h"
 
+class nsParser;
+
 class nsReadEndCondition {
 public:
   const PRUnichar *mChars;
@@ -364,6 +366,11 @@ class nsScanner {
         return mFirstNonWhitespacePosition;
       }
 
+      void SetParser(nsParser *aParser)
+      {
+        mParser = aParser;
+      }
+
   protected:
 
 
@@ -395,6 +402,7 @@ class nsScanner {
       PRInt32         mCharsetSource;
       nsCString       mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
+      nsParser        *mParser;
 };
 
 #endif

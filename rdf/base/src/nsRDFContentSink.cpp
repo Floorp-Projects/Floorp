@@ -174,6 +174,7 @@ public:
     NS_IMETHOD SetParser(nsIParser* aParser);  
     virtual void FlushContent(PRBool aNotify) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
+    virtual nsISupports *GetTarget() { return nsnull; }
 
     // nsIRDFContentSink
     NS_IMETHOD Init(nsIURI* aURL);

@@ -87,6 +87,7 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);  
   virtual void FlushContent(PRBool aNotify) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
+  virtual nsISupports *GetTarget();
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
