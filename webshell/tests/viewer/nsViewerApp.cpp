@@ -66,8 +66,6 @@ static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
-static NS_DEFINE_IID(kINetContainerApplicationIID,
-                     NS_INETCONTAINERAPPLICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
@@ -102,11 +100,6 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kINetContainerApplicationIID)) {
-    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
@@ -183,7 +176,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   mPrefs->Startup("prefs.js");
 
   // Setup networking library
-  rv = NS_InitINetService((nsINetContainerApplication*) this);
+  rv = NS_InitINetService();
   if (NS_OK != rv) {
     return rv;
   }
@@ -500,48 +493,6 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 
   aNewWindow = bw;
 
-  return NS_OK;
-}
-
-//----------------------------------------
-
-// nsINetContainerApplication implementation
-// XXX:  These methods are called by the netlib thread...
-
-NS_IMETHODIMP    
-nsViewerApp::GetAppCodeName(nsString& aAppCodeName)
-{
-  aAppCodeName.SetString("Mozilla");
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsViewerApp::GetAppVersion(nsString& aAppVersion)
-{
-  //This seems kinda wrong in x-platform code
-  aAppVersion.SetString("4.05 [en] (WinNT;I)");
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsViewerApp::GetAppName(nsString& aAppName)
-{
-  aAppName.SetString("Netscape");
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsViewerApp::GetLanguage(nsString& aLanguage)
-{
-  aLanguage.SetString("en");
-  return NS_OK;
-}
- 
-NS_IMETHODIMP    
-nsViewerApp::GetPlatform(nsString& aPlatform)
-{
-  //This seems kinda wrong in x-platform code
-  aPlatform.SetString("Win32");
   return NS_OK;
 }
 

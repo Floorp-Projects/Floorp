@@ -27,7 +27,6 @@
 #include "nsNetThread.h"
 #include "net.h"
 
-class nsINetContainerApplication;
 class nsITimer;
 
 class nsNetlibService : public nsINetService {
@@ -35,16 +34,13 @@ class nsNetlibService : public nsINetService {
 public:
     NS_DECL_ISUPPORTS
 
-    nsNetlibService(nsINetContainerApplication *aContainer);
+    nsNetlibService();
 
     /* Implementation of the nsINetService interface */
     NS_IMETHOD OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer);
     NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream);
-
-    NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer);
-    nsresult SetContainerApplication(nsINetContainerApplication *aContainer);
 
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
@@ -53,6 +49,13 @@ public:
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD GetHTTPOneOne(PRBool& aOneOne);
     NS_IMETHOD SetHTTPOneOne(PRBool aSendOneOne);
+
+    NS_IMETHOD GetAppCodeName(nsString& aAppCodeName);
+    NS_IMETHOD GetAppVersion(nsString& aAppVersion);
+    NS_IMETHOD GetAppName(nsString& aAppName);
+    NS_IMETHOD GetLanguage(nsString& aLanguage);
+    NS_IMETHOD GetPlatform(nsString& aPlatform);
+    NS_IMETHOD SetCustomUserAgent(nsString aCustom);
 
 protected:
     virtual ~nsNetlibService();
@@ -72,7 +75,6 @@ private:
     void SetupURLStruct(nsIURL *aURL, URL_Struct *aURL_s);
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
-    nsINetContainerApplication *mContainer;
     nsIPref *mPref;
 
     nsITimer* mPollingTimer;

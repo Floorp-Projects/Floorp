@@ -9,7 +9,6 @@ nsIRelatedLinks.h
 nsIURL.h
 nsIPostToServer.h
 nsIHttpUrl.h
-nsINetContainerApplication.h
 nsIRefreshUrl.h
 nsIConnectionInfo.h
 nsILoadAttribs.h

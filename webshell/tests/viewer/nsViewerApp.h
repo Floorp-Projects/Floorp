@@ -19,7 +19,6 @@
 #ifndef nsViewerApp_h___
 #define nsViewerApp_h___
 
-#include "nsINetContainerApplication.h"
 #include "nsIAppShell.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -30,8 +29,7 @@ class nsWebCrawler;
 class nsBrowserWindow;
 class nsIBrowserWindow;
 
-class nsViewerApp : public nsINetContainerApplication,
-                    public nsDispatchListener
+class nsViewerApp : public nsDispatchListener
 {
 public:
   void* operator new(size_t sz) {
@@ -44,13 +42,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  // nsINetContainerApplication
-  NS_IMETHOD GetAppCodeName(nsString& aAppCodeName);
-  NS_IMETHOD GetAppVersion(nsString& aAppVersion);
-  NS_IMETHOD GetAppName(nsString& aAppName);
-  NS_IMETHOD GetLanguage(nsString& aLanguage);
-  NS_IMETHOD GetPlatform(nsString& aPlatform);
 
   // nsDispatchListener
   virtual void AfterDispatch();
