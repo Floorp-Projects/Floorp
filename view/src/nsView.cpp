@@ -266,6 +266,8 @@ nsresult nsView :: Init(nsIViewManager* aManager,
   NS_ADDREF(aManager);
 
   mBounds = aBounds;
+  mContainerRect = aBounds;
+  mClipRect.Empty();
 
   // assign the parent view
   SetParent(aParent);
@@ -320,14 +322,52 @@ nsIWidget * nsView :: GetWidget()
 
 void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
 {
+  rc.PushState();
+  rc.Translate(mBounds.x, mBounds.y);
+
+  if (mClipRect.IsEmpty() == PR_FALSE)
+  {
+    nsRect  trect;
+
+    trect.x = mClipRect.x;
+    trect.y = mClipRect.y;
+    trect.width = (mClipRect.width - mClipRect.x) + 1;
+    trect.height = (mClipRect.height - mClipRect.y) + 1;
+
+    rc.SetClipRect(trect, PR_TRUE);
+  }
+
   if (nsnull != mFrame)
   {
     nsIPresContext  *cx = mViewManager->GetPresContext();
-
     mFrame->Paint(*cx, rc, rect);
-
     NS_RELEASE(cx);
   }
+
+  PRInt32 numkids = GetChildCount();
+
+  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+  {
+    nsIView *kid = GetChild(cnt);
+
+    if (nsnull != kid)
+    {
+      nsRect kidRect;
+      kid->GetBounds(kidRect);
+      nsRect damageArea;
+      PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+
+      if (overlap == PR_TRUE)
+      {
+        // Translate damage area into kid's coordinate system
+        nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                             damageArea.width, damageArea.height);
+        kid->Paint(rc, kidDamageArea);
+      }
+    }
+  }
+
+  rc.PopState();
 }
 
 void nsView :: Paint(nsIRenderingContext& rc, const nsRegion& region)
@@ -535,15 +575,33 @@ void nsView :: GetBounds(nsRect &aBounds)
 
 void nsView :: SetClip(const nsRect &aClip)
 {
+  mClipRect.x = aClip.x;
+  mClipRect.y = aClip.y;
+  mClipRect.width = aClip.width;
+  mClipRect.width = aClip.height;
 }
 
 void nsView :: SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  mClipRect.x = aX;
+  mClipRect.y = aY;
+  mClipRect.width = aWidth;
+  mClipRect.width = aHeight;
 }
 
-PRBool nsView :: GetClip(nsRect *aClip)
+PRBool nsView :: GetClip(nsRect& aClip)
 {
-  return PR_FALSE;
+  if (mClipRect.IsEmpty() == PR_TRUE)
+    return PR_FALSE;
+  else
+  {
+    aClip.x = mClipRect.x;
+    aClip.y = mClipRect.y;
+    aClip.width = mClipRect.width;
+    aClip.width = mClipRect.height;
+
+    return PR_TRUE;
+  }
 }
 
 void nsView :: SetVisibility(nsViewVisibility aVisibility)

@@ -231,41 +231,6 @@ void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsRegion *region, P
 {
 }
 
-static void paint_all_kids(nsIRenderingContext *context, nsIView *par, nsRect *rect)
-{
-  nsIView   *kid;
-
-  if (gsDebug)
-  {
-    printf("ViewManager::Refresh: view=%p painting twips=(%d, %d, %d, %d) pixels: ",
-           par, rect->x, rect->y, rect->XMost(), rect->YMost());
-    stdout << *rect;
-    printf("\n");
-  }
-
-  nsRect  parbounds;
-
-  par->GetBounds(parbounds);
-
-  context->PushState();
-  context->Translate(parbounds.x, parbounds.y);
-
-  par->Paint(*context, *rect);
-
-  if (par->GetChildCount() > 0)
-  {
-    kid = par->GetChild(0);
-
-    while (nsnull != kid)
-    {
-      paint_all_kids(context, kid, rect);
-      kid = kid->GetNextSibling();
-    }
-  }
-
-  context->PopState();
-}
-
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsRect *rect, PRUint32 aUpdateFlags)
 {
   nsRect              wrect;
@@ -302,7 +267,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   else
     localcx->SetClipRect(trect, PR_FALSE);
 
-  paint_all_kids(localcx, aView, &trect);
+  aView->Paint(*localcx, trect);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
