@@ -30,7 +30,7 @@
 
   <box orient="vertical" id="searchTermListBox" class="indent">
 
-    <radiogroup id="booleanAndGroup" autostretch="never"
+    <radiogroup id="booleanAndGroup"
                 selectedItem="or" oncommand="booleanChanged(event);">
       <radio group="booleanAndGroup" value="and" label="&matchAll.label;"/>
       <radio group="booleanAndGroup" checked="true" value="or" label="&matchAny.label;"/>

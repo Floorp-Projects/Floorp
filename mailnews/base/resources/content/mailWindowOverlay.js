@@ -858,7 +858,7 @@ function MsgCanFindAgain()
 function MsgSearchMessages()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable,centerscreen", { folder: preselectedFolder });
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable,centerscreen,dialog=no", { folder: preselectedFolder });
 }
 
 function MsgFilters()

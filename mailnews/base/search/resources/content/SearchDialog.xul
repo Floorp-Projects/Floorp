@@ -25,6 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
@@ -68,7 +69,7 @@ Rights Reserved.
   <dummy class="usesMailWidgets"/>
   <box flex="1" orient="vertical">
     
-    <titledbox orient="vertical" class="dialog box-padded" flex="1">
+    <titledbox orient="vertical" flex="1">
       <label value="&conditions.label;"/>
       <box autostretch="never">
         <text class="label" value="&searchHeading.label;"/>
@@ -90,12 +91,14 @@ Rights Reserved.
       </box>
     </titledbox>
     
-    <splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
+    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
     
-    <titledbox orient="horizontal" class="dialog box-padded" flex="1">
+    <titledbox orient="horizontal" flex="1">
        <label value="&results.label;"/>
        <box id="searchTermListBox" orient="vertical" flex="1">
             <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
+            <statusbar id="status-bar" class="chromeclass-status"/>
+
        </box>
        <box orient="vertical">
             <spring flex="1" />
@@ -168,11 +171,6 @@ Rights Reserved.
             <spring flex="1" />
        </box>      
     </titledbox>
-
-    <box autostretch="never" align="right">
-      <button label="&closeButton.label;" oncommand="onSearchStop(); window.close();"/>
-    </box>
-  
   </box>
   <statusbar id="status-bar"/>
   
