@@ -5,8 +5,9 @@ use POSIX qw(strftime);
 
 my $req = new CGI::Request;
 
-my $TBOX     = lc($req->param('tbox'));
-my $DATAFILE = "db/$TBOX";
+my $TBOX      = lc($req->param('tbox'));
+my $AUTOSCALE = lc($req->param('autoscale'));
+my $DATAFILE  = "db/$TBOX";
 
 sub make_machine_list {
   my @result;
@@ -57,6 +58,18 @@ sub show_graph {
         die "Can't find gnuplot.";
   }
 
+  # Auto-scale y-axis?
+  my $yscale;
+  if($AUTOSCALE) {
+	$yscale = "";
+  } else {
+	# $yscale = "set yrange [ 0 : ]";
+
+	# btek hack
+	$yscale = "set yrange [ 1300 : 1400 ]";
+  }
+
+
   use constant DAY => 60*60*24;
   my $rightNow = time();
   my $endOfDay = $rightNow + 2 * DAY - $rightNow % DAY;
@@ -76,7 +89,7 @@ sub show_graph {
                                 set linestyle 2 lt 1 lw 1 pt 7 ps 1
                                 set data style points
                                 set timefmt "%Y:%m:%d:%H:%M:%S"
-                                set yrange [ 1300 : 1400 ]
+                                $yscale
                                 set xdata time
                                 set ylabel "Pageload time (msec.)"
                                 set timestamp "Generated: %d/%b/%y %H:%M" 0,0
