@@ -397,7 +397,9 @@ if ($::FORM{'keywords'}) {
     }
 }
 
-if ($::comma eq "") {
+my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
+
+if ($::comma eq "" && 0 == @keywordlist && $keywordaction ne "makeexact") {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
         print "Um, you apparently did not change anything on the selected\n";
         print "bugs. <p>Click <b>Back</b> and try again.\n";
@@ -444,9 +446,6 @@ sub SnapShotKeywords {
     return join(',', @list);
 }
     
-
-my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
-
 
 my $whoid = DBNameToIdAndCheck($::FORM{'who'});
 my $timestamp;
