@@ -1972,9 +1972,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp,
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     return NS_ERROR_FAILURE;
   }
-  if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FDX, PR_TRUE)) {
-    return NS_ERROR_FAILURE;
-  }
   if (SECSuccess != SSL_BadCertHook(fd, (SSLBadCertHandler) nsNSSBadCertHandler,
                                     infoObject)) {
     return NS_ERROR_FAILURE;
