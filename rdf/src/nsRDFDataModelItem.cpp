@@ -18,6 +18,7 @@
 
 #include "nsRDFDataModel.h"
 #include "nsRDFDataModelItem.h"
+#include "rdf-int.h"
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -45,7 +45,7 @@ public:
   NS_METHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 
 protected:
-  rdfStreamListener::rdfStreamListener();
+  // rdfStreamListener::rdfStreamListener();
 
 private:
   RDFFile mFile;
