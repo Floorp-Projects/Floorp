@@ -5769,6 +5769,9 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
         return NS_OK;           // URIs not the same
     }
 
+    // Now we know we are dealing with an anchor
+    *aWasAnchor = PR_TRUE;
+
     // Both the new and current URIs refer to the same page. We can now
     // browse to the hash stored in the new URI.
     //
@@ -5779,8 +5782,6 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     GetCurScrollPos(ScrollOrientation_Y, cy);
 
     if (!sNewRef.IsEmpty()) {
-        *aWasAnchor = PR_TRUE;
-
         // anchor is there, but if it's a load from history,
         // we don't have any anchor jumping to do
         PRBool scroll = aLoadType != LOAD_HISTORY &&
@@ -5818,15 +5819,14 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
             NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
             nsCOMPtr<nsIDocument> doc;
             rv = docv->GetDocument(getter_AddRefs(doc));
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(rv, rv);
             nsCAutoString aCharset;
             rv = doc->GetDocumentCharacterSet(aCharset);
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsITextToSubURI> textToSubURI =
                 do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return NS_ERROR_FAILURE;
+            NS_ENSURE_SUCCESS(rv, rv);
 
             // Unescape and convert to unicode
             nsXPIDLString uStr;
@@ -5834,13 +5834,17 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
             rv = textToSubURI->UnEscapeAndConvert(aCharset.get(),
                                                   PromiseFlatCString(sNewRef).get(),
                                                   getter_Copies(uStr));
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = shell->GoToAnchor(uStr, scroll);
+            // Ignore return value of GoToAnchor, since it will return an error
+            // if there is no such anchor in the document, which is actually a
+            // success condition for us (we want to update the session history
+            // with the new URI no matter whether we actually scrolled
+            // somewhere).
+            shell->GoToAnchor(uStr, scroll);
         }
     }
     else {
-        *aWasAnchor = PR_TRUE;
 
         // Tell the shell it's at an anchor, without scrolling.
         shell->GoToAnchor(NS_LITERAL_STRING(""), PR_FALSE);
