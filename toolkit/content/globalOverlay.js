@@ -6,7 +6,7 @@ function goQuitApplication()
   {
     try
     {
-      ObserverService.notifyObservers(null, "about-to-quit-application", null);
+      ObserverService.notifyObservers(null, "quit-application-requested", null);
     }
     catch (ex)
     {
@@ -31,7 +31,7 @@ function goQuitApplication()
   {
      var domWindow = enumerator.getNext();
      if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-       return false;
+       return false;          
      domWindow.close();
   };
   if (!nativeAppSupport || !nativeAppSupport.isServerMode)
