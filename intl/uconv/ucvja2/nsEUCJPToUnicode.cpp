@@ -119,8 +119,8 @@ NS_IMETHODIMP nsEUCJPToUnicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
                                  mBehavior,
 				 4,
 				 (uRange*) gRanges,
-                                 (uShiftTable*) gShiftTables, 			
-                                 (uMappingTable*)gMappingTables);
+                                 (uShiftTable**) gShiftTables, 			
+                                 (uMappingTable**)gMappingTables);
 }
 
 NS_IMETHODIMP nsEUCJPToUnicode::Finish(PRUnichar * aDest, PRInt32 aDestOffset,
