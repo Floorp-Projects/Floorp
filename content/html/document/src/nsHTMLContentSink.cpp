@@ -1565,7 +1565,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   // Create new container content object
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsIHTMLContent* content;
-  nsIDocShell *docShell = nsnull;
+  nsIDocShell *docshell = nsnull;
   if (mSink->mFrameset) docshell = (nsIDocShell *) mSink->mDocShell;
   rv = mSink->CreateContentObject(aNode, nodeType, mSink->mCurrentForm,
                                   docshell, &content);
