@@ -1068,24 +1068,31 @@ str_nyi(JSContext *cx, const char *what)
 #endif
 
 #if JS_HAS_REGEXPS
-typedef enum GlobMode {
-    GLOB_MATCH,
-    GLOB_REPLACE,
-    GLOB_SEARCH
-} GlobMode;
-
 typedef struct GlobData {
-    uintN    optarg;    /* input: index of optional flags argument */
-    GlobMode mode;      /* input: return index, match object, or void */
-    JSBool   global;    /* output: whether regexp was global */
-    JSString *str;      /* output: 'this' parameter object as string */
-    JSRegExp *regexp;   /* output: regexp parameter object private data */
+    uintN       flags;          /* inout: mode and flag bits, see below */
+    uintN       optarg;         /* in: index of optional flags argument */
+    JSString    *str;           /* out: 'this' parameter object as string */
+    JSRegExp    *regexp;        /* out: regexp parameter object private data */
 } GlobData;
+
+/*
+ * Mode and flag bit definitions for match_or_replace's GlobData.flags field.
+ */
+#define MODE_MATCH      0x00    /* in: return match array on success */
+#define MODE_REPLACE    0x01    /* in: match and replace */
+#define MODE_SEARCH     0x02    /* in: search only, return match index or -1 */
+#define GET_MODE(f)     ((f) & 0x03)
+#define FORCE_FLAT      0x04    /* in: force flat (non-regexp) string match */
+#define KEEP_REGEXP     0x08    /* inout: keep GlobData.regexp alive for caller
+                                          of match_or_replace; if set on input
+                                          but clear on output, regexp ownership
+                                          does not pass to caller */
+#define GLOBAL_REGEXP   0x10    /* out: regexp had the 'g' flag */
 
 static JSBool
 match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  JSBool (*glob)(JSContext *cx, jsint count, GlobData *data),
-                 GlobData *data, jsval *rval, JSBool forceFlat)
+                 GlobData *data, jsval *rval)
 {
     JSString *str, *src, *opt;
     JSObject *reobj;
@@ -1115,23 +1122,25 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         } else {
             opt = NULL;
         }
-        re = js_NewRegExpOpt(cx, NULL, src, opt, forceFlat);
+        re = js_NewRegExpOpt(cx, NULL, src, opt,
+                             (data->flags & FORCE_FLAT) != 0);
         if (!re)
             return JS_FALSE;
         reobj = NULL;
     }
     data->regexp = re;
 
-    data->global = (re->flags & JSREG_GLOB) != 0;
+    if (re->flags & JSREG_GLOB)
+        data->flags |= GLOBAL_REGEXP;
     index = 0;
-    if (data->mode == GLOB_SEARCH) {
+    if (GET_MODE(data->flags) == MODE_SEARCH) {
         ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
         if (ok) {
             *rval = (*rval == JSVAL_TRUE)
                     ? INT_TO_JSVAL(cx->regExpStatics.leftContext.length)
                     : INT_TO_JSVAL(-1);
         }
-    } else if (data->global) {
+    } else if (data->flags & GLOBAL_REGEXP) {
         if (reobj) {
             /* Set the lastIndex property's reserved slot to 0. */
             ok = js_SetLastIndex(cx, reobj, 0);
@@ -1155,18 +1164,25 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
         }
     } else {
-        ok = js_ExecuteRegExp(cx, re, str, &index, data->mode == GLOB_REPLACE,
+        ok = js_ExecuteRegExp(cx, re, str, &index,
+                              GET_MODE(data->flags) == MODE_REPLACE,
                               rval);
     }
 
-    if (!reobj)
+    if (reobj) {
+        /* Tell our caller that it doesn't need to destroy data->regexp. */
+        data->flags &= ~KEEP_REGEXP;
+    } else if (!(data->flags & KEEP_REGEXP)) {
+        /* Caller didn't want to keep data->regexp, so null and destroy it.  */
+        data->regexp = NULL;
         js_DestroyRegExp(cx, re);
+    }
     return ok;
 }
 
 typedef struct MatchData {
-    GlobData base;
-    JSObject *arrayobj;
+    GlobData    base;
+    jsval       *arrayval;      /* NB: local root pointer */
 } MatchData;
 
 static JSBool
@@ -1179,12 +1195,12 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     jsval v;
 
     mdata = (MatchData *)data;
-    arrayobj = mdata->arrayobj;
+    arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
     if (!arrayobj) {
         arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL, 0, NULL);
         if (!arrayobj)
             return JS_FALSE;
-        mdata->arrayobj = arrayobj;
+        *mdata->arrayval = OBJECT_TO_JSVAL(arrayobj);
     }
     matchsub = &cx->regExpStatics.lastMatch;
     matchstr = js_NewStringCopyN(cx, matchsub->chars, matchsub->length, 0);
@@ -1202,16 +1218,13 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     MatchData mdata;
     JSBool ok;
 
+    mdata.base.flags = MODE_MATCH;
     mdata.base.optarg = 1;
-    mdata.base.mode = GLOB_MATCH;
-    mdata.arrayobj = NULL;
-    if (!js_AddRoot(cx, &mdata.arrayobj, "mdata.arrayobj"))
-        return JS_FALSE;
-    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval,
-                          JS_FALSE);
-    if (ok && mdata.arrayobj)
-        *rval = OBJECT_TO_JSVAL(mdata.arrayobj);
-    js_RemoveRoot(cx->runtime, &mdata.arrayobj);
+    mdata.arrayval = &argv[argc];
+    *mdata.arrayval = JSVAL_NULL;
+    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
+    if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
+        *rval = *mdata.arrayval;
     return ok;
 #else
     return str_nyi(cx, "match");
@@ -1222,12 +1235,11 @@ static JSBool
 str_search(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #if JS_HAS_REGEXPS
-    MatchData mdata;
+    GlobData data;
 
-    mdata.base.optarg = 1;
-    mdata.base.mode = GLOB_SEARCH;
-    return match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval,
-                            JS_FALSE);
+    data.flags = MODE_SEARCH;
+    data.optarg = 1;
+    return match_or_replace(cx, obj, argc, argv, NULL, &data, rval);
 #else
     return str_nyi(cx, "search");
 #endif
@@ -1534,6 +1546,7 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *lambda;
     JSString *repstr, *str;
     ReplaceData rdata;
+    JSBool ok;
     jschar *chars;
     size_t leftlen, rightlen, length;
 
@@ -1550,8 +1563,16 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         lambda = NULL;
     }
 
+    /*
+     * For ECMA Edition 3, the first argument is to be converted to a string
+     * to match in a "flat" sense (without regular expression metachars having
+     * special meanings) UNLESS the first arg is a RegExp object.
+     */
+    rdata.base.flags = MODE_REPLACE | KEEP_REGEXP;
+    if (cx->version == JSVERSION_DEFAULT || cx->version > JSVERSION_1_4)
+        rdata.base.flags |= FORCE_FLAT;
     rdata.base.optarg = 2;
-    rdata.base.mode = GLOB_REPLACE;
+
     rdata.lambda = lambda;
     rdata.repstr = repstr;
     if (repstr) {
@@ -1566,29 +1587,26 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.index = 0;
     rdata.leftIndex = 0;
 
-    /*
-     * For ECMA 3, the first argument is to be treated as a string
-     * (i.e. converted to one if necessary) UNLESS it's a reg.exp object.
-     */
-    if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval,
-                          (cx->version == JSVERSION_DEFAULT ||
-                           cx->version > JSVERSION_1_4))) {
+    ok = match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval);
+    if (!ok)
         return JS_FALSE;
-    }
 
     if (!rdata.chars) {
-        if (rdata.base.global || *rval != JSVAL_TRUE) {
+        if ((rdata.base.flags & GLOBAL_REGEXP) || *rval != JSVAL_TRUE) {
             /* Didn't match even once. */
             *rval = STRING_TO_JSVAL(rdata.base.str);
-            return JS_TRUE;
+            goto out;
         }
         leftlen = cx->regExpStatics.leftContext.length;
-        if (!find_replen(cx, &rdata, &length))
-            return JS_FALSE;
+        ok = find_replen(cx, &rdata, &length);
+        if (!ok)
+            goto out;
         length += leftlen;
         chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
-        if (!chars)
-            return JS_FALSE;
+        if (!chars) {
+            ok = JS_FALSE;
+            goto out;
+        }
         js_strncpy(chars, cx->regExpStatics.leftContext.chars, leftlen);
         do_replace(cx, &rdata, chars + leftlen);
         rdata.chars = chars;
@@ -1601,7 +1619,8 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_realloc(cx, rdata.chars, (length + 1) * sizeof(jschar));
     if (!chars) {
         JS_free(cx, rdata.chars);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
     js_strncpy(chars + rdata.length, cx->regExpStatics.rightContext.chars,
                rightlen);
@@ -1610,10 +1629,16 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = js_NewString(cx, chars, length, 0);
     if (!str) {
         JS_free(cx, chars);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
     *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+
+out:
+    /* If KEEP_REGEXP is still set, it's our job to destroy regexp now. */
+    if (rdata.base.flags & KEEP_REGEXP)
+        js_DestroyRegExp(cx, rdata.base.regexp);
+    return ok;
 #else
     return str_nyi(cx, "replace");
 #endif
@@ -2215,7 +2240,7 @@ static JSFunctionSpec string_methods[] = {
     {"localeCompare",       str_localeCompare,      1,0,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-    {"match",               str_match,              1,0,0},
+    {"match",               str_match,              1,0,1},
     {"search",              str_search,             1,0,0},
     {"replace",             str_replace,            2,0,0},
     {"split",               str_split,              2,0,0},
