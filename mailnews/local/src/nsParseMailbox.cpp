@@ -2347,9 +2347,6 @@ PRInt32 ParseOutgoingMessage::ParseBlock(const char *block, PRUint32 length)
 	PR_ASSERT(m_outputBuffer != nsnull);
 
 	return msg_LineBuffer (block, length, &m_outputBuffer, &m_ouputBufferSize,  &m_outputBufferIndex, PR_FALSE,
-#ifdef XP_OS2
-					(PRInt32 (_Optlink*) (char*,PRUint32,void*))
-#endif
 					   LineBufferCallback, this);
 }
 
