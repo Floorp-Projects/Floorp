@@ -135,10 +135,18 @@ private:
                      const char* aClassName, const char* aProperty,
                      PRUint32 aAction, nsCString &capability, void** aPolicy);
 
+    static nsresult
+    TryToGetPref(nsISecurityPref* aSecurityPref,
+                 nsCString &aPrefName,
+                 const char* aClassName,
+                 const char* aPropertyName,
+                 PRInt32 aClassPolicy,
+                 PRUint32 aAction, char** result);
+
     nsresult
-    GetPrefName(nsIPrincipal* principal,
-                const char* aClassName, const char* aPropertyName,
-                void* aClassPolicy, nsCString &result);
+    GetPolicy(nsIPrincipal* principal,
+              const char* aClassName, const char* aPropertyName,
+              PRInt32 aClassPolicy, PRUint32 aAction, char** result);
 
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
