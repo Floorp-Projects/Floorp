@@ -416,77 +416,21 @@ NS_IMETHODIMP nsAppShell::Exit()
   return NS_OK;
 }
 
+// does nothing. used by xp code with non-gtk expectations.
+// this method will be removed once xp eventloops are working.
 NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
-  GdkEvent *event;
-
-  aEvent = 0;
   aRealEvent = PR_FALSE;
-  event = gdk_event_peek();
-
-  if ((GdkEvent *) nsnull != event ) { 
-    aRealEvent = PR_TRUE;
-    aEvent = event;
-  } else 
-    g_main_iteration (PR_TRUE);
-
+  aEvent = 0;
   return NS_OK;
 }
 
+// simply executes one iteration of the event loop. used by xp code with
+// non-gtk expectations.
+// this method will be removed once xp eventloops are working.
 NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-	if ( aRealEvent == PR_TRUE )
-    g_main_iteration (PR_TRUE);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
-                                                void *aEvent,
-                                                nsIWidget *aWidget,
-                                                PRBool *aForWindow)
-{
-  PRBool isInWindow, isMouseEvent;
-  GdkEventAny *msg = (GdkEventAny *) aEvent;
-
-  if (aRealEvent == PR_FALSE) {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-  }
-
-  isInWindow = PR_FALSE;
-  if (aWidget != nsnull) {
-    // Get Native Window for dialog window
-    GdkWindow *win;
-    win = (GdkWindow *)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-    // Find top most window of event window
-    GdkWindow *eWin = msg->window;
-    if (nsnull != eWin) {
-      if (win == eWin) {
-        isInWindow = PR_TRUE;
-      }
-    }
-  }
-
-  isMouseEvent = PR_FALSE;
-  switch (msg->type)
-  {
-    case GDK_MOTION_NOTIFY:
-    case GDK_BUTTON_PRESS:
-    case GDK_2BUTTON_PRESS:
-    case GDK_3BUTTON_PRESS:
-    case GDK_BUTTON_RELEASE:
-      isMouseEvent = PR_TRUE;
-      break;
-    default:
-      isMouseEvent = PR_FALSE;
-      break;
-  }
-
-  *aForWindow = isInWindow == PR_TRUE || 
-    isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
-
-  gdk_event_free( (GdkEvent *) aEvent );
+  g_main_iteration(PR_TRUE);
   return NS_OK;
 }
 
