@@ -895,21 +895,23 @@ __ptr_t calloc(size_t count, size_t size)
 
 __ptr_t realloc(__ptr_t ptr, size_t size)
 {
+    callsite *oldsite, *site;
     size_t oldsize;
     PLHashNumber hash;
     PLHashEntry *he;
     allocation *alloc;
-    callsite *site;
 
     tmstats.realloc_calls++;
     if (suppress_tracing == 0) {
         if (tmmon)
             PR_EnterMonitor(tmmon);
+        oldsite = NULL;
         oldsize = 0;
         if (ptr && get_allocations()) {
             hash = hash_pointer(ptr);
             he = *PL_HashTableRawLookup(allocations, hash, ptr);
             if (he) {
+                oldsite = (callsite*) he->value;
                 alloc = (allocation*) he;
                 oldsize = alloc->size;
             }
@@ -938,8 +940,10 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
             PR_EnterMonitor(tmmon);
 #endif
         site = backtrace(1);
-        if (site)
-            log_event3(logfp, TM_EVENT_REALLOC, site->serial, oldsize, size);
+        if (site) {
+            log_event4(logfp, TM_EVENT_REALLOC, site->serial, size,
+                       oldsite ? oldsite->serial : 0, oldsize);
+        }
         if (ptr && allocations) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1296,6 +1300,21 @@ NS_TraceMallocDumpAllocations(const char *pathname)
     rv = ferror(ofp) ? -1 : 0;
     fclose(ofp);
     return rv;
+}
+
+PR_IMPLEMENT(void)
+NS_TraceMallocFlushLogfiles()
+{
+    logfile *fp;
+
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
+
+    for (fp = logfile_list; fp; fp = fp->next)
+        flush_logfile(fp);
+
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
 }
 
 #endif /* NS_TRACE_MALLOC */
