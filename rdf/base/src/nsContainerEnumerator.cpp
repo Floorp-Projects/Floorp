@@ -180,7 +180,7 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
     }
 
     // Now iterate through each index.
-    while (mNextIndex <= count) {
+    while (mCurrent || mNextIndex < count) {
         if (! mCurrent) {
             NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
             if (NS_FAILED(rv)) return rv;
