@@ -316,19 +316,10 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
 
             if (NS_SUCCEEDED(rv)) {
                 // send off the notification, and block.
-                nsIHTTPNotify* externMod = nsnull;
-                rv = pNotify->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&externMod);
-                NS_RELEASE(pNotify);
-            
-                if (NS_FAILED(rv)) {
-                    NS_ASSERTION(0, "proxy object manager found an interface we can not QI for");
-                    NS_RELEASE(pModules);
-                    return rv;
-                }
 
                 // make the nsIHTTPNotify api call
-                externMod->AsyncExamineResponse(m_pConnection);
-                NS_RELEASE(externMod);
+                pNotify->AsyncExamineResponse(m_pConnection);
+                NS_RELEASE(pNotify);
                 // we could do something with the return code from the external
                 // module, but what????            
             }
