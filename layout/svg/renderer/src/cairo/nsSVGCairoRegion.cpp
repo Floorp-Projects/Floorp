@@ -35,11 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsISVGRendererRegion.h"
+#include "nsISVGCairoRegion.h"
 #include "nsISVGRectangleSink.h"
 #include "nsSVGCairoRegion.h"
 
-class nsSVGCairoRectRegion : public nsISVGRendererRegion
+class nsSVGCairoRectRegion : public nsISVGCairoRegion
 {
 protected:
   friend nsresult NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result,
@@ -50,6 +50,9 @@ protected:
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
+
+  // nsISVGCairoRegion interface:
+  NS_IMETHOD_(PRBool) Contains(float x, float y);
 
   // nsISVGRendererRegion interface:
   NS_DECL_NSISVGRENDERERREGION
@@ -85,9 +88,24 @@ NS_IMPL_ADDREF(nsSVGCairoRectRegion)
 NS_IMPL_RELEASE(nsSVGCairoRectRegion)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGCairoRectRegion)
+  NS_INTERFACE_MAP_ENTRY(nsISVGCairoRegion)
   NS_INTERFACE_MAP_ENTRY(nsISVGRendererRegion)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+//----------------------------------------------------------------------
+// nsISVGCairoRegion methods:
+
+NS_IMETHODIMP_(PRBool)
+nsSVGCairoRectRegion::Contains(float x, float y)
+{
+  if (x >= mX &&
+      x <= mX + mWidth &&
+      y >= mY &&
+      y <= mY + mHeight)
+    return PR_TRUE;
+  return PR_FALSE;
+}
 
 //----------------------------------------------------------------------
 // nsISVGRendererRegion methods:

@@ -45,6 +45,7 @@
 #include "nsISVGCairoCanvas.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGCairoRegion.h"
+#include "nsISVGCairoRegion.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGGlyphGeometrySource.h"
 #include "nsPromiseFlatString.h"
@@ -461,6 +462,13 @@ NS_IMETHODIMP
 nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 {
   *_retval = PR_FALSE;
+
+  // early reject test
+  if (mCoveredRegion) {
+    nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
+    if (!region->Contains(x,y))
+      return NS_OK;
+  }
 
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;

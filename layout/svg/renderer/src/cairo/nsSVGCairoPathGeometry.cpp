@@ -44,6 +44,7 @@
 #include "nsSVGCairoPathGeometry.h"
 #include "nsISVGRendererPathGeometry.h"
 #include "nsISVGCairoCanvas.h"
+#include "nsISVGCairoRegion.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGPathGeometrySource.h"
@@ -441,6 +442,13 @@ NS_IMETHODIMP
 nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 {
   *_retval = PR_FALSE;
+
+  // early reject test
+  if (mCoveredRegion) {
+    nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
+    if (!region->Contains(x,y))
+      return NS_OK;
+  }
 
   cairo_t *ctx = cairo_create();
 
