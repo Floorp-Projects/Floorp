@@ -146,6 +146,8 @@ protected:
   static PRBool MatchLinks(nsIContent *aContent);
   static PRBool MatchAnchors(nsIContent *aContent);
 
+  PRBool GetBodyContent();
+
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
   nsDTDMode mDTDMode;

@@ -51,6 +51,7 @@
 #include "nsParserCIID.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMHTMLElement.h"
 
 
 // Find/Serach Includes
@@ -83,6 +84,7 @@ static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
+static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
@@ -747,8 +749,10 @@ nsHTMLDocument::GetURL(nsString& aURL)
 NS_IMETHODIMP    
 nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_ERROR_FAILURE;
+  }
+  return mBodyContent->QueryInterface(kIDOMHTMLElementIID, (void **)aBody);
 }
 
 NS_IMETHODIMP    
@@ -1909,29 +1913,9 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
   nsIDOMNode * start = nsnull;
   nsIDOMNode * end   = nsnull;
-
-  nsString bodyStr("BODY");
   nsIDOMNode * child;
-  root->GetFirstChild(&child);
 
-  while (child != nsnull) {
-    nsIDOMElement* domElement;
-    nsresult rv = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
-    if (NS_OK == rv) {
-      nsString tagName;
-      domElement->GetTagName(tagName);
-      if (bodyStr.EqualsIgnoreCase(tagName)) {
-        mBodyContent = child;
-        break;
-      }
-      NS_RELEASE(domElement);
-    }
-    nsIDOMNode * node = child;
-    NS_RELEASE(child);
-    node->GetNextSibling(&child);
-  }
-
-  if (mBodyContent == nsnull) {
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
     return NS_OK;
   }
 
@@ -2176,10 +2160,41 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     NS_RELEASE(startContent);
     NS_RELEASE(endContent);
   }
-
-  NS_IF_RELEASE(mBodyContent);
-
   return NS_OK;
+}
+
+PRBool
+nsHTMLDocument::GetBodyContent()
+{
+  nsIDOMElement * root = nsnull;
+  if (NS_OK != GetDocumentElement(&root)) {  
+    return PR_FALSE;
+  }
+
+  nsAutoString bodyStr("BODY");
+  nsIDOMNode * child;
+  root->GetFirstChild(&child);
+
+  while (child != nsnull) {
+    nsIDOMElement* domElement;
+    nsresult rv = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
+    if (NS_OK == rv) {
+      nsString tagName;
+      domElement->GetTagName(tagName);
+      if (bodyStr.EqualsIgnoreCase(tagName)) {
+        mBodyContent = child;
+        NS_RELEASE(root);
+        NS_RELEASE(domElement);
+        return PR_TRUE;
+      }
+      NS_RELEASE(domElement);
+    }
+    nsIDOMNode * node = child;
+    NS_RELEASE(child);
+    node->GetNextSibling(&child);
+  }
+  NS_RELEASE(root);
+  return PR_FALSE;
 }
 
 // forms related stuff
