@@ -2332,7 +2332,19 @@ NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI,
    nsAutoString uriSpec(aStringURI);
 
    ConvertFileToStringURI(uriSpec, uriSpec);
-   return NS_OK;
+
+   if(0 == uriSpec.Find("file:", 0))
+      {
+      // if this is file url, we need to  convert the URI
+      // from Unicode to the FS charset
+      nsCAutoString inFSCharset;
+      NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpec, inFSCharset),
+         NS_ERROR_FAILURE);
+
+      if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.GetBuffer(), nsnull)))
+         return NS_OK;
+      } 
+   return NS_ERROR_FAILURE;
 }
 
 #define FILE_PROTOCOL "file://"
