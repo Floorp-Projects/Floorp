@@ -160,7 +160,6 @@ CPPSRCS		= \
 		nsUnicodeToUserDefined.cpp \
 		nsUnicodeToSymbol.cpp \
 		nsUnicodeToZapfDingbat.cpp \
-		nsUnicodeToAdobeEuro.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvLatinCID.h
