@@ -1,0 +1,310 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Netscape's XBL Marquee Emulation code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Doron Rosenberg <doron@netscape.com>
+   -   L. David Baron <dbaron@fas.harvard.edu>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="marqueeBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+
+  <binding id="marquee">
+
+    <implementation>
+
+      <property name="scrollAmount">
+        <getter>
+          if (this.hasAttribute("scrollamount"))
+            return this.getAttribute("scrollamount");
+          return 6; //default value is 6 pixels
+        </getter>
+        <setter>
+          this.setAttribute("scrollamount", val);
+        </setter>
+      </property>
+
+      <property name="scrollDelay">
+        <getter>
+          <![CDATA[
+          if (!this.hasAttribute("scrolldelay"))
+            return 85; //default value is 85 ms
+
+          var myScrollDelay = this.getAttribute('scrolldelay');
+
+          //marquee doesn't allow anything shorter than 40 ms
+          if (myScrollDelay < 40)
+            return 40;
+          return myScrollDelay;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="direction">
+        <getter>
+          if (this.hasAttribute("direction"))
+            return this.getAttribute("direction");
+          return "left"; //default value is "left"
+        </getter>
+      </property>
+
+      <property name="behavior">
+        <getter>
+          if (this.hasAttribute("behavior"))
+            return this.getAttribute("behavior");
+          return "scroll"; //default value is "scroll"
+        </getter>
+      </property>
+
+      <field name="dirsign">1</field>
+      <field name="startAt">0</field>
+      <field name="stopAt">0</field>
+      <field name="newPosition">0</field>
+      <field name="runId">0</field>
+
+      <field name="scrollStarted">0</field>
+
+      <property name="outerDiv"
+        onget="return document.getAnonymousNodes(this)[0]"
+      />
+
+      <property name="height"
+        onget="return this.getAttribute('height');"
+      />
+
+      <property name="width">
+        <getter>
+          <![CDATA[
+          if (this.hasAttribute("width"))
+            return this.getAttribute("width");
+          else if (this.parentNode.offsetWidth > 0)
+            return this.parentNode.offsetWidth;
+          else if (this.parentNode.parentNode.offsetWidth > 0)
+            return this.parentNode.parentNode.offsetWidth;
+          else
+            return 1;
+          ]]>
+        </getter>
+      </property> 
+
+      <!-- For sniffing purposes -->
+      <field name="nsMarqueeVersion">"0.9.6"</field>
+  
+      <method name="start">
+        <body>
+        <![CDATA[
+
+          this.stop();
+
+          if (this.scrollStarted == 0)
+          {
+            this.scrollStarted = 1; //we only want this to run once
+
+            switch (this.direction)
+            {
+              case "up":
+                this.dirsign = 1;
+                this.startAt = 0;
+                this.stopAt  = this.innerDiv.offsetHeight -
+                               parseInt(this.outerDiv.style.height);
+              break;
+
+              case "down":
+                this.dirsign = -1;
+                this.startAt = this.innerDiv.offsetHeight -
+                               parseInt(this.outerDiv.style.height);
+                this.stopAt  = 0;
+              break;
+
+              case "left":
+                this.dirsign = 1;
+                this.startAt = this.innerDiv.offsetLeft - this.outerDiv.offsetWidth;
+                this.stopAt  = this.outerDiv.offsetWidth + this.innerDiv.offsetWidth + this.startAt;
+              break;
+
+              case "right":
+              default:
+                this.dirsign = -1;
+                this.stopAt  = this.innerDiv.offsetLeft - this.outerDiv.offsetWidth;
+                this.startAt = this.outerDiv.offsetWidth + this.innerDiv.offsetWidth + this.stopAt;              
+              break;
+            }
+            this.newPosition = this.startAt;
+          } //end if
+
+          this.newPosition = parseInt(this.newPosition) + (this.dirsign * this.scrollAmount);
+
+          if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
+              (this.dirsign == -1 && this.newPosition < this.stopAt))
+          {
+            if (this.behavior == "alternate")
+            {
+              this.dirsign = -1 * this.dirsign;
+              var temp     = this.stopAt;
+              this.stopAt  = this.startAt;
+              this.startAt = temp;
+            }
+            else
+            {
+              this.newPosition = this.startAt;
+            }
+          }
+
+          switch(this.direction)
+          {
+            case "up":
+            case "down":
+              this.outerDiv.scrollTop = this.newPosition;
+            break;
+
+            case "left":
+            case "right":
+            default:
+              this.outerDiv.scrollLeft = this.newPosition;
+            break;
+          }
+
+          var myThis = this;
+          var myTimeOut = function myTimeOutFunction(){myThis.start();}
+
+          this.runId = window.setTimeout(myTimeOut, this.scrollDelay);
+        ]]>
+        </body>
+      </method>
+
+      <method name="stop">
+        <body>
+        <![CDATA[
+          if (this.runId != 0)
+            clearTimeout(this.runId);
+
+          this.runId = 0;
+        ]]>
+        </body>
+      </method>
+
+      <method name="init">
+        <body>
+        <![CDATA[
+          var height;
+
+          if ((this.direction == "up") || (this.direction == "down")) {
+            height = "200px";
+            this.outerDiv.style.height = height;
+          }
+          else {
+            this.innerDiv.style.whiteSpace = "nowrap";          
+          }
+
+          if (this.hasAttribute('height')) {
+            height = this.getAttribute('height');
+            this.outerDiv.style.height = height;
+          }
+
+          this.outerDiv.style.width = this.width;
+
+          if ((this.direction == "up") || (this.direction == "down")) {
+            this.innerDiv.style.padding = height + " 0";
+          }
+  
+          // Some sites access the element via the evil IE way of elementID.foo()
+          if (this.hasAttribute('id'))
+            window[this.getAttribute('id')] = this;
+
+          this.start();
+        ]]>
+        </body>
+      </method>
+
+      <constructor>
+        <![CDATA[
+          var myThis = this;
+          var lambda = function myScopeFunction() { myThis.init(); }
+
+          //init needs to be run after the page has loaded in order to calculate the correct
+          //height/width
+          window.addEventListener("load", lambda, false);
+        ]]>
+      </constructor>
+    </implementation>
+
+  </binding>
+
+  <binding id="marquee-horizontal"
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee">
+
+    <implementation>
+
+      <property name="innerDiv"
+        onget="return document.getAnonymousNodes(this)[0].firstChild.firstChild"
+      />
+
+    </implementation>
+
+    <content>
+      <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
+        <xul:hbox style="margin: 0 100%;">
+          <html:div>
+            <children/>
+          </html:div>
+        </xul:hbox>
+      </html:div>
+    </content>
+
+  </binding>
+
+  <binding id="marquee-vertical"
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee">
+
+    <implementation>
+      <property name="innerDiv"
+        onget="return document.getAnonymousNodes(this)[0].firstChild"
+      />
+    </implementation>
+
+    <content>
+      <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
+        <html:div>
+          <children/>
+        </html:div>
+      </html:div>
+    </content>
+
+  </binding>
+
+</bindings>

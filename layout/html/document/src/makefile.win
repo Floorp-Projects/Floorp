@@ -21,6 +21,8 @@
 
 DEPTH=..\..\..\.. 
 
+DIRS = xbl-marquee 
+
 LIBRARY_NAME=layouthtmldoc_s 
 MODULE=layout
 REQUIRES	= xpcom \
