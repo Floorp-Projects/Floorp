@@ -1,0 +1,3 @@
+class JSNumber extends JSValue {
+    
+}
