@@ -288,9 +288,9 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 		            
 		            // Test Alt attribute
 		            PRBool isAlt = PR_FALSE;
-		            theEvent->GetShiftKey(&isAlt);
-		            //  if (isAlt && (modAlt != "true"))
-		            //    break;
+		            theEvent->GetAltKey(&isAlt);
+		              if (isAlt && (modAlt != "true"))
+		                break;
 		            
 		            // Modifier tests passed so execute onclick command
 		            
