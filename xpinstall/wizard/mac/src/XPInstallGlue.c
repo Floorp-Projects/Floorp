@@ -214,7 +214,7 @@ OSErr
 RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 {
 	OSErr 				err = noErr;
-	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec, xpiProgDirSpec;
+	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec;
 	XPI_InitProc		xpi_initProc;
 	XPI_InstallProc		xpi_installProc;
 	XPI_ExitProc		xpi_exitProc;
