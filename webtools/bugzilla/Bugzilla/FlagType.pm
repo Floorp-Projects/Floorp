@@ -229,7 +229,6 @@ sub match {
 
     my @tables = @base_tables;
     my @columns = @base_columns;
-    my $having = "";
     my $dbh = Bugzilla->dbh;
 
     # Include a count of the number of flags per type if requested.
@@ -239,7 +238,7 @@ sub match {
     }
     
     # Generate the SQL WHERE criteria.
-    my @criteria = sqlify_criteria($criteria, \@tables, \@columns, \$having);
+    my @criteria = sqlify_criteria($criteria, \@tables);
     
     # Build the query, grouping the types if we are counting flags.
     my $select_clause = "SELECT " . join(", ", @columns);
@@ -249,8 +248,7 @@ sub match {
     my $query = "$select_clause $from_clause $where_clause";
     $query .= " " . $dbh->sql_group_by('flagtypes.id',
               join(', ', @base_columns[2..$#base_columns]))
-                    if ($include_count || $having ne "");
-    $query .= " HAVING $having " if $having ne "";
+                    if $include_count;
     $query .= " ORDER BY flagtypes.sortkey, flagtypes.name";
     
     # Execute the query and retrieve the results.
@@ -284,16 +282,13 @@ sub count {
 
     # Generate query components.
     my @tables = @base_tables;
-    my @columns = ("COUNT(flagtypes.id)");
-    my $having = "";
-    my @criteria = sqlify_criteria($criteria, \@tables, \@columns, \$having);
+    my @criteria = sqlify_criteria($criteria, \@tables);
     
     # Build the query.
-    my $select_clause = "SELECT " . join(", ", @columns);
+    my $select_clause = "SELECT COUNT(flagtypes.id)";
     my $from_clause = "FROM " . join(" ", @tables);
     my $where_clause = "WHERE " . join(" AND ", @criteria);
     my $query = "$select_clause $from_clause $where_clause";
-    $query .= " GROUP BY flagtypes.id HAVING $having " if $having ne "";
         
     # Execute the query and get the results.
     &::PushGlobalSQLState();
@@ -460,21 +455,19 @@ sub normalize {
 
 =over
 
-=item C<sqlify_criteria($criteria, Rtables, $columns, $having)>
+=item C<sqlify_criteria($criteria, $tables)>
 
 Converts a hash of criteria into a list of SQL criteria.
 $criteria is a reference to the criteria (field => value), 
 $tables is a reference to an array of tables being accessed 
-by the query, $columns is a reference to an array of columns
-being returned by the query, and $having is a reference to
-a criterion to put into the HAVING clause.
+by the query.
 
 =back
 
 =cut
 
 sub sqlify_criteria {
-    my ($criteria, $tables, $columns, $having) = @_;
+    my ($criteria, $tables) = @_;
 
     # the generated list of SQL criteria; "1=1" is a clever way of making sure
     # there's something in the list so calling code doesn't have to check list
@@ -501,7 +494,7 @@ sub sqlify_criteria {
         
         # Add inclusions to the query, which simply involves joining the table
         # by flag type ID and target product/component.
-        push(@$tables, "INNER JOIN flaginclusions ON " .
+        push(@$tables, "LEFT JOIN flaginclusions ON " .
                        "flagtypes.id = flaginclusions.type_id");
         push(@criteria, "(flaginclusions.product_id = $product_id " . 
                         " OR flaginclusions.product_id IS NULL)");
@@ -512,16 +505,15 @@ sub sqlify_criteria {
         # we do a LEFT JOIN so we don't miss flag types with no exclusions.
         # Then, as with inclusions, we join on flag type ID and target product/
         # component.  However, since we want flag types that *aren't* on the
-        # exclusions list, we count the number of exclusions records returned
-        # and use a HAVING clause to weed out types with one or more exclusions.
+        # exclusions list, we add a WHERE criteria to use only records with
+        # NULL exclusion type, i.e. without any exclusions.
         my $join_clause = "flagtypes.id = flagexclusions.type_id " . 
                           "AND (flagexclusions.product_id = $product_id " . 
                           "OR flagexclusions.product_id IS NULL) " . 
                           "AND (flagexclusions.component_id = $component_id " .
                           "OR flagexclusions.component_id IS NULL)";
         push(@$tables, "LEFT JOIN flagexclusions ON ($join_clause)");
-        push(@$columns, "COUNT(flagexclusions.type_id) AS num_exclusions");
-        $$having = "num_exclusions = 0";
+        push(@criteria, "flagexclusions.type_id IS NULL");
     }
     if ($criteria->{group}) {
         my $gid = $criteria->{group};
