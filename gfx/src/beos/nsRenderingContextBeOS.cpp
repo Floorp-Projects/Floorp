@@ -973,38 +973,20 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 					mView->DrawString(aString, aLength, BPoint(xx+1.0, yy));
 				}
 			} else {
-					int32 wlen=0, wpos=aX;
 					char *wpoint =0;
-					for(int32 i =0, onword=0, unichnum=0,  position=aX, ch_len=0;i<=aLength; )
+					int32 unichnum=0,  position=aX, ch_len=0;
+					for (PRUint32 i =0; i <= aLength; i += ch_len)
 					{
 						ch_len = utf8_char_len((uchar)aString[i]);
-						wlen  += ch_len;
-						if((aString[i]==' ' && onword==1) || aString[i]=='\0')
-						{
-							onword=0;
-							xx = wpos; 
-							yy = y;
-							mTranMatrix->TransformCoord(&xx, &yy);
-							// yy++; DrawString quirk!
-							if('\0' == aString[i]) 
-								wlen--;
-							mView->DrawString((char *)(wpoint), wlen, BPoint(xx, yy)); 
-							if (doEmulateBold) 	
-								mView->DrawString((char *)(wpoint), wlen, BPoint(xx+1.0, yy));
-							wlen=0;
-						}
-						else
-						{
-							if (onword ==0)
-							{
-								onword= 1; 
-								wpoint = (char *)&(aString[i]); 
-								wpos = position;
-								
-							}
-						}
+						wpoint = (char *)(aString + i);
+						xx = position; 
+						yy = y;
+						mTranMatrix->TransformCoord(&xx, &yy);
+						// yy++; DrawString quirk!
+						mView->DrawString((char *)(wpoint), ch_len, BPoint(xx, yy)); 
+						if (doEmulateBold) 	
+							mView->DrawString((char *)(wpoint), ch_len, BPoint(xx+1.0, yy));
 						position += aSpacing[unichnum++];
-						i += ch_len;
 					}
 			}
 			mView->SetDrawingMode(B_OP_COPY);
