@@ -125,7 +125,7 @@ nsPluginInstance::nsPluginInstance(NPP aInstance) : nsPluginInstanceBase(),
   mInitialized(FALSE),
   mScriptablePeer(NULL)
 {
-  mString[0] = '\0';
+
 }
 
 nsPluginInstance::~nsPluginInstance()
@@ -135,7 +135,6 @@ nsPluginInstance::~nsPluginInstance()
 
 NPBool nsPluginInstance::init(NPWindow* aWindow)
 {
-  mDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");
 
   if(aWindow == NULL)
     return FALSE;
@@ -149,7 +148,6 @@ void nsPluginInstance::shut()
 {
   mScriptablePeer->PluginShutdown();
 
-  mDebugObj    = nsnull;
   mInitialized = FALSE;
 }
 
@@ -158,240 +156,6 @@ NPBool nsPluginInstance::isInitialized()
   return mInitialized;
 }
 
-NS_IMETHODIMP 
-nsPluginInstance::GetVersion(char * *aVersion)
-{
-  const char *ua = NPN_UserAgent(mInstance);
-  char*& version = *aVersion;
-
-  // although we can use NPAPI NPN_MemAlloc call to allocate memory:
-  //    version = (char*)NPN_MemAlloc(strlen(ua) + 1);
-  // for illustration purposed we use the service manager to access 
-  // the memory service provided by Mozilla
-  nsIMemory * nsMemoryService = NULL;
-  
-  if (gServiceManager) {
-    // get service using its contract id and use it to allocate the memory
-    gServiceManager->GetServiceByContractID("@mozilla.org/xpcom/memory-service;1", NS_GET_IID(nsIMemory), (void **)&nsMemoryService);
-    if(nsMemoryService)
-      version = (char *)nsMemoryService->Alloc(strlen(ua) + 1);
-  }
-
-  if (version)
-    strcpy(version, ua);
-
-  // release service
-  NS_IF_RELEASE(nsMemoryService);
-  return NS_OK;
-}
-
-//-----------------------------------------------------
- 
-void
-nsPluginInstance::OutPutLayoutFrames(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags , PRInt32 *aRetVal)
-{
-  *aRetVal = NS_ERROR_FAILURE;
-
-  if(mDebugObj){
-    *aRetVal = mDebugObj->DumpContent(aWindow,aFilePath,aFileName,aFlags);
-  }
-}
-
-//-----------------------------------------------------
- 
-NS_IMETHODIMP
-nsPluginInstance::CreateDirectory(const PRUnichar *aBasePath, PRUint32 aFlags, PRInt32 *aRetVal)
-{
-  *aRetVal = NS_ERROR_FAILURE;
-
-  if(mDebugObj){
-    *aRetVal = mDebugObj->CreateDirectory(aBasePath, aFlags);
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------
- 
-void
-nsPluginInstance::CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
-            const PRUnichar *aBaseFile, const PRUnichar *aVerFile,  PRUint32 aFlags, PRInt32 *aRetVal)
-{
-  *aRetVal = NS_ERROR_FAILURE;
-
-  if(mDebugObj){
-    *aRetVal = mDebugObj->CompareFrameModels(aBasePath,aVerPath,aBaseFile,aVerFile,aFlags);
-  }
-}
-
-//-----------------------------------------------------
-
-NS_IMETHODIMP
-nsPluginInstance::StartDirectorySearch(const char *aFilePath)
-{
-nsXPIDLCString  dirPath;
-nsresult        rv;
-
-  nsCString dirStr(aFilePath);
-  nsCOMPtr<nsIFile> theDir;
-  rv = NS_GetFileFromURLSpec(dirStr, getter_AddRefs(theDir));
-  if (NS_FAILED(rv)) {
-    printf("nsPluginInstance::StartDirectorySearch failed on creation of nsIFile [%s]\n", aFilePath);
-    mIter = 0;
-    return NS_OK;
-  }
-
-  rv = theDir->GetDirectoryEntries(getter_AddRefs(mIter));
-  if (NS_FAILED(rv)){
-    printf("nsPluginInstance::StartDirectorySearch failed on GetDirectoryEntries of nsIFile [%s]\n", aFilePath);
-    mIter = 0;
-    return NS_OK;
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------
-
-NS_IMETHODIMP
-nsPluginInstance::GetNextFileInDirectory(char **aDirName)
-{
-PRBool                hasMore;
-nsresult              rv;
-nsCOMPtr<nsISupports> supports;
-char*                 URLName;
-
-  *aDirName = 0;
-  if ( 0 ==mIter ){
-    return NS_OK;
-  }
-
-  while ( NS_SUCCEEDED(mIter->HasMoreElements(&hasMore)) ){
-    rv = mIter->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv))
-      break;
-    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-    if (NS_FAILED(rv))
-      break;
-    nsXPIDLCString filePath;
-    char* afilepath;
-    nsAutoString path;
-
-
-    rv = dirEntry->GetPath(path);
-    if (NS_FAILED(rv))
-      continue;
-
-    afilepath =  ToNewCString(path);
- 
-    if( strstr(afilepath,".html") != 0 ) {
-      *aDirName = afilepath;
-      nsCAutoString urlname;
-      NS_GetURLSpecFromFile(dirEntry,urlname);
-      URLName = ToNewCString(urlname);
-      *aDirName = URLName;
-      break;
-    } else {
-      nsMemory::Free(afilepath);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPluginInstance::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
-                  const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult)
-{
- return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsPluginInstance::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, 
-                                           PRUint32 aFlags, PRInt32 *aResult)
-{
- return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void PluginShutdown (); */
-NS_IMETHODIMP 
-nsPluginInstance::PluginShutdown()
-{
- return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-
-NS_IMETHODIMP 
-nsPluginInstance::SetBoolPref(const PRUnichar *aPrefName, PRBool aVal)
-{
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    nsCString prefName;
-    prefName.AssignWithConversion(aPrefName);
-    prefs->SetBoolPref(prefName.get(), aVal);
-  }
-  return NS_OK;
-}
-
-/* attribute boolean doRuntimeTests; */
-NS_IMETHODIMP 
-nsPluginInstance::GetDoRuntimeTests(PRBool *aDoRuntimeTests)
-{
-  if (mDebugObj)
-    return mDebugObj->GetDoRuntimeTests(aDoRuntimeTests);
-  return NS_ERROR_FAILURE;
-}
-NS_IMETHODIMP 
-nsPluginInstance::SetDoRuntimeTests(PRBool aDoRuntimeTests)
-{
-  if (mDebugObj)
-    return mDebugObj->SetDoRuntimeTests(aDoRuntimeTests);
-  return NS_ERROR_FAILURE;
-}
-
-/* attribute short testId; */
-NS_IMETHODIMP 
-nsPluginInstance::GetTestId(PRInt16 *aTestId)
-{
-  if (mDebugObj)
-    return mDebugObj->GetTestId(aTestId);
-  return NS_ERROR_FAILURE;
-}
-NS_IMETHODIMP 
-nsPluginInstance::SetTestId(PRInt16 aTestId)
-{
-  if (mDebugObj)
-    return mDebugObj->SetTestId(aTestId);
-  return NS_ERROR_FAILURE;
-}
-
-/* attribute boolean printAsIs; */
-NS_IMETHODIMP 
-nsPluginInstance::GetPrintAsIs(PRBool *aPrintAsIs)
-{
-  if (mDebugObj)
-    return mDebugObj->GetPrintAsIs(aPrintAsIs);
-  return NS_ERROR_FAILURE;
-}
-NS_IMETHODIMP 
-nsPluginInstance::SetPrintAsIs(PRBool aPrintAsIs)
-{
-  if (mDebugObj)
-    return mDebugObj->SetPrintAsIs(aPrintAsIs);
-  return NS_ERROR_FAILURE;
-}
-
-/* attribute wstring printFileName; */
-NS_IMETHODIMP nsPluginInstance::GetPrintFileName(PRUnichar * *aPrintFileName)
-{
-  if (mDebugObj)
-    return mDebugObj->GetPrintFileName(aPrintFileName);
-  return NS_ERROR_FAILURE;
-}
-NS_IMETHODIMP nsPluginInstance::SetPrintFileName(const PRUnichar * aPrintFileName)
-{
-  if (mDebugObj)
-    return mDebugObj->SetPrintFileName(aPrintFileName);
-  return NS_ERROR_FAILURE;
-}
 
 //-----------------------------------------------------
 

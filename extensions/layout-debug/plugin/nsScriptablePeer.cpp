@@ -42,10 +42,11 @@
 /////////////////////////////////////////////////////
 //
 // This file implements the nsScriptablePeer object
-// The native methods of this class are supposed to
+// The naive methods of this class are supposed to
 // be callable from JavaScript
 //
-#include "plugin.h"
+#include "plugin.h" 
+
 
 static NS_DEFINE_IID(kIDebugPluginIID, NS_IDEBUGPLUGIN_IID);
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
@@ -55,8 +56,15 @@ nsScriptablePeer::nsScriptablePeer(nsPluginInstance* aPlugin)
 {
   NS_INIT_ISUPPORTS();
   mPlugin = aPlugin;
+
+  mDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");
+
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 nsScriptablePeer::~nsScriptablePeer()
 {
 }
@@ -64,8 +72,12 @@ nsScriptablePeer::~nsScriptablePeer()
 NS_IMPL_ADDREF(nsScriptablePeer)
 NS_IMPL_RELEASE(nsScriptablePeer)
 
-// here nsScriptablePeer should return three interfaces it can be asked for by their iid's
-// static casts are necessary to ensure that correct pointer is returned
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  here nsScriptablePeer should return three interfaces it can be asked for by their iid's
+ *  static casts are necessary to ensure that correct pointer is returned
+ */
 NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 { 
   if(!aInstancePtr) 
@@ -92,35 +104,52 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   return NS_NOINTERFACE; 
 }
 
-//
-// the following method will be callable from JavaScript
-//
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  the following method will be callable from JavaScript
+ */
 NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
 {
-  if (mPlugin)
-    mPlugin->GetVersion(aVersion);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptablePeer::CreateDirectory(const PRUnichar *aFilePath,PRUint32 aFlags, PRInt32 *aResult)
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::CreateDirectory(const PRUnichar *aFilePath,PRUint32 aFlags, PRInt32 *aResult)
 {
 nsresult  rv = NS_OK;
 PRBool    retVal;
 
-  if ( mPlugin ) {
-    return mPlugin->CreateDirectory(aFilePath,aFlags,&retVal);
+  retVal = NS_ERROR_FAILURE;
+
+  if(mDebugObj){
+    retVal = mDebugObj->CreateDirectory(aFilePath, aFlags);
+    printf("Tested CreateDirectory\n");
   }
+
   return NS_OK;
+
 }
 
-NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, 
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, 
                                            PRUint32 aFlags, PRInt32 *aResult)
 {
 nsresult  rv = NS_OK;
 PRBool    retVal;
 
-  if (mPlugin){
-    mPlugin->OutPutLayoutFrames(aWindow,aFilePath,aFileName,aFlags,&retVal);
+
+  if(mDebugObj){
+    retVal = mDebugObj->DumpContent(aWindow,aFilePath,aFileName,aFlags);
     if (retVal == NS_OK) {
       *aResult= 0;
     } else if ( retVal == NS_ERROR_FILE_INVALID_PATH ) {
@@ -128,120 +157,251 @@ PRBool    retVal;
     } else {
       *aResult = 1;     // did not load.. keep going
     }
+    printf("Tested DumpLayout\n");
   }
+  
   return rv;
 }
 
-NS_IMETHODIMP nsScriptablePeer::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
                   const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult)
 {
 nsresult  rv = NS_OK;
-PRBool    retVal;
+PRBool    retVal = NS_ERROR_FAILURE;
 
-  if (mPlugin){
-    mPlugin->CompareLayoutFrames(aBasePath,aVerPath,aBaseFile,aVerFile,aFlags, &retVal);
-    if (retVal == NS_OK) {
+  if(mDebugObj){
+    retVal = mDebugObj->CompareFrameModels(aBasePath,aVerPath,aBaseFile,aVerFile,aFlags);
+     if (retVal == NS_OK) {
       *aResult= 0;
     } else {
       *aResult = 1;
     }
+    printf("Tested CompareLayoutFiles\n");
   }
+
   return rv;
 }
 
-//
-// the following method will be callable from JavaScript
-//
-NS_IMETHODIMP nsScriptablePeer::StartDirectorySearch(const char *aFilePath)
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  the following method will be callable from JavaScript
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::StartDirectorySearch(const char *aFilePath)
 {
 
-  if (mPlugin)
-    return mPlugin->StartDirectorySearch(aFilePath);
+nsXPIDLCString  dirPath;
+nsresult        rv;
+
+  nsCString dirStr(aFilePath);
+  nsCOMPtr<nsIFile> theDir;
+  rv = NS_GetFileFromURLSpec(dirStr, getter_AddRefs(theDir));
+  if (NS_FAILED(rv)) {
+    printf("nsPluginInstance::StartDirectorySearch failed on creation of nsIFile [%s]\n", aFilePath);
+    mIter = 0;
+    return NS_OK;
+  }
+
+  rv = theDir->GetDirectoryEntries(getter_AddRefs(mIter));
+  if (NS_FAILED(rv)){
+    printf("nsPluginInstance::StartDirectorySearch failed on GetDirectoryEntries of nsIFile [%s]\n", aFilePath);
+    mIter = 0;
+    return NS_OK;
+  }
+
+  printf("Tested StartDirectory\n");
 
   return NS_OK;
+
 }
 
 
-NS_IMETHODIMP nsScriptablePeer::GetNextFileInDirectory(char **aFilePath)
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::GetNextFileInDirectory(char **aFilePath)
 {
+PRBool                hasMore;
+nsresult              rv;
+nsCOMPtr<nsISupports> supports;
+char*                 URLName;
 
-  if (mPlugin)
-    return mPlugin->GetNextFileInDirectory(aFilePath);
+  *aFilePath = 0;
+  if ( 0 ==mIter ){
+    return NS_OK;
+  }
+
+  while ( NS_SUCCEEDED(mIter->HasMoreElements(&hasMore)) ){
+    rv = mIter->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv))
+      break;
+    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv))
+      break;
+    nsXPIDLCString filePath;
+    char* afilepath;
+    nsAutoString path;
+
+
+    rv = dirEntry->GetPath(path);
+    if (NS_FAILED(rv))
+      continue;
+
+    afilepath =  ToNewCString(path);
+ 
+    if( strstr(afilepath,".html") != 0 ) {
+      *aFilePath = afilepath;
+      nsCAutoString urlname;
+      NS_GetURLSpecFromFile(dirEntry,urlname);
+      URLName = ToNewCString(urlname);
+      *aFilePath = URLName;
+      break;
+    } else {
+      nsMemory::Free(afilepath);
+    }
+  }
+
+  printf("Tested NextDirectory\n");
 
   return NS_OK;
+
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 NS_IMETHODIMP nsScriptablePeer::SetBoolPref(const PRUnichar *aPrefName, PRBool aVal)
 {
-  if (mPlugin)
-    return mPlugin->SetBoolPref(aPrefName, aVal);
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs) {
+    nsCString prefName;
+    prefName.AssignWithConversion(aPrefName);
+    prefs->SetBoolPref(prefName.get(), aVal);
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+    
 }
 
-/* attribute boolean doRuntimeTests; */
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  attribute boolean doRuntimeTests;
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::GetDoRuntimeTests(PRBool *aDoRuntimeTests)
 {
-  if (mPlugin)
-    return mPlugin->GetDoRuntimeTests(aDoRuntimeTests);
+  if (mDebugObj)
+    return mDebugObj->GetDoRuntimeTests(aDoRuntimeTests);
   return NS_ERROR_FAILURE;
 }
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::SetDoRuntimeTests(PRBool aDoRuntimeTests)
 {
-  if (mPlugin)
-    return mPlugin->SetDoRuntimeTests(aDoRuntimeTests);
+  if (mDebugObj)
+    return mDebugObj->SetDoRuntimeTests(aDoRuntimeTests);
   return NS_ERROR_FAILURE;
 }
 
-/* attribute short testId; */
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  ttribute short testId;
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::GetTestId(PRInt16 *aTestId)
 {
-  if (mPlugin)
-    return mPlugin->GetTestId(aTestId);
+  if (mDebugObj)
+    return mDebugObj->GetTestId(aTestId);
   return NS_ERROR_FAILURE;
 }
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::SetTestId(PRInt16 aTestId)
 {
-  if (mPlugin)
-    return mPlugin->SetTestId(aTestId);
+  if (mDebugObj)
+    return mDebugObj->SetTestId(aTestId);
   return NS_ERROR_FAILURE;
 }
 
-/* attribute boolean printAsIs; */
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ *  attribute boolean printAsIs;
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::GetPrintAsIs(PRBool *aPrintAsIs)
 {
-  if (mPlugin)
-    return mPlugin->GetPrintAsIs(aPrintAsIs);
+  if (mDebugObj)
+    return mDebugObj->GetPrintAsIs(aPrintAsIs);
   return NS_ERROR_FAILURE;
 }
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 NS_IMETHODIMP 
 nsScriptablePeer::SetPrintAsIs(PRBool aPrintAsIs)
 {
-  if (mPlugin)
-    return mPlugin->SetPrintAsIs(aPrintAsIs);
+  if (mDebugObj)
+    return mDebugObj->SetPrintAsIs(aPrintAsIs);
   return NS_ERROR_FAILURE;
 }
 
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
 /* attribute wstring printFileName; */
-NS_IMETHODIMP nsScriptablePeer::GetPrintFileName(PRUnichar * *aPrintFileName)
+NS_IMETHODIMP 
+nsScriptablePeer::GetPrintFileName(PRUnichar * *aPrintFileName)
 {
-  if (mPlugin)
-    return mPlugin->GetPrintFileName(aPrintFileName);
-  return NS_ERROR_FAILURE;
-}
-NS_IMETHODIMP nsScriptablePeer::SetPrintFileName(const PRUnichar * aPrintFileName)
-{
-  if (mPlugin)
-    return mPlugin->SetPrintFileName(aPrintFileName);
+  if (mDebugObj)
+    return mDebugObj->GetPrintFileName(aPrintFileName);
   return NS_ERROR_FAILURE;
 }
 
-/* void PluginShutdown (); */
-NS_IMETHODIMP nsScriptablePeer::PluginShutdown()
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::SetPrintFileName(const PRUnichar * aPrintFileName)
+{
+  if (mDebugObj)
+    return mDebugObj->SetPrintFileName(aPrintFileName);
+  return NS_ERROR_FAILURE;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
+nsScriptablePeer::PluginShutdown()
 {
   mPlugin = nsnull;
   return NS_OK;
