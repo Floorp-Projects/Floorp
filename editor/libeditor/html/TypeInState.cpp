@@ -83,6 +83,10 @@ TypeInState::TypeInState() :
 
 TypeInState::~TypeInState()
 {
+  // Call Reset() to release any data that may be in
+  // mClearedArray and mSetArray.
+
+  Reset();
 }
 
 NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection,short)
