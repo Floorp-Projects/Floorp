@@ -24,11 +24,9 @@
 
 #include "stdio.h"
 
-static nsBrowserWindow *nbw;
-
 typedef GtkItemFactoryCallback GIFC;
 
-void gtk_ifactory_cb (gpointer callback_data,
+void gtk_ifactory_cb (nsBrowserWindow *nbw,
 	guint callback_action, 
 	GtkWidget *widget)
 {
@@ -129,11 +127,10 @@ void CreateViewerMenus(GtkWidget *aParent, gpointer data)
 {
   GtkItemFactory *item_factory;
   GtkWidget *menubar;
-  nbw = (nsBrowserWindow*)data;
   
   int nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
   item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", nsnull);
-  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, nsnull);
+  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, data);
 /* HACK HACK HACK */
   menubar = gtk_item_factory_get_widget (item_factory, "<main>");
   gtk_widget_show(menubar);
