@@ -3854,6 +3854,54 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
     print "done.\n";
 }
 
+# 2004-12-13 Nick.Barnes@pobox.com bug 262268
+# Check flag type names for spaces and commas, and rename them.
+if (TableExists("flagtypes")) {
+    print "Checking flag type names for spaces and commas...\n";
+    
+    # Get names and IDs which are broken.
+    $sth = $dbh->prepare("SELECT name, id FROM flagtypes");
+    $sth->execute();
+
+    my %flagtypes;
+    my @badflagnames;
+    
+    while (my ($name, $id) = $sth->fetchrow_array()) {
+        $flagtypes{$name} = $id;
+        if ($name =~ /[ ,]/) {
+            push(@badflagnames, $name);
+        }
+    }
+    if (@badflagnames) {
+        my ($flagname, $tryflagname);
+        my $sth = $dbh->prepare("UPDATE flagtypes SET name = ? WHERE id = ?");
+        foreach $flagname (@badflagnames) {
+            print "  Bad flag type name \"$flagname\" ...\n";
+            ($tryflagname = $flagname) =~ tr/ ,/__/;
+            while (defined($flagtypes{$tryflagname})) {
+                print "  ... can't rename as \"$tryflagname\" ...\n";
+                $tryflagname .= "'";
+                if (length($tryflagname) > 50) {
+                    my $lastchanceflagname = (substr $tryflagname, 0, 47) . '...';
+                    if (defined($flagtypes{$lastchanceflagname})) {
+                        print "  ... last attempt as \"$lastchanceflagname\" still failed.'\n";
+                        print "Rename the flag by hand and run checksetup.pl again.\n";
+                        die("Bad flag type name $flagname");
+                    }
+                    $tryflagname = $lastchanceflagname;
+                }
+            }
+            $sth->execute($tryflagname, $flagtypes{$flagname});
+            print "  renamed flag type \"$flagname\" as \"$tryflagname\"\n";
+            $flagtypes{$tryflagname} = $flagtypes{$flagname};
+            delete $flagtypes{$flagname};
+        }
+        print "... done.\n";
+    } else {
+        print "... all flag type names are good.\n";
+    }
+}
+
 # 2002-11-24 - bugreport@peshkin.net - bug 147275 
 #
 # If group_control_map is empty, backward-compatbility 
