@@ -427,6 +427,11 @@ NS_IMETHODIMP
 nsWindow::IsVisible(PRBool & aState)
 {
     aState = mIsVisible;
+    if (mIsTopLevel && mShell && !GTK_WIDGET_MAPPED(mShell)) {
+        /* we do not change mIsVisible to PR_FALSE here so we don't bother
+           to change it back to PR_TRUE when the mShell is mapped again. */
+        aState = PR_FALSE;
+    }
     return NS_OK;
 }
 
