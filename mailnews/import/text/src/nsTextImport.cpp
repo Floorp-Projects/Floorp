@@ -67,7 +67,8 @@
 #include "nsTextStringBundle.h"
 #include "nsIStringBundle.h"
 #include "nsTextAddress.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsProxiedService.h"
 #include "TextDebugLog.h"
@@ -713,10 +714,10 @@ NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFi
 	// from the same file format.
 	
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+	nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;
-		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
+		rv = prefs->GetCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
 		if (NS_SUCCEEDED( rv)) {
 			const char *pStr = (const char *)prefStr;
 			if (pStr) {
@@ -791,12 +792,12 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 
 	PRBool	done = PR_FALSE;
 	nsresult rv;
-	// NS_WITH_PROXIED_SERVICE( nsIPref, prefs, kPrefServiceCID, NS_UI_THREAD_EVENTQ, &rv);
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+
+	nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
 
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;
-		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
+		rv = prefs->GetCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
 		if (NS_SUCCEEDED( rv)) {
 			if (str.Equals(prefStr))
 				done = PR_TRUE;

@@ -39,7 +39,8 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIIOService.h"
 #include "nsIPipe.h"
 #include "nsNetCID.h"
@@ -68,6 +69,7 @@
 #define MAIL_ROOT_PREF "mail."
 #define PREF_MAIL_SMTPSERVERS "mail.smtpservers"
 #define PREF_MAIL_SMTPSERVERS_APPEND_SERVERS "mail.smtpservers.appendsmtpservers"
+#define PREF_MAIL_SMTP_DEFAULTSERVER "mail.smtp.defaultserver"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -383,12 +385,15 @@ nsSmtpService::loadSmtpServers()
     if (mSmtpServersLoaded) return NS_OK;
     
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefBranch> prefRootBranch;
+    prefService->GetBranch(nsnull, getter_AddRefs(prefRootBranch));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString tempServerList;
     nsXPIDLCString serverList;
-    rv = prefs->CopyCharPref(PREF_MAIL_SMTPSERVERS, getter_Copies(tempServerList));
+    rv = prefRootBranch->GetCharPref(PREF_MAIL_SMTPSERVERS, getter_Copies(tempServerList));
 
     //Get the pref in a tempServerList and then parse it to see if it has dupes.
     //if so remove the dupes and then create the serverList.
@@ -422,8 +427,7 @@ nsSmtpService::loadSmtpServers()
     // We need to check if we have any pre-configured smtp servers so that
     // those servers can be appended to the list. 
     nsXPIDLCString appendServerList;
-    rv = prefs->CopyCharPref(PREF_MAIL_SMTPSERVERS_APPEND_SERVERS,
-					    getter_Copies(appendServerList));
+    rv = prefRootBranch->GetCharPref(PREF_MAIL_SMTPSERVERS_APPEND_SERVERS, getter_Copies(appendServerList));
 
     // Get the list of smtp servers (either from regular pref i.e, mail.smtpservers or
     // from preconfigured pref mail.smtpservers.appendsmtpservers) and create a keyed 
@@ -438,18 +442,18 @@ nsSmtpService::loadSmtpServers()
        * is stored in mailnews.js file. If a given vendor needs to add more preconfigured 
        * smtp servers, the default version number can be increased. Comparing version 
        * number from user's prefs file and the default one from mailnews.js, we
-       * can add new smp servers and any other version level changes that need to be done.
+       * can add new smtp servers and any other version level changes that need to be done.
        *
        * 2. pref("mail.smtpservers.appendsmtpservers", <comma separated servers list>);
        * This pref contains the list of pre-configured smp servers that ISP/Vendor wants to
        * to add to the existing servers list. 
        */
       nsCOMPtr<nsIPrefBranch> defaultsPrefBranch;
-      rv = prefs->GetDefaultBranch(MAIL_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
+      rv = prefService->GetDefaultBranch(MAIL_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
       NS_ENSURE_SUCCESS(rv,rv);
 
       nsCOMPtr<nsIPrefBranch> prefBranch;
-      rv = prefs->GetBranch(MAIL_ROOT_PREF, getter_AddRefs(prefBranch));
+      rv = prefService->GetBranch(MAIL_ROOT_PREF, getter_AddRefs(prefBranch));
       NS_ENSURE_SUCCESS(rv,rv);
 
       PRInt32 appendSmtpServersCurrentVersion=0;
@@ -527,10 +531,10 @@ nsresult
 nsSmtpService::saveKeyList()
 {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    return prefs->SetCharPref(PREF_MAIL_SMTPSERVERS, mServerKeyList.get());
+    return prefBranch->SetCharPref(PREF_MAIL_SMTPSERVERS, mServerKeyList.get());
 }
 
 nsresult
@@ -545,14 +549,11 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
     server->SetKey(key);
     mSmtpServers->AppendElement(server);
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        if (mServerKeyList.IsEmpty())
-            mServerKeyList = key;
-        else {
-            mServerKeyList += ",";
-            mServerKeyList += key;
-        }
+    if (mServerKeyList.IsEmpty())
+        mServerKeyList = key;
+    else {
+        mServerKeyList.Append(',');
+        mServerKeyList += key;
     }
 
     if (aResult) {
@@ -594,13 +595,12 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
-      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
       if (NS_FAILED(rv)) return rv;
 
       // try to get it from the prefs
       nsXPIDLCString defaultServerKey;
-      rv = pref->CopyCharPref("mail.smtp.defaultserver",
-                             getter_Copies(defaultServerKey));
+      rv = prefBranch->GetCharPref(PREF_MAIL_SMTP_DEFAULTSERVER, getter_Copies(defaultServerKey));
       if (NS_SUCCEEDED(rv) &&
           !defaultServerKey.IsEmpty()) {
 
@@ -630,7 +630,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
           nsXPIDLCString serverKey;
           mDefaultSmtpServer->GetKey(getter_Copies(serverKey));
           if (NS_SUCCEEDED(rv))
-              pref->SetCharPref("mail.smtp.defaultserver", serverKey);
+              prefBranch->SetCharPref(PREF_MAIL_SMTP_DEFAULTSERVER, serverKey);
       }
   }
 
@@ -655,8 +655,9 @@ nsSmtpService::SetDefaultServer(nsISmtpServer *aServer)
     nsresult rv = aServer->GetKey(getter_Copies(serverKey));
     NS_ENSURE_SUCCESS(rv,rv);
     
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
-    pref->SetCharPref("mail.smtp.defaultserver", serverKey);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
+    prefBranch->SetCharPref(PREF_MAIL_SMTP_DEFAULTSERVER, serverKey);
     return NS_OK;
 }
 

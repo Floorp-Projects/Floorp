@@ -62,7 +62,7 @@ class nsOutputFileStream;
 extern "C" {
 #endif /* __cplusplus */
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 
 typedef struct _nsMIMESession nsMIMESession;
 
@@ -195,7 +195,7 @@ extern "C" nsresult     mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool r
 extern "C" nsresult     mimeEmitterUpdateCharacterSet(MimeDisplayOptions *opt, const char *aCharset);
 
 /* To Get the connnection to prefs service manager */
-extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
+extern "C" nsIPrefBranch      *GetPrefBranch(MimeDisplayOptions *opt);
 
 // Get the text converter...
 mozITXTToHTMLConv           *GetTextConverter(MimeDisplayOptions *opt);

@@ -53,7 +53,6 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIPref.h"
 #include "nsInt64.h"
 #include "nsISupportsArray.h"
 #include "nsIObserver.h"

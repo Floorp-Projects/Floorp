@@ -41,6 +41,7 @@
 
 #include "nsString.h"
 #include "nsISmtpServer.h"
+#include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
 
 class nsSmtpServer : public nsISmtpServer,
@@ -55,13 +56,13 @@ public:
 
 private:
     nsCString mKey;
-
-    nsresult getPrefString(const char *pref, nsCAutoString& result);
-    nsresult getDefaultIntPref(nsIPref *prefs, PRInt32 defVal, const char *prefName, PRInt32 *val);
+    nsCOMPtr<nsIPrefBranch> mPrefBranch;
+    nsCOMPtr<nsIPrefBranch> mDefPrefBranch;
+                                                                                                                                               
+    nsresult getPrefs();
+    nsresult getIntPrefWithDefault(const char *prefName, PRInt32 *val, PRInt32 defval);
     nsCString m_password;
     PRBool m_logonFailed;
-    static void clearPrefEnum(const char *aPref, void *aClosure);
-    
 };
 
 #endif

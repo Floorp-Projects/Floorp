@@ -60,6 +60,9 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIRelativeFilePref.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
@@ -1029,3 +1032,47 @@ NS_MSG_BASE nsresult NS_SetPersistentFile(const char *relPrefName,
     return rv;
 }
 
+NS_MSG_BASE nsresult NS_GetUnicharPreferenceWithDefault(nsIPrefBranch *prefBranch,  //can be null, if so uses the root branch
+                                                        const char *prefName,
+                                                        const nsString& defValue,
+                                                        nsString& prefValue)
+{
+    NS_ENSURE_ARG(prefName);
+
+    nsCOMPtr<nsIPrefBranch> pbr;
+    if(!prefBranch) {
+        pbr = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        prefBranch = pbr;
+    }
+    nsCOMPtr<nsISupportsString> str;
+
+    nsresult rv = prefBranch->GetComplexValue(prefName, NS_GET_IID(nsISupportsString), getter_AddRefs(str));
+    if (NS_SUCCEEDED(rv))
+        return str->GetData(prefValue);
+
+    prefValue = defValue;
+    return NS_OK;
+}
+ 
+NS_MSG_BASE nsresult NS_GetLocalizedUnicharPreferenceWithDefault(nsIPrefBranch *prefBranch,  //can be null, if so uses the root branch
+                                                                 const char *prefName,
+                                                                 const nsString& defValue,
+                                                                 nsXPIDLString& prefValue)
+{
+    NS_ENSURE_ARG(prefName);
+
+    nsCOMPtr<nsIPrefBranch> pbr;
+    if(!prefBranch) {
+        pbr = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        prefBranch = pbr;
+    }
+
+    nsCOMPtr<nsIPrefLocalizedString> str;
+
+    nsresult rv = prefBranch->GetComplexValue(prefName, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(str));
+    if (NS_SUCCEEDED(rv))
+        str->ToString(getter_Copies(prefValue));
+    else
+        prefValue = defValue;
+    return NS_OK;
+}

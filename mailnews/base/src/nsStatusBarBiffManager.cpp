@@ -52,7 +52,8 @@
 #include "MailNewsTypes.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIFileChannel.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -103,7 +104,7 @@ nsresult nsStatusBarBiffManager::Init()
 nsresult nsStatusBarBiffManager::PlayBiffSound()
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
   
   PRBool playSoundOnBiff = PR_FALSE;

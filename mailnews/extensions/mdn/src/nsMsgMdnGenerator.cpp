@@ -60,7 +60,6 @@
 #include "nsIPrompt.h"
 #include "nsIMsgCompUtils.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
 

@@ -70,7 +70,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 
 #include "nsMsgBaseCID.h"

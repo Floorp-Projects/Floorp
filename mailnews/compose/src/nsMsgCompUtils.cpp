@@ -37,8 +37,8 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsMsgCompUtils.h"
-#include "nsIPref.h"
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "prmem.h"
 #include "nsEscape.h"
 #include "nsIFileSpec.h"
@@ -64,7 +64,6 @@
 #include "nsIMsgCompUtils.h"
 #include "nsIMsgMdnGenerator.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 
@@ -172,9 +171,9 @@ nsMsgMIMESetConformToStandard (PRBool conform_p)
     mime_headers_use_quoted_printable_p = PR_TRUE;
   else {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    if (NS_SUCCEEDED(rv) && prefs) {
-      rv = prefs->GetBoolPref("mail.strictly_mime_headers", &mime_headers_use_quoted_printable_p);
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+    if (NS_SUCCEEDED(rv)) {
+      prefs->GetBoolPref("mail.strictly_mime_headers", &mime_headers_use_quoted_printable_p);
     }
   }
 }
@@ -280,9 +279,9 @@ mime_generate_headers (nsMsgCompFields *fields,
   nsresult rv;
   *status = 0;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
   if (NS_FAILED(rv)) {
-  *status = rv;
+    *status = rv;
     return nsnull;
   }
 
@@ -1622,8 +1621,6 @@ msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs)
 void
 msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *proposedName, const char *charset)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   const char *s, *s2;
   char *s3;
 
@@ -1670,7 +1667,10 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *propose
   }
 
   PRInt32 parmFolding = 0;
-  if (NS_SUCCEEDED(rv) && prefs) 
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+  if (NS_SUCCEEDED(rv)) 
     prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
 
   if (parmFolding == 0 || parmFolding == 1)
@@ -1965,10 +1965,10 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode aMode, nsIMsgIdentity* identity)
   
   if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    if (NS_FAILED(rv) || !prefs) 
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+    if (NS_FAILED(rv)) 
       return nsnull;
-    rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);   
+    rv = prefs->GetCharPref("mail.default_sendlater_uri", &uri);   
     if (NS_FAILED(rv) || !uri) 
     {
       uri = PR_smprintf("%s", ANY_SERVER);
@@ -2132,31 +2132,22 @@ PRBool UseFormatFlowed(const char *charset)
   PRBool disableForCertainCharsets = PR_TRUE;
   nsresult rv;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  if(prefs)
-  {
-    
-    rv = prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendFlowed);
-    if (NS_SUCCEEDED(rv) && !sendFlowed)
-      return PR_FALSE;
-
-    // If we shouldn't care about charset, then we are finished
-    // checking and can go on using format=flowed
-    if(!charset)
-      return PR_TRUE;
-    rv = prefs->GetBoolPref("mailnews.disable_format_flowed_for_cjk",
-                            &disableForCertainCharsets);
-    if (NS_SUCCEEDED(rv) && !disableForCertainCharsets)
-      return PR_TRUE;
-  }
-  else
-  {
-    // No prefs service. Be careful. Don't use format=flowed.
+  rv = prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendFlowed);
+  if (NS_SUCCEEDED(rv) && !sendFlowed)
     return PR_FALSE;
-  }
+
+  // If we shouldn't care about charset, then we are finished
+  // checking and can go on using format=flowed
+  if(!charset)
+    return PR_TRUE;
+  rv = prefs->GetBoolPref("mailnews.disable_format_flowed_for_cjk",
+                          &disableForCertainCharsets);
+  if (NS_SUCCEEDED(rv) && !disableForCertainCharsets)
+    return PR_TRUE;
 
   // Just the check for charset left.
 
@@ -2171,6 +2162,4 @@ PRBool UseFormatFlowed(const char *charset)
     return PR_FALSE;
 
   return PR_TRUE;
-  
 }
-

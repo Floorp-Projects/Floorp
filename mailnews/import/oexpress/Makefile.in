@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  mork \
 		  intl \
 		  msgbase \
+		  pref \
 		  mailnews \
 		  necko \
 		  msgdb \

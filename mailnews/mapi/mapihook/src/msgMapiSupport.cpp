@@ -46,10 +46,6 @@
 #include "nsICategoryManager.h"
 #include "nsCRT.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
-
 #include "msgMapiSupport.h"
 #include "nsMapiRegistryUtils.h" 
 #include "nsMapiRegistry.h"

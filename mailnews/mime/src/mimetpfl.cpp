@@ -44,7 +44,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsMimeStringResources.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "mimemoz2.h"
 #include "prprf.h"
@@ -133,14 +133,14 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   text->mQuotedStyleSetting = 0;  // mail.quoted_style
   text->mCitationColor = nsnull;  // mail.citation_color
 
-  nsIPref *prefs = GetPrefServiceManager(obj->options);
-  if (prefs)
+  nsIPrefBranch *prefBranch = GetPrefBranch(obj->options);
+  if (prefBranch)
   {
-    prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
-    prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
-    prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
-    nsresult rv = prefs->GetBoolPref("mail.fixed_width_messages",
-                                     &(exdata->fixedwidthfont));
+    prefBranch->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
+    prefBranch->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
+    prefBranch->GetCharPref("mail.citation_color", &(text->mCitationColor));
+    nsresult rv = prefBranch->GetBoolPref("mail.fixed_width_messages",
+                                          &(exdata->fixedwidthfont));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref");
          // Check at least the success of one
   }

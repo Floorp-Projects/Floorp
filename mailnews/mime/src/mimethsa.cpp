@@ -44,6 +44,7 @@
 #include "prlog.h"
 #include "msgCore.h"
 #include "mimemoz2.h"
+#include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
@@ -161,10 +162,10 @@ printf("buffer: -%s-\n", NS_LossyConvertUCS2toASCII(*textHTMLSan->complete_buffe
 #endif
 
   char* allowedTags = 0;
-  nsIPref *prefs = GetPrefServiceManager(obj->options);
-  if (prefs)
-    prefs->CopyCharPref("mailnews.display.html_sanitizer.allowed_tags",
-                        &allowedTags);
+  nsIPrefBranch *prefBranch = GetPrefBranch(obj->options);
+  if (prefBranch)
+    prefBranch->GetCharPref("mailnews.display.html_sanitizer.allowed_tags",
+                            &allowedTags);
 
 #ifdef DEBUG_BenB
 printf(" E2\n");

@@ -65,7 +65,8 @@
 #include "nsReadableUtils.h"
 #include "nsMsgBaseCID.h"
 #include "nsIStringBundle.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsIMsgAttachment.h"
@@ -299,10 +300,10 @@ nsMapiHook::IsBlindSendAllowed()
 {
     PRBool enabled = PR_FALSE;
     PRBool warn = PR_TRUE;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-        prefs->GetBoolPref(PREF_MAPI_WARN_PRIOR_TO_BLIND_SEND,&warn);
-            prefs->GetBoolPref(PREF_MAPI_BLIND_SEND_ENABLED,&enabled);
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranch) {
+        prefBranch->GetBoolPref(PREF_MAPI_WARN_PRIOR_TO_BLIND_SEND, &warn);
+        prefBranch->GetBoolPref(PREF_MAPI_BLIND_SEND_ENABLED, &enabled);
     } 
     if (!enabled)
         return PR_FALSE;
@@ -335,11 +336,10 @@ nsMapiHook::IsBlindSendAllowed()
     PRBool okayToContinue = PR_FALSE;
     dlgService->ConfirmCheck(nsnull, nsnull, warningMsg, dontShowAgainMessage, &continueToWarn, &okayToContinue);
         
-    if (!continueToWarn && okayToContinue && prefs)
-        prefs->SetBoolPref(PREF_MAPI_WARN_PRIOR_TO_BLIND_SEND,PR_FALSE);
+    if (!continueToWarn && okayToContinue && prefBranch)
+        prefBranch->SetBoolPref(PREF_MAPI_WARN_PRIOR_TO_BLIND_SEND, PR_FALSE);
     
     return okayToContinue;
-        
 }
 
 // this is used for Send without UI

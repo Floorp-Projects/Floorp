@@ -53,7 +53,9 @@
 #include "comi18n.h"
 #include "nsIServiceManager.h"
 #include "nsIStringCharsetDetector.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsMsgUtils.h"
 #include "mimebuf.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
@@ -239,11 +241,10 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
     if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
       static PRInt32  conv_kana = -1;
       if (conv_kana < 0) {
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-        if (nsnull != prefs && NS_SUCCEEDED(rv)) {
-          PRBool val;
-          if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &val)))
-            val = PR_FALSE;  // no pref means need the mapping
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+        if (NS_SUCCEEDED(rv)) {
+          PRBool val = PR_FALSE; // no pref means need the mapping
+          prefBranch->GetBoolPref("mailnews.send_hankaku_kana", &val);
           conv_kana = val ? 0 : 1;
         }
       }
@@ -753,24 +754,18 @@ char * NextChar_UTF8(char *str)
 nsresult
 MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
 {
-  nsresult res;
-  char theBuffer[128];
-  nsFixedCString detector_contractid(theBuffer, sizeof(theBuffer), 0);
+  nsresult res = NS_ERROR_UNEXPECTED;
   nsXPIDLString detector_name;
-  nsCOMPtr<nsIStringCharsetDetector> detector;
   *aCharset = nsnull;
 
-  detector_contractid.Assign(NS_STRCDETECTOR_CONTRACTID_BASE);
+  NS_GetLocalizedUnicharPreferenceWithDefault(nsnull, "intl.charset.detector", EmptyString(), detector_name);
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res)); 
-  if (NS_SUCCEEDED(res)) {
-    if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", getter_Copies(detector_name)))) {
-      AppendUTF16toUTF8(detector_name, detector_contractid);
-    }
-  }
+  if (!detector_name.IsEmpty()) {
+    nsCAutoString detector_contractid;
+    detector_contractid.AssignLiteral(NS_STRCDETECTOR_CONTRACTID_BASE);
 
-  if (detector_contractid.Length() > sizeof(NS_STRCDETECTOR_CONTRACTID_BASE)) {
-    detector = do_CreateInstance(detector_contractid.get(), &res);
+    AppendUTF16toUTF8(detector_name, detector_contractid);
+    nsCOMPtr<nsIStringCharsetDetector> detector = do_CreateInstance(detector_contractid.get(), &res);
     if (NS_SUCCEEDED(res)) {
       nsDetectionConfident oConfident;
       res = detector->DoIt(aBuf, aLength, aCharset, oConfident);

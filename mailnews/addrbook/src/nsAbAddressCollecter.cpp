@@ -44,7 +44,8 @@
 #include "nsIAbCard.h"
 #include "nsAbBaseCID.h"
 #include "nsAbAddressCollecter.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIAddrBookSession.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIRDFService.h"
@@ -54,7 +55,7 @@
 #include "prmem.h"
 #include "nsIAddressBook.h"
 
-NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
+NS_IMPL_ISUPPORTS2(nsAbAddressCollecter, nsIAbAddressCollecter, nsIObserver)
 
 #define PREF_MAIL_COLLECT_ADDRESSBOOK "mail.collect_addressbook"
 
@@ -69,6 +70,11 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
     m_database->Close(PR_FALSE);
     m_database = nsnull;
   }
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranchInternal> pPrefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if(NS_SUCCEEDED(rv))
+    pPrefBranchInt->RemoveObserver(PREF_MAIL_COLLECT_ADDRESSBOOK, this);
 }
 
 NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar *aAddress, PRBool aCreateCard, PRUint32 aSendFormat)
@@ -296,33 +302,30 @@ nsresult nsAbAddressCollecter::SplitFullName(const char *fullName, char **firstN
   return NS_OK;
 }
 
-int PR_CALLBACK 
-nsAbAddressCollecter::collectAddressBookPrefChanged(const char *aNewpref, void *aData)
+NS_IMETHODIMP nsAbAddressCollecter::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  nsresult rv;
-  nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) aData;
-  nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv); 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs");
+  nsCOMPtr<nsIPrefBranchInternal> pPrefBranchInt = do_QueryInterface(aSubject);
+  NS_ASSERTION(pPrefBranchInt, "failed to get prefs");
 
+  nsresult rv;
   nsXPIDLCString prefVal;
-  rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  rv = adCol->SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbookUri : prefVal.get());
+  pPrefBranchInt->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
+  rv = SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to change collected ab");
-  return 0;
+  return NS_OK;
 }
 
 nsresult nsAbAddressCollecter::Init(void)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv); 
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = pPref->RegisterCallback(PREF_MAIL_COLLECT_ADDRESSBOOK, collectAddressBookPrefChanged, this);
+  nsCOMPtr<nsIPrefBranchInternal> pPrefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
+  rv = pPrefBranchInt->AddObserver(PREF_MAIL_COLLECT_ADDRESSBOOK, this, PR_FALSE);
+
   nsXPIDLCString prefVal;
-  rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  rv = SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbookUri : prefVal.get());
+  pPrefBranchInt->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
+  rv = SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }

@@ -68,6 +68,9 @@
 #include "nsIWeakReference.h"
 #include "nsIStringBundle.h"
 #include "nsIAlertsService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsISupportsPrimitives.h"
 
 #ifdef MOZ_THUNDERBIRD
 #define PROFILE_COMMANDLINE_ARG " -profile "
@@ -328,13 +331,12 @@ nsMessengerWinIntegration::Init()
   nsresult rv;
 
   // get pref service
-  nsCOMPtr<nsIPref> prefService;
-  prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // first check the timer value
-  PRInt32 timerInterval;
-  prefService->GetIntPref(TIMER_INTERVAL_PREF, &timerInterval);
+  PRInt32 timerInterval = 0;
+  prefBranch->GetIntPref(TIMER_INTERVAL_PREF, &timerInterval);
 
   // return if the timer value is negative or ZERO
   if (timerInterval > 0) 
@@ -472,12 +474,11 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
   if (mAlertInProgress) 
     return NS_OK; 
 
-  nsCOMPtr<nsIPref> prefService;
-  prefService = do_GetService(NS_PREF_CONTRACTID, &rv);  
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   PRBool showAlert = PR_TRUE; 
   
-  if (prefService)
-    prefService->GetBoolPref(SHOW_ALERT_PREF, &showAlert);
+  if (prefBranch)
+    prefBranch->GetBoolPref(SHOW_ALERT_PREF, &showAlert);
   
   if (showAlert)
   {
@@ -1032,19 +1033,20 @@ nsMessengerWinIntegration::SetupInbox()
       providerPrefixPref.Append(".unreadMailCountRegistryKeyPrefix");
 
       // get pref service
-      nsCOMPtr<nsIPref> prefService;
-      prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv,rv);
 
-      nsXPIDLString prefixValue;
-      prefService->CopyUnicharPref(providerPrefixPref.get(), getter_Copies(prefixValue));
-      if (prefixValue.get())
-        mEmailPrefix.Assign(prefixValue);
+      nsCOMPtr<nsISupportsString> tmp;
+      rv = prefBranch->GetComplexValue(providerPrefixPref.get(), NS_GET_IID(nsISupportsString),
+                                       getter_AddRefs(tmp));
+
+      if (NS_SUCCEEDED(rv))
+        tmp->GetData(mEmailPrefix);
       else
-        mEmailPrefix.Truncate(0);
+        mEmailPrefix.Truncate();
     }
     else {
-        mEmailPrefix.Truncate(0);
+      mEmailPrefix.Truncate();
     }
 
     // Get user's email address

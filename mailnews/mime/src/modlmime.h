@@ -48,7 +48,7 @@
 #include "nsIMimeStreamConverter.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "mozITXTToHTMLConv.h"
 
 #define MIME_DRAFTS
@@ -166,7 +166,7 @@ public:
   MimeDisplayOptions();
   virtual ~MimeDisplayOptions();
   mozITXTToHTMLConv   *conv;        // For text conversion...
-  nsIPref             *prefs;       /* Connnection to prefs service manager */
+  nsCOMPtr<nsIPrefBranch> m_prefBranch; /* prefBranch-service */
   nsMimeOutputType    format_out;   // The format out type
   nsCString           charsetForCachedInputDecoder;
   nsCOMPtr<nsIUnicodeDecoder>   m_inputCharsetToUnicodeDecoder;

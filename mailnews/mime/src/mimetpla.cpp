@@ -49,7 +49,7 @@
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "prprf.h"
 #include "nsMsgI18N.h"
 
@@ -151,14 +151,14 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
       text->mCitationColor = nsnull;  // mail.citation_color
       PRBool graphicalQuote = PR_TRUE; // mail.quoted_graphical
 
-      nsIPref *prefs = GetPrefServiceManager(obj->options);
-      if (prefs)
+      nsIPrefBranch *prefBranch = GetPrefBranch(obj->options);
+      if (prefBranch)
       {
-        prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
-        prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
-        prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
-        prefs->GetBoolPref("mail.quoted_graphical", &graphicalQuote);
-        prefs->GetBoolPref("mail.quoteasblock", &(text->mBlockquoting));
+        prefBranch->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
+        prefBranch->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
+        prefBranch->GetCharPref("mail.citation_color", &(text->mCitationColor));
+        prefBranch->GetBoolPref("mail.quoted_graphical", &graphicalQuote);
+        prefBranch->GetBoolPref("mail.quoteasblock", &(text->mBlockquoting));
       }
 
       if (!rawPlainText)

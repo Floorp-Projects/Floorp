@@ -55,7 +55,8 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "mimemoz2.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsFileSpec.h"
 #include "comi18n.h"
@@ -100,7 +101,6 @@
 // </for>
 
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // <for functions="HTML2Plaintext,HTMLSantinize">
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
@@ -954,9 +954,9 @@ mime_display_stream_complete (nsMIMESession *stream)
     int       status;
     PRBool    abortNow = PR_FALSE;
 
-    // Release the prefs service
-    if ( (obj->options) && (obj->options->prefs) )
-      obj->options->prefs->Release();
+    // Release the prefbranch
+    if ( (obj->options) )
+      obj->options->m_prefBranch = 0;
     
     if ((obj->options) && (obj->options->headers == MimeHeadersOnly))
       abortNow = PR_TRUE;
@@ -1370,13 +1370,13 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 //
 
 // Get the connnection to prefs service manager 
-nsIPref *
-GetPrefServiceManager(MimeDisplayOptions *opt)
+nsIPrefBranch *
+GetPrefBranch(MimeDisplayOptions *opt)
 {
   if (!opt) 
     return nsnull;
 
-  return opt->prefs;
+  return opt->m_prefBranch;
 }
 
 // Get the text converter...
@@ -1392,7 +1392,6 @@ GetTextConverter(MimeDisplayOptions *opt)
 MimeDisplayOptions::MimeDisplayOptions()
 {
   conv = nsnull;        // For text conversion...
-  prefs = nsnull;       /* Connnection to prefs service manager */
   format_out = 0;   // The format out type
   url = nsnull;	
 
@@ -1537,9 +1536,9 @@ mime_bridge_create_display_stream(
 //  memset(msd->options, 0, sizeof(*msd->options));
   msd->options->format_out = format_out;     // output format
 
-  rv = CallGetService(kPrefCID, &(msd->options->prefs));
-  if (! (msd->options->prefs && NS_SUCCEEDED(rv)))
-	{
+  msd->options->m_prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+  {
     PR_FREEIF(msd);
     return nsnull;
   }
@@ -1547,8 +1546,8 @@ mime_bridge_create_display_stream(
   // Need the text converter...
   rv = CallCreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &(msd->options->conv));
   if (NS_FAILED(rv))
-	{
-    msd->options->prefs->Release();
+  {
+    msd->options->m_prefBranch = 0;
     PR_FREEIF(msd);
     return nsnull;
   }
@@ -1595,15 +1594,27 @@ mime_bridge_create_display_stream(
   // Now, get the libmime prefs...
   ////////////////////////////////////////////////////////////
   
-  /* This pref is written down in with the
-  opposite sense of what we like to use... */
   MIME_WrapLongLines = PR_TRUE;
-  if (msd->options->prefs)
-    msd->options->prefs->GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
-
   MIME_VariableWidthPlaintext = PR_TRUE;
-  if (msd->options->prefs)
-    msd->options->prefs->GetBoolPref("mail.fixed_width_messages", &MIME_VariableWidthPlaintext);
+  msd->options->force_user_charset = PR_FALSE;
+
+  if (msd->options->m_prefBranch)
+  {
+    msd->options->m_prefBranch->GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
+    msd->options->m_prefBranch->GetBoolPref("mail.fixed_width_messages", &MIME_VariableWidthPlaintext);
+      // 
+      // Charset overrides takes place here
+      //
+      // We have a bool pref (mail.force_user_charset) to deal with attachments.
+      // 1) If true - libmime does NO conversion and just passes it through to raptor
+      // 2) If false, then we try to use the charset of the part and if not available, 
+      //    the charset of the root message 
+      //
+    msd->options->m_prefBranch->GetBoolPref("mail.force_user_charset", &(msd->options->force_user_charset));
+    msd->options->m_prefBranch->GetBoolPref("mail.inline_attachments", &(msd->options->show_attachment_inline_p));
+  }
+  /* This pref is written down in with the
+     opposite sense of what we like to use... */
   MIME_VariableWidthPlaintext = !MIME_VariableWidthPlaintext;
 
   msd->options->wrap_long_lines_p = MIME_WrapLongLines;
@@ -1644,26 +1655,10 @@ mime_bridge_create_display_stream(
   
   msd->options->variable_width_plaintext_p = MIME_VariableWidthPlaintext;
 
-  // 
-  // Charset overrides takes place here
-  //
-  // We have a bool pref (mail.force_user_charset) to deal with attachments.
-  // 1) If true - libmime does NO conversion and just passes it through to raptor
-  // 2) If false, then we try to use the charset of the part and if not available, 
-  //    the charset of the root message 
-  //
-  msd->options->force_user_charset = PR_FALSE;
-
-  if (msd->options->prefs)
-    msd->options->prefs->GetBoolPref("mail.force_user_charset", &(msd->options->force_user_charset));
-
   // If this is a part, then we should emit the HTML to render the data
   // (i.e. embedded images)
   if (msd->options->part_to_load && msd->options->format_out != nsMimeOutput::nsMimeMessageBodyDisplay)
     msd->options->write_html_p = PR_FALSE;
-
-  if (msd->options->prefs)
-    msd->options->prefs->GetBoolPref("mail.inline_attachments", &(msd->options->show_attachment_inline_p));
 
   obj = mime_new ((MimeObjectClass *)&mimeMessageClass, (MimeHeaders *) NULL, MESSAGE_RFC822);
   if (!obj)
@@ -2089,8 +2084,8 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
 {
   nsresult rv = NS_OK;
 
-  nsIPref *prefs = GetPrefServiceManager(obj->options);
-  if (prefs) {
+  nsIPrefBranch *prefBranch = GetPrefBranch(obj->options);
+  if (prefBranch) {
     MimeInlineText  *text = (MimeInlineText *) obj;
     nsCAutoString charset;
 
@@ -2124,13 +2119,21 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
     // get a font size from pref
     prefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
     prefStr.Append(fontLang);
-    rv = prefs->GetIntPref(prefStr.get(), fontPixelSize);
+    rv = prefBranch->GetIntPref(prefStr.get(), fontPixelSize);
     if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIPrefBranch> prefDefBranch;
+    nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if(prefSvc)
+      rv = prefSvc->GetDefaultBranch("", getter_AddRefs(prefDefBranch));
+
+    if(!prefDefBranch)
       return rv;
 
     // get original font size
     PRInt32 originalSize;
-    rv = prefs->GetDefaultIntPref(prefStr.get(), &originalSize);
+    rv = prefDefBranch->GetIntPref(prefStr.get(), &originalSize);
     if (NS_FAILED(rv))
       return rv;
 

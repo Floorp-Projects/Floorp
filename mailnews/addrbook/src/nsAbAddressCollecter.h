@@ -44,8 +44,10 @@
 #include "nsIAddrDatabase.h"
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
+#include "nsIObserver.h"
 
-class nsAbAddressCollecter : public nsIAbAddressCollecter
+class nsAbAddressCollecter : public nsIAbAddressCollecter,
+                             public nsIObserver
 {
 public:
   nsAbAddressCollecter();
@@ -53,11 +55,11 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABADDRESSCOLLECTER
+  NS_DECL_NSIOBSERVER
 
   nsresult Init();
 
 private:
-  static int PR_CALLBACK collectAddressBookPrefChanged(const char *newpref, void *data);
   nsresult AddCardToAddressBook(nsIAbCard *card);
   nsresult AutoCollectScreenName(nsIAbCard *aCard, const char *aEmail, PRBool *aModifiedCard);
   nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName, PRBool *aModifiedCard);

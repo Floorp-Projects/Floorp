@@ -39,7 +39,6 @@
 #include "nsMsgContentPolicy.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -96,18 +95,14 @@ nsMsgContentPolicy::nsMsgContentPolicy()
 nsMsgContentPolicy::~nsMsgContentPolicy()
 {
   // hey, we are going away...clean up after ourself....unregister our observer
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      prefInternal->RemoveObserver(kBlockRemoteImages, this);
-      prefInternal->RemoveObserver(kRemoteImagesUseWhiteList, this);
-      prefInternal->RemoveObserver(kRemoteImagesWhiteListURI, this);
-      prefInternal->RemoveObserver(kAllowPlugins, this);
-    }
+    prefInternal->RemoveObserver(kBlockRemoteImages, this);
+    prefInternal->RemoveObserver(kRemoteImagesUseWhiteList, this);
+    prefInternal->RemoveObserver(kRemoteImagesWhiteListURI, this);
+    prefInternal->RemoveObserver(kAllowPlugins, this);
   }
 }
 
@@ -116,20 +111,18 @@ nsresult nsMsgContentPolicy::Init()
   nsresult rv;
 
   // register ourself as an observer on the mail preference to block remote images
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   prefInternal->AddObserver(kBlockRemoteImages, this, PR_TRUE);
   prefInternal->AddObserver(kRemoteImagesUseWhiteList, this, PR_TRUE);
   prefInternal->AddObserver(kRemoteImagesWhiteListURI, this, PR_TRUE);
   prefInternal->AddObserver(kAllowPlugins, this, PR_TRUE);
 
-  prefBranch->GetBoolPref(kAllowPlugins, &mAllowPlugins);
-  prefBranch->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
-  prefBranch->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
-  return prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+  prefInternal->GetBoolPref(kAllowPlugins, &mAllowPlugins);
+  prefInternal->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
+  prefInternal->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
+  return prefInternal->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
 }
 
 nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed)
@@ -299,21 +292,21 @@ nsMsgContentPolicy::ShouldProcess(PRUint32          aContentType,
 
 NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  nsresult rv;
-   
   if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) 
   {
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     NS_LossyConvertUCS2toASCII pref(aData);
 
+    nsresult rv;
+
+    nsCOMPtr<nsIPrefBranchInternal> prefBranchInt = do_QueryInterface(aSubject, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (pref.Equals(kBlockRemoteImages))
-      rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+      prefBranchInt->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
     else if (pref.Equals(kRemoteImagesUseWhiteList))
-      prefBranch->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
+      prefBranchInt->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
     else if (pref.Equals(kRemoteImagesWhiteListURI))
-      prefBranch->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
+      prefBranchInt->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   }
   
   return NS_OK;

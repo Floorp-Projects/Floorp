@@ -42,7 +42,7 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "nsMimeStringResources.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "mimemoz2.h" // for prefs
 #include "nsCRT.h"
 
@@ -236,10 +236,10 @@ MimeMultipartAlternative_display_part_p(MimeObject *self,
    */
 
   // prefer_plaintext pref
-  nsIPref *pref = GetPrefServiceManager(self->options); 
+  nsIPrefBranch *prefBranch = GetPrefBranch(self->options); 
   PRBool prefer_plaintext = PR_FALSE;
-  if (pref)
-    (void)pref->GetBoolPref("mailnews.display.prefer_plaintext",
+  if (prefBranch)
+    prefBranch->GetBoolPref("mailnews.display.prefer_plaintext",
                             &prefer_plaintext);
   if (prefer_plaintext
       && self->options->format_out != nsMimeOutput::nsMimeMessageSaveAs

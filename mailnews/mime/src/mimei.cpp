@@ -96,7 +96,7 @@
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
 #include "nsMsgUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "imgILoader.h"
 
 #ifdef MOZ_THUNDERBIRD
@@ -431,7 +431,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   contentTypeHandlerInitStruct  ctHandlerInfo;
 
   // Read some prefs
-  nsIPref *pref = GetPrefServiceManager(opts); 
+  nsIPrefBranch *prefBranch = GetPrefBranch(opts); 
   PRInt32 html_as = 0;  // def. see below
   PRInt32 types_of_classes_to_disallow = 0;  /* Let only a few libmime classes
        process incoming data. This protects from bugs (e.g. buffer overflows)
@@ -448,11 +448,11 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
        */
   if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer &&
                opts->format_out != nsMimeOutput::nsMimeMessageDecrypt)
-    if (pref)
+    if (prefBranch)
     {
-      pref->GetIntPref("mailnews.display.html_as", &html_as);
-      pref->GetIntPref("mailnews.display.disallow_mime_handlers",
-                       &types_of_classes_to_disallow);
+      prefBranch->GetIntPref("mailnews.display.html_as", &html_as);
+      prefBranch->GetIntPref("mailnews.display.disallow_mime_handlers",
+                            &types_of_classes_to_disallow);
       if (types_of_classes_to_disallow > 0 && html_as == 0)
            // We have non-sensical prefs. Do some fixup.
         html_as = 1;
@@ -466,8 +466,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   // it is faster to read the pref first then figure out the msg hdr for the current url only if we have to
   // XXX instead of reading this pref every time, part of mime should be an observer listening to this pref change
   // and updating internal state accordingly. But none of the other prefs in this file seem to be doing that...=(
-  if (pref)
-    pref->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
+  if (prefBranch)
+    prefBranch->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
 
   if (sanitizeJunkMail)
   {
@@ -559,9 +559,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer)
         {
           PRBool disable_format_flowed = PR_FALSE;
-          if (pref)
-            pref->GetBoolPref("mailnews.display.disable_format_flowed_support",
-                              &disable_format_flowed);
+          if (prefBranch)
+            prefBranch->GetBoolPref("mailnews.display.disable_format_flowed_support",
+                                    &disable_format_flowed);
 
           if(!disable_format_flowed)
           {

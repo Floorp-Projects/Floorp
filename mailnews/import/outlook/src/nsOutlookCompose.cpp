@@ -69,7 +69,6 @@
 #include "OutlookDebugLog.h"
 
 #include "nsMimeTypes.h"
-#include "nsIPref.h"
 #include "nsMsgUtils.h"
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
@@ -623,17 +622,16 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	ExtractCharset( headerVal);
   // Use platform charset as default if the msg doesn't specify one
   // (ie, no 'charset' param in the Content-Type: header). As the last
-  // resort we'll use the mail defaul charset.
+  // resort we'll use the mail default charset.
   if (headerVal.IsEmpty())
   {
     headerVal.AssignWithConversion(nsMsgI18NFileSystemCharset());
     if (headerVal.IsEmpty())
     { // last resort
       nsXPIDLString defaultCharset;
-      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv))
-        rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(defaultCharset));
-      headerVal.Assign(defaultCharset.IsEmpty() ? NS_LITERAL_STRING("ISO-8859-1").get() : defaultCharset.get());
+      NS_GetLocalizedUnicharPreferenceWithDefault(nsnull, "mailnews.view_default_charset",
+                                                  NS_LITERAL_STRING("ISO-8859-1"), defaultCharset);
+      headerVal = defaultCharset;
     }
   }
   m_pMsgFields->SetCharacterSet( NS_LossyConvertUTF16toASCII(headerVal).get() );

@@ -56,7 +56,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgQuote.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsXPIDLString.h"
 #include "nsIMsgHeaderParser.h"
@@ -123,47 +124,28 @@
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
-static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type, 
-                                   PRUnichar** reply_header_locale,
-                                   PRUnichar** reply_header_authorwrote,
-                                   PRUnichar** reply_header_ondate,
-                                   PRUnichar** reply_header_separator,
-                                   PRUnichar** reply_header_colon,
-                                   PRUnichar** reply_header_originalmessage)
+static void GetReplyHeaderInfo(PRInt32* reply_header_type, 
+                               nsString& reply_header_locale,
+                               nsXPIDLString& reply_header_authorwrote,
+                               nsXPIDLString& reply_header_ondate,
+                               nsString& reply_header_separator,
+                               nsString& reply_header_colon,
+                               nsXPIDLString& reply_header_originalmessage)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    rv = prefs->GetIntPref("mailnews.reply_header_type", reply_header_type);
-    if (NS_FAILED(rv))
-      *reply_header_type = 1;
-
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_locale", reply_header_locale);
-    if (NS_FAILED(rv) || !*reply_header_locale)
-      *reply_header_locale = nsCRT::strdup(EmptyString().get());
-
-    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_authorwrote", reply_header_authorwrote);
-    if (NS_FAILED(rv) || !*reply_header_authorwrote)
-      *reply_header_authorwrote = nsCRT::strdup(NS_LITERAL_STRING("%s wrote").get());
-
-    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_ondate", reply_header_ondate);
-    if (NS_FAILED(rv) || !*reply_header_ondate)
-      *reply_header_ondate = nsCRT::strdup(NS_LITERAL_STRING("On %s").get());
-
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_separator", reply_header_separator);
-    if (NS_FAILED(rv) || !*reply_header_separator)
-      *reply_header_separator = nsCRT::strdup(NS_LITERAL_STRING(", ").get());
-
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_colon", reply_header_colon);
-    if (NS_FAILED(rv) || !*reply_header_colon)
-      *reply_header_colon = nsCRT::strdup(NS_LITERAL_STRING(":").get());
-
-    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_originalmessage", reply_header_originalmessage);
-    if (NS_FAILED(rv) || !*reply_header_originalmessage)
-      *reply_header_originalmessage = nsCRT::strdup(NS_LITERAL_STRING("--- Original Message ---").get());
+  nsresult  rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  
+  *reply_header_type = 1;
+  if(NS_SUCCEEDED(rv)) {
+    prefBranch->GetIntPref("mailnews.reply_header_type", reply_header_type);
+    
+    NS_GetUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_locale", EmptyString(), reply_header_locale);
+    NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_authorwrote", NS_LITERAL_STRING("%s wrote"), reply_header_authorwrote);
+    NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_ondate", NS_LITERAL_STRING("On %s"), reply_header_ondate);
+    NS_GetUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_separator", NS_LITERAL_STRING(", "), reply_header_separator);
+    NS_GetUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_colon", NS_LITERAL_STRING(":"), reply_header_colon);
+    NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_originalmessage", NS_LITERAL_STRING("--- Original Message ---"), reply_header_originalmessage);
   }
-  return rv;
 }
 
 static nsresult RemoveDuplicateAddresses(const char * addresses, const char * anothersAddresses, PRBool removeAliasesToMe, char** newAddress)
@@ -245,9 +227,9 @@ nsMsgCompose::nsMsgCompose()
   // For TagConvertible
   // Read and cache pref
   mConvertStructs = PR_FALSE;
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs)
-    prefs->GetBoolPref("converter.html2txt.structs", &mConvertStructs);
+  nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetBoolPref("converter.html2txt.structs", &mConvertStructs);
 
   m_composeHTML = PR_FALSE;
   mRecycledWindow = PR_TRUE;
@@ -1025,10 +1007,10 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
     m_compFields->GetSubject(msgSubject);
 
     PRBool showProgress = PR_FALSE;
-    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-    if (prefs)
+    nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch)
     {
-      prefs->GetBoolPref("mailnews.show_send_progress", &showProgress);
+      prefBranch->GetBoolPref("mailnews.show_send_progress", &showProgress);
       if (showProgress)
       {
         nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
@@ -1405,10 +1387,10 @@ NS_IMETHODIMP nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
 nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  return prefs->GetIntPref("mailnews.wraplength", aWrapLength);
+  return prefBranch->GetIntPref("mailnews.wraplength", aWrapLength);
 }
 
 nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
@@ -1555,7 +1537,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       nsCAutoString originCharset(charset); 
 
       // use send_default_charset if reply_in_default_charset is on.
-      nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+      nsCOMPtr<nsIPrefBranch> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
       if (prefs)
       {
         PRBool replyInDefault = PR_FALSE;
@@ -1563,9 +1545,9 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
                            &replyInDefault);
         if (replyInDefault) {
           nsXPIDLString str;
-          rv = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset",
-                                              getter_Copies(str));
-          if (NS_SUCCEEDED(rv) && !str.IsEmpty())
+          NS_GetLocalizedUnicharPreferenceWithDefault(prefs, "mailnews.send_default_charset",
+                                                      EmptyString(), str);
+          if (!str.IsEmpty())
             LossyCopyUTF16toASCII(str, charset);
         }
       }
@@ -1824,20 +1806,20 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       
       PRBool header, headerDate;
       PRInt32 replyHeaderType;
-      nsXPIDLString replyHeaderLocale;
+      nsAutoString replyHeaderLocale;
       nsXPIDLString replyHeaderAuthorwrote;
       nsXPIDLString replyHeaderOndate;
-      nsXPIDLString replyHeaderSeparator;
-      nsXPIDLString replyHeaderColon;
+      nsAutoString replyHeaderSeparator;
+      nsAutoString replyHeaderColon;
 
       // Get header type, locale and strings from pref.
-      rv = GetReplyHeaderInfo(&replyHeaderType, 
-                              getter_Copies(replyHeaderLocale),
-                              getter_Copies(replyHeaderAuthorwrote),
-                              getter_Copies(replyHeaderOndate),
-                              getter_Copies(replyHeaderSeparator),
-                              getter_Copies(replyHeaderColon),
-                              getter_Copies(replyHeaderOriginalmessage));
+      GetReplyHeaderInfo(&replyHeaderType, 
+                         replyHeaderLocale,
+                         replyHeaderAuthorwrote,
+                         replyHeaderOndate,
+                         replyHeaderSeparator,
+                         replyHeaderColon,
+                         replyHeaderOriginalmessage);
 
       switch (replyHeaderType)
       {
@@ -1963,22 +1945,22 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
 
     if (mCitePrefix.IsEmpty())
     {
-      if (!replyHeaderOriginalmessage)
+      if (replyHeaderOriginalmessage.IsEmpty())
       {
         // This is not likely to happen but load the string if it's not done already.
         PRInt32 replyHeaderType;
-        nsXPIDLString replyHeaderLocale;
+        nsAutoString replyHeaderLocale;
         nsXPIDLString replyHeaderAuthorwrote;
         nsXPIDLString replyHeaderOndate;
-        nsXPIDLString replyHeaderSeparator;
-        nsXPIDLString replyHeaderColon;
-        rv = GetReplyHeaderInfo(&replyHeaderType, 
-                                getter_Copies(replyHeaderLocale),
-                                getter_Copies(replyHeaderAuthorwrote),
-                                getter_Copies(replyHeaderOndate),
-                                getter_Copies(replyHeaderSeparator),
-                                getter_Copies(replyHeaderColon),
-                                getter_Copies(replyHeaderOriginalmessage));
+        nsAutoString replyHeaderSeparator;
+        nsAutoString replyHeaderColon;
+        GetReplyHeaderInfo(&replyHeaderType, 
+                           replyHeaderLocale,
+                           replyHeaderAuthorwrote,
+                           replyHeaderOndate,
+                           replyHeaderSeparator,
+                           replyHeaderColon,
+                           replyHeaderOriginalmessage);
       }
       mCitePrefix.AppendLiteral("\n\n");
       mCitePrefix.Append(replyHeaderOriginalmessage);
@@ -4085,18 +4067,17 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   */
     nsAutoString recipientsStr;
     nsAutoString nonHtmlRecipientsStr;
-    nsAutoString plaintextDomains;
-    nsAutoString htmlDomains;
+    nsXPIDLString plaintextDomains;
+    nsXPIDLString htmlDomains;
     nsAutoString domain;
     
-    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-    if (prefs)
+    nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch)
     {
-      nsXPIDLString str;
-      prefs->CopyUnicharPref("mailnews.plaintext_domains", getter_Copies(str));
-      plaintextDomains = str;
-      prefs->CopyUnicharPref("mailnews.html_domains", getter_Copies(str));
-      htmlDomains = str;
+      NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.plaintext_domains", EmptyString(),
+                                                  plaintextDomains);
+      NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.html_domains", EmptyString(),
+                                                  htmlDomains);
     }
 
     PRBool atLeastOneRecipientPrefersUnknown = PR_FALSE;

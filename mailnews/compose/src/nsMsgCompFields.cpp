@@ -38,12 +38,12 @@
 
 #include "nsMsgCompFields.h"
 #include "nsCRT.h"
-#include "nsIPref.h"
 #include "nsMsgI18N.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgRecipientArray.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgCompUtils.h"
+#include "nsMsgUtils.h"
 #include "prmem.h"
 #include "nsIFileChannel.h"
 #include "nsReadableUtils.h"
@@ -70,18 +70,13 @@ nsMsgCompFields::nsMsgCompFields()
   m_receiptHeaderType = nsIMsgMdnGenerator::eDntType;
   m_bodyIsAsciiOnly = PR_FALSE;
 
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) 
-  {
-    // Get the default charset from pref, use this as a mail charset.
-    nsXPIDLString charset;
-    prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", getter_Copies(charset));
-    if (charset.IsEmpty())
-      m_DefaultCharacterSet.Assign("ISO-8859-1");
-    else
-      LossyCopyUTF16toASCII(charset, m_DefaultCharacterSet); // Charsets better be ASCII
-    SetCharacterSet(m_DefaultCharacterSet.get());
-  }
+  // Get the default charset from pref, use this as a mail charset.
+  nsXPIDLString charset;
+  NS_GetLocalizedUnicharPreferenceWithDefault(nsnull, "mailnews.send_default_charset", 
+                                              NS_LITERAL_STRING("ISO-8859-1"), charset);
+
+  LossyCopyUTF16toASCII(charset, m_DefaultCharacterSet); // Charsets better be ASCII
+  SetCharacterSet(m_DefaultCharacterSet.get());
 }
 
 nsMsgCompFields::~nsMsgCompFields()

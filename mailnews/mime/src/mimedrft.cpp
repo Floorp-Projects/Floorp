@@ -56,7 +56,8 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "prio.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "msgCore.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
@@ -107,8 +108,6 @@ static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);
 // THIS SHOULD ALL MOVE TO ANOTHER FILE AFTER LANDING!
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
-// Define CIDs...
-static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
 // safe filename for all OSes
 #define SAFE_TMP_FILENAME "nsmime.tmp"
@@ -437,12 +436,12 @@ PRBool
 GetMailXlateionPreference(void)
 {
   nsresult res;
-  PRBool   xlate = PR_FALSE; 
+  PRBool   xlate = PR_FALSE;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-  if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetBoolPref("mail.unknown", &xlate);
-  
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
+  if(NS_SUCCEEDED(res))
+    prefBranch->GetBoolPref("mail.unknown", &xlate);
+
   return xlate;
 }
 
@@ -454,9 +453,9 @@ GetMailSigningPreference(void)
   nsresult  res;
   PRBool    signit = PR_FALSE;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-  if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetBoolPref("mail.unknown", &signit);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
+  if(NS_SUCCEEDED(res))
+    prefBranch->GetBoolPref("mail.unknown", &signit);
 
   return signit;
 }
@@ -1210,9 +1209,9 @@ mime_insert_forwarded_message_headers(char            **body,
   PRInt32     show_headers = 0;
   nsresult    res;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-  if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetIntPref("mail.show_headers", &show_headers);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
+  if (NS_SUCCEEDED(res))
+    prefBranch->GetIntPref("mail.show_headers", &show_headers);
 
   switch (show_headers)
   {
@@ -1652,10 +1651,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
   }
   PR_FREEIF(mdd->mailcharset);
   
-  // Release the prefs service
-  MimeObject *obj = (mdd ? mdd->obj : 0);  
-  if ( (obj) && (obj->options) && (obj->options->prefs) )
-    obj->options->prefs->Release();
+   // Release the prefbranch
+    MimeObject *obj = (mdd ? mdd->obj : 0);  
+   if ( (obj) && (obj->options))
+     obj->options->m_prefBranch = 0;
   
   mdd->identity = nsnull;
   PR_Free(mdd->url_name);
@@ -2107,7 +2106,7 @@ mime_bridge_create_draft_stream(
   mdd->options->decompose_file_output_fn = mime_decompose_file_output_fn;
   mdd->options->decompose_file_close_fn = mime_decompose_file_close_fn;
 
-  rv = CallGetService(kPrefCID, &(mdd->options->prefs));
+  mdd->options->m_prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     goto FAIL;
 

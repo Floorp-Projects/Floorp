@@ -52,7 +52,8 @@
 #include "prmem.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCompleteSession)
 
@@ -521,19 +522,8 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
   return NS_OK;
 }
 
-nsresult
-nsAbAutoCompleteSession::NeedToSearchLocalDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch)
-{
-  NS_ENSURE_ARG_POINTER(aPrefs);
-  NS_ENSURE_ARG_POINTER(aNeedToSearch);
-
-  nsresult rv = aPrefs->GetBoolPref("mail.enable_autocomplete", aNeedToSearch);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
-}
-  
-nsresult
-nsAbAutoCompleteSession::NeedToSearchReplicatedLDAPDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch)
+static nsresult
+NeedToSearchReplicatedLDAPDirectories(nsIPrefBranch *aPrefs, PRBool *aNeedToSearch)
 {
   NS_ENSURE_ARG_POINTER(aPrefs);
   NS_ENSURE_ARG_POINTER(aNeedToSearch);
@@ -556,12 +546,12 @@ nsAbAutoCompleteSession::NeedToSearchReplicatedLDAPDirectories(nsIPref *aPrefs, 
 }
 
 nsresult 
-nsAbAutoCompleteSession::SearchReplicatedLDAPDirectories(nsIPref *aPref, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
+nsAbAutoCompleteSession::SearchReplicatedLDAPDirectories(nsIPrefBranch *aPref, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
 {
   NS_ENSURE_ARG_POINTER(aPref);
 
   nsXPIDLCString prefName;
-  nsresult rv = aPref->CopyCharPref("ldap_2.autoComplete.directoryServer", getter_Copies(prefName));
+  nsresult rv = aPref->GetCharPref("ldap_2.autoComplete.directoryServer", getter_Copies(prefName));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (prefName.IsEmpty())
@@ -572,7 +562,7 @@ nsAbAutoCompleteSession::SearchReplicatedLDAPDirectories(nsIPref *aPref, nsAbAut
   fileNamePref = prefName + NS_LITERAL_CSTRING(".filename");
 
   nsXPIDLCString fileName;
-  rv = aPref->CopyCharPref(fileNamePref.get(), getter_Copies(fileName));
+  rv = aPref->GetCharPref(fileNamePref.get(), getter_Copies(fileName));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // if there is no fileName, bail out now.
@@ -716,10 +706,11 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     PRBool enableLocalAutocomplete;
     PRBool enableReplicatedLDAPAutocomplete;
 
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NeedToSearchLocalDirectories(prefs, &enableLocalAutocomplete);
+    // check if using autocomplete for local address books
+    rv = prefs->GetBoolPref("mail.enable_autocomplete", &enableLocalAutocomplete);
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = NeedToSearchReplicatedLDAPDirectories(prefs, &enableReplicatedLDAPAutocomplete);

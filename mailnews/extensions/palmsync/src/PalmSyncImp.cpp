@@ -58,8 +58,6 @@
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPref.h"
-#include "nsIPrefBranchInternal.h"
 
 #include "nspr.h"
 PRLogModuleInfo *PALMSYNC;

@@ -47,6 +47,7 @@
 #include "nsCOMPtr.h"
 
 class nsILocalFile;
+class nsIPrefBranch;
 
 //These are utility functions that can used throughout the mailnews code
 
@@ -99,6 +100,16 @@ NS_MSG_BASE nsresult NS_SetPersistentFile(const char *relPrefName,
 NS_MSG_BASE nsresult CreateServicesForPasswordManager();
 
 NS_MSG_BASE nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult);
+
+NS_MSG_BASE nsresult NS_GetUnicharPreferenceWithDefault(nsIPrefBranch *prefBranch,   //can be null, if so uses the root branch
+                                                        const char *prefName,
+                                                        const nsString& defValue,
+                                                        nsString& prefValue);
+ 
+NS_MSG_BASE nsresult NS_GetLocalizedUnicharPreferenceWithDefault(nsIPrefBranch *prefBranch,   //can be null, if so uses the root branch
+                                                                 const char *prefName,
+                                                                 const nsString& defValue,
+                                                                 nsXPIDLString& prefValue);
 
   /**
    * this needs a listener, because we might have to create the folder

@@ -45,7 +45,7 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbAutoCompleteSession.h"
 
-class nsIPref;
+class nsIPrefBranch;
 
 typedef struct
 {
@@ -131,9 +131,7 @@ private:
     nsresult SearchDirectory(const nsACString& aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
     nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
 
-    nsresult SearchReplicatedLDAPDirectories(nsIPref *aPrefs, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
-    nsresult NeedToSearchReplicatedLDAPDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch);
-    nsresult NeedToSearchLocalDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch);
+    nsresult SearchReplicatedLDAPDirectories(nsIPrefBranch *aPrefs, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
 };
 
 

@@ -41,7 +41,9 @@
 #include "nsMsgSearchAdapter.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsMsgI18N.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsMsgSearchTerm.h"
@@ -326,22 +328,27 @@ nsresult
 nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCharset)
 {
   nsresult rv;
+  nsAutoString destination;
   NS_ENSURE_ARG(srcCharset);
   NS_ENSURE_ARG(dstCharset);
   
   if (m_defaultCharset.IsEmpty())
   {
     m_forceAsciiSearch = PR_FALSE;  // set the default value in case of error
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
-      rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(m_defaultCharset));
-      rv = prefs->GetBoolPref("mailnews.force_ascii_search", &m_forceAsciiSearch);
+      nsCOMPtr<nsIPrefLocalizedString> localizedstr;
+      rv = prefs->GetComplexValue("mailnews.view_default_charset", NS_GET_IID(nsIPrefLocalizedString),
+                                  getter_AddRefs(localizedstr)); 
+      if (NS_SUCCEEDED(rv))
+        localizedstr->GetData(getter_Copies(m_defaultCharset));
+
+      prefs->GetBoolPref("mailnews.force_ascii_search", &m_forceAsciiSearch);
     }
   }
-  *srcCharset = nsCRT::strdup(m_defaultCharset.IsEmpty() ?
-    NS_LITERAL_STRING("ISO-8859-1").get() : m_defaultCharset.get());
-  *dstCharset = nsCRT::strdup(*srcCharset);
+  *srcCharset = m_defaultCharset.IsEmpty() ? 
+    ToNewUnicode(NS_LITERAL_STRING("ISO-8859-1")) : ToNewUnicode(m_defaultCharset);
   
   if (m_scope)
   {
@@ -355,9 +362,12 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
     {
       nsXPIDLCString folderCharset;
       folder->GetCharset(getter_Copies(folderCharset));
-      PR_Free(*dstCharset);
-      *dstCharset = ToNewUnicode(folderCharset);
+      AppendASCIItoUTF16(folderCharset, destination);
     }
+  }
+  else
+  {
+    destination.Assign(*srcCharset);
   }
   
   
@@ -366,10 +376,9 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
   // the source. (CS_DEFAULT is an indication that the charset
   // was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
-  if (!nsCRT::strcmp(*dstCharset, m_defaultCharset.get()))
+  if (destination.Equals(m_defaultCharset))
   {
-    PR_Free(*dstCharset);
-    *dstCharset = nsCRT::strdup(*srcCharset);
+    destination.Assign(*srcCharset);
   }
   
   if (m_forceAsciiSearch)
@@ -381,9 +390,10 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
     // If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
     // source text to US-ASCII. (Not for now.)
     // if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
-    PR_Free(*dstCharset);
-    *dstCharset = nsCRT::strdup(NS_LITERAL_STRING("us-ascii").get());
+    destination.AssignLiteral("us-ascii");
   }
+
+  *dstCharset = ToNewUnicode(destination);
   return NS_OK;
 }
 
@@ -1084,12 +1094,12 @@ NS_IMETHODIMP nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearch
 {
   NS_ENSURE_ARG_POINTER(ppOutTable);
   
-  nsresult rv = NS_OK;
+  nsresult rv;
   *ppOutTable = nsnull;
   
-  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   nsXPIDLCString customHeaders;
-  if (NS_SUCCEEDED(rv) && pref)
+  if (NS_SUCCEEDED(rv))
     pref->GetCharPref(PREF_CUSTOM_HEADERS, getter_Copies(customHeaders));
   
   switch (whichTable)

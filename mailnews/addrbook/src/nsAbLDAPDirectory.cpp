@@ -52,9 +52,9 @@
 #include "nsAutoLock.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
-#include "nsIPref.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
@@ -120,7 +120,7 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // use mURINoQuery to get a prefName
@@ -129,7 +129,7 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
 
     // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
     nsXPIDLCString URI;
-    rv = prefs->CopyCharPref(prefName.get(), getter_Copies(URI));
+    rv = prefs->GetCharPref(prefName.get(), getter_Copies(URI));
     if (NS_FAILED(rv))
     {
         /*
@@ -231,7 +231,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
       nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
       // use mURINoQuery to get a prefName
@@ -239,7 +239,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
       prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".filename");
 
       nsXPIDLCString fileName;
-      rv = prefs->CopyCharPref(prefName.get(), getter_Copies(fileName));
+      rv = prefs->GetCharPref(prefName.get(), getter_Copies(fileName));
       NS_ENSURE_SUCCESS(rv,rv);
       
       // if there is no fileName, bail out now.
@@ -374,7 +374,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
         new nsAbDirSearchListener (this);
     queryListener = _queryListener;
 
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // use mURINoQuery to get a prefName
@@ -480,7 +480,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetIsSecure(PRBool *aIsSecure)
   NS_ENSURE_ARG_POINTER(aIsSecure);
 
   nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   
   // use mURINoQuery to get a prefName

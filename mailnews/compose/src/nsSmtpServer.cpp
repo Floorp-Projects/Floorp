@@ -37,7 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsEscape.h"
 #include "nsSmtpServer.h"
 #include "nsIObserverService.h"
@@ -59,9 +60,11 @@ NS_INTERFACE_MAP_BEGIN(nsSmtpServer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISmtpServer)
 NS_INTERFACE_MAP_END
 
-nsSmtpServer::nsSmtpServer()
+nsSmtpServer::nsSmtpServer():
+    mKey("")
 {
-  m_logonFailed = PR_FALSE;
+    m_logonFailed = PR_FALSE;
+    getPrefs();
 }
 
 nsSmtpServer::~nsSmtpServer()
@@ -82,7 +85,33 @@ nsSmtpServer::GetKey(char * *aKey)
 NS_IMETHODIMP
 nsSmtpServer::SetKey(const char * aKey)
 {
+    NS_ASSERTION(aKey, "Bad key pointer");
     mKey = aKey;
+    return getPrefs();
+}
+
+nsresult nsSmtpServer::getPrefs()
+{
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString branchName;
+    branchName.AssignLiteral("mail.smtpserver.");
+    branchName += mKey;
+    branchName.Append('.');
+    rv = prefs->GetBranch(branchName.get(), getter_AddRefs(mPrefBranch));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if(!mDefPrefBranch) {
+        branchName.AssignLiteral("mail.smtpserver.default.");
+        rv = prefs->GetBranch(branchName.get(), getter_AddRefs(mDefPrefBranch));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
     return NS_OK;
 }
 
@@ -90,13 +119,8 @@ NS_IMETHODIMP
 nsSmtpServer::GetHostname(char * *aHostname)
 {
     nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(aHostname);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("hostname", pref);
-    rv = prefs->CopyCharPref(pref.get(), aHostname);
+    rv = mPrefBranch->GetCharPref("hostname", aHostname);
     if (NS_FAILED(rv))
         *aHostname=nsnull;
     return NS_OK;
@@ -105,16 +129,10 @@ nsSmtpServer::GetHostname(char * *aHostname)
 NS_IMETHODIMP
 nsSmtpServer::SetHostname(const char * aHostname)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("hostname", pref);
     if (aHostname)
-        return prefs->SetCharPref(pref.get(), aHostname);
+        return mPrefBranch->SetCharPref("hostname", aHostname);
     else
-        prefs->ClearUserPref(pref.get());
+        mPrefBranch->ClearUserPref("hostname");
     return NS_OK;
 }
 
@@ -123,13 +141,8 @@ NS_IMETHODIMP
 nsSmtpServer::GetPort(PRInt32 *aPort)
 {
     nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(aPort);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("port", pref);
-    rv = prefs->GetIntPref(pref.get(), aPort);
+    rv = mPrefBranch->GetIntPref("port", aPort);
     if (NS_FAILED(rv))
         *aPort = 0;
     return NS_OK;
@@ -138,16 +151,10 @@ nsSmtpServer::GetPort(PRInt32 *aPort)
 NS_IMETHODIMP
 nsSmtpServer::SetPort(PRInt32 aPort)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("port", pref);
     if (aPort)
-        return prefs->SetIntPref(pref.get(), aPort);
+        return mPrefBranch->SetIntPref("port", aPort);
     else
-        prefs->ClearUserPref(pref.get());
+        mPrefBranch->ClearUserPref("port");
     return NS_OK;
 }
 
@@ -157,143 +164,89 @@ nsSmtpServer::GetDisplayname(char * *aDisplayname)
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aDisplayname);
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCAutoString hpref;
-    getPrefString("hostname", hpref);
-
-    nsCAutoString ppref;
-    getPrefString("port", ppref);
-
     nsXPIDLCString hostname;
-    rv = prefs->CopyCharPref(hpref.get(), getter_Copies(hostname));
+    rv = mPrefBranch->GetCharPref("hostname", getter_Copies(hostname));
     if (NS_FAILED(rv)) {
         *aDisplayname=nsnull;
         return NS_OK;
     }
     PRInt32 port;
-    rv = prefs->GetIntPref(ppref.get(), &port);
+    rv = mPrefBranch->GetIntPref("port", &port);
     if (NS_FAILED(rv))
         port = 0;
     
     if (port) {
-        nsCAutoString combined;
-        combined = hostname.get();
-        combined += ":";
-        combined.AppendInt(port);
-        *aDisplayname = ToNewCString(combined);
+        hostname.Append(':');
+        hostname.AppendInt(port);
     }
-    else {
-        *aDisplayname = ToNewCString(hostname);
-    }
-    
+
+    *aDisplayname = ToNewCString(hostname);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
 {
-    nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(trySSL);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    *trySSL= 0;
-    getPrefString("try_ssl", pref);
-    rv = prefs->GetIntPref(pref.get(), trySSL);
-    if (NS_FAILED(rv))
-        getDefaultIntPref(prefs, 0, "try_ssl", trySSL);
-    return NS_OK;
+    return getIntPrefWithDefault("try_ssl", trySSL, 0);
 }
 
 NS_IMETHODIMP
 nsSmtpServer::SetTrySSL(PRInt32 trySSL)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("try_ssl", pref);
-    return prefs->SetIntPref(pref.get(), trySSL);
+    return mPrefBranch->SetIntPref("try_ssl", trySSL);
 }
 
 NS_IMETHODIMP
 nsSmtpServer::GetTrySecAuth(PRBool *trySecAuth)
 {
     nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(trySecAuth);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
     *trySecAuth = PR_TRUE;
-    getPrefString("trySecAuth", pref);
-    rv = prefs->GetBoolPref(pref.get(), trySecAuth);
+    rv = mPrefBranch->GetBoolPref("trySecAuth", trySecAuth);
     if (NS_FAILED(rv))
-        prefs->GetBoolPref("mail.smtpserver.default.trySecAuth", trySecAuth);
+        mDefPrefBranch->GetBoolPref("trySecAuth", trySecAuth);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
 {
-    nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(authMethod);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    *authMethod = 1;
-    getPrefString("auth_method", pref);
-    rv = prefs->GetIntPref(pref.get(), authMethod);
-    if (NS_FAILED(rv))
-        rv = getDefaultIntPref(prefs, 1, "auth_method", authMethod);
-    return rv;
+    return getIntPrefWithDefault("auth_method", authMethod, 1);
 }
 
 nsresult
-nsSmtpServer::getDefaultIntPref(nsIPref *prefs,
-                                PRInt32 defVal,
-                                const char *prefName,
-                                PRInt32 *val)
+nsSmtpServer::getIntPrefWithDefault(const char *prefName,
+                                    PRInt32 *val,
+                                    PRInt32 defVal)
 {
-  // mail.smtpserver.default.<prefName>  
-  nsCAutoString fullPrefName;
-  fullPrefName = "mail.smtpserver.default.";
-  fullPrefName.Append(prefName);
-  nsresult rv = prefs->GetIntPref(fullPrefName.get(), val);
+    nsresult rv = mPrefBranch->GetIntPref(prefName, val);
+    if (NS_SUCCEEDED(rv))
+        return NS_OK;
 
-  if (NS_FAILED(rv))
-  { // last resort
-    *val = defVal;
-  }
-  return NS_OK;
+    rv = mDefPrefBranch->GetIntPref(prefName, val);
+
+    if (NS_FAILED(rv))
+    { // last resort
+        *val = defVal;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSmtpServer::SetAuthMethod(PRInt32 authMethod)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    getPrefString("auth_method", pref);
-    return prefs->SetIntPref(pref.get(), authMethod);
+    return mPrefBranch->SetIntPref("auth_method", authMethod);
 }
 
 NS_IMETHODIMP
 nsSmtpServer::GetUsername(char * *aUsername)
 {
     nsresult rv;
-    nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(aUsername);
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("username", pref);
-    rv = prefs->CopyCharPref(pref.get(), aUsername);
+    rv = mPrefBranch->GetCharPref("username", aUsername);
     if (NS_FAILED(rv))
         *aUsername = nsnull;
     return NS_OK;
@@ -302,16 +255,10 @@ nsSmtpServer::GetUsername(char * *aUsername)
 NS_IMETHODIMP
 nsSmtpServer::SetUsername(const char * aUsername)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("username", pref);
     if (aUsername)
-        return prefs->SetCharPref(pref.get(), aUsername);
+        return mPrefBranch->SetCharPref("username", aUsername);
     else
-        prefs->ClearUserPref(pref.get());
+        mPrefBranch->ClearUserPref("username");
     return NS_OK;
 }
 
@@ -336,15 +283,10 @@ nsSmtpServer::GetPassword(char * *aPassword)
       // is everything after the first '.'
       // user_pref("mail.smtp.useMatchingDomainServer", true);
 
-      nsresult rv;
-      nsCAutoString accountKeyPref;
       nsXPIDLCString accountKey;
       PRBool useMatchingHostNameServer = PR_FALSE;
       PRBool useMatchingDomainServer = PR_FALSE;
-      getPrefString("incomingAccount", accountKeyPref);
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-      prefBranch->GetCharPref(accountKeyPref.get(), getter_Copies(accountKey));
+      mPrefBranch->GetCharPref("incomingAccount", getter_Copies(accountKey));
 
       nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
       nsCOMPtr<nsIMsgIncomingServer> incomingServerToUse;
@@ -356,6 +298,9 @@ nsSmtpServer::GetPassword(char * *aPassword)
         }
         else
         {
+          nsresult rv;
+          nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+          NS_ENSURE_SUCCESS(rv,rv);
           prefBranch->GetBoolPref("mail.smtp.useMatchingHostNameServer", &useMatchingHostNameServer);
           prefBranch->GetBoolPref("mail.smtp.useMatchingDomainServer", &useMatchingDomainServer);
           if (useMatchingHostNameServer || useMatchingDomainServer)
@@ -378,7 +323,7 @@ nsSmtpServer::GetPassword(char * *aPassword)
               {
                 PRUint32 count = 0;
                 allServers->Count(&count);
-                PRInt32 i;
+                PRUint32 i;
                 for (i = 0; i < count; i++) 
                 {
                   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(allServers, i);
@@ -600,31 +545,14 @@ nsSmtpServer::GetServerURI(char **aResult)
     *aResult = ToNewCString(uri);
     return NS_OK;
 }
-                          
-nsresult
-nsSmtpServer::getPrefString(const char *pref, nsCAutoString& result)
-{
-    result = "mail.smtpserver.";
-    result += mKey;
-    result += ".";
-    result += pref;
-
-    return NS_OK;
-}
     
 NS_IMETHODIMP
 nsSmtpServer::SetRedirectorType(const char *aRedirectorType)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("redirector_type", pref);
     if (aRedirectorType)
-        return prefs->SetCharPref(pref.get(), aRedirectorType);
-    else
-        prefs->ClearUserPref(pref.get());
+        return mPrefBranch->SetCharPref("redirector_type", aRedirectorType);
+
+    mPrefBranch->ClearUserPref("redirector_type");
     return NS_OK;
 }
 
@@ -632,17 +560,8 @@ NS_IMETHODIMP
 nsSmtpServer::GetRedirectorType(char **aResult)
 {
     nsresult rv;
-    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    nsCOMPtr<nsIPrefBranch> prefBranch; 
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
-    NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCAutoString prefName;
-    getPrefString("redirector_type", prefName);
-
-    rv = prefBranch->GetCharPref(prefName.get(), aResult);
+    rv = mPrefBranch->GetCharPref("redirector_type", aResult);
     if (NS_FAILED(rv)) 
       *aResult = nsnull;
 
@@ -671,9 +590,12 @@ nsSmtpServer::GetRedirectorType(char **aResult)
       rv = GetHostname(getter_Copies(hostName));
       NS_ENSURE_SUCCESS(rv,rv);
 
-      prefName.Assign("default_redirector_type.smtp.");
+      nsCAutoString prefName;
+      prefName.AssignLiteral("default_redirector_type.smtp.");
       prefName.Append(hostName);
 
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+      NS_ENSURE_SUCCESS(rv,rv);
       nsXPIDLCString defaultRedirectorType;
       rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(defaultRedirectorType));
       if (NS_SUCCEEDED(rv) && !defaultRedirectorType.IsEmpty()) 
@@ -690,21 +612,5 @@ nsSmtpServer::GetRedirectorType(char **aResult)
 NS_IMETHODIMP
 nsSmtpServer::ClearAllValues()
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString rootPref("mail.smtpserver.");
-    rootPref += mKey;
-
-    rv = prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)prefs.get());
-
-    return rv;
-}
-
-void
-nsSmtpServer::clearPrefEnum(const char *aPref, void *aClosure)
-{
-    nsIPref *prefs = (nsIPref *)aClosure;
-    prefs->ClearUserPref(aPref);
+  return mPrefBranch->DeleteBranch("");
 }

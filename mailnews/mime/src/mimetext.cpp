@@ -52,8 +52,11 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsIPrefLocalizedString.h"
+#include "nsMsgUtils.h"
 #include "nsMimeTypes.h"
 #include "nsReadableUtils.h"
 
@@ -87,8 +90,6 @@ MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
   lclass->parse_decoded_buffer = MimeInlineText_parse_decoded_buffer;
   return 0;
 }
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static int
 MimeInlineText_initialize (MimeObject *obj)
@@ -140,13 +141,14 @@ static int MimeInlineText_initializeCharset(MimeObject *obj)
       if (!text->charset)
       {
         nsresult res;
-        nsXPIDLString detector_name;
         
         text->charsetOverridable = PR_TRUE;
 
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res)); 
-        if (NS_SUCCEEDED(res)) {
-          if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", getter_Copies(detector_name)))) {
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res)); 
+        if (NS_SUCCEEDED(res))
+        {
+          nsCOMPtr<nsIPrefLocalizedString> str;
+          if (NS_SUCCEEDED(prefBranch->GetComplexValue("intl.charset.detector", NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(str)))) {
             //only if we can get autodetector name correctly, do we set this to true
             text->inputAutodetect = PR_TRUE;
           }
@@ -156,19 +158,13 @@ static int MimeInlineText_initializeCharset(MimeObject *obj)
           text->charset = nsCRT::strdup(obj->options->default_charset);
         else
         {
-          // New change for falling back to a default view charset
-          nsresult        rv;
-          nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-          if ( NS_SUCCEEDED(rv) && prefs)
+          if (NS_SUCCEEDED(res))
           {
             nsXPIDLString value;
-            rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(value));
-            if(NS_SUCCEEDED(rv)) {
-              text->charset = ToNewUTF8String(value);
-            }
+            NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.view_default_charset", EmptyString(), value);
+            text->charset = ToNewUTF8String(value);
           }
-
-          if (!text->charset)
+          else
             text->charset = nsCRT::strdup("");
         }
       } 

@@ -68,7 +68,6 @@
 #include "EudoraDebugLog.h"
 
 #include "nsMimeTypes.h"
-#include "nsIPref.h"
 #include "nsMsgUtils.h"
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
@@ -619,7 +618,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	ExtractCharset( headerVal);
   // Use platform charset as default if the msg doesn't specify one
   // (ie, no 'charset' param in the Content-Type: header). As the last
-  // resort we'll use the mail defaul charset.
+  // resort we'll use the mail default charset.
   if (headerVal.IsEmpty())
   {
     headerVal.AssignWithConversion(nsMsgI18NFileSystemCharset());
@@ -628,10 +627,9 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
       if (m_defCharset.IsEmpty())
       {
         nsXPIDLString defaultCharset;
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-        if (NS_SUCCEEDED(rv))
-          rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(defaultCharset));
-        m_defCharset.Assign(defaultCharset ? defaultCharset.get() : NS_LITERAL_STRING("ISO-8859-1").get());
+        NS_GetLocalizedUnicharPreferenceWithDefault(nsnull, "mailnews.view_default_charset",
+                                                    NS_LITERAL_STRING("ISO-8859-1"), defaultCharset);
+        m_defCharset = defaultCharset;
       }
       headerVal = m_defCharset;
     }
