@@ -1,0 +1,111 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+
+[object, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
+interface nsIMsgCompFields : nsISupports {
+
+	void Test();
+
+	void Copy(in nsIMsgCompFields pMsgCompFields);
+
+	long SetHeader(in long header, in string value);
+	string GetHeader(in long header);
+
+	long SetBoolHeader(in long header, in boolean bValue);
+	boolean GetBoolHeader(in long header);
+
+	/* Convenience routines to get and set header's value... */
+	long SetFrom(in string value);
+	string GetFrom();
+
+	long SetReplyTo(in string value);
+	string GetReplyTo();
+
+	long SetTo(in string value);
+	string GetTo();
+
+	long SetCc(in string value);
+	string GetCc();
+
+	long SetBcc(in string value);
+	string GetBcc();
+
+	long SetFcc(in string value);
+	string GetFcc();
+
+	long SetNewsFcc(in string value);
+	string GetNewsFcc();
+
+	long SetNewsBcc(in string value);
+	string GetNewsBcc();
+
+	long SetNewsgroups(in string value);
+	string GetNewsgroups();
+
+	long SetFollowupTo(in string value);
+	string GetFollowupTo();
+
+	long SetSubject(in string value);
+	string GetSubject();
+
+	long SetAttachments(in string value);
+	string GetAttachments();
+
+	long SetOrganization(in string value);
+	string GetOrganization();
+
+	long SetReferences(in string value);
+	string GetReferences();
+
+	long SetOtherRandomHeaders(in string value);
+	string GetOtherRandomHeaders();
+
+	long SetNewspostUrl(in string value);
+	string GetNewspostUrl();
+
+	long SetDefaultBody(in string value);
+	string GetDefaultBody();
+
+    long SetPriority(in string value);
+    string GetPriority();
+
+	long SetMessageEncoding(in string value);
+	string GetMessageEncoding();
+
+	long SetCharacterSet(in string value);
+	string GetCharacterSet();
+
+	long SetMessageId(in string value);
+	string GetMessageId();
+
+	long SetHTMLPart(in string value);
+	string GetHTMLPart();
+
+	long SetTemplateName(in string value);
+	string GetTemplateName();
+
+	long SetReturnReceipt(in boolean value);
+	boolean GetReturnReceipt();
+
+	long SetAttachVCard(in boolean value);
+	boolean GetAttachVCard();
+};
+
