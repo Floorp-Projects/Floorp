@@ -29,6 +29,8 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontEnumerator.h"
+#include <Types.h>
+#include <QuickDraw.h>
 
 class nsDeviceContextMac : public DeviceContextImpl
 {

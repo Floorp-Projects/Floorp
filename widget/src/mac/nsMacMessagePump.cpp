@@ -56,7 +56,7 @@
 #include <DiskInit.h>
 #include <LowMem.h>
 #include <Devices.h>
-
+#include <quickdraw.h>
 #include "nsCarbonHelpers.h"
 
 #ifndef topLeft
@@ -68,8 +68,10 @@
 #endif
 
 #if DEBUG
+#if !TARGET_CARBON
 #include <SIOUX.h>
 #include "macstdlibextras.h"
+#endif
 #endif
 
 #define DRAW_ON_RESIZE	0		// if 1, enable live-resize except when the command key is down
@@ -255,11 +257,12 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 
 	::LMSetSysEvtMask(eventMask);	// we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mMouseRgn) ? PR_TRUE : PR_FALSE;
+#if !TARGET_CARBON
 	if (haveEvent && TSMEvent(&theEvent) )
 	{
 		haveEvent = PR_FALSE;
 	}
-
+#endif
 	if (mMouseRgn)
 	{
 		Point globalMouse = theEvent.where;
@@ -280,8 +283,10 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 	{
 
 #if DEBUG
+#if !TARGET_CARBON
 		if (SIOUXHandleOneEvent(anEvent))
 			return;
+#endif
 #endif
 
 		switch(anEvent->what)
@@ -313,6 +318,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 				break;
 
 			case osEvt:
+				{
 				unsigned char eventType = ((anEvent->message >> 24) & 0x00ff);
 				switch (eventType)
 				{
@@ -327,6 +333,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 					case mouseMovedMessage:
 						DoMouseMove(*anEvent);
 						break;
+				}
 				}
 				break;
 			
@@ -481,10 +488,12 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							Boolean					haveEvent;
 							EventRecord			updateEvent;
 							haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
+#if !TARGET_CARBON
 							if (haveEvent && TSMEvent(&updateEvent))
 							{
 								haveEvent = PR_FALSE;
 							}
+#endif
 							if (haveEvent)
 								DoUpdate(updateEvent);
 						}
@@ -712,7 +721,9 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 			
 			::GetMenuItemText(::GetMenuHandle(kAppleMenuID), theItem, daName);
 			::GetPort(&savePort);
+#if !TARGET_CARBON
 			::OpenDeskAcc(daName);
+#endif
 			::SetPort(savePort);
 		}
 	}

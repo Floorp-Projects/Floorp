@@ -26,11 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter beos os2 rhapsody,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		= $(MOZ_WIDGET_TOOLKIT)
 else
 DIRS		= unix
 endif
 
 include $(topsrcdir)/config/rules.mk
+
 

@@ -213,6 +213,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     //mMacMenuHandle = NSStringNewChildMenu(mMacMenuID, mLabel);
     mMacMenuHandle = ::GetMenuHandle(mMacMenuID);
   } else {
+#if !TARGET_CARBON
     // Look at the label and figure out if it is the "Help" menu
 
     if(mDOMElement) {
@@ -223,7 +224,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
       ::HMGetHelpMenuHandle(&mMacMenuHandle);
       mMacMenuID = kHMHelpMenuID;
       
-      int numHelpItems = ::CountMItems(mMacMenuHandle);
+      int numHelpItems = ::CountMenuItems(mMacMenuHandle);
         if ( mHelpMenuOSItemsCount == 0)
           mHelpMenuOSItemsCount = numHelpItems;
         for(int i=0; i<numHelpItems; ++i) {
@@ -233,7 +234,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
       return NS_OK;
       }
     }
-  
+#endif
     mMacMenuHandle = NSStringNewMenu(mMacMenuIDCount, mLabel);
     mMacMenuID = mMacMenuIDCount;
 #if DEBUG_saari
@@ -242,6 +243,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 #endif
       
     mMacMenuIDCount++;
+#if !TARGET_CARBON
     // Replace standard MDEF with our stub MDEF
     if(mMacMenuHandle) {    
       SInt8 state = ::HGetState((Handle)mMacMenuHandle);
@@ -250,6 +252,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
       (**mMacMenuHandle).menuProc = gMDEF;
       ::HSetState((Handle)mMacMenuHandle, state);
     }
+#endif
   }
   
   //printf("MacMenuID = %d", mMacMenuID);
@@ -349,9 +352,9 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  PRBool isChecked;
 	  aMenuItem->GetChecked(&isChecked);
 	  if(isChecked)
-	    ::CheckItem(mMacMenuHandle, currItemIndex, true);
+	    ::CheckMenuItem(mMacMenuHandle, currItemIndex, true);
 	  else
-	    ::CheckItem(mMacMenuHandle, currItemIndex, false);
+	    ::CheckMenuItem(mMacMenuHandle, currItemIndex, false);
 	}
   }
   return NS_OK;
@@ -431,10 +434,12 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 NS_METHOD nsMenu::RemoveAll()
 {
 #ifdef notdef
+#if !TARGET_CARBON
   MenuHandle helpmh;
   ::HMGetHelpMenuHandle(&helpmh);
   if ( helpmh != mMacMenuHandle)
     helpmh = nsnull;
+#endif
 #endif
 
   while(mMenuItemVoidArray.Count())
@@ -551,11 +556,14 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
         return nsEventStatus_eIgnore;
       }
     }
-	  
+
     /* set up a default event to query with */
     nsMenuEvent event;
     MenuHandle handle;
+#if !TARGET_CARBON
+    // XXX fix me for carbon!
     ::HMGetHelpMenuHandle(&handle);
+#endif
     event.mCommand = (unsigned int) handle;
 
     /* loop through the top-level menus in the menubar */
@@ -794,7 +802,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
   //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
   // Begin menuitem inner loop
 
-  int numHelpItems = ::CountMItems(mMacMenuHandle);
+  int numHelpItems = ::CountMenuItems(mMacMenuHandle);
   for(int i=0; i<numHelpItems; ++i)
     mMenuItemVoidArray.AppendElement(nsnull);
      
@@ -906,9 +914,9 @@ NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
   // this menu (which would be bad).
   if ( gCurrentMenuDepth < 2 ) {
     if ( aIsEnabled )
-      ::EnableItem(mMacMenuHandle, 0);
+      ::EnableMenuItem(mMacMenuHandle, 0);
     else
-      ::DisableItem(mMacMenuHandle, 0);
+      ::DisableMenuItem(mMacMenuHandle, 0);
   }
 
   return NS_OK;
@@ -1422,7 +1430,7 @@ nsMenu::AttributeChanged(
   //printf("AttributeChanged\n");
 
   nsCOMPtr<nsIAtom> openAtom = NS_NewAtom("open");
-  if(aAttribute != openAtom) {
+  if(aAttribute != openAtom.get()) {
 	    
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
     if(!element) {
@@ -1437,10 +1445,10 @@ nsMenu::AttributeChanged(
 	  return NS_OK;
     }
 		  
-    if(aContent == contentNode){
+    if(aContent == contentNode.get()){
       nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
       nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
-      if(aAttribute == disabledAtom) {
+      if(aAttribute == disabledAtom.get()) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         nsString valueString;
         element->GetAttribute("disabled", valueString);
@@ -1450,7 +1458,7 @@ nsMenu::AttributeChanged(
           SetEnabled(PR_TRUE);
           
         ::DrawMenuBar();
-      } else if(aAttribute == valueAtom) {
+      } else if(aAttribute == valueAtom.get()) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         element->GetAttribute("value", mLabel);
         ::DeleteMenu(mMacMenuID);
@@ -1458,6 +1466,7 @@ nsMenu::AttributeChanged(
         mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
 
         // Replace standard MDEF with our stub MDEF
+#if !TARGET_CARBON
         if(mMacMenuHandle) {    
           SInt8 state = ::HGetState((Handle)mMacMenuHandle);
           ::HLock((Handle)mMacMenuHandle);
@@ -1470,6 +1479,7 @@ nsMenu::AttributeChanged(
           mMenuBarParent->SetNativeData(::GetMenuBar());
           ::DrawMenuBar();
         }
+#endif
       }
       
     }

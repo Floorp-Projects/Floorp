@@ -39,6 +39,7 @@
 
 #include <FixMath.h>
 #include <Gestalt.h>
+#include <Quickdraw.h>
 #include "nsCarbonHelpers.h"
 
 #define STACK_TREASHOLD 1000
@@ -51,7 +52,7 @@
 class StPortSetter {
 public:
 	StPortSetter(GrafPtr newPort)
-		: mNewPort(newPort), mOldPort(qd.thePort)
+		: mNewPort(newPort), mOldPort(::GetQDGlobalsThePort())
 	{
 		if (mOldPort != newPort)
 			::SetPort(newPort);
@@ -541,7 +542,7 @@ NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSur
 	// delete the offscreen
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 	GWorldPtr offscreenGWorld;
-	surface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
+	surface->GetGrafPtr(reinterpret_cast<GrafPtr*>(&offscreenGWorld));
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
 
@@ -578,8 +579,12 @@ NS_IMETHODIMP nsRenderingContextMac::Reset(void)
 
 NS_IMETHODIMP nsRenderingContextMac::GetDeviceContext(nsIDeviceContext *&aContext)
 {
-	NS_IF_ADDREF(mContext);
-	aContext = mContext;
+	if (mContext) {
+		aContext = mContext;
+		NS_ADDREF(aContext);
+	} else {
+		aContext = nsnull;
+	}
 	return NS_OK;
 }
 
@@ -666,7 +671,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetClipRect(nsRect &aRect, PRBool &aClipVal
 NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
 	RgnHandle regionH;
-	aRegion.GetNativeRegion(regionH);
+	aRegion.GetNativeRegion((void*&)regionH);
 
 	RgnHandle clipRgn = mGS->mClipRegion;
 	if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;

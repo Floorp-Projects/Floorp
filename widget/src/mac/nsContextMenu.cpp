@@ -332,7 +332,7 @@ nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     //PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
     PRInt16 menuItemID = mSelectedMenuItem;
     nsIMenuListener * menuListener = nsnull;
-    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
+    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
 	if(menuListener) {
 	  eventStatus = menuListener->MenuSelected(aMenuEvent);
 	  NS_IF_RELEASE(menuListener);
@@ -346,11 +346,11 @@ nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	    if(nsnull != mMenuItemVoidArray[i-1])
 	    {
 		    nsIMenu * submenu = nsnull;
-		    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenu), &submenu);
+		    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenu), (void**)&submenu);
 		    if(submenu)
 		    {
 			    nsIMenuListener * menuListener = nsnull;
-			    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
+			    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
 			    if(menuListener){
 			      eventStatus = menuListener->MenuSelected(aMenuEvent);
 			      NS_IF_RELEASE(menuListener);

@@ -250,7 +250,7 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
       parent->GetFirstChild(getter_AddRefs(currSibling));
       while ( currSibling ) {
         // skip this node
-        if ( currSibling != mDOMNode ) {        
+        if ( currSibling.get() != mDOMNode ) {        
           nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currSibling);
           if ( !currElement )
             break;

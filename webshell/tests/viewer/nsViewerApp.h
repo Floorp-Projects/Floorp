@@ -94,7 +94,7 @@ public:
   ~nsNativeViewerApp();
 
   virtual int Run();
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
   static void DispatchMenuItemWithoutWindow(PRInt32 menuResult);
 #endif
 };

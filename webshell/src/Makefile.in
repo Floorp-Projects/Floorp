@@ -29,6 +29,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= raptor
 LIBRARY_NAME	= raptorwebwidget
 
+ifeq ($(OS_ARCH),Rhapsody)
+IS_COMPONENT	= 1
+endif
+
 CPPSRCS		= \
 		dlldeps.cpp \
 		nsDLLFactory.cpp \
@@ -39,6 +43,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		-ljsdom \
+		-lmozjs \
 		$(MOZ_COMPONENT_LIBS) \
 		-ldocshell \
 		$(NULL)

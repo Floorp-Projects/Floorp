@@ -65,6 +65,11 @@ static Boolean	gNotificationInstalled = false;
 // #define PAINT_DEBUGGING
 // #define BLINK_DEBUGGING
 
+#if TARGET_CARBON
+#undef PAINT_DEBUGGING
+#undef BLINK_DEBUGGING
+#endif
+
 #ifdef BLINK_DEBUGGING
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
@@ -1077,9 +1082,13 @@ NS_IMETHODIMP	nsWindow::Update()
 
 static Boolean control_key_down()
 {
+#if TARGET_CARBON
+  return PR_FALSE;
+#else
 	EventRecord event;
 	::OSEventAvail(0, &event);
 	return (event.modifiers & controlKey) != 0;
+#endif
 }
 
 static long long microseconds()
@@ -1286,7 +1295,23 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	if ( !updateRgn ) return;
 	::RectRgn(updateRgn, &frame);
 	::DiffRgn (updateRgn, destRgn, updateRgn);
-		
+
+#if TARGET_CARBON
+  RgnHandle visRgn = ::NewRgn();
+  ::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), visRgn);
+  if (::EmptyRgn(visRgn))
+  {
+    PixMapHandle portPixH = ::GetPortPixMap(::GetWindowPort(mWindowPtr));
+    ::HLock((Handle) portPixH);
+    ::CopyBits ( *((BitMapHandle) portPixH),
+                 *((BitMapHandle) portPixH),
+                 &source, 
+                 &dest, 
+                 srcCopy, 
+                 nil);
+    ::HUnlock((Handle) portPixH);
+  }
+#else
 	if(::EmptyRgn(mWindowPtr->visRgn))		
 	{
 		::CopyBits ( 
@@ -1297,12 +1322,18 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 			srcCopy, 
 			nil);
 	}
+#endif
 	else
 	{
 		// compute the non-visable region
 		StRegionFromPool nonVisableRgn;
 		if ( !nonVisableRgn ) return;
-		::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisableRgn );
+
+#if TARGET_CARBON
+    ::DiffRgn ( totalVisRgn, visRgn, nonVisableRgn );
+#else
+    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisableRgn );
+#endif
 		
 		// compute the extra area that may need to be updated
 		// scoll the non-visable region to determine what needs updating
@@ -1319,7 +1350,17 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 		::RGBForeColor(&black);
 		::RGBBackColor(&white);
 		::PenNormal();	
-
+#if TARGET_CARBON
+    PixMapHandle portPixH = ::GetPortPixMap(::GetWindowPort(mWindowPtr));
+    ::HLock((Handle) portPixH);
+    ::CopyBits ( *((BitMapHandle) portPixH),
+                 *((BitMapHandle) portPixH),
+                 &source, 
+                 &dest, 
+                 srcCopy, 
+                 copyMaskRgn);
+    ::HUnlock((Handle) portPixH);
+#else
 		::CopyBits ( 
 			&mWindowPtr->portBits, 
 			&mWindowPtr->portBits, 
@@ -1327,11 +1368,15 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 			&dest, 
 			srcCopy, 
 			copyMaskRgn);
-			
+#endif
+
 		// union the update regions together and invalidate them
 		::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
 	}
 	
+#if TARGET_CARBON
+  ::DisposeRgn(visRgn);
+#endif
 	::InvalWindowRgn(mWindowPtr, updateRgn);
 }
 
@@ -1345,16 +1390,18 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 	if (! mVisible)
 		return NS_OK;
-	
+
+  nsRect scrollRect;	
+
 	// If the clipping region is non-rectangular, just force a full update, sorry.
-	if (IsRegionComplex(mWindowRegion)) {
+  // XXX ?
+	if (!IsRegionRectangular(mWindowRegion)) {
 		Invalidate(PR_TRUE);
 		goto scrollChildren;
 	}
 
 	//--------
 	// Scroll this widget
-	nsRect scrollRect;
 	if (aClipRect)
 		scrollRect = *aClipRect;
 	else

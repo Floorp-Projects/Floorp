@@ -42,8 +42,9 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 
-
+#if !TARGET_CARBON
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
+#endif
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
@@ -114,7 +115,9 @@ printf("**** created drag ref %ld\n", theDragRef);
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
+#if !TARGET_CARBON
   ::SetDragSendProc ( theDragRef, sDragSendDataUPP, this );
+#endif
 
   // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
   // reset by the dragTrackingHandler).
@@ -155,7 +158,7 @@ nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobal
   // At the end, we are left with an outline of the region in global coordinates.
   if ( geckoRegion ) {
     RgnHandle dragRegion = nsnull;
-    geckoRegion->GetNativeRegion(dragRegion);
+    geckoRegion->GetNativeRegion((void*&)dragRegion);
     if ( dragRegion && ioDragRgn ) {
       ::CopyRgn ( dragRegion, ioDragRgn );
       ::InsetRgn ( ioDragRgn, 1, 1 );
@@ -588,7 +591,7 @@ nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemRefere
 {
   char* mapperData = nsnull;
   PRInt32 mapperSize = 0;
-  ExtractDataFromOS(inDragRef, inItemRef, nsMimeMapperMac::MappingFlavor(),  &mapperData, &mapperSize);
+  ExtractDataFromOS(inDragRef, inItemRef, nsMimeMapperMac::MappingFlavor(),  (void**)&mapperData, &mapperSize);
 
   return mapperData;
   

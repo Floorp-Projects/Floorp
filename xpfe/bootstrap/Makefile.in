@@ -60,6 +60,10 @@ ifdef MOZ_MONOLITHIC_TOOLKIT
 XP_LIBS		+= $(TK_LIBS)
 endif
 
+ifeq ($(OS_ARCH),Rhapsody)
+DETECT_WEBSHELL_LEAKS=
+endif
+
 ifdef DETECT_WEBSHELL_LEAKS
 XP_LIBS         += -lraptorwebwidget -ldocshell -ljsdom
 endif

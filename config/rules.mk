@@ -319,6 +319,18 @@ endif
 endif
 
 #
+# MacOS X specific stuff
+#
+
+ifeq ($(OS_ARCH),Rhapsody)
+ifdef IS_COMPONENT
+EXTRA_DSO_LDOPTS	+= -bundle
+else
+EXTRA_DSO_LDOPTS	+= -dynamiclib
+endif
+endif
+
+#
 # HP-UXBeOS specific section: for COMPONENTS only, add -Bsymbolic flag
 # which uses internal symbols first
 #
@@ -570,7 +582,7 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS,$(OS_ARCH)))
+ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Rhapsody,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
 else

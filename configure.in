@@ -767,6 +767,20 @@ alpha*-*-osf*)
 
 *-rhapsody*) 
     DLL_SUFFIX="dylib"
+    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
+    AC_DEFINE(NO_X11)
+    AC_DEFINE(RHAPSODY)
+    AC_DEFINE(TARGET_CARBON)
+    AC_DEFINE(TARGET_API_MAC_CARBON)
+    ENABLE_TESTS=
+    MOZ_WIDGET_TOOLKIT='mac'
+    TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
+    CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
+    CXXFLAGS="$CXXFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
+    MKSHLIB='$(CXX) -arch ppc $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+    MKSHLIB_FORCE_ALL=''
+    MKSHLIB_UNFORCE_ALL=''
     ;;
 
 *-sco*) 
@@ -2878,6 +2892,13 @@ case "$target" in
 	;;
 esac
 
+# so does MacOS
+case "$target" in
+    *-rhapsody*)
+        MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_mac.dylib'
+    ;;
+esac
+
 dnl ========================================================
 dnl =
 dnl = End MOZ_TIMER_LIBS
@@ -3279,6 +3300,11 @@ elif test "$OS_TARGET" = "WINNT"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
+elif test "$OS_TARGET" = "Mac OS"; then
+  AC_DEFINE(XP_UNIX)
+  AC_DEFINE(UNIX_EMBED)
+  AC_DEFINE(UNIX_LDAP)
+  AC_DEFINE(UNIX_ASYNC_DNS)
 else
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)

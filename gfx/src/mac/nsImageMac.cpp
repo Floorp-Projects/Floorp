@@ -22,6 +22,10 @@
 #include "nsImageMac.h"
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
+#include "nsCarbonHelpers.h"
+
+#include <Types.h>
+#include <QuickDraw.h>
 
 #include "nspr.h"
 
@@ -230,6 +234,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				break;
 				
 			case nsMaskRequirements_kNeeds8Bit:
+                        {
 				mAlphaDepth = 8;
 				
 				// make 8-bit grayscale color table
@@ -244,6 +249,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 					
 				::DisposeHandle((Handle)grayRamp);
 				break;
+                        }
 				
 			default:
 				NS_NOTREACHED("Uknown mask depth");
@@ -327,12 +333,16 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 		
 		// 1-bit masks?
 		
+#if !TARGET_CARBON
 		// can only do this if we are NOT printing
 		aContext.GetDeviceContext(theDevContext);
-		
+
 		if(!theDevContext->IsPrinter()){
+#endif
 			::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+#if !TARGET_CARBON
 		}
+#endif
 	}
 	else
 	{
@@ -444,7 +454,10 @@ void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 		::SetGWorld(theGWorld, nil);
 
 		::BackColor(whiteColor);
-		::EraseRect(&theGWorld->portRect);
+
+    Rect portRect;
+    ::GetPortBounds(reinterpret_cast<GrafPtr>(theGWorld), &portRect);
+		::EraseRect(&portRect);
 
 		::UnlockPixels(thePixels);
 	}

@@ -598,6 +598,8 @@ nsHTTPHandler::InitUserAgentComponents()
     // Gather platform.
 #if defined(XP_PC)
     mAppPlatform = "Windows";
+#elif defined(RHAPSODY)
+    mAppPlatform = "Macintosh";
 #elif defined (XP_UNIX)
     mAppPlatform = "X11";
 #else

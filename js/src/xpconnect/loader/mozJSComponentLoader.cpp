@@ -37,10 +37,17 @@
 
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
+
 /* XXX export properly from libxpcom, for now this will let Mac build */
+#ifdef RHAPSODY
+extern const char fileSizeValueName[]; // = "FileSize";
+extern const char lastModValueName[]; // = "LastModTimeStamp";
+extern const char xpcomKeyName[]; // = "Software/Mozilla/XPCOM";
+#else
 const char fileSizeValueName[] = "FileSize";
 const char lastModValueName[] = "LastModTimeStamp";
 const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
+#endif
 
 const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 const char kXPConnectServiceProgID[] = "nsIXPConnect";

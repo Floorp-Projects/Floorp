@@ -35,6 +35,7 @@ EXPORTS		= \
 		nsCoord.h \
 		nsFont.h \
 		nsRect.h \
+		nsRepeater.h \
 		nsPoint.h \
 		nsSize.h \
 		nsMargin.h \

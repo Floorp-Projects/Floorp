@@ -58,7 +58,9 @@ MenuHandle gLevel3HierMenu = nsnull;
 MenuHandle gLevel4HierMenu = nsnull;
 MenuHandle gLevel5HierMenu = nsnull;
 
+#if !TARGET_CARBON
 extern nsVoidArray gPreviousMenuStack;
+#endif
 extern PRInt16 gCurrentMenuDepth;
 
 // #if APPLE_MENU_HACK
@@ -95,7 +97,7 @@ nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   for (int i = mMenuVoidArray.Count(); i > 0; --i)
   {
     nsIMenuListener * menuListener = nsnull;
-    ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
+    ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
     if(menuListener){
       eventStatus = menuListener->MenuItemSelected(aMenuEvent);
       NS_RELEASE(menuListener);
@@ -113,11 +115,12 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   nsIMenuListener * menuListener = nsnull;
-  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
+  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
   //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+#if !TARGET_CARBON
   if (gPreviousMenuStack[gPreviousMenuStack.Count() - 1])
-    ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
-    
+    ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
+#endif
   if (menuListener) {
     //TODO: MenuSelected is the right thing to call...
     //eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -129,7 +132,7 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
     // If it's the help menu, gPreviousMenuStack won't be accurate so we need to get the listener a different way 
     // We'll do it the old fashioned way of looping through and finding it
     for (int i = mMenuVoidArray.Count(); i > 0; --i) {
-      ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
+      ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
 	  if (menuListener) {
         //TODO: MenuSelected is the right thing to call...
 	    //eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -170,6 +173,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 	        MenuHandle macMenuHandle = ::NewMenu(2, "\psubmenu");
 	        if(macMenuHandle) { 
 	          gLevel2HierMenu = macMenuHandle;
+#if !TARGET_CARBON
 	          SInt8 state = ::HGetState((Handle)macMenuHandle);
 	          ::HLock((Handle)macMenuHandle);
 			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -177,12 +181,14 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			  (**macMenuHandle).menuWidth = -1;
 			  (**macMenuHandle).menuHeight = -1;
 			  ::HSetState((Handle)macMenuHandle, state);
+#endif
 			  ::InsertMenu(macMenuHandle, hierMenu);
 			}
 			
 	        macMenuHandle = ::NewMenu(3, "\psubmenu");
 	        if(macMenuHandle) { 
 	          gLevel3HierMenu = macMenuHandle;
+#if !TARGET_CARBON
 	          SInt8 state = ::HGetState((Handle)macMenuHandle);
 	          ::HLock((Handle)macMenuHandle);
 			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -190,12 +196,14 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			  (**macMenuHandle).menuWidth = -1;
 			  (**macMenuHandle).menuHeight = -1;
 			  ::HSetState((Handle)macMenuHandle, state);
+#endif
 			  ::InsertMenu(macMenuHandle, hierMenu);
 			}
 			
 	        macMenuHandle = ::NewMenu(4, "\psubmenu");
 	        if(macMenuHandle) { 
 	          gLevel4HierMenu = macMenuHandle;
+#if !TARGET_CARBON
 	          SInt8 state = ::HGetState((Handle)macMenuHandle);
 	          ::HLock((Handle)macMenuHandle);
 			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -203,12 +211,14 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			  (**macMenuHandle).menuWidth = -1;
 			  (**macMenuHandle).menuHeight = -1;
 			  ::HSetState((Handle)macMenuHandle, state);
+#endif
 			  ::InsertMenu(macMenuHandle, hierMenu);
 			}
 			
 	        macMenuHandle = ::NewMenu(5, "\psubmenu");
 	        if(macMenuHandle) { 
 	          gLevel5HierMenu = macMenuHandle; 
+#if !TARGET_CARBON
 	          SInt8 state = ::HGetState((Handle)macMenuHandle);
 	          ::HLock((Handle)macMenuHandle);
 			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -216,6 +226,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			  (**macMenuHandle).menuWidth = -1;
 			  (**macMenuHandle).menuHeight = -1;
 			  ::HSetState((Handle)macMenuHandle, state);
+#endif
 			  ::InsertMenu(macMenuHandle, hierMenu);
 			}
 		} else {
@@ -281,7 +292,9 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   if(menuIDstring == "menu_Help") {
                     nsMenuEvent event;
                     MenuHandle handle;
+#ifndef RHAPSODY
                     ::HMGetHelpMenuHandle(&handle);
+#endif
                     event.mCommand = (unsigned int) handle;
                     nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
                     listener->MenuSelected(event);
@@ -333,8 +346,9 @@ nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   gCurrentMenuDepth = 1;
+#if !TARGET_CARBON
   nsPreviousMenuStackUnwind(nsnull, nsnull);
-  
+#endif
   NS_INIT_REFCNT();
   mNumMenus       = 0;
   mParent         = nsnull;
@@ -342,9 +356,11 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mWebShell       = nsnull;
   mDOMNode        = nsnull;
   
+#if !TARGET_CARBON
   MenuDefUPP mdef = NewMenuDefProc( nsDynamicMDEFMain );
   InstallDefProc((short)nsMacResources::GetLocalResourceFile(), (ResType)'MDEF', (short)128, (Ptr) mdef );
-  
+#endif
+
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
   
@@ -433,7 +449,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 #endif
   
   MenuHandle menuHandle = nsnull;
-  aMenu->GetNativeData(&menuHandle);
+  aMenu->GetNativeData((void**)&menuHandle);
   
   mNumMenus++;
   PRBool helpMenu;
@@ -512,9 +528,10 @@ NS_METHOD nsMenuBar::Paint()
     ((nsIMenu*)mMenuVoidArray[i])->IsHelpMenu(&isHelpMenu);
     if(isHelpMenu){
       MenuHandle helpMenuHandle;
+#if !TARGET_CARBON
       ::HMGetHelpMenuHandle(&helpMenuHandle);
       ((nsIMenu*)mMenuVoidArray[i])->SetNativeData((void*)helpMenuHandle);
-      
+#endif 
       nsMenuEvent event;
       event.mCommand = (unsigned int) helpMenuHandle;
       nsCOMPtr<nsIMenuListener> listener(do_QueryInterface((nsIMenu*)mMenuVoidArray[i]));

@@ -155,6 +155,8 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
 	PRBool eventHandled = nsWindow::DispatchMouseEvent(aEvent);	// we don't want the 'Inherited' nsMacControl behavior
 
+  EventRecord* theOSEvent;
+
 	if ((! eventHandled) && (mControl != nsnull))
 	{
 		switch (aEvent.message)
@@ -166,7 +168,7 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 				thePoint.v = aEvent.point.y;
 
 				short theModifiers;
-				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+				theOSEvent = (EventRecord*)aEvent.nativeMsg;
 				if (theOSEvent)
 				{
 					theModifiers = theOSEvent->modifiers;
@@ -287,9 +289,15 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 										selection.ToCString(cRepOfSelection.get(), selectionLen + 1);
 										
 										// copy it to the scrapMgr
+#if TARGET_CARBON
+                    ::ClearCurrentScrap();
+                    ScrapRef scrap;
+                    ::GetCurrentScrap(&scrap);
+                    ::PutScrapFlavor(scrap, 'TEXT', 0L /* ??? */, selectionLen, cRepOfSelection.get());
+#else
 										::ZeroScrap();
 										::PutScrap ( selectionLen, 'TEXT', cRepOfSelection.get() );
-									
+#endif						
 										// if we're cutting, remove the text from the widget
 										if ( menuItem == cmd_Cut ) {
 											unused = 0;
@@ -305,9 +313,20 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 								case cmd_Paste:
 								{
 									long scrapOffset;
-									Handle scrapH = ::NewHandle(0);
+                  Handle scrapH = ::NewHandle(0);
+#if TARGET_CARBON
+                  ScrapRef scrap;
+                  OSStatus err;
+                  err = ::GetCurrentScrap(&scrap);
+                  if (err != noErr) return NS_ERROR_FAILURE;
+                  err = ::GetScrapFlavorSize(scrap, 'TEXT', &scrapOffset);
+                  // XXX uhh.. i don't think this is right..
+                  long scrapLen = scrapOffset;
+                  if ( scrapOffset > 0 )
+#else             
 									long scrapLen = ::GetScrap(scrapH, 'TEXT', &scrapOffset);
 									if (scrapLen > 0)
+#endif
 									{
 										::HLock(scrapH);
 

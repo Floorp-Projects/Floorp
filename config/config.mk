@@ -119,6 +119,11 @@ ifeq ($(OS_ARCH),UnixWare)
 OS_ARCH		:= UNIXWARE
 OS_RELEASE	:= $(shell uname -v)
 endif
+ifeq ($(OS_ARCH),Mac OS)
+ifeq ($(OS_RELEASE),10.0)
+OS_ARCH		:= Rhapsody
+endif
+endif
 
 #
 # Strip off the excessively long version numbers on these platforms,

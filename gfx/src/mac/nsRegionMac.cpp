@@ -311,7 +311,7 @@ NS_IMETHODIMP nsRegionMac::GetRects(nsRegionRectSet **aRects)
 	typedef struct {
 		short	size;
 		Rect	bbox;
-		short	data[];
+		short	data[0];
 	} ** Internal;
 	
 	Internal  region;

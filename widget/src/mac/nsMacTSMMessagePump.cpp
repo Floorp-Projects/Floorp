@@ -220,7 +220,9 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	long					fixLength;
 	nsresult				res;
 	TextRangeArray*			hiliteRangePtr;
-	
+
+#if !TARGET_CARBON
+
 	//
 	// refcon stores the nsMacEventHandler
 	//
@@ -307,6 +309,6 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 
 	(void)AEDisposeDesc(&text);
 	(void)AEDisposeDesc(&hiliteRangeArray);
-						
+#endif
 	return noErr;
 }

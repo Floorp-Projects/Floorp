@@ -75,7 +75,7 @@ nsresult nsBasicDecoderSupport::QueryInterface(REFNSIID aIID,
                                                                          
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 
-  if (aIID.Equals(kIUnicodeDecoderIID)) {                                          
+  if (aIID.Equals(NS_GET_IID(nsIUnicodeDecoder))) {                                          
     *aInstancePtr = (void*) ((nsIUnicodeDecoder*)this); 
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -382,7 +382,7 @@ nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID,
                                                                          
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 
-  if (aIID.Equals(kIUnicodeEncoderIID)) {                                          
+  if (aIID.Equals(NS_GET_IID(nsIUnicodeEncoder))) {                                          
     *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this); 
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

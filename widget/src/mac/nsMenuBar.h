@@ -27,6 +27,8 @@
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 
+#include "Types.h"
+
 extern nsIMenuBar * gMacMenubar;
 
 class nsIWidget;

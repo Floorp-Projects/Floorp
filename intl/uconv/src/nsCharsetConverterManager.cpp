@@ -551,7 +551,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   PL_strncpy(progid, NS_UNICODEENCODER_PROGID_BASE, 256);
   aDest->ToCString(progid + baselen, 256 - baselen);
   res = comMgr->CreateInstanceByProgID(progid,NULL,
-                 kIUnicodeEncoderIID ,(void**)aResult);
+                 NS_GET_IID(nsIUnicodeEncoder),(void**)aResult);
   if(NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
   return res;
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   PL_strncpy(progid, NS_UNICODEDECODER_PROGID_BASE, 256);
   aSrc->ToCString(progid + baselen, 256 - baselen);
   res = comMgr->CreateInstanceByProgID(progid,NULL,
-                 kIUnicodeDecoderIID,(void**)aResult);
+                 NS_GET_IID(nsIUnicodeDecoder),(void**)aResult);
   if(NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
   return res;

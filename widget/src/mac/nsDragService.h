@@ -37,7 +37,7 @@
 #include "nsBaseDragService.h"
 #include "nsIDragSessionMac.h"
 #include <Drag.h>
-
+#include <MacWindows.h>
 
 class  nsNativeDragTarget;
 

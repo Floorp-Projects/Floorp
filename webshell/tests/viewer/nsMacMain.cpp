@@ -37,9 +37,10 @@
 #include <Dialogs.h>
 
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
+#if !TARGET_CARBON
 #include "nsILeakDetector.h"
-
 #include "macstdlibextras.h"
+#endif
 
 typedef		SInt32			MessageT;
 typedef   PRUint32    Uint32;
@@ -128,7 +129,7 @@ static nsNativeViewerApp* gTheApp;
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
-	nsMacMessagePump::SetWindowlessMenuEventHandler(DispatchMenuItemWithoutWindow);
+	//nsMacMessagePump::SetWindowlessMenuEventHandler(DispatchMenuItemWithoutWindow);
 }
 
 nsNativeViewerApp::~nsNativeViewerApp()
@@ -173,9 +174,9 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 					gTheApp->OpenWindow();
 					break;
 				case cmd_Open:
-					nsBrowserWindow * newWindow;
-					gTheApp->OpenWindow(0, newWindow);
-					newWindow->DoFileOpen();
+					nsIBrowserWindow * newWindow;
+					gTheApp->OpenWindow((PRUint32)0, newWindow);
+					((nsBrowserWindow*)newWindow)->DoFileOpen();
 					break;
 				case cmd_Quit:
 					gTheApp->Exit();
@@ -340,9 +341,11 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_DumpLeaks:
 					{
 						nsresult rv;
+#if !TARGET_CARBON
 						NS_WITH_SERVICE(nsILeakDetector, leakDetector, "component://netscape/xpcom/leakdetector", &rv)
 						if (NS_SUCCEEDED(rv))
 							leakDetector->DumpLeaks();
+#endif
 					}
 					break;
 			}
@@ -385,7 +388,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 /**
  * Quit AppleEvent handler.
  */
-static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, long)
+static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, UInt32)
 {
 	if (gTheApp != nsnull) {
 		gTheApp->Exit();
@@ -400,7 +403,9 @@ static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, long)
 int main(int argc, char **argv)
 {
 	// Set up the toolbox and (if DEBUG) the console
+#if !TARGET_CARBON
 	InitializeMacToolbox();
+#endif
 
 	// Install an a Quit AppleEvent handler.
 	OSErr err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
@@ -424,6 +429,9 @@ int main(int argc, char **argv)
 		NS_RELEASE(gTheApp);
 	}
 
+#ifdef RHAPSODY
+#undef DETECT_WEBSHELL_LEAKS
+#endif
 #ifdef DETECT_WEBSHELL_LEAKS
 	if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
 		printf("XXX WARNING: Number of webshells being leaked: %d \n", count);

@@ -247,14 +247,17 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	err = ::ATSUCreateTextLayoutWithTextPtr (dmy, 0,0,0,0,NULL, NULL, &txLayout);
 	if(noErr != err) {
 		NS_WARNING("ATSUCreateTextLayoutWithTextPtr failed");
-		goto errorDone;
+    // goto errorDone;
+    return nsnull;
 	}
 
 	ATSUStyle				theStyle;
 	err = ::ATSUCreateStyle(&theStyle);
 	if(noErr != err) {
 		NS_WARNING("ATSUCreateStyle failed");
-		goto errorDoneDestroyTextLayout;
+    // goto errorDoneDestroyTextLayout;
+  	err = ::ATSUDisposeTextLayout(txLayout);
+    return nsnull;
 	}
 
 	ATSUAttributeTag 		theTag[3];
@@ -267,7 +270,10 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	err = ::ATSUFONDtoFontID(aFontNum, (StyleField)((aBold ? bold : normal) | (aItalic ? italic : normal)), &atsuFontID);
 	if(noErr != err) {
 		NS_WARNING("ATSUFONDtoFontID failed");
-		goto errorDoneDestroyStyle;
+    // goto errorDoneDestroyStyle;
+  	err = ::ATSUDisposeStyle(theStyle);
+  	err = ::ATSUDisposeTextLayout(txLayout);
+    return nsnull;
 	}
 	
 	theTag[0] = kATSUFontTag;
@@ -280,7 +286,8 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	short fontsize = aSize;
 
 	mContext->GetDevUnitsToAppUnits(dev2app);
-	Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
+  //	Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
+  Fixed size = FloatToFixed( (float) rint(float(fontsize) / dev2app));
 	if( FixRound ( size ) < 9  && !nsDeviceContextMac::DisplayVerySmallFonts())
 		size = X2Fix(9);
 
@@ -305,33 +312,33 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	err =  ::ATSUSetAttributes(theStyle, 3, theTag, theValueSize, theValue);
 	if(noErr != err) {
 		NS_WARNING("ATSUSetAttributes failed");
-		goto errorDoneDestroyStyle;
+    // goto errorDoneDestroyStyle;
+  	err = ::ATSUDisposeStyle(theStyle);
+  	err = ::ATSUDisposeTextLayout(txLayout);
+    return nsnull;
 	}
 	 	
 	err = ::ATSUSetRunStyle(txLayout, theStyle, kATSUFromTextBeginning, kATSUToTextEnd);
 	if(noErr != err) {
 		NS_WARNING("ATSUSetRunStyle failed");
-		goto errorDoneDestroyStyle;
+    // goto errorDoneDestroyStyle;
+  	err = ::ATSUDisposeStyle(theStyle);
+  	err = ::ATSUDisposeTextLayout(txLayout);
+    return nsnull;
 	}
 	
     err = ::ATSUSetTransientFontMatching(txLayout, true);
 	if(noErr != err) {
 		NS_WARNING( "ATSUSetTransientFontMatching failed");
-		goto errorDoneDestroyStyle;
+    // goto errorDoneDestroyStyle;
+  	err = ::ATSUDisposeStyle(theStyle);
+  	err = ::ATSUDisposeTextLayout(txLayout);
+    return nsnull;
 	}
     	
 	nsATSUIUtils::gTxLayoutCache->Set(aFontNum, aSize, aBold, aItalic, aColor,  txLayout);	
 
-okDone:
 	return txLayout;
-	
-	
-errorDoneDestroyStyle:
-	err = ::ATSUDisposeStyle(theStyle);
-errorDoneDestroyTextLayout:
-	err = ::ATSUDisposeTextLayout(txLayout);
-errorDone:
-	return nsnull;
 }
 //------------------------------------------------------------------------
 //	PrepareToDraw
@@ -397,20 +404,25 @@ NS_IMETHODIMP nsATSUIToolkit::GetWidth(
   
   StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor , savePort, aTxtLayout);
   if (nsnull == aTxtLayout) 
-  	goto done;
-  	
+    {
+      // goto done;
+      return res;
+  	}
+
   OSStatus err = noErr;	
   ATSUTextMeasurement iAfter; 
   err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &iAfter, NULL, NULL );
   if(noErr != err) {
-     NS_WARNING("ATSUMeasureText failed");
-     goto done1;
+     NS_WARNING("ATSUMeasureText failed");     
+     // goto done1;
+     EndDraw(savePort);
+     return res;
   }
   oWidth = FixRound(iAfter);
   res = NS_OK;
-done1:
+  /* done1: */
   EndDraw(savePort);
-done:
+  /* done: */
   return res;
 }
 
@@ -436,25 +448,28 @@ NS_IMETHODIMP nsATSUIToolkit::DrawString(
   
   StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor , savePort, aTxtLayout);
   if (nsnull == aTxtLayout)
-  	goto done;
-  	
+    {
+      return res;
+  	}
+
   OSStatus err = noErr;	
   ATSUTextMeasurement iAfter; 
   err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &iAfter, NULL, NULL );
   if(noErr != err) {
      NS_WARNING("ATSUMeasureText failed");
-     goto done1;
+     EndDraw(savePort);
+     return res;
   } 
+
   err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
   if(noErr != err) {
     NS_WARNING("ATSUDrawText failed");
-    goto done1;
+    EndDraw(savePort);
+    return res;
   } 
   oWidth = FixRound(iAfter);
   res = NS_OK;
 
-done1:
   EndDraw(savePort);
-done:
   return res;
 }

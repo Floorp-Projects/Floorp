@@ -36,6 +36,8 @@
 
 #include "nsIMenuBar.h"
 
+#include "nsplugindefs.h"
+#include <QuickDraw.h>
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))

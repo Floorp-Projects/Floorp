@@ -76,7 +76,7 @@ EXPORT_RESOURCE_SAMPLES	:= \
 
 EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
 
-ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter beos os2 photon mac,$(MOZ_WIDGET_TOOLKIT)))
 DIRS			+= unix
 UNIX_VIEWER_TK_LIBS	= unix/$(MOZ_WIDGET_TOOLKIT)/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
 else
@@ -86,6 +86,9 @@ TOOLKIT_CPPSRCS		= nsBeOSMain.cpp
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+TOOLKIT_CPPSRCS		= nsMacMain.cpp
 endif
 endif
 
@@ -153,6 +156,10 @@ install::
 	+$(LOOP_OVER_DIRS)
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),Rhapsody)
+INCLUDES		+= -I$(topsrcdir)/widget/src/mac
+endif
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 

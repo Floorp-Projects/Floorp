@@ -338,7 +338,7 @@ NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		const nsIDeviceContext& inDevContext, TextStyle &outStyle)
 {
 	
-	nsFont	*aFont;
+	const nsFont *aFont;
 	inMetrics.GetFont(aFont);
 	
 	nsFontHandle	fontNum;

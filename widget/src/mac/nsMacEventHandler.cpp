@@ -34,8 +34,9 @@
 #include <Script.h>
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
+#ifndef RHAPSODY
 #include <locale>
-
+#endif
 
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
@@ -297,6 +298,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	// each Mac window
 	//
 	mTSMDocument = nsnull;
+#if !TARGET_CARBON
 	supportedServices[0] = kTextService;
 	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
@@ -304,7 +306,8 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 #ifdef DEBUG_TSM
 	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
 #endif
-	
+#endif
+
 	mIMEIsComposing = PR_FALSE;
 	mIMECompositionStr=nsnull;
 
@@ -358,6 +361,7 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 			break;
 
 		case osEvt:
+		{
 			unsigned char eventType = ((aOSEvent.message >> 24) & 0x00ff);
 			if (eventType == suspendResumeMessage)
 			{
@@ -375,7 +379,8 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 				if (! mInBackground)
 					retVal = HandleMouseMoveEvent(aOSEvent);
 			}
-			break;
+		}
+		break;
 	
 		case nullEvent:
 			if (! mInBackground)
@@ -1157,7 +1162,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			        ConvertOSEventToMouseEvent(aOSEvent, mouseActivateEvent, NS_MOUSE_ACTIVATE);
 					widgetHit->DispatchMouseEvent(mouseActivateEvent);
 					//if( mouseActivateEvent.acceptActivation ) 
-						//gEventDispatchHandler.SetFocus(widgetHit);
+						gEventDispatchHandler.SetFocus(widgetHit);
 						//gEventDispatchHandler.Special(widgetHit);
 				}
 
@@ -1457,6 +1462,9 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	OSErr				err;
 	ByteCount			source_read;
 	nsresult res = NS_OK;
+	long committedLen = 0;
+	PRUnichar* ubuf;
+
 	//====================================================================================================
 	// 0. Create Unicode Converter
 	//====================================================================================================
@@ -1496,7 +1504,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	}
 	// Prepare buffer....
 	mIMECompositionStr->SetCapacity(text_size+1);
-	PRUnichar* ubuf = (PRUnichar*)mIMECompositionStr->GetUnicode();
+	ubuf = (PRUnichar*)mIMECompositionStr->GetUnicode();
 	size_t len;
 
 	//====================================================================================================
@@ -1505,7 +1513,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	//====================================================================================================
 	//	1. Handle the committed text
 	//====================================================================================================
-	long committedLen = (fixedLength == -1) ? text_size : fixedLength;
+	committedLen = (fixedLength == -1) ? text_size : fixedLength;
 	if(0 != committedLen)
 	{
 #ifdef DEBUG_TSM

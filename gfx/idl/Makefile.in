@@ -32,6 +32,7 @@ XPIDL_MODULE	= gfx
 XPIDLSRCS	= \
 		nsIFontEnumerator.idl \
 		nsIScriptableRegion.idl \
+		nsIGraphics.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

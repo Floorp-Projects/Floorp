@@ -480,6 +480,9 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #elif defined(XP_MAC)
 //#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
 // we include the .cpp file in the project now.
+#elif defined(RHAPSODY)
+#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
+#include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #elif defined(XP_BEOS)
 #include "nsFileSpecBeOS.cpp" // BeOS-specific implementations
 #elif defined(XP_UNIX)

@@ -449,7 +449,7 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 #ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
-		  	nsFont *font;
+		  	const nsFont *font;
 			mGS->mFontMetrics->GetFont(font);
 		  	fallbackDone = ATSUIFallbackGetWidth(aString, thisWidth, fontNum, 
 									  		font->size, 
@@ -571,7 +571,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 #ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
-		  	nsFont *font;
+		  	const nsFont *font;
 			mGS->mFontMetrics->GetFont(font);
 		  	fallbackDone = ATSUIFallbackDrawChar(aString, x, y, thisWidth, fontNum, 
 									  		font->size, 

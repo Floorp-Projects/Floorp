@@ -59,6 +59,8 @@ class nsIUnicodeEncodeHelper : public nsISupports
 {
 public:
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(kIUnicodeEncodeHelperIID)
+
   /**
    * Converts data using a lookup table.
    */
