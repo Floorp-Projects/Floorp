@@ -816,7 +816,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       return CancelDownload(path.get());  
     }
   }
-  else if (nsCRT::strcmp(aTopic, "quit-application") == 0 && mCurrDownloads.Count()) {
+  else if (nsCRT::strcmp(aTopic, "about-to-quit-application") == 0 && mCurrDownloads.Count()) {
     gQuitting = PR_TRUE;
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
   }
