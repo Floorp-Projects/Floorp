@@ -146,8 +146,15 @@ nsTextTransformer::Shutdown()
 // For now, we have only a couple of characters to strip out. If we get
 // any more, change this to use a bitset to lookup into.
 //   CH_SHY - soft hyphen (discretionary hyphen)
+#ifdef IBMBIDI
+// added BIDI formatting codes
+#define IS_DISCARDED(_ch) \
+  (((_ch) == CH_SHY) || ((_ch) == '\r') || IS_BIDI_CONTROL(_ch))
+#else
 #define IS_DISCARDED(_ch) \
   (((_ch) == CH_SHY) || ((_ch) == '\r'))
+#endif
+
 
 #define MAX_UNIBYTE 127
 
@@ -454,9 +461,23 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
   const nsTextFragment* frag = mFrag;
   const PRUnichar* cp0 = frag->Get2b();
   PRInt32 fragLen = frag->GetLength();
+#ifdef IBMBIDI
+  if (*aWordLen > 0 && *aWordLen < fragLen) {
+    fragLen = *aWordLen;
+  }
+#endif
   PRInt32 offset = mOffset;
 
   PRUnichar firstChar = frag->CharAt(offset++);
+
+#ifdef IBMBIDI
+  // Need to strip BIDI controls even when those are 'firstChars'.
+  // This doesn't seem to produce bug 14280 (or similar bugs).
+  while (offset < fragLen && IS_BIDI_CONTROL(firstChar) ) {
+    firstChar = frag->CharAt(offset++);
+  }
+#endif // IBMBIDI
+
   if (firstChar > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
 
   // Only evaluate complex breaking logic if there are more characters
@@ -771,6 +792,11 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
+#ifdef IBMBIDI
+  if (*aWordLenResult > 0 && *aWordLenResult < fragLen) {
+    fragLen = *aWordLenResult;
+  }
+#endif
   PRInt32 offset = mOffset;
   PRInt32 wordLen = 0;
   PRBool isWhitespace = PR_FALSE;
@@ -831,6 +857,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           }
         }
         else if (frag->Is2b()) {
+#ifdef IBMBIDI
+          wordLen = *aWordLenResult;
+#endif
           offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
@@ -869,6 +898,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           isWhitespace = PR_TRUE;
         }
         else if (frag->Is2b()) {
+#ifdef IBMBIDI
+          wordLen = *aWordLenResult;
+#endif
           offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
@@ -1048,11 +1080,25 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
   PRInt32 offset = mOffset - 1;
 
   PRUnichar firstChar = frag->CharAt(offset);
+
+#ifdef IBMBIDI
+  PRInt32 limit = (*aWordLen > 0) ? *aWordLen : 0;
+  
+  while (offset > limit && IS_BIDI_CONTROL(firstChar) ) {
+    firstChar = frag->CharAt(--offset);
+  }
+#endif
+
   mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = firstChar;
   if (firstChar > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
 
   PRInt32 numChars = 1;
+
+#ifdef IBMBIDI
+  if (offset > limit) {
+#else
   if (offset > 0) {
+#endif
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
@@ -1207,7 +1253,12 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   if((! aForLineBreak) && (eNormal != mMode))
      mMode = eNormal;
 
+#ifdef IBMBIDI
+  PRInt32 limit = (*aWordLenResult > 0) ? *aWordLenResult : 0;
+  while (--offset >= limit) {
+#else
   while (--offset >= 0) {
+#endif
     PRUnichar firstChar = frag->CharAt(offset);
 
     // Eat up any discarded characters before dispatching
@@ -1229,6 +1280,9 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = ' ';
           offset--;
         } else if (frag->Is2b()) {
+#ifdef IBMBIDI
+          wordLen = *aWordLenResult;
+#endif
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
         else {
@@ -1261,6 +1315,9 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           isWhitespace = PR_TRUE;
         }
         else if (frag->Is2b()) {
+#ifdef IBMBIDI
+          wordLen = *aWordLenResult;
+#endif
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
         else {
@@ -1465,6 +1522,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       int* expectedResults = st->modes[preMode].data;
       int resultsLen = st->modes[preMode].length;
 
+#ifdef IBMBIDI
+      wordLen = -1;
+#endif
       while ((bp = tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &ws, &transformed))) {
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
@@ -1479,6 +1539,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
           break;
         }
         expectedResults++;
+#ifdef IBMBIDI
+        wordLen = -1;
+#endif
       }
       if (expectedResults != st->modes[preMode].data + resultsLen) {
         if (st->modes[preMode].data[0] != 0) {
@@ -1496,6 +1559,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       tx.Init2(&frag, frag.GetLength(), NS_STYLE_WHITESPACE_NORMAL,
                NS_STYLE_TEXT_TRANSFORM_NONE);
       expectedResults = st->modes[preMode].data + resultsLen;
+#ifdef IBMBIDI
+      wordLen = -1;
+#endif
       while ((bp = tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &ws))) {
         --expectedResults;
         if (gNoisy) {
@@ -1510,6 +1576,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
           error = PR_TRUE;
           break;
         }
+#ifdef IBMBIDI
+        wordLen = -1;
+#endif
       }
       if (expectedResults != st->modes[preMode].data) {
         if (st->modes[preMode].data[0] != 0) {

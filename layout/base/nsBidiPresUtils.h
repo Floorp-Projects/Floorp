@@ -162,8 +162,6 @@ private:
                          PRUint8& aCharType,
                          PRUint8& aPrevCharType) const;
   
-  void StripBidiControlCharacters(PRUnichar* aText,
-                                  PRInt32&   aTextLength) const;
   nsAutoString    mBuffer;
   nsVoidArray     mLogicalFrames;
   nsVoidArray     mVisualFrames;
