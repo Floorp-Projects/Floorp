@@ -72,18 +72,33 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  cursor                : grab;
   } 
 
-#ubhist-keyword-popup 
+#ubhist-keyword-popup
   {
-	  margin                : 0px 4px 0px 0px;
-	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    margin                : 0px 4px 0px 0px;
+    width                 : 10px; 
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
   } 
+
+#ubhist
+  {
+    margin                : 0px 2px 0px 0px;
+    width                 : 10px; 
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    border                : none;
+    border-right          : 1px solid #336699;
+    padding               : 0px 2px 0px 0px;
+  }
+
+#ubhist-popup
+  {
+    max-width             : none !important;
+  }
 
 #action-popup 
   {
     list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
-	  margin                : 0px; 
-	  -moz-border-radius    : 4px;
+    margin                : 0px; 
+    -moz-border-radius    : 4px;
   }
 
 #content-frame 
@@ -131,3 +146,5 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     padding               : 2px;
   }
+
+#
