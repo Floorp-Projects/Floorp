@@ -39,10 +39,8 @@
 
 # Create a read-only disk image of the contents of a folder
 #
-# Usage: make-diskimage <image file> <folder> <volume name>
+# Usage: make-diskimage <image file> <folder> <volume name> <.dsstore file to use> <background image>
 #
-
-SCRIPT_DIR=`pwd`/`dirname $0`
 
 DMG_DIRNAME=`dirname $1`
 DMG_DIR=`cd $DMG_DIRNAME; pwd`
@@ -50,6 +48,10 @@ DMG_NAME=`basename $1`
 DMG_TEMP_NAME=${DMG_DIR}/rw.${DMG_NAME}
 SRC_FOLDER=`cd $2; pwd`
 VOLUME_NAME=$3
+
+# optional arguments
+DMG_DSSTORE=$4
+DMG_BKGND_IMG=$5
 
 # Find the size of the folder contents
 FOLDER_SIZE=`du -s $SRC_FOLDER | sed s/[^0-9].*//`
@@ -74,10 +76,21 @@ MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
 
 # copy content
 echo "copying content to disk image"
+echo ditto $SRC_FOLDER
 ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR
-cp -p ${SCRIPT_DIR}/mozilla.dsstore ${MOUNT_DIR}/.DS_Store
-mkdir ${MOUNT_DIR}/.background
-cp -p ${SCRIPT_DIR}/mozilla13-banner.jpg ${MOUNT_DIR}/.background/
+# add optional Finder window layout and background image
+if [ ! -z ${DMG_DSSTORE} ]; then
+	echo cp ${DMG_DSSTORE}
+	cp -p ${DMG_DSSTORE} ${MOUNT_DIR}/.DS_Store
+fi
+if [ ! -z ${DMG_BKGND_IMG} ]; then
+	echo cp ${DMG_BKGND_IMG}
+	mkdir ${MOUNT_DIR}/.background
+	cp -p ${DMG_BKGND_IMG} ${MOUNT_DIR}/.background/
+fi
+
+# make the top window open itself on mount:
+/usr/local/bin/openUp ${MOUNT_DIR}
 
 # unmnount
 echo "unmounting disk image"
