@@ -121,6 +121,7 @@ protected:
 
   PRBool IsMouseHandler(const nsString& aName);
   PRBool IsKeyHandler(const nsString& aName);
+  PRBool IsXULHandler(const nsString& aName);
 
   static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
 
@@ -406,8 +407,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
         // Add an event listener for mouse and key events only.
         PRBool mouse = IsMouseHandler(type);
         PRBool key = IsKeyHandler(type);
+        PRBool xul = IsXULHandler(type);
 
-        if (mouse || key) {
+        if (mouse || key || xul) {
           // Create a new nsXBLEventHandler.
           nsXBLEventHandler* handler;
           NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
@@ -423,8 +425,10 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
           if (mouse)
             receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
-          else
+          else if(key)
             receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+          else
+            receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
 
           NS_RELEASE(handler);
         }
@@ -655,6 +659,13 @@ PRBool
 nsXBLBinding::IsKeyHandler(const nsString& aName)
 {
   return ((aName == "keypress") || (aName == "keydown") || (aName == "keyup"));
+}
+
+PRBool
+nsXBLBinding::IsXULHandler(const nsString& aName)
+{
+  return ((aName == "create") || (aName == "destroy") || (aName=="broadcast") ||
+          (aName == "command") || (aName == "commandupdate") || (aName == "close"));
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

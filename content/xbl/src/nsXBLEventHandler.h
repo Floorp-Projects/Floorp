@@ -25,6 +25,7 @@
 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMMenuListener.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
@@ -35,7 +36,8 @@ class nsIAtom;
 class nsIController;
 
 class nsXBLEventHandler : public nsIDOMKeyListener, 
-                          public nsIDOMMouseListener
+                          public nsIDOMMouseListener,
+                          public nsIDOMMenuListener
 {
 public:
   nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, const nsString& aEventName);
@@ -54,6 +56,13 @@ public:
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
   
+  NS_IMETHOD Create(nsIDOMEvent* aEvent);
+  NS_IMETHOD Close(nsIDOMEvent* aEvent);
+  NS_IMETHOD Destroy(nsIDOMEvent* aEvent);
+  NS_IMETHOD Action(nsIDOMEvent* aEvent);
+  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
+  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
+
   NS_DECL_ISUPPORTS
 
 protected:

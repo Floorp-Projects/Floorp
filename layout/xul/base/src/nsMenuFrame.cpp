@@ -45,6 +45,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
@@ -191,6 +192,31 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
     // Didn't find it.
     rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    
+    nsCOMPtr<nsIDOMXULMenuListElement> list(do_QueryInterface(mContent));
+    if (list) {
+      nsCOMPtr<nsIDOMElement> element;
+      list->GetSelectedItem(getter_AddRefs(element));
+      if (!element) {
+        nsAutoString value;
+        list->GetValue(value);
+        if (value == "") {
+          nsCOMPtr<nsIContent> child;
+          GetMenuChildrenElement(getter_AddRefs(child));
+          if (child) {
+            PRInt32 count;
+            child->ChildCount(count);
+            if (count > 0) {
+              nsCOMPtr<nsIContent> item;
+              child->ChildAt(0, *getter_AddRefs(item));
+              nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
+              if (selectedElement) 
+                list->SetSelectedItem(selectedElement);
+            }
+          }
+        }
+      }
+    }
   }
   return rv;
 }
@@ -243,7 +269,15 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
   if (IsDisabled()) // Disabled menus process no events.
     return NS_OK;
 
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+  if (aEvent->message == NS_KEY_PRESS) {
+    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+    PRUint32 keyCode = keyEvent->keyCode;
+    if (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) {
+      if (!IsOpen()) 
+        OpenMenu(PR_TRUE);
+    }
+  }
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     PRBool isMenuBar = PR_FALSE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
@@ -532,10 +566,34 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (mMenuParent)
         mMenuParent->SetActive(PR_TRUE);
 
-      // Sync up the view.
       nsCOMPtr<nsIContent> menuPopupContent;
       menuPopup->GetContent(getter_AddRefs(menuPopupContent));
 
+      // See if we're a menulist and set our selection accordingly.
+      nsCOMPtr<nsIDOMXULMenuListElement> list = do_QueryInterface(mContent);
+      if (list) {
+        nsCOMPtr<nsIDOMElement> element;
+        list->GetSelectedItem(getter_AddRefs(element));
+        if (element) {
+          nsCOMPtr<nsIContent> selectedContent = do_QueryInterface(element);
+          nsIFrame* curr;
+          menuPopup->FirstChild(mPresContext, nsnull, &curr);
+          while (curr) {
+            nsCOMPtr<nsIContent> child;
+            curr->GetContent(getter_AddRefs(child));
+            if (selectedContent == child.get()) {
+              nsCOMPtr<nsIMenuFrame> menuframe(do_QueryInterface(curr));
+              if (menuframe)
+                menuPopup->SetCurrentMenuItem(menuframe);
+            }
+            curr->GetNextSibling(&curr);
+          }
+        }
+      }
+      // End of menulist stuff.  We now return to our regularly scheduled
+      // programming.
+
+      // Sync up the view.
       nsAutoString popupAnchor, popupAlign;
       
       menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
@@ -644,44 +702,53 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
 {
   //NS_ASSERTION(aReflowState.reason != eReflowReason_Incremental,"Incremental Reflow not supported!");
 
-    nsIFrame* popupChild = mPopupFrames.FirstChild();
+  nsIFrame* popupChild = mPopupFrames.FirstChild();
 
-    nsHTMLReflowState boxState(aReflowState);
+  nsHTMLReflowState boxState(aReflowState);
 
-    if (aReflowState.reason == eReflowReason_Incremental) {
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    nsIFrame* incrementalChild;
 
-        nsIFrame* incrementalChild;
+    // get the child but don't pull it off
+    aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+    
+    // see if it is in the mPopupFrames list
+    nsIFrame* child = mPopupFrames.FirstChild();
+    popupChild = nsnull;
 
-        // get the child but don't pull it off
-        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-        
-        // see if it is in the mPopupFrames list
-        nsIFrame* child = mPopupFrames.FirstChild();
-        popupChild = nsnull;
+    while (nsnull != child) 
+    { 
+      // if it is then flow the popup incrementally then flow
+      // us with a resize just to get our correct desired size.
+      if (child == incrementalChild) {
+        // pull it off now
+        aReflowState.reflowCommand->GetNext(incrementalChild);
 
-        while (nsnull != child) 
-        { 
-            // if it is then flow the popup incrementally then flow
-            // us with a resize just to get our correct desired size.
-            if (child == incrementalChild) {
-                // pull it off now
-                aReflowState.reflowCommand->GetNext(incrementalChild);
+        // we know what child
+        popupChild = child;
 
-                // we know what child
-                popupChild = child;
+        // relow the box with resize just to get the
+        // aDesiredSize set correctly
+        boxState.reason = eReflowReason_Resize;
+        break;
+      }
 
-                // relow the box with resize just to get the
-                // aDesiredSize set correctly
-                boxState.reason = eReflowReason_Resize;
-                break;
-            }
+      nsresult rv = child->GetNextSibling(&child);
+      NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    }   
+  } 
 
-            nsresult rv = child->GetNextSibling(&child);
-            NS_ASSERTION(rv == NS_OK,"failed to get next child");
-        }   
-    } 
+  // If we're a menulist AND if we're intrinsically sized, then
+  // we need to flow our popup and use its width as our own width.
+  PRBool constrainMenuWidth = PR_FALSE;
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
+  if (menulist && (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE)) {
+    constrainMenuWidth = PR_TRUE;
+    MarkAsGenerated();
+  }
 
   // Handle reflowing our subordinate popup
+  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);  
   if (popupChild) {         
       // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
       nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
@@ -689,8 +756,7 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
                                        availSize);
       kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
       kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);
-    
+      
       nsRect rect;
       popupChild->GetRect(rect);
       nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
@@ -702,8 +768,36 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
   }
 
+  if (constrainMenuWidth) {
+    boxState.mComputedWidth = kidDesiredSize.width;
+  }
+
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
 
+  // If we're a menulist, then we might potentially flow the popup a second time
+  // (its width may be too small).
+  if (menulist && popupChild) {
+    if (kidDesiredSize.width < aDesiredSize.width) {
+      // Flow the popup again.
+      // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
+      nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
+                                       availSize);
+      kidReflowState.mComputedWidth = aDesiredSize.width;
+      kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
+    
+      nsRect rect;
+      popupChild->GetRect(rect);
+      nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
+                       rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
+
+      // Set the child's width and height to its desired size
+      // Note: don't position or size the view now, we'll do that in the
+      // DidReflow() function
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
+    }
+  }
+ 
   return rv;
 }
 
@@ -1271,4 +1365,36 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
   nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+}
+
+NS_IMETHODIMP
+nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+  nsresult rv = nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist(do_QueryInterface(mContent));
+  if (menulist) {
+    nsCalculatedBoxInfo boxInfo;
+    boxInfo.frame = this;
+    boxInfo.prefSize.width = NS_UNCONSTRAINEDSIZE;
+    boxInfo.prefSize.height = NS_UNCONSTRAINEDSIZE;
+    boxInfo.flex = 0;
+    GetRedefinedMinPrefMax(aPresContext, this, boxInfo);
+    if (boxInfo.prefSize.width == NS_UNCONSTRAINEDSIZE &&
+        boxInfo.prefSize.height == NS_UNCONSTRAINEDSIZE &&
+        boxInfo.flex == 0) {
+      nsIFrame* frame = mPopupFrames.FirstChild();
+      if (!frame) {
+        MarkAsGenerated();
+        frame = mPopupFrames.FirstChild();
+      }
+      
+      nsCOMPtr<nsIBox> box(do_QueryInterface(frame));
+      nsCalculatedBoxInfo childInfo;
+      childInfo.frame = frame;
+      box->GetBoxInfo(aPresContext, aReflowState, childInfo);
+      GetRedefinedMinPrefMax(aPresContext, this, childInfo);
+      aSize.prefSize.width = childInfo.prefSize.width;
+    }
+  }
+  return rv;
 }

@@ -66,6 +66,7 @@ CPPSRCS=					\
 	nsMenuListener.cpp \
 	nsMenuDismissalListener.cpp \
 	nsPopupSetFrame.cpp \
+	nsXULCheckboxFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -107,6 +108,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMenuListener.obj \
 	.\$(OBJDIR)\nsMenuDismissalListener.obj \
 	.\$(OBJDIR)\nsPopupSetFrame.obj \
+	.\$(OBJDIR)\nsXULCheckboxFrame.obj \
 	$(NULL)
 
 EXPORTS =					\
