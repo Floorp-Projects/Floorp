@@ -30,7 +30,7 @@
  */
 
 /*
- * example: make search fields on www.mozilla.org white-on-black
+ * example: make search fields on www.mozilla.org black-on-white
  *
  * @-moz-document url-prefix(http://www.mozilla.org/) {
  *   #q { background: white ! important; color: black ! important; }
