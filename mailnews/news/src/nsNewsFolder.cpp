@@ -395,8 +395,6 @@ nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
 		*result = messageEnumerator;
   }
 
-  rv = GetNewMessages();
-  if (NS_FAILED(rv)) return rv;
   return rv;
 }
 
