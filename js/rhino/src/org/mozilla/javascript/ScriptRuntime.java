@@ -844,7 +844,7 @@ public class ScriptRuntime {
         } else if (t instanceof EcmaError) {
             EcmaError ee = (EcmaError)t;
             String errorName = ee.getName();
-            return makeErrorObject(cx, scope, errorName, ee.getMessage(),
+            return makeErrorObject(cx, scope, errorName, ee.getErrorMessage(),
                                    ee.getSourceName(), ee.getLineNumber());
         } else if (evaluator == null) {
             // Script can catch only instances of JavaScriptException,

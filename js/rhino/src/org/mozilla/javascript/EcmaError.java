@@ -60,7 +60,8 @@ public class EcmaError extends RuntimeException
               String sourceName, int lineNumber,
               String lineSource, int columnNumber)
     {
-        super("EcmaError: "+errorName+": "+errorMessage);
+        super(EvaluatorException.generateErrorMessage(
+                  errorName+": "+errorMessage, sourceName, lineNumber));
         this.errorName = errorName;
         this.errorMessage = errorMessage;
         this.sourceName = sourceName;
@@ -78,31 +79,6 @@ public class EcmaError extends RuntimeException
     {
         this("InternalError", ScriptRuntime.toString(nativeError),
              sourceName, lineNumber, lineSource, columnNumber);
-    }
-
-    /**
-     * Return a string representation of the error, which currently consists
-     * of the name of the error together with the message.
-     */
-    public String toString()
-    {
-        StringBuffer buf = new StringBuffer();
-        buf.append(errorName);
-        buf.append(": ");
-        buf.append(errorMessage);
-        if (sourceName != null || lineNumber > 0) {
-            buf.append(" (");
-            if (sourceName != null) {
-                buf.append(sourceName);
-                buf.append("; ");
-            }
-            if (lineNumber > 0) {
-                buf.append("line ");
-                buf.append(lineNumber);
-            }
-            buf.append(')');
-        }
-        return buf.toString();
     }
 
     /**
@@ -128,7 +104,7 @@ public class EcmaError extends RuntimeException
      *
      * @return an implemenation-defined string describing the error.
      */
-    public String getMessage() {
+    public String getErrorMessage() {
         return errorMessage;
     }
 

@@ -82,7 +82,7 @@ public class Parser
             return parse();
         } catch (IOException ex) {
             // Should never happen
-            throw new IllegalStateException(ex.getMessage());
+            throw new IllegalStateException();
         }
     }
 
