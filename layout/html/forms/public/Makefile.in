@@ -26,6 +26,7 @@ EXPORTS =			\
 	nsIFormManager.h	\
 	nsIListControlFrame.h	\
 	nsIComboboxControlFrame.h	\
+	nsIFormControlFrame.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
