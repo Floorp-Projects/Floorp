@@ -916,15 +916,10 @@ nsBoxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleCont
                                                 PRInt32* aLocalChange)
 {
 
-  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
-  
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange); 
 
-  return NS_OK;  
+  return rv;  
 } // ReResolveStyleContext
 
 

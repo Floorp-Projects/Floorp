@@ -289,3 +289,7 @@ tabcontrol {
   background-color: rgb(206, 207, 206);
   color:black; 
 }
+
+tabpage {
+   visibility: hidden;
+}

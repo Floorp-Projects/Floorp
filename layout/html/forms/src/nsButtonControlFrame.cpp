@@ -266,6 +266,11 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+	mStyleContext->GetStyleData(eStyleStruct_Display);
+	if (!disp->mVisible)
+     return NS_OK;
+
     nsRect rect(0, 0, mRect.width, mRect.height);
     mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
 

@@ -77,6 +77,11 @@ public:
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
+
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList);
+
 /*
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
@@ -90,6 +95,11 @@ public:
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
+
+private:
+
+  nsIFrame* mSelected;
+  PRBool mSelectedChanged;
 
 }; // class nsDeckFrame
 

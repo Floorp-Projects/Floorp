@@ -75,11 +75,29 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    nsIContent* tabpanel = nsnull;
    GetChildWithTag(nsXULAtoms::tabpanel, tabcontrol, tabpanel);
 
+   /*
+    // set visiblity
+    PRInt32 count = 0;
+    tabpanel->ChildCount(count); 
+    for (PRInt32 i = 0; i < count; i++)
+    {
+       nsIContent* child;
+       tabpanel->ChildAt(i,child); 
+
+       if (i != index)
+          child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: hidden", PR_TRUE);
+       else
+          child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible", PR_TRUE);
+    }
+    */
+
+
    // set the panels index
    char value[100];
    sprintf(value, "%d", index);
 
    tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_TRUE);
+   
 }
 
 nsresult
