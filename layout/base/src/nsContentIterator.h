@@ -57,7 +57,7 @@ public:
   virtual nsresult CurrentNode(nsIContent **aItem);
 
   virtual nsresult IsDone();
-
+  
 protected:
 
   static nsIContent* GetDeepFirstChild(nsIContent* aRoot);
@@ -65,6 +65,8 @@ protected:
   nsIContent *mCurNode;
   nsIContent *mFirst;
   nsIContent *mLast;
+
+  PRBool mIsDone;
   
 private:
 
