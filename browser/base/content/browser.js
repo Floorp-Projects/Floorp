@@ -4418,14 +4418,12 @@ function SelectDetector(event, doReload)
     }
 
     try {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
-        var str =  Components.classes["@mozilla.org/supports-wstring;1"]
-                             .createInstance(Components.interfaces.nsISupportsWString);
+        var str =  Components.classes["@mozilla.org/supports-string;1"]
+                             .createInstance(Components.interfaces.nsISupportsString);
 
         str.data = prefvalue;
-        pref.setComplexValue("intl.charset.detector",
-                             Components.interfaces.nsISupportsWString, str);
+        gPrefService.setComplexValue("intl.charset.detector",
+                             Components.interfaces.nsISupportsString, str);
         if (doReload) window._content.location.reload();
     }
     catch (ex) {
