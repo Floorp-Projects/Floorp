@@ -154,9 +154,9 @@ sub get_loginfo {
         s/^[ \t\n]+//;		# delete leading whitespace
         s/[ \t\n]+$//;		# delete trailing whitespace
         
-        if ($state == $STATE_CHANGED) { push(@changed_files, split); }
-        if ($state == $STATE_ADDED)   { push(@added_files,   split); }
-        if ($state == $STATE_REMOVED) { push(@removed_files, split); }
+        if ($state == $STATE_CHANGED && !(/^Tag:/)) { push(@changed_files, split); }
+        if ($state == $STATE_ADDED && !(/^Tag:/))   { push(@added_files,   split); }
+        if ($state == $STATE_REMOVED && !(/^Tag:/)) { push(@removed_files, split); }
         if ($state == $STATE_LOG)     { push(@log_lines,     $_); }
     }
     
