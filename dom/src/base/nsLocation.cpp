@@ -751,8 +751,10 @@ CheckHrefAccess(JSContext *aContext, JSObject *aObj, PRBool isWrite)
   else
     rv = secMan->CheckScriptAccess(aContext, aObj, NS_DOM_PROP_LOCATION_HREF,
                                    isWrite);
-  if (NS_FAILED(rv))
-    return nsJSUtils::nsReportError(aContext, aObj, rv);
+  if (NS_FAILED(rv)) {
+    nsJSUtils::nsReportError(aContext, aObj, rv);
+    return rv;
+  }
   return NS_OK;
 }
 
