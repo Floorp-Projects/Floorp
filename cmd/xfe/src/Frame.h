@@ -245,13 +245,6 @@ public:
   virtual XP_Bool isOkToClose();
   virtual void	doClose();
 
-// Handles image display in the new setup
-/*
-void displayImage(MWContext * context, IL_Pixmap * image, 
-                        IL_Pixmap * mask, PRInt32 x, PRInt32 y,
-                        PRInt32 x_offset, PRInt32 y_offset,PRInt32  width, PRInt32 height);
-*/
-
 protected:
     char* geometryPrefName;
     // Next two routines return static data -- copy immediately

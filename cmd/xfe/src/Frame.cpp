@@ -59,6 +59,7 @@
 #ifdef MOZ_MAIL_NEWS
 #include "MNView.h" /* for MNView::getBiffState() */
 #endif
+#include "Image.h"
 #include "xpassert.h"
 #include "xpgetstr.h"
 #include "prefapi.h"
@@ -216,7 +217,9 @@ MenuSpec XFE_Frame::servertools_submenu_spec[] = {
 };
 
 MenuSpec XFE_Frame::window_menu_spec[] = {
+#ifdef MOZ_SELECTOR_BAR
     { xfeCmdOpenNavCenter,  PUSHBUTTON },
+#endif
 	{ xfeCmdOpenOrBringUpBrowser,	PUSHBUTTON },
 #ifdef MOZ_MAIL_NEWS
 	{ xfeCmdOpenInbox,		PUSHBUTTON },
@@ -1758,7 +1761,8 @@ XFE_Frame::initializeMWContext(EFrameType frame_type,
 	CONTEXT_DATA (m_context)->colormap = m_cmap;
 
     // set image library Callback functions 
-    CONTEXT_DATA (m_context)->DisplayPixmap = (DisplayPixmapPtr)fe_DisplayPixmap;
+    CONTEXT_DATA (m_context)->DisplayPixmap 
+        = (DisplayPixmapPtr)fe_DisplayPixmap;
     CONTEXT_DATA (m_context)->NewPixmap = (NewPixmapPtr)NULL;
     CONTEXT_DATA (m_context)->ImageComplete = (ImageCompletePtr)NULL;
 

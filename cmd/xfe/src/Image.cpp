@@ -62,16 +62,16 @@ XFE_Image::XFE_Image(XFE_Component * frame, char * imageURL, fe_colormap * cmap,
 
     // Set up the image library callbacks
     CONTEXT_DATA(m_imageContext)->DisplayPixmap = (DisplayPixmapPtr)fe_DisplayPixmap;
-    CONTEXT_DATA(m_imageContext)->NewPixmap = (NewPixmapPtr)fe_NewPixmap;
-    CONTEXT_DATA(m_imageContext)->ImageComplete = (ImageCompletePtr)fe_ImageComplete;
+    CONTEXT_DATA(m_imageContext)->NewPixmap = (NewPixmapPtr)NewPixmap;
+    CONTEXT_DATA(m_imageContext)->ImageComplete = (ImageCompletePtr)ImageComplete;
 
    
     /* 
      * Stolen from Frame.cpp. 
      */
-    CONTEXT_DATA (m_imageContext)->colormap = cmap;
-    CONTEXT_WIDGET (m_imageContext) = baseWidget; 
-    CONTEXT_DATA(m_imageContext)->drawing_area = baseWidget;
+    CONTEXT_WIDGET (m_imageContext)                 = baseWidget; 
+    CONTEXT_DATA   (m_imageContext)->drawing_area   = baseWidget;
+    CONTEXT_DATA   (m_imageContext)->colormap       = cmap;
 
     m_imageContext->funcs = fe_BuildDisplayFunctionTable();
     m_imageContext->convertPixX = m_imageContext->convertPixY = 1;
@@ -153,7 +153,7 @@ XFE_Image::~XFE_Image(void)
 
   free(m_urlString);
 
-  // S'd I destroy the m_mask and m_image and the clientdata inside them?
+  // Should I destroy the m_mask and m_image and the clientdata inside them?
   // Destroy the Image groupcontexts and observers
   if (m_imageContext)
   {
@@ -233,16 +233,14 @@ XFE_Image::getImageHeight(void)
 void 
 XFE_Image::loadImage(void)
 {
-
    if (cxtInitSucceeded)
-     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT,   m_imageContext, Image_GetUrlExitRoutine);
-
+     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD),
+                FO_CACHE_AND_PRESENT, m_imageContext,
+                getURLExit_cb);
 }
 
-extern "C"
-{
-void
-Image_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
+/*static*/ void
+XFE_Image::getURLExit_cb(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 {
 	//	Report any errors.
 	if(iStatus < 0 && pUrl->error_msg != NULL)	
@@ -252,7 +250,7 @@ Image_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 
     XP_FREE(pUrl);
 }
-};
+
 
 
 
@@ -263,12 +261,13 @@ Image_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 //               ImageLibrary Callbacks                                  //
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C"
-{
-
-  /* The XFE handle to the image library callback -IMGCB_DisplayPixmap */
-void 
-fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height) 
+// The XFE handle to the image library callback -IMGCB_DisplayPixmap
+extern "C" void 
+fe_DisplayPixmap(MWContext * context,
+                         IL_Pixmap * image, IL_Pixmap * mask,
+                         PRInt32  x,        PRInt32  y,
+                         PRInt32  x_offset, PRInt32  y_offset,
+                         PRInt32  width,    PRInt32  height) 
 {
 
    XFE_Frame *    frameHandle=(XFE_Frame *)NULL;
@@ -286,8 +285,9 @@ fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt
         if (context->type != MWContextIcon)
         {
             /* Call the frame's displayImage method */
-            fe_DisplayImage(context, image, mask, x, y, x_offset, y_offset,
-                                width, height);
+            XFE_Image::DisplayImage(context, image, mask,
+                                    x, y, x_offset, y_offset,
+                                    width, height);
         }
         else
         {
@@ -307,10 +307,9 @@ fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt
 
 
 
-/* The XFE handle to the image library callback _IMGCB_NewPixmap */
-
-void 
-fe_NewPixmap(MWContext * context, IL_Pixmap * image, Boolean mask)
+// The XFE handle to the image library callback _IMGCB_NewPixmap
+/*static*/ void 
+XFE_Image::NewPixmap(MWContext * context, IL_Pixmap * image, Boolean mask)
 {
 
    XFE_Frame *    frameHandle=(XFE_Frame *)NULL;
@@ -345,9 +344,9 @@ fe_NewPixmap(MWContext * context, IL_Pixmap * image, Boolean mask)
 }   /* NewPixmap */
 
 
-/* The XFE handle to the image library callback _IMGCB_ImageComplete */
-void
-fe_ImageComplete(MWContext * context, IL_Pixmap * image)
+// The XFE handle to the image library callback _IMGCB_ImageComplete
+/*static*/ void
+XFE_Image::ImageComplete(MWContext * context, IL_Pixmap * image)
 {
    XFE_Frame *    frameHandle=(XFE_Frame *)NULL;
    /* Get the handle to the frame from the context */
@@ -380,11 +379,13 @@ fe_ImageComplete(MWContext * context, IL_Pixmap * image)
 }  /* ImageComplete  */
 
 
-/* The actual XFE function that renders image on a HTML area */
-void
-fe_DisplayImage(MWContext * context, IL_Pixmap * image, 
-                        IL_Pixmap * mask, PRInt32 x, PRInt32 y,
-                        PRInt32 x_offset, PRInt32 y_offset, PRInt32 width,PRInt32  height)
+// The actual XFE function that renders image on a HTML area
+/*static*/ void
+XFE_Image::DisplayImage(MWContext * context, 
+                        IL_Pixmap * image, IL_Pixmap * mask,
+                        PRInt32 x,         PRInt32 y,
+                        PRInt32 x_offset,  PRInt32 y_offset,
+                        PRInt32 width,     PRInt32 height)
 {
 
     int32 img_x_offset, img_y_offset;   /* Offset of image in drawable. */
@@ -533,5 +534,4 @@ fe_DisplayImage(MWContext * context, IL_Pixmap * image,
 
 
 }  /* displayImage */
-};   /* extern "C"  */
 

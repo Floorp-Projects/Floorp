@@ -31,6 +31,7 @@
 #define D(x)
 #endif
 
+#if 0
 extern "C"
 {
 void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , PRInt32, PRInt32, PRInt32, PRInt32, PRInt32, PRInt32);
@@ -38,7 +39,7 @@ void NewPixmap(MWContext *, IL_Pixmap * image, PRBool mask);
 void ImageComplete(MWContext *, IL_Pixmap * image);
 void fe_load_default_font(MWContext *context);
 };
-
+#endif
 
 int XFE_RDFImage::refCount = 0;
 int XFE_RDFImage::m_numRDFImagesLoaded = 0;
@@ -233,10 +234,10 @@ XFE_RDFImage::getImageHeight(void)
 void 
 XFE_RDFImage::loadImage(void)
 {
-
    if (cxtInitSucceeded)
-     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT,   m_imageContext, Image_GetUrlExitRoutine);
-
+     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD), 
+                FO_CACHE_AND_PRESENT, m_imageContext, 
+                XFE_Image::getURLExit_cb);
 }
 
 
