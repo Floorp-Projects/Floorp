@@ -38,4 +38,10 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   NS_IMETHOD OpenURL(nsAutoString& str) = 0;
 };
 
+
+extern "C" NS_DOM
+nsresult
+NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
+
 #endif /* __gen_nsIDOMMsgAppCore_h__ */
+
