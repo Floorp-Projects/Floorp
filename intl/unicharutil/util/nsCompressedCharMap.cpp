@@ -110,6 +110,55 @@ MapperToCCMap(nsICharRepresentable *aMapper)
   return ccMap;
 }
 
+PRBool
+NextNonEmptyCCMapPage(PRUint16* aCCMap, PRUint16 *aPageStart)
+{
+  int i, j;
+  unsigned int k;
+  
+  //
+  // Point to the next page
+  //
+  unsigned int upper_index;
+  unsigned int mid_index;
+  if (*aPageStart == CCMAP_BEGIN_AT_START_OF_MAP) {
+    upper_index = 0;
+    mid_index   = 0;
+  }
+  else {
+    upper_index = CCMAP_UPPER_INDEX(*aPageStart);
+    mid_index   = CCMAP_MID_INDEX(*aPageStart) + 1;
+  }
+
+
+  // walk thru the upper pointers
+  PRUint16 *upper = &aCCMap[0];
+  for (i=upper_index; i<CCMAP_NUM_UPPER_POINTERS; i++, mid_index=0) {
+    if (upper[i] == CCMAP_EMPTY_MID) {
+      continue;
+    }
+
+    // walk the mid array
+    PRUint16 *mid = &aCCMap[upper[i]];
+    for (j=mid_index; j<CCMAP_NUM_MID_POINTERS; j++) {
+      if (mid[j] == CCMAP_EMPTY_PAGE)
+        continue;
+
+      // walk the page
+      ALU_TYPE *page = (ALU_TYPE*)&aCCMap[mid[j]];
+      for (k=0; k<CCMAP_NUM_ALUS_PER_PAGE; k++) {
+        if (page[k] != 0) {
+          PRUint32 base = (i*CCMAP_NUM_UCHARS_PER_MID) + (j*CCMAP_NUM_UCHARS_PER_PAGE);
+          NS_ASSERTION(base<NUM_UNICODE_CHARS, "invalid page address");
+          *aPageStart = (PRUint16)base;
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 #define CCMAP_MID_OFFSET(m, i) ((m)[i])
 #define CCMAP_PAGE_OFFSET_FROM_MIDOFFSET(m, midoffset, i) ((m)[(i) + (midoffset)])
 
@@ -307,6 +356,35 @@ nsCompressedCharMap::SetChars(PRUint16 aBase, ALU_TYPE* aPage)
 }
 
 void
+nsCompressedCharMap::SetChars(PRUint16* aCCMap)
+{
+  int i, j;
+  unsigned int k;
+
+  //
+  // Copy the input CCMap
+  //
+  // walk thru the upper pointers
+  PRUint16 *upper = &aCCMap[0];
+  for (i=0; i<CCMAP_NUM_UPPER_POINTERS; i++) {
+    if (upper[i] == CCMAP_EMPTY_MID)
+      continue;
+
+    // walk the mid array
+    PRUint16 *mid = &aCCMap[upper[i]];
+    for (j=0; j<CCMAP_NUM_MID_POINTERS; j++) {
+      if (mid[j] == CCMAP_EMPTY_PAGE)
+        continue;
+
+      PRUint32 base = (i*CCMAP_NUM_UCHARS_PER_MID) + (j*CCMAP_NUM_UCHARS_PER_PAGE);
+      NS_ASSERTION(base<NUM_UNICODE_CHARS, "invalid page address");
+      ALU_TYPE *page = (ALU_TYPE*)&aCCMap[mid[j]];
+      SetChars((PRUint16)base, page);
+    }
+  }
+}
+
+void
 nsCompressedCharMap::SetChars(PRUint32* aMap)
 {
   PRUint32* frommap_page;
@@ -354,6 +432,33 @@ nsCompressedCharMap::SetChars(PRUint32* aMap)
     base += CCMAP_NUM_UCHARS_PER_PAGE;
   }
 }
+
+#ifdef DEBUG
+void
+printCCMap(PRUint16* aCCMap)
+{
+  PRUint16 page = CCMAP_BEGIN_AT_START_OF_MAP;
+  while (NextNonEmptyCCMapPage(aCCMap, &page)) {
+    //FONT_SCAN_PRINTF(("page starting at 0x%04x has chars", page));
+    int i;
+    PRUint32 pagechar = page;
+  
+    printf("CCMap:0x%04lx=", (long)page);
+    for (i=0; i<(CCMAP_BITS_PER_PAGE/8); i++) {
+      unsigned char val = 0;
+      for (int j=0; j<8; j++) {
+        if (CCMAP_HAS_CHAR(aCCMap, pagechar)) {
+          val |= 1 << j;
+        }
+        pagechar++;
+      }
+      printf("%02x", val);
+    }
+    printf("\n");
+  }
+}
+#endif
+
 
 #define EXTENDED_UNICODE_PLANES    16
 

@@ -67,7 +67,12 @@ extern PRUint16* CreateEmptyCCMap();
 extern PRUint16* MapToCCMap(PRUint32* aMap);
 extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
 extern void FreeCCMap(PRUint16* &aMap);
+extern PRBool NextNonEmptyCCMapPage(PRUint16 *, PRUint16 *);
 extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
+#ifdef DEBUG
+void printCCMap(PRUint16* aCCMap);
+#endif
+
 
 // surrogate support extension
 extern PRUint16*
@@ -290,6 +295,7 @@ protected:
 #define CCMAP_TOTAL_PAGES    CCMAP_POW2(CCMAP_BITS_PER_UPPER_LOG2 \
                                        +CCMAP_BITS_PER_MID_LOG2)
 
+#define CCMAP_BEGIN_AT_START_OF_MAP 0xFFFF
 
 //
 // Finally, build up the macro to test the bit for a given char
