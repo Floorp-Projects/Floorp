@@ -1,15 +1,19 @@
-/*
- * IENUMFE.H
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Definitions of a template IDataObject interface implementation.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Copyright (c)1993-1994 Microsoft Corporation, All Right Reserved
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * Kraig Brockschmidt, Software Design Engineer
- * Microsoft Systems Developer Relations
- *
- * Internet  :  kraigb@microsoft.com
- * Compuserve:  >INTERNET:kraigb@microsoft.com
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
 
@@ -33,16 +37,15 @@ typedef class CEnumFormatEtc *LPCEnumFormatEtc;
 class CEnumFormatEtc : public IEnumFORMATETC
     {
     private:
-        ULONG           m_cRef;     //Object reference count
-        LPUNKNOWN       m_pUnkRef;  //IUnknown for ref counting
-        ULONG           m_iCur;     //Current element
-        ULONG           m_cfe;      //Number of FORMATETCs in us
-        LPFORMATETC     m_prgfe;    //Source of FORMATETCs
-        ULONG           m_maxcfe;   // Max number of us
+        ULONG           mRefCnt;      // Object reference count
+        ULONG           mCurrentInx;  // Current element
+        ULONG           mNumFEs;      // Number of FORMATETCs in us
+        LPFORMATETC     mFEList;      // Source of FORMATETCs
+        ULONG           mMaxNumFEs;   // Max number of us
 
     public:
-        CEnumFormatEtc(LPUNKNOWN, ULONG, LPFORMATETC);
-        CEnumFormatEtc(LPUNKNOWN, ULONG aMaxSize);
+        CEnumFormatEtc(ULONG, LPFORMATETC);
+        CEnumFormatEtc(ULONG aMaxSize);
         ~CEnumFormatEtc(void);
 
         //IUnknown members that delegate to m_pUnkOuter.
