@@ -1436,7 +1436,7 @@ nsRenderingContextXP::GetBoundingMetrics(const char*        aString,
     return NS_OK;
   }
 
-  XFontStruct *font_struct = mFont;
+  XFontStruct *font_struct = mCurrentFont;
   XCharStruct overall;
   int direction, font_ascent, font_descent;
 
@@ -1500,9 +1500,8 @@ FoundFont:
     // XXX avoid this test by duplicating code -- erik
     if (prevFont) {
       if (currFont != prevFont) {
-        nsFontMetricsXP::GetBoundingMetrics(prevFont,
-                                         (const PRUnichar*) &aString[start],
-                                         i - start, rawbm);
+        prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                     i - start, rawbm);
         if (firstTime) {
           firstTime = PR_FALSE;
           aBoundingMetrics = rawbm;
@@ -1520,9 +1519,8 @@ FoundFont:
     }
   }
   if (prevFont) {
-    nsFontMetricsXP::GetBoundingMetrics(prevFont,
-                                         (const PRUnichar*) &aString[start],
-                                         i - start, rawbm);
+    prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                 i - start, rawbm);
     if (firstTime) {
       aBoundingMetrics = rawbm;
     }
