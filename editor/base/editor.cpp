@@ -34,7 +34,6 @@
 #include "nsITransactionManager.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
-#include "nsISelection.h"
 #include "nsIDOMSelection.h"
 #include "nsICollection.h"
 #include "nsIEnumerator.h"
@@ -714,32 +713,13 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aParent,
   return result;
 }
 
-//
-// Convenience routine since we use it here and there
-//
-static nsCOMPtr<nsIDOMSelection>
-getDOMSelection(nsIPresShell* presShell)
-{
-  nsCOMPtr<nsIDOMSelection> selection;  // will be the return value
-
-  nsresult result;
-  nsCOMPtr<nsISelection> frameSelection;
-  result = presShell->GetSelection(getter_AddRefs(frameSelection));
-  if ((!NS_SUCCEEDED(result)) || !frameSelection)
-    return selection;
-
-  frameSelection->QueryInterface(kIDOMSelectionIID,
-                                          getter_AddRefs(selection));
-
-  return selection;
-}
-
 nsresult 
 nsEditor::InsertText(const nsString& aStringToInsert)
 {
   nsresult result;
-  nsCOMPtr<nsIDOMSelection> selection = getDOMSelection(mPresShell);
-  if (selection)
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection)
   {
     PRBool collapsed;
     result = selection->IsCollapsed(&collapsed);
@@ -759,7 +739,7 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
                                           InsertTextTxn ** aTxn)
 {
   nsresult result;
-  nsCOMPtr<nsISelection> selection;
+  nsCOMPtr<nsIDOMSelection> selection;
   result = mPresShell->GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
@@ -857,7 +837,7 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
   {
     return result;
   }
-  nsCOMPtr<nsISelection> selection;
+  nsCOMPtr<nsIDOMSelection> selection;
   result = mPresShell->GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
@@ -929,9 +909,10 @@ nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 #else
   // XXX Warning, this should be moved to a transaction since
   // calling it this way means undo won't work.
-  nsCOMPtr<nsIDOMSelection> domSelection = getDOMSelection(mPresShell);
-  if (domSelection)
-    result = domSelection->DeleteFromDocument();
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection)
+    result = selection->DeleteFromDocument();
 #endif
 
   return result;
@@ -947,7 +928,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
   {
     return result;
   }
-  nsCOMPtr<nsISelection> selection;
+  nsCOMPtr<nsIDOMSelection> selection;
   result = mPresShell->GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {

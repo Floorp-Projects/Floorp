@@ -9,6 +9,7 @@ nsIDocumentObserver.h
 nsIDOMSelection.h
 nsIFocusTracker.h
 nsIFrame.h
+nsIFrameSelection.h
 nsIFrameUtil.h
 nsIFrameImageLoader.h
 nsINameSpace.h
@@ -17,7 +18,6 @@ nsIPageSequenceFrame.h
 nsIPresContext.h
 nsIPresShell.h
 nsIReflowCommand.h
-nsISelection.h
 nsISpaceManager.h
 nsLayoutAtoms.h
 nsStyleCoord.h

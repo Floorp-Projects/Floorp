@@ -32,7 +32,7 @@ class nsIReflowCommand;
 class nsIDeviceContext;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
-class nsISelection;
+class nsIDOMSelection;
 class nsString;
 class nsStringArray;
 
@@ -75,10 +75,10 @@ public:
    */
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
 
-  /** GetSelection will return the selection that the presentation shell may implement.
+  /** GetSelection will return the selection in the presentation shell.
    *  @param aSelection will hold the return value
    */
-  virtual nsresult GetSelection(nsISelection **aSelection) = 0;
+  virtual nsresult GetSelection(nsIDOMSelection **aSelection) = 0;
 
   NS_IMETHOD EnterReflowLock() = 0;
 

@@ -67,7 +67,7 @@ nsresult nsMarkupDocument::CreateShell(nsIPresContext* aContext,
     return rv;
   }
 
-  if (NS_OK != shell->Init(this, aContext, aViewManager, aStyleSet)) {
+  if (NS_OK != (rv = shell->Init(this, aContext, aViewManager, aStyleSet))) {
     NS_RELEASE(shell);
     return rv;
   }
@@ -243,7 +243,7 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
 
 void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  nsISelection* sel = aConverter.GetSelection();
+  nsIDOMSelection* sel = aConverter.GetSelection();
 
   if (sel != nsnull)
   {
@@ -275,7 +275,7 @@ void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 }
 
 
-void nsMarkupDocument::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
+void nsMarkupDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
   nsDocument::CreateXIF(aBuffer,aSelection);
 }

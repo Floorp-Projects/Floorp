@@ -39,9 +39,10 @@
 #include "nsIDOMText.h"
 #include "nsDocument.h"
 #include "nsIDeviceContext.h"
-#include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
+#include "nsIDOMSelection.h"
+#include "nsIFrameSelection.h"
 #include "nsIFocusTracker.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
@@ -138,6 +139,7 @@ nsIFrame::GetLogModuleInfo()
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFocusTracker, NS_IFOCUSTRACKER_IID);
+static NS_DEFINE_IID(kIFrameSelection, NS_IFRAMESELECTION_IID);
 nsresult
 NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
 {
@@ -704,11 +706,16 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
-        nsISelection *selection = nsnull;
+        nsIDOMSelection *selection = nsnull;
         if (NS_SUCCEEDED(shell->GetSelection(&selection))){
           nsIFocusTracker *tracker;
           if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))){
-            selection->TakeFocus(tracker, this, startPos, contentOffset, PR_FALSE);
+            nsIFrameSelection *frameselection = nsnull;
+            if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection,
+                                                  (void **)&frameselection))) {
+              frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_FALSE);
+              NS_RELEASE(frameselection);
+            }
             NS_RELEASE(tracker);
           }
           NS_RELEASE(selection);
@@ -918,11 +925,15 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
-        nsISelection *selection = nsnull;
+        nsIDOMSelection *selection = nsnull;
         if (NS_SUCCEEDED(shell->GetSelection(&selection))){
           nsIFocusTracker *tracker;
-          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))){
-            selection->TakeFocus(tracker, this, startPos, contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))) {
+            nsIFrameSelection* frameselection;
+            if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+              frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+              NS_RELEASE(frameselection);
+            }
             NS_RELEASE(tracker);
           }
           NS_RELEASE(selection);

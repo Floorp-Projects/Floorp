@@ -55,7 +55,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
 #include "nsIScriptContextOwner.h"
-#include "nsISelection.h"
+#include "nsIDOMSelection.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleSet.h"
@@ -92,7 +92,7 @@ static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
-static NS_DEFINE_IID(kISelectionIID,          NS_ISELECTION_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID,       NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -402,13 +402,13 @@ public:
     NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
-    NS_IMETHOD GetSelection(nsISelection** aSelection);
+    NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
 
     NS_IMETHOD SelectAll();
 
     NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection);
+    virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
 
     virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
@@ -422,7 +422,7 @@ public:
 
     virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
 
-    virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
+    virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
 
     virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
 
@@ -498,7 +498,7 @@ protected:
     nsIScriptContextOwner* mScriptContextOwner;
     nsString*              mCharSetID;
     nsVoidArray            mStyleSheets;
-    nsISelection*          mSelection;
+    nsIDOMSelection*       mSelection;
     PRBool                 mDisplaySelection;
     nsVoidArray            mPresShells;
     nsINameSpaceManager*   mNameSpaceManager;
@@ -637,7 +637,7 @@ XULDocumentImpl::XULDocumentImpl(void)
     // construct a selection object
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
                                                     nsnull,
-                                                    kISelectionIID,
+                                                    kIDOMSelectionIID,
                                                     (void**) &mSelection)))
         PR_ASSERT(0);
 
@@ -1382,7 +1382,7 @@ XULDocumentImpl::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::GetSelection(nsISelection** aSelection)
+XULDocumentImpl::GetSelection(nsIDOMSelection** aSelection)
 {
     if (!mSelection) {
         PR_ASSERT(0);
@@ -1473,7 +1473,7 @@ XULDocumentImpl::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool 
 }
 
 void 
-XULDocumentImpl::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
+XULDocumentImpl::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
     PR_ASSERT(0);
 }
@@ -1537,7 +1537,7 @@ XULDocumentImpl::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurr
 }
 
 PRBool 
-XULDocumentImpl::IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const
+XULDocumentImpl::IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const
 {
     PRBool  result = PR_FALSE;
 

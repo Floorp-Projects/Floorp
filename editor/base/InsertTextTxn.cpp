@@ -20,7 +20,6 @@
 #include "editor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
-#include "nsISelection.h"
 #include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
@@ -48,14 +47,10 @@ nsresult InsertTextTxn::Do(void)
 {
   nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
-  nsCOMPtr<nsISelection> frameSelection;
-  res = mPresShell->GetSelection(getter_AddRefs(frameSelection));
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = mPresShell->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(res))
   {
-    nsCOMPtr<nsIDOMSelection> selection;
-    res = frameSelection->QueryInterface(kIDOMSelectionIID,
-                                          getter_AddRefs(selection));
-    if (NS_SUCCEEDED(res))
       res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
     // We know mOffset+Length should be there
     // because we just added that many characters.

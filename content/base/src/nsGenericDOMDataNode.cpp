@@ -28,7 +28,7 @@
 #include "nsSelectionRange.h"
 #include "nsRange.h"
 
-#include "nsISelection.h"
+#include "nsIDOMSelection.h"
 #include "nsIEnumerator.h"
 
 
@@ -478,7 +478,7 @@ nsresult
 nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   const nsIContent* content = mContent;
-  nsISelection* sel = aConverter.GetSelection();
+  nsIDOMSelection* sel = aConverter.GetSelection();
 
   if (sel != nsnull && mDocument->IsInSelection(sel,content))
   {
