@@ -485,23 +485,19 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
 
     // Notify the HTTPChannel that the response has completed...
     NS_ASSERTION(mChannel, "HTTPChannel is null.");
-    if (mChannel) {
+    if (mChannel)
+    {
         PRUint32 status = 0;
 
-        if (mResponse) {
+        if (mResponse)
             mResponse->GetStatus(&status);
+
+        if (!mChannel -> mCachedResponse)
+        {
+            mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
+            mChannel -> mHTTPServerListener = 0;
         }
 
-        if (status != 304) {
-            mChannel->ResponseCompleted(mResponseDataListener, 
-                                        i_Status, i_pMsg);
-            // The HTTPChannel no longer needs a reference to this object.
-            mChannel->mHTTPServerListener = 0;
-        } else {
-            PR_LOG(gHTTPLog, PR_LOG_DEBUG,
-                  ("nsHTTPServerListener::OnStopRequest [this=%x]. "
-                   "Discarding 304 response\n", this));
-        }
         PRBool keepAlive = PR_FALSE;
 
         if (mResponse)
