@@ -61,7 +61,11 @@
 extern unsigned char* _mbsrchr( const unsigned char*, int);
 #endif
 
-#if defined(XP_MAC)
+#if defined(XP_MACOSX)
+#include <sys/stat.h>
+#endif
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Aliases.h>
 #include <TextUtils.h>
 #endif
@@ -417,7 +421,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 } // nsSimpleCharString::GetLeaf
 
 
-#ifdef XP_MAC
+#if 0
 #pragma mark -
 #endif
 
@@ -496,9 +500,10 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 
 #endif // XP_UNIX || XP_WIN || XP_OS2 || XP_BEOS
 
-#ifdef XP_MAC
+#if 0
 #pragma mark -
 #endif
+
 #if defined(XP_WIN)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
@@ -667,7 +672,7 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 } // nsFileURL::operator =
 #endif
 
-#ifdef XP_MAC
+#if 0
 #pragma mark -
 #endif
 
@@ -832,7 +837,7 @@ nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 }  // nsFilePath::operator +
 
 
-#ifdef XP_MAC
+#if 0
 #pragma mark -
 #endif
 
@@ -952,6 +957,26 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
     mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
     DisposeHandle((Handle) aliasH);
     mPath.SetToEmpty();
+#elif defined(XP_MACOSX)
+    char* decodedData = PL_Base64Decode(data.get(), data.Length(), nsnull);
+    // Cast to an alias record and resolve.
+    AliasHandle aliasH = nsnull;
+    mError = NS_FILE_RESULT(::PtrToHand(decodedData, &(Handle)aliasH, (data.Length() * 3) / 4));
+    PR_Free(decodedData);
+    if (NS_FAILED(mError))
+        return; // not enough memory?
+
+    Boolean changed;
+    FSRef fileRef;
+    mError = NS_FILE_RESULT(::FSResolveAlias(nsnull, aliasH, &fileRef, &changed));
+    ::DisposeHandle((Handle) aliasH);
+
+    UInt8 pathBuf[PATH_MAX];
+    mError = NS_FILE_RESULT(::FSRefMakePath(&fileRef, pathBuf, PATH_MAX));
+    if (NS_FAILED(mError))
+      return;
+    
+    mPath = (const char*)pathBuf;
 #else
     mPath = data.get();
     mError = NS_OK;
@@ -1154,7 +1179,8 @@ PRBool nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
     // not reached, but I bet some compiler will whine
     return PR_FALSE;
 }
-#ifdef XP_MAC
+
+#if 0 
 #pragma mark -
 #endif
 
@@ -1199,6 +1225,28 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
     HLock((Handle) aliasH);
     char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
     DisposeHandle((Handle) aliasH);
+
+    mDescriptorString = buf;
+    PR_Free(buf);
+#elif  defined(XP_MACOSX)
+    if (inSpec.Error())
+        return;
+    
+    FSRef fileRef;
+    Boolean isDir;
+    OSErr err = ::FSPathMakeRef((const UInt8*)inSpec.GetCString(), &fileRef, &isDir);
+    if (err != noErr)
+        return;
+    
+    AliasHandle    aliasH;
+    err = ::FSNewAlias(nsnull, &fileRef, &aliasH);
+    if (err != noErr)
+        return;
+
+    PRUint32 bytes = ::GetHandleSize((Handle) aliasH);
+    ::HLock((Handle)aliasH);
+    char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
+    ::DisposeHandle((Handle) aliasH);
 
     mDescriptorString = buf;
     PR_Free(buf);
@@ -1301,6 +1349,7 @@ NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result)
         file = do_QueryInterface(psmAppMacFile, &rv);
     }
 #else
+    // XP_MACOSX: do this for OS X to preserve long filenames
     rv = file->InitWithNativePath(nsDependentCString(fileSpec->GetNativePathCString()));
 #endif
     if (NS_FAILED(rv)) return rv;
