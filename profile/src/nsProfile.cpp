@@ -51,6 +51,8 @@
 #ifdef XP_UNIX
 #define USER_ENVIRONMENT_VARIABLE "USER"
 #define HOME_ENVIRONMENT_VARIABLE "HOME"
+#define PROFILE_NAME_ENVIRONMENT_VARIABLE "PROFILE_NAME"
+#define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
 #endif
 
 #ifndef NECKO
@@ -2065,8 +2067,13 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		}
 	}
 #else
-    char *unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
-    char *unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
+    char *unixProfileName = PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE);
+    char *unixProfileDirectory = PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE);
+	
+    if (!unixProfileName || !unixProfileDirectory || (PL_strlen(unixProfileName) == 0) || (PL_strlen(unixProfileDirectory) == 0)) {
+	    char *unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
+	    char *unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
+    }
 
     if (unixProfileName && unixProfileDirectory) {
 	PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(unixProfileName));
