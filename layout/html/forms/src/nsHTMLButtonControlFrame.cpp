@@ -304,9 +304,26 @@ nsHTMLButtonControlFrame::IsReset(PRInt32 type)
 }
 
 PRBool
-nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
+nsHTMLButtonControlFrame::IsSubmit(nsIPresContext* aPresContext, PRInt32 type)
 {
-  if (NS_FORM_BUTTON_SUBMIT == type) {
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+  if (eCompatibility_Standard == mode && mContent != nsnull) {
+    // The default type for a html4 button is NS_FORM_BUTTON_BUTTON, 
+    // but that does not mean that the type was actually set to "button"
+    // so we need to check here to see if a type was actually set
+    // and oif it wasn't explicitly then we we allow to be a submit
+    if (NS_FORM_BUTTON_BUTTON == type) {
+      nsAutoString type;
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type)) {
+        return PR_FALSE;
+      } else {
+        return PR_TRUE;
+      }
+    }
+  }
+
+  if (NS_FORM_BUTTON_SUBMIT == type || NS_FORM_INPUT_SUBMIT == type) {
     return PR_TRUE;
   } else {
     return PR_FALSE;
@@ -337,7 +354,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
           mFormFrame->OnReset(aPresContext);
         }
       }
-      else if (IsSubmit(type) == PR_TRUE) {
+      else if (IsSubmit(aPresContext, type) == PR_TRUE) {
         event.message = NS_FORM_SUBMIT;
         presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
         if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
@@ -658,18 +675,37 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
               focusPadding.top + aReflowState.mComputedBorderPadding.top,
               0, aStatus);
 
+  // calculate the min internal size so the contents gets centered correctly
+  nscoord minInternalWidth  = aReflowState.mComputedMinWidth  == 0?0:aReflowState.mComputedMinWidth - 
+    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  nscoord minInternalHeight = aReflowState.mComputedMinHeight == 0?0:aReflowState.mComputedMinHeight - 
+    (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+
   // center child vertically
   nscoord yoff = 0;
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
     yoff = (aReflowState.mComputedHeight - aDesiredSize.height)/2;
-    if (yoff < 0)
-        yoff = 0;
+    if (yoff < 0) {
+      yoff = 0;
+    }
+  } else if (aDesiredSize.height < minInternalHeight) {
+    yoff = (minInternalHeight - aDesiredSize.height) / 2;
   }
 
+  // center child horizontally
+  nscoord xoff = 0;
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
+    xoff = (aReflowState.mComputedWidth - aDesiredSize.width)/2;
+    if (xoff < 0) {
+      xoff = 0;
+    }
+  } else if (aDesiredSize.width < minInternalWidth) {
+    xoff = (minInternalWidth - aDesiredSize.width) / 2;
+  }
 
   // Place the child
   FinishReflowChild(firstKid, aPresContext, aDesiredSize,
-                    focusPadding.left + aReflowState.mComputedBorderPadding.left,
+                    xoff + focusPadding.left + aReflowState.mComputedBorderPadding.left,
                     yoff + focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 
 #if 0 // old way
@@ -716,6 +752,20 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
+  // Make sure we obey min/max-width and min/max-height
+  if (aDesiredSize.width > aReflowState.mComputedMaxWidth) {
+    aDesiredSize.width = aReflowState.mComputedMaxWidth;
+  }
+  if (aDesiredSize.width < aReflowState.mComputedMinWidth) {
+    aDesiredSize.width = aReflowState.mComputedMinWidth;
+  } 
+
+  if (aDesiredSize.height > aReflowState.mComputedMaxHeight) {
+    aDesiredSize.height = aReflowState.mComputedMaxHeight;
+  }
+  if (aDesiredSize.height < aReflowState.mComputedMinHeight) {
+    aDesiredSize.height = aReflowState.mComputedMinHeight;
+  }  
   aStatus = NS_FRAME_COMPLETE;
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
