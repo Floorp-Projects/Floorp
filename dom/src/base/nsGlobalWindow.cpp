@@ -4549,10 +4549,23 @@ NS_IMETHODIMP NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
   nsCOMPtr<nsIHTTPProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    // sorry for the #if platform ugliness, but Communicator is likewise hardcoded
+    // and we're seeking backward compatibility here (bug 47080)
+#if defined(WIN32)
+    aPlatform = NS_LITERAL_STRING("Win32");
+#elif defined(XP_MAC)
+    // XXX not sure what to do about Mac OS X on non-PPC, but since Comm 4.x
+    // doesn't know about it this will actually be backward compatible
+    aPlatform = NS_LITERAL_STRING("MacPPC");
+#else
+    // XXX Communicator uses compiled-in build-time string defines
+    // to indicate the platform it was compiled *for*, not what it is
+    // currently running *on* which is what this does.
     PRUnichar *plat = nsnull;
-    res = service->GetPlatform(&plat);
+    res = service->GetOscpu(&plat);
     aPlatform = plat;
     Recycle(plat);
+#endif
   }
 
   return res;
