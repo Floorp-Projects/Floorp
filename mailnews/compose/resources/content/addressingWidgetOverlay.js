@@ -157,7 +157,8 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
 		//We need to set the value using both setAttribute and .value else we will
 		// loose the content when the field is not visible. See bug 37435
 	    input[0].setAttribute("value", inputValue);
-	    input[0].value = inputValue;
+		//comment this out as a workaround for bug #41143
+	    //input[0].value = inputValue;
 	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
 	}
     var select = newNode.getElementsByTagName(awSelectElementName());
@@ -258,7 +259,8 @@ function awAppendNewRow(setFocus)
 			//We need to set the value using both setAttribute and .value else we will
 			// loose the content when the field is not visible. See bug 37435
    			input[0].setAttribute("value", "");
-   			input[0].value = "";
+			//comment this out as a workaround for bug #41143
+			//input[0].value = "";
     	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
     	}
         var select = newNode.getElementsByTagName(awSelectElementName());
