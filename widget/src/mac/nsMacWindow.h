@@ -20,6 +20,7 @@
 
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
+#include "memory"	// for auto_ptr
 
 class nsMacEventHandler;
 
@@ -88,7 +89,7 @@ public:
 
 protected:
 	PRBool							mWindowMadeHere;	// true if we created the window
-	nsMacEventHandler*	mMacEventHandler;
+	auto_ptr<nsMacEventHandler>		mMacEventHandler;
 };
 
 
