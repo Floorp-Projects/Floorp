@@ -1322,6 +1322,22 @@ nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
   return NS_STYLE_HINT_FRAMECHANGE;
 }
 
+nsresult nsStyleContent::AllocateContents(PRUint32 aCount)
+{
+  if (aCount != mContentCount) {
+    DELETE_ARRAY_IF(mContents);
+    if (aCount) {
+      mContents = new nsStyleContentData[aCount];
+      if (! mContents) {
+        mContentCount = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    mContentCount = aCount;
+  }
+  return NS_OK;
+}
+
 // ---------------------
 // nsStyleQuotes
 //
