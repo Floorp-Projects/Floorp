@@ -35,12 +35,12 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNNTPHost.cpp					\
 			$(NULL)
 
-CPP_OBJS=   nsNNTPProtocol.obj				\
-			nsNntpUrl.obj					\
-			nsNNTPArticleSet.obj			\
-			nsNNTPArticleList.obj			\
-			nsNNTPNewsgroupList.obj			\
-			nsNNTPHost.obj					\
+CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
+			.\$(OBJDIR)\nsNntpUrl.obj					\
+			.\$(OBJDIR)\nsNNTPArticleSet.obj			\
+			.\$(OBJDIR)\nsNNTPArticleList.obj			\
+			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
+			.\$(OBJDIR)\nsNNTPHost.obj					\
 			$(NULL)
 
 
