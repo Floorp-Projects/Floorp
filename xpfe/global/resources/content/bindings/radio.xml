@@ -56,8 +56,12 @@
         </getter>
         <setter>
         <![CDATA[
-          if (this.getAttribute("focused") == "true")
+          var alreadySelected = val.getAttribute("selected") == "true";
+          var focused = false;
+          if (this.getAttribute("focused") == "true") {
             val.setAttribute("focused", "true");
+            focused = true;
+          }
 
           val.setAttribute("selected", "true");
           this.value = val.value;
@@ -70,13 +74,17 @@
               children[i].removeAttribute("focused");
             }
           }
+
           var event = document.createEvent("Events");
           event.initEvent("select", false, true);
           this.dispatchEvent(event);
 
-          var myEvent = document.createEvent("Events");
-          myEvent.initEvent("RadioStateChange", true, true);
-          val.dispatchEvent(myEvent);
+          if (!alreadySelected && focused) {
+            // Only report if actual change
+            var myEvent = document.createEvent("Events");
+            myEvent.initEvent("RadioStateChange", true, true);
+            val.dispatchEvent(myEvent);
+          }
 
           return val;
         ]]>
