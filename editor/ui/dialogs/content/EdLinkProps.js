@@ -324,9 +324,9 @@ function FillListboxes()
 
 function ChangeText()
 {
-  var enable = dialog.hrefInput.value.trimString().length > 0;
+  // We disable Ok button when there's no href text only if inserting a new link
+  var enable = insertNew ? (dialog.hrefInput.value.trimString().length > 0) : true;
   SetElementEnabledById( "ok", enable);
-  SetElementEnabledById("MakeRelativeUrl", enable);
 }
 
 var gClearListSelections = true;
