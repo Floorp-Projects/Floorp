@@ -10,9 +10,6 @@ toolkit.jar:
 
 classic.jar:
   skin/classic/mozapps/downloads/unknownContentType.css     (downloads/skin/unknownContentType.css)
-  skin/classic/mozapps/pref/pref.css                        (pref/skin/pref.css)
-  skin/classic/mozapps/pref/dot.gif                         (pref/skin/dot.gif)
-  skin/classic/mozapps/pref/check.gif                       (pref/skin/check.gif)
   skin/classic/mozapps/contents.rdf                         (contents-skin.rdf)
 
 en-US.jar:

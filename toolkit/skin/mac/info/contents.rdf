@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+  <!-- List all the skins being supplied by this theme -->
+  <RDF:Seq about="urn:mozilla:skin:root">
+    <RDF:li resource="urn:mozilla:skin:pinstripe3" />
+  </RDF:Seq>
+
+  <!-- classic Information -->
+  <RDF:Description about="urn:mozilla:skin:pinstripe3"
+        chrome:displayName="Pinstripe3"
+        chrome:accessKey="S"
+        chrome:author="webmail@kmgerich.com"
+        chrome:description="Pinstripe 3 Preview."
+        chrome:name="pinstripe3"
+        chrome:image="preview.png">
+    <chrome:packages>
+      <RDF:Seq about="urn:mozilla:skin:pinstripe3:packages">
+        <RDF:li resource="urn:mozilla:skin:pinstripe3:global"/>
+	<RDF:li resource="urn:mozilla:skin:pinstripe3:browser"/>
+	<RDF:li resource="urn:mozilla:skin:pinstripe3:mozapps"/>      
+     </RDF:Seq>
+    </chrome:packages>
+  </RDF:Description>
+
+  <!-- Version Information.  State that we work only with major version 1 of this
+       package. -->
+  <RDF:Description chrome:skinVersion="1.5" about="urn:mozilla:skin:pinstripe3:global"/>
+  <RDF:Description chrome:skinVersion="1.5" about="urn:mozilla:skin:pinstripe3:browser"/>
+<RDF:Description chrome:skinVersion="1.5" about="urn:mozilla:skin:pinstripe3:mozapps"/>
+</RDF:RDF>

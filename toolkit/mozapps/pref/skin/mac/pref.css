@@ -1,4 +1,5 @@
-# ***** BEGIN LICENSE BLOCK *****
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -11,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is Mozilla.org Code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Doron Rosenberg.
+# Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
+#   Ben Goodger <ben@netscape.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,46 +35,67 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+*/
 
-DEPTH     = ..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+.listBox {
+  margin: 2px 4px;  border-top: 1px solid #A1A1A1 !important;
+  border-right: 1px solid #C3C3C3 !important;
+  border-bottom: 1px solid #DDDDDD !important;
+  border-left: 1px solid #C3C3C3 !important;
+  background-color: #FFFFFF;  color: -moz-FieldText;
+}
 
-include $(DEPTH)/config/autoconf.mk
+.indent {
+  margin-left: 23px;
+  margin-right: 23px;
+}
 
-DIRS	= xre components mozapps
+.small-indent {
+  margin-left: 15px; 
+}
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# XXXben this is temporary, until Thunderbird is converted to Pinstripe on MacOS X. For now, 
-#        continue to use Qute. 
-ifdef MOZ_THUNDERBIRD
-DIRS    += skin/win skin/mac/obsolete
-else
-# Use Pinstripe on MacOS X
-DIRS	+= skin/mac
-endif
-else
-# Use Qute on Windows and Linux
-DIRS    += skin/win 
-endif
+.uniWidthButton {
+  min-width: 8em;
+}
 
-CHROME_DEPS	= locale/build.dtd content/buildconfig.html
+/** Privacy/Advanced Panels Expander Boxes **/
+.settingsBox {
+  margin: 5px;
+  padding: 5px;
+}
 
-include $(topsrcdir)/config/rules.mk
+#fileExtension {
+  width: 5em; 
+}
 
-GARBAGE	+= locale/build.dtd
+#fileExtension.pluginsList {
+  width: 5.5em; 
+}
 
-locale/build.dtd: locale/build.dtd.in $(DEPTH)/config/build_number
-	@$(RM) -f $@
-	@if test ! -d locale; then mkdir locale; fi
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/locale/build.dtd.in
+#typeIcon, 
+.extensionChildren::-moz-tree-image(fileExtension),
+.pluginTypesChildren::-moz-tree-image(fileExtension) {
+  margin: 0px 5px 0px 0px;
+}
 
-distclean::
-	$(RM) -f content/buildconfig.html
+.pluginTypesChildren::-moz-tree-image(pluginEnabled) {
+  margin: 0px 5px 0px 0px;
+  list-style-image: url(chrome://mozapps/skin/pref/dot.gif);  
+}
 
-# skin/unix contains css rules that more closely match gtk widgets
-### killing this for now until we know how qute looks on linux
-# ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-# DIRS	+= skin/unix
-# endif
+.pluginTypesChildren::-moz-tree-image(pluginEnabled, enabled) {
+  margin: 0px 5px 0px 0px;
+  list-style-image: url(chrome://mozapps/skin/pref/check.gif);  
+}
+
+.biggerIndent {
+  margin-left: 28px; 
+}
+
+#typeField {
+  font-weight: bold; 
+}
+
+#defaultAppName {
+  margin-left: 6px !important; 
+}
