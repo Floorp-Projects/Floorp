@@ -118,10 +118,11 @@ STRIP_FLAGS	= -g
 PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "mozilla-bin"
 endif
 ifeq ($(OS_ARCH),OS2)
-STRIP		= dllrname.exe
-STRIP_FLAGS	= cpprmi36=mozrmi36
+STRIP		= $(srcdir)/os2/strip.cmd
+STRIP_FLAGS	=
 OSPACKAGE	= os2
 TAR_CREATE_FLAGS = -cvf
+PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
 $(PACKAGE): $(MOZILLA_BIN)
