@@ -643,8 +643,8 @@ SignFile (FILE *outFile, FILE *inFile, CERTCertificate *cert)
     }
 
 	if(password) {
-		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, password_hardcode,
-			NULL);
+		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, 
+			(SECKEYGetPasswordKey) password_hardcode, NULL);
 	} else {
 		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, NULL,
 			NULL);
