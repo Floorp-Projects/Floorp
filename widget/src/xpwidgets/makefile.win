@@ -62,7 +62,7 @@ LINCS=                                  \
 	-I..\windows               \
 	-I$(PUBLIC)\dom                 \
 	-I$(PUBLIC)\js				\
-	-I$(PUBLIC)\network				\
+	-I$(PUBLIC)\network	-I$(PUBLIC)\netlib	\
 	$(NULL)
 
 LCFLAGS =                               \
