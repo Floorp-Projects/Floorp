@@ -68,10 +68,6 @@ public:
   NS_IMETHOD    Close()=0;
 
   NS_IMETHOD    Exit()=0;
-
-  NS_IMETHOD    SetDisableCallback(const nsString& aScript)=0;
-
-  NS_IMETHOD    SetEnableCallback(const nsString& aScript)=0;
 };
 
 
@@ -93,8 +89,6 @@ public:
   NS_IMETHOD    Print();  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Exit();  \
-  NS_IMETHOD    SetDisableCallback(const nsString& aScript);  \
-  NS_IMETHOD    SetEnableCallback(const nsString& aScript);  \
 
 
 
@@ -116,8 +110,6 @@ public:
   NS_IMETHOD    Print() { return _to##Print(); }  \
   NS_IMETHOD    Close() { return _to##Close(); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
-  NS_IMETHOD    SetDisableCallback(const nsString& aScript) { return _to##SetDisableCallback(aScript); }  \
-  NS_IMETHOD    SetEnableCallback(const nsString& aScript) { return _to##SetEnableCallback(aScript); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
