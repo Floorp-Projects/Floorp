@@ -1320,7 +1320,7 @@ nsAutoString    fontFamily;
   mStates->mFontMetrics = mFontMetrics;
 
   // get the fontfamily we are using, not what we want, but what we are using
-  fontFamily.SetString(((nsFontMetricsPS*)mFontMetrics)->mAFMInfo->mPSFontInfo->mFamilyName);
+  fontFamily.AssignWithConversion(((nsFontMetricsPS*)mFontMetrics)->mAFMInfo->mPSFontInfo->mFamilyName);
   fontIndex = ((nsFontMetricsPS*)mFontMetrics)->GetFontIndex();
 
   mPSObj->setscriptfont(fontIndex,fontFamily,fontHeight,font->style,font->variant,font->weight,font->decorations);
