@@ -1914,7 +1914,7 @@ if test "$GNU_CXX"; then
   AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
   [echo "int main() { return 0; }" | cat > conftest.C
 
-  ${CXX-g++} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
+  ${CXX-g++} ${CXXFLAGS} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
 
   if egrep "warning.*renamed" conftest.out >/dev/null; then
     ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-exceptions
@@ -1929,10 +1929,8 @@ if test "$GNU_CXX"; then
 fi
 
 dnl Put your C++ language/feature checks below
-dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
-_SAVE_CC=$CC
-CC=$CXX
-ac_ext=C
+AC_LANG_CPLUSPLUS
+
 AC_MSG_CHECKING(for ios::binary)
 AC_CACHE_VAL(ac_cv_ios_binary,
  [AC_TRY_COMPILE([#include <iostream.h>]
@@ -2102,10 +2100,8 @@ if test "$ac_cv_cpp_unused_required" = yes ; then
    AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 fi
 
-CC=$_SAVE_CC
-ac_ext=c
-
 dnl End of C++ language/feature checks
+AC_LANG_C
 
 dnl ========================================================
 dnl =
