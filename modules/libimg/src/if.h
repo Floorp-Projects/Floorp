@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.26 2000/10/28 22:15:50 warren%netscape.com Exp $
+ * $Id: if.h,v 3.27 2001/03/20 05:30:59 cls%seawood.org Exp $
  */
 
 #ifndef _if_h
@@ -74,11 +74,11 @@ typedef struct il_container_struct il_container;
 
 #ifdef DEBUG
 extern int il_debug;
-extern PRLogModuleInfo *il_log_module;
 #define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
 #else
 #define ILTRACE(l,t) {}
 #endif
+extern PRLogModuleInfo *il_log_module;
 
 #define FREE_IF_NOT_NULL(x)    do {if (x) {PR_FREEIF(x); (x) = NULL;}} while (0)
 

@@ -42,7 +42,6 @@
 static PRUint32 image_cache_size;
 static PRUint32 max_cache_items = 192;
 
-PRLogModuleInfo *il_log_module = NULL;
 ilISystemServices *il_ss = NULL;
 
 /* simple list, in use order */

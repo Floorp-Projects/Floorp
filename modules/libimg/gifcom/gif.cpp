@@ -77,8 +77,13 @@ mailing address.
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
 
-int il_debug;
-PRLogModuleInfo *il_log_module = NULL;
+#ifdef DEBUG
+static int il_debug_gif = 0;
+static PRLogModuleInfo *il_log_module_gif = NULL;
+#define ILTRACE(l,t) { if(il_debug_gif>l) {PR_LOG(il_log_module_gif, 1, t);} } 
+#else
+#define ILTRACE(l,t) {}
+#endif
 
 #ifndef MAX
 #    define MAX(x, y)   (((x) > (y)) ? (x) : (y))

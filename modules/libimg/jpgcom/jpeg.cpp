@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.26 2001/02/18 01:05:42 tor%cs.brown.edu Exp $
+ *    $Id: jpeg.cpp,v 1.27 2001/03/20 05:30:52 cls%seawood.org Exp $
  */
 
 
@@ -64,8 +64,13 @@ PR_END_EXTERN_C
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
-int il_debug;
-PRLogModuleInfo *il_log_module = NULL;
+#ifdef DEBUG
+static int il_debug_jpg = 0;
+static PRLogModuleInfo *il_log_module_jpg = NULL;
+#define ILTRACE(l,t) { if(il_debug_jpg>l) {PR_LOG(il_log_module_jpg, 1, t);} } 
+#else
+#define ILTRACE(l,t) {}
+#endif
 
 /*
  * States that the jpeg decoder might be in

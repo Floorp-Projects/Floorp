@@ -50,6 +50,7 @@ int il_debug=100;
 #else
 int il_debug=0;
 #endif
+PRLogModuleInfo *il_log_module = NULL;
 
 /* Global list of image group contexts. */
 static IL_GroupContext *il_global_img_cx_list = NULL;
