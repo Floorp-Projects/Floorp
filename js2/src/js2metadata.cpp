@@ -3091,8 +3091,13 @@ doUnary:
             reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
             break;
         case StaticMember::Variable:
-            *rval = (checked_cast<Variable *>(m))->value;
-            return true;
+            {
+                Variable *v = checked_cast<Variable *>(m); 
+                if ((phase == CompilePhase) && !v->immutable)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                *rval = v->value;
+                return true;
+            }
         case StaticMember::HoistedVariable:
             if (phase == CompilePhase) 
                 reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());

@@ -92,6 +92,7 @@ public:
     void mark();
     
     uint8 *getCodeStart()                   { return mBuffer.begin(); }
+    uint8 *getCodeEnd()                     { return mBuffer.begin() + mBuffer.size(); }
 
     typedef std::pair<uint16, size_t> MapEntry;
     std::vector<MapEntry> pcMap;

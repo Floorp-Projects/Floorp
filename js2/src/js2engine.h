@@ -139,14 +139,15 @@ enum JS2Op {
 
 };
 
-int getStackEffect(JS2Op op);
-
 
 class Frame;
 class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
 class JS2Class;
+
+int getStackEffect(JS2Op op);
+void dumpBytecode(BytecodeContainer *bCon);
 
 class JS2Engine {
 public:

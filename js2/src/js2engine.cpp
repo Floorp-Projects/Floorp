@@ -382,9 +382,9 @@ namespace MetaData {
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
     }
 
-#ifdef NYI_DEBUG
+#ifdef DEBUG
 
-    enum { BRANCH_OFFSET = 1, STR_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16 };
+    enum { BRANCH_OFFSET = 1, STR_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64 };
     struct {
         JS2Op op;
         char *name;
@@ -416,8 +416,8 @@ namespace MetaData {
         { eTrue,  "True", 0 },
         { eFalse,  "False", 0 },
         { eNull,  "Null", 0 },
-        { eNumber,  "Number", 0 },
-        { eRegExp,  "RegExp", 0 },
+        { eNumber,  "Number", FLOAT64 },
+        { eRegExp,  "RegExp", U16 },
         { eUInt64,  "UInt64", 0 },
         { eInt64,  "Int64", 0 },
         { eString,  "String", STR_PTR },            // <string pointer:u32>
@@ -484,10 +484,65 @@ namespace MetaData {
 
     };
 
-    void dumpBytecode(uint8 *start, uint8 *end)
+    void dumpBytecode(BytecodeContainer *bCon)
     {
+        uint8 *start = bCon->getCodeStart();
+        uint8 *end = bCon->getCodeEnd();
         uint8 *pc = start;
-        while () {
+        while (pc < end) {
+            printFormat(stdOut, "%.4d ", pc - start);
+            stdOut << opcodeData[*pc].name;
+            switch (opcodeData[*pc++].flags) {
+            case BRANCH_OFFSET:
+                {
+                    int32 offset = BytecodeContainer::getOffset(pc);
+                    stdOut << " " << offset << " --> " << (pc - start) + offset;
+                    pc += sizeof(int32);
+                }
+                break;
+            case STR_PTR:
+                {
+                    uint16 index = BytecodeContainer::getShort(pc);
+                    stdOut << "\"" << bCon->mStringList[index] << "\"";
+                    pc += sizeof(short);
+                }
+                break;
+            case NAME_INDEX:
+                {
+                    Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+                    stdOut << " " << *mn->name;
+                    pc += sizeof(short);
+                }
+                break;
+            case FRAME_INDEX:
+                {
+                    pc += sizeof(short);
+                }
+                break;
+            case BRANCH_PAIR:
+                {
+                    int32 offset1 = BytecodeContainer::getOffset(pc);
+                    pc += sizeof(int32);
+                    int32 offset2 = BytecodeContainer::getOffset(pc);
+                    pc += sizeof(int32);
+                    if (offset1 == NotALabel)
+                        stdOut << "no finally; ";
+                    else
+                        stdOut << "(finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
+                    if (offset2 == -1)
+                        stdOut << "no catch;";
+                    else
+                        stdOut << "(catch) " << offset2 << " --> " << (pc - start) + offset2;
+                }
+                break;
+            case FLOAT64:
+                {
+                    stdOut << " " << BytecodeContainer::getFloat64(pc);
+                    pc += sizeof(float64);
+                }
+                break;
+            }
+            stdOut << "\n";
         }
     }
 

@@ -209,6 +209,30 @@ js2val print(JS2Metadata * /* meta */, const js2val /* thisValue */, js2val argv
     return JS2VAL_UNDEFINED;
 }
 
+#ifdef DEBUG
+js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+{
+    if (argc) {
+        if (JS2VAL_IS_OBJECT(argv[0])) {
+            JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
+            if ((((fObj->kind == FixedInstanceKind) || (fObj->kind == DynamicInstanceKind))
+                        && (meta->objectType(argv[0]) == meta->functionClass))) {
+                FunctionWrapper *fWrap;
+                if (fObj->kind == FixedInstanceKind)
+                    fWrap = (checked_cast<FixedInstance *>(fObj))->fWrap;
+                else
+                    fWrap = (checked_cast<DynamicInstance *>(fObj))->fWrap;
+                if (fWrap->code)
+                    stdOut << "<native code>\n";
+                else
+                    dumpBytecode(fWrap->bCon);
+            }
+        }
+    }
+    return JS2VAL_UNDEFINED;
+}
+#endif
+
 js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     // Set the environment to global object and system frame so that the
@@ -244,7 +268,9 @@ int main(int argc, char **argv)
     metadata = new MetaData::JS2Metadata(world);
     metadata->addGlobalObjectFunction("print", print);
     metadata->addGlobalObjectFunction("load", load);
-
+#ifdef DEBUG
+    metadata->addGlobalObjectFunction("dump", dump);
+#endif
 
     try {
         bool doInteractive = true;
