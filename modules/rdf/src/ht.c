@@ -6962,16 +6962,8 @@ HT_Properties (HT_Resource node)
 		{
 			context = gRDFMWContext();
 		}
-		if (node->parent == NULL)
-		{
-			XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
-				RDF_MAIN_TITLE, strings, node, PR_FALSE);
-		}
-		else
-		{
-			XP_MakeHTMLDialog(context, &rdfPropDialogInfo,
-				RDF_MAIN_TITLE, strings, node, PR_FALSE);
-		}
+		XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
+			RDF_MAIN_TITLE, strings, node, PR_FALSE);
 	}
 	else
 	{
