@@ -164,10 +164,11 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
            *aSrcLength -= srclen;
            *aDestLength = validlen;
            return NS_ERROR_ILLEGAL_INPUT;
+         } else {
+           *dest= NOMAPPING;
          }
          if(scanlen == 0)
             scanlen = 1;
-         *dest= NOMAPPING;
       }
   }
   *aSrcLength -= srclen;
