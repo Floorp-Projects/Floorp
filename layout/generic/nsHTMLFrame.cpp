@@ -67,7 +67,7 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
-    aBase = PR_FALSE;
+    aBase = PR_TRUE;
     return NS_OK;
   }
 
