@@ -69,7 +69,7 @@ sub show_graph {
 				set timefmt "%Y:%m:%d:%H:%M:%S"
 				set yrange [ 0 : ]
 				set xdata time
-				set ylabel "Startup time (msec.)"
+				set ylabel "XUL Window Open time (msec.)"
 				set timestamp "Generated: %d/%b/%y %H:%M" 0,0 
 				set format x "%h %d"
 				set grid
