@@ -41,7 +41,7 @@ $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
-$results_server           = "tegu.mozilla.org";
+$results_server           = "axolotl.mozilla.org"; # was tegu
 $pageload_server          = "spider";  # localhost
 
 #
