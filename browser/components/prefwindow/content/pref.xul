@@ -116,6 +116,7 @@
     var button = prefsCategories.childNodes[lastPanel];
     document.getElementById("panelFrame").setAttribute("src", button.getAttribute("url"));
     button.focus();
+    button.click();
   ]]>
   </script>
   
