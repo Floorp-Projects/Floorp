@@ -100,6 +100,9 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     delete [] colWidths;
     return PR_FALSE;
   }
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
   nsCRT::memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
   nscoord percTotal = 0;
@@ -145,8 +148,8 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
         // Get fixed cell width if available
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-          colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;
-                 colFrame->SetWidth(MIN_CON, colWidths[colX]);
+          colWidths[colX] = nsTableFrame::RoundToPixel(cellPosition->mWidth.GetCoordValue() / colSpan, p2t);
+          colFrame->SetWidth(MIN_CON, colWidths[colX]);
         }
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
                  (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
