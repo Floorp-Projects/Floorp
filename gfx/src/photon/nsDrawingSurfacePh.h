@@ -84,7 +84,7 @@ public:
   /* Is this Drawing Surface Active? */
   PRBool      IsActive();
   void *GetDrawContext(void);
-
+   void GetSize(PRUint32 *aWidth, PRUint32 *aHeight) { *aWidth = mWidth; *aHeight = mHeight;}
 public:
   PRUint32			mWidth;
   PRUint32			mHeight;
@@ -106,6 +106,7 @@ private:
   PRUint32			mLockHeight;
   PRUint32			mLockFlags;
   PRBool			mLocked;
+  static int    prefChanged(const char* aPref, void* aClosure);
 };
 
 #endif

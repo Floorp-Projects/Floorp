@@ -107,17 +107,22 @@ void nsRegionPh :: SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeigh
 	}
 
 
-void nsRegionPh :: Intersect( const nsIRegion &aRegion ) {
-  PhTile_t *original = mRegion;
-  PhTile_t *tiles;
-  aRegion.GetNativeRegion( ( void*& ) tiles );
-  mRegion = PhIntersectTilings( original, tiles, NULL);
-	if( mRegion ) mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
+void nsRegionPh :: Intersect( const nsIRegion &aRegion ) 
+{
+	PhTile_t *original = mRegion;
+	PhTile_t *tiles;
+	aRegion.GetNativeRegion( ( void*& ) tiles );
+	mRegion = PhIntersectTilings( original, tiles, NULL);
+	if( mRegion ) 
+		mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
 	PhFreeTiles( original );
-	}
+	if ( mRegion == NULL )
+		SetTo(0, 0, 1, 1);
+}
 
 
-void nsRegionPh :: Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) {
+void nsRegionPh :: Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight ) 
+{
 	if( aWidth > 0 && aHeight > 0 ) {
 		/* Create a temporary tile to  assign to mRegion */
 		PhTile_t tile;
@@ -130,9 +135,12 @@ void nsRegionPh :: Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aH
 		PhTile_t *original = mRegion;
 		mRegion = PhIntersectTilings( mRegion, &tile, NULL );
 		PhFreeTiles( original );
-		}
-	else SetRegionEmpty();
+		if ( mRegion == NULL )
+			SetTo(0, 0, 1, 1);
 	}
+	else 
+		SetRegionEmpty();
+}
 
 
 void nsRegionPh :: Union( const nsIRegion &aRegion ) {
@@ -179,7 +187,15 @@ void nsRegionPh :: Subtract( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 	}
 
 
-PRBool nsRegionPh :: IsEmpty( void ) { return mRegion ? PR_FALSE : PR_TRUE; }
+PRBool nsRegionPh :: IsEmpty( void ) 
+{ 
+	if ( !mRegion )
+		return PR_TRUE;
+	if ( mRegion->rect.ul.x == 0 && mRegion->rect.ul.y == 0 &&
+		mRegion->rect.lr.x == 0 && mRegion->rect.lr.y == 0 )
+		return PR_TRUE;
+	return PR_FALSE;
+}
 
 PRBool nsRegionPh :: IsEqual( const nsIRegion &aRegion ) {
   PRBool result = PR_TRUE;

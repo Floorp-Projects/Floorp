@@ -63,7 +63,7 @@ static int gnFonts = 0;
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-nsFontMetricsPh :: nsFontMetricsPh()
+nsFontMetricsPh::nsFontMetricsPh()
 {
 	NS_INIT_REFCNT();
 	mDeviceContext = nsnull;
@@ -96,28 +96,26 @@ static void InitGlobals()
 	gFontMetricsCache = new nsHashtable();
 }
 
-static PRBool
-   FreeFontMetricsCache(nsHashKey* aKey, void* aData, void* aClosure)
+static PRBool FreeFontMetricsCache(nsHashKey* aKey, void* aData, void* aClosure)
 {
 	FontQueryInfo * node = (FontQueryInfo*) aData;
-
-	//delete node;
-  /* Use free() rather since we use calloc() in ::Init to alloc the node.  */
+	
+	/* Use free() rather since we use calloc() in ::Init to alloc the node.  */
 	if (node)
-	   free (node);
-
+		free (node);
+	
 	return PR_TRUE;
 }
 
 static void FreeGlobals()
 {
 	if (gFontMetricsCache)
-	  {
-		  gFontMetricsCache->Reset(FreeFontMetricsCache, nsnull);
-		  delete gFontMetricsCache;
-		  gFontMetricsCache = nsnull;
-		  gFontMetricsCacheCount = 0;
-	  }
+	{
+		gFontMetricsCache->Reset(FreeFontMetricsCache, nsnull);
+		delete gFontMetricsCache;
+		gFontMetricsCache = nsnull;
+		gFontMetricsCacheCount = 0;
+	}
 }
 
 nsFontMetricsPh :: ~nsFontMetricsPh( )
@@ -135,24 +133,23 @@ nsFontMetricsPh :: ~nsFontMetricsPh( )
 
 NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 
-   NS_IMETHODIMP nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext )
+NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext )
 {
-
 	NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
-
+	
 	nsAutoString  firstFace;
 	char          *str = nsnull;
 	nsresult      result;
 	PhRect_t      extent;
-
+	
 	if( !gFontMetricsCacheCount )
-	   InitGlobals( );
-
+		InitGlobals( );
+	
 	mFont = new nsFont(aFont);
 	mLangGroup = aLangGroup;
-
+	
 	mDeviceContext = aContext;
-
+	
 	float app2dev;
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
 	float textZoom = 1.0;
@@ -163,24 +160,22 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 	str = ToNewCString(firstFace);
 
 	if( !str || !str[0] )
-	  {
-		  //delete [] str;
-		  free (str);
-		  str = strdup("serif");
-	  }
-
+	{
+		free (str);
+		str = strdup("serif");
+	}
+	
 	const PRUnichar *uc;
 	aLangGroup->GetUnicode( &uc );
 	nsString language( uc );
 	char *cstring = ToNewCString(language);
-
+	
 	char prop[256];
 	sprintf( prop, "font.name.%s.%s", str, cstring );
 
 	/* Free cstring.  */
 	if (cstring)
-	   //delete [] cstring;
-	   free (cstring);
+		free (cstring);
 
 	char *font_default = NULL;
 	nsresult res = NS_ERROR_FAILURE;
@@ -199,16 +194,14 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 	  }
 	NS_IF_RELEASE(prefs);
 
-	float app2twip, scale = 1.0;
+	float scale = 1.0;
 
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-	mDeviceContext->GetDevUnitsToTwips(app2twip);
 	mDeviceContext->GetCanonicalPixelScale(scale);
 	mDeviceContext->GetTextZoom(textZoom);
 
-	app2twip *= (app2dev * textZoom);
-	PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * 0.90));
-
+	PRInt32 sizePoints = NSToIntRound(app2dev * textZoom * mFont->size * 0.8);
+	
 	char NSFontSuffix[5];
 	char NSFullFontName[MAX_FONT_TAG];
 

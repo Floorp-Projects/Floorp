@@ -43,13 +43,14 @@
 #include "nsIFontMetrics.h"
 #include "nsTransform2D.h"
 #include "nsRegionPh.h"
+#include "nsCOMPtr.h"
 
 class nsGraphicsState
 {
 public:
 
   nsTransform2D  *mMatrix;
-  nsIRegion      *mClipRegion;
+  nsCOMPtr<nsIRegion> mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
