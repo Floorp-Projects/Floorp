@@ -34,6 +34,8 @@ class nsString;
  */
 class nsIHTMLElementFactory : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTM_ELEMENT_FACTORY_IID; return iid; }
+
   NS_IMETHOD CreateInstanceByTag(const nsString& aTag,
                                  nsIHTMLContent** aResult) = 0;
 };
