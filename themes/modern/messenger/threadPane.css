@@ -111,16 +111,8 @@ treechildren:-moz-tree-image(threadCol, container) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
 }
 
-treechildren:-moz-tree-image(threadCol, container, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
-}
-
 treechildren:-moz-tree-image(threadCol, container, hasUnread) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
-}
-
-treechildren:-moz-tree-image(threadCol, container, hasUnread, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
 }
 
 /* ::::: new thread icons for watch and ignore ::::: */
@@ -155,38 +147,6 @@ treechildren:-moz-tree-image(news, threadCol, container, hasUnread, watch, offli
 
 treechildren:-moz-tree-image(news, threadCol, container, hasUnread, ignore, offline) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed-offl-kill.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-eye.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-kill.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, watch, open, offline) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-offl-eye.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, ignore, open, offline) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-offl-kill.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-eye.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-kill.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, watch, open, offline) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-offl-eye.gif");
-}
-
-treechildren:-moz-tree-image(news, threadCol, container, ignore, open, offline) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-offl-kill.gif");
 }
 
 /* ..... read column ..... */
