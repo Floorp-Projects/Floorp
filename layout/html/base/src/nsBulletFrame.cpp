@@ -36,6 +36,7 @@
 #include "nsIURL.h"
 #include "nsLayoutAtoms.h"
 #include "prprf.h"
+#include "nsIImage.h"
 
 nsBulletFrame::nsBulletFrame()
 {
@@ -134,6 +135,7 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
           aRenderingContext.DrawImage(image, innerArea);
           return NS_OK;
         }
+        NS_RELEASE(image);
       }
     }
 

@@ -910,6 +910,8 @@ nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
       aRenderingContext.DrawImage(image, mImageRect);
     }
 
+    NS_IF_RELEASE(image);
+
    return NS_OK;
 }
 
