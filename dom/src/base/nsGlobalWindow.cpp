@@ -189,10 +189,10 @@ static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 // CheckForAbusePoint return values:
 enum {
-  openAllow = 0,    // open that window without worries
+  openAllowed = 0,  // open that window without worries
   openControlled,   // it's a popup, but allow it
   openAbused,       // it's a popup. disallow it, but allow domain override.
-  openAbuseOverride // disallow window open
+  openOverridden    // disallow window open
 };
 
 // return true if eventName is contained within events, delimited by spaces
@@ -3040,11 +3040,13 @@ GlobalWindowImpl::CheckForAbusePoint()
 
     item->GetItemType(&type);
     if (type != nsIDocShellTreeItem::typeContent)
-      return openAllow;
+      return openAllowed;
   }
 
   if (!gPrefBranch)
-    return openAllow;
+    return openAllowed;
+
+  PRUint32 abuse = openAllowed; // level of abuse we've detected
 
   PRInt32 intPref = 0;
 
@@ -3057,130 +3059,150 @@ GlobalWindowImpl::CheckForAbusePoint()
     LL_SUB(ll_delta, now, mLastMouseButtonAction);
     LL_L2UI(delta, ll_delta);
     if (delta/1000 > (PRUint32) intPref)
-      return openAbuseOverride;
+      abuse = openOverridden;
   }
-
-  // limit the number of simultaneously open popups
-  intPref = 0;
-  nsresult gotPref = gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
-  if (NS_SUCCEEDED(gotPref) && intPref >= 0 && gOpenPopupSpamCount >= intPref)
-    return openAbuseOverride;
 
   // is a timer running?
-  if (mRunningTimeout)
-    return openAbused;
+  if (abuse == openAllowed && mRunningTimeout)
+    abuse = openAbused;
 
   // is the document being loaded or unloaded?
-  if (!mIsDocumentLoaded)
-    return openAbused;
+  if (abuse == openAllowed && !mIsDocumentLoaded)
+    abuse = openAbused;
 
-  // we'll need to know what DOM event is being processed now, if any
-  nsEvent *currentEvent = mCurrentEvent;
-  if (!currentEvent && mDocShell) {
-    /* The DOM window's current event is accurate for events that make it
-       all the way to the window. But it doesn't see events handled directly
-       by a target element. For those, check the EventStateManager. */
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-        nsCOMPtr<nsIEventStateManager> esManager;
-        presContext->GetEventStateManager(getter_AddRefs(esManager));
-        if (esManager)
-          esManager->GetCurrentEvent(&currentEvent);
+  if (abuse == openAllowed) {
+    // we'll need to know what DOM event is being processed now, if any
+    nsEvent *currentEvent = mCurrentEvent;
+    if (!currentEvent && mDocShell) {
+      /* The DOM window's current event is accurate for events that make it
+        all the way to the window. But it doesn't see events handled directly
+        by a target element. For those, check the EventStateManager. */
+      nsCOMPtr<nsIPresShell> presShell;
+      mDocShell->GetPresShell(getter_AddRefs(presShell));
+      if (presShell) {
+        nsCOMPtr<nsIPresContext> presContext;
+        presShell->GetPresContext(getter_AddRefs(presContext));
+        if (presContext) {
+          nsCOMPtr<nsIEventStateManager> esManager;
+          presContext->GetEventStateManager(getter_AddRefs(esManager));
+          if (esManager)
+            esManager->GetCurrentEvent(&currentEvent);
+        }
       }
     }
+
+    // fetch pref string detailing which events are allowed
+    nsXPIDLCString eventPref;
+    gPrefBranch->GetCharPref("dom.popup_allowed_events",
+                            getter_Copies(eventPref));
+    nsCAutoString eventPrefStr(eventPref);
+
+    // generally if an event handler is running, new windows are disallowed.
+    // check for exceptions:
+    if (currentEvent) {
+      abuse = openAbused;
+      switch(currentEvent->eventStructType) {
+        case NS_EVENT :
+          switch(currentEvent->message) {
+            case NS_FORM_SELECTED :
+              if (::ContainsEventName("select", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_RESIZE_EVENT :
+              if (::ContainsEventName("resize", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_GUI_EVENT :
+          switch(currentEvent->message) {
+            case NS_FORM_INPUT :
+              if (::ContainsEventName("input", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_INPUT_EVENT :
+          switch(currentEvent->message) {
+            case NS_FORM_CHANGE :
+              if (::ContainsEventName("change", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_KEY_EVENT :
+          switch(currentEvent->message) {
+            case NS_KEY_PRESS :
+              if (::ContainsEventName("keypress", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_KEY_UP :
+              if (::ContainsEventName("keyup", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_KEY_DOWN :
+              if (::ContainsEventName("keydown", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_MOUSE_EVENT :
+          switch(currentEvent->message) {
+            case NS_MOUSE_LEFT_BUTTON_UP :
+              if (::ContainsEventName("mouseup", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_MOUSE_LEFT_BUTTON_DOWN :
+              if (::ContainsEventName("mousedown", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_MOUSE_LEFT_CLICK :
+              /* Click events get special treatment because of their
+                 historical status as a more legitimate event handler.
+                 If click popups are enabled in the prefs, clear the
+                 popup status completely. */
+              if (::ContainsEventName("click", eventPref))
+                abuse = openAllowed;
+              break;
+            case NS_MOUSE_LEFT_DOUBLECLICK :
+              if (::ContainsEventName("dblclick", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_SCRIPT_ERROR_EVENT :
+          switch(currentEvent->message) {
+            case NS_SCRIPT_ERROR :
+              if (::ContainsEventName("error", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+        case NS_FORM_EVENT :
+          switch(currentEvent->message) {
+            case NS_FORM_SUBMIT :
+              if (::ContainsEventName("submit", eventPref))
+                abuse = openControlled;
+              break;
+            case NS_FORM_RESET :
+              if (::ContainsEventName("reset", eventPref))
+                abuse = openControlled;
+              break;
+          }
+          break;
+      } // switch
+    } // currentEvent
+  } // abuse == openAllowed
+
+  // limit the number of simultaneously open popups
+  if (abuse == openAbused || abuse == openControlled) {
+    intPref = 0;
+    nsresult gotPref = gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
+    if (NS_SUCCEEDED(gotPref) && intPref >= 0 && gOpenPopupSpamCount >= intPref)
+      abuse = openOverridden;
   }
 
-  // fetch pref string detailing which events are allowed
-  nsXPIDLCString eventPref;
-  gPrefBranch->GetCharPref("dom.popup_allowed_events",
-                           getter_Copies(eventPref));
-  nsCAutoString eventPrefStr(eventPref);
-
-  // generally if an event handler is running, new windows are disallowed.
-  // check for exceptions:
-  if (currentEvent) {
-    PRBool prefMatch = PR_FALSE;
-    switch(currentEvent->eventStructType) {
-      case NS_EVENT :
-        switch(currentEvent->message) {
-          case NS_FORM_SELECTED :
-            prefMatch = ::ContainsEventName("select", eventPref);
-            break;
-          case NS_RESIZE_EVENT :
-            prefMatch = ::ContainsEventName("resize", eventPref);
-            break;
-        }
-        break;
-      case NS_GUI_EVENT :
-        switch(currentEvent->message) {
-          case NS_FORM_INPUT :
-            prefMatch = ::ContainsEventName("input", eventPref);
-            break;
-        }
-        break;
-      case NS_INPUT_EVENT :
-        switch(currentEvent->message) {
-          case NS_FORM_CHANGE :
-            prefMatch = ::ContainsEventName("change", eventPref);
-            break;
-        }
-        break;
-      case NS_KEY_EVENT :
-        switch(currentEvent->message) {
-          case NS_KEY_PRESS :
-            prefMatch = ::ContainsEventName("keypress", eventPref);
-            break;
-          case NS_KEY_UP :
-            prefMatch = ::ContainsEventName("keyup", eventPref);
-            break;
-          case NS_KEY_DOWN :
-            prefMatch = ::ContainsEventName("keydown", eventPref);
-            break;
-        }
-        break;
-      case NS_MOUSE_EVENT :
-        switch(currentEvent->message) {
-          case NS_MOUSE_LEFT_BUTTON_UP :
-            prefMatch = ::ContainsEventName("mouseup", eventPref);
-            break;
-          case NS_MOUSE_LEFT_BUTTON_DOWN :
-            prefMatch = ::ContainsEventName("mousedown", eventPref);
-            break;
-          case NS_MOUSE_LEFT_CLICK :
-            prefMatch = ::ContainsEventName("click", eventPref);
-            break;
-          case NS_MOUSE_LEFT_DOUBLECLICK :
-            prefMatch = ::ContainsEventName("dblclick", eventPref);
-            break;
-        }
-        break;
-      case NS_SCRIPT_ERROR_EVENT :
-        switch(currentEvent->message) {
-          case NS_SCRIPT_ERROR :
-            prefMatch = ::ContainsEventName("error", eventPref);
-            break;
-        }
-        break;
-      case NS_FORM_EVENT :
-        switch(currentEvent->message) {
-          case NS_FORM_SUBMIT :
-            prefMatch = ::ContainsEventName("submit", eventPref);
-            break;
-          case NS_FORM_RESET :
-            prefMatch = ::ContainsEventName("reset", eventPref);
-            break;
-        }
-        break;
-    }
-    return prefMatch ? openControlled : openAbused;
-  }
-
-  // damn. nothing? then allow the new window.
-  return openAllow;
+  return abuse;
 }
 
 /* Allow or deny a window open based on whether popups are suppressed.
@@ -3192,7 +3214,7 @@ PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
 {
   PRBool allowWindow = PR_TRUE;
   
-  if (aAbuseLevel == openAbuseOverride ||
+  if (aAbuseLevel == openOverridden ||
       aAbuseLevel == openAbused && IsPopupBlocked(mDocument)) {
     allowWindow = PR_FALSE;
     // However it might still not be blocked.
