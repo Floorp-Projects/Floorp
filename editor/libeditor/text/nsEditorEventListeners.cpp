@@ -63,6 +63,7 @@
 #include "nsIContent.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLayoutCID.h"
+#include "nsIDOMNSRange.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
@@ -701,6 +702,48 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     aMouseEvent->PreventBubble();
     aMouseEvent->PreventDefault();
 
+    /* for bug 47399, when dropping a drag session, if you are over your original
+       selection, nothing should happen. */
+    nsCOMPtr<nsIDOMSelection> tempSelection;
+    rv = mEditor->GetSelection(getter_AddRefs(tempSelection));
+    if (NS_FAILED(rv) || !tempSelection) 
+      return rv?rv:NS_ERROR_FAILURE;
+    
+    PRInt32 rangeCount;
+    rv = tempSelection->GetRangeCount(&rangeCount);
+    if (NS_FAILED(rv)) 
+      return rv?rv:NS_ERROR_FAILURE;
+
+    for(int i = 0; i < rangeCount; i++)
+    {
+      nsCOMPtr<nsIDOMRange> range;
+
+      rv = tempSelection->GetRangeAt(i, getter_AddRefs(range));
+      if (NS_FAILED(rv) || !range) 
+        continue;//dont bail yet, iterate through them all
+
+      nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+      if (NS_FAILED(rv) || !nsrange) 
+        continue;//dont bail yet, iterate through them all
+
+      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
+      if (!nsuiEvent)
+        continue;//dont bail yet, iterate through them all
+
+      nsCOMPtr<nsIDOMNode> parent;
+      if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
+        continue;//dont bail yet, iterate through them all
+
+      PRInt32 offset = 0;
+      if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
+        continue;//dont bail yet, iterate through them all
+
+      PRBool inrange;
+      rv = nsrange->IsPointInRange(parent, offset, &inrange);
+      if(inrange)
+        return NS_ERROR_FAILURE;//okay, now you can bail, we are over the orginal selection
+    }
+    // if we are not over orginal selection, drop that baby!
     return htmlEditor->InsertFromDrop(aMouseEvent);
   }
 
