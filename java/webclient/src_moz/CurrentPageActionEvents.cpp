@@ -45,6 +45,7 @@
 #include "nsIURI.h"
 #include "nsIHistoryEntry.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
@@ -251,7 +252,7 @@ wsGetURLEvent::handleEvent ()
 	if (NS_FAILED(rv)) {
         return result;
     }
-    currentURL = (char *) urlSpecString.GetBufferHandle();
+    currentURL = ToNewCString(urlSpecString);
     
     result = (void *) currentURL;
     }

@@ -139,7 +139,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 			return nsnull;
 		}
         
-        nsCRT::free(charResult);
+        nsMemory::Free(charResult);
 	}
     
 	return urlString;

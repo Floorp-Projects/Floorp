@@ -269,7 +269,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
 {
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
-    const char	*	charResult = nsnull;
+    char	*	charResult = nsnull;
     jstring		urlString = nsnull;
     
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -284,7 +284,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
             new wsGetURLForIndexEvent(initContext, historyIndex);
         PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
         
-        charResult = (const char *) ::util_PostSynchronousEvent(initContext, 
+        charResult = (char *) ::util_PostSynchronousEvent(initContext, 
                                                                 event);
         
         if (charResult != nsnull) {
@@ -294,6 +294,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
             ::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned nsnull");
             return nsnull;
         }
+        nsMemory::Free((void *) charResult);
     }
     
     return urlString;
