@@ -120,11 +120,10 @@ struct _MDFileDesc {
 	
 	/* Server sockets: listen bit tells the notifier func what to do */
 	PRBool		doListen;
-	
+
 	_MDSocketCallerInfo  misc;
 	_MDSocketCallerInfo  read;
 	_MDSocketCallerInfo  write;
-	_MDSocketCallerInfo  poll;
 };
 
 /*
