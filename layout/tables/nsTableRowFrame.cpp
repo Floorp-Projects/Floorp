@@ -987,6 +987,8 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
             (eReflowReason_StyleChange == aReflowState.reason)        ||
             isPaginated                                               ||
+            (cellFrame->NeedPass2Reflow() &&
+             NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)     ||
             (aReflowState.mFlags.mSpecialHeightReflow && cellFrame->NeedSpecialReflow()) ||
             (!aReflowState.mFlags.mSpecialHeightReflow && cellFrame->HadSpecialReflow()) ||
             HasPctHeight()                                            ||
