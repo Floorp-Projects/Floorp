@@ -18,8 +18,6 @@
 
 #include "nspr.h"
 #include "nsString.h"
-#include "nsWidgetsCID.h"
-#include "nsIWidget.h"
 #include "nsRepository.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -29,10 +27,7 @@
 #include "nsTreeView.h"
 #include "nsHTTreeDataModel.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCTreeViewCID,  NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kITreeViewIID, NS_ITREEVIEW_IID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_ADDREF(nsTreeView)
 NS_IMPL_RELEASE(nsTreeView)
