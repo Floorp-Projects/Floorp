@@ -1233,7 +1233,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
       }
       // fallback if the line breaker is unavailable or failed
       if (nsnull == mLineBreaker || NS_FAILED(result)) {
-        goodSpace = mWrapColumn-prefixwidth;
+        goodSpace=(prefixwidth>mWrapColumn)?1:mWrapColumn-prefixwidth;
         while (goodSpace >= 0 &&
                !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
           goodSpace--;
@@ -1244,7 +1244,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
       if(goodSpace<0) {
         // If we don't found a good place to break, accept long line and
         // try to find another place to break
-        goodSpace=mWrapColumn-prefixwidth+1;
+        goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         result = NS_OK;
         if (nsnull != mLineBreaker) {
           result = mLineBreaker->Next(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
