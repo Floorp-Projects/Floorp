@@ -126,7 +126,7 @@ Widget nsMenu::GetNativeParent()
 
   void * voidData; 
   if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
+    mMenuParent->GetNativeData(&voidData);
   } else if (nsnull != mMenuBarParent) {
     mMenuBarParent->GetNativeData(voidData);
   } else {
