@@ -37,6 +37,7 @@
 #include "nsIURL.h"
 #include "nsIXMLContent.h"
 #include "nsLayoutCID.h"
+#include "nsNeckoUtil.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
@@ -460,25 +461,54 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
         if (NS_FAILED(rv)) return rv;
 
-#ifdef NECKO
-        char* spec;
-#else
-        const char* spec;
-#endif
-        docURL->GetSpec(&spec);
+        // XXX Urgh. This is so broken; I'd really just like to use
+        // NS_MakeAbsolueURI(). Unfortunatly, doing that breaks
+        // MakeElementID in some cases that I haven't yet been able to
+        // figure out.
+#define USE_BROKEN_RELATIVE_PARSING
+#ifdef USE_BROKEN_RELATIVE_PARSING
+        nsXPIDLCString spec;
+        docURL->GetSpec(getter_Copies(spec));
         if (! spec)
             return NS_ERROR_FAILURE;
 
         aURI = spec;
 
-#ifdef NECKO
-        nsCRT::free(spec);
-#endif
         if (aElementID.First() != '#') {
             aURI += '#';
         }
         aURI += aElementID;
+#else
+        nsXPIDLCString spec;
+        rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
+        if (NS_SUCCEEDED(rv)) {
+            aURI = spec;
+        }
+        else {
+            NS_WARNING("MakeElementURI: NS_MakeAbsoluteURI failed");
+            aURI = aElementID;
+        }
+#endif
     }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsRDFContentUtils::MakeElementResource(nsIDocument* aDocument, const nsString& aID, nsIRDFResource** aResult)
+{
+    nsresult rv;
+    nsCAutoString uri;
+    rv = MakeElementURI(aDocument, aID, uri);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf->GetResource(uri, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
@@ -496,25 +526,23 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
     if (NS_FAILED(rv)) return rv;
 
-#ifdef NECKO
-    char* spec;
-#else
-    const char* spec;
-#endif
-    docURL->GetSpec(&spec);
+    nsXPIDLCString spec;
+    docURL->GetSpec(getter_Copies(spec));
     if (! spec)
         return NS_ERROR_FAILURE;
 
     if (aURI.Find(spec) == 0) {
+#ifdef USE_BROKEN_RELATIVE_PARSING
+        static const PRInt32 kFudge = 1;  // XXX assume '#'
+#else
+        static const PRInt32 kFudge = 0;
+#endif
         PRInt32 len = PL_strlen(spec);
-        aURI.Right(aElementID, aURI.Length() - (len + 1)); // XXX assume '#'
+        aURI.Right(aElementID, aURI.Length() - (len + kFudge));
     }
     else {
         aElementID = aURI;
     }
-#ifdef NECKO
-    nsCRT::free(spec);
-#endif
 
     return NS_OK;
 }

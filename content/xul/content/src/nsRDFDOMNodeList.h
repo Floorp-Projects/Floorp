@@ -21,11 +21,13 @@
 #define nsRDFDOMNodeList_h__
 
 #include "nsIDOMNodeList.h"
+#include "nsIRDFNodeList.h"
 #include "nsIScriptObjectOwner.h"
 class nsIDOMNode;
 class nsISupportsArray;
 
 class nsRDFDOMNodeList : public nsIDOMNodeList,
+                         public nsIRDFNodeList,
                          public nsIScriptObjectOwner
 {
 private:
@@ -51,8 +53,8 @@ public:
     NS_IMETHOD SetScriptObject(void* aScriptObject);
 
     // Implementation methods
-    nsresult AppendNode(nsIDOMNode* aNode);
-    nsresult RemoveNode(nsIDOMNode* aNode);
+    NS_IMETHOD AppendNode(nsIDOMNode* aNode);
+    NS_IMETHOD RemoveNode(nsIDOMNode* aNode);
 };
 
 #endif // nsRDFDOMNodeList_h__

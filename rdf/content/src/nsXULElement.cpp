@@ -41,10 +41,8 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementObserver.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNodeObserver.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
@@ -80,6 +78,7 @@
 #include "nsIFocusableContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
+#include "nsIXULContent.h"
 #include "nsXULTreeElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
@@ -227,6 +226,7 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIJSScriptObject,
                        public nsIStyledContent,
                        public nsIXMLContent,
+                       public nsIXULContent,
                        public nsIFocusableContent
 {
 public:
@@ -310,6 +310,9 @@ public:
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
     NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
     NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
+
+    // nsIXULContent
+    NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -677,6 +680,9 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(nsIXMLContent::GetIID())) {
         *result = NS_STATIC_CAST(nsIXMLContent*, this);
     }
+    else if (iid.Equals(nsCOMTypeInfo<nsIXULContent>::GetIID())) {
+        *result = NS_STATIC_CAST(nsIXULContent*, this);
+    }
     else if (iid.Equals(nsIDOMXULElement::GetIID()) ||
              iid.Equals(kIDOMElementIID) ||
              iid.Equals(kIDOMNodeIID)) {
@@ -699,7 +705,8 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
              IsFocusableContent()) {
         *result = NS_STATIC_CAST(nsIFocusableContent*, this);
     }
-    else if (iid.Equals(nsIDOMXULTreeElement::GetIID()) &&
+    else if ((iid.Equals(nsIDOMXULTreeElement::GetIID()) ||
+              iid.Equals(nsIXULTreeContent::GetIID())) &&
              (mNameSpaceID == kNameSpaceID_XUL) &&
              (mTag == kTreeAtom)) {
         // We delegate XULTreeElement APIs to an aggregate object
@@ -944,19 +951,66 @@ RDFElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
+    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
+    if (! aNewChild)
         return NS_ERROR_NULL_POINTER;
 
-    // It's possible that mDocument will be null for an element that's
-    // not in the content model (e.g., somebody is working on a
-    // "scratch" element that has been removed from the content tree).
-    if (mDocument) {
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnInsertBefore(this, aNewChild, aRefChild);
-            NS_RELEASE(obs);
+    // aRefChild may be null; that means "append".
+
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> newcontent = do_QueryInterface(aNewChild);
+    NS_ASSERTION(newcontent != nsnull, "not an nsIContent");
+    if (! newcontent)
+        return NS_ERROR_UNEXPECTED;
+
+    // First, check to see if the content was already parented
+    // somewhere. If so, remove it.
+    nsCOMPtr<nsIContent> oldparent;
+    rv = newcontent->GetParent(*getter_AddRefs(oldparent));
+    if (NS_FAILED(rv)) return rv;
+
+    if (oldparent) {
+        PRInt32 oldindex;
+        rv = oldparent->IndexOf(newcontent, oldindex);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aNewChild in old parent");
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(oldindex >= 0, "old parent didn't think aNewChild was a child");
+
+        if (oldindex >= 0) {
+            rv = oldparent->RemoveChildAt(oldindex, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
         }
+    }
+
+    // Now, insert the element into the content model under 'this'
+    if (aRefChild) {
+        nsCOMPtr<nsIContent> refcontent = do_QueryInterface(aRefChild);
+        NS_ASSERTION(refcontent != nsnull, "not an nsIContent");
+        if (! refcontent)
+            return NS_ERROR_UNEXPECTED;
+
+        PRInt32 pos;
+        rv = IndexOf(refcontent, pos);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aRefChild");
+        if (NS_FAILED(rv)) return rv;
+
+        if (pos >= 0) {
+            rv = InsertChildAt(newcontent, pos, PR_TRUE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert aNewChild");
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        // XXX Hmm. There's a case here that we handle ambiguously, I
+        // think. If aRefChild _isn't_ actually one of our kids, then
+        // pos == -1, and we'll never insert the new kid. Should we
+        // just append it?
+    }
+    else {
+        rv = AppendChildTo(newcontent, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append a aNewChild");
+        if (NS_FAILED(rv)) return rv;
     }
 
     NS_ADDREF(aNewChild);
@@ -968,18 +1022,32 @@ RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDO
 NS_IMETHODIMP
 RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
+    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
+    if (! aNewChild)
         return NS_ERROR_NULL_POINTER;
 
-    // It's possible that mDocument will be null for an element that's
-    // not in the content model (e.g., somebody is working on a
-    // "scratch" element that has been removed from the content tree).
-    if (mDocument) {
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnReplaceChild(this, aNewChild, aOldChild);
-            NS_RELEASE(obs);
+    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
+    if (! aOldChild)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> oldelement = do_QueryInterface(aOldChild);
+    NS_ASSERTION(oldelement != nsnull, "not an nsIContent");
+
+    if (oldelement) {
+        PRInt32 pos;
+        rv = IndexOf(oldelement, pos);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aOldChild");
+
+        if (NS_SUCCEEDED(rv) && (pos >= 0)) {
+            nsCOMPtr<nsIContent> newelement = do_QueryInterface(aNewChild);
+            NS_ASSERTION(newelement != nsnull, "not an nsIContent");
+
+            if (newelement) {
+                rv = ReplaceChildAt(newelement, pos, PR_TRUE);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to replace old child");
+            }
         }
     }
 
@@ -992,18 +1060,23 @@ RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
 NS_IMETHODIMP
 RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
+    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
+    if (! aOldChild)
         return NS_ERROR_NULL_POINTER;
 
-    // It's possible that mDocument will be null for an element that's
-    // not in the content model (e.g., somebody is working on a
-    // "scratch" element that has been removed from the content tree).
-    if (mDocument) {
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnRemoveChild(this, aOldChild);
-            NS_RELEASE(obs);
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> element = do_QueryInterface(aOldChild);
+    NS_ASSERTION(element != nsnull, "not an nsIContent");
+
+    if (element) {
+        PRInt32 pos;
+        rv = IndexOf(element, pos);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aOldChild");
+
+        if (NS_SUCCEEDED(rv) && (pos >= 0)) {
+            rv = RemoveChildAt(pos, PR_TRUE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child");
         }
     }
 
@@ -1016,24 +1089,7 @@ RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 RDFElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
-        return NS_ERROR_NULL_POINTER;
-
-    // It's possible that mDocument will be null for an element that's
-    // not in the content model (e.g., somebody is working on a
-    // "scratch" element that has been removed from the content tree).
-    if (mDocument) {
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnAppendChild(this, aNewChild);
-            NS_RELEASE(obs);
-        }
-    }
-
-    NS_ADDREF(aNewChild);
-    *aReturn = aNewChild;
-    return NS_OK;
+    return InsertBefore(aNewChild, nsnull, aReturn);
 }
 
 
@@ -1094,11 +1150,19 @@ RDFElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 NS_IMETHODIMP
 RDFElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
-    nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-        obs->OnSetAttribute(this, aName, aValue);
-        NS_RELEASE(obs);
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+
+    rv = ParseAttributeString(aName, *getter_AddRefs(tag), nameSpaceID);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse attribute name");
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = SetAttribute(nameSpaceID, tag, aValue, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set attribute");
     }
+
     return NS_OK;
 }
 
@@ -1106,11 +1170,19 @@ RDFElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 NS_IMETHODIMP
 RDFElementImpl::RemoveAttribute(const nsString& aName)
 {
-    nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-        obs->OnRemoveAttribute(this, aName);
-        NS_RELEASE(obs);
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+
+    rv = ParseAttributeString(aName, *getter_AddRefs(tag), nameSpaceID);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse attribute name");
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = UnsetAttribute(nameSpaceID, tag, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove attribute");
     }
+
     return NS_OK;
 }
 
@@ -1142,15 +1214,12 @@ RDFElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 NS_IMETHODIMP
 RDFElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
+    NS_PRECONDITION(aNewAttr != nsnull, "null ptr");
+    if (! aNewAttr)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-        obs->OnSetAttributeNode(this, aNewAttr);
-        NS_RELEASE(obs);
-    }
+    NS_NOTYETIMPLEMENTED("write me");
+
     NS_ADDREF(aNewAttr);
     *aReturn = aNewAttr;
     return NS_OK;
@@ -1160,15 +1229,12 @@ RDFElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 NS_IMETHODIMP
 RDFElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
+    NS_PRECONDITION(aOldAttr != nsnull, "null ptr");
+    if (! aOldAttr)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-        obs->OnRemoveAttributeNode(this, aOldAttr);
-        NS_RELEASE(obs);
-    }
+    NS_NOTYETIMPLEMENTED("write me");
+
     NS_ADDREF(aOldAttr);
     *aReturn = aOldAttr;
     return NS_OK;
@@ -1303,6 +1369,27 @@ RDFElementImpl::SetNameSpaceID(PRInt32 aNameSpaceID)
 }
 
 
+////////////////////////////////////////////////////////////////////////
+// nsIXULContent interface
+
+NS_IMETHODIMP
+RDFElementImpl::PeekChildCount(PRInt32& aCount) const
+{
+    if (mChildren) {
+        PRUint32 cnt;
+
+        nsresult rv;
+        rv = mChildren->Count(&cnt);
+        if (NS_FAILED(rv)) return rv;
+
+        aCount = PRInt32(cnt);
+    }
+    else {
+        aCount = 0;
+    }
+    
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMEventReceiver interface
@@ -1718,15 +1805,7 @@ RDFElementImpl::ChildCount(PRInt32& aResult) const
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    if (mChildren) {
-        PRUint32 cnt;
-        rv = mChildren->Count(&cnt);
-        if (NS_FAILED(rv)) return rv;
-        aResult = cnt;
-    }
-    else 
-        aResult = 0;
-    return NS_OK;
+    return PeekChildCount(aResult);
 }
 
 NS_IMETHODIMP
@@ -1824,14 +1903,6 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     if (oldKid.get() == aKid)
         return NS_OK;
 
-    // Make sure that we're not trying to insert the same child
-    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
-    // freak out.
-    PRInt32 i = mChildren->IndexOf(aKid);
-    NS_ASSERTION(i < 0, "element is already a child");
-    if (i >= 0)
-        return NS_ERROR_FAILURE;
-
     PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
@@ -1858,14 +1929,6 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         if (NS_FAILED(NS_NewISupportsArray(&mChildren)))
             return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // Make sure that we're not trying to insert the same child
-    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
-    // freak out.
-    PRInt32 i = mChildren->IndexOf(aKid);
-    NS_ASSERTION(i < 0, "element is already a child");
-    if (i >= 0)
-        return NS_ERROR_FAILURE;
 
     PRBool appendOk = mChildren->AppendElement(aKid);
     if (appendOk) {
@@ -1913,16 +1976,12 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
-      nsRDFDOMNodeList* itemList = nsnull;
-      nsRDFDOMNodeList* cellList = nsnull;
       nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-      GetParentTree(getter_AddRefs(treeElement));
+      rv = GetParentTree(getter_AddRefs(treeElement));
       if (treeElement) {
-        nsCOMPtr<nsIDOMNodeList> nodes;
-        treeElement->GetSelectedItems(getter_AddRefs(nodes));
-        itemList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
-        treeElement->GetSelectedCells(getter_AddRefs(nodes));
-        cellList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        nsCOMPtr<nsIDOMNodeList> itemList;
+        treeElement->GetSelectedItems(getter_AddRefs(itemList));
+
         nsCOMPtr<nsIDOMNode> parentKid = do_QueryInterface(oldKid);
         PRBool fireSelectionHandler = PR_FALSE;
         if (itemList) {
@@ -1942,6 +2001,10 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
             }
           }
         }
+
+        nsCOMPtr<nsIDOMNodeList> cellList;
+        treeElement->GetSelectedCells(getter_AddRefs(cellList));
+
         if (cellList) {
           // Iterate over all of the items and find out if they are contained inside
           // the removed subtree.
@@ -1961,8 +2024,10 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         }
 
         if (fireSelectionHandler) {
-          nsXULTreeElement* tree = (nsXULTreeElement*)(treeElement.get()); // XXX Yes, I am evil.
-          tree->FireOnSelectHandler();
+          nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
+          if (tree) {
+            tree->FireOnSelectHandler();
+          }
         }
       }
     }
@@ -2131,14 +2196,14 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     GetTag(*getter_AddRefs(tag));
     if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
       // See if we're a treeitem atom.
-      nsRDFDOMNodeList* nodeList = nsnull;
+      nsCOMPtr<nsIRDFNodeList> nodeList;
       if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
         nsCOMPtr<nsIDOMXULTreeElement> treeElement;
         GetParentTree(getter_AddRefs(treeElement));
         if (treeElement) {
           nsCOMPtr<nsIDOMNodeList> nodes;
           treeElement->GetSelectedItems(getter_AddRefs(nodes));
-          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+          nodeList = do_QueryInterface(nodes);
         }
       }
       else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
@@ -2147,7 +2212,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         if (treeElement) {
           nsCOMPtr<nsIDOMNodeList> nodes;
           treeElement->GetSelectedCells(getter_AddRefs(nodes));
-          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+          nodeList = do_QueryInterface(nodes);
         }
       }
       if (nodeList) {
@@ -2193,17 +2258,22 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     // Check to see if the REF attribute is being set. If so, we need
     // to update the element map.  First, remove the old mapping, if
     // necessary...
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kRefAtom)) {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
-        if (rdfdoc) {
-            nsCOMPtr<nsIRDFResource> resource;
-
+    nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+    if (rdfdoc && (aNameSpaceID == kNameSpaceID_None)) {
+        nsCOMPtr<nsIRDFResource> resource;
+        if (aName == kRefAtom) {
             GetRefResource(getter_AddRefs(resource));
-            if (resource) {
-                rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-            }
+        }
+        else if (aName == kIdAtom) {
+            GetIdResource(getter_AddRefs(resource));
+        }
+
+        if (resource) {
+            rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
         }
     }
+
+
 
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
@@ -2231,15 +2301,17 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
     // Check for REF attribute, part deux. Add the new REF to the map,
     // if appropriate.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kRefAtom)) {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
-        if (rdfdoc) {
-            nsCOMPtr<nsIRDFResource> resource;
-
+    if (rdfdoc && (aNameSpaceID == kNameSpaceID_None)) {
+        nsCOMPtr<nsIRDFResource> resource;
+        if (aName == kRefAtom) {
             GetRefResource(getter_AddRefs(resource));
-            if (resource) {
-                rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-            }
+        }
+        else if (aName == kIdAtom) {
+            GetIdResource(getter_AddRefs(resource));
+        }
+
+        if (resource) {
+            rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
         }
     }
         
@@ -2374,6 +2446,7 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                 else {
                     rv = NS_CONTENT_ATTR_NO_VALUE;
                 }
+#if 0
                 if ((aNameSpaceID == kNameSpaceID_None) &&
                     (attr->mName == kIdAtom))
                 {
@@ -2384,6 +2457,7 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                         nsRDFContentUtils::MakeElementID(mDocument, attr->mValue, aResult);
                     }
                 }
+#endif
                 break;
             }
         }
@@ -2427,14 +2501,14 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
       // doing it anyway.  Need to make an nsIRDFNodeList interface that
       // I can QI to for additions and removals of nodes.  For now
       // do an evil cast.
-      nsRDFDOMNodeList* nodeList = nsnull;
+      nsCOMPtr<nsIRDFNodeList> nodeList;
       if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
         nsCOMPtr<nsIDOMXULTreeElement> treeElement;
         GetParentTree(getter_AddRefs(treeElement));
         if (treeElement) {
           nsCOMPtr<nsIDOMNodeList> nodes;
           treeElement->GetSelectedItems(getter_AddRefs(nodes));
-          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+          nodeList = do_QueryInterface(nodes);
         }
       }
       else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
@@ -2443,7 +2517,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         if (treeElement) {
           nsCOMPtr<nsIDOMNodeList> nodes;
           treeElement->GetSelectedCells(getter_AddRefs(nodes));
-          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+          nodeList = do_QueryInterface(nodes);
         }
       }
       if (nodeList) {
@@ -2944,7 +3018,7 @@ RDFElementImpl::GetIdResource(nsIRDFResource** aResource)
             const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName == kIdAtom)) {
-                return gRDFService->GetUnicodeResource(attr->mValue.GetUnicode(), aResource);
+                return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue.GetUnicode(), aResource);
             }
         }
     }
@@ -2970,7 +3044,7 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
 
             if (attr->mName != kRefAtom)
                 continue;
-
+#if 0
             // Found it!
             nsresult rv;
 
@@ -2983,6 +3057,9 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
 
             // ...then, setup the new mapping.
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
+#else
+            return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue.GetUnicode(), aResource);
+#endif
         }
     }
 

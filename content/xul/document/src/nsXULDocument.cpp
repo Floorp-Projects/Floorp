@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -23,9 +23,28 @@
   implementation serves as the basis for generating an NGLayout
   content model.
 
-  TO DO
+  To Do
+  -----
 
- */
+  1. Implement DOM range constructors.
+
+  2. Implement XIF conversion (this is really low priority).
+
+  Notes
+  -----
+
+  1. We do some monkey business in the document observer methods to
+     keep the element map in sync for HTML elements. Why don't we just
+     do it for _all_ elements? Well, in the case of XUL elements,
+     which may be lazily created during frame construction, the
+     document observer methods will never be called because we'll be
+     adding the XUL nodes into the content model "quietly".
+
+  2. The "element map" maps an RDF resource to the elements whose 'id'
+     or 'ref' attributes refer to that resource. We re-use the element
+     map to support the HTML-like 'getElementById()' method.
+
+*/
 
 // Note the ALPHABETICAL ORDERING
 #include "nsCOMPtr.h"
@@ -35,11 +54,9 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMElementObserver.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMNodeObserver.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMSelection.h"
@@ -111,6 +128,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIXULCommandDispatcher.h"
+#include "nsIXULContent.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
@@ -234,6 +252,21 @@ public:
 
     nsresult
     Find(nsIRDFResource* aResource, nsISupportsArray* aResults);
+
+    typedef PRIntn (*nsElementMapEnumerator)(nsIRDFResource* aResource,
+                                             nsIContent* aElement,
+                                             void* aClosure);
+    nsresult
+    Enumerate(nsElementMapEnumerator aEnumerator, void* aClosure);
+
+private:
+    struct EnumerateClosure {
+        nsElementMapEnumerator mEnumerator;
+        void*                  mClosure;
+    };
+        
+    static PRIntn
+    EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure);
 };
 
 
@@ -270,7 +303,7 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
     NS_RELEASE(resource);
         
     ContentListItem* head =
-        (ContentListItem*) aHashEntry->value;
+        NS_REINTERPRET_CAST(ContentListItem*, aHashEntry->value);
 
     while (head) {
         ContentListItem* doomed = head;
@@ -289,6 +322,16 @@ nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
     if (! mResources)
         return NS_ERROR_NOT_INITIALIZED;
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        aResource->GetValue( getter_Copies(uri) );
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelemap(%p) add    [%p] <-- %s\n",
+                this, aContent, (const char*) uri));
+    }
+#endif
+
     ContentListItem* head =
         (ContentListItem*) PL_HashTableLookup(mResources, aResource);
 
@@ -304,8 +347,14 @@ nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
     else {
         while (1) {
             if (head->mContent == aContent) {
-                NS_ERROR("attempt to add same element twice");
-                return NS_ERROR_ILLEGAL_VALUE;
+                // This can happen if an element that was created via
+                // frame construction code is then "appended" to the
+                // content model with aNotify == PR_TRUE. If you see
+                // this warning, it's an indication that you're
+                // unnecessarily notifying the frame system, and
+                // potentially causing unnecessary reflow.
+                NS_WARNING("element was already in the map");
+                return NS_OK;
             }
             if (! head->mNext)
                 break;
@@ -329,6 +378,16 @@ nsElementMap::Remove(nsIRDFResource* aResource, nsIContent* aContent)
     NS_PRECONDITION(mResources != nsnull, "not initialized");
     if (! mResources)
         return NS_ERROR_NOT_INITIALIZED;
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        aResource->GetValue( getter_Copies(uri) );
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelemap(%p) remove [%p] <-- %s\n",
+                this, aContent, (const char*) uri));
+    }
+#endif
 
     ContentListItem* head =
         (ContentListItem*) PL_HashTableLookup(mResources, aResource);
@@ -391,6 +450,49 @@ nsElementMap::Find(nsIRDFResource* aResource, nsISupportsArray* aResults)
     return NS_OK;
 }
 
+nsresult
+nsElementMap::Enumerate(nsElementMapEnumerator aEnumerator, void* aClosure)
+{
+    EnumerateClosure closure = { aEnumerator, aClosure };
+    PL_HashTableEnumerateEntries(mResources, EnumerateImpl, &closure);
+    return NS_OK;
+}
+
+
+PRIntn
+nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+{
+    EnumerateClosure* closure = NS_REINTERPRET_CAST(EnumerateClosure*, aClosure);
+
+    nsIRDFResource* resource =
+        NS_REINTERPRET_CAST(nsIRDFResource*, NS_CONST_CAST(void*, aHashEntry->key));
+
+    ContentListItem** link = 
+        NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value);
+
+    ContentListItem* item = *link;
+
+    while (item) {
+        PRIntn result = (*closure->mEnumerator)(resource, item->mContent, closure->mClosure);
+
+        if (result == HT_ENUMERATE_REMOVE) {
+            NS_RELEASE(item->mContent);
+            *link = item->mNext;
+
+            if ((! *link) && (link == NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value))) {
+                NS_RELEASE(resource);
+                return HT_ENUMERATE_REMOVE;
+            }
+        }
+        else {
+            link = &item->mNext;
+        }
+
+        item = item->mNext;
+    }
+
+    return HT_ENUMERATE_NEXT;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // XULDocumentImpl
@@ -404,8 +506,6 @@ class XULDocumentImpl : public nsIDocument,
                         public nsIJSScriptObject,
                         public nsIScriptObjectOwner,
                         public nsIHTMLContentContainer,
-                        public nsIDOMNodeObserver,
-                        public nsIDOMElementObserver,
                         public nsIXULParentDocument,
                         public nsIXULChildDocument
 {
@@ -696,17 +796,26 @@ public:
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
     NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
-    // nsIDOMNodeObserver interface
-    NS_DECL_IDOMNODEOBSERVER
-
-    // nsIDOMElementObserver interface
-    NS_DECL_IDOMELEMENTOBSERVER
-
     // Implementation methods
     nsresult Init(void);
     nsresult StartLayout(void);
 
-    void SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMElement** aReturn);
+    nsresult OpenWidgetItem(nsIContent* aElement);
+    nsresult CloseWidgetItem(nsIContent* aElement);
+    nsresult RemoveAndRebuildGeneratedChildren(nsIContent* aElement);
+
+    nsresult
+    AddElementToMap(nsIContent* aElement, PRBool aDeep);
+
+    nsresult
+    RemoveElementFromMap(nsIContent* aElement, PRBool aDeep);
+
+    static PRIntn
+    RemoveElementsFromMapByContent(nsIRDFResource* aResource,
+                                   nsIContent* aElement,
+                                   void* aClosure);
+
+    nsresult SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMElement** aReturn);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -741,13 +850,26 @@ protected:
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
-    static nsIAtom* kIdAtom;
-    static nsIAtom* kObservesAtom;
+    static nsIAtom*  kContainerContentsGeneratedAtom;
+    static nsIAtom*  kIdAtom;
+    static nsIAtom*  kLazyContentAtom;
+    static nsIAtom*  kObservesAtom;
+    static nsIAtom*  kOpenAtom;
+    static nsIAtom*  kRefAtom;
+    static nsIAtom*  kRuleAtom;
+    static nsIAtom*  kTemplateAtom;
+    static nsIAtom*  kTemplateContentsGeneratedAtom;
+    static nsIAtom*  kXULContentsGeneratedAtom;
+
+    static nsIAtom** kIdentityAttrs[];
 
     static nsIRDFService* gRDFService;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kXUL_element;
+
+    static nsINameSpaceManager* gNameSpaceManager;
+    static PRInt32 kNameSpaceID_XUL;
 
     nsIContent*
     FindContent(const nsIContent* aStartNode,
@@ -812,13 +934,24 @@ protected:
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
+nsIAtom* XULDocumentImpl::kContainerContentsGeneratedAtom;
 nsIAtom* XULDocumentImpl::kIdAtom;
+nsIAtom* XULDocumentImpl::kLazyContentAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
+nsIAtom* XULDocumentImpl::kOpenAtom;
+nsIAtom* XULDocumentImpl::kRefAtom;
+nsIAtom* XULDocumentImpl::kRuleAtom;
+nsIAtom* XULDocumentImpl::kTemplateAtom;
+nsIAtom* XULDocumentImpl::kTemplateContentsGeneratedAtom;
+nsIAtom* XULDocumentImpl::kXULContentsGeneratedAtom;
 
 nsIRDFService* XULDocumentImpl::gRDFService;
 nsIRDFResource* XULDocumentImpl::kRDF_instanceOf;
 nsIRDFResource* XULDocumentImpl::kRDF_type;
 nsIRDFResource* XULDocumentImpl::kXUL_element;
+
+nsINameSpaceManager* XULDocumentImpl::gNameSpaceManager;
+PRInt32 XULDocumentImpl::kNameSpaceID_XUL;
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -846,8 +979,16 @@ XULDocumentImpl::XULDocumentImpl(void)
     }*/
 
     if (gRefCnt++ == 0) {
-        kIdAtom        = NS_NewAtom("id");
-        kObservesAtom  = NS_NewAtom("observes");
+        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
+        kIdAtom                         = NS_NewAtom("id");
+        kLazyContentAtom                = NS_NewAtom("lazycontent");
+        kObservesAtom                   = NS_NewAtom("observes");
+        kOpenAtom                       = NS_NewAtom("open");
+        kRefAtom                        = NS_NewAtom("ref");
+        kRuleAtom                       = NS_NewAtom("rule");
+        kTemplateAtom                   = NS_NewAtom("template");
+        kTemplateContentsGeneratedAtom  = NS_NewAtom("templatecontentsgenerated");
+        kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
 
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
@@ -862,6 +1003,15 @@ XULDocumentImpl::XULDocumentImpl(void)
             gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
             gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
         }
+
+        rv = nsServiceManager::GetService(kNameSpaceManagerCID,
+                                          nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
+                                          (nsISupports**) &gNameSpaceManager);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
+
+#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
+        gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
     }
 
 #ifdef PR_LOGGING
@@ -930,8 +1080,16 @@ XULDocumentImpl::~XULDocumentImpl()
     }
     
     if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kObservesAtom);
+        NS_IF_RELEASE(kOpenAtom);
+        NS_IF_RELEASE(kRefAtom);
+        NS_IF_RELEASE(kRuleAtom);
+        NS_IF_RELEASE(kTemplateAtom);
+        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
+        NS_IF_RELEASE(kXULContentsGeneratedAtom);
 
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -1009,12 +1167,6 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIHTMLContentContainerIID)) {
         *result = NS_STATIC_CAST(nsIHTMLContentContainer*, this);
-    }
-    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-    }
-    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMElementObserver*, this);
     }
     else if (iid.Equals(kIDOMEventReceiverIID)) {
         *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
@@ -1828,8 +1980,7 @@ XULDocumentImpl::RemoveObserver(nsIDocumentObserver* aObserver)
 NS_IMETHODIMP 
 XULDocumentImpl::BeginLoad()
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->BeginLoad(this);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1910,8 +2061,7 @@ XULDocumentImpl::EndLoad()
 
     StartLayout();
 
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->EndLoad(this);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1927,8 +2077,7 @@ NS_IMETHODIMP
 XULDocumentImpl::ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentChanged(this, aContent, aSubContent);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1941,8 +2090,7 @@ XULDocumentImpl::ContentChanged(nsIContent* aContent,
 NS_IMETHODIMP 
 XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentStatesChanged(this, aContent1, aContent2);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1954,11 +2102,51 @@ XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aConten
 
 NS_IMETHODIMP 
 XULDocumentImpl::AttributeChanged(nsIContent* aChild,
-                                nsIAtom* aAttribute,
-                                PRInt32 aHint)
+                                  nsIAtom* aAttribute,
+                                  PRInt32 aHint)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    rv = aChild->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    // First see if we need to update our element map.
+    if (nameSpaceID == kNameSpaceID_HTML) {
+        if ((aAttribute == kIdAtom) || (aAttribute == kRefAtom)) {
+
+            rv = mResources.Enumerate(RemoveElementsFromMapByContent, nsnull);
+            if (NS_FAILED(rv)) return rv;
+
+            // That'll have removed _both_ the 'ref' and 'id' entries from
+            // the map. So add 'em back now.
+            rv = AddElementToMap(aChild, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // Handle "special" cases.
+    if (nameSpaceID == kNameSpaceID_XUL) {
+        if (aAttribute == kOpenAtom) {
+            nsAutoString open;
+            rv = aChild->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
+            if (NS_FAILED(rv)) return rv;
+
+            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
+                OpenWidgetItem(aChild);
+            }
+            else {
+                CloseWidgetItem(aChild);
+            }
+        }
+        else if (aAttribute == kRefAtom) {
+            rv = RemoveAndRebuildGeneratedChildren(aChild);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->AttributeChanged(this, aChild, aAttribute, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1970,10 +2158,28 @@ XULDocumentImpl::AttributeChanged(nsIContent* aChild,
 
 NS_IMETHODIMP 
 XULDocumentImpl::ContentAppended(nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer)
+                                 PRInt32 aNewIndexInContainer)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    // First update our element map
+    {
+        nsresult rv;
+
+        PRInt32 count;
+        rv = aContainer->ChildCount(count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = aNewIndexInContainer; i < count; ++i) {
+            nsCOMPtr<nsIContent> child;
+            rv = aContainer->ChildAt(i, *getter_AddRefs(child));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = AddElementToMap(child, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentAppended(this, aContainer, aNewIndexInContainer);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -1985,12 +2191,18 @@ XULDocumentImpl::ContentAppended(nsIContent* aContainer,
 
 NS_IMETHODIMP 
 XULDocumentImpl::ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer)
+                                 nsIContent* aChild,
+                                 PRInt32 aIndexInContainer)
 {
-    
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    // First update our element map
+    {
+        nsresult rv;
+        rv = AddElementToMap(aChild, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -2002,12 +2214,22 @@ XULDocumentImpl::ContentInserted(nsIContent* aContainer,
 
 NS_IMETHODIMP 
 XULDocumentImpl::ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer)
+                                 nsIContent* aOldChild,
+                                 nsIContent* aNewChild,
+                                 PRInt32 aIndexInContainer)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    // First update our element map
+    {
+        nsresult rv;
+        rv = RemoveElementFromMap(aOldChild, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = AddElementToMap(aNewChild, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                                   aIndexInContainer);
@@ -2020,11 +2242,18 @@ XULDocumentImpl::ContentReplaced(nsIContent* aContainer,
 
 NS_IMETHODIMP 
 XULDocumentImpl::ContentRemoved(nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
+                                nsIContent* aChild,
+                                PRInt32 aIndexInContainer)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    // First update our element map
+    {
+        nsresult rv;
+        rv = RemoveElementFromMap(aChild, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentRemoved(this, aContainer, 
                                  aChild, aIndexInContainer);
@@ -2037,11 +2266,10 @@ XULDocumentImpl::ContentRemoved(nsIContent* aContainer,
 
 NS_IMETHODIMP 
 XULDocumentImpl::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              PRInt32 aHint)
+                                  nsIStyleRule* aStyleRule,
+                                  PRInt32 aHint)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -2053,10 +2281,9 @@ XULDocumentImpl::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
 
 NS_IMETHODIMP 
 XULDocumentImpl::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule)
+                                nsIStyleRule* aStyleRule)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -2068,10 +2295,9 @@ XULDocumentImpl::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
 
 NS_IMETHODIMP 
 XULDocumentImpl::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule)
+                                  nsIStyleRule* aStyleRule)
 {
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
@@ -2521,16 +2747,6 @@ XULDocumentImpl::AddElementForResource(nsIRDFResource* aResource, nsIContent* aE
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
-        nsXPIDLCString uri;
-        aResource->GetValue( getter_Copies(uri) );
-        PR_LOG(gMapLog, PR_LOG_ALWAYS,
-               ("xulelemap(%p) add    [%p] <-- %s\n",
-                this, aElement, (const char*) uri));
-    }
-#endif
-
     mResources.Add(aResource, aElement);
     return NS_OK;
 }
@@ -2546,16 +2762,6 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
-        nsXPIDLCString uri;
-        aResource->GetValue( getter_Copies(uri) );
-        PR_LOG(gMapLog, PR_LOG_ALWAYS,
-               ("xulelemap(%p) remove [%p] <-- %s\n",
-                this, aElement, (const char*) uri));
-    }
-#endif
 
     mResources.Remove(aResource, aElement);
     return NS_OK;
@@ -2989,26 +3195,16 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 
     nsresult rv;
 
-    nsCAutoString uri;
-    rv = nsRDFContentUtils::MakeElementURI(this, aId, uri);
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = nsRDFContentUtils::MakeElementResource(this, aId, getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetResource(uri, getter_AddRefs(resource)))) {
-        NS_ERROR("unable to get resource");
-        return rv;
-    }
-
     nsCOMPtr<nsISupportsArray> elements;
-    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create new ISupportsArray");
-        return rv;
-    }
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = GetElementsForResource(resource, elements))) {
-        NS_ERROR("unable to get elements for resource");
-        return rv;
-    }
+    rv = GetElementsForResource(resource, elements);
+    if (NS_FAILED(rv)) return rv;
 
     PRUint32 cnt = 0;
     rv = elements->Count(&cnt);
@@ -3026,56 +3222,175 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
         return rv;
     }
 
-    // Didn't find it in our hash table. Walk the tree looking for the
-    // node. This happens for elements that aren't nsRDFElement
-    // objects (e.g., HTML content).
-
+    // Didn't find it in our element map. Grovel for it.
     *aReturn = nsnull;
     SearchForNodeByID(aId, mRootContent, aReturn);
 
     return NS_OK;
 }
 
-void
-XULDocumentImpl::SearchForNodeByID(const nsString& anID, 
-                                   nsIContent* anElement,
+nsIAtom** XULDocumentImpl::kIdentityAttrs[] = { &kIdAtom, &kRefAtom, nsnull };
+
+nsresult
+XULDocumentImpl::AddElementToMap(nsIContent* aElement, PRBool aDeep)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    if (nameSpaceID == kNameSpaceID_HTML) {
+        for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
+            nsAutoString value;
+            rv = aElement->GetAttribute(kNameSpaceID_None, *kIdentityAttrs[i], value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute");
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                nsCAutoString uri;
+                rv = nsRDFContentUtils::MakeElementURI(NS_STATIC_CAST(nsIDocument*, this), value, uri);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create element URI");
+                if (NS_FAILED(rv)) return rv;
+            
+                nsCOMPtr<nsIRDFResource> resource;
+                rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = mResources.Add(resource, aElement);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
+
+    if (aDeep) {
+        PRInt32 count;
+        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+        rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
+        if (NS_FAILED(rv)) return rv;
+
+        while (--count > 0) {
+            nsCOMPtr<nsIContent> child;
+            rv = aElement->ChildAt(count, *getter_AddRefs(child));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = AddElementToMap(child, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement, PRBool aDeep)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    if (nameSpaceID == kNameSpaceID_HTML) {
+        for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
+            nsAutoString value;
+            rv = aElement->GetAttribute(kNameSpaceID_None, *kIdentityAttrs[i], value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute");
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                nsCAutoString uri;
+                rv = nsRDFContentUtils::MakeElementURI(NS_STATIC_CAST(nsIDocument*, this), value, uri);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create element URI");
+                if (NS_FAILED(rv)) return rv;
+            
+                nsCOMPtr<nsIRDFResource> resource;
+                rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = mResources.Remove(resource, aElement);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
+
+    if (aDeep) {
+        PRInt32 count;
+        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+        rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
+        if (NS_FAILED(rv)) return rv;
+
+        while (--count > 0) {
+            nsCOMPtr<nsIContent> child;
+            rv = aElement->ChildAt(count, *getter_AddRefs(child));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = RemoveElementFromMap(child, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+
+PRIntn
+XULDocumentImpl::RemoveElementsFromMapByContent(nsIRDFResource* aResource,
+                                                nsIContent* aElement,
+                                                void* aClosure)
+{
+    nsIContent* content = NS_REINTERPRET_CAST(nsIContent*, aClosure);
+    return (aElement == content) ? HT_ENUMERATE_REMOVE : HT_ENUMERATE_NEXT;
+}
+
+
+nsresult
+XULDocumentImpl::SearchForNodeByID(const nsString& aID, 
+                                   nsIContent* aElement,
                                    nsIDOMElement** aReturn)
 {
+    nsresult rv;
+
     // See if we match.
     PRInt32 namespaceID;
-    anElement->GetNameSpaceID(namespaceID);
+    rv = aElement->GetNameSpaceID(namespaceID);
+    if (NS_FAILED(rv)) return rv;
     
-    nsAutoString idValue;
+    nsAutoString id;
+    rv = aElement->GetAttribute(namespaceID, kIdAtom, id);
+    if (NS_FAILED(rv)) return rv;
 
-    anElement->GetAttribute(namespaceID, kIdAtom, idValue);
-
-    if (idValue == anID)
-    {
-      nsCOMPtr<nsIDOMElement> pDomNode( do_QueryInterface(anElement) );
-      if (pDomNode)
-      {
-        *aReturn = pDomNode;
-        NS_ADDREF(*aReturn);
-      }
-
-      return;
+    if (id == aID) {
+        nsCOMPtr<nsIDOMElement> domNode( do_QueryInterface(aElement) );
+        NS_ASSERTION(domNode != nsnull, "not a dom node");
+        
+        if (domNode) {
+            *aReturn = domNode;
+            NS_ADDREF(*aReturn);
+        }
+        return NS_OK;
     }
 
     // Walk children.
     // XXX: Don't descend into closed tree items (or menu items or buttons?).
     PRInt32 childCount;
-    anElement->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount && !(*aReturn); i++)
-    {
-        nsIContent* pContent = nsnull;
-        anElement->ChildAt(i, pContent);
-        if (pContent)
-        {
-            SearchForNodeByID(anID, pContent, aReturn);
-            NS_RELEASE(pContent);
-        }
+    aElement->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount && !(*aReturn); i++) {
+        nsCOMPtr<nsIContent> child;
+        rv = aElement->ChildAt(i, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = SearchForNodeByID(aID, child, aReturn);
+        if (NS_FAILED(rv)) return rv;
+
+        if (*aReturn)
+            return NS_OK;
     }
+
+    return NS_OK;
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIXULParentDocument interface
@@ -3636,214 +3951,6 @@ XULDocumentImpl::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
     return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMNodeObserver interface
-
-NS_IMETHODIMP
-XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnSetNodeValue(aNode, aValue);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnInsertBefore(aParent, aNewChild, aRefChild);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnReplaceChild(aParent, aNewChild, aOldChild);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnRemoveChild(aParent, aOldChild);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-            obs->OnAppendChild(aParent, aNewChild);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMElementObserver interface
-
-NS_IMETHODIMP
-XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-            obs->OnSetAttribute(aElement, aName, aValue);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-            obs->OnRemoveAttribute(aElement, aName);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-            obs->OnSetAttributeNode(aElement, aNewAttr);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-XULDocumentImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
-{
-    PRUint32 cnt;
-    nsresult rv = mBuilders->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
-            obs->OnRemoveAttributeNode(aElement, aOldAttr);
-            NS_RELEASE(obs);
-        }
-
-        NS_RELEASE(builder);
-    }
-    return NS_OK;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -4372,5 +4479,206 @@ XULDocumentImpl::ReleaseEvent(const nsString& aType)
   }
   return NS_ERROR_FAILURE;
 }
+
+nsresult
+XULDocumentImpl::OpenWidgetItem(nsIContent* aElement)
+{
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+        nsresult rv;
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = aElement->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagStr;
+        tag->ToString(tagStr);
+
+        PR_LOG(gXULLog, PR_LOG_DEBUG,
+               ("xuldoc open-widget-item %s",
+                (const char*) nsCAutoString(tagStr)));
+    }
+#endif
+    return CreateContents(aElement);
+}
+
+nsresult
+XULDocumentImpl::CloseWidgetItem(nsIContent* aElement)
+{
+    nsresult rv;
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+        nsCOMPtr<nsIAtom> tag;
+        rv = aElement->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagStr;
+        tag->ToString(tagStr);
+
+        PR_LOG(gXULLog, PR_LOG_DEBUG,
+               ("xuldoc close-widget-item %s",
+                (const char*) nsCAutoString(tagStr)));
+    }
+#endif
+
+    // Find the tag that contains the children so that we can remove
+    // all of the children.
+    //
+    // XXX We make a bit of a leap here and assume that the same
+    // template that was used to generate _us_ was used to generate
+    // our _kids_. I'm sure this'll break when we do toolbars or
+    // something.
+    nsAutoString tmplID;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        return NS_OK;
+
+    nsCOMPtr<nsIDOMElement> tmplDOMEle;
+    rv = GetElementById(tmplID, getter_AddRefs(tmplDOMEle));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIContent> tmpl = do_QueryInterface(tmplDOMEle);
+    if (! tmpl)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIContent> tmplParent;
+    rv = tmpl->GetParent(*getter_AddRefs(tmplParent));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(tmplParent != nsnull, "template node has no parent");
+    if (! tmplParent)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIAtom> tmplParentTag;
+    rv = tmplParent->GetTag(*getter_AddRefs(tmplParentTag));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIContent> childcontainer;
+    if ((tmplParentTag.get() == kRuleAtom) || (tmplParentTag.get() == kTemplateAtom)) {
+        childcontainer = dont_QueryInterface(aElement);
+    }
+    else {
+        rv = nsRDFContentUtils::FindChildByTag(aElement,
+                                               kNameSpaceID_XUL,
+                                               tmplParentTag,
+                                               getter_AddRefs(childcontainer));
+
+        if (NS_FAILED(rv)) return rv;
+
+        if (rv == NS_RDF_NO_VALUE) {
+            // No tag; must've already been closed
+            return NS_OK;
+        }
+    }
+
+    PRInt32 count;
+    rv = childcontainer->ChildCount(count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get count of the parent's children");
+    if (NS_FAILED(rv)) return rv;
+
+    while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = childcontainer->ChildAt(count, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = childcontainer->RemoveChildAt(count, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+
+        do {
+            // If it's _not_ a XUL element, then we want to blow it and
+            // all of its kids out of the XUL document's
+            // resource-to-element map.
+            nsCOMPtr<nsIRDFResource> resource;
+            rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(resource));
+            if (NS_FAILED(rv)) break;
+
+            PRBool isXULElement;
+            rv = mDocumentDataSource->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+            if (NS_FAILED(rv)) break;
+
+            if (! isXULElement)
+                break;
+            
+            rv = child->SetDocument(nsnull, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        } while (0);
+    }
+
+    // Clear the container-contents-generated attribute so that the next time we
+    // come back, we'll regenerate the kids we just killed.
+    rv = aElement->UnsetAttribute(kNameSpaceID_None,
+                                  kContainerContentsGeneratedAtom,
+                                  PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
+
+	// This is a _total_ hack to make sure that any XUL we blow away
+	// gets rebuilt.
+	rv = childcontainer->UnsetAttribute(kNameSpaceID_None,
+                                        kXULContentsGeneratedAtom,
+                                        PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = childcontainer->SetAttribute(kNameSpaceID_None,
+                                      kLazyContentAtom,
+                                      "true",
+                                      PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+XULDocumentImpl::RemoveAndRebuildGeneratedChildren(nsIContent* aElement)
+{
+    nsresult rv;
+
+    PRInt32 count;
+    rv = aElement->ChildCount(count);
+    if (NS_FAILED(rv)) return rv;
+
+    while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tmplID;
+        rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
+        if (NS_FAILED(rv)) return rv;
+
+        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            continue;
+
+        // It's a generated element. Remove it, and set its document
+        // to null so that it'll get knocked out of the XUL doc's
+        // resource-to-element map.
+        rv = aElement->RemoveChildAt(count, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+
+        rv = child->SetDocument(nsnull, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Clear the contents-generated attribute so that the next time we
+    // come back, we'll regenerate the kids we just killed.
+    rv = aElement->UnsetAttribute(kNameSpaceID_None,
+                                  kTemplateContentsGeneratedAtom,
+                                  PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aElement->UnsetAttribute(kNameSpaceID_None,
+                                  kContainerContentsGeneratedAtom,
+                                  PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = CreateContents(aElement);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 
 

@@ -28,10 +28,12 @@
 
 #include "nsXULElement.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsIXULTreeContent.h"
 #include "nsRDFDOMNodeList.h"
 
 class nsXULTreeElement : public nsXULElement,
-                         public nsIDOMXULTreeElement
+                         public nsIDOMXULTreeElement,
+                         public nsIXULTreeContent
 {
 public:
     nsXULTreeElement(nsIDOMXULElement* aOuter);
@@ -51,10 +53,11 @@ public:
     // nsIDOMXULTreeElement interface
     NS_DECL_IDOMXULTREEELEMENT
    
+    // nsIXULTreeContent interface
+    NS_IMETHOD FireOnSelectHandler();
+
     static nsIAtom*             kSelectedAtom;
     static int gRefCnt;
-
-    void FireOnSelectHandler();
 
 protected:
     // Helpers
