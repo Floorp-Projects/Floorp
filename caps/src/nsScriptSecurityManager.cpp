@@ -20,6 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Norris Boyd
+ * Mitch Stoltz
+ * Steve Morse
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2001,6 +2004,9 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
 /////////////////////////////////////
 // Method implementing nsIObserver //
 /////////////////////////////////////
+static const char sPrincipalPrefix[] = "capability.principal";
+static const char sPolicyPrefix[] = "capability.policy";
+
 NS_IMETHODIMP
 nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
                                  const PRUnichar* aPrefName)
@@ -2030,6 +2036,11 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
             const char** idPrefArray = (const char**)&prefName;
             rv = InitPrincipals(1, idPrefArray, securityPref);
         }
+    }
+    else if((PL_strncmp(prefName, sPolicyPrefix, sizeof(sPolicyPrefix)-1) == 0))
+    {
+        const char** prefArray = (const char**)&prefName;
+        rv = InitPolicies(1, prefArray, securityPref);
     }
     PR_Free(prefName);
     return rv;
@@ -2112,7 +2123,6 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 
 const char* nsScriptSecurityManager::sJSEnabledPrefName = "javascript.enabled";
 const char* nsScriptSecurityManager::sJSMailEnabledPrefName = "javascript.allow.mailnews";
-const char* nsScriptSecurityManager::sPrincipalPrefix = "capability.principal";
 
 PR_STATIC_CALLBACK(PRBool)
 DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
@@ -2423,13 +2433,16 @@ nsScriptSecurityManager::InitPrefs()
     char** prefNames;
 
     //-- Initialize the policy database from prefs
-    rv = prefBranch->GetChildList("capability.policy", &prefCount, &prefNames);
+    rv = prefBranch->GetChildList(sPolicyPrefix, &prefCount, &prefNames);
     if (NS_SUCCEEDED(rv) && prefCount > 0)
     {
         rv = InitPolicies(prefCount, (const char**)prefNames, securityPref);
         NS_ENSURE_SUCCESS(rv, rv);
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
     }
+    //-- Set a callback for policy changes
+    prefBranchInternal->AddObserver(sPolicyPrefix, this);
+
     //-- Initialize the principals database from prefs
     rv = prefBranch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
     if (NS_SUCCEEDED(rv) && prefCount > 0)
