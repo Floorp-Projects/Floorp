@@ -85,11 +85,12 @@ titledbox {
   margin-top    : 6px;
   margin-bottom : 6px;
 }
+
 .color-well {
   width:20px;
   height: 16px; 
   border: 1px inset #CCCCCC;
-  margin: 3px 1px 5px 8px;
+  margin: 4px 2px 5px 8px;
 }
 
 .color-well[default="true"] {
@@ -97,12 +98,9 @@ titledbox {
   background-color: inherit;
 }
 
-.color-button {
-  /* shouldn't have to do this!
-     but can't get sizing in stack to work!
-  */
-  width: 38px;
-  background: transparent;
+button.color-button {
+  /* need to override large default min-width */
+  min-width : 44px;
 }
 
 #ColorPickerSwatch {
@@ -119,9 +117,9 @@ titledbox {
 
 #LastPickedColor {
   width: 17px;
-  height: 1.2em; 
+  height: 13px; 
   border: 1px inset #CCCCCC;
-  margin-bottom: 2px;
+  margin: 1px 2px 2px 4px;
 }
 
 .popup-trigger {
@@ -183,9 +181,6 @@ tree.list {
   font-weight: bold;
 }
 
-/* For a column of right-aligned text before 
-   a column of input fields, e.g., InsertTable dialog
-*/
 .right {
   /* doesn't work yet! must use align="right" in <text> */
   text-align:   right;
