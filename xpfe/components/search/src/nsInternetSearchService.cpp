@@ -2258,6 +2258,20 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	}
 #endif
 
+	// pre-compute server path (we'll discard URLs that match this)
+	nsAutoString	serverPathStr;
+	char *serverPath = nsnull;
+	aURL->GetPath(&serverPath);
+	if (serverPath)
+	{
+		serverPathStr = serverPath;
+		nsCRT::free(serverPath);
+		serverPath = nsnull;
+
+		PRInt32 serverOptionsOffset = serverPathStr.FindChar(PRUnichar('?'));
+		if (serverOptionsOffset >= 0)	serverPathStr.Truncate(serverOptionsOffset);
+	}
+
 	// look for banner once in entire document
 	nsCOMPtr<nsIRDFLiteral>	bannerLiteral;
 	if ((bannerStartStr.Length() > 0) && (bannerEndStr.Length() > 0))
@@ -2422,6 +2436,17 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 			}
 			if (host) nsCRT::free(host);
 			if (protocol) nsCRT::free(protocol);
+		}
+		else if (serverPathStr.Length() > 0)
+		{
+			// prune out any URLs that reference the search engine site
+			nsAutoString	tempHREF = hrefStr;
+			tempHREF.Insert("/", 0);
+
+			PRInt32	optionsOffset = tempHREF.FindChar(PRUnichar('?'));
+			if (optionsOffset >= 0)	tempHREF.Truncate(optionsOffset);
+
+			if (tempHREF.EqualsIgnoreCase(serverPathStr))	continue;
 		}
 		
 		char	*href = hrefStr.ToNewCString();
