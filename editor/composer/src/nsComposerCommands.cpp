@@ -44,15 +44,12 @@
 
 #include "nsIEditorShell.h"
 
-#include "nsISelection.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 
 #include "nsIClipboard.h"
 
-#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
 #include "nsComposerCommands.h"
