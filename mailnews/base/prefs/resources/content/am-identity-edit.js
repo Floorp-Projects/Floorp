@@ -96,6 +96,8 @@ function onOk()
   saveIdentitySettings(gIdentity);
 
   window.arguments[0].result = true;
+
+  return true;
 }
 
 // returns false and prompts the user if
