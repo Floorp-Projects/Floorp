@@ -1239,11 +1239,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     // means necessary
     //
 
-    // add back in the parentPos offset. Not sure why, but we need this for mail/news
-    // context menus and we can't do this in the case where there popup is anchored.
-    screenViewLocX += parentPos.x;
-    screenViewLocY += parentPos.y;    
-    
     // shrink to fit onto the screen, vertically and horizontally
     if(mRect.width > screenWidthTwips) 
         mRect.width = screenWidthTwips;    
