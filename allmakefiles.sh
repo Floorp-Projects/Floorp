@@ -850,7 +850,7 @@ for extension in $MOZ_EXTENSIONS; do
 	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    $MAKEFILES_transformiix"
 	    ;;
-        wallet ) MAKEFILES_extensions="$MAKEFILE_extensions
+        wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/wallet/Makefile
 	    extensions/wallet/public/Makefile
 	    extensions/wallet/src/Makefile
