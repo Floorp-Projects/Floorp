@@ -30,6 +30,7 @@
 /* ::::: listbox ::::: */
 
 listbox {
+  -moz-appearance: listbox;
   margin: 2px 4px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
@@ -63,6 +64,7 @@ listbox:focus > listitem[selected="true"] {
 /* ::::: listheader ::::: */
 
 listheader { 
+  -moz-appearance: treeheadercell;
   -moz-box-align: center;
   border: 2px solid;
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
