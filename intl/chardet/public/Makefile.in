@@ -39,6 +39,7 @@ EXPORTS		= \
 		nsIXMLEncodingService.h \
 		nsMetaCharsetCID.h \
 		nsXMLEncodingCID.h \
+		nsIDocumentCharsetInfo.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

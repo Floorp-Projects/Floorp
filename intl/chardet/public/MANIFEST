@@ -8,3 +8,4 @@ nsIStringCharsetDetector.h
 nsIXMLEncodingService.h
 nsMetaCharsetCID.h
 nsXMLEncodingCID.h
+nsIDocumentCharsetInfo.h
