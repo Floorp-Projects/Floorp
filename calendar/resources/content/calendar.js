@@ -1658,7 +1658,7 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
 //
 
 // returns the TZID of the timezone pref
-gDefaultTimezone = -1;
+var gDefaultTimezone = -1;
 function calendarDefaultTimezone() {
     if (gDefaultTimezone == -1) {
         var prefobj = prefService.getBranch("calendar.");
