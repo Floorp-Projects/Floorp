@@ -30,7 +30,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	/* void OpenComposeWindow (in wstring msgComposeWindowURL, in wstring originalMsgURI, in long type, in long format); */
-	NS_IMETHOD OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, nsISupports *object);
+	NS_IMETHOD OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, nsISupports *object,
+	nsIMsgIdentity *identity);
 
 	/* void OpenComposeWindowWithValues (in wstring msgComposeWindowURL, in MSG_ComposeFormat format, in wstring to, in wstring cc, in wstring bcc, in wstring newsgroups, in wstring subject, in wstring body); */
 	NS_IMETHOD OpenComposeWindowWithValues(const PRUnichar *msgComposeWindowURL, MSG_ComposeFormat format, const PRUnichar *to, const PRUnichar *cc, const PRUnichar *bcc, const PRUnichar *newsgroups,

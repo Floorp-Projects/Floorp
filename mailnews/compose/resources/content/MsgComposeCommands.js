@@ -126,10 +126,21 @@ function ComposeStartup()
 
     // fill in Identity combobox
     var identitySelect = document.getElementById("msgIdentity");
+
     if (identitySelect) {
         fillIdentitySelect(identitySelect);
+
+	// because of bug #14312, a default option was in the select widget
+	// remove it now
+ 	identitySelect.remove(0);   
     }
-    
+
+    // autoselect the first identity.  soon, we'll be smarter about this
+    // and select the one that is appropriate.  bug #10235
+    if (identitySelect) {
+	identitySelect.selectedIndex = 0;
+    }
+
     // fill in Recipient type combobox
     FillRecipientTypeCombobox();
     
@@ -432,6 +443,7 @@ function SelectAddress()
 function queryISupportsArray(supportsArray, iid) {
     var result = new Array;
     for (var i=0; i<supportsArray.Count(); i++) {
+	dump(i + "," + result[i] + "\n");
       result[i] = supportsArray.GetElementAt(i).QueryInterface(iid);
     }
     return result;
@@ -447,17 +459,21 @@ function GetIdentities()
     var identities = queryISupportsArray(idSupports,
                                          Components.interfaces.nsIMsgIdentity);
 
+    dump(identities + "\n");
     return identities;
 }
 
 function fillIdentitySelect(selectElement)
 {
     var identities = GetIdentities();
+	
+    dump("identities = " + identities + "\n");
 
     for (var i=0; i<identities.length; i++)
     {
 		var identity = identities[i];
 		var opt = new Option(identity.identityName, identity.key);
+		dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
 		selectElement.add(opt, null);
     }

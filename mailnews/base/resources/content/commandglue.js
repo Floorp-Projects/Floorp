@@ -49,6 +49,15 @@ function ComposeMessage(type, format)
 //
 //format: 0=default (use preference), 1=HTML, 2=plain text
 {
+	var folderTree = GetFolderTree();
+        var selectedFolderList = folderTree.selectedItems;
+        if(selectedFolderList.length > 0)
+        {
+                var selectedFolder = selectedFolderList[0]; 
+		var uri = selectedFolder.getAttribute('id');
+		dump("selectedFolder uri = " + uri + "\n");
+	}
+
 	dump("\nComposeMessage from XUL\n");
 	var uri = null;
 
@@ -60,7 +69,7 @@ function ComposeMessage(type, format)
 	
 	if (type == 0) //new message
 	{
-		msgComposeService.OpenComposeWindow(null, null, 0, format, null);
+		msgComposeService.OpenComposeWindow(null, null, 0, format, null, null);
 		return;
 	}
 		
@@ -85,7 +94,7 @@ function ComposeMessage(type, format)
 				{
 					if (appCore)
 						object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object);
+					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object, null);
 				}
 				else
 				{
@@ -99,7 +108,7 @@ function ComposeMessage(type, format)
 			{
 				if (appCore)
 					object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-				msgComposeService.OpenComposeWindow(null, uri, type, format, object);
+				msgComposeService.OpenComposeWindow(null, uri, type, format, object, null);
 			}
 		}
 		else
@@ -118,7 +127,7 @@ function NewMessage()
 
 function GetNewMessages()
 {
-	var folderTree = GetFolderTree();; 
+	var folderTree = GetFolderTree();
 	var selectedFolderList = folderTree.selectedItems;
 	if(selectedFolderList.length > 0)
 	{

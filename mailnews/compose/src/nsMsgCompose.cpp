@@ -958,8 +958,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   mQuotingToFollow = PR_FALSE;
 
   nsString    tmpURI(originalMsgURI);
-  char        *compString = tmpURI.ToNewCString();
-
+  
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
                                           NULL, nsCOMTypeInfo<nsIMsgQuote>::GetIID(), 

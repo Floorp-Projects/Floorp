@@ -516,8 +516,6 @@ nsMsgDBFolder::OnStartRunningUrl(nsIURI *aUrl)
 NS_IMETHODIMP
 nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
-	nsresult rv = NS_OK;
-
 	NS_PRECONDITION(aUrl, "just a sanity check");
 	nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 	if (mailUrl)

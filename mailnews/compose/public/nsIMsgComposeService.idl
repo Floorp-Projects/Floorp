@@ -30,7 +30,8 @@ interface nsIMsgComposeService : nsISupports {
 
 	/* ... */
 	void OpenComposeWindow(in wstring msgComposeWindowURL, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
-		                   in nsISupports object); /*object is temporary*/
+		                   in nsISupports object,
+				   in nsIMsgIdentity identity); /*object is temporary*/
 
 	/* ... */
 	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeFormat format,

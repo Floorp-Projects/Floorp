@@ -58,7 +58,8 @@ nsMsgComposeService::~nsMsgComposeService()
 NS_IMPL_ISUPPORTS(nsMsgComposeService, nsCOMTypeInfo<nsMsgComposeService>::GetIID());
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
+	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object,
+	nsIMsgIdentity * identity)
 {
 	nsAutoString args = "";
 	nsresult rv;

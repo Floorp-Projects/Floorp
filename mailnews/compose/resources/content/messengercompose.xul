@@ -286,8 +286,10 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 					<html:div flex="20%">&fromAddr.label;</html:div>
 					<html:select id="msgIdentity" flex="80%"
 						onkeyup="if (event.which == 9) ShouldITabIntoBody(2);"
-						onfocus="ShouldITabIntoBody(1);"
-						/>
+						onfocus="ShouldITabIntoBody(1);">
+						<!-- work around for bug #14312 -->
+						<html:option name="foo" key="foo" id="foo">foo</html:option>
+					</html:select>
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="horizontal" flex="100%">

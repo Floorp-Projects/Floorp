@@ -152,7 +152,7 @@ function MsgHome(url)
 
 function MsgNewMessage() 
 {
-  dump("\n\nMsgNewMessage from XUL\n");
+  //dump("\n\nMsgNewMessage from XUL\n");
   NewMessage();
 } 
 
@@ -163,7 +163,7 @@ function MsgGetMessage()
 
 function MsgDeleteMessage(fromToolbar)
 {
-  dump("\nMsgDeleteMessage from XUL\n");
+  //dump("\nMsgDeleteMessage from XUL\n");
   //dump("from toolbar? " + fromToolbar + "\n");
 
   var tree = GetThreadTree();
