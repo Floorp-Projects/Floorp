@@ -70,6 +70,12 @@ CPPSRCS		= \
 		nsURLParsers.cpp \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+	CPPSRCS += nsIOServiceOS2.cpp
+else
+	CPPSRCS += nsIOServiceUnix.cpp
+endif
+
 JSFILES		= \
 		$(srcdir)/nsProxyAutoConfig.js \
 		$(NULL)
