@@ -46,7 +46,7 @@ interface nsIStreamObserver : nsISupports
 // An asynchronous stream observer is used to ship data over to another thread specified
 // by the thread's event queue. The receiver stream observer is then used to receive
 // the notifications on the other thread.
-extern nsresult
+extern NS_NET nsresult
 NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           nsIEventQueue* eventQueue,
                           nsIStreamObserver* receiver);

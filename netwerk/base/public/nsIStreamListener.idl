@@ -35,14 +35,14 @@ interface nsIStreamListener : nsIStreamObserver
 // An asynchronous stream listener is used to ship data over to another thread specified
 // by the thread's event queue. The receiver stream listener is then used to receive
 // the data on the other thread.
-extern nsresult
+extern NS_NET nsresult
 NS_NewAsyncStreamListener(nsIStreamListener* *result,
                           nsIEventQueue* eventQueue,
                           nsIStreamListener* receiver);
 
 // A synchronous stream listener pushes data through a pipe that ends up
 // in an input stream to be read by another thread.
-extern nsresult
+extern NS_NET nsresult
 NS_NewSyncStreamListener(nsIStreamListener* *listener,
                          nsIBufferInputStream* *inStream);
 
