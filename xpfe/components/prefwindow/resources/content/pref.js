@@ -238,26 +238,26 @@ function PREF_ParsePref( elementID, elementObject )
  *  - in:      DOMElement representing the clicked node in the panel tree
  *  - out:     nothing;
  **/
-function PREF_SwitchPage( node )
+function PREF_SwitchPage()
 {
-  // XXX 12/04/99
-  if( node.nodeName == "treecell" && node.getAttribute("url") != "__header" ) {
-    var url = document.getElementById( this.contentFrame ).getAttribute("src");
-    var oldTag = this.wsm.GetTagFromURL( url, "/", ".xul", false );
-    // extra attributes to be saved
-    var extras  = ["pref", "preftype", "prefstring", "prefindex"];
-    dump("*** going to save page data for tag: " + oldTag + "\n");
-    this.wsm.SavePageData( oldTag, extras, false, false );      // save data from the current page. 
+  var prefPanelTree = document.getElementById( "prefsTree" );
+  var selectedItem = prefPanelTree.selectedItems[0];
 
-    var newURL = node.getAttribute("url");
-    dump("*** newURL: " + newURL + "\n");
-    var newTag = this.wsm.GetTagFromURL( newURL, "/", ".xul", false );
-    // if the page clicked is the same one, don't bother reloading it.
-    if( newTag != oldTag )
-      document.getElementById( this.contentFrame ).setAttribute( "src", newURL );
-    else 
-      return;
-  }
+  var url = document.getElementById( this.contentFrame ).getAttribute("src");
+  var oldTag = this.wsm.GetTagFromURL( url, "/", ".xul", false );
+  // extra attributes to be saved
+  var extras  = ["pref", "preftype", "prefstring", "prefindex"];
+  dump("*** going to save page data for tag: " + oldTag + "\n");
+  this.wsm.SavePageData( oldTag, extras, false, false );      // save data from the current page. 
+
+  var newURL = selectedItem.firstChild.firstChild.getAttribute("url");
+  dump("*** newURL: " + newURL + "\n");
+  var newTag = this.wsm.GetTagFromURL( newURL, "/", ".xul", false );
+  // if the page clicked is the same one, don't bother reloading it.
+  if( newTag != oldTag )
+    document.getElementById( this.contentFrame ).setAttribute( "src", newURL );
+  else 
+    return;
 }
 
 /** void onpageload ( string tag );

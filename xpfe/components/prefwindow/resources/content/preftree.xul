@@ -29,7 +29,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <tree id="prefsTree" 
-        onclick="window.handle.SwitchPage( event.target )">
+        onselect="window.handle.SwitchPage( event.target )">
  <treehead name="tree">
   <treerow>
     <treecell url="__header" value="&categoryHeader;"/>
