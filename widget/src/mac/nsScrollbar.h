@@ -82,13 +82,14 @@ private:
 	PRUint32			mThumbSize;
   PRUint32 			mLineIncrement;
   int      			mIsVertical;
-  PRBool				mMouseDownInButton;
+  PRBool				mMouseDownInScroll;
   PRBool				mWidgetArmed;
   
 
 
   int AdjustScrollBarPosition(int aPosition);
   void DrawWidget();
+  void DrawThumb(PRBool	aClear);
 
 };
 
