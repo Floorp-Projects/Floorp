@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.2 $ $Date: 2000/05/15 20:59:11 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.3 $ $Date: 2000/05/16 01:55:20 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -139,6 +139,7 @@ nss_dbm_db_get_format_version
       v.data = buffer;
       v.size = nssUTF8_Size((NSSUTF8 *)v.data, (PRStatus *)NULL);
       dbrv = db->db->put(db->db, &k, &v, 0);
+      (void)db->db->sync(db->db, 0);
       rv = nss_dbm_db_format_version;
     } else {
       /* No error return.. */
@@ -174,6 +175,11 @@ nss_dbm_db_set_label
     }
 
     dbrv = db->db->put(db->db, &k, &v, 0);
+    if( 0 != dbrv ) {
+      rv = CKR_DEVICE_ERROR;
+    }
+
+    dbrv = db->db->sync(db->db, 0);
     if( 0 != dbrv ) {
       rv = CKR_DEVICE_ERROR;
     }
@@ -248,6 +254,12 @@ nss_dbm_db_delete_object
       goto done;
     }
 
+    dbrv = dbt->my_db->db->sync(dbt->my_db->db, 0);
+    if( 0 != dbrv ) {
+      rv = CKR_DEVICE_ERROR;
+      goto done;
+    }
+
   done:
     (void)NSSCKFWMutex_Unlock(dbt->my_db->crustylock);
   }
@@ -300,6 +312,11 @@ nss_dbm_db_new_handle
     v.size = sizeof(CK_ULONG);
 
     rv = db->db->put(db->db, &k, &v, 0);
+    if( 0 != rv ) {
+      goto done;
+    }
+
+    rv = db->db->sync(db->db, 0);
     if( 0 != rv ) {
       goto done;
     }
@@ -586,6 +603,8 @@ nss_dbm_db_create_object
     if( 0 != *pdbrv ) {
       *pError = CKR_DEVICE_ERROR;
     }
+
+    (void)db->db->sync(db->db, 0);
 
     (void)NSSCKFWMutex_Unlock(db->crustylock);
   }
@@ -1030,6 +1049,8 @@ nss_dbm_db_set_object_attribute
       rv = CKR_DEVICE_ERROR;
       goto done;
     }
+
+    (void)dbt->my_db->db->sync(dbt->my_db->db, 0);
 
   done:
     (void)NSSCKFWMutex_Unlock(dbt->my_db->crustylock);
