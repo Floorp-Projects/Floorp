@@ -208,12 +208,12 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
 		if (!newsFolder->IsSubscribed())
 			return NS_OK;
 
+#endif
 		// It would be nice if the FEs did this, but I guess no one knows
 		// that offline news searching is supposed to work
-		if (NET_IsOffline())
+    if (nsMsgSearchAdapter::SearchIsOffline())
       attrib = nsMsgSearchScope::OfflineNewsgroup;
-#endif
-	}
+  }
 
   if (attrib == nsMsgSearchScope::AllSearchableGroups)
 	{

@@ -30,7 +30,8 @@
 #include "nsXPIDLString.h"
 #include "nsMsgSearchTerm.h"
 #include "nsMsgSearchBoolExpression.h"
-
+#include "nsIIOService.h"
+#include "nsNetCID.h"
 // This stuff lives in the base class because the IMAP search syntax 
 // is used by the Dredd SEARCH command as well as IMAP itself
 
@@ -60,6 +61,7 @@ const char *nsMsgSearchAdapter::m_kImapNotAnswered = " UNANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapCharset = " CHARSET ";
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMETHODIMP nsMsgSearchAdapter::FindTargetFolder(const nsMsgResultElement *,nsIMsgFolder * *)
 {
@@ -977,6 +979,16 @@ nsMsgSearchValidityManager::~nsMsgSearchValidityManager ()
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchValidityManager, nsIMsgSearchValidityManager)
 
+PRBool nsMsgSearchAdapter::SearchIsOffline()
+{
+  PRBool offline = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr <nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && ioService)
+    ioService->GetOffline(&offline);
+  return offline;
+}
+
 
 //-----------------------------------------------------------------------------
 // Bottleneck accesses to the objects so we can allocate and initialize them
@@ -993,11 +1005,23 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 
 	// hack alert...currently FEs are setting scope to News even if it should be set to OfflineNewsgroups...
 	// i'm fixing this by checking if we are in offline mode...
-#ifdef DOING_OFFLINE
-	if (NET_IsOffline() && (whichTable == news || whichTable == newsEx))
-		whichTable = localNews;
-#endif
-
+    if (whichTable == news || whichTable == newsEx || whichTable == onlineMail)
+    {
+      nsresult rv;
+      nsCOMPtr <nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
+      if (NS_SUCCEEDED(rv) && ioService)
+      {
+        PRBool offline;
+        ioService->GetOffline(&offline);
+        if (offline)
+        {
+          if (whichTable == news || whichTable == newsEx)
+            whichTable = localNews;
+          else
+            whichTable = offlineMail;
+        }
+      }
+    }
 	switch (whichTable)
 	{
 	case offlineMail:
@@ -1020,13 +1044,11 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 			err = InitNewsTable ();
 		*ppOutTable = m_newsTable;
 		break;
-#ifdef DOING_OFFLINE
 	case localNews:
 		if (!m_localNewsTable)
 			err = InitLocalNewsTable();
 		*ppOutTable = m_localNewsTable;
 		break;
-#endif
 #ifdef DOING_EXNEWSSEARCH
 	case newsEx:
 		if (!m_newsExTable)

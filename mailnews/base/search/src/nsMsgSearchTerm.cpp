@@ -1287,19 +1287,13 @@ nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
     return NS_OK;
 }
 
-// ### purely temporary
-static PRBool NET_IsOffline()
-{
-	return PR_FALSE;
-}
-
 PRBool nsMsgSearchScopeTerm::IsOfflineNews()
 {
 	switch (m_attribute)
 	{
 	case nsMsgSearchScope::Newsgroup:
 	case nsMsgSearchScope::AllSearchableGroups:
-		if (NET_IsOffline() || !m_searchServer)
+		if (nsMsgSearchAdapter::SearchIsOffline() || !m_searchServer)
 			return PR_TRUE;
 		else
 			return PR_FALSE;
@@ -1312,21 +1306,22 @@ PRBool nsMsgSearchScopeTerm::IsOfflineNews()
 
 PRBool nsMsgSearchScopeTerm::IsOfflineMail ()
 {
-	// Find out whether "this" mail folder is online or offline
-	NS_ASSERTION(m_folder, "scope doesn't have folder");
+  // Find out whether "this" mail folder is online or offline
+  NS_ASSERTION(m_folder, "scope doesn't have folder");
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
-	if (imapFolder /* && !NET_IsOffline() && m_searchServer */)    // make sure we are not in offline IMAP (mscott)
-		return PR_FALSE;
-	return PR_TRUE;  // if POP or IMAP in offline mode
+  if (imapFolder && !nsMsgSearchAdapter::SearchIsOffline() && m_searchServer)    // make sure we are not in offline IMAP (mscott)
+    return PR_FALSE;
+  return PR_TRUE;  // if POP or IMAP in offline mode
 }
 
 PRBool nsMsgSearchScopeTerm::IsOfflineIMAPMail()
 {
-	// Find out whether "this" mail folder is an offline IMAP folder
-	NS_ASSERTION(m_folder, "scope doesn't have folder");
-//	if (m_folder->GetType() == FOLDER_IMAPMAIL && (NET_IsOffline() || !m_searchServer))
-//		return PR_TRUE;
-	return PR_FALSE;       // we are not an IMAP folder that is offline
+  // Find out whether "this" mail folder is an offline IMAP folder
+  NS_ASSERTION(m_folder, "scope doesn't have folder");
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+  if (imapFolder && (nsMsgSearchAdapter::SearchIsOffline() || !m_searchServer))
+    return PR_TRUE;
+  return PR_FALSE;       // we are not an IMAP folder that is offline
 }
 
 nsresult nsMsgSearchScopeTerm::GetMailPath(nsIFileSpec **aFileSpec)

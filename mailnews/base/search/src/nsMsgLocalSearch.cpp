@@ -790,13 +790,13 @@ nsMsgSearchOfflineNews::~nsMsgSearchOfflineNews ()
 
 nsresult nsMsgSearchOfflineNews::OpenSummaryFile ()
 {
-	nsresult err = NS_OK;
+  nsresult err = NS_OK;
   nsCOMPtr <nsIDBFolderInfo>  folderInfo;
   nsCOMPtr <nsIMsgFolder> scopeFolder;
   err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
   if (NS_SUCCEEDED(err) && scopeFolder)
-    err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &m_db);
-	return err;
+    err = scopeFolder->GetMsgDatabase(nsnull, &m_db);
+  return err;
 }
 
 nsresult nsMsgSearchOfflineNews::ValidateTerms ()
