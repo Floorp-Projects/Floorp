@@ -42,15 +42,12 @@
 */
 
 #include <stdio.h>
-#include <fstream.h>
-//using namespace std;
 
 #include "plstr.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
-#include "iostream.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -84,7 +81,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
                     NS_GET_IID(nsIURI), (void**)&url);
             if (NS_FAILED(result))
             {
-                cout << "CreateInstance failed" << endl;
+                printf("CreateInstance failed\n");
                 return NS_ERROR_FAILURE;
             }
             pURL = url;
@@ -96,7 +93,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
                      do_GetService(kIOServiceCID, &result);
             if (NS_FAILED(result)) 
             {
-                cout << "Service failed!" << endl;
+                printf("Service failed!\n");
                 return NS_ERROR_FAILURE;
             }   
             result = pService->NewURI(nsDependentCString(i_pURL), nsnull, nsnull, getter_AddRefs(pURL));
@@ -161,7 +158,7 @@ nsresult writeout(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
     char* temp = 0;
     if (!i_pURL) return NS_ERROR_FAILURE;
     int rv = writeoutto(i_pURL, &temp, urlFactory);
-    cout << i_pURL << endl << temp << endl;
+    printf("%s\n%s\n", i_pURL, temp);
     delete[] temp;
     return rv;
 }
@@ -177,10 +174,10 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
     if (!gFileIO)
         return NS_ERROR_FAILURE;
 
-    ifstream testfile(gFileIO);
+    FILE *testfile = fopen(gFileIO, "rt");
     if (!testfile) 
     {
-        cerr << "Cannot open testfile: " << gFileIO << endl;
+        fprintf(stderr, "Cannot open testfile: %s\n", gFileIO);
         return NS_ERROR_FAILURE;
     }
 
@@ -190,7 +187,7 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
     char* prevResult = nsnull;
     char* tempurl = nsnull;
 
-    while (testfile.getline(temp,512))
+    while (fgets(temp,512,testfile))
     {
         if (*temp == '#' || !*temp)
             continue;
@@ -198,7 +195,7 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
         if (0 == count%3)
         {
             if (prevResult) delete[] prevResult;
-            cout << "Testing:  " << temp << endl;
+            printf("Testing:  %s\n", temp);
             writeoutto(temp, &prevResult, urlFactory);
         }
         else if (1 == count%3) {
@@ -206,24 +203,24 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
             tempurl = nsCRT::strdup(temp);
         } else { 
             if (!prevResult)
-                cout << "no results to compare to!" << endl;
+                printf("no results to compare to!\n");
             else 
             {
                 PRInt32 res;
-                cout << "Result:   " << prevResult << endl;
+                printf("Result:   %s\n", prevResult);
                 if (urlFactory != URL_FACTORY_DEFAULT) {
-                    cout << "Expected: " << tempurl << endl;
+                    printf("Expected: %s\n", tempurl);
                     res = PL_strcmp(tempurl, prevResult);
                 } else {
-                    cout << "Expected: " << temp << endl;
+                    printf("Expected: %s\n", temp);
                     res = PL_strcmp(temp, prevResult);
                 }
 
                 if (res == 0)
-                    cout << "\tPASSED" << endl << endl;
+                    printf("\tPASSED\n\n");
                 else 
                 {
-                    cout << "\tFAILED" << endl << endl;
+                    printf("\tFAILED\n\n");
                     failed++;
                 }
             }
@@ -231,10 +228,10 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
         count++;
     }
     if (failed>0) {
-        cout << failed << " tests FAILED out of " << count/3 << endl;
+        printf("%d tests FAILED out of %d\n", failed, count/3);
         return NS_ERROR_FAILURE;
     } else {
-        cout << "All " << count/3 << " tests PASSED." << endl;
+        printf("All %d tests PASSED.\n", count/3);
         return NS_OK;
     }
 }
@@ -251,7 +248,7 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
         NS_GET_IID(nsIURI), getter_AddRefs(baseURL));
     if (NS_FAILED(status))
     {
-        cout << "CreateInstance failed" << endl;
+        printf("CreateInstance failed\n");
         return status;
     }
     status = baseURL->SetSpec(nsDependentCString(i_BaseURI));
@@ -266,18 +263,18 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
     nsCAutoString temp;
     baseURL->GetSpec(temp);
 
-    cout << "Analyzing " << temp.get() << endl;
-    cout << "With      " << relativePortion << endl;
+    printf("Analyzing %s\n", temp.get());
+    printf("With      %s\n", relativePortion);
 
-    cout << "Got       " << newURL.get() << endl;
+    printf("Got       %s\n", newURL.get());
     if (expectedResult) {
-        cout << "Expect    " << expectedResult << endl;
+        printf("Expect    %s\n", expectedResult);
         int res = PL_strcmp(newURL.get(), expectedResult);
         if (res == 0) {
-            cout << "\tPASSED" << endl << endl;
+            printf("\tPASSED\n\n");
             return NS_OK;
         } else {
-            cout << "\tFAILED" << endl << endl;
+            printf("\tFAILED\n\n");
             return NS_ERROR_FAILURE;
         }
     }
@@ -390,25 +387,25 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
             failed++;
     }
     if (failed>0) {
-        cout << failed << " tests FAILED out of " << numTests << endl;
+        printf("%d tests FAILED out of %d\n", failed, numTests);
         return NS_ERROR_FAILURE;
     } else {
-        cout << "All " << numTests << " tests PASSED." << endl;
+        printf("All %d tests PASSED.\n", numTests);
         return NS_OK;
     }
 }
 
 void printusage(void)
 {
-    cout << "urltest [-std] [-file <filename>] <URL> " <<
-        " [-abs <relative>]" << endl << endl
-        << "\t-std  : Generate results using nsStdURL. "  << endl
-        << "\t-file : Read URLs from file. "  << endl
-        << "\t-abs  : Make an absolute URL from the base (<URL>) and the" << endl
-        << "\t\trelative path specified. If -abs is given without " << endl
-        << "\t\ta base URI standard RFC 2396 relative URL tests" << endl
-        << "\t\tare performed. Implies -std." << endl
-        << "\t<URL> : The string representing the URL." << endl;
+    printf("urltest [-std] [-file <filename>] <URL> "
+           " [-abs <relative>]\n\n"
+           "\t-std  : Generate results using nsStdURL.\n"
+           "\t-file : Read URLs from file.\n"
+           "\t-abs  : Make an absolute URL from the base (<URL>) and the\n"
+           "\t\trelative path specified. If -abs is given without\n"
+           "\t\ta base URI standard RFC 2396 relative URL tests\n"
+           "\t\tare performed. Implies -std.\n"
+           "\t<URL> : The string representing the URL.\n");
 }
 
 int main(int argc, char **argv)
@@ -428,7 +425,7 @@ int main(int argc, char **argv)
             registrar->AutoRegister(nsnull);
 
         // end of all messages from register components...
-        cout << "------------------" << endl << endl;
+        printf("------------------\n\n");
 
         PRInt32 urlFactory = URL_FACTORY_DEFAULT;
         PRBool bMakeAbs= PR_FALSE;

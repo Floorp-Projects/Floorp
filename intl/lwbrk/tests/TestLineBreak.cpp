@@ -35,7 +35,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <iostream.h>
+#include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
@@ -122,23 +122,23 @@ PRBool TestASCIILB(nsILineBreaker *lb,
          if (i != outlen)
          {
             ok = PR_FALSE;
-            cout << "WARNING!!! return size wrong, expect " << outlen <<
-                    " bet got " << i << "\n";
+            printf("WARNING!!! return size wrong, expect %d bet got %d \n",
+                   outlen, i);
          }
-         cout << "string  = \n" << in << "\n";
-         cout << ruler1 << "\n";
-         cout << ruler2 << "\n";
-         cout << "Expect = \n";
+         printf("string  = \n%s\n", in);
+         printf("%s\n", ruler1);
+         printf("%s\n", ruler2);
+         printf("Expect = \n");
          for(j=0;j<outlen;j++)
          {
-            cout << out[j] << ",";
+            printf("%d,", out[j]);
          }
-         cout << "\nResult = \n";
+         printf("\nResult = \n");
          for(j=0;j<i;j++)
          {
-            cout << res[j] << ",";
+            printf("%d,", res[j]);
          }
-         cout << "\n";
+         printf("\n");
          for(j=0;j<i;j++)
          {
             if(j < outlen)
@@ -146,14 +146,11 @@ PRBool TestASCIILB(nsILineBreaker *lb,
                 if (res[j] != out[j])
                 {
                    ok = PR_FALSE;
-                   cout << "[" << j << "] expect " << out[j] << " but got " <<
-                      res[j] << "\n";
+                   printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
                 }
             } else {
                    ok = PR_FALSE;
-                   cout << "[" << j << "] additional " <<
-                      res[j] << "\n";
-   
+                   printf("[%d] additional %d\n", j, res[j]);
             }
          }
          return ok;
@@ -181,23 +178,23 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
          if (i != outlen)
          {
             ok = PR_FALSE;
-            cout << "WARNING!!! return size wrong, expect " << outlen <<
-                    " bet got " << i << "\n";
+            printf("WARNING!!! return size wrong, expect %d bet got %d\n",
+                   outlen, i);
          }
-         cout << "string  = \n" << in << "\n";
-         cout << ruler1 << "\n";
-         cout << ruler2 << "\n";
-         cout << "Expect = \n";
+         printf("string  = \n%s\n", in);
+         printf("%s\n", ruler1);
+         printf("%s\n", ruler2);
+         printf("Expect = \n");
          for(j=0;j<outlen;j++)
          {
-            cout << out[j] << ",";
+            printf("%d,", out[j]);
          }
-         cout << "\nResult = \n";
+         printf("\nResult = \n");
          for(j=0;j<i;j++)
          {
-            cout << res[j] << ",";
+            printf("%d,", res[j]);
          }
-         cout << "\n";
+         printf("\n");
          for(j=0;j<i;j++)
          {
             if(j < outlen)
@@ -205,14 +202,11 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                 if (res[j] != out[j])
                 {
                    ok = PR_FALSE;
-                   cout << "[" << j << "] expect " << out[j] << " but got " <<
-                      res[j] << "\n";
+                   printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
                 }
             } else {
                    ok = PR_FALSE;
-                   cout << "[" << j << "] additional " <<
-                      res[j] << "\n";
-   
+                   printf("[%d] additional %d\n", j, res[j]);
             }
          }
          return ok;
@@ -221,9 +215,9 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
      
 PRBool TestLineBreaker()
 {
-   cout << "==================================\n";
-   cout << "Finish nsILineBreakerFactory Test \n";
-   cout << "==================================\n";
+   printf("==================================\n");
+   printf("Finish nsILineBreakerFactory Test \n");
+   printf("==================================\n");
    nsILineBreakerFactory *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
@@ -231,9 +225,9 @@ PRBool TestLineBreaker()
                                 kILineBreakerFactory,
                                 (nsISupports**) &t);
            
-   cout << "Test 1 - GetService():\n";
+   printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t1st GetService failed\n";
+     printf("\t1st GetService failed\n");
      ok = PR_FALSE;
    } else {
 #ifdef WORD_AROUND_SERVICE_MANAGER_ASSERT
@@ -246,48 +240,48 @@ PRBool TestLineBreaker()
                                 (nsISupports**) &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t2nd GetService failed\n";
+     printf("\t2nd GetService failed\n");
      ok = PR_FALSE;
    } else {
 
-     cout << "Test 3 - GetLineBreaker():\n";
+     printf("Test 3 - GetLineBreaker():\n");
      nsILineBreaker *lb;
 
      nsAutoString lb_arg;
      res = t->GetBreaker(lb_arg, &lb);
      if(NS_FAILED(res) || (lb == NULL)) {
-         cout << "GetBreaker(nsILineBreaker*) failed\n";
+         printf("GetBreaker(nsILineBreaker*) failed\n");
          ok = PR_FALSE;
      } else {
          
-         cout << "Test 4 - {First,Next}ForwardBreak():\n";
+         printf("Test 4 - {First,Next}ForwardBreak():\n");
          if( TestASCIILB(lb, teng1, sizeof(teng1)/sizeof(char), 
                    exp1, sizeof(exp1)/sizeof(PRUint32)) )
          {
-           cout << "Test 4 Passed\n\n";
+           printf("Test 4 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 4 Failed\n\n";
+           printf("Test 4 Failed\n\n");
          }
 
-         cout << "Test 5 - {First,Next}ForwardBreak():\n";
+         printf("Test 5 - {First,Next}ForwardBreak():\n");
          if(TestASCIILB(lb, teng2, sizeof(teng2)/sizeof(char), 
                    lexp2, sizeof(lexp2)/sizeof(PRUint32)) )
          {
-           cout << "Test 5 Passed\n\n";
+           printf("Test 5 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 5 Failed\n\n";
+           printf("Test 5 Failed\n\n");
          }
 
-         cout << "Test 6 - {First,Next}ForwardBreak():\n";
+         printf("Test 6 - {First,Next}ForwardBreak():\n");
          if(TestASCIILB(lb, teng3, sizeof(teng3)/sizeof(char), 
                    exp3, sizeof(exp3)/sizeof(PRUint32)) )
          {
-           cout << "Test 6 Passed\n\n";
+           printf("Test 6 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 6 Failed\n\n";
+           printf("Test 6 Failed\n\n");
          }
 
 
@@ -298,18 +292,18 @@ PRBool TestLineBreaker()
      res = nsServiceManager::ReleaseService(kLWBrkCID, t);
 #endif
    }
-   cout << "==================================\n";
-   cout << "Finish nsILineBreakerFactory Test \n";
-   cout << "==================================\n";
+   printf("==================================\n");
+   printf("Finish nsILineBreakerFactory Test \n");
+   printf("==================================\n");
 
    return ok;
 }
 
 PRBool TestWordBreaker()
 {
-   cout << "==================================\n";
-   cout << "Finish nsIWordBreakerFactory Test \n";
-   cout << "==================================\n";
+   printf("==================================\n");
+   printf("Finish nsIWordBreakerFactory Test \n");
+   printf("==================================\n");
    nsIWordBreakerFactory *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
@@ -317,9 +311,9 @@ PRBool TestWordBreaker()
                                 kIWordBreakerFactory,
                                 (nsISupports**) &t);
            
-   cout << "Test 1 - GetService():\n";
+   printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t1st GetService failed\n";
+     printf("\t1st GetService failed\n");
      ok = PR_FALSE;
    } else {
      res = nsServiceManager::ReleaseService(kLWBrkCID, t);
@@ -330,48 +324,48 @@ PRBool TestWordBreaker()
                                 (nsISupports**) &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t2nd GetService failed\n";
+     printf("\t2nd GetService failed\n");
      ok = PR_FALSE;
    } else {
 
-     cout << "Test 3 - GetWordBreaker():\n";
+     printf("Test 3 - GetWordBreaker():\n");
      nsIWordBreaker *lb;
 
      nsAutoString lb_arg;
      res = t->GetBreaker(lb_arg, &lb);
      if(NS_FAILED(res) || (lb == NULL)) {
-         cout << "GetBreaker(nsIWordBreaker*) failed\n";
+         printf("GetBreaker(nsIWordBreaker*) failed\n");
          ok = PR_FALSE;
      } else {
          
-         cout << "Test 4 - {First,Next}ForwardBreak():\n";
+         printf("Test 4 - {First,Next}ForwardBreak():\n");
          if( TestASCIIWB(lb, teng1, sizeof(teng1)/sizeof(char), 
                    wexp1, sizeof(wexp1)/sizeof(PRUint32)) )
          {
-           cout << "Test 4 Passed\n\n";
+           printf("Test 4 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 4 Failed\n\n";
+           printf("Test 4 Failed\n\n");
          }
 
-         cout << "Test 5 - {First,Next}ForwardBreak():\n";
+         printf("Test 5 - {First,Next}ForwardBreak():\n");
          if(TestASCIIWB(lb, teng2, sizeof(teng2)/sizeof(char), 
                    wexp2, sizeof(wexp2)/sizeof(PRUint32)) )
          {
-           cout << "Test 5 Passed\n\n";
+           printf("Test 5 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 5 Failed\n\n";
+           printf("Test 5 Failed\n\n");
          }
 
-         cout << "Test 6 - {First,Next}ForwardBreak():\n";
+         printf("Test 6 - {First,Next}ForwardBreak():\n");
          if(TestASCIIWB(lb, teng3, sizeof(teng3)/sizeof(char), 
                    wexp3, sizeof(wexp3)/sizeof(PRUint32)) )
          {
-           cout << "Test 6 Passed\n\n";
+           printf("Test 6 Passed\n\n");
          } else {
            ok = PR_FALSE;
-           cout << "Test 6 Failed\n\n";
+           printf("Test 6 Failed\n\n");
          }
 
 
@@ -380,9 +374,9 @@ PRBool TestWordBreaker()
 
      res = nsServiceManager::ReleaseService(kLWBrkCID, t);
    }
-   cout << "==================================\n";
-   cout << "Finish nsIWordBreakerFactory Test \n";
-   cout << "==================================\n";
+   printf("==================================\n");
+   printf("Finish nsIWordBreakerFactory Test \n");
+   printf("==================================\n");
 
    return ok;
 }
@@ -472,8 +466,8 @@ void SamplePrintWordWithBreak()
         fragText = nextFragText;
       }
    }
-   cout << "Output From  SamplePrintWordWithBreak() \n\n";
-   cout << "[" << NS_LossyConvertUCS2toASCII(result).get() << "]\n";
+   printf("Output From  SamplePrintWordWithBreak() \n\n");
+   printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
 }
 
 void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
@@ -560,8 +554,8 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      }
    }
    
-   cout << "Output From  SamplePrintWordWithBreak() \n\n";
-   cout << "[" << NS_LossyConvertUCS2toASCII(result).get() << "]\n";
+   printf("Output From  SamplePrintWordWithBreak() \n\n");
+   printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
 }
 
 // Main
@@ -571,37 +565,37 @@ int main(int argc, char** argv) {
    NS_InitXPCOM2(nsnull, nsnull, nsnull);
    
    // --------------------------------------------
-   cout << "Test Line Break\n";
+   printf("Test Line Break\n");
 
    PRBool lbok ; 
    PRBool wbok ; 
    lbok =TestWordBreaker();
    if(lbok)
-      cout <<  "Line Break Test\nOK\n";
+      printf("Line Break Test\nOK\n");
    else
-      cout <<  "Line Break Test\nFailed\n";
+      printf("Line Break Test\nFailed\n");
 
    wbok = TestLineBreaker();
    if(wbok)
-      cout <<  "Word Break Test\nOK\n";
+      printf("Word Break Test\nOK\n");
    else
-      cout <<  "Word Break Test\nFailed\n";
+      printf("Word Break Test\nFailed\n");
 
    SampleWordBreakUsage();
    
 
    // --------------------------------------------
-   cout << "Finish All The Test Cases\n";
+   printf("Finish All The Test Cases\n");
    nsresult res = NS_OK;
    res = nsComponentManager::FreeLibraries();
 
    if(NS_FAILED(res))
-      cout << "nsComponentManager failed\n";
+      printf("nsComponentManager failed\n");
    else
-      cout << "nsComponentManager FreeLibraries Done\n";
+      printf("nsComponentManager FreeLibraries Done\n");
    if(lbok && wbok)
-      cout <<  "Line/Word Break Test\nOK\n";
+      printf("Line/Word Break Test\nOK\n");
    else
-      cout <<  "Line/Word Break Test\nFailed\n";
+      printf("Line/Word Break Test\nFailed\n");
    return 0;
 }

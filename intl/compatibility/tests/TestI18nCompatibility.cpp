@@ -36,7 +36,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <iostream.h>
+#include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
       nsMemory::Free(charsetUni);
 
       if (NULL != tempCstr) {
-        cout << csid << " " << tempCstr << "\n";
+        printf("%us %s\n", csid, tempCstr);
         delete [] tempCstr;
       }
     }

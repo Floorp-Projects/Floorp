@@ -36,7 +36,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <iostream.h>
+#include <stdio.h>
 #include "nsISupports.h"
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
@@ -267,18 +267,18 @@ static PRUnichar t4result[T4LEN+1] =  {
 
 void TestCaseConversion()
 {
-   cout << "==============================\n";
-   cout << "Start nsICaseConversion Test \n";
-   cout << "==============================\n";
+   printf("==============================\n");
+   printf("Start nsICaseConversion Test \n");
+   printf("==============================\n");
    nsICaseConversion *t = NULL;
    nsresult res;
    res = nsServiceManager::GetService(kUnicharUtilCID,
                                 kCaseConversionIID,
                                 (nsISupports**) &t);
            
-   cout << "Test 1 - GetService():\n";
+   printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t1st GetService failed\n";
+     printf("\t1st GetService failed\n");
    } else {
      res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
    }
@@ -288,97 +288,97 @@ void TestCaseConversion()
                                 (nsISupports**) &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t2nd GetService failed\n";
+     printf("\t2nd GetService failed\n");
    } else {
      int i;
      PRUnichar ch;
      PRUnichar buf[256];
 
-    cout << "Test 2 - ToUpper(PRUnichar, PRUnichar*):\n";
+    printf("Test 2 - ToUpper(PRUnichar, PRUnichar*):\n");
     for(i=0;i < T2LEN ; i++)
     {
          res = t->ToUpper(t2data[i], &ch);
          if(NS_FAILED(res)) {
-            cout << "\tFailed!! return value != NS_OK\n";
+            printf("\tFailed!! return value != NS_OK\n");
             break;
          }
          if(ch != t2result[i]) 
-            cout << "\tFailed!! result unexpected " << i << "\n";
+            printf("\tFailed!! result unexpected %d\n", i);
      }
 
 
-    cout << "Test 3 - ToLower(PRUnichar, PRUnichar*):\n";
+    printf("Test 3 - ToLower(PRUnichar, PRUnichar*):\n");
     for(i=0;i < T3LEN; i++)
     {
          res = t->ToLower(t3data[i], &ch);
          if(NS_FAILED(res)) {
-            cout << "\tFailed!! return value != NS_OK\n";
+            printf("\tFailed!! return value != NS_OK\n");
             break;
          }
          if(ch != t3result[i]) 
-            cout << "\tFailed!! result unexpected " << i << "\n";
+            printf("\tFailed!! result unexpected %d\n", i);
      }
 
 
-    cout << "Test 4 - ToTitle(PRUnichar, PRUnichar*):\n";
+    printf("Test 4 - ToTitle(PRUnichar, PRUnichar*):\n");
     for(i=0;i < T4LEN; i++)
     {
          res = t->ToTitle(t4data[i], &ch);
          if(NS_FAILED(res)) {
-            cout << "\tFailed!! return value != NS_OK\n";
+            printf("\tFailed!! return value != NS_OK\n");
             break;
          }
          if(ch != t4result[i]) 
-            cout << "\tFailed!! result unexpected " << i << "\n";
+            printf("\tFailed!! result unexpected %d\n", i);
      }
 
 
-    cout << "Test 5 - ToUpper(PRUnichar*, PRUnichar*, PRUint32):\n";
+    printf("Test 5 - ToUpper(PRUnichar*, PRUnichar*, PRUint32):\n");
     res = t->ToUpper(t2data, buf, T2LEN);
     if(NS_FAILED(res)) {
-       cout << "\tFailed!! return value != NS_OK\n";
+       printf("\tFailed!! return value != NS_OK\n");
     } else {
        for(i = 0; i < T2LEN; i++)
        {
           if(buf[i] != t2result[i])
           {
-            cout << "\tFailed!! result unexpected " << i << "\n";
+            printf("\tFailed!! result unexpected %d\n", i);
             break;
           }
        }
     }
 
-    cout << "Test 6 - ToLower(PRUnichar*, PRUnichar*, PRUint32):\n";
+    printf("Test 6 - ToLower(PRUnichar*, PRUnichar*, PRUint32):\n");
     res = t->ToLower(t3data, buf, T3LEN);
     if(NS_FAILED(res)) {
-       cout << "\tFailed!! return value != NS_OK\n";
+       printf("\tFailed!! return value != NS_OK\n");
     } else {
        for(i = 0; i < T3LEN; i++)
        {
           if(buf[i] != t3result[i])
           {
-            cout << "\tFailed!! result unexpected " << i << "\n";
+            printf("\tFailed!! result unexpected %d\n", i);
             break;
           }
        }
     }
 
-     cout << "Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n";
-     cout << "!!! To Be Implemented !!!\n";
+     printf("Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n");
+     printf("!!! To Be Implemented !!!\n");
 
    res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
    }
-   cout << "==============================\n";
-   cout << "Finish nsICaseConversion Test \n";
-   cout << "==============================\n";
+   printf("==============================\n");
+   printf("Finish nsICaseConversion Test \n");
+   printf("==============================\n");
 
 }
 
 static void TestEntityConversion(PRUint32 version)
 {
-  cout << "==============================\n";
-  cout << "Start nsIEntityConverter Test \n";
-  cout << "==============================\n";
+  printf("==============================\n");
+  printf("Start nsIEntityConverter Test \n");
+  printf("==============================\n");
 
   PRUint32 i;
   nsString inString;
@@ -394,7 +394,7 @@ static void TestEntityConversion(PRUint32 version)
 
   nsCOMPtr <nsIEntityConverter> entityConv;
   res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n"; return;}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n"); return;}
 
 
   // convert char by char
@@ -402,7 +402,7 @@ static void TestEntityConversion(PRUint32 version)
     char *entity = NULL;
     res = entityConv->ConvertToEntity(inString[i], version, &entity);
     if (NS_SUCCEEDED(res) && NULL != entity) {
-      cout << inString[i] << " " << entity << "\n";
+      printf("%c %s\n", inString[i], entity);
       nsMemory::Free(entity);
     }
   }
@@ -412,23 +412,23 @@ static void TestEntityConversion(PRUint32 version)
   res = entityConv->ConvertToEntities(inString.get(), version, &entities);
   if (NS_SUCCEEDED(res) && NULL != entities) {
     for (i = 0; i < nsCRT::strlen(entities); i++) {
-      cout << (char) entities[i];
+      printf("%c", (char) entities[i]);
       if (';' == (char) entities[i])
-        cout << "\n";
+        printf("\n");
     }
     nsMemory::Free(entities);
   }
 
-  cout << "==============================\n";
-  cout << "Finish nsIEntityConverter Test \n";
-  cout << "==============================\n\n";
+  printf("==============================\n");
+  printf("Finish nsIEntityConverter Test \n");
+  printf("==============================\n\n");
 }
 
 static void TestSaveAsCharset()
 {
-  cout << "==============================\n";
-  cout << "Start nsISaveAsCharset Test \n";
-  cout << "==============================\n";
+  printf("==============================\n");
+  printf("Start nsISaveAsCharset Test \n");
+  printf("==============================\n");
 
   nsresult res;
 
@@ -438,84 +438,84 @@ static void TestSaveAsCharset()
   
   // first, dump input string
   for (PRUint32 i = 0; i < inString.Length(); i++) {
-    cout << inString[i] << " ";
+    printf("%c ", inString[i]);
   }
-  cout << "\n";
+  printf("\n");
 
   nsCOMPtr <nsISaveAsCharset> saveAsCharset;
   res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, NS_GET_IID(nsISaveAsCharset), getter_AddRefs(saveAsCharset));
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   
-  cout << "ISO-8859-1 " << "attr_plainTextDefault " << "entityNone " << "\n";
+  printf("ISO-8859-1 attr_plainTextDefault entityNone\n");
   res = saveAsCharset->Init("ISO-8859-1", 
                                  nsISaveAsCharset::attr_plainTextDefault, 
                                  nsIEntityConverter::entityNone);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
 
-  cout << "ISO-2022-JP " << "attr_plainTextDefault " << "entityNone " << "\n";
+  printf("ISO-2022-JP attr_plainTextDefault entityNone\n");
   res = saveAsCharset->Init("ISO-2022-JP", 
                                  nsISaveAsCharset::attr_plainTextDefault,
                                  nsIEntityConverter::entityNone);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
   if (NS_ERROR_UENC_NOMAPPING == res) {
     outString = ToNewUTF8String(inString);
-    if (NULL == outString) {cout << "\tFailed!! output null\n";}
-    else {cout << "Fall back to UTF-8: " << outString << "\n"; nsMemory::Free(outString);}
+    if (NULL == outString) {printf("\tFailed!! output null\n");}
+    else {printf("Fall back to UTF-8: %s\n", outString); nsMemory::Free(outString);}
   }
 
-  cout << "ISO-2022-JP " << "attr_FallbackQuestionMark " << "entityNone " << "\n";
+  printf("ISO-2022-JP attr_FallbackQuestionMark entityNone\n");
   res = saveAsCharset->Init("ISO-2022-JP", 
                                  nsISaveAsCharset::attr_FallbackQuestionMark,
                                  nsIEntityConverter::entityNone);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
 
-  cout << "ISO-2022-JP " << "attr_FallbackEscapeU " << "entityNone " << "\n";
+  printf("ISO-2022-JP attr_FallbackEscapeU entityNone\n");
   res = saveAsCharset->Init("ISO-2022-JP", 
                                  nsISaveAsCharset::attr_FallbackEscapeU,
                                  nsIEntityConverter::entityNone);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
 
-  cout << "ISO-8859-1 " << "attr_htmlTextDefault " << "html40Latin1 " << "\n";
+  printf("ISO-8859-1 attr_htmlTextDefault html40Latin1\n");
   res = saveAsCharset->Init("ISO-8859-1", 
                                  nsISaveAsCharset::attr_htmlTextDefault, 
                                  nsIEntityConverter::html40Latin1);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
 
-  cout << "ISO-8859-1 " << "attr_FallbackHexNCR+attr_EntityAfterCharsetConv " << "html40Latin1 " << "\n";
+  printf("ISO-8859-1 attr_FallbackHexNCR+attr_EntityAfterCharsetConv html40Latin1 \n");
   res = saveAsCharset->Init("ISO-8859-1", 
                                  nsISaveAsCharset::attr_FallbackHexNCR + 
                                  nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                                  nsIEntityConverter::html40Latin1);
-  if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
+  if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
-  if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsMemory::Free(outString);}
+  if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
+  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  else {printf("%s\n", outString); nsMemory::Free(outString);}
 
 
-  cout << "==============================\n";
-  cout << "Finish nsISaveAsCharset Test \n";
-  cout << "==============================\n\n";
+  printf("==============================\n");
+  printf("Finish nsISaveAsCharset Test \n");
+  printf("==============================\n\n");
 }
 
 static PRUnichar normStr[] = 
@@ -544,18 +544,18 @@ static PRUnichar nfdForm[] =
 
 void TestNormalization()
 {
-   cout << "==============================\n";
-   cout << "Start nsIUnicodeNormalizer Test \n";
-   cout << "==============================\n";
+   printf("==============================\n");
+   printf("Start nsIUnicodeNormalizer Test \n");
+   printf("==============================\n");
    nsIUnicodeNormalizer *t = NULL;
    nsresult res;
    res = nsServiceManager::GetService(kUnicodeNormalizerCID,
                                       NS_GET_IID(nsIUnicodeNormalizer),
                                       (nsISupports**) &t);
            
-   cout << "Test 1 - GetService():\n";
+   printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t1st Norm GetService failed\n";
+     printf("\t1st Norm GetService failed\n");
    } else {
      res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
    }
@@ -565,23 +565,23 @@ void TestNormalization()
                                 (nsISupports**) &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t2nd GetService failed\n";
+     printf("\t2nd GetService failed\n");
    } else {
-    cout << "Test 2 - NormalizeUnicode(PRUint32, const nsAString&, nsAString&):\n";
+    printf("Test 2 - NormalizeUnicode(PRUint32, const nsAString&, nsAString&):\n");
     nsAutoString resultStr;
     res =  t->NormalizeUnicodeNFD(nsDependentString(normStr), resultStr);
     if (resultStr.Equals(nfdForm)) {
-      cout << " Succeeded in NFD UnicodeNormalizer test. \n";
+      printf(" Succeeded in NFD UnicodeNormalizer test. \n");
     } else {
-      cout << " Failed in NFD UnicodeNormalizer test. \n";
+      printf(" Failed in NFD UnicodeNormalizer test. \n");
     }
 
 
     res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
    }
-   cout << "==============================\n";
-   cout << "Finish nsIUnicodeNormalizer Test \n";
-   cout << "==============================\n";
+   printf("==============================\n");
+   printf("Finish nsIUnicodeNormalizer Test \n");
+   printf("==============================\n");
 
 }
 
@@ -611,14 +611,14 @@ int main(int argc, char** argv) {
    TestNormalization();
 
    // --------------------------------------------
-   cout << "Finish All The Test Cases\n";
+   printf("Finish All The Test Cases\n");
    nsresult res = NS_OK;
    res = nsComponentManager::FreeLibraries();
 
    if(NS_FAILED(res))
-      cout << "nsComponentManager failed\n";
+      printf("nsComponentManager failed\n");
    else
-      cout << "nsComponentManager FreeLibraries Done\n";
+      printf("nsComponentManager FreeLibraries Done\n");
    return 0;
 }
 

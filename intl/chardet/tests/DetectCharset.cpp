@@ -36,7 +36,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <iostream.h>
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsICharsetDetector.h"

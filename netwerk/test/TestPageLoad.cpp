@@ -49,7 +49,6 @@
 #include "prlong.h"
 #include "plstr.h"
 #include "nsSupportsArray.h"
-#include <fstream.h>
 #include "nsReadableUtils.h"
 #include "nsIComponentRegistrar.h"
 int getStrLine(const char *src, char *str, int ind, int max);

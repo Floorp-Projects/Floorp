@@ -40,7 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
-#include <iostream.h>
+#include <stdio.h>
 
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
@@ -118,9 +118,9 @@ main(int argc, char *argv[])
   nsAutoString country;
   ret = getUILangCountry(uiLang, country);
 #if DEBUG_tao
-  cout << "\n uiLang=" << NS_LossyConvertUTF16toASCII(uiLang).get()
-       << ", country=" << NS_LossyConvertUTF16toASCII(country).get()
-       << "\n" << endl;
+  printf("\n uiLang=%s, country=%s\n\n",
+         NS_LossyConvertUTF16toASCII(uiLang).get(),
+         NS_LossyConvertUTF16toASCII(country).get());
 #endif
 
   nsIStringBundle* bundle = nsnull;
@@ -144,7 +144,7 @@ main(int argc, char *argv[])
   }
   v = ptrv;
   value = ToNewCString(v);
-  cout << "123=\"" << value << "\"" << endl;
+  printf("123=\"%s\"\n", value);
 
   // file
   nsString strfile;
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
   }
   v = ptrv;
   value = ToNewCString(v);
-  cout << "file=\"" << value << "\"" << endl;
+  printf("file=\"%s\"\n", value);
 
   return 0;
 }
