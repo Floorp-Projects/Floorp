@@ -959,6 +959,10 @@ void nsTextAddress::AddLdifRowToDatabase( void)
 		m_ldifLine.Truncate();
 }
 
+// We have two copies of this function in the code, one here fo rimport and 
+// the other one in addrbook/src/nsAddressBook.cpp for migrating.  If ths 
+// function need modification, make sure change in both places until we resolve
+// this problem.
 void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList)
 {
     nsCAutoString colType(typeSlot);
@@ -980,7 +984,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 		else
 		  m_database->AddDisplayName(newRow, column);
 	  }
-	  else if ( -1 != colType.Find("countryName") )
+	  else if ( -1 != colType.Find("countryname") )
 		m_database->AddWorkCountry(newRow, column);
 
 	  // else if ( -1 != colType.Find("charset") )
@@ -1144,10 +1148,14 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  break; // 'n'
 
 	case 'o':
-//		  if ( -1 != colType.Find("o") ) // organization
-//			ioRow->AddColumn(ev, this->ColCompany(), yarn);
-//		  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
-//			ioRow->AddColumn(ev, this->ColDepartment(), yarn);
+	  if ( -1 != colType.Find("objectclass"))
+		break;
+
+	  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
+		m_database->AddDepartment(newRow, column);
+
+	  else if ( -1 != colType.Find("o") ) // organization
+		m_database->AddCompany(newRow, column);
 
 	  break; // 'o'
 
@@ -1197,11 +1205,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  if ( -1 != colType.Find("sn") || -1 != colType.Find("surname") )
 		m_database->AddLastName(newRow, column);
 
+	  else if ( -1 != colType.Find("streetaddress") )
+		m_database->AddWorkAddress(newRow, column);
+
 	  else if ( -1 != colType.Find("st") )
 		m_database->AddWorkState(newRow, column);
 
-	  else if ( -1 != colType.Find("streetaddress") )
-		m_database->AddWorkAddress2(newRow, column);
 
 //		  else if ( -1 != colType.Find("secretary") )
 //			ioRow->AddColumn(ev, this->ColSecretary(), yarn);
@@ -1263,7 +1272,11 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  }
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
-		; //add use plain text
+		column.ToLowerCase();
+		if (-1 != column.Find("true"))
+			m_database->AddSendPlainText(newRow, PR_TRUE);
+		else
+			m_database->AddSendPlainText(newRow, PR_FALSE);
 	  }
 
 	  break; // 'x'

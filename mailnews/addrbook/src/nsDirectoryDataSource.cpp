@@ -583,8 +583,7 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 			PRUint32 i;
 			for (i = 0; i < total; i++)
 			{
-				nsCOMPtr<nsISupports> mailList;
-				mailList = pAddressLists->ElementAt(i);
+				nsCOMPtr<nsISupports> mailList = getter_AddRefs(pAddressLists->ElementAt(i));
 				if (mailList)
 					mailList->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)target);
 				else

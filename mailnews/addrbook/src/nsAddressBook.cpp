@@ -446,7 +446,7 @@ protected:
     nsresult ParseLDIFFile();
 	void AddTabRowToDatabase();
 	void AddLdifRowToDatabase();
-	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot);
+	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
 
 	nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos);
 	nsresult str_parse_line(char *line, char	**type, char **value, int *vlen);
@@ -978,10 +978,19 @@ nsresult AddressBookParser::ParseLDIFFile()
 
 void AddressBookParser::AddLdifRowToDatabase()
 {
+	PRBool bIsList = PR_FALSE;
+	if (mLine.Find("groupOfNames") == -1)
+		bIsList = PR_FALSE;
+	else
+		bIsList = PR_TRUE;
+
 	nsIMdbRow* newRow = nsnull;
 	if (mDatabase)
 	{
-		mDatabase->GetNewRow(&newRow); 
+		if (bIsList)
+			mDatabase->GetNewListRow(&newRow); 
+		else
+			mDatabase->GetNewRow(&newRow); 
 
 		if (!newRow)
 			return;
@@ -999,7 +1008,7 @@ void AddressBookParser::AddLdifRowToDatabase()
 	{
 		if ( str_parse_line(line, &typeSlot, &valueSlot, &length) == 0 )
 		{
-			AddLdifColToDatabase(newRow, typeSlot, valueSlot);
+			AddLdifColToDatabase(newRow, typeSlot, valueSlot, bIsList);
 		}
 		else
 			continue; // parse error: continue with next loop iteration
@@ -1011,12 +1020,15 @@ void AddressBookParser::AddLdifRowToDatabase()
 		mLine.Truncate();
 }
 
-void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot)
+// We have two copies of this function in the code, one here fo rimport and 
+// the other one in addrbook/src/nsAddressBook.cpp for migrating.  If ths 
+// function need modification, make sure change in both places until we resolve
+// this problem.
+void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList)
 {
     nsCAutoString colType(typeSlot);
     nsCAutoString column(valueSlot);
 
-//	mdb_u1 firstByte = (mdb_u1)colType[0];
 	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
 	switch ( firstByte )
 	{
@@ -1027,9 +1039,13 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'c':
 	  if ( -1 != colType.Find("cn") || -1 != colType.Find("commonname") )
-		mDatabase->AddDisplayName(newRow, column);
-
-	  else if ( -1 != colType.Find("countryName") )
+	  {
+		if (bIsList)
+		  mDatabase->AddListName(newRow, column);
+		else
+		  mDatabase->AddDisplayName(newRow, column);
+	  }
+	  else if ( -1 != colType.Find("countryname") )
 		mDatabase->AddWorkCountry(newRow, column);
 
 	  // else if ( -1 != colType.Find("charset") )
@@ -1069,8 +1085,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'd':
 	  if ( -1 != colType.Find("description") )
-		mDatabase->AddNotes(newRow, column);
-
+	  {
+		if (bIsList)
+		  mDatabase->AddListDescription(newRow, column);
+		else
+		  mDatabase->AddNotes(newRow, column);
+	  }
 //		  else if ( -1 != colType.Find("dn") ) // distinuished name
 //			ioRow->AddColumn(ev, this->ColDistName(), yarn);
 
@@ -1191,27 +1211,14 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	  break; // 'n'
 
 	case 'o':
-//		  if ( -1 != colType.Find("o") ) // organization
-//			ioRow->AddColumn(ev, this->ColCompany(), yarn);
+	  if ( -1 != colType.Find("objectclass"))
+		break;
 
-//		  else if ( -1 != colType.Find("objectclass") ) 
-//		  {
-//			if ( strcasecomp(inVal, "person") ) // objectclass == person?
-//			{
-//			  this->put-bool-row-col(row, this->ColPerson(), mdbBool_kTrue);
-//			}
-//			else if ( strcasecomp(inVal, "groupofuniquenames") || 
-//			  strcasecomp(inVal, "groupOfNames") ) // objectclass == list?
-//			{
-//			  this->put-bool-row-col(row, this->ColPerson(), mdbBool_kFalse);
-//			  isList = mdbBool_kTrue;
-//			  if ( !list )
-//				list = this->make-new-mdb-list-table-for-row(ioRow);
-//			}
-//		  }
+	  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
+		mDatabase->AddDepartment(newRow, column);
 
-//		  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
-//			ioRow->AddColumn(ev, this->ColDepartment(), yarn);
+	  else if ( -1 != colType.Find("o") ) // organization
+		mDatabase->AddCompany(newRow, column);
 
 	  break; // 'o'
 
@@ -1261,11 +1268,11 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	  if ( -1 != colType.Find("sn") || -1 != colType.Find("surname") )
 		mDatabase->AddLastName(newRow, column);
 
+	  else if ( -1 != colType.Find("streetaddress") )
+		mDatabase->AddWorkAddress(newRow, column);
+
 	  else if ( -1 != colType.Find("st") )
 		mDatabase->AddWorkState(newRow, column);
-
-	  else if ( -1 != colType.Find("streetaddress") )
-		mDatabase->AddWorkAddress2(newRow, column);
 
 //		  else if ( -1 != colType.Find("secretary") )
 //			ioRow->AddColumn(ev, this->ColSecretary(), yarn);
@@ -1325,7 +1332,11 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
-		; //add use plain text
+		column.ToLowerCase();
+		if (-1 != column.Find("true"))
+			mDatabase->AddSendPlainText(newRow, PR_TRUE);
+		else
+			mDatabase->AddSendPlainText(newRow, PR_FALSE);
 	  }
 
 	  break; // 'x'
