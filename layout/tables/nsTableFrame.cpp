@@ -52,7 +52,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugCLD = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 static const PRBool gsDebugIR = PR_FALSE;
-
 #endif
 
 #ifndef max
@@ -271,6 +270,7 @@ nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
     mColCache(nsnull),
     mTableLayoutStrategy(nsnull),
     mFirstPassValid(PR_FALSE),
+    mColumnWidthsValid(PR_FALSE),
     mColumnCacheValid(PR_FALSE),
     mCellMapValid(PR_TRUE),
     mIsInvariantWidth(PR_FALSE)
@@ -1565,7 +1565,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (PR_TRUE==gsDebug) printf("TIF Reflow: needs reflow\n");
     if (eReflowReason_Initial!=aReflowState.reason && PR_FALSE==IsCellMapValid())
     {
-      if (PR_TRUE==gsDebug) printf("TIF Reflow: not initial reflow, so resetting cell map.\n");
+      if (PR_TRUE==gsDebug) printf("TIF Reflow: cell map invalid, rebuilding...\n");
       if (nsnull!=mCellMap)
         delete mCellMap;
       mCellMap = new nsCellMap(0,0);
@@ -1574,14 +1574,17 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     }
     if (PR_FALSE==IsFirstPassValid())
     {
-      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid\n");
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid, rebuilding...\n");
       rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, aReflowState.reason);
       if (NS_FAILED(rv))
         return rv;
       needsRecalc=PR_TRUE;
     }
     if (PR_FALSE==IsColumnCacheValid())
+    {
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: column cache is invalid, rebuilding...\n");
       needsRecalc=PR_TRUE;
+    }
     if (PR_TRUE==needsRecalc)
     {
       if (PR_TRUE==gsDebugIR) printf("TIF Reflow: needs recalc.\n");
@@ -1590,11 +1593,20 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       {
         if (PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
         mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
+        mColumnWidthsValid=PR_TRUE;
       }
       BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
       RecalcLayoutData();  // Recalculate Layout Dependencies
     }
-
+    if (PR_FALSE==IsColumnWidthsValid())
+    {
+      if (PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
+      if (nsnull!=mTableLayoutStrategy)
+      {
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
+        mColumnWidthsValid=PR_TRUE;
+      }
+    }
 
     if (nsnull==mPrevInFlow)
     { // only do this for a first-in-flow table frame
@@ -1707,6 +1719,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
         yCoord+= topInset;
+      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of frame %p\n", kidFrame);
       ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
 
       // Place the child since some of its content fit in us.
@@ -1875,7 +1888,8 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
                                       InnerTableReflowState& aReflowState,
                                       nsReflowStatus&        aStatus)
 {
-  nsresult rv = NS_FRAME_COMPLETE;
+  nsresult rv = NS_OK;
+  aStatus = NS_FRAME_COMPLETE;
   nsIReflowCommand::ReflowType type;
   aReflowState.reflowState.reflowCommand->GetType(type);
   nsIFrame *objectFrame;
@@ -1962,7 +1976,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   case nsIReflowCommand::UserDefined :
     NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TOF IR: reflow command not implemented.\n");
+    if (PR_TRUE==gsDebugIR) printf("TIF IR: reflow command not implemented.\n");
     break;
   }
 
@@ -2172,6 +2186,13 @@ NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
   nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
                                         aStatus, (nsIFrame*)aInsertedFrame, aReplace);
   // inserting the rowgroup only effects reflow if the rowgroup includes at least one row
+  PRInt32 rowCount;
+  aInsertedFrame->GetRowCount(rowCount);
+  if (0>rowCount)
+  { // for now we will assume that if there are rows, then there are cells and we need to recalc table info
+    InvalidateCellMap();
+    InvalidateColumnCache();
+  }
   return rv;
 }
 
@@ -2189,6 +2210,7 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
     return rv;
 
   // account for the cells in the rows that are children of aAppendedFrame
+  // this will add the content of the rowgroup to the cell map
   rv = DidAppendRowGroup((nsTableRowGroupFrame*)aAppendedFrame);
 
   // do a pass-1 layout of all the cells in all the rows of the rowgroup
@@ -2198,7 +2220,8 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
     return rv;
 
   // if any column widths have to change due to this, rebalance column widths
-  mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);  
+  //XXX need to calculate this, but for now just do it
+  InvalidateColumnWidths();  
 
   return rv;
 }
@@ -2210,6 +2233,20 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
   nsresult rv;
+
+  rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                              aDeletedFrame);
+  PRInt32 rowCount=0;
+  aDeletedFrame->GetRowCount(rowCount);
+  if (0>rowCount)
+  { // for now we will assume that if there are rows, then there are cells and we need to recalc table info
+    InvalidateCellMap();
+    InvalidateColumnCache();
+  }
+  // if any column widths have to change due to this, rebalance column widths
+  //XXX need to calculate this, but for now just do it
+  InvalidateColumnWidths();
+
   return rv;
 }
 
@@ -2262,7 +2299,8 @@ NS_METHOD nsTableFrame::IR_UnknownFrameInserted(nsIPresContext&        aPresCont
       aInsertedFrame->SetNextSibling(nextSibling);
     }
   }
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 NS_METHOD nsTableFrame::IR_UnknownFrameRemoved(nsIPresContext&        aPresContext,
@@ -2287,7 +2325,8 @@ NS_METHOD nsTableFrame::IR_UnknownFrameRemoved(nsIPresContext&        aPresConte
     mFirstChild = nextChild;
   else
     prevChild->SetNextSibling(nextChild);
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;;
 }
 
 NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
@@ -2322,10 +2361,7 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   // XXX For the time being just fall through and treat it like a
   // pass 2 reflow...
   // calling intialize here resets all the cached info based on new table content 
-  if (nsnull!=mTableLayoutStrategy)
-  {
-    mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
-  }
+  InvalidateColumnWidths();
 #else
   // XXX Hack...
   AdjustSiblingsAfterReflow(&aPresContext, aReflowState, aNextFrame, desiredSize.height -
@@ -2459,6 +2495,7 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
  * @return  true if we successfully reflowed all the mapped children and false
  *            otherwise, e.g. we pushed children to the next in flow
  */
+ // XXX: this interface should change to pass in aStatus, return nsresult
 PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext&        aPresContext,
                                            InnerTableReflowState& aState,
                                            nsSize*                aMaxElementSize)
@@ -2518,6 +2555,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext&        aPresContext,
 
       nscoord x = aState.leftInset + kidMargin.left;
       nscoord y = aState.topInset + aState.y + topMargin;
+      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p\n", kidFrame);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, status);
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
@@ -2800,6 +2838,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
     mTableLayoutStrategy->Initialize(aMaxElementSize);
+    mColumnWidthsValid=PR_TRUE;
   }
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
   mColumnWidthsSet=PR_TRUE;
@@ -3024,11 +3063,10 @@ PRBool nsTableFrame::IsColumnWidthsSet()
  * Then we terminate that loop and start a second pass.
  * In the second pass, we build column and cell cache info.
  */
-void nsTableFrame::BuildColumnCache( nsIPresContext&      aPresContext,
-                                     nsHTMLReflowMetrics& aDesiredSize,
+void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
+                                     nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState,
-                                     nsReflowStatus&      aStatus
-                                    )
+                                     nsReflowStatus&          aStatus)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
@@ -3122,6 +3160,20 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&      aPresContext,
     childFrame->GetNextSibling(childFrame);
   }
   mColumnCacheValid=PR_TRUE;
+}
+
+void nsTableFrame::InvalidateColumnWidths()
+{
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
+  firstInFlow->mColumnWidthsValid=PR_FALSE;
+}
+
+PRBool nsTableFrame::IsColumnWidthsValid() const
+{
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
+  return firstInFlow->mColumnWidthsValid;
 }
 
 PRBool nsTableFrame::IsFirstPassValid() const
