@@ -35,6 +35,7 @@ endif
 
 # packaging file for the pref extension which is optional
 PREF = pref-win
+INSPECTOR = inspector-win
 
 APP_NAME=thunderbird
 
@@ -90,6 +91,9 @@ mail_copy::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEMAIL) -o $(_PLATFORM) -v
 ifneq (,$(findstring pref,$(MOZ_EXTENSIONS)))
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(PREF) -o $(_PLATFORM) -v
+endif
+ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(INSPECTOR) -o $(_PLATFORM) -v
 endif
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(MOZILLA_DIR)/mail/config/installed-chrome.txt > $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt

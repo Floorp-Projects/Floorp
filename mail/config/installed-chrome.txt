@@ -60,3 +60,8 @@ locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/communicator-p
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/navigator-platform/
 #endif
 skin,install,select,classic/1.0
+
+content,install,url,jar:resource:/chrome/inspector.jar!/content/inspector/
+locale,install,url,jar:resource:/chrome/inspector.jar!/locale/en-US/inspector/
+skin,install,url,jar:resource:/chrome/inspector.jar!/skin/classic/inspector/
+skin,install,url,jar:resource:/chrome/inspector.jar!/skin/modern/inspector/
