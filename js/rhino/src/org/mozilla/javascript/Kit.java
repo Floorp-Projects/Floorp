@@ -397,7 +397,10 @@ public class Kit
     public static RuntimeException codeBug()
         throws RuntimeException
     {
-        throw new IllegalStateException("FAILED ASSERTION");
+        RuntimeException ex = new IllegalStateException("FAILED ASSERTION");
+        // Print stack trace ASAP
+        ex.printStackTrace(System.err);
+        throw ex;
     }
 }
 
