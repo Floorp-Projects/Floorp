@@ -49,6 +49,7 @@
 #include "nsJSUtils.h"
 #include "nsIDocShell.h"
 #include "nsIPresContext.h"
+#include "nsIObserverService.h"
 
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
@@ -1168,29 +1169,12 @@ nsJSContext::SetScriptsEnabled(PRBool aEnabled)
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
 
-// Class to manage destruction of the singleton
-// JSEnvironment
-struct JSEnvironmentInit {
-  JSEnvironmentInit() {
-  }
-
-  ~JSEnvironmentInit() {
-    if (nsJSEnvironment::sTheEnvironment) {
-      delete nsJSEnvironment::sTheEnvironment;
-      nsJSEnvironment::sTheEnvironment = nsnull;
-    }
-  }
-};
-
-#ifndef XP_MAC
-static JSEnvironmentInit initJSEnvironment;
-#endif
-
 nsJSEnvironment *
 nsJSEnvironment::GetScriptingEnvironment()
 {
   if (nsnull == sTheEnvironment) {
     sTheEnvironment = new nsJSEnvironment();
+    NS_IF_ADDREF(sTheEnvironment); // released in |Observe|
   }
   return sTheEnvironment;
 }
@@ -1209,10 +1193,24 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 
 nsJSEnvironment::nsJSEnvironment()
 {
+  NS_INIT_ISUPPORTS();
+
+  // So that we get deleted on XPCOM shutdown, set up an
+  // observer.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
+  if (NS_SUCCEEDED(rv))
+  {
+    nsAutoString topic;
+    topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    observerService->AddObserver(this,topic.GetUnicode());
+  }
+
   mRuntimeService = nsnull;
-  nsresult rv = nsServiceManager::GetService(kJSRuntimeServiceProgID,
-                                             NS_GET_IID(nsIJSRuntimeService),
-                                             (nsISupports**)&mRuntimeService);
+  rv = nsServiceManager::GetService(kJSRuntimeServiceProgID,
+                                    NS_GET_IID(nsIJSRuntimeService),
+                                    (nsISupports**)&mRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
   if (NS_FAILED(rv))
     return;                     // XXX swallow error! need Init()?
@@ -1242,6 +1240,21 @@ nsJSEnvironment::~nsJSEnvironment()
     nsJSUtils::nsClearCachedSecurityManager();
   if (mRuntimeService)
     nsServiceManager::ReleaseService(kJSRuntimeServiceProgID, mRuntimeService);
+}
+
+NS_IMPL_ISUPPORTS1(nsJSEnvironment,nsIObserver);
+
+NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject, 
+                                       const PRUnichar *aTopic,
+                                       const PRUnichar *someData)
+{
+#ifdef DEBUG
+  nsAutoString topic;
+  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  NS_ASSERTION(topic.EqualsWithConversion(aTopic), "not shutdown");
+#endif
+  NS_RELEASE_THIS(); // release ref from |GetScriptingEnvironment|
+  return NS_OK;
 }
 
 nsIScriptContext* nsJSEnvironment::GetNewContext()
