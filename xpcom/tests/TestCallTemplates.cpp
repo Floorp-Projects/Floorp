@@ -96,10 +96,10 @@ int main()
     nsIShutdownListener *myShutdownListener =
         NS_STATIC_CAST(nsIShutdownListener*, mySupportsPtr);
     CallGetService(kTestServiceCID, &myITestService);
-    CallGetService(kTestServiceCID, &myITestService, myShutdownListener);
+    CallGetService(kTestServiceCID, myShutdownListener, &myITestService);
     CallGetService(NS_TEST_SERVICE_CONTRACTID, &myITestService);
-    CallGetService(NS_TEST_SERVICE_CONTRACTID, &myITestService,
-                   myShutdownListener);
+    CallGetService(NS_TEST_SERVICE_CONTRACTID, myShutdownListener,
+                   &myITestService);
 
     return 0;
 }
