@@ -23,6 +23,7 @@
 
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
+#include <gdk/gdk.h>
 
 #undef Bool
 
@@ -52,15 +53,15 @@ public:
 
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaWidth()     { return 0; }
-  virtual PRInt32     GetAlphaHeight()    { return 0; }
+  virtual PRInt32     GetAlphaWidth()     { return mAlphaWidth; }
+  virtual PRInt32     GetAlphaHeight()    { return mAlphaHeight; }
   virtual PRInt32     GetAlphaXLoc()      { return 0; }
   virtual PRInt32     GetAlphaYLoc()      { return 0; }
-  virtual PRInt32     GetAlphaLineStride(){ return 0; }
+  virtual PRInt32     GetAlphaLineStride(){ return mAlphaRowBytes; }
   virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage() {return(nsnull);}
 
-  /** 
+  /**
    * Calculate the number of bytes spaned for this image for a given width
    * @param aWidth is the width to calculate the number of bytes for
    * @return the number of bytes in this span
@@ -72,7 +73,7 @@ public:
   virtual void  MoveAlphaMask(PRInt32 /* aX */, PRInt32 /* aY */) {}
 
 private:
-  /** 
+  /**
    * Calculate the amount of memory needed for the initialization of the image
    */
   void ComputMetrics();
@@ -92,8 +93,9 @@ private:
 
  // alpha layer members
   PRUint8    *mAlphaBits;
+  GdkPixmap  *mAlphaPixmap;
   PRInt8     mAlphaDepth;        // alpha layer depth
-  PRInt16    mARowBytes;
+  PRInt16    mAlphaRowBytes;     // alpha bytes per row
   PRInt16    mAlphaWidth;        // alpha layer width
   PRInt16    mAlphaHeight;       // alpha layer height
   nsPoint    mLocation;          // alpha mask location
