@@ -121,11 +121,6 @@ interface nsICacheEntryInfo : nsISupports
     readonly attribute PRUint32  lastModified;
 
     /**
-     * Get the last time the cache entry was marked valid (in seconds since the Epoch).
-     */
-    readonly attribute PRUint32  lastValidated;
-
-    /**
      * Get the expiration time of the cache entry (in seconds since the Epoch).
      */
     readonly attribute PRUint32  expirationTime;
