@@ -424,6 +424,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
            ((nsWebShellWindow *)data)->Close();
         break;
       }
+
+      default:
+        break;
+
     }
   }
   return nsEventStatus_eIgnore;
@@ -706,7 +710,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       // XXX ok this is somewhat of a kludge but it is needed. When the menu bar is added the client area got smaller
       // unfortunately the document will already have been flowed. So we need to reflow it to a smaller size. -EDV
       // BEGIN REFLOW CODE
-      nsresult rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_FAILURE;
 
       // do a reflow
       nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
