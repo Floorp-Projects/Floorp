@@ -1526,8 +1526,12 @@ net_IsHostResolvable (CONST char *hostname, MWContext *context)
 #endif
 }
 
+/* Accomodate non-dns OS's like SunOS 4.1.3 */
+#if defined(__sun) && !(defined(__svr4__) || defined(__SVR4))
+#define MOZ_MAY_HAVE_DNS
+#endif
 
-#if defined(__sun) && !defined(__svr4__)
+#ifdef MOZ_MAY_HAVE_DNS
 /* From xfe/dns-stub.o or xfe/nis-stub.o, depending.  Gag. */
 extern int fe_HaveDNS;
 #endif
@@ -1544,7 +1548,7 @@ NET_SanityCheckDNS (MWContext *context)
   char *test_host_2 = "home6.netscape.com";
   char *test_host_3 = "internic.net";
   char *message;
-#if defined(__sun) && !defined(__svr4__)
+#ifdef MOZ_MAY_HAVE_DNS
   char temp[1000];
 #endif
 
@@ -1667,13 +1671,13 @@ NET_SanityCheckDNS (MWContext *context)
 		}
 	      PL_strcat (message, XP_GetString(XP_SOME_HOSTS_UNREACHABLE));
 #ifdef XP_UNIX
-# if defined(__sun) && !defined(__svr4__)       /* compiled on SunOS 4.1.3 */
+# ifdef MOZ_MAY_HAVE_DNS       /* compiled on SunOS 4.1.3 */
 			  if (fe_HaveDNS)
 				/* Don't talk about $SOCKS_NS in the YP/NIS version. */
 # endif
 				PL_strcat (message, XP_GetString(XP_SOCKS_NS_ENV_VAR));
 
-#if defined(__sun) && !defined(__svr4__)        /* compiled on SunOS 4.1.3 */
+#ifdef MOZ_MAY_HAVE_DNS        /* compiled on SunOS 4.1.3 */
 			  assert (XP_AppName);
 			  if (fe_HaveDNS)
 				{
