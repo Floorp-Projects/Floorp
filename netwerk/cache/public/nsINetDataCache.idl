@@ -20,7 +20,7 @@
 
 interface nsIURI;
 interface nsINetDataCacheRecord;
-interface nsIEnumerator;
+interface nsISimpleEnumerator;
 interface nsIFileSpec;
 
 /**
@@ -46,25 +46,25 @@ interface nsINetDataCache : nsISupports
 	/**
 	 * Human-readable description of the cache module, e.g. "Disk Cache"
 	 */
-	readonly attribute wstring Description;
+	readonly attribute wstring description;
   
     /**
      * Returns true if cached data is available for the given opaque key,
      * even if only partial data is stored.
      */
-    boolean Contains([size_is(length)] in string key, in PRUint32 length);
+    boolean contains([size_is(length)] in string key, in PRUint32 length);
 
     /**
      * Fetch the cache entry record for the given opaque key.  If one does not
      * exist, create a new, empty record.
      */
-    nsINetDataCacheRecord GetCachedNetData([size_is(length)] in string key,
+    nsINetDataCacheRecord getCachedNetData([size_is(length)] in string key,
                                            in PRUint32 length);
 
     /**
      * Fetch the cache entry record for the given URI using the record ID as a key.
      */
-    nsINetDataCacheRecord GetCachedNetDataByID(in PRInt32 RecordID);
+    nsINetDataCacheRecord getCachedNetDataByID(in PRInt32 RecordID);
 
 	/**
 	 * False indicates that this cache is entirely bypassed.
@@ -75,29 +75,29 @@ interface nsINetDataCache : nsISupports
 	 * This attribute will be false for the memory cache and the disk cache,
 	 * but will be true for all other cache modules.
 	 */
-	readonly attribute boolean ReadOnly;
+	readonly attribute boolean readOnly;
 
     /**
      * Total number of URI entries stored in the cache.
      */
-    readonly attribute PRUint32 NumEntries;
+    readonly attribute PRUint32 numEntries;
 
     /**
      * Maximum number of URI entries that may be stored in the cache.
      */
-    readonly attribute PRUint32 MaxEntries;
+    readonly attribute PRUint32 maxEntries;
 
     /**
      * Enumerate the URI entries stored in the cache.
      */
-    nsIEnumerator NewCacheEntryEnumerator();
-	
+    nsISimpleEnumerator newCacheEntryIterator();
+
 	/**
 	 * Contains a reference to the next cache in search order.  For the memory
 	 * cache, this attribute always references the disk cache.  For the disk
 	 * cache, it contains a reference to the first extension cache.
 	 */
-    attribute nsINetDataCache NextCache;
+    attribute nsINetDataCache nextCache;
 
     /**
      * Set the maximum permitted size of the cache, in kB.  Setting the
@@ -105,7 +105,7 @@ interface nsINetDataCache : nsISupports
      * cause cache entries to be evicted from the cache to accomodate the
      * requested capacity.
 	 */
-    attribute PRUint32 Capacity;
+    attribute PRUint32 capacity;
 
     /**
      * An estimate of the amount of storage occupied by the cache, in kB.
@@ -113,7 +113,7 @@ interface nsINetDataCache : nsISupports
      * and heap fragmentation (in the memory cache) or block quantization (in
      * the disk cache).
 	 */
-    readonly attribute PRUint32 StorageInUse;
+    readonly attribute PRUint32 storageInUse;
 
     /**
      * Remove all entries from a writable cache.  This could be used, for
@@ -122,5 +122,13 @@ interface nsINetDataCache : nsISupports
      * even those in active use, will be deleted.  Also, any global cache
      * database files will be deleted.
 	 */
-    void RemoveAll();
+    void removeAll();
 };
+
+%{ C++
+// ProgID prefix for Components that implement this interface
+#define NS_NETWORK_CACHE_PROGID "component://netscape/network/cache"
+#define NS_NETWORK_MEMORY_CACHE_PROGID NS_NETWORK_CACHE_PROGID "?name=memory-cache"
+#define NS_NETWORK_PERSISTENT_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=persistent-cache"
+#define NS_NETWORK_FILE_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=file-cache"
+%}

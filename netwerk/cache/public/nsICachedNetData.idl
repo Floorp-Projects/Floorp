@@ -21,6 +21,7 @@
 
 interface nsIFileSpec;
 interface nsIURI;
+interface nsIObserver;
 
 /**
  * The nsICachedNetData interface represents a single entry in a database that
@@ -35,76 +36,100 @@ interface nsIURI;
  * cache is indexed by two different keys: a record id number and a key created
  * by combining the URI with a "secondary key", e.g. HTTP post data.
  *
- * Though this interface inherits from nsIChannel, it is expected that the
- * following nsIChannel methods return NS_NOT_IMPLEMENTED:
- *    + GetContentType()
- *    + GetContentLength()
- *
- * Though nsIChannel provides for both async and synchronous I/O APIs,
- * nsIRawCachedNetData need not implement both.  If an async I/O method
- * returns NS_NOT_IMPLEMENTED, the cache manager will fall back to the
- * synchronous equivalent.
- *
- * @See nsICachedNetData
+ * @See nsINetDataCacheRecord
  * @See nsINetDataCache
  * @See nsINetDataDiskCache
- * @See nsINetDataCacheManager */
+ * @See nsINetDataCacheManager
+ */
 [scriptable, uuid(6aeb2a40-6d43-11d3-90c8-000064657374)]
 interface nsICachedNetData : nsINetDataCacheRecord
 {
     /**
-     * Retrieve the secondary key passed into nsINetDataCache::GetCachedNetData()
+     * The URI that was provided as an argument to the call to
+     * nsINetDataCacheManager::GetCachedNetData() that created this record.
      */
-    [size_is(length)] string GetSecondaryKey(out unsigned long length);
-
-    /**
-     * This flag indicates that a protocol handler supports partial fetching of
-     * data.  If so, the cache manager may truncate the content to accommodate other
-     * cache entries rather than deleting it wholesale.
-     */
-    attribute boolean AllowPartial;
+    readonly attribute nsIURI uri;
     
     /**
-     * Indicates that the write stream supplying content data for the cache did
-     * not complete normally, so the content may be truncated.
+     * Getter for the opaque secondary database key that was provided as an
+     * argument to the call to nsINetDataCacheManager::GetCachedNetData() that
+     * created this record.
      */
-    readonly attribute boolean Partial;
+    void getSecondaryKey(out unsigned long length,
+                         [retval, size_is(length)] out string secondaryKey);
 
     /**
-     * True, if a write stream is open for this cache entry or if no
-     * stream data has ever been stored in this cache record.  There
-     * can only be a single write stream open at a time for each cache
-     * entry.
+     * This flag may be set by a protocol handler to indicate that it supports
+     * partial fetching of data.  In that case, the cache manager may truncate
+     * the entry's content to accommodate data for other cache entries rather
+     * than deleting it wholesale.
      */
-    readonly attribute boolean UpdateInProgress;
-
-    /* FIXME: Should use nsIDateTime interface, once it's created
-     *  instead of PRTime, for improved scriptability ?
+    attribute boolean allowPartial;
+    
+    /**
+     * This flag indicates that the write stream supplying content data for the
+     * cache did not complete normally, so the content may be truncated.
      */
+    readonly attribute boolean partial;
 
     /**
-     * Date/time of expiration for this record, at which point the content is
-     * *likely* to be stale.  This heuristic date does not necessarily
-     * correspond to the HTTP Expires header, as it does not determine when
-     * cached network data must be validated with the origin server, but only
-     * serves as a hint to the cache replacement policy.
+     * This flag can be set and cleared by a protocol handler so as to avoid
+     * race conditions in which the handler issues two identical network
+     * requests to fill the same cache entry.
      */
-    readonly attribute PRTime ExpirationTime;
+    attribute boolean updateInProgress;
+
+    /**
+     * Date/time that the document was last stored on the origin server, as
+     * supplied by the protocol handler. If the protocol can't supply a
+     * last-modified time, this attribute should remain unset.  This value
+     * is used as input to the cache replacement policy.
+     *
+     * FIXME: Should use nsIDateTime interface, once it's created
+     *  instead of PRTime, for improved scriptability ? 
+     */
+    readonly attribute PRTime lastModifiedTime;
+
+    /**
+     * Date/time of expiration for this record, supplied by the protocol
+     * handler, at which point the content is *likely* to be stale.  This
+     * heuristic date does not necessarily correspond to the HTTP Expires
+     * header, as it does not determine when cached network data must be
+     * validated with the origin server, but only serves as a hint to the cache
+     * replacement policy.
+     */
+    readonly attribute PRTime expirationTime;
 
     /**
      * Date/time of last access (retrieval) of the data in this record.
      */
-    readonly attribute PRTime LastRetrievalTime;
+    readonly attribute PRTime lastRetrievalTime;
 
     /**
      * Number of times an output stream has been created for this cache entry
      * since it was first stored.
      */
-    readonly attribute PRUint16 NumberRetrievals;
+    readonly attribute PRUint16 numberRetrievals;
 
     /**
      * If the underlying cache database is persistent, flush this entry's data
-     * to the database.
+     * to the database and the underlying nsINetDataCacheRecord instance.
      */
-    void Commit();
+    void commit();
+
+    /**
+     * Add an observer for this cache record.  When the cache wants to delete
+     * or truncate a record, so as to make space for another cache entry's
+     * content data, it will call <code>aObserver</code>'s Observe() method,
+     * passing the nsICachedNetData instance as the <code>aSubject</code>
+     * argument and "Eviction Notice" as the <code>aTopic</code> argument.  If
+     * the observer does not wish to inhibit the deletion, it should Release()
+     * any references it has to the cache record.
+     */
+    void addObserver(in nsIObserver aObserver);
+
+    /**
+     * Delete an observer that was added by the AddObserver() method.
+     */
+    void removeObserver(in nsIObserver aObserver);
 };
