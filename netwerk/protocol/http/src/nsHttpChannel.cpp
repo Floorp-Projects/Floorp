@@ -1585,11 +1585,11 @@ NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
 {
     LOG(("nsHttpChannel::Cancel [this=%x status=%x]\n", this, status));
+    mStatus = status;
     if (mTransaction)
         mTransaction->Cancel(status);
     else if (mCacheReadRequest)
         mCacheReadRequest->Cancel(status);
-    mStatus = status;
     return NS_OK;
 }
 
@@ -2047,7 +2047,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
-        mTransaction->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+        mSecurityInfo = mTransaction->SecurityInfo();
 
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.

@@ -77,9 +77,6 @@ public:
     // called by the transaction to resume a read-in-progress
     nsresult Resume();
 
-    // called by the channel to get the security info from the socket transport.
-    nsresult GetSecurityInfo(nsISupports **);
-
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStepUp();
 

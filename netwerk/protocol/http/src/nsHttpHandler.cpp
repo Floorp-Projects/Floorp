@@ -397,34 +397,27 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
     return NS_OK;
 }
 
+// called from any thread, by the implementation of nsHttpTransaction::Cancel
 nsresult
-nsHttpHandler::CancelPendingTransaction(nsHttpTransaction *trans,
-                                        nsresult status)
+nsHttpHandler::CancelTransaction(nsHttpTransaction *trans, nsresult status)
 {
-    LOG(("nsHttpHandler::CancelPendingTransaction [trans=%x status=%x]\n",
+    LOG(("nsHttpHandler::CancelTransaction [trans=%x status=%x]\n",
         trans, status));
 
     NS_ENSURE_ARG_POINTER(trans);
 
     nsAutoLock lock(mConnectionLock);
 
-    nsPendingTransaction *pt = nsnull;
-    PRInt32 i;
-    for (i=0; i<mTransactionQ.Count(); ++i) {
-        pt = (nsPendingTransaction *) mTransactionQ[i];
+    // we need to be inside the connection lock in order to know whether
+    // or not this transaction has an associated connection.  otherwise,
+    // we'd have a race condition (see bug 85822).
 
-        if (pt->Transaction() == trans) {
-            trans->OnStopTransaction(status);
+    if (trans->Connection())
+        trans->Connection()->OnTransactionComplete(status);
+    else
+        CancelPendingTransaction(trans, status);
 
-            mTransactionQ.RemoveElementAt(i);
-            delete pt;
-
-            return NS_OK;
-        }
-    }
-
-    LOG(("CancelPendingTransaction failed: transaction not in pending queue\n"));
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;
 }
 
 nsresult
@@ -585,7 +578,7 @@ nsHttpHandler::UserAgent()
     return mUserAgent.get();
 }
 
-// called while holding the connection lock
+// called with the connection lock held
 void
 nsHttpHandler::ProcessTransactionQ()
 {
@@ -613,7 +606,7 @@ nsHttpHandler::ProcessTransactionQ()
     }
 }
 
-// called while holding the connection lock
+// called with the connection lock held
 nsresult
 nsHttpHandler::EnqueueTransaction(nsHttpTransaction *trans,
                                   nsHttpConnectionInfo *ci)
@@ -630,6 +623,7 @@ nsHttpHandler::EnqueueTransaction(nsHttpTransaction *trans,
     return NS_OK;
 }
 
+// called with the connection lock held
 nsresult
 nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
                                           nsHttpConnectionInfo *ci,
@@ -694,6 +688,35 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
 failed:
     NS_RELEASE(conn);
     return rv;
+}
+
+// called with the connection lock held
+nsresult
+nsHttpHandler::CancelPendingTransaction(nsHttpTransaction *trans,
+                                        nsresult status)
+{
+    LOG(("nsHttpHandler::CancelPendingTransaction [trans=%x status=%x]\n",
+        trans, status));
+
+    NS_ENSURE_ARG_POINTER(trans);
+
+    nsPendingTransaction *pt = nsnull;
+    PRInt32 i;
+    for (i=0; i<mTransactionQ.Count(); ++i) {
+        pt = (nsPendingTransaction *) mTransactionQ[i];
+
+        if (pt->Transaction() == trans) {
+            trans->OnStopTransaction(status);
+
+            mTransactionQ.RemoveElementAt(i);
+            delete pt;
+
+            return NS_OK;
+        }
+    }
+
+    LOG(("CancelPendingTransaction failed: transaction not in pending queue\n"));
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 PRUint32

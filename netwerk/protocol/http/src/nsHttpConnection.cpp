@@ -61,14 +61,7 @@ nsHttpConnection::~nsHttpConnection()
     LOG(("Destroying nsHttpConnection @%x\n", this));
  
     NS_IF_RELEASE(mConnectionInfo);
-    mConnectionInfo = 0;
-
     NS_IF_RELEASE(mTransaction);
-
-    // warning: this call could result in OnStopRequest being called.  this
-    // is why we are careful to null out mTransaction and mConnectionInfo ;-)
-    if (mSocketTransport)
-        mSocketTransport->SetReuseConnection(PR_FALSE);
 }
 
 nsresult
@@ -85,7 +78,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info)
     return NS_OK;
 }
 
-// called from any thread
+// called from any thread, with the connection lock held
 nsresult
 nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
 {
@@ -221,7 +214,6 @@ nsHttpConnection::OnTransactionComplete(nsresult status)
     if (!mKeepAlive || NS_FAILED(status)) {
         // if we're not going to be keeping this connection alive...
         mSocketTransport->SetReuseConnection(PR_FALSE);
-        mSocketTransport = 0;
     }
 
     return NS_OK;
@@ -236,15 +228,6 @@ nsHttpConnection::Resume()
     if (mReadRequest)
         mReadRequest->Resume();
 
-    return NS_OK;
-}
-
-// not called from the socket thread
-nsresult
-nsHttpConnection::GetSecurityInfo(nsISupports **result)
-{
-    if (mSocketTransport)
-        mSocketTransport->GetSecurityInfo(result);
     return NS_OK;
 }
 
@@ -285,6 +268,7 @@ nsHttpConnection::IsAlive()
     return isAlive;
 }
 
+// called on the socket thread
 void
 nsHttpConnection::DropTransaction()
 {
@@ -299,6 +283,7 @@ nsHttpConnection::DropTransaction()
     mKeepAlive = PR_FALSE;
 }
 
+// called on the socket thread
 void
 nsHttpConnection::ReportProgress(PRUint32 progress, PRInt32 progressMax)
 {
@@ -311,6 +296,7 @@ nsHttpConnection::ReportProgress(PRUint32 progress, PRInt32 progressMax)
 // nsHttpConnection <private>
 //-----------------------------------------------------------------------------
 
+// called on any thread
 nsresult
 nsHttpConnection::ActivateConnection()
 {
@@ -468,6 +454,13 @@ NS_IMETHODIMP
 nsHttpConnection::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
     LOG(("nsHttpConnection::OnStartRequest [this=%x]\n", this));
+
+    if (mTransaction && ctxt) { // do this only once
+        nsCOMPtr<nsISupports> info;
+        mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
+        mTransaction->SetSecurityInfo(info);
+    }
+
     return NS_OK;
 }
 
