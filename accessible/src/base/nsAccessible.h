@@ -95,7 +95,7 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
-  PRBool IsEntirelyVisible(); 
+  PRBool IsPartiallyVisible(); 
   NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
   NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
   NS_IMETHOD GetHTMLAccName(nsAWritableString& _retval);
