@@ -736,7 +736,7 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 	if (NS_FAILED(rv)) return rv;
 
 	// XXX This should be a parameter
-	nsAutoString	relatedLinksQueryURL("http://www-rl.netscape.com/wtgn?");
+	nsCAutoString	relatedLinksQueryURL("http://www-rl.netscape.com/wtgn?");
 	relatedLinksQueryURL += mRelatedLinksURL;
 
 	const char *queryURL = relatedLinksQueryURL.GetBuffer();
