@@ -29,7 +29,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
@@ -64,9 +64,9 @@ public:
    * XIF is an intermediate form of the content model, the buffer
    * will then be parsed into any number of formats including HTML, TXT, etc.
    */
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void BeginConvertToXIF(nsIXIFConverter* aConverter) const;
+  virtual void ConvertContentToXIF(nsIXIFConverter* aConverter) const;
+  virtual void FinishConvertToXIF(nsIXIFConverter* aConverter) const;
 
 
   void GetHREF(nsString& aHref) const;
@@ -366,7 +366,7 @@ void Area::ToHTML(nsString& aResult)
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 
-void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
+void Area::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   nsAutoString href, target, altText;
 
@@ -377,13 +377,13 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
   }
 
   nsAutoString  tag; tag.AssignWithConversion("area");
-  aConverter.BeginStartTag(tag);
+  aConverter->BeginStartTag(tag);
 
 
   nsAutoString name; name.AssignWithConversion("shape");
   nsAutoString shape;
   GetShapeName(shape);
-  aConverter.AddAttribute(name,shape);
+  aConverter->AddAttribute(name,shape);
    
 
   nsAutoString  coords;
@@ -397,33 +397,33 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
     }
   }
   name.AssignWithConversion("coords");
-  aConverter.AddAttribute(name,coords);
+  aConverter->AddAttribute(name,coords);
 
   name.AssignWithConversion("href");
-  aConverter.AddAttribute(name,href);
+  aConverter->AddAttribute(name,href);
 
   
   if (0 < target.Length()) {
     name.AssignWithConversion("target");
-    aConverter.AddAttribute(name,target);
+    aConverter->AddAttribute(name,target);
   }
   if (0 < altText.Length()) {
     name.AssignWithConversion("alt");
-    aConverter.AddAttribute(name,altText);
+    aConverter->AddAttribute(name,altText);
   }
   if (mSuppressFeedback) {
     name.AssignWithConversion("suppress");
-    aConverter.AddAttribute(name);
+    aConverter->AddAttribute(name);
   }
 }
 
-void Area::FinishConvertToXIF(nsXIFConverter& aConverter) const
+void Area::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   nsAutoString  tag; tag.AssignWithConversion("area");
-  aConverter.FinishStartTag(tag,PR_TRUE);
+  aConverter->FinishStartTag(tag,PR_TRUE, PR_TRUE);
 }
 
-void Area::ConvertContentToXIF(nsXIFConverter& aConverter) const
+void Area::ConvertContentToXIF(nsIXIFConverter* ) const
 {
   // Nothing needs to be done here, all of the logic
   // is handled in the start and finish methods
