@@ -367,6 +367,10 @@ IsInlineFrame(nsIFrame* aFrame)
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
+    case NS_STYLE_DISPLAY_DECK:
+    case NS_STYLE_DISPLAY_POPUP:
+    case NS_STYLE_DISPLAY_BULLETINBOARD:
+    case NS_STYLE_DISPLAY_GROUPBOX:
       return PR_TRUE;
     default:
       break;
@@ -5208,7 +5212,12 @@ PRBool IsXULDisplayType(const nsStyleDisplay* aDisplay)
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_STACK ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE);
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_DECK ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_BULLETINBOARD ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_POPUP ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_GROUPBOX
+          );
 }
 
 nsresult
@@ -5258,499 +5267,472 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)
       isAbsolutelyPositioned = PR_TRUE;
 
-    // Create a frame based on the tag
-    // box is first because it is created the most.
-      // BOX CONSTRUCTION
-    if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
-                          display->mDisplay == NS_STYLE_DISPLAY_BOX)) || 
-        aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
-        aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
-        || aTag == nsXULAtoms::treecell  || aTag == nsXULAtoms::outliner
-        ) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-
-      if (aTag == nsXULAtoms::treecell)
-        rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
-      else
-
-      // create a box. Its not root, its layout manager is default (nsnull) which is "sprocket" and
-      // its default orientation is horizontal for hbox and vertical for vbox
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of BOX CONSTRUCTION logic
-    
-    // BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewButtonBoxFrame(aPresShell, &newFrame);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of BUTTON CONSTRUCTION logic
- // BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::autorepeatbutton) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewAutoRepeatBoxFrame(aPresShell, &newFrame);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of BUTTON CONSTRUCTION logic
-
-
-	 // TITLEBAR CONSTRUCTION
-	 else if (aTag == nsXULAtoms::titlebar) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTitleBarFrame(aPresShell, &newFrame);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-		// Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of TITLEBAR CONSTRUCTION logic
-
-	 // RESIZER CONSTRUCTION
-	 else if (aTag == nsXULAtoms::resizer) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewResizerFrame(aPresShell, &newFrame);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of RESIZER CONSTRUCTION logic
-
-    else if (aTag == nsXULAtoms::image) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewImageBoxFrame(aPresShell, &newFrame);
-    }
-    else if (aTag == nsXULAtoms::spring) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewSpringFrame(aPresShell, &newFrame);
-    }
-     else if (aTag == nsXULAtoms::outlinerbody) {
-      isReplaced = PR_TRUE;
-      rv = NS_NewOutlinerBodyFrame(aPresShell, &newFrame);
-    }
-    else if (aTag == nsXULAtoms::outlinercol) {
-      isReplaced = PR_TRUE;
-      processChildren = PR_TRUE;
-      rv = NS_NewOutlinerColFrame(aPresShell, &newFrame);
-    }
-    // TEXT CONSTRUCTION
-    else if (aTag == nsXULAtoms::text) {
+    if (isXULNS) {
+      // First try creating a frame based on the tag
+      // BUTTON CONSTRUCTION
+      if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
         processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
-    }
-    // End of TEXT CONSTRUCTION logic
+        isReplaced = PR_TRUE;
+        rv = NS_NewButtonBoxFrame(aPresShell, &newFrame);
 
-     // Menu Construction    
-    else if (aTag == nsXULAtoms::menu ||
-             aTag == nsXULAtoms::menuitem || 
-             aTag == nsXULAtoms::menubutton) {
-      // A derived class box frame
-      // that has custom reflow to prevent menu children
-      // from becoming part of the flow.
-      processChildren = PR_TRUE; // Will need this to be custom.
-      isReplaced = PR_TRUE;
-      rv = NS_NewMenuFrame(aPresShell, &newFrame, (aTag != nsXULAtoms::menuitem));
-      ((nsMenuFrame*) newFrame)->SetFrameConstructor(this);
-    }
-    else if (aTag == nsXULAtoms::menubar) {
-#if defined(XP_MAC) || defined(RHAPSODY) // The Mac uses its native menu bar.
-      aHaltProcessing = PR_TRUE;
-      return NS_OK;
-#else
-      processChildren = PR_TRUE;
-      rv = NS_NewMenuBarFrame(aPresShell, &newFrame);
-#endif
-    }
-    else if (aTag == nsXULAtoms::popupset) {
-      // This frame contains child popups
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewPopupSetFrame(aPresShell, &newFrame);
-      ((nsPopupSetFrame*) newFrame)->SetFrameConstructor(this);
-    }
-    else if (aTag == nsXULAtoms::menupopup || aTag == nsXULAtoms::popup) {
-      // This is its own frame that derives from
-      // box.
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewMenuPopupFrame(aPresShell, &newFrame);
-    } 
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
 
-    // ------- Begin Grid ---------
-    else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
-                               display->mDisplay == NS_STYLE_DISPLAY_GRID)) ||
-              aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      nsCOMPtr<nsIBoxLayout> layout;
-      NS_NewGridLayout(aPresShell, layout);
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
 
-      if (aTag == nsXULAtoms::tree) {
-        rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
-        if (aXBLBaseTag) {
-          // In this scenario, someone has extended the tree with a custom
-          // tag name.  Although this is a complete and total hack, we're
-          // going to assume that the extender is simplifying the syntax
-          // of the tree and that the direct explicit children of the 
-          // tree are actually rows or items (and thus they shouldn't be
-          // built yet).
-          processChildren = PR_FALSE;
-          processAnonymousChildren = PR_TRUE;
-        }
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } // End of BUTTON CONSTRUCTION logic
+   // BUTTON CONSTRUCTION
+      else if (aTag == nsXULAtoms::autorepeatbutton) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewAutoRepeatBoxFrame(aPresShell, &newFrame);
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
+
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } // End of BUTTON CONSTRUCTION logic
+
+
+	   // TITLEBAR CONSTRUCTION
+	   else if (aTag == nsXULAtoms::titlebar) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewTitleBarFrame(aPresShell, &newFrame);
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
+		  // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } // End of TITLEBAR CONSTRUCTION logic
+
+	   // RESIZER CONSTRUCTION
+	   else if (aTag == nsXULAtoms::resizer) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewResizerFrame(aPresShell, &newFrame);
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
+
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } // End of RESIZER CONSTRUCTION logic
+
+      else if (aTag == nsXULAtoms::image) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewImageBoxFrame(aPresShell, &newFrame);
       }
-      else
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+      else if (aTag == nsXULAtoms::spring) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewSpringFrame(aPresShell, &newFrame);
+      }
+       else if (aTag == nsXULAtoms::outlinerbody) {
+        isReplaced = PR_TRUE;
+        rv = NS_NewOutlinerBodyFrame(aPresShell, &newFrame);
+      }
+      else if (aTag == nsXULAtoms::outlinercol) {
+        isReplaced = PR_TRUE;
+        processChildren = PR_TRUE;
+        rv = NS_NewOutlinerColFrame(aPresShell, &newFrame);
+      }
+      // TEXT CONSTRUCTION
+      else if (aTag == nsXULAtoms::text) {
+          processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
+      }
+      // End of TEXT CONSTRUCTION logic
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
+       // Menu Construction    
+      else if (aTag == nsXULAtoms::menu ||
+               aTag == nsXULAtoms::menuitem || 
+               aTag == nsXULAtoms::menubutton) {
+        // A derived class box frame
+        // that has custom reflow to prevent menu children
+        // from becoming part of the flow.
+        processChildren = PR_TRUE; // Will need this to be custom.
+        isReplaced = PR_TRUE;
+        rv = NS_NewMenuFrame(aPresShell, &newFrame, (aTag != nsXULAtoms::menuitem));
+        ((nsMenuFrame*) newFrame)->SetFrameConstructor(this);
+      }
+      else if (aTag == nsXULAtoms::menubar) {
+  #if defined(XP_MAC) || defined(RHAPSODY) // The Mac uses its native menu bar.
+        aHaltProcessing = PR_TRUE;
+        return NS_OK;
+  #else
+        processChildren = PR_TRUE;
+        rv = NS_NewMenuBarFrame(aPresShell, &newFrame);
+  #endif
+      }
+      else if (aTag == nsXULAtoms::popupset) {
+        // This frame contains child popups
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewPopupSetFrame(aPresShell, &newFrame);
+        ((nsPopupSetFrame*) newFrame)->SetFrameConstructor(this);
+      }
+      else if (aTag == nsXULAtoms::scrollbox) {
+            rv = NS_NewScrollBoxFrame(aPresShell, &newFrame);
+ 
+            //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
+            processChildren = PR_TRUE;
+            isReplaced = PR_TRUE;
       } 
-    } //------- End Grid ------
-
-    // ------- Begin Rows/Columns ---------
-    else if ((!aXBLBaseTag && display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) ||
-             aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns
-             || aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treecolgroup ||
-             aTag == nsXULAtoms::treehead || aTag == nsXULAtoms::treerows || 
-             aTag == nsXULAtoms::treecols || aTag == nsXULAtoms::treeitem
-      ) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-
-      nsCOMPtr<nsIBoxLayout> layout;
-      
-      PRBool treeScrollPort = PR_FALSE;
-
-      if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
-        NS_NewTreeLayout(aPresShell, layout);
-
-        nsAutoString outer;
-        rv = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::outer, outer); 
-        if (outer.EqualsIgnoreCase("true")) {
-          rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
-          ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
-          treeScrollPort = PR_TRUE;
-        }
-        else {
-          rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
-          ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, ((nsXULTreeGroupFrame*)aParentFrame)->GetOuterFrame());
-        }
-
-        processChildren = PR_FALSE;
+      else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
+               aTag == nsXULAtoms::browser) {
+        isReplaced = PR_TRUE;
+        rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
       }
-      else
+      else if (aTag == nsXULAtoms::treeindentation)
       {
-        NS_NewTempleLayout(aPresShell, layout);
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
       }
+      // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
+      // PROGRESS METER CONSTRUCTION
+      else if (aTag == nsXULAtoms::progressbar) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewProgressMeterFrame(aPresShell, &newFrame);
+      }
+      // End of PROGRESS METER CONSTRUCTION logic
+      // SLIDER CONSTRUCTION
+      else if (aTag == nsXULAtoms::slider) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewSliderFrame(aPresShell, &newFrame);
+      }
+      // End of SLIDER CONSTRUCTION logic
 
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
+      // SCROLLBAR CONSTRUCTION
+      else if (aTag == nsXULAtoms::scrollbar) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewScrollbarFrame(aPresShell, &newFrame);
 
-        nsIFrame* scrollPort = nsnull;
-        if (treeScrollPort) 
-          NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
+      }
+      // End of SCROLLBAR CONSTRUCTION logic
 
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext, scrollPort);
+      // SCROLLBUTTON CONSTRUCTION
+      else if (aTag == nsXULAtoms::scrollbarbutton) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewScrollbarButtonFrame(aPresShell, &newFrame);
+      }
+      // End of SCROLLBUTTON CONSTRUCTION logic
 
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
+      // SPLITTER CONSTRUCTION
+      else if (aTag == nsXULAtoms::splitter) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewSplitterFrame(aPresShell, &newFrame);
+      }
+      // End of SPLITTER CONSTRUCTION logic
 
-        primaryFrameSet = PR_TRUE;
+      // GRIPPY CONSTRUCTION
+      else if (aTag == nsXULAtoms::grippy) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewGrippyFrame(aPresShell, &newFrame);
+      }
+      // End of GRIPPY CONSTRUCTION logic
+    }
 
-        frameHasBeenInitialized = PR_TRUE;
+    // Display types for XUL start here
+    // First is BOX
+    if (!newFrame && isXULDisplay) {
+      if (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
+               display->mDisplay == NS_STYLE_DISPLAY_BOX) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
 
-      } 
-    } //------- End Grid ------
+        if (aTag == nsXULAtoms::treecell)
+          rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
+        else
+          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
 
-    // ------- Begin Row/Column ---------
-    else if ((!aXBLBaseTag && display->mDisplay == NS_STYLE_DISPLAY_GRID_LINE) ||
-             aTag == nsXULAtoms::row || aTag == nsXULAtoms::column
-             || aTag == nsXULAtoms::treerow || aTag == nsXULAtoms::treecol
-      ) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      
-      nsCOMPtr<nsIBoxLayout> layout;
-      NS_NewObeliskLayout(aPresShell, layout);
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
 
-      if (aTag == nsXULAtoms::treerow)
-        rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
-      else
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
 
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
+          primaryFrameSet = PR_TRUE;
 
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
+          frameHasBeenInitialized = PR_TRUE;
 
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
+        } 
+      } // End of BOX CONSTRUCTION logic
 
-        primaryFrameSet = PR_TRUE;
+      // ------- Begin Grid ---------
+      else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
+                                 display->mDisplay == NS_STYLE_DISPLAY_GRID)) ||
+                aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        nsCOMPtr<nsIBoxLayout> layout;
+        NS_NewGridLayout(aPresShell, layout);
 
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } //------- End Grid ------
-
-    else if (aTag == nsXULAtoms::titledbox) {
-
-          rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
- 
-          //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
-          processChildren = PR_TRUE;
-          isReplaced = PR_TRUE;
-
-          const nsStyleDisplay* display = (const nsStyleDisplay*)
-               aStyleContext->GetStyleData(eStyleStruct_Display);
-
-          // Boxes can scroll.
-          if (IsScrollable(aPresContext, display)) {
-
-            // set the top to be the newly created scrollframe
-            BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                             topFrame, aStyleContext);
-
-            // we have a scrollframe so the parent becomes the scroll frame.
-            newFrame->GetParent(&aParentFrame);
-
-            primaryFrameSet = PR_TRUE;
-
-            frameHasBeenInitialized = PR_TRUE;
+        if (aTag == nsXULAtoms::tree) {
+          rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
+          if (aXBLBaseTag) {
+            // In this scenario, someone has extended the tree with a custom
+            // tag name.  Although this is a complete and total hack, we're
+            // going to assume that the extender is simplifying the syntax
+            // of the tree and that the direct explicit children of the 
+            // tree are actually rows or items (and thus they shouldn't be
+            // built yet).
+            processChildren = PR_FALSE;
+            processAnonymousChildren = PR_TRUE;
           }
-    } 
-    else if (aTag == nsXULAtoms::scrollbox) {
-          rv = NS_NewScrollBoxFrame(aPresShell, &newFrame);
- 
-          //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
-          processChildren = PR_TRUE;
-          isReplaced = PR_TRUE;
-    } 
-    else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
-             aTag == nsXULAtoms::browser) {
-      isReplaced = PR_TRUE;
-      rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
-    }
-    else if (aTag == nsXULAtoms::treeindentation)
-    {
-      rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
-    }
-    // End of TREE CONSTRUCTION code here (there's more later on in the function)
+        }
+        else
+          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
-    // PROGRESS METER CONSTRUCTION
-    else if (aTag == nsXULAtoms::progressbar) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewProgressMeterFrame(aPresShell, &newFrame);
-    }
-    // End of PROGRESS METER CONSTRUCTION logic
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
 
-    // STACK CONSTRUCTION
-    else if (aTag == nsXULAtoms::stack) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewStackFrame(aPresShell, &newFrame);
-    }
-    // End of STACK CONSTRUCTION logic
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
 
-    // BULLETINBOARD CONSTRUCTION
-    else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK ||
-                               display->mDisplay == NS_STYLE_DISPLAY_STACK)) ||
-             aTag == nsXULAtoms::bulletinboard) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
 
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
 
-      nsCOMPtr<nsIBoxLayout> layout;
-      NS_NewBulletinBoardLayout(aPresShell, layout);
+          primaryFrameSet = PR_TRUE;
 
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+          frameHasBeenInitialized = PR_TRUE;
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
+        } 
+      } //------- End Grid ------
 
-       if (IsScrollable(aPresContext, display)) {
+      // ------- Begin Rows/Columns ---------
+      else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
 
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
+        nsCOMPtr<nsIBoxLayout> layout;
+      
+        PRBool treeScrollPort = PR_FALSE;
 
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-        primaryFrameSet = PR_TRUE;
+        if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
+          NS_NewTreeLayout(aPresShell, layout);
 
-        frameHasBeenInitialized = PR_TRUE;
+          nsAutoString outer;
+          rv = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::outer, outer); 
+          if (outer.EqualsIgnoreCase("true")) {
+            rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
+            ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
+            treeScrollPort = PR_TRUE;
+          }
+          else {
+            rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
+            ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, ((nsXULTreeGroupFrame*)aParentFrame)->GetOuterFrame());
+          }
 
+          processChildren = PR_FALSE;
+        }
+        else
+        {
+          NS_NewTempleLayout(aPresShell, layout);
+          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        }
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
+
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
+
+          nsIFrame* scrollPort = nsnull;
+          if (treeScrollPort) 
+            NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext, scrollPort);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } //------- End Grid ------
+
+      // ------- Begin Row/Column ---------
+      else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_LINE) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+      
+        nsCOMPtr<nsIBoxLayout> layout;
+        NS_NewObeliskLayout(aPresShell, layout);
+
+        if (aTag == nsXULAtoms::treerow)
+          rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        else
+          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
+
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        } 
+      } //------- End Grid ------
+      // STACK CONSTRUCTION
+      else if (display->mDisplay == NS_STYLE_DISPLAY_STACK ||
+               display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewStackFrame(aPresShell, &newFrame);
       }
-    }
-    // End of STACK CONSTRUCTION logic
+      // End of STACK CONSTRUCTION logic
+       // DECK CONSTRUCTION
+      else if (display->mDisplay == NS_STYLE_DISPLAY_DECK) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewDeckFrame(aPresShell, &newFrame);
+      }
+      // End of DECK CONSTRUCTION logic
+      else if (display->mDisplay == NS_STYLE_DISPLAY_GROUPBOX) {
+        rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
 
-    // DECK CONSTRUCTION
-    else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewDeckFrame(aPresShell, &newFrame);
-    }
-    // End of DECK CONSTRUCTION logic
-    // SLIDER CONSTRUCTION
-    else if (aTag == nsXULAtoms::slider) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewSliderFrame(aPresShell, &newFrame);
-    }
-    // End of SLIDER CONSTRUCTION logic
+        //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
 
-    // SCROLLBAR CONSTRUCTION
-    else if (aTag == nsXULAtoms::scrollbar) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewScrollbarFrame(aPresShell, &newFrame);
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+             aStyleContext->GetStyleData(eStyleStruct_Display);
 
-    }
-    // End of SCROLLBAR CONSTRUCTION logic
+        // Boxes can scroll.
+        if (IsScrollable(aPresContext, display)) {
 
-    // SCROLLBUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::scrollbarbutton) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewScrollbarButtonFrame(aPresShell, &newFrame);
-    }
-    // End of SCROLLBUTTON CONSTRUCTION logic
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
 
-    // SPLITTER CONSTRUCTION
-    else if (aTag == nsXULAtoms::splitter) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewSplitterFrame(aPresShell, &newFrame);
-    }
-    // End of SPLITTER CONSTRUCTION logic
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
 
-    // GRIPPY CONSTRUCTION
-    else if (aTag == nsXULAtoms::grippy) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewGrippyFrame(aPresShell, &newFrame);
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+        }
+      } 
+      // BULLETINBOARD CONSTRUCTION
+      else if (display->mDisplay == NS_STYLE_DISPLAY_BULLETINBOARD) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+
+
+        nsCOMPtr<nsIBoxLayout> layout;
+        NS_NewBulletinBoardLayout(aPresShell, layout);
+
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+        aStyleContext->GetStyleData(eStyleStruct_Display);
+
+         if (IsScrollable(aPresContext, display)) {
+
+          // set the top to be the newly created scrollframe
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                           topFrame, aStyleContext);
+
+          // we have a scrollframe so the parent becomes the scroll frame.
+          newFrame->GetParent(&aParentFrame);
+          primaryFrameSet = PR_TRUE;
+
+          frameHasBeenInitialized = PR_TRUE;
+
+        }
+      }
+      else if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+        // This is its own frame that derives from
+        // box.
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewMenuPopupFrame(aPresShell, &newFrame);
+      } 
     }
-    // End of GRIPPY CONSTRUCTION logic
-#if 1
-    else if (aTag != nsHTMLAtoms::html) {
-      nsCAutoString str("Invalid XUL tag encountered in file. Perhaps you used the wrong namespace?\n\nThe tag name is ");
-      nsAutoString tagName;
-      aTag->ToString(tagName);
-      str.AppendWithConversion(tagName);
-      NS_WARNING(str);
-    }
-#endif
   }
 
   // If we succeeded in creating a frame then initialize it, process its

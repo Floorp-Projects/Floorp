@@ -19,6 +19,7 @@ class nsIStyleRuleSupplier : public nsISupports {
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc, void* aData,
                        nsIContent* aContent)=0;
+  NS_IMETHOD MatchesScopedRoot(nsIContent* aContent, PRBool* aResult)=0;
 };
 
 #endif /* _nsIStyleRuleSupplier_h */
