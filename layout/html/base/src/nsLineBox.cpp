@@ -288,6 +288,23 @@ nsLineBox::IsEmpty() const
   return PR_TRUE;
 }
 
+PRBool
+nsLineBox::CachedIsEmpty()
+{
+  if (mFlags.mDirty) {
+    return IsEmpty();
+  }
+  
+  if (mFlags.mEmptyCacheValid) {
+    return mFlags.mEmptyCacheState;
+  }
+
+  PRBool result = IsEmpty();
+  mFlags.mEmptyCacheValid = PR_TRUE;
+  mFlags.mEmptyCacheState = result;
+  return result;
+}
+
 void
 nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
 {
