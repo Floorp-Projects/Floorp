@@ -1487,11 +1487,12 @@ dnl = Enable stripping of .so and .a libs
 dnl = 
 dnl ========================================================
 MOZ_POST_DSO_LIB_COMMAND=true
-MOZ_POST_AR_LIB_COMMAND=true
+MOZ_POST_PROGRAM_COMMAND=true
 
 MOZ_ARG_ENABLE_BOOL(strip-libs,
 [  --enable-strip-libs       Enable stripping of .so and .a libs ],
-  [ MOZ_POST_DSO_LIB_COMMAND=strip MOZ_POST_AR_LIB_COMMAND=strip ])
+  [ MOZ_POST_DSO_LIB_COMMAND=strip
+    MOZ_POST_PROGRAM_COMMAND=strip ])
 
 dnl ========================================================
 dnl =
@@ -1730,7 +1731,7 @@ AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 AC_SUBST(MOZ_BUILD_ROOT)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
-AC_SUBST(MOZ_POST_AR_LIB_COMMAND)
+AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
 AC_SUBST(ClientWallet)
 AC_SUBST(CookieManagement)
