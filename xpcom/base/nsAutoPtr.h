@@ -42,19 +42,10 @@
 
   // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
 #ifndef nsCOMPtr_h___
-  // For |already_AddRefed|, |nsDerivedSafe|, |NSCAP_Zero|.
+  // For |already_AddRefed|, |nsDerivedSafe|, |NSCAP_Zero|,
+  // |NSCAP_DONT_PROVIDE_NONCONST_OPEQ|,
+  // |NSCAP_FEATURE_INLINE_STARTASSIGNMENT|
 #include "nsCOMPtr.h"
-#endif
-
-
-#ifdef _MSC_VER
-  #define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-    // under VC++, we win by inlining StartAssignment
-
-    // Also under VC++, at the highest warning level, we are overwhelmed  with warnings
-    //  about (unused) inline functions being removed.  This is to be expected with
-    //  templates, so we disable the warning.
-  #pragma warning( disable: 4514 )
 #endif
 
 /*****************************************************************************/
@@ -376,13 +367,6 @@ operator!=( const U* lhs, const nsAutoPtr<T>& rhs )
   // better conversion for the other argument, define additional
   // |operator==| without the |const| on the raw pointer.
   // See bug 65664 for details.
-
-// This is defined by an autoconf test, but VC++ also has a bug that
-// prevents us from using these.  (It also, fortunately, has the bug
-// that we don't need them either.)
-#ifdef _MSC_VER
-#define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
-#endif
 
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
@@ -803,13 +787,6 @@ operator!=( const U* lhs, const nsAutoArrayPtr<T>& rhs )
   // better conversion for the other argument, define additional
   // |operator==| without the |const| on the raw pointer.
   // See bug 65664 for details.
-
-// This is defined by an autoconf test, but VC++ also has a bug that
-// prevents us from using these.  (It also, fortunately, has the bug
-// that we don't need them either.)
-#ifdef _MSC_VER
-#define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
-#endif
 
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
@@ -1252,13 +1229,6 @@ operator!=( const U* lhs, const nsRefPtr<T>& rhs )
   // better conversion for the other argument, define additional
   // |operator==| without the |const| on the raw pointer.
   // See bug 65664 for details.
-
-// This is defined by an autoconf test, but VC++ also has a bug that
-// prevents us from using these.  (It also, fortunately, has the bug
-// that we don't need them either.)
-#ifdef _MSC_VER
-#define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
-#endif
 
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
