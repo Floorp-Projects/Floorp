@@ -96,7 +96,6 @@ JSStubGen::Generate(char *aFileName,
 
 static const char kIncludeDefaultsStr[] = "\n"
 "#include \"jsapi.h\"\n"
-"#include \"jsnum.h\"\n"
 "#include \"nsJSUtils.h\"\n"
 "#include \"nsDOMError.h\"\n"
 "#include \"nscore.h\"\n"
@@ -715,7 +714,7 @@ static const char kIntGetCaseStr[] =
 "            *vp = INT_TO_JSVAL(prop);\n";
 
 static const char kFloatGetCaseStr[] = 
-"            *vp = DOUBLE_TO_JSVAL(js_NewDouble(cx, prop));\n";
+"            *vp = DOUBLE_TO_JSVAL(JS_NewDouble(cx, prop));\n";
 
 static const char kBoolGetCaseStr[] =
 "            *vp = BOOLEAN_TO_JSVAL(prop);\n";
@@ -1314,7 +1313,7 @@ static const char kMethodIntRetStr[] =
 "    *rval = INT_TO_JSVAL(nativeRet);\n";
 
 static const char kMethodFloatRetStr[] = 
-"    *rval = DOUBLE_TO_JSVAL(js_NewDouble(cx, nativeRet));\n";
+"    *rval = DOUBLE_TO_JSVAL(JS_NewDouble(cx, nativeRet));\n";
 
 static const char kMethodBoolRetStr[] =
 "    *rval = BOOLEAN_TO_JSVAL(nativeRet);\n";
