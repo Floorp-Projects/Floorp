@@ -186,6 +186,13 @@ var progressListener = {
     },
     onSecurityChange: function(aWebProgress, aRequest, state)
     {
+    },
+    QueryInterface : function(iid)
+    {
+     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
+      return this;
+     
+     throw Components.results.NS_NOINTERFACE;
     }
 };
 
