@@ -17,17 +17,13 @@
  */
 <!--  to hide script contents from old browsers
 
-
-
-function go(msg)
+function go( msg )
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")
+	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
-		return(checkData());
+		return checkData();
 }
-
-
 
 function checkData()
 {
@@ -69,29 +65,24 @@ function loadData()
 {
 	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
 
-	var thePlatform = new String(navigator.userAgent);
-	var x=thePlatform.indexOf("(")+1;
-	var y=thePlatform.indexOf(";",x+1);
-	thePlatform=thePlatform.substring(x,y);
+	var thePlatform = parent.parent.globals.getPlatform();
 
-	if (thePlatform != "WinNT")	{
-		document.layers["ModemSetup"].visibility = "show";
-		}
+	if ( thePlatform != "WinNT" )
+		document.layers[ "ModemSetup" ].visibility = "show";
 
-
-	updateModemStatus(true);
-	if (parent.controls.generateControls)	parent.controls.generateControls();
+	updateModemStatus( true );
+	if ( parent.controls.generateControls )
+		parent.controls.generateControls();
 }
 
 
 
 function saveData()
 {
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	if (document.forms[0].modem.selectedIndex >= 0) {
-		parent.parent.globals.document.vars.modem.value = document.forms[0].modem[document.forms[0].modem.selectedIndex].value;
-	}
+	if ( document.forms[ 0 ].modem.selectedIndex >= 0 )
+		parent.parent.globals.document.vars.modem.value = document.forms[ 0 ].modem[ document.forms[ 0 ].modem.selectedIndex ].value;
 
 	parent.parent.globals.document.setupPlugin.CloseModemWizard();
 }
@@ -128,31 +119,27 @@ function generateModems()
 
 function selectCurrentModem()
 {
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	var found = false;
-	var thePopup = document.forms[0]["modem"];
+	var thePopup = document.forms[ 0 ][ "modem" ];
 	var globalModem = parent.parent.globals.document.vars.modem.value;
 	var pluginModem = parent.parent.globals.document.setupPlugin.GetCurrentModemName();
 
-	var thePlatform = new String(navigator.userAgent);
-	var x=thePlatform.indexOf("(")+1;
-	var y=thePlatform.indexOf(";",x+1);
-	thePlatform=thePlatform.substring(x,y);
+	var thePlatform = parent.parent.globals.getPlatform();
 
 	var selectIndex = 0;
-	if (thePlatform != "Macintosh")	{  // work around for window's list index bug
-		var selectIndex = thePopup.options.length-1;
-		}
+	if ( thePlatform != "Macintosh" )		// work around for window's list index bug
+		selectIndex = thePopup.options.length - 1;
 
 	//alert("globalModem: " + globalModem + ", pluginModem: " + pluginModem);
-	for(var index = 0; index < thePopup.options.length; index++)
+	for( var index = 0; index < thePopup.options.length; index ++ )
 	{
-		if ((globalModem == thePopup.options[index]) || (selectIndex == 0 && pluginModem == thePopup.options[index]) )
+		if ( ( globalModem == thePopup.options[ index ] ) || ( selectIndex == 0 && pluginModem == thePopup.options[ index ] ) )
 			selectIndex = index;
 	}
 
-	thePopup.options[selectIndex].selected = true;	
+	thePopup.options[ selectIndex ].selected = true;	
 }
 
 function OLDgenerateModems()
@@ -176,8 +163,6 @@ function OLDgenerateModems()
 			}
 	}
 }
-
-
 
 function updateModemStatus(loadingFlag)
 {
@@ -215,8 +200,6 @@ function updateModemStatus(loadingFlag)
 	
 	}
 }
-
-
 
 function callModemWizard()
 {

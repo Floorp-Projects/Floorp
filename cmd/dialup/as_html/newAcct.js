@@ -17,32 +17,28 @@
  */
 <!--  to hide script contents from old browsers
 
-
-
 var	intlString = "";
 var	localString = "";
-
-
 
 var theFile = parent.parent.globals.getAcctSetupFilename(self);
 var intlFlag = parent.parent.globals.GetNameValuePair(theFile,"Mode Selection","IntlMode");
 intlFlag = intlFlag.toLowerCase();
 
-if (intlFlag == "yes")	{
+if ( intlFlag == "yes" )
+{
 	intlString = "text";
 	localString = "hidden";
-	}
-else	{
+}
+else
+{
 	intlString = "hidden";
 	localString = "text";
-	}
+}
 
-
-
-function Country(name,countryCode)
+function Country( name, countryCode )
 {
 	this.name=name;
-	this.countryCode=countryCode;
+	this.countryCode = countryCode;
 }
 
 
@@ -76,121 +72,129 @@ countryList[25]=new Country("USA","1");
 
 
 
-function writeLocalText(theString)
+function writeLocalText( theString )
 {
-	if (localString == "text")	{
-		document.write(theString);
-		}
+	if ( localString == "text" )
+		document.write( theString );
 }
 
 
 
 function generateCountryList()
 {
-if (intlFlag == "yes")	{
-	var	country = parent.parent.globals.document.vars.country.value;
+	if ( intlFlag == "yes" )
+	{
+		var	country = parent.parent.globals.document.vars.country.value;
 
-	document.writeln("<TR><TD COLSPAN='3'><spacer type=vertical size=2></TD></TR>");
-	document.writeln("<TR><TD VALIGN=MIDDLE ALIGN=RIGHT HEIGHT=25><B>Country:</B></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>");
-	document.writeln("<SELECT NAME='countryList'>");
-	for (var x=0; x<countryList.length; x++)	{
-		var selected=(country==countryList[x].name) ? " SELECTED":"";
-		document.writeln("<OPTION VALUE='" + countryList[x].name + "'" + selected + ">" + countryList[x].name);
+		document.writeln( "<TR><TD COLSPAN='3'><spacer type=vertical size=2></TD></TR>" );
+		document.writeln( "<TR><TD VALIGN=MIDDLE ALIGN=RIGHT HEIGHT=25><B>Country:</B></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>" );
+		document.writeln( "<SELECT NAME='countryList'>" );
+		for ( var x = 0; x < countryList.length; x++ )
+		{
+			var selected = ( country == countryList[ x ].name ) ? " SELECTED" : "";
+			document.writeln( "<OPTION VALUE='" + countryList[ x ].name + "'" + selected + ">" + countryList[ x ].name );
 		}
-	document.writeln("</SELECT></TD></TR>");
+		document.writeln( "</SELECT></TD></TR>" );
 	}
 }
 
-
-
-function go(msg)
+function go( msg )
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")
+	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
-		return(checkData());
+		return checkData();
 }
-
-
 
 function checkData()
 {
-	if (document.forms[0].first.value == "")	{
-		alert("You must enter a first name.");
-		document.forms[0].first.focus();
-		document.forms[0].first.select();
-		return(false);
-		}
-	if (document.forms[0].last.value == "")	{
-		alert("You must enter a last name.");
-		document.forms[0].last.focus();
-		document.forms[0].last.select();
-		return(false);
-		}
-	if (document.forms[0].address1.value == "")	{
-		alert("You must enter a street address.");
-		document.forms[0].address1.focus();
-		document.forms[0].address1.select();
-		return(false);
-		}
+	if ( document.forms[ 0 ].first.value == "" )
+	{
+		alert( "You must enter a first name." );
+		document.forms[ 0 ].first.focus();
+		document.forms[ 0 ].first.select();
+		return false;
+	}
+	if ( document.forms[0].last.value == "" )
+	{
+		alert( "You must enter a last name." );
+		document.forms[ 0 ].last.focus();
+		document.forms[ 0 ].last.select();
+		return false;
+	}
+	if ( document.forms[ 0 ].address1.value == "" )
+	{
+		alert( "You must enter a street address." );
+		document.forms[ 0 ].address1.focus();
+		document.forms[ 0 ].address1.select();
+		return false;
+	}
 
-	if (intlFlag != "yes")	{
-		if (document.forms[0].city.value == "")	{
-			alert("You must enter a city.");
-			document.forms[0].city.focus();
-			document.forms[0].city.select();
-			return(false);
-			}
-		if (document.forms[0].state.value == "")	{
-			alert("You must enter a state or province.");
-			document.forms[0].state.focus();
-			document.forms[0].state.select();
-			return(false);
-			}
-		if (document.forms[0].state.value.length < 2)	{
-			alert("You must enter a valid state or province.");
-			document.forms[0].state.focus();
-			document.forms[0].state.select();
-			return(false);
-			}
-		if (document.forms[0].zip.value == "")	{
-			alert("You must enter a ZIP or postal code.");
-			document.forms[0].zip.focus();
-			document.forms[0].zip.select();
-			return(false);
-			}
-		if (parent.parent.globals.verifyZipCode(document.forms[0].zip.value)==false)	{
-			alert("Please enter a valid ZIP or postal code.");
-			parent.parent.globals.setFocus(document.forms[0].zip);
-			return(false);
-			}
-		if (document.forms[0].areaCode.value == "")	{
-			alert("You must enter an area code.");
-			document.forms[0].areaCode.focus();
-			document.forms[0].areaCode.select();
-			return(false);
-			}
-		if (parent.parent.globals.verifyAreaCode(document.forms[0].areaCode.value)==false)	{
-			alert("Please enter a valid area code.");
-			parent.parent.globals.setFocus(document.forms[0].areaCode);
-			return(false);
-			}
+	if ( intlFlag != "yes" )
+	{
+		if ( document.forms[ 0 ].city.value == "" )
+		{
+			alert( "You must enter a city." );
+			document.forms[ 0 ].city.focus();
+			document.forms[ 0 ].city.select();
+			return false;
 		}
-	if (document.forms[0].phoneNumber.value == "")	{
-		alert("You must enter a telephone number.");
-		document.forms[0].phoneNumber.focus();
-		document.forms[0].phoneNumber.select();
-		return(false);
+		if ( document.forms[ 0 ].state.value == "" )
+		{
+			alert( "You must enter a state or province." );
+			document.forms[ 0 ].state.focus();
+			document.forms[ 0 ].state.select();
+			return false;
 		}
-	if (parent.parent.globals.verifyPhoneNumber(document.forms[0].phoneNumber.value)==false)	{
-		alert("Please enter a valid telephone number.");
-		parent.parent.globals.setFocus(document.forms[0].phoneNumber);
-		return(false);
+		if ( document.forms[ 0 ].state.value.length < 2 )
+		{
+			alert( "You must enter a valid state or province." );
+			document.forms[ 0 ].state.focus();
+			document.forms[ 0 ].state.select();
+			return false;
 		}
-	return(true);
+		if ( document.forms[0].zip.value == "" )
+		{
+			alert( "You must enter a ZIP or postal code." );
+			document.forms[ 0 ].zip.focus();
+			document.forms[ 0 ].zip.select();
+			return false;
+		}
+		if ( parent.parent.globals.verifyZipCode( document.forms[ 0 ].zip.value ) == false )
+		{
+			alert( "Please enter a valid ZIP or postal code." );
+			parent.parent.globals.setFocus( document.forms[ 0 ].zip );
+			return false;
+		}
+		if ( document.forms[0].areaCode.value == "" )
+		{
+			alert( "You must enter an area code." );
+			document.forms[ 0 ].areaCode.focus();
+			document.forms[ 0 ].areaCode.select();
+			return false;
+		}
+		if ( parent.parent.globals.verifyAreaCode( document.forms[ 0 ].areaCode.value ) == false )
+		{
+			alert( "Please enter a valid area code." );
+			parent.parent.globals.setFocus( document.forms[ 0 ].areaCode);
+			return false;
+		}
+	}
+	if ( document.forms[ 0 ].phoneNumber.value == "" )
+	{
+		alert( "You must enter a telephone number." );
+		document.forms[ 0 ].phoneNumber.focus();
+		document.forms[ 0 ].phoneNumber.select();
+		return false;
+	}
+	if ( parent.parent.globals.verifyPhoneNumber(  document.forms[ 0 ].phoneNumber.value, 7 ) == false )
+	{
+		alert( "Please enter a valid telephone number." );
+		parent.parent.globals.setFocus( document.forms[ 0 ].phoneNumber );
+		return false;
+	}
+	return true;
 }
-
-
 
 function loadData()
 {
@@ -298,7 +302,5 @@ function saveData()
 		parent.parent.globals.document.vars.countryCode.value = "1";
 		}
 }
-
-
 
 // end hiding contents from old browsers  -->

@@ -17,75 +17,69 @@
  */
 <!--  to hide script contents from old browsers
 
-
-
 var	intlString = "";
 var	localString = "";
-
-
 
 var theFile = parent.parent.globals.getAcctSetupFilename(self);
 var intlFlag = parent.parent.globals.GetNameValuePair(theFile,"Mode Selection","IntlMode");
 intlFlag = intlFlag.toLowerCase();
 
-if (intlFlag == "yes")	{
+if ( intlFlag == "yes" )
+{
 	intlString = "text";
 	localString = "hidden";
-	}
-else	{
+}
+else
+{
 	intlString = "hidden";
 	localString = "text";
-	}
-
-
-
-function writeLocalText(theString)
-{
-	if (localString == "text")	{
-		document.write(theString);
-		}
 }
 
-
-
-function go(msg)
+function writeLocalText( theString )
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")
+	if ( localString == "text" )
+		document.write( theString );
+}
+
+function go( msg )
+{
+	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
-		return(checkData());
+		return checkData();
 }
-
-
 
 function checkData()
 {
-	if (intlFlag != "yes")	{
-		if (document.forms[0].accountAreaCode.value == "")	{
-			alert("You must enter an area code.");
-			parent.parent.globals.setFocus(document.forms[0].accountAreaCode);
-			return(false);
-			}
-		if (parent.parent.globals.verifyAreaCode(document.forms[0].accountAreaCode.value)==false)	{
-			alert("Please enter a valid area code.");
-			parent.parent.globals.setFocus(document.forms[0].accountAreaCode);
-			return(false);
-			}
+	if ( intlFlag != "yes" )
+	{
+		if ( document.forms[ 0 ].accountAreaCode.value == "" )
+		{
+			alert( "You must enter an area code." );
+			parent.parent.globals.setFocus( document.forms[ 0 ].accountAreaCode );
+			return false;
 		}
-	if (document.forms[0].accountPhoneNumber.value == "")	{
-		alert("You must enter a telephone number.");
-		parent.parent.globals.setFocus(document.forms[0].accountPhoneNumber);
-		return(false);
+		if ( parent.parent.globals.verifyAreaCode( document.forms[ 0 ].accountAreaCode.value) == false )
+		{
+			alert( "Please enter a valid area code." );
+			parent.parent.globals.setFocus( document.forms[ 0 ].accountAreaCode );
+			return false;
 		}
-	if (parent.parent.globals.verifyPhoneNumber(document.forms[0].accountPhoneNumber.value)==false)	{
-		alert("Please enter a valid telephone number.");
-		parent.parent.globals.setFocus(document.forms[0].accountPhoneNumber);
-		return(false);
-		}
-	return(true);
+	}
+	if ( document.forms[ 0 ].accountPhoneNumber.value == "" )
+	{
+		alert( "You must enter a telephone number." );
+		parent.parent.globals.setFocus( document.forms[ 0 ].accountPhoneNumber );
+		return false;
+	}
+	if ( parent.parent.globals.verifyPhoneNumber( document.forms[ 0] .accountPhoneNumber.value, 7 ) == false )
+	{
+		alert( "Please enter a valid telephone number." );
+		parent.parent.globals.setFocus( document.forms[ 0 ].accountPhoneNumber );
+		return false;
+	}
+	return true;
 }
-
-
 
 function loadData()
 {
@@ -122,7 +116,5 @@ function saveData()
 		}
 	parent.parent.globals.document.vars.accountPhoneNumber.value = document.forms[0].accountPhoneNumber.value;
 }
-
-
 
 // end hiding contents from old browsers  -->

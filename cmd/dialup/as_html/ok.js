@@ -17,24 +17,20 @@
  */
 <!--  to hide script contents from old browsers
 
+var savedFlag = false;
 
-
-	var savedFlag = false;
-
-
-
-function go(msg)
+function go( msg )
 {
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	if (parent.parent.globals.document.vars.editMode.value == "yes")	{
-		return(true);
-		}
-	else	{
-		if (msg=="Internet")	{
-			if (parent.parent.globals.document.setupPlugin.DialerConnect() == false)	{
-				return(false);
-				}
+	if (parent.parent.globals.document.vars.editMode.value == "yes")
+		return true;
+	else
+	{
+		if ( msg=="Internet" )
+		{
+			if ( parent.parent.globals.document.setupPlugin.DialerConnect() == false )
+				return false;
 	
 			// check browser version
 			var theAgent=navigator.userAgent;
@@ -68,35 +64,26 @@ function go(msg)
 		}
 }
 
-
-
 function checkData()
 {
-	return(true);
+	return true;
 }
-
-
 
 function loadData()
 {
-	if (parent.controls.generateControls)	parent.controls.generateControls();
-	if (parent.parent.globals.document.vars.editMode.value != "yes")
-		saveAccountInfo(false);
+	if ( parent.controls.generateControls )
+		parent.controls.generateControls();
+	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
+		saveAccountInfo( false );
 }
-
-
 
 function saveData()
 {
 }
 
-
-
-function saveAccountInfo(promptFlag)
+function saveAccountInfo( promptFlag )
 {
-	savedFlag = parent.parent.globals.saveAccountInfo(promptFlag);
+	savedFlag = parent.parent.globals.saveAccountInfo( promptFlag );
 }
-
-
 
 // end hiding contents from old browsers  -->

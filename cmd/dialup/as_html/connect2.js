@@ -33,10 +33,7 @@ function configureDialer()
 
 
 	// platform check
-	var thePlatform = new String(navigator.userAgent);
-	var x=thePlatform.indexOf("(")+1;
-	var y=thePlatform.indexOf(";",x+1);
-	thePlatform=thePlatform.substring(x,y);
+	var thePlatform = parent.parent.globals.getPlatform();
 
 
 /*
@@ -332,11 +329,7 @@ function configureDialer()
 	if (profileDir != null && profileDir != "")	{
 
 		// write MUC Configuration file
-
-		var thePlatform = new String(navigator.userAgent);
-		var x=thePlatform.indexOf("(")+1;
-		var y=thePlatform.indexOf(";",x+1);
-		thePlatform=thePlatform.substring(x,y);
+		var thePlatform = parent.parent.globals.getPlatform();
 	
 		var configFile="";
 		if (thePlatform == "Macintosh")	{				// Macintosh support

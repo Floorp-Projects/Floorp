@@ -44,9 +44,7 @@ else
 function writeLocalText( theString )
 {
 	if ( localString == "text" )
-	{
 		document.write( theString );
-	}
 }
 
 
@@ -56,14 +54,10 @@ function go( msg )
 	if ( ( parent.parent.globals.document.vars.editMode.value == "yes" ) || checkData() )
 	{
 		if ( msg == parent.parent.globals.document.vars.path.value )
-		{
 			return true;
-		}
 	}
 	return false;
 }
-
-
 
 function checkData()
 {
@@ -88,7 +82,7 @@ function checkData()
 		parent.parent.globals.setFocus( document.forms[ 0 ].modemPhoneNumber );
 		return false;
 	}
-	if ( parent.parent.globals.verifyPhoneNumber( document.forms[ 0 ].modemPhoneNumber.value ) == false )
+	if ( parent.parent.globals.verifyPhoneNumber( document.forms[ 0 ].modemPhoneNumber.value, 3 ) == false )
 	{
 		alert( "Please enter a valid telephone number." );
 		parent.parent.globals.setFocus( document.forms[ 0 ].modemPhoneNumber );
@@ -120,15 +114,15 @@ function loadData()
 	if ( intlFlag != "yes" )
 	{
 		if ( document.forms[ 0 ].modemAreaCode.value == "" )
-		{
 			document.forms[ 0 ].modemAreaCode.value = parent.parent.globals.document.vars.areaCode.value;
-		}
 	}
 
 	document.forms[ 0 ].modemPhoneNumber.value = parent.parent.globals.document.vars.modemPhoneNumber.value;
 	if ( document.forms[ 0 ].modemPhoneNumber.value == "" )
 	{
-		document.forms[ 0 ].modemPhoneNumber.value = parent.parent.globals.document.vars.phoneNumber.value;
+		phonePrefix = parent.parent.globals.document.vars.phoneNumber.value;
+		phonePrefix = phonePrefix.substring( 0, 3 );
+		document.forms[ 0 ].modemPhoneNumber.value = phonePrefix;
 	}
 
 	document.forms[ 0 ].altAreaCode1.value = parent.parent.globals.document.vars.altAreaCode1.value;

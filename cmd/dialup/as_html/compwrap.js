@@ -19,7 +19,7 @@
 
 function go( msg )
 {
-	parent.parent.globals.debug( "compwrap go" );
+	//parent.parent.globals.debug( "compwrap go" );
 	
 	if ( compare.ispRadio != null && compare.ispRadio != "" )
 	{

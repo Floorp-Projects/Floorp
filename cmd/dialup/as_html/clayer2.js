@@ -448,28 +448,25 @@ function generateControls()
 
 function doHelp(formName)
 {
-		var thePlatform;
+	var thePlatform;
 
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	helpFile = "./help/ashelp.htm";
 
 	var helpPath = "";
-	if (parent && parent.parent && parent.parent.globals)	{
-		helpPath = "" + parent.parent.globals.getFolder(self);
+	if ( parent && parent.parent && parent.parent.globals )
+	{
+		helpPath = "" + parent.parent.globals.getFolder( self );
 
-		thePlatform = new String(navigator.userAgent);
-		var x=thePlatform.indexOf("(")+1;
-		var y=thePlatform.indexOf(";",x+1);
-		thePlatform=thePlatform.substring(x,y);
-		if (thePlatform == "Macintosh")	{						// Macintosh support
-			helpPath = helpPath + "help:";
-			}
-		else	{												// Windows support
-			helpPath = helpPath + "help/";
-			}
+		thePlatform = parent.parent.globals.getPlatform();
+		if ( thePlatform == "Macintosh" )
+			helpPath = helpPath + "help:";	// Macintosh support
+		else
+			helpPath = helpPath + "help/";	// Windows support
 
-		if (thePlatform != "Macintosh") {
+		if ( thePlatform != "Macintosh" )
+		{
 
 			var hpath=unescape(location.pathname);
 			hpath = hpath.substring(0, hpath.lastIndexOf('/'));
@@ -483,31 +480,36 @@ function doHelp(formName)
 		}
 
 		var theList = parent.parent.globals.document.setupPlugin.GetFolderContents(helpPath,".htm");
-		if (theList != null)	{
-			for (var i=0; i<theList.length; i++)	{
-				if (formName == theList[i])	{
-					if (thePlatform != "Macintosh") {
-						var currentpath=unescape(location.pathname);
-						currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
+		if ( theList != null )
+		{
+			for ( var i = 0; i < theList.length; i++ )
+			{
+				if ( formName == theList[ i ] )
+				{
+					if ( thePlatform != "Macintosh" )
+					{
+						var currentpath = unescape( location.pathname );
+						currentpath = currentpath.substring( 0, currentpath.lastIndexOf( '/' ) );
 						helpFile = currentpath + "/help/" + formName;
-					} else { 
+					}
+					else
 						helpFile = "./help/" + formName;
-					}
 					break;
-					}
 				}
 			}
 		}
+	}
 
-	if (helpFile != null && helpFile != "")	{
-		if (helpWindow == null || helpWindow.closed)	{
-			helpWindow=window.open("about:blank","Documentation","width=328,height=328,alwaysRaised=yes,dependent=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes");
-			}
-		if (helpWindow && helpWindow != null)	{
+	if ( helpFile != null && helpFile != "" )
+	{
+		if ( helpWindow == null || helpWindow.closed )
+			helpWindow = window.open( "about:blank","Documentation","width=328,height=328,alwaysRaised=yes,dependent=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes" );
+		if ( helpWindow && helpWindow != null )
+		{
 			helpWindow.focus();
 			helpWindow.location = helpFile;
-			}
 		}
+	}	
 }
 
 
@@ -519,32 +521,24 @@ function doHelp(formName)
 function openToolBar()
 {
 
-		var thePlatform = new String(navigator.userAgent);
-		var x=thePlatform.indexOf("(")+1;
-		var y=thePlatform.indexOf(";",x+1);
-		thePlatform=thePlatform.substring(x,y);
+	var thePlatform = parent.parent.globals.getPlatform();
+	var	editMode = false;
 
-		var	editMode = false;
+	if ( parent && parent.parent && parent.parent.globals )
+		editMode = ( parent.parent.globals.document.vars.editMode.value.toLowerCase() == "yes" ) ? true : false;
 
-	if (parent && parent.parent && parent.parent.globals)	{
-		editMode=(parent.parent.globals.document.vars.editMode.value.toLowerCase() == "yes") ? true:false;
-		}
-
-	if (editMode == true)	
+	if ( editMode == true )	
 	{
-		if (!(theToolBar) || (theToolBar == null) || !(theToolBar.location)) 
+		if ( !(theToolBar) || (theToolBar == null) || !( theToolBar.location ) ) 
 		{
-			if (thePlatform == "Macintosh")	
-				theToolBar = top.open("../../Tools/Kit/config.htm","Configurator","width=400,height=104,dependent=yes,alwaysraised=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no");
+			if ( thePlatform == "Macintosh" )	
+				theToolBar = top.open( "../../Tools/Kit/config.htm","Configurator","width=400,height=104,dependent=yes,alwaysraised=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no" );
 			else
-				theToolBar = top.open("../../../AccountSetupTools/Kit/config.htm","Configurator","width=400,height=104,dependent=yes,alwaysraised=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no");
-				
+				theToolBar = top.open( "../../../AccountSetupTools/Kit/config.htm","Configurator","width=400,height=104,dependent=yes,alwaysraised=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no" );				
 		}
 	}
 	else
-	{
 		theToolBar = null;
-	}
 	return theToolBar;
 }
 

@@ -17,17 +17,13 @@
  */
 <!--  to hide script contents from old browsers
 
-
-
-function go(msg)
+function go( msg )
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")
+	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
-		return(checkData());
+		return checkData();
 }
-
-
 
 function checkData()
 {
@@ -56,32 +52,23 @@ function checkData()
 	return(true);
 }
 
-
-
 function loadData()
 {
-	if (parent.controls.generateControls)	parent.controls.generateControls();
-	if (parent.parent.globals.document.vars.editMode.value != "yes")
-		saveAccountInfo(false);
+	if ( parent.controls.generateControls )
+		parent.controls.generateControls();
+	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
+		saveAccountInfo( false );
 }
-
-
 
 function saveData()
 {
 }
 
+var savedFlag = false;
 
-
-	var savedFlag = false;
-
-
-
-function saveAccountInfo(promptFlag)
+function saveAccountInfo( promptFlag )
 {
-	savedFlag = parent.parent.globals.saveAccountInfo(promptFlag);
+	savedFlag = parent.parent.globals.saveAccountInfo( promptFlag );
 }
-
-
 
 // end hiding contents from old browsers  -->

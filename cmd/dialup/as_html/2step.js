@@ -22,28 +22,45 @@ var controls = parent.controls;
 
 function go( msg )
 {
+	return true;
+}
+
+function checkData()
+{
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	// * skip if we're in edit mode
 	if ( globals.document.vars.editMode.value != "yes" )
 	{
+		// * check for toll calls when not in international mode
+		if ( globals.document.vars.intlMode.value != "yes" )
+		{
+			if ( document.forms && document.forms[ 0 ] && document.forms[ 0 ].popList )
+				selectedIndex = document.forms[ 0 ].popList.selectedIndex;
+			else
+				selectedIndex = -1;
+
+			ispPhoneNumber = new String( globals.document.setupPlugin.GetISPModemNumber( globals.selectedISP, selectedIndex ) );
+			areaCode = globals.getAreaCode( ispPhoneNumber );
+			if ( areaCode != "" )
+			{
+				if ( areaCode != "800" && areaCode != "888" )
+					if ( confirm( "The area code to call this ISP is " + areaCode + ".  This might be a toll call from your area code.  Do you wish to continue?" ) == false )
+						return false;
+			}
+		}
+		
 		if ( document.forms && document.forms[ 0 ] && document.forms[ 0 ].popList )
-			globals.document.setupPlugin.CreateConfigIAS(
-				globals.selectedISP, document.forms[ 0 ].popList.selectedIndex );
+			selectedIndex = document.forms[ 0 ].popList.selectedIndex;
 		else
-			globals.document.setupPlugin.CreateConfigIAS( globals.selectedISP, -1 );
+			selectedIndex = -1;
+
+		globals.document.setupPlugin.CreateConfigIAS( globals.selectedISP, selectedIndex );
 				
 		return true;
 	}
 	else
-	{
 		return false;
-	}
-}
-
-function checkData()
-{
-	return true;
 }
 
 function saveData()
@@ -73,10 +90,10 @@ function generatePopNumberList()
 
 	var list = globals.document.setupPlugin.GetISPPopList( globals.selectedISP );
 	
-	globals.debug( "generating pop list" );
+	//globals.debug( "generating pop list" );
 	if ( list && list.length > 0 )
 	{
-		globals.debug( "emitting table" );
+		//globals.debug( "emitting table" );
 		document.writeln( "<TABLE CELLPADDING=2 CELLSPACING=0 ID='minspace'><TR><TD ALIGN=LEFT VALIGN=TOP HEIGHT=25><spacer type=vertical size=2><B>Pick a phone number from the following list to connect to:</B></TD><TD ALIGN=LEFT VALIGN=TOP><FORM><SELECT NAME='popList'>");
 		for ( var x = 0; x < list.length; x++ )
 		{

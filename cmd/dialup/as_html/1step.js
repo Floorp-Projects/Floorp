@@ -23,7 +23,7 @@ var documentVars = globals.document.vars;
 
 function go( msg )
 {
-	parent.parent.globals.debug( "1step go" );
+//	parent.parent.globals.debug( "1step go" );
 	
 	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
@@ -38,7 +38,7 @@ function checkData()
 
 function configureDialer( configFolder, acctSetupIni, regFile )
 {
-	globals.debug( "Configuring dialer" );
+//	globals.debug( "Configuring dialer" );
 
 	var		intlFlag = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "IntlMode" );
 	intlFlag = intlFlag.toLowerCase();

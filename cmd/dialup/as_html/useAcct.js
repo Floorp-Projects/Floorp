@@ -258,64 +258,62 @@ function ISPcompare(a,b)
 
 function generateISPList()
 {
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
-
-	for (x=document.forms[0].providerlist.length; x>=0; x--)	{
-		document.forms[0].providerlist[x]=null;
-		}
-
-	var theAcctSetupFile = parent.parent.globals.getAcctSetupFilename(self);
-	var showPhonesFlag = parent.parent.globals.GetNameValuePair(theAcctSetupFile,"Existing Acct Mode","ShowPhones");
-	if (showPhonesFlag != null && showPhonesFlag != "")	{
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+	
+	for ( x = document.forms[ 0 ].providerlist.length; x >= 0; x-- )
+		document.forms[ 0 ].providerlist[ x ] = null;
+	
+	var theAcctSetupFile = parent.parent.globals.getAcctSetupFilename( self );
+	var showPhonesFlag = parent.parent.globals.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowPhones" );
+	if ( showPhonesFlag != null && showPhonesFlag != "" )
 		showPhonesFlag = showPhonesFlag.toLowerCase();
-		}
-
-	var pathName = parent.parent.globals.getConfigFolder(self);
-	var theList = parent.parent.globals.document.setupPlugin.GetFolderContents(pathName,".NCI");
-
-	if (theList != null)	{
-		parent.parent.globals.debug("GetFolderContents returned " + theList.length + " items");
-
+	
+	var pathName = parent.parent.globals.getConfigFolder( self );
+	var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName, ".NCI" );
+	
+	if ( theList != null )
+	{
+		parent.parent.globals.debug( "GetFolderContents returned " + theList.length + " items" );
+	
 		var ISParray = new Array();
-		for (var i=0,j=0; i<theList.length; i++)	{
-			var theProviderFilename = pathName + theList[i];
-//			parent.parent.globals.debug("theProviderFilename " + i + ": " +theProviderFilename);
-
-			var name="";
-			if (showPhonesFlag == "yes")	{
-				name = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Dial-In Configuration","Phone");
-				}
-			if (name==null || name=="")	{
-				var name = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Dial-In Configuration","SiteName");
-				}
-
-			if (theProviderFilename!=null && theProviderFilename!="" && name!=null && name!="")	{
-				ISParray[j++]=new ISP(theProviderFilename,name);
-				}
-			}
-
-		// un-comment the following line to sort the ISP array
-		// Note: for large (more than a dozen or so) lists, this is AMAZINGLY slow
-		// (unsorted data takes seconds; sorted data can take more than a minute)
-
-//		ISParray.sort(ISPcompare);
-
-		for (var x=0; x<ISParray.length; x++)	{
-			var y = document.forms[0].providerlist.length;
-			document.forms[0].providerlist.options[y] = new Option(ISParray[x].name,ISParray[x].theProviderFilename,false,false);
-			document.forms[0].providerlist.options[y].selected = ((ISParray[x].name == parent.parent.globals.document.vars.providername.value) ? true:false);
-			}
-
-		var showNoneAboveFlag = parent.parent.globals.document.setupPlugin.GetNameValuePair(theAcctSetupFile,"Existing Acct Mode","ShowNoneAbove");
-		if (showNoneAboveFlag != null && showNoneAboveFlag != "")	{
-			showNoneAboveFlag = showNoneAboveFlag.toLowerCase();
-			}
-		if (showNoneAboveFlag != "no")	{
-			x = document.forms[0].providerlist.options.length;
-			document.forms[0].providerlist.options[x] = new Option("(None of the above)","",false,false);
-			document.forms[0].providerlist.options[x].selected = false;
-			}
-		}	
+		for ( var i = 0, j = 0; i < theList.length; i++ )
+		{
+			var theProviderFilename = pathName + theList[ i ];
+			//parent.parent.globals.debug("theProviderFilename " + i + ": " +theProviderFilename);
+	
+			var name = "";
+			if ( showPhonesFlag == "yes" )
+				name = parent.parent.globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "Phone" );
+			if ( name == null || name == "" )
+				var name = parent.parent.globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "SiteName" );
+		}
+	
+		if ( theProviderFilename != null && theProviderFilename != "" && name != null && name!= "" )	{
+			ISParray[ j++ ] = new ISP( theProviderFilename, name );
+	}
+	
+	// un-comment the following line to sort the ISP array
+	// Note: for large (more than a dozen or so) lists, this is AMAZINGLY slow
+	// (unsorted data takes seconds; sorted data can take more than a minute)
+	
+	//		ISParray.sort(ISPcompare);
+	
+	for ( var x = 0; x < ISParray.length; x++ )
+	{
+		var y = document.forms[ 0 ].providerlist.length;
+		document.forms[ 0 ].providerlist.options[ y ] = new Option( ISParray[ x ].name, ISParray[ x ].theProviderFilename, false, false );
+		document.forms[ 0 ].providerlist.options[ y ].selected = ( ( ISParray[ x ].name == parent.parent.globals.document.vars.providername.value) ? true : false );
+	}
+	
+	var showNoneAboveFlag = parent.parent.globals.document.setupPlugin.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowNoneAbove" );
+	if ( showNoneAboveFlag != null && showNoneAboveFlag != "" )
+		showNoneAboveFlag = showNoneAboveFlag.toLowerCase();
+	if ( showNoneAboveFlag != "no" )
+	{
+		x = document.forms[ 0 ].providerlist.options.length;
+		document.forms[ 0 ].providerlist.options[ x ] = new Option( "(None of the above)", "", false, false );
+		document.forms[ 0 ].providerlist.options[ x ].selected = false;
+	}
 }
 
 

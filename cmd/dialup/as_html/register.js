@@ -21,9 +21,9 @@ var	globals = parent.parent.globals;
 var plugin = globals.document.setupPlugin;
 var documentVars = globals.document.vars;
 
-function go(msg)
+function go( msg )
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")
+	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
 		return checkData();
@@ -83,30 +83,29 @@ function loadData()
 		if ( globals.document.vars.prefixData.value != "" )
 		{
 			outsideLineAccessStr = parent.parent.globals.document.vars.prefixData.value;
-			x = outsideLineAccessStr.indexOf(",");
+			x = outsideLineAccessStr.indexOf( "," );
 			if ( x < 0 )
 				outsideLineAccessStr = outsideLineAccessStr + ",";
 		}
 	
-	
 		// configure dialer for Registration Server	
-		dialerData = globals.document.setupPlugin.newStringArray(28);		// increment this # as new dialer strings are added
+		dialerData = globals.document.setupPlugin.newStringArray( 28 );		// increment this # as new dialer strings are added
 		dialerData[0]  = "FileName=" + regFile;
-		dialerData[1]  = "AccountName=" + globals.GetNameValuePair( regFile,"Dial-In Configuration","SiteName");
-		dialerData[2]  = "ISPPhoneNum=" + globals.GetNameValuePair( regFile,"Dial-In Configuration","Phone");
-		dialerData[3]  = "LoginName=" + globals.GetNameValuePair( regFile,"Dial-In Configuration","Name");
-		dialerData[4]  = "Password=" + globals.GetNameValuePair( regFile,"Dial-In Configuration","Password");
-		dialerData[5]  = "DNSAddress=" + globals.GetNameValuePair( regFile,"IP","DNSAddress");
-		dialerData[6]  = "DNSAddress2=" + globals.GetNameValuePair( regFile,"IP","DNSAddress2");
-		dialerData[7]  = "DomainName=" + globals.GetNameValuePair( regFile,"IP","DomainName");
-		dialerData[8]  = "IPAddress=" + globals.GetNameValuePair( regFile,"IP","IPAddress");
-		dialerData[9]  = "IntlMode=" + ((intlFlag=="yes") ? "TRUE":"FALSE");
+		dialerData[1]  = "AccountName=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "SiteName" );
+		dialerData[2]  = "ISPPhoneNum=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "Phone" );
+		dialerData[3]  = "LoginName=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "Name" );
+		dialerData[4]  = "Password=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "Password" );
+		dialerData[5]  = "DNSAddress=" + globals.GetNameValuePair( regFile, "IP", "DNSAddress" );
+		dialerData[6]  = "DNSAddress2=" + globals.GetNameValuePair( regFile, "IP", "DNSAddress2" );
+		dialerData[7]  = "DomainName=" + globals.GetNameValuePair( regFile, "IP", "DomainName" );
+		dialerData[8]  = "IPAddress=" + globals.GetNameValuePair( regFile, "IP", "IPAddress" );
+		dialerData[9]  = "IntlMode=" + ( ( intlFlag=="yes" ) ? "TRUE" : "FALSE" );
 		dialerData[10] = "DialOnDemand=TRUE";
 		dialerData[11] = "ModemName=" + globals.document.vars.modem.value;
-		dialerData[12] = "ModemType=" + globals.document.setupPlugin.GetModemType(parent.parent.globals.document.vars.modem.value);
+		dialerData[12] = "ModemType=" + globals.document.setupPlugin.GetModemType( parent.parent.globals.document.vars.modem.value );
 		dialerData[13] = "DialType=" + globals.document.vars.dialMethod.value;
-		dialerData[14] = "OutsideLineAccess=" + outsideLineAccessStr;
-		dialerData[15] = "DisableCallWaiting=" + ( ( globals.document.vars.cwData.value != "" ) ? "TRUE" : "FALSE");
+		dialerData[14] = "OutsideLineAccess=" + outsideLineAccessStr; 
+		dialerData[15] = "DisableCallWaiting=" + ( ( globals.document.vars.cwData.value != "" ) ? "TRUE" : "FALSE" );
 		dialerData[16] = "DisableCallWaitingCode=" + globals.document.vars.cwData.value;
 		dialerData[17] = "UserAreaCode=" + globals.document.vars.modemAreaCode.value;				// XXX what to do if international mode?
 		dialerData[18] = "CountryCode=" + globals.document.vars.countryCode.value;
@@ -121,12 +120,12 @@ function loadData()
 		dialerData[27] = "Path=Server";
 	
 		// write out dialer data to Java Console
-		if ( globals.document.vars.debugMode.value.toLowerCase() == "yes")
+		if ( globals.document.vars.debugMode.value.toLowerCase() == "yes" )
 		{
 			globals.debug( "\nDialer data (for Registration Server): " );
 			var numElements = dialerData.length;
 			for ( var x = 0; x < numElements; x++ )
-				globals.debug("        " + x + ": " + dialerData[ x ]);
+				globals.debug( "        " + x + ": " + dialerData[ x ] );
 		}
 	
 		globals.document.setupPlugin.DialerConfig( dialerData, true );
@@ -135,14 +134,14 @@ function loadData()
 		
 		if ( globals.document.setupPlugin.NeedReboot() == true )
 		{
-			globals.forceReboot( "2step.htm" );		// XXX hardcode in name of next screen???
+			globals.forceReboot( "2step.htm" );			// XXX hardcode in name of next screen???
 			return;
 		}
 	
 		if ( globals.document.setupPlugin.DialerConnect() == false )
 		{
 			globals.document.setupPlugin.DialerHangup();
-			window.location.replace( "error.htm" );							// XXX hardcode in name of next screen???
+			window.location.replace( "error.htm" );		// XXX hardcode in name of next screen???
 			return;
 		}
 	

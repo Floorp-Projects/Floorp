@@ -38,15 +38,9 @@ function cancelEvent( e )
 	return retVal;
 }
 
-
-
 function debug( theString )
 {
 	java.lang.System.out.println( theString );
-//	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
-//
-//	if ( document.vars.debugMode.value.toLowerCase() == "yes" )
-//		document.setupPlugin.debug( theString );
 }
 
 function GetNameValuePair( file, section, variable )
@@ -99,7 +93,29 @@ function getPlatform()
 	platform = platform.substring( x, y );
 	return platform;
 }
-	
+
+function getBrowserVersionNumber()
+{
+	var theAgent = navigator.userAgent;
+	var x = theAgent.indexOf( "/" );
+	var theVersion = "unknown";
+	if ( x >= 0 )
+		var theVersion = theAgent.substring( x + 1, theAgent.length );
+	return theVersion;
+}
+
+function getBrowserMajorVersionNumber()
+{
+	var	version = getBrowserVersionNumber();
+	if ( version != "unknown" )
+	{
+		var x = theVersion.indexOf( "." );
+		if ( x > 0 )
+			version = version.substring( 0, x );	
+	}
+	return version;
+}
+
 // * returns a canoncial path to the folder containing the document representing the current contents of "window"
 function getFolder( window )
 {
@@ -140,7 +156,6 @@ function getFolder( window )
 		//debug( "drive: " + drive + " path: " + path );
 
 		// construct newpath		
-
 		newpath = drive + ":" + path + "\\";
 		debug( "path: " + newpath );
 	}
@@ -213,8 +228,6 @@ function checkPluginExists( name, generateOutputFlag )
 	}
 }
 
-
-
 function forceReboot(pageName)
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
@@ -236,8 +249,6 @@ function forceReboot(pageName)
 	parent.parent.globals.document.setupPlugin.Reboot( getFolder( self ) + "start.htm" );
 }
 
-
-
 function findVariable( theVar )
 {
 	var theValue = "";
@@ -255,8 +266,6 @@ function findVariable( theVar )
 	}
 	return theValue;
 }
-
-
 
 //	contentFile = "main.htm";
 function getContentPage()
@@ -796,9 +805,9 @@ function setRegisterMode( numSecondsElapsed )
 			document.vars.regData.value = "";
 			debug( "\nRegistration Complete: " + regData.length + " item(s)" );
 			
-			for ( var x=0; x < regData.length; x++ )
+			for ( var x = 0; x < regData.length; x++ )
 			{
-				var data = "" + regData[x];
+				var data = "" + regData[ x ];
 				var dataLen = data.length;
 
 				if ( data.indexOf( bookmarkTag ) ==0 )
@@ -903,25 +912,6 @@ function verifyIPaddress( address )
 	return validFlag;
 }
 
-function verifyAreaCode( areaCode )
-{
-	var	validFlag = false;
-
-	if ( areaCode.length >= 3 )
-	{
-		validFlag = true;
-		for ( var x = 0; x < areaCode.length; x++ )
-		{
-			if ( "0123456789".indexOf( areaCode.charAt( x ) ) < 0 )
-			{
-				validFlag = false;
-				break;
-			}
-		}
-	}
-	return validFlag;
-}
-
 function verifyZipCode( zipCode )
 {
 	var	validFlag = false;
@@ -941,14 +931,14 @@ function verifyZipCode( zipCode )
 	return validFlag;
 }
 
-function verifyPhoneNumber( phoneNum )
+function verifyPhoneNumber( phoneNum, minLength )
 {
 	var	validFlag = false;
 
-	if ( phoneNum.length >= 7 )
+	if ( phoneNum.length >= minLength )
 	{
 		validFlag = true;
-		for ( var x=0; x < phoneNum.length; x++ )
+		for ( var x = 0; x < phoneNum.length; x++ )
 		{
 			if ( "0123456789().,-+ ".indexOf( phoneNum.charAt( x ) ) < 0 )
 			{
@@ -960,6 +950,39 @@ function verifyPhoneNumber( phoneNum )
 	return validFlag;
 }
 
+function verifyAreaCode( areaCode )
+{
+	var	validFlag = false;
 
+	if ( areaCode.length >= 3 )
+	{
+		validFlag = true;
+		for ( var x = 0; x < areaCode.length; x++ )
+		{
+			if ( "0123456789".indexOf( areaCode.charAt( x ) ) < 0 )
+			{
+				validFlag = false;
+				break;
+			}
+		}
+	}
+	return validFlag;
+}
+
+function getAreaCode( tapiPhoneNumber )
+{
+	var x = tapiPhoneNumber.indexOf( "(" );
+	var y = tapiPhoneNumber.indexOf( ")" );
+	var	temp = "";
+	if ( x >= 0 && y >= 0 )
+	{
+		temp = tapiPhoneNumber.substring( x + 1, y );
+		if ( verifyAreaCode( temp ) == false )
+			temp = "";
+	}
+	return temp;
+}
+
+		
 
 // end hiding contents from old browsers  -->
