@@ -229,21 +229,37 @@ class nsStrPrivate {
   static PRInt32 FindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
   
-  static PRInt32 FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
-  
   static PRInt32 RFindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindSubstr1in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 RFindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
-  
-  static PRInt32 RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
 
   static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
   
+  static char GetFindInSetFilter(const char *set)
+  {
+    // Calculate filter
+    char filter = ~char(0); // All bits set
+    while (*set) {
+      filter &= ~(*set);
+      ++set;
+    }
+
+    return filter;
+  }
+  static PRUnichar GetFindInSetFilter(const PRUnichar *set)
+  {
+    // Calculate filter
+    PRUnichar filter = ~PRUnichar(0); // All bits set
+    while (*set) {
+      filter &= ~(*set);
+      ++set;
+    }
+    return filter;
+  }
+
 #ifdef NS_STR_STATS
   static PRBool   DidAcquireMemory(void);
 #endif

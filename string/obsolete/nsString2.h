@@ -324,14 +324,26 @@ public:
   /**********************************************************************
     Searching methods...                
    *********************************************************************/
+   /**
+   *  Search for given character within this string
+   *  
+   *  @param   aChar is the character to search for
+   *  @param   anOffset tells us where in this string to start searching
+               (optional parameter)
+   *  @param   aCount tells us how far from the offset we are to search. Use
+               -1 to search the whole string. (optional parameter)
+   *  @return  offset in string, or -1 (kNotFound)
+   */
+  PRInt32 FindChar(PRUnichar aChar, PRInt32 anOffset=0, PRInt32 aCount=-1) const;
  
   /**
    *  Search for given substring within this string
    *  
    *  @param   aString is substring to be sought in this
    *  @param   aIgnoreCase selects case sensitivity
-   *  @param   anOffset tells us where in this strig to start searching
-   *  @param   aCount tells us how many iterations to make starting at the given offset
+   *  @param   anOffset tells us where in this string to start searching
+   *  @param   aCount tells us how far from the offset we are to search. Use
+               -1 to search the whole string.
    *  @return  offset in string, or -1 (kNotFound)
    */
   PRInt32 Find(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
@@ -350,9 +362,6 @@ public:
    */
   PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=0) const;
   PRInt32 FindCharInSet(const PRUnichar* aString,PRInt32 anOffset=0) const;
-  PRInt32 FindCharInSet(const nsString& aString,PRInt32 anOffset=0) const;
-  PRInt32 FindCharInSet(const nsCString& aString,PRInt32 anOffset=0) const;
-
 
   /**
    * This methods scans the string backwards, looking for the given string
@@ -377,7 +386,6 @@ public:
    *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  //PRInt32 RFind(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
   PRInt32 RFindChar(PRUnichar aChar,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
   /**
