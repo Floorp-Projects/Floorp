@@ -31,6 +31,7 @@
 #include "nspr.h"
 #include "plbase64.h"
 #include "nsIWebShell.h"
+#include "nsCOMPtr.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -239,6 +240,9 @@ nsImapProtocol::nsImapProtocol() :
 	m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
 	m_currentBiffState = nsMsgBiffState_Unknown;
 
+	m_userName = nsnull;
+	m_hostName = nsnull;
+
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
 		IMAP = PR_NewLogModule("IMAP");
@@ -294,6 +298,9 @@ nsImapProtocol::~nsImapProtocol()
     NS_IF_RELEASE(m_imapExtensionSink);
     NS_IF_RELEASE(m_imapMiscellaneousSink);
 	NS_IF_RELEASE(m_hostSessionList);
+
+	PR_FREEIF(m_userName);
+	PR_FREEIF(m_hostName);
 
 	PR_FREEIF(m_dataOutputBuf);
 	if (m_inputStreamBuffer)
@@ -358,22 +365,25 @@ nsImapProtocol::~nsImapProtocol()
 const char*
 nsImapProtocol::GetImapHostName()
 {
-    const char* hostName = nsnull;
-	// mscott - i wonder if we should be getting the host name from the url
-	// or from m_server....
-    if (m_runningUrl)
-        m_runningUrl->GetHost(&hostName);
-    return hostName;
+	if (!m_userName && m_runningUrl)
+	{
+		const char * temp = nsnull;
+		m_runningUrl->GetHost(&temp);
+		if (temp) // keep our own copy
+			m_hostName = PL_strdup(temp); 
+	}
+
+	return m_hostName;
 }
 
-char*
+const char*
 nsImapProtocol::GetImapUserName()
 {
     char* userName = nsnull;
 	nsIMsgIncomingServer * server = m_server;
-    if (server)
-		server->GetUserName(&userName);
-    return userName;
+	if (!m_userName && server)
+		server->GetUserName(&m_userName);
+	return m_userName;
 }
 
 void
@@ -480,25 +490,11 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			const char * hostName = nsnull;
 			PRUint32 port = IMAP_PORT;
 
-			m_runningUrl->GetHost(&hostName);
 			m_runningUrl->GetHostPort(&port);
+			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 
-            /*JT - Should go away when netlib registers itself! */
-            nsComponentManager::RegisterComponent(kNetServiceCID, NULL,
-                                                  NULL, "netlib.dll",
-                                                  PR_FALSE, PR_FALSE);
-
-            nsINetService* pNetService;
-            rv = nsServiceManager::GetService(kNetServiceCID,
-                                              nsINetService::GetIID(),
-                                              (nsISupports**)&pNetService);
 			if (NS_SUCCEEDED(rv) && pNetService)
-			{
- 				rv = pNetService->CreateSocketTransport(&m_transport, port,
-                                                        hostName);
-                (void)nsServiceManager::ReleaseService(kNetServiceCID,
-                                                       pNetService);
-			}
+ 				rv = pNetService->CreateSocketTransport(&m_transport, port, GetImapHostName());
 		}
 	}
 	
@@ -515,8 +511,20 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Imap instance as a consumer on the socket");
 }
 
-void
-nsImapProtocol::ImapThreadMain(void *aParm)
+
+// when the connection is done processing the current state, free any per url state data...
+void nsImapProtocol::ReleaseUrlState()
+{
+	NS_RELEASE(m_runningUrl);
+	m_runningUrl = nsnull;
+
+	// mscott - do we need to release all of our sinks here? will we re-use them on the next
+	// url request? I'm guessing we need to release them even though we'll just re-acquire
+	// them on the next request.
+
+}
+
+void nsImapProtocol::ImapThreadMain(void *aParm)
 {
     nsImapProtocol *me = (nsImapProtocol *) aParm;
     NS_ASSERTION(me, "Yuk, me is null.\n");
@@ -807,38 +815,11 @@ void nsImapProtocol::ProcessCurrentURL()
 
 	m_runningUrl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
+
+	// release the url as we are done with it...
+	ReleaseUrlState();
+
 }
-
-
-#if 0
-void nsImapProtocol::ProcessCurrentURL()
-{
-    nsresult res;
-
-    if (!m_urlInProgress)
-    {
-        // **** we must be just successfully connected to the sever; we
-        // haven't got a chance to run the url yet; let's call load the url
-        // again
-        res = LoadUrl((nsIURL*)m_runningUrl, m_consumer);
-        return;
-    }
-    else 
-    {
-        GetServerStateParser().ParseIMAPServerResponse(m_currentCommand.GetBuffer());
-        // **** temporary for now
-        if (m_imapLog)
-        {
-            m_imapLog->HandleImapLogData(m_dataOutputBuf);
-            // WaitForFEEventCompletion();
-
-            // we are done running the imap log url so mark the url as done...
-            // set change in url state...
-            m_runningUrl->SetUrlState(PR_FALSE, NS_OK); 
-        }
-    }
-}
-#endif
 
 void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
 {
@@ -1024,7 +1005,57 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	return rv;
 }
 
-// ***** Beginning of ported stuf from 4.5 *******
+NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool &aIsConnectionBusy)
+{
+	NS_LOCK_INSTANCE();
+	aIsConnectionBusy = PR_FALSE;
+	if (m_runningUrl) // do we have a url? That means we're working on it...
+		aIsConnectionBusy = PR_TRUE;
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl)
+{
+	nsresult rv = NS_OK;
+	NS_LOCK_INSTANCE();
+	aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
+	PRBool isConnectionBusy = PR_TRUE;
+	IsBusy(isConnectionBusy);
+	if (!isConnectionBusy) // if the connection isn't busy, then see if we can legally run it...
+	{
+		aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
+
+		// verify that the host name, user name and folder name all match between the url
+		// and the protocol connection.
+		nsCOMPtr<nsIMsgIncomingServer> server;
+		rv = aImapUrl->GetServer(getter_AddRefs(server));
+		if (NS_SUCCEEDED(rv))
+		{
+			// compare host/user between url and connection.
+			char * urlHostName = nsnull;
+			char * urlUserName = nsnull;
+			rv = server->GetHostName(&urlHostName);
+			if (NS_FAILED(rv)) return rv;
+			rv = server->GetUserName(&urlUserName);
+			if (NS_FAILED(rv)) return rv;
+			if ((!GetImapHostName() || PL_strcasecmp(urlHostName, GetImapHostName()) == 0) &&
+				(!GetImapUserName() || PL_strcasecmp(urlUserName, GetImapUserName()) == 0))
+				aCanRunUrl = PR_TRUE;
+#ifdef DEBUG_mscott
+			if (aCanRunUrl)
+				printf("host name and user name match...we can re-use the connection. \n");
+			else
+				printf("host name and user name do not match!! We cannot re-use the imap connection. \n");
+#endif
+			PR_FREEIF(urlHostName);
+			PR_FREEIF(urlUserName);
+		}
+	}
+	NS_UNLOCK_INSTANCE();
+	return rv;
+}
+
 
 // Command tag handling stuff
 void nsImapProtocol::IncrementCommandTagNumber()
@@ -2260,25 +2291,25 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 
 	if (!chunkEnd)
 	{
-#if (LINEBREAK_LEN == 1)
+#if (MSG_LINEBREAK_LEN == 1)
 		if ((endOfLine - localMessageLine) >= 2 &&
 			 endOfLine[-2] == CR &&
 			 endOfLine[-1] == LF)
 			{
 			  /* CRLF -> CR or LF */
-			  endOfLine[-2] = LINEBREAK[0];
+			  endOfLine[-2] = MSG_LINEBREAK[0];
 			  endOfLine[-1] = '\0';
 			}
 		  else if (endOfLine > localMessageLine + 1 &&
-				   endOfLine[-1] != LINEBREAK[0] &&
+				   endOfLine[-1] != MSG_LINEBREAK[0] &&
 			   ((endOfLine[-1] == CR) || (endOfLine[-1] == LF)))
 			{
 			  /* CR -> LF or LF -> CR */
-			  endOfLine[-1] = LINEBREAK[0];
+			  endOfLine[-1] = MSG_LINEBREAK[0];
 			}
 		else // no eol characters at all
 		  {
-		    endOfLine[0] = LINEBREAK[0]; // CR or LF
+		    endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
 		    endOfLine[1] = '\0';
 		  }
 #else
@@ -2288,14 +2319,14 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 			  if ((endOfLine[-1] == CR) || (endOfLine[-1] == LF))
 			  {
 				  /* LF -> CRLF or CR -> CRLF */
-				  endOfLine[-1] = LINEBREAK[0];
-				  endOfLine[0]  = LINEBREAK[1];
+				  endOfLine[-1] = MSG_LINEBREAK[0];
+				  endOfLine[0]  = MSG_LINEBREAK[1];
 				  endOfLine[1]  = '\0';
 			  }
 			  else	// no eol characters at all
 			  {
-				  endOfLine[0] = LINEBREAK[0];	// CR
-				  endOfLine[1] = LINEBREAK[1];	// LF
+				  endOfLine[0] = MSG_LINEBREAK[0];	// CR
+				  endOfLine[1] = MSG_LINEBREAK[1];	// LF
 				  endOfLine[2] = '\0';
 			  }
 			}
@@ -2843,11 +2874,10 @@ PRUint32 nsImapProtocol::GetMessageSize(nsString2 &messageId,
 			sizeInfo->idIsUid = idsAreUids;
 
 			nsIMAPNamespace *nsForMailbox = nsnull;
-            char *userName = GetImapUserName();
+            const char *userName = GetImapUserName();
             m_hostSessionList->GetNamespaceForMailboxForHost(
                 GetImapHostName(), userName, folderFromParser,
                 nsForMailbox);
-            PR_FREEIF(userName);
 
 			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, FALSE);
 			if (nonUTF7ConvertedName)
@@ -3046,13 +3076,12 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 	if (aclRightsInfo)
 	{
 		nsIMAPNamespace *namespaceForFolder = nsnull;
-        char *userName = GetImapUserName();
+        const char *userName = GetImapUserName();
         NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
         if (m_hostSessionList)
             m_hostSessionList->GetNamespaceForMailboxForHost(
                 GetImapHostName(), userName, mailboxName,
                 namespaceForFolder);
-		PR_FREEIF(userName);
 
 		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
 
@@ -3263,7 +3292,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 
 	nsIMAPNamespace *ns = nsnull;
     const char* hostName = GetImapHostName();
-    char *userName = GetImapUserName();
+    const char *userName = GetImapUserName();
 
     NS_ASSERTION (m_hostSessionList, "fatal null host session list");
     if (!m_hostSessionList) return;
@@ -3439,7 +3468,6 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
         NS_ASSERTION (FALSE, "we aren't supposed to be here");
         break;
 	}
-    PR_FREEIF(userName);
 }
 
 void
@@ -4133,7 +4161,6 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 {
     //PR_EnterMonitor(fFindingMailboxesMonitor);
     // biff should not discover mailboxes
-	char * imapUserName = GetImapUserName();
 	PRBool foundMailboxesAlready = PR_FALSE;
 	nsIImapUrl::nsImapAction imapAction;
 	nsresult rv = NS_OK;
@@ -5059,12 +5086,11 @@ PRBool
 nsImapProtocol::GetDeleteIsMoveToTrash()
 {
     PRBool rv = PR_FALSE;
-    char *userName = GetImapUserName();
+    const char *userName = GetImapUserName();
     NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
     if (m_hostSessionList)
         m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapHostName(),
                                                          userName, rv);
-    PR_FREEIF(userName);
     return rv;
 }
 

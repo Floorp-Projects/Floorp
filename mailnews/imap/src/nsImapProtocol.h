@@ -63,6 +63,8 @@ public:
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
+	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy);
+	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl);
 	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
     // Notify FE Event has been completed
@@ -174,7 +176,7 @@ public:
     
 	const char* GetImapHostName(); // return the host name from the url for the
                                    // current connection
-    char* GetImapUserName(); // return the user name from the identity; caller
+    const char* GetImapUserName(); // return the user name from the identity; caller
                              // must free the returned username string
 	
 	// state set by the imap parser...
@@ -255,6 +257,8 @@ private:
 	nsIImapUrl		*m_runningUrl; // the nsIImapURL that is currently running
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
+	char			*m_userName;
+	char			*m_hostName;
 	char			*m_dataOutputBuf;
 	nsMsgLineStreamBuffer * m_inputStreamBuffer;
     PRUint32		m_allocatedSize; // allocated size
@@ -349,6 +353,7 @@ private:
 
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);
+	void ReleaseUrlState(); // release any state that is stored on a per action basis.
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
