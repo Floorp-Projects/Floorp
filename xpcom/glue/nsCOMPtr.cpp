@@ -17,6 +17,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsIWeakReference.h"
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
 nsCOMPtr_base::~nsCOMPtr_base()
@@ -41,6 +42,24 @@ nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid
   {
     nsresult status = NS_ERROR_NULL_POINTER;
     if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
+      rawPtr = 0;
+
+    if ( mRawPtr )
+      NSCAP_RELEASE(mRawPtr);
+
+    mRawPtr = rawPtr;
+
+    if ( result )
+      *result = status;
+  }
+
+void
+nsCOMPtr_base::assign_with_QueryReference( nsIWeakReference* weakPtr, const nsIID& iid, nsresult* result )
+  {
+    nsresult status = NS_ERROR_NULL_POINTER;
+
+    nsISupports* rawPtr;
+    if ( !weakPtr || !NS_SUCCEEDED( status = weakPtr->QueryReference(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
       rawPtr = 0;
 
     if ( mRawPtr )

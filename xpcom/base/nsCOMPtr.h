@@ -169,6 +169,8 @@
   #define NSCAP_RELEASE(ptr)   (ptr)->Release()
 #endif
 
+class nsIWeakReference;
+
   /*
     WARNING:
       VC++4.2 is very picky.  To compile under VC++4.2, the classes must be defined
@@ -191,6 +193,8 @@ class nsDerivedSafe : public T
       on a |nsCOMPtr|.  DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.
 
       See |nsCOMPtr::operator->|, |nsCOMPtr::operator*|, et al.
+
+			This type should be a nested class inside |nsCOMPtr<T>|.
     */
   {
     private:
@@ -273,26 +277,63 @@ dont_QueryInterface( T* aRawPtr )
   }
 
 
+#if 1
 
+	template <class T>
+	struct
+	nsCOMPtrQueryRequest
+		{
+			T*				mRawPtr;
+			nsresult*	mErrorPtr;
 
-struct nsQueryInterface
-    /*
-      ...
+			explicit
+			nsCOMPtrQueryRequest( T* aRawPtr, nsresult* error = 0 )
+					: mRawPtr(aRawPtr),
+						mErrorPtr(error)
+				{
+					// nothing else to do here
+				}
+		};
 
-      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
-    */
-  {
-    explicit
-    nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
-        : mRawPtr(aRawPtr),
-          mErrorPtr(error)
-      {
-        // nothing else to do here
-      }
+	typedef nsCOMPtrQueryRequest<nsISupports>				nsQueryInterface;
+	typedef nsCOMPtrQueryRequest<nsIWeakReference>	nsQueryReference;
 
-    nsISupports* mRawPtr;
-    nsresult*    mErrorPtr;
-  };
+#else
+
+	struct nsQueryInterface
+	    /*
+	      ...
+
+	      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
+	    */
+	  {
+	    explicit
+	    nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
+	        : mRawPtr(aRawPtr),
+	          mErrorPtr(error)
+	      {
+	        // nothing else to do here
+	      }
+
+	    nsISupports* mRawPtr;
+	    nsresult*    mErrorPtr;
+	  };
+
+	struct nsQueryReference
+		{
+			explicit
+			nsQueryReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+					: mRawPtr(aRawPtr),
+						mErrorPtr(error)
+				{
+					// nothing else to do here
+				}
+
+			nsIWeakReference* mRawPtr;
+			nsresult*					mErrorPtr;
+		};
+
+#endif
 
 inline
 const nsQueryInterface
@@ -300,6 +341,14 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
   {
     return nsQueryInterface(aRawPtr, error);
   }
+
+inline
+const nsQueryReference
+do_QueryReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+	{
+		return nsQueryReference(aRawPtr, error);
+	}
+
 
 #define null_nsCOMPtr() (0)
 
@@ -356,6 +405,15 @@ dont_AddRef( T* aRawPtr )
 class nsCOMPtr_base
     /*
       ...factors implementation for all template versions of |nsCOMPtr|.
+
+			This should really be an |nsCOMPtr<nsISupports>|, but this wouldn't work
+			because unlike the
+
+			Here's the way people normally do things like this
+			
+				template <class T> class Foo { ... };
+				template <> class Foo<void*> { ... };
+				template <class T> class Foo<T*> : private Foo<void*> { ... };
     */
   {
     public:
@@ -372,6 +430,7 @@ class nsCOMPtr_base
 
       NS_EXPORT void    assign_with_AddRef( nsISupports* );
       NS_EXPORT void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
+      NS_EXPORT void    assign_with_QueryReference( nsIWeakReference*, const nsIID&, nsresult* );
       NS_EXPORT void**  begin_assignment();
 
     protected:
@@ -379,6 +438,7 @@ class nsCOMPtr_base
   };
 
 
+template <class T> class nsGetterAddRefs;
 
 template <class T>
 class nsCOMPtr
@@ -390,6 +450,7 @@ class nsCOMPtr
 		private:
 			void		assign_with_AddRef( nsISupports* );
 			void		assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
+			void		assign_with_QueryReference( nsIWeakReference*, const nsIID&, nsresult* );
 			void**	begin_assignment();
 
 		private:
@@ -422,6 +483,12 @@ class nsCOMPtr
         {
           assign_with_QueryInterface(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
         }
+
+			nsCOMPtr( const nsQueryReference& aSmartPtr )
+					: NSCAP_CTOR_BASE(0)
+				{
+					assign_with_QueryReference(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
+				}
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
 			void
@@ -489,6 +556,13 @@ class nsCOMPtr
         }
 
       nsCOMPtr<T>&
+      operator=( const nsQueryReference& rhs )
+        {
+          assign_with_QueryReference(rhs.mRawPtr, nsCOMTypeInfo<T>::GetIID(), rhs.mErrorPtr);
+          return *this;
+        }
+
+      nsCOMPtr<T>&
       operator=( const nsDontAddRef<T>& rhs )
         {
           if ( mRawPtr )
@@ -542,20 +616,8 @@ class nsCOMPtr
           return get();
         }
 
-#if 0
     private:
       friend class nsGetterAddRefs<T>;
-
-      /*
-        In a perfect world, the following member function, |StartAssignment|, would be private.
-        It is and should be only accessed by the closely related class |nsGetterAddRefs<T>|.
-
-        Unfortunately, some compilers---most notably VC++5.0---fail to grok the
-        friend declaration above or in any alternate acceptable form.  So, physically
-        it will be public (until our compilers get smarter); but it is not to be
-        considered part of the logical public interface.
-      */
-#endif
 
       T**
       StartAssignment()
@@ -588,17 +650,36 @@ void
 nsCOMPtr<T>::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
   {
     nsresult status = NS_ERROR_NULL_POINTER;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      rawPtr = 0;
+    T* newPtr;
+    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
+      newPtr = 0;
 
     if ( mRawPtr )
       NSCAP_RELEASE(mRawPtr);
 
-    mRawPtr = NS_REINTERPRET_CAST(T*, rawPtr);
+    mRawPtr = newPtr;
 
     if ( result )
       *result = status;
   }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_with_QueryReference( nsIWeakReference* rawPtr, const nsIID& iid, nsresult* result )
+	{
+    nsresult status = NS_ERROR_NULL_POINTER;
+    T* newPtr;
+    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryReference(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
+      newPtr = 0;
+
+    if ( mRawPtr )
+      NSCAP_RELEASE(mRawPtr);
+
+    mRawPtr = newPtr;
+
+    if ( result )
+      *result = status;
+	}
 
 template <class T>
 void**
