@@ -118,6 +118,9 @@ body {
 }
 </style>
 </head>
+<script>
+dump("+++ loading $::URL\\n");
+</script>
 <body>
 };
     print "$::File: $::URL";
