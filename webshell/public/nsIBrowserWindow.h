@@ -84,6 +84,8 @@ public:
 
   NS_IMETHOD GetStatus(PRUnichar** aResult) = 0;
 
+  NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax) = 0;
+
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 
   // XXX minimize, maximize
