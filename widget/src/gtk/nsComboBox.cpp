@@ -301,7 +301,7 @@ PRBool nsComboBox::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsComboBox::OnResize(nsRect &aWindowRect)
+PRBool nsComboBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }

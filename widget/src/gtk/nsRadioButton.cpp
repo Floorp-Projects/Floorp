@@ -156,7 +156,7 @@ PRBool nsRadioButton::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsRadioButton::OnResize(nsRect &aWindowRect)
+PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }

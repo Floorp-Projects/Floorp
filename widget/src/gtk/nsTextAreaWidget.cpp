@@ -97,7 +97,7 @@ PRBool nsTextAreaWidget::OnPaint(nsPaintEvent & aEvent)
 
 
 //--------------------------------------------------------------
-PRBool nsTextAreaWidget::OnResize(nsRect &aWindowRect)
+PRBool nsTextAreaWidget::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }

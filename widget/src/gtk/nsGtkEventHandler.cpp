@@ -137,7 +137,7 @@ int nsConvertKey(int keysym)
 }
 
 //==============================================================
-void InitConfigureEvent(GdkEventConfigure *aGEC,
+void InitAllocationEvent(GtkAllocation *aAlloc,
                             gpointer   p,
                             nsSizeEvent &anEvent,
                             PRUint32   aEventType)
@@ -148,16 +148,16 @@ void InitConfigureEvent(GdkEventConfigure *aGEC,
 
   anEvent.eventStructType = NS_SIZE_EVENT;
 
-  if (aGEC != NULL) {
-    nsRect rect(aGEC->x, aGEC->y, aGEC->width, aGEC->height);
+  if (aAlloc != NULL) {
+    nsRect rect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
     anEvent.windowSize = &rect;
-    anEvent.point.x = aGEC->x;
-    anEvent.point.y = aGEC->y;
-    anEvent.mWinWidth = aGEC->width;
-    anEvent.mWinHeight = aGEC->height;
+    anEvent.point.x = aAlloc->x;
+    anEvent.point.y = aAlloc->y;
+    anEvent.mWinWidth = aAlloc->width;
+    anEvent.mWinHeight = aAlloc->height;
   }
 // this usually returns 0
-  anEvent.time = gdk_event_get_time((GdkEvent*)aGEC);
+  anEvent.time = 0;
 }
 
 //==============================================================
@@ -180,11 +180,11 @@ void InitMouseEvent(GdkEventButton *aGEB,
     anEvent.isControl = (aGEB->state & ControlMask) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEB->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
     anEvent.time = aGEB->time;
-
+/* FIXME this doesn't seem to work right
     switch(aGEB->type)
     {
       case GDK_BUTTON_PRESS:
-        anEvent.clickCount = 1;
+        anEvent.clickCount = 0;
 	break;
       case GDK_2BUTTON_PRESS:
         anEvent.clickCount = 2;
@@ -192,9 +192,9 @@ void InitMouseEvent(GdkEventButton *aGEB,
       default:
         anEvent.clickCount = 0;
     }
+*/
 
   }
-
 }
 
 //==============================================================
@@ -281,16 +281,14 @@ void InitKeyEvent(GdkEventKey *aGEK,
   =============================================================
   ==============================================================*/
 
-gint handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
+void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
-  GdkEventConfigure *event = (GdkEventConfigure*)gtk_get_current_event();
   nsSizeEvent sevent;
-  InitConfigureEvent(event, p, sevent, NS_SIZE);
+  InitAllocationEvent(alloc, p, sevent, NS_SIZE);
 
   nsWindow *win = (nsWindow *)p;
-//  win->DispatchWindowEvent(&sevent);
 
-  return PR_FALSE;
+  win->OnResize(sevent);
 }
 
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)

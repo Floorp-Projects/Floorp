@@ -107,10 +107,13 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD Update(void);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
+    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+    
   // Utility functions
 
     PRBool     ConvertStatus(nsEventStatus aStatus);
     PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
+    PRBool     DispatchStandardEvent(PRUint32 aMsg);
 
  protected:
     virtual void InitCallbacks(char * aName = nsnull);

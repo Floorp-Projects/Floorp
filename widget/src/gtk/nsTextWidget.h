@@ -39,7 +39,7 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsRect &aWindowRect);
+  virtual PRBool  OnResize(nsSizeEvent &aEvent);
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);

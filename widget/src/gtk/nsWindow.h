@@ -54,8 +54,6 @@ public:
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
 
-    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
-
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD              Update();
@@ -84,7 +82,7 @@ public:
     PRBool   OnKey(nsKeyEvent &aEvent);
     PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    virtual  PRBool OnResize(nsRect &aWindowRect);
+    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 
     char gInstanceClassName[256];
   

@@ -375,7 +375,7 @@ PRBool nsListBox::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsListBox::OnResize(nsRect &aWindowRect)
+PRBool nsListBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
