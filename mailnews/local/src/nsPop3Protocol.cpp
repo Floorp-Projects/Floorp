@@ -2145,9 +2145,9 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			status += buffer_size;
 		} while (/* !pauseForMoreData && */ line);
 
-		PRUint32 size = 0;
-		inputStream->GetLength(&size);
-		NS_ASSERTION(size == 0, "hmmm....");
+		//PRUint32 size = 0;
+		//inputStream->GetLength(&size);
+		//NS_ASSERTION(size == 0, "hmmm....");
     }
 
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
