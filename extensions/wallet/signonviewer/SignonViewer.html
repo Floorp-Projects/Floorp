@@ -182,7 +182,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i!=signonList.length; i++) {
+      for (i=1; !(i>=signonList.length); i++) {
         if (!deleted_signons[i-1]) {
           top.frames[list_frame].document.write(signonList[i]);
         }
@@ -257,7 +257,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i!=rejectList.length; i++) {
+      for (i=1; !(i>=rejectList.length); i++) {
         if (!deleted_rejects[i-1]) {
           top.frames[list_frame].document.write(rejectList[i]);
         }
@@ -331,7 +331,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i!=nopreviewList.length; i++) {
+      for (i=1; !(i>=nopreviewList.length); i++) {
         if (!deleted_nopreviews[i-1]) {
           top.frames[list_frame].document.write(nopreviewList[i]);
         }
@@ -405,7 +405,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i!=nocaptureList.length; i++) {
+      for (i=1; !(i>=nocaptureList.length); i++) {
         if (!deleted_nocaptures[i-1]) {
           top.frames[list_frame].document.write(nocaptureList[i]);
         }

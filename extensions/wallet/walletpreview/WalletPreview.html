@@ -42,7 +42,7 @@
                 "<br/>" 
       )
       var count;
-      for (i=1; i!=prefillList.length-2; i+=3) {
+      for (i=1; !(i>=prefillList.length-2); i+=3) {
         if(prefillList[i] != 0) {
           count = prefillList[i];
           top.frames[list_frame].document.write(
@@ -116,7 +116,7 @@
       url.value = "prefillList[prefillList.length-1]";
       var fillins = top.frames[button_frame].document.buttons.fillins;
       fillins.value = "";
-      for (i=0; i!=selname.length; i++) {
+      for (i=0; !(i>=selname.length); i++) {
         fillins.value = fillins.value +
           selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%&amp;" +
           selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%&amp;";

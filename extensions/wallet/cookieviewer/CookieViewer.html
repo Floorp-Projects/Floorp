@@ -140,7 +140,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple' onchange='top.ViewCookieSelected();'>"
       );
-      for (i=1; i!=cookieList.length; i+=8) {
+      for (i=1; !(i>=cookieList.length); i+=8) {
         if (!deleted_cookies[cookieList[i]]) {
           top.frames[list_frame].document.write(
                         "<option value=" + cookieList[i] + ">" +
@@ -209,7 +209,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i!=permissionList.length; i+=2) {
+      for (i=1; (!i>=permissionList.length); i+=2) {
         if (!deleted_permissions[permissionList[i]]) {
           top.frames[list_frame].document.write(
                         "<option value=" + permissionList[i] + ">" +
