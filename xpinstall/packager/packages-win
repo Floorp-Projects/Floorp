@@ -11,6 +11,7 @@
 [core]
 bin\appcores.dll
 bin\apprunner.exe
+bin\component.reg
 bin\img3250.dll
 bin\jpeg3250.dll
 bin\js3250.dll
