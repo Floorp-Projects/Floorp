@@ -20,7 +20,8 @@
 // Mike Pinkerton
 // Netscape Communications
 //
-// Native MacOS Clipboard Implementation
+// Native MacOS Clipboard Implementation of nsIClipboard. This contains
+// the FE-specific implementations of the pure virtuals in nsBaseClipboard
 //
 
 #ifndef nsClipboard_h__
@@ -51,6 +52,11 @@ protected:
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
   static ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
+
+  // Utility routines. Closure of intrinsic flavors + those obtainable through conversion
+  // XXX Move into the transferable with permission
+  nsresult FlavorsTransferableCanImport ( nsITransferable* aTrans, nsISupportsArray** outFlavorList ) ;
+  nsresult FlavorsTransferableCanExport ( nsITransferable* aTrans, nsISupportsArray** outFlavorList ) ;
 
 }; // nsClipboard
 
