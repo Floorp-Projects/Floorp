@@ -54,7 +54,7 @@
    * If we turn out to have a need for multi-fragment ASCII strings, then perhaps we'll templatize
    * or else duplicate this class.
    */
-class nsSharedBufferList
+class NS_COM nsSharedBufferList
   {
     public:
 
@@ -165,7 +165,15 @@ class nsSharedBufferList
     public:
       void    LinkBuffer( Buffer*, Buffer*, Buffer* );
       Buffer* UnlinkBuffer( Buffer* );
-      void    SplitBuffer( const Position& );
+
+      enum SplitDisposition     // when splitting a buffer in two...
+        {
+          kSplitCopyRightData,  // copy the data right of the split point to a new buffer
+          kSplitCopyLeastData,  // copy the smaller amount of data to the new buffer
+          kSplitCopyLeftData    // copy the data left of the split point to a new buffer
+        };
+      
+      void    SplitBuffer( const Position&, SplitDisposition = kSplitCopyLeastData );
 
       static
       Buffer*

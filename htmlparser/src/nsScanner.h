@@ -48,9 +48,8 @@ class nsScannerString : public nsSlidingString {
     nsScannerString(PRUnichar* aStorageStart, 
                     PRUnichar* aDataEnd, 
                     PRUnichar* aStorageEnd);
-    virtual void InsertBuffer(PRUnichar* aStorageStart, 
-                              PRUnichar* aDataEnd, 
-                              PRUnichar* aStorageEnd);
+    virtual void InsertData(const PRUnichar* aDataStart, 
+                            const PRUnichar* aDataEnd);
     virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
                                   PRUnichar aChar);
 };

@@ -92,7 +92,7 @@ nsSharedBufferList::LinkBuffer( Buffer* aPrevBuffer, Buffer* aNewBuffer, Buffer*
   }
 
 void
-nsSharedBufferList::SplitBuffer( const Position& aSplitPosition )
+nsSharedBufferList::SplitBuffer( const Position& aSplitPosition, SplitDisposition aSplitDirection )
   {
     Buffer* bufferToSplit = aSplitPosition.mBuffer;
 
@@ -102,17 +102,22 @@ nsSharedBufferList::SplitBuffer( const Position& aSplitPosition )
 
     NS_ASSERTION(0 <= splitOffset && splitOffset <= bufferToSplit->DataLength(), "|splitOffset| within buffer");
 
-    if ( (bufferToSplit->DataLength() >> 1) > splitOffset )
+      // if the caller specifically asked to split off the right side of the buffer-to-be-split
+      //  or else if they asked for the minimum amount of work, and that turned out to be the right side...
+    if ( aSplitDirection==kSplitCopyRightData ||
+        ( aSplitDirection==kSplitCopyLeastData && ((bufferToSplit->DataLength() >> 1) <= splitOffset) ) )
       {
-        Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart(), PRUint32(splitOffset));
-        LinkBuffer(bufferToSplit->mPrev, new_buffer, bufferToSplit);
-        bufferToSplit->DataStart(aSplitPosition.mPosInBuffer);
-      }
-    else
-      {
+          // ...then allocate a new buffer initializing it by copying all the data _after_ the split in the source buffer (i.e., `split right')
         Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart()+splitOffset, PRUint32(bufferToSplit->DataLength()-splitOffset));
         LinkBuffer(bufferToSplit, new_buffer, bufferToSplit->mNext);
         bufferToSplit->DataEnd(aSplitPosition.mPosInBuffer);
+      }
+    else
+      {
+          // ...else move the data _before_ the split point (i.e., `split left')
+        Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart(), PRUint32(splitOffset));
+        LinkBuffer(bufferToSplit->mPrev, new_buffer, bufferToSplit);
+        bufferToSplit->DataStart(aSplitPosition.mPosInBuffer);
       }
   }
 
