@@ -32,6 +32,8 @@ Contributor(s):
       onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
       headertitle="&pane.title;">
 
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
+
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
@@ -39,7 +41,6 @@ Contributor(s):
                        "newMailNotification", "newMailNotificationAlert", "mailWarnOnSendAccelKey" ];
   ]]>
   </script>
-  <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
   
   <groupbox>
     <caption label="&windowSettings.label;"/>
@@ -92,7 +93,7 @@ Contributor(s):
     <caption label="&messengerStartPage.label;"/>
       <hbox align="center">
         <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
-                  prefstring="mailnews.start_page.enabled"/>
+                  prefstring="mailnews.start_page.enabled" oncommand="StartPageCheck();"/>
       </hbox>
 
       <hbox align="center">

@@ -9,6 +9,8 @@ function Startup()
   }
   if (startupFunc)
     eval(startupFunc);
+
+  StartPageCheck();
 }
 
 function setColorWell(menu) 
@@ -20,6 +22,13 @@ function setColorWell(menu)
 	// Extract color from colorPicker and assign to colorWell.
 	var color = colorPicker.getAttribute('color');
 	colorWell.style.backgroundColor = color;
+}
+
+function StartPageCheck()
+{
+  var checked = document.getElementById("mailnewsStartPageEnabled").checked;
+  var field = document.getElementById("mailnewsStartPageUrl");
+  field.disabled = !checked;
 }
 
 function setHomePageToDefaultPage(folderFieldId)
