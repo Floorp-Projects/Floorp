@@ -667,7 +667,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
           case 7: //  JIS X 0208 1978
           case 8: //  JIS X 0208 1983
           case 9: //  JIS X 0212 1990
-          break;
+ 
             if(0x1b == *src) {
               mLastLegalState = mState;
               mState = 1;
