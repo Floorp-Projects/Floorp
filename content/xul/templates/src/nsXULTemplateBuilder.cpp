@@ -63,6 +63,8 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
+#include "nsIBindingManager.h"
+#include "nsIDOMNodeList.h"
 #include "nsIHTMLContent.h"
 #include "nsIElementFactory.h"
 #include "nsINameSpace.h"
@@ -79,6 +81,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
+#include "nsISecurityCheckedComponent.h"
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
 #include "nsITimer.h"
@@ -106,6 +109,8 @@
 #include "rdfutil.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "pldhash.h"
+#include "plhash.h"
 
 // Return values for EnsureElementHasGenericChild()
 #define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
@@ -2509,6 +2514,7 @@ ContentSupportMap::Get(nsIContent* aElement, Match** aMatch)
 
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
                              public nsIRDFContentModelBuilder,
+                             public nsISecurityCheckedComponent,
                              public nsIRDFObserver
 {
 public:
@@ -2522,6 +2528,9 @@ public:
 
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
+
+    // nsISecurityCheckedComponent
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIXULDocument* aDocument);
@@ -2549,6 +2558,9 @@ public:
 
     nsresult
     GetFlags();
+
+    friend static PRBool
+    IsTemplateElement(nsIContent* aContent);
 
     nsresult
     CompileRules();
@@ -2685,7 +2697,7 @@ public:
 
     nsresult
     CreateTemplateContents(nsIContent* aElement,
-                           const nsString& aTemplateID,
+                           nsIContent* aTemplateElement,
                            nsIContent** aContainer,
                            PRInt32* aNewIndexInContainer);
 
@@ -2880,6 +2892,82 @@ protected:
     };
 
     friend class ContentTestNode;
+
+    class TemplateMap {
+    protected:
+        struct Entry {
+            PLDHashEntryHdr mHdr;
+            nsIContent*     mContent;
+            nsIContent*     mTemplate;
+        };
+
+        PLDHashTable mTable;
+
+        void
+        Init() { PL_DHashTableInit(&mTable, PL_DHashGetStubOps(), nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE); }
+
+        void
+        Finish() { PL_DHashTableFinish(&mTable); }
+
+    public:
+        TemplateMap() { Init(); }
+
+        ~TemplateMap() { Finish(); }
+
+        void
+        Put(nsIContent* aContent, nsIContent* aTemplate) {
+            NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP)),
+                         "aContent already in map");
+
+            Entry* entry =
+                NS_REINTERPRET_CAST(Entry*, PL_DHashTableOperate(&mTable, aContent, PL_DHASH_ADD));
+
+            if (entry) {
+                entry->mContent = aContent;
+                entry->mTemplate = aTemplate;
+            } }
+
+        void
+        Remove(nsIContent* aContent) {
+            NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP)),
+                         "aContent not in map");
+
+            PL_DHashTableOperate(&mTable, aContent, PL_DHASH_REMOVE);
+
+            PRInt32 count;
+
+            // If possible, use the special nsIXULContent interface to
+            // "peek" at the child count without accidentally creating
+            // children as a side effect, since we're about to rip 'em
+            // outta the map anyway.
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aContent);
+            if (xulcontent) {
+                xulcontent->PeekChildCount(count);
+            }
+            else {
+                aContent->ChildCount(count);
+            }
+
+            for (PRInt32 i = 0; i < count; ++i) {
+                nsCOMPtr<nsIContent> child;
+                aContent->ChildAt(i, *getter_AddRefs(child));
+
+                Remove(child);
+            } }
+
+
+        void
+        GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
+            Entry* entry =
+                NS_REINTERPRET_CAST(Entry*, PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP));
+
+            NS_IF_ADDREF(*aResult = entry->mTemplate); }
+
+        void
+        Clear() { Finish(); Init(); }
+    };
+
+    TemplateMap mTemplateMap;
 };
 
 //----------------------------------------------------------------------
@@ -4197,9 +4285,10 @@ nsXULTemplateBuilder::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(nsXULTemplateBuilder,
+NS_IMPL_ISUPPORTS4(nsXULTemplateBuilder,
                    nsIXULTemplateBuilder,
                    nsIRDFContentModelBuilder,
+                   nsISecurityCheckedComponent,
                    nsIRDFObserver);
 
 //----------------------------------------------------------------------
@@ -4477,6 +4566,7 @@ nsXULTemplateBuilder::RebuildContainerInternal(nsIContent* aElement, PRBool aRec
     if (aElement == mRoot.get()) {
         // Nuke the content support map and conflict set completely.
         mContentSupportMap.Clear();
+        mTemplateMap.Clear();
         mConflictSet.Clear();
 
         if (aRecompileRules) {
@@ -5543,15 +5633,10 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 *aNewIndexInContainer = indx;
             }
 
-            // Mark the node with the ID of the template node used to
-            // create this element. This allows us to sync back up
-            // with the template to incrementally build content.
-            nsAutoString templateID;
-            rv = tmplKid->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, templateID);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::Template, templateID, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
+            // Remember the template kid from which we created the
+            // real kid. This allows us to sync back up with the
+            // template to incrementally build content.
+            mTemplateMap.Put(realKid, tmplKid);
 
             // Copy all attributes from the template to the new
             // element.
@@ -5840,26 +5925,8 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
             if (! IsElementContainedBy(element, parent))
                 continue;
 
-            nsAutoString templateID;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       nsXULAtoms::Template,
-                                       templateID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-                continue;
-
-            nsCOMPtr<nsIDOMXULDocument>    xulDoc;
-            xulDoc = do_QueryInterface(mDocument);
-            if (! xulDoc)
-                return NS_ERROR_UNEXPECTED;
-
-            nsCOMPtr<nsIDOMElement>    domElement;
-            rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
+            nsCOMPtr<nsIContent> templateNode;
+            mTemplateMap.GetTemplateFor(element, getter_AddRefs(templateNode));
             if (! templateNode)
                 return NS_ERROR_UNEXPECTED;
 
@@ -5989,30 +6056,10 @@ nsXULTemplateBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPar
     if (! aChild)
         return PR_FALSE;
 
-    nsresult rv;
-
     // Every generated element has a "template" attribute that gives
     // us the ID of the template node that it was created from.
-    nsAutoString tmplID;
-    rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, tmplID);
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return PR_FALSE;
-
-    // We've got the template ID; find the element in the content
-    // model.
-    nsCOMPtr<nsIDOMXULDocument> xuldoc( do_QueryInterface(mDocument) );
-    NS_ASSERTION(xuldoc != nsnull, "not an nsIDOMXULDocument");
-    if (! xuldoc)
-        return PR_FALSE;
-
-    nsCOMPtr<nsIDOMElement> tmplele;
-    xuldoc->GetElementById(tmplID, getter_AddRefs(tmplele));
-    NS_ASSERTION(tmplele != nsnull, "couldn't find template element");
-    if (! tmplele)
-        return PR_FALSE;
-
-    nsCOMPtr<nsIContent> tmpl( do_QueryInterface(tmplele) );
-    NS_ASSERTION(tmpl != nsnull, "not an nsIContent");
+    nsCOMPtr<nsIContent> tmpl;
+    mTemplateMap.GetTemplateFor(aChild, getter_AddRefs(tmpl));
     if (! tmpl)
         return PR_FALSE;
 
@@ -6102,6 +6149,9 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
         // Remove from the content support map.
         mContentSupportMap.Remove(child);
 
+        // Remove from the template map
+        mTemplateMap.Remove(child);
+
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
             nsCOMPtr<nsIAtom> parentTag;
@@ -6149,7 +6199,6 @@ nsXULTemplateBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
     // container resource in the RDF graph).
-    nsresult rv;
 
     // If we're asked to return the first generated child, then
     // initialize to "none".
@@ -6160,23 +6209,19 @@ nsXULTemplateBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
 
     // Create the current resource's contents from the template, if
     // appropriate
-    nsAutoString templateID;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, templateID);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIContent> tmpl;
+    mTemplateMap.GetTemplateFor(aElement, getter_AddRefs(tmpl));
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = CreateTemplateContents(aElement, templateID, aContainer, aNewIndexInContainer);
-        if (NS_FAILED(rv)) return rv;
-    }
+    if (tmpl)
+        CreateTemplateContents(aElement, tmpl, aContainer, aNewIndexInContainer);
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
-    if (NS_SUCCEEDED(rv)) {
+    gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
+    if (resource) {
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
         // create its contents.
-        rv = CreateContainerContents(aElement, resource, PR_FALSE, aContainer, aNewIndexInContainer);
-        if (NS_FAILED(rv)) return rv;
+        CreateContainerContents(aElement, resource, PR_FALSE, aContainer, aNewIndexInContainer);
     }
 
     return NS_OK;
@@ -6291,7 +6336,7 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
 
 nsresult
 nsXULTemplateBuilder::CreateTemplateContents(nsIContent* aElement,
-                                             const nsString& aTemplateID,
+                                             nsIContent* aTemplateElement,
                                              nsIContent** aContainer,
                                              PRInt32* aNewIndexInContainer)
 {
@@ -6325,14 +6370,6 @@ nsXULTemplateBuilder::CreateTemplateContents(nsIContent* aElement,
     if (! xulDoc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIDOMElement> tmplNode;
-    rv = xulDoc->GetElementById(aTemplateID, getter_AddRefs(tmplNode));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIContent> tmpl = do_QueryInterface(tmplNode);
-    if (! tmpl)
-        return NS_ERROR_UNEXPECTED;
-
     // Crawl up the content model until we find the "resource" element
     // that spawned this template.
     nsCOMPtr<nsIRDFResource> resource;
@@ -6352,7 +6389,7 @@ nsXULTemplateBuilder::CreateTemplateContents(nsIContent* aElement,
     Match* match;
     mContentSupportMap.Get(element, &match);
 
-    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_FALSE, resource, PR_FALSE,
+    rv = BuildContentFromTemplate(aTemplateElement, aElement, aElement, PR_FALSE, resource, PR_FALSE,
                                   match, aContainer, aNewIndexInContainer);
 
     if (NS_FAILED(rv)) return rv;
@@ -6494,22 +6531,6 @@ nsXULTemplateBuilder::IsElementInWidget(nsIContent* aElement)
 nsresult
 nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 {
-    // Remove and re-insert the element into the document. This'll
-    // minimize the number of notifications that the layout engine has
-    // to deal with.
-    nsCOMPtr<nsIContent> parent;
-    aElement->GetParent(*getter_AddRefs(parent));
-
-    NS_ASSERTION(parent != nsnull, "huh? no parent!");
-    if (! parent)
-        return NS_ERROR_UNEXPECTED;
-
-    PRInt32 pos;
-    parent->IndexOf(aElement, pos);
-    parent->RemoveChildAt(pos, PR_TRUE);
-
-#define FAST_REMOVE_GENERATED_CONTENT
-#ifdef FAST_REMOVE_GENERATED_CONTENT
     // Keep a queue of "ungenerated" elements that we have to probe
     // for generated content.
     nsAutoVoidArray ungenerated;
@@ -6540,23 +6561,19 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
             if (tag.get() == nsXULAtoms::Template)
                 continue;
 
-            // If the element has a 'template' attribute, then we
+            // If the element is in the template map, then we
             // assume it's been generated and nuke it.
-            nsAutoString tmplID;
-            child->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, tmplID);
+            nsCOMPtr<nsIContent> tmpl;
+            mTemplateMap.GetTemplateFor(child, getter_AddRefs(tmpl));
 
-            if (tmplID.Length() == 0) {
-                // No 'template' attribute, so this must not have been
+            if (! tmpl) {
+                // Not in the template map, so this must not have been
                 // generated. We'll need to examine its kids.
-                ungenerated.AppendElement(child);
                 continue;
             }
 
-            // If we get here, it's "generated". Bye bye!  Remove it
-            // from the content model "quietly", because we'll remove
-            // and re-insert the top-level element into the document
-            // to minimze reflow.
-            element->RemoveChildAt(i, PR_FALSE);
+            // If we get here, it's "generated". Bye bye!
+            element->RemoveChildAt(i, PR_TRUE);
             child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
             // Remove element from the conflict set.
@@ -6566,31 +6583,12 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 
             // Remove this and any children from the content support map.
             mContentSupportMap.Remove(child);
+
+            // Remove from the template map
+            mTemplateMap.Remove(child);
         }
     }
-#else
-    // Compute the retractions that'll occur when we remove the
-    // element from the conflict set.
-    MatchSet firings, retractions;
-    mConflictSet.Remove(ContentTestNode::Element(aElement), firings, retractions);
 
-    // Removing the generated content, quietly.
-    MatchSet::Iterator last = retractions.Last();
-    for (MatchSet::Iterator match = retractions.First(); match != last; ++match) {
-        Value memberval;
-        match->mAssignments.GetAssignmentFor(match->mRule->GetMemberVariable(), &memberval);
-
-        RemoveMember(aElement, VALUE_TO_IRDFRESOURCE(memberval), PR_FALSE);
-    }
-#endif
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-    if (! doc)
-        return NS_ERROR_UNEXPECTED;
-
-    aElement->SetDocument(doc, PR_TRUE, PR_TRUE);
-
-    parent->InsertChildAt(aElement, pos, PR_TRUE);
     return NS_OK;
 }
 
@@ -7171,6 +7169,23 @@ nsXULTemplateBuilder::GetFlags()
 }
 
 
+static PRBool
+IsTemplateElement(nsIContent* aContent)
+{
+    PRInt32 nameSpaceID;
+    aContent->GetNameSpaceID(nameSpaceID);
+
+    if (nameSpaceID == nsXULTemplateBuilder::kNameSpaceID_XUL) {
+        nsCOMPtr<nsIAtom> tag;
+        aContent->GetTag(*getter_AddRefs(tag));
+
+        if (tag.get() == nsXULAtoms::Template)
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
 
 nsresult
 nsXULTemplateBuilder::CompileRules()
@@ -7220,31 +7235,32 @@ nsXULTemplateBuilder::CompileRules()
     // If root node has no template attribute, then look for a child
     // node which is a template tag
     if (! tmpl) {
-        PRInt32    count;
-        rv = mRoot->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+        nsCOMPtr<nsIBindingManager> bindingManager;
+        doc->GetBindingManager(getter_AddRefs(bindingManager));
 
-        for (PRInt32 i = 0; i < count; i++) {
-            nsCOMPtr<nsIContent> child;
-            rv = mRoot->ChildAt(i, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
+        if (bindingManager) {
+            nsCOMPtr<nsIDOMNodeList> kids;
+            bindingManager->GetXBLChildNodesFor(mRoot, getter_AddRefs(kids));
 
-            PRInt32 nameSpaceID;
-            rv = child->GetNameSpaceID(nameSpaceID);
-            if (NS_FAILED(rv)) return rv;
+            if (kids) {
+                PRUint32 length;
+                kids->GetLength(&length);
 
-            if (nameSpaceID != kNameSpaceID_XUL)
-                continue;
+                for (PRUint32 i = 0; i < length; ++i) {
+                    nsCOMPtr<nsIDOMNode> node;
+                    kids->Item(i, getter_AddRefs(node));
+                    if (! node)
+                        continue;
 
-            nsCOMPtr<nsIAtom> tag;
-            rv = child->GetTag(*getter_AddRefs(tag));
-            if (NS_FAILED(rv)) return rv;
+                    nsCOMPtr<nsIContent> child = do_QueryInterface(node);
 
-            if (tag.get() != nsXULAtoms::Template)
-                continue;
-
-            tmpl = child;
-            break;
+                    if (IsTemplateElement(child)) {
+                        tmpl = child;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -8114,4 +8130,36 @@ nsXULTemplateBuilder::CompileBinding(Rule* aRule,
     }
 
     return aRule->AddBinding(svar, pres, ovar);
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsXULTemplateBuilder::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+  *_retval = PL_strdup("AllAccess");
+  return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsXULTemplateBuilder::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+  *_retval = PL_strdup("AllAccess");
+  return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXULTemplateBuilder::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  *_retval = PL_strdup("AllAccess");
+  return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXULTemplateBuilder::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  *_retval = PL_strdup("AllAccess");
+  return NS_OK;
 }
