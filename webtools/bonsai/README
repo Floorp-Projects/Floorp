@@ -1,0 +1,460 @@
+This is Bonsai.  See <http://www.mozilla.org/bonsai.html>.
+
+
+	=================================
+	What's What in the Bonsai sources:
+	=================================
+
+
+CGI.tcl			???
+
+Makefile:		builds the "trapdoor" program
+
+SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
+			Called by: nobody
+
+SourceChecker.pm	???
+
+addcheckin.tcl		???
+
+admin.cgi		TCL.  Select from various administrative tasks 
+			(which require a password.)
+
+			Called by: toplevel.cgi
+
+			Calls:
+				doadmin.cgi password=<text> treeid=<text>
+					command=[open|close]
+					closetimestamp=<time-text>
+					lastgood=<time-text>
+					doclear=<checkbox>
+
+				doadmin.cgi password=<text> treeid=<text>
+					command=tweaktimes
+					lastgood=<time-text>
+					lastclose=<time-text>
+
+				doadmin.cgi password=<text> treeid=<text>
+					command=editmotd
+					origmotd=<text>
+					motd=<text>
+
+				editmessage.cgi treeid=<text>
+					msgname=[openmessage|closemessage|
+						 treeopened|treeopenedsamehook|
+						 treeclosed]
+				    #### note: no password?
+
+				repophook.cgi password=<text> treeid=<text>
+					command=repophook
+					startfrom=<time-text>
+
+				rebuildtaginfo.cgi password=<text>
+					treeid=<text>
+					command=rebuildtaginfo
+
+				rebuildcvshistory.cgi password=<text>
+					treeid=<text>
+					command=rebuildcvs
+					startfrom=<time-text>
+					firstfile=<time-text>
+					subdir=<time-text>
+
+				doadmin.cgi password=<text> treeid=<text>
+					command=changepassword
+					password=<text>
+					newpassword=<text>
+					newpassword2=<text>
+					doglobal=<radio>
+
+adminfuncs.tcl		???
+
+adminmail.tcl		???
+
+bonsai.gif		uh, a corrupted gif file.
+
+branchspam.cgi		failed attempt to web-afy branch spam too DELETE
+			Called by: nobody
+			Calls: branchspammer.cgi
+
+branchspammer.cgi	more garbage
+			Called by: branchspam.cgi
+			Calls: nobody
+
+changebar.tcl		???
+
+closemessage		???
+
+configure/		???
+
+contacthelp.html	???
+
+countcheckins.cgi	TCL.  Draws a graph of checkins for the various
+			Bonsai 'hooks'.
+			Called by: toplevel.cgi
+			Calls: nobody
+
+createlegaldirs.tcl	???
+
+crontab			???
+
+cvsblame.cgi		Runs through a CVS file and tells you who changed what.
+			Calls:
+				rview.cgi dir= cvsroot= rev= 
+				cvsblame.cgi file= rev= root= mark=
+				cvsblame.cgi set_line= (cookie magic?)
+				cvsblame.cgi root= file= rev= use_html=
+			Called by:
+				cvsguess.cgi
+				moduleanalyse.cgi
+			Used to be called by:
+				cvslog.cgi
+
+cvsblame.pl		???
+
+cvsguess.cgi		Given a file name, try to figure out what directory 
+			it's in.  then link to cvsblame.cgi.  parameters are
+			the same.
+
+			Seems to take an exact file name (sans directory),
+			then do a redirect to cvsblame.cgi.  If there are
+			more than one file of that name, it presents a list.
+			This is (I think) redundant with LXR's file name 
+			search.
+
+			Calls:
+				cvsblame.cgi file= rev= mark= #
+			Called by: nobody
+
+cvsindex.pl		???
+
+cvslog.cgi		Web interface to "cvs log".
+			Calls:
+				rview.cgi dir= cvsroot= rev=
+				cvslog.cgi file= root= rev= 
+					sort=[revision|date|author]
+					author=
+				cvsview2.cgi 
+					command=DIFF_FRAMESET
+					diff_mode=context
+					whitespace_mode=show
+					root= subdir= file=
+					rev1= rev2=
+				cvsview2.cgi
+					command=DIRECTORY
+					subdir= files= root= branch=
+
+			Used to call:
+				cvsblame.cgi file= rev= root=
+
+cvsmenu.pl		???
+
+cvsquery.cgi		Displays the results of a query entered in cvsqueryform
+			Called by: 
+				cvsqueryform.cgi
+			Calls:
+				cvsqueryform.cgi
+				cvsview2 command=DIRECTORY
+					subdir= files= branch= root=
+				cvsview2.cgi command=DIFF_FRAMESET
+					diff_mode=context 
+					whitespace_mode=show
+					subdir= file= rev1= rev2= root=
+				multidiff.cgi name=allchanges cvsroot=
+				cvsquery.cgi sortby=
+				../registry/who.cgi email=
+				http://scopus.mcom.com/bugsplat/show_bug.cgi
+
+cvsquery.pl		???
+
+cvsqueryform.cgi	Main screen to let you query the CVS database.
+			Called by:
+				cvsblame.cgi
+				cvslog.cgi
+				cvsquery.cgi
+				toplevel.cgi
+			Calls:
+				cvsregexp.html
+				cvsquery.cgi 
+					module=[all|allrepositories|?]
+					branch=
+					branchtype=[match|regexp]
+					directory=<text>
+					file=<text>
+					who=<text>
+					whotype=[match|regexp]
+					sortby=[Date|Who|File|Change Size]
+					date=[hours|day|week|month|all|
+						explicit]
+					hours=
+					mindate=
+					maxdate=
+					cvsroot=
+
+cvsregexp.html		???
+
+cvsview2.cgi		Lets you view CVS diffs.
+			Called by:
+				cvsblame.cgi
+				cvslog.cgi
+				cvsquery.cgi
+				show2.cgi
+				showcheckins.cgi
+			Calls:
+				rview.cgi dir= cvsroot= rev=
+				cvsview2.cgi subdir= command=DIFF
+					root= file= rev1= rev2=
+				cvsview2.cgi subdir= command=DIFF_LINKS
+					root= file= rev1= rev2=
+				cvsview2.cgi subdir= command=DIFF
+					root= file= rev1= rev2= #
+				cvsview2.cgi subdir= command=DIFF_FRAMESET
+					root= file= rev1= rev2=
+				cvsview2.cgi subdir= command=DIRECTORY
+					root= files= branch= skip=
+				cvsview2.cgi subdir= command=LOG
+					root= file= rev=
+
+doadmin.cgi		TCL.  Executes admin things asked for in admin.cgi
+			Called by:
+				admin.cgi
+			Calls:
+				mailto:clienteng
+
+doeditcheckin.cgi	TCL.  Edits a checkin on the hook.
+			Called by:
+				editcheckin.cgi
+			Calls:
+				nobody
+
+doeditmessage.cgi	TCL.  Edits one of the email messages that bonsai sends
+			people.
+			Called by:
+				editmessage.cgi
+			Calls:
+				nobody
+
+doeditprofile.cgi	TCL.  Edit peoples contact info.  Left-over code from
+			before we started getting this info from LDAP.
+			Called by:
+				editprofile.cgi
+			Calls:
+				nobody
+
+doeditwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
+			Called by:
+				editwhiteboard.cgi
+			Calls:
+				nobody
+
+dolog.pl		???
+
+dotweak.cgi		TCL.  Tweaks a bunch of checkins in ahook at once.
+			Called by:
+				show2.cgi
+				showcheckins.cgi
+			Calls:
+				nobody
+
+editcheckin.cgi		TCL.  Edits a checkin on the hook.
+			Called by:
+				show2.cgi
+				showcheckins.cgi
+			Calls:
+				doeditcheckin.cgi
+
+editmessage.cgi		TCL.  Edits one of the email messages that bonsai sends
+			people.
+			Called by:
+				admin.cgi
+			Calls:
+				doeditmessage.cgi
+
+editprofile.cgi		TCL.  Edit peoples contact info.  Left-over code from
+			before we started getting this info from LDAP.
+			Called by:
+				localprofile.cgi
+			Calls:
+				doeditprofile.cgi
+
+editwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
+			Called by:
+				toplevel.cgi
+			Calls:
+				doeditwhiteboard.cgi
+
+globals.tcl		???
+
+handleAdminMail.tcl	???
+
+handleCheckinMail.tcl	???
+
+header.pl		???
+
+index.html		???
+
+indextest.pl		???
+
+lloydcgi.pl		parses CGI args from $QUERY_STRING and leaves them
+			in $form{$key}; and puts cookies in %cookie_jar.
+			Calls: nobody
+			Called by: everybody
+
+localprofile.cgi	TCL.  Display peoples contact info.  Left-over code
+			from before we started getting this info from LDAP.
+			Called by:
+				nobody
+			Calls:
+				editprofile.cgi
+				profile.cgi
+
+maketables.sh		???
+			Unused?
+
+moduleanalyse.cgi	Shows the directories in a module.
+			Called by:
+				nobody
+			Calls:
+				moduleanalyse.cgi module=[all|?] cvsroot=
+				rview.cgi dir= cvsroot=
+				cvsblame.cgi file= root=
+
+modules.pl		???
+			Called by:
+				branchspam.cgi
+				cvsqueryform.cgi
+				moduleanalyse.cgi
+
+multidiff.cgi		Implements the "Show me ALL the Diffs" button
+			Called by:
+				cvsquery.cgi
+				show2.cgi
+				showcheckins.cgi
+			Calls:
+				nobody
+
+myglobrecur.tcl		???
+
+openmessage		???
+
+perlifyconfig.tcl	???
+
+processqueue.pl		???
+
+profile.cgi		TCL.  Stupid interface to LDAP to show all the info
+			about a person.
+			Called by:
+				localprofile.cgi
+				show2.cgi
+			Calls:
+				profile.cgi person=
+
+rebuildcvshistory.cgi	TCL.  Admin script to go rebuild the bonsai database 
+			from CVS.
+			Called by:
+				admin.cgi
+			Calls:
+				nobody
+
+rebuilddatabase.tcl	???
+
+rebuildtaginfo.cgi	TCL.  Half-written piece of junk to try and remember 
+			things about tags.   Should probably nuke it.
+			Called by:
+				admin.cgi
+
+repophook.cgi		TCL.  Rebuilds a bonsai hook from the bonsai database.
+			Called by:
+				admin.cgi
+			Calls:
+				nobody
+
+reposfiles.pl		???
+
+rview.cgi		Lets you browse a directory in a CVS repository.
+			Called by:
+				cvsblame.cgi
+				cvslog.cgi
+				cvsview2.cgi
+				moduleanalyse.cgi
+			Calls:
+				rview.cgi dir= cvsroot= rev=
+				rview.cgi dir= cvsroot= rev= ?=chdir
+				rview.cgi dir= cvsroot= rev= ?=Set Branch
+				&make_cgi_args ???
+				../registry/file.cgi cvsroot= file= dir=
+
+show2.cgi		TCL.  This seems to be a variant on showcheckins.cgi?
+			Called by:
+				nobody
+			Calls:
+				dotweak.cgi
+				showcheckins.cgi [various funky args]
+				editcheckin.cgi id= [various funky args]w
+				profile.cgi person= [various funky args]
+				cvsview2.cgi subdir= files= command=DIRECTORY
+					branch=
+				http://w3/cgi/cvsview2.cgi subdir= files=
+					command=DIRECTORY
+				multidiff.cgi allchanges=
+
+showcheckins.cgi	TCL.  Shows some set of checkins in a bonsai hook.
+			Called by:
+				admin.cgi
+				show2.cgi
+				toplevel.cgi
+			Calls:
+				dotweak.cgi
+				showcheckins.cgi [various funky args]
+				editcheckin.cgi id= [various funky args]w
+				http://phonebook/ds/dosearch/phonebook/...
+				cvsview2.cgi root= subdir= files= 
+					command=DIRECTORY branch=
+				http://w3/cgi/cvsview2.cgi subdir= files=
+					command=DIRECTORY
+				multidiff.cgi allchanges=
+
+status/			???
+
+switchtree.cgi		TCL.  Lets you choose a different bonsai branch.
+			Called by:
+				toplevel.cgi
+			Calls:
+				nobody
+
+testlock.pl		???
+
+toplevel.cgi		TCL.  Main interface to the bonsai hook.
+			Called by:
+				CGI.tcl
+				contacthelp.html
+				index.html
+				sheriff2.html
+				switchtree.cgi
+				toplevel.cgi
+				viewold.cgi
+			Calls:
+				editwhiteboard.cgi [...]
+				http://phonebook/ds/dosearch/phonebook/...
+				showcheckins.cgi
+				http://warp/tinderbox/showbuilds.cgi
+				switchtree.cgi [...]
+				news:mcom.dev.client.build.busted
+				http://phonebook/
+				viewold.cgi [...]
+				countcheckins.cgi [...]
+				admin.cgi [...]
+				index.html
+				http://warp/client/dogbert/tree.html
+				contacthelp.html
+				http://warp/client/dogbert/buildlore/index.html
+
+trapdoor.c		???
+
+utils.pl		???
+
+viewold.cgi		TCL.  Lets you choose an old bonsai hook to view.
+			Called by:
+				toplevel.cgi
+			Calls:
+				toplevel.cgi treeid=

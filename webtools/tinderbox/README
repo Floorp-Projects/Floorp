@@ -1,0 +1,73 @@
+This is Tinderbox.  See <http://www.mozilla.org/tinderbox.html>.
+
+
+	==========
+	DISCLAIMER
+	==========
+
+This is not very well packaged code.  It's not packaged at all.  Don't
+come here expecting something you plop in a directory, twiddle a few
+things, and you're off and using it.  Much work has to be done to get
+there.  I'd like to get there, but it wasn't clear when that would be,
+and so we decided to let people see it first.
+
+Don't believe for a minute that you can use this stuff without first
+understanding most of the code.
+
+
+
+	============
+	DEPENDENCIES
+	============
+
+To use tinderbox, you must first have bonsai up and running.
+See <http://www.mozilla.org/bonsai.html>.
+
+Be warned now that bonsai is not easily installed.
+
+
+	====================================
+	What's What in the Tinderbox sources:
+	====================================
+
+
+1afi003r.gif	The "flames" animation used by ???
+
+Empty.html	Document used for an empty frame by ???
+
+addimage.cgi	The form that lets you add a new image to the list of
+		images that Tinderbox picks from randomly.
+
+addnote.cgi	Add a note to a build log.
+
+admintree.cgi	Lets you perform various admin tasks on a Tinderbox tree.
+		This just prompts for a password and posts to doadmin.cgi.
+
+buildwho.pl	???
+clean.pl	???
+copydata.pl	???
+
+doadmin.cgi	Actually do the work to admin a tinderbox tree 
+
+ep_mac.pl	Knows how to parse Mac build error logs.  Used by ???
+ep_unix.pl	Knows how to parse Unix build error logs.  Used by ???
+ep_windows.pl	Knows how to parse Windows build error logs.  Used by ???
+
+faq.html	Wildly out of date.
+
+fixupimages.pl	???
+globals.pl	???
+handlemail.pl	???
+imagelog.pl	???
+index.html	???
+processbuild.pl	???
+reledanim.gif	???
+
+showbuilds.cgi	The main Tinderbox page.  Interesting params are:
+		express=1; hours=n; tree2=anothertree.
+
+showimages.cgi	Show all the images in the Tinderbox list.  Password-protected.
+
+showlog.cgi	Show a build log (brief and full).
+
+star.gif	The "star" image used to annotate builds by ???

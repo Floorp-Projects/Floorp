@@ -1,0 +1,599 @@
+#!/usr/bonsaitools/bin/perl --
+#  cvsblame.cgi -- cvsblame with logs as popups and allowing html in comments.
+
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the Bonsai CVS tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+
+
+#  Created: Steve Lamm <slamm@netscape.com>, 12-Sep-97.
+#  Modified: Marc Byrd <byrd@netscape.com> , 19971030.
+#
+#  Arguments (passed via GET or POST):
+#    file - path to file name (e.g. ns/cmd/xfe/Makefile)
+#    root - cvs root (e.g. /warp/webroot)
+#         - default includes /m/src/ and /h/rodan/cvs/repository/1.0
+#    rev  - revision (default is the latest version)
+#    line_nums - boolean for line numbers on/off (use 1,0).
+#                (1,on by default)
+#    use_html - boolean for html comments on/off (use 1,0).
+#                (0,off by default)
+#    sanitize - path to sanitization dictionary
+#               (e.g. /warp2/webdoc/projects/bonsai/dictionary/sanitization.db)
+#    mark - highlight a line
+#
+
+require 'lloydcgi.pl';
+require 'cvsblame.pl';
+require 'utils.pl';
+use SourceChecker;
+
+$| = 1;
+
+# Cope with the cookie and print the header, first thing.  That way, if
+# any errors result, they will show up for the user.
+
+print "Content-Type:text/html\n";
+if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'set_line'})) {
+    # Expire the cookie 5 months from now
+    print "Set-Cookie: line_nums=$form{'set_line'}; expires="
+        . toGMTString(time + 86400 * 152) . "; path=/\n";
+}     
+print "\n";
+
+
+# Some Globals
+#
+
+@src_roots = getRepositoryList();
+
+# Init sanitiazation source checker
+#
+$sanitization_dictionary = $form{'sanitize'};
+$opt_sanitize = defined $sanitization_dictionary;
+if ( $opt_sanitize )
+{
+    dbmopen %SourceChecker::token_dictionary, "$sanitization_dictionary", 0664;
+}
+
+# Init byrd's 'feature' to allow html in comments
+#
+$opt_html_comments = &html_comments_init();
+
+
+# Handle the "file" argument
+#
+$filename = '';
+$filename = $form{'file'} if defined($form{'file'});
+if ($filename eq '') 
+{
+    &print_usage;
+    exit;
+}
+($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+
+# Handle the "rev" argument
+#
+$opt_rev = $form{'rev'} if defined($form{'rev'} && $form{'rev'} ne 'HEAD');
+$browse_revtag = "HEAD";
+$browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
+$revision = '';
+
+
+# Handle the "root" argument
+#
+if (defined($root = $form{'root'}) && $root ne '') {
+    $root =~ s|/$||;
+    validateRepository($root);
+    if (-d $root) {
+        unshift(@src_roots, $root);
+    } else {
+        &print_top;
+        print "Error:  Root, $root, is not a directory.<BR><BR>\n";
+        print "</BODY></HTML>\n";
+        &print_bottom;
+        exit;
+    }
+}
+
+
+# Find the rcs file
+#
+foreach (@src_roots) {
+    $root = $_;
+    $rcs_filename = "$root/$filename,v";
+    goto found_file if -r $rcs_filename;
+    $rcs_filename = "$root/${file_head}Attic/$file_tail,v";
+    goto found_file if -r $rcs_filename;
+}
+# File not found
+&print_top;
+print "Rcs file, $filename, does not exist.<BR><BR>\n";
+print "</BODY></HTML>\n";
+&print_bottom;
+exit;
+
+found_file:
+    ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
+
+# Parse the rcs file ($opt_rev is passed as a global)
+#
+$revision = &parse_cvs_file($rcs_filename);
+$file_rev = $revision;
+
+# Handle the "line_nums" argument
+#
+$opt_line_nums = 0;
+$opt_line_nums = 1 if $cookie_jar{'line_nums'} eq 'on';
+$opt_line_nums = 0 if $form{'line_nums'} =~ /off|no|0/i;
+$opt_line_nums = 1 if $form{'line_nums'} =~ /on|yes|1/i;
+
+# Option to make links to included files
+$opt_includes = 0;
+$opt_includes = 1 if $form{'includes'} =~ /on|yes|1/i;
+$opt_includes = 1 if $opt_includes && $file_tail =~ /(.c|.h|.cpp)$/;
+
+@text = &extract_revision($revision);
+die "$progname: Internal consistency error" if ($#text != $#revision_map);
+
+
+# Handle the "mark" argument
+#
+$mark_arg = '';
+$mark_arg = $form{'mark'} if defined($form{'mark'});
+foreach $mark (split(',',$mark_arg)) {
+    if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
+        $begin = 1 if $begin eq '';
+        $end = $#text + 1 if $end eq '' || $end > $#text + 1;
+        next if $begin >= $end;
+        $mark_line{$begin} = 'begin';
+        $mark_line{$end} = 'end';
+    } else {
+        $mark_line{$mark} = 'single';
+    }
+}
+
+# Start printing out the page
+#
+&print_top;
+
+if ($ENV{'HTTP_USER_AGENT'} =~ /Win/) {
+    $font_tag = "<PRE><FONT FACE='Lucida Console' SIZE=-1>";
+} else {
+    # We don't want your stinking Windows font
+    #$font_tag = "<FONT>";
+    $font_tag = "<PRE><FONT>";
+}
+
+# Print link at top for directory browsing
+#
+$output = "<DIV ALIGN=LEFT>";
+foreach $path (split('/',$rcs_path)) {
+    $link_path .= $path;
+    $output .= "<A HREF='rview.cgi?dir=$link_path";
+    $output .= "&cvsroot=$form{'root'}" if defined $form{'root'};
+    $output .= "&rev=$browse_revtag" unless $browse_revtag eq 'HEAD';
+    $output .= "' onmouseover='window.status=\"Browse $link_path\";"
+        ." return true;'>$path</A>/ ";
+    $link_path .= '/';
+}
+$output .= "$file_tail "
+    ." (<A HREF onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");'"
+    ." onmouseover='return log(event,0,\"$prev_revision{$revision}\","
+    ."\"$revision\");'>";
+$output .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+$output .= $revision if $revision;
+$output .= "</A>)";
+
+$output .= "</DIV>";
+EmitHtmlHeader("CVS Blame", $output);
+print "<HR>\n";
+
+print $font_tag;
+
+# Print each line of the revision, preceded by its annotation.
+#
+$start_of_mark = 0;
+$end_of_mark = 0;
+$line_num_width = int(log($#revision_map)/log(10)) + 1;
+$revision_width = 3;
+$author_width = 5;
+$line = 0;
+$usedlog{$revision} = 1;
+foreach $revision (@revision_map)
+{
+    $text = $text[$line++];
+    $usedlog{$revision} = 1;
+
+
+    if ($opt_html_comments) {
+        # Don't escape HTML in C/C++ comments
+        $text = &leave_html_comments($text);
+    } elsif ( $opt_sanitize ){
+        # Mark filty words and Escape HTML meta-characters
+        $text = markup_line($text);
+    } else {
+        $text =~ s/&/&amp;/g;
+        $text =~ s/</&lt;/g;
+        $text =~ s/>/&gt;/g;
+    }
+    # Add a link to traverse to included files
+    $text = &link_includes($text) if $opt_includes;
+
+
+    $output = "<A NAME=$line></A>";
+
+    # Highlight lines
+    if (defined($mark_cmd = $mark_line{$line})
+        && $mark_cmd ne 'end') {
+
+        $output .= "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 "
+            ."><TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'>$font_tag";
+    }
+
+    $output .= sprintf("%${line_num_width}s ", $line) if $opt_line_nums;
+
+    if ($old_revision ne $revision || $rev_count > 20) {
+
+        $author_width = max($author_width,length($revision_author{$revision}));
+        $revision_width = max($revision_width,length($revision));
+
+        $output .= ($rev_count > 20 ? '| ' : '+ ');
+        
+        $output .= sprintf("%-${author_width}s ",$revision_author{$revision});
+
+        $output .= "<A HREF "
+        ."onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");' "
+        ."onmouseover='return log(event,$line,\"$prev_revision{$revision}\","
+        ."\"$revision\");'>$revision</A> ";
+        $output .= ' ' x ($revision_width - length($revision));
+
+        $old_revision = $revision;
+        $rev_count = 0;
+    } else {
+        $output .= '|   ' . ' ' x ($author_width + $revision_width);
+    }
+    $rev_count++;
+
+    $output .= "$text";
+    
+    # Close the highlighted section
+    if (defined($mark_cmd) && $mark_cmd ne 'begin') {
+        chop($output);
+        $output .= "</TD>";
+        #if( defined($prev_revision{$file_rev})) {
+            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD  BGCOLOR=LIGHTGREEN>&nbsp</TD>";
+        #}
+        $output .= "</TR></TABLE>";
+    }
+
+    print $output;
+}
+print "</FONT></PRE>\n";
+
+# Write out cvs log messages as a JS variables
+#
+print "<SCRIPT>";
+while (($revision, $junk) = each %usedlog) {
+
+        # Create a safe variable name for a revision log
+        $revisionName = $revision;
+        $revisionName =~ tr/./_/;
+    
+        $log = $revision_log{$revision};
+        $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
+        eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
+        $log =~ s/\n|\r|\r\n/<BR>/g;
+        $log =~ s/"/\\"/g;
+
+        # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
+        print "log$revisionName = \""
+            ."$revision_ctime{$revision}<BR>"
+            ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
+}
+print "</SCRIPT>";
+
+&print_bottom;
+
+print "<NOLAYER><BR><FONT SIZE=-1>(This page is much cooler with a layers enabled browser)</FONT></NOLAYER>";
+
+if ( $opt_sanitize )
+{
+    dbmclose %SourceChecker::token_dictionary;
+}
+
+## END of main script
+
+sub max {
+    local ($a, $b) = @_;
+    return ($a > $b ? $a : $b);
+}
+
+sub print_top {
+    local ($title_text) = "for $file_tail (";
+    $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+    $title_text .= $revision if $revision;
+    $title_text .= ")";
+    $title_text =~ s/\(\)//;
+
+    local ($diff_dir_link) = 
+        "cvsview2.cgi?subdir=$rcs_path&files=$file_tail&command=DIRECTORY";
+    $diff_dir_link .= "&root=$form{'root'}" if defined $form{'root'};
+    $diff_dir_link .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
+
+    local ($diff_link) = "cvsview2.cgi?diff_mode=context&whitespace_mode=show";
+    $diff_link .= "&root=$form{'root'}" if defined $form{'root'};
+    $diff_link .= "&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail";
+
+    print <<__TOP__;
+<HTML>
+<HEAD>
+<TITLE>CVS Blame $title_text</TITLE>
+<SCRIPT>
+document.loaded = false;
+
+function revToName (rev) {
+    revName = rev + "";
+    revArray = revName.split(".");
+    return revArray.join("_");
+}
+
+function finishedLoad() {
+    if (parseInt(navigator.appVersion) < 4) {
+        return true;
+    }
+    document.loaded = true;
+    document.layers['popup'].visibility='hide';
+    
+    return true;
+}
+
+function log(event, line, prev_rev, rev) {
+    window.defaultStatus = "";
+    if (prev_rev == '') {
+        window.status = "View diffs for " + file_tail;
+    } else {
+        window.status = "View diff for " + prev_rev + " vs." + rev;
+    }
+
+    if (parseInt(navigator.appVersion) < 4) {
+        return true;
+    }
+
+    l = document.layers['popup'];
+    if (document.loaded) {
+        l.document.write("<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=2><TR><TD>");
+        if (line) {
+            l.document.write("line " + line + ", ");
+        }
+        l.document.write(eval("log" + revToName(rev)) + "</TD></TR></TABLE>");
+        l.document.close();
+    }
+    l.top = event.target.y - 3;
+    l.left = event.target.x + 40;
+    l.visibility="show";
+
+    return true;
+}
+
+function dif(prev_rev, rev) {
+    if (prev_rev == '') {
+        document.location = "$diff_dir_link";
+    } else {
+        document.location = "$diff_link"
+            + "&rev1=" + prev_rev + "&rev2=" + rev;
+    }
+    return false;
+}
+file_tail = "$file_tail";
+
+/* Make JavaScript happy in akbar */
+event = 0;
+initialLayer = "<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1><TR><TD><B>Page loading...please wait.</B></TD></TR></TABLE>";
+
+</SCRIPT>
+</HEAD>
+<BODY onLoad="finishedLoad();">
+<LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
+__TOP__
+} # print_top
+
+sub print_usage {
+    local ($linenum_message) = '';
+    local ($new_linenum, $src_roots_list);
+    local ($title_text) = "Usage";
+
+    if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'set_line'})) {
+  
+        # Expire the cookie 5 months from now
+        $set_cookie = "Set-Cookie: line_nums=$form{'set_line'}; expires="
+            .&toGMTString(time + 86400 * 152)."; path=/";
+    }
+    if (!defined($cookie_jar{'line_nums'}) && !defined($form{'set_line'})) {
+        $new_linenum = 'on';
+    } elsif ($cookie_jar{'line_nums'} eq 'off' || $form{'set_line'} eq 'off') {
+        $linenum_message = 'Line numbers are currently <b>off</b>.';
+        $new_linenum = 'on';
+    } else {
+        $linenum_message = 'Line numbers are currently <b>on</b>.';
+        $new_linenum = 'off';
+    }
+    $src_roots_list = join('<BR>', @src_roots);
+
+    print <<__USAGE__;
+<HTML>
+<HEAD>
+<TITLE>CVS Blame $title_text</TITLE>
+</HEAD><BODY>
+<H2>CVS Blame Usage</H2>
+Add parameters to the query string to view a file.
+<P>
+<TABLE BORDER CELLPADDING=3>
+<TR ALIGN=LEFT>
+  <TH>Param</TH>
+  <TH>Default</TH>
+  <TH>Example</TH>
+  <TH>Description</TH>
+</TR><TR>
+  <TD>file</TD>
+  <TD>--</TD>
+  <TD>ns/cmd/Makefile</TD>
+  <TD>path to file name</TD>
+</TR><TR>
+  <TD>root</TD>
+  <TD>$src_roots_list</TD>
+  <TD>/warp/webroot</TD>
+  <TD>cvs root</TD>
+</TR><TR>
+  <TD>rev</TD>
+  <TD>HEAD</TD>
+  <TD>1.3
+    <BR>ACTRA_branch</TD>
+  <TD>revision</TD>
+</TR><TR>
+  <TD>line_nums</TD>
+  <TD>off *</TD>
+  <TD>on
+    <BR>off</TD>
+  <TD>line numbers</TD>
+</TR><TR>
+  <TD>#&lt;line_number&gt;</TD>
+  <TD>--</TD>
+  <TD>#111</TD>
+  <TD>jump to a line</TD>
+</TR>
+</TABLE>
+
+<P>Examples:
+<TABLE><TR><TD>&nbsp;</TD><TD>
+<A HREF="cvsblame.cgi?file=ns/cmd/Makefile">
+         cvsblame.cgi?file=ns/cmd/Makefile</A>
+</TD></TR><TR><TD>&nbsp;</TD><TD>
+<A HREF="cvsblame.cgi?file=ns/cmd/xfe/mozilla.c&rev=Dogbert4xEscalation_BRANCH">
+         cvsblame.cgi?file=ns/cmd/xfe/mozilla.c&amp;rev=Dogbert4xEscalation_BRANCH</A>
+</TD></TR><TR><TD>&nbsp;</TD><TD>
+<A HREF="cvsblame.cgi?file=projects/bonsai/cvsblame.cgi&root=/warp/webroot">
+         cvsblame.cgi?file=projects/bonsai/cvsblame.cgi&root=/warp/webroot</A>
+</TD></TR><TR><TD>&nbsp;</TD><TD>
+<A HREF="cvsblame.cgi?file=ns/config/config.mk&line_nums=on">
+         cvsblame.cgi?file=ns/config/config.mk&amp;line_nums=on</A>
+</TD></TR><TR><TD>&nbsp;</TD><TD>
+<A HREF="cvsblame.cgi?file=ns/cmd/xfe/dialogs.c#2384">
+         cvsblame.cgi?file=ns/cmd/xfe/dialogs.c#2384</A>
+</TD></TR></TABLE>            
+
+<P>
+You may also begin a query with the <A HREF="cvsqueryform.cgi">CVS Query Form</A>.
+<FORM METHOD='POST' ACTION='cvsblame.cgi'>
+
+<TABLE CELLPADDING=0 CELLSPACING=0>
+<TR>
+   <TD>*<SPACER TYPE=HORIZONTAL SIZE=6></TD>
+   <TD>Instead of the <i>line_nums</i> parameter, you can
+       <INPUT TYPE=submit value='set a cookie to turn $new_linenum'>
+       line numbers.</TD>
+</TR><TR>
+   <TD></TD>
+   <TD>$linenum_message</TD>
+</TR></TABLE>
+
+<INPUT TYPE=hidden NAME='set_line' value='$new_linenum'>
+</FORM>
+__USAGE__
+    &print_bottom;
+} # sub print_usage
+
+sub print_bottom {
+    print <<__BOTTOM__;
+<HR WIDTH="100%">
+<FONT SIZE=-1>
+<A HREF="cvsblame.cgi">Page configuration and help</A>.
+Mail feedback to <A HREF="mailto:slamm?subject=About the cvsblame script">&lt;slamm\@netscape.com></A>. 
+</FONT></BODY>
+</HTML>
+__BOTTOM__
+} # print_bottom
+
+
+sub link_includes {
+    local ($text) = $_[0];
+
+    if ($text =~ /\#(\s*)include(\s*)"(.*?)"/) {
+        foreach $trial_root (($rcs_path, 'ns/include', 
+                              "$rcs_path/Attic", "$rcs_path/..")) {
+            if (-r "$root/$trial_root/$3,v") {
+                $text = "$`#$1include$2\"<A HREF='cvsblame.cgi"
+                    ."?root=$root&file=$trial_root/$3&rev=".$browse_revtag
+                    ."&use_html=$use_html'>$3</A>\";$'";
+                last;
+            }
+        }
+    }
+    return $text;
+}
+
+sub html_comments_init {
+    return 0 unless defined($form{'use_html'}) && $form{'use_html'};
+                                                      
+    # Initialization for C comment context switching
+    $in_comments = 0;
+    $open_delim = '\/\*';
+    $close_delim = '\*\/';
+
+    # Initialize the next expected delim
+    $expected_delim = $open_delim;
+
+    return 1;
+}
+
+sub leave_html_comments {
+    local ($text) = $_[0];
+    # Allow HTML in the comments.
+    #
+    $newtext = "";
+    $oldtext = $text;
+    while ($oldtext =~ /(.*$expected_delim)(.*\n)/) {
+        $a = $1;
+        $b = $2;
+        # pay no attention to C++ comments within C comment context
+        if ($in_comments == 0) {
+            $a =~ s/</&lt;/g;
+            $a =~ s/>/&gt;/g;
+            $expected_delim = $close_delim;
+            $in_comments = 1;
+        }
+        else {
+            $expected_delim = $open_delim;
+            $in_comments = 0;
+        }
+        $newtext = $newtext . $a;
+        $oldtext = $b;
+    }
+    # Handle thre remainder
+    if ($in_comments == 0){
+      $oldtext =~ s/</&lt;/g;
+      $oldtext =~ s/>/&gt;/g;
+    }
+    $text = $newtext . $oldtext;
+
+    # Now fix the breakage of <username> stuff on xfe. -byrd
+    if ($text =~ /(.*)<(.*@.*)>(.*\n)/) {
+        $text = $1 . "<A HREF=mailto:$2?subject=$filename>$2</A>" . $3;
+    }
+
+    return $text;
+}
