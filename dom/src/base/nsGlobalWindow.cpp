@@ -1096,31 +1096,30 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
   nsresult ret = NS_OK;
   nsAutoString str;
 
-  if (nsnull != mWebShell) {
-    if (argc > 0) {
-      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-    }
-    else {
-      str.SetString("undefined");
-    }
-    
-    nsIWebShell *rootWebShell;
-    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-    if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      ret = rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-        nsIPrompt *prompter;
-        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
-          ret = prompter->Alert(str.GetUnicode());
-          NS_RELEASE(prompter);
-        }
-        NS_RELEASE(rootContainer);
-      }
-      NS_RELEASE(rootWebShell);
-    }
+  NS_ENSURE_STATE(mWebShell);
+  if (argc > 0) {
+  nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
   }
-  return ret;
+  else {
+  str.SetString("undefined");
+  }
+
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
+      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+
+  //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
+  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
+  /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
+  // one
+  if(!prompter)
+  {
+  prompter = Create our internal prompter
+  }
+  */
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  return prompter->Alert(str.GetUnicode());
 }
 
 NS_IMETHODIMP    
@@ -1130,32 +1129,30 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
   nsAutoString str;
 
   *aReturn = PR_FALSE;
-  if (nsnull != mWebShell) {
-    if (argc > 0) {
-      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-    }
-    else {
-      str.SetString("undefined");
-    }
-    
-    nsIWebShell *rootWebShell;
-    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-    if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      ret = rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-        nsIPrompt *prompter;
-        ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter);
-        if (NS_SUCCEEDED(ret)) {
-          ret = prompter->Confirm(str.GetUnicode(), aReturn);
-          NS_RELEASE(prompter);
-        }
-        NS_RELEASE(rootContainer);
-      }
-      NS_RELEASE(rootWebShell);
-    }
+  NS_ENSURE_STATE(mWebShell);
+  if (argc > 0) {
+  nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
   }
-  return ret;
+  else {
+  str.SetString("undefined");
+  }
+
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
+      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+
+  //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
+  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
+  /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
+  // one
+  if(!prompter)
+  {
+  prompter = Create our internal prompter
+  }
+  */
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  return prompter->Confirm(str.GetUnicode(), aReturn);
 }
 
 NS_IMETHODIMP    
@@ -1165,46 +1162,47 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
   nsAutoString str, initial;
 
   aReturn.Truncate();
-  if (nsnull != mWebShell) {
-    if (argc > 0) {
-      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-      
-      if (argc > 1) {
-        nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
-      }
-      else {
-        initial.SetString("undefined");
-      }
-    }
-    
-    nsIWebShell *rootWebShell;
-    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-    if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      ret = rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-        nsIPrompt *prompter;
-        if (NS_OK == (ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter))) {
-          PRBool b;
-          PRUnichar* uniResult = nsnull;
-          ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
-          aReturn = uniResult;
-          if (uniResult) {
-            nsAllocator::Free(uniResult);
-          }
-          if (NS_FAILED(ret) || !b) {
-            // XXX Need to check return value and return null if the
-            // user hits cancel. Currently, we can only return a 
-            // string reference.
-            aReturn.SetString("");
-          }
-          NS_RELEASE(prompter);
-        }
-        NS_RELEASE(rootContainer);
-      }
-      NS_RELEASE(rootWebShell);
-    }
+  NS_ENSURE_STATE(mWebShell);
+  if (argc > 0) {
+   nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+   
+   if (argc > 1) {
+     nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
+   }
+   else {
+     initial.SetString("undefined");
+   }
   }
+
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
+      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+
+  //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
+  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
+  /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
+  // one
+  if(!prompter)
+  {
+  prompter = Create our internal prompter
+  }
+  */
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  PRBool b;
+  PRUnichar* uniResult = nsnull;
+  ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
+  aReturn = uniResult;
+  if (uniResult) {
+    nsAllocator::Free(uniResult);
+  }
+  if (NS_FAILED(ret) || !b) {
+    // XXX Need to check return value and return null if the
+    // user hits cancel. Currently, we can only return a 
+    // string reference.
+    aReturn.SetString("");
+  }
+
   return ret;
 }
 
@@ -2607,27 +2605,17 @@ GlobalWindowImpl::GetBrowserWindowInterface(
                     nsIBrowserWindow*& aBrowser,
                     nsIWebShell *aWebShell)
 {
-  nsresult ret = NS_ERROR_FAILURE;
   aBrowser = nsnull;
   
   if (nsnull == aWebShell)
     aWebShell = mWebShell;
-  if (nsnull != aWebShell) {
-    nsIWebShell *rootWebShell;
-    aWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-    if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-        ret = rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
-        if (NS_FAILED(ret))
-          aBrowser = nsnull;
-        NS_RELEASE(rootContainer);
-      }
-      NS_RELEASE(rootWebShell);
-    }
-  }
-  return ret;
+  NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
+      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+  
+  return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
 }
 
 PRBool

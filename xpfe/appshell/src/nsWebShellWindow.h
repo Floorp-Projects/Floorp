@@ -132,6 +132,7 @@ public:
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
+  NS_IMETHOD GetDOMWindow(nsIDOMWindow** aDOMWindow);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,

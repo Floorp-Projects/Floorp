@@ -852,43 +852,27 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         char * urlStr = "chrome://global/content/finddialog.xul";
 
         // We need the parent's nsIDOMWindow...
-        // 1. Get root nsIWebShell (chrome included).
+        // 1. Get topLevelWindow nsIWebShellContainer (chrome included).
         nsCOMPtr<nsIWebShell> ws;
         rv = context->GetTargetWebShell( getter_AddRefs( ws ) );
         if ( NS_SUCCEEDED( rv ) && ws ) {
-            nsCOMPtr<nsIWebShell> rootws;
-            rv = ws->GetRootWebShellEvenIfChrome( *getter_AddRefs( rootws ) );
-            if ( NS_SUCCEEDED( rv ) && rootws ) {
-                // 2. Get container for the root web shell.
-                nsCOMPtr<nsIWebShellContainer> rootwsContainer;
-                rv = rootws->GetContainer( *getter_AddRefs( rootwsContainer ) );
-                if ( NS_SUCCEEDED( rv ) && rootwsContainer ) {
-                    // 3. Convert that to an nsIWebShellWindow.
-                    nsCOMPtr<nsIWebShellWindow> rootWindow;
-                    rv = rootwsContainer->QueryInterface( nsIWebShellWindow::GetIID(),
-                                                          getter_AddRefs( rootWindow ) );
-                    if ( NS_SUCCEEDED( rv ) && rootWindow ) {
-                        // 4. Convert window to nsIDOMWindow.
-                        nsCOMPtr<nsIDOMWindow> domWindow;
-                        rv = rootWindow->ConvertWebShellToDOMWindow( rootws,
-                                                                     getter_AddRefs( domWindow ) );
-                        if ( NS_SUCCEEDED( rv ) && domWindow ) {
-                            // Whew.  Now open dialog with search context as argument.
-                            rv = OpenDialogWithArg( domWindow, context, urlStr );
-                        } else {
-                            DEBUG_PRINTF( PR_STDOUT, "%s %d:  Error getting DOM window from web shell, rv=0x%08X\n",
-                                          (char*)__FILE__, (int)__LINE__, (int)rv );
-                        }
-                    } else {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d:  QueryInterface (for nsIWebShellWindow) failed, rv=0x%08X\n",
-                                      (char*)__FILE__, (int)__LINE__, (int)rv );
-                    }
+            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+            rv = ws->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+            // 3. Convert that to an nsIWebShellWindow.
+            nsCOMPtr<nsIWebShellWindow> rootWindow(do_QueryInterface(topLevelWindow));
+            if ( rootWindow ) {
+                // 4. Convert window to nsIDOMWindow.
+                nsCOMPtr<nsIDOMWindow> domWindow;
+                rv = rootWindow->GetDOMWindow(getter_AddRefs( domWindow ) );
+                if ( NS_SUCCEEDED( rv ) && domWindow ) {
+                    // Whew.  Now open dialog with search context as argument.
+                    rv = OpenDialogWithArg( domWindow, context, urlStr );
                 } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d:  GetContainer failed, rv=0x%08X\n",
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d:  Error getting DOM window from web shell, rv=0x%08X\n",
                                   (char*)__FILE__, (int)__LINE__, (int)rv );
                 }
             } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d:  GetRootWebShellEvenIfChrome failed, rv=0x%08X\n",
+                DEBUG_PRINTF( PR_STDOUT, "%s %d:  QueryInterface (for nsIWebShellWindow) failed, rv=0x%08X\n",
                               (char*)__FILE__, (int)__LINE__, (int)rv );
             }
         } else {

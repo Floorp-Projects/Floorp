@@ -361,12 +361,10 @@ void nsToolkitCore::DOMWindowToWebShellWindow(
   nsCOMPtr<nsIWebShell> webshell, rootWebshell;
   if (globalScript)
     globalScript->GetWebShell(getter_AddRefs(webshell));
-  if (webshell)
-    webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
-  if (rootWebshell) {
-    nsCOMPtr<nsIWebShellContainer> webshellContainer;
-    rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
-    *webWindow = do_QueryInterface(webshellContainer);
-  }
+  if(!webshell)
+   return;
+  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+  webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+  *webWindow = do_QueryInterface(topLevelWindow);
 }
 

@@ -1906,6 +1906,12 @@ nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShellWindow::GetDOMWindow(nsIDOMWindow** aDOMWindow)
+{
+   return ConvertWebShellToDOMWindow(mWebShell, aDOMWindow);
+}
+
 void *
 nsWebShellWindow::HandleModalDialogEvent(PLEvent *aEvent)
 {
