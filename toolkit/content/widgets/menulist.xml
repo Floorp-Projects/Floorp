@@ -92,6 +92,8 @@
       <property name="src"  onset="this.setAttribute('src',val); return val;"
                             onget="return this.getAttribute('src');"/>
       <property name="label" readonly="true" onget="return this.getAttribute('label');"/>
+      <property name="description" onset="this.setAttribute('description',val); return val;"
+                             onget="return this.getAttribute('description');"/>
       <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
                                        else this.removeAttribute('disabled');
                                        return val;"
@@ -169,6 +171,7 @@
               this.removeAttribute('value');
               this.removeAttribute('src');
               this.removeAttribute('label');
+              this.removeAttribute('description');
               return val;
             }
              
@@ -177,6 +180,7 @@
             this.setAttribute('value', val.getAttribute('value'));
             this.setAttribute('src', val.getAttribute('src'));
             this.setAttribute('label', val.getAttribute('label'));
+            this.setAttribute('description', val.getAttribute('description'));
 
             return val;
           ]]>
@@ -186,6 +190,7 @@
       <method name="appendItem">
         <parameter name="label"/>
         <parameter name="value"/>
+        <parameter name="description"/>
         <body>
         <![CDATA[
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -194,6 +199,9 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
+          if (description)
+            item.setAttribute("description", description);
+
           popup.appendChild(item);
           return item;
         ]]>
@@ -204,6 +212,7 @@
         <parameter name="index"/>
         <parameter name="label"/>
         <parameter name="value"/>
+        <parameter name="description"/>
         <body>
         <![CDATA[
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -212,6 +221,9 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
+          if (description)
+            item.setAttribute("description", description);
+
           if (index < popup.childNodes.length)
             popup.insertBefore(item, popup.childNodes[index]);
           else
@@ -443,5 +455,17 @@
       <children includes="menupopup"/>
     </content>
   </binding>
-  
+
+  <binding id="menulist-description" display="xul:menu" 
+           extends="chrome://global/content/bindings/menulist.xml#menulist">
+    <content sizetopopup="pref">
+      <xul:hbox class="menulist-label-box" flex="1">
+        <xul:image class="menulist-icon" xbl:inherits="src"/>
+        <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+        <xul:label class="menulist-label menulist-description" xbl:inherits="value=description" crop="right" flex="10000"/>
+      </xul:hbox>
+      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
 </bindings>
