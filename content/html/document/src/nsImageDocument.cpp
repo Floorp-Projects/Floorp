@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Morten Nilsen <morten@nilsen.com>
+ *    Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -398,7 +399,21 @@ nsImageDocument::CreateSyntheticDocument()
   nsHTMLValue val(src_string);
 
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
-  image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
+
+  // Create a stringbundle for localized error message
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> stringService =
+           do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && stringService)
+    rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv) && bundle) {
+    const PRUnichar* formatString[1] = { src_string.get() };
+    nsXPIDLString errorMsg;
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("InvalidImage").get(), formatString, 1, getter_Copies(errorMsg));
+
+    nsHTMLValue errorText(errorMsg);
+    image->SetHTMLAttribute(nsHTMLAtoms::alt, errorText, PR_FALSE);
+  }
 
   root->AppendChildTo(body, PR_FALSE, PR_FALSE);
   center->AppendChildTo(image, PR_FALSE, PR_FALSE);
