@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.15 2000/10/24 21:32:53 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.16 2000/11/08 01:10:44 javi%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -55,7 +55,11 @@
 #endif
 
 #include <limits.h>
+#ifdef macintosh
+#include <Types.h>
+#else
 #include <sys/types.h>
+#endif
 
 #define  MP_NEG    1
 #define  MP_ZPOS   0
