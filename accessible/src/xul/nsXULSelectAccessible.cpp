@@ -402,6 +402,14 @@ NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *_retval)
 nsXULListitemAccessible::nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
 nsXULMenuitemAccessible(aDOMNode, aShell)
 {
+  mIsCheckbox = PR_FALSE;
+  nsCOMPtr<nsIDOMElement> listItem (do_QueryInterface(mDOMNode));
+  if (listItem) {
+    nsAutoString typeString;
+    nsresult res = listItem->GetAttribute(NS_LITERAL_STRING("type"), typeString);
+    if (NS_SUCCEEDED(res) && typeString.Equals(NS_LITERAL_STRING("checkbox")))
+      mIsCheckbox = PR_TRUE;
+  }
 }
 
 /** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
@@ -433,7 +441,10 @@ NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
   */
 NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_LISTITEM;
+  if (mIsCheckbox)
+    *_retval = ROLE_CHECKBUTTON;
+  else
+    *_retval = ROLE_LISTITEM;
   return NS_OK;
 }
 
@@ -444,6 +455,11 @@ NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *_retval)
 {
 //  nsAccessible::GetState(_retval); // get focused state
 
+  if (mIsCheckbox) {
+    nsXULMenuitemAccessible::GetState(_retval);
+    return NS_OK;
+  }
+  
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem (do_QueryInterface(mDOMNode));
   if (listItem) {
     PRBool isSelected;
@@ -469,6 +485,22 @@ NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+{
+  if (index == eAction_Click) {
+    // check or uncheck
+    PRUint32 state;
+    GetState(&state);
+                                                                                                                                         
+    if (state & STATE_CHECKED)
+      _retval = NS_LITERAL_STRING("uncheck");
+    else
+      _retval = NS_LITERAL_STRING("check");
+                                                                                                                                         
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
 /** ------------------------------------------------------ */
 /**  Finally, the Combobox widgets                         */
 /** ------------------------------------------------------ */
