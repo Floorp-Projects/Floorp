@@ -40,12 +40,27 @@ endif
 
 _DEFS = $(subst \",\\\\\",$(ACDEFINES))
 
+pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
+	mozilla-gtkmozembed.pc
+
 mozilla-config:: mozilla-config.in Makefile.in Makefile
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%exec_prefix%|$(exec_prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%libdir%|$(mozappdir)|" \
+	-e "s|%MOZILLA_VERSION%|$(MOZILLA_VERSION)|" \
+	-e "s|%DEFS%|$(_DEFS)|" \
+	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
+	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
+
+%.pc : %.pc.in
+	cat $< | sed \
+	-e "s|%prefix%|$(prefix)|" \
+	-e "s|%exec_prefix%|$(exec_prefix)|" \
+	-e "s|%includedir%|$(includedir)|" \
+	-e "s|%libdir%|$(mozappdir)|" \
+	-e "s|%MOZILLA_VERSION%|$(MOZILLA_VERSION)|" \
 	-e "s|%DEFS%|$(_DEFS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
@@ -54,7 +69,7 @@ libs:: mozilla-config
 	chmod 755 $<
 	$(INSTALL) -m 755 $< $(DIST)/bin
 
-libs:: $(srcdir)/run-mozilla.sh
+libs:: $(srcdir)/run-mozilla.sh $(pkg_config_files)
 	$(INSTALL) $< $(DIST)/bin
 
 install:: run-mozilla.sh
@@ -63,3 +78,7 @@ install:: run-mozilla.sh
 install:: mozilla-config
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
 
+install:: $(pkg_config_files)
+	chmod 644 $<
+	$(SYSINSTALL) $(IFLAGS1) $(pkg_config_files) \
+		$(DESTDIR)$(libdir)/pkgconfig
