@@ -344,6 +344,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 	}
 
 	// call into the entry point
+	NPError error;
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
                                                        &callbacks, 
