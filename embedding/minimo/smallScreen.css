@@ -13,6 +13,9 @@
   /* and make the width adjust to screen layout for the device */
   max-width: 100% ! important;
 
+  /* max-heights should not apply to small screens */
+  max-height: none ! important;
+
   /* remove all positioning */
   position: static ! important;
 
