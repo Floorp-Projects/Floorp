@@ -43,6 +43,8 @@
 #include <nsCURILoader.h>
 #include <nsIURI.h>
 #include <nsNetUtil.h>
+#include <nsIWindowMediator.h>
+#include <rdf.h>
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -150,6 +152,10 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   // find the DOM window for the passed in parameter
   nsVoidKey *key;
   key = new nsVoidKey(aWidget);
+  if (!key)
+    return NS_ERROR_FAILURE;
+  // If this fails it's OK since it just means that we got a request
+  // on an unknown window.  We can handle that case.
   nsIDOMWindowInternal *domWindow = NS_STATIC_CAST(nsIDOMWindowInternal *,
 						   mWindowList.Get(key));
   delete key;
@@ -172,12 +178,10 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   if (action.Equals("openurl") || action.Equals("openfile")) {
-    if (argument.Length() == 0) {
+    if (argument.Length() == 0)
       rv = OpenURLDialog(domWindow);
-    }
-    else {
+    else
       rv = OpenURL(argument, domWindow, PR_TRUE);
-    }
   }
 
   /*
@@ -260,6 +264,28 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
 	rv = NS_ERROR_NOT_IMPLEMENTED;
       }
     }
+  }
+
+  /* some extensions! */
+  
+  /*
+      ping()
+         Just responds with an OK to let a client know that we are here.
+  */
+
+  else if (action.Equals("ping")) {
+    // the 200 will get filled in below
+    rv = NS_OK;
+  }
+
+  /*
+      xfeDoCommand()
+       This is an interface to make the xfe "do stuff."  Lifted from
+       the old Netscape 4.x interface.
+  */
+
+  else if (action.Equals("xfedocommand")) {
+    rv = XfeDoCommand(argument, domWindow);
   }
 
   // bad command
@@ -352,11 +378,15 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
   // keep a weak ptr or anything.
   nsVoidKey *key;
   key = new nsVoidKey (mainWidget.get());
+  if (!key)
+    return NS_ERROR_FAILURE;
   mWindowList.Put(key, aBrowser);
   delete key;
 
   // ...and the reverse lookup
   key = new nsVoidKey (aBrowser);
+  if (!key)
+    return NS_ERROR_FAILURE;
   mBrowserList.Put(key, mainWidget.get());
   delete key;
 
@@ -378,11 +408,15 @@ XRemoteService::RemoveBrowserInstance(nsIDOMWindowInternal *aBrowser)
   // remove our keys
   nsVoidKey *key;
   key = new nsVoidKey(aBrowser);
+  if (!key)
+    return NS_ERROR_FAILURE;
   nsIWidget *widget = NS_STATIC_CAST(nsIWidget *,
 				     mBrowserList.Remove(key));
   delete key;
 
   key = new nsVoidKey(widget);
+  if (!key)
+    return NS_ERROR_FAILURE;
   mWindowList.Remove(key);
   delete key;
 
@@ -404,10 +438,15 @@ XRemoteService::CreateProxyWindow(void)
 
   // create the window as a new toplevel
   nsRect rect(0,0,100,100);
-  mProxyWindow->Create(NS_STATIC_CAST(nsIWidget *, nsnull),
-		       rect,
-		       nsnull, nsnull, nsnull, nsnull,
-		       &initData);
+  nsresult rv;
+  rv = mProxyWindow->Create(NS_STATIC_CAST(nsIWidget *, nsnull),
+			    rect,
+			    nsnull, nsnull, nsnull, nsnull,
+			    &initData);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create proxy window");
+    return;
+  }
 
   // Tell the widget code to set up X remote for this window
   nsCOMPtr<nsIXRemoteWidgetHelper> widgetHelper =
@@ -417,7 +456,6 @@ XRemoteService::CreateProxyWindow(void)
     return;
   }
 
-  nsresult rv;
   rv = widgetHelper->EnableXRemoteCommands(mProxyWindow);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to enable x remote commands for proxy window");
@@ -520,6 +558,27 @@ XRemoteService::GetBrowserLocation(char **_retval)
     *_retval = nsCRT::strdup("chrome://navigator/content/navigator.xul");
 
   return NS_OK;
+}
+
+nsresult
+XRemoteService::GetMailLocation(char **_retval)
+{
+  // get the mail chrome URL
+  nsCOMPtr<nsIPref> prefs;
+  prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return NS_ERROR_FAILURE;
+  
+  PRInt32 retval = 0;
+  prefs->GetIntPref("mail.pane_config", &retval);
+
+  if (!retval)
+    *_retval = nsCRT::strdup("chrome://messenger/content/messenger.xul");
+  else
+    *_retval = nsCRT::strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+
+  return NS_OK;
+  
 }
 
 nsresult
@@ -700,6 +759,78 @@ XRemoteService::OpenURLDialog(nsIDOMWindowInternal *aParent)
 			getter_AddRefs(newWindow));
   
   return rv;
+}
+
+nsresult
+XRemoteService::XfeDoCommand(nsCString &aArgument,
+			     nsIDOMWindowInternal *aParent)
+{
+  nsresult rv = NS_OK;
+
+  // someone requested opening mail/news
+  if (aArgument.EqualsIgnoreCase("openinbox")) {
+
+    // check to see if it's already running
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+
+    rv = FindWindow(NS_LITERAL_STRING("mail:3pane").get(),
+		    getter_AddRefs(domWindow));
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // focus the window if it was found
+    if (domWindow) {
+      domWindow->Focus();
+    }
+
+    // otherwise open a new mail/news window
+    else {
+      // get the mail chrome location
+      nsXPIDLCString mailLocation;
+      GetMailLocation(getter_Copies(mailLocation));
+      if (!mailLocation)
+	return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = OpenChromeWindow(0, mailLocation, "chrome,all,dialog=no",
+			    nsnull, getter_AddRefs(newWindow));
+    }
+  }
+
+  // open a new browser window
+  else if (aArgument.EqualsIgnoreCase("openbrowser")) {
+    nsXPIDLCString browserLocation;
+    GetBrowserLocation(getter_Copies(browserLocation));
+    if (!browserLocation)
+      return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = OpenChromeWindow(0, browserLocation, "chrome,all,dialog=np",
+			  nsnull, getter_AddRefs(newWindow));
+  }
+
+  // open a new compose window
+  else if (aArgument.EqualsIgnoreCase("composemessage")) {
+    nsCString tempString("mailto:");
+    rv = OpenURL(tempString, nsnull, PR_FALSE);
+  }
+
+  return rv;
+}
+
+nsresult
+XRemoteService::FindWindow(const PRUnichar *aType,
+			   nsIDOMWindowInternal **_retval)
+{
+  nsCOMPtr<nsIWindowMediator> mediator;
+  mediator = do_GetService(NS_RDF_DATASOURCE_CONTRACTID_PREFIX
+			   "window-mediator");
+
+  if (!mediator)
+    return NS_ERROR_FAILURE;
+
+  return mediator->GetMostRecentWindow(aType, _retval);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteService)
