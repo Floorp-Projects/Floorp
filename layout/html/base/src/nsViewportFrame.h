@@ -117,8 +117,7 @@ public:
 #endif
 
 protected:
-  void AdjustReflowStateForScrollbars(nsIPresContext*    aPresContext,
-                                      nsHTMLReflowState& aReflowState) const;
+  nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
 
 protected:
   nsFixedContainingBlock mFixedContainer;

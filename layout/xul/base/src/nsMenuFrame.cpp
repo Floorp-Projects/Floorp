@@ -1012,17 +1012,14 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
       if (pref == nsIScrollableFrame::Auto)  
       {
-        // if our pref height
         if (bounds.height < prefSize.height) {
            // layout the child
            ibox->Layout(aState);
 
-           nscoord width;
-           nscoord height;
-           scrollframe->GetScrollbarSizes(aState.GetPresContext(), &width, &height);
-           if (bounds.width < prefSize.width + width)
+           nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
+           if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
            {
-             bounds.width += width;
+             bounds.width += scrollbars.left + scrollbars.right;
              //printf("Width=%d\n",width);
              ibox->SetBounds(aState, bounds);
            }

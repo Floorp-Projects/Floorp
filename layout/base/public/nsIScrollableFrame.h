@@ -46,6 +46,7 @@
 class nsIFrame;
 class nsIBox;
 class nsIPresContext;
+class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface
 #define NS_ISCROLLABLE_FRAME_IID    \
@@ -78,12 +79,18 @@ public:
   NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
 
- /**
-  * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
-  */
-  NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
-                         nscoord *aWidth, 
-                         nscoord *aHeight) const = 0;
+  /**
+   * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
+   * positions that don't have a scrollbar or where the scrollbar is not visible.
+   */
+  virtual nsMargin GetActualScrollbarSizes() const = 0;
+
+  /**
+   * Return the sizes of all scrollbars assuming that any scrollbars that could
+   * be visible due to overflowing content, are.
+   */
+  virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
+
   /**
    * Get information about whether the vertical and horizontal scrollbars
    * are currently visible
@@ -98,14 +105,6 @@ public:
    * @return current scrollbar selection
    */
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
-
-  /**
-   * Gets the vertical width and horizontal height of the scrollbars.
-   */
-  NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
-                               nscoord *aVbarWidth, 
-                               nscoord *aHbarHeight) const = 0;
-
 
   /**
    * Get the position of the scrolled view.

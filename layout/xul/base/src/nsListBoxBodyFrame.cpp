@@ -1457,10 +1457,8 @@ nsListboxScrollPortFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& 
       scrollFrame->GetScrollPreference(aBoxLayoutState.GetPresContext(), &scrollPref);
 
       if (scrollPref == nsIScrollableFrame::Auto) {
-        nscoord vbarwidth, hbarheight;
-        scrollFrame->GetScrollbarSizes(aBoxLayoutState.GetPresContext(),
-                                       &vbarwidth, &hbarheight);
-        aSize.width += vbarwidth;
+        nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+        aSize.width += scrollbars.left + scrollbars.right;
       }
     }
   }
@@ -1496,10 +1494,8 @@ nsListboxScrollPortFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize&
     scrollFrame->GetScrollPreference(aBoxLayoutState.GetPresContext(), &scrollPref);
 
     if (scrollPref == nsIScrollableFrame::Auto) {
-      nscoord vbarwidth, hbarheight;
-      scrollFrame->GetScrollbarSizes(aBoxLayoutState.GetPresContext(),
-                                     &vbarwidth, &hbarheight);
-      aSize.width += vbarwidth;
+      nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+      aSize.width += scrollbars.left + scrollbars.right;
     }
   }
 

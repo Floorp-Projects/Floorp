@@ -95,6 +95,11 @@ public:
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
 
   // nsIScrollbarFrame

@@ -159,15 +159,10 @@ public:
                                     nsIContent* aChild,
                                     PRInt32 aModType);
 
-  NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
-                         nscoord *aWidth, 
-                         nscoord *aHeight) const;
- 
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
-  NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
-                               nscoord *aVbarWidth, 
-                               nscoord *aHbarHeight) const;
+  virtual nsMargin GetActualScrollbarSizes() const;
+  virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
 
   /**
    * Get the "type" of the frame

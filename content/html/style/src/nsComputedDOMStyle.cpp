@@ -2664,8 +2664,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
   if (container) {
     nscoord margin = GetMarginWidthCoordFor(aSide, aFrame);
     nscoord border = GetBorderWidthCoordFor(aSide, container);
-    nscoord horScrollBarHeight = 0;
-    nscoord verScrollBarWidth = 0;
+    nsMargin scrollbarSizes(0, 0, 0, 0);
     nsRect rect = aFrame->GetRect();
     nsRect containerRect = container->GetRect();
       
@@ -2684,39 +2683,28 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
       nsCOMPtr<nsIScrollableFrame> scrollFrame =
         do_QueryInterface(scrollingChild);
       if (scrollFrame) {
-        scrollFrame->GetScrollbarSizes(presContext, &verScrollBarWidth,
-                                       &horScrollBarHeight);
-        PRBool verScrollBarVisible;
-        PRBool horScrollBarVisible;
-        scrollFrame->GetScrollbarVisibility(presContext, &verScrollBarVisible,
-                                            &horScrollBarVisible);
-        if (!verScrollBarVisible) {
-          verScrollBarWidth = 0;
-        }
-        if (!horScrollBarVisible) {
-          horScrollBarHeight = 0;
-        }
+        scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
       }
     }
 
     nscoord offset = 0;
     switch (aSide) {
       case NS_SIDE_TOP:
-        offset = rect.y - margin - border;
+        offset = rect.y - margin - border - scrollbarSizes.top;
 
         break;
       case NS_SIDE_RIGHT:
         offset = containerRect.width - rect.width -
-          rect.x - margin - border - verScrollBarWidth;
+          rect.x - margin - border - scrollbarSizes.right;
 
         break;
       case NS_SIDE_BOTTOM:
         offset = containerRect.height - rect.height -
-          rect.y - margin - border - horScrollBarHeight;
+          rect.y - margin - border - scrollbarSizes.bottom;
 
         break;
       case NS_SIDE_LEFT:
-        offset = rect.x - margin - border;
+        offset = rect.x - margin - border - scrollbarSizes.left;
 
         break;
       default:
