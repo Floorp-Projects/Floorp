@@ -5471,8 +5471,8 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
         nsCOMArray<nsIRDFResource> parentArray;
         rv |= WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
 
-        strm->Close();
-        out->Close();
+        rv |= strm->Close();
+        rv |= out->Close();
 
         if (NS_FAILED(rv))
             break;
