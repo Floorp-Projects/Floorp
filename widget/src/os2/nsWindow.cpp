@@ -1997,7 +1997,20 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case WM_CHORD:
-          result = DispatchMouseEvent( 0, mp1, mp2);
+
+          {
+             POINTL ptl;
+             WinQueryMsgPos( 0/*hab*/, &ptl);
+             WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
+             USHORT usFlags = 0;
+             if (WinIsKeyDown( VK_SHIFT))
+                usFlags |= KC_SHIFT;
+             if (WinIsKeyDown( VK_CTRL))
+                usFlags |= KC_CTRL;
+             if (WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF))
+                usFlags |= KC_ALT;
+             result = DispatchMouseEvent( NS_MOUSE_MIDDLE_CLICK, MPFROM2SHORT(ptl.x, ptl.y), MPFROM2SHORT(0,usFlags));
+          }
           break;
         case WM_BUTTON3DOWN:
           result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
@@ -2310,8 +2323,6 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   }
   else
   {
-    if( !aEventType) aEventType = NS_MOUSE_MIDDLE_BUTTON_DOWN; // WM_CHORD hack
-
     InitEvent( event, aEventType, nsnull);
     event.isShift = WinIsKeyDown( VK_SHIFT);
     event.isControl = WinIsKeyDown( VK_CTRL);
