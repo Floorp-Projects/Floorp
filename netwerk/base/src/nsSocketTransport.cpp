@@ -2462,7 +2462,6 @@ nsSocketRequest::GetStatus(nsresult *aResult)
 NS_IMETHODIMP
 nsSocketRequest::Cancel(nsresult status)
 {
-    NS_BREAK();
     if (!mTransport)
         return NS_ERROR_NOT_INITIALIZED;
     LOG(("nsSocketRequest: Cancel [this=%x status=%x]\n", this, status));
