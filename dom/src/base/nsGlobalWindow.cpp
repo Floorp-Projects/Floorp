@@ -90,6 +90,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIEventQueueService.h"
@@ -143,6 +144,7 @@
 #include "nsIPrintSettings.h"
 
 #include "nsWindowRoot.h"
+#include "nsNetCID.h"
 
 // XXX An unfortunate dependency exists here (two XUL files).
 #include "nsIDOMXULDocument.h"
@@ -2861,15 +2863,18 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 }
 
 static
-void FirePopupBlockedEvent(nsIDOMDocument* aDoc)
+void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
+                           nsIURI *aRequestingURI, nsIURI *aPopupURI)
 {
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about blocked popups.
     nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
     nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    docEvent->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"), getter_AddRefs(event));
     if (event) {
-      event->InitEvent(NS_LITERAL_STRING("DOMPopupBlocked"), PR_TRUE, PR_TRUE);
+      nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
+      pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
+              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI);
       PRBool noDefault;
       nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
       targ->DispatchEvent(event, &noDefault);
@@ -3018,8 +3023,17 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 
   if (abusedWindow) {
     if (IsPopupBlocked(mDocument)) {
+      nsCOMPtr<nsIURI> requestingURI;
+      nsCOMPtr<nsIURI> popupURI;
+      nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(topWindow));
+      nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
+      if (webNav)
+        webNav->GetCurrentURI(getter_AddRefs(requestingURI));
+      if (ios)
+        ios->NewURI(NS_ConvertUCS2toUTF8(url), 0, 0,
+                    getter_AddRefs(popupURI));
       if (name.IsEmpty()) {
-        FirePopupBlockedEvent(topDoc);
+        FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
         return NS_OK;
       }
 
@@ -3039,7 +3053,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
                                 getter_AddRefs(namedWindow));
 
         if (!namedWindow) {
-          FirePopupBlockedEvent(topDoc);
+          FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
           return NS_OK;
         }
       }
