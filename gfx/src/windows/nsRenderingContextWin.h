@@ -168,6 +168,9 @@ protected:
 private:
   ~nsRenderingContextWin();
 
+   // ConditionRect is used to fix a coordinate overflow problem under WIN95. 
+  void ConditionRect(nsRect aSrcRect, RECT& aDestRect);
+
   nsresult CommonInit(void);
   nsresult SetupDC(HDC aOldDC, HDC aNewDC);
   HBRUSH SetupSolidBrush(void);
