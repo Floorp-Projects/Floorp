@@ -2971,6 +2971,17 @@ DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeP
 // these and bind them to rooted things so immediately that this just is not
 // needed.
 
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+/***************************************************************************/
+// Allocates a string that grants all access ("AllAccess")
+
+extern char* xpc_CloneAllAccess();
+/***************************************************************************/
+// Returns access if wideName is in list
+
+extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[]);
+#endif
+
 /***************************************************************************/
 // Inlined utilities.
 

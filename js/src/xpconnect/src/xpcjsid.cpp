@@ -599,18 +599,12 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 }
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-static char* CloneAllAccess()
-{
-    static const char allAccess[] = "AllAccess";
-    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
-}
-
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = CloneAllAccess();
+    *_retval = xpc_CloneAllAccess();
     return NS_OK;
 }
 
@@ -618,8 +612,9 @@ nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsJSIID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
+    static const char* allowed[] = {"equals", "toString", nsnull};
+
+    *_retval = xpc_CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
@@ -627,8 +622,8 @@ nsJSIID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_r
 NS_IMETHODIMP
 nsJSIID::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
+    static const char* allowed[] = {"name", "number", "valid", nsnull};
+    *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 

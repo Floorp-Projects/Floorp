@@ -70,10 +70,22 @@ JSValIsInterfaceOfType(JSContext *cx, jsval v, REFNSIID iid)
 }
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-static char* CloneAllAccess()
+char* xpc_CloneAllAccess()
 {
     static const char allAccess[] = "AllAccess";
     return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+}
+
+char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
+{
+    nsCAutoString asciiName;   
+    CopyUCS2toASCII(nsDependentString(wideName), asciiName);
+
+    for(const char** p = list; *p; p++)
+        if(!strcmp(*p, asciiName))
+            return xpc_CloneAllAccess();
+    
+    return nsnull;
 }
 #endif
 
@@ -265,7 +277,7 @@ NS_IMETHODIMP
 nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = CloneAllAccess();
+    *_retval = xpc_CloneAllAccess();
     return NS_OK;
 }
 
@@ -1762,7 +1774,7 @@ NS_IMETHODIMP
 nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = CloneAllAccess();
+    *_retval = xpc_CloneAllAccess();
     return NS_OK;
 }
 
@@ -1779,15 +1791,8 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 NS_IMETHODIMP
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const NS_NAMED_LITERAL_STRING(s_interfaces, "interfaces");
-    static const NS_NAMED_LITERAL_STRING(s_results, "results");
-
-    const nsDependentString name(propertyName);
-
-    if(name.Equals(s_interfaces) || name.Equals(s_results))
-        *_retval = CloneAllAccess();
-    else
-        *_retval = nsnull;
+    static const char* allowed[] = { "interfaces", "results", nsnull};
+    *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 

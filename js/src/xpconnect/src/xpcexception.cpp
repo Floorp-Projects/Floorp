@@ -497,17 +497,12 @@ nsXPCException::NewException(const char *aMessage,
 }
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-static char* CloneAllAccess()
-{
-    static const char allAccess[] = "AllAccess";
-    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
-}
 
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
-    *_retval = CloneAllAccess();
+    *_retval = xpc_CloneAllAccess();
     return NS_OK;
 }
 
@@ -515,14 +510,9 @@ nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const NS_NAMED_LITERAL_STRING(s_toString, "toString");
+    static const char* allowed[] = { "toString", nsnull};
 
-    const nsDependentString name(methodName);
-
-    if(name.Equals(s_toString))
-        *_retval = CloneAllAccess();
-    else
-        *_retval = nsnull;
+    *_retval = xpc_CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
@@ -530,20 +520,10 @@ nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, ch
 NS_IMETHODIMP
 nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const NS_NAMED_LITERAL_STRING(s_message, "message");
-    static const NS_NAMED_LITERAL_STRING(s_result , "result");
-    static const NS_NAMED_LITERAL_STRING(s_code   , "code");
-    static const NS_NAMED_LITERAL_STRING(s_name   , "name");
+    static const char* allowed[] = { "message", "result", "code", "name", 
+       nsnull};
 
-    const nsDependentString name(propertyName);
-
-    if(name.Equals(s_message) ||
-       name.Equals(s_result)  ||
-       name.Equals(s_code)    ||
-       name.Equals(s_name))
-        *_retval = CloneAllAccess();
-    else
-        *_retval = nsnull;
+    *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 
