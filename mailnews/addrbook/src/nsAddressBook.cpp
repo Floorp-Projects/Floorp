@@ -1336,7 +1336,7 @@ enum ADDRESSBOOK_EXPORT_FILE_TYPE
  TAB_EXPORT_TYPE = 2
 };
 
-NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin, nsIAbDirectory *aDirectory)
+NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindow *aParentWin, nsIAbDirectory *aDirectory)
 {
   NS_ENSURE_ARG_POINTER(aParentWin);
 
@@ -1350,22 +1350,11 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin,
   rv = bundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
  
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(aParentWin, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocShell> docShell = globalObj->GetDocShell();
-  if (!docShell)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIDOMWindow> parentWindow = do_GetInterface(docShell);
-  if (!parentWindow)
-    return NS_NOINTERFACE;
-
   nsXPIDLString title;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("ExportAddressBookTitle").get(), getter_Copies(title));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->Init(parentWindow, title, nsIFilePicker::modeSave);
+  rv = filePicker->Init(aParentWin, title, nsIFilePicker::modeSave);
   NS_ENSURE_SUCCESS(rv, rv);
  
   nsXPIDLString filterString;
