@@ -60,6 +60,7 @@ DLL = .\$(OBJDIR)\$(DLLNAME).dll
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
+LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules

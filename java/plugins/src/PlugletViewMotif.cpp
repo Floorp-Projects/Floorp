@@ -37,15 +37,20 @@
 #include "PlugletViewMotif.h"
 #include "PlugletEngine.h"
 
+#include "PlugletLog.h"
 
 jclass   PlugletViewMotif::clazz = NULL;
 jmethodID  PlugletViewMotif::initMID = NULL;
 
 PlugletViewMotif::PlugletViewMotif() {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	            ("PlugletViewMotif.Constructor this=%p\n",this));
     frame = NULL;
     WindowID = 0;
 }
 void PlugletViewMotif::Initialize() {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	   ("PlugletViewMotif.Initialize\n"));
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     clazz = env->FindClass("sun/awt/motif/MEmbeddedFrame");
     if (!clazz) {
@@ -70,7 +75,8 @@ extern jobject awt_lock;
 extern Display *awt_display;
 
 PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
-    printf("--PlugletViewMotif::SetWindow \n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	              ("PlugletViewMotif.SetWindow this=%p\n",this));
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!clazz) {
         Initialize();
@@ -81,7 +87,8 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
     if (!win 
         || !win->window) {
         if (win && !win->window) {
-            printf("--PlugletViewMotif win->window = NULL. We have a bug in plugin module \n");
+	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	              ("PlugletViewMotif.SetWindow  win->window = NULL. We have a bug in plugin module. this=%p\n",this));
         }
         if (frame) {
             env->DeleteGlobalRef(frame);
@@ -145,9 +152,7 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         }
         
     }
-    printf("--before new frame\n");
     frame = env->NewObject(clazz,initMID,(jlong)w);
-    printf("--after new frame\n");
     if(frame) {
         frame = env->NewGlobalRef(frame);
         if (env->ExceptionOccurred()) {

@@ -25,6 +25,7 @@
 #include "PlugletManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "PlugletLog.h"
 
 #ifndef OJI_DISABLE
 #include "ProxyJNI.h"
@@ -40,6 +41,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
+PRLogModuleInfo* PlugletLog::log = NULL;
 
 #define PLUGLETENGINE_PROGID \
 "component://netscape/blackwood/pluglet-engine"
@@ -91,6 +93,8 @@ NS_METHOD PlugletEngine::CreateInstance(nsISupports *aOuter,
  
 NS_METHOD PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
 				const char* aPluginMIMEType, void **aResult) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletEngine::CreatePluginInstance\n"));
     if (!aResult) {
 	return NS_ERROR_FAILURE; 
     }
@@ -105,6 +109,8 @@ NS_METHOD PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID
 }
 
 NS_METHOD PlugletEngine::GetMIMEDescription(const char* *result) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletEngine::GetMimeDescription\n"));
     if (!result) {
 	return NS_ERROR_FAILURE;
     }
@@ -113,6 +119,8 @@ NS_METHOD PlugletEngine::GetMIMEDescription(const char* *result) {
 }
 
 NS_METHOD PlugletEngine::GetValue(nsPluginVariable variable, void *value) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletEngine::GetValue; stub\n"));
     //nb ????
     return NS_OK;
 }
@@ -143,6 +151,7 @@ char *ToString(jobject obj,JNIEnv *env) {
 
 PlugletEngine::PlugletEngine() {
     NS_INIT_REFCNT();
+    PlugletLog::log = PR_NewLogModule("pluglets");
     dir = new PlugletsDir();
     engine = this;
     objectCount++;
@@ -165,6 +174,8 @@ PlugletEngine::~PlugletEngine(void) {
 JavaVM *PlugletEngine::jvm = NULL;	
 
 void PlugletEngine::StartJVM(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletEngine::StartJVM\n"));
     JNIEnv *env = NULL;	
     jint res;
     JDK1_1InitArgs vm_args;
@@ -174,7 +185,8 @@ void PlugletEngine::StartJVM(void) {
     /* Append USER_CLASSPATH to the default system class path */
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
-	printf("-- classpath %s\n",classpath);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	   ("PlugletEngine::StartJVM classpath=%s\n",classpath));
     char **props = new char*[2];
     props[0]="java.compiler=NONE";
     props[1]=0;
@@ -183,9 +195,11 @@ void PlugletEngine::StartJVM(void) {
     /* Create the Java VM */	
     res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
     if(res < 0 ) {
-        printf("--JNI_CreateJavaVM failed \n");
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletEngine::StartJVM JNI_CreateJavaVM failed \n"));
     } else {
-        printf("--PlugletEngine::StartJVM() jvm was started \n");
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletEngine::StartJVM jvm was started \n"));
     }
 }
 #endif /* OJI_DISABLE */
@@ -210,16 +224,18 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
    SetSecurityContext(res,securityContext);
 #else  /* OJI_DISABLE */
     if (!jvm) {
-           printf(":) starting jvm\n");
-	   StartJVM();
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletEngine::GetJNIEnv going to start our own jvm \n"));
+	StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
-   printf("--PluglgetEngine::GetJNIEnv after jvm->Attach \n");
 #endif /* OJI_DISABLE */
    return res;
 }
 
 jobject PlugletEngine::GetPlugletManager(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletEngine::GetPlugletManager\n"));
     if (!pluginManager) {
         nsresult  res;
         NS_WITH_SERVICE(nsIPluginManager,_pluginManager,kPluginManagerCID,&res);

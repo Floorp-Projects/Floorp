@@ -21,6 +21,8 @@
 #include "string.h"
 #include "PlugletEngine.h"
 #include "PlugletLoader.h"
+#include "PlugletLog.h"
+
 jclass PlugletLoader::clazz = NULL;
 jmethodID PlugletLoader::getMIMEDescriptionMID = NULL;
 jmethodID PlugletLoader::getPlugletMID = NULL;
@@ -43,6 +45,8 @@ static char *ToString(jobject obj,JNIEnv *env) {
 }
 
 void PlugletLoader::Initialize(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletLoader::Initialize\n"));
     //nb erors handling
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     clazz = env->FindClass("org/mozilla/pluglet/PlugletLoader");
@@ -68,11 +72,15 @@ void PlugletLoader::Initialize(void) {
 }
 
 void PlugletLoader::Destroy(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletLoader::destroy\n"));
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->DeleteGlobalRef(clazz);
 }
 
 char * PlugletLoader::GetMIMEDescription(const char * path) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletLoader::GetMIMEDescription\n"));
     if (!clazz) {
 	Initialize();
 	if (!clazz) {
@@ -103,6 +111,8 @@ char * PlugletLoader::GetMIMEDescription(const char * path) {
 }
 
 jobject PlugletLoader::GetPluglet(const char * path) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletLoader::GetPluglet\n"));
     if (!clazz) {
 	Initialize();
 	if (!clazz) {

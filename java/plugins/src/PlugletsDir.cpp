@@ -20,6 +20,7 @@
  */
 #include"PlugletsDir.h"
 #include "prenv.h"
+#include "PlugletLog.h"
 
 PlugletsDir::PlugletsDir(void) {
     list = NULL;
@@ -35,6 +36,8 @@ PlugletsDir::~PlugletsDir(void) {
 }
 
 void PlugletsDir::LoadPluglets() {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletsDir::LoadPluglets\n"));
     if (!list) {
 	list = new List();
 	char * path = PR_GetEnv("PLUGLET");

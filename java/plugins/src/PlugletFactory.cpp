@@ -23,6 +23,7 @@
 #include "PlugletLoader.h"
 #include "Pluglet.h"
 #include "string.h"
+#include "PlugletLog.h"
 
 jmethodID PlugletFactory::createPlugletMID = NULL;
 jmethodID PlugletFactory::initializeMID = NULL;  
@@ -30,6 +31,8 @@ jmethodID PlugletFactory::shutdownMID = NULL;
 
 
 nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void **aResult) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletFactory::CreatePluginInstance\n"));
     if(!aResult
        || Initialize() != NS_OK) {
 	return NS_ERROR_FAILURE;
@@ -51,6 +54,8 @@ nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void 
 }
 
 nsresult PlugletFactory::Initialize(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletFactory::Initialize\n"));
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!env) {
         return NS_ERROR_FAILURE;
@@ -93,6 +98,8 @@ nsresult PlugletFactory::Initialize(void) {
 }
 
 nsresult PlugletFactory::Shutdown(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletFactory::Shutdown\n"));
     
     if(!jthis) {
 	return NS_ERROR_FAILURE;
@@ -110,6 +117,8 @@ nsresult PlugletFactory::Shutdown(void) {
 }
 
 nsresult PlugletFactory::GetMIMEDescription(const char* *result) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletFactory::GetMimeDescription\n"));
     if(!result) {
 	return NS_ERROR_FAILURE;
     }
@@ -140,6 +149,8 @@ PlugletFactory::~PlugletFactory(void) {
 }
 
 PlugletFactory * PlugletFactory::Load(const char * path) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletFactory::Load\n"));
     char * mime = PlugletLoader::GetMIMEDescription(path);
     PlugletFactory * result = NULL;
     if (mime) {

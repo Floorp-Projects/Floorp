@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include "nsIOutputStream.h"
 #include "org_mozilla_pluglet_mozilla_PlugletOutputStream.h"
+#include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -36,6 +37,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_flus
      if(!output) {
 	 return;
      }
+     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletOutputStream.flush: stream = %p\n", output));
      output->Flush();
 }
 
@@ -55,9 +58,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_nati
     if(!output) {
 	return;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletOutputStream.nativeWrite: stream = %p, off = %i, len = %i\n", output, off, len));
     env->GetByteArrayRegion(b,off,len,buf);
     PRUint32 tmp;
     output->Write(buf,len,&tmp);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletOutputStream.nativeWrite: %i bytes written\n", tmp));
     free(buf);
 }
 
@@ -71,6 +78,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_nati
     /* nb do as in java-dom  stuff */
     nsIOutputStream * output = (nsIOutputStream*)env->GetLongField(jthis, peerFID);
     if(output) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletOutputStream.nativeFinalize: stream = %p\n", output));
 	NS_RELEASE(output);    
     }
 }
@@ -90,6 +99,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_nati
     }
     nsIOutputStream * output = (nsIOutputStream*)env->GetLongField(jthis, peerFID);
     if (output) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletOutputStream.nativeInitialize: stream = %p\n", output));
 	output->AddRef();
     }
 }
@@ -103,6 +114,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_clos
     (JNIEnv *env, jobject jthis) {
     nsIOutputStream * output = (nsIOutputStream*)env->GetLongField(jthis, peerFID);
     if (output) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletOutputStream.close: stream = %p\n", output));
 	NS_RELEASE(output);
 	env->SetLongField(jthis, peerFID,0);
     }

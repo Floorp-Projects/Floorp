@@ -20,6 +20,7 @@
  */
 #include "nsIPluginTagInfo2.h"
 #include "org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl.h"
+#include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -29,6 +30,8 @@ static jfieldID peerFID = NULL;
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributes
     (JNIEnv *, jobject) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getAttributes: stub\n"));
     //nb Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributes
     return NULL;
 }
@@ -40,6 +43,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttribute
     (JNIEnv *env, jobject jthis, jstring _name) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getAttribute: name = %s\n", _name));
     if (!_name) {
 	return NULL;
     }
@@ -54,6 +59,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
 	return NULL;
     }
     env->ReleaseStringUTFChars(_name,name);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getAttribute: value = %s\n", result));
     return env->NewStringUTF(result);
 }
 
@@ -84,6 +91,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
 	 res = "UNKNOWN";
 	 break;
      }
+     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getTagType: tag is %s\n", res));
      return env->NewStringUTF(res);
 }
 
@@ -99,6 +108,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     if(NS_FAILED(info->GetTagText(&text))) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getTagText: text = %s\n", text));
     return env->NewStringUTF(text);
 }
 
@@ -114,6 +125,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     if(NS_FAILED(info->GetDocumentBase(&base))) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getDocumentBase: base = %s\n", base));
     return env->NewStringUTF(base);
 }
 
@@ -129,6 +142,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     if(NS_FAILED(info->GetDocumentEncoding(&encoding))) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getDocumentEncoding: encoding = %s\n", encoding));
     return env->NewStringUTF(encoding);
 }
 
@@ -145,6 +160,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     if(NS_FAILED(info->GetAlignment(&aligment))) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getAlignment: align = %s\n", aligment));
     return env->NewStringUTF(aligment);
 }
 
@@ -160,6 +177,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getW
     if(NS_FAILED(info->GetWidth(&res))) {
 	return 0;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getWidth: width = %i\n", res));
     return res;
 }
 
@@ -175,6 +194,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getH
     if(NS_FAILED(info->GetHeight(&res))) {
 	return 0;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getHeight: width = %i\n", res));
     return res;
 }
 
@@ -190,6 +211,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getB
     if(NS_FAILED(info->GetBorderVertSpace(&res))) {
 	return 0;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getBorderVertSpace: res = %i\n", res));
     return res;
 }
 
@@ -205,6 +228,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getB
     if(NS_FAILED(info->GetBorderHorizSpace(&res))) {
 	return 0;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getBorderHorizSpace: res = %i\n", res));
     return res;
 }
 
@@ -220,6 +245,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getU
     if(NS_FAILED(info->GetUniqueID(&res))) {
 	return 0;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getUniqueID: id = %i\n", res));
     return res;
 }
 
@@ -233,6 +260,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_nati
     /* nb do as in java-dom  stuff */
     nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
     if(info) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletTagInfo2Impl.nativeFinalize: info = %p\n", info));
 	NS_RELEASE(info);    
     }
 }
@@ -252,6 +281,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_nati
     }
     nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
     if (info) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletTagInfo2Impl.nativeInitialize: info = %p\n", info));
 	info->AddRef();
     }
 }

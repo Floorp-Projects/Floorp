@@ -19,6 +19,7 @@
 #include "PlugletOutputStream.h"
 #include "PlugletTagInfo2.h"
 #include "org_mozilla_pluglet_mozilla_PlugletPeerImpl.h"
+#include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -32,10 +33,14 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMI
     if (!instancePeer) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.getMIMEType: instancePeer = %p\n", instancePeer));
     nsMIMEType mime;
     if(NS_FAILED(instancePeer->GetMIMEType(&mime))) {
 	return NULL;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.getMIMEType: mime type is = %s\n", (char *)mime));
     return env->NewStringUTF((char *)mime);
 }
 
@@ -46,6 +51,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMI
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMode
     (JNIEnv *, jobject) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.getMode: always return 1\n"));
     return 1; //nb
 }
 
@@ -56,6 +63,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMode
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getValue
     (JNIEnv *, jobject, jint) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.getValue: stub\n"));
     return NULL; //nb
 }
 
@@ -66,6 +75,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getVa
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_newStream
     (JNIEnv *env, jobject jthis, jstring _type, jstring _target) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.newStream: mime type is %s, target is %s\n", _type, _target));
     nsMIMEType mimeType = NULL;
     if ( _type == NULL
          || _target == NULL) {
@@ -102,12 +113,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_newSt
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_showStatus
-    (JNIEnv *env, jobject jthis, jstring _msg) {
+(JNIEnv *env, jobject jthis, jstring _msg) {
+    if(1) { //work around for bug 24194
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletPeerImpl.showStatus:  nsIPluginInstancePeer.ShowStatus crashes browser \n"
+		"So we skeep calling this method. See bug 24194.\n"
+		"msg=%s\n", _msg));
+	return;
+	
+    }
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer
         || !_msg) {
 	return;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.showStatus: massage is %s\n", _msg));
     const char *msg = NULL;
     if(!(msg = env->GetStringUTFChars(_msg,NULL))) {
 	return;
@@ -123,6 +144,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_showStat
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_setWindowSize
     (JNIEnv *env, jobject jthis, jint width, jint height) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.setWindowSize: width = %i, height = %i\n", width, height));
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer) {
 	return;
@@ -142,6 +165,11 @@ static NS_DEFINE_IID(kIPluginTagInfo2,NS_IPLUGINTAGINFO2_IID);
 JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getTagInfo
     (JNIEnv *env, jobject jthis) {
      nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
+     if (!instancePeer) {
+	 return NULL;
+     }
+     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletPeerImpl.getTagInfo: instancePeer = %p\n", instancePeer));
      nsIPluginTagInfo2 * info = NULL;
      if(NS_FAILED(instancePeer->QueryInterface(kIPluginTagInfo2,(void**)&info))) {
 	 return NULL;
@@ -158,6 +186,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_nativeFi
     (JNIEnv *env, jobject jthis) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (instancePeer) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletPeerImpl.nativeFinalize: instancePeer = %p\n", instancePeer));
 	/*nb do as in java-dom  stuff */
 	NS_RELEASE(instancePeer);
     }
@@ -178,6 +208,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_nativeIn
     }
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (instancePeer) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletPeerImpl.nativeInitialize: instancePeer = %p\n", instancePeer));
 	instancePeer->AddRef();
     }
 }

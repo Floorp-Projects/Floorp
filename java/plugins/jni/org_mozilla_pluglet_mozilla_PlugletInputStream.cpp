@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include "nsIInputStream.h"
 #include "org_mozilla_pluglet_mozilla_PlugletInputStream.h"
+#include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -31,9 +32,11 @@ static jfieldID peerFID = NULL;
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_available
     (JNIEnv *env, jobject jthis) {
-    nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);;
+    nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     PRUint32 res = 0;
     if(input) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletInputStream.available: stream = %p\n", input));
 	input->Available(&res);
     }
     return (jint)res;
@@ -48,6 +51,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_close
     (JNIEnv *env, jobject jthis) {
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     if (input) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletInputStream.close: stream = %p\n", input));
 	NS_RELEASE(input);
 	env->SetLongField(jthis, peerFID,0);
     }
@@ -64,6 +69,11 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
     (JNIEnv *env, jobject jthis, jbyteArray b, jint off, jint len) {
     PRUint32 retval = 0;
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
+    if (input) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletInputStream.nativeRead: stream = %p, off = %i, len = %i\n", input, off, len));
+    }
+
     if (env->ExceptionOccurred()) {
 	return retval;
     }
@@ -86,6 +96,9 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
 	free(bufElems);
 	return retval;
     }
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletInputStream.nativeRead: %i bytes read\n", retval));
+
     env->SetByteArrayRegion(b,off,len,bufElems);
     free(bufElems);
     return retval;
@@ -101,6 +114,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
     /* nb do as in java-dom  stuff */
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     if(input) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletInputStream.nativeFinalize: stream = %p\n", input));
 	NS_RELEASE(input);    
     }
 }
@@ -119,7 +134,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
 	}
     }
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
+
     if (input) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletInputStream.nativeInitialize: stream = %p\n", input));
 	input->AddRef();
     }
 }

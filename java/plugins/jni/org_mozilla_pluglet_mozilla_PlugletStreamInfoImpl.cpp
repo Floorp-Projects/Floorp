@@ -21,6 +21,7 @@
 #include "nsIPluginStreamInfo.h"
 #include "org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.h"
 #include "ByteRanges.h"
+#include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -39,6 +40,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl
 		 || !mimeType) {
 	return NULL;
     } else {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletStreamInfoImpl.getContentType: mime type is %s\n", (char *)mimeType));
 	return env->NewStringUTF((char *)mimeType);
     }
 }
@@ -56,6 +59,8 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImp
     }
     PRBool res;
     streamInfo->IsSeekable(&res);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletStreamInfoImpl.isSeakable: res = %i\n", res));
     if (res == PR_TRUE) {
         return JNI_TRUE;
     } else {
@@ -77,6 +82,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_ge
     }
     PRUint32 length;
     nsresult rv = streamInfo->GetLength(&length);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletStreamInfoImpl.getLength: length = %i\n", length));
     if (NS_FAILED(rv)) {
         return -1;
     }
@@ -96,6 +103,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_ge
     }
     PRUint32 res = 0;
     streamInfo->GetLastModified(&res);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletStreamInfoImpl.getLastModified: res = %i\n", res));
     return res;
     
 }
@@ -113,6 +122,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl
     }
     const char *res = NULL;
     streamInfo->GetURL(&res); /* do we need to free this memory */
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletStreamInfoImpl.getURL: url = %s\n", res));
     return (res)? env->NewStringUTF(res) : NULL;
 }
 
@@ -128,6 +139,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_re
 	return;
     }
     nsByteRange* range = ByteRanges::GetByteRanges(env,object);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletStreamInfoImpl.requestRead\n"));
     streamInfo->RequestRead(range);
     ByteRanges::FreeByteRanges(range);
 }
@@ -142,6 +155,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_na
     /* nb do as in java-dom  stuff */
     nsIPluginStreamInfo * streamInfo = (nsIPluginStreamInfo*)env->GetLongField(jthis, peerFID);
     if (streamInfo) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletStreamInfoImpl.nativeFinalize: streamInfo = %p\n", streamInfo));
 	NS_RELEASE(streamInfo);
     }
 }
@@ -161,6 +176,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_na
     }
     nsIPluginStreamInfo * streamInfo = (nsIPluginStreamInfo*)env->GetLongField(jthis, peerFID);;
     if (streamInfo) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		("PlugletStreamInfoImpl.nativeInitialize: streamInfo = %p\n", streamInfo));
 	streamInfo->AddRef();
     }
 }

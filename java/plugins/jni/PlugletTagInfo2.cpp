@@ -20,12 +20,14 @@
  */
 
 #include "PlugletTagInfo2.h"
-
+#include "PlugletLog.h"
 
 jclass    PlugletTagInfo2::clazz = NULL;
 jmethodID PlugletTagInfo2::initMID = NULL;
 
 void PlugletTagInfo2::Initialize(JNIEnv *env) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2.Initialize\n"));
     clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletTagInfo2Impl");
     if (!clazz) {
 	env->ExceptionDescribe();
@@ -41,6 +43,8 @@ void PlugletTagInfo2::Initialize(JNIEnv *env) {
 }
 
 void PlugletTagInfo2::Destroy(JNIEnv *env) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2.Destroy\n"));
     //nb  who gonna cal it?
     if(clazz) {
 	env->DeleteGlobalRef(clazz);

@@ -24,7 +24,7 @@
 #include "PlugletPeer.h"
 #include "Registry.h"
 #include "PlugletViewFactory.h"
-
+#include "PlugletLog.h"
 
 jmethodID Pluglet::initializeMID = NULL;
 jmethodID Pluglet::startMID = NULL;
@@ -54,11 +54,15 @@ Pluglet::~Pluglet() {
 }
 
 NS_METHOD Pluglet::HandleEvent(nsPluginEvent* event, PRBool* handled) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::HandleEvent; stub\n"));
     //nb we do not need it under win32
     return NS_OK;
 }
 
 NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::Initialize\n"));
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if (!printMID) {
 	jclass clazz = env->FindClass("org/mozilla/pluglet/Pluglet");
@@ -113,14 +117,16 @@ NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
 }
 
 NS_METHOD Pluglet::GetPeer(nsIPluginInstancePeer* *result) {
-    printf("--Pluglet::GetPeer\n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::GetPeer\n"));
     peer->AddRef();
     *result = peer;
     return NS_OK;
 }
 
 NS_METHOD Pluglet::Start(void) {
-    printf("--Pluglet::Start\n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::Start\n"));
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->CallVoidMethod(jthis,startMID);
     if (env->ExceptionOccurred()) {
@@ -130,7 +136,8 @@ NS_METHOD Pluglet::Start(void) {
     return NS_OK;
 }
 NS_METHOD Pluglet::Stop(void) {
-    printf("--Pluglet::Stop\n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::Stop\n"));
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->CallVoidMethod(jthis,stopMID);
     if (env->ExceptionOccurred()) {
@@ -140,6 +147,8 @@ NS_METHOD Pluglet::Stop(void) {
     return NS_OK;
 }
 NS_METHOD Pluglet::Destroy(void) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::Destroy\n"));
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->CallVoidMethod(jthis,destroyMID);
     if (env->ExceptionOccurred()) {
@@ -150,7 +159,8 @@ NS_METHOD Pluglet::Destroy(void) {
 }
 
 NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
-    printf("--Pluglet::NewStream \n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::NewStream\n"));
     if(!listener) {
 	return NS_ERROR_FAILURE;
     }
@@ -168,12 +178,14 @@ NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
 }
 
 NS_METHOD Pluglet::GetValue(nsPluginInstanceVariable variable, void *value) {
-    printf("--Pluglet::GetValue\n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::GetValue; stub\n"));
     return NS_ERROR_FAILURE;
 }
 
 NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
-    printf("--Pluglet::SetWindow  \n");
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::SetWindow\n"));
     if (view->SetWindow(window) == PR_TRUE) {
 	JNIEnv *env = PlugletEngine::GetJNIEnv();
 	env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
@@ -186,6 +198,8 @@ NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
 }
 
 NS_METHOD Pluglet::Print(nsPluginPrint* platformPrint) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("Pluglet::Print; stub\n"));
     //nb
     return NS_OK;
 }

@@ -20,12 +20,14 @@
  */
 
 #include "PlugletOutputStream.h"
-
+#include "PlugletLog.h"
 
 jclass    PlugletOutputStream::clazz = NULL;
 jmethodID PlugletOutputStream::initMID = NULL;
 
 void PlugletOutputStream::Initialize(JNIEnv *env) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletOutputStream.Initialize\n"));
     clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletOutputStream");
     if (!clazz) {
 	env->ExceptionDescribe();
@@ -41,6 +43,8 @@ void PlugletOutputStream::Initialize(JNIEnv *env) {
 }
 
 void PlugletOutputStream::Destroy(JNIEnv *env) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletOutputStream.Destroy\n"));
     //nb  who gonna cal it?
     if(clazz) {
 	env->DeleteGlobalRef(clazz);
