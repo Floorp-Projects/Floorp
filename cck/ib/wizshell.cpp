@@ -6,6 +6,8 @@
 #include <direct.h>
 #include "comp.h"
 #include "ib.h"
+#include <stdlib.h>
+#define LATIN1_CODEPAGE 1252
 
 extern CString rootPath;//	= GetGlobal("Root");
 extern CString configName;//	= GetGlobal("CustomizationList");
@@ -60,11 +62,11 @@ void CreateRshell (void)
 
 		rshell <<jsprefname<<"\n";
 	}
-	rshell <<"caption="<<captionValue<<"\n";
+	rshell <<"caption="<<ConvertUTF8toANSI(captionValue)<<"\n";
 //	rshell <<"bk_bitmap="<<fvalue2<<"\n";
 //	rshell <<"button2_cmdline=exe,"<<fvalue4<<"\n";
 
-	rshell <<"dialog_title_text="<<fvalue3<<"\n";
+	rshell <<"dialog_title_text="<<ConvertUTF8toANSI(fvalue3)<<"\n";
 	if(!part2) {
 		cout << "cannot open the file \n";
 		}
@@ -74,6 +76,23 @@ void CreateRshell (void)
 		rshell <<jsprefname<<"\n";
 	}
 	rshell.close();
+
+	if (GetACP() != LATIN1_CODEPAGE)
+	{
+		// For non-western languages, change the western font specifications 
+		// to blank in order to use the sytem font appropriate to the user's 
+		// Windows regional setting
+		WritePrivateProfileString("Dialog1", "dialog_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog1", "button_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog1", "body_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog2", "dialog_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog2", "button_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog2", "body_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog3", "dialog_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog3", "button_title_text_font", "", Rsh);
+		WritePrivateProfileString("Dialog3", "body_text_font", "", Rsh);
+	}
+
 	CString bmpdest = cdshellPath + "\\bmps\\Install.bmp";
 	CString txtdest = configPath + "\\Output\\install.txt";
 	CopyFile(fvalue2,bmpdest,FALSE);

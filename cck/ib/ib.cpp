@@ -1182,7 +1182,9 @@ int interpret(char *cmd)
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
-		WritePrivateProfileString(section, key, newvalue, iniDstPath);
+		CString encodedValue = newvalue;
+		WritePrivateProfileString(section, key, ConvertUTF8toANSI(encodedValue), 
+			iniDstPath);
 	}
 	else if (strcmp(cmdname, "replaceXPI") == 0)
 	{
@@ -1458,7 +1460,7 @@ void init_components()
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
 	{
-		if ((strstr(w->value, Components[i].name) == NULL))
+		if ((strstr(ConvertUTF8toANSI(w->value), Components[i].name) == NULL))
 		{
 			if (!(Components[i].selected && Components[i].invisible))
 			Components[i].selected = FALSE;
@@ -1593,8 +1595,8 @@ void AddThirdParty()
 {
 	CString tpCompPath1 = GetGlobal("CustomComponentPath1");
 	CString tpCompPath2 = GetGlobal("CustomComponentPath2");
-	CString tpComp1		= GetGlobal("CustomComponentDesc1");
-	CString tpComp2		= GetGlobal("CustomComponentDesc2");
+	CString tpComp1		= ConvertUTF8toANSI(GetGlobal("CustomComponentDesc1"));
+	CString tpComp2		= ConvertUTF8toANSI(GetGlobal("CustomComponentDesc2"));
 	CString tpCompSize1	= GetGlobal("CustomComponentSize1");
 	CString tpCompSize2	= GetGlobal("CustomComponentSize2");
 	CString componentName;
@@ -2343,9 +2345,10 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	CString MozBrowser = GetBrowser();
 //	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 
+	SetCurrentDirectory(configPath);
 	EraseDirectory(tempPath);
-	_chdir(configPath);
-	_rmdir("Temp");
+	RemoveDirectory(tempPath);
+
 	return TRUE;
 
 }
