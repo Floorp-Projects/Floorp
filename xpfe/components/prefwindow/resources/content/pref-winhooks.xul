@@ -40,18 +40,17 @@
 		orient="vertical"
 		>
 
-<html:script language="JavaScript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
+<script language="JavaScript" src="chrome://communicator/content/pref/pref-winhooks.js"></script>
     
     <box class="box-smallheader" title="&title.label;"/>
 
-    <box orient="vertical">
         <!-- File types -->
-        <titledbox>
+        <titledbox flex="1">
             <title>
                 <text value="&files.label;"/>
             </title>
-            <box orient="vertical">
-                <html>
+            <box orient="vertical" autostretch="never" flex="1">
+                <html flex="1">
                     &files.text;
                 </html>
                 <checkbox id="isHandlingHTML" value="&html.label;"/>
@@ -63,12 +62,12 @@
             </box>
         </titledbox>
         <!-- Internet Shortcuts -->
-        <titledbox>
+        <titledbox flex="1">
             <title>
                 <text value="&shortcuts.label;"/>
             </title>
-            <box orient="vertical">
-                <html>
+            <box orient="vertical" autostretch="never" flex="1">
+                <html flex="1">
                     &shortcuts.text;
                 </html>
                 <checkbox id="isHandlingHTTP"   value="&http.label;"/>
@@ -77,7 +76,6 @@
                 <checkbox id="isHandlingCHROME" value="&chrome.label;"/>
             </box>
         </titledbox>
-    </box>
 
 </window>
 

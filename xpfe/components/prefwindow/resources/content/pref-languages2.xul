@@ -19,7 +19,6 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages2.dtd" >
@@ -29,8 +28,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="color-dialog"
   title="&languages.customize.window.title;" 
-  onload="Init();">
-  orient="vertical">
+  onload="Init();" orient="vertical">
 
   <script language="javascript" src="chrome://communicator/content/pref/pref-languages.js"></script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
@@ -45,99 +43,36 @@
                 preftype="string" 
                 prefstring="intl.accept_languages"/>
 
-  <!-- vert 0 -->
-  <box align="vertical" flex="100%">
-
+                
     <box class="box-smallheader" title="&languages.customize.lHeader;"/>
     <!--
       description="&languages.customize.rHeader;    
     -->
 
-      <!-- The main pane -->
-      <!-- horz 1 -->
-      <box align="horizontal" flex="100%">
+  <titledbox orient="vertical" flex="1">
+    <title><text value="&langtitle.label;"/></title>
 
-        <!-- Spacing between the left window border and list box -->
-        <spring style="width:2em"/>
-    
-        <!-- vert 1 -->
-	      <box align="vertical" flex="1">
+    <html>&languages.customize.prefLangDescript;</html>
 
-          <spring style="height:4px"/>
-
-          <box align="horizontal" flex="0">
-            <html class="label" style="width: 370px;">
-              &languages.customize.prefLangDescript;
-            </html>
-          </box>
-
-          <separator/>
-      
-          <html>
-    		    &languages.customize.active.label;
-          </html>
-
-          <!-- horz 2 -->
-          <box align="horizontal" class="box-group" flex="1">
-
-            <!-- Languages list box -->
-            <!-- Active Charsets Tree -->
-            <tree id="active_languages" flex="1"
-              datasources="rdf:null"
-              indent="false"
-              multiple="true"
-              style="height:0px">
-              <!-- We explicitly create a 'treechildren' so we can refer
-                  to it from the script -->
-              <treechildren id="active_languages_root">
-              </treechildren>
-            </tree>
-
-            <!-- Spacing between the right selector and "Reorder" -->
-            <spring style="width:4px"/>
-
-            <!-- The Reorder Buttons -->
-            <!-- vert 2 -->
-            <box align="vertical">
-                <spring flex="50%"/>
-                <box autostretch="never">
-                  <button onclick="MoveUp();" id="up" class="up small" />
-                </box>
-
-                <!-- 
-                  <html>
-                    &languages.customize.reorder.label;
-                  </html>
-                -->
-
-                <box autostretch="never">
-                  <button onclick="MoveDown();" id="down" class="down small" />
-                </box>
-
-                <spring flex="50%"/>
-            </box>
-            <!-- vert 2 -->
-
-            <!-- The Add/Remove Buttons -->
-            <!-- vert 3 -->
-            <box align="vertical">
-              <button class="dialog push" value="&languages.customize.addButton.label;" onclick="AddLanguage();"/>
-              <button class="dialog push" value="&languages.customize.deleteButton.label;" onclick="RemoveActiveLanguage();"/>
-            </box>
-            <!-- vert 3 -->
-
-        </box>
-	      <!-- horiz 2 -->
-
-        <spring style="height:8px"/>
-
-      </box> 
-	    <!-- vert 1 -->
-  
-     </box>
-     <!-- horiz 1 -->	
-
-   </box>
-   <!-- vert 0 -->	
-
+    <box flex="1">
+      <box orient="vertical" flex="1">
+        <html>&languages.customize.active.label;</html>
+        <tree class="inset" id="active_languages" flex="1"
+              datasources="rdf:null" multiple="true">
+              <treechildren id="active_languages_root"/>
+        </tree>
+      </box>
+      <box orient="vertical" autostretch="never">
+        <spring flex="1"/>
+        <button oncommand="MoveUp();" id="up" class="up small" />
+        <button oncommand="MoveDown();" id="down" class="down small" />
+        <spring flex="1"/>
+      </box>
+      <box orient="vertical">
+        <button class="dialog" value="&languages.customize.addButton.label;" oncommand="AddLanguage();"/>
+        <button class="dialog" value="&languages.customize.deleteButton.label;" oncommand="RemoveActiveLanguage();"/>
+      </box>
+    </box>
+	</titledbox>
+   
 </window>

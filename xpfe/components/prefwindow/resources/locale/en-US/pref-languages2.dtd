@@ -7,6 +7,7 @@
 <!ENTITY languages.customize.window.title               "Languages">
 <!ENTITY languages.customize.lHeader                    "Languages">
 <!ENTITY languages.customize.rHeader                    "Languages in which webpages are displayed">
+<!ENTITY langtitle.label                                "Languages for web pages">
 <!ENTITY languages.customize.prefAddLangDescript        "Select the language(s) you would like to add.">
 <!ENTITY languages.customize.engOrder.label             "1">
 <!ENTITY languages.customize.engOption.label            "English">
