@@ -1523,6 +1523,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTableFrame", aReflowState.reason);
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
 
   // Initialize out parameter

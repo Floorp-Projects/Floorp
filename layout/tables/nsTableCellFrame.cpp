@@ -629,6 +629,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame", aReflowState.reason);
   if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
 
   nsresult rv = NS_OK;
