@@ -21,7 +21,7 @@
    - Contributor(s):
    -->
 
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/walletPrefsOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://wallet/locale/walletPrefsOverlay.dtd" >
 
 <overlay id="walletPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

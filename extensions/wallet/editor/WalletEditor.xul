@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletEditor.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/wallet/WalletEditor.dtd" >
 
 <dialog id="walleteditor"
         title="&windowtitle.label;"

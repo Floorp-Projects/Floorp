@@ -24,7 +24,7 @@
 
 <?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd">
 
 <overlay id="prefTreeOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

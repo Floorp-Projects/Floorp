@@ -22,7 +22,7 @@
    Contributor(s): 
   -->
 
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/walletTasksOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://wallet/locale/walletTasksOverlay.dtd">
 
 <overlay id="walletTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

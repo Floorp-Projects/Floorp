@@ -23,7 +23,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % walletviewerDTD SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
