@@ -997,13 +997,15 @@ void nsImapProtocol::ProcessCurrentURL()
 	// this connection is busy running a url.
 	m_runningUrl = null_nsCOMPtr();
 
+    // release the url as we are done with it...
+	ReleaseUrlState();
 	// now try queued urls, now that we've released this connection.
 	if (m_imapServerSink && GetConnectionStatus() >= 0)
 	{
 		rv = m_imapServerSink->LoadNextQueuedUrl();
+        SetFlag(IMAP_FIRST_PASS_IN_THREAD);
 	}
-	// release the url as we are done with it...
-	ReleaseUrlState();
+
 	if (GetConnectionStatus() < 0)
 	{
 		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
