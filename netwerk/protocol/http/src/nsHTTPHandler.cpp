@@ -118,7 +118,8 @@ nsHTTPHandler::nsHTTPHandler():mProxy(nsnull)
         nsXPIDLCString proxyServer;
         PRInt32 proxyPort = -1;
         rv = prefs->CopyCharPref("network.proxy.http", getter_Copies(proxyServer));
-        if (NS_FAILED(rv)) NS_ERROR("Failed to get the HTTP proxy server");
+        if (NS_FAILED(rv)) 
+            return; //NS_ERROR("Failed to get the HTTP proxy server");
         rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
 #ifdef DEBUG_gagan
         printf("Read HTTP proxy = %s:%d\n", (const char*)proxyServer,proxyPort);
