@@ -1630,24 +1630,19 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 		return NS_MSG_FOLDER_BUSY;
 
 	rv = GetPath(getter_AddRefs(pathSpec));
-	if (NS_FAILED(rv)) goto done;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) goto done;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	mCopyState = new nsLocalMailCopyState();
 	if(!mCopyState)
-  {
-    rv =  NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mCopyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
   if (!mCopyState->m_dataBuffer)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+    return NS_ERROR_OUT_OF_MEMORY;
+
   mCopyState->m_dataBufferSize = COPY_BUFFER_SIZE;
 
 	//Before we continue we should verify that there is enough diskspace.
@@ -1655,16 +1650,14 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 	mCopyState->m_fileStream = new nsOutputFileStream(path, PR_WRONLY |
                                                   PR_CREATE_FILE);
 	if(!mCopyState->m_fileStream)
-	{
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+     return NS_ERROR_OUT_OF_MEMORY;
+
 	//The new key is the end of the file
 	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
   mCopyState->m_srcSupport = do_QueryInterface(aSupport, &rv);
-  if (NS_FAILED(rv)) goto done;
+  NS_ENSURE_SUCCESS(rv, rv);
   mCopyState->m_messages = do_QueryInterface(messages, &rv);
-  if (NS_FAILED(rv)) goto done;
+  NS_ENSURE_SUCCESS(rv, rv);
   mCopyState->m_curCopyIndex = 0;
   mCopyState->m_isMove = isMove;
   mCopyState->m_isFolder = isFolder;
@@ -1674,26 +1667,15 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   if (listener)
     mCopyState->m_listener = do_QueryInterface(listener, &rv);
   mCopyState->m_copyingMultipleMessages = PR_FALSE;
-
-done:
-
-  if (NS_FAILED(rv))
-    OnCopyCompleted(PR_FALSE);
-
   return rv;
 }
 
-void
-nsMsgLocalMailFolder::OnCopyCompleted(PRBool moveCopySucceeded)
+nsresult
+nsMsgLocalMailFolder::OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded)
 {
-  nsCOMPtr<nsISupports> srcSupport;
-  if (mCopyState)
-  {
-    srcSupport = mCopyState->m_srcSupport;
-    delete mCopyState;
-    mCopyState = nsnull;
-  }
-   
+  delete mCopyState;
+  mCopyState = nsnull;
+    
   // we are the destination folder for a move/copy
   if (moveCopySucceeded && mDatabase)
   {
@@ -1723,6 +1705,7 @@ nsMsgLocalMailFolder::OnCopyCompleted(PRBool moveCopySucceeded)
 
   if (NS_SUCCEEDED(result))  //copyService will do listener->OnStopCopy()
     copyService->NotifyCompletion(srcSupport, this, moveCopySucceeded ? NS_OK : NS_ERROR_FAILURE); 
+  return NS_OK;
 }
 
 nsresult 
@@ -1757,9 +1740,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    nsIMsgCopyServiceListener* listener, 
                                    PRBool isFolder, PRBool allowUndo)
 {
-  if (!srcFolder || !messages)
-    return NS_ERROR_NULL_POINTER;
-  
+  nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(srcFolder);
   PRBool isServer;
   nsresult rv = GetIsServer(&isServer);
   if (NS_SUCCEEDED(rv) && isServer)
@@ -1767,7 +1748,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     NS_ASSERTION(0, "Destination is the root folder. Cannot move/copy here");
     if (isMove)
       srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
-    return NS_OK;
+    return OnCopyCompleted(srcSupport, PR_FALSE);
   }
   
   nsXPIDLCString uri;
@@ -1794,19 +1775,19 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
           if (isMove)
             srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
           ThrowAlertMsg("cantMoveMsgWOBodyOffline", msgWindow);
-          return NS_OK; // I think we want to return ok here
+          return OnCopyCompleted(srcSupport, PR_FALSE);
         }
       }
     }
   }
-  nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
-  if (NS_FAILED(rv)) return rv;
   
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_FALSE /*dbBatching*/);  //dest folder doesn't need db batching
   
   rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder, allowUndo);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return OnCopyCompleted(srcSupport, PR_FALSE);
+
   if (!protocolType.EqualsIgnoreCase("mailbox"))
   {
     mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
@@ -1837,7 +1818,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     
     if (NS_FAILED(rv))
     {
-      OnCopyCompleted(PR_FALSE);
+      (void) OnCopyCompleted(srcSupport, PR_FALSE);
     }
     else
     {
@@ -1872,7 +1853,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
       if (NS_FAILED(rv))
       {
         NS_ASSERTION(PR_FALSE, "copy message failed");
-        OnCopyCompleted(PR_FALSE);
+        (void) OnCopyCompleted(srcSupport, PR_FALSE);
       }
     }
   }
@@ -2125,13 +2106,10 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
                                       nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
-  if (!fileSpec) return rv;
-
   nsCOMPtr<nsIInputStream> inputStream;
   nsParseMailMessageState* parseMsgState = nsnull;
   PRUint32 fileSize = 0;
   nsCOMPtr<nsISupports> fileSupport(do_QueryInterface(fileSpec, &rv));
-  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsISupportsArray> messages;
   rv = NS_NewISupportsArray(getter_AddRefs(messages));
@@ -2184,7 +2162,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
 done:
   if(NS_FAILED(rv))
   {
-    OnCopyCompleted(PR_FALSE);
+    (void) OnCopyCompleted(fileSupport, PR_FALSE);
   }
 
   fileSpec->CloseStream();
@@ -2492,7 +2470,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
       are in sync*/
 
-      OnCopyCompleted(PR_TRUE);
+      (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);
 
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
@@ -2629,7 +2607,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (srcFolder && !mCopyState->m_isFolder)
           srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
         
-        OnCopyCompleted(PR_TRUE);
+        (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);
       }      
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
@@ -2654,7 +2632,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
     hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
     are in sync*/
 
-    OnCopyCompleted(PR_TRUE);
+    (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);
 
     // enable the dest folder
     EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/ );  //dest folder doesn't need db batching
@@ -2684,9 +2662,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
       if (txnMgr)
         txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
     }
-    
-    nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-    OnCopyCompleted(PR_TRUE);  //clear the copy state so that the next message from a different folder can be move
+    (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);  //clear the copy state so that the next message from a different folder can be move
   }
   
   return NS_OK;

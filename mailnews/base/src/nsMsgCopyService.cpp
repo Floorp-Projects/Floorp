@@ -181,11 +181,35 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
 }
 
 nsresult 
+nsMsgCopyService::QueueRequest(nsCopyRequest* aRequest, PRBool *aCopyImmediately)
+{
+  NS_ENSURE_ARG_POINTER(aRequest);
+  NS_ENSURE_ARG_POINTER(aCopyImmediately);
+  *aCopyImmediately = PR_TRUE;
+  nsCopyRequest* copyRequest;
+
+  PRInt32 cnt, i;
+  cnt = m_copyRequests.Count();
+  for (i=0; i < cnt; i++)
+  {
+    copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+    if (copyRequest->m_dstFolder.get() == aRequest->m_dstFolder.get())  //if dst are same and we already have a request, we cannot copy immediately
+    {
+      *aCopyImmediately = PR_FALSE;
+      break;
+    }
+  }
+  return NS_OK;
+}
+  
+nsresult 
 nsMsgCopyService::DoCopy(nsCopyRequest* aRequest)
 {
   NS_ENSURE_ARG(aRequest);
+  PRBool copyImmediately;
+  QueueRequest(aRequest, &copyImmediately);
   m_copyRequests.AppendElement((void*) aRequest);
-  if (m_copyRequests.Count() == 1)  //if only one request, then go ahead and do the copy, otherwise the request is queued
+  if (copyImmediately) // if there wasn't another request for this dest folder then we can copy immediately
     return DoNextCopy();
 
   return NS_OK;
@@ -468,19 +492,20 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsCopyRequest* copyRequest;
     nsCopySource* copySource = nsnull;
-    nsCOMPtr<nsISupports> aSupport;
+    nsCOMPtr<nsISupports> fileSupport;
 	  nsCOMPtr<nsITransactionManager> txnMgr;
 
-    if (!fileSpec || !dstFolder) return rv;
+    NS_ENSURE_ARG_POINTER(fileSpec);
+    NS_ENSURE_ARG_POINTER(dstFolder);
 
 	if (window)
 		window->GetTransactionManager(getter_AddRefs(txnMgr));
   copyRequest = new nsCopyRequest();
   if (!copyRequest) return rv;
-  aSupport = do_QueryInterface(fileSpec, &rv);
+  fileSupport = do_QueryInterface(fileSpec, &rv);
   if (NS_FAILED(rv)) goto done;
 
-  rv = copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
+  rv = copyRequest->Init(nsCopyFileMessageType, fileSupport, dstFolder,
                          isDraft, listener, window, PR_FALSE);
   if (NS_FAILED(rv)) goto done;
 

@@ -408,7 +408,7 @@ protected:
                          nsIMsgCopyServiceListener* listener,
                          nsIMsgWindow *msgWindow,
                          PRBool allowUndo);
-  void OnCopyCompleted(nsresult exitCode);
+  nsresult OnCopyCompleted(nsISupports *srcSupport, nsresult exitCode);
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                nsCString& msgIds, nsMsgKeyArray& keyArray);
 

@@ -108,6 +108,7 @@ private:
     nsresult DoCopy(nsCopyRequest* aRequest);
     nsresult DoNextCopy();
     nsCopyRequest* FindRequest(nsISupports* aSupport, nsIMsgFolder* dstFolder);
+    nsresult QueueRequest(nsCopyRequest* aRequest, PRBool *aCopyImmediately);
 
     nsVoidArray m_copyRequests;
 };

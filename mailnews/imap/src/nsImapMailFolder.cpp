@@ -113,7 +113,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 
 nsIAtom* nsImapMailFolder::mImapHdrDownloadedAtom=nsnull;
@@ -4358,7 +4357,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (txnMgr)
                 txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
             }
-            OnCopyCompleted(aExitCode);
+             (void) OnCopyCompleted(m_copyState->m_srcSupport, aExitCode);
           }
           // we're the dest folder of a move/copy - if we're not open in the ui,
           // then we should clear our nsMsgDatabase pointer. Otherwise, the db would
@@ -4443,12 +4442,12 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     if (txnMgr)
                       txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
                   }
-                  OnCopyCompleted(aExitCode);
+                  (void) OnCopyCompleted(m_copyState->m_srcSupport, aExitCode);
                 }
               }
               else
                 //clear the copyState if copy has failed
-                OnCopyCompleted(aExitCode);              
+                (void) OnCopyCompleted(m_copyState->m_srcSupport, aExitCode);              
             }
             break;
         case nsIImapUrl::nsImapRenameFolder:
@@ -5704,7 +5703,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
       if (NS_SUCCEEDED(rv))
         CopyStreamMessage(aMessage, this, msgWindow, isMove);
       else
-        OnCopyCompleted(rv);
+        return rv; //we are clearing copy state in CopyMessages on failure
     }
     else
     {
@@ -6149,16 +6148,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
       txnMgr->EndBatch();
   }
 
-
-  // since we don't have a copy state object, we can't use the normal mechanism
-  // of calling OnCopyCompleted to notify the copy service that the copy is complete.
-  // So, we notify the copy service directly.
-  nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
-  if (copyService)
-  {
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(srcFolder);
-    (void) copyService->NotifyCompletion(supports, this, rv);
-  }
+  nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(srcFolder);
+  OnCopyCompleted(srcSupport, rv);
 
   if (NS_SUCCEEDED(rv) && isMove)
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
@@ -6186,7 +6177,8 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
   nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
 
-  if (!srcFolder || !messages) return NS_ERROR_NULL_POINTER;
+  srcSupport = do_QueryInterface(srcFolder);
+
   nsCOMPtr <nsIMsgIncomingServer> srcServer;
   nsCOMPtr <nsIMsgIncomingServer> dstServer;
 
@@ -6211,7 +6203,6 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
   if(NS_FAILED(rv)) goto done;
 
-  srcSupport = do_QueryInterface(srcFolder);
   rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
 
   rv = InitCopyState(srcSupport, messages, isMove, PR_TRUE, listener, msgWindow, allowUndo);
@@ -6252,16 +6243,17 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
          getter_AddRefs(m_copyState->m_undoMsgTxn) );
     }
     else 
-    {
       NS_ASSERTION(PR_FALSE, "online copy failed");
-      OnCopyCompleted(rv);
-    }
 
 done:
-    if (NS_FAILED(rv) && isMove)
+    if (NS_FAILED(rv))
     {
-      srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);  //enable message count notification 
-      NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+      (void) OnCopyCompleted(srcSupport, PR_FALSE);
+      if (isMove)
+      {
+        srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);  //enable message count notification 
+        NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+      }
     }
     return rv;
 }
@@ -6321,19 +6313,16 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     nsMsgKey key = 0xffffffff;
     nsCAutoString messageId;
     nsCOMPtr<nsIUrlListener> urlListener;
-    nsCOMPtr<nsISupports> srcSupport;
     nsCOMPtr<nsISupportsArray> messages;
-
-    if (!fileSpec) return rv;
-
-    srcSupport = do_QueryInterface(fileSpec, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(fileSpec, &rv);
 
     rv = NS_NewISupportsArray(getter_AddRefs(messages));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return OnCopyCompleted(srcSupport, rv);
 
     nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return OnCopyCompleted(srcSupport, rv);
 
     rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
 
@@ -6346,7 +6335,8 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
 
     rv = InitCopyState(srcSupport, messages, PR_FALSE, isDraftOrTemplate,
                        listener, msgWindow, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return OnCopyCompleted(srcSupport, rv);
 
     nsCOMPtr<nsISupports> copySupport;
     if( m_copyState ) 
@@ -6358,7 +6348,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             copySupport,
                                             msgWindow);
     if (NS_FAILED(rv))
-      OnCopyCompleted(rv);
+      return OnCopyCompleted(srcSupport, rv);
 
     return rv;
 }
@@ -6490,19 +6480,16 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
     return rv;
 }
 
-void
-nsImapMailFolder::OnCopyCompleted(nsresult rv)
+nsresult
+nsImapMailFolder::OnCopyCompleted(nsISupports *srcSupport, nsresult rv)
 {
-    if (m_copyState)
-    {
-        nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(m_copyState->m_srcSupport);
-        m_copyState = nsnull;
-        nsresult result;
-        nsCOMPtr<nsIMsgCopyService> copyService = 
-                 do_GetService(kMsgCopyServiceCID, &result);
-        if (NS_SUCCEEDED(result))
-            copyService->NotifyCompletion(srcSupport, this, rv);    
-    }
+  m_copyState = nsnull;
+  nsresult result;
+  nsCOMPtr<nsIMsgCopyService> copyService = 
+    do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result);
+  if (NS_SUCCEEDED(result))
+    copyService->NotifyCompletion(srcSupport, this, rv);    
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
