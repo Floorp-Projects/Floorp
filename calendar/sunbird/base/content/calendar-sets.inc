@@ -92,7 +92,12 @@
 
   <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
 
-  <command id="cmd_CustomizeToolbars" oncommand="CalendarCustomizeToolbar()"/>
+  <command id="cmd_CustomizeToolbars"   oncommand="CalendarCustomizeToolbar()"/>
+  <command id="cmd_showCalendarToolbar" oncommand="goToggleToolbar('calendar-bar', 'menu_showCalendarToolbar');"/>
+  <command id="cmd_showSearchToolbar"   oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar');"/>
+  <command id="cmd_showStatusBar"       oncommand="goToggleToolbar('status-bar', 'menu_showStatusBar');"/>
+  <command id="cmd_showTaskBox"         oncommand="goToggleToolbar('taskBox', 'menu_showTaskBox');"/>
+
 #ifdef XP_MACOSX
   <command id="minimizeWindowCmd" oncommand="window.minimize();"/>
   <command id="zoomWindowCmd" oncommand="zoomWindow();"/>
@@ -102,6 +107,9 @@
 <keyset>
   <key id="new_event_key"        key="&event.new.event.key;"             observes="new_command"                 modifiers="accel"/>
   <key id="new_todo_key"         key="&event.new.todo.key;"              observes="new_todo_command"            modifiers="accel"/>
+#XXX lilmatt: Finish/localize this!
+  <key id="new_journal_key"      key="J"               modifiers="accel"/>
+
   <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"              modifiers="accel"/>
   <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_local_calendar_command"  modifiers="accel"/>
   <key id="open_calendar_key"    key="&calendar.open.file.key;"          observes="open_local_calendar_command" modifiers="accel"/>
@@ -112,6 +120,10 @@
   <key id="send_event_key"       key="&event.mail.event.key;"            observes="send_event_command"          modifiers="accel"/>
 #endif
   <key id="print_key"            key="&calendar.print.key;"              observes="print_command"               modifiers="accel"/>
+
+#XXX lilmatt: Finish/localize this!
+  <key id="undo_key"             key="Z"               modifiers="accel"/>
+  <key id="redo_key"             key="Z"               modifiers="shift,accel"/>
 
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
