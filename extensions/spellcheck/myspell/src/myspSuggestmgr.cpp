@@ -109,7 +109,6 @@ nsresult myspSuggestMgr::suggest(PRUnichar ***slst,const nsAFlatString &word, PR
   res = replacechars(wlst, word, &nsug);
 
   // did we forget to add a char
-  res = forgotchar(wlst, word, &nsug);
   if ((nsug < maxSug) && NS_SUCCEEDED(res)){
     res = forgotchar(wlst, word, &nsug);
   }
