@@ -110,13 +110,13 @@ nsMsgFolderDataSource::QueryInterface(REFNSIID iid, void** result)
       iid.Equals(kISupportsIID))
   {
     *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    AddRef();
+    NS_ADDREF(this);
     return NS_OK;
   }
 	else if(iid.Equals(nsIFolderListener::GetIID()))
 	{
     *result = NS_STATIC_CAST(nsIFolderListener*, this);
-    AddRef();
+    NS_ADDREF(this);
     return NS_OK;
 	}
   return NS_NOINTERFACE;
@@ -663,7 +663,7 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 											   nsIRDFNode **target)
 {
 	nsresult rv;
-	PRUint32 totalMessages;
+	PRInt32 totalMessages;
 	rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
 	if(NS_SUCCEEDED(rv))
 		rv = createNode(totalMessages, target);
@@ -675,7 +675,7 @@ nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 												nsIRDFNode **target)
 {
 	nsresult rv;
-	PRUint32 totalUnreadMessages;
+	PRInt32 totalUnreadMessages;
 	rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
 	if(NS_SUCCEEDED(rv))
 		rv = createNode(totalUnreadMessages, target);
