@@ -157,7 +157,7 @@ public:
     virtual nsNodeInfoManager *GetNodeInfoManager();
 
     // nsIScriptGlobalObjectOwner methods
-    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
+    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XULPROTOTYPEDOCUMENT_CID);
 
@@ -540,8 +540,8 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     }
 
     // Now serialize the document contents
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    rv |= GetScriptGlobalObject(getter_AddRefs(globalObject));
+    nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
+    NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
     nsIScriptContext *scriptContext = globalObject->GetContext();
 
@@ -764,39 +764,13 @@ nsXULPrototypeDocument::NotifyLoadDone()
 // nsIScriptGlobalObjectOwner methods
 //
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::GetScriptGlobalObject(nsIScriptGlobalObject** _result)
+nsIScriptGlobalObject*
+nsXULPrototypeDocument::GetScriptGlobalObject()
 {
-    nsresult rv = NS_OK;
     if (!mGlobalObject)
-         rv = NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
-    *_result = mGlobalObject;
-    NS_IF_ADDREF(*_result);
-    return rv;
-}
+        NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::ReportScriptError(nsIScriptError *errorObject)
-{
-   nsresult rv;
-
-   if (errorObject == nsnull)
-      return NS_ERROR_NULL_POINTER;
-
-   // Get the console service, where we're going to register the error.
-   nsCOMPtr<nsIConsoleService> consoleService
-      (do_GetService("@mozilla.org/consoleservice;1"));
-
-   if (consoleService != nsnull) {
-       rv = consoleService->LogMessage(errorObject);
-       if (NS_SUCCEEDED(rv)) {
-           return NS_OK;
-       } else {
-           return rv;
-       }
-   } else {
-       return NS_ERROR_NOT_AVAILABLE;
-   }
+    return mGlobalObject;
 }
 
 //----------------------------------------------------------------------

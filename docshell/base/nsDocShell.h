@@ -214,7 +214,6 @@ public:
     NS_DECL_NSITEXTSCROLL
     NS_DECL_NSIDOCCHARSET
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIREFRESHURI
     NS_DECL_NSICONTENTVIEWERCONTAINER
@@ -226,6 +225,8 @@ public:
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
     PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
 
+    // nsIScriptGlobalObjectOwner methods
+    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 protected:
     // Object Management
     virtual ~nsDocShell();

@@ -145,8 +145,8 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // context.
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(
       do_QueryInterface(aBinding->XBLDocumentInfo()));
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  globalOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
+  NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext *context = globalObject->GetContext();
 

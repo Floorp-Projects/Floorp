@@ -64,7 +64,7 @@ public:
   NS_IMETHOD FlushSkinStylesheets();
 
   // nsIScriptGlobalObjectOwner methods
-  NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
+  virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
 private:
   nsCOMPtr<nsIDocument> mDocument;

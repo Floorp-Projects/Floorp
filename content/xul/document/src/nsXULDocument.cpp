@@ -3234,10 +3234,10 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                 // Ignore the return value, as we don't need to propagate
                 // a failure to write to the FastLoad file, because this
                 // method aborts that whole process on error.
-                nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner
-                  = do_QueryInterface(mCurrentPrototype);
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+                nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
+                  do_QueryInterface(mCurrentPrototype);
+                nsIScriptGlobalObject* global = 
+                  globalOwner->GetScriptGlobalObject();
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {

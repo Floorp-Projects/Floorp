@@ -1075,8 +1075,7 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowIn
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(aShell));
   NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsIScriptGlobalObject* globalObject = globalObjectOwner->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindowInternal> newDOMWindow(do_QueryInterface(globalObject));

@@ -630,11 +630,11 @@ nsXMLDocument::EndLoad()
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_PAGE_LOAD);
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    nsIScriptGlobalObject* sgo = nsnull;
     nsCOMPtr<nsIScriptGlobalObjectOwner> container =
       do_QueryReferent(mDocumentContainer);
     if (container) {
-      container->GetScriptGlobalObject(getter_AddRefs(sgo));
+      sgo = container->GetScriptGlobalObject();
     }
 
     nsCxPusher pusher(sgo);

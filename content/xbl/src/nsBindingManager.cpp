@@ -82,7 +82,6 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"

@@ -3835,45 +3835,16 @@ nsDocShell::ScrollByPages(PRInt32 numPages)
 // nsDocShell::nsIScriptGlobalObjectOwner
 //*****************************************************************************   
 
-NS_IMETHODIMP
-nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject ** aGlobal)
+nsIScriptGlobalObject*
+nsDocShell::GetScriptGlobalObject()
 {
     if (mIsBeingDestroyed) {
-        return NS_ERROR_NOT_AVAILABLE;
+        return nsnull;
     }
 
-    NS_ENSURE_ARG_POINTER(aGlobal);
-    NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), nsnull);
 
-    *aGlobal = mScriptGlobal;
-    NS_IF_ADDREF(*aGlobal);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::ReportScriptError(nsIScriptError * errorObject)
-{
-    nsresult rv;
-
-    if (errorObject == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    // Get the console service, where we're going to register the error.
-    nsCOMPtr<nsIConsoleService> consoleService
-        (do_GetService("@mozilla.org/consoleservice;1"));
-
-    if (consoleService != nsnull) {
-        rv = consoleService->LogMessage(errorObject);
-        if (NS_SUCCEEDED(rv)) {
-            return NS_OK;
-        }
-        else {
-            return rv;
-        }
-    }
-    else {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
+    return mScriptGlobal;
 }
 
 //*****************************************************************************
@@ -6957,9 +6928,9 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
     // we promise that the nsIWebBrowserFind that we return has been set
     // up to point to the focussed, or content window, so we have to
     // set that up each time.
-    nsCOMPtr<nsIScriptGlobalObject> scriptGO;
-    rv = GetScriptGlobalObject(getter_AddRefs(scriptGO));
-    if (NS_FAILED(rv)) return rv;
+
+    nsIScriptGlobalObject* scriptGO = GetScriptGlobalObject();
+    NS_ENSURE_TRUE(scriptGO, NS_ERROR_UNEXPECTED);
 
     // default to our window
     nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(scriptGO);

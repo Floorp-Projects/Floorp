@@ -71,7 +71,6 @@
 #include "nsIPresShell.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"

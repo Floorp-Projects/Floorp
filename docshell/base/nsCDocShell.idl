@@ -43,7 +43,6 @@
 #include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
 #include "nsITextScroll.idl"
-#include "nsIScriptGlobalObjectOwner.idl"
 
 /*
 nsCHTMLDocShell implements:
@@ -54,11 +53,10 @@ nsIDocShellTreeNode
 nsIBaseWindow
 nsIScrollable
 nsITextScroll
-nsIScriptGlobalObjectOwner
 */
 
 %{ C++
-//	{F1EAC762-87E9-11d3-AF80-00A024FFC08C} - 
+//  {F1EAC762-87E9-11d3-AF80-00A024FFC08C} - 
 #define NS_DOCSHELL_CID \
 { 0xf1eac762, 0x87e9, 0x11d3, { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
 #define NS_DOCSHELL_CONTRACTID \

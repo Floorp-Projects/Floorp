@@ -2027,7 +2027,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
     nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(aContainer);
     NS_ENSURE_TRUE(owner, PR_TRUE);
 
-    owner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    globalObject = owner->GetScriptGlobalObject();
     NS_ENSURE_TRUE(globalObject, PR_TRUE);
   }
 
