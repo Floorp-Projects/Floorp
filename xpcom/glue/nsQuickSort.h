@@ -32,7 +32,7 @@
  */
 NS_BEGIN_EXTERN_C
 
-PR_EXTERN(void) nsQuickSort(void *, size_t, size_t,
+PR_EXTERN(void) nsQuickSort(void *, unsigned int, unsigned int,
                      int (*)(const void *, const void *, void *), void *);
 
 NS_END_EXTERN_C
