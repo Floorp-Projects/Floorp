@@ -21,11 +21,13 @@
 #include <stdio.h>
 #include "nsISupports.h"
 class nsIAtom;
+class nsString;
 class nsIURL;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsIPresContext;
 class nsIContent;
+class nsIDocument;
 class nsIStyleContext;
 
 // IID for the nsIStyleSheet interface {8c4a80a0-ad6a-11d1-8031-006008159b5a}
@@ -34,7 +36,20 @@ class nsIStyleContext;
 
 class nsIStyleSheet : public nsISupports {
 public:
-  virtual nsIURL* GetURL(void) = 0;
+  // basic style sheet data
+  NS_IMETHOD GetURL(nsIURL*& aURL) const = 0;
+  NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
+  NS_IMETHOD GetType(nsString& aType) const = 0;
+  NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const = 0;
+
+  NS_IMETHOD GetEnabled(PRBool& aEnabled) const = 0;
+  NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
+
+  // style sheet owner info
+  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const = 0;  // may be null
+  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const = 0; // may be null
+  NS_IMETHOD SetOwningDocument(nsIDocument* aDocument) = 0;
 
   // populate supports array with nsIStyleRule*
   // rules are ordered, those with higher precedence come last
