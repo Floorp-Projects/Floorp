@@ -81,11 +81,19 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="command">
+      <handler event="click" button="1">
         <![CDATA[
-          if (event.target.localName == "radio")
-            this.selectedItem = event.target;
+            if (event.target.localName == "radio" && !event.target.disabled)
+              this.selectedItem = event.target;
+
          ]]>
+      </handler>
+      <handler event="keypress" key=" ">
+        <![CDATA[
+            if (event.target.localName == "radio" && !event.target.disabled)
+              this.selectedItem = event.target;
+
+        ]]>
       </handler>
      
       <!-- keyboard navigation -->
