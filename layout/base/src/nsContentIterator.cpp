@@ -68,7 +68,7 @@ public:
 
 protected:
 
-  static nsIContent* GetDeepFirstChild(nsIContent* aRoot);
+  static nsCOMPtr<nsIContent> GetDeepFirstChild(nsCOMPtr<nsIContent> aRoot);
 
   nsCOMPtr<nsIContent> mCurNode;
   nsCOMPtr<nsIContent> mFirst;
@@ -84,10 +84,12 @@ private:
 
 };
 
+nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+
+
 /******************************************************
  * repository cruft
  ******************************************************/
-
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult)
 {
@@ -107,20 +109,24 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
                                      void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
+  if (nsnull == aInstancePtrResult) 
+  {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(kISupportsIID)) 
+  {
     *aInstancePtrResult = (void*)(nsISupports*)(nsIContentIterator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-/*  if (aIID.Equals(nsIEnumerator::IID())) {
+/*  if (aIID.Equals(nsIEnumerator::IID())) 
+  {
     *aInstancePtrResult = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }  */
-  if (aIID.Equals(nsIContentIterator::IID())) {
+  if (aIID.Equals(nsIContentIterator::IID())) 
+  {
     *aInstancePtrResult = (void*)(nsIContentIterator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -155,9 +161,11 @@ nsContentIterator::~nsContentIterator()
 
 nsresult nsContentIterator::Init(nsIContent* aRoot)
 {
-  if (!aRoot) return NS_ERROR_NULL_POINTER; 
+  if (!aRoot) 
+    return NS_ERROR_NULL_POINTER; 
 
-  mFirst = GetDeepFirstChild(aRoot); 
+  nsCOMPtr<nsIContent> root(aRoot);
+  mFirst = GetDeepFirstChild(root); 
   mLast = aRoot;
   mCurNode = mFirst;
   return NS_OK;
@@ -166,15 +174,18 @@ nsresult nsContentIterator::Init(nsIContent* aRoot)
 
 nsresult nsContentIterator::Init(nsIDOMRange* aRange)
 {
-  if (!aRange) return NS_ERROR_NULL_POINTER; 
+  if (!aRange) 
+    return NS_ERROR_NULL_POINTER; 
 
   // get the start node and offset, convert to nsIContent
   nsCOMPtr<nsIContent> cN;
   nsCOMPtr<nsIDOMNode> dN;
   aRange->GetStartParent(getter_AddRefs(dN));
-  if (!dN) return NS_ERROR_ILLEGAL_VALUE;
+  if (!dN) 
+    return NS_ERROR_ILLEGAL_VALUE;
   cN = dN;
-  if (!cN) return NS_ERROR_FAILURE;
+  if (!cN) 
+    return NS_ERROR_FAILURE;
   
   PRInt32 indx;
   aRange->GetStartOffset(&indx);
@@ -182,6 +193,7 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   // find first node in range
   nsCOMPtr<nsIContent> cChild;
   cN->ChildAt(0,*getter_AddRefs(cChild));
+  
   if (!cChild) // no children, must be a text node
   {
     mFirst = cN; 
@@ -199,14 +211,19 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
     }
   }
   
+  
   aRange->GetEndParent(getter_AddRefs(dN));
-  if (!dN) return NS_ERROR_ILLEGAL_VALUE;
+  if (!dN) 
+    return NS_ERROR_ILLEGAL_VALUE;
   cN = dN;
-  if (!cN) return NS_ERROR_FAILURE;
+  if (!cN) 
+    return NS_ERROR_FAILURE;
 
   aRange->GetEndOffset(&indx);
   
+  // find last node in range
   cN->ChildAt(0,*getter_AddRefs(cChild));
+
   if (!cChild) // no children, must be a text node
   {
     mLast = cN; 
@@ -217,24 +234,18 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   }
   else
   {
-    cN->ChildAt(indx,*getter_AddRefs(cChild));
+    cN->ChildAt(--indx,*getter_AddRefs(cChild));
     if (!cChild)  // offset after last child, last child is last node
     {
       cN->ChildCount(indx);
-      cN->ChildAt(indx,*getter_AddRefs(cChild));  // XXX off by one???
+      cN->ChildAt(--indx,*getter_AddRefs(cChild)); 
       if (!cChild)
       {
         NS_NOTREACHED("nsContentIterator::nsContentIterator");
         return NS_ERROR_FAILURE; 
       }
-      mLast = cChild; 
     }
-    else // child just before indx is last node
-    {
-      --indx;
-      cN->ChildAt(indx,*getter_AddRefs(cChild));
-      mLast = cChild;  
-    }
+    mLast = cChild;  
   }
   
   mCurNode = mFirst;
@@ -243,21 +254,20 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
 
 
 /******************************************************
- * Private helper routines
+ * Helper routines
  ******************************************************/
 
-nsIContent* nsContentIterator::GetDeepFirstChild(nsIContent* aRoot)
+nsCOMPtr<nsIContent> nsContentIterator::GetDeepFirstChild(nsCOMPtr<nsIContent> aRoot)
 {
-  // THIS ROUTINE DOES NOT ADDREF
-  if (!aRoot) return nsnull;
-  nsIContent *cN = aRoot;
-  nsIContent *cChild;
-  cN->ChildAt(0,cChild);
+  if (!aRoot) 
+    return aRoot;
+  nsCOMPtr<nsIContent> cN = aRoot;
+  nsCOMPtr<nsIContent> cChild;
+  cN->ChildAt(0,*getter_AddRefs(cChild));
   while ( cChild )
   {
-    NS_IF_RELEASE(cN); // balance addref inside ChildAt()
     cN = cChild;
-    cN->ChildAt(0,cChild);
+    cN->ChildAt(0,*getter_AddRefs(cChild));
   }
   return cN;
 }
@@ -268,9 +278,11 @@ nsIContent* nsContentIterator::GetDeepFirstChild(nsIContent* aRoot)
 
 nsresult nsContentIterator::First()
 {
-  if (!mFirst) return NS_ERROR_FAILURE;
+  if (!mFirst) 
+    return NS_ERROR_FAILURE;
   mIsDone = false;
-  if (mFirst == mCurNode) return NS_OK;
+  if (mFirst == mCurNode) 
+    return NS_OK;
   mCurNode = mFirst;
   return NS_OK;
 }
@@ -278,9 +290,11 @@ nsresult nsContentIterator::First()
 
 nsresult nsContentIterator::Last()
 {
-  if (!mLast) return NS_ERROR_FAILURE;
+  if (!mLast) 
+    return NS_ERROR_FAILURE;
   mIsDone = false;
-  if (mLast == mCurNode) return NS_OK;
+  if (mLast == mCurNode) 
+    return NS_OK;
   mCurNode = mLast;
   return NS_OK;
 }
@@ -288,8 +302,10 @@ nsresult nsContentIterator::Last()
 
 nsresult nsContentIterator::Next()
 {
-  if (mIsDone) return NS_ERROR_FAILURE;
-  if (!mCurNode) return NS_OK;
+  if (mIsDone) 
+    return NS_ERROR_FAILURE;
+  if (!mCurNode) 
+    return NS_OK;
   if (mCurNode == mLast) 
   {
     mIsDone = true;
@@ -301,7 +317,8 @@ nsresult nsContentIterator::Next()
   
   mCurNode->GetParent(*getter_AddRefs(cParent));
   // no parent and we are not done?  something is wrong
-  if (!cParent) return NS_ERROR_UNEXPECTED; 
+  if (!cParent) 
+    return NS_ERROR_UNEXPECTED; 
   
   // get next sibling
   PRInt32 indx;
@@ -329,27 +346,114 @@ nsresult nsContentIterator::Prev()
 
 nsresult nsContentIterator::IsDone()
 {
-  if (mIsDone) return NS_OK;
-  else return NS_COMFALSE;
+  if (mIsDone) 
+    return NS_OK;
+  else 
+    return NS_COMFALSE;
 }
 
 
 nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
 {
-  if (!mCurNode) return NS_ERROR_FAILURE;
-  if (mIsDone) return NS_ERROR_FAILURE;
+  if (!mCurNode) 
+    return NS_ERROR_FAILURE;
+  if (mIsDone) 
+    return NS_ERROR_FAILURE;
   return mCurNode->QueryInterface(nsIContent::IID(), (void**) aNode);
 }
 
 
+
+
+
+/*====================================================================================*/
+/*====================================================================================*/
+
+
+
+
+
+
 /******************************************************
- * Enumerator routines
+ * nsContentSubtreeIterator
  ******************************************************/
 
-/*nsresult nsContentIterator::CurrentItem(nsISupports **aNode)
+
+/*
+ *  A simple iterator class for traversing the content in "top subtree" order
+ */
+class nsContentSubtreeIterator : public nsContentIterator 
 {
-  if (!mCurNode) return NS_ERROR_FAILURE;
-  if (mIsDone) return NS_ERROR_FAILURE;
-  return mCurNode->QueryInterface(kISupportsIID, (void**) aNode);
+public:
+  nsContentSubtreeIterator() {};
+  virtual ~nsContentSubtreeIterator() {};
+
+  // nsContentIterator overrides ------------------------------
+
+  NS_IMETHOD Init(nsIContent* aRoot);
+
+  NS_IMETHOD Init(nsIDOMRange* aRange);
+
+  NS_IMETHOD Next();
+
+  NS_IMETHOD Prev();
+
+private:
+
+  // no copy's or assigns  FIX ME
+  nsContentSubtreeIterator(const nsContentSubtreeIterator&);
+  nsContentSubtreeIterator& operator=(const nsContentSubtreeIterator&);
+
+};
+
+nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
+
+/******************************************************
+ * repository cruft
+ ******************************************************/
+
+nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult)
+{
+  nsContentIterator * iter = new nsContentSubtreeIterator();
+  return iter->QueryInterface(nsIContentIterator::IID(), (void**) aInstancePtrResult);
 }
-*/
+
+
+
+/******************************************************
+ * Init routines
+ ******************************************************/
+
+
+nsresult nsContentSubtreeIterator::Init(nsIContent* aRoot)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/******************************************************
+ *  Helper routines
+ ******************************************************/
+
+
+/****************************************************************
+ * nsContentSubtreeIterator overrides of ContentIterator routines
+ ****************************************************************/
+
+nsresult nsContentSubtreeIterator::Next()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult nsContentSubtreeIterator::Prev()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
