@@ -43,6 +43,7 @@
 #include "nsCSSProps.h"     // to addref/release table
 #include "nsCSSAtoms.h"     // to addref/release table
 #include "nsColorNames.h"   // to addref/release table
+#include "nsCSSFrameConstructor.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -99,6 +100,8 @@ Initialize(nsIModule* self)
   nsSVGAtoms::AddRefAtoms();
 #endif
 
+  nsCSSFrameConstructor::InitGlobals();
+
   return nsTextTransformer::Initialize();
 }
 
@@ -141,6 +144,8 @@ Shutdown(nsIModule* self)
 #ifdef MOZ_SVG
   nsSVGAtoms::ReleaseAtoms();
 #endif
+
+  nsCSSFrameConstructor::ReleaseGlobals();
 
   nsTextTransformer::Shutdown();
 }

@@ -104,6 +104,7 @@ class nsIDocumentLoaderFactory;
 #include "nsIXULSortService.h"
 #include "nsXULAtoms.h"
 #include "nsXULContentUtils.h"
+#include "nsXULElement.h"
 #endif
 
 // jst says, ``we need this to avoid holding on to XPConnect past its
@@ -203,6 +204,7 @@ Shutdown(nsIModule* aSelf)
 #ifdef MOZ_XUL
   nsXULContentUtils::Finish();
   nsXULAtoms::ReleaseAtoms();
+  nsXULElement::ReleaseGlobals();
 #endif
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);

@@ -115,7 +115,6 @@ static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 
 #include "nsIScrollableFrame.h"
 
-#include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsIStyleRuleSupplier.h"
 
@@ -156,6 +155,9 @@ NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #include "nsIScrollable.h"
 #include "nsINodeInfo.h"
 #include "prenv.h"
+
+// Global object maintenance
+nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;
 
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
@@ -3452,14 +3454,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   if (!display->mBinding.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
-    nsCOMPtr<nsIXBLService> xblService = 
-             do_GetService("@mozilla.org/xbl;1", &rv);
-    if (!xblService)
-      return rv;
-
     PRBool resolveStyle;
     nsCOMPtr<nsIXBLBinding> binding;
-    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+    if (!gXBLService)
+      return NS_ERROR_FAILURE;
+    rv = gXBLService->LoadBindings(aDocElement, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
@@ -7297,14 +7296,11 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     if (!display->mBinding.IsEmpty()) {
       // Get the XBL loader.
       nsresult rv;
-      nsCOMPtr<nsIXBLService> xblService = 
-               do_GetService("@mozilla.org/xbl;1", &rv);
-      if (!xblService)
-        return rv;
-
       // Load the bindings.
       PRBool resolveStyle;
-      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+      if (!gXBLService)
+        return NS_ERROR_FAILURE;
+      rv = gXBLService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;
 
@@ -7316,7 +7312,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;
-      xblService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
+      gXBLService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
  
       if (baseTag.get() != aTag || aNameSpaceID != nameSpaceID) {
         // Construct the frame using the XBL base tag.
