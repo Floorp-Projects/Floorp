@@ -122,7 +122,7 @@ EXPORTS = \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom \
-      -I..\base -I..\util -I..\xml -I..\xml\util -I..\xml\dom -I..\xslt \
+      -I..\base -I..\xml -I..\xml\dom -I..\xslt \
       -I..\xslt\functions -I..\xslt\util
 
 LCFLAGS = \

@@ -95,7 +95,6 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/XPathNames.obj \
   ../xml/$(OBJDIR)/XMLUtils.obj \
   ../xml/$(OBJDIR)/XMLDOMUtils.obj \
-  ../xml/util/$(OBJDIR)/DOMHelper.obj \
   ../xml/parser/$(OBJDIR)/XMLParser.obj \
   ../xml/printer/$(OBJDIR)/XMLPrinter.obj \
   ../xml/printer/$(OBJDIR)/HTMLPrinter.obj \
@@ -124,7 +123,7 @@ EXPORTS = 					\
 	$(NULL)
 
 LINCS=-I../xslt -I../base -I../net \
-  -I../xml -I../xml/dom -I../xml/util \
+  -I../xml -I../xml/dom \
   -I../xml/printer -I../xpath -I../xslt/util \
   -I../xslt/functions -I../xml/parser
 

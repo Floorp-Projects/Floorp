@@ -81,6 +81,10 @@ typedef 0 NULL;
 
 typedef UNICODE_CHAR DOM_CHAR;
 
+#define kTxNsNodeIndexOffset 0x00000000;
+#define kTxAttrIndexOffset 0x40000000;
+#define kTxChildIndexOffset 0x80000000;
+
 class Attr;
 class CDATASection;
 class Comment;
@@ -251,11 +255,26 @@ class Node : public MozillaObjectWrapper
         virtual PRInt32 getNamespaceID();
         virtual PRInt32 lookupNamespaceID(txAtom* aPrefix);
         virtual Node* getXPathParent();
+        virtual PRInt32 compareDocumentPosition(Node* aOther);
 
     protected:
         String nodeName;
         String nodeValue;
         PRInt32 namespaceID;
+        
+    private:
+        // Struct to hold document order information
+        struct OrderInfo {
+            ~OrderInfo();
+            PRUint32* mOrder;
+            PRInt32 mSize;
+            Node* mRoot;
+        };
+
+        OrderInfo* mOrderInfo;
+
+        // Helpfunctions for compareDocumentPosition
+        OrderInfo* getOrderInfo();
 };
 
 /*

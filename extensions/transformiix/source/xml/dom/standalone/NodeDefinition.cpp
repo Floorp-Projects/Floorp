@@ -33,6 +33,7 @@
 #include "ArrayList.h"
 #include "URIUtils.h"
 #include "txAtoms.h"
+#include "string.h"
 
 NodeDefinition::NodeDefinition(NodeType type, const String& name,
                                const String& value, Document* owner)
@@ -51,6 +52,7 @@ NodeDefinition::NodeDefinition(NodeType type, const String& name,
   ownerDocument = owner;
   length = 0;
 
+  mOrderInfo = 0;
 }
 
 //
@@ -59,6 +61,7 @@ NodeDefinition::NodeDefinition(NodeType type, const String& name,
 NodeDefinition::~NodeDefinition()
 {
   DeleteChildren();
+  delete mOrderInfo;
 }
 
 //
@@ -461,3 +464,117 @@ String NodeDefinition::getBaseURI()
   
   return url;
 } // getBaseURI
+
+/*
+ * Compares document position of this node relative to another node
+ */
+PRInt32 NodeDefinition::compareDocumentPosition(Node* aOther)
+{
+  OrderInfo* myOrder = getOrderInfo();
+  OrderInfo* otherOrder = ((NodeDefinition*)aOther)->getOrderInfo();
+  if (!myOrder || !otherOrder)
+      return -1;
+
+  if (myOrder->mRoot == otherOrder->mRoot) {
+    int c = 0;
+    while (c < myOrder->mSize && c < otherOrder->mSize) {
+      if (myOrder->mOrder[c] < otherOrder->mOrder[c])
+        return -1;
+      if (myOrder->mOrder[c] > otherOrder->mOrder[c])
+        return 1;
+      ++c;
+    }
+    if (c < myOrder->mSize)
+      return 1;
+    if (c < otherOrder->mSize)
+      return -1;
+    return 0;
+  }
+
+  if (myOrder->mRoot < otherOrder->mRoot)
+    return -1;
+
+  return 1;
+}
+
+/*
+ * Get order information for node
+ */
+NodeDefinition::OrderInfo* NodeDefinition::getOrderInfo()
+{
+  if (mOrderInfo)
+    return mOrderInfo;
+
+  mOrderInfo = new OrderInfo;
+  if (!mOrderInfo)
+    return 0;
+
+  Node* parent = getXPathParent();
+  if (!parent) {
+    mOrderInfo->mOrder = 0;
+    mOrderInfo->mSize = 0;
+    mOrderInfo->mRoot = this;
+    return mOrderInfo;
+  }
+
+  OrderInfo* parentOrder = ((NodeDefinition*)parent)->getOrderInfo();
+  mOrderInfo->mSize = parentOrder->mSize + 1;
+  mOrderInfo->mRoot = parentOrder->mRoot;
+  mOrderInfo->mOrder = new PRUint32[mOrderInfo->mSize];
+  if (!mOrderInfo->mOrder) {
+    delete mOrderInfo;
+    mOrderInfo = 0;
+    return 0;
+  }
+  memcpy(mOrderInfo->mOrder,
+         parentOrder->mOrder,
+         parentOrder->mSize * sizeof(PRUint32*));
+
+  // Get childnumber of this node
+  int lastElem = parentOrder->mSize;
+  switch (getNodeType()) {
+    case Node::ATTRIBUTE_NODE:
+    {
+      NS_ASSERTION(parent->getNodeType() == Node::ELEMENT_NODE,
+                   "parent to attribute is not an element");
+
+      Element* elem = (Element*)parent;
+      PRUint32 i;
+      NamedNodeMap* attrs = elem->getAttributes();
+      for (i = 0; i < attrs->getLength(); ++i) {
+        if (attrs->item(i) == this) {
+          mOrderInfo->mOrder[lastElem] = i + kTxAttrIndexOffset;
+          return mOrderInfo;
+        }
+      }
+      break;
+    }
+    // XXX Namespace: need to take care of namespace nodes here
+    default:
+    {
+      PRUint32 i = 0;
+      Node * child = parent->getFirstChild();
+      while (child) {
+        if (child == this) {
+          mOrderInfo->mOrder[lastElem] = i + kTxChildIndexOffset;
+          return mOrderInfo;
+        }
+        ++i;
+        child = child->getNextSibling();
+      }
+      break;
+    }
+  }
+
+  NS_ASSERTION(0, "unable to get childnumber");
+  mOrderInfo->mOrder[lastElem] = 0;
+  return mOrderInfo;
+}
+
+/*
+ * OrderInfo destructor
+ */
+NodeDefinition::OrderInfo::~OrderInfo()
+{
+    delete [] mOrder;
+}

@@ -33,7 +33,6 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
-#include "DOMHelper.h"
 #include "TxString.h"
 #include "ProcessorState.h"
 #include "Map.h"

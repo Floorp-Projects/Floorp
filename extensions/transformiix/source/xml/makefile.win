@@ -30,7 +30,7 @@ REQUIRES	= string \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
-DIRS=dom parser util
+DIRS=dom parser
 
 !if defined(TX_EXE)
 DEFINES=$(DEFINES) -DTX_EXE

@@ -1118,11 +1118,8 @@ void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
         Node* node = nodes->get(i);
         for (k = i - 1; k >= 0; k--) {
             Node* tmpNode = sorted.get(k);
-            if (domHelper.appearsFirst(tmpNode, node) == tmpNode) {
-                if (k == i - 1)
-                    sorted.add(node);
-                else
-                    sorted.add(k, node);
+            if (node->compareDocumentPosition(tmpNode) > 0) {
+                sorted.add(k + 1, node);
                 break;
             }
             else if (k == 0) {

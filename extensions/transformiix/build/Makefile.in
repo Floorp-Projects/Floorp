@@ -120,7 +120,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xpath/XPathProcessor.$(OBJ_SUFFIX) \
   ../source/xml/XMLUtils.$(OBJ_SUFFIX) \
   ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
-  ../source/xml/util/DOMHelper.$(OBJ_SUFFIX) \
   ../source/xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../source/xml/parser/nsSyncLoader.$(OBJ_SUFFIX) \
   ../source/xslt/OutputFormat.$(OBJ_SUFFIX) \
@@ -152,7 +151,6 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
   -I$(srcdir)/../source/net \
   -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
-  -I$(srcdir)/../source/xml/util \
   -I$(srcdir)/../source/xml/parser \
   -I$(srcdir)/../source/xml/printer -I$(srcdir)/../source/xpath \
   -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions
