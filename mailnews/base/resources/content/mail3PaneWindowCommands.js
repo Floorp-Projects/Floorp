@@ -369,13 +369,14 @@ var DefaultController =
       case "cmd_markAsFlagged":
       case "button_file":
       case "cmd_file":
+        return ( GetNumSelectedMessages() > 0 );
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
       case "cmd_label3":
       case "cmd_label4":
       case "cmd_label5":
-        return ( GetNumSelectedMessages() > 0 );
+        return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
       case "cmd_editDraft":
                 return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
       case "cmd_nextMsg":
