@@ -797,7 +797,9 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 #ifdef XP_MAC
     nsXPIDLCString contentType;
     mMimeInfo->GetMIMEType(getter_Copies(contentType));
-    if (contentType && !nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE))
+    if (contentType &&
+      (nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE) == 0) ||
+      (nsCRT::strcasecmp(contentType, MULTIPART_APPLEDOUBLE) == 0))
     {
       nsCOMPtr<nsIOutputStream> appleFileDecoder;
       NS_NEWXPCOM(appleFileDecoder, nsDecodeAppleFile);
