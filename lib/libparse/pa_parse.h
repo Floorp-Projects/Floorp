@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef PA_PARSE_H
+#define PA_PARSE_H
+
 #include "xp.h"
 #include "pa_tags.h"
 #include "edttypes.h"
@@ -129,3 +132,4 @@ extern void pa_FlushOverflow(NET_StreamClass *stream);
 extern intn LO_Format(int32, PA_Tag *, intn);
 */
 
+ #endif /* PA_PARSE_H */
