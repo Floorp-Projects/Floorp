@@ -203,7 +203,9 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     file->Append(OPERA_PREFERENCES_FOLDER_NAME);
 
     nsCOMPtr<nsISimpleEnumerator> e;
-    file->GetDirectoryEntries(getter_AddRefs(e));
+    rv = file->GetDirectoryEntries(getter_AddRefs(e));
+    if (NS_FAILED(rv))
+      return rv;
 
     PRBool hasMore;
     e->HasMoreElements(&hasMore);
