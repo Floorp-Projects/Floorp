@@ -14,7 +14,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 1999 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -29,37 +29,10 @@
 # and other provisions required by the GPL.  If you do not delete
 # the provisions above, a recipient may use your version of this
 # file under either the NPL or the GPL.
+#
 
-# JDK_DIR should be the directory you put the JDK in, and should have
-# the appropriate lib/ and include/ dirs on it.
-# If you're not using the `Blackdown' JDK, try changing the following line:
+#
+# Config stuff for SunOS5.8
+#
 
-# JDK=/share/builds/components/jdk/1.1.7/Linux
-
-ifndef JDK_VERSION
-JDK_VERSION = 1.2.2
-endif
-
-JDK = /share/builds/components/jdk/$(JDK_VERSION)/Linux
-
-# INCLUDES   += -I$(JDK)/include -I$(JDK)/include/solaris
-INCLUDES   += -I$(JDK)/include/linux -I$(JDK)/include
-
-OTHER_LIBS += -L$(JDK)/jre/lib/i386/native_threads
-OTHER_LIBS += -L$(JDK)/jre/lib/i386/classic
-OTHER_LIBS += -L$(JDK)/jre/lib/i386 -ljava -ljvm -lhpi
-
-
-# Uncomment below to maybe build against 1.3.
-
-# export THREADS_FLAG=native
-
-# JDK = /usr/java/jdk1.3
-
-# INCLUDES   += -I$(JDK)/include -I$(JDK)/include/md \
-# 	      -I$(JDK)/include/genunix -I$(JDK)/include/linux \
-
-# OTHER_LIBS += -L$(JDK)/jre/lib/i386/native_threads -ljava \
-# 	      -L$(JDK)/jre/lib/i386 -lverify -lhpi
-
-# export THREADS_FLAG=native
+include $(DEPTH)/config/SunOS5.5.mk
