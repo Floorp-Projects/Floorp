@@ -20,6 +20,9 @@
   *    Roger B. Sidje <rbs@maths.uq.edu.au>
   --> 
 
+<!-- handy alias for the MathML namespace -->
+<!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
+
 <!-- MathML 1.01 entities - Auto-generated (Total in this list: 2157) -->
 
 <!ENTITY Tab "&#x0009;">
