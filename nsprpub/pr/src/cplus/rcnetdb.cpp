@@ -37,7 +37,7 @@ RCNetAddr::RCNetAddr(const RCNetAddr& his, PRUint16 port): RCBase()
     {
         case PR_AF_INET: address.inet.port = port; break;
 #if defined(_PR_INET6)
-        case PR_AF_INET6: address.ipv6.port = his.address.ipv6.port; break;
+        case PR_AF_INET6: address.ipv6.port = port; break;
 #endif
         default: break;
     }
