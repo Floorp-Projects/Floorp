@@ -67,7 +67,10 @@ interface nsIProfile : nsISupports {
     
     void migrateProfileInfo();
 
-    void createNewProfile(in wstring profileName, in wstring nativeProfileDir);
+    void createNewProfile(in wstring profileName, 
+                          in wstring nativeProfileDir, 
+                          in boolean useExistingDir);
+
     void renameProfile(in wstring oldName, in wstring newName);
 
     void deleteProfile(in wstring name, in boolean canDeleteFiles);
