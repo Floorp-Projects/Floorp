@@ -64,7 +64,11 @@ class FolderViewBase implements FolderView, MessageChangedListener,
     Message messages[] = null;
     try {
       if (!fFolder.isOpen()) {
-        fFolder.open(Folder.READ_WRITE);
+        try {
+          fFolder.open(Folder.READ_WRITE);
+        } catch (MessagingException e) {
+          fFolder.open(Folder.READ_ONLY);
+        }
       }
       messages = fFolder.getMessages();
       FetchProfile fp = new FetchProfile();

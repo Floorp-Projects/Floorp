@@ -355,7 +355,11 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
         if (folder != null) {
 
           if (!folder.isOpen()) {
-            folder.open(Folder.READ_WRITE);
+            try {
+              folder.open(Folder.READ_WRITE);
+            } catch (MessagingException e) {
+              folder.open(Folder.READ_ONLY);
+            }
           }
           int messageCount = folder.getMessageCount();
           int unreadCount = folder.getUnreadMessageCount();
