@@ -430,7 +430,7 @@ int main(int argc, char* argv[])
     }
     if (nsnull == urlstr)
     {
-      rv = cmdLineArgs->GetCmdLineValue("-msgcompose", &cmdResult);
+      rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
       if (NS_SUCCEEDED(rv))
       {
         if (cmdResult && (strcmp("1",cmdResult)==0))
