@@ -31,6 +31,7 @@ nsFontMetricsUnix :: nsFontMetricsUnix()
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontHandle = nsnull;
+  mFontInfo = nsnull;
   mXstring = nsnull;
   mXstringSize = 0;
 }
@@ -93,7 +94,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
              (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
              ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
 
-  fnames = XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
+  fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
 
   if (aFont.style == NS_FONT_STYLE_ITALIC)
     altitalicization = 'o';
@@ -108,7 +109,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
                (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                altitalicization, dpi, dpi);
 
-    fnames = XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
+    fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
   }
 
   if (numnames <= 0)
@@ -124,7 +125,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
                (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
                ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
 
-    fnames = XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
+    fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
 
     if ((numnames <= 0) && altitalicization)
     {
@@ -134,7 +135,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                  altitalicization, dpi, dpi);
 
-      fnames = XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
+      fnames = ::XListFontsWithInfo(dpy, &wildstring[namelen + 1], 200, &numnames, &fonts);
     }
   }
 
@@ -148,7 +149,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
     fprintf(stderr, " is: %s\n", nametouse);
 #endif
     
-    XFreeFontInfo(fnames, fonts, numnames);
+    ::XFreeFontInfo(fnames, fonts, numnames);
   }
   else
   {
@@ -216,26 +217,26 @@ char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, 
 
 void nsFontMetricsUnix::RealizeFont()
 {
-  XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
+  mFontInfo = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
 
   float f  = mContext->GetDevUnitsToAppUnits();
   
-  mAscent = nscoord(fs->ascent * f);
-  mDescent = nscoord(fs->descent * f);
-  mMaxAscent = nscoord(fs->ascent * f) ;
-  mMaxDescent = nscoord(fs->descent * f);
+  mAscent = nscoord(mFontInfo->ascent * f);
+  mDescent = nscoord(mFontInfo->descent * f);
+  mMaxAscent = nscoord(mFontInfo->ascent * f) ;
+  mMaxDescent = nscoord(mFontInfo->descent * f);
   
-  mHeight = nscoord((fs->ascent + fs->descent) * f) ;
-  mMaxAdvance = nscoord(fs->max_bounds.width * f);
+  mHeight = nscoord((mFontInfo->ascent + mFontInfo->descent) * f) ;
+  mMaxAdvance = nscoord(mFontInfo->max_bounds.width * f);
 
   PRUint32 i;
 
   for (i = 0; i < 256; i++)
   {
-    if ((i < fs->min_char_or_byte2) || (i > fs->max_char_or_byte2))
+    if ((i < mFontInfo->min_char_or_byte2) || (i > mFontInfo->max_char_or_byte2))
       mCharWidths[i] = mMaxAdvance;
     else
-      mCharWidths[i] = nscoord((fs->per_char[i - fs->min_char_or_byte2].width) * f);
+      mCharWidths[i] = nscoord((mFontInfo->per_char[i - mFontInfo->min_char_or_byte2].width) * f);
   }
 
   mLeading = 0;
@@ -266,9 +267,7 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
   PRInt32 rc = 0 ;
   
-  XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
-  
-  rc = (PRInt32) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
+  rc = (PRInt32) ::XTextWidth(mFontInfo, aString, nsCRT::strlen(aString));
 
   return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));
 }
@@ -300,9 +299,7 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
     thischar->byte1 = (aunichar & 0xff00) >> 8;      
   }
   
-  XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
-  
-  width = ::XTextWidth16(fs, mXstring, aLength);
+  width = ::XTextWidth16(mFontInfo, mXstring, aLength);
 
   return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
 }
