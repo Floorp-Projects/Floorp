@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.190 $ ';
+$::UtilsVersion = '$Revision: 1.191 $ ';
 
 package TinderUtils;
 
@@ -1614,9 +1614,10 @@ sub run_all_tests {
         my $z_data = extract_token_from_file("$build_dir/$test_log", "__codesize", ":");
         chomp($z_data);
         my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+        my $z_data_string = PrintSize($z_data,4);
         print_log "TinderboxPrint:" .
         "<a title=\"Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
-          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=1&showpoint=$time,$z_data\">Z:$z_data" . "</a>\n";
+          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=1&showpoint=$time,$z_data\">Z:$z_data_string" . "B</a>\n";
 
         if($Settings::TestsPhoneHome) {
           send_results_to_server($z_data, "--", "codesize", ::hostname());
@@ -2123,10 +2124,10 @@ sub BloatTest {
 
     if($Settings::TestsPhoneHome) {
         # Generate and print tbox output strings for leak, bloat.
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
+        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Lk:" . PrintSize($leaks,3) . "B</a>\n\n";
         print_log $leaks_string;
 
-        my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
+        my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Bl:" . PrintSize($bloat,3) . "B</a>\n\n";
         print_log $bloat_string;
 
         # Report numbers to server.
@@ -2134,8 +2135,8 @@ sub BloatTest {
         send_results_to_server($bloat, "--", $bloat_testname, ::hostname() );
 
     } else {
-        print_log "TinderboxPrint:" . $label_prefix . "Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks) . "B</a>\n\n";
-        print_log "TinderboxPrint:" . $label_prefix . "Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat) . "B</a>\n\n";
+        print_log "TinderboxPrint:" . $label_prefix . "Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
+        print_log "TinderboxPrint:" . $label_prefix . "Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat,3) . "B</a>\n\n";
     }
 
     return 'success';
@@ -2191,34 +2192,51 @@ sub PercentChange($$) {
 }
 
 # Print a value of bytes out in a reasonable
-# KB, MB, or GB form.
-sub PrintSize($) {
+# KB, MB, or GB form.  Sig figs should probably
+# be 3, 4, or 5 for most purposes here.  This used
+# to default to 3 sig figs, but I wanted 4 so I
+# generalized here.  -mcafee
+#
+# Usage: PrintSize(valueAsInteger, numSigFigs)
+# 
+sub PrintSize($$) {
 
     # print a number with 3 significant figures
-    sub PrintNum($) {
-        my ($num) = @_;
+    sub PrintNum($$) {
+        my ($num, $sigs) = @_;
         my $rv;
-        if ($num < 1) {
-            $rv = sprintf "%.3f", ($num);
-        } elsif ($num < 10) {
-            $rv = sprintf "%.2f", ($num);
-        } elsif ($num < 100) {
-            $rv = sprintf "%.1f", ($num);
+
+        # Figure out how many decimal places to show.
+        # Only doing a few cases here, for normal range
+        # of test numbers.
+        if ($num < 10**($sigs-5)) {
+          $rv = sprintf "%.5f", ($num);
+        } elsif ($num < 10**($sigs-4)) {
+          $rv = sprintf "%.4f", ($num);
+        } elsif ($num < 10**($sigs-3)) {
+          $rv = sprintf "%.3f", ($num);
+        } elsif ($num < 10**($sigs-2)) {
+          $rv = sprintf "%.2f", ($num);
+        } elsif ($num < 10**($sigs-1)) {
+          $rv = sprintf "%.1f", ($num);
         } else {
-            $rv = sprintf "%d", ($num);
+          $rv = sprintf "%d", ($num);
         }
+
     }
 
-    my ($size) = @_;
+    my ($size, $sigfigs) = @_;
+
+    # 1K = 1024, previously this was approximated as 1000.
     my $rv;
-    if ($size > 1000000000) {
-        $rv = PrintNum($size / 1000000000.0) . "G";
-    } elsif ($size > 1000000) {
-        $rv = PrintNum($size / 1000000.0) . "M";
-    } elsif ($size > 1000) {
-        $rv = PrintNum($size / 1000.0) . "K";
+    if ($size > 1073741824) {  # 1024^3
+        $rv = PrintNum($size / 1073741824.0, $sigfigs) . "G";
+    } elsif ($size > 1048576) {  # 1024^2
+        $rv = PrintNum($size / 1048576.0, $sigfigs) . "M";
+    } elsif ($size > 1024) {
+        $rv = PrintNum($size / 1024.0, $sigfigs) . "K";
     } else {
-        $rv = PrintNum($size);
+        $rv = PrintNum($size, $sigfigs);
     }
 }
 
@@ -2293,15 +2311,15 @@ sub BloatTest2 {
 
     if($Settings::TestsPhoneHome) {
         my $leaks_testname       = "trace_malloc_leaks";
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . PrintSize($newstats->{'leaks'}) . "B</a>\n\n";
+        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . PrintSize($newstats->{'leaks'},3) . "B</a>\n\n";
         print_log $leaks_string;
 
         my $maxheap_testname       = "trace_malloc_maxheap";
-        my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . PrintSize($newstats->{'mhs'}) . "B</a>\n\n";
+        my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . PrintSize($newstats->{'mhs'},3) . "B</a>\n\n";
         print_log $maxheap_string;
 
         my $allocs_testname       = "trace_malloc_allocs";
-        my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'}) . "</a>\n\n";
+        my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'},3) . "</a>\n\n";
         print_log $allocs_string;
 
         # Send results to server.
@@ -2311,9 +2329,9 @@ sub BloatTest2 {
 
     } else {
         print_log "TinderboxPrint:";
-        print_log "<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'}) . "B,";
-        print_log "<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'}) . "B,";
-        print_log "<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'}) . "\n";
+        print_log "<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'},3) . "B,";
+        print_log "<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'},3) . "B,";
+        print_log "<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'},3) . "\n";
     }
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
