@@ -2597,7 +2597,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
     nsAutoString metaCharset;
     metaCharset.Assign(NS_LITERAL_STRING("charset="));
     metaCharset.Append(sigEncoding);
-    PRInt32 metaCharsetOffset = sigData.Find(metaCharset,true,0,-1);
+    PRInt32 metaCharsetOffset = sigData.Find(metaCharset,PR_TRUE,0,-1);
 
     if (metaCharsetOffset != kNotFound)
       nsStr::Delete(sigData, metaCharsetOffset, metaCharset.Length());
