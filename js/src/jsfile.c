@@ -851,6 +851,12 @@ js_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
       }
       break;
     }
+
+    if(count==-1){
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_READ_FAILED, file->path);
+    }
+
     return count;
 }
 
@@ -907,15 +913,22 @@ js_FileSkip(JSFile * f, int32 len, int32 mode)
                 fseek(f->nativehandle, len*2, SEEK_CUR)/2;
         break;
     }
+
+    if(count==-1){
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_SKIP_FAILED, file->path);
+    }
+
     return count;
 }
 
 static int32
-js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
+js_FileWrite(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
 {
-    unsigned char*aux;
-    int32 count, i, j;
-    unsigned char*utfbuf;
+    unsigned char   *aux;
+    int32           count, i, j;
+    unsigned char   *utfbuf;
+
     switch (mode) {
     case ASCII:
         aux = (unsigned char*)JS_malloc(cx, len);
@@ -925,9 +938,9 @@ js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
             aux[i]=buf[i]%256;
         }
 
-        count = (!f->isNative)?
-                    PR_Write(f->handle, aux, len):
-                    fwrite(aux, 1, len, f->nativehandle);
+        count = (!file->isNative)?
+                    PR_Write(file->handle, aux, len):
+                    fwrite(aux, 1, len, file->nativehandle);
 
         if (count==-1) {
             JS_free(cx, aux);
@@ -947,9 +960,9 @@ js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
             }
             i+=j;
         }
-        j = (!f->isNative)?
-                PR_Write(f->handle, utfbuf, i):
-                fwrite(utfbuf, 1, i, f->nativehandle);
+        j = (!file->isNative)?
+                PR_Write(file->handle, utfbuf, i):
+                fwrite(utfbuf, 1, i, file->nativehandle);
 
         if (j<i) {
             JS_free(cx, utfbuf);
@@ -958,14 +971,18 @@ js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
         JS_free(cx, utfbuf);
       break;
     case UCS2:
-        count = (!f->isNative)?
-                PR_Write(f->handle, buf, len*2)>>1:
-                fwrite(buf, 1, len*2, f->nativehandle)>>1;
+        count = (!file->isNative)?
+                PR_Write(file->handle, buf, len*2)>>1:
+                fwrite(buf, 1, len*2, file->nativehandle)>>1;
 
         if (count==-1) {
             return 0;
         }
         break;
+    }
+    if(count==-1){
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_WRITE_FAILED, file->path);
     }
     return count;
 }
@@ -1055,7 +1072,7 @@ js_isDirectory(JSFile *file)
 }
 
 static int
-js_size(JSFile *file)
+js_size(JSContext *cx, JSFile *file)
 {
     /* SECURITY */
     if(!file->isNative){
@@ -1306,7 +1323,7 @@ static JSBool
 file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile      *file;
-    char        *dest;
+    char        *dest = NULL;
     PRFileDesc  *handle = NULL;
     char        *buffer;
     uint32      count, size;
@@ -1334,20 +1351,16 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* open a closed file */
     if(!file->isOpen){
-        if(!file->isNative){
-            file->handle = PR_Open(file->path, PR_RDONLY, 0644);
-        }else{
-            file->nativehandle = fopen(file->path, "r");
-        }
+        js_FileOpen(cx, obj, file, "readOnly");
     }else
         fileInitiallyOpen = JS_TRUE;
 
     if (file->handle==NULL && file->nativehandle==NULL){
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
             JSFILEMSG_OPEN_FAILED, file->path);
-        return JS_FALSE;
+        goto out;
     }else
-        file->open = JS_TRUE;
+        file->isOpen = JS_TRUE;
 
     handle = PR_Open(dest, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 0644);
 
@@ -1357,7 +1370,7 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         goto out;
     }
 
-    if ((size=js_size(file))!=-1) {
+    if ((size=js_size(cx, file))!=-1) {
         goto out;
     }
 
@@ -1370,7 +1383,6 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* reading panic */
     if (count!=size) {
         JS_free(cx, buffer);
-
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
               JSFILEMSG_COPY_READ_ERROR, file->path);
         goto out;
@@ -1387,18 +1399,23 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     JS_free(cx, buffer);
+
     if(((!file->isNative)?PR_Close(file->handle):fclose(file->nativehandle))!=PR_SUCCESS){
-        /* TODO: error */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+              JSFILEMSG_CLOSE_FAILED, file->path);
+        goto out;
     }
 
     if(PR_Close(handle)!=PR_SUCCESS){
-    }   goto out;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+              JSFILEMSG_CLOSE_FAILED, dest);
+        goto out;
+    }
 
     *rval = JSVAL_TRUE;
     return JS_TRUE;
 out:
-    if(file->open && !fileInitiallyOpen){
+    if(file->isOpen && !fileInitiallyOpen){
         if((!file->isNative)?PR_Close(file->handle):fclose(file->nativehandle)!=PR_SUCCESS){
             JS_ReportWarning(cx, "Can't close %s, proceeding", file->path);
         }
@@ -1419,9 +1436,10 @@ file_renameTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     char    *dest;
 
     if (argc<1) {
-      JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-           JSFILEMSG_EXPECTS_ONE_ARG_ERROR, "rename", argc);
-      return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_EXPECTS_ONE_ARG_ERROR, "rename", argc);
+        *rval = JSVAL_TRUE;
+        return JS_FALSE;
     }
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
@@ -1430,10 +1448,12 @@ file_renameTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
     /* SECURITY */
     if (((!file->isNative)?PR_Rename(file->path, dest):rename(file->path, dest))==PR_SUCCESS){
-      *rval = JSVAL_TRUE;
+        *rval = JSVAL_TRUE;
         return JS_TRUE;
     }else{
-        /* TODO: error */
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_RENAME_FAILED, file->path, dest);
+        *rval = JSVAL_FALSE;
         return JS_FALSE;
     }
 }
@@ -1480,7 +1500,7 @@ file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         str = JS_ValueToString(cx, argv[i]);
         count = js_FileWrite(cx, file, JS_GetStringChars(str), JS_GetStringLength(str), file->type);
         if (count==-1){
-          /* TODO: error */
+          *rval = JSVAL_FALSE;
           return JS_FALSE;
         }
     }
@@ -1503,7 +1523,7 @@ file_writeln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JS_NewStringCopyZ(cx, LINEBREAK);
 
     if (js_FileWrite(cx, file, JS_GetStringChars(str), JS_GetStringLength(str), file->type)==-1){
-        /* TODO: error */
+        *rval = JSVAL_FALSE;
         return JS_FALSE;
     }
 
@@ -1531,18 +1551,18 @@ file_writeAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     if (argc<1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
             JSFILEMSG_WRITEALL_EXPECTS_ONE_ARG_ERROR);
-        return JS_FALSE;
+        goto out;
     }
 
     if (!JS_IsArrayObject(cx, JSVAL_TO_OBJECT(argv[0]))) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
             JSFILEMSG_FIRST_ARGUMENT_WRITEALL_NOT_ARRAY_ERROR);
-        return JS_FALSE;
+        goto out;
     }
     array = JSVAL_TO_OBJECT(argv[0]);
     if (!JS_GetArrayLength(cx, array, &limit)) {
         /* TODO: error */
-        return JS_FALSE; /* not supposed to happen */
+        goto out;
     }
 
     for (i = 0; i<limit; i++) {
@@ -1553,6 +1573,9 @@ file_writeAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
     *rval = JSVAL_TRUE;
     return JS_TRUE;
+out:
+    *rval = JSVAL_FALSE;
+    return JS_FALSE;
 }
 
 static JSBool
@@ -1565,19 +1588,27 @@ file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     /* SECURITY */
+
+    if (argc!=1){
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_EXPECTS_ONE_ARG_ERROR, "copyTo", argc);
+        goto out;
+    }
+
     if (!file->isOpen) {
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
     if (!JS_ValueToInt32(cx, argv[0], &want)){
-        /* TODO: error */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_FIRST_ARGUMENT__MUST_BE_A_NUMBER, "read", argv[0]);
+        goto out;
     }
 
     /* want = (want>262144)?262144:want; * arbitrary size limitation */
 
     buf = JS_malloc(cx, want*sizeof buf[0]);
-    if (!buf)  return JS_FALSE;
+    if (!buf)  goto out;
 
     count =  js_FileRead(cx, file, buf, want, file->type);
     if (count>0) {
@@ -1588,9 +1619,11 @@ file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_TRUE;
     } else {
         JS_free(cx, buf);
-        *rval = JSVAL_NULL;
-        return JS_FALSE;
+        goto out;
     }
+out:
+    *rval = JSVAL_FALSE;
+    return JS_FALSE;
 }
 
 static JSBool
@@ -1672,9 +1705,8 @@ static JSBool
 file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile      *file;
-    PRFileInfo  info;
     JSObject    *array;
-    jsint       len;
+    jsint       len, size;
     jsval       line;
     JSBool      ok = JS_TRUE;
 
@@ -1688,23 +1720,23 @@ file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
-    if ((!file->isNative) ? PR_GetOpenFileInfo(file->handle, &info) : PR_GetFileInfo(file->path, &info)){
-        /* TODO: error */
-        return JS_FALSE;
-    }
+    if(size = js_size(cx, file)==-1) goto out;
 
     while (ok&&
-            (info.size>(JSUint32)
+            (size>(JSUint32)
                 ((!file->isNative)?
                     PR_Seek(file->handle, 0, PR_SEEK_CUR):
                     fseek(file->nativehandle, 0, SEEK_CUR)))) {
-        if(!file_readln(cx, obj, 0, NULL, &line)) return JS_FALSE;
+        if(!file_readln(cx, obj, 0, NULL, &line)) goto out;
         JS_SetElement(cx, array, len, &line);
         len++;
     }
 
     *rval = OBJECT_TO_JSVAL(array);
     return JS_TRUE;
+out:
+    *rval = JSVAL_FALSE;
+    return JS_FALSE;
 }
 
 static JSBool
@@ -1713,22 +1745,32 @@ file_skip(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSFile      *file;
     int32       toskip;
 
-    file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    /* SECURITY */
-    if (!file->isOpen) {
-        js_FileOpen(cx, obj, file, "readOnly");
+    if (argc!=1){
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_EXPECTS_ONE_ARG_ERROR, "copyTo", argc);
+        goto out;
     }
 
     if (!JS_ValueToInt32(cx, argv[0], &toskip)){
-        /* TODO: report error */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_NUMBER, "skip", argv[0]);
+        goto out;
+    }
+
+    file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+
+    /* SECURITY */
+    if (!file->isOpen) {
+        if(!js_FileOpen(cx, obj, file, "readOnly")) goto out;
     }
 
     if (js_FileSkip(file, toskip, file->type)!=toskip) {
-        /* TODO: error */
-        return JS_FALSE;
+        goto out;
     }else
         return JS_TRUE;
+out:
+    *rval = JSVAL_FALSE;
+    return JS_FALSE;
 }
 
 static JSBool
