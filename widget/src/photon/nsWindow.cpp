@@ -148,7 +148,7 @@ void nsWindow::DestroyNative(void)
   }
   // destroy all of the children that are nsWindow() classes
   // preempting the gdk destroy system.
-  DestroyNativeChildren();
+  if( mWidget ) DestroyNativeChildren();
 
   // Call the base class to actually PtDestroy mWidget.
   nsWidget::DestroyNative();
