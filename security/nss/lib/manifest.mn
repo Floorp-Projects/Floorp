@@ -37,7 +37,7 @@ DIRS = pkcs7 ssl nss crmf jar \
     certhigh pk11wrap cryptohi \
     softoken certdb crypto \
     util freebl pkcs12 fortcrypt \
-    smime
+    smime base ckfw
 #
 # these dirs are not built at the moment
 #
