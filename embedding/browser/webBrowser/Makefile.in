@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 		nsIWebBrowserSetup.idl			\
 		nsICommandHandler.idl			\
 		nsIContextMenuListener.idl		\
+		nsIWebBrowserPersist.idl		\
 		$(NULL)
 
 CPPSRCS		= \
@@ -44,6 +45,8 @@ CPPSRCS		= \
 		nsWBURIContentListener.cpp		\
 		nsWebBrowser.cpp		\
 		nsCommandHandler.cpp		\
+		nsWebBrowserPersist.cpp		\
+		nsDOMWalker.cpp			\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -29,6 +29,7 @@ XPIDLSRCS=						\
 		.\nsIWebBrowserChrome.idl					\
     .\nsICommandHandler.idl       \
 		.\nsIWebBrowserSetup.idl					\
+		.\nsIWebBrowserPersist.idl					\
 		$(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s
@@ -38,6 +39,8 @@ CPP_OBJS=							\
 		.\$(OBJDIR)\nsWBURIContentListener.obj		\
 		.\$(OBJDIR)\nsWebBrowser.obj			\
 		.\$(OBJDIR)\nsCommandHandler.obj		\
+		.\$(OBJDIR)\nsWebBrowserPersist.obj		\
+		.\$(OBJDIR)\nsDOMWalker.obj			\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -46,6 +46,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIWebBrowserSetup.h"
+#include "nsIWebBrowserPersist.h"
 
 class nsWebBrowserInitInfo
 {
@@ -69,7 +70,8 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIBaseWindow,
                      public nsIScrollable, 
                      public nsITextScroll, 
-                     public nsIInterfaceRequestor
+                     public nsIInterfaceRequestor,
+                     public nsIWebBrowserPersist
 {
 friend class nsDocShellTreeOwner;
 friend class nsWBURIContentListener;
@@ -87,6 +89,7 @@ public:
     NS_DECL_NSIWEBNAVIGATION
     NS_DECL_NSIWEBPROGRESS
     NS_DECL_NSIWEBBROWSERSETUP
+    NS_DECL_NSIWEBBROWSERPERSIST
 
 protected:
     virtual ~nsWebBrowser();
@@ -115,6 +118,7 @@ protected:
    nsWebBrowserInitInfo*      mInitInfo;
    PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;
+   nsIWebBrowserPersistProgress *mProgressListener;
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;
