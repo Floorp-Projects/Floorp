@@ -719,11 +719,11 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
       outputHTML.Append(PRUnichar(' '));
     }
 
-    outputHTML += NS_LITERAL_STRING("<img src=\"chrome://editor/content/images/") 
-        + NS_ConvertASCIItoUCS2(imageName) 
-        + NS_LITERAL_STRING("\" alt=\"") 
-        + NS_ConvertASCIItoUCS2(tagTXT) 
-        + NS_LITERAL_STRING("\" class=\"moz-txt-smily\"height=19 width=19 align=ABSCENTER>");
+    outputHTML += NS_LITERAL_STRING("<img src=\"chrome://editor/content/images/");
+    AppendASCIItoUTF16(imageName, outputHTML);
+    outputHTML += NS_LITERAL_STRING("\" alt=\"");
+    AppendASCIItoUTF16(tagTXT, outputHTML);
+    outputHTML += NS_LITERAL_STRING("\" class=\"moz-txt-smily\"height=19 width=19 align=ABSCENTER>");
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
   }

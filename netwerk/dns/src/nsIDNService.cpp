@@ -515,7 +515,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out)
   nsAutoString utf16;
   ucs4toUtf16(output, utf16);
   delete [] output;
-  out.Assign(NS_ConvertUCS2toUTF8(utf16));
+  CopyUTF16toUTF8(utf16, out);
 
   // Validation: encode back to ACE and compare the strings
   nsCAutoString ace;

@@ -582,7 +582,7 @@ nsHttpChannel::ApplyContentConversions()
         // stream converter service.. carry on..
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIStreamListener> converter;
-            nsAutoString from = NS_ConvertASCIItoUCS2(val);
+            NS_ConvertASCIItoUTF16 from(val);
             ToLowerCase(from);
             rv = serv->AsyncConvertData(from.get(),
                                         NS_LITERAL_STRING("uncompressed").get(),

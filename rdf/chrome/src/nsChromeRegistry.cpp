@@ -1379,7 +1379,7 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
     const PRUnichar *s;
     rv = literal->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
-    aResult.Assign(NS_ConvertUCS2toUTF8(s));
+    CopyUTF16toUTF8(s, aResult);
   }
   else {
     // This should _never_ happen.

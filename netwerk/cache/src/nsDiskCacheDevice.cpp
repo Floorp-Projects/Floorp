@@ -205,7 +205,7 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
     mDevice->getCacheDirectory(getter_AddRefs(cacheDir)); 
     nsresult rv = cacheDir->GetPath(path);
     if (NS_SUCCEEDED(rv)) {
-        buffer.Append(NS_ConvertUCS2toUTF8(path));
+        AppendUTF16toUTF8(path, buffer);
     } else {
         buffer.Append("directory unavailable");
     }

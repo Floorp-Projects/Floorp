@@ -2043,7 +2043,7 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
     if (nsnull != aURL) {
       nsCAutoString str;
       aURL->GetSpec(str);
-      url = NS_ConvertUTF8toUCS2(str);
+      AppendUTF8toUTF16(str, url);
     }
     url.Append(NS_LITERAL_STRING(": progress "));
     url.AppendInt(aProgress, 10);

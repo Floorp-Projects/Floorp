@@ -2242,7 +2242,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
 
     if (!uname.IsEmpty() && !uname.Equals(NS_LITERAL_CSTRING("anonymous"))) {
         mAnonymous = PR_FALSE;
-        mUsername = NS_ConvertUTF8toUCS2(NS_UnescapeURL(uname));
+        CopyUTF8toUTF16(NS_UnescapeURL(uname), mUsername);
         
         // return an error if we find a CR or LF in the username
         if (uname.FindCharInSet(CRLF) >= 0)
@@ -2254,7 +2254,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (NS_FAILED(rv))
         return rv;
 
-    mPassword = NS_ConvertUTF8toUCS2(NS_UnescapeURL(password));
+    CopyUTF8toUTF16(NS_UnescapeURL(password), mPassword);
 
     // return an error if we find a CR or LF in the password
     if (mPassword.FindCharInSet(CRLF) >= 0)

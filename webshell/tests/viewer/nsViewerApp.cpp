@@ -1098,7 +1098,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
         {
           nsString* tempStr = new nsString;
           if ( tempStr )
-            tempStr->Assign(NS_ConvertUTF8toUCS2(str));
+            CopyUTF8toUTF16(str, *tempStr);
           gWorkList->AppendElement(tempStr);
         }
 #if defined(XP_WIN) && defined(NS_DEBUG)

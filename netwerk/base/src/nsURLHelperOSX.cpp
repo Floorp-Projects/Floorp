@@ -66,8 +66,8 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
       FSRef rootDirectory;
       err = ::FSGetVolumeInfo(0, volumeIndex, NULL, kFSVolInfoNone, NULL, &volName, &rootDirectory);
       if (err == noErr) {
-        nsCString volNameStr = NS_ConvertUCS2toUTF8(Substring((PRUnichar *)volName.unicode,
-                                (PRUnichar *)volName.unicode + volName.length));
+        NS_ConvertUTF16toUTF8 volNameStr(Substring((PRUnichar *)volName.unicode,
+                                                   (PRUnichar *)volName.unicode + volName.length));
         gVolumeList.AppendCString(volNameStr);
         volumeIndex++;
       }

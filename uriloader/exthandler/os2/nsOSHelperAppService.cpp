@@ -201,7 +201,7 @@ nsOSHelperAppService::UnescapeCommand(const nsAString& aEscapedCommand,
   
   LOG(("UnescapeCommand really needs some work -- it should actually do some unescaping\n"));
 
-  aUnEscapedCommand = NS_ConvertUCS2toUTF8(aEscapedCommand);
+  CopyUTF16toUTF8(aEscapedCommand, aUnEscapedCommand);
   LOG(("Escaped command: '%s'\n",
        PromiseFlatCString(aUnEscapedCommand).get()));
   return NS_OK;

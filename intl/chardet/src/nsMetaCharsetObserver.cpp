@@ -377,7 +377,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
                   !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
                   !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
                   !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE")))
-                  aCharset = NS_ConvertASCIItoUCS2(preferred);
+                  AppendASCIItoUTF16(preferred, aCharset);
           }
       }
     }

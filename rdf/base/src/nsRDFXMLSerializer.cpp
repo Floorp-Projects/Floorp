@@ -388,7 +388,7 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
         const char *s;
         resource->GetValueConst(&s);
 
-        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        NS_ConvertUTF8toUTF16 uri(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
         rdf_EscapeAttributeValue(uri);
 
@@ -536,7 +536,7 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
     rv = aResource->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+    NS_ConvertUTF8toUTF16 uri(s);
     rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
     rdf_EscapeAttributeValue(uri);
 
@@ -699,7 +699,7 @@ static const char kRDFLIOpen[] = "    <RDF:li";
 static const char kRDFLIResource1[] = " resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        NS_ConvertUTF8toUTF16 uri(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
         rdf_EscapeAttributeValue(uri);
 
@@ -797,7 +797,7 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
 
     const char *s;
     if (NS_SUCCEEDED(aContainer->GetValueConst(&s))) {
-        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        NS_ConvertUTF8toUTF16 uri(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
 
         rdf_EscapeAttributeValue(uri);

@@ -241,7 +241,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0\""));
+    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0\" encoding=\""));
     
     // Get the encoding from the parser
     // XXX - this won't work for any encoding set via a 301: line in the
@@ -253,11 +253,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mParser->GetEncoding(getter_Copies(encoding));
     if (NS_FAILED(rv)) return rv;
 
-    buffer.Append(NS_LITERAL_STRING(" encoding=\"") +
-                  NS_ConvertASCIItoUCS2(encoding) +
-                  NS_LITERAL_STRING("\""));
+    AppendASCIItoUTF16(encoding, buffer);
 
-    buffer.Append(NS_LITERAL_STRING("?>\n") +
+    buffer.Append(NS_LITERAL_STRING("\"?>\n") +
                   NS_LITERAL_STRING("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" ") +
                   NS_LITERAL_STRING("\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"));
 
@@ -335,9 +333,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
         
         ConvertNonAsciiToNCR(parentText, strNCR);
-        buffer.Append(NS_LITERAL_STRING("<tr><td colspan=\"3\"><a href=\"") +
-                      NS_ConvertASCIItoUCS2(parentStr) +
-                      NS_LITERAL_STRING("\">") +
+        buffer.Append(NS_LITERAL_STRING("<tr><td colspan=\"3\"><a href=\""));
+        AppendASCIItoUTF16(parentStr, buffer);
+        buffer.Append(NS_LITERAL_STRING("\">") +
                       strNCR +
                       NS_LITERAL_STRING("</a></td></tr>\n"));
     }
@@ -510,7 +508,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
   
-    pushBuffer.Append(NS_ConvertUTF8toUCS2(escapeBuf));
+    AppendUTF8toUTF16(escapeBuf, pushBuffer);
     
     pushBuffer.Append(NS_LITERAL_STRING("\"><img src=\""));
 
