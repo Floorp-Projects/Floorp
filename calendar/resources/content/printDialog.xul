@@ -163,10 +163,8 @@ var descriptionTag="&newevent.description.label;"
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
-                        <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value=""
-                             onchange="onDatePick( this );"/>
-                        </hbox>
+                        <datepicker id="start-date-picker" value=""
+                         onchange="onDatePick( this );"/>
                      </row>
                      
                      <!-- Private -->
