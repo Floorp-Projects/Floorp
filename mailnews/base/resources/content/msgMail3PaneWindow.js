@@ -654,14 +654,8 @@ function OnFolderUnreadColAttrModified(event)
     if (event.attrName == "hidden")
     {
         var folderNameCell = document.getElementById("folderNameCell");
-        if (event.newValue == "true")
-        {
-            folderNameCell.setAttribute("label", "?folderTreeName");
-        }
-        else if (event.attrChange == Components.interfaces.nsIDOMMutationEvent.REMOVAL)
-        {
-            folderNameCell.setAttribute("label", "?folderTreeSimpleName");
-        }
+        var label = {"true": "?folderTreeName", "false": "?folderTreeSimpleName"};
+        folderNameCell.setAttribute("label", label[event.newValue]);
     }
 }
 
