@@ -1177,7 +1177,10 @@ nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
     if ( id == "data.execute" ) {
         nsString cmd;
         nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
+        // Get requested command.
         aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
+        // Reset (immediately, to prevent feedback loop).
+        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
         if ( cmd == "ok" ) {
             OnOK( aContent );
         } else if ( cmd == "start" ) {
@@ -1188,7 +1191,6 @@ nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
             OnClose();
         } else {
         }
-        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
     }
 
     return rv;
