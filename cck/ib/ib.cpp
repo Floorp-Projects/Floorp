@@ -295,6 +295,13 @@ int interpret(char *cmd)
 		}
 		if (!xpiname || !xpifile || !newvalue)
 			return FALSE;
+		/*This is a hack to prevent the last page from staying up there endlessly;
+		  We check to see if the filename is null and if it is so we return true 
+		  so that the return value isnt made FALSE */
+		CString filename = newvalue;
+		if (filename.IsEmpty())
+			return TRUE;
+		////////////////////////////////
 		ExtractXPIFile(xpiname, xpifile);
 		if (!CopyFile(newvalue, xpifile, FALSE))
 		{
