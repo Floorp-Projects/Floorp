@@ -792,7 +792,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsReflowState&
   if (PR_TRUE==aTableIsAutoWidth)
     actualMaxWidth = aMaxWidth;
   else
-    actualMaxWidth = aTableSpecifiedWidth;
+    actualMaxWidth = PR_MIN(aMaxWidth, aTableSpecifiedWidth);
 
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==mMinTableWidth)
   { // the max width of the table fits comfortably in the available space
@@ -2382,7 +2382,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
             excess -= mTableFrame->GetColumnWidth(colIndex) - colFrame->GetMinColWidth();   
             mTableFrame->SetColumnWidth(colIndex, colFrame->GetMinColWidth());
           }
-          if (0>excess)
+          if (0>=excess)
             break;
         }
       }
