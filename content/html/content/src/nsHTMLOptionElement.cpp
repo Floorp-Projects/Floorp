@@ -340,7 +340,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
     PRInt32 index;
     GetIndex(&index);
     // This should end up calling SetSelectedInternal
-    return selectInt->SetOptionsSelectedByIndex(index, index, PR_TRUE,
+    return selectInt->SetOptionsSelectedByIndex(index, index, aValue,
                                                 PR_FALSE, PR_TRUE, PR_TRUE,
                                                 nsnull);
   } else {
