@@ -324,12 +324,19 @@ sm_InitPages(SMPageMgr* pm, SMPageCount minPages, SMPageCount maxPages)
     SMPageCount size = maxPages;
     int zero_fd;
 
+#ifdef MAP_ANON
+    zero_fd = -1;
+#else
     zero_fd = open("/dev/zero", O_RDWR);
+#endif
 
     while (addr == NULL) {
         /* let the system place the heap */
         addr = (SMPage*)mmap(0, size << SM_PAGE_BITS,
                              PROT_READ | PROT_WRITE,
+#ifdef MAP_ANON
+                             MAP_ANON | 
+#endif
                              MAP_PRIVATE,
                              zero_fd, 0);
         if (addr == (SMPage*)MAP_FAILED) {
@@ -340,6 +347,11 @@ sm_InitPages(SMPageMgr* pm, SMPageCount minPages, SMPageCount maxPages)
             }
         }
     }
+
+#ifndef MAP_ANON
+    close(zero_fd);
+#endif
+
     SM_ASSERT(SM_IS_ALIGNED(addr, SM_PAGE_BITS));
     pm->memoryBase = addr;
     pm->pageCount = size;
