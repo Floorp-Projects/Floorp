@@ -101,22 +101,17 @@ nsSVGGenericContainerFrame::Init(nsPresContext*  aPresContext,
 
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::AppendFrames(nsPresContext* aPresContext,
-                                         nsIPresShell&   aPresShell,
-                                         nsIAtom*        aListName,
+nsSVGGenericContainerFrame::AppendFrames(nsIAtom*        aListName,
                                          nsIFrame*       aFrameList)
 {
   // append == insert at end:
-  return InsertFrames(aPresContext, aPresShell, aListName,
-                      mFrames.LastChild(), aFrameList);  
+  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::InsertFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+nsSVGGenericContainerFrame::InsertFrames(nsIAtom*        aListName,
+                                         nsIFrame*       aPrevFrame,
+                                         nsIFrame*       aFrameList)
 {
   nsIFrame* lastNewFrame = nsnull;
   {
@@ -144,10 +139,8 @@ nsSVGGenericContainerFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame)
+nsSVGGenericContainerFrame::RemoveFrame(nsIAtom*        aListName,
+                                        nsIFrame*       aOldFrame)
 {
   nsCOMPtr<nsISVGRendererRegion> dirty_region;
   
@@ -157,7 +150,7 @@ nsSVGGenericContainerFrame::RemoveFrame(nsPresContext* aPresContext,
   if (SVGFrame)
     dirty_region = SVGFrame->GetCoveredRegion();
 
-  PRBool result = mFrames.DestroyFrame(aPresContext, aOldFrame);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
@@ -169,11 +162,9 @@ nsSVGGenericContainerFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aOldFrame,
-                      nsIFrame*       aNewFrame)
+nsSVGGenericContainerFrame::ReplaceFrame(nsIAtom*        aListName,
+                                         nsIFrame*       aOldFrame,
+                                         nsIFrame*       aNewFrame)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;

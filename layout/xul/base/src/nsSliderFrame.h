@@ -141,22 +141,14 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   // nsIFrame overrides
-
-    /** nsIFrame **/
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);

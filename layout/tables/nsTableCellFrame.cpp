@@ -213,7 +213,7 @@ nsTableCellFrame::AttributeChanged(nsIContent*     aChild,
   nsTableFrame* tableFrame = nsnull; 
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (tableFrame)) {
-    tableFrame->AttributeChangedFor(GetPresContext(), this, aChild, aAttribute); 
+    tableFrame->AttributeChangedFor(this, aChild, aAttribute); 
   }
   return NS_OK;
 }
@@ -239,9 +239,7 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::AppendFrames(nsPresContext* aPresContext,
-                               nsIPresShell&   aPresShell,
-                               nsIAtom*        aListName,
+nsTableCellFrame::AppendFrames(nsIAtom*        aListName,
                                nsIFrame*       aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "unsupported operation");
@@ -249,9 +247,7 @@ nsTableCellFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::InsertFrames(nsPresContext* aPresContext,
-                               nsIPresShell&   aPresShell,
-                               nsIAtom*        aListName,
+nsTableCellFrame::InsertFrames(nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
                                nsIFrame*       aFrameList)
 {
@@ -260,9 +256,7 @@ nsTableCellFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::RemoveFrame(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsTableCellFrame::RemoveFrame(nsIAtom*        aListName,
                               nsIFrame*       aOldFrame)
 {
   NS_PRECONDITION(PR_FALSE, "unsupported operation");
@@ -424,7 +418,7 @@ nsTableCellFrame::Paint(nsPresContext*      aPresContext,
     // bottom and/or right portion of the cell is painted by translating
     // the rendering context.
     nsPoint offset;
-    GetCollapseOffset(aPresContext, offset);
+    GetCollapseOffset(offset);
     PRBool pushed = PR_FALSE;
     if ((0 != offset.x) || (0 != offset.y)) {
       aRenderingContext.PushState();
@@ -526,13 +520,13 @@ PRBool nsTableCellFrame::ParentDisablesSelection() const //override default beha
 
 // Align the cell's child frame within the cell
 
-void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext,
-                                            const nsHTMLReflowState& aReflowState,
+void nsTableCellFrame::VerticallyAlignChild(const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
 {
   const nsStyleTextReset* textStyle = GetStyleTextReset();
   /* XXX: remove tableFrame when border-collapse inherits */
-  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
+  nsPresContext* presContext = GetPresContext();
+  GET_PIXELS_TO_TWIPS(presContext, p2t);
   nsMargin borderPadding = nsTableFrame::GetBorderPadding(aReflowState, p2t, this);
   
   nscoord topInset = borderPadding.top;
@@ -585,7 +579,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
       kidYTop = nsTableFrame::RoundToPixel(kidYTop,
-                                           aPresContext->ScaledPixelsToTwips(),
+                                           presContext->ScaledPixelsToTwips(),
                                            eAlwaysRoundDown);
   }
   // if the content is larger than the cell height align from top
@@ -604,7 +598,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext
     nsContainerFrame::PositionChildViews(firstKid);
   }
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);
+    nsContainerFrame::SyncFrameViewAfterReflow(presContext, this,
+                                               GetView(),
+                                               &desiredSize.mOverflowArea, 0);
   }
 }
 
@@ -1184,33 +1180,30 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-void nsTableCellFrame::SetCollapseOffsetX(nsPresContext* aPresContext,
-                                          nscoord         aXOffset)
+void nsTableCellFrame::SetCollapseOffsetX(nscoord aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, aXOffset != 0);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aXOffset != 0);
 
   if (offset) {
     offset->x = aXOffset;
   }
 }
 
-void nsTableCellFrame::SetCollapseOffsetY(nsPresContext* aPresContext,
-                                          nscoord         aYOffset)
+void nsTableCellFrame::SetCollapseOffsetY(nscoord aYOffset)
 {
   // Get the property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, aYOffset != 0);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aYOffset != 0);
 
   if (offset) {
     offset->y = aYOffset;
   }
 }
 
-void nsTableCellFrame::GetCollapseOffset(nsPresContext* aPresContext,
-                                         nsPoint&        aOffset)
+void nsTableCellFrame::GetCollapseOffset(nsPoint& aOffset)
 {
   // See if the property is set
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty);
 
   if (offset) {
     aOffset = *offset;

@@ -1317,8 +1317,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                            firstNewFrame->GetContent(),
                                            containingBlock->GetContent()) < 0) {
       // no lastChild, or lastChild comes before the new children, so just append
-      rv = containingBlock->AppendFrames(mPresContext, *mPresShell, aChildListName,
-                                         firstNewFrame);
+      rv = containingBlock->AppendFrames(aChildListName, firstNewFrame);
     } else {
       nsIFrame* insertionPoint = nsnull;
       // try the other children
@@ -1332,9 +1331,9 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
         }
         insertionPoint = f;
       }
-    
-      rv = containingBlock->InsertFrames(mPresContext, *mPresShell, aChildListName,
-                                         insertionPoint, firstNewFrame);
+
+      rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
+                                         firstNewFrame);
     }
   }
   aFrameItems.childList = nsnull;
@@ -9197,10 +9196,7 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
         // empty, so we can simply append).
         NS_ASSERTION(mDocElementContainingBlock->GetFirstChild(nsnull) == nsnull,
                      "Unexpected child of document element containing block");
-        mDocElementContainingBlock->AppendFrames(aPresContext,
-                                                 *shell,
-                                                 nsnull,
-                                                 docElementFrame);
+        mDocElementContainingBlock->AppendFrames(nsnull, docElementFrame);
       }
 
 #ifdef DEBUG
@@ -9467,7 +9463,8 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
         // XXXwaterson this seems wrong; i.e., how can we assume
         // that appending is the right thing to do here?
         state.mFrameManager->AppendFrames(outerTableFrame,
-                                          nsLayoutAtoms::captionList, newFrame);
+                                          nsLayoutAtoms::captionList,
+                                          newFrame);
       }
       else {
         state.mFrameManager->InsertFrames(parentFrame,
@@ -12274,8 +12271,7 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
           // We got lucky: aPrevSibling was the last inline frame in
           // the line-frame.
           ReparentFrame(aPresContext, aBlockFrame, firstLineStyle, newFrame);
-          aState.mFrameManager->InsertFrames(aPresContext, *aState.mPresShell,
-                                             aBlockFrame, nsnull,
+          aState.mFrameManager->InsertFrames(aBlockFrame, nsnull,
                                              prevSiblingParent, newFrame);
           aFrameItems.childList = nsnull;
           aFrameItems.lastChild = nsnull;
@@ -12546,12 +12542,10 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       // Take the old textFrame out of the inline parents child list
       DeletingFrameSubtree(aPresContext, aState.mPresShell, 
                            aState.mFrameManager, textFrame);
-      parentFrame->RemoveFrame(aPresContext, *aState.mPresShell,
-                               nsnull, textFrame);
+      parentFrame->RemoveFrame(nsnull, textFrame);
 
       // Insert in the letter frame(s)
-      parentFrame->InsertFrames(aPresContext, *aState.mPresShell,
-                                nsnull, prevFrame, letterFrames.childList);
+      parentFrame->InsertFrames(nsnull, prevFrame, letterFrames.childList);
     }
   }
 
@@ -12849,12 +12843,10 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIPresShell* aPresShell, nsPresConte
     // Take the old textFrame out of the parents child list
     DeletingFrameSubtree(aPresContext, aState.mPresShell,
                          aState.mFrameManager, textFrame);
-    parentFrame->RemoveFrame(aPresContext, *aState.mPresShell,
-                             nsnull, textFrame);
+    parentFrame->RemoveFrame(nsnull, textFrame);
 
     // Insert in the letter frame(s)
-    parentFrame->InsertFrames(aPresContext, *aState.mPresShell,
-                              nsnull, prevFrame, letterFrames.childList);
+    parentFrame->InsertFrames(nsnull, prevFrame, letterFrames.childList);
   }
   return rv;
 }
@@ -13509,7 +13501,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsPresContext* aPresContext,
       aRightInlineChildFrame->SetParent(aFrame);
 
     aBlockChildFrame->SetNextSibling(aRightInlineChildFrame);
-    aFrame->InsertFrames(aPresContext, *shell, nsnull, aLeftInlineChildFrame, aBlockChildFrame);
+    aFrame->InsertFrames(nsnull, aLeftInlineChildFrame, aBlockChildFrame);
 
     // If aLeftInlineChild has a view...
     if (aLeftInlineChildFrame && aLeftInlineChildFrame->HasView()) {

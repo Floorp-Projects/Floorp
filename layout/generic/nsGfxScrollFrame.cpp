@@ -208,62 +208,40 @@ nsHTMLScrollFrame::SetInitialChildList(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::AppendFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aFrameList)
+nsHTMLScrollFrame::AppendFrames(nsIAtom*        aListName,
+                                nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::AppendFrames(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::InsertFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+nsHTMLScrollFrame::InsertFrames(nsIAtom*        aListName,
+                                nsIFrame*       aPrevFrame,
+                                nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::InsertFrames(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aPrevFrame,
-                                         aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame)
+nsHTMLScrollFrame::RemoveFrame(nsIAtom*        aListName,
+                               nsIFrame*       aOldFrame)
 {
-  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext,
-                                        aPresShell,
-                                        aListName,
-                                        aOldFrame);
+  nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::ReplaceFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame,
-                     nsIFrame*       aNewFrame)
+nsHTMLScrollFrame::ReplaceFrame(nsIAtom*         aListName,
+                                nsIFrame*        aOldFrame,
+                                nsIFrame*        aNewFrame)
 {
-  nsresult rv = nsBoxFrame::ReplaceFrame(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aOldFrame,
-                                         aNewFrame);
+  nsresult rv = nsBoxFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
   mInner.ReloadChildFrames();
   return rv;
 }
@@ -731,62 +709,40 @@ nsXULScrollFrame::SetInitialChildList(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsXULScrollFrame::AppendFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aFrameList)
+nsXULScrollFrame::AppendFrames(nsIAtom*        aListName,
+                               nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::AppendFrames(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 NS_IMETHODIMP
-nsXULScrollFrame::InsertFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+nsXULScrollFrame::InsertFrames(nsIAtom*        aListName,
+                               nsIFrame*       aPrevFrame,
+                               nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::InsertFrames(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aPrevFrame,
-                                         aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 NS_IMETHODIMP
-nsXULScrollFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame)
+nsXULScrollFrame::RemoveFrame(nsIAtom*        aListName,
+                              nsIFrame*       aOldFrame)
 {
-  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext,
-                                        aPresShell,
-                                        aListName,
-                                        aOldFrame);
+  nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
   mInner.ReloadChildFrames();
   return rv;
 }
 
 
 NS_IMETHODIMP
-nsXULScrollFrame::ReplaceFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame,
-                     nsIFrame*       aNewFrame)
+nsXULScrollFrame::ReplaceFrame(nsIAtom*        aListName,
+                               nsIFrame*       aOldFrame,
+                               nsIFrame*       aNewFrame)
 {
-  nsresult rv = nsBoxFrame::ReplaceFrame(aPresContext,
-                                         aPresShell,
-                                         aListName,
-                                         aOldFrame,
-                                         aNewFrame);
+  nsresult rv = nsBoxFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
   mInner.ReloadChildFrames();
   return rv;
 }

@@ -85,22 +85,14 @@ private:
 public:
   // nsIFrame:
 
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
   NS_IMETHOD Init(nsPresContext*  aPresContext,
@@ -263,20 +255,15 @@ nsSVGTSpanFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::AppendFrames(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsSVGTSpanFrame::AppendFrames(nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
 {
   // append == insert at end:
-  return InsertFrames(aPresContext, aPresShell, aListName,
-                      mFrames.LastChild(), aFrameList);  
+  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::InsertFrames(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsSVGTSpanFrame::InsertFrames(nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
                               nsIFrame*       aFrameList)
 {
@@ -309,9 +296,7 @@ nsSVGTSpanFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::RemoveFrame(nsPresContext* aPresContext,
-                             nsIPresShell&   aPresShell,
-                             nsIAtom*        aListName,
+nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
 {
   nsCOMPtr<nsISVGRendererRegion> dirty_region;
@@ -322,7 +307,7 @@ nsSVGTSpanFrame::RemoveFrame(nsPresContext* aPresContext,
   if (SVGFrame)
     dirty_region = SVGFrame->GetCoveredRegion();
   
-  PRBool result = mFrames.DestroyFrame(aPresContext, aOldFrame);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
@@ -345,9 +330,7 @@ nsSVGTSpanFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::ReplaceFrame(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsSVGTSpanFrame::ReplaceFrame(nsIAtom*        aListName,
                               nsIFrame*       aOldFrame,
                               nsIFrame*       aNewFrame)
 {

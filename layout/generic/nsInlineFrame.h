@@ -74,24 +74,16 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aPrevFrame,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell& aPresShell,
-                         nsIAtom* aListName,
-                         nsIFrame* aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aOldFrame,
-                          nsIFrame* aNewFrame);
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame);
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
@@ -215,24 +207,16 @@ public:
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aPrevFrame,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell& aPresShell,
-                         nsIAtom* aListName,
-                         nsIFrame* aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aOldFrame,
-                          nsIFrame* aNewFrame);
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame);
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 

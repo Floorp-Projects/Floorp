@@ -218,9 +218,7 @@ nsTableOuterFrame::SetInitialChildList(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::AppendFrames(nsPresContext* aPresContext,
-                                nsIPresShell&   aPresShell,
-                                nsIAtom*        aListName,
+nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
                                 nsIFrame*       aFrameList)
 {
   nsresult rv;
@@ -242,7 +240,7 @@ nsTableOuterFrame::AppendFrames(nsPresContext* aPresContext,
   
       rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
       if (NS_SUCCEEDED(rv))
-        aPresShell.AppendReflowCommand(reflowCmd);
+        GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
     }
   }
   else {
@@ -254,20 +252,16 @@ nsTableOuterFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::InsertFrames(nsPresContext* aPresContext,
-                                nsIPresShell&   aPresShell,
-                                nsIAtom*        aListName,
+nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
                                 nsIFrame*       aFrameList)
 {
   NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
-  return AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  return AppendFrames(aListName, aFrameList);
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::RemoveFrame(nsPresContext* aPresContext,
-                               nsIPresShell&   aPresShell,
-                               nsIAtom*        aListName,
+nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
                                nsIFrame*       aOldFrame)
 {
   nsresult rv;
@@ -290,7 +284,7 @@ nsTableOuterFrame::RemoveFrame(nsPresContext* aPresContext,
 
   // Remove the caption frame and destroy it
   if (mCaptionFrame && (mCaptionFrame == aOldFrame)) {
-    mCaptionFrame->Destroy(aPresContext);
+    mCaptionFrame->Destroy(GetPresContext());
     mCaptionFrame = nsnull;
     mMinCaptionWidth = 0;
   }
@@ -300,7 +294,7 @@ nsTableOuterFrame::RemoveFrame(nsPresContext* aPresContext,
 
   rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv))
-    aPresShell.AppendReflowCommand(reflowCmd);
+    GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
 
   return NS_OK;
 }
@@ -449,7 +443,7 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
   nsMargin* pCollapsePadding = nsnull;
   if ((aReflowState.frame == mInnerTableFrame) && (mInnerTableFrame->IsBorderCollapse())) {
     if (mInnerTableFrame->NeedToCalcBCBorders()) {
-      mInnerTableFrame->CalcBCBorders(aPresContext);
+      mInnerTableFrame->CalcBCBorders();
     }
     collapseBorder  = mInnerTableFrame->GetBCBorder();
     pCollapseBorder = &collapseBorder;

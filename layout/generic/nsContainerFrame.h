@@ -73,9 +73,7 @@ public:
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
-  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);

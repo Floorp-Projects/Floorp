@@ -81,18 +81,12 @@ public:
   NS_IMETHOD AddTooltipSupport(nsIContent* aNode);
   NS_IMETHOD RemoveTooltipSupport(nsIContent* aNode);
 
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -152,10 +146,8 @@ nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
 }
 
 NS_IMETHODIMP
-nsRootBoxFrame::AppendFrames(nsPresContext* aPresContext,
-                        nsIPresShell&   aPresShell,
-                        nsIAtom*        aListName,
-                        nsIFrame*       aFrameList)
+nsRootBoxFrame::AppendFrames(nsIAtom*        aListName,
+                             nsIFrame*       aFrameList)
 {
   nsresult  rv;
 
@@ -170,18 +162,16 @@ nsRootBoxFrame::AppendFrames(nsPresContext* aPresContext,
     rv = NS_ERROR_FAILURE;
 
   } else {
-    rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsRootBoxFrame::InsertFrames(nsPresContext* aPresContext,
-                        nsIPresShell&   aPresShell,
-                        nsIAtom*        aListName,
-                        nsIFrame*       aPrevFrame,
-                        nsIFrame*       aFrameList)
+nsRootBoxFrame::InsertFrames(nsIAtom*        aListName,
+                             nsIFrame*       aPrevFrame,
+                             nsIFrame*       aFrameList)
 {
   nsresult  rv;
 
@@ -191,17 +181,15 @@ nsRootBoxFrame::InsertFrames(nsPresContext* aPresContext,
   if (aPrevFrame) {
     rv = NS_ERROR_UNEXPECTED;
   } else {
-    rv = AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    rv = AppendFrames(aListName, aFrameList);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsRootBoxFrame::RemoveFrame(nsPresContext* aPresContext,
-                       nsIPresShell&   aPresShell,
-                       nsIAtom*        aListName,
-                       nsIFrame*       aOldFrame)
+nsRootBoxFrame::RemoveFrame(nsIAtom*        aListName,
+                            nsIFrame*       aOldFrame)
 {
   nsresult  rv;
 
@@ -211,7 +199,7 @@ nsRootBoxFrame::RemoveFrame(nsPresContext* aPresContext,
     rv = NS_ERROR_INVALID_ARG;
   
   } else if (aOldFrame == mFrames.FirstChild()) {
-     rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+     rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
   } else {
     rv = NS_ERROR_FAILURE;
   }

@@ -69,20 +69,14 @@ public:
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
   // This function returns NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
 
@@ -131,19 +125,18 @@ protected:
    // that sub-classes may control widget creation.
   virtual nsresult CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay);
    // Getting the view for scollframe may be overriden to provide a parent view for te scroll frame
-  virtual nsresult GetScrollingParentView(nsPresContext* aPresContext,
-                                          nsIFrame* aParent,
+  virtual nsresult GetScrollingParentView(nsIFrame* aParent,
                                           nsIView** aParentView);
 
 private:
-  nsresult CreateScrollingView(nsPresContext* aPresContext);
+  nsresult CreateScrollingView();
   PRPackedBool mVerticalOverflow;
   PRPackedBool mHorizontalOverflow;
 
 protected:
   virtual PRBool NeedsClipWidget();
-  virtual void PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, nsScrollPortEvent::orientType aType);
-  virtual void SetUpScrolledFrame(nsPresContext* aPresContext);
+  virtual void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
+  virtual void SetUpScrolledFrame();
 };
 
 #endif /* nsScrollBoxFrame_h___ */

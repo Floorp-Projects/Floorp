@@ -139,8 +139,7 @@ public:
                                     nsIAtom*        aListName,
                                     nsIFrame*       aFrameList)
   {
-    return aParentFrame->AppendFrames(GetPresContext(), *GetPresShell(),
-                                      aListName, aFrameList);
+    return aParentFrame->AppendFrames(aListName, aFrameList);
   }
 
   NS_HIDDEN_(nsresult) InsertFrames(nsIFrame*       aParentFrame,
@@ -157,8 +156,7 @@ public:
                                     nsIFrame*       aOldFrame,
                                     nsIFrame*       aNewFrame)
   {
-    return aParentFrame->ReplaceFrame(GetPresContext(), *GetPresShell(),
-                                      aListName, aOldFrame, aNewFrame);
+    return aParentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
   }
 
   // Notification that we were unable to render a replaced element

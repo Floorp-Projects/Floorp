@@ -210,9 +210,7 @@ nsTableRowFrame::Init(nsPresContext*  aPresContext,
 
 
 NS_IMETHODIMP
-nsTableRowFrame::AppendFrames(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
 {
   // Append the frames
@@ -225,7 +223,7 @@ nsTableRowFrame::AppendFrames(nsPresContext* aPresContext,
        childFrame = childFrame->GetNextSibling()) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
       // Add the cell to the cell map
-      tableFrame->AppendCell(*aPresContext, (nsTableCellFrame&)*childFrame, GetRowIndex());
+      tableFrame->AppendCell((nsTableCellFrame&)*childFrame, GetRowIndex());
       // XXX this could be optimized with some effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);
     }
@@ -233,16 +231,14 @@ nsTableRowFrame::AppendFrames(nsPresContext* aPresContext,
 
   // Reflow the new frames. They're already marked dirty, so generate a reflow
   // command that tells us to reflow our dirty child frames
-  tableFrame->AppendDirtyReflowCommand(&aPresShell, this);
+  tableFrame->AppendDirtyReflowCommand(this);
 
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsTableRowFrame::InsertFrames(nsPresContext* aPresContext,
-                              nsIPresShell&   aPresShell,
-                              nsIAtom*        aListName,
+nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
                               nsIFrame*       aFrameList)
 {
@@ -267,22 +263,20 @@ nsTableRowFrame::InsertFrames(nsPresContext* aPresContext,
   if (prevCellFrame) {
     prevCellFrame->GetColIndex(colIndex);
   }
-  tableFrame->InsertCells(*aPresContext, cellChildren, GetRowIndex(), colIndex);
+  tableFrame->InsertCells(cellChildren, GetRowIndex(), colIndex);
 
   // Insert the frames in the frame list
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
   // Reflow the new frames. They're already marked dirty, so generate a reflow
   // command that tells us to reflow our dirty child frames
-  tableFrame->AppendDirtyReflowCommand(&aPresShell, this);
+  tableFrame->AppendDirtyReflowCommand(this);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::RemoveFrame(nsPresContext* aPresContext,
-                             nsIPresShell&   aPresShell,
-                             nsIAtom*        aListName,
+nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
 {
   // Get the table frame
@@ -294,19 +288,19 @@ nsTableRowFrame::RemoveFrame(nsPresContext* aPresContext,
       PRInt32 colIndex;
       cellFrame->GetColIndex(colIndex);
       // remove the cell from the cell map
-      tableFrame->RemoveCell(*aPresContext, cellFrame, GetRowIndex());
+      tableFrame->RemoveCell(cellFrame, GetRowIndex());
       // XXX this could be optimized with some effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);
 
       // Remove the frame and destroy it
-      mFrames.DestroyFrame(aPresContext, aOldFrame);
+      mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
       // XXX This could probably be optimized with much effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);
       // Generate a reflow command so we reflow the table itself.
       // Target the row so that it gets a dirty reflow before a resize reflow
       // in case another cell gets added to the row during a reflow coallesce.
-      tableFrame->AppendDirtyReflowCommand(&aPresShell, this);
+      tableFrame->AppendDirtyReflowCommand(this);
     }
   }
 
@@ -391,7 +385,7 @@ nsTableRowFrame::DidResize(nsPresContext*          aPresContext,
         //XXX nsReflowStatus status;
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
 
-        cellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+        cellFrame->VerticallyAlignChild(aReflowState, mMaxCellAscent);
         ConsiderChildOverflow(desiredSize.mOverflowArea, cellFrame);
       }
     }
@@ -1316,7 +1310,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
     aDesiredSize.width  = aReflowState.availableWidth;
     if (!aDesiredSize.mNothingChanged) {
       if (aDesiredSize.height == mRect.height) { // our height didn't change
-        cellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+        cellFrame->VerticallyAlignChild(aReflowState, mMaxCellAscent);
         nsRect dirtyRect = cellFrame->GetRect();
         dirtyRect.height = mRect.height;
         ConsiderChildOverflow(aDesiredSize.mOverflowArea, cellFrame);
@@ -1472,7 +1466,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   if (fullyComplete) {
-    aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+    aCellFrame->VerticallyAlignChild(aReflowState, mMaxCellAscent);
   }
   aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
@@ -1544,7 +1538,7 @@ nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
 {
   NS_ASSERTION(!mPrevInFlow, "program error");
   // Get the property 
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
   if (value) {
     *value = aValue;
   }
@@ -1554,7 +1548,7 @@ nscoord
 nsTableRowFrame::GetUnpaginatedHeight(nsPresContext* aPresContext)
 {
   // See if the property is set
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, GetFirstInFlow(), nsLayoutAtoms::rowUnpaginatedHeightProperty);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(GetFirstInFlow(), nsLayoutAtoms::rowUnpaginatedHeightProperty);
   if (value) 
     return *value;
   else 

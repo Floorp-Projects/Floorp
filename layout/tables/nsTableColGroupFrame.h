@@ -115,30 +115,22 @@ public:
 
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   /** remove the column aChild from the column group, if requested renumber
     * the subsequent columns in this column group and all following column
     * groups. see also ResetColIndices for this
-    * @param aPresContext - the presentation context
     * @param aChild       - the column frame that needs to be removed
     * @param aResetSubsequentColIndices - if true the columns that follow
     *                                     after aChild will be reenumerated
     */
-  void RemoveChild(nsPresContext&  aPresContext,
-                   nsTableColFrame& aChild,
+  void RemoveChild(nsTableColFrame& aChild,
                    PRBool           aResetSubsequentColIndices);
 
   /** @see nsIFrame::Paint
@@ -179,7 +171,6 @@ public:
 
   /** Add column frames to the table storages: colframe cache and cellmap
     * this doesn't change the mFrames of the colgroup frame.
-    * @param aPresContext - the presentation context
     * @param aFirstColIndex - the index at which aFirstFrame should be inserted
     *                         into the colframe cache.
     * @param aResetSubsequentColIndices - the indices of the col frames
@@ -193,8 +184,7 @@ public:
     * @result            - if there is no table frame or the table frame is not
     *                      the first in flow it will return an error
     */
-  nsresult AddColsToTable(nsPresContext&  aPresContext,
-                          PRInt32          aFirstColIndex,
+  nsresult AddColsToTable(PRInt32          aFirstColIndex,
                           PRBool           aResetSubsequentColIndices,
                           nsIFrame*        aFirstFrame,
                           nsIFrame*        aLastFrame = nsnull);
@@ -263,33 +253,27 @@ public:
 protected:
   nsTableColGroupFrame();
 
-  void InsertColsReflow(nsPresContext& aPresContext,
-                        nsIPresShell&   aPresShell,
-                        PRInt32         aColIndex,
+  void InsertColsReflow(PRInt32         aColIndex,
                         nsIFrame*       aFirstFrame,
                         nsIFrame*       aLastFrame = nsnull);
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  NS_IMETHOD IncrementalReflow(nsPresContext*          aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
+  NS_IMETHOD IncrementalReflow(nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_TargetIsMe(nsPresContext*          aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+  NS_IMETHOD IR_TargetIsMe(nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
+  NS_IMETHOD IR_StyleChanged(nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus);
 
 
-  NS_IMETHOD IR_TargetIsChild(nsPresContext*          aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
+  NS_IMETHOD IR_TargetIsChild(nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,
                               nsIFrame *               aNextFrame);

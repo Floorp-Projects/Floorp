@@ -590,9 +590,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AppendFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
+nsFrame::AppendFrames(nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -600,9 +598,7 @@ nsFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::InsertFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
+nsFrame::InsertFrames(nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
                       nsIFrame*       aFrameList)
 {
@@ -611,9 +607,7 @@ nsFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
+nsFrame::RemoveFrame(nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -621,9 +615,7 @@ nsFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::ReplaceFrame(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
+nsFrame::ReplaceFrame(nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
                       nsIFrame*       aNewFrame)
 {

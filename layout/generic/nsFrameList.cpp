@@ -321,8 +321,7 @@ nsFrameList::DoReplaceFrame(nsIFrame* aParent,
 }
 
 PRBool
-nsFrameList::ReplaceFrame(nsPresContext* aPresContext,
-                          nsIFrame* aParent,
+nsFrameList::ReplaceFrame(nsIFrame* aParent,
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame,
                           PRBool aDestroy)
@@ -331,7 +330,7 @@ nsFrameList::ReplaceFrame(nsPresContext* aPresContext,
   NS_PRECONDITION(aNewFrame, "null ptr");
   if (DoReplaceFrame(aParent, aOldFrame, aNewFrame)) {
     if (aDestroy) {
-      aOldFrame->Destroy(aPresContext);
+      aOldFrame->Destroy(aOldFrame->GetPresContext());
     }
     return PR_TRUE;
   }

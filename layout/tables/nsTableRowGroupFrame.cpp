@@ -1327,9 +1327,7 @@ nsTableRowGroupFrame::IncrementalReflow(nsPresContext*        aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::AppendFrames(nsPresContext* aPresContext,
-                                   nsIPresShell&   aPresShell,
-                                   nsIAtom*        aListName,
+nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
   // collect the new row frames in an array
@@ -1349,10 +1347,10 @@ nsTableRowGroupFrame::AppendFrames(nsPresContext* aPresContext,
     nsTableFrame* tableFrame = nsnull;
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (tableFrame) {
-      tableFrame->AppendRows(*aPresContext, *this, rowIndex, rows);
+      tableFrame->AppendRows(*this, rowIndex, rows);
       // Reflow the new frames. They're already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
-      nsTableFrame::AppendDirtyReflowCommand(&aPresShell, this);
+      nsTableFrame::AppendDirtyReflowCommand(this);
       if (tableFrame->RowIsSpannedInto(rowIndex)) {
         tableFrame->SetNeedStrategyInit(PR_TRUE);
       }
@@ -1372,9 +1370,7 @@ nsTableRowGroupFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::InsertFrames(nsPresContext* aPresContext,
-                                   nsIPresShell&   aPresShell,
-                                   nsIAtom*        aListName,
+nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
                                    nsIFrame*       aFrameList)
 {
@@ -1407,11 +1403,11 @@ nsTableRowGroupFrame::InsertFrames(nsPresContext* aPresContext,
   if (numRows > 0) {
     nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
-    tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
+    tableFrame->InsertRows(*this, rows, rowIndex, PR_TRUE);
 
     // Reflow the new frames. They're already marked dirty, so generate a reflow
     // command that tells us to reflow our dirty child frames
-    nsTableFrame::AppendDirtyReflowCommand(&aPresShell, this);
+    nsTableFrame::AppendDirtyReflowCommand(this);
     if (tableFrame->RowIsSpannedInto(rowIndex) || 
         tableFrame->RowHasSpanningCells(rowIndex + numRows - 1)) {
       tableFrame->SetNeedStrategyInit(PR_TRUE);
@@ -1430,9 +1426,7 @@ nsTableRowGroupFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::RemoveFrame(nsPresContext* aPresContext,
-                                  nsIPresShell&   aPresShell,
-                                  nsIAtom*        aListName,
+nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
   nsTableFrame* tableFrame = nsnull;
@@ -1440,16 +1434,16 @@ nsTableRowGroupFrame::RemoveFrame(nsPresContext* aPresContext,
   if (tableFrame) {
     if (nsLayoutAtoms::tableRowFrame == aOldFrame->GetType()) {
       // remove the rows from the table (and flag a rebalance)
-      tableFrame->RemoveRows(*aPresContext, (nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
+      tableFrame->RemoveRows((nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
 
       // XXX this could be optimized (see nsTableFrame::RemoveRows)
       tableFrame->SetNeedStrategyInit(PR_TRUE);
       // Because we haven't added any new frames we don't need to do a pass1
       // reflow. Just generate a reflow command so we reflow the table 
-      nsTableFrame::AppendDirtyReflowCommand(&aPresShell, this);
+      nsTableFrame::AppendDirtyReflowCommand(this);
     }
   }
-  mFrames.DestroyFrame(aPresContext, aOldFrame);
+  mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   return NS_OK;
 }

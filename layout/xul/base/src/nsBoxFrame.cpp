@@ -1155,12 +1155,11 @@ nsBoxFrame::NeedsRecalc()
 }
 
 NS_IMETHODIMP
-nsBoxFrame::RemoveFrame(nsPresContext* aPresContext,
-                        nsIPresShell&   aPresShell,
-                        nsIAtom*        aListName,
+nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
                         nsIFrame*       aOldFrame)
 {
-  nsBoxLayoutState state(aPresContext);
+  nsPresContext* presContext = GetPresContext();
+  nsBoxLayoutState state(presContext);
 
   // remove the child frame
   mFrames.RemoveFrame(aOldFrame);
@@ -1170,7 +1169,7 @@ nsBoxFrame::RemoveFrame(nsPresContext* aPresContext,
     mLayoutManager->ChildrenRemoved(this, state, aOldFrame);
 
   // destroy the child frame
-  aOldFrame->Destroy(aPresContext);
+  aOldFrame->Destroy(presContext);
 
   // mark us dirty and generate a reflow command
   MarkDirtyChildren(state);
@@ -1179,13 +1178,11 @@ nsBoxFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::InsertFrames(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+nsBoxFrame::InsertFrames(nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
                          nsIFrame*       aFrameList)
 {
-   nsBoxLayoutState state(aPresContext);
+   nsBoxLayoutState state(GetPresContext());
 
    // insert the child frames
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
@@ -1208,12 +1205,10 @@ nsBoxFrame::InsertFrames(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsBoxFrame::AppendFrames(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+nsBoxFrame::AppendFrames(nsIAtom*        aListName,
                          nsIFrame*       aFrameList)
 {
-   nsBoxLayoutState state(aPresContext);
+   nsBoxLayoutState state(GetPresContext());
 
    // append the new frames
    mFrames.AppendFrames(this, aFrameList);

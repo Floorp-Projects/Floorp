@@ -645,58 +645,36 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord
 
 
 NS_IMETHODIMP 
-nsHTMLButtonControlFrame::AppendFrames(nsPresContext* aPresContext,
-                                       nsIPresShell&   aPresShell,
-                                       nsIAtom*        aListName,
+nsHTMLButtonControlFrame::AppendFrames(nsIAtom*        aListName,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(aPresContext->FrameManager(), aFrameList);
-  return mFrames.FirstChild()->AppendFrames(aPresContext,
-                                            aPresShell,
-                                            aListName,
-                                            aFrameList);
+  ReParentFrameList(GetPresContext()->FrameManager(), aFrameList);
+  return mFrames.FirstChild()->AppendFrames(aListName, aFrameList);
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::InsertFrames(nsPresContext* aPresContext,
-                                       nsIPresShell&   aPresShell,
-                                       nsIAtom*        aListName,
+nsHTMLButtonControlFrame::InsertFrames(nsIAtom*        aListName,
                                        nsIFrame*       aPrevFrame,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(aPresContext->FrameManager(), aFrameList);
-  return mFrames.FirstChild()->InsertFrames(aPresContext,
-                                            aPresShell,
-                                            aListName,
-                                            aPrevFrame,
-                                            aFrameList);
+  ReParentFrameList(GetPresContext()->FrameManager(), aFrameList);
+  return mFrames.FirstChild()->InsertFrames(aListName, aPrevFrame, aFrameList);
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::RemoveFrame(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsHTMLButtonControlFrame::RemoveFrame(nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame)
 {
-  return mFrames.FirstChild()->RemoveFrame(aPresContext,
-                                           aPresShell,
-                                           aListName,
-                                           aOldFrame);
+  return mFrames.FirstChild()->RemoveFrame(aListName, aOldFrame);
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::ReplaceFrame(nsPresContext* aPresContext,
-                                       nsIPresShell&   aPresShell,
-                                       nsIAtom*        aListName,
+nsHTMLButtonControlFrame::ReplaceFrame(nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame,
                                        nsIFrame*       aNewFrame)
 {
-  ReParentFrameList(aPresContext->FrameManager(), aNewFrame);
-  return mFrames.FirstChild()->ReplaceFrame(aPresContext,
-                                            aPresShell,
-                                            aListName,
-                                            aOldFrame,
-                                            aNewFrame);
+  ReParentFrameList(GetPresContext()->FrameManager(), aNewFrame);
+  return mFrames.FirstChild()->ReplaceFrame(aListName, aOldFrame, aNewFrame);
 }
 
 NS_IMETHODIMP

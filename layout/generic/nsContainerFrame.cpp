@@ -386,9 +386,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
-                               nsIPresShell&   aPresShell,
-                               nsIAtom*        aListName,
+nsContainerFrame::ReplaceFrame(nsIAtom*        aListName,
                                nsIFrame*       aOldFrame,
                                nsIFrame*       aNewFrame)
 {
@@ -401,9 +399,9 @@ nsContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
   prevFrame = frames.GetPrevSiblingFor(aOldFrame);
 
   // Default implementation treats it like two separate operations
-  rv = RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  rv = RemoveFrame(aListName, aOldFrame);
   if (NS_SUCCEEDED(rv)) {
-    rv = InsertFrames(aPresContext, aPresShell, aListName, prevFrame, aNewFrame);
+    rv = InsertFrames(aListName, prevFrame, aNewFrame);
   }
 
   return rv;

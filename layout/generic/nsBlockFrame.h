@@ -119,18 +119,12 @@ public:
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
@@ -333,8 +327,7 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  nsresult AddFrames(nsPresContext* aPresContext,
-                     nsIFrame* aFrameList,
+  nsresult AddFrames(nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
   /** does all the real work for removing aDeletedFrame from this
@@ -342,8 +335,7 @@ protected:
     * handled continued frames
     * marks lines dirty as needed
     */
-  nsresult DoRemoveFrame(nsPresContext* aPresContext,
-                         nsIFrame* aDeletedFrame);
+  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame);
 
   /** grab overflow lines from this block's prevInFlow, and make them
     * part of this block's mLines list.
@@ -358,8 +350,7 @@ protected:
   line_iterator RemoveFloat(nsIFrame* aFloat);
 
   // Remove a float, abs, rel positioned frame from the appropriate block's list
-  static void DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
-                                     nsIFrame*       aFrame);
+  static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
   /** set up the conditions necessary for an initial reflow */
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
