@@ -67,7 +67,7 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
-#ifdef DEBUG_mjudge
+#ifdef ENDER_LITE
 typedef nsIGfxTextControlFrame2 textControlPlace;
 #else
 typedef nsIGfxTextControlFrame textControlPlace;
