@@ -275,7 +275,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
                   // it won't break UCS2 file
                   // Hack Start
                   for(PRInt32 i=0;i<unicharLength;i++)
-                    NS_ASSERTION(0x0000 != unichars[i],"found a null character");
+                    NS_WARN_IF_FALSE(0x0000 != unichars[i], "found a null character");
                      //if(0x0000 == unichars[i])
                         //unichars[i] = 0x0020;
                   // Hack End
