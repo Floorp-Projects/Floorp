@@ -41,7 +41,7 @@ EXPORTS	=                        \
 	nsTarget.h               \
 	nsUserDialogHelper.h     \
 	nsUserTarget.h           \
-	nsZig.h                  \	
+	nsZig.h                  \
 	nsZip.h 
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
