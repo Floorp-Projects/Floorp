@@ -222,6 +222,8 @@
 <!ENTITY fonttimes.accesskey "t">
 <!ENTITY fontCourier.label "Courier">
 <!ENTITY fontcourier.accesskey "c">
+<!ENTITY localfontfaceMenu.label "Local Fonts">
+<!ENTITY localfontmenu.accesskey "f">
 
 <!-- Font Size SubMenu -->
 <!ENTITY FontSizeSelect.tooltip "Choose a font size">
@@ -545,7 +547,7 @@
 <!ENTITY NormalMode.label "Normal Edit Mode">
 <!ENTITY NormalMode.accesskey "n">
 <!ENTITY NormalMode.tooltip "Show table borders and named anchors">
-<!ENTITY AllTagsMode.label "Show All Tags">
+<!ENTITY AllTagsMode.label "HTML Tags">
 <!ENTITY AllTagsMode.accesskey "A">
 <!ENTITY AllTagsMode.tooltip "Display icons for all HTML tags">
 
