@@ -737,7 +737,11 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       UtilityWrite("<menuitem value=\"");
       UtilityWrite(attachInfo->displayName);
       UtilityWrite("\" oncommand=\"OpenAttachURL('");
-      UtilityWrite(attachInfo->urlSpec);
+      // mscott --> i'm intentionally breaking attachements (they don't work yet anyway) in msg display
+      // until we properly escape the url spec and replace '&' with &amp so we don't make the xml parser
+      // think we are feeding it an entity reference!
+//      UtilityWrite(attachInfo->urlSpec);
+      UtilityWrite("mailboxMessage://dummyMessage");
       UtilityWriteCRLF("' );\"  />");
     }
   }
