@@ -51,6 +51,10 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile);
 #include <stdlib.h>
 #include <sys/param.h>
 #include <prenv.h>
+#elif defined(XP_BEOS)
+#include <sys/param.h>
+#include <kernel/image.h>
+#include <storage/FindDirectory.h>
 #endif
 static nsresult GetChromeLocale(PRUnichar** localeName);
 static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
@@ -527,7 +531,7 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
         return NS_ERROR_FAILURE;
     path[len]   = '/';
     path[len+1] = '\0';
-    rv = NS_NewLocalFile(path, aLocalFile);
+    rv = NS_NewLocalFile(path, PR_TRUE, aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     pLocalFile = *aLocalFile;
     pLocalFile->AppendRelativePath("mozilla");
