@@ -266,33 +266,6 @@ nsInputStringStream::nsInputStringStream(const nsString& stringToRead)
 	mStore = do_QueryInterface(mInputStream);
 }
 
-//========================================================================================
-//          nsOutputStringStream
-//========================================================================================
-
-//----------------------------------------------------------------------------------------
-nsOutputStringStream::nsOutputStringStream(char*& stringToChange)
-//----------------------------------------------------------------------------------------
-{
-	nsISupports* stream;
-	if (NS_FAILED(NS_NewCharOutputStream(&stream, &stringToChange)))
-		return;
-	mOutputStream = do_QueryInterface(stream);
-	mStore = do_QueryInterface(stream);
-	NS_RELEASE(stream);
-}
-
-//----------------------------------------------------------------------------------------
-nsOutputStringStream::nsOutputStringStream(nsString& stringToChange)
-//----------------------------------------------------------------------------------------
-{
-	nsISupports* stream;
-	if (NS_FAILED(NS_NewStringOutputStream(&stream, stringToChange)))
-		return;
-	mOutputStream = do_QueryInterface(stream);
-	mStore = do_QueryInterface(stream);
-	NS_RELEASE(stream);
-}
 
 //========================================================================================
 //          nsInputFileStream

@@ -157,7 +157,7 @@ NS_IMETHODIMP BasicStringImpl::Seek(PRInt32 whence, PRInt32 offset)
     }
     mOffset = newPosition;
     return NS_OK;
-} // StringImpl::Seek
+} // BasicStringImpl::Seek
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP BasicStringImpl::Tell(PRUint32* outWhere)
@@ -330,77 +330,6 @@ class ConstCharImpl
 }; // class ConstCharImpl
 
 //========================================================================================
-class CharImpl
-    : public ConstCharImpl
-//========================================================================================
-{
-    enum { kAllocQuantum = 256 };
-    
-    public:
-                                        CharImpl(char** inString, PRInt32 inLength = -1)
-                                            : ConstCharImpl(*inString, inLength)
-                                            , mString(*inString)
-                                            , mAllocLength(mLength + 1)
-                                            , mOriginalLength(mLength)
-                                        {
-                                            if (!mString)
-                                            {
-                                                mAllocLength = kAllocQuantum;
-                                                mString = new char[mAllocLength];
-                                                if (!mString)
-                                                {
-                                                    mLastResult = NS_ERROR_OUT_OF_MEMORY;
-                                                    return;
-                                                }
-                                                mConstString = mString;
-                                                *mString = '\0';
-                                                
-                                            }
-                                        }
-                                        
-                                        ~CharImpl()
-                                        {
-                                            if (mString) 
-                                            {
-                                                delete [] mString;
-                                            }
-                                        }
-
-        virtual PRInt32                 write(const char* buf, PRUint32 aCount)
-                                        {
-                                            if (!buf)
-                                                return 0;
-                                            PRInt32 maxCount = mAllocLength - 1 - mOffset;
-                                            if ((PRInt32)aCount > maxCount)
-                                            {
-                                                mAllocLength = aCount + 1 + mOffset + kAllocQuantum;
-                                                char* newString = new char[mAllocLength];
-                                                if (!newString)
-                                                {
-                                                    mLastResult = NS_ERROR_OUT_OF_MEMORY;
-                                                    return 0;
-                                                }
-                                                memcpy(newString, mString, mLength);
-                                                delete [] mString;
-                                                mString = newString;
-                                                mConstString = newString;
-                                            }
-                                            memcpy(mString + mOffset, buf, aCount);
-                                            mOffset += aCount;
-                                            mLength += aCount;
-                                            if (mOffset > mOriginalLength)
-                                                mString[mOffset] = 0;
-                                            return aCount;
-                                        }
-    protected:
-    
-        char*&                          mString;
-        size_t                          mAllocLength;
-        size_t                          mOriginalLength;
-        
-}; // class CharImpl
-                                       
-//========================================================================================
 class ConstStringImpl
     : public ConstCharImpl
 //========================================================================================
@@ -429,49 +358,6 @@ class ConstStringImpl
     
 }; // class ConstStringImpl
 
-
-//========================================================================================
-class StringImpl
-    : public ConstStringImpl
-// This is wrong, since it really converts to 1-char strings.
-//========================================================================================
-{
-    public:
-                                        StringImpl(nsString& inString)
-                                            : ConstStringImpl(inString)
-                                            , mString(inString)
-                                        {
-                                        }
-
-    protected:
-    
-        virtual PRInt32                 write(const char* buf, PRUint32 count)
-                                        {
-                                            if (!buf)
-                                                return 0;
-                                            // Clone our string as chars
-                                            char* cstring = ToNewCString(mString);
-                                            // Make a CharImpl and do the write
-                                            CharImpl chars(&cstring, mString.Length());
-                                            chars.Seek(PR_SEEK_SET, mOffset);
-                                            // Get the bytecount and result from the CharImpl
-                                            PRInt32 result = chars.write(buf,count);
-                                            mLastResult = chars.get_result();
-                                            // Set our string to match the new chars
-                                            chars.Seek(PR_SEEK_SET, 0);
-                                            PRUint32 newLength;
-                                            chars.Available(&newLength);
-                                            mString.AssignWithConversion(cstring, newLength);
-                                            // Set our const string also...
-                                            delete [] (char*)mConstString;
-                                            mConstString = cstring;
-                                            return result;
-                                        }
-    protected:
-    
-        nsString&                       mString;
-        
-}; // class StringImpl
 
 NS_IMPL_THREADSAFE_ADDREF(BasicStringImpl)
 NS_IMPL_THREADSAFE_RELEASE(BasicStringImpl)
@@ -526,27 +412,6 @@ extern "C" NS_COM nsresult NS_NewCStringInputStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewStringOutputStream(
-    nsISupports** aStreamResult,
-    nsString& aStringToChange)
-    // Factory method to get an nsOutputStream from a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
-//----------------------------------------------------------------------------------------
-{
-    NS_PRECONDITION(aStreamResult != nsnull, "null ptr");
-    if (! aStreamResult)
-        return NS_ERROR_NULL_POINTER;
-
-    StringImpl* stream = new StringImpl(aStringToChange);
-    if (! stream)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(stream);
-    *aStreamResult = (nsISupports*)(void*)stream;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewCharInputStream(
     nsISupports** aStreamResult,
     const char* aStringToRead)
@@ -565,50 +430,6 @@ extern "C" NS_COM nsresult NS_NewCharInputStream(
     NS_ADDREF(stream);
     *aStreamResult = (nsISupports*)(void*)stream;
     return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCharOutputStream(
-    nsISupports** aStreamResult,
-    char** aStringToChange)
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
-//----------------------------------------------------------------------------------------
-{
-    NS_PRECONDITION(aStreamResult != nsnull, "null ptr");
-    NS_PRECONDITION(aStringToChange != nsnull, "null ptr");
-    if (!aStreamResult || !aStringToChange)
-        return NS_ERROR_NULL_POINTER;
-
-    CharImpl* stream = new CharImpl(aStringToChange);
-    if (! stream)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(stream);
-    *aStreamResult = (nsISupports*)(void*)stream;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewStringIOStream(
-    nsISupports** aStreamResult,
-    nsString& aStringToChange)
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-// file stream interfaces in nsIFileStream.h
-//----------------------------------------------------------------------------------------
-{
-    return NS_NewStringOutputStream(aStreamResult, aStringToChange);
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCharIOStream(
-    nsISupports** aStreamResult,
-    char** aStringToChange)
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
-//----------------------------------------------------------------------------------------
-{
-    return NS_NewCharOutputStream(aStreamResult, aStringToChange);
 }
 
 //----------------------------------------------------------------------------------------
