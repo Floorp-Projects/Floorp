@@ -60,6 +60,12 @@ int
 xpidl_process_idl(char *filename);
 
 /*
+ * Iterate over an IDLN_LIST -- why is this not part of libIDL?
+ */
+void
+xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data);
+
+/*
  * Add an output file to an internal list.  Used to clean up temporary files
  * in case of fatal error.
  */
