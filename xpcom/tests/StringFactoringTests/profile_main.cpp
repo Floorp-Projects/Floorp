@@ -1,14 +1,17 @@
 // profile_main.cpp
 
 #include "nscore.h"
-#include "prlong.h"
-#include "prtime.h"
 #include <iostream.h>
 #include <string>
 #include <iomanip>
 
+#include "nsInt64.h"
+
 #ifdef XP_MAC
+#include <Timer.h>
 #include "Profiler.h"
+#else
+#include "prtime.h"
 #endif
 
 #ifndef TEST_STD_STRING
@@ -56,37 +59,37 @@ Find( const string& text, const string& pattern )
     return text.find(pattern);
   }
 
-#ifndef HAVE_LONG_LONG
 inline
-PRUint64
-operator-( const PRUint64& lhs, const PRUint64& rhs )
+nsInt64
+GetTime()
   {
-    PRInt64 result;
-    LL_SUB(result, lhs, rhs);
-    return result;
-  }
+#ifdef XP_MAC
+    UnsignedWide time;
+    Microseconds(&time);
+    return nsInt64( *reinterpret_cast<PRInt64*>(&time) );
+#else
+    return nsInt64( PR_Now() );
 #endif
+  }
 
 class TestTimer
   {
     public:
-      TestTimer() : mStartTime(PR_Now()) { }
+      TestTimer() : mStartTime(GetTime()) { }
 
      ~TestTimer()
         {
-          PRTime stopTime = PR_Now();
-	        PRTime totalTime = stopTime - mStartTime;
+          nsInt64 stopTime = GetTime();
+	        nsInt64 totalTime = stopTime - mStartTime;
 #ifdef HAVE_LONG_LONG
-          cout << setw(10) << totalTime << " 탎 : ";
+          cout << setw(10) << NS_STATIC_CAST(PRInt64, totalTime) << " 탎 : ";
 #else
-          if ( totalTime.hi )
-            cout << "*";
-          cout << setw(10) << totalTime.lo << "탎 : ";
+          cout << setw(10) << NS_STATIC_CAST(PRInt32, totalTime) << "탎 : ";
 #endif
         }
 
     private:
-      PRTime mStartTime;
+      nsInt64 mStartTime;
   };
 
 static
