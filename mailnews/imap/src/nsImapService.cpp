@@ -2942,6 +2942,12 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
       }
     }
 
+    // if we are fetching a part, be sure to enable fetch parts on demand
+    PRBool mimePartSelectorDetected = PR_FALSE;
+    aImapUrl->GetMimePartSelectorDetected(&mimePartSelectorDetected);
+    if (mimePartSelectorDetected)
+      aImapUrl->SetFetchPartsOnDemand(PR_TRUE);
+
     // we got an imap url, so be sure to return it...
     aImapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
   }
@@ -2963,7 +2969,14 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     // XXX this mock channel stuff is wrong -- the channel really should be owning the URL
     // and the originalURL, not the other way around
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
-    if (NS_FAILED(rv) || !mockChannel) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv) || !mockChannel) 
+    {
+      // this is a funky condition...it means we've already run the url once
+      // and someone is trying to get us to run it again...
+      imapUrl->Initialize(); // force a new mock channel to get created.
+      rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
+      if (!mockChannel) return NS_ERROR_FAILURE;
+    }
 
     *_retval = mockChannel;
     NS_IF_ADDREF(*_retval);

@@ -1840,8 +1840,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
               if (urlOKToFetchByParts &&
                 allowedToBreakApart && 
                 !GetShouldFetchAllParts() &&
-                GetServerStateParser().ServerHasIMAP4Rev1Capability()  &&
-                  !mimePartSelectorDetected )  // if a ?part=, don't do BS.
+                GetServerStateParser().ServerHasIMAP4Rev1Capability() /* &&
+                  !mimePartSelectorDetected */)  // if a ?part=, don't do BS.
               {
                 // OK, we're doing bodystructure
 
