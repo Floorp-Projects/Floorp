@@ -89,6 +89,8 @@
 #include <TextEdit.h>
 #endif
 
+// For Copy
+#include "nsISelection.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -2089,8 +2091,13 @@ nsBrowserWindow::DoCopy()
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
       nsString buffer;
-
-      doc->CreateXIF(buffer,PR_TRUE);
+    
+      nsISelection* sel = nsnull;
+      shell->GetSelection(&sel);
+      
+      if (sel != nsnull)
+        doc->CreateXIF(buffer,sel);
+      NS_IF_RELEASE(sel);
 
       nsIParser* parser;
 
@@ -2747,7 +2754,7 @@ nsBrowserWindow::DoDebugSave()
     if (nsnull != doc) {
       nsString buffer;
 
-      doc->CreateXIF(buffer,PR_FALSE);
+      doc->CreateXIF(buffer);
 
       nsIParser* parser;
 
