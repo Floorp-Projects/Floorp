@@ -114,7 +114,8 @@ NS_IMETHODIMP nsAbView::GetURI(char **aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener)
+NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener, 
+                             const PRUnichar *colID, const PRUnichar *sortDirection)
 {
   nsresult rv;
 
@@ -141,6 +142,9 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
     
   rv = EnumerateCards();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SortBy(colID, sortDirection);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	NS_ENSURE_SUCCESS(rv,rv);
@@ -176,14 +180,15 @@ nsresult nsAbView::EnumerateCards()
 
         abcard->card = card;
         NS_IF_ADDREF(abcard->card);
+
+        // XXX better to do an assertion sort, than append and sort?
+        // XXX do we know how many cards ahead of time?
         rv = mCards.AppendElement((void *)abcard);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to append card");
       }
     }
   }
 
-  // XXX hard code, default sortby name
-  rv = SortBy(NS_LITERAL_STRING("DisplayName").get());
   return NS_OK;
 }
 
@@ -319,10 +324,13 @@ NS_IMETHODIMP nsAbView::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 {
-  nsresult rv = SortBy(colID);
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
 
-  rv = InvalidateOutliner(ALL_ROWS);
+  // reverse the sort
+  if (nsCRT::strcmp(mSortDirection.get(), NS_LITERAL_STRING("ascending").get()))
+    rv = SortBy(colID, NS_LITERAL_STRING("ascending").get());
+  else 
+    rv = SortBy(colID, NS_LITERAL_STRING("descending").get());
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -330,7 +338,7 @@ NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 nsresult nsAbView::InvalidateOutliner(PRInt32 row)
 {
   if (!mOutliner)
-    return NS_ERROR_UNEXPECTED;
+    return NS_OK;
   
   if (row == ALL_ROWS)
     return mOutliner->Invalidate();
@@ -389,13 +397,19 @@ NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
   return NS_OK;
 }
 
+typedef struct SortClosure
+{
+  const PRUnichar *colID;
+  PRInt32 factor;
+} SortClosure;
+
 static int PR_CALLBACK
 inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
   AbCard *card1 = (AbCard *)data1;
   AbCard *card2 = (AbCard *)data2;
 
-  const PRUnichar *colID = (const PRUnichar *)privateData;
+  SortClosure *closure = (SortClosure *) privateData;
 
   PRInt32 sortValue;
 
@@ -403,31 +417,37 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
   // PrimaryEmail.  use the last primary key as the secondary key.
   //
   // "Pr" to distinguish "PrimaryEmail" from "PagerNumber"
-  if (colID[0] == 'P' && colID[1] == 'r') {
+  if (closure->colID[0] == 'P' && closure->colID[1] == 'r') {
     sortValue = nsCRT::strcmp(card1->secondaryCollationKey, card2->secondaryCollationKey);
     if (sortValue)
-    return sortValue;
+      return sortValue * closure->factor;
     else
-      return nsCRT::strcmp(card1->primaryCollationKey, card2->primaryCollationKey);
-}
+      return nsCRT::strcmp(card1->primaryCollationKey, card2->primaryCollationKey) * (closure->factor);
+  }
   else {
     sortValue = nsCRT::strcmp(card1->primaryCollationKey, card2->primaryCollationKey);
     if (sortValue)
-      return sortValue;
+      return sortValue * (closure->factor);
     else
-      return nsCRT::strcmp(card1->secondaryCollationKey, card2->secondaryCollationKey);
+      return nsCRT::strcmp(card1->secondaryCollationKey, card2->secondaryCollationKey) * (closure->factor);
   }
 }
 
-nsresult nsAbView::SortBy(const PRUnichar *colID)
+NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 {
   nsresult rv;
+
+  nsAutoString sortColumn;
+  if (!colID) 
+    sortColumn = NS_LITERAL_STRING("DisplayName");  // default sort
+  else 
+    sortColumn = colID;
 
   PRInt32 count = mCards.Count();
   PRInt32 i;
 
   // if we are sorting by how we are already sorted, just reverse
-  if (!nsCRT::strcmp(mSortedColumn.get(),colID)) {
+  if (!nsCRT::strcmp(mSortColumn.get(),sortColumn.get())) {
     PRInt32 halfPoint = count / 2;
     for (i=0; i < halfPoint; i++) {
       // swap the elements.
@@ -436,19 +456,39 @@ nsresult nsAbView::SortBy(const PRUnichar *colID)
       mCards.ReplaceElementAt(ptr2, i);
       mCards.ReplaceElementAt(ptr1, count - i - 1);
     }
+
+    mSortDirection = sortDir;
   }
   else {
     // generate collation keys
     for (i=0; i < count; i++) {
       AbCard *abcard = (AbCard *)(mCards.ElementAt(i));
 
-      rv = GenerateCollationKeysForCard(colID, abcard);
+      rv = GenerateCollationKeysForCard(sortColumn.get(), abcard);
       NS_ENSURE_SUCCESS(rv,rv);
     }
-    mCards.Sort(inplaceSortCallback, (void *)colID);
-    mSortedColumn = colID;
+
+    SortClosure closure;
+    closure.colID = sortColumn.get();
+    closure.factor = 1;
+
+    nsAutoString sortDirection;
+    if (!sortDir)
+      sortDirection = NS_LITERAL_STRING("ascending");  // default direction
+    else {
+      sortDirection = sortDir;
+      if (nsCRT::strcmp(sortDirection.get(), NS_LITERAL_STRING("ascending").get())) {
+        closure.factor = -1;
+      }
+    }
+
+    mCards.Sort(inplaceSortCallback, (void *)(&closure));
+    mSortColumn = sortColumn.get();
+    mSortDirection = sortDirection.get();
   }
 
+  rv = InvalidateOutliner(ALL_ROWS);
+  NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
 
@@ -539,7 +579,7 @@ NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)
       abcard->card = addedCard;
       NS_IF_ADDREF(abcard->card);
     
-      rv = GenerateCollationKeysForCard(mSortedColumn.get(), abcard);
+      rv = GenerateCollationKeysForCard(mSortColumn.get(), abcard);
       NS_ENSURE_SUCCESS(rv,rv);
 
       PRInt32 index;
@@ -555,7 +595,7 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(abcard);
   
-  *index = FindIndexForInsert(mSortedColumn.get(), abcard);
+  *index = FindIndexForInsert(mSortColumn.get(), abcard);
   rv = mCards.InsertElementAt((void *)abcard, *index);
   NS_ENSURE_SUCCESS(rv,rv);
     
@@ -665,7 +705,7 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
   newCard->card = card;
   NS_IF_ADDREF(newCard->card);
     
-  rv = GenerateCollationKeysForCard(mSortedColumn.get(), newCard);
+  rv = GenerateCollationKeysForCard(mSortColumn.get(), newCard);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (!nsCRT::strcmp(newCard->primaryCollationKey, oldCard->primaryCollationKey) &&
@@ -715,6 +755,18 @@ NS_IMETHODIMP nsAbView::SelectAll()
     mOutlinerSelection->SelectAll();
     mOutliner->Invalidate();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::GetSortDirection(PRUnichar **direction)
+{
+  *direction = nsCRT::strdup(mSortDirection.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::GetSortColumn(PRUnichar **column)
+{
+  *column = nsCRT::strdup(mSortColumn.get());
   return NS_OK;
 }
 

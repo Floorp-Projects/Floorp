@@ -1,12 +1,35 @@
 <!ENTITY DisplayName.label "Name">
+<!ENTITY DisplayName.accesskey "N">
+
 <!ENTITY PrimaryEmail.label "Email">
+<!ENTITY PrimaryEmail.accesskey "E">
+
 <!ENTITY Company.label "Organization">
+<!ENTITY Company.accesskey "O">
+
 <!ENTITY NickName.label "Nick Name">
+<!ENTITY NickName.accesskey "i">
+
 <!ENTITY SecondEmail.label "Additional Email">
+<!ENTITY SecondEmail.accesskey "A">
+
 <!ENTITY Department.label "Department">
+<!ENTITY Department.accesskey "D">
+
 <!ENTITY JobTitle.label "Title">
+<!ENTITY JobTitle.accesskey "T">
+
 <!ENTITY CellularNumber.label "Cellular">
+<!ENTITY CellularNumber.accesskey "C">
+
 <!ENTITY PagerNumber.label "Pager">
+<!ENTITY PagerNumber.accesskey "P">
+
 <!ENTITY FaxNumber.label "Fax">
+<!ENTITY FaxNumber.accesskey "F">
+
 <!ENTITY HomePhone.label "Work Phone">
+<!ENTITY HomePhone.accesskey "W">
+
 <!ENTITY WorkPhone.label "Home Phone">
+<!ENTITY WorkPhone.accesskey "H">

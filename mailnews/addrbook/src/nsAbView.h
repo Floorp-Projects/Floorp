@@ -73,7 +73,6 @@ public:
 private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
-  nsresult SortBy(const PRUnichar *colID);
   nsresult CreateCollationKey(const PRUnichar *source, PRUnichar **result);
   PRInt32 FindIndexForInsert(const PRUnichar *colID, AbCard *abcard);
   PRInt32 FindIndexForCard(nsIAbCard *card);
@@ -89,7 +88,8 @@ private:
   nsCOMPtr <nsIAbDirectory> mDirectory;
   nsVoidArray mCards;
   nsCOMPtr<nsIAtom> mMailListAtom;
-  nsString mSortedColumn;
+  nsString mSortColumn;
+  nsString mSortDirection;
   nsCOMPtr<nsICollation> mCollationKeyGenerator;
   nsCOMPtr<nsIAbViewListener> mAbViewListener;
 };

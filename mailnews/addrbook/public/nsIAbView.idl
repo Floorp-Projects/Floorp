@@ -49,10 +49,13 @@ interface nsIAbViewListener : nsISupports
 [scriptable, uuid(e35c015c-1dd1-11b2-9494-f88326252aae)]
 interface nsIAbView : nsISupports
 {
-    void init(in string URI, in nsIAbViewListener abViewListener);
+    void init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
     void close();
 
+    void sortBy(in wstring sortColumn, in wstring sortDirection);
 	readonly attribute string URI;
+    readonly attribute wstring sortColumn;
+	readonly attribute wstring sortDirection;
 
     nsIAbCard getCardFromRow(in long row);
     void selectAll();
