@@ -35,7 +35,6 @@
 
 const NS_XHTML   = "http://www.w3.org/1999/xhtml";
 
-/*
 const HTML_BR    = "html:br";
 const HTML_IMG   = "html:img";
 const HTML_SPAN  = "html:span";
@@ -44,7 +43,6 @@ const HTML_TBODY = "html:tbody";
 const HTML_TD    = "html:td";
 const HTML_TH    = "html:th";
 const HTML_TR    = "html:tr";
-*/
 
 function HTML (tagName, attribs, args)
 {
