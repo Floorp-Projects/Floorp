@@ -657,8 +657,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 nsCOMPtr<nsIPresContext> oldPresContext;
                 shell->GetPresContext(getter_AddRefs(oldPresContext));
 
-                nsCOMPtr<nsIEventStateManager> esm;
-                esm = oldPresContext->GetEventStateManager();
+                nsCOMPtr<nsIEventStateManager> esm =
+                  oldPresContext->EventStateManager();
                 esm->SetFocusedContent(gLastFocusedContent);
                 gLastFocusedContent->HandleDOMEvent(oldPresContext, &event,
                                                     nsnull, NS_EVENT_FLAG_INIT,
