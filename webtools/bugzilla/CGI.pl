@@ -385,7 +385,7 @@ sub confirm_login {
         if (defined $::FORM{"PleaseMailAPassword"}) {
 	    my $realpwd;
             if ($realcryptpwd eq "") {
-		$realpwd = InsertNewUser($enteredlogin);
+		$realpwd = InsertNewUser($enteredlogin, "");
             } else {
                 SendSQL("select password from profiles where login_name = " .
 			SqlQuote($enteredlogin));

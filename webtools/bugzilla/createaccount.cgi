@@ -44,6 +44,7 @@ Content-type: text/html
 PutHeader("Create a new bugzilla account");
 
 my $login = $::FORM{'login'};
+my $realname = $::FORM{'realname'};
 if (defined $login) {
     CheckEmailSyntax($login);
     if (DBname_to_id($login) != 0) {
@@ -53,7 +54,7 @@ if (defined $login) {
 	print "the <b>E-mail me a password</b> button.\n";
 	exit;
     }
-    my $password = InsertNewUser($login);
+    my $password = InsertNewUser($login, $realname);
     MailPassword($login, $password);
     print "A bugzilla account for <tt>$login</tt> has been created.  The\n";
     print "password has been e-mailed to that address.  When it is\n";
@@ -66,13 +67,18 @@ if (defined $login) {
 print q{
 To create a bugzilla account, all that you need to do is to enter a
 legitimate e-mail address.  The account will be created, and its
-password will be mailed to you.
+password will be mailed to you. Optionally you may enter your real name 
+as well.
 
 <FORM method=get>
 <table>
 <tr>
 <td align=right><b>E-mail address:</b></td>
 <td><input size=35 name=login></td>
+</tr>
+<tr>
+<td align=right><b>Real name:</b></td>
+<td><input size=35 name=realname></td>
 </tr>
 </table>
 <input type=submit>

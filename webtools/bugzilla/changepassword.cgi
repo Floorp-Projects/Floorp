@@ -33,9 +33,11 @@ if (! defined $::FORM{'pwd1'}) {
     if (Param('useqacontact')) {
         $qacontactpart = ", the current QA Contact";
     }
-    SendSQL("select emailnotification from profiles where login_name = " .
-            SqlQuote($::COOKIE{'Bugzilla_login'}));
-    my ($emailnotification) = (FetchSQLData());
+    my $loginname = SqlQuote($::COOKIE{'Bugzilla_login'});
+    SendSQL("select emailnotification,realname from profiles where login_name = " .
+            $loginname);
+    my ($emailnotification, $realname) = (FetchSQLData());
+    $realname = value_quote($realname);
     print qq{
 <form method=post>
 <hr>
@@ -47,6 +49,11 @@ if (! defined $::FORM{'pwd1'}) {
 <tr>
 <td align=right>Re-enter your new password:</td>
 <td><input type=password name="pwd2"></td>
+</tr>
+<tr>
+<td align=right>Your real name (optional):</td>
+<td><input size=35 name=realname value="$realname"></td>
+</tr>
 </table>
 <hr>
 <table>
@@ -122,6 +129,13 @@ Please click <b>Back</b> and try again.\n";
 SendSQL("update profiles set emailnotification='$::FORM{'emailnotification'}' where login_name = " .
         SqlQuote($::COOKIE{'Bugzilla_login'}));
 
+my $newrealname = $::FORM{'realname'};
+
+if ($newrealname ne "") {
+    $newrealname = SqlQuote($newrealname);
+    SendSQL("update profiles set realname=$newrealname where login_name = " .
+            SqlQuote($::COOKIE{'Bugzilla_login'}));
+}
 
 PutHeader("Preferences updated.");
 print "

@@ -353,7 +353,7 @@ sub GetVersionTable {
 
 
 sub InsertNewUser {
-    my ($username) = (@_);
+    my ($username, $realname) = (@_);
     my $password = "";
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
@@ -370,7 +370,9 @@ sub InsertNewUser {
         }
     }
             
-    SendSQL("insert into profiles (login_name, password, cryptpassword, groupset) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'), $groupset)");
+    $username = SqlQuote($username);
+    $realname = SqlQuote($realname);
+    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset) values ($username, $realname, '$password', encrypt('$password'), $groupset)");
     return $password;
 }
 
@@ -406,7 +408,7 @@ sub DBNameToIdAndCheck {
         return $result;
     }
     if ($forceok) {
-        InsertNewUser($name);
+        InsertNewUser($name, "");
         $result = DBname_to_id($name);
         if ($result > 0) {
             return $result;
