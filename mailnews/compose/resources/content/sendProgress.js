@@ -75,7 +75,7 @@ var progressListener = {
       var percent;
       if ( aMaxTotalProgress > 0 ) 
       {
-        percent = parseInt( (aCurTotalProgress*100)/aMaxTotalProgress + .5 );
+        percent = Math.round( (aCurTotalProgress*100)/aMaxTotalProgress );
         if ( percent > 100 )
           percent = 100;
         
