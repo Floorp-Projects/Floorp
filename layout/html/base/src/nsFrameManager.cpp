@@ -497,7 +497,7 @@ FrameManager::HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEven
   mPresShell->ProcessReflowCommands();
 }
 
-static void PR_CALLBACK
+void PR_CALLBACK
 HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
 {
   FrameManager* frameManager = (FrameManager*)aEvent->owner;
