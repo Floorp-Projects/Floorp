@@ -27,7 +27,9 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES = -D_IMPL_NS_WIDGET 
 
-EXTRA_DSO_LDOPTS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a -lXm -lXt -lX11
+EXTRA_DSO_LDOPTS+= \
+	$(DIST)/bin/libxpcom.so \
+	$(LIBNSPR) -lXm -lXt -lX11
 
 CPPSRCS=nsWidgetFactory.cpp \
 	nsWindow.cpp \
