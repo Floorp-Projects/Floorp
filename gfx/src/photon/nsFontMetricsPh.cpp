@@ -22,6 +22,7 @@
 
 #include "xp_core.h"
 #include "nsQuickSort.h"
+#include "nsIServiceManager.h"
 #include "nsFontMetricsPh.h"
 #include "nsPhGfxLog.h"
 #include "nsHashtable.h"
@@ -166,8 +167,9 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 
 	char *font_default = NULL;
 	nsresult res = NS_ERROR_FAILURE;
-	NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
-	if( res == NS_OK )
+	nsIPref* prefs = nsnull;
+	nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &prefs);
+	if (prefs)
 	  {
 		  prefs->CopyCharPref( prop, &font_default );
 		  if( font_default )
@@ -178,6 +180,7 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 				str = font_default;
 			}
 	  }
+	NS_IF_RELEASE(prefs);
 
 	float app2twip, scale = 1.0;
 
