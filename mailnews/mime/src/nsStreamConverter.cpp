@@ -38,6 +38,7 @@
 #include "nsIPref.h"
 #include "nsIIOService.h"
 #include "nsIMsgQuote.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -357,8 +358,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	// mscott --> we need to look at the url and figure out what the correct output type is...
 	nsMimeOutputType newType;
 
-	if (NS_FAILED(rv)) return rv;
-	
 	if (!mAlreadyKnowOutputType)
 	{
 		nsXPIDLCString urlSpec;
@@ -422,6 +421,20 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	rv = netService->NewInputStreamChannel(aURI, mOutputFormat,
                                          -1,    // XXX fix contentLength
                                          nsnull, nsnull, getter_AddRefs(mOutgoingChannel));
+	if (NS_FAILED(rv)) 
+		return rv;
+
+	// Set system principal for this document, which will be dynamically generated 
+	NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+					NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+	if (NS_FAILED(rv)) 
+		return rv;
+	nsCOMPtr<nsIPrincipal> principal;
+	if (NS_FAILED(rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
+		return rv;
+	nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+	if (NS_FAILED(rv = mOutgoingChannel->SetOwner(owner)))
+		return rv;
 	
 	// We will first find an appropriate emitter in the repository that supports 
 	// the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
