@@ -323,14 +323,15 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   if ( (tableIsAutoWidth && (perAdjTableWidth - totalAllocated > 0)) ||
        (!tableIsAutoWidth && (totalAllocated < maxWidth)) ) {
     if (totalCounts[PCT] != numCols) {
-      //PRBool onlyAuto = (totalCounts[DES_CON] > 0) && !mIsNavQuirksMode;
+      PRBool onlyAllocateAutoCols = (totalCounts[DES_CON] > 0) && !mIsNavQuirksMode;
       for (colX = 0; colX < numCols; colX++) {
         if (PCT == allocTypes[colX]) {
           allocTypes[colX] = -1;
         }
-        //else if ((FIX == allocTypes[colX]) && onlyAuto) {
-        //  allocTypes[colX] = -1;
-        //}
+        else if (onlyAllocateAutoCols && (DES_CON != allocTypes[colX]) && 
+                                         (DES_ADJ != allocTypes[colX])) {
+          allocTypes[colX] = -1;
+        }
       }
     }
     if (tableIsAutoWidth) {
