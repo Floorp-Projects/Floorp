@@ -108,6 +108,10 @@ ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsMessengerWinIntegration.cpp 
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS		+= nsMessengerOS2Integration.cpp 
+endif
+
 EXPORTS		= \
 		nsMessenger.h \
 		nsMessengerBootstrap.h \
