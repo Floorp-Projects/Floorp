@@ -195,6 +195,10 @@ statusbarpanel, .statusbar-panel {
   padding: 0px;
 }
 
+.statusbar-panel-text {
+  margin: 0px !important;
+}
+
 /* ::::: Descriptions and Labels ::::::: */
 
 description[disabled="true"], label[disabled="true"] {

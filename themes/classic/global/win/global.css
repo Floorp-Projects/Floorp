@@ -211,6 +211,11 @@ button[type="menu-button"] {
     {
       padding             : 0px;
     }    
+  
+  .statusbar-panel-text
+    {
+      margin: 0px !important;
+    }
     
 /**
  * iframe default sizing 
