@@ -40,7 +40,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(705e7fc8-6fbb-456e-8d18-fd2dae55d477)]
+[scriptable, uuid(1ea57817-73cc-4224-adb7-55aa83bb3f09)]
 interface nsIXTFVisual : nsIXTFElement
 {
   // The content tree rooted in 'visualContent' will be rendered where

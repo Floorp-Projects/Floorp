@@ -1063,6 +1063,11 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     }
   }
 
+#ifdef MOZ_XTF
+  if (nameSpaceID > kNameSpaceID_LastBuiltin)
+    content->BeginAddingChildren();
+#endif
+
   return result;
 }
 

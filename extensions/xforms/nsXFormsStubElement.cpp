@@ -167,6 +167,12 @@ nsXFormsStubElement::AttributeRemoved(nsIAtom *aName)
 }
 
 NS_IMETHODIMP
+nsXFormsStubElement::BeginAddingChildren()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsStubElement::DoneAddingChildren()
 {
   return NS_OK;
@@ -311,6 +317,12 @@ nsXFormsXMLVisualStub::WillRemoveAttribute(nsIAtom *aName)
 
 NS_IMETHODIMP
 nsXFormsXMLVisualStub::AttributeRemoved(nsIAtom *aName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsXMLVisualStub::BeginAddingChildren()
 {
   return NS_OK;
 }

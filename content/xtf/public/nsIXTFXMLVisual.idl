@@ -41,7 +41,7 @@
 interface nsIXTFXMLVisualWrapper;
 interface nsIDOMElement;
 
-[scriptable, uuid(f6e8a067-a3ec-450f-b1e1-3f14ac2b369e)]
+[scriptable, uuid(e63d240d-bd00-4857-ba65-2f9cc599eead)]
 interface nsIXTFXMLVisual : nsIXTFVisual
 {
   // onCreated: Will be called before any notifications are sent to
