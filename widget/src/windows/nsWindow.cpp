@@ -2881,7 +2881,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 			HIMC hIMEContext;
 
-			mIMEIsComposing = PR_TRUE;
 			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
 				return PR_FALSE;
 			}
@@ -2961,6 +2960,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
 #endif
+				if(! mIMEIsComposing) {
+					HandleStartComposition(hIMEContext);
+				}
+
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
 				if (compStrLen+1>mIMECompositionStringSize) {
 					delete [] mIMECompositionString;
@@ -2971,11 +2974,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,mIMECompositionString,mIMECompositionStringSize);
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
+#if defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::GCS_RESULTSTR compStrLen = %d\n", compStrLen);
+#endif
 				result = PR_TRUE;
 				HandleTextEvent(hIMEContext, PR_FALSE);
 				HandleEndComposition();
-				HandleStartComposition(hIMEContext);
-                                bSendEvent = PR_TRUE;
+                bSendEvent = PR_TRUE;
 			}
 			//
 			// This provides us with a composition string
@@ -2984,6 +2989,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
 #endif
+				if(! mIMEIsComposing) {
+					HandleStartComposition(hIMEContext);
+				}
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
 				if (compStrLen+1>mIMECompositionStringSize) {
 					if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
@@ -2993,6 +3001,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				
 				::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,mIMECompositionString,mIMECompositionStringSize);
 				mIMECompositionStringLength = compStrLen;
+#if defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::GCS_COMPSTR compStrLen = %d\n", compStrLen);
+#endif
 				mIMECompositionString[compStrLen]='\0';
 				HandleTextEvent(hIMEContext);
 				result = PR_TRUE;
@@ -3003,6 +3014,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: haandle 0 length TextEvent. \n");
 #endif
+				if(! mIMEIsComposing) {
+					HandleStartComposition(hIMEContext);
+				}
 				mIMECompositionStringLength = 0;
 				HandleTextEvent(hIMEContext,PR_FALSE);
                                 bSendEvent = PR_TRUE;
@@ -3013,13 +3027,34 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 			break;
 
-		case WM_IME_ENDCOMPOSITION:
+		case WM_IME_ENDCOMPOSITION: 
 
-			mIMEIsComposing = PR_FALSE;
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
 #endif
-			HandleEndComposition();
+			if(mIMEIsComposing)
+			{
+				HIMC hIMEContext;
+
+				if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
+					return PR_FALSE;
+				}
+
+				hIMEContext = ::ImmGetContext(mWnd);
+				if (hIMEContext==NULL) {
+					return PR_TRUE;
+				}
+				// IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
+							// first when we hit space in composition mode
+							// we need to clear out the current composition string 
+							// in that case. 
+				mIMECompositionStringLength = 0;
+				mIMECompositionString[0]='\0';
+				HandleTextEvent(hIMEContext, PR_FALSE);
+
+				HandleEndComposition();
+				::ImmReleaseContext(mWnd,hIMEContext);
+			}
 			result = PR_TRUE;
 			break;
 
@@ -3759,6 +3794,7 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 void
 nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 {
+  NS_ASSERTION( mIMEIsComposing, "conflict state");
   nsTextEvent		event;
   nsPoint			point;
   size_t			unicharSize;
@@ -3774,7 +3810,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,0);
 
-  if (mIMECompositionUniStringSize < (PRInt32)unicharSize) {
+  if (mIMECompositionUniStringSize < (PRInt32)(unicharSize+1)) {
 	if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
 		mIMECompositionUniString = new PRUnichar[unicharSize+32];
 		mIMECompositionUniStringSize = unicharSize+32;
@@ -3825,6 +3861,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 void
 nsWindow::HandleStartComposition(HIMC hIMEContext)
 {
+	NS_ASSERTION( !mIMEIsComposing, "conflict state");
 	nsCompositionEvent	event;
 	nsPoint				point;
 	CANDIDATEFORM		candForm;
@@ -3849,11 +3886,14 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 #endif
 	::ImmSetCandidateWindow(hIMEContext,&candForm);
 	NS_RELEASE(event.widget);
+	mIMEIsComposing = PR_TRUE;
+
 }
 
 void
 nsWindow::HandleEndComposition(void)
 {
+	NS_ASSERTION(mIMEIsComposing, "conflict state");
 	nsCompositionEvent	event;
 	nsPoint				point;
 
@@ -3865,6 +3905,7 @@ nsWindow::HandleEndComposition(void)
 	event.compositionMessage = NS_COMPOSITION_END;
 	(void)DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
+	mIMEIsComposing = PR_FALSE;
 }
 
 static PRUint32 PlatformToNSAttr(PRUint32 aAttr)
@@ -3892,13 +3933,16 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 {
 	PRUint32	rangePointer;
 	PRInt32		ictr;
-	PRUint32	uctr;
 	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
 	
 	//
 	// figure out the ranges from the compclause string
 	//
 	if (mIMECompClauseStringLength==0) {
+    // xxx Fix me....
+    NS_ASSERTION(mIMECursorPosition <= mIMECompositionStringLength, "wrong cursor positoin");
+    if(mIMECursorPosition > mIMECompositionStringLength)
+        mIMECursorPosition = mIMECompositionStringLength;
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
