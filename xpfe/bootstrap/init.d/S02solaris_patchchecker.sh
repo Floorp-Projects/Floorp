@@ -4,7 +4,7 @@
 moz_spc_fatal_error()
 {
     echo "$0: Solaris patch checker error: $1"
-    moz_startstop_addon_scripts "stop"
+    moz_pis_startstop_scripts "stop"
     exit 1
 }
 
@@ -59,7 +59,7 @@ if [ "`uname -s`" = "SunOS" -a "${MOZILLA_SOLARIS_PATCHCHECKER}" != "disable_pat
             echo "${key}" >>"${keyfile}"
         else
             echo "# Patch checker failure. Please apply the missing Solaris patches."
-            moz_startstop_addon_scripts "stop"
+            moz_pis_startstop_scripts "stop"
             exit 1
         fi
     fi

@@ -53,12 +53,12 @@ case "$(uname -p)" in
         # Solaris 2.7/SPARC
         "5.7")
             required_patches=(
-              [0]="106950-24" [0_title]="SunOS 5.7: linker patch"
+              [0]="106300-22" [0_title]="64-Bit Shared library patch for C++"
               [1]="106327-21" [1_title]="32-Bit Shared library patch for C++"
-              [2]="106300-22" [2_title]="64-Bit Shared library patch for C++"
-              [3]="108376-44" [3_title]="OpenWindows 3.6.1: Xsun Patch"
-              [4]="107650-08" [4_title]="OpenWindows 3.6.1 X11R6.4 Xprint Extension Patch"
-              [5]="107636-10" [5_title]="SunOS 5.7: X Input & Output Method patch"
+              [2]="106950-24" [2_title]="SunOS 5.7: linker patch"
+              [3]="107650-08" [3_title]="OpenWindows 3.6.1 X11R6.4 Xprint Extension Patch"
+              [4]="107636-10" [4_title]="SunOS 5.7: X Input & Output Method patch"
+              [5]="108376-44" [5_title]="OpenWindows 3.6.1: Xsun Patch"
               [6]="112689-02" [6_title]="SunOS 5.7: UTF-8 locale ICONV patch"
             )
             num_required_patches=7
@@ -67,25 +67,34 @@ case "$(uname -p)" in
         # Solaris 2.8/SPARC
         "5.8")
             required_patches=(
-              [0]="109147-27" [0_title]="SunOS 5.8: linker patch"
-              [1]="108434-14" [1_title]="32-Bit Shared library patch for C++"
-              [2]="108435-14" [2_title]="64-Bit Shared library patch for C++"
+              [0]="108434-14" [0_title]="32-Bit Shared library patch for C++"
+              [1]="108435-14" [1_title]="64-Bit Shared library patch for C++"
+              [2]="108652-79" [2_title]="X11 6.5.1: Xsun patch"
               [3]="108773-18" [3_title]="SunOS 5.8: IIIM and X Input & Output Method patch"
-              [4]="108652-77" [4_title]="X11 6.5.1: Xsun patch"
+              [4]="109147-27" [4_title]="SunOS 5.8: linker patch"
+              [5]="109159-03" [5_title]="SunOS 5.8: Chinese iconv module updates"
+              [6]="109704-03" [6_title]="SunOS 5.8: Japanese iconv patch"
+              [7]="111721-04" [7_title]="SunOS 5.8: Math Library (libm) patch"
+              [8]="113261-02" [8_title]="SunOS 5.8: UTF-8 locale ICONV patch"
+              [9]="114542-01" [9_title]="SunOS 5.8: Adds extended Arabic support"
             )
-            num_required_patches=5
+            num_required_patches=10
             ;;
 
         # Solaris 2.9/SPARC
         "5.9")
             required_patches=(
-              [0]="112963-10" [0_title]="SunOS 5.9: linker patch"
-              [1]="111711-08" [1_title]="32-Bit Shared library patch for C++"
-              [2]="111712-08" [2_title]="64-Bit Shared library patch for C++"
+              [0]="111711-08" [0_title]="32-Bit Shared library patch for C++"
+              [1]="111712-08" [1_title]="64-Bit Shared library patch for C++"
+              [2]="111722-04" [2_title]="SunOS 5.9: Math Library (libm) patch"
               [3]="112661-06" [3_title]="SunOS 5.9: IIIM and X Input & Output Method patch"
-              [4]="112785-30" [4_title]="X11 6.6.1: Xsun patch"
+              [4]="112785-34" [4_title]="X11 6.6.1: Xsun patch"
+              [5]="112963-10" [5_title]="SunOS 5.9: linker patch"
+              [6]="113902-03" [6_title]="SunOS 5.9: Asian UTF-8 iconv modules enhancement"
+              [7]="114276-02" [7_title]="SunOS 5.9: Extended Arabic support in UTF-8"
+              [8]="114641-02" [8_title]="SunOS 5.9: Japanese iconv for UTF-8 patch"
             )
-            num_required_patches=5
+            num_required_patches=9
             ;;
         *)
             echo "# WARNING: Patch checker not supported for $(uname -s)."
@@ -93,10 +102,61 @@ case "$(uname -p)" in
             ;;
       esac
       ;;
-  # FixMe: Need support for Solaris/{x86,x86-64}
+  "i386")
+      case "$(uname -r)" in
+        # Solaris 2.7/x86
+        "5.7")
+            required_patches=(
+              [0]="106328-19" [0_title]="SunOS 5.7_x86: Shared library patch for C++"
+              [1]="106951-25" [1_title]="SunOS 5.7_x86: Linker Patch"
+              [2]="107651-08" [2_title]="OpenWindows 3.6.1_x86: X11R6.4 Xprint Extension Patch"
+              [3]="107637-10" [3_title]="SunOS 5.7_x86: X Input & Output Method patch"
+              [4]="108377-39" [4_title]="OpenWindows 3.6.1_x86: Xsun Patch"
+              [5]="112690-01" [5_title]="SunOS 5.7_x86: UTF-8 locale ICONV patch"
+            )
+            num_required_patches=6
+            ;;
+
+        # Solaris 2.8/x86
+        "5.8")
+            required_patches=(
+              [0]="108436-13" [0_title]="SunOS 5.8_x86 Shared library patch for C++"
+              [1]="108653-68" [1_title]="X11 6.4.1_x86: Xsun patch"
+              [2]="108774-18" [2_title]="SunOS 5.8_x86: IIIM and X Input & Output Method patch"
+              [3]="109148-28" [3_title]="SunOS 5.8_x86: linker patch"
+              [4]="109160-03" [4_title]="SunOS 5.8_x86: Chinese iconv module updates"
+              [5]="109705-03" [5_title]="SunOS 5.8_x86: Japanese iconv patch"
+              [6]="112757-01" [6_title]="SunOS 5.8_x86: Math Library (libm) patch"
+              [7]="113262-02" [7_title]="SunOS 5.8_x86: UTF-8 locale ICONV patch"
+              [8]="114543-01" [8_title]="SunOS 5.8_x86: Adds extended Arabic support"
+            )
+            num_required_patches=9
+            ;;
+
+        # Solaris 2.9/x86
+        "5.9")
+            required_patches=(
+              [0]="111713-06" [0_title]="SunOS 5.9_x86: Shared library patch for C++"
+              [1]="111728-03" [1_title]="SunOS 5.9_x86: Math Library (libm) patch"
+              [2]="112662-04" [2_title]="SunOS 5.9_x86: IIIM and X Input & Output Method patch"
+              [3]="112786-22" [3_title]="X11 6.6.1_x86: Xsun patch"
+              [4]="113986-06" [4_title]="SunOS 5.9_x86: linker Patch"
+              [5]="113903-03" [5_title]="SunOS 5.9_x86: Asian UTF-8 iconv modules enhancement"
+              [6]="114277-02" [6_title]="SunOS 5.9_x86: Extended Arabic support in UTF-8 "
+              [7]="114642-02" [7_title]="SunOS 5.9_x86: Japanese iconv for UTF-8 patch"
+            )
+            num_required_patches=8
+            ;;
+
+        *)
+            echo "# WARNING: Patch checker not supported for $(uname -s)."
+            exit 0
+            ;;
+      esac
+      ;;
   *)
-      echo "# WARNING: Patch checker not supported for $(uname -p)."
-      exit 0
+      echo "# ERROR: Patch checker not supported for $(uname -p)."
+      exit 1
       ;;
 esac
 
