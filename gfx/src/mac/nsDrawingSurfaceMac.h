@@ -21,9 +21,8 @@
 
 #include "nsIDrawingSurface.h"
 #include "nsIDrawingSurfaceMac.h"
-#include "nsFontMetricsMac.h"
-#include "nsGraphicState.h"
 
+class nsGraphicState;
 
 class nsDrawingSurfaceMac : public nsIDrawingSurface,
                             nsIDrawingSurfaceMac
