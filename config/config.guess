@@ -236,7 +236,7 @@ EOF
     TSUNAMI:LynxOS:2.2*:*)
 	echo sparc-lynx-lynxos${UNAME_RELEASE}
 	exit 0 ;;
-    RM*:SINIX-N:5.4[23]:*|RM*:ReliantUNIX-N:5.4[23]:*)
+    RM*:SINIX*:5.4[23]:* | RM*:Reliant*:5.4[23]:*)
 	echo mips-sni-reliantunix
 	exit 0 ;;
 esac
