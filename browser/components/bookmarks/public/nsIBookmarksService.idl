@@ -65,12 +65,14 @@ interface nsIBookmarksService : nsISupports
                                   in wstring aURL,
                                   in wstring aShortcutURL,
                                   in wstring aDescription,
-                                  in wstring aDocCharSet);
+                                  in wstring aDocCharSet,
+                                  in wstring aPostData);
     nsIRDFResource createBookmarkInContainer(in wstring aName,
                                              in wstring aURL,
                                              in wstring aShortcutURL,
                                              in wstring aDescription,
-                                             in wstring aDocCharSet, 
+                                             in wstring aDocCharSet,
+                                             in wstring aPostData, 
                                              in nsIRDFResource aFolder,
                                              in long aIndex);
 
@@ -88,7 +90,7 @@ interface nsIBookmarksService : nsISupports
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
-    string resolveKeyword(in wstring aName);
+    string resolveKeyword(in wstring aName, out wstring aPostData);
     
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
 

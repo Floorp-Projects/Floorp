@@ -206,7 +206,7 @@ nsBookmarkContentHandler.prototype = {
       var root = rdf.GetResource("NC:BookmarksRoot");  
       // Append this bookmark to the end.
       var bmRes = bms.createBookmarkInContainer(bookmark.name, bookmark.url, bookmark.keyword, 
-                                                bookmark.description, bookmark.charset, root, -1);
+                                                bookmark.description, bookmark.charset, root, -1, "");
       dump("*** bookmark =" + bookmark.toSource() + "\n");                                                
       var ds = bms.QueryInterface(Components.interfaces.nsIRDFDataSource);
       if (bookmark.webpanel == "true") {                                                   
