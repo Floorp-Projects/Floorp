@@ -43,13 +43,21 @@ nsAutoString& GetEmptyString() {
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): 
     nsIParserNode(), mSkippedContent("") {
   NS_INIT_REFCNT();
-  mAttributeCount=0;
+
+  static int theNodeCount=0;
+  theNodeCount++;
+  mAttributes=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
-  memset(mAttributes,0,sizeof(mAttributes));
   mRecycler=aRecycler;
 }
 
+static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
+  CToken* theToken=0;
+  while(theToken=(CToken*)aDeque.Pop()){
+    aRecycler->RecycleToken(theToken);
+  }
+}
 
 /**
  *  default destructor
@@ -60,11 +68,9 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
  *  @return  
  */
 nsCParserNode::~nsCParserNode() {
-  if(mRecycler) {
-    PRUint32 index=0;
-    for(index=0;index<mAttributeCount;index++){
-      mRecycler->RecycleToken(mAttributes[index]);
-    }
+  if(mRecycler && mAttributes) {
+    RecycleTokens(mRecycler,*mAttributes);
+    delete mAttributes;
   }
 }
 
@@ -79,10 +85,11 @@ NS_IMPL_RELEASE(nsCParserNode)
  *  @return  
  */
 
-nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber)  
-{
+nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler) {
   mLineNumber=aLineNumber;
-  mAttributeCount=0;
+  mRecycler=aRecycler;
+  if(mAttributes && (mAttributes->GetSize()))
+    RecycleTokens(mRecycler,*mAttributes);
   mToken=aToken;
   return NS_OK;
 }
@@ -130,13 +137,12 @@ nsresult nsCParserNode::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @return  
  */
 void nsCParserNode::AddAttribute(CToken* aToken) {
-  NS_PRECONDITION(mAttributeCount<eMaxAttr, "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
 
-  if(mAttributeCount<eMaxAttr) {
-    if(aToken) {
-      mAttributes[mAttributeCount++]=aToken;
-    }
+  if(!mAttributes)
+    mAttributes=new nsDeque(0);
+  if(mAttributes) {
+    mAttributes->Push(aToken);
   }
 }
 
@@ -224,9 +230,14 @@ PRInt32 nsCParserNode::GetTokenType(void) const{
  *  @return  int -- representing attribute count
  */
 PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
-  if(PR_TRUE==askToken)
-    return mToken->GetAttributeCount();
-  return mAttributeCount;
+  PRInt32 result=0;
+
+  if(PR_FALSE==askToken) {
+    if(mAttributes)
+      result=mAttributes->GetSize();
+  }
+  else result=mToken->GetAttributeCount();
+  return result;
 }
 
 /**
@@ -238,8 +249,9 @@ PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
  *  @return  string rep of given attribute text key
  */
 const nsString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
-  if(anIndex<mAttributeCount) {
-    CAttributeToken* tkn=(CAttributeToken*)(mAttributes[anIndex]);
+  PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
+  if((PRInt32)anIndex<theCount) {
+    CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
     return tkn->GetKey();
   }
   return GetEmptyString();
@@ -254,9 +266,13 @@ const nsString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
  *  @return  string rep of given attribute text value
  */
 const nsString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
-  NS_PRECONDITION(anIndex<mAttributeCount, "Bad attr index");
-  if(anIndex<mAttributeCount){
-    return (mAttributes[anIndex])->GetStringValueXXX();
+  PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
+
+  NS_PRECONDITION(PRInt32(anIndex)<theCount, "Bad attr index");
+
+  if(PRInt32(anIndex)<theCount) {
+    CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
+    return tkn->GetStringValueXXX();
   }
   return GetEmptyString();
 }
@@ -286,13 +302,11 @@ PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
  * @return  token at anIndex
  */
 
-CToken* nsCParserNode::PopAttributeToken()
-{
-  NS_PRECONDITION(mAttributeCount<eMaxAttr, "Buffer overrun!");
-  if(mAttributeCount > 0) {
-    CToken* theAttrToken = mAttributes[--mAttributeCount];
-    mAttributes[mAttributeCount] = nsnull;
-    return theAttrToken;
+CToken* nsCParserNode::PopAttributeToken() {
+
+  CToken* result=0;
+  if(mAttributes) {
+    result =(CToken*)mAttributes->Pop();
   }
-  return nsnull;
+  return result;
 }

@@ -816,7 +816,6 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
         if(kMinus==aChar) {
              //in this case, we're reading a long-form comment <-- xxx -->
           aString+=aChar;
-          PRBool done=PR_FALSE;
           PRInt32 findpos=kNotFound;
           result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
           findpos=aString.RFind("-->");
@@ -1523,7 +1522,6 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
 
   if(mTextValue.Length()>1) {
     PRUnichar theChar0=mTextValue.CharAt(0);
-    PRBool    isDigit0=nsString::IsDigit(theChar0);
 
     if(kHashsign==theChar0) {
       PRInt32 err=0;
