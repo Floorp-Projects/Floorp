@@ -59,27 +59,11 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-#if 0
-  NS_IMETHODIMP       Create(nsIWidget *aParent,
-                  const nsRect &aRect,
-                  EVENT_CALLBACK aHandleEventFunction,
-                  nsIDeviceContext *aContext = nsnull,
-                  nsIAppShell *aAppShell = nsnull,
-                  nsIToolkit *aToolkit = nsnull,
-                  nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD              Create(nsNativeWidget aNativeParent,
-                                 const nsRect &aRect,
-                                 EVENT_CALLBACK aHandleEventFunction,
-                                 nsIDeviceContext *aContext,
-                                 nsIAppShell *aAppShell = nsnull,
-                                 nsIToolkit *aToolkit = nsnull,
-                                 nsWidgetInitData *aInitData = nsnull);
-#endif
-
   // nsWindow Interface
   virtual PRBool        DispatchMouseEvent(nsMouseEvent &aEvent);
   NS_IMETHOD            Show(PRBool bState);
   NS_IMETHOD            Enable(PRBool bState);
+  NS_IMETHOD            IsEnabled(PRBool* outState);
 
   // nsIScrollbar part
   NS_IMETHOD          SetMaxRange(PRUint32 aEndRange);
@@ -107,9 +91,9 @@ public:
 protected:
   
   virtual PRBool    IsVertical ( ) const = 0;
-  
-  virtual void      GetRectForMacControl(nsRect &outRect);
-  
+    
+  NSScroller* GetControl() { return mView; }
+
   virtual NSView*   CreateCocoaView() ;
   virtual GrafPtr   GetQuickDrawPort() ;
 
@@ -122,14 +106,12 @@ private:
 // DATA
 private:
   PRInt32           mValue;
-  PRUint32          mFullImageSize;
+  PRUint32          mMaxValue;
   PRUint32          mVisibleImageSize;
   PRUint32          mLineIncrement;
   PRBool            mMouseDownInScroll;
   ControlPartCode       mClickedPartCode;
   static ControlActionUPP   sControlActionProc; // we only need one of these
-  
-  NSView*           mParentView;      // for showing/hiding
 };
 
 

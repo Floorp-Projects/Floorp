@@ -81,6 +81,7 @@ CMMSRCS = \
     nsCocoaWindow.mm \
     nsChildView.mm \
     nsWidgetFactory.mm \
+    nsNativeScrollbar.mm \
     $(NULL)
     
 XPIDLSRCS	+= \

@@ -70,6 +70,7 @@
 
 #include "nsSound.h"
 #include "nsScrollbar.h"
+#include "nsNativeScrollbar.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
@@ -89,6 +90,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVertScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHorizScrollbar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -181,6 +183,10 @@ static nsModuleComponentInfo components[] =
 		NS_VERTSCROLLBAR_CID,
 		"@mozilla.org/widgets/vertscroll/mac;1",
 		nsVertScrollbarConstructor },
+	{	"Native Scrollbar",
+		NS_NATIVESCROLLBAR_CID,
+		"@mozilla.org/widget/nativescrollbar;1",
+		nsNativeScrollbarConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetModule, components)
