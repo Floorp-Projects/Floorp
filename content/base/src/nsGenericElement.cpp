@@ -173,6 +173,7 @@ nsGenericElement::nsGenericElement()
   mContent = nsnull;
   mDOMSlots = nsnull;
   mListenerManager = nsnull;
+  mContentID = 0;
 }
 
 nsGenericElement::~nsGenericElement()

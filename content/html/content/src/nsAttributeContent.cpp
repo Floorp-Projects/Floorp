@@ -136,6 +136,16 @@ public:
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
                           nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    *aID = 0;
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;

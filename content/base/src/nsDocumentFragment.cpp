@@ -185,6 +185,16 @@ public:
       aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    *aID = 0;
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange)
     {  return mInner.RangeAdd(aRange); } 
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange)

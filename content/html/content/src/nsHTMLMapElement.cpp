@@ -158,6 +158,14 @@ public:
                             nsIDOMEvent** aDOMEvent,                       
                             PRUint32 aFlags,                               
                             nsEventStatus& aEventStatus);                  
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    return mInner.GetContentID(aID);
+  }
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    return mInner.SetContentID(aID);
+  }
+  
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               
     return mInner.RangeAdd(aRange);                                            
   }                                                                        

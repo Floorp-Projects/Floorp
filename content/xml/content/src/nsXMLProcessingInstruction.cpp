@@ -273,3 +273,15 @@ nsXMLProcessingInstruction::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+NS_IMETHODIMP
+nsXMLProcessingInstruction::GetContentID(PRUint32* aID) 
+{
+  *aID = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::SetContentID(PRUint32 aID) 
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

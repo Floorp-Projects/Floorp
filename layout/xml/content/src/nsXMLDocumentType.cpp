@@ -296,3 +296,15 @@ nsXMLDocumentType::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+NS_IMETHODIMP
+nsXMLDocumentType::GetContentID(PRUint32* aID) 
+{
+  *aID = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocumentType::SetContentID(PRUint32 aID) 
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

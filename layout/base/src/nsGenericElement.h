@@ -150,6 +150,16 @@ public:
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
                           nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    *aID = mContentID;
+    return NS_OK;
+  }
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    mContentID = aID;
+    return NS_OK;
+  }
+
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
@@ -210,6 +220,7 @@ public:
   nsIAtom* mTag;
   nsIEventListenerManager* mListenerManager;
   nsDOMSlots *mDOMSlots;
+  PRUint32 mContentID;
 };
 
 class nsGenericContainerElement : public nsGenericElement {
@@ -501,6 +512,12 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
+    return _g.GetContentID(aID);                                           \
+  }                                                                        \
+  NS_IMETHOD SetContentID(PRUint32 aID) {                                  \
+    return _g.SetContentID(aID);                                           \
+  }                                                                        \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
@@ -603,6 +620,12 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
+    return _g.GetContentID(aID);                                           \
+  }                                                                        \
+  NS_IMETHOD SetContentID(PRUint32 aID) {                                  \
+    return _g.SetContentID(aID);                                           \
+  }                                                                        \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
@@ -705,6 +728,12 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
+    return _g.GetContentID(aID);                                           \
+  }                                                                        \
+  NS_IMETHOD SetContentID(PRUint32 aID) {                                  \
+    return _g.SetContentID(aID);                                           \
+  }                                                                        \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
@@ -805,6 +834,12 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
+    return _g.GetContentID(aID);                                           \
+  }                                                                        \
+  NS_IMETHOD SetContentID(PRUint32 aID) {                                  \
+    return _g.SetContentID(aID);                                           \
+  }                                                                        \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
