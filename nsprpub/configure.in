@@ -697,7 +697,7 @@ case "$target" in
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(AIX)
     AC_DEFINE(SYSV)
-    DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
+    DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall -blibpath:/usr/lib:/lib'
     AC_CHECK_HEADER(sys/atomic_op.h, AC_DEFINE(AIX_HAVE_ATOMIC_OP_H))
     case "${target_os}" in
     aix3.2*)
