@@ -1572,7 +1572,7 @@ static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
   const char* str;
   aPseudo->GetUTF8String(&str);
   static const char moz_tree[] = ":moz-tree-";
-  return nsCRT::strncmp(str, moz_tree, sizeof(moz_tree)-1) == 0;
+  return nsCRT::strncmp(str, moz_tree, PRInt32(sizeof(moz_tree)-1)) == 0;
 }
 #endif
 
