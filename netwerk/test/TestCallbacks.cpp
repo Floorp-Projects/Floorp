@@ -138,8 +138,6 @@ Consumer::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
     if (NS_FAILED(rv)) return rv;
 
     fprintf(stderr, "Consumer::OnStop() -> out\n\n");
-
-    gKeepRunning--;
     return rv;
 }
 
@@ -170,6 +168,7 @@ Consumer::Consumer() {
     NS_INIT_REFCNT();
     mOnStart = mOnStop = PR_FALSE;
     mOnDataCount = 0;
+    gKeepRunning++;
 }
 
 Consumer::~Consumer() {
@@ -186,6 +185,7 @@ Consumer::~Consumer() {
     }
 
     fprintf(stderr, "Consumer::~Consumer -> out\n\n");
+    gKeepRunning--;
 }
 
 nsresult
@@ -225,6 +225,12 @@ nsresult StartLoad(char *);
 
 int main(int argc, char *argv[]) {
     nsresult rv = NS_OK;
+    PRBool cmdLineURL = PR_FALSE;
+
+    if (argc > 1) {
+        // run in signle url mode
+        cmdLineURL = PR_TRUE;
+    }
 
     rv = NS_InitXPCOM(nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
@@ -240,7 +246,11 @@ int main(int argc, char *argv[]) {
     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
     if (NS_FAILED(rv)) return rv;
 
-    rv = StartLoad("http://badhostnamexyz/test.txt");
+    if (cmdLineURL) {
+        rv = StartLoad(argv[1]);
+    } else {
+        rv = StartLoad("http://badhostnamexyz/test.txt");
+    }
     if (NS_FAILED(rv)) return rv;
 
     // Enter the message pump to allow the URL load to proceed.
@@ -266,14 +276,15 @@ int main(int argc, char *argv[]) {
     }
 
     NS_ShutdownXPCOM(nsnull);
+    if (gError) {
+        fprintf(stderr, "\n\n-------ERROR-------\n\n");
+    }
     return rv;
 }
 
 nsresult StartLoad(char *aURISpec) {
     nsresult rv = NS_OK;
     
-    gKeepRunning++;
-
     // create a context
     ConsumerContext *context = new ConsumerContext;
     nsCOMPtr<nsISupports> contextSup = do_QueryInterface(context, &rv);
