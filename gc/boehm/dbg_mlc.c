@@ -159,6 +159,62 @@ ptr_t p;
     PRINT_CALL_CHAIN(ohdr);
 }
 
+#define NEXT_WORD(ohdr) (ohdr->oh_ci[1].ci_pc)
+#define NEXT_OBJECT(ohdr) (*(oh**)&ohdr->oh_ci[1].ci_pc)
+#define IS_PLAUSIBLE_POINTER(p) ((p >= GC_least_plausible_heap_addr) && (p < GC_greatest_plausible_heap_addr))
+
+/**
+ * Note:  this can be made completely iterative, using the mark
+ * field as a link to the next object to be scanned.
+ */
+void GC_trace_object(ptr_t p)
+{
+    register oh *head, *scan, *tail;
+    register word *wp, *wend;
+    
+    head = scan = tail = (oh *)GC_base(p);
+    if (head == 0) return;
+    
+    /* invariant:  end of list always marked with value 1. */
+    NEXT_WORD(tail) = 1;
+    
+    for (;;) {
+        wp = (word*)((unsigned long)scan + sizeof(oh));
+
+        GC_err_printf3("\n0x%08lX <%s> (%ld)\n", wp, getTypeName(wp),
+                       (unsigned long)(scan->oh_sz));
+
+        /* print all potential references held by this object. */
+        wend = (word*)((unsigned long)wp + scan->oh_sz);
+        while (wp < wend) {
+            p = (ptr_t) *wp++;
+            GC_err_printf1("\t0x%08lX\n", p);
+            if (IS_PLAUSIBLE_POINTER(p)) {
+                oh* header = (oh *)GC_base(p);
+                if (header && !NEXT_WORD(header)) {
+                    NEXT_OBJECT(tail) = header;
+                    tail = header;
+                    NEXT_WORD(tail) = 1;
+                }
+            }
+        }
+        PRINT_CALL_CHAIN(scan);
+        
+        if (NEXT_WORD(scan) == 1)
+            break;
+        scan = NEXT_OBJECT(scan);
+    }
+
+    /* clear all marks. */
+    scan = head;
+    NEXT_WORD(tail) = 0;
+    while (scan) {
+        tail = NEXT_OBJECT(scan);
+        NEXT_WORD(scan) = 0;
+        scan = tail;
+    }
+}
+
 void GC_debug_print_heap_obj_proc(p)
 ptr_t p;
 {
