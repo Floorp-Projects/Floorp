@@ -20,10 +20,8 @@
  * Contributor(s): 
  */
 
-var spellChecker;
-var WordToAdd;
-var WordInput;
-var DictionaryList;
+var gSpellChecker;
+var gWordToAdd;
 
 function Startup()
 {
@@ -31,33 +29,41 @@ function Startup()
     return;
   dump("EditoreditorShell found for dialog\n");
 
-  // Get the spellChecker shell
-  spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
-  if (!spellChecker)
+  // Get the SpellChecker shell
+  gSpellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
+  if (!gSpellChecker)
   {
     dump("SpellChecker not found!!!\n");
     window.close();
+    return;
+  }
+  // Create dialog object to store controls for easy access
+  dialog = new Object;
+  if (!dialog)
+  {
+    dump("Failed to create dialog object!!!\n");
+    Close();
   }
   // The word to add word is passed as the 2nd extra parameter in window.openDialog()
-  WordToAdd = window.arguments[1];
+  gWordToAdd = window.arguments[1];
   
-  WordInput = document.getElementById("WordInput");
-  DictionaryList = document.getElementById("DictionaryList");
+  dialog.WordInput = document.getElementById("WordInput");
+  dialog.DictionaryList = document.getElementById("DictionaryList");
   
-  WordInput.value = WordToAdd;
+  dialog.WordInput.value = gWordToAdd;
   FillDictionaryList();
 
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
-  SetTextboxFocus(WordInput);
+  SetTextboxFocus(dialog.WordInput);
 
   SetWindowLocation();
 }
 
 function ValidateWordToAdd()
 {
-  WordToAdd = TrimString(WordInput.value);
-  if (WordToAdd.length > 0)
+  gWordToAdd = TrimString(dialog.WordInput.value);
+  if (gWordToAdd.length > 0)
   {
     return true;
   } else {
@@ -67,11 +73,11 @@ function ValidateWordToAdd()
 
 function SelectWordToAddInList()
 {
-  for (var index = 0; index < DictionaryList.getAttribute("length"); index++)
+  for (var index = 0; index < dialog.DictionaryList.getAttribute("length"); index++)
   {
-    if (WordToAdd == GetTreelistValueAt(DictionaryList,index))
+    if (gWordToAdd == GetTreelistValueAt(dialog.DictionaryList,index))
     {
-      DictionaryList.selectedIndex = index;
+      dialog.DictionaryList.selectedIndex = index;
       break;
     }
   }
@@ -82,16 +88,17 @@ function AddWord()
   if (ValidateWordToAdd())
   {
     try {
-      spellChecker.AddWordToDictionary(WordToAdd);
+      gSpellChecker.AddWordToDictionary(gWordToAdd);
     }
     catch (e) {
-      dump("Exception occured in spellChecker.AddWordToDictionary\nWord to add probably already existed\n");
+      dump("Exception occured in gSpellChecker.AddWordToDictionary\nWord to add probably already existed\n");
     }
 
     // Rebuild the dialog list
     FillDictionaryList();
 
     SelectWordToAddInList();
+    dialog.WordInput.value = "";
   }
 }
 
@@ -99,19 +106,16 @@ function ReplaceWord()
 {
   if (ValidateWordToAdd())
   {
-    selIndex = DictionaryList.selectedIndex;
+    var selIndex = dialog.DictionaryList.selectedIndex;
     if (selIndex >= 0)
     {
-
-      WordToRemove = GetSelectedTreelistValue(DictionaryList);
-dump("Word to remove: "+WordToRemove+"\n");
-      spellChecker.RemoveWordFromDictionary(WordToRemove);
+      gSpellChecker.RemoveWordFromDictionary(GetSelectedTreelistValue(dialog.DictionaryList));
       try {
         // Add to the dictionary list
-        spellChecker.AddWordToDictionary(WordToAdd);
+        gSpellChecker.AddWordToDictionary(gWordToAdd);
         // Just change the text on the selected item
         //  instead of rebuilding the list
-        ReplaceStringInTreeList(DictionaryList, selIndex, WordToAdd);
+        ReplaceStringInTreeList(dialog.DictionaryList, selIndex, gWordToAdd);
       } catch (e) {
         // Rebuild list and select the word - it was probably already in the list
         dump("Exception occured adding word in ReplaceWord\n");
@@ -124,19 +128,18 @@ dump("Word to remove: "+WordToRemove+"\n");
 
 function RemoveWord()
 {
-  selIndex = DictionaryList.selectedIndex;
-dump("RemoveWord/n");
+  var selIndex = dialog.DictionaryList.selectedIndex;
   if (selIndex >= 0)
   {
-    word = GetSelectedTreelistValue(DictionaryList);
+    var word = GetSelectedTreelistValue(dialog.DictionaryList);
 
     // Remove word from list
-    RemoveSelectedTreelistItem(DictionaryList);
+    RemoveSelectedTreelistItem(dialog.DictionaryList);
 
     // Remove from dictionary
     try {
       //Not working: BUG 43348
-      spellChecker.RemoveWordFromDictionary(word);
+      gSpellChecker.RemoveWordFromDictionary(word);
     }
     catch (e)
     {
@@ -149,27 +152,36 @@ dump("RemoveWord/n");
 
 function FillDictionaryList()
 {
-  selIndex = DictionaryList.selectedIndex;
+  var selIndex = dialog.DictionaryList.selectedIndex;
 
   // Clear the current contents of the list
-  ClearTreelist(DictionaryList);
+  ClearTreelist(dialog.DictionaryList);
   // Get the list from the spell checker
-  spellChecker.GetPersonalDictionary()
+  gSpellChecker.GetPersonalDictionary()
+
+  var haveList = false;
 
   // Get words until an empty string is returned
   do {
-    word = spellChecker.GetPersonalDictionaryWord();
+    var word = gSpellChecker.GetPersonalDictionaryWord();
     if (word != "")
-      AppendStringToTreelist(DictionaryList, word);
-
+    {
+      AppendStringToTreelist(dialog.DictionaryList, word);
+      haveList = true;
+    }
   } while (word != "");
+  
+  //XXX: BUG 74467: If list is empty, tree doesn't layout to full height correctly
+  //     (ignores "rows" attribute) (bug is latered, so we are fixing here for now)
+  if (!haveList)
+    AppendStringToTreelist(dialog.DictionaryList, " ");
 
   ResetSelectedItem(selIndex);
 }
 
 function ResetSelectedItem(index)
 {
-  lastIndex = DictionaryList.getAttribute("length") - 1;
+  var lastIndex = dialog.DictionaryList.getAttribute("length") - 1;
   if (index > lastIndex)
     index = lastIndex;
 
@@ -180,7 +192,7 @@ function ResetSelectedItem(index)
 
 dump("ResetSelectedItem to index="+index+"\n");
 
-  DictionaryList.selectedIndex = index;
+  dialog.DictionaryList.selectedIndex = index;
 }
 
 function Close()
