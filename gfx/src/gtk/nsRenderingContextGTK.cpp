@@ -62,6 +62,11 @@ GraphicsState::GraphicsState()
 
 GraphicsState::~GraphicsState()
 {
+  NS_IF_RELEASE(mClipRegion);
+  NS_IF_RELEASE(mFontMetrics);
+
+  if (mFont)
+    ::gdk_font_unref(mFont);
 }
 
 
@@ -242,39 +247,38 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContex
 
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
-  GraphicsState * state = new GraphicsState();
+  GraphicsState *state = new GraphicsState();
 
   // Push into this state object, add to vector
   state->mMatrix = mTMatrix;
-
-  mStateCache->AppendElement(state);
 
   if (nsnull == mTMatrix)
     mTMatrix = new nsTransform2D();
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
-  PRBool clipState;
-  GetClipRect(state->mLocalClip, clipState);
-
+  NS_ADDREF(mRegion);
   state->mClipRegion = mRegion;
 
-  if (nsnull != state->mClipRegion) {
+  if (state->mClipRegion) {
     mRegion = new nsRegionGTK();
     mRegion->Init();
     mRegion->SetTo(state->mClipRegion);
   }
 
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
+
   state->mColor = mCurrentColor;
   state->mLineStyle = mCurrentLineStyle;
+
+  mStateCache->AppendElement(state);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 {
-  PRBool bEmpty = PR_FALSE;
-
   PRUint32 cnt = mStateCache->Count();
   GraphicsState * state;
 
@@ -287,39 +291,27 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
 
-    if (nsnull != mRegion)
-      delete mRegion;
+    NS_RELEASE(mRegion);
 
+// restore everything
     mRegion = state->mClipRegion;
+    mFontMetrics = state->mFontMetrics;
 
-    if (nsnull != mRegion && mRegion->IsEmpty() == PR_TRUE) {
-      bEmpty = PR_TRUE;
-    }else{
-
-  // Select in the old region.  We probably want to set a dirty flag and only
-  // do this IFF we need to draw before the next Pop.  We'd need to check the
- // state flag on every draw operation.
-      if (nsnull != mRegion)
-      {
-         GdkRegion *rgn;
-         mRegion->GetNativeRegion((void*&)rgn);
-	::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
-        // can we destroy rgn now?
-      }
-    }
+    GdkRegion *rgn;
+    mRegion->GetNativeRegion((void*&)rgn);
+    ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
 
     if (state->mColor != mCurrentColor)
-        SetColor(state->mColor);
+      SetColor(state->mColor);
 
     if (state->mLineStyle != mCurrentLineStyle)
       SetLineStyle(state->mLineStyle);
-
 
     // Delete this graphics state object
     delete state;
   }
 
-  aClipEmpty = bEmpty;
+  aClipEmpty = mRegion->IsEmpty();
 
   return NS_OK;
 }
