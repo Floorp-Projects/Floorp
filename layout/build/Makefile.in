@@ -63,16 +63,6 @@ EXTRA_DSO_LDOPTS =	       \
 	$(MKSHLIB_FORCE_ALL)   \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin	       \
-	-lraptorhtmlpars       \
-	-lraptorgfx	       \
-	-lraptorbase	       \
-	$(BASE_DSO_FLAGS)      \
-	-ljsdom		       \
-	-ljs		       \
-	-lnetlib	       \
-	-lxpcom		       \
-	$(NSPR_LIBS)	       \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

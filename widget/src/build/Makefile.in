@@ -68,11 +68,6 @@ EXTRA_DSO_LDOPTS+=	       \
 	$(MKSHLIB_FORCE_ALL)   \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin	       \
-	-lxpcom		       \
-	-lraptorbase	       \
-	-lreg		       \
-	$(NSPR_LIBS)	       \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
