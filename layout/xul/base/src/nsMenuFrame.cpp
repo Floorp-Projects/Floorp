@@ -373,5 +373,11 @@ nsMenuFrame::Escape(PRBool& aHandledFlag)
 void
 nsMenuFrame::SelectFirstItem()
 {
-  //XXX Fill in!
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+    nsIFrame* result;
+    popup->GetNextMenuItem(nsnull, &result);
+    popup->SetCurrentMenuItem(result);
+  }
 }
