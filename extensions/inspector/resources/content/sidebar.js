@@ -54,13 +54,13 @@ const gNavigator = window._content;
 
 //////////////////////////////////////////////////
 
-window.addEventListener("load", InspectorSidebar_initialize, false);
-
 function InspectorSidebar_initialize()
 {
   inspector = new InspectorSidebar();
   inspector.initialize();
 }
+
+window.addEventListener("load", InspectorSidebar_initialize, false);
 
 ////////////////////////////////////////////////////////////////////////////
 //// class InspectorSidebar
