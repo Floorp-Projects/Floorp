@@ -241,15 +241,10 @@ nsComposeAppCore::~nsComposeAppCore()
 	// remove ourselves from the app cores manager...
 	// if we were able to inherit directly from nsBaseAppCore then it would do this for
 	// us automatically
-
-	nsIDOMAppCoresManager * appCoreManager;
-	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
-											   (nsISupports**)&appCoreManager);
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoreManager, kAppCoresManagerCID, &rv); 
 	if (NS_SUCCEEDED(rv) && appCoreManager)
-	{
 		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
-		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
-	}
 
 	NS_IF_RELEASE(mWebShell);
 	NS_IF_RELEASE(mWebShellWindow);
@@ -349,8 +344,7 @@ nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset)
 			res = domDoc->QueryInterface(kIDocumentIID,(void**)&doc);
 			if (NS_SUCCEEDED(res) && nsnull != doc) 
 			{
-				doc->SetDocumentCharacterSet(aCharset);
-				
+				doc->SetDocumentCharacterSet(aCharset);			
 				NS_RELEASE(doc);
 			}
 			
@@ -569,14 +563,9 @@ nsComposeAppCore::Init(const nsString& aId)
 	// if we were able to inherit directly from nsBaseAppCore then it would do this for
 	// us automatically
 
-	nsIDOMAppCoresManager * appCoreManager;
-	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
-											   (nsISupports**)&appCoreManager);
-	if (NS_SUCCEEDED(rv) && appCoreManager)
-	{
+	NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoreManager, kAppCoresManagerCID, &res); 
+	if (NS_SUCCEEDED(res) && appCoreManager)
 		appCoreManager->Add((nsIDOMBaseAppCore *) this);
-		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
-	}
 
 	if (!mMsgSend)
 	{
@@ -644,23 +633,18 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                              nsIDOMMsgAppCore * msgAppCore,
                              PRInt32 messageType)
 {
-	//char *  urlstr=nsnull;
 	nsresult rv;
 	nsString controllerCID;
 
 	mArgs = args;
-	nsIAppShellService* appShell;
-    rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                      nsIAppShellService::GetIID(),
-                                      (nsISupports**)&appShell);
+	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
 	nsIURL* url = nsnull;
-	nsINetService * pNetService;
-	rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
-	if (NS_SUCCEEDED(rv) && pNetService) {
+	NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
+	if (NS_SUCCEEDED(rv) && pNetService) 
+	{
 		rv = pNetService->CreateURL(&url, aUrl);
-		NS_RELEASE(pNetService);
 		if (NS_FAILED(rv))
 			goto done;
 	}
@@ -677,9 +661,9 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                    615,         // width
                                    650);        // height
 	
-  // Get the default charset from pref, use this as a mail charset.
-  // TODO: For reply/forward, original charset need to be used instead.
-  mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
+	// Get the default charset from pref, use this as a mail charset.
+	// TODO: For reply/forward, original charset need to be used instead.
+	mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
 
 	if (tree && nodeList && msgAppCore) {
 		nsCOMPtr<nsISupports> object;
@@ -791,8 +775,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 	}
 
 done:
-	NS_RELEASE(url);
-    (void)nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+	NS_IF_RELEASE(url);
 	return NS_OK;
 }
 
