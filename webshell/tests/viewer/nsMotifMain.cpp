@@ -24,11 +24,6 @@
 #include <stdlib.h>
 #include "plevent.h"
 
-extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
-  return strdup("/tmp");
-}
-
 XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
 PLEventQueue*  gUnixMainEventQueue = nsnull;

@@ -25,11 +25,6 @@
 #include <stdlib.h>
 #include "plevent.h"
 
-
-extern "C" char *fe_GetConfigDir(void) {
-  return strdup("/tmp");
-}
-
 static nsNativeViewerApp* gTheApp;
 
 nsNativeViewerApp::nsNativeViewerApp()
