@@ -56,16 +56,18 @@ class nsRegionXlib : public nsIRegion
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
-  NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
-  
+  NS_IMETHOD GetNumRects(PRUint32 *aRects) const;
+
+protected:
+  Region xlib_region_copy(Region region);
+  Region xlib_region_from_rect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+
 private:
   Region mRegion;
-  nsRegionComplexity mRegionType;
+  static Region copyRegion;
 
-  void SetRegionEmpty();
-  Region CreateRectRegion(PRInt32 aX, PRInt32 aY,          
-                          PRInt32 aWidth, PRInt32 aHeight);
-
+  inline Region GetCopyRegion();
+  inline void SetRegionEmpty();
 };
 
 #endif
