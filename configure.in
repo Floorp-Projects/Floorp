@@ -349,6 +349,51 @@ AC_STRUCT_ST_RDEV
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 
+dnl Check for int16_t, int32_t, and uint16_t.
+dnl ========================================================
+AC_MSG_CHECKING(for int16_t)
+AC_CACHE_VAL(ac_cv_int16_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [int16_t foo = 0;],
+                 [ac_int16_t=true],
+                 [ac_int16_t=false])
+  ac_cv_int16_t=$ac_int16_t])
+if test $ac_int16_t = true ; then
+  AC_DEFINE(HAVE_INT16_T)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for int32_t)
+AC_CACHE_VAL(ac_cv_int32_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [int32_t foo = 0;],
+                 [ac_int32_t=true],
+                 [ac_int32_t=false])
+  ac_cv_int32_t=$ac_int32_t])
+if test $ac_int32_t = true ; then
+  AC_DEFINE(HAVE_INT32_T)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for uint16_t)
+AC_CACHE_VAL(ac_cv_uint16_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [uint16_t foo = 0;],
+                 [ac_uint16_t=true],
+                 [ac_uint16_t=false])
+  ac_cv_uint16_t=$ac_uint16_t])
+if test $ac_uint16_t = true ; then
+  AC_DEFINE(HAVE_UINT16_T)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
