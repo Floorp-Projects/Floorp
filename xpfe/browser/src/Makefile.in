@@ -63,6 +63,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/errorI.gif \
 	$(srcdir)/messagel.gif \
 	$(srcdir)/questionl.gif \
+	$(srcdir)/DumpDOM.js \
 	$(NULL)
 
 install:: 

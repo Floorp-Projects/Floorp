@@ -103,6 +103,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) errorI.gif $(DISTRES)
 	$(MAKE_INSTALL) messagel.gif $(DISTRES)
 	$(MAKE_INSTALL) questionl.gif $(DISTRES)
+	$(MAKE_INSTALL) DumpDOM.js $(DISTRES)
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
@@ -136,3 +137,5 @@ clobber::
 	rm -f $(DISTRES)\errorI.gif
 	rm -f $(DISTRES)\messagel.gif
 	rm -f $(DISTRES)\questionl.gif
+	rm -f $(DISTRES)\DumpDOM.js
+	
