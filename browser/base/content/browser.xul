@@ -438,8 +438,8 @@
 
   <!-- Total hack. Used by the Go menu to build up items. -->
   <tree id="hiddenHistoryTree" hidden="true" collapsed="true" datasources="rdf:null"
-                  flags="dont-build-content"
-                  hidecolumnpicker="true">
+        flags="dont-build-content"
+        hidecolumnpicker="true">
     <template>
       <rule>
         <treechildren>
