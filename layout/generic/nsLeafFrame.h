@@ -28,19 +28,23 @@
  */
 class nsLeafFrame : public nsFrame {
 public:
+
+  // nsIFrame replacements
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
-
   NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
+  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute);
 
 protected:
   nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame);
