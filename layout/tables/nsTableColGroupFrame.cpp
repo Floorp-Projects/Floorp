@@ -67,26 +67,29 @@ void nsTableColGroupFrame::ResetColIndices(nsIPresContext* aPresContext,
   nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)aFirstColGroup;
   PRInt32 colIndex = aFirstColIndex;
   while (colGroupFrame) {
-    nsIAtom* cgType;
-    colGroupFrame->GetFrameType(&cgType);
-    if (nsLayoutAtoms::tableColGroupFrame == cgType) {
-      colGroupFrame->SetStartColumnIndex(colIndex);
+    nsCOMPtr<nsIAtom> cgType;
+    colGroupFrame->GetFrameType(getter_AddRefs(cgType));
+    if (nsLayoutAtoms::tableColGroupFrame == cgType.get()) {
+      // reset the starting col index for the first cg only if
+      // aFirstColIndex is smaller than the existing starting col index
+      if ((colIndex != aFirstColIndex) ||
+          (colIndex < colGroupFrame->GetStartColumnIndex())) {
+        colGroupFrame->SetStartColumnIndex(colIndex);
+      }
       nsIFrame* colFrame = aStartColFrame; 
       if (!colFrame || (colIndex != aFirstColIndex)) {
         colGroupFrame->FirstChild(aPresContext, nsnull, &colFrame);
       }
       while (colFrame) {
-        nsIAtom* colType;
-        colFrame->GetFrameType(&colType);
-        if (nsLayoutAtoms::tableColFrame == colType) {
+        nsCOMPtr<nsIAtom> colType;
+        colFrame->GetFrameType(getter_AddRefs(colType));
+        if (nsLayoutAtoms::tableColFrame == colType.get()) {
           ((nsTableColFrame*)colFrame)->SetColIndex(colIndex);
           colIndex++;
         }
-        NS_IF_RELEASE(colType);
         colFrame->GetNextSibling(&colFrame);
       }
     }
-    NS_IF_RELEASE(cgType);
     colGroupFrame->GetNextSibling((nsIFrame**)&colGroupFrame);
   }
 }
