@@ -111,8 +111,15 @@ void GraphicState::Init(GrafPtr aPort)
 
 	// init from grafPort (usually an offscreen port)
 	RgnHandle	rgn = ::NewRgn();
+#if TARGET_CARBON
+	if ( rgn ) {
+		Rect bounds;
+		::RectRgn(rgn, ::GetPortBounds(aPort, &bounds));
+	}
+#else
 	if (rgn)
 	  ::RectRgn(rgn, &aPort->portRect);
+#endif
 
   mMainRegion					= rgn;
   mClipRegion					= DuplicateRgn(rgn);
@@ -313,8 +320,13 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 	if (!mSavePort)
 	{
 		::GetPort(&mSavePort);
-		if (mSavePort)
+		if (mSavePort) {
+		  #if TARGET_CARBON
+			::GetPortBounds(mSavePort, &mSavePortRect);
+		  #else
 			mSavePortRect = mSavePort->portRect;
+		  #endif
+		}
 	}
 
 	mCurrentSurface = aSurface;
@@ -515,9 +527,18 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 	    dstRect.y + dstRect.height);
   
 	// get the source clip region
+#if TARGET_CARBON
+	RgnHandle clipRgn = ::NewRgn();
+#else
 	RgnHandle clipRgn;
-  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+#endif
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) {
+#if TARGET_CARBON
+  	::GetPortClipRegion(srcPort, clipRgn);
+#else
   	clipRgn = srcPort->clipRgn;
+#endif
+  }
   else
 		clipRgn = mGS->mMainRegion;
 //	clipRgn = nil;		
@@ -568,8 +589,13 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 	// copy the bits now
 	::CopyBits(
+#if TARGET_CARBON
+		  reinterpret_cast<BitMap*>(*::GetPortPixMap(srcPort)),
+		  reinterpret_cast<BitMap*>(*::GetPortPixMap(destPort)),
+#else
 		  &srcPort->portBits,
 		  &destPort->portBits,
+#endif
 		  &macSrcRect,
 		  &macDstRect,
 		  srcCopy,
@@ -737,7 +763,11 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRect(nsRect &aRect, PRBool &aClipV
 
   if (mGS->mClipRegion != nsnull) 
   {
+#if TARGET_CARBON
+  	::GetRegionBounds(mGS->mClipRegion, &cliprect);
+#else
   	cliprect = (**mGS->mClipRegion).rgnBBox;
+#endif
     aRect.SetRect(cliprect.left, cliprect.top, cliprect.right-cliprect.left, cliprect.bottom-cliprect.top);
     aClipValid = PR_TRUE;
  	} 
