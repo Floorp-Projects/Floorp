@@ -28,9 +28,10 @@
 #include "nsCOMPtr.h"
 #include "nsICache.h"
 #include "nsICacheListener.h"
+#include "nsIEventQueue.h"
 
 
-class nsCacheRequest
+class nsCacheRequest : public PRCList
 {
 private:
     friend class nsCacheService;
@@ -43,37 +44,106 @@ private:
                     nsCacheStoragePolicy  storagePolicy)
 
         : mKey(key),
+          mInfo(0),
           mListener(listener),
-          mAccessRequested(accessRequested),
-          mStreamBased(streamBased),
-          mStoragePolicy(storagePolicy)
+          mEventQ(nsnull),
+          mLock(nsnull),
+          mCondVar(nsnull)
     {
-        mRequestThread = PR_GetCurrentThread();
-
-        PR_INIT_CLIST(&mListLink);
+        PR_INIT_CLIST(this);
+        SetAccessRequested(accessRequested);
+        if (streamBased)  MarkStreamBased();
+        SetStoragePolicy(storagePolicy);
     }
     
     ~nsCacheRequest()
     {
         delete mKey;
-        NS_ASSERTION(PR_CLIST_IS_EMPTY(&mListLink), "request still on a list");
+        NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "request still on a list");
     }
     
+    /**
+     * Simple Accessors
+     */
+    enum CacheRequestInfo {
+        eAccessRequestedMask       = 0xFF000000,
+        eStoragePolicyMask         = 0x00FF0000,
+        eStreamBasedMask           = 0x00000010,
+        eWaitingForValidationMask  = 0x00000001
+    };
 
-    PRCList*                GetListNode(void)    { return &mListLink;   }
-    static nsCacheRequest*  GetInstance(PRCList* qp) {
-        return (nsCacheRequest*)
-            ((char*)qp - offsetof(nsCacheRequest, mListLink));
+    void SetAccessRequested(nsCacheAccessMode mode)
+    {
+        NS_ASSERTION(mode <= 0xFF, "too many bits in nsCacheAccessMode");
+        mInfo &= ~eAccessRequestedMask;
+        mInfo |= mode << 24;
     }
 
+    nsCacheAccessMode AccessRequested()
+    {
+        return (nsCacheAccessMode)((mInfo >> 24) & 0xFF);
+    }
 
+    void MarkStreamBased()      { mInfo |=  eStreamBasedMask; }
+    PRBool IsStreamBased()      { return (mInfo & eStreamBasedMask) != 0; }
+
+    void SetStoragePolicy(nsCacheStoragePolicy policy)
+    {
+        NS_ASSERTION(policy <= 0xFF, "too many bits in nsCacheStoragePolicy");
+        mInfo &= ~eStoragePolicyMask;  // clear storage policy bits
+        mInfo |= policy << 16;         // or in new bits
+    }
+
+    nsCacheStoragePolicy StoragePolicy()
+    {
+        return (nsCacheStoragePolicy)((mInfo >> 16) & 0xFF);
+    }
+
+    void   MarkWaitingForValidation() { mInfo |=  eWaitingForValidationMask; }
+    void   DoneWaitingForValidation() { mInfo &= ~eWaitingForValidationMask; }
+    PRBool WaitingForValidation()
+    {
+        return (mInfo & eWaitingForValidationMask) != 0;
+    }
+
+    nsresult
+    WaitForValidation(void)
+    {
+        if (!mLock) {
+            mLock = PR_NewLock();
+            if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ASSERTION(!mCondVar,"we have mCondVar, but didn't have mLock?");
+            mCondVar = PR_NewCondVar(mLock);
+            if (!mCondVar) {
+                PR_DestroyLock(mLock);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+        
+        PRStatus status;
+        PR_Lock(mLock);
+        while (WaitingForValidation() && (status == PR_SUCCESS) ) {
+            status = PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
+        }
+        PR_Unlock(mLock);
+
+        NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar() returned PR_FAILURE?");
+        if (status == PR_FAILURE)
+            return NS_ERROR_UNEXPECTED;
+
+        return NS_OK;
+    }
+
+    /**
+     * Data members
+     */
     nsCString *                mKey;
+    PRUint32                   mInfo;
     nsCOMPtr<nsICacheListener> mListener;
-    nsCacheAccessMode          mAccessRequested;
-    PRBool                     mStreamBased;
-    nsCacheStoragePolicy       mStoragePolicy;
-    PRThread *                 mRequestThread;
-    PRCList                    mListLink;
+    nsCOMPtr<nsIEventQueue>    mEventQ;
+    PRLock *                   mLock;
+    PRCondVar *                mCondVar;
 };
 
 #endif // _nsCacheRequest_h_

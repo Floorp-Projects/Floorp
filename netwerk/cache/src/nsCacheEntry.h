@@ -42,7 +42,7 @@ class nsCacheRequest;
 class nsCacheEntryDescriptor;
 
 
-class nsCacheEntry
+class nsCacheEntry : public PRCList
 {
 public:
 
@@ -137,16 +137,15 @@ public:
                                          PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
 
     // methods for nsCacheService
+    nsresult RequestAccess( nsCacheRequest * request, nsCacheAccessMode *accessGranted);
+    nsresult CreateDescriptor( nsCacheRequest *           request,
+                               nsCacheAccessMode          accessGranted,
+                               nsICacheEntryDescriptor ** result);
+
     nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
     nsresult AsyncOpen(nsCacheRequest *request);
     PRBool   RemoveRequest( nsCacheRequest * request);
     PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
-
-    PRCList*              GetListNode(void)        { return &mListLink;   }
-    static nsCacheEntry*  GetInstance(PRCList* qp) {
-        return (nsCacheEntry*) ((char*)qp - offsetof(nsCacheEntry, mListLink));
-    }
-
     
 private:
     friend class nsCacheEntryHashTable;
@@ -160,7 +159,6 @@ private:
     void MarkActive()          { mFlags |=  eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
 
-    PRCList                mListLink;       // 8  for holding entry on various lists
     nsCString *            mKey;            // 4  // XXX ask scc about const'ness
     PRUint32               mFetchCount;     // 4
     PRUint32               mLastFetched;    // 8
@@ -196,6 +194,7 @@ public:
     nsresult      RemoveEntry( nsCacheEntry *entry);
     // XXX enumerate entries?
 
+    // XXX
 private:
 
     // PLDHashTable operation callbacks

@@ -67,8 +67,8 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
     if (!entry)  return nsnull;
 
     // move entry to the tail of the eviction list
-    PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
-    PR_APPEND_LINK(entry->GetListNode(), &mEvictionList);
+    PR_REMOVE_AND_INIT_LINK(entry);
+    PR_APPEND_LINK(entry, &mEvictionList);
     
     return entry;;
 }
@@ -98,15 +98,15 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry->GetListNode()),"entry is already on a list!");
+    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
 
     // append entry to the eviction list
-    PR_APPEND_LINK(entry->GetListNode(), &mEvictionList);
+    PR_APPEND_LINK(entry, &mEvictionList);
 
     // add entry to hashtable of mem cache entries
     nsresult  rv = mMemCacheEntries.AddEntry(entry);
     if (NS_FAILED(rv)) {
-        PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+        PR_REMOVE_AND_INIT_LINK(entry);
         return rv;
     }
 
@@ -123,7 +123,7 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
     if (NS_FAILED(rv)) return rv;
 
     // remove entry from our eviction list
-    PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+    PR_REMOVE_AND_INIT_LINK(entry);
 
     return NS_OK;
 }

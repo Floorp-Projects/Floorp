@@ -31,6 +31,10 @@
 #include "nsDiskCacheDevice.h"
 #include "nsAutoLock.h"
 #include "nsVoidArray.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsCacheService *   nsCacheService::gService = nsnull;
 
@@ -201,10 +205,87 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    if (!listener)  return NS_OK;  // we're sync, we're done.
+
+    // get the nsIEventQueue for the request's thread
+    nsresult  rv;
+    // XXX can we just keep a reference so we don't have to do this everytime?
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv))  goto error;
+    
+    rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ,
+                                          getter_AddRefs((*request)->mEventQ));
+    if (NS_FAILED(rv))  goto error;
+    
+    
+    if (!(*request)->mEventQ) {
+        rv = NS_ERROR_UNEXPECTED; // XXX what is the right error?
+        goto error;
+    }
+
     return NS_OK;
-}                                     
+
+ error:
+    delete *request;
+    *request = nsnull;
+    return rv;
+}
 
 
+nsresult
+nsCacheService::OpenCacheEntry(nsCacheSession *           session,
+                                const char *               key,
+                                nsCacheAccessMode          accessRequested,
+                                nsICacheListener *         listener,
+                                nsICacheEntryDescriptor ** result)
+{
+    if (*result)
+        *result = nsnull;
+
+    nsCacheRequest * request = nsnull;
+    nsCacheEntry *   entry   = nsnull;
+    nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
+
+    nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
+    if (NS_FAILED(rv))  return rv;
+
+    nsAutoLock cacheService(mCacheServiceLock);
+
+    while(1) {  // Activate entry loop
+        rv = ActivateEntry(request, &entry);  // get the entry for this request
+        if (NS_FAILED(rv))  break;
+
+        while(1) { // Request Access loop
+            NS_ASSERTION(entry, "no entry in Request Access loop!");
+            rv = entry->RequestAccess(request, &accessGranted);
+            if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION) break;
+            
+            if (listener) // async exits - validate, doom, or close will resume
+                return rv; 
+            
+            cacheService.unlock();
+            rv = request->WaitForValidation();
+            cacheService.lock();
+            if (NS_FAILED(rv)) break;
+            // okay, we're ready to process this request, request access again
+        }
+        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
+    }
+    nsICacheEntryDescriptor * descriptor;
+
+    rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+
+    if (listener) {
+        // XXX call listener to report error or descriptor 
+    } else {
+        *result = descriptor;
+    }
+
+    delete request;
+    return rv;
+}
+
+#if 0
 nsresult
 nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                                const char *               key, 
@@ -244,7 +325,7 @@ nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
 {
     if (!mCacheServiceLock)  return NS_ERROR_NOT_INITIALIZED;
     if (!listener)           return NS_ERROR_NULL_POINTER;
-
+    
     nsCacheRequest * request = nsnull;
     nsCacheEntry *   entry   = nsnull;
 
@@ -258,7 +339,7 @@ nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
 
    return rv;
 }
-
+#endif
 
 nsresult
 nsCacheService::ActivateEntry(nsCacheRequest * request, 
@@ -276,18 +357,18 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     if (!entry) {
         // search cache devices for entry
-        entry = SearchCacheDevices(request->mKey, request->mStoragePolicy);
+        entry = SearchCacheDevices(request->mKey, request->StoragePolicy());
         if (entry)  entry->MarkInitialized();
     }
 
-    if (!entry && !(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
+    if (!entry && !(request->AccessRequested() & nsICache::ACCESS_WRITE)) {
         // this is a READ-ONLY request
         rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
         goto error;
     }
 
     if (entry &&
-        ((request->mAccessRequested == nsICache::ACCESS_WRITE) ||
+        ((request->AccessRequested() == nsICache::ACCESS_WRITE) ||
          (entry->mExpirationTime &&
           entry->mExpirationTime < ConvertPRTimeToSeconds(PR_Now()))))
         // XXX beginning to look a lot like lisp
@@ -306,8 +387,8 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     if (!entry) {
         entry = new nsCacheEntry(request->mKey,
-                                 request->mStreamBased,
-                                 request->mStoragePolicy);
+                                 request->IsStreamBased(),
+                                 request->StoragePolicy());
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         
@@ -411,10 +492,12 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
         }
     }
     // put on doom list to wait for descriptors to close
-    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry->GetListNode()),
+    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),
                  "doomed entry still on device list");
 
-    PR_APPEND_LINK(entry->GetListNode(), &mDoomedEntries);
+    PR_APPEND_LINK(entry, &mDoomedEntries);
+
+    // XXX reprocess pending requests
                  
     return rv;
 }
@@ -464,7 +547,9 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
     // ask entry to remove descriptor
     nsCacheEntry * entry       = descriptor->CacheEntry();
     PRBool         stillActive = entry->RemoveDescriptor(descriptor);
-    
+
+    // XXX if (!entry->IsValid())  process pending requests
+
     if (!stillActive) {
         DeactivateEntry(entry);
     }
@@ -479,7 +564,7 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 
     if (entry->IsDoomed()) {
         // remove from Doomed list
-        PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+        PR_REMOVE_AND_INIT_LINK(entry);
     } else {
         if (entry->IsActive()) {
             // remove from active entries

@@ -29,6 +29,7 @@
 #include "nsCacheEntry.h"
 
 class nsCacheEntryDescriptor :
+    public PRCList,
     public nsICacheEntryDescriptor,
     public nsITransport
 {
@@ -43,14 +44,6 @@ public:
     static nsresult Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
                            nsICacheEntryDescriptor ** result);
 
-    /**
-     *  routines for manipulating descriptors in PRCLists
-     */
-    PRCList*                        GetListNode(void)    { return &mListLink;   }
-    static nsCacheEntryDescriptor*  GetInstance(PRCList* qp) {
-        return (nsCacheEntryDescriptor*)
-            ((char*)qp - offsetof(nsCacheEntryDescriptor, mListLink));
-    }
 
     /**
      * utility method to attempt changing data size of associated entry
@@ -64,7 +57,6 @@ public:
 
 protected:
     
-    PRCList                 mListLink;
     nsCacheEntry          * mCacheEntry; // we are a child of the entry
     nsCacheAccessMode       mAccessGranted;
     nsCOMPtr<nsITransport>  mTransport;
