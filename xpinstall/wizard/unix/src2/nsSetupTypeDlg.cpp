@@ -615,7 +615,10 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
     gtk_widget_destroy(sCreateDestDlg);
 
     if (err != 0)
+    {
         ErrorHandler(E_MKDIR_FAIL);
+        return;
+    }
 
     // hide this notebook page
     gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);

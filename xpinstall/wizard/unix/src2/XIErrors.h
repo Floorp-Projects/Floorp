@@ -60,7 +60,7 @@
         E_INSTALL       = -421,     /* a .xpi failed to install */
         E_CP_FAIL       = -622,     /* copy of a xpi failed */
         E_NO_DEST       = -623,     /* destination dir doesn't exist */
-        E_MKDIR_FAIL    = -624      /* can't make destination dir */
+        E_MKDIR_FAIL    = -424      /* can't make destination dir */
     };
 
 #define FATAL_ERR_THRESHOLD -500    /* errs below this cause app quit */
