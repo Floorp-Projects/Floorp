@@ -64,7 +64,8 @@
                        prefstring="browser.cache.memory_cache_size" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>
-          <button class="dialog" value="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"/>
+          <button class="dialog" value="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
+                  oncommand="prefClearMemCache();"/>
         </row>
         <row>
           <text class="label" value="&diskCache.label;" accesskey="&diskCache.accesskey;" for="browserCacheDiskCache"/>
@@ -73,7 +74,8 @@
                        prefstring="browser.cache.disk_cache_size" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>
-          <button class="dialog" value="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"/>
+          <button class="dialog" value="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
+                  oncommand="prefClearDiskCache();"/>
         </row>
         <row>
           <text class="label" value="&diskCacheFolder.label;" accesskey="&diskCacheFolder.accesskey;" for="browserCacheDirectory"/>
