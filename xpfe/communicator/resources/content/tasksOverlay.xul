@@ -148,11 +148,11 @@
   <box id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
        grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
     <box id="taskButtons">
-      <button class="button-toolbar-4 taskbutton" id="mini-nav" onclick="toNavigator();" 
+      <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-comp" onclick="toEditor();" 
+      <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
               tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-addr" onclick="toAddressBook()"
+      <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
               tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
     </box>
     <spring id="taskbar-middle-spacer" flex="10"/>
