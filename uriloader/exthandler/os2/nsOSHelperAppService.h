@@ -40,13 +40,13 @@ public:
   // override nsIExternalHelperAppService methods....
   NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
+  // override nsIMIMEService methods to contain mime.types and mime.info look up steps
+  NS_IMETHODIMP GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
+  NS_IMETHODIMP GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
+
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);
-
-  // over ride nsIMIMEService methods to contain windows registry look up steps....
-  NS_IMETHOD GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
-  NS_IMETHOD GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo ** _retval);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
@@ -55,7 +55,7 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
-  nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
+
 };
 
 #endif // nsOSHelperAppService_h__
