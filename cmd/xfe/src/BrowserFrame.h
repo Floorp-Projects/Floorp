@@ -77,10 +77,11 @@ private:
   XFE_URLBar *				m_urlBar;
   XFE_RDFToolbox *          m_rdfToolbars;
 
-  XFE_BrowserDrop *			m_browserDropSite;
 #ifdef ENDER
   XFE_EditorToolbar *			m_editorStyleToolbar;
 #endif /* ENDER */
+
+  XFE_BrowserDrop *			m_browserDropSite;
 
   XP_Bool					m_notification_added;
 
@@ -97,6 +98,10 @@ private:
   // static MenuSpec navigate_menu_spec[];
 
   static ToolbarSpec toolbar_spec[];
+
+#ifdef ENDER
+  void createEditorToolbar();
+#endif /* ENDER */
 
   XFE_CALLBACK_DECL(navigateToURL) // URL_Struct is sent in callData
   XFE_CALLBACK_DECL(newPageLoading) // URL_Struct is sent in callData

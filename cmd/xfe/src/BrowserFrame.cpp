@@ -306,7 +306,13 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 			  parent_frame, 
 			  FRAME_BROWSER, 
 			  chromespec, 
-			  True)
+			  True),
+	m_urlBar(NULL),
+	m_rdfToolbars(NULL),
+#ifdef ENDER
+	m_editorStyleToolbar(NULL),
+#endif
+	m_browserDropSite(NULL)
 {
   geometryPrefName = "browser";
 
@@ -339,21 +345,6 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
                              "personalToolbarItem",
                              this);
 #endif /*OLD_PERSONALTOOLBAR*/
-
-#ifdef ENDER
-  // Create the editor toolbars needed for embedded composer
-  m_editorStyleToolbar = new XFE_EditorToolbar(this,
-                                               m_toolbox,
-                                               "editorFormattingToolbar",
-									(ToolbarSpec*)&editor_style_toolbar_spec,
-										   True);
-
-  // don't show the editor toolbars; they will be turned on when
-  // we load a page which contains an htmlarea.
-
-  // Need to register commands which the editor toolbars will need:
-  registerCommand(my_commands, new SetFontColorCommand(0));
-#endif /* ENDER */
 
   // add notification now 'cuz frame->getURL might not get called and
   // fe_SetURLString will break.
@@ -460,27 +451,62 @@ XFE_BrowserFrame::updateToolbar()
 }
 
 #ifdef ENDER
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_BrowserFrame::createEditorToolbar()
+{
+	XP_ASSERT( m_editorStyleToolbar == NULL );
+	XP_ASSERT( m_toolbox != NULL );
+
+	// Create the editor toolbars needed for embedded composer
+	m_editorStyleToolbar = 
+		new XFE_EditorToolbar(this,
+							  m_toolbox,
+							  "editorFormattingToolbar",
+							  (ToolbarSpec*)&editor_style_toolbar_spec,
+							  True);
+	
+	// Need to register commands which the editor toolbars will need:
+	registerCommand(my_commands, new SetFontColorCommand(0));
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserFrame::showEditorToolbar(XFE_View* view)
 {
-  if (m_editorStyleToolbar)
-  {
-    if (view)
-      m_editorStyleToolbar->setCommandDispatcher(view);
-    m_editorStyleToolbar->update();
-    // Update the toolbar to reflect the current view and cursor location:
-    m_editorStyleToolbar->updateCommand(0);
-    m_editorStyleToolbar->show();
-  }
-}
+	// Create the editor style toolbar only once
+	if (!m_editorStyleToolbar)
+	{
+		createEditorToolbar();
+	}
 
+	XP_ASSERT( m_editorStyleToolbar != NULL );
+
+	if (m_editorStyleToolbar)
+	{
+		if (view)
+		{
+			m_editorStyleToolbar->setCommandDispatcher(view);
+		}
+
+		m_editorStyleToolbar->update();
+
+		// Update the toolbar to reflect the current view and cursor location:
+		m_editorStyleToolbar->updateCommand(0);
+
+		m_editorStyleToolbar->show();
+	}
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserFrame::hideEditorToolbar()
 {
-  if (m_editorStyleToolbar)
-    m_editorStyleToolbar->hide();
+	if (m_editorStyleToolbar)
+	{
+		m_editorStyleToolbar->hide();
+	}
 }
 #endif /* ENDER */
+
 //////////////////////////////////////////////////////////////////////////
 //
 // isCommandEnabled()
