@@ -1208,17 +1208,11 @@ sub GenerateUserLookUp {
 sub Fix_LxrLink {
      my ($lxr_path) = @_;
      my $lxr_base = Param('lxr_base');
-
-#      # total kludge!!  lxr omits the top-level "mozilla" directory...
-#      if (mozilla_lxr_kludge) {
-#           $lxr_path =~ s@^ns/@@;
-#           $lxr_path =~ s@^mozilla/@@;
-#      }
-
-    $lxr_path =~ s!.*/(r+src/)!$1!;
-    $lxr_path =~ s!(r+src)/!device/$1/!;
-
-     return "$lxr_base/$lxr_path";
+     my $munge = Param('lxr_mungeregexp');
+     if ($munge ne "") {
+         eval("\$lxr_path =~ $munge");
+     }
+     return "$lxr_base$lxr_path";
 }
 
 #

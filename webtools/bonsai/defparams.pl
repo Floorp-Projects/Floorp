@@ -212,6 +212,11 @@ DefParam("lxr_base",
 	 "http://lxr.mozilla.org/",
 	 \&check_urlbase);
 
+DefParam("lxr_mungeregexp",
+         'A regexp to use to munge a pathname from the $CVSROOT into a valid LXR pathname.  So, for example, if we tend to have a lot of pathnames that start with "mozilla/", and the LXR URLs should not contain that leading mozilla/, then you would use something like:  s@^mozilla/@@',
+         "t",
+         "");
+
 DefParam("bugs_base",
 	 "The URL that is the common initial leading part of all Bugzilla URLs.",
 	 "t",
