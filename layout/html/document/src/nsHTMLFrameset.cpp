@@ -109,6 +109,32 @@ protected:
   nsMouseState mLastMouseState;
   friend class nsHTMLFramesetFrame;
 };
+/*******************************************************************************
+ * nsHTMLFramesetBlankFrame
+ ******************************************************************************/
+class nsHTMLFramesetBlankFrame : public nsLeafFrame {
+
+public:
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
+
+protected:
+  nsHTMLFramesetBlankFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  virtual ~nsHTMLFramesetBlankFrame();
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
+                              nsReflowMetrics& aDesiredSize);
+  friend class nsHTMLFramesetFrame;
+  friend class nsHTMLFrameset;
+};
 
 /*******************************************************************************
  * nsHTMLFramesetFrame
@@ -511,6 +537,10 @@ PRBool nsHTMLFramesetFrame::GetFrameBorder(nsHTMLTagContent* aContent)
   return PR_TRUE;
 }
 
+#define FRAMESET 0
+#define FRAME 1
+#define BLANK 2
+
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
                             nsReflowMetrics&     aDesiredSize,
@@ -550,7 +580,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   nsHTMLFramesetBorderFrame** verBorders;    // vertical borders
   PRBool*    horBordersVis; // horizontal borders visibility
   nsHTMLFramesetBorderFrame** horBorders;    // horizontal borders
-  PRBool*    isFrameset;    // frameset/frame distinction of children  
+  PRInt32*   childTypes;    // frameset/frame distinction of children  
   PRBool*    hasBorderAttr; // the frameborder attr of non border children 
   if (firstTime) {
     verBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
@@ -566,7 +596,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
       horBorders[horX]    = nsnull;
       horBordersVis[horX] = PR_FALSE;
     }
-    isFrameset = new PRBool[numCells]; 
+    childTypes = new PRInt32[numCells]; 
     hasBorderAttr  = new PRBool[numCells]; 
   }
   
@@ -576,6 +606,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   if (firstTime) {
     mChildCount = 0;
     nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
+    nsIFrame* frame;
     PRInt32 numChildren = content->ChildCount();
     for (int childX = 0; childX < numChildren; childX++) {
       nsHTMLTagContent* child = (nsHTMLTagContent*)(content->ChildAt(childX));
@@ -584,9 +615,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
       }
       nsIAtom* tag = child->GetTag();
       if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
-        isFrameset[mChildCount] = (nsHTMLAtoms::frameset == tag);
+        childTypes[mChildCount] = (nsHTMLAtoms::frameset == tag) ? FRAMESET : FRAME;
         hasBorderAttr[mChildCount] = (nsHTMLAtoms::frameset == tag) ? PR_FALSE : GetFrameBorder(child);
-        nsIFrame* frame;
         nsresult result = nsHTMLBase::CreateFrame(&aPresContext, this, child, nsnull, frame); 
         NS_RELEASE(child);
         if (NS_OK != result) {
@@ -600,6 +630,21 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
         lastChild = frame;
         mChildCount++;
       }
+    }
+    // add blank frames for frameset cells that had no content provided
+    for (int blankX = mChildCount; blankX < numCells; blankX++) {
+      // XXX the blank frame is using the content of its parent - at some point it should just have null content
+      // XXX bypassing nsHTMLBase::CreateFrame; all we need is a simple blank frame.
+      nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame(mContent, this);
+      //GetStyleContext(&aPresContext, blankFrame->mStyleContext); // set the blank frame's style context
+      if (nsnull == lastChild) {
+        mFirstChild = blankFrame;
+      } else {
+        lastChild->SetNextSibling(blankFrame);
+      }
+      lastChild = blankFrame;
+      childTypes[mChildCount] = BLANK;
+      mChildCount++;
     }
     mNonBorderChildCount = mChildCount;
   }
@@ -656,10 +701,12 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
 
     if (firstTime) {
       PRInt32 childVis; 
-      if (isFrameset[childX]) {
+      if (FRAMESET == childTypes[childX]) {
         childVis = ((nsHTMLFramesetFrame*)child)->mEdgeVisibility;
-      } else {
+      } else if (FRAME == childTypes[childX]) {
         childVis = (hasBorderAttr[childX]) ? ALL : NONE;
+      } else {  // blank 
+        childVis = NONE;
       }
       // set the visibility of our edge borders based on children
       if ((0 == cellIndex.x) && (!(mEdgeVisibility & LEFT))) {
@@ -711,7 +758,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
     delete[] verBorders;   
     delete[] horBordersVis; 
     delete[] horBorders; 
-    delete[] isFrameset; 
+    delete[] childTypes; 
     delete[] hasBorderAttr; 
   }
 
@@ -929,5 +976,74 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::ListTag(FILE* out) const
   nsLeafFrame::ListTag(out);
   fputs(" (BORDER)", out);
   return NS_OK;
+}
+
+/*******************************************************************************
+ * nsHTMLFramesetBlankFrame
+ ******************************************************************************/
+nsHTMLFramesetBlankFrame::nsHTMLFramesetBlankFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsLeafFrame(aContent, aParent)
+{
+}
+
+nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
+{
+}
+
+void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                              const nsReflowState& aReflowState,
+                                              nsReflowMetrics& aDesiredSize)
+{
+  aDesiredSize.width   = aReflowState.maxSize.width;
+  aDesiredSize.height  = aReflowState.maxSize.height;
+  aDesiredSize.ascent  = aDesiredSize.width;
+  aDesiredSize.descent = 0;
+}
+
+NS_IMETHODIMP
+nsHTMLFramesetBlankFrame::Reflow(nsIPresContext&      aPresContext,
+                                 nsReflowMetrics&     aDesiredSize,
+                                 const nsReflowState& aReflowState,
+                                 nsReflowStatus&      aStatus)
+{
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+NS_METHOD
+nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect&        aDirtyRect)
+{
+  nscolor white = NS_RGB(255,255,255);
+  aRenderingContext.SetColor (white);
+  // XXX FillRect doesn't seem to work
+  //aRenderingContext.FillRect (mRect);
+  static PRInt32 colors[6] = {160, 255, 160, 160, 75, 0}; 
+
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord x0 = 0;
+  nscoord y0 = 0;
+  nscoord x1 = x0;
+  nscoord y1 = mRect.height;
+  nscoord pixel = NSIntPixelsToTwips(1, p2t);
+
+  aRenderingContext.SetColor(white);
+  for (int i = 0; i < mRect.width; i += pixel) {
+    aRenderingContext.DrawLine (x0, y0, x1, y1);
+    x0 += NSIntPixelsToTwips(1, p2t);
+    x1 =  x0;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X BLANK \n", this);
+  return nsLeafFrame::List(out, aIndent);
 }
 

@@ -718,6 +718,10 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       break;
     }
 
+    // this shouldn't happen, but it does
+    if ((tileWidth == 0) || (tileHeight == 0)) {
+      return;
+    }
     // Tile the background
     nscoord xpos, ypos, xpostart;
     PRIntn x, y, xstart;
