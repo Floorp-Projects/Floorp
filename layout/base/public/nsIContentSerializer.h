@@ -47,24 +47,24 @@ class nsIContentSerializer : public nsISupports {
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn) = 0;
 
-  NS_IMETHOD AddText(nsIDOMText* aText, nsAWritableString& aStr) = 0;
+  NS_IMETHOD AppendText(nsIDOMText* aText, nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddCDATASection(nsIDOMCDATASection* aCDATASection,
+  NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
 			     nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddProcessingInstruction(nsIDOMProcessingInstruction* aPI,
+  NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
 				      nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddComment(nsIDOMComment* aComment,
+  NS_IMETHOD AppendComment(nsIDOMComment* aComment,
 			nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddDoctype(nsIDOMDocumentType *aDoctype,
+  NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
 			nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddElementStart(nsIDOMElement *aElement,
+  NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
 			     nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD AddElementEnd(nsIDOMElement *aElement,
+  NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
 			   nsAWritableString& aStr) = 0;
 };
 
