@@ -17,7 +17,7 @@
         <template>
         <rule>
 		    <menupopup>
-              <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
+              <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
 			</menupopup>
           </rule>
         </template>
@@ -50,7 +50,7 @@
       <template>
         <rule>
           <menupopup>
-            <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#name"
+            <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#name"
             oncommand="ShowUpdateFromResource( event.target )"/>
           </menupopup>
         </rule>
@@ -71,43 +71,57 @@
 	</menu>
 
 	 <toolbar id="taskbar" chromeclass="status" persist="collapsed">
-
-		  <popup id="mozillaPopup">
-		    <menu>
-		    	<menuitem value="&bonsai.label;" oncommand="OpenTaskURL('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
-		    	<menuitem value="&bugzillaButton.label;" oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
-		    </menu>
-		  </popup>
-		 
-		   <popup id="windowPopup" >
-		    <menu oncommand="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
-                  <template>
-                    <rule>
-                      <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                    </rule>
-                  </template>
-		    </menu>
-		  </popup>
-		
-		  
 	  	 <box id="taskButtons" align="horizontal">
   			
-  	 		<titledbutton class="toolbar-flat" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
-  	 		<titledbutton class="toolbar-flat" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-  	 		<titledbutton class="toolbar-flat" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
-  	 		<titledbutton class="toolbar-flat" align="left" id="mini-comp" value="" onclick="toEditor();" />
+  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
+  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
+  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
 	      </box>
 		  <spring flex="100%"/>
-	 	  <box align="horizontal">
-  	 		<titledbutton align="right"  class="popup toolbar-flat" popup="mozillaPopup"
-			   popupanchor="bottomright" value="&mozillaButton.label;" />
-			   
-			<titledbutton align="right" class="popup toolbar-flat" value="&openWinButton.label;" popup="windowPopup"
-			 popupanchor="topleft" popupalign="bottomleft"  />
 
-          </box>
-		  <spring flex="100%"/>
-	   	 
+	 	  <box align="horizontal">
+                    <!-- The "Tasks" menu is a grab bag o' fun little tasks -->
+                    <menu>
+                      <titledbutton align="right" class="bookmarkFolder toolbar-flat"
+                                    value="&mozillaButton.label;" crop="right" />
+
+                        <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft">
+                          <menuitem class="standard" value="&bonsai.label;"
+                                    oncommand="OpenTaskURL('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
+
+                          <menuitem class="standard" value="&bugzillaButton.label;"
+                                    oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
+
+                        </menupopup>
+
+                        <spring class="personaltoolbarspacer" flex="1"/>
+                      </menu>
+
+                      <!-- The "Open Windows" menu uses the window mediator
+                           to display all of the open windows -->
+                      <menu align="right"
+                            oncommand="ShowWindowFromResource(event.target)"
+                            datasources="rdf:window-mediator"
+                            ref="NC:WindowMediatorRoot" >
+
+                        <titledbutton align="right" class="bookmarkFolder toolbar-flat"
+                                      value="&openWinButton.label;" crop="right" />
+
+                        <template>
+                          <menupopup>
+                            <menuitem class="standard" uri="rdf:*"
+                                      value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                          </menupopup>
+                        </template>
+
+                        <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft" />
+
+                        <spring class="personaltoolbarspacer" flex="1"/>
+                      </menu>
+                    </box>
+
+                    <spring flex="100%"/>
 	  </toolbar>
 	
 </overlay>		

@@ -98,6 +98,10 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/toolbar-begincap.gif \
 		$(srcdir)/toolbar-endcap.gif \
 		$(srcdir)/toolbar-dropdown.gif \
+		$(srcdir)/toolbar-dropdown-hover.gif \
+		$(srcdir)/toolbar-menu-arrow.gif \
+		$(srcdir)/toolbar-menu-arrow-disabled.gif \
+		$(srcdir)/toolbar-menu-arrow-hover.gif \
 		$(srcdir)/navbar-bg.gif \
 		$(srcdir)/navbar-endcap.gif \
 		$(srcdir)/navbar-bg-begincap.gif \
