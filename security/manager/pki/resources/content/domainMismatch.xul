@@ -25,8 +25,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="250"
-  width="400"
+  width="320"
   onload="onLoad();"
 >
 <script src="chrome://global/content/strres.js" />
@@ -45,7 +44,7 @@
 
   <html id="message1" />
   <separator/>
-  <html id="message2" />
+  <html id="message2" flex="100%"/>
 
   <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
