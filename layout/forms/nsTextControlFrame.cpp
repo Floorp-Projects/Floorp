@@ -34,6 +34,7 @@
 #include "nsWidgetsCID.h"
 #include "nsSize.h"
 #include "nsString.h"
+#include "nsLinebreakConverter.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsFont.h"
@@ -363,23 +364,32 @@ nsTextControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame:
 NS_IMETHODIMP
 nsTextControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
 {
-  nsISupportsString* value = nsnull;
-  nsAutoString string;
-  nsresult res = GetProperty(nsHTMLAtoms::value, string);
+  nsISupportsString* theValue = nsnull;
+  nsAutoString theString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, theString);
   if (NS_SUCCEEDED(res)) {
-    char* chars = string.ToNewCString();
+    char* chars = theString.ToNewCString();
     if (chars) {
+    
+      // GetProperty returns platform-native line breaks. We must convert
+      // these to content line breaks.
+      char* newChars = nsLinebreakConverter::ConvertLineBreaks(chars,
+           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
+      if (newChars) {
+        nsCRT::free(chars);
+        chars = newChars;
+      }
       res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                           NS_GET_IID(nsISupportsString), (void**)&value);
-      if (NS_SUCCEEDED(res) && value) {
-        value->SetData(chars);
+                                           NS_GET_IID(nsISupportsString), (void**)&theValue);
+      if (NS_SUCCEEDED(res) && theValue) {
+        theValue->SetData(chars);
       }
       nsCRT::free(chars);
     } else {
       res = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  *aState = (nsISupports*)value;
+  *aState = (nsISupports*)theValue;
   return res;
 }
 
@@ -389,8 +399,8 @@ nsTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aSta
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString string(chars);
-    res = SetProperty(aPresContext, nsHTMLAtoms::value, string);
+    nsAutoString theString(chars);
+    res = SetProperty(aPresContext, nsHTMLAtoms::value, theString);
     nsCRT::free(chars);
   }
   return res;
