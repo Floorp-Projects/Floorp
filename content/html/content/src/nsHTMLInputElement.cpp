@@ -710,9 +710,9 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 
   nsIFormControlFrame* formControlFrame = nsnull;
 
-  rv = GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
@@ -873,16 +873,16 @@ nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   PRBool disabled;
+
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
     return rv;
   }
 
   // Generate a submit event targetted at the form content
-  nsCOMPtr<nsIDOMHTMLFormElement> form;
-  GetForm(getter_AddRefs(form));
-  nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
-  if (formContent) {
+  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+
+  if (form) {
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     if (shell) {
@@ -890,9 +890,10 @@ nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
       nsEvent event;
       event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SUBMIT;
-      shell->HandleDOMEventWithTarget(formContent, &event, &status);
+      shell->HandleDOMEventWithTarget(form, &event, &status);
     }
   }
+
   return rv;
 }
 

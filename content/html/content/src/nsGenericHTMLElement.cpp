@@ -1008,46 +1008,60 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return result;
 }
 
-nsIContent*
-nsGenericHTMLElement::FindFormParentContent(nsIContent* aParent)
+nsresult
+nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
 {
+  // XXX: Namespaces!!!
+
+  nsCOMPtr<nsIContent> content(this);
   nsCOMPtr<nsIAtom> tag;
-  nsCOMPtr<nsIContent> parent(aParent);
+  PRInt32 nameSpaceID;
 
-  while (parent) {
-    PRInt32 nameSpaceID;
+  *aForm = nsnull;
 
-    parent->GetTag(*getter_AddRefs(tag));
-    parent->GetNameSpaceID(nameSpaceID);
+  while (content) {
+    content->GetTag(*getter_AddRefs(tag));
+    content->GetNameSpaceID(nameSpaceID);
 
-    // If the current ancestor is a form, set it as our form
+    // If the current ancestor is a form, return it as our form
     if ((tag.get() == nsHTMLAtoms::form) &&
         (kNameSpaceID_HTML == nameSpaceID)) {
-      nsIContent * content = parent.get();
-      NS_IF_ADDREF(content);
-      return content;
+      return CallQueryInterface(content, aForm);
     }
 
-    nsIContent *tmp = parent;
-    tmp->GetParent(*getter_AddRefs(parent));
+    nsIContent *tmp = content;
+    tmp->GetParent(*getter_AddRefs(content));
+
+    if (content) {
+      PRInt32 i;
+
+      content->IndexOf(tmp, i);
+
+      if (i < 0) {
+        // This means 'tmp' is anonymous content, form controls in
+        // anonymous content can't refer to the real form, if they do
+        // they end up in form.elements n' such, and that's wrong...
+
+        return NS_OK;
+      }
+    }
   }
 
-  return nsnull;
+  return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::FindAndSetFormParent(nsIContent* aParent,
-                                    nsIFormControl* aControl)
+nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIContent> formParent(getter_AddRefs(FindFormParentContent(aParent)));
-  if (formParent) {
-    nsCOMPtr<nsIDOMHTMLFormElement> form(do_QueryInterface(formParent));
-    if (form) {
-      result = aControl->SetForm(form);
-    }
+  nsCOMPtr<nsIDOMHTMLFormElement> form;
+
+  FindForm(getter_AddRefs(form));
+
+  if (form) {
+    return aFormControl->SetForm(form);
   }
-  return result;
+
+  return NS_OK;
 }
 
 nsresult
@@ -3749,7 +3763,7 @@ nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
     // search. In this case, someone (possibly the content sink) has
     // already set the form for us.
 
-    rv = FindAndSetFormParent(aParent, this);
+    rv = FindAndSetForm(this);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -3767,14 +3781,7 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
   nsresult rv = NS_OK;
 
   if (aDocument && mParent && !mForm) {
-    // XXX Do this check since anonymous frame content was also being
-    // added to the form. To make sure that the form control isn't
-    // anonymous, we ask the parent if it knows about it.
-    PRInt32 index;
-    mParent->IndexOf(this, index);
-    if (-1 != index) {
-      rv = FindAndSetFormParent(mParent, this);
-    }
+    rv = FindAndSetForm(this);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -3953,15 +3960,6 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
 
-  // This is here because radios can be created via script
-  // and depending on how the content in the script is constructed
-  // none of the code paths that set up the mForm may get called
-  // So this is a last stab effort to get the form before somebody 
-  // uses the radiobutton. Bug 62799
-  if (mForm == nsnull) {
-    FindAndSetFormParent(mParent, this); // ignore returned result
-  }
-
   if (mForm) {
     mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)aForm);
   }
@@ -3974,6 +3972,12 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
 {
   nsresult rv = NS_OK;
 
+  PRBool old_parent = (PRBool)mParent;
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = nsGenericElement::SetParent(aParent);
+  }
+
   if (!aParent && mForm) {
     SetForm(nsnull);
   }
@@ -3982,12 +3986,8 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
   // have an old parent, but we do have a form, we shouldn't do the
   // search. In this case, someone (possibly the content sink) has
   // already set the form for us.
-  else if (mDocument && aParent && (mParent || !mForm)) {
-    rv = FindAndSetFormParent(aParent, this);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericElement::SetParent(aParent);
+  else if (mDocument && aParent && (old_parent || !mForm)) {
+    rv = FindAndSetForm(this);
   }
 
   return rv;
@@ -4001,14 +4001,7 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
   nsresult rv = NS_OK;
 
   if (aDocument && mParent && !mForm) {
-    // XXX Do this check since anonymous frame content was also being
-    // added to the form. To make sure that the form control isn't
-    // anonymous, we ask the parent if it knows about it.
-    PRInt32 index;
-    mParent->IndexOf(this, index);
-    if (-1 != index) {
-      rv = FindAndSetFormParent(mParent, this);
-    }
+    rv = FindAndSetForm(this);
   }
 
   if (NS_SUCCEEDED(rv)) {
