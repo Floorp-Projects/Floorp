@@ -641,9 +641,6 @@ case "$target" in
 	CFLAGS="$CFLAGS -mieee"
 	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
-    i*86*)
-    AC_DEFINE(MOZ_LEAKY)
-    ;;
     esac
     ;;
 
@@ -2834,7 +2831,6 @@ then
         AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
         ;;
   esac
-  AC_DEFINE(TRACING)
 else
   AC_DEFINE(NDEBUG)
   AC_DEFINE(TRIMMED)
