@@ -3501,7 +3501,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
     if (NS_FAILED(result)) return result;
     if (!IsDescendantOfBody(*aResultNode))
     {
-      *aResultNode = nsnull;
+      NS_RELEASE(*aResultNode); // assigns nsnull
       return result;
     }
     if (!aEditableNode) return result;
@@ -3544,7 +3544,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
     if (NS_FAILED(result)) { return result; }
     if (!IsDescendantOfBody(*aResultNode))
     {
-      *aResultNode = nsnull;
+      NS_RELEASE(*aResultNode); // assigns nsnull
       return result;
     }
     if (PR_FALSE==aEditableNode) {
@@ -3576,7 +3576,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
         if (NS_FAILED(result)) { return result; }
         if (!IsDescendantOfBody(*aResultNode))
         {
-          *aResultNode = nsnull;
+          NS_RELEASE(*aResultNode); // assigns nsnull
           return result;
         }
         if (PR_FALSE==aEditableNode) {
@@ -3614,7 +3614,7 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
     if (NS_FAILED(result)) { return result; }
     if (!IsDescendantOfBody(*aResultNode))
     {
-      *aResultNode = nsnull;
+      NS_RELEASE(*aResultNode); // assigns nsnull
       return result;
     }
     if (PR_FALSE==aEditableNode) {
@@ -3647,7 +3647,7 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
         if (NS_FAILED(result)) { return result; }
         if (!IsDescendantOfBody(*aResultNode))
         {
-          *aResultNode = nsnull;
+          NS_RELEASE(*aResultNode); // assigns nsnull
           return result;
         }
         if (PR_FALSE==aEditableNode) {
