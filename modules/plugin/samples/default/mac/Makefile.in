@@ -81,6 +81,7 @@ libs install:: install-plugin
 
 install-plugin: build-plugin
 	$(INSTALL) "build/Default Plugin.plugin" $(DIST)/bin/plugins
+	$(INSTALL) "build/DefaultPlugin.build/Default Plugin.build/PkgInfo" "$(DIST)/bin/plugins/Default Plugin.plugin/Contents"
 
 resources: $(RESOURCE_FILES)
 
