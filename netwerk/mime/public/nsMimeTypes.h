@@ -73,6 +73,7 @@
 #define APPLICATION_POSTSCRIPT              "application/postscript"
 #define APPLICATION_PDF                     "application/pdf"
 #define APPLICATION_PRE_ENCRYPTED           "application/pre-encrypted"
+#define APPLICATION_RDF                     "application/rdf+xml"
 #define APPLICATION_UUENCODE                "application/x-uuencode"
 #define APPLICATION_UUENCODE2               "application/x-uue"
 #define APPLICATION_UUENCODE3               "application/uuencode"

@@ -163,6 +163,7 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 #ifdef MOZ_SVG
            mMimeType.EqualsLiteral(kSVGTextContentType)          ||
 #endif
+           mMimeType.EqualsLiteral(kRDFApplicationContentType)   ||
            mMimeType.EqualsLiteral(kRDFTextContentType))
     mDocType=eXML;
 }
