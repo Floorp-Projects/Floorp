@@ -796,14 +796,15 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   nsAutoString2 theString(*this,eOneByte);
   PRUint32  theRadix=aRadix;
-  PRInt32   result=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
-
-  if(NS_OK==result){
+  PRInt32   result=0;
+  
+  *anErrorCode=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
+  if(NS_OK==*anErrorCode){
     if(kAutoDetect==aRadix)
       aRadix=theRadix;
     if((kRadix10==aRadix) || (kRadix16==aRadix))
       result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
-    else result=NS_ERROR_ILLEGAL_VALUE;
+    else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
   }
 
   return result;
