@@ -839,7 +839,7 @@ sub MakeResourceAliases()
 
 
         # Autocomplete
-    _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",          "$chrome_dir");
+    _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",          "$globalContent", 0);
                                                                                  
         {
         my($walletContent) = "$communicatorContent"."wallet:";
