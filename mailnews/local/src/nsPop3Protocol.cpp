@@ -482,14 +482,14 @@ void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 
 void nsPop3Protocol::UpdateStatusWithString(PRUnichar * aStatusString)
 {
-	if (m_statusFeedback && aStatusString)
-		m_statusFeedback->ShowStatusString(aStatusString);
+  if (mProgressEventSink)
+    mProgressEventSink->OnStatus(this, m_channelContext, aStatusString);
 }
 
 void nsPop3Protocol::UpdateProgressPercent (PRUint32 totalDone, PRUint32 total)
 {
-	if (m_statusFeedback && total > 0)
-		m_statusFeedback->ShowProgress((100 *(totalDone))  / total);
+  if (mProgressEventSink)
+    mProgressEventSink->OnProgress(this, m_channelContext, (PRInt32) totalDone, (PRInt32) total); 
 }
 
 void nsPop3Protocol::SetUsername(const char* name)
