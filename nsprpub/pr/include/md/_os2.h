@@ -59,11 +59,6 @@
 #define sock_errno() errno
 #define soclose close
 #define sock_init()
-
-#include <sys/builtin.h>
-#include <sys/smutex.h>
-static _smutex _md_shm_lock = 0;
-
 #endif
 
 /*
