@@ -4473,6 +4473,15 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
         return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsICaret>  caretP;
   
+  // workaround for windows ime bug 23558: we get every ime event twice. 
+  // for escape keypress, this causes an empty string to be passed
+  // twice, which freaks out the editor.  This is to detect and aviod that
+  // situation:
+  if (aCompositionString.IsEmpty() && !mIMETextNode) 
+  {
+    return NS_OK;
+  }
+  
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
@@ -4490,6 +4499,12 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   ps->GetCaret(getter_AddRefs(caretP));
   caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
 
+  // second part of 23558 fix:
+  if (aCompositionString.IsEmpty()) 
+  {
+    mIMETextNode = nsnull;
+  }
+  
   return result;
 }
 
