@@ -57,6 +57,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	SetForegroundColor(NS_RGB(0, 0, 0));
 
 	mFontMetrics = nsnull;
+  mMenuBar = nsnull;
   mWindowRegion = nsnull;
   mWindowPtr = nsnull;
   mPainting = PR_FALSE;
