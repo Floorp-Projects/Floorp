@@ -1334,10 +1334,9 @@ void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
 		fNextToken++; // eat the next '('
 
 		if (!firstAddress)
-		{
 			addressLine += ", ";
-			firstAddress = PR_FALSE;
-		}
+
+		firstAddress = PR_FALSE;
 		char *personalName = CreateNilString();
 		fNextToken = GetNextToken();
 		char *atDomainList = CreateNilString();
