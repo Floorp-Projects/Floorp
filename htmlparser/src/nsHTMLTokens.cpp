@@ -292,6 +292,7 @@ void CStartToken::GetSource(nsString& anOutputString){
  *  @return  
  */
 CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
+  SetStringValue(GetTagName(aTag));
 }
 
 
