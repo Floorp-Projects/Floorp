@@ -928,14 +928,14 @@
         <spacer flex="1"/>
         <toolbarbutton class="tabs-closebutton" oncommand="toggleSidebar();"/>      
       </sidebarheader>        
-      <browser id="sidebar" flex="1" disablehistory="true"
+      <browser id="sidebar" flex="1"
                style="min-width: 150px; width: 200px; max-width: 400px;"/>
     </vbox>    
     
     <splitter id="sidebar-splitter" hidden="true"/>
     <!-- we only need to handle |ondragdrop| because everything else is
           taken care of by the builtin behavior inside the tabbrowser -->
-    <tabbrowser id="content"
+    <tabbrowser id="content" disablehistory="true"
                 flex="1" contenttooltip="aHTMLTooltip"
                 contentcontextmenu="contentAreaContextMenu"
                 onnewtab="BrowserOpenTab();"
