@@ -679,9 +679,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
-  if (!mInScript) {
-    FlushText();
-  }
+  FlushText();
 
   if (isHTML) {
     nsIAtom* tagAtom = NS_NewAtom(tag);
@@ -730,18 +728,7 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
       break;
 
     case eToken_cdatasection:
-      /*
-       * If we're inside a <html:script> tag we add the data as text so that
-       * the script can be processed.
-       *
-       * -- jst@citec.fi
-       */
-      if (mInScript) {
-        AddText(aNode.GetText());
-      } else {
-        AddCDATASection(aNode);
-      }
-
+      AddCDATASection(aNode);    
       break;
 
     case eToken_entity:
@@ -799,17 +786,15 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
 {
   FlushText();
 
-  nsAutoString text;
   nsIContent *comment;
   nsIDOMComment *domComment;
   nsresult result = NS_OK;
 
-  text.Assign(aNode.GetText());
   result = NS_NewCommentNode(&comment);
   if (NS_OK == result) {
     result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void **)&domComment);
     if (NS_OK == result) {
-      domComment->AppendData(text);
+      domComment->AppendData(aNode.GetText());
       NS_RELEASE(domComment);
 
       comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
@@ -826,12 +811,14 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
 {
   FlushText();
 
-  nsAutoString text;
   nsIContent *cdata;
   nsIDOMCDATASection *domCDATA;
   nsresult result = NS_OK;
 
-  text.Assign(aNode.GetText());
+  const nsAReadableString& text = aNode.GetText();
+  if (mInScript) {
+    mScriptText.Append(text);
+  }
   result = NS_NewXMLCDATASection(&cdata);
   if (NS_OK == result) {
     result = cdata->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void **)&domCDATA);
@@ -1262,20 +1249,7 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 
   nsCOMPtr<nsIDOMNode> tmpNode;
   
-  doc->GetDoctype(getter_AddRefs(oldDocType)); 
-  if (oldDocType) {
-    /*
-     * If we already have a doctype we replace the old one.
-     */
-    rv = doc->ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
-  } else {
-    /*
-     * If we don't already have one, append it.
-     */
-    rv = doc->AppendChild(docType, getter_AddRefs(tmpNode));
-  }
-  
-  return NS_OK;
+  return doc->AppendChild(docType, getter_AddRefs(tmpNode));
 }
 
 nsresult
@@ -1325,6 +1299,10 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
   PRInt32 addLen = aString.Length();
   if (0 == addLen) {
     return NS_OK;
+  }
+
+  if (mInScript) {
+    mScriptText.Append(aString);
   }
 
   // Create buffer when we first need it
@@ -1602,18 +1580,14 @@ nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
   if (mInScript) {
-    nsAutoString script;
-    script.Assign(mText, mTextLength);
     nsCOMPtr<nsIURI> docURI( dont_AddRef( mDocument->GetDocumentURL() ) );
-    result = EvaluateScript(script, docURI, mScriptLineNo, mScriptLanguageVersion);
-    FlushText(PR_FALSE);
+    result = EvaluateScript(mScriptText, docURI, mScriptLineNo, mScriptLanguageVersion);  
+    mScriptText.Truncate();
     mInScript = PR_FALSE;
   }
 
   return result;
 }
-
-#define SCRIPT_BUF_SIZE 1024
 
 // XXX Stolen from nsHTMLContentSink. Needs to be shared.
 // XXXbe share also with nsRDFParserUtils.cpp and nsHTMLContentSink.cpp
