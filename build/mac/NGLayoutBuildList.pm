@@ -206,6 +206,9 @@ sub Checkout()
   
   		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyEditor" module.
   		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
+
+  		#// Check out the Boehm GC for leak detection. Needs to be added to the "SeaMonkeyEditor" module.
+  		$session->checkout("mozilla/gc/boehm")						|| die "checkout failure";
 	} elsif ($main::pull{runtime}) {
 		$session->checkout("mozilla/build")							|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/InterfaceLib")	        || die "checkout failure";
@@ -279,17 +282,20 @@ sub BuildRuntimeDist()
 	_InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
-	_InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",		"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",	"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
 
+	#GC_LEAK_DETECTOR
+	_InstallFromManifest(":mozilla:gc:boehm:MANIFEST",								"$distdirectory:gc:");
+	
 	#INCLUDE
-	_InstallFromManifest(":mozilla:config:mac:MANIFEST",								"$distdirectory:config:");
+	_InstallFromManifest(":mozilla:config:mac:MANIFEST",							"$distdirectory:config:");
 	_InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
 	
 	#NSPR	
-    _InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",						"$distdirectory:nspr:");		
+    _InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:");		
     _InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
-    _InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",							"$distdirectory:nspr:");		
+    _InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:");		
     _InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
     _InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
 
@@ -949,13 +955,22 @@ sub BuildRuntimeProjects()
 		_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorCarbon$D.o");	
 	}
 	else {
-		_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
-		#// _BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorGC");
+		if ($main::GC_LEAK_DETECTOR) {
+			_BuildProject(":mozilla:gc:boehm:macbuild:gc.mcp",						"gc.ppc.lib");
+			_MakeAlias(":mozilla:gc:boehm:macbuild:gc.PPC.lib",						":mozilla:dist:gc:gc.PPC.lib");
+			_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"MemAllocatorGC.o");
+		} else {
+			_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"MemAllocator$D.o");
+		}
 	}
 
-	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	if ($main::GC_LEAK_DETECTOR) {
+		BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLibGC.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	} else {
+		BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	}
 
-	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",					"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",						"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	print("--- Runtime projects complete ----\n")
 }
