@@ -62,7 +62,7 @@ function findInPage(browser, rootSearchWindow, startSearchWindow)
 
 function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
 {
-  if (window.findDialog)
+  if ("findDialog" in window && window.findDialog)
     window.findDialog.focus();
   else
   {
