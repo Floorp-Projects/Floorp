@@ -171,11 +171,17 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX,
       childContent->CreateFrame(aCX, this, mStyleContext, childFrame);
       if (0 == i) {
         mFirstChild = childFrame;
-        SetFirstContentOffset(mFirstChild);
+        PRInt32 contentIndex;
+        mFirstChild->GetContentIndex(contentIndex);
+        SetFirstContentOffset(contentIndex);
       }
       else {
         mFirstChild->SetNextSibling(childFrame);
-        SetLastContentOffset(childFrame);
+        // XXX We shouldn't be setting this inside of a loop. Plus using
+        // GetContentIndex() is very slow...
+        PRInt32 contentIndex;
+        childFrame->GetContentIndex(contentIndex);
+        SetLastContentOffset(contentIndex);
       }
       NS_RELEASE(childContent);
       mChildCount++;

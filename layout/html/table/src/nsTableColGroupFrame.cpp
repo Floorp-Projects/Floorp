@@ -104,7 +104,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
         prevKidFrame->SetNextSibling(kidFrame);
       } else {
         mFirstChild = kidFrame;  // our first child
-        SetFirstContentOffset(kidFrame);
+        SetFirstContentOffset(kidIndex);
       }
       prevKidFrame = kidFrame;
       mChildCount++;

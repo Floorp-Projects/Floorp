@@ -290,18 +290,6 @@ protected:
   // Returns true if aChild is being used as a pseudo frame
   PRBool ChildIsPseudoFrame(const nsIFrame* aChild) const;
 
-  /**
-   * Sets the first content offset based on the first child frame.
-   */
-  void SetFirstContentOffset(const nsIFrame* aFirstChild);
-
-  /**
-   * Sets the last content offset based on the last child frame. If the last
-   * child is a pseudo frame then it sets mLastContentIsComplete to be the same
-   * as the last child's mLastContentIsComplete
-   */
-  void SetLastContentOffset(const nsIFrame* aLastChild);
-
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
 #ifdef NS_DEBUG
@@ -359,6 +347,20 @@ protected:
   nsIFrame*   mOverflowList;
 
 private:
+  /**
+   * Sets the first content offset based on the first child frame.
+   * @deprecated
+   */
+  void SetFirstContentOffset(const nsIFrame* aFirstChild);
+
+  /**
+   * Sets the last content offset based on the last child frame. If the last
+   * child is a pseudo frame then it sets mLastContentIsComplete to be the same
+   * as the last child's mLastContentIsComplete
+   * @deprecated
+   */
+  void SetLastContentOffset(const nsIFrame* aLastChild);
+
 #ifdef NS_DEBUG
   /**
    * Helper function to verify that the first/last content offsets

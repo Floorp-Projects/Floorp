@@ -323,7 +323,9 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       // give it our original mLastContentIsComplete, too (in case we
       // are pushing into an empty next-in-flow)
       PushChildren(kidFrame, prevKidFrame, lastContentIsComplete);
-			SetLastContentOffset(prevKidFrame);
+      PRInt32 contentIndex;
+      prevKidFrame->GetContentIndex(contentIndex);
+			SetLastContentOffset(contentIndex);
 
       // Our mLastContentIsComplete was already set by the last kid we
       // reflowed reflow's status
@@ -391,7 +393,9 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       kidFrame->GetNextSibling(nextSibling);
       if (nsnull != nextSibling) {
         PushChildren(nextSibling, kidFrame, lastContentIsComplete);
-        SetLastContentOffset(prevKidFrame);
+        PRInt32 contentIndex;
+        prevKidFrame->GetContentIndex(contentIndex);
+        SetLastContentOffset(contentIndex);
       }
       result = PR_FALSE;
       break;
@@ -563,7 +567,9 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     nextInFlow->mChildCount--;
     // Update the next-in-flows first content offset
     if (nsnull != nextInFlow->mFirstChild) {
-      nextInFlow->SetFirstContentOffset(nextInFlow->mFirstChild);
+      PRInt32 contentIndex;
+      nextInFlow->mFirstChild->GetContentIndex(contentIndex);
+      nextInFlow->SetFirstContentOffset(contentIndex);
     }
 
     // Link the frame into our list of children
@@ -576,7 +582,9 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
     if (nsnull == prevKidFrame) {
       mFirstChild = kidFrame;
-      SetFirstContentOffset(kidFrame);
+      PRInt32 contentIndex;
+      kidFrame->GetContentIndex(contentIndex);
+      SetFirstContentOffset(contentIndex);
     } else {
       prevKidFrame->SetNextSibling(kidFrame);
     }
@@ -632,7 +640,9 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
   // Update our last content offset
   if (nsnull != prevKidFrame) {
     NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-    SetLastContentOffset(prevKidFrame);
+    PRInt32 contentIndex;
+    prevKidFrame->GetContentIndex(contentIndex);
+    SetLastContentOffset(contentIndex);
   }
 
   // We need to make sure the first content offset is correct for any empty
@@ -769,7 +779,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
       prevKidFrame->SetNextSibling(kidFrame);
     } else {
       mFirstChild = kidFrame;  // our first child
-      SetFirstContentOffset(kidFrame);
+      SetFirstContentOffset(kidIndex);
     }
     mChildCount++;
 
@@ -816,7 +826,9 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
   // Update the content mapping
   NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-  SetLastContentOffset(prevKidFrame);
+  PRInt32 contentIndex;
+  prevKidFrame->GetContentIndex(contentIndex);
+  SetLastContentOffset(contentIndex);
 #ifdef NS_DEBUG
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "bad child count");
