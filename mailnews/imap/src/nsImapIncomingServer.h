@@ -22,11 +22,6 @@
 #include "nsIImapIncomingServer.h"
 #include "nscore.h"
 
-#define NS_IMAPINCOMINGSERVER_CID				  \
-{ /* 8D3675E0-ED46-11d2-8077-006008128C4E */      \
- 0x8d3675e0, 0xed46, 0x11d2,	                  \
- {0x80, 0x77, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e}}
-
 NS_BEGIN_EXTERN_C
 
 nsresult NS_NewImapIncomingServer(const nsIID& iid, void **result);

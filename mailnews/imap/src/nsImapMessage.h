@@ -27,12 +27,6 @@
 
 #include "nsMessage.h" /* include the interface we are going to support */
 
-
-// 225310c0-f69e-11d2-8d6d-00805f8a6617
-#define NS_IMAPMESSAGERESOURCE_CID \
-	{0x225310c0, 0xf69e, 0x11d2, \
-	{0x8d, 0x6d, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0x17}}
-
 class nsImapMessage : public nsMessage
 {
 public:
