@@ -28,12 +28,22 @@ namespace JavaScript {
 #define op2(i) (i->itsOperand2)
 #define op3(i) (i->itsOperand3)
 
+/**
+ * Private representation of a JavaScript object.
+ * This will change over time, so it is treated as an opaque
+ * type everywhere else but here.
+ */
+class JSObject : public std::map<String, JSValue> {
+public:
+    // we'll define a GC-aware operator new here, and use a gc_allocator when the time comes.
+};
+
 JSValue interpret(InstructionStream& iCode, const JSValues& args)
 {
 	JSValue result;
 	JSValues frame(args);
 	JSValues registers(32);
-	static std::map<String, JSValue> globals;
+	static JSObject globals;
 	
 	InstructionIterator pc = iCode.begin();
     while (pc != iCode.end()) {
@@ -41,97 +51,117 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 	    switch (instruction->opcode()) {
 		case MOVE_TO:
 			{
-				Move* i = static_cast<Move*>(instruction);
-				registers[op2(i)] = registers[op1(i)];
+				Move* mov = static_cast<Move*>(instruction);
+				registers[op2(mov)] = registers[op1(mov)];
 			}
 			break;
-                case LOAD_NAME:
+        case LOAD_NAME:
 			{
-				LoadName* i = static_cast<LoadName*>(instruction);
-				registers[op2(i)] = globals[*op1(i)];
+				LoadName* ln = static_cast<LoadName*>(instruction);
+				registers[op2(ln)] = globals[*op1(ln)];
 			}
 			break;
 		case SAVE_NAME:
 			{
-				SaveName* i = static_cast<SaveName*>(instruction);
-				globals[*op1(i)] = registers[op2(i)];
+				SaveName* sn = static_cast<SaveName*>(instruction);
+				globals[*op1(sn)] = registers[op2(sn)];
 			}
 			break;
+		case NEW_OBJECT:
+		    {
+		        NewObject* no = static_cast<NewObject*>(instruction);
+				registers[op1(no)].obj = new JSObject();
+			}
+			break;
+		case GET_PROP:
+		    {
+		        GetProp* gp = static_cast<GetProp*>(instruction);
+		        JSObject* obj = registers[op2(gp)].obj;
+				registers[op3(gp)] = (*obj)[*op1(gp)];
+		    }
+		    break;
+		case SET_PROP:
+		    {
+		        SetProp* sp = static_cast<SetProp*>(instruction);
+		        JSObject* obj = registers[op2(sp)].obj;
+				(*obj)[*op1(sp)] = registers[op3(sp)];
+		    }
+		    break;
 		case LOAD_IMMEDIATE:
 			{
-				LoadImmediate* i = static_cast<LoadImmediate*>(instruction);
-				registers[op2(i)] = JSValue(op1(i));
+				LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
+				registers[op2(li)] = JSValue(op1(li));
 			}
 			break;
 		case LOAD_VAR:
 			{
-				LoadVar* i = static_cast<LoadVar*>(instruction);
-				registers[op2(i)] = frame[op1(i)];
+				LoadVar* lv = static_cast<LoadVar*>(instruction);
+				registers[op2(lv)] = frame[op1(lv)];
 			}
 			break;
 		case SAVE_VAR:
 			{
-				SaveVar* i = static_cast<SaveVar*>(instruction);
-				frame[op1(i)] = registers[op2(i)];
+				SaveVar* sv = static_cast<SaveVar*>(instruction);
+				frame[op1(sv)] = registers[op2(sv)];
 			}
 			break;
 		case BRANCH:
 			{
-				Branch* i = static_cast<Branch*>(instruction);
-				pc = iCode.begin() + op1(i);
+				Branch* bra = static_cast<Branch*>(instruction);
+				pc = iCode.begin() + op1(bra);
 				continue;
 			}
 			break;
 		case BRANCH_LT:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 < 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 < 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
 			break;
 		case BRANCH_LE:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 <= 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 <= 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
 			break;
 		case BRANCH_EQ:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 == 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 == 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
 			break;
 		case BRANCH_NE:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 != 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 != 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
 			break;
 		case BRANCH_GE:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 >= 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 >= 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
 			break;
 		case BRANCH_GT:
 			{
-				BranchCond* i = static_cast<BranchCond*>(instruction);
-				if (registers[op2(i)].i32 > 0) {
-					pc = iCode.begin() + op1(i);
+				BranchCond* bc = static_cast<BranchCond*>(instruction);
+				if (registers[op2(bc)].i32 > 0) {
+					pc = iCode.begin() + op1(bc);
 					continue;
 				}
 			}
@@ -139,29 +169,26 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 		case ADD:
 			{
 				// could get clever here with Functional forms.
-				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				registers[op3(i)] = JSValue(registers[op1(i)].f64 + registers[op2(i)].f64);
+				Arithmetic* add = static_cast<Arithmetic*>(instruction);
+				registers[op3(add)] = JSValue(registers[op1(add)].f64 + registers[op2(add)].f64);
 			}
 			break;
 		case SUBTRACT:
 			{
-				// could get clever here with Functional forms.
-				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				registers[op3(i)] = JSValue(registers[op1(i)].f64 - registers[op2(i)].f64);
+				Arithmetic* sub = static_cast<Arithmetic*>(instruction);
+				registers[op3(sub)] = JSValue(registers[op1(sub)].f64 - registers[op2(sub)].f64);
 			}
 			break;
 		case MULTIPLY:
 			{
-				// could get clever here with Functional forms.
-				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				registers[op3(i)] = JSValue(registers[op1(i)].f64 * registers[op2(i)].f64);
+				Arithmetic* mul = static_cast<Arithmetic*>(instruction);
+				registers[op3(mul)] = JSValue(registers[op1(mul)].f64 * registers[op2(mul)].f64);
 			}
 			break;
 		case DIVIDE:
 			{
-				// could get clever here with Functional forms.
-				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				registers[op3(i)] = JSValue(registers[op1(i)].f64 / registers[op2(i)].f64);
+				Arithmetic* div = static_cast<Arithmetic*>(instruction);
+				registers[op3(div)] = JSValue(registers[op1(div)].f64 / registers[op2(div)].f64);
 			}
 			break;
 		case COMPARE_LT:
@@ -171,24 +198,24 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 		case COMPARE_GT:
 		case COMPARE_GE:
 			{
-				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				float64 diff = (registers[op1(i)].f64 - registers[op2(i)].f64);
-				registers[op3(i)].i32 = (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
+				Arithmetic* cmp = static_cast<Arithmetic*>(instruction);
+				float64 diff = (registers[op1(cmp)].f64 - registers[op2(cmp)].f64);
+				registers[op3(cmp)].i32 = (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
 			}
 			break;
 		case NOT:
 			{
-				Move* i = static_cast<Move*>(instruction);
-				registers[op2(i)].i32 = !registers[op1(i)].i32;
+				Move* nt = static_cast<Move*>(instruction);
+				registers[op2(nt)].i32 = !registers[op1(nt)].i32;
 			}
 			break;
-		case RETURN:
-		    {
-		        Return* i = static_cast<Return*>(instruction);
-		        result = registers[op1(i)];
-		        pc = iCode.end();
-		        continue;
-		    }
+        case RETURN:
+            {
+                Return* ret = static_cast<Return*>(instruction);
+                result = registers[op1(ret)];
+                return result;
+            }
+            break;
         default:
             break;
     	}
