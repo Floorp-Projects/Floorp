@@ -21,7 +21,6 @@
  *   Johnny Stenback <jst@netscape.com> (original author)
  */
 
-#include "nscore.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
@@ -4449,6 +4448,33 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 // History helper
 
+NS_IMETHODIMP
+nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  PRBool is_number = PR_FALSE;
+  GetArrayIndexFromId(cx, id, &is_number);
+
+  if (!is_number) {
+    return NS_OK;
+  }
+
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, sClassInfoData[mID].mName, "item",
+                                 nsIXPCSecurityManager::ACCESS_CALL_METHOD);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+
+    return NS_OK;
+  }
+
+  // sec check
+
+  return nsStringArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
 nsresult
 nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
                          nsAWritableString& aResult)
@@ -4459,7 +4485,7 @@ nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMHistory> history(do_QueryInterface(aNative));
 
-  return history->Item(NS_PTR_TO_INT32(aNative), aResult);
+  return history->Item(aIndex, aResult);
 }
 
 
