@@ -110,7 +110,9 @@ UINT nsClipboard::GetFormat(const nsString & aMimeStr)
   } else if (aMimeStr.Equals(kUnicodeMime)) {
     format = CF_UNICODETEXT;
   } else if (aMimeStr.Equals(kJPEGImageMime)) {
-    format = CF_BITMAP;
+    format = CF_DIB;
+  } else if (aMimeStr.Equals(kDropFilesMime)) {
+    format = CF_HDROP;
   } else {
     char * str = aMimeStr.ToNewCString();
     format = ::RegisterClipboardFormat(str);
@@ -126,19 +128,38 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
   }
+
   // Create our native DataObject that implements 
   // the OLE IDataObject interface
   nsDataObj * dataObj;
   dataObj = new nsDataObj();
-  //dataObj->AddRef();
+  dataObj->AddRef();
+
+  // No set it up with all the right data flavors & enums
+  nsresult res = SetupNativeDataObject(aTransferable, dataObj);
+  if (NS_OK == res) {
+    *aDataObj = dataObj; 
+  } else {
+    delete dataObj;
+  }
+  return res;
+}
+
+//-------------------------------------------------------------------------
+nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDataObject * aDataObj)
+{
+  if (nsnull == aTransferable || nsnull == aDataObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsDataObj * dObj = NS_STATIC_CAST(nsDataObj *, aDataObj);
 
   // Now give the Transferable to the DataObject 
   // for getting the data out of it
-  dataObj->SetTransferable(aTransferable);
+  dObj->SetTransferable(aTransferable);
 
   // Get the transferable list of data flavors
   nsISupportsArray * dfList;
-  //aTransferable->GetTransferDataFlavors(&dfList);
   aTransferable->FlavorsTransferableCanExport(&dfList);
 
   // Walk through flavors that contain data and register them
@@ -159,7 +180,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
 
       // Now tell the native IDataObject about both the DataFlavor and 
       // the native data format
-      dataObj->AddDataFlavor(df, &fe);
+      dObj->AddDataFlavor(df, &fe);
       NS_RELEASE(df);
     }
     NS_RELEASE(supports);
@@ -167,43 +188,6 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   // Delete the data flavors list
   NS_RELEASE(dfList);
 
-  // Now check to see if there is a converter for the transferable
-  // and then register any of it's output formats
-  // Get the transferable list of data flavors
-/*  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
-  if (genericTrans) {
-    nsCOMPtr<nsIFormatConverter> converter;
-    genericTrans->GetConverter(getter_AddRefs(converter));
-    if (converter) {
-      // Get list of output flavors
-      converter->GetOutputDataFlavors(&dfList);
-      if (nsnull != dfList) {
-        for (i=0;i<dfList->Count();i++) {
-          nsIDataFlavor * df;
-          nsISupports * supports = dfList->ElementAt(i);
-          if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-            nsString mime;
-            df->GetMimeType(mime);
-            UINT format = GetFormat(mime);
-
-            // check here to see if we can the data back from global member
-            // XXX need IStream support, or file support
-            FORMATETC fe;
-            SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-
-            // Now tell the native IDataObject about both the DataFlavor and 
-            // the native data format
-            dataObj->AddDataFlavor(df, &fe);
-            NS_RELEASE(df);
-          }
-          NS_RELEASE(supports);
-        }
-        NS_RELEASE(dfList);
-      }
-    }
-  }
-*/
-  *aDataObj = dataObj;
   return NS_OK;
 }
 
@@ -227,8 +211,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
   IDataObject * dataObj;
   if (NS_OK == CreateNativeDataObject(mTransferable, &dataObj)) { // this add refs
-    //dataObj->AddRef(); // ?? maybe not do this
-
     // cast our native DataObject to its IDataObject pointer
     // and put it on the clipboard
     mDataObj = (IDataObject *)dataObj;
@@ -308,25 +290,14 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aForma
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
+static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed)
 {
-  nsresult result = NS_ERROR_FAILURE;
-
-  if (nsnull == aDataObject) {
-    return result;
-  }
-
-  // XXX at the moment we only support global memory transfers
-  // It is here where we will add support for native images 
-  // and IStream
-  FORMATETC fe;
-  SET_FORMATETC(fe, aFormat, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+  SET_FORMATETC(*pFE, aFormat, 0, DVASPECT_CONTENT, -1, aTymed);
 
   // Starting by querying for the data to see if we can get it as from global memory
-  if (S_OK == aDataObject->QueryGetData(&fe)) {
-    //LPSTGMEDIUM stm;
-    STGMEDIUM stm;
-    HRESULT hres = aDataObject->GetData(&fe, &stm);
+  HRESULT hres = S_FALSE;
+  if (S_OK == aDataObject->QueryGetData(pFE)) {
+    hres = aDataObject->GetData(pFE, pSTM);
 
 #if 1 // for debug
     if (hres == E_INVALIDARG) {
@@ -360,21 +331,69 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
       printf("S_OK\n");
     } 
 #endif
-    if (S_OK == hres) {
-      switch (stm.tymed) {
-        case TYMED_HGLOBAL:
-          result = GetGlobalData(stm.hGlobal, aData, aLen);
-          if (fe.cfFormat == CF_TEXT) {
-            char * str = (char *)*aData;
-            while (str[*aLen-1] == 0) {
-              (*aLen)--;
-            }
-          }
-          break;
-        default:
-          break;
-      } //switch
+  }
+  return hres;
+}
+
+//-------------------------------------------------------------------------
+nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
+{
+  nsresult result = NS_ERROR_FAILURE;
+
+  if (nsnull == aDataObject) {
+    return result;
+  }
+
+  UINT    format = aFormat;
+  HRESULT hres   = S_FALSE;
+
+  // XXX at the moment we only support global memory transfers
+  // It is here where we will add support for native images 
+  // and IStream
+  FORMATETC fe;
+  STGMEDIUM stm;
+  hres = FillSTGMedium(aDataObject, format, &fe, &stm, TYMED_HGLOBAL);
+
+  // We can only understand our own aFormats (the MIME types)
+  // So if the aFormat match one of the image MIME we need to convert over
+  // to a format that windows understands
+  /*if (S_OK != hres) {
+    nsAutoString mime(kJPEGImageMime);
+    UINT jpegFormat = GetFormat(mime);
+    if (jpegFormat == format) {
+      hres = FillSTGMedium(aDataObject, CF_DIB, &fe, &stm, TYMED_HGLOBAL);
     }
+  }*/
+
+
+  if (S_OK == hres) {
+    switch (stm.tymed) {
+
+      case TYMED_HGLOBAL: 
+        {
+          result = GetGlobalData(stm.hGlobal, aData, aLen);
+          switch (fe.cfFormat) {
+            case CF_TEXT: 
+              {
+                char * str = (char *)*aData;
+                while (str[*aLen-1] == 0) {
+                  (*aLen)--;
+                }
+              } break;
+
+            case CF_DIB :
+              {
+                printf("************** DIB was dropped!\n");
+              } break;
+
+            default:
+              break;
+          } // switch
+        } break;
+
+      default:
+        break;
+    } //switch
   }
 
   return result;
