@@ -186,10 +186,10 @@ public:
     // loader type cannot be determined.
     int GetLoaderType(const char *typeStr);
 
-    // Add a loader type if not already known. Return the typeIndex
-    // if the loader type is either added or already there; -1 if
-    // there was an error
-    int AddLoaderType(const char *typeStr);
+    // Add a loader type if not already known. Out the typeIndex
+    // if the loader type is either added or already there;
+    // returns NS_OK or an error on failure.
+    nsresult AddLoaderType(const char *typeStr, int *typeIndex);
 
     int GetLoaderCount() { return mNLoaderData + 1; }
 
