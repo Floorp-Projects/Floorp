@@ -1,20 +1,16 @@
-Blue sky:
-+ Client/server version with automatiation
-
-
 known issues:
 * doen't handle unsupported file types very well
-* escapes : with \:
 
 
 Todo:
 + define command line commands :-)
-+ fix XPI install.js error
-+ remember state on all dialogs (where is it missing?)
 
-Today:
-* implement advanced search
-* release
+MozillaTranslator 4.21
++ Added Kazu's workaround 
++ Added user pref to activate kazu's workaround
++ added state remembering for advanced search
++ now uses a new fixed version of install.js
++ re-added the list of changed phrases after a update install
 
 MozillaTranslator 4.2
 + fixed dtd reading where it cut off the first chars of the keys
@@ -22,9 +18,6 @@ MozillaTranslator 4.2
 + Small UI changes (spelling errors and the like)
 + Read localizations directly from jar and directory
 + removed debug Log.write() call
-
-
-
 
 MozillaTranslator 4.15
 + Now reads installs from jars
