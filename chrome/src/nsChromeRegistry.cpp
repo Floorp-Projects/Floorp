@@ -2736,6 +2736,8 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
                                 getter_AddRefs(overlayDS));
       if (NS_FAILED(rv) || !overlayDS) continue;
 
+      PRBool dirty = PR_FALSE;
+
       // Look for all the seqs in this file
       nsCOMPtr<nsIRDFResource> instanceOf, seq;
       GetResource(NS_LITERAL_CSTRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#instanceOf"),
@@ -2785,20 +2787,23 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
 
           // This overlay entry is for a package that is being uninstalled. Remove the
           // entry from the overlay list.
-          if (targetHost.Equals(uninstallHost))
-            container->RemoveElement(element, PR_TRUE);
+          if (targetHost.Equals(uninstallHost)) {
+            container->RemoveElement(element, PR_FALSE);
+            dirty = PR_TRUE;
+          }
         }
         while (PR_TRUE);
       }
       while (PR_TRUE);
 
-      nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(overlayDS);
-      rv = remote->Flush();
+      if (dirty) {
+        nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(overlayDS);
+        rv = remote->Flush();
+      }
     }
   }
   while (PR_TRUE);
 
-  // goats
   return rv;
 }
 
