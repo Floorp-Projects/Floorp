@@ -281,7 +281,7 @@ int main( int argc, char *argv[] )
 #else
   // Load initial XMLterm document
   result = gSimpleContainer->LoadURL(
-                             "chrome://communicator/content/xmlterm/xmlterm.html");
+                             "chrome://xmlterm/content/xmlterm.html");
   if (NS_FAILED(result))
     return result;
 #endif

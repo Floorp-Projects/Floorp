@@ -404,7 +404,7 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
   // Create top level window
   nsCOMPtr<nsIWebShellWindow> webShellWin;
   nsCOMPtr<nsIURI> uri = nsnull;
-  //nsCAutoString urlCString("chrome://communicator/content/xmlterm/xmlterm.html");
+  //nsCAutoString urlCString("chrome://xmlterm/content/xmlterm.html");
   //result = uri->SetSpec(urlCString.GetBuffer());
 
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check6\n"));
