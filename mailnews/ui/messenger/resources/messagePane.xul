@@ -8,7 +8,7 @@
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:iframe src="message.html" name="browser.webwindow" width="100%" height="100%" > </html:iframe>
+<html:iframe src="message.html" name="browser.webwindow" width="100%" height="325px" > </html:iframe>
 
 
 </window>
