@@ -1103,7 +1103,7 @@ pr/src/io/Makefile
 pr/src/linking/Makefile 
 pr/src/malloc/Makefile 
 pr/src/md/Makefile 
-pr/src/md/${PR_MD_ARCH_DIR}/Makefile
+pr/src/md/${PR_MD_ARCH_DIR}/Makefile 
 pr/src/memory/Makefile 
 pr/src/misc/Makefile 
 pr/src/threads/Makefile 
