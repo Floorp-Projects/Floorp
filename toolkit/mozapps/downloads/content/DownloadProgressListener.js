@@ -25,7 +25,7 @@ DownloadProgressListener.prototype =
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload)
   {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-      var aDownloadID = aDownload.target.path;
+      var aDownloadID = aDownload.targetFile.path;
       var download = this.doc.getElementById(aDownloadID);
       if (download)
         download.setAttribute("status", "");
@@ -56,7 +56,7 @@ DownloadProgressListener.prototype =
     else
       rate = 0;
 
-    var aDownloadID = aDownload.target.path;
+    var aDownloadID = aDownload.targetFile.path;
     var download = this.doc.getElementById(aDownloadID);
 
     // Calculate percentage.
