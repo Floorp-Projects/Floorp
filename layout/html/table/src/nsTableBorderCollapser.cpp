@@ -22,7 +22,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
 #include "nsCellMap.h"
-#include "cellData.h"
+#include "celldata.h"
 
 nsTableBorderCollapser::nsTableBorderCollapser(nsTableFrame& aTableFrame)
 :mTableFrame(aTableFrame)
