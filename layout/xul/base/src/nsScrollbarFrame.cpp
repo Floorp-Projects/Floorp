@@ -51,7 +51,7 @@
 class AnonymousElement : public nsXMLElement, public nsIStyledContent, public nsIAnonymousContent
 {
 public:
-  AnonymousElement(nsIAtom *aTag):nsXMLElement(aTag) {}
+  AnonymousElement(nsINodeInfo *aNodeInfo):nsXMLElement(aNodeInfo) {}
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -204,14 +204,24 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLElement)
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
 {
-   
+    NS_ENSURE_ARG_POINTER(aParent);
+
     // create the xml element
     nsCOMPtr<nsIXMLContent> content;
     //NS_NewXMLElement(getter_AddRefs(content), aTag);
-    content = new AnonymousElement(aTag);
 
-    content->SetNameSpaceID(aNameSpaceId);
-        
+    nsCOMPtr<nsIDocument> doc;
+    aParent->GetDocument(*getter_AddRefs(doc));
+
+    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceId,
+                                 *getter_AddRefs(nodeInfo));
+
+    content = new AnonymousElement(nodeInfo);
+
     aNewNode = content;
 
   /*

@@ -51,6 +51,7 @@
 #include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
+#include "nsDOMError.h"
 #include "nsDOMEvent.h"
 #include "nsForwardReference.h"
 #include "nsHTMLValue.h"
@@ -563,7 +564,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-nsXULElement::Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult)
+nsXULElement::Create(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 {
     // Create an nsXULElement with the specified namespace and tag.
     NS_PRECONDITION(aResult != nsnull, "null ptr");
@@ -585,8 +586,7 @@ nsXULElement::Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult)
     rv = element->EnsureSlots();
     if (NS_FAILED(rv)) return rv;
 
-    element->mSlots->mNameSpaceID = aNameSpaceID;
-    element->mSlots->mTag         = aTag;
+    element->mSlots->mNodeInfo    = aNodeInfo;
 
     *aResult = NS_REINTERPRET_CAST(nsIStyledContent*, element);
     NS_ADDREF(*aResult);
@@ -646,7 +646,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
-             (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -667,7 +667,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
-              (NameSpaceID() == kNameSpaceID_XUL)){
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -687,7 +687,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -707,7 +707,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -727,7 +727,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
-             (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -747,7 +747,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -767,7 +767,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -787,7 +787,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -807,7 +807,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -827,7 +827,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_NOINTERFACE;
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
-      (NameSpaceID() == kNameSpaceID_XUL)) {
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
@@ -862,8 +862,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 nsXULElement::GetNodeName(nsString& aNodeName)
 {
-    Tag()->ToString(aNodeName);
-    return NS_OK;
+    return NodeInfo()->GetQualifiedName(aNodeName);
 }
 
 
@@ -877,7 +876,7 @@ nsXULElement::GetNodeValue(nsString& aNodeValue)
 NS_IMETHODIMP
 nsXULElement::SetNodeValue(const nsString& aNodeValue)
 {
-    return NS_OK;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
@@ -1083,33 +1082,47 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 NS_IMETHODIMP
 nsXULElement::GetNamespaceURI(nsString& aNamespaceURI)
-{ 
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+{
+    return NodeInfo()->GetNamespaceURI(aNamespaceURI);
 }
 
 
 NS_IMETHODIMP
 nsXULElement::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NodeInfo()->GetPrefix(aPrefix);
 }
 
 
 NS_IMETHODIMP
 nsXULElement::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX: Validate the prefix string!
+
+    nsINodeInfo *newNodeInfo = nsnull;
+    nsCOMPtr<nsIAtom> prefix;
+
+    if (aPrefix.Length()) {
+        prefix = dont_AddRef(NS_NewAtom(aPrefix));
+        NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    nsresult rv = EnsureSlots();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mSlots->mNodeInfo->PrefixChanged(prefix, newNodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mSlots->mNodeInfo = newNodeInfo;
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULElement::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NodeInfo()->GetLocalName(aLocalName);
 }
 
 
@@ -1313,15 +1326,12 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     else if (mSlots) {
         // We've faulted: create another heavyweight, and then copy
         // stuff by hand.
-        rv = nsXULElement::Create(mSlots->mNameSpaceID, mSlots->mTag, getter_AddRefs(result));
+        rv = nsXULElement::Create(mSlots->mNodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         // Copy namespace stuff.
         nsCOMPtr<nsIXMLContent> xmlcontent = do_QueryInterface(result);
         if (xmlcontent) {
-            rv = xmlcontent->SetNameSpacePrefix(mSlots->mNameSpacePrefix);
-            if (NS_FAILED(rv)) return rv;
-
             rv = xmlcontent->SetContainingNameSpace(mSlots->mNameSpace);
             if (NS_FAILED(rv)) return rv;
         }
@@ -1414,8 +1424,7 @@ nsXULElement::Supports(const nsString& aFeature, const nsString& aVersion,
 NS_IMETHODIMP
 nsXULElement::GetTagName(nsString& aTagName)
 {
-    Tag()->ToString(aTagName);
-    return NS_OK;
+    return NodeInfo()->GetQualifiedName(aTagName);
 }
 
 
@@ -1649,28 +1658,18 @@ nsXULElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
     rv = EnsureSlots();
     if (NS_FAILED(rv)) return rv;
 
-    mSlots->mNameSpacePrefix = aNameSpacePrefix;
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
+    mSlots->mNodeInfo->PrefixChanged(aNameSpacePrefix,
+                                     *getter_AddRefs(newNodeInfo));
+
+    mSlots->mNodeInfo = newNodeInfo;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
-    aNameSpacePrefix = NameSpacePrefix();
-    NS_IF_ADDREF(aNameSpacePrefix);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::SetNameSpaceID(PRInt32 aNameSpaceID)
-{
-    nsresult rv;
-
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    mSlots->mNameSpaceID = aNameSpaceID;
-    return NS_OK;
+    return NodeInfo()->GetPrefixAtom(aNameSpacePrefix);
 }
 
 NS_IMETHODIMP
@@ -1758,7 +1757,7 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REF
         if (NS_FAILED(rv)) return rv;
     }
 
-    if (Tag() == kWindowAtom) {
+    if (NodeInfo()->Equals(kWindowAtom)) {
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;
@@ -2636,16 +2635,13 @@ nsXULElement::IsSynthetic(PRBool& aResult)
 NS_IMETHODIMP 
 nsXULElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
-    aNameSpaceID = NameSpaceID();
-    return NS_OK;
+    return NodeInfo()->GetNamespaceID(aNameSpaceID);
 }
 
 NS_IMETHODIMP
 nsXULElement::GetTag(nsIAtom*& aResult) const
 {
-    aResult = Tag();
-    NS_ADDREF(aResult);
-    return NS_OK;
+    return NodeInfo()->GetNameAtom(aResult);
 }
 
 NS_IMETHODIMP 
@@ -3143,24 +3139,15 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
         if (mSlots) fputs("*", out);
         fputs(" ", out);
 
-        if (NameSpaceID() == kNameSpaceID_XUL) {
-            fputs("xul:", out);
-        }
-        else if (NameSpaceID() == kNameSpaceID_HTML) {
-            fputs("html:", out);
-        }
-        else if (NameSpaceID() == kNameSpaceID_None) {
-            fputs("none:", out);
-        }
-        else if (NameSpaceID() == kNameSpaceID_Unknown) {
+        PRInt32 namespaceID;
+        NodeInfo()->GetNamespaceID(namespaceID);
+
+        if (namespaceID == kNameSpaceID_Unknown) {
             fputs("unknown:", out);
-        }
-        else {
-            fputs("?:", out);
         }
         
         nsAutoString as;
-        Tag()->ToString(as);
+        NodeInfo()->GetQualifiedName(as);
         fputs(as, out);
     }
 
@@ -3899,7 +3886,7 @@ NS_IMETHODIMP
 nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
     // For treecols, we support proportional widths using the WIDTH attribute.
-    if (Tag() == kTreeColAtom) {
+    if (NodeInfo()->Equals(kTreeColAtom)) {
         // If the width attribute is set, then we should return ourselves as a style
         // rule.
         nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
@@ -3949,19 +3936,17 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
-    nsIAtom* tag = Tag();
-
-    if (kTreeItemAtom == tag) {
+    if (NodeInfo()->Equals(kTreeItemAtom)) {
         // Force a framechange if the 'open' atom changes on a <treeitem>
         if (kOpenAtom == aAttribute)
             aHint = NS_STYLE_HINT_FRAMECHANGE;
     }
-    else if (kTreeColAtom == tag) {
+    else if (NodeInfo()->Equals(kTreeColAtom)) {
         // Ignore 'width' and 'hidden' on a <treecol>
         if (kWidthAtom == aAttribute || kHiddenAtom == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;
     }
-    else if (kWindowAtom == tag) {
+    else if (NodeInfo()->Equals(kWindowAtom)) {
         // Ignore 'width' and 'height' on a <window>
         if (kWidthAtom == aAttribute || kHeightAtom == aAttribute)
             aHint = NS_STYLE_HINT_NONE;
@@ -4262,7 +4247,7 @@ nsXULElement::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext*
 NS_IMETHODIMP 
 nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-    if (Tag() == kTreeColAtom) {
+    if (NodeInfo()->Equals(kTreeColAtom)) {
         // Should only get called if we had a width attribute set. Retrieve it.
         nsAutoString widthVal;
         nsAutoString hiddenVal;
@@ -4422,9 +4407,7 @@ nsXULElement::EnsureSlots()
     mPrototype = nsnull;
 
     mSlots->mNameSpace       = proto->mNameSpace;
-    mSlots->mNameSpacePrefix = proto->mNameSpacePrefix;
-    mSlots->mNameSpaceID     = proto->mNameSpaceID;
-    mSlots->mTag             = proto->mTag;
+    mSlots->mNodeInfo        = proto->mNodeInfo;
 
     // Copy the attributes, if necessary. Arguably, we are over-eager
     // about copying attributes. But eagerly copying the attributes
@@ -4468,7 +4451,6 @@ nsXULElement::EnsureSlots()
 
 nsXULElement::Slots::Slots(nsXULElement* aElement)
     : mElement(aElement),
-      mNameSpaceID(0),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
       mBuilder(nsnull),

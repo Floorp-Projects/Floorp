@@ -43,7 +43,7 @@ class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLAreaElement(nsIAtom* aTag);
+  nsHTMLAreaElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLAreaElement();
 
   // nsISupports
@@ -99,13 +99,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLAreaElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLAreaElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -113,10 +113,10 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLAreaElement::nsHTMLAreaElement(nsIAtom* aTag)
+nsHTMLAreaElement::nsHTMLAreaElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLAreaElement::~nsHTMLAreaElement()
@@ -149,7 +149,7 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAreaElement* it = new nsHTMLAreaElement(mInner.mTag);
+  nsHTMLAreaElement* it = new nsHTMLAreaElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

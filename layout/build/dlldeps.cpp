@@ -58,5 +58,5 @@ void XXXNeverCalled()
   NS_NewSimplePageSequenceFrame(ps, &f);
   nsINameSpaceManager* nsm;
   NS_NewNameSpaceManager(&nsm);
-  NS_CreateHTMLElement(nsnull, nsAutoString());
+  NS_CreateHTMLElement(nsnull, nsnull);
 }

@@ -26,6 +26,8 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsGenericElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsINodeInfo.h"
+#include "nsNodeInfoManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -40,7 +42,7 @@ class nsDocumentFragment : public nsIContent,
                            public nsIScriptObjectOwner
 {
 public:
-  nsDocumentFragment(nsIDocument* aOwnerDocument);
+  nsDocumentFragment(nsIDocument* aOwnerDocument, nsINodeInfo *aNodeInfo);
   virtual ~nsDocumentFragment();
 
   // nsISupports
@@ -242,11 +244,26 @@ nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                        nsIDocument* aOwnerDocument)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+
+  nsresult rv;
+
+  if (aOwnerDocument) {
+    rv = aOwnerDocument->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  } else {
+    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nimgr));
   }
-  nsDocumentFragment* it = new nsDocumentFragment(aOwnerDocument);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("#document-fragment"),
+                          nsnull, kNameSpaceID_None,
+                          *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsDocumentFragment* it = new nsDocumentFragment(aOwnerDocument, nodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -254,10 +271,11 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                             (void**) aInstancePtrResult);
 }
 
-nsDocumentFragment::nsDocumentFragment(nsIDocument* aOwnerDocument)
+nsDocumentFragment::nsDocumentFragment(nsIDocument* aOwnerDocument,
+                                       nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, nsnull);
+  mInner.Init(this, aNodeInfo);
   mScriptObject = nsnull;
   mOwnerDocument = aOwnerDocument;
   NS_IF_ADDREF(mOwnerDocument);
@@ -382,7 +400,7 @@ NS_IMETHODIMP
 nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsDocumentFragment* it;
-  it = new nsDocumentFragment(mOwnerDocument);
+  it = new nsDocumentFragment(mOwnerDocument, mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

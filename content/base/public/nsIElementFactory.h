@@ -25,7 +25,7 @@
 #include "nsISupports.h"
 
 class nsIContent;
-class nsString;
+class nsINodeInfo;
 
 /* a6cf90fb-15b3-11d2-932e-00805f8add32 */
 #define NS_IELEMENT_FACTORY_IID \
@@ -38,7 +38,7 @@ class nsIElementFactory : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IELEMENT_FACTORY_IID; return iid; }
 
-  NS_IMETHOD CreateInstanceByTag(const nsString& aTag,
+  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                  nsIContent** aResult) = 0;
 };
 

@@ -49,7 +49,7 @@ class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
                             public nsIFormControl
 {
 public:
-  nsHTMLButtonElement(nsIAtom* aTag);
+  nsHTMLButtonElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLButtonElement();
 
   // nsISupports
@@ -109,13 +109,13 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 // Construction, destruction
 
 nsresult
-NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLButtonElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLButtonElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -123,10 +123,10 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLButtonElement::nsHTMLButtonElement(nsIAtom* aTag)
+nsHTMLButtonElement::nsHTMLButtonElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mForm = nsnull;
   mType = NS_FORM_BUTTON_BUTTON; // default
 }
@@ -184,7 +184,7 @@ nsHTMLButtonElement::Release()
 nsresult
 nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLButtonElement* it = new nsHTMLButtonElement(mInner.mTag);
+  nsHTMLButtonElement* it = new nsHTMLButtonElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

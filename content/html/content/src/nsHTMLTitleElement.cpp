@@ -44,7 +44,7 @@ class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
                            public nsIHTMLContent
 {
 public:
-  nsHTMLTitleElement(nsIAtom* aTag);
+  nsHTMLTitleElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTitleElement();
 
   // nsISupports
@@ -77,13 +77,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTitleElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTitleElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -91,10 +91,10 @@ NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLTitleElement::nsHTMLTitleElement(nsIAtom* aTag)
+nsHTMLTitleElement::nsHTMLTitleElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTitleElement::~nsHTMLTitleElement()
@@ -121,7 +121,7 @@ nsHTMLTitleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTitleElement* it = new nsHTMLTitleElement(mInner.mTag);
+  nsHTMLTitleElement* it = new nsHTMLTitleElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

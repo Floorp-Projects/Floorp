@@ -38,7 +38,7 @@ class nsHTMLQuoteElement : public nsIDOMHTMLQuoteElement,
                     public nsIHTMLContent
 {
 public:
-  nsHTMLQuoteElement(nsIAtom* aTag);
+  nsHTMLQuoteElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLQuoteElement();
 
   // nsISupports
@@ -71,13 +71,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLQuoteElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLQuoteElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLQuoteElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLQuoteElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -85,10 +85,10 @@ NS_NewHTMLQuoteElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLQuoteElement::nsHTMLQuoteElement(nsIAtom* aTag)
+nsHTMLQuoteElement::nsHTMLQuoteElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLQuoteElement::~nsHTMLQuoteElement()
@@ -115,7 +115,7 @@ nsHTMLQuoteElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLQuoteElement* it = new nsHTMLQuoteElement(mInner.mTag);
+  nsHTMLQuoteElement* it = new nsHTMLQuoteElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

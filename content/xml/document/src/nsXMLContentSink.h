@@ -34,6 +34,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIStreamLoader.h"
 #include "nsISupportsArray.h"
+#include "nsINodeInfo.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -193,6 +194,7 @@ protected:
   nsString  mPreferredStyle;
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
+  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 #ifdef XSL
   nsITransformMediator* mXSLTransformMediator;    // Weak reference
 #endif

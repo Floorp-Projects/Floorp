@@ -36,7 +36,7 @@ class nsHTMLSpanElement : public nsIDOMHTMLElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLSpanElement(nsIAtom* aTag);
+  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSpanElement();
 
   // nsISupports
@@ -65,13 +65,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLSpanElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLSpanElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLSpanElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLSpanElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -79,10 +79,10 @@ NS_NewHTMLSpanElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLSpanElement::nsHTMLSpanElement(nsIAtom* aTag)
+nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLSpanElement::~nsHTMLSpanElement()
@@ -103,7 +103,7 @@ nsHTMLSpanElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSpanElement* it = new nsHTMLSpanElement(mInner.mTag);
+  nsHTMLSpanElement* it = new nsHTMLSpanElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

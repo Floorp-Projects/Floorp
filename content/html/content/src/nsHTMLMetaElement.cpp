@@ -38,7 +38,7 @@ class nsHTMLMetaElement : public nsIDOMHTMLMetaElement,
 		   public nsIHTMLContent
 {
 public:
-  nsHTMLMetaElement(nsIAtom* aTag);
+  nsHTMLMetaElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLMetaElement();
 
   // nsISupports
@@ -77,13 +77,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLMetaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLMetaElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLMetaElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLMetaElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -91,10 +91,10 @@ NS_NewHTMLMetaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLMetaElement::nsHTMLMetaElement(nsIAtom* aTag)
+nsHTMLMetaElement::nsHTMLMetaElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLMetaElement::~nsHTMLMetaElement()
@@ -122,7 +122,7 @@ nsHTMLMetaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLMetaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLMetaElement* it = new nsHTMLMetaElement(mInner.mTag);
+  nsHTMLMetaElement* it = new nsHTMLMetaElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -53,7 +53,7 @@ class nsHTMLEmbedElement : public nsIDOMHTMLElement,
                            public nsIHTMLContent
 {
 public:
-  nsHTMLEmbedElement(nsIAtom* aTag);
+  nsHTMLEmbedElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLEmbedElement();
 
   // nsISupports
@@ -99,13 +99,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLEmbedElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLEmbedElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLEmbedElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLEmbedElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -113,10 +113,10 @@ NS_NewHTMLEmbedElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLEmbedElement::nsHTMLEmbedElement(nsIAtom* aTag)
+nsHTMLEmbedElement::nsHTMLEmbedElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLEmbedElement::~nsHTMLEmbedElement()
@@ -145,7 +145,7 @@ nsHTMLEmbedElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLEmbedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLEmbedElement* it = new nsHTMLEmbedElement(mInner.mTag);
+  nsHTMLEmbedElement* it = new nsHTMLEmbedElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

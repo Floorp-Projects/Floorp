@@ -74,7 +74,7 @@ class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIFormControl
 {
 public:
-  nsHTMLInputElement(nsIAtom* aTag);
+  nsHTMLInputElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -86,9 +86,9 @@ public:
   // nsIDOMElement
     // can't use the macro here because input type=text needs to notify up to 
     // frame system on SetAttribute("value");
-  NS_IMETHOD GetTagName(nsString& aTagName) {                              
-    return mInner.GetTagName(aTagName);                                        
-  }                                                                        
+  NS_IMETHOD GetTagName(nsString& aTagName) {
+    return mInner.GetTagName(aTagName);
+  }
   NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {      
     return mInner.GetAttribute(aName, aReturn);                                
   }                                                                        
@@ -169,13 +169,13 @@ protected:
 // construction, destruction
 
 nsresult
-NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLInputElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLInputElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -183,10 +183,10 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
+nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mSkipFocusEvent = PR_FALSE;
@@ -250,7 +250,7 @@ nsHTMLInputElement::Release()
 nsresult
 nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLInputElement* it = new nsHTMLInputElement(mInner.mTag);
+  nsHTMLInputElement* it = new nsHTMLInputElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

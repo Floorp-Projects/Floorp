@@ -55,6 +55,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsINodeInfo.h"
 #include "nsIParser.h"
 #include "nsIPresShell.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -172,16 +173,18 @@ protected:
     nsresult GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace);
 
     nsVoidArray mNameSpaceStack;
+
+    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
     
     // RDF-specific parsing
     nsresult GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID);
     nsresult AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
-    nsresult ParseTag(const nsString& aText, nsIAtom*& aTag, PRInt32& aNameSpaceID);
+    nsresult ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo);
     nsresult ParseAttributeString(const nsString& aText, nsIAtom*& aAttr, PRInt32& aNameSpaceID);
-    nsresult CreateElement(PRInt32 aNameSpaceID, nsIAtom* aTag, nsXULPrototypeElement** aResult);
+    nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
-    nsresult OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTag);
-    nsresult OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTag);
+    nsresult OpenRoot(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo);
+    nsresult OpenTag(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo);
 
     // Script tag handling
     nsresult OpenScript(const nsIParserNode& aNode);
@@ -339,8 +342,8 @@ XULContentSinkImpl::ContextStack::IsInsideXULTemplate()
                 nsXULPrototypeElement* element =
                     NS_REINTERPRET_CAST(nsXULPrototypeElement*, node);
 
-                if ((element->mNameSpaceID == kNameSpaceID_XUL) &&
-                    (element->mTag.get() == kTemplateAtom)) {
+                if (element->mNodeInfo->Equals(kTemplateAtom,
+                                               kNameSpaceID_XUL)) {
                     return PR_TRUE;
                 }
             }
@@ -617,9 +620,8 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 
     nsresult rv;
 
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> tag;
-    rv = ParseTag(aNode.GetText(), *getter_AddRefs(tag), nameSpaceID);
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    rv = ParseTag(aNode.GetText(), *getter_AddRefs(nodeInfo));
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
         nsCAutoString anodeC;
@@ -636,11 +638,11 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
     switch (mState) {
     case eInProlog:
         // We're the root document element
-        rv = OpenRoot(aNode, nameSpaceID, tag);
+        rv = OpenRoot(aNode, nodeInfo);
         break;
 
     case eInDocumentElement:
-        rv = OpenTag(aNode, nameSpaceID, tag);
+        rv = OpenTag(aNode, nodeInfo);
         break;
 
     case eInEpilog:
@@ -1140,6 +1142,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     rv = htmlContainer->GetCSSLoader(*getter_AddRefs(mCSSLoader));
     if (NS_FAILED(rv)) return rv;
 
+    rv = aDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+    if (NS_FAILED(rv)) return rv;
 
     mState = eInProlog;
     return NS_OK;
@@ -1334,7 +1338,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
 
     // XUL elements may require some additional work to compute
     // derived information.
-    if (aElement->mNameSpaceID == kNameSpaceID_XUL) {
+    if (aElement->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         nsAutoString value;
 
         // Compute the element's class list if the element has a 'class' attribute.
@@ -1375,7 +1379,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
 
 
 nsresult
-XULContentSinkImpl::ParseTag(const nsString& aText, nsIAtom*& aTag, PRInt32& aNameSpaceID)
+XULContentSinkImpl::ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo)
 {
     nsresult rv;
 
@@ -1397,14 +1401,15 @@ XULContentSinkImpl::ParseTag(const nsString& aText, nsIAtom*& aTag, PRInt32& aNa
     rv = GetTopNameSpace(&ns);
     if (NS_FAILED(rv)) return rv;
 
-    rv = ns->FindNameSpaceID(prefix, aNameSpaceID);
+    PRInt32 namespaceID;
+    rv = ns->FindNameSpaceID(prefix, namespaceID);
     if (NS_FAILED(rv)) return rv;
 
-    aTag = NS_NewAtom(tagStr);
-    if (! aTag)
+    nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(tagStr)));
+    if (! tag)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return NS_OK;
+    return mNodeInfoManager->GetNodeInfo(tag, prefix, namespaceID, aNodeInfo);
 }
 
 
@@ -1446,8 +1451,7 @@ XULContentSinkImpl::ParseAttributeString(const nsString& aText, nsIAtom*& aAttr,
 
 
 nsresult
-XULContentSinkImpl::CreateElement(PRInt32 aNameSpaceID,
-                                  nsIAtom* aTag,
+XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
     nsresult rv;
@@ -1456,20 +1460,13 @@ XULContentSinkImpl::CreateElement(PRInt32 aNameSpaceID,
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    element->mNameSpaceID = aNameSpaceID;
-    element->mTag         = aTag;
+    element->mNodeInfo    = aNodeInfo;
     element->mDocument    = mPrototype;
 
     nsCOMPtr<nsINameSpace> ns;
     rv = GetTopNameSpace(&ns);
     if (NS_SUCCEEDED(rv)) {
         element->mNameSpace = ns;
-
-        nsCOMPtr<nsIAtom> prefix;
-        rv = ns->FindNameSpacePrefix(aNameSpaceID, *getter_AddRefs(prefix));
-        if (NS_SUCCEEDED(rv)) {
-            element->mNameSpacePrefix = prefix;
-        }
     }
 
     *aResult = element;
@@ -1479,7 +1476,7 @@ XULContentSinkImpl::CreateElement(PRInt32 aNameSpaceID,
 
 
 nsresult
-XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTag)
+XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo)
 {
     NS_ASSERTION(mState == eInProlog, "how'd we get here?");
     if (mState != eInProlog)
@@ -1487,8 +1484,8 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
 
     nsresult rv;
 
-    if ((aNameSpaceID == kNameSpaceID_HTML || 
-         aNameSpaceID == kNameSpaceID_XUL) && (aTag == kScriptAtom)) {
+    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
+        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: script tag not allowed as root content element"));
 
@@ -1497,7 +1494,7 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
 
     // Create the element
     nsXULPrototypeElement* element;
-    rv = CreateElement(aNameSpaceID, aTag, &element);
+    rv = CreateElement(aNodeInfo, &element);
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
@@ -1530,18 +1527,19 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
 
 
 nsresult
-XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTag)
+XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo)
 {
     nsresult rv;
-    if ((aNameSpaceID == kNameSpaceID_HTML  || 
-         aNameSpaceID == kNameSpaceID_XUL) && (aTag == kScriptAtom)) {
+
+    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
+        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
         // Oops, it's a script!
         return OpenScript(aNode);
     }
 
     // Create the element
     nsXULPrototypeElement* element;
-    rv = CreateElement(aNameSpaceID, aTag, &element);
+    rv = CreateElement(aNodeInfo, &element);
 
     if (NS_FAILED(rv)) {
         nsCAutoString anodeC;

@@ -66,6 +66,7 @@
 #include "nsWeakReference.h"
 #include "nsIStreamLoader.h"
 #include "nsIBindingManager.h"
+#include "nsINodeInfo.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -261,6 +262,8 @@ public:
     NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
 
     NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
+
+    NS_IMETHOD GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager);
 
     virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
@@ -577,6 +580,7 @@ protected:
     // this (pinkerton).
     nsCOMPtr<nsIDOMNode>    mPopupNode;            // [OWNER] element triggering the popup
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
+    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // [OWNER] list of names in the document
 
     /**
      * Context stack, which maintains the state of the Builder and allows

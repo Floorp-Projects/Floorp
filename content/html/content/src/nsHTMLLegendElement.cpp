@@ -45,7 +45,7 @@ class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
                             public nsIFormControl
 {
 public:
-  nsHTMLLegendElement(nsIAtom* aTag);
+  nsHTMLLegendElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLLegendElement();
 
   // nsISupports
@@ -88,13 +88,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLLegendElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLLegendElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -102,10 +102,10 @@ NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
+nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mForm = nsnull;
 }
 
@@ -141,7 +141,7 @@ nsHTMLLegendElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLegendElement* it = new nsHTMLLegendElement(mInner.mTag);
+  nsHTMLLegendElement* it = new nsHTMLLegendElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

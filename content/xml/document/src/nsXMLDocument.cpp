@@ -66,6 +66,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIParserFilter.h"
 #include "nsNetUtil.h"
+#include "nsDOMError.h"
 
 
 // XXX The XML world depends on the html atoms
@@ -701,14 +702,20 @@ NS_IMETHODIMP
 nsXMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_TRUE(aTagName.Length(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+
   nsIXMLContent* content;
-  nsIAtom* tag = NS_NewAtom(aTagName);
-  nsresult rv = NS_NewXMLElement(&content, tag);
-  NS_RELEASE(tag);
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv;
+
+  rv = mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_NewXMLElement(&content, nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
    
-  if (NS_OK != rv) {
-    return rv;
-  }
   rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   NS_RELEASE(content);
  
@@ -717,34 +724,29 @@ nsXMLDocument::CreateElement(const nsString& aTagName,
 
 NS_IMETHODIMP    
 nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName, 
-                                            const nsString& aNameSpace, 
-                                            nsIDOMElement** aReturn)
+                                          const nsString& aNameSpace, 
+                                          nsIDOMElement** aReturn)
 {
-  PRInt32 namespaceID = kNameSpaceID_None;
   nsresult rv = NS_OK;
 
-  if ((0 < aNameSpace.Length() && (nsnull != mNameSpaceManager))) {
-    mNameSpaceManager->GetNameSpaceID(aNameSpace, namespaceID);
-  }
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  mNodeInfoManager->GetNodeInfo(aTagName, nsString(), aNameSpace,
+                                *getter_AddRefs(nodeInfo));
+
+  PRInt32 namespaceID;
+  nodeInfo->GetNamespaceID(namespaceID);
 
   nsIContent* content;
   if (namespaceID == kNameSpaceID_HTML) {
     nsIHTMLContent* htmlContent;
-    
-    rv = NS_CreateHTMLElement(&htmlContent, aTagName);
+
+    rv = NS_CreateHTMLElement(&htmlContent, nodeInfo);
     content = (nsIContent*)htmlContent;
   }
   else {
     nsIXMLContent* xmlContent;
-    nsIAtom* tag;
-
-    tag = NS_NewAtom(aTagName);
-    rv = NS_NewXMLElement(&xmlContent, tag);
-    NS_RELEASE(tag);
-    if (NS_OK == rv) {
-      xmlContent->SetNameSpaceID(namespaceID);
-    }
-    content = (nsIXMLContent*)xmlContent;
+    rv = NS_NewXMLElement(&xmlContent, nodeInfo);
+    content = NS_STATIC_CAST(nsIXMLContent *, xmlContent);
   }
 
   if (NS_OK != rv) {

@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 
 class nsINameSpace;
+class nsINodeInfo;
 class nsIWebShell;
 
 #define NS_IXMLCONTENT_IID \
@@ -45,8 +46,6 @@ public:
   
   NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace) = 0;
   NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const = 0;
-
-  NS_IMETHOD SetNameSpaceID(PRInt32 aNSIdentifier) = 0;
 
   /**
    * Give this element a change to fire its links that should be fired
@@ -71,7 +70,7 @@ public:
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 7)
 
 extern nsresult
-NS_NewXMLElement(nsIXMLContent** aResult, nsIAtom* aTag);
+NS_NewXMLElement(nsIXMLContent** aResult, nsINodeInfo* aNodeInfo);
 
 // XXX These belongs elsewhere
 extern nsresult

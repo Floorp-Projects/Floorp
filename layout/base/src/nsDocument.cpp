@@ -86,6 +86,7 @@
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsNodeInfoManager.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -797,8 +798,20 @@ NS_IMPL_RELEASE(nsDocument)
 
 nsresult nsDocument::Init()
 {
+  if (mNameSpaceManager) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   nsresult rv = NS_NewHeapArena(&mArena, nsnull);
-  NS_NewNameSpaceManager(&mNameSpaceManager);
+
+  rv = NS_NewNameSpaceManager(&mNameSpaceManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mNodeInfoManager = new nsNodeInfoManager();
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
+
+  mNodeInfoManager->Init(mNameSpaceManager);
+
   return rv;
 }
 
@@ -2339,29 +2352,28 @@ nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsDocument::GetNamespaceURI(nsString& aNamespaceURI)
 { 
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aNamespaceURI.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aPrefix.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP
 nsDocument::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aLocalName.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -3318,6 +3330,19 @@ nsDocument::IncrementModCount(PRInt32 aNumMods)
   //NS_ASSERTION(mModCount >= 0, "Modification count went negative");
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsDocument::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
+{
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
+  aNodeInfoManager = mNodeInfoManager;
+  NS_ADDREF(aNodeInfoManager);
+
+  return NS_OK;
+}
+
 
 //
 // FindContent does a depth-first search from aStartNode

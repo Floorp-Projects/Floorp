@@ -38,7 +38,7 @@ class nsHTMLOptGroupElement : public nsIDOMHTMLOptGroupElement,
                               public nsIHTMLContent
 {
 public:
-  nsHTMLOptGroupElement(nsIAtom* aTag);
+  nsHTMLOptGroupElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLOptGroupElement();
 
   // nsISupports
@@ -73,13 +73,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLOptGroupElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLOptGroupElement(nsIHTMLContent** aInstancePtrResult,
+                          nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLOptGroupElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLOptGroupElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -87,10 +87,10 @@ NS_NewHTMLOptGroupElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLOptGroupElement::nsHTMLOptGroupElement(nsIAtom* aTag)
+nsHTMLOptGroupElement::nsHTMLOptGroupElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLOptGroupElement::~nsHTMLOptGroupElement()
@@ -117,7 +117,7 @@ nsHTMLOptGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLOptGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLOptGroupElement* it = new nsHTMLOptGroupElement(mInner.mTag);
+  nsHTMLOptGroupElement* it = new nsHTMLOptGroupElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -77,6 +77,7 @@
 #include "nsIXMLContent.h"
 #include "nsIXPConnect.h"
 #include "nsIXULSortService.h"
+#include "nsINodeInfo.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsIXULContent.h"
@@ -6121,27 +6122,31 @@ nsXULTemplateBuilder::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
+    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceID,
+                                 *getter_AddRefs(nodeInfo));
+
     if (aNameSpaceID == kNameSpaceID_XUL) {
-        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        rv = nsXULElement::Create(nodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
     else if (aNameSpaceID == kNameSpaceID_HTML) {
-        const PRUnichar *tagName;
-        aTag->GetUnicode(&tagName);
-
-        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
+        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
+                                                      getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        const PRUnichar *tagName;
-        aTag->GetUnicode(&tagName);
-
         nsCOMPtr<nsIElementFactory> elementFactory;
         GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
-        rv = elementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
+        rv = elementFactory->CreateInstanceByTag(nodeInfo,
+                                                 getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)

@@ -45,7 +45,7 @@ class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
                                 public nsIHTMLContent
 {
 public:
-  nsHTMLTableCellElement(nsIAtom* aTag);
+  nsHTMLTableCellElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTableCellElement();
 
 // nsISupports
@@ -118,13 +118,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult,
+                           nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTableCellElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTableCellElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -132,10 +132,10 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLTableCellElement::nsHTMLTableCellElement(nsIAtom* aTag)
+nsHTMLTableCellElement::nsHTMLTableCellElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mColIndex=0;
 }
 
@@ -169,7 +169,7 @@ nsHTMLTableCellElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLTableCellElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableCellElement* it = new nsHTMLTableCellElement(mInner.mTag);
+  nsHTMLTableCellElement* it = new nsHTMLTableCellElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

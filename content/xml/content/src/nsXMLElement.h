@@ -33,6 +33,7 @@
 
 class nsIDocument;
 class nsIAtom;
+class nsINodeInfo;
 class nsIEventListenerManager;
 class nsIHTMLAttributes;
 class nsIURI;
@@ -43,7 +44,7 @@ class nsXMLElement : public nsIDOMElement,
 		     public nsIJSScriptObject
 {
 public:
-  nsXMLElement(nsIAtom *aTag);
+  nsXMLElement(nsINodeInfo *aNodeInfo);
   virtual ~nsXMLElement();
 
   // nsISupports
@@ -200,9 +201,6 @@ public:
   }
   NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const {
     return mInner.GetNameSpacePrefix(aNameSpace);
-  }
-  NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceId) {
-    return mInner.SetNameSpaceID(aNameSpaceId);
   }
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 

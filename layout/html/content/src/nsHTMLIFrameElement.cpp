@@ -46,7 +46,7 @@ class nsHTMLIFrameElement : public nsIDOMHTMLIFrameElement,
                             public nsIChromeEventHandler
 {
 public:
-  nsHTMLIFrameElement(nsIAtom* aTag);
+  nsHTMLIFrameElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLIFrameElement();
 
   // nsISupports
@@ -102,13 +102,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLIFrameElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLIFrameElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLIFrameElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLIFrameElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -116,10 +116,10 @@ NS_NewHTMLIFrameElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLIFrameElement::nsHTMLIFrameElement(nsIAtom* aTag)
+nsHTMLIFrameElement::nsHTMLIFrameElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLIFrameElement::~nsHTMLIFrameElement()
@@ -151,7 +151,7 @@ nsHTMLIFrameElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLIFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLIFrameElement* it = new nsHTMLIFrameElement(mInner.mTag);
+  nsHTMLIFrameElement* it = new nsHTMLIFrameElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -38,7 +38,7 @@ class nsHTMLInsElement : public nsIDOMHTMLModElement,
                   public nsIHTMLContent
 {
 public:
-  nsHTMLInsElement(nsIAtom* aTag);
+  nsHTMLInsElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLInsElement();
 
   // nsISupports
@@ -73,13 +73,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLInsElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLInsElement(nsIHTMLContent** aInstancePtrResult,
+                     nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLInsElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLInsElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -87,10 +87,10 @@ NS_NewHTMLInsElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLInsElement::nsHTMLInsElement(nsIAtom* aTag)
+nsHTMLInsElement::nsHTMLInsElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLInsElement::~nsHTMLInsElement()
@@ -117,7 +117,7 @@ nsHTMLInsElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLInsElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLInsElement* it = new nsHTMLInsElement(mInner.mTag);
+  nsHTMLInsElement* it = new nsHTMLInsElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

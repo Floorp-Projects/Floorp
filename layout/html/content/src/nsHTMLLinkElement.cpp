@@ -44,7 +44,7 @@ class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
                           public nsIStyleSheetLinkingElement
 {
 public:
-  nsHTMLLinkElement(nsIAtom* aTag);
+  nsHTMLLinkElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLLinkElement();
 
   // nsISupports
@@ -98,13 +98,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLLinkElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLLinkElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -112,10 +112,10 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLLinkElement::nsHTMLLinkElement(nsIAtom* aTag)
+nsHTMLLinkElement::nsHTMLLinkElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mStyleSheet = nsnull;
 }
 
@@ -150,7 +150,7 @@ nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLinkElement* it = new nsHTMLLinkElement(mInner.mTag);
+  nsHTMLLinkElement* it = new nsHTMLLinkElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

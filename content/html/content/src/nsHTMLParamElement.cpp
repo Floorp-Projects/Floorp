@@ -38,7 +38,7 @@ class nsHTMLParamElement : public nsIDOMHTMLParamElement,
                     public nsIHTMLContent
 {
 public:
-  nsHTMLParamElement(nsIAtom* aTag);
+  nsHTMLParamElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLParamElement();
 
   // nsISupports
@@ -77,13 +77,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLParamElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLParamElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLParamElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLParamElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -91,10 +91,10 @@ NS_NewHTMLParamElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLParamElement::nsHTMLParamElement(nsIAtom* aTag)
+nsHTMLParamElement::nsHTMLParamElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLParamElement::~nsHTMLParamElement()
@@ -121,7 +121,7 @@ nsHTMLParamElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLParamElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLParamElement* it = new nsHTMLParamElement(mInner.mTag);
+  nsHTMLParamElement* it = new nsHTMLParamElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

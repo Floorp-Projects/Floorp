@@ -22,6 +22,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsINodeInfo.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
@@ -417,16 +418,44 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 }
 
 nsresult
-nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
-{
-  return GetTagName(aNodeName);
-}
-
-nsresult
 nsGenericHTMLElement::GetTagName(nsString& aTagName)
 {
   nsGenericElement::GetTagName(aTagName);
   aTagName.ToUpperCase();
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
+{
+  // This whole method needs revriting to work properly with XHTML...
+#ifdef MOZILLA_IS_READY_FOR_THIS
+  mNodeInfo->GetPrefix(aNodeName);
+  if (aNodeName.Length()) {
+    aNodeName.Append(PRUnichar(':'));
+  }
+#else
+  aNodeName.Truncate();
+#endif
+
+  nsCOMPtr<nsIAtom> atom;
+  mNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+
+  atom->ToString(aNodeName);
+
+  aNodeName.ToUpperCase();
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::GetLocalName(nsString& aLocalName)
+{
+  mNodeInfo->GetLocalName(aLocalName);
+
+  // This doesn't work for XHTML
+  aLocalName.ToUpperCase();
+
   return NS_OK;
 }
 
@@ -1716,9 +1745,9 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 {
   aBuf.AssignWithConversion('<');
 
-  if (nsnull != mTag) {
+  if (mNodeInfo) {
     nsAutoString tmp;
-    mTag->ToString(tmp);
+    mNodeInfo->GetQualifiedName(tmp);
     aBuf.Append(tmp);
   } else {
     aBuf.AppendWithConversion("?NULL");
@@ -2906,10 +2935,10 @@ nsresult
 nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   nsresult rv = NS_OK;
-  if (nsnull != mTag)
+  if (mNodeInfo)
   {
     nsAutoString name;
-    mTag->ToString(name);
+    mNodeInfo->GetQualifiedName(name);
     aConverter.BeginLeaf(name);    
   }
 
@@ -2944,10 +2973,10 @@ nsGenericHTMLLeafElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
 nsresult
 nsGenericHTMLLeafElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
-  if (nsnull != mTag)
+  if (mNodeInfo)
   {
     nsAutoString name;
-    mTag->ToString(name);
+    mNodeInfo->GetQualifiedName(name);
     aConverter.EndLeaf(name);    
   }
   return NS_OK;
@@ -3070,10 +3099,10 @@ nsresult
 nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   nsresult rv = NS_OK;
-  if (nsnull != mTag)
+  if (mNodeInfo)
   {
     nsAutoString name;
-    mTag->ToString(name);
+    mNodeInfo->GetQualifiedName(name);
     aConverter.BeginContainer(name);
   }
 
@@ -3108,10 +3137,10 @@ nsGenericHTMLContainerElement::ConvertContentToXIF(nsXIFConverter& aConverter) c
 nsresult
 nsGenericHTMLContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
-  if (nsnull != mTag)
+  if (mNodeInfo)
   {
     nsAutoString name;
-    mTag->ToString(name);
+    mNodeInfo->GetQualifiedName(name);
     aConverter.EndContainer(name);
   }
   return NS_OK;

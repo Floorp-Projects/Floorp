@@ -244,7 +244,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
     NS_RELEASE(htmlContainer);
   }
 
-  return NS_OK;
+  return aDoc->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
 }
 
 #ifndef XSL
@@ -705,6 +705,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   tag.Assign(aNode.GetText());
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
+  nsCOMPtr<nsIAtom> tagAtom = dont_AddRef(NS_NewAtom(tag));
 
   // We must register namespace declarations found in the attribute list
   // of an element before creating the element. This is because the
@@ -713,16 +714,21 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   PushNameSpacesFrom(aNode);
 
   nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+
+  mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
+                                *getter_AddRefs(nodeInfo));
+
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (isHTML) {
-    nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tag));
     if (nsHTMLAtoms::script == tagAtom.get()) {
       result = ProcessStartSCRIPTTag(aNode);
     }
     
     nsCOMPtr<nsIHTMLContent> htmlContent;
-    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), tag);
+    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
     content = do_QueryInterface(htmlContent);
   }
   else {
@@ -730,21 +736,18 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     // own content element implementation (e.g., XUL or MathML).  
     // This is done based off a progid/namespace scheme.
     nsCOMPtr<nsIElementFactory> elementFactory;
+
+    // This should *not* be done for every node, only when we find
+    // a new namespace!!! -- jst
     GetElementFactory(nameSpaceID, getter_AddRefs(elementFactory));
     if (elementFactory) {
       // Create the content element using the element factory.
-      elementFactory->CreateInstanceByTag(tag, getter_AddRefs(content));
+      elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
     }
     else {
-      nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tag));
       nsCOMPtr<nsIXMLContent> xmlContent;
-      result = NS_NewXMLElement(getter_AddRefs(xmlContent), tagAtom);
+      result = NS_NewXMLElement(getter_AddRefs(xmlContent), nodeInfo);
     
-      // For XML elements, set the namespace
-      if (NS_OK == result) {
-        xmlContent->SetNameSpacePrefix(nameSpacePrefix);
-        xmlContent->SetNameSpaceID(nameSpaceID);
-      }
       content = do_QueryInterface(xmlContent);
     }
   }
@@ -800,6 +803,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
 
   tag.Assign(aNode.GetText());
+
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
   nameSpaceID = GetNameSpaceId(nameSpacePrefix);
   isHTML = IsHTMLNameSpace(nameSpaceID);
@@ -1846,7 +1850,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIContent** aResult);
+  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
 
 };
 
@@ -1883,14 +1887,11 @@ NS_NewXMLElementFactory(nsIElementFactory** aResult)
 
 
 NS_IMETHODIMP
-XMLElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIContent** aResult)
+XMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
+                                           nsIContent** aResult)
 {
-  nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aTag));
-  if (! tag)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   nsCOMPtr<nsIXMLContent> xmlContent;
-  nsresult rv = NS_NewXMLElement(getter_AddRefs(xmlContent), tag);
+  nsresult rv = NS_NewXMLElement(getter_AddRefs(xmlContent), aNodeInfo);
   nsCOMPtr<nsIContent> result = do_QueryInterface(xmlContent);
   *aResult = result;
   NS_IF_ADDREF(*aResult);

@@ -51,6 +51,7 @@ nsIFrameManager.h \
 nsILayoutDebugger.h \
 nsINameSpace.h \
 nsINameSpaceManager.h \
+nsINodeInfo.h \
 nsIFrameUtil.h \
 nsIPageSequenceFrame.h \
 nsIPresContext.h \

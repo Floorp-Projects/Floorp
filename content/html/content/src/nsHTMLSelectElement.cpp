@@ -130,7 +130,7 @@ class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(nsIAtom* aTag);
+  nsHTMLSelectElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -222,13 +222,13 @@ protected:
 // construction, destruction
 
 nsresult
-NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsHTMLSelectElement* it = new nsHTMLSelectElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -236,10 +236,10 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
+nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mOptions = nsnull;
   mForm = nsnull;
   mIsDoneAddingContent = PR_TRUE;
@@ -322,7 +322,7 @@ nsHTMLSelectElement::Release()
 nsresult
 nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(mInner.mTag);
+  nsHTMLSelectElement* it = new nsHTMLSelectElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -479,8 +479,12 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
   } else if (aLength) {
     // This violates the W3C DOM but we do this for backwards compatibility
     nsCOMPtr<nsIHTMLContent> element;
+    nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nsHTMLAtoms::option);
+    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::option,
+                                  *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIContent> text;

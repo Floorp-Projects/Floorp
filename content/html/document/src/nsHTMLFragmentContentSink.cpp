@@ -20,8 +20,11 @@
  * Contributor(s): 
  */
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nsIHTMLFragmentContentSink.h"
 #include "nsIParser.h"
+#include "nsIParserService.h"
+#include "nsParserCIID.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
@@ -36,6 +39,7 @@
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "prmem.h"
 
 //
@@ -50,6 +54,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLFragmentContentSinkIID, NS_IHTML_FRAGMENT_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 class nsHTMLFragmentContentSink : public nsIHTMLFragmentContentSink {
 public:
@@ -112,6 +117,8 @@ public:
   void ProcessBaseTag(nsIHTMLContent* aContent);
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
+  nsresult Init();
+
   PRBool mHitSentinel;
   PRBool mSeenBody;
 
@@ -128,6 +135,8 @@ public:
 
   nsString mBaseHREF;
   nsString mBaseTarget;
+
+  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 };
 
 
@@ -143,6 +152,12 @@ NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  nsresult rv = it->Init();
+  if (NS_FAILED(rv)) {
+    delete it;
+    return rv;
+  }
+
   return it->QueryInterface(kIHTMLFragmentContentSinkIID, (void **)aResult);
 }
 
@@ -215,6 +230,19 @@ nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
+}
+
+
+nsresult nsHTMLFragmentContentSink::Init()
+{
+  nsresult rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINameSpaceManager> nsmgr;
+  rv = NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mNodeInfoManager->Init(nsmgr);
 }
 
 
@@ -410,7 +438,28 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent *content = nsnull;
-    result = NS_CreateHTMLElement(&content, nodeType);
+
+    NS_WITH_SERVICE(nsIParserService,
+                    parserService, 
+                    kParserServiceCID,
+                    &result);
+    NS_ENSURE_SUCCESS(result, result);
+
+    nsAutoString tmpName;
+
+    if (nodeType == eHTMLTag_userdefined) {
+      tmpName = aNode.GetText();
+    } else {
+      result = parserService->HTMLIdToStringTag(nodeType, tmpName);
+      NS_ENSURE_SUCCESS(result, result);
+    }
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    result =
+      mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
+                                    *getter_AddRefs(nodeInfo));
+
+    result = NS_CreateHTMLElement(&content, nodeInfo);
 
     if (NS_OK == result) {
       result = AddAttributes(aNode, content);
@@ -466,8 +515,30 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         // Create new leaf content object
         nsCOMPtr<nsIHTMLContent> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-        result = NS_CreateHTMLElement(getter_AddRefs(content), nodeType);
-        
+
+        NS_WITH_SERVICE(nsIParserService,
+                        parserService, 
+                        kParserServiceCID,
+                        &result);
+
+        NS_ENSURE_SUCCESS(result, result);
+
+        nsAutoString tmpName;
+
+        if (nodeType == eHTMLTag_userdefined) {
+          tmpName = aNode.GetText();
+        } else {
+          result = parserService->HTMLIdToStringTag(nodeType, tmpName);
+          NS_ENSURE_SUCCESS(result, result);
+        }
+
+        nsCOMPtr<nsINodeInfo> nodeInfo;
+        result =
+          mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
+                                        *getter_AddRefs(nodeInfo));
+
+        result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
+
         if (NS_OK == result) {
           result = AddAttributes(aNode, content);
           if (NS_OK == result) {

@@ -56,7 +56,7 @@ class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
                             public nsIHTMLContent
 {
 public:
-  nsHTMLAnchorElement(nsIAtom* aTag);
+  nsHTMLAnchorElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLAnchorElement();
 
   // nsISupports
@@ -123,13 +123,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLAnchorElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLAnchorElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -137,10 +137,10 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLAnchorElement::nsHTMLAnchorElement(nsIAtom* aTag)
+nsHTMLAnchorElement::nsHTMLAnchorElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLAnchorElement::~nsHTMLAnchorElement()
@@ -172,7 +172,7 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAnchorElement* it = new nsHTMLAnchorElement(mInner.mTag);
+  nsHTMLAnchorElement* it = new nsHTMLAnchorElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -37,6 +37,7 @@
 #include "nsIViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsINodeInfo.h"
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
@@ -302,6 +303,7 @@ public:
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
+  nsINodeInfoManager* mNodeInfoManager;
   nsIURI* mDocumentURI;
   nsIURI* mDocumentBaseURL;
   nsCOMPtr<nsIURI> mScriptURI;
@@ -514,10 +516,10 @@ HTMLContentSink::ReduceEntities(nsString& aString)
       // so we should add a translate numeric entity method from the parser...
       char cbuf[100];
       PRInt32 i = 0;
-      while (i < aString.Length()) {
+      while ((PRUint32)i < aString.Length()) {
         // If we have the start of an entity (and it's not at the end of
         // our string) then translate the entity into it's unicode value.
-        if ((aString.CharAt(i++) == '&') && (i < aString.Length())) {
+        if ((aString.CharAt(i++) == '&') && ((PRUint32)i < aString.Length())) {
           PRInt32 start = i - 1;
           PRUnichar e = aString.CharAt(i);
           if (e == '#') {
@@ -686,57 +688,57 @@ void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 // XXX compare switch statement against nsHTMLTags.h's list
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType,
-                             nsIAtom* aAtom,
-                             nsIDOMHTMLFormElement* aForm,
-                             nsIWebShell* aWebShell,
-                             nsIHTMLContent** aResult,
-                             const nsString* aContent = nsnull)
+                  nsINodeInfo *aNodeInfo,
+                  nsIDOMHTMLFormElement* aForm,
+                  nsIWebShell* aWebShell,
+                  nsIHTMLContent** aResult,
+                  const nsString* aContent = nsnull)
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
   default:
-    rv = NS_NewHTMLSpanElement(aResult, aAtom);
+    rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
     break;
 
   case eHTMLTag_a:
-    rv = NS_NewHTMLAnchorElement(aResult, aAtom);
+    rv = NS_NewHTMLAnchorElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_applet:
-    rv = NS_NewHTMLAppletElement(aResult, aAtom);
+    rv = NS_NewHTMLAppletElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_area:
-    rv = NS_NewHTMLAreaElement(aResult, aAtom);
+    rv = NS_NewHTMLAreaElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_base:
-    rv = NS_NewHTMLBaseElement(aResult, aAtom);
+    rv = NS_NewHTMLBaseElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_basefont:
-    rv = NS_NewHTMLBaseFontElement(aResult, aAtom);
+    rv = NS_NewHTMLBaseFontElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_blockquote:
-    rv = NS_NewHTMLQuoteElement(aResult, aAtom);
+    rv = NS_NewHTMLQuoteElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_body:
-    rv = NS_NewHTMLBodyElement(aResult, aAtom);
+    rv = NS_NewHTMLBodyElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_br:
-    rv = NS_NewHTMLBRElement(aResult, aAtom);
+    rv = NS_NewHTMLBRElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_button:
-    rv = NS_NewHTMLButtonElement(aResult, aAtom);
+    rv = NS_NewHTMLButtonElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_caption:
-    rv = NS_NewHTMLTableCaptionElement(aResult, aAtom);
+    rv = NS_NewHTMLTableCaptionElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_col:
-    rv = NS_NewHTMLTableColElement(aResult, aAtom);
+    rv = NS_NewHTMLTableColElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_colgroup:
-    rv = NS_NewHTMLTableColGroupElement(aResult, aAtom);
+    rv = NS_NewHTMLTableColGroupElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_dir:
-    rv = NS_NewHTMLDirectoryElement(aResult, aAtom);
+    rv = NS_NewHTMLDirectoryElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_div:
   case eHTMLTag_noembed:
@@ -744,20 +746,20 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_noscript:
   case eHTMLTag_parsererror:
   case eHTMLTag_sourcetext:
-    rv = NS_NewHTMLDivElement(aResult, aAtom);
+    rv = NS_NewHTMLDivElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_dl:
-    rv = NS_NewHTMLDListElement(aResult, aAtom);
+    rv = NS_NewHTMLDListElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_embed:
-    rv = NS_NewHTMLEmbedElement(aResult, aAtom);
+    rv = NS_NewHTMLEmbedElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_fieldset:
-    rv = NS_NewHTMLFieldSetElement(aResult, aAtom);
+    rv = NS_NewHTMLFieldSetElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_font:
-    rv = NS_NewHTMLFontElement(aResult, aAtom);
+    rv = NS_NewHTMLFontElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_form:
     // the form was already created 
@@ -765,14 +767,14 @@ MakeContentObject(nsHTMLTag aNodeType,
       rv = aForm->QueryInterface(kIHTMLContentIID, (void**)aResult);
     }
     else {
-      rv = NS_NewHTMLFormElement(aResult, aAtom);
+      rv = NS_NewHTMLFormElement(aResult, aNodeInfo);
     }
     break;
   case eHTMLTag_frame:
-    rv = NS_NewHTMLFrameElement(aResult, aAtom);
+    rv = NS_NewHTMLFrameElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_frameset:
-    rv = NS_NewHTMLFrameSetElement(aResult, aAtom);
+    rv = NS_NewHTMLFrameSetElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_h1:
   case eHTMLTag_h2:
@@ -780,104 +782,104 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_h4:
   case eHTMLTag_h5:
   case eHTMLTag_h6:
-    rv = NS_NewHTMLHeadingElement(aResult, aAtom);
+    rv = NS_NewHTMLHeadingElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_head:
-    rv = NS_NewHTMLHeadElement(aResult, aAtom);
+    rv = NS_NewHTMLHeadElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_hr:
-    rv = NS_NewHTMLHRElement(aResult, aAtom);
+    rv = NS_NewHTMLHRElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_html:
-    rv = NS_NewHTMLHtmlElement(aResult, aAtom);
+    rv = NS_NewHTMLHtmlElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_iframe:
-    rv = NS_NewHTMLIFrameElement(aResult, aAtom);
+    rv = NS_NewHTMLIFrameElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_img:
-    rv = NS_NewHTMLImageElement(aResult, aAtom);
+    rv = NS_NewHTMLImageElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_input:
-    rv = NS_NewHTMLInputElement(aResult, aAtom);
+    rv = NS_NewHTMLInputElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_isindex:
-    rv = NS_NewHTMLIsIndexElement(aResult, aAtom);
+    rv = NS_NewHTMLIsIndexElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_label:
-    rv = NS_NewHTMLLabelElement(aResult, aAtom);
+    rv = NS_NewHTMLLabelElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_legend:
-    rv = NS_NewHTMLLegendElement(aResult, aAtom);
+    rv = NS_NewHTMLLegendElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_li:
-    rv = NS_NewHTMLLIElement(aResult, aAtom);
+    rv = NS_NewHTMLLIElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_link:
-    rv = NS_NewHTMLLinkElement(aResult, aAtom);
+    rv = NS_NewHTMLLinkElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_map:
-    rv = NS_NewHTMLMapElement(aResult, aAtom);
+    rv = NS_NewHTMLMapElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_menu:
-    rv = NS_NewHTMLMenuElement(aResult, aAtom);
+    rv = NS_NewHTMLMenuElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_meta:
-    rv = NS_NewHTMLMetaElement(aResult, aAtom);
+    rv = NS_NewHTMLMetaElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_object:
-    rv = NS_NewHTMLObjectElement(aResult, aAtom);
+    rv = NS_NewHTMLObjectElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_ol:
-    rv = NS_NewHTMLOListElement(aResult, aAtom);
+    rv = NS_NewHTMLOListElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_optgroup:
-    rv = NS_NewHTMLOptGroupElement(aResult, aAtom);
+    rv = NS_NewHTMLOptGroupElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_option:
-    rv = NS_NewHTMLOptionElement(aResult, aAtom);
+    rv = NS_NewHTMLOptionElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_p:
-    rv = NS_NewHTMLParagraphElement(aResult, aAtom);
+    rv = NS_NewHTMLParagraphElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_pre:
-    rv = NS_NewHTMLPreElement(aResult, aAtom);
+    rv = NS_NewHTMLPreElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_param:
-    rv = NS_NewHTMLParamElement(aResult, aAtom);
+    rv = NS_NewHTMLParamElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_q:
-    rv = NS_NewHTMLQuoteElement(aResult, aAtom);
+    rv = NS_NewHTMLQuoteElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_script:
-    rv = NS_NewHTMLScriptElement(aResult, aAtom);
+    rv = NS_NewHTMLScriptElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_select:
-    rv = NS_NewHTMLSelectElement(aResult, aAtom);
+    rv = NS_NewHTMLSelectElement(aResult, aNodeInfo);
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_spacer:
-    rv = NS_NewHTMLSpacerElement(aResult, aAtom);
+    rv = NS_NewHTMLSpacerElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_style:
-    rv = NS_NewHTMLStyleElement(aResult, aAtom);
+    rv = NS_NewHTMLStyleElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_table:
-    rv = NS_NewHTMLTableElement(aResult, aAtom);
+    rv = NS_NewHTMLTableElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_tbody:
   case eHTMLTag_thead:
   case eHTMLTag_tfoot:
-    rv = NS_NewHTMLTableSectionElement(aResult, aAtom);
+    rv = NS_NewHTMLTableSectionElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_td:
   case eHTMLTag_th:
-    rv = NS_NewHTMLTableCellElement(aResult, aAtom);
+    rv = NS_NewHTMLTableCellElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_textarea:
-    rv = NS_NewHTMLTextAreaElement(aResult, aAtom);
+    rv = NS_NewHTMLTextAreaElement(aResult, aNodeInfo);
     // XXX why is textarea not a container. If it were, this code would not be necessary
     // If the text area has some content, set it 
     if (aContent && (aContent->Length() > 0)) {
@@ -891,23 +893,23 @@ MakeContentObject(nsHTMLTag aNodeType,
     SetForm(*aResult, aForm);
     break;
   case eHTMLTag_title:
-    rv = NS_NewHTMLTitleElement(aResult, aAtom);
+    rv = NS_NewHTMLTitleElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_tr:
-    rv = NS_NewHTMLTableRowElement(aResult, aAtom);
+    rv = NS_NewHTMLTableRowElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_ul:
-    rv = NS_NewHTMLUListElement(aResult, aAtom);
+    rv = NS_NewHTMLUListElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_wbr:
-    rv = NS_NewHTMLWBRElement(aResult, aAtom);
+    rv = NS_NewHTMLWBRElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_layer:
   case eHTMLTag_ilayer:
   case eHTMLTag_nolayer:
   case eHTMLTag_unknown:
   case eHTMLTag_userdefined:
-    rv = NS_NewHTMLUnknownElement(aResult, aAtom);
+    rv = NS_NewHTMLUnknownElement(aResult, aNodeInfo);
     break;
   }
 
@@ -974,9 +976,12 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsIAtom* atom = NS_NewAtom(tmp);
-    if (nsnull == atom) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
+                                       *getter_AddRefs(nodeInfo));
+
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     // Make the content object
@@ -985,14 +990,12 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     if (eHTMLTag_textarea == aNodeType) {
       content.Assign(aNode.GetSkippedContent());
     }
-    rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
+    rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell,
                            aResult, &content);
 
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
     (*aResult)->SetContentID(id);
-    
-    NS_RELEASE(atom);
   }
 
   return rv;
@@ -1001,7 +1004,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
+NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 {
   nsresult rv = NS_OK;
 
@@ -1011,9 +1014,11 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
                   &rv);
 
   if (NS_SUCCEEDED(rv)) {
+    nsAutoString tmpName;
+    aNodeInfo->GetName(tmpName);
     // Find tag in tag table
     PRInt32 id; 
-    rv = parserService->HTMLStringTagToId(aTag, &id);
+    rv = parserService->HTMLStringTagToId(tmpName, &id);
     if (eHTMLTag_userdefined == nsHTMLTag(id)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -1021,35 +1026,11 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
     // Create atom for tag and then create content object
     nsAutoString tag;
     rv = parserService->HTMLIdToStringTag(id, tag);
-    nsIAtom* atom = NS_NewAtom(tag.GetUnicode());
-    rv = MakeContentObject(nsHTMLTag(id), atom, nsnull, nsnull, aResult);
-    NS_RELEASE(atom);
-  }
+    nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.GetUnicode())));
+    nsCOMPtr<nsINodeInfo> newName;
+    aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
 
-  return rv;
-}
-
-nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, PRInt32 aID)
-{
-  nsresult rv = NS_OK;
-
-  if (eHTMLTag_userdefined == nsHTMLTag(aID)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  NS_WITH_SERVICE(nsIParserService,
-                  parserService, 
-                  kParserServiceCID,
-                  &rv);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Create atom for tag and then create content object
-    nsAutoString tag;
-    rv = parserService->HTMLIdToStringTag(aID, tag);
-    nsIAtom* atom = NS_NewAtom(tag.GetUnicode());
-    rv = MakeContentObject(nsHTMLTag(aID), atom, nsnull, nsnull, aResult);
-    NS_RELEASE(atom);
+    rv = MakeContentObject(nsHTMLTag(id), newName, nsnull, nsnull, aResult);
   }
 
   return rv;
@@ -1065,7 +1046,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CreateInstanceByTag(const nsString& aTag,
+  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                  nsIContent** aResult);
 };
 
@@ -1096,12 +1077,15 @@ nsHTMLElementFactory::~nsHTMLElementFactory()
 NS_IMPL_ISUPPORTS1(nsHTMLElementFactory, nsIElementFactory);
 
 NS_IMETHODIMP
-nsHTMLElementFactory::CreateInstanceByTag(const nsString& aTag,
+nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                           nsIContent** aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
   nsresult rv;
   nsCOMPtr<nsIHTMLContent> htmlContent;
-  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aTag);
+  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo);
   nsCOMPtr<nsIContent> content = do_QueryInterface(htmlContent);
   *aResult = content;
   NS_IF_ADDREF(*aResult);
@@ -2094,6 +2078,7 @@ HTMLContentSink::HTMLContentSink() {
   mInNotification = 0;
   mInMonolithicContainer = 0;
   mInsideNoXXXTag  = 0;
+  mNodeInfoManager = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2117,6 +2102,8 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mRefContent);
+
+  NS_IF_RELEASE(mNodeInfoManager);
 
   if (mNotificationTimer) {
     mNotificationTimer->Cancel();
@@ -2183,10 +2170,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     return NS_ERROR_NULL_POINTER;
   }
 
+  nsresult rv;
+
   mDocument = aDoc;
   NS_ADDREF(aDoc);
   aDoc->AddObserver(this);
   aDoc->QueryInterface(kIHTMLDocumentIID, (void**)&mHTMLDocument);
+  rv = mDocument->GetNodeInfoManager(mNodeInfoManager);
+  NS_ENSURE_SUCCESS(rv, rv);
   mDocumentURI = aURL;
   NS_ADDREF(aURL);
   mDocumentBaseURL = aURL;
@@ -2194,7 +2185,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
 
-  nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 
   if (NS_FAILED(rv)) {
@@ -2225,8 +2215,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // XXX if it isn't we need to set it here...
   mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
 
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
+                                     kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Make root part
-  rv = NS_NewHTMLHtmlElement(&mRoot, nsHTMLAtoms::html);
+  rv = NS_NewHTMLHtmlElement(&mRoot, nodeInfo);
   if (NS_OK != rv) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
@@ -2236,14 +2232,12 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocument->SetRootContent(mRoot);
 
   // Make head part
-  nsIAtom* atom = NS_NewAtom("head");
-  if (nsnull == atom) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-    MOZ_TIMER_STOP(mWatch);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_NewHTMLHeadElement(&mHead, atom);
-  NS_RELEASE(atom);
+  rv = mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("head"),
+                                     nsnull, kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_NewHTMLHeadElement(&mHead, nodeInfo);
   if (NS_OK != rv) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
@@ -2295,7 +2289,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   }
 
   if (nsnull == mTitle) {
-    mHTMLDocument->SetTitle(nsAutoString());
+    mHTMLDocument->SetTitle(nsString());
   }
 
   // XXX this is silly; who cares? RickG cares. It's part of the regression test. So don't bug me. 
@@ -2557,9 +2551,14 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   mHTMLDocument->SetTitle(*mTitle);
 
-  nsIAtom* atom = NS_NewAtom("title");
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
+                                              kNameSpaceID_None,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIHTMLContent* it = nsnull;
-  nsresult rv = NS_NewHTMLTitleElement(&it, atom);
+  rv = NS_NewHTMLTitleElement(&it, nodeInfo);
   if (NS_OK == rv) {
     nsIContent* text;
     rv = NS_NewTextNode(&text);
@@ -2577,7 +2576,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
     mHead->AppendChildTo(it, PR_FALSE);
     NS_RELEASE(it);
   }
-  NS_RELEASE(atom);
+
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetTitle()\n"));
   MOZ_TIMER_STOP(mWatch);
   return NS_OK;
@@ -2765,14 +2764,18 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       mCurrentContext->IsCurrentContainer(eHTMLTag_tr) ||
       mCurrentContext->IsCurrentContainer(eHTMLTag_col) ||
       mCurrentContext->IsCurrentContainer(eHTMLTag_colgroup)) {
-    nsAutoString tmp; tmp.AssignWithConversion("form");
-    nsIAtom* atom = NS_NewAtom(tmp);
-    result = NS_NewHTMLFormElement(&content, atom);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    result = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::form, nsnull,
+                                           kNameSpaceID_None,
+                                           *getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(result, result);
+
+    result = NS_NewHTMLFormElement(&content, nodeInfo);
     if (NS_SUCCEEDED(result) && content) {
       content->QueryInterface(kIDOMHTMLFormElementIID, (void**)&mCurrentForm);
       NS_RELEASE(content);
     }
-    NS_RELEASE(atom);
     
     result = AddLeaf(aNode);
   }
@@ -3145,7 +3148,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       name.AssignWithConversion("HTML");
     }
 
-    rv = domImpl->CreateDocumentType(name, publicId, nsAutoString(),
+    rv = domImpl->CreateDocumentType(name, publicId, nsString(),
                                      getter_AddRefs(docType));
 
     if (NS_FAILED(rv) || !docType) {
@@ -3439,9 +3442,13 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
  
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag; tag.AssignWithConversion("BASE");
     nsCOMPtr<nsIHTMLContent> element;
-    result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("base"),
+                                  nsnull, kNameSpaceID_None,
+                                  *getter_AddRefs(nodeInfo));
+
+    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo);
     if (NS_SUCCEEDED(result)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);
@@ -3796,9 +3803,12 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag; tag.AssignWithConversion("LINK");
     nsIHTMLContent* element = nsnull;
-    result = NS_CreateHTMLElement(&element, tag);
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_HTML,
+                                  *getter_AddRefs(nodeInfo));
+
+    result = NS_CreateHTMLElement(&element, nodeInfo);
     if (NS_SUCCEEDED(result)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);      
@@ -3913,14 +3923,14 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   if (nsnull != parent) {
     // Create content object
-    nsAutoString tmp; tmp.AssignWithConversion("meta");
-    nsIAtom* atom = NS_NewAtom(tmp);
-    if (nsnull == atom) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    rv = mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("meta"), nsnull,
+                                       kNameSpaceID_None,
+                                       *getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsIHTMLContent* it;
-    rv = NS_NewHTMLMetaElement(&it, atom);
-    NS_RELEASE(atom);
+    rv = NS_NewHTMLMetaElement(&it, nodeInfo);
     if (NS_OK == rv) {
       // Add in the attributes and add the meta content object to the
       // head container.
@@ -4543,9 +4553,12 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return NS_ERROR_FAILURE;
   }
   nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
-  nsAutoString tag; tag.AssignWithConversion("SCRIPT");
   nsIHTMLContent* element = nsnull;
-  rv = NS_CreateHTMLElement(&element, tag);
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
+                                *getter_AddRefs(nodeInfo));
+
+  rv = NS_CreateHTMLElement(&element, nodeInfo);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);    
@@ -4672,9 +4685,13 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag; tag.AssignWithConversion("STYLE");
     nsIHTMLContent* element = nsnull;
-    rv = NS_CreateHTMLElement(&element, tag);
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::style, nsnull,
+                                  kNameSpaceID_None,
+                                  *getter_AddRefs(nodeInfo));
+
+    rv = NS_CreateHTMLElement(&element, nodeInfo);
     if (NS_SUCCEEDED(rv)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);    
