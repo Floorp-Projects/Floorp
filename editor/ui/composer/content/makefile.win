@@ -25,7 +25,6 @@ install::
 	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content\default
-	$(MAKE_INSTALL) editor.properties          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorStyles1.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) contentframe.xul           $(DIST)\bin\chrome\editor\content\default
@@ -48,7 +47,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorCommands.js	
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPage.html 
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPagePlain.html	
-  rm -f $(DIST)\bin\chrome\editor\content\default\editor.properties
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorStyles1.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorContent.css
   rm -f $(DIST)\bin\chrome\editor\content\default\contentframe.xul

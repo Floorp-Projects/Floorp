@@ -31,7 +31,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/TextEditorAppShell.xul \
 		$(srcdir)/EditorInitPage.html \
 		$(srcdir)/EditorInitPagePlain.html \
-		$(srcdir)/editor.properties \
 		$(srcdir)/EditorStyles1.css \
 		$(srcdir)/EditorContent.css \
 		$(srcdir)/contentframe.xul \
