@@ -254,12 +254,12 @@
                 label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
                 command="cmd_useTheme"/>
       </hbox>
+      <spacer flex="1"/>
       <label id="getMore" onclick="openURL(gGetMoreURL);"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"
              tooltiptextthemes="&getMoreThemes.tooltip;"
-             tooltiptextextensions="&getMoreExtensions.tooltip;"
-             flex="1" crop="right" align="right"/>
+             tooltiptextextensions="&getMoreExtensions.tooltip;"/>
     </hbox>
     
     <resizer id="windowResizer" dir="bottomright"/>
