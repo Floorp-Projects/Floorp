@@ -1157,7 +1157,7 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 	// be sure to resolve aliases in case we encounter one
 	PRBool	wasAliased = PR_FALSE;
 	searchEngine.ResolveAlias(wasAliased);
-#endif	XP_MAC
+#endif
 
 	nsInputFileStream		searchFile(searchEngine);
 
