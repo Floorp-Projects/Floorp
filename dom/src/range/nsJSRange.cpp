@@ -1079,7 +1079,7 @@ extern "C" NS_DOM nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **
 //
 // Method for creating a new Range JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptRange(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+NS_DOM nsresult NS_NewScriptRange(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptRange");
   JSObject *proto;

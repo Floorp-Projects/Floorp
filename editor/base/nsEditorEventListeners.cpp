@@ -871,34 +871,10 @@ nsresult
 nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
 	nsString				composedText;
-	const PRUnichar*		composedTextAsChar;
-	PRBool					commitText;
 	nsresult				result;
 
 	aTextEvent->GetText(composedText);
-	composedTextAsChar = (const PRUnichar*)(&composedText);
-	
-	if (!mInTransaction) {
-//		mEditor->BeginTransaction();
-		mInTransaction = PR_TRUE;
-	}
-
-	aTextEvent->GetCommitText(&commitText);
-	if (commitText) {
-		mEditor->Undo(1);
-		result = mEditor->InsertText(composedText);
-//		result = mEditor->EndTransaction();
-		mInTransaction=PR_FALSE;
-		mCommitText = PR_TRUE;
-	} else {
-		if (!mCommitText) {
-			mEditor->Undo(1);
-		} else {
-			mCommitText = PR_FALSE;
-		}	
-		result = mEditor->InsertText(composedText);
-	}
-
+	result = mEditor->SetCompositionString(composedText);
 	return result;
 }
 
@@ -1029,6 +1005,64 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+nsTextEditorCompositionListener::nsTextEditorCompositionListener()
+{
+  NS_INIT_REFCNT();
+}
+
+nsTextEditorCompositionListener::~nsTextEditorCompositionListener() 
+{
+}
+
+
+nsresult
+nsTextEditorCompositionListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kIDOMCompositionListenerIID, NS_IDOMCOMPOSITIONLISTENER_IID);
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMCompositionListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMCompositionListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsTextEditorCompositionListener)
+
+NS_IMPL_RELEASE(nsTextEditorCompositionListener)
+
+nsresult
+nsTextEditorCompositionListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+nsresult
+nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
+{
+	return mEditor->BeginComposition();
+}
+
+nsresult
+nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
+{
+	return mEditor->EndComposition();
+}
+
 
 
 /*
@@ -1104,5 +1138,18 @@ NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult,
   return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
 }
 
+nsresult
+NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor* aEditor)
+{
+	nsTextEditorCompositionListener*	it = new nsTextEditorCompositionListener();
+	if (nsnull==it) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	it->SetEditor(aEditor);
+	static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+
+	return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);
+}
 
 

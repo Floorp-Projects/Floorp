@@ -178,6 +178,27 @@ public:
    */
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
 
+  /**
+   * BeginComposition() Handles the start of inline input composition.
+   */
+
+  NS_IMETHOD BeginComposition(void) = 0;
+
+  /**
+   * SetCompositionString() Sets the inline input composition string.
+   * BeginComposition must be called prior to this.
+   */
+
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString) = 0;
+
+  /**
+   * BeginComposition() Handles the end of inline input composition.
+   */
+
+  NS_IMETHOD EndComposition(void) = 0;
+
+
+
   /** 
    * DeleteNode removes aChild from aParent.
    * @param aChild    The node to delete

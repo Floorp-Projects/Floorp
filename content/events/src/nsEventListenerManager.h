@@ -105,6 +105,7 @@ protected:
   nsVoidArray* mDragListeners;
   nsVoidArray* mPaintListeners;
   nsVoidArray* mTextListeners;
+  nsVoidArray* mCompositionListeners;
 
 };
 
@@ -137,6 +138,11 @@ protected:
 //nsIDOMTextListener
 #define NS_EVENT_BITS_TEXT_NONE      0x00
 #define NS_EVENT_BITS_TEXT_TEXT      0x01
+
+//nsIDOMCompositionListener
+#define NS_EVENT_BITS_COMPOSITION_NONE      0x00
+#define NS_EVENT_BITS_COMPOSITION_START     0x01
+#define NS_EVENT_BITS_COMPOSITION_END		0x02
 
 //nsIDOMFocusListener
 #define NS_EVENT_BITS_FOCUS_NONE    0x00

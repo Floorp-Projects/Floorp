@@ -1330,3 +1330,18 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   
   return result;
 }
+
+NS_IMETHODIMP nsHTMLEditor::BeginComposition(void)
+{
+	return nsTextEditor::BeginComposition();
+}
+
+NS_IMETHODIMP nsHTMLEditor::EndComposition(void)
+{
+	return nsTextEditor::EndComposition();
+}
+
+NS_IMETHODIMP nsHTMLEditor::SetCompositionString(const nsString& aCompositionString)
+{
+	return nsTextEditor::SetCompositionString(aCompositionString);
+}

@@ -41,6 +41,7 @@ EXPORTS =				\
 	nsIDOMNSEvent.h			\
 	nsIDOMEventTarget.h			\
 	nsIDOMTextListener.h		\
+	nsIDOMCompositionListener.h	\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

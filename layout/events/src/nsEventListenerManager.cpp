@@ -31,6 +31,7 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMTextListener.h"
+#include "nsIDOMCompositionListener.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptObjectOwner.h"
@@ -55,6 +56,7 @@ nsEventListenerManager::nsEventListenerManager()
   mDragListeners = nsnull;
   mPaintListeners = nsnull;
   mTextListeners = nsnull;
+  mCompositionListeners = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -70,6 +72,7 @@ nsEventListenerManager::~nsEventListenerManager()
   ReleaseListeners(mDragListeners);
   ReleaseListeners(mPaintListeners);
   ReleaseListeners(mTextListeners);
+  ReleaseListeners(mCompositionListeners);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -118,6 +121,9 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   }
   else if (aIID.Equals(kIDOMTextListenerIID)) {
 	return &mTextListeners;
+  }
+  else if (aIID.Equals(kIDOMCompositionListenerIID)) {
+	return &mCompositionListeners;
   }
   return nsnull;
 }
@@ -333,7 +339,7 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
   else if (aType == "paint") {
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
-  }
+  } // extened this to handle IME related events
   else {
     return NS_ERROR_FAILURE;
   }
@@ -607,6 +613,58 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
       }
       break;
 	
+	case NS_COMPOSITION_START:
+	case NS_COMPOSITION_END:
+#if DEBUG_TAGUE
+		printf("DOM: got composition event\n");
+#endif
+		if (nsnull != mCompositionListeners) {
+			if (nsnull == *aDOMEvent) {
+				ret = NS_NewDOMEvent(aDOMEvent,aPresContext,aEvent);
+			}
+			if (NS_OK == ret) {
+				for(int i=0;i<mTextListeners->Count();i++) {
+					nsListenerStruct *ls;
+					nsIDOMCompositionListener* mCompositionListener;
+					ls =(nsListenerStruct*)mCompositionListeners->ElementAt(i);
+
+					if (ls->mFlags & aFlags) {
+					  if (NS_OK == ls->mListener->QueryInterface(kIDOMCompositionListenerIID, (void**)&mCompositionListener)) {
+						  if (aEvent->message==NS_COMPOSITION_START) {
+							ret = mCompositionListener->HandleStartComposition(*aDOMEvent);
+						  }
+						  if (aEvent->message==NS_COMPOSITION_END) {
+							ret = mCompositionListener->HandleEndComposition(*aDOMEvent);
+						  }
+						}
+						NS_RELEASE(mCompositionListener);
+					  }
+					  else {
+						PRBool correctSubType = PR_FALSE;
+						switch(aEvent->message) {
+						  case NS_COMPOSITION_START:
+							if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_START) {
+							  correctSubType = PR_TRUE;
+							}
+							break;
+						  case NS_COMPOSITION_END:
+							if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
+							  correctSubType = PR_TRUE;
+							}
+							break;
+						  default:
+							break;
+						}
+						if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
+						  ret = ls->mListener->HandleEvent(*aDOMEvent);
+						}
+					  }
+					}
+					aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
+				  }
+				}
+			break;
+
 	case NS_TEXT_EVENT:
 #if DEBUG_TAGUE
   		printf("DOM: got text event\n");

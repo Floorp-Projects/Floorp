@@ -75,6 +75,7 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextListenerIID,  NS_IDOMTEXTLISTENER_IID);
+static NS_DEFINE_IID(kIDOMCompositionListenerIID, NS_IDOMCOMPOSITIONLISTENER_IID);
 static NS_DEFINE_IID(kIDOMDragListenerIID,  NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIDOMSelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
 
@@ -170,7 +171,11 @@ nsTextEditor::~nsTextEditor()
 		  erP->RemoveEventListenerByIID(mTextListenerP, kIDOMTextListenerIID);
 	  }
 
-      if (mDragListenerP) {
+ 	  if (mCompositionListenerP) {
+		  erP->RemoveEventListenerByIID(mCompositionListenerP, kIDOMCompositionListenerIID);
+	  }
+
+	  if (mDragListenerP) {
         erP->RemoveEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
       }
 
@@ -265,12 +270,25 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 		return result;
 	}
 
+	result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
+	if (NS_OK!=result) {
+		// drop the key and mouse listeners
+#ifdef DEBUG_TAGUE
+	printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
+#endif
+		mMouseListenerP = do_QueryInterface(0);
+		mKeyListenerP = do_QueryInterface(0);
+		mTextListenerP = do_QueryInterface(0);
+		return result;
+	}
+
     result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), this);
     if (NS_OK != result) {
       //return result;
 		mMouseListenerP = do_QueryInterface(0);
 		mKeyListenerP = do_QueryInterface(0);
 		mTextListenerP = do_QueryInterface(0);
+		mCompositionListenerP = do_QueryInterface(0);
     }
 
     nsCOMPtr<nsIDOMEventReceiver> erP;
@@ -279,8 +297,9 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     {
       mKeyListenerP = do_QueryInterface(0);
       mMouseListenerP = do_QueryInterface(0); //dont need these if we cant register them
-	    mTextListenerP = do_QueryInterface(0);
+	  mTextListenerP = do_QueryInterface(0);
       mDragListenerP = do_QueryInterface(0); //dont need these if we cant register them
+	  mCompositionListenerP = do_QueryInterface(0);
       return result;
     }
     //cmanske: Shouldn't we check result from this?
@@ -289,6 +308,7 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
 	
 	erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
+	erP->AddEventListenerByIID(mCompositionListenerP,kIDOMCompositionListenerIID);
 
     result = NS_OK;
 
@@ -2370,4 +2390,22 @@ NS_IMETHODIMP
 nsTextEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 {
   return nsEditor::CopyAttributes(aDestNode, aSourceNode);
+}
+
+NS_IMETHODIMP
+nsTextEditor::BeginComposition(void)
+{
+	return nsEditor::BeginComposition();
+}
+
+NS_IMETHODIMP
+nsTextEditor::SetCompositionString(const nsString& aCompositionString)
+{
+	return nsEditor::SetCompositionString(aCompositionString);
+}
+
+NS_IMETHODIMP
+nsTextEditor::EndComposition(void)
+{
+	return nsEditor::EndComposition();
 }

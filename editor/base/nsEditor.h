@@ -25,6 +25,7 @@
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
@@ -63,6 +64,7 @@ private:
   PRUint32        mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
+  nsCOMPtr<nsIDOMRange> mIMESelectionRange;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
@@ -124,6 +126,12 @@ public:
                         nsIDOMNode * aParent,
                         PRInt32      aPosition);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
+
+  NS_IMETHOD BeginComposition(void);
+
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
+
+  NS_IMETHOD EndComposition(void);
   
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
@@ -304,13 +312,20 @@ protected:
 
   NS_IMETHOD DebugDumpContent() const;
 
+  NS_IMETHODIMP SetPreeditText(const nsString& aStringToInsert);
+
+  NS_IMETHODIMP DoInitialPreeeditInsert(const nsString& aStringToInsert);
+
 protected:
 // XXXX: Horrible hack! We are doing this because
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
+  PRBool mIMEFirstTransaction;
+
 
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
+
 
 };
 

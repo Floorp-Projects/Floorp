@@ -83,7 +83,6 @@ public:
   NS_IMETHOD Paste()=0;
 
   NS_IMETHOD Insert(nsString &aInputString)=0;
-
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 
@@ -153,6 +152,12 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
   NS_IMETHOD JoinTableCells(PRBool aCellToRight)=0;
+
+// IME editing Methods
+  NS_IMETHOD BeginComposition(void)=0;
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString)=0;
+  NS_IMETHOD EndComposition(void)=0;
+
 };
 
 #endif //nsIEditor_h__

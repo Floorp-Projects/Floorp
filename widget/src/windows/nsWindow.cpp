@@ -2484,7 +2484,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			HIMC hIMEContext;
 
 			mIMEIsComposing = PR_TRUE;
-#ifdef		DEBUG_TAGUE
+#ifdef DEBUG_TAGUE
 			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
 #endif
 			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
@@ -2503,6 +2503,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			::ImmSetCompositionWindow(hIMEContext,&compForm);
 			::ImmReleaseContext(mWnd,hIMEContext);
 
+			HandleStartComposition();
 			result = PR_TRUE;
 			}
 			break;
@@ -2519,6 +2520,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_COMPSTR) {
+#ifdef DEBUG_TAGUE
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
+#endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
 				if (compStrLen+1>mIMECompositionStringSize) {
 					if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
@@ -2534,6 +2538,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_RESULTSTR) {
+#ifdef DEBUG_TAGUE
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
+#endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
 				if (compStrLen+1>mIMECompositionStringSize) {
 					delete [] mIMECompositionString;
@@ -2546,13 +2553,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompositionString[compStrLen]='\0';
 				result = PR_TRUE;
 				HandleTextEvent(PR_TRUE);
+				HandleEndComposition();
+				HandleStartComposition();
 			}
-#ifdef DEBUG_TAGUE
-			if (lParam & GCS_COMPSTR)
-				printf("IME: Composition String = %s\n",mIMECompositionString);
-			if (lParam & GCS_RESULTSTR)
-				printf("IME: Result String = %s\n",mIMECompositionString);
-#endif			
 			
 			::ImmReleaseContext(mWnd,hIMEContext);
 
@@ -2565,6 +2568,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef DEBUG_TAGUE
 			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
 #endif
+			HandleEndComposition();
 			result = PR_TRUE;
 			break;
 
@@ -3135,4 +3139,36 @@ nsWindow::HandleTextEvent(PRBool commit)
   (void)DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
+}
+
+void
+nsWindow::HandleStartComposition(void)
+{
+	nsCompositionEvent	event;
+	nsPoint				point;
+
+	point.x	= 0;
+	point.y = 0;
+
+	InitEvent(event,NS_COMPOSITION_START,&point);
+	event.eventStructType = NS_COMPOSITION_START;
+	event.compositionMessage = NS_COMPOSITION_START;
+	(void)DispatchWindowEvent(&event);
+	NS_RELEASE(event.widget);
+}
+
+void
+nsWindow::HandleEndComposition(void)
+{
+	nsCompositionEvent	event;
+	nsPoint				point;
+
+	point.x	= 0;
+	point.y = 0;
+
+	InitEvent(event,NS_COMPOSITION_END,&point);
+	event.eventStructType = NS_COMPOSITION_END;
+	event.compositionMessage = NS_COMPOSITION_END;
+	(void)DispatchWindowEvent(&event);
+	NS_RELEASE(event.widget);
 }
