@@ -63,8 +63,8 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
   
   /* attribute string password; */
-  NS_IMETHOD GetPassword(char * *aPassword);
-  NS_IMETHOD SetPassword(char * aPassword);
+  NS_IMETHOD GetPassword(PRBool aWithUI, char * *aPassword);
+  NS_IMETHOD SetPassword(const char * aPassword);
   
   /* attribute boolean doBiff; */
   NS_IMETHOD GetDoBiff(PRBool *aDoBiff);
@@ -91,10 +91,16 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
 private:
   nsIPref *m_prefs;
   char *m_serverKey;
+  nsCString m_password;
 
 protected:
   char *getPrefName(const char *serverKey, const char *pref);
   char *getDefaultPrefName(const char *pref);
+
+  // these are private pref getters and setters for the password
+  // field. Callers should be using Get/Set Password
+  NS_IMETHOD GetPrefPassword(char * *aPassword);
+  NS_IMETHOD SetPrefPassword(char * aPassword);
   
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsresult getCharPref(const char *pref, char **);

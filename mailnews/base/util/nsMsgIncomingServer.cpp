@@ -29,11 +29,14 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMsgIncomingServer::nsMsgIncomingServer():
@@ -348,10 +351,95 @@ nsMsgIncomingServer::SetPrettyName(PRUnichar *value) {
   return setCharPref("name", str.GetBuffer());
 }
 
+NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
+{
+	// if remember password is turned on, write the password to preferences
+	// otherwise, just set the password so we remember it for the rest of the current
+	// session.
+
+	PRBool rememberPassword = PR_FALSE;
+	GetRememberPassword(&rememberPassword);
+	
+	if (rememberPassword)
+	{
+		SetPrefPassword((char *) aPassword);
+	}
+
+	m_password = aPassword;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::GetPassword(PRBool aWithUI, char ** aPassword)
+{
+	nsresult rv = NS_OK;
+	PRBool rememberPassword = PR_FALSE;
+	// okay, here's the scoop for this messs...
+	// (1) if we have a password already, go ahead and use it!
+	// (2) if remember password is turned on, try reading in from the prefs and if we have one, go ahead
+	//	   and use it
+	// (3) otherwise prompt the user for a password and then remember that password in the server
+
+	if (m_password.IsEmpty())
+	{
+
+		// case (2)
+		GetRememberPassword(&rememberPassword);
+		if (rememberPassword)
+		{
+			nsXPIDLCString password;
+			GetPrefPassword(getter_Copies(password));
+			m_password = password;
+		}
+	}
+
+	// if we still don't have a password fall to case (3)
+	if (m_password.IsEmpty() && aWithUI)
+	{
+
+		// case (3) prompt the user for the password
+		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			PRUnichar * uniPassword;
+			PRBool okayValue = PR_TRUE;
+			char * promptText = nsnull;
+			nsXPIDLCString hostName;
+			nsXPIDLCString userName;
+
+			GetHostName(getter_Copies(hostName));
+			GetUsername(getter_Copies(userName));
+			// mscott - this is just a temporary hack using the raw string..this needs to be pushed into
+			// a string bundle!!!!!
+			if (hostName)
+				promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) userName, (const char *) hostName);
+			else
+				promptText = PL_strdup("Enter your password here: ");
+
+			dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
+			PR_FREEIF(promptText);
+				
+			if (!okayValue) // if the user pressed cancel, just return NULL;
+			{
+				*aPassword = nsnull;
+				return rv;
+			}
+
+			// we got a password back...so remember it
+			nsCString aCStr(uniPassword); 
+
+			SetPassword((const char *) aCStr);
+		} // if we got a prompt dialog
+	} // if the password is empty
+
+	*aPassword = m_password.ToNewCString();
+	return rv;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, RememberPassword, "remember_password");
