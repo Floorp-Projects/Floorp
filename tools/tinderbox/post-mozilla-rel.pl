@@ -376,8 +376,8 @@ sub packit_l10n {
           run_locale_shell_command "mkdir -p $stagedir/windows-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/windows-xpi/$locale.xpi";
 	} elsif (is_mac()) {
-          run_locale_shell_command "mkdir -p $stagedir/mac-xpi/";
-          run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/mac-xpi/$locale.xpi";
+	  # Instead of adding something here (which will never be called),
+	  # please add your code to the is_mac() section below.
         } elsif (is_linux()) {
           run_locale_shell_command "mkdir -p $stagedir/linux-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/linux-xpi/$locale.xpi";
@@ -420,7 +420,8 @@ sub packit_l10n {
         system("mkdir -p $stagedir");
         run_locale_shell_command "cp $package_location/../*$locale*.dmg.gz $stagedir/";
         if ($tinderstatus eq 'success') {
-          run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/";
+          run_locale_shell_command "mkdir -p $stagedir/mac-xpi/";
+          run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/mac-xpi/$locale.xpi";
         }
       } else {
         my $archive_loc = "$package_location/..";
