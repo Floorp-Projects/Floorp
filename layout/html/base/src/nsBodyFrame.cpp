@@ -104,12 +104,12 @@ NS_IMETHODIMP
 nsBodyFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom*& aListName) const
 {
-  if (aIndex < 2) {
+  if (aIndex <= NS_BLOCK_FRAME_LAST_LIST_INDEX) {
     return nsBlockFrame::GetAdditionalChildListName(aIndex, aListName);
   }
   
   nsIAtom* atom = nsnull;
-  if (2 == aIndex) {
+  if (NS_BODY_FRAME_ABSOLUTE_LIST_INDEX == aIndex) {
     atom = gAbsoluteAtom;
     NS_ADDREF(atom);
   }

@@ -1599,11 +1599,11 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
   }
   nsIAtom* atom = nsnull;
   switch (aIndex) {
-  case 0:
+  case NS_BLOCK_FRAME_FLOATER_LIST_INDEX:
     atom = gFloaterAtom;
     NS_ADDREF(atom);
     break;
-  case 1:
+  case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
     atom = gBulletAtom;
     NS_ADDREF(atom);
     break;
