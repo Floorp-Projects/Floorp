@@ -108,11 +108,13 @@ function OnInit()
 function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
 {
     try {
+        var displayRssHeader = server.type == 'rss';
+
         /***** Email header and items : Begin *****/
 
         // Read Messages
         var canGetMessages = protocolInfo.canGetMessages;
-        SetItemDisplay("ReadMessages", canGetMessages);
+        SetItemDisplay("ReadMessages", canGetMessages && !displayRssHeader);
     
         // Compose Messages link
         var showComposeMsgLink = protocolInfo.showComposeMsgLink;
@@ -122,7 +124,7 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         var canControlJunkEmail = protocolInfo.canGetIncomingMessages && protocolInfo.canGetMessages && false;  // && false, until ready for prime time
         SetItemDisplay("JunkSettingsMail", canControlJunkEmail);
 
-        var displayEmailHeader = canGetMessages || showComposeMsgLink || canControlJunkEmail;
+        var displayEmailHeader = (canGetMessages || showComposeMsgLink || canControlJunkEmail) && !displayRssHeader;
         // Display Email header, only if any of the items are displayed
         SetItemDisplay("EmailHeader", displayEmailHeader);
     
@@ -144,8 +146,15 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
     
         /***** News header and items : End *****/
    
+        /***** RSS header and items : Begin *****/
+                        
+        SetItemDisplay("rssHeader", displayRssHeader);
+        SetItemDisplay("SubscribeRSS", displayRssHeader);
+
+        /***** RSS header and items : End *****/
+   
         // If neither of above sections exist, collapse section separators
-        if (!(displayNewsHeader || displayEmailHeader)) { 
+        if (!(displayNewsHeader || displayEmailHeader || displayRssHeader)) { 
             CollapseSectionSeparators("MessagesSection.separator", false);
         } 
 
@@ -274,6 +283,10 @@ function CreateMsgFilters()
 // Open Subscribe dialog
 function Subscribe()
 {
+    var server = GetSelectedServer();
+    if (server && server.type == 'rss')
+        window.parent.openSubscriptionsDialog(server);
+    else
     window.parent.MsgSubscribe();
 } 
 

@@ -119,6 +119,19 @@
       </row>
       <separator id="JunkSettingsNews.separator" class="thin"/>
 
+      <row id="rssHeader" class="acctCentralTitleRow">
+        <hbox class="acctCentralRowTitleBox">
+          <description>&rssSectionHdr.label;</description> 
+        </hbox>
+      </row>
+      <separator id="rssHeader.separator" class="thin"/>
+      <row id="SubscribeRSS" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscibeRSS.label;" onclick="Subscribe();"/> 
+        </hbox> 
+      </row>
+      <separator id="SubscribeRSS.separator" class="thin"/>
+
       <separator id="MessagesSection.separator1"/>
       <separator id="MessagesSection.separator2"/>
       <separator id="MessagesSection.separator3"/>
