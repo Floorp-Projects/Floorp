@@ -38,8 +38,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
@@ -68,8 +68,8 @@ static NS_DEFINE_IID(kIDocumentCSSIID, NS_IDOMDOCUMENTCSS_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kIDocumentXBLIID, NS_IDOMDOCUMENTXBL_IID);
@@ -1218,6 +1218,59 @@ DocumentXBLRemoveBinding(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
+// Native method GetBindingParent
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentXBLGetBindingParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMDocumentXBL> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIDocumentXBLIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMElement* nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTXBL_GETBINDINGPARENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->GetBindingParent(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method LoadBindingDocument
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1230,6 +1283,7 @@ DocumentXBLLoadBindingDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
+  nsIDOMDocument* nativeRet;
   nsAutoString b0;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
@@ -1251,12 +1305,12 @@ DocumentXBLLoadBindingDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    result = nativeThis->LoadBindingDocument(b0);
+    result = nativeThis->LoadBindingDocument(b0, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    *rval = JSVAL_VOID;
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
 
   return JS_TRUE;
@@ -1411,6 +1465,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"getAnonymousNodes",          DocumentXBLGetAnonymousNodes,     1},
   {"addBinding",          DocumentXBLAddBinding,     2},
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
+  {"getBindingParent",          DocumentXBLGetBindingParent,     1},
   {"loadBindingDocument",          DocumentXBLLoadBindingDocument,     1},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     1},
