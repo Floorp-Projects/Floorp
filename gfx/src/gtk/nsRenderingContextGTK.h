@@ -260,15 +260,6 @@ public:
                                const gchar *text,
                                gint         text_length);
 
-  // replacment for gdk_draw_text that doesn't do XSetFont
-  static void my_gdk_draw_text(GdkDrawable *drawable,
-                               GdkFont     *font,
-                               GdkGC       *gc,
-                               gint         x,
-                               gint         y,
-                               const gchar *text,
-                               gint         text_length);
-
 private:
   nsDrawingSurfaceGTK   *mOffscreenSurface;
   nsDrawingSurfaceGTK   *mSurface;

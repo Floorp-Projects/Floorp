@@ -41,14 +41,14 @@
 #include "nscore.h"
 #include "nsXFontNormal.h"
 #include "nsRenderingContextGTK.h"
+#include "nsGdkUtils.h"
 
 void
 nsXFontNormal::DrawText8(GdkDrawable *aDrawable, GdkGC *aGC,
                          PRInt32 aX, PRInt32 aY,
                         const char *aString, PRUint32 aLength)
 {
-  nsRenderingContextGTK::my_gdk_draw_text(aDrawable, mGdkFont, aGC,
-                                          aX, aY, aString, aLength);
+  my_gdk_draw_text(aDrawable, mGdkFont, aGC, aX, aY, aString, aLength);
 }
 
 void
@@ -56,9 +56,8 @@ nsXFontNormal::DrawText16(GdkDrawable *aDrawable, GdkGC *aGC,
                          PRInt32 aX, PRInt32 aY,
                         const XChar2b *aString, PRUint32 aLength)
 {
-  nsRenderingContextGTK::my_gdk_draw_text(aDrawable, mGdkFont, aGC,
-                                          aX, aY,
-                                          (const char *)aString, aLength*2);
+  my_gdk_draw_text(aDrawable, mGdkFont, aGC, aX, aY,
+                   (const char *)aString, aLength*2);
 }
 
 PRBool

@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsDeviceContextSpecG.cpp \
 		nsDrawingSurfaceGTK.cpp \
 		nsFontMetricsGTK.cpp \
+		nsGdkUtils.cpp \
 		nsGfxFactoryGTK.cpp \
 		nsGraphicsStateGTK.cpp \
 		nsImageGTK.cpp \
