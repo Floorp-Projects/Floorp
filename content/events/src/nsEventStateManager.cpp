@@ -159,7 +159,6 @@ nsEventStateManager::nsEventStateManager()
   mAccessKeys = nsnull;
   mBrowseWithCaret = PR_FALSE;
   hHover = PR_FALSE;
-  mSpecialTopOfDoc = PR_FALSE;
 
   NS_INIT_REFCNT();
 
@@ -1519,9 +1518,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               activeContent = par;
           }
           SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
-          nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(activeContent));
-          if (bodyElement)
-            mSpecialTopOfDoc = PR_TRUE;
         }
       }
       else {
@@ -2604,7 +2600,8 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
   }
 #endif
 
-  PRBool topOfDoc = PR_FALSE;
+  // Indicates whether the document itself (i.e. no content) has focus
+  PRBool docHasFocus = PR_FALSE;
 
   if (nsnull == mPresContext) {
     return;
@@ -2639,7 +2636,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
       return;
     }
     mCurrentTabIndex = forward ? 1 : 0;
-    topOfDoc = PR_TRUE;
+    docHasFocus = PR_TRUE;
   }
 
   nsIFrame* primaryFrame = nsnull;
@@ -2651,17 +2648,10 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
         nsCOMPtr<nsIContent> caretFocus;
         PRUint32 caretOffset;
         GetCaretLocation(getter_AddRefs(caretFocus), &primaryFrame, &caretOffset);
-        }
-      else if (topOfDoc && !mSpecialTopOfDoc) {
-        primaryFrame = nsnull;
       }
       else {
         shell->GetPrimaryFrameFor(mCurrentFocus, &primaryFrame);
-        // Check to see if we are in the special situation 
-        // where we are at the top of the document and mSpecialTopOfDoc is set
-        // this means the document is focus and the first piece of content is not
-        if (topOfDoc && mSpecialTopOfDoc) {
-          topOfDoc = PR_FALSE;
+        if (docHasFocus) {
           // so if we are going backwards then find the last piece of content
           // and and look backwards for the last focusable content
           if (!forward) {
@@ -2684,8 +2674,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 
   PRBool doFocusAvailDocShells = PR_FALSE;
   nsCOMPtr<nsIContent> next;
-  // rememeber whether mSpecialTopOfDoc was set
-  PRBool wasSpecialDocFocus = mSpecialTopOfDoc;
+  PRBool hadDocFocus = docHasFocus;
 
   nsCOMPtr<nsIContent> rootContent;
   mDocument->GetRootContent(getter_AddRefs(rootContent));
@@ -2696,7 +2685,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
   if (docType == eFrame && aRoot == nsnull) {
     if (FocusWithinHTMLFrameDoc(aRoot, shell, forward, doFocusAvailDocShells)) {
       return;
-    } else if (mSpecialTopOfDoc) {
+    } else if (docHasFocus) {
       // If we are starting at the top of the document
       // first check to see if there is a tabbable index to go to
       //
@@ -2704,17 +2693,19 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
       // so we remember it here and reset it back if it didn't find anything
       PRInt32 currentTabIndex = mCurrentTabIndex;
       GetNextTabbableIndexContent(rootContent, forward, PR_TRUE, getter_AddRefs(next));
-      if (next) {
-        topOfDoc = PR_TRUE;
-      } else {
+      if (!next) {
         mCurrentTabIndex = currentTabIndex;
       }
+
+      // frames are document first, then content
+      // so this allows us to call GetNextTabbableContent below
+      docHasFocus = PR_FALSE; 
     }
   }
 
 
   //Get the next tab item.  This takes tabIndex into account
-  if (!topOfDoc)
+  if (!docHasFocus && !next)
     GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
   
   //Either no tabbable items or the end of the document
@@ -2722,7 +2713,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 
     // If we've reached the end of the content in this document, we
     // focus the document itself before leaving.
-    if (!topOfDoc && !doFocusAvailDocShells) {
+    if (!docHasFocus && !doFocusAvailDocShells) {
       PRBool focusDoc = PR_TRUE;
 
       nsCOMPtr<nsIDocShell> docShell;
@@ -2769,7 +2760,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
       
     //No one took focus and we're not already at the top of the doc
     //so calling ShiftFocus will start at the top of the doc again.
-    if (!focusTaken && !topOfDoc) {
+    if (!focusTaken && !docHasFocus) {
       ShiftFocus(forward);
     }
 
@@ -2809,7 +2800,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
     docShell->SetCanvasHasFocus(PR_FALSE);
   }
 
-  if (wasSpecialDocFocus) {
+  if (hadDocFocus) {
     nsCOMPtr<nsISupports> container;
     mPresContext->GetContainer(getter_AddRefs(container));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
@@ -2823,8 +2814,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 {
   *aResult = nsnull;
   PRBool keepFirstFrame = PR_FALSE;
-
-  mSpecialTopOfDoc = mCurrentFocus == nsnull;
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
@@ -3792,7 +3781,6 @@ nsEventStateManager::SetFocusedContent(nsIContent* aContent)
   NS_IF_RELEASE(mCurrentFocus);
   mCurrentFocus = aContent;
   NS_IF_ADDREF(mCurrentFocus);
-  mSpecialTopOfDoc = PR_FALSE;
   return NS_OK;
 }
 

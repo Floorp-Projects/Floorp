@@ -2698,7 +2698,6 @@ nsDocShell::SetFocus()
       // Either focus the document or the "first" piece of content
       if (doFocusDoc) {
         esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-        esm->SetSpecialTopOfDoc(PR_TRUE);
       } else {
         nsCOMPtr<nsIContent> content;
         esm->GetNextTabbableIndexContent(rootContent, PR_TRUE, PR_TRUE, getter_AddRefs(content));
