@@ -20,6 +20,7 @@
 #include "nsXtEventHandler.h"
 
 #include "nsWindow.h"
+#include "nsCheckButton.h"
 #include "nsGUIEvent.h"
 
 #include "stdio.h"
@@ -129,6 +130,52 @@ void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Bo
 }
 
 //==============================================================
+void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
+
+  nsScrollbarEvent sevent;
+
+  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+  
+  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+
+  /*nsGUIEvent event;
+  nsXtWidget_InitNSEvent(event, p, event, NS_MOUSE_MOVE);
+  widgetWindow->DispatchMouseEvent(mevent);
+  */
+}
+
+//==============================================================
+void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsCheckButton * checkBtn = (nsCheckButton *) p ;
+
+  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+  
+  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  checkBtn->Armed();
+
+}
+
+//==============================================================
+void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsCheckButton * checkBtn = (nsCheckButton *) p ;
+  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
+
+  nsScrollbarEvent sevent;
+
+  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+  
+  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+
+  checkBtn->DisArmed();
+  
+}
+
+//==============================================================
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
@@ -137,7 +184,7 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
   nsScrollbarEvent sevent;
 
   XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;
-fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
 
   sevent.widget  = (nsWindow *) p;
   if (cbs->event != nsnull) {
