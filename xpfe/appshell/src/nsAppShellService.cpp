@@ -658,6 +658,7 @@ nsAppShellService::RunModalDialog(
   if (aWindow && *aWindow) {
     theWindow = *aWindow; // and rv is already some success indication
     NS_ADDREF(theWindow);
+    rv = NS_OK;
   } else {
     pushedQueue = PR_TRUE;
     PushThreadEventQueue();
