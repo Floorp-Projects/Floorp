@@ -201,8 +201,12 @@ XP_Bool EDT_PerformPlugin(MWContext *pContext, int32 category, int32 index, EDT_
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
+        XP_Bool saveJS = pContext->forceJSEnabled;
+        pContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pContext);
-        return ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(category, index, doneFunction, hook, t_object);
+        XP_Bool bReturn = ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(category, index, doneFunction, hook, t_object);
+        pContext->forceJSEnabled = saveJS;
+        return bReturn;
     }
 #endif
     return FALSE;
@@ -212,8 +216,12 @@ XP_Bool EDT_PerformPluginByClassName(MWContext *pContext, char* pClassName, EDT_
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
+        XP_Bool saveJS = pContext->forceJSEnabled;
+        pContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pContext);
-        return ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(pClassName, doneFunction, hook, t_object);
+        XP_Bool bReturn = ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(pClassName, doneFunction, hook, t_object);
+        pContext->forceJSEnabled = saveJS;
+        return bReturn;
     }
 #endif
     return FALSE;
@@ -226,11 +234,12 @@ void EDT_PerformEvent(MWContext *pContext, char* pEvent, char* pDocURL, XP_Bool 
     if ( EditorPluginManager_PluginsExist() ) {
         // We must force JavaScript on with this, else we fail to
         //   get t_object because JS is normally OFF for editor
+        XP_Bool saveJS = pContext->forceJSEnabled;
         pContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pContext);
         ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->Perform(pEvent, pDocURL, bCanChangeDocument, bCanCancel,
             doneFunction, hook, t_object);
-        pContext->forceJSEnabled = FALSE;
+        pContext->forceJSEnabled = saveJS;
         return;
     }
 #endif
@@ -397,7 +406,8 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
   // Always ignore target or query appendages
   edt_StripAtHashOrQuestionMark(pURL);
   
-  if (!pURL || !*pURL) {
+  if ( !pURL || !*pURL || !pErrorContext ) {
+    XP_ASSERT(pErrorContext);
     // Canceled.
     if (doneFunction) {
       (*doneFunction)(TRUE, _pURL, hook);
@@ -427,22 +437,19 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
 
 
   if (!bValid) {
-    // Don't report errors if pErrorContext is NULL.
-    if (pErrorContext != NULL) {
-      // Tell user that we are rejecting their URL.
-      char *tmplate = XP_GetString(XP_EDT_CANT_EDIT_URL);
-      char *msg = NULL;
-      if (tmplate) {
+    // Tell user that we are rejecting their URL.
+    char *tmplate = XP_GetString(XP_EDT_CANT_EDIT_URL);
+    char *msg = NULL;
+    if (tmplate) {
         msg = PR_smprintf(tmplate,pURL);
-      }
-  
-      if (msg) {
+    }
+
+    if (msg) {
         FE_Alert(pErrorContext,msg);
         XP_FREE(msg);
-      }
-      else {
+    }
+    else {
         XP_ASSERT(0);
-      }
     }
 
     // TRUE says to cancel opening URL.
@@ -464,8 +471,13 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
         hook2->doneFunction = doneFunction;
         hook2->pURL = pURL ? XP_STRDUP(pURL) : 0;
         hook2->hook = hook;
+
+        XP_Bool saveJS = pErrorContext->forceJSEnabled;
+        pErrorContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pErrorContext);
-        if ( epi->Perform(temp, &edt_PreOpenDoneFunction, hook2, t_object) ){
+        XP_Bool bResult = epi->Perform(temp, &edt_PreOpenDoneFunction, hook2, t_object);
+        pErrorContext->forceJSEnabled = saveJS;
+        if ( bResult ){
             XP_FREE(pURL);
             return;
         }
