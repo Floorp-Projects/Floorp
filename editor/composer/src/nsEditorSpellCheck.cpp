@@ -237,7 +237,6 @@ nsEditorSpellCheck::CheckCurrentWord(const PRUnichar *aSuggestedWord,
   if (!mSpellChecker)
     return NS_NOINTERFACE;
 
-  nsAutoString suggestedWord(aSuggestedWord);
   DeleteSuggestedWordList();
   return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
                                   aIsMisspelled, &mSuggestedWordList);
@@ -251,7 +250,6 @@ nsEditorSpellCheck::ReplaceWord(const PRUnichar *aMisspelledWord,
   if (!mSpellChecker)
     return NS_NOINTERFACE;
 
-  nsAutoString replaceWord(aReplaceWord);
   return mSpellChecker->Replace(nsDependentString(aMisspelledWord),
                                 nsDependentString(aReplaceWord), allOccurrences);
 }
