@@ -260,6 +260,11 @@ static void TermDialog(PanelParameterBlock *pb)
 	DisposeRgn(sDragRgn);
 }
 
+inline Boolean hasLinkerOutput(short mode)
+{
+	return (mode == kXPIDLModeHeader || mode == kXPIDLModeTypelib);
+}
+
 /*
  *	PutData		-	copy the options data from the handle to the screen
  *
@@ -276,7 +281,7 @@ static void PutData(PanelParameterBlock *pb, Handle options)
 	CWPanlSetItemValue(pb, kXPIDLWarningsItem, prefsData.warnings);
 	CWPanlSetItemValue(pb, kXPIDLVerboseItem, prefsData.verbose);
 
-	CWPanlEnableItem(pb, kXPTLinkerOutputItem, prefsData.mode == kXPIDLModeTypelib);
+	CWPanlEnableItem(pb, kXPTLinkerOutputItem, hasLinkerOutput(prefsData.mode));
 	CWPanlSetItemText(pb, kXPTLinkerOutputItem, prefsData.output);
 }
 
@@ -353,7 +358,7 @@ static void ItemHit(PanelParameterBlock *pb)
 	switch (theItem) {
 	case kXPIDLModeItem:
 		CWPanlGetItemValue(pb, theItem, &oldValue);
-		CWPanlEnableItem(pb, kXPTLinkerOutputItem, oldValue == kXPIDLModeTypelib);
+		CWPanlEnableItem(pb, kXPTLinkerOutputItem, hasLinkerOutput(oldValue));
 		break;
 		
 	case kXPIDLWarningsItem:
@@ -380,7 +385,7 @@ static void Validate(Handle original, Handle current, Boolean *recompile, Boolea
 	XPIDLSettings& currentSettings = **(XPIDLSettingsHandle) current;
 	
 	*recompile	= currentSettings.mode != origSettings.mode;
-	*relink		= *recompile && (currentSettings.mode == kXPIDLModeTypelib);
+	*relink		= *recompile && hasLinkerOutput(currentSettings.mode);
 	*reset		= false;
 }
 
