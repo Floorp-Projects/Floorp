@@ -44,7 +44,7 @@
         class="dialog"
         align="vertical">
               
-    <keyset id="keyset"/>
+    <keyset id="dialogKeys"/>
            
     <vbox>
         <html id="intro">&intro.label;</html>     
