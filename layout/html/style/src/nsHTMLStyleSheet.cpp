@@ -1424,7 +1424,7 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
   nsIStyleContext*  rootPseudoStyle;
 
   // Create the root frame
-  NS_NewHTMLFrame(rootFrame);
+  NS_NewRootFrame(rootFrame);
   
   // Create a pseudo element style context
   rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
