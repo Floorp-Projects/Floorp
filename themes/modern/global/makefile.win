@@ -134,6 +134,7 @@ install::
 	$(MAKE_INSTALL) taskbar-addressbook.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-composer.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-mailnew.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-navigator.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-popup-arrow.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

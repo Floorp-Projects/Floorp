@@ -8,6 +8,11 @@
 	  list-style-image      : url("chrome://global/skin/taskbar-mail.gif");
   }
 
+#mini-mail[BiffState="NewMail"]
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-mailnew.gif");
+  }
+
 #mini-addr 
   {
 	  list-style-image      : url("chrome://global/skin/taskbar-addressbook.gif");
