@@ -61,9 +61,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include <UAppleEventsMgr.h>
 #include <UExtractFromAEDesc.h>
 
-#include "nsAppCoresCIDs.h"
-static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
-
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
