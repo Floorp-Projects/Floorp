@@ -1,6 +1,8 @@
+<<<<<<< API.xs
+=======
 /*
  *******************************************************************************
- * $Id: API.xs,v 1.3 1998/07/23 11:05:52 leif Exp $
+ * $Id: API.xs,v 1.4 1998/07/23 12:34:32 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -25,6 +27,7 @@
  *
  *******************************************************************************/
 
+>>>>>>> 1.3
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,7 +53,6 @@ extern "C" {
 #include "constant.h"
 
 /* Prototypes - Processing LDAP Modifications */
-static char **av2modvals(AV *ldap_value_array_av, int  ldap_isa_ber);
 static LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
                 int ldap_add_func,int cont);
 static LDAPMod **hash2mod(SV *ldap_change_ref,int ldap_add_func,const char *func);
@@ -102,7 +104,7 @@ char ** avref2charptrptr(SV *avref)
       current_val = av_fetch((AV *)SvRV(avref),ix_av,0);
       tmp_cpp[ix_av] = SvPV(*current_val,na);
    }
-   tmp_cpp[ix_av+1] = NULL;
+   tmp_cpp[ix_av] = NULL;
 
    return(tmp_cpp);
 }
@@ -128,7 +130,7 @@ struct berval ** avref2berptrptr(SV *avref)
       tmp_ber[ix_av]->bv_val = (char *)SvPV(*current_val,na);
       tmp_ber[ix_av]->bv_len = na;
    }
-   tmp_ber[ix_av+1] = NULL;
+   tmp_ber[ix_av] = NULL;
 
    return(tmp_ber);
 }
@@ -171,63 +173,6 @@ SV* berptrptr2avref(struct berval **bval)
       ldap_values_free_len(bval);
    }
    return(tmp_ref);
-}
-
-/* av2modvals - Takes a single Array Reference (AV *) and returns a */
-/*    NULL-terminated list of char pointers.                        */
-
-static
-char **av2modvals(AV *ldap_value_array_av, int ldap_isa_ber)
-{
-   I32 ldap_arraylen;
-   char **ldap_ch_modvalues = NULL;
-   char *ldap_current_value_char = NULL;
-   struct berval **ldap_bv_modvalues = NULL;
-   struct berval *ldap_current_bval = NULL;
-   SV **ldap_current_value_sv;
-   int ldap_value_count = 0;
-   int ldap_pvlen = 0;
-   int ldap_real_valuecount = 0;
-
-   ldap_arraylen = av_len(ldap_value_array_av);
-   if (ldap_arraylen < 0)
-      return(NULL);
-
-   if (ldap_isa_ber == 1)
-   {
-      New(1,ldap_bv_modvalues,2+ldap_arraylen,struct berval *);
-   } else {
-      New(1,ldap_ch_modvalues,2+ldap_arraylen,char *);
-   }
-
-   for (ldap_value_count = 0; ldap_value_count <=ldap_arraylen;
-        ldap_value_count++)
-   {
-      ldap_current_value_sv = av_fetch(ldap_value_array_av,ldap_value_count,0);
-      ldap_current_value_char = SvPV(*ldap_current_value_sv,na);
-      ldap_pvlen = SvCUR(*ldap_current_value_sv);
-      if (strcmp(ldap_current_value_char,"") != 0)
-      {
-         if (ldap_isa_ber == 1)
-         {
-            New(1,ldap_current_bval,1,struct berval);
-            ldap_current_bval->bv_len = ldap_pvlen;
-            ldap_current_bval->bv_val = ldap_current_value_char;
-            ldap_bv_modvalues[ldap_real_valuecount] = ldap_current_bval;
-         } else {
-            ldap_ch_modvalues[ldap_real_valuecount] = ldap_current_value_char;
-         }
-         ldap_real_valuecount++;
-      }
-   }
-   if (ldap_isa_ber == 1)
-   {
-      ldap_bv_modvalues[ldap_real_valuecount] = NULL;
-      return ((char **)ldap_bv_modvalues);
-   } else {
-      ldap_ch_modvalues[ldap_real_valuecount] = NULL;
-      return (ldap_ch_modvalues);
-   }
 }
 
 
@@ -290,11 +235,11 @@ LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
       {
          if (ldap_isa_ber == 1)
          {
-            ldap_current_mod->mod_values =
-              av2modvals((AV *)SvRV(ldap_current_value_sv),ldap_isa_ber);
+            ldap_current_mod->mod_values = (char **)
+		avref2berptrptr(ldap_current_value_sv);
          } else {
             ldap_current_mod->mod_values =
-              av2modvals((AV *)SvRV(ldap_current_value_sv),ldap_isa_ber);
+		avref2charptrptr(ldap_current_value_sv);
          }
       }
      } else if (SvTYPE(SvRV(ldap_value_ref)) == SVt_PVAV) {
@@ -304,7 +249,8 @@ LDAPMod *parse1mod(SV *ldap_value_ref,char *ldap_current_attribute,
          ldap_current_mod->mod_op = 0;
       else
          ldap_current_mod->mod_op = LDAP_MOD_REPLACE;
-      ldap_current_mod->mod_values = av2modvals((AV *)SvRV(ldap_value_ref),0);
+      ldap_current_mod->mod_values = avref2charptrptr(ldap_value_ref);
+		 /*av2modvals((AV *)SvRV(ldap_value_ref),0); */
       if (ldap_current_mod->mod_values == NULL)
       {
          ldap_current_mod->mod_op = LDAP_MOD_DELETE;
@@ -372,9 +318,9 @@ LDAPMod ** hash2mod(SV *ldap_change_ref,int ldap_add_func,const char *func)
          (ldapmod
            ? Renew(ldapmod,1+ldap_attribute_count,LDAPMod *)
            : New(1,ldapmod,1+ldap_attribute_count,LDAPMod *));
-         New(1,ldapmod[ldap_attribute_count -1],sizeof(LDAPMod),LDAPMod);
-         Copy(ldap_current_mod,ldapmod[ldap_attribute_count-1],
-           sizeof(LDAPMod),LDAPMod *);
+         /* New(1,ldapmod[ldap_attribute_count -1],sizeof(LDAPMod),LDAPMod); */
+         ldapmod[ldap_attribute_count-1] = (LDAPMod *)ldap_current_mod;
+         /* ,ldapmod[ldap_attribute_count-1], sizeof(LDAPMod),LDAPMod *); */
          ldap_current_mod = parse1mod(ldap_current_value_sv,
            ldap_current_attribute,ldap_add_func,1);
 
@@ -478,8 +424,6 @@ ldap_add_s(ld,dn,attrs)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	attrs = hash2mod($arg,1,"$func_name");
-#	CLEANUP:
-#	ldap_mods_free(attrs,0);
 
 void
 ldap_ber_free(ber,freebuf)
@@ -760,10 +704,10 @@ ldap_get_lang_values(ld,entry,target,type)
 	LDAP *		ld
 	LDAPMessage *	entry
 	const char *	target
-	char *		&type
+	char *		type
 	PPCODE:
 	{
-	   char ** MOZLDAP_VAL = ldap_get_lang_values(ld,entry,target,type);
+	   char ** MOZLDAP_VAL = ldap_get_lang_values(ld,entry,target,&type);
 	   RET_CPP(MOZLDAP_VAL);
 	}
 
@@ -772,11 +716,11 @@ ldap_get_lang_values_len(ld,entry,target,type)
 	LDAP *		ld
 	LDAPMessage *	entry
 	const char *	target
-	char *		&type
+	char *		type
 	PPCODE:
 	{
 	   struct berval ** MOZLDAP_VAL = 
-	       ldap_get_lang_values_len(ld,entry,target,type);
+	       ldap_get_lang_values_len(ld,entry,target,&type);
 	   RET_BVPP(MOZLDAP_VAL);
 	}
 
@@ -923,8 +867,6 @@ ldap_modify_s(ld,dn,mods)
 	LDAP *		ld
 	const char *	dn
 	LDAPMod **	mods = hash2mod($arg,0,"$func_name");
-#	CLEANUP:
-#	ldap_mods_free(mods,0);
 
 int
 ldap_modrdn(ld,dn,newrdn)
@@ -975,7 +917,9 @@ ldap_multisort_entries(ld,chain,attr)
 	LDAPMessage *	chain
 	char **		attr
 	CODE:
-	RETVAL = ldap_multisort_entries(ld,&chain,attr,ldap_sort_strcasecmp);
+	{
+	   RETVAL = ldap_multisort_entries(ld,&chain,attr,strcasecmp);
+	}
 	OUTPUT:
 	RETVAL
 	chain
@@ -1294,7 +1238,7 @@ ldap_sort_entries(ld,chain,attr)
 	char *		attr
 	CODE:
 	{
-	   RETVAL = ldap_sort_entries(ld,&chain,attr,ldap_sort_strcasecmp);
+	   RETVAL = ldap_sort_entries(ld,&chain,attr,strcasecmp);
 	}
 	OUTPUT:
 	RETVAL
