@@ -864,7 +864,4 @@ CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestinatio
     	// this calls the _other_ |CallQueryInterface|
   }
 
-typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
-
-
 #endif // !defined(nsCOMPtr_h___)
