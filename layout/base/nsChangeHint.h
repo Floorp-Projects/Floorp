@@ -45,6 +45,7 @@ enum nsChangeHint {
   nsChangeHint_RepaintFrame = 0x01,  // change was visual only (e.g., COLOR=)
   nsChangeHint_ReflowFrame = 0x02,   // change requires reflow (e.g., WIDTH=)
   nsChangeHint_SyncFrameView = 0x04, // change requires view to be updated, if there is one (e.g., clip:)
+  nsChangeHint_UpdateCursor = 0x10,  // The currently shown mouse cursor needs to be updated
   nsChangeHint_ReconstructFrame = 0x08   // change requires frame change (e.g., display:)
                                          // This subsumes all the above
   // TBD: add nsChangeHint_ForceFrameView to force frame reconstruction if the frame doesn't yet

@@ -1693,13 +1693,12 @@ nsStyleUserInterface::nsStyleUserInterface(void)
   mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
 }
 
-nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) 
+nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) :
+  mUserInput(aSource.mUserInput),
+  mUserModify(aSource.mUserModify),
+  mUserFocus(aSource.mUserFocus),
+  mCursor(aSource.mCursor)
 { 
-  mUserInput = aSource.mUserInput;
-  mUserModify = aSource.mUserModify;
-  mUserFocus = aSource.mUserFocus;
-  
-  mCursor = aSource.mCursor;
 }
 
 nsStyleUserInterface::~nsStyleUserInterface(void) 
@@ -1708,31 +1707,29 @@ nsStyleUserInterface::~nsStyleUserInterface(void)
 
 nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
 {
+  nsChangeHint hint = nsChangeHint(0);
   if (mCursor != aOther.mCursor)
-    return NS_STYLE_HINT_VISUAL;
+    NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
 
-  if (mUserInput == aOther.mUserInput) {
-    if (mUserModify == aOther.mUserModify) {
-      // ignore mUserFocus
-      return NS_STYLE_HINT_NONE;
-    }
-    return NS_STYLE_HINT_VISUAL;
-  }
+  if (mUserModify != aOther.mUserModify)
+    NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
   
   if ((mUserInput != aOther.mUserInput) &&
       ((NS_STYLE_USER_INPUT_NONE == mUserInput) || 
        (NS_STYLE_USER_INPUT_NONE == aOther.mUserInput))) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    NS_UpdateHint(hint, NS_STYLE_HINT_FRAMECHANGE);
   }
 
-  return NS_STYLE_HINT_VISUAL;
+  // ignore mUserFocus
+
+  return hint;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleUserInterface::MaxDifference()
 {
-  return NS_STYLE_HINT_FRAMECHANGE;
+  return nsChangeHint(nsChangeHint_UpdateCursor | NS_STYLE_HINT_FRAMECHANGE);
 }
 #endif
 
