@@ -301,6 +301,19 @@ public:
     NS_IMETHOD
     UserAgent(const char* *result);
 
+    NS_IMETHOD
+    GetURL(nsISupports* peer, const char* url, const char* target,
+           void* notifyData = NULL, const char* altHost = NULL,
+           const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
+
+    NS_IMETHOD
+    PostURL(nsISupports* peer, const char* url, const char* target,
+            PRUint32 postDataLen, const char* postData,
+            PRBool isFile = PR_FALSE, void* notifyData = NULL,
+            const char* altHost = NULL, const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
+
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginManager2:
 
@@ -319,6 +332,9 @@ public:
     NS_IMETHOD
     NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus);
     
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result);
+
     ////////////////////////////////////////////////////////////////////////////
     // New top-level window handling calls for Mac:
     
@@ -348,25 +364,6 @@ public:
     // the tickle code can notify it without freezing.
     NS_IMETHOD
     ProcessNextEvent(PRBool *bEventHandled);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsINetworkManager:
-
-    NS_IMETHOD
-    GetURL(nsISupports* peer, const char* url, const char* target,
-           void* notifyData = NULL, const char* altHost = NULL,
-           const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
-
-    NS_IMETHOD
-    PostURL(nsISupports* peer, const char* url, const char* target,
-            PRUint32 postDataLen, const char* postData,
-            PRBool isFile = PR_FALSE, void* notifyData = NULL,
-            const char* altHost = NULL, const char* referrer = NULL,
-            PRBool forceJSEnabled = PR_FALSE,
-            PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
-
-    NS_IMETHOD
-    FindProxyForURL(const char* url, char* *result);
 
     ////////////////////////////////////////////////////////////////////////////
     // nsPluginManager specific methods:

@@ -57,7 +57,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
-static NS_DEFINE_IID(kINetworkManagerIID, NS_INETWORKMANAGER_IID);
 static NS_DEFINE_IID(kIJNIEnvIID, NS_IJNIENV_IID); 
 static NS_DEFINE_IID(kILiveConnectPluginInstancePeerIID, NS_ILIVECONNECTPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
@@ -200,11 +199,6 @@ nsPluginManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
         aIID.Equals(kIPluginManager2IID) ||
         aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (nsIPluginManager*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    if (aIID.Equals(kINetworkManagerIID)) {
-        *aInstancePtr = (nsINetworkManager*) this; 
         AddRef(); 
         return NS_OK; 
     } 
@@ -558,7 +552,6 @@ nsPluginManager::ProcessNextEvent(PRBool *bEventHandled)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// from nsINetworkManager:
 
 #include "plevent.h"
 

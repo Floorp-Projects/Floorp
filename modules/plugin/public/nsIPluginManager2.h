@@ -82,6 +82,22 @@ public:
     NS_IMETHOD
     NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus) = 0;
     
+    /**
+     * Returns the proxy info for a given URL. The caller is required to
+     * free the resulting memory with nsIMalloc::Free. The result will be in the
+     * following format
+     * 
+     *   i)   "DIRECT"  -- no proxy
+     *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
+     *   iii) "SOCKS xxx.xxx.xxx.xxx"  -- use SOCKS
+     *   iv)  Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
+     *                    "PROXY 111.111.111.111;SOCKS 112.112.112.112"....
+     *
+     * Which proxy/SOCKS to use is determined by the plugin.
+     */
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result) = 0;
+
     ////////////////////////////////////////////////////////////////////////////
     // New top-level window handling calls for Mac:
     
@@ -159,11 +175,11 @@ public:
 };
 
 #define NS_IPLUGINMANAGER2_IID                       \
-{ /* 29c4ae70-019a-11d2-815b-006008119d7a */         \
-    0x29c4ae70,                                      \
-    0x019a,                                          \
+{ /* d2962dc0-4eb6-11d2-8164-006008119d7a */         \
+    0xd2962dc0,                                      \
+    0x4eb6,                                          \
     0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
 ////////////////////////////////////////////////////////////////////////////////

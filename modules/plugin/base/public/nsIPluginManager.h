@@ -82,14 +82,73 @@ public:
     NS_IMETHOD
     UserAgent(const char* *resultingAgentString) = 0;
 
+    /**
+     * Fetches a URL.
+     *
+     * (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
+     *
+     * @param url - the URL to fetch
+     * @param target - the target window into which to load the URL
+     * @param notifyData - when present, URLNotify is called passing the
+     *   notifyData back to the client. When NULL, this call behaves like
+     *   NPN_GetURL.
+     * @param altHost - an IP-address string that will be used instead of the 
+     *   host specified in the URL. This is used to prevent DNS-spoofing 
+     *   attacks. Can be defaulted to NULL meaning use the host in the URL.
+     * @param referrer - the referring URL (may be NULL)
+     * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+     *   URLs, even if the user currently has JavaScript disabled (usually 
+     *   specify PR_FALSE) 
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetURL(nsISupports* peer, const char* url, const char* target,
+           void* notifyData = NULL, const char* altHost = NULL,
+           const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE) = 0;
+
+    /**
+     * Posts to a URL with post data and/or post headers.
+     *
+     * (Corresponds to NPN_PostURL and NPN_PostURLNotify.)
+     *
+     * @param url - the URL to fetch
+     * @param target - the target window into which to load the URL
+     * @param postDataLength - the length of postData (if non-NULL)
+     * @param postData - the data to POST. NULL specifies that there is not post
+     *   data
+     * @param isFile - whether the postData specifies the name of a file to 
+     *   post instead of data. The file will be deleted afterwards.
+     * @param notifyData - when present, URLNotify is called passing the 
+     *   notifyData back to the client. When NULL, this call behaves like 
+     *   NPN_GetURL.
+     * @param altHost - an IP-address string that will be used instead of the 
+     *   host specified in the URL. This is used to prevent DNS-spoofing 
+     *   attacks. Can be defaulted to NULL meaning use the host in the URL.
+     * @param referrer - the referring URL (may be NULL)
+     * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+     *   URLs, even if the user currently has JavaScript disabled (usually 
+     *   specify PR_FALSE) 
+     * @param postHeadersLength - the length of postHeaders (if non-NULL)
+     * @param postHeaders - the headers to POST. NULL specifies that there 
+     *   are no post headers
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    PostURL(nsISupports* peer, const char* url, const char* target,
+            PRUint32 postDataLen, const char* postData,
+            PRBool isFile = PR_FALSE, void* notifyData = NULL,
+            const char* altHost = NULL, const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0, const char* postHeaders = NULL) = 0;
+
 };
 
 #define NS_IPLUGINMANAGER_IID                        \
-{ /* f10b9600-a1bc-11d1-85b1-00805f0e4dfe */         \
-    0xf10b9600,                                      \
-    0xa1bc,                                          \
-    0x11d1,                                          \
-    {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+{ /* da58ad80-4eb6-11d2-8164-006008119d7a */         \
+    0xda58ad80,                                      \
+    0x4eb6,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
 ////////////////////////////////////////////////////////////////////////////////
