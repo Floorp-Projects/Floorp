@@ -40,25 +40,22 @@ public:
   virtual ~nsITableLayoutStrategy() {};
 
   /** call once every time any table thing changes (content, structure, or style) 
-    * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
-    * @param aComputedWidth   the computed size of the table
+    * @param aPresContext - the presentation context
+	   * @param aReflowState - the reflow state for mTableFrame
     */
   virtual PRBool Initialize(nsIPresContext*          aPresContext,
-                            const nsHTMLReflowState& aBorderPadding)=0;
+                            const nsHTMLReflowState& aReflowState)=0;
 
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
-    * @param aTableStyle      the resolved style for the table
-    * @param aReflowState     the reflow state for the calling table frame
-    * @param aMaxWidth        the width constraint
-
+    * @param aPresContext - the presentation context
+	   * @param aReflowState - the reflow state for mTableFrame
     */
   virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState)=0;
 
 
-  /** return the value of the COLS attribute, used for balancing column widths */
-  virtual nscoord GetCOLSAttribute() const = 0;
+  
 
 
 #ifdef DEBUG

@@ -600,6 +600,8 @@ public:
   // calculate the computed height of aFrame including its border and padding given 
   // its reflow state.
   nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
+  // calculate the minimum width to layout aFrame and its desired width 
+  // including border and padding given its reflow state and column width information 
   void CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
                                  nscoord&                 aMinWidth,
                                  nscoord&                 aPreferredWidth);
