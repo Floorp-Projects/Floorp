@@ -214,7 +214,7 @@ function GetComposerCommandManager()
   if (gComposerJSCommandControllerID)
   {
     try { 
-      controller = window.controllers.getControllerById(gComposerJSCommandControllerID);
+      controller = window.content.controllers.getControllerById(gComposerJSCommandControllerID);
     } catch (e) {}
   }
   if (!controller)
