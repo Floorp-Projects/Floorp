@@ -3819,6 +3819,7 @@ nsresult nsMsgCompose::GetMailListAddresses(nsString& name, nsISupportsArray* ma
 }
 
 
+// 3 = To, Cc, Bcc
 #define MAX_OF_RECIPIENT_ARRAY    3
 
 NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBool returnNonHTMLRecipients, PRUnichar **nonHTMLRecipients, PRUint32 *_retval)
@@ -4115,11 +4116,11 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
           /* setup return value */
           switch (recipient->mPreferFormat)
           {
-            case nsIAbPreferMailFormat::html :
+            case nsIAbPreferMailFormat::html:
               // nothing to do
               break;
 
-            case nsIAbPreferMailFormat::plaintext :
+            case nsIAbPreferMailFormat::plaintext:
               if (*_retval == nsIAbPreferMailFormat::html)
                 *_retval = nsIAbPreferMailFormat::plaintext;
               break;
@@ -4161,14 +4162,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     *nonHTMLRecipients = ToNewUnicode(nonHtmlRecipientsStr);
 
   return rv;
-}
-
-nsresult nsMsgCompose::GetNoHtmlNewsgroups(const char *newsgroups, char **_retval)
-{
-    //FIX ME: write me
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-    *_retval = nsnull;
-    return rv;
 }
 
 /* Decides which tags trigger which convertible mode, i.e. here is the logic

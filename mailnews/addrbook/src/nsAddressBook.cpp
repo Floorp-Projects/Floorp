@@ -85,6 +85,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShell.h"
 
 // according to RFC 2849
 // SEP = (CR LF / LF)
@@ -166,7 +167,6 @@ const ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABL
 //
 nsAddressBook::nsAddressBook()
 {
-  mDocShell = nsnull;
 }
 
 nsAddressBook::~nsAddressBook()
@@ -258,25 +258,6 @@ nsresult nsAddressBook::DoCommand(nsIRDFDataSource* db,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (!aWin)
-    return NS_ERROR_NULL_POINTER;
- 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  if (!globalObj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // mDocShell is a weak reference
-  mDocShell = globalObj->GetDocShell();
-  if (!mDocShell)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatabase **aDB)
@@ -1262,6 +1243,8 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
         ToLowerCase(column);
         if (kNotFound != column.Find("true"))
             mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
+        else if (kNotFound != column.Find("false"))
+            mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::plaintext);
         else
             mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::unknown);
       }
@@ -1348,10 +1331,11 @@ enum ADDRESSBOOK_EXPORT_FILE_TYPE
  TAB_EXPORT_TYPE = 2
 };
 
-NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
+NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin, nsIAbDirectory *aDirectory)
 {
-  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aParentWin);
 
+  nsresult rv;
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1360,8 +1344,17 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
+ 
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(aParentWin, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> parentWindow = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocShell> docShell = globalObj->GetDocShell();
+  if (!docShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMWindow> parentWindow = do_GetInterface(docShell);
+  if (!parentWindow)
+    return NS_NOINTERFACE;
 
   nsXPIDLString title;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("ExportAddressBookTitle").get(), getter_Copies(title));

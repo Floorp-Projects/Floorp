@@ -356,14 +356,14 @@ var messageHeaderSink = {
                 (gCollectNewsgroup && dontCollectAddress))
             {
               gCollectAddress = foo.headerValue;
-              // collect, and add card if doesn't exist
-              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true);', 2000);
+              // collect, and add card if doesn't exist, unknown preferred send format
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
             }
             else if (gCollectOutgoing) 
             {
-              // collect, but only update existing cards
+              // collect, but only update existing cards, unknown preferred send format
               gCollectAddress = foo.headerValue;
-              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false);', 2000);
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
             }
           } 
         }

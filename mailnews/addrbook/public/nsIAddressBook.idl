@@ -51,8 +51,7 @@ interface nsIAddressBook : nsISupports
   void newAddressBook(in nsIAbDirectoryProperties aProperties);
   void modifyAddressBook(in nsIRDFDataSource aDS, in nsIAbDirectory aParentDir, in nsIAbDirectory aDirectory, in nsIAbDirectoryProperties aProperties);
   void deleteAddressBooks(in nsIRDFDataSource aDS, in nsISupportsArray aParentDir, in nsISupportsArray aResourceArray);
-  void setDocShellWindow(in nsIDOMWindowInternal win);
-  void exportAddressBook(in nsIAbDirectory aDirectory);
+  void exportAddressBook(in nsIDOMWindowInternal aParentWin, in nsIAbDirectory aDirectory);
   void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating, in nsIAddrDatabase db, in boolean bStoreLocAsHome, in boolean bImportingComm4x);
   void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
   nsIAddrDatabase getAbDatabaseFromURI(in string URI);

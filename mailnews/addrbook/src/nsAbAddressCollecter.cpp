@@ -71,11 +71,11 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
   }
 }
 
-NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAddress, PRBool aCreateCard)
+NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar *aAddress, PRBool aCreateCard, PRUint32 aSendFormat)
 {
   NS_ENSURE_ARG_POINTER(aAddress);
   // convert the unicode string to UTF-8...
-  nsresult rv = CollectAddress(NS_ConvertUCS2toUTF8(aAddress).get(), aCreateCard);
+  nsresult rv = CollectAddress(NS_ConvertUCS2toUTF8(aAddress).get(), aCreateCard, aSendFormat);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -86,7 +86,7 @@ NS_IMETHODIMP nsAbAddressCollecter::GetCardFromAttribute(const char *aName, cons
   return m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
 }
 
-NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool aCreateCard)
+NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool aCreateCard, PRUint32 aSendFormat)
 {
   // note that we're now setting the whole recipient list,
   // not just the pretty name of the first recipient.
@@ -98,7 +98,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
   nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = pHeader->ParseHeaderAddresses(nsnull, address, &names, &addresses, &numAddresses);
+  rv = pHeader->ParseHeaderAddresses(nsnull, aAddress, &names, &addresses, &numAddresses);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to parse, so can't collect");
   if (NS_FAILED(rv))
     return NS_OK;
@@ -136,21 +136,43 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
         rv = senderCard->SetPrimaryEmail(NS_ConvertASCIItoUCS2(curAddress).get());
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set email");
 
+        if (aSendFormat != nsIAbPreferMailFormat::unknown)
+        {
+          rv = senderCard->SetPreferMailFormat(aSendFormat);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remember preferred mail format");
+        }
+
         rv = AddCardToAddressBook(senderCard);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add card");
       }
     }
     else if (existingCard) { 
       // address is already in the AB, so update the names
-      PRBool setNames;
+      PRBool setNames = PR_FALSE;
       rv = SetNamesForCard(existingCard, unquotedName.get(), &setNames);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
 
-      PRBool setScreenName;
+      PRBool setScreenName = PR_FALSE; 
       rv = AutoCollectScreenName(existingCard, curAddress, &setScreenName);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set screen name");
 
-      if (setScreenName || setNames)
+      PRBool setPreferMailFormat = PR_FALSE; 
+      if (aSendFormat != nsIAbPreferMailFormat::unknown)
+      {
+        PRUint32 currentFormat;
+        rv = existingCard->GetPreferMailFormat(&currentFormat);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get preferred mail format");
+
+        // we only want to update the AB if the current format is unknown
+        if (currentFormat == nsIAbPreferMailFormat::unknown) 
+        {
+          rv = existingCard->SetPreferMailFormat(aSendFormat);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remember preferred mail format");
+          setPreferMailFormat = PR_TRUE;
+        }
+      }
+
+      if (setScreenName || setNames || setPreferMailFormat)
         existingCard->EditCardToDatabase(m_abURI.get());
     }
 

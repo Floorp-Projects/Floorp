@@ -42,14 +42,13 @@ interface nsIAbCard;
 
 [scriptable, uuid(fe04c8e6-501e-11d3-a527-0060b0fc04b7)]
 interface nsIAbAddressCollecter : nsISupports {
-  [noscript] void collectAddress(in string address, in boolean aCreateCard);
-
+  void collectAddress(in string aAddress, in boolean aCreateCard, in unsigned long aSendFormat);
   /* CollectUnicodeAddress is the most I18N friendly
      of the two methods to call. If you just take a char * address
      as used by CollectAddress then you don't know what char set
      the address is in (UTF-8??).
   */
-  void collectUnicodeAddress(in wstring address, in boolean aCreateCard);
+  void collectUnicodeAddress(in wstring aAddress, in boolean aCreateCard, in unsigned long aSendFormat);
 
   // get the first card with this name / value in the collected ab, 
   // which is determined by the mail.collect_addressbook pref

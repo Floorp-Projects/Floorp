@@ -42,7 +42,6 @@
 #include "nsIAbCard.h"
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
-#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
@@ -103,7 +102,6 @@ protected:
 	nsresult GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db);
 
 private:
-  nsIDocShell        *mDocShell;            // weak reference
   nsresult ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile);
   nsresult ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *aLocalFile);
   nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aResult);
