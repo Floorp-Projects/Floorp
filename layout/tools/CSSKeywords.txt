@@ -1,4 +1,5 @@
 absolute
+arrow
 auto
 baseline
 blink
@@ -20,7 +21,9 @@ em
 ex
 fixed
 groove
+hand
 hidden
+ibeam
 in
 inherit
 inline
@@ -37,6 +40,7 @@ list-item
 lower-alpha
 lower-roman
 lowercase
+ltr
 medium
 middle
 mm
@@ -60,6 +64,7 @@ repeat-x
 repeat-y
 ridge
 right
+rtl
 scroll
 small
 small-caps
