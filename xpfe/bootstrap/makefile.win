@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  gfx \
 		  intl \
+		  uconv \
 		  profile \
 		  xpconnect \
 		  $(NULL)

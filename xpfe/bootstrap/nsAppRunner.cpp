@@ -53,6 +53,8 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -791,7 +793,43 @@ static nsresult DoOnShutdown()
   return rv;
 }
 
+static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAWritableString& outString)
+{
+  nsresult rv;
 
+  // convert result to unicode
+  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID , &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr <nsIUnicodeDecoder> decoder; 
+  rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 uniLength = 0;
+  PRInt32 srcLength = strlen(inString);
+  rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUnichar *unichars = new PRUnichar [uniLength];
+  if (nsnull != unichars) {
+    // convert to unicode
+    rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
+    if (NS_SUCCEEDED(rv)) {
+      // Pass back the unicode string
+      outString.Assign(unichars, uniLength);
+    }
+    delete [] unichars;
+  }
+  else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
+}
+ 
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
     nsresult rv;
@@ -815,8 +853,32 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
       printf("url to load: %s\n", urlToLoad.get());
 #endif /* DEBUG_CMD_LINE */
 
-      NS_ConvertUTF8toUCS2 url(urlToLoad);
+      nsAutoString url; 
+      if (nsCRT::IsAscii(urlToLoad))  {
+        url.AssignWithConversion(urlToLoad);
+      }
+      else {
+        // get a platform charset
+        nsAutoString charSet;
+        nsCOMPtr <nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to get a platform charset");
+          return rv;
+        }
 
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charSet);
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to get a charset");
+          return rv;
+        }
+
+        // convert the cmdLine URL to Unicode
+        rv = ConvertToUnicode(charSet, urlToLoad, url);
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to convert commandline url to unicode");
+          return rv;
+        }
+      }
       rv = OpenWindow(chromeUrlForTask, url, width, height);
 
     } else {

@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  mpfilelocprovider \
 		  browser \
 		  docshell \
+		  uconv \
 		  xremoteservice \
 		  $(NULL)
 # for jprof
