@@ -50,6 +50,7 @@
 #include "nsIFileURL.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMNode.h"
@@ -2240,7 +2241,7 @@ nsWebBrowserPersist::GetQuotedAttributeValue(
     return PR_FALSE;
 }
 
-nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref)
+nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref)
 {
     NS_ENSURE_ARG_POINTER(aPI);
     nsresult rv = NS_OK;
@@ -2250,28 +2251,26 @@ nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     nsAutoString href;
-    nsAutoString alternate;
-    nsAutoString charset;
-    nsAutoString title;
-    nsAutoString type;
-    nsAutoString media;
-
     GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("charset"), charset);
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
 
     // Construct and set a new data value for the xml-stylesheet
-    if (!aHref.IsEmpty())
+    if (!aHref.IsEmpty() && !href.IsEmpty())
     {
+        nsAutoString alternate;
+        nsAutoString charset;
+        nsAutoString title;
+        nsAutoString type;
+        nsAutoString media;
+
+        GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
+        GetQuotedAttributeValue(data, NS_LITERAL_STRING("charset"), charset);
+        GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
+        GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
+        GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
+
         NS_NAMED_LITERAL_STRING(kCloseAttr, "\" ");
         nsAutoString newData;
-        if (!aHref.IsEmpty())
-        {
-            newData += NS_LITERAL_STRING("href=\"") + href + kCloseAttr;
-        }
+        newData += NS_LITERAL_STRING("href=\"") + aHref + kCloseAttr;
         if (!title.IsEmpty())
         {
             newData += NS_LITERAL_STRING("title=\"") + title + kCloseAttr;
@@ -2292,14 +2291,9 @@ nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction
         {
             newData += NS_LITERAL_STRING("alternate=\"") + alternate + kCloseAttr;
         }
-        if (newData.Length() > 0)
-        {
-            newData.Truncate(newData.Length() - 1);  // Remove the extra space on the end.
-        }
+        newData.Truncate(newData.Length() - 1);  // Remove the extra space on the end.
         aPI->SetData(newData);
     }
-
-    aHref = href;
 
     return rv;
 }
@@ -3133,7 +3127,98 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     return NS_OK;
 }
 
+struct SpecialXHTMLTags {
+    PRUnichar name[sizeof(PRUnichar)*11]; // strlen("blockquote")==10
+};
 
+static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
+{
+    nsAutoString ns;
+    aNode->GetNamespaceURI(ns);
+    if (!ns.Equals(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml")))
+        return PR_FALSE;
+
+    // Ordered so that typical documents work fastest
+    static SpecialXHTMLTags tags[] = {
+        {'b','o','d','y',0},
+        {'h','e','a','d',0},
+        {'i','m','g',0},
+        {'s','c','r','i','p','t',0},
+        {'a',0},
+        {'a','r','e','a',0},
+        {'l','i','n','k',0},
+        {'i','n','p','u','t',0},
+        {'f','r','a','m','e',0},
+        {'i','f','r','a','m','e',0},
+        {'o','b','j','e','c','t',0},
+        {'a','p','p','l','e','t',0},
+        {'f','o','r','m',0},
+        {'b','l','o','c','k','q','u','o','t','e',0},
+        {'q',0},
+        {'d','e','l',0},
+        {'i','n','s',0},
+        {0}};
+
+    nsAutoString localName;
+    aNode->GetLocalName(localName);
+    PRInt32 i;
+    for (i = 0; tags[i].name[0]; i++) {
+        if (localName.Equals(tags[i].name))
+        {
+            // XXX This element MAY have URI attributes, but
+            //     we are not actually checking if they are present.
+            //     That would slow us down further, and I am not so sure
+            //     how important that would be.
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
+static PRBool HasSpecialXHTMLTags(nsIDOMNode *aParent)
+{
+    if (IsSpecialXHTMLTag(aParent))
+        return PR_TRUE;
+
+    nsCOMPtr<nsIDOMNodeList> list;
+    aParent->GetChildNodes(getter_AddRefs(list));
+    if (list)
+    {
+        PRUint32 count;
+        list->GetLength(&count);
+        PRUint32 i;
+        for (i = 0; i < count; i++) {
+            nsCOMPtr<nsIDOMNode> node;
+            list->Item(i, getter_AddRefs(node));
+            if (!node)
+                break;
+            PRUint16 nodeType;
+            node->GetNodeType(&nodeType);
+            if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+                return HasSpecialXHTMLTags(node);
+            }
+        }
+    }
+
+    return PR_FALSE;
+}
+
+static PRBool NeedXHTMLBaseTag(nsIDOMDocument *aDocument)
+{
+    nsCOMPtr<nsIDOMElement> docElement;
+    aDocument->GetDocumentElement(getter_AddRefs(docElement));
+
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(docElement));
+    if (node)
+    {
+        return HasSpecialXHTMLTags(node);
+    }
+
+    return PR_FALSE;
+}
+
+// Set document base. This could create an invalid XML document (still well-formed).
 nsresult
 nsWebBrowserPersist::SetDocumentBase(
     nsIDOMDocument *aDocument, nsIURI *aBaseURI)
@@ -3143,17 +3228,39 @@ nsWebBrowserPersist::SetDocumentBase(
         return NS_OK;
     }
 
+    nsCOMPtr<nsIDOMXMLDocument> xmlDoc;
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
     if (!htmlDoc)
     {
-        return NS_ERROR_FAILURE;
+        xmlDoc = do_QueryInterface(aDocument);
+        if (!xmlDoc)
+        {
+            return NS_ERROR_FAILURE;
+        }
     }
+
+    NS_NAMED_LITERAL_STRING(kXHTMLNS, "http://www.w3.org/1999/xhtml");
+    NS_NAMED_LITERAL_STRING(kHead, "head");
 
     // Find the head element
     nsCOMPtr<nsIDOMElement> headElement;
     nsCOMPtr<nsIDOMNodeList> headList;
-    aDocument->GetElementsByTagName(
-        NS_LITERAL_STRING("head"), getter_AddRefs(headList));
+    if (xmlDoc)
+    {
+        // First see if there is XHTML content that needs base 
+        // tags.
+        if (!NeedXHTMLBaseTag(aDocument))
+            return NS_OK;
+
+        aDocument->GetElementsByTagNameNS(
+            kXHTMLNS,
+            kHead, getter_AddRefs(headList));
+    }
+    else
+    {
+        aDocument->GetElementsByTagName(
+            kHead, getter_AddRefs(headList));
+    }
     if (headList)
     {
         nsCOMPtr<nsIDOMNode> headNode;
@@ -3165,10 +3272,24 @@ nsWebBrowserPersist::SetDocumentBase(
         // Create head and insert as first element
         nsCOMPtr<nsIDOMNode> firstChildNode;
         nsCOMPtr<nsIDOMNode> newNode;
-        aDocument->CreateElement(
-            NS_LITERAL_STRING("head"), getter_AddRefs(headElement));
-        aDocument->GetFirstChild(getter_AddRefs(firstChildNode));
-        aDocument->InsertBefore(headElement, firstChildNode, getter_AddRefs(newNode));
+        if (xmlDoc)
+        {
+            aDocument->CreateElementNS(
+                kXHTMLNS,
+                kHead, getter_AddRefs(headElement));
+        }
+        else
+        {
+            aDocument->CreateElement(
+                kHead, getter_AddRefs(headElement));
+        }
+        nsCOMPtr<nsIDOMElement> documentElement;
+        aDocument->GetDocumentElement(getter_AddRefs(documentElement));
+        if (documentElement)
+        {
+            documentElement->GetFirstChild(getter_AddRefs(firstChildNode));
+            documentElement->InsertBefore(headElement, firstChildNode, getter_AddRefs(newNode));
+        }
     }
     if (!headElement)
     {
@@ -3176,10 +3297,20 @@ nsWebBrowserPersist::SetDocumentBase(
     }
 
     // Find or create the BASE element
+    NS_NAMED_LITERAL_STRING(kBase, "base");
     nsCOMPtr<nsIDOMElement> baseElement;
     nsCOMPtr<nsIDOMNodeList> baseList;
-    headElement->GetElementsByTagName(
-        NS_LITERAL_STRING("base"), getter_AddRefs(baseList));
+    if (xmlDoc)
+    {
+        headElement->GetElementsByTagNameNS(
+            kXHTMLNS,
+            kBase, getter_AddRefs(baseList));
+    }
+    else
+    {
+        headElement->GetElementsByTagName(
+            kBase, getter_AddRefs(baseList));
+    }
     if (baseList)
     {
         nsCOMPtr<nsIDOMNode> baseNode;
@@ -3193,8 +3324,17 @@ nsWebBrowserPersist::SetDocumentBase(
         if (!baseElement)
         {
             nsCOMPtr<nsIDOMNode> newNode;
-            aDocument->CreateElement(
-                NS_LITERAL_STRING("base"), getter_AddRefs(baseElement));
+            if (xmlDoc)
+            {
+                aDocument->CreateElementNS(
+                    kXHTMLNS,
+                    kBase, getter_AddRefs(baseElement));
+            }
+            else
+            {
+                aDocument->CreateElement(
+                    kBase, getter_AddRefs(baseElement));
+            }
             headElement->AppendChild(baseElement, getter_AddRefs(newNode));
         }
         if (!baseElement)

@@ -122,7 +122,7 @@ private:
     nsresult FixupURI(nsAString &aURI);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
-    nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
+    nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref);
     nsresult GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
 
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
