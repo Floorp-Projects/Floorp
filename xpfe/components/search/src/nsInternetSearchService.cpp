@@ -117,17 +117,41 @@ public:
 
 			InternetSearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine);
 	virtual		~InternetSearchDataSourceCallback(void);
+	NS_METHOD	Init();
 
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
+	// nsIStreamObserver methods:
+	NS_DECL_NSISTREAMOBSERVER
 
-    // nsIStreamListener methods:
-    NS_DECL_NSISTREAMLISTENER
+	// nsIStreamListener methods:
+	NS_DECL_NSISTREAMLISTENER
 };
 
 
 
-class InternetSearchDataSource : public nsIRDFDataSource
+nsresult
+NS_NewInternetSearchStreamListener(nsIRDFDataSource *aDataSource, nsIRDFResource *aParent,
+			nsIRDFResource *aEngine, nsIStreamListener** aResult)
+{
+	 InternetSearchDataSourceCallback* result =
+		 new InternetSearchDataSourceCallback(aDataSource, aParent, aEngine);
+
+	 if (! result)
+		 return NS_ERROR_OUT_OF_MEMORY;
+
+	 nsresult rv = result->Init();
+	 if (NS_FAILED(rv)) {
+		 delete result;
+		 return rv;
+	 }
+
+	 NS_ADDREF(result);
+	 *aResult = result;
+	 return NS_OK;
+}
+
+
+
+class InternetSearchDataSource : public nsIInternetSearchService, public nsIRDFDataSource
 {
 private:
 	static PRInt32			gRefCnt;
@@ -164,15 +188,16 @@ static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, 
 	nsresult	GetInputs(nsString data, nsString text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
 
+
+			InternetSearchDataSource(void);
+	virtual		~InternetSearchDataSource(void);
+	NS_METHOD	Init();
+
 public:
 
 friend	class		InternetSearchDataSourceCallback;
 
 	NS_DECL_ISUPPORTS
-
-			InternetSearchDataSource(void);
-	virtual		~InternetSearchDataSource(void);
-	nsresult	Init();
 
 	NS_DECL_NSIINTERNETSEARCHSERVICE
 
@@ -371,11 +396,12 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 
 
-// NS_IMPL_ISUPPORTS(InternetSearchDataSource, InternetSearchDataSource::GetIID());
+NS_IMPL_ISUPPORTS2(InternetSearchDataSource, nsIInternetSearchService, nsIRDFDataSource);
+
+
+/*
 NS_IMPL_ADDREF(InternetSearchDataSource);
 NS_IMPL_RELEASE(InternetSearchDataSource);
-
-
 
 NS_IMETHODIMP
 InternetSearchDataSource::QueryInterface(REFNSIID aIID, void **aResult)
@@ -400,10 +426,11 @@ InternetSearchDataSource::QueryInterface(REFNSIID aIID, void **aResult)
 	NS_ADDREF(this);
 	return NS_OK;
 }
+*/
 
 
 
-nsresult
+NS_METHOD
 InternetSearchDataSource::Init()
 {
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1150,8 +1177,9 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!searchURL)
 		return(NS_ERROR_NULL_POINTER);
 
-	InternetSearchDataSourceCallback *callback = new InternetSearchDataSourceCallback(mInner, source, engine);
-	if (nsnull != callback)
+	nsCOMPtr<nsIStreamListener> callback;
+	rv = NS_NewInternetSearchStreamListener(mInner, source, engine, getter_AddRefs(callback));
+	if (NS_SUCCEEDED(rv) && (nsnull != callback))
 	{
 		nsCOMPtr<nsIURI>	url;
 		if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), (const char*) searchURL)))
@@ -1159,7 +1187,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			if (method.EqualsIgnoreCase("post"))
 			{
 				nsCOMPtr<nsIChannel>	channel;
-                // XXX: Null LoadGroup ?
+				// XXX: Null LoadGroup ?
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
 				{
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
@@ -1692,7 +1720,46 @@ InternetSearchDataSourceCallback::InternetSearchDataSourceCallback(nsIRDFDataSou
 	NS_IF_ADDREF(mDataSource);
 	NS_IF_ADDREF(mParent);
 	NS_IF_ADDREF(mEngine);
+}
 
+
+
+InternetSearchDataSourceCallback::~InternetSearchDataSourceCallback()
+{
+	NS_IF_RELEASE(mDataSource);
+	NS_IF_RELEASE(mParent);
+	NS_IF_RELEASE(mEngine);
+
+	if (mLine)
+	{
+		nsCRT::free(mLine);
+		mLine = nsnull;
+	}
+
+	if (--gRefCnt == 0)
+	{
+		NS_IF_RELEASE(kNC_LastSearchRoot);
+		NS_IF_RELEASE(kNC_Child);
+		NS_IF_RELEASE(kNC_URL);
+		NS_IF_RELEASE(kNC_Name);
+		NS_IF_RELEASE(kNC_Data);
+		NS_IF_RELEASE(kNC_Relevance);
+		NS_IF_RELEASE(kNC_RelevanceSort);
+		NS_IF_RELEASE(kNC_Site);
+		NS_IF_RELEASE(kNC_Engine);
+		NS_IF_RELEASE(kNC_loading);
+		NS_IF_RELEASE(kNC_HTML);
+		NS_IF_RELEASE(kNC_Banner);
+
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+	}
+}
+
+
+
+NS_METHOD
+InternetSearchDataSourceCallback::Init()
+{
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -1714,37 +1781,7 @@ InternetSearchDataSourceCallback::InternetSearchDataSourceCallback(nsIRDFDataSou
 		gRDFService->GetResource(NC_NAMESPACE_URI "HTML", &kNC_HTML);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Banner", &kNC_Banner);
 	}
-}
-
-
-
-InternetSearchDataSourceCallback::~InternetSearchDataSourceCallback()
-{
-	NS_IF_RELEASE(mDataSource);
-	NS_IF_RELEASE(mParent);
-	NS_IF_RELEASE(mEngine);
-
-	if (mLine)
-	{
-		nsCRT::free(mLine);
-		mLine = nsnull;
-	}
-
-	if (--gRefCnt == 0)
-	{
-		NS_RELEASE(kNC_LastSearchRoot);
-		NS_RELEASE(kNC_Child);
-		NS_RELEASE(kNC_URL);
-		NS_RELEASE(kNC_Name);
-		NS_RELEASE(kNC_Data);
-		NS_RELEASE(kNC_Relevance);
-		NS_RELEASE(kNC_RelevanceSort);
-		NS_RELEASE(kNC_Site);
-		NS_RELEASE(kNC_Engine);
-		NS_RELEASE(kNC_loading);
-		NS_RELEASE(kNC_HTML);
-		NS_RELEASE(kNC_Banner);
-	}
+	 return(NS_OK);
 }
 
 
@@ -2424,7 +2461,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 
 
-NS_IMPL_ISUPPORTS(InternetSearchDataSourceCallback, InternetSearchDataSourceCallback::GetIID());
+NS_IMPL_ISUPPORTS(InternetSearchDataSourceCallback, nsIStreamListener::GetIID());
 
 
 
