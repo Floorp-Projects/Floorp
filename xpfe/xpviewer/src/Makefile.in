@@ -132,6 +132,10 @@ EX_LIBS = \
 	-lraptorplugin \
 	$(NULL)
 
+ifdef MOZ_EDITOR
+EX_LIBS += -lender
+endif
+
 ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
 	-lpwcac \
