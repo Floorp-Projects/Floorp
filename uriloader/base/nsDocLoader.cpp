@@ -156,7 +156,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 			An alternative would be incrementing our refcount (consider it a compressed flag
 			saying "Don't re-destroy.").  I haven't yet decided which is better. [scc]
 		*/
-	ClearWeakReferences();
+  ClearWeakReferences();
 
   Destroy();
 
@@ -428,6 +428,8 @@ nsDocLoaderImpl::Destroy()
     mParent->RemoveChildGroup(this);
     mParent = nsnull;
   }
+
+  ClearChannelInfoList();
 
   mDocumentChannel = null_nsCOMPtr();
 
