@@ -250,8 +250,8 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
       mStyleContext->GetStyleData(eStyleStruct_Position);
     const nsStyleColor*    color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing*  spacing = (const nsStyleSpacing*)
-      mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    const nsStyleBorder*  borderStyle = (const nsStyleBorder*)
+      mStyleContext->GetStyleData(eStyleStruct_Border);
     const nsStyleDisplay*  display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
 
@@ -292,7 +292,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
 
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
-    if (!spacing->GetBorder(border)) {
+    if (!borderStyle->GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
       border.SizeTo(0, 0, 0, 0);
     }
@@ -593,12 +593,12 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
 
     if (display->IsVisibleOrCollapsed()) {
       // Paint our border only (no background)
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* border = (const nsStyleBorder*)
+        mStyleContext->GetStyleData(eStyleStruct_Border);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
+                                  aDirtyRect, rect, *border, mStyleContext, 0);
     }
   }
 

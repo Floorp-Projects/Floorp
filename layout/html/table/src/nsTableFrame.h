@@ -44,7 +44,6 @@ class nsHTMLValue;
 
 struct InnerTableReflowState;
 struct nsStylePosition;
-struct nsStyleSpacing;
 
 /**
  * Child list name indices
@@ -708,7 +707,7 @@ protected:
 
   /** Support methods for DidSetStyleContext */
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
-  void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
+  void      MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
 public:

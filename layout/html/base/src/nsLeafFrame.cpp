@@ -45,17 +45,19 @@ nsLeafFrame::Paint(nsIPresContext* aPresContext,
     if (disp->IsVisibleOrCollapsed()) {
       const nsStyleColor* myColor = (const nsStyleColor*)
         mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* myBorder = (const nsStyleBorder*)
+        mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleOutline* myOutline = (const nsStyleOutline*)
+        mStyleContext->GetStyleData(eStyleStruct_Outline);
       nsRect rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+                                      aDirtyRect, rect, *myColor, *myBorder, 0, 0);
 
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, mStyleContext, 0);
+                                  aDirtyRect, rect, *myBorder, mStyleContext, 0);
 
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, mStyleContext, 0);
+                                  aDirtyRect, rect, *myBorder, *myOutline, mStyleContext, 0);
     }
   }
   return NS_OK;

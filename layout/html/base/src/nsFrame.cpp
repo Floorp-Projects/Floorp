@@ -493,6 +493,23 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFrame::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const {
+  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
+  if (mStyleContext) {
+    return mStyleContext->GetStyle(aSID, aStruct);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
+  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
+  if (mStyleContext) {
+    mStyleContext->CalcBorderPaddingFor(this, aBorderPadding);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
                                    nsIStyleContext** aStyleContext) const
@@ -624,8 +641,10 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   // 'overflow-clip' only applies to block-level elements and replaced
   // elements that have 'overflow' set to 'hidden', and it is relative
   // to the content area and applies to content only (not border or background)
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  const nsStyleBorder* borderStyle;
+  const nsStylePadding* paddingStyle;
+  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingStyle);
   
   // Start with the 'auto' values and then factor in user specified values
   nsRect  clipRect(0, 0, mRect.width, mRect.height);
@@ -634,10 +653,10 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   // content area (which is the default value) as the clip shape
   nsMargin  border, padding;
 
-  spacing->GetBorder(border);
+  borderStyle->GetBorder(border);
   clipRect.Deflate(border);
   // XXX We need to handle percentage padding
-  if (spacing->GetPadding(padding)) {
+  if (paddingStyle->GetPadding(padding)) {
     clipRect.Deflate(padding);
   }
 
@@ -2073,10 +2092,10 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
 
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  const nsStyleOutline* outline;
+  GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
   nscoord width;
-  spacing->GetOutlineWidth(width);
+  outline->GetOutlineWidth(width);
   if (width > 0) {
     damageRect.Inflate(width, width);
   }

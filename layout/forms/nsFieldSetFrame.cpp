@@ -163,11 +163,11 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* spacing =
-        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* borderStyle = 
+        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
        
         nsMargin border;
-        if (!spacing->GetBorder(border)) {
+        if (!borderStyle->GetBorder(border)) {
           NS_NOTYETIMPLEMENTED("percentage border");
         }
 
@@ -181,7 +181,7 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
         nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+                                        aDirtyRect, rect, *color, *borderStyle, 0, 0);
 
 
         if (mLegendFrame) {
@@ -198,7 +198,7 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
 
@@ -212,7 +212,7 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
 
@@ -226,14 +226,14 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
         } else {
 
           
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, nsRect(0,0,mRect.width, mRect.height), *spacing, mStyleContext, skipSides);
+                                      aDirtyRect, nsRect(0,0,mRect.width, mRect.height), *borderStyle, mStyleContext, skipSides);
         }
     }
   }
@@ -347,10 +347,10 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     nsMargin legendMargin(0,0,0,0);
     // reflow the legend only if needed
     if (mLegendFrame) {
-        const nsStyleSpacing* legendSpacing;
-        mLegendFrame->GetStyleData(eStyleStruct_Spacing,
-                              (const nsStyleStruct*&) legendSpacing);
-        legendSpacing->GetMargin(legendMargin);
+        const nsStyleMargin* marginStyle;
+        mLegendFrame->GetStyleData(eStyleStruct_Margin,
+                              (const nsStyleStruct*&) marginStyle);
+        marginStyle->GetMargin(legendMargin);
 
         if (reflowLegend) {
           nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
@@ -482,12 +482,12 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         } else {
             // if we don't need to reflow just get the old size
             mContentFrame->GetRect(contentRect);
-            const nsStyleSpacing* spacing;
-            mContentFrame->GetStyleData(eStyleStruct_Spacing,
-                                  (const nsStyleStruct*&) spacing);
+            const nsStyleMargin* marginStyle;
+            mContentFrame->GetStyleData(eStyleStruct_Margin,
+                                  (const nsStyleStruct*&) marginStyle);
 
             nsMargin m(0,0,0,0);
-            spacing->GetMargin(m);
+            marginStyle->GetMargin(m);
             contentRect.Inflate(m);
         }
     }

@@ -29,7 +29,6 @@ class nsIFrame;
 class nsIPresContext;
 class nsLineLayout;
 struct nsStylePosition;
-struct nsStyleSpacing;
 struct nsBlockHorizontalAlign;
 
 /**
@@ -137,7 +136,9 @@ protected:
   nsIFrame* mNextRCFrame;
 
   // Spacing style for the frame we are reflowing; only valid after reflow
-  const nsStyleSpacing* mStyleSpacing;
+  const nsStyleBorder* mStyleBorder;
+  const nsStyleMargin* mStyleMargin;
+  const nsStylePadding* mStylePadding;
 
   nscoord mComputedWidth;               // copy of reflowstate's computedWidth
   nsMargin mMargin;

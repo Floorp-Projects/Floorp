@@ -132,13 +132,13 @@ CSSFirstLineRule::MapStyleInto(nsIMutableStyleContext* aContext,
   parentContext = aContext->GetParent();
 
   // Disable border
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    aContext->GetMutableStyleData(eStyleStruct_Spacing);
-  if (spacing) {
-    spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+  nsStyleBorder* border = (nsStyleBorder*)
+    aContext->GetMutableStyleData(eStyleStruct_Border);
+  if (border) {
+    border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+    border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+    border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
   }
 
   // Undo any change made to "direction"
