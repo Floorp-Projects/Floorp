@@ -1986,7 +1986,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     if (APP_DEBUG) {
       printf("Executing [%s]\n", (const char *)nsCAutoString(aScript));
     }
-    aContext->EvaluateString(aScript, url, 0, nsnull, rVal, &isUndefined);
+    aContext->EvaluateString(aScript, nsnull, nsnull, url, 0, nsnull, rVal, &isUndefined);
   } 
   return NS_OK;
 }

@@ -54,12 +54,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD       EvaluateString(const nsString& aScript,
-                                  const char *aURL,
-                                  PRUint32 aLineNo,
-                                  const char* aVersion,
-                                  nsString& aRetValue,
-                                  PRBool* aIsUndefined);
-  NS_IMETHOD       EvaluateString(const nsString& aScript,
                                   void *aScopeObject,
                                   nsIPrincipal *principal,
                                   const char *aURL,
