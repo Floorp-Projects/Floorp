@@ -26,8 +26,7 @@
 #define JS_CLASS_MAP_SIZE       256
 #define NATIVE_CLASS_MAP_SIZE   256
 
-static NS_DEFINE_IID(kXPConnectIID, NS_IXPCONNECT_IID);
-NS_IMPL_ISUPPORTS(nsXPConnect, kXPConnectIID)
+NS_IMPL_ISUPPORTS1(nsXPConnect, nsIXPConnect)
 
 const char XPC_COMPONENTS_STR[] = "Components";
 

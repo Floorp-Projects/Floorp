@@ -20,8 +20,7 @@
 
 #include "xpcprivate.h"
 
-static NS_DEFINE_IID(kWrappedNativeIID, NS_IXPCONNECT_WRAPPED_NATIVE_IID);
-NS_IMPL_QUERY_INTERFACE(nsXPCWrappedNative, kWrappedNativeIID)
+NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedNative, nsIXPConnectWrappedNative)
 
 // do chained ref counting
 

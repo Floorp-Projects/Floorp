@@ -745,7 +745,7 @@ public:
     static nsJSID* NewID(const char* str);
 
     nsJSID();
-    ~nsJSID();
+    virtual ~nsJSID();
 protected:
 
     void reset();
@@ -861,11 +861,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSCONTEXTSTACK
 
-public:
     static nsXPCThreadJSContextStackImpl* GetSingleton();
 
-private:
-    // hide ctor and dtor
     nsXPCThreadJSContextStackImpl();
     virtual ~nsXPCThreadJSContextStackImpl();
 };
