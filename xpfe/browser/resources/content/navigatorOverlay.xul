@@ -358,8 +358,6 @@ END of Deprecated -->
        <menuseparator />
       <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>      	
       <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
-      <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" disabled="true" oncommand=""/>
-      <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" disabled="true" oncommand="OpenSearch('addressbook', true, null);"/>
       <menuseparator />
        <menu value="&searchOptions.label;">
        	  <menupopup>
