@@ -365,4 +365,5 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #PersonalToolbar
   {
   	background-color	  : #394B6E;
+    border-bottom       : 1px solid #000000;
   }
