@@ -462,21 +462,34 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     nameChars = JS_GetStringChars(name);
     nameLen   = JS_GetStringLength(name);
 
-    /* It's OK if this fails - we just don't get attribs */
     JS_GetUCPropertyAttributes(cx, obj, nameChars, nameLen, &attrs, &found);
+    if (!found)
+        return NULL;
+
+    JS_ClearPendingException(cx);
 
     if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, &val))
-        return NULL;
-
-    /* XXX screwy! no good way to detect that property does not exist at all */
-    if(!found && JSVAL_IS_VOID(val))
-        return NULL;
+    {
+        if (JS_IsExceptionPending(cx))
+        {
+            if (!JS_GetPendingException(cx, &pd.value))
+                return NULL;
+            pd.flags = JSPD_EXCEPTION;
+        }
+        else
+        {
+            pd.flags = JSPD_ERROR;
+            pd.value = JSVAL_VOID;
+        }
+    }
+    else
+    {
+        pd.value = val;
+    }
 
     pd.id = STRING_TO_JSVAL(name);
-    pd.value = val;
     pd.alias = pd.slot = pd.spare = 0;
-    pd.flags = 0
-        | (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
+    pd.flags |= (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
         | (attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0
         | (attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0;
 
