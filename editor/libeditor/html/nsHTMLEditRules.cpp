@@ -4173,55 +4173,68 @@ nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode,
   // if we are inside an empty block, delete it.
   // Note: do NOT delete table elements this way.
   nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> block;
+  nsCOMPtr<nsIDOMNode> block, emptyBlock;
   if (IsBlockNode(aStartNode)) 
     block = aStartNode;
   else
     block = mHTMLEditor->GetBlockNodeParent(aStartNode);
   PRBool bIsEmptyNode;
-  if (block != aBodyNode)
+  if (block != aBodyNode)  // efficiency hack. avoiding IsEmptyNode() call when in body
   {
     res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
     if (NS_FAILED(res)) return res;
-    if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(block))
+    while (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(block) && (block != aBodyNode))
     {
-      nsCOMPtr<nsIDOMNode> blockParent;
-      PRInt32 offset;
-      res = nsEditor::GetNodeLocation(block, address_of(blockParent), &offset);
+      emptyBlock = block;
+      block = mHTMLEditor->GetBlockNodeParent(emptyBlock);
+      res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
       if (NS_FAILED(res)) return res;
-      if (!blockParent || offset < 0) return NS_ERROR_FAILURE;
+    }
+  }
+  
+  if (emptyBlock)
+  {
+    nsCOMPtr<nsIDOMNode> blockParent;
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(emptyBlock, address_of(blockParent), &offset);
+    if (NS_FAILED(res)) return res;
+    if (!blockParent || offset < 0) return NS_ERROR_FAILURE;
 
-      if (nsHTMLEditUtils::IsListItem(block))
+    if (nsHTMLEditUtils::IsListItem(emptyBlock))
+    {
+      // are we the first list item in the list?
+      PRBool bIsFirst;
+      res = mHTMLEditor->IsFirstEditableChild(emptyBlock, &bIsFirst);
+      if (NS_FAILED(res)) return res;
+      if (bIsFirst)
       {
-        // are we the first list item in the list?
-        PRBool bIsFirst;
-        res = mHTMLEditor->IsFirstEditableChild(block, &bIsFirst);
+        nsCOMPtr<nsIDOMNode> listParent;
+        PRInt32 listOffset;
+        res = nsEditor::GetNodeLocation(blockParent, address_of(listParent), &listOffset);
         if (NS_FAILED(res)) return res;
-        if (bIsFirst)
+        if (!listParent || listOffset < 0) return NS_ERROR_FAILURE;
+        // if we are a sublist, skip the br creation
+        if (!nsHTMLEditUtils::IsList(listParent))
         {
-          nsCOMPtr<nsIDOMNode> listParent;
-          PRInt32 listOffset;
-          res = nsEditor::GetNodeLocation(blockParent, address_of(listParent), &listOffset);
-          if (NS_FAILED(res)) return res;
-          if (!listParent || listOffset < 0) return NS_ERROR_FAILURE;
           // create a br before list
           nsCOMPtr<nsIDOMNode> brNode;
           res = mHTMLEditor->CreateBR(listParent, listOffset, address_of(brNode));
           if (NS_FAILED(res)) return res;
-          // adjust selection to be right after it
+          // adjust selection to be right before it
           res = aSelection->Collapse(listParent, listOffset);
           if (NS_FAILED(res)) return res;
         }
+        // else just let selection perculate up.  We'll adjust it in AfterEdit()
       }
-      else
-      {
-        // adjust selection to be right after it
-        res = aSelection->Collapse(blockParent, offset+1);
-        if (NS_FAILED(res)) return res;
-      }
-      res = mHTMLEditor->DeleteNode(block);
-      *aHandled = PR_TRUE;
     }
+    else
+    {
+      // adjust selection to be right after it
+      res = aSelection->Collapse(blockParent, offset+1);
+      if (NS_FAILED(res)) return res;
+    }
+    res = mHTMLEditor->DeleteNode(emptyBlock);
+    *aHandled = PR_TRUE;
   }
   return res;
 }
