@@ -276,16 +276,12 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     mLocale.SetString(aLocaleUnichar); // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
-    nsCOMPtr <nsIMacLocale> macLocale;
-    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
-                                             NS_GET_IID(nsIMacLocale), getter_AddRefs(macLocale));
+    nsCOMPtr <nsIMacLocale> macLocale = do_GetService(kMacLocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
       res = macLocale->GetPlatformLocale(&mLocale, &mScriptcode, &mLangcode, &mRegioncode);
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset;
-    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);

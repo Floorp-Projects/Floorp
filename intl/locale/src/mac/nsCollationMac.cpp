@@ -168,18 +168,14 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsAllocator::Free(aLocaleUnichar);
 
     short scriptcode, langcode, regioncode;
-    nsCOMPtr <nsIMacLocale> macLocale;
-    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
-                                             NS_GET_IID(nsIMacLocale), getter_AddRefs(macLocale));
+    nsCOMPtr <nsIMacLocale> macLocale = do_GetService(kMacLocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
         m_scriptcode = scriptcode;
       }
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset;
-    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
