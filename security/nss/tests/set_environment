@@ -63,14 +63,16 @@ then
     OPENWINHOME=/usr/openwin
     LD_LIBRARY_PATH=$OPENWINHOME/lib
     PATH=/tools/ns/bin:$PATH:/opt/SUNWspro/bin:/usr/bin/X11:/usr/openwin/bin:/usr/openwin/demo
-    if [ "$os_version" = "5.8" -o "$os_version" = "5.7" ]
+    if [ "$os_version" = "5.8" -o "$os_version" = "5.7" -o \
+         "$os_version" = "5.9" ]
     then
         PATH=$PATH:/tools/ns/workshop-5.0/bin
     else
         PATH=$PATH:/tools/ns/workshop-4.0/bin
     fi
     PATH=$PATH:/usr/ccs/bin:/usr/ucb/bin:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin
-    if [ "$os_full" = "SOLARISx86 2.8" ] ; then
+    if [ "$os_full" = "SOLARISx86 2.8" -o "$os_full" = "SOLARISx86 2.9" ] 
+    then
         PATH=/usr/ucb:/opt/usr/local/bin:$PATH
     else
         PATH=/usr/ucb:/h/tortoise/export/share/builds/tools/sparc_sun_solaris2.5.1/perl5.004/bin:$PATH
