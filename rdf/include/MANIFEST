@@ -7,6 +7,5 @@ nsIRDFDataSource.h
 nsIRDFDocument.h
 nsIRDFNode.h
 nsIRDFObserver.h
-nsIRDFRegistry.h
 nsIRDFResourceManager.h
 nsRDFCID.h
