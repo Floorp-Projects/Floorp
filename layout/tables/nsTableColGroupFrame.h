@@ -102,11 +102,63 @@ protected:
     * Since we need to know the full column structure before the COLS attribute
     * can be interpreted, we can't just use DidSetStyleContext
     */
-  NS_METHOD SetStyleContextForFirstPass(nsIPresContext& aPresContext);
+  NS_IMETHOD SetStyleContextForFirstPass(nsIPresContext& aPresContext);
 
-  nsresult InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
-  nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
-  
+  NS_IMETHOD InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
+
+  NS_IMETHOD IncrementalReflow(nsIPresContext&          aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus&          aStatus);
+
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext&          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus);
+
+  NS_IMETHOD IR_ColInserted(nsIPresContext&          aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsReflowStatus&          aStatus,
+                            nsTableColFrame *        aInsertedFrame,
+                            PRBool                   aReplace);
+
+  NS_IMETHOD IR_ColAppended(nsIPresContext&          aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsReflowStatus&          aStatus,
+                            nsTableColFrame *        aAppendedFrame);
+
+  NS_IMETHOD IR_ColRemoved(nsIPresContext&          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus,
+                           nsTableColFrame *        aDeletedFrame);
+
+  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&          aPresContext,
+                                     nsHTMLReflowMetrics&     aDesiredSize,
+                                     const nsHTMLReflowState& aReflowState,
+                                     nsReflowStatus&          aStatus,
+                                     nsIFrame *               aInsertedFrame,
+                                     PRBool                   aReplace);
+
+  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&          aPresContext,
+                                    nsHTMLReflowMetrics&     aDesiredSize,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsReflowStatus&          aStatus,
+                                    nsIFrame *               aRemovedFrame);
+
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus,
+                              nsIFrame *               aNextFrame);
+
+
+// data members
+
   PRInt32 mColCount;
 
   /** the starting column index this col group represents. Must be >= 0. */

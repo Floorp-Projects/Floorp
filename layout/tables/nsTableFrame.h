@@ -447,10 +447,15 @@ protected:
   /** returns PR_TRUE if the cached column info is still valid */
   virtual PRBool IsColumnCacheValid() const;
 
+  /** returns PR_TRUE if the cached column info is still valid */
+  virtual PRBool IsColumnWidthsValid() const;
+
 public:
   virtual void InvalidateFirstPassCache();
 
   virtual void InvalidateColumnCache();
+
+  virtual void InvalidateColumnWidths();
 
 protected:
   /** do post processing to setting up style information for the frame */
@@ -600,9 +605,10 @@ private:
   PRInt32     *mColumnWidths;       // widths of each column
   PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
   PRBool       mColumnWidthsSet;    // PR_TRUE if column widths have been set at least once
-  PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
-  PRBool       mColumnCacheValid;   // PR_TRUE if column cache info is still legit
-  PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit
+  PRBool       mColumnWidthsValid;  // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
+  PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
+  PRBool       mColumnCacheValid;   // PR_TRUE if column cache info is still legit, PR_FALSE if it needs to be recalculated
+  PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit, PR_FALSE if it needs to be recalculated
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   PRInt32      mColCount;           // the number of columns in this table
   PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
