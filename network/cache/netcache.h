@@ -21,7 +21,7 @@
 
 #include "mkgeturl.h"
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 extern void   NET_CleanupCache (char * filename);
 extern int    NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt);
@@ -32,7 +32,7 @@ extern void NET_CacheInit(void);
 extern void NET_InitMemCacProtocol(void);
 
 
-extern XP_Bool NET_IsCacheTraceOn(void);
+extern PRBool NET_IsCacheTraceOn(void);
 
 /* remove a URL from the cache
  */
@@ -46,7 +46,7 @@ extern void NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry);
 /* return TRUE if the URL is in the cache and
  * is a partial cache file
  */ 
-extern XP_Bool NET_IsPartialCacheFile(URL_Struct *URL_s);
+extern PRBool NET_IsPartialCacheFile(URL_Struct *URL_s);
 
 /* encapsulated access to the first object in cache_database */
 extern int NET_FirstCacheObject(DBT *key, DBT *data);
@@ -84,6 +84,6 @@ NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
  */
 extern int NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* NETCACHE_H */

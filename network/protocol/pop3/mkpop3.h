@@ -20,7 +20,7 @@
 
 extern void NET_InitPop3Protocol(void);
 
-MODULE_PRIVATE XP_Bool NET_GetAllowAtSignInMailUserName();
-MODULE_PRIVATE void NET_SetAllowAtSignInMailUserName(XP_Bool allow);
+MODULE_PRIVATE PRBool NET_GetAllowAtSignInMailUserName();
+MODULE_PRIVATE void NET_SetAllowAtSignInMailUserName(PRBool allow);
 
 #endif /* not MKPOP3_H */

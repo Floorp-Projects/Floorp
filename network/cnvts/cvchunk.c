@@ -17,6 +17,8 @@
  */
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -72,14 +74,14 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 		 	 *
 		 	 * make sure the line has a CRLF
 	 	 	 */
-			if((line_feed = XP_STRNCHR(obj->in_buf, LF, obj->in_buf_size)) == NULL)
+			if((line_feed = PL_strnchr(obj->in_buf, LF, obj->in_buf_size)) == NULL)
 			{
 				return 1;  /* need more data */
 			}
 			
             *line_feed = '\0';
 
-            semicolon = XP_STRNCHR(obj->in_buf, ';', line_feed-obj->in_buf);
+            semicolon = PL_strnchr(obj->in_buf, ';', line_feed-obj->in_buf);
 
             if(semicolon)
                 *semicolon = '\0';
@@ -94,7 +96,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 			/* strip everything up to the line feed */
 			obj->in_buf_size -= (line_feed+1) - obj->in_buf;
             if(obj->in_buf_size)
-                XP_MEMMOVE(obj->in_buf, 
+                memmove(obj->in_buf, 
 				   	    line_feed+1, 
 				   	    obj->in_buf_size);
 	
@@ -128,7 +130,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 			/* remove the part that has been pushed */
 			obj->in_buf_size -= data_size;
             if(obj->in_buf_size)
-			    XP_MEMMOVE(obj->in_buf, 
+			    memmove(obj->in_buf, 
 				   	    obj->in_buf+data_size, 
 				   	    obj->in_buf_size);
 
@@ -136,7 +138,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 	
 			if(obj->amount_of_chunk_parsed >= obj->chunk_size)
 			{
-				XP_ASSERT(obj->amount_of_chunk_parsed == obj->chunk_size);
+				PR_ASSERT(obj->amount_of_chunk_parsed == obj->chunk_size);
 				/* reinit */
 				obj->amount_of_chunk_parsed = 0;
 				obj->cur_state = STRIP_CRLF;
@@ -149,7 +151,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
                 /* strip two bytes */ 
                 obj->in_buf_size -= 2;
                 if(obj->in_buf_size)
-                    XP_MEMMOVE(obj->in_buf, 
+                    memmove(obj->in_buf, 
 				   	        obj->in_buf+2, 
 				   	        obj->in_buf_size);
                 obj->cur_state = FIND_CHUNK_SIZE;
@@ -159,7 +161,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
                 /* strip one bytes */ 
                 obj->in_buf_size -= 1;
                 if(obj->in_buf_size)
-                    XP_MEMMOVE(obj->in_buf, 
+                    memmove(obj->in_buf, 
 				   	        obj->in_buf+1, 
 				   	        obj->in_buf_size);
                 obj->cur_state = FIND_CHUNK_SIZE;
@@ -171,7 +173,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
                     int status;
                     
                     /* a fatal parse error */
-                    XP_ASSERT(0);
+                    PR_ASSERT(0);
 
                     /* just spew the buf to the screen */
            			status = (obj->next_stream->put_block)(obj->next_stream,
@@ -191,7 +193,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
             char *value;
 
             /* parse until we see two CRLF's in a row */
-            if((line_feed = XP_STRNCHR(obj->in_buf, LF, obj->in_buf_size)) == NULL)
+            if((line_feed = PL_strnchr(obj->in_buf, LF, obj->in_buf_size)) == NULL)
 			{
 				return 1;  /* need more data */
 			}
@@ -210,7 +212,7 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 
             /* names are separated from values with a colon
             */
-            value = XP_STRCHR(obj->in_buf, ':');
+            value = PL_strchr(obj->in_buf, ':');
             if(value)
                 value++;
 
@@ -225,13 +227,13 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
             /* strip the line from the buffer */
 			obj->in_buf_size -= (line_feed+1) - obj->in_buf;
             if(obj->in_buf_size)
-			    XP_MEMMOVE(obj->in_buf, 
+			    memmove(obj->in_buf, 
 				   	    line_feed+1, 
 				   	    obj->in_buf_size);
         }
 	}
 	
-	XP_ASSERT(obj->in_buf_size == 0);
+	PR_ASSERT(obj->in_buf_size == 0);
 
     return(1);
 }
@@ -250,7 +252,7 @@ PRIVATE void net_ChunkedComplete (NET_StreamClass *stream)
 	DataObject *obj=stream->data_object;	
 	(*obj->next_stream->complete)(obj->next_stream);
 
-    XP_FREE(obj);
+    PR_Free(obj);
     return;
 }
 
@@ -274,11 +276,11 @@ NET_ChunkedDecoderStream (int         format_out,
     
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW_ZAP(DataObject);
+    obj = PR_NEWZAP(DataObject);
     if (obj == NULL) 
         return(NULL);
     
@@ -293,20 +295,20 @@ NET_ChunkedDecoderStream (int         format_out,
     /* clear the "chunked" encoding */
     if(URL_s->transfer_encoding)
     {
-    	XP_FREEIF(URL_s->transfer_encoding);
+    	PR_FREEIF(URL_s->transfer_encoding);
     	URL_s->transfer_encoding = NULL;
     }
     else
     {
-    	XP_FREEIF(URL_s->content_encoding);
+    	PR_FREEIF(URL_s->content_encoding);
     	URL_s->content_encoding = NULL;
     }
     obj->next_stream = NET_StreamBuilder(format_out, URL_s, window_id);
 
 	if(!obj->next_stream)
 	{
-		XP_FREE(obj);
-		XP_FREE(stream);
+		PR_Free(obj);
+		PR_Free(stream);
 		return NULL;
 	}
 

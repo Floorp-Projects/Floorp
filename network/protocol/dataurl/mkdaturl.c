@@ -17,6 +17,8 @@
  */
 
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "net.h"
 #include "netutils.h"
 #include "mkselect.h"
@@ -45,7 +47,7 @@ net_DataURLLoad (ActiveEntry * ce)
 
 	/* we need a buffer equal to or smaller than the size of the URL
 	 */
-	data_buffer = (char *)XP_ALLOC(XP_STRLEN(ce->URL_s->address)+1);
+	data_buffer = (char *)PR_Malloc(PL_strlen(ce->URL_s->address)+1);
 
 	if(!data_buffer)
 		return(MK_OUT_OF_MEMORY);
@@ -53,7 +55,7 @@ net_DataURLLoad (ActiveEntry * ce)
 	/* determine the content type */
 
 	/* find the first comma */
-	comma = XP_STRCHR(ce->URL_s->address, ',');
+	comma = PL_strchr(ce->URL_s->address, ',');
 
 	/* if no comma abort */
 	if(!comma)
@@ -66,14 +68,14 @@ net_DataURLLoad (ActiveEntry * ce)
 	StrAllocCopy(ce->URL_s->content_type, TEXT_PLAIN);
 
 	/* check for a content type */
-	if(comma != ce->URL_s->address + XP_STRLEN("data:"))
+	if(comma != ce->URL_s->address + PL_strlen("data:"))
 	{
 		*comma = '\0';
-		XP_STRCPY(data_buffer, ce->URL_s->address + XP_STRLEN("data:"));		
+		PL_strcpy(data_buffer, ce->URL_s->address + PL_strlen("data:"));		
 		*comma = ',';
 
 		/* check for base 64 encoding */
-		if(strcasestr(data_buffer, "base64"))
+		if(PL_strcasestr(data_buffer, "base64"))
 			is_base64 = TRUE;
 
 		/* parse the rest as a content-type */
@@ -102,11 +104,11 @@ net_DataURLLoad (ActiveEntry * ce)
 	/* @@@@ bug: ignore is_write_ready */
 
 	/* copy the data part of the URL into a scratch buffer */
-	XP_STRCPY(data_buffer, comma+1);
+	PL_strcpy(data_buffer, comma+1);
 
     ce->status = (*stream->put_block)(stream,
                                         data_buffer,
-                                        XP_STRLEN(data_buffer));
+                                        PL_strlen(data_buffer));
     if(ce->status < 0)
       {
     	(*stream->abort)(stream, ce->status);
@@ -126,7 +128,7 @@ net_DataURLLoad (ActiveEntry * ce)
 PRIVATE int32
 net_ProcessDataURL (ActiveEntry * cur_entry)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return(-1);
 }
 
@@ -136,7 +138,7 @@ net_ProcessDataURL (ActiveEntry * cur_entry)
 PRIVATE int32
 net_InterruptDataURL (ActiveEntry * cur_entry)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return(-1);
 }
 

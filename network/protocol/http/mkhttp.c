@@ -265,7 +265,7 @@ int ReturnErrorStatus (int status)
 #define PUTBLOCK(b, l)  (*cd->stream->put_block) \
                                     (cd->stream, b, l)
 #define PUTSTRING(s)    (*cd->stream->put_block) \
-                                    (cd->stream, s, XP_STRLEN(s))
+                                    (cd->stream, s, PL_strlen(s))
 #define COMPLETE_STREAM (*cd->stream->complete) \
                                     (cd->stream)
 #define ABORT_STREAM(s) (*cd->stream->abort) \
@@ -317,11 +317,11 @@ net_check_for_company_hostname(ActiveEntry *ce)
 	 	*/
 		char * host = NET_ParseURL(CE_URL_S->address, GET_HOST_PART);
 	
-		if(host && *host && !(dot = XP_STRCHR(host, '.')))
+		if(host && *host && !(dot = PL_strchr(host, '.')))
 	  	  {
 			add_www = add_com = TRUE;
 		  }
-		else if(dot && !XP_STRCHR(dot+1, '.'))
+		else if(dot && !PL_strchr(dot+1, '.'))
 		  {
 			/* there is only one dot in the host name
 			 * so it's probably of the form of "netscape.com"
@@ -333,15 +333,15 @@ net_check_for_company_hostname(ActiveEntry *ce)
 
 		if(add_www) {
 		  /* no dots in hostname */
-		  if (goBrowsing && !XP_STRCHR(CE_URL_S->address, '/')) {			
+		  if (goBrowsing && !PL_strchr(CE_URL_S->address, '/')) {			
 			char *pUrl;
 			PREF_CopyCharPref("network.search.url",&pUrl);
 			if (pUrl) {
 			  char *tmp = NET_ParseURL(CE_URL_S->address, GET_HOST_PART);
 			  char* new_address = PR_smprintf("%sgo+%s", pUrl, tmp);
-			  XP_FREE(pUrl);
-			  XP_FREE(CE_URL_S->address);
-			  XP_FREEIF(tmp);  
+			  PR_Free(pUrl);
+			  PR_Free(CE_URL_S->address);
+			  PR_FREEIF(tmp);  
 			  CE_URL_S->address = new_address;
 	
 			  if(cd->connection->sock != NULL)
@@ -368,9 +368,9 @@ net_check_for_company_hostname(ActiveEntry *ce)
 						GET_PATH_PART | GET_SEARCH_PART | GET_HASH_PART);
 					
 			StrAllocCat(new_address, tmp);
-			XP_FREEIF(tmp);
+			PR_FREEIF(tmp);
 	
-			XP_FREE(CE_URL_S->address);
+			PR_Free(CE_URL_S->address);
 			CE_URL_S->address = new_address;
 	
 	    	if(cd->connection->sock != NULL)
@@ -710,10 +710,10 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
     StrAllocCopy(command, "CONNECT ");
 	StrAllocCat(command, host);
 
-	if(!XP_STRCHR(host, ':'))
+	if(!PL_strchr(host, ':'))
       {
 	    char small_buf[20];
-		XP_SPRINTF(small_buf, ":%d", DEF_HTTPS_PORT);
+		sprintf(small_buf, ":%d", DEF_HTTPS_PORT);
 		StrAllocCat(command, small_buf);
 	  }
 
@@ -729,11 +729,11 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
 											   CE_URL_S,
 											   CD_PROXY_SERVER)))
 	  {
-		  char *line = (char *)XP_ALLOC(strlen(auth) + 30);
+		  char *line = (char *)PR_Malloc(strlen(auth) + 30);
 		  if (line) {
-			  XP_SPRINTF(line, "Proxy-authorization: %s%c%c", auth, CR, LF);
+			  sprintf(line, "Proxy-authorization: %s%c%c", auth, CR, LF);
 			  StrAllocCat(command, line);
-			  XP_FREE(line);
+			  PR_Free(line);
 		  }
 		  CD_SENT_PROXY_AUTH = TRUE;
 		  TRACEMSG(("HTTP: Sending proxy-authorization: %s", auth));
@@ -745,7 +745,7 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
 
 	{
 		char line[200];
-		XP_SPRINTF(line, "User-Agent: %.100s/%.90s" CRLF CRLF,
+		sprintf(line, "User-Agent: %.100s/%.90s" CRLF CRLF,
 				   XP_AppCodeName, XP_AppVersion);
 		StrAllocCat(command, line);
 	}
@@ -753,9 +753,9 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
 	TRACEMSG(("Tx: %s", command));
 
 	SSL_SetSockPeerID(cd->connection->sock, command);
-    CE_STATUS = NET_HTTPNetWrite(cd->connection->sock, command, XP_STRLEN(command));
+    CE_STATUS = NET_HTTPNetWrite(cd->connection->sock, command, PL_strlen(command));
 
-	XP_FREE(command);
+	PR_Free(command);
 
 	CD_PAUSE_FOR_READ = TRUE;
 
@@ -791,7 +791,7 @@ net_get_size_with_crlf( char *filename, XP_FileType file_type, XP_Bool add_crlf 
 	if (!xpfileptr)
 		return -1;
 	
-	buffer = (char *) XP_ALLOC(POST_DATA_BUFFER_SIZE);
+	buffer = (char *) PR_Malloc(POST_DATA_BUFFER_SIZE);
 	if (!buffer)
 		return -1;
 	
@@ -800,7 +800,7 @@ net_get_size_with_crlf( char *filename, XP_FileType file_type, XP_Bool add_crlf 
 	  if (!line)
 		break;
 
-	  line_length = XP_STRLEN(line);
+	  line_length = PL_strlen(line);
 
 	  if (line_length > 1 && line[line_length-2] == CR && line[line_length-1] == LF)
 	 	{
@@ -815,7 +815,7 @@ net_get_size_with_crlf( char *filename, XP_FileType file_type, XP_Bool add_crlf 
 	  return_value += line_length;
 	} while (line);
 
-	XP_FREE( buffer );
+	PR_Free( buffer );
 	
 	return return_value;
 }
@@ -841,7 +841,7 @@ net_begin_upload_file (ActiveEntry *ce)
 		return(0);
 	  }
 
-	XP_ASSERT(ce->URL_s->files_to_post && ce->URL_s->files_to_post[0]);
+	PR_ASSERT(ce->URL_s->files_to_post && ce->URL_s->files_to_post[0]);
 	if(!ce->URL_s->files_to_post || !ce->URL_s->files_to_post[0])
 		return MK_UNABLE_TO_LOCATE_FILE;
 
@@ -850,7 +850,7 @@ net_begin_upload_file (ActiveEntry *ce)
 	for(i=0; ce->URL_s->files_to_post[i]; i++)
 		; /* find the end */
 
-	XP_ASSERT(i>0);
+	PR_ASSERT(i>0);
 
 	file_to_post = ce->URL_s->files_to_post[i-1];
 
@@ -858,11 +858,11 @@ net_begin_upload_file (ActiveEntry *ce)
 	ce->URL_s->files_to_post[i-1] = NULL;
 
 #ifdef XP_MAC
-    filename = XP_STRRCHR(file_to_post, '/');
+    filename = PL_strrchr(file_to_post, '/');
 #elif defined(XP_WIN)
-    filename = XP_STRRCHR(file_to_post, '\\');
+    filename = PL_strrchr(file_to_post, '\\');
 #else
-    filename = XP_STRRCHR(file_to_post, '/');
+    filename = PL_strrchr(file_to_post, '/');
 #endif
 
     if(!filename)
@@ -875,7 +875,7 @@ net_begin_upload_file (ActiveEntry *ce)
 	if (-1 == adjusted_file_size)
 	  {																						   
 		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_LOCATE_FILE, file_to_post);
-		XP_FREE(file_to_post);
+		PR_Free(file_to_post);
 		return MK_UNABLE_TO_LOCATE_FILE;
 	  }
 		
@@ -883,7 +883,7 @@ net_begin_upload_file (ActiveEntry *ce)
 	if(status_msg)
 	  {
 		NET_Progress(ce->window_id, status_msg);
-		XP_FREE(status_msg);
+		PR_Free(status_msg);
 	  }		
 
 /*#ifdef EDITOR
@@ -893,14 +893,14 @@ net_begin_upload_file (ActiveEntry *ce)
 	header = PR_smprintf("Content-Length: %ld" CRLF CRLF, adjusted_file_size);
 
 
-	XP_FREEIF(ce->URL_s->post_headers);
+	PR_FREEIF(ce->URL_s->post_headers);
 	/* if header is null this won't crash */
 	ce->URL_s->post_headers = header;
 
     /* If the destination URL is explicitly specified in the post_to array, use it, otherwise
      * generate destination from URL_s->address and filename.  hardts */
     if (ce->URL_s->post_to && ce->URL_s->post_to[i - 1]) {
-        XP_FREE(ce->URL_s->address); /* We don't use it at all. */
+        PR_Free(ce->URL_s->address); /* We don't use it at all. */
         ce->URL_s->address = ce->URL_s->post_to[i - 1];
         ce->URL_s->post_to[i - 1] = NULL;  /* zero the element */
     }
@@ -908,7 +908,7 @@ net_begin_upload_file (ActiveEntry *ce)
 	     /* strip the filename from the last slash and append the
 	     * new filename to the URL
 	     */
-	    last_slash = XP_STRRCHR(ce->URL_s->address, '/');
+	    last_slash = PL_strrchr(ce->URL_s->address, '/');
 	    if(last_slash)
 		    *last_slash = '\0';
 	    StrAllocCat(ce->URL_s->address, "/");
@@ -920,11 +920,11 @@ net_begin_upload_file (ActiveEntry *ce)
          /* Strip out username and password. from address */
         char *pLocation = NULL;
         if (!NET_ParseUploadURL( ce->URL_s->address, &pLocation, NULL,NULL )) {
-            XP_ASSERT(0);
+            PR_ASSERT(0);
         }        
         if (CLEAR_CACHE_BIT(ce->format_out) != FO_LOCATION_INDEPENDENCE)
             FE_SaveDialogSetFilename(ce->window_id, pLocation);
-        XP_FREE(pLocation);
+        PR_Free(pLocation);
    }
 #endif /* EDITOR */
 
@@ -940,7 +940,7 @@ net_begin_upload_file (ActiveEntry *ce)
 	/* do the request */
 	cd->next_state = HTTP_SEND_REQUEST;
 	
-	XP_FREE(file_to_post);
+	PR_Free(file_to_post);
 
 	return(0);
 }
@@ -1029,7 +1029,7 @@ net_build_http_request (URL_Struct * URL_s,
 			break;
 
 		default:
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 			/* fall through to GET */
 
     	case URL_GET_METHOD:
@@ -1061,9 +1061,9 @@ net_build_http_request (URL_Struct * URL_s,
 			| GET_SEARCH_PART);
 		if(url_minus_hash)
 		{
-			BlockAllocCat(*command, (size_t) csize, url_minus_hash, XP_STRLEN(url_minus_hash));
-			csize += XP_STRLEN(url_minus_hash);
-			XP_FREE(url_minus_hash);
+			BlockAllocCat(*command, (size_t) csize, url_minus_hash, PL_strlen(url_minus_hash));
+			csize += PL_strlen(url_minus_hash);
+			PR_Free(url_minus_hash);
 		}
 
 	  }
@@ -1073,10 +1073,10 @@ net_build_http_request (URL_Struct * URL_s,
 		 */
     	char *path = NET_ParseURL(URL_s->address, 
 										GET_PATH_PART | GET_SEARCH_PART);
-        BlockAllocCat(*command, csize, path, XP_STRLEN(path));
-		csize += XP_STRLEN(path);
+        BlockAllocCat(*command, csize, path, PL_strlen(path));
+		csize += PL_strlen(path);
 
-    	XP_FREE(path);
+    	PR_Free(path);
 	  }
 
     if(http1) 
@@ -1085,8 +1085,8 @@ net_build_http_request (URL_Struct * URL_s,
 		csize += 1;
         BlockAllocCat(*command, csize, 
 					  VERSION_STRING, 
-					  XP_STRLEN(VERSION_STRING));
-		csize += XP_STRLEN(VERSION_STRING);
+					  PL_strlen(VERSION_STRING));
+		csize += PL_strlen(VERSION_STRING);
         /* finish the line */
         BlockAllocCat(*command, csize, CRLF, 2); /* CR LF, as in rfc 977 */
 		csize += 2;
@@ -1094,14 +1094,14 @@ net_build_http_request (URL_Struct * URL_s,
 		if ((URL_s->etag) && (URL_s->force_reload != NET_SUPER_RELOAD))
 		{
 			/* add the If-None-Match header */
-			XP_STRCPY(line_buffer, "If-None-Match: \"");
+			PL_strcpy(line_buffer, "If-None-Match: \"");
 			BlockAllocCat(*command, csize,
-				line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+				line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 			BlockAllocCat(*command, csize, 
 				URL_s->etag,
-				XP_STRLEN(URL_s->etag));
-			csize += XP_STRLEN(URL_s->etag);
+				PL_strlen(URL_s->etag));
+			csize += PL_strlen(URL_s->etag);
 			/* Closing " */
 			BlockAllocCat(*command, csize,
 				"\"",
@@ -1164,16 +1164,16 @@ net_build_http_request (URL_Struct * URL_s,
 			 * or else I screwed up the cache logic 
 			 */
 #ifndef AIX
-			XP_ASSERT(strncasecomp(URL_s->address, tmp_str, 4)
+			PR_ASSERT(PL_strncasecmp(URL_s->address, tmp_str, 4)
 					  || URL_s->real_content_length > 0);
 #endif
 
 			if(URL_s->real_content_length)
-            	XP_SPRINTF(&line_buffer[XP_STRLEN(line_buffer)], 
+            	sprintf(&line_buffer[PL_strlen(line_buffer)], 
 							"; length=%ld" CRLF,
 							URL_s->real_content_length);
-            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 
             /* reset the expires since we will want to
              * either get a new one from the server or
@@ -1185,8 +1185,8 @@ net_build_http_request (URL_Struct * URL_s,
         if(URL_s->http_headers)  /* use headers that were passed in */
           {
 
-            BlockAllocCat(*command, csize, URL_s->http_headers, XP_STRLEN(URL_s->http_headers));
-			csize += XP_STRLEN(URL_s->http_headers);
+            BlockAllocCat(*command, csize, URL_s->http_headers, PL_strlen(URL_s->http_headers));
+			csize += PL_strlen(URL_s->http_headers);
           }
         else
           {
@@ -1199,8 +1199,8 @@ net_build_http_request (URL_Struct * URL_s,
 				){
 				int len=0;
 				if(meth == URL_MOVE_METHOD) {
-					XP_SPRINTF(line_buffer, "New-uri: %s", URL_s->destination);
-					len=XP_STRLEN(line_buffer);
+					sprintf(line_buffer, "New-uri: %s", URL_s->destination);
+					len=PL_strlen(line_buffer);
 					BlockAllocCat(*command, csize, line_buffer, len);
 					csize+=len;
 				}
@@ -1208,8 +1208,8 @@ net_build_http_request (URL_Struct * URL_s,
 					;/* some http copy syntax */
 				}
 
-				BlockAllocCat(*command, csize, CRLF, XP_STRLEN(CRLF));
-                csize += XP_STRLEN(CRLF);
+				BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
+                csize += PL_strlen(CRLF);
 			}
 			/* sendRefererHeader is set in NET_SetSendRefererHeaderPref in mkhttp.c. 
 			   This condition is set via a javascript pref and was implemented to 
@@ -1223,12 +1223,12 @@ net_build_http_request (URL_Struct * URL_s,
 					&& url_type != FILE_TYPE_URL)
 				  {
 					TRACEMSG(("Sending referer field"));
-            		XP_STRCPY(line_buffer, "Referer: ");
-					BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-					csize += XP_STRLEN(line_buffer);
+            		PL_strcpy(line_buffer, "Referer: ");
+					BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+					csize += PL_strlen(line_buffer);
 					BlockAllocCat(*command,  csize, URL_s->referer,
-								  XP_STRLEN(URL_s->referer));
-					csize += XP_STRLEN(URL_s->referer);
+								  PL_strlen(URL_s->referer));
+					csize += PL_strlen(URL_s->referer);
 					BlockAllocCat(*command, csize, CRLF, 2);
 					csize += 2;
 				  }
@@ -1238,15 +1238,15 @@ net_build_http_request (URL_Struct * URL_s,
 			assert (XP_AppVersion);
 
 			if(proxy_server)
-            	XP_STRCPY(line_buffer, "Proxy-Connection: Keep-Alive" CRLF);
+            	PL_strcpy(line_buffer, "Proxy-Connection: Keep-Alive" CRLF);
 			else
-            	XP_STRCPY(line_buffer, "Connection: Keep-Alive" CRLF);
+            	PL_strcpy(line_buffer, "Connection: Keep-Alive" CRLF);
 
-            XP_SPRINTF (&line_buffer[XP_STRLEN(line_buffer)], 
+            sprintf (&line_buffer[PL_strlen(line_buffer)], 
 						"User-Agent: %.100s/%.90s" CRLF,
 						XP_AppCodeName, XP_AppVersion);
-            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 
             if(URL_s->force_reload)
 			  {
@@ -1258,20 +1258,20 @@ net_build_http_request (URL_Struct * URL_s,
 			  {
 #ifndef AIX
 				char *tmp_str = CRLF;
-				XP_ASSERT(!XP_STRSTR(URL_s->range_header, tmp_str));
+				PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
 #endif
 #define REQUEST_RANGE_HEADER "Range: "
             	BlockAllocCat(*command, csize, 
 							  REQUEST_RANGE_HEADER,
-							  XP_STRLEN(REQUEST_RANGE_HEADER));
-				csize += XP_STRLEN(REQUEST_RANGE_HEADER);
+							  PL_strlen(REQUEST_RANGE_HEADER));
+				csize += PL_strlen(REQUEST_RANGE_HEADER);
             	BlockAllocCat(*command, csize, 
 							  URL_s->range_header,
-							  XP_STRLEN(URL_s->range_header));
-				csize += XP_STRLEN(URL_s->range_header);
+							  PL_strlen(URL_s->range_header));
+				csize += PL_strlen(URL_s->range_header);
             	BlockAllocCat(*command, csize, 
-							  CRLF, XP_STRLEN(CRLF));
-				csize += XP_STRLEN(CRLF);
+							  CRLF, PL_strlen(CRLF));
+				csize += PL_strlen(CRLF);
 			  }
 
 #define OLD_RANGE_SUPPORT
@@ -1284,21 +1284,21 @@ net_build_http_request (URL_Struct * URL_s,
               {
 #ifndef AIX
 		char *tmp_str = CRLF;
-                XP_ASSERT(!XP_STRSTR(URL_s->range_header, tmp_str));
+                PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
 #endif
 #undef REQUEST_RANGE_HEADER
 #define REQUEST_RANGE_HEADER "Request-Range: "
                 BlockAllocCat(*command, csize,
                               REQUEST_RANGE_HEADER,
-                              XP_STRLEN(REQUEST_RANGE_HEADER));
-                csize += XP_STRLEN(REQUEST_RANGE_HEADER);
+                              PL_strlen(REQUEST_RANGE_HEADER));
+                csize += PL_strlen(REQUEST_RANGE_HEADER);
                 BlockAllocCat(*command, csize,
                               URL_s->range_header,
-                              XP_STRLEN(URL_s->range_header));
-                csize += XP_STRLEN(URL_s->range_header);
+                              PL_strlen(URL_s->range_header));
+                csize += PL_strlen(URL_s->range_header);
                 BlockAllocCat(*command, csize,
-                              CRLF, XP_STRLEN(CRLF));
-                csize += XP_STRLEN(CRLF);
+                              CRLF, PL_strlen(CRLF));
+                csize += PL_strlen(CRLF);
               }
 #endif
 
@@ -1316,12 +1316,12 @@ net_build_http_request (URL_Struct * URL_s,
 									HOST_HEADER, 	
 									sizeof(HOST_HEADER)-1);
 					csize += sizeof(HOST_HEADER)-1;
-					len = XP_STRLEN(host);
+					len = PL_strlen(host);
                 	BlockAllocCat(*command, csize, host, len);
 	
 					csize += len;
 
-					XP_FREE(host);
+					PR_Free(host);
 
                 	BlockAllocCat(*command, csize, CRLF, 2);
 					csize += 2;
@@ -1329,10 +1329,10 @@ net_build_http_request (URL_Struct * URL_s,
 			  }
 
 #ifdef SEND_FROM_FIELD
-            XP_SPRINTF(line_buffer, "From: %.256s%c%c", 
+            sprintf(line_buffer, "From: %.256s%c%c", 
                 			FE_UsersMailAddress() ? FE_UsersMailAddress() : "unregistered", CR,LF);
-            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 #endif /* SEND_FROM_FIELD */
 
 
@@ -1340,22 +1340,22 @@ net_build_http_request (URL_Struct * URL_s,
 			  {
 				/* send Accept: *(slash)* as well as the others
 				 */
-				XP_SPRINTF(line_buffer, "Accept: %s, %s, %s, %s, %s, */*" CRLF, 
+				sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s, */*" CRLF, 
 						    IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
 			  }
 			else
 			  {
-				XP_SPRINTF(line_buffer, "Accept: %s, %s, %s, %s, %s" CRLF, 
+				sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s" CRLF, 
 						    IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
 			  }
 
-            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 
 			/* add Accept-Encoding Header */
-			XP_SPRINTF(line_buffer, "Accept-Encoding: %s" CRLF, ENCODING_GZIP2);
-            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-			csize += XP_STRLEN(line_buffer);
+			sprintf(line_buffer, "Accept-Encoding: %s" CRLF, ENCODING_GZIP2);
+            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+			csize += PL_strlen(line_buffer);
 
 #ifdef MOZILLA_CLIENT
 #define SEND_ACCEPT_LANGUAGE 1
@@ -1364,10 +1364,10 @@ net_build_http_request (URL_Struct * URL_s,
 				char *acceptlang = INTL_GetAcceptLanguage();
 				if((acceptlang != NULL) && ( *acceptlang != '\0') )
 				{
-					XP_SPRINTF(line_buffer, "Accept-Language: %s" CRLF, 
+					sprintf(line_buffer, "Accept-Language: %s" CRLF, 
 							  	 acceptlang );
-		            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-					csize += XP_STRLEN(line_buffer);
+		            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+					csize += PL_strlen(line_buffer);
 				}
 			}
 #endif /* SEND_ACCEPT_LANGUAGE */
@@ -1378,10 +1378,10 @@ net_build_http_request (URL_Struct * URL_s,
 				char *acceptCharset = INTL_GetAcceptCharset();
 				if((acceptCharset != NULL) && ( *acceptCharset != '\0') )
 				{
-					XP_SPRINTF(line_buffer, "Accept-Charset: %s" CRLF, 
+					sprintf(line_buffer, "Accept-Charset: %s" CRLF, 
 							  	 acceptCharset );
-		            BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-					csize += XP_STRLEN(line_buffer);
+		            BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+					csize += PL_strlen(line_buffer);
 				}
 			}
 #endif /* SEND_ACCEPT_CHARSET */
@@ -1414,11 +1414,11 @@ net_build_http_request (URL_Struct * URL_s,
 													   proxyServer)))
               {
 				if (tempURL)
-					XP_FREE(proxyServer);
+					PR_Free(proxyServer);
 				*sent_proxy_auth = TRUE;
-                XP_SPRINTF(line_buffer, "Proxy-authorization: %.3840s%c%c", auth, CR, LF);
-            	BlockAllocCat(*command, csize, line_buffer, XP_STRLEN(line_buffer));
-				csize += XP_STRLEN(line_buffer);
+                sprintf(line_buffer, "Proxy-authorization: %.3840s%c%c", auth, CR, LF);
+            	BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+				csize += PL_strlen(line_buffer);
                 TRACEMSG(("HTTP: Sending proxy-authorization: %s", auth));
               }
             else 
@@ -1437,8 +1437,8 @@ net_build_http_request (URL_Struct * URL_s,
             if (NULL!=(auth=NET_BuildAuthString(window_id, URL_s))) 
               {
 				*sent_authorization = TRUE;
-            	BlockAllocCat(*command, csize, auth, XP_STRLEN(auth));
-				csize += XP_STRLEN(auth);
+            	BlockAllocCat(*command, csize, auth, PL_strlen(auth));
+				csize += PL_strlen(auth);
                 TRACEMSG(("HTTP: Sending authorization: %s", auth));
               }
             else 
@@ -1449,18 +1449,18 @@ net_build_http_request (URL_Struct * URL_s,
             if (NULL!=(auth=NET_GetCookie(window_id, URL_s->address))) 
 			  {
 				int len;
-                XP_STRCPY(line_buffer, "Cookie: ");
+                PL_strcpy(line_buffer, "Cookie: ");
                 BlockAllocCat(*command, csize, 
-							  line_buffer, XP_STRLEN(line_buffer));
+							  line_buffer, PL_strlen(line_buffer));
 				
-                csize += XP_STRLEN(line_buffer);
-				len = XP_STRLEN(auth);
+                csize += PL_strlen(line_buffer);
+				len = PL_strlen(auth);
                 BlockAllocCat(*command, csize, auth, len);
                 csize += len;
-                BlockAllocCat(*command, csize, CRLF, XP_STRLEN(CRLF));
-                csize += XP_STRLEN(CRLF);
+                BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
+                csize += PL_strlen(CRLF);
                 TRACEMSG(("HTTP: Sending Cookie: %s", auth));
-		XP_FREE(auth);
+		PR_Free(auth);
               }
             else
               {
@@ -1535,11 +1535,11 @@ net_send_http_request (ActiveEntry *ce)
  	 * all except content_length since that may be passed in
      */
     CE_URL_S->protection_template = 0;
-    XP_FREEIF(CE_URL_S->redirecting_url);
+    PR_FREEIF(CE_URL_S->redirecting_url);
     CE_URL_S->redirecting_url = NULL;
-    XP_FREEIF(CE_URL_S->authenticate);
+    PR_FREEIF(CE_URL_S->authenticate);
     CE_URL_S->authenticate = NULL;
-    XP_FREEIF(CE_URL_S->proxy_authenticate);
+    PR_FREEIF(CE_URL_S->proxy_authenticate);
     CE_URL_S->proxy_authenticate = NULL;
 
     /* Build the request command.  (It must be free'd!!!) 
@@ -1571,7 +1571,7 @@ net_send_http_request (ActiveEntry *ce)
 	  }
 #endif /* DEBUG */
 #endif /* JAVA */
-    XP_FREE (command);  /* freeing the request */
+    PR_Free (command);  /* freeing the request */
 
 	if (CE_STATUS < 0) 
 	  {
@@ -1590,7 +1590,7 @@ net_send_http_request (ActiveEntry *ce)
 
 	/* make sure these are empty
 	 */
-	XP_FREEIF(CD_LINE_BUFFER); /* reset */
+	PR_FREEIF(CD_LINE_BUFFER); /* reset */
 	CD_LINE_BUFFER = NULL;
 	CD_LINE_BUFFER_SIZE=0;          /* reset */
 
@@ -1629,9 +1629,9 @@ net_send_http_request (ActiveEntry *ce)
 									nonProxyHost);
 			if (msg) {
 				NET_Progress(CE_WINDOW_ID, msg);
-				XP_FREE(msg);
+				PR_Free(msg);
 			}
-			XP_FREE(nonProxyHost);
+			PR_Free(nonProxyHost);
 		}
 	}
 
@@ -1652,8 +1652,8 @@ net_http_send_post_data (ActiveEntry *ce)
 	 */
 	if(cd->line_buffer_size < 200)
 	  {
-		XP_FREEIF(cd->line_buffer);
-		cd->line_buffer = (char*)XP_ALLOC(256);
+		PR_FREEIF(cd->line_buffer);
+		cd->line_buffer = (char*)PR_Malloc(256);
 		cd->line_buffer_size = 256;
 	  }
 
@@ -1687,7 +1687,7 @@ net_http_send_post_data (ActiveEntry *ce)
 
 		/* make sure these are empty
 	 	 */
-	 	XP_FREEIF(cd->line_buffer); /* reset */
+	 	PR_FREEIF(cd->line_buffer); /* reset */
 	 	cd->line_buffer = NULL;
 		cd->line_buffer_size=0;          /* reset */
 
@@ -1702,9 +1702,9 @@ net_http_send_post_data (ActiveEntry *ce)
 										nonProxyHost);
 				if (msg) {
 					NET_Progress(CE_WINDOW_ID, msg);
-					XP_FREE(msg);
+					PR_Free(msg);
 				}
-				XP_FREE(nonProxyHost);
+				PR_Free(nonProxyHost);
 			}
 		}
 
@@ -1769,14 +1769,14 @@ net_parse_http_mime_headers (ActiveEntry *ce)
              * cache file
              */
 			if(!CE_URL_S->preset_content_type)
-            	XP_FREEIF(CE_URL_S->content_type);
+            	PR_FREEIF(CE_URL_S->content_type);
             	CE_URL_S->content_type = NULL;
             CE_URL_S->content_length = 0;
             CE_URL_S->real_content_length = 0;
             CE_URL_S->last_modified = 0;
-            XP_FREEIF(CE_URL_S->content_encoding);
+            PR_FREEIF(CE_URL_S->content_encoding);
             CE_URL_S->content_encoding = NULL;
-            XP_FREEIF(CE_URL_S->content_name);
+            PR_FREEIF(CE_URL_S->content_name);
             CE_URL_S->content_name = NULL;
             CD_NEXT_STATE = HTTP_DONE;
 			CD_PAUSE_FOR_READ = FALSE;
@@ -1897,7 +1897,7 @@ HG07606
         return(0);
       }
 
-	value = XP_STRCHR(line, ':');
+	value = PL_strchr(line, ':');
 	if(value)
 		value++;
 	NET_ParseMimeHeader(CE_FORMAT_OUT, CE_WINDOW_ID, CE_URL_S, line, value, TRUE);
@@ -1969,7 +1969,7 @@ net_parse_first_http_line (ActiveEntry *ce)
 	 */
     /* clear existing data
      */
-    XP_FREEIF(CE_URL_S->sec_info);
+    PR_FREEIF(CE_URL_S->sec_info);
     ce->URL_s->sec_info = SECNAV_SSLSocketStatus(cd->connection->sock,
                                                  &ce->URL_s->security_on);
 
@@ -1987,7 +1987,7 @@ net_parse_first_http_line (ActiveEntry *ce)
                                                     ce->URL_s->redirect_sec_info);
 
 		/* now that we are done with the redirecting info destroy it */
-        XP_FREE(ce->URL_s->redirect_sec_info);
+        PR_Free(ce->URL_s->redirect_sec_info);
         ce->URL_s->redirect_sec_info = NULL;
 		
 		if ( compare != PR_TRUE ) {
@@ -2035,7 +2035,7 @@ net_parse_first_http_line (ActiveEntry *ce)
     
         /* Try and make sure this is an HTTP/1.0 reply
 	 	 */
-        if (num_fields == 2 || !XP_STRNCMP("HTTP/", server_version, 5))
+        if (num_fields == 2 || !PL_strncmp("HTTP/", server_version, 5))
           {
 			double ver = atof(server_version+5);
 
@@ -2046,14 +2046,14 @@ net_parse_first_http_line (ActiveEntry *ce)
 
 				net_setup_http11_defaults(ce);
 
-				XP_ASSERT(ver == 1.1);
+				PR_ASSERT(ver == 1.1);
 			}
 			else
 			{
             	/* HTTP1 */
     			cd->protocol_version = ONE_POINT_O;
 
-				XP_ASSERT(ver == 1.0  || ver == 0.0); /* allow 0 bug */
+				PR_ASSERT(ver == 1.0  || ver == 0.0); /* allow 0 bug */
 			}
           }
 
@@ -2090,14 +2090,14 @@ net_parse_first_http_line (ActiveEntry *ce)
         
 		CE_URL_S->content_length = 0;
 		CE_URL_S->real_content_length = 0;
-		XP_FREEIF(CE_URL_S->content_encoding);
+		PR_FREEIF(CE_URL_S->content_encoding);
 		CE_URL_S->content_encoding = NULL;
-		XP_FREEIF(CE_URL_S->content_name);
+		PR_FREEIF(CE_URL_S->content_name);
 		CE_URL_S->content_name = NULL;
 
 		if(!CE_URL_S->preset_content_type)
 		  {
-			XP_FREEIF(CE_URL_S->content_type);
+			PR_FREEIF(CE_URL_S->content_type);
 			CE_URL_S->content_type = NULL;
 
          	/* fake the content_type since we can't get it */
@@ -2138,14 +2138,14 @@ net_parse_first_http_line (ActiveEntry *ce)
 			 */
 			if(!CE_URL_S->preset_content_type)
 			{
-				XP_FREEIF(CE_URL_S->content_type);
+				PR_FREEIF(CE_URL_S->content_type);
 				CE_URL_S->content_type = NULL;
 			}
 			CE_URL_S->content_length = 0;
 			CE_URL_S->real_content_length = 0;
-			XP_FREEIF(CE_URL_S->content_encoding);
+			PR_FREEIF(CE_URL_S->content_encoding);
 			CE_URL_S->content_encoding = NULL;
-			XP_FREEIF(CE_URL_S->content_name);
+			PR_FREEIF(CE_URL_S->content_name);
 			CE_URL_S->content_name = NULL;
 		  }
 
@@ -2182,7 +2182,7 @@ net_parse_first_http_line (ActiveEntry *ce)
 
 					cd->line_buffer_size -= cur_line_size;
 					if(cd->line_buffer_size)
-						XP_MEMMOVE(cd->line_buffer, end_of_line+1, cd->line_buffer_size); 
+						memmove(cd->line_buffer, end_of_line+1, cd->line_buffer_size); 
 
 					/* by not setting CD_NEXT_STATE to something different
 					 * we will come back to this function and look for another
@@ -2371,7 +2371,7 @@ net_parse_first_http_line (ActiveEntry *ce)
               default:  /* unexpected reply code */
                 {
                   char message_buffer[256];
-                  XP_SPRINTF(message_buffer,
+                  sprintf(message_buffer,
 							 XP_GetString(XP_ALERT_UNKNOWN_STATUS),
                              CE_URL_S->server_status);
                   FE_Alert(CE_WINDOW_ID, message_buffer);
@@ -2408,13 +2408,13 @@ net_revert_post_data(ActiveEntry * ce)
 			; /* null body */
 
 		/* this will not explode even if the malloc fails */
-		ce->URL_s->files_to_post[index] = XP_STRDUP(ce->URL_s->post_data);					
+		ce->URL_s->files_to_post[index] = PL_strdup(ce->URL_s->post_data);					
 
 		ce->URL_s->files_to_post[index+1] = NULL;
 
 		if(ce->URL_s->post_to)
 		{
-			ce->URL_s->post_to[index] = XP_STRDUP(ce->URL_s->address);
+			ce->URL_s->post_to[index] = PL_strdup(ce->URL_s->address);
 
 			ce->URL_s->post_to[index+1] = NULL;
 		}
@@ -2475,14 +2475,14 @@ net_setup_http_stream(ActiveEntry * ce)
 			 */
 			if(!CE_URL_S->preset_content_type)
 			{
-				XP_FREEIF(CE_URL_S->content_type);
+				PR_FREEIF(CE_URL_S->content_type);
 				CE_URL_S->content_type = NULL;
 			}
 			CE_URL_S->content_length = 0;
 			CE_URL_S->real_content_length = 0;
-			XP_FREEIF(CE_URL_S->content_encoding);
+			PR_FREEIF(CE_URL_S->content_encoding);
 			CE_URL_S->content_encoding = NULL;
-			XP_FREEIF(CE_URL_S->content_name);
+			PR_FREEIF(CE_URL_S->content_name);
 			CE_URL_S->content_name = NULL;
 			CD_NEXT_STATE = HTTP_DONE;
 			CD_PAUSE_FOR_READ = FALSE;
@@ -2521,7 +2521,7 @@ net_setup_http_stream(ActiveEntry * ce)
 
 #define COMPUSERVE_HEADER_NAME "Remote-Passphrase"
 
-	else if(CE_URL_S->authenticate && !strncasecomp(CE_URL_S->authenticate, 
+	else if(CE_URL_S->authenticate && !PL_strncasecmp(CE_URL_S->authenticate, 
 						 							COMPUSERVE_HEADER_NAME, 
 						 							sizeof(COMPUSERVE_HEADER_NAME) - 1))
 	  {
@@ -2572,7 +2572,7 @@ net_setup_http_stream(ActiveEntry * ce)
 		 * pointing to it. 
 		 */
 		if (tempURL)
-			XP_FREEIF(proxyServer);
+			PR_FREEIF(proxyServer);
 	  }
 
 	if (need_to_do_again)
@@ -2592,12 +2592,12 @@ net_setup_http_stream(ActiveEntry * ce)
 
         /* clear the buffer 
          */ 
-        XP_FREEIF(CD_LINE_BUFFER);
+        PR_FREEIF(CD_LINE_BUFFER);
         CD_LINE_BUFFER = NULL;
         CD_LINE_BUFFER_SIZE = 0;
 
 		/* if necessary */
-		XP_FREEIF(CD_SERVER_HEADERS);
+		PR_FREEIF(CD_SERVER_HEADERS);
 		CD_SERVER_HEADERS = NULL;
 
         return(0); /* continue */
@@ -2605,7 +2605,7 @@ net_setup_http_stream(ActiveEntry * ce)
     else if (CD_DOING_REDIRECT && CE_URL_S->redirecting_url &&
             /* try and prevent a circular loop. wont work for dual doc loop
              */
-                XP_STRCMP(CE_URL_S->redirecting_url, CE_URL_S->address))
+                PL_strcmp(CE_URL_S->redirecting_url, CE_URL_S->address))
       {
 		Bool do_redirect=TRUE;
 		char *curURLHost, *redirectURLHost;
@@ -2624,26 +2624,26 @@ net_setup_http_stream(ActiveEntry * ce)
 			if( !(curURLHost = NET_ParseURL(CE_URL_S->address, GET_HOST_PART)) )
 				return MK_INTERRUPTED;
 			if( !(redirectURLHost = NET_ParseURL(CE_URL_S->redirecting_url, GET_HOST_PART)) ) {
-				XP_FREE(curURLHost);
+				PR_Free(curURLHost);
 				return MK_INTERRUPTED;
 			}
 
-			if ( (curPort = XP_STRCHR(curURLHost, ':')) != NULL)
+			if ( (curPort = PL_strchr(curURLHost, ':')) != NULL)
 				*curPort='\0';
-			if ( (redirectPort = XP_STRCHR(redirectURLHost, ':')) != NULL)
+			if ( (redirectPort = PL_strchr(redirectURLHost, ':')) != NULL)
 				*redirectPort='\0';
 
-			if(strcasecomp(curURLHost, redirectURLHost)) {
-				XP_FREE(curURLHost);
-				XP_FREE(redirectURLHost);
-				XP_FREEIF(CE_URL_S->redirecting_url);
+			if(PL_strcasecmp(curURLHost, redirectURLHost)) {
+				PR_Free(curURLHost);
+				PR_Free(redirectURLHost);
+				PR_FREEIF(CE_URL_S->redirecting_url);
 				CE_URL_S->redirecting_url = NULL;
 				CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_REDIRECT_ATTEMPT_NOT_ALLOWED);
 				return MK_REDIRECT_ATTEMPT_NOT_ALLOWED;
 			}
 
-			XP_FREE(curURLHost);
-			XP_FREE(redirectURLHost);		
+			PR_Free(curURLHost);
+			PR_Free(redirectURLHost);		
 			
 		} /* End URL_s->dontAllowDiffHostRedirect */
 
@@ -2678,9 +2678,9 @@ net_setup_http_stream(ActiveEntry * ce)
 
 		if(!cd->save_redirect_method)
 		{
-			XP_FREEIF(CE_URL_S->post_data);
+			PR_FREEIF(CE_URL_S->post_data);
 			CE_URL_S->post_data = NULL;
-			XP_FREEIF(CE_URL_S->post_headers);
+			PR_FREEIF(CE_URL_S->post_headers);
 			CE_URL_S->post_headers = NULL;
 			CE_URL_S->post_data_size = 0;
 			CE_URL_S->method = URL_GET_METHOD;
@@ -2688,9 +2688,9 @@ net_setup_http_stream(ActiveEntry * ce)
 
 		/* clear these */
 		if(!CE_URL_S->preset_content_type)
-    		XP_FREEIF(CE_URL_S->content_type);
+    		PR_FREEIF(CE_URL_S->content_type);
     		CE_URL_S->content_type = NULL;
-    	XP_FREEIF(CE_URL_S->content_encoding);
+    	PR_FREEIF(CE_URL_S->content_encoding);
     	CE_URL_S->content_encoding = NULL;
 		CE_URL_S->content_length = 0;       /* reset */
 		CE_URL_S->real_content_length = 0;  /* reset */
@@ -2773,7 +2773,7 @@ net_setup_http_stream(ActiveEntry * ce)
 		  {
 			Chrome chrome_struct;
 
-		    XP_MEMSET(&chrome_struct, 0, sizeof(Chrome));
+		    memset(&chrome_struct, 0, sizeof(Chrome));
 
 			
    			chrome_struct.is_modal = TRUE;
@@ -2804,7 +2804,7 @@ net_setup_http_stream(ActiveEntry * ce)
 			 * pushed onto the history stack.  Otherwise it can
 			 * get deleted when the history gets cleared
 			 */
-			XP_FREEIF(ce->URL_s->post_data);
+			PR_FREEIF(ce->URL_s->post_data);
 			ce->URL_s->post_data = NULL;
 			ce->URL_s->post_data_is_file = FALSE;
 		  }
@@ -2825,7 +2825,7 @@ net_setup_http_stream(ActiveEntry * ce)
              * remove it so the history doesn't get confused
              * and try and delete the file.
              */
-            XP_FREEIF(ce->URL_s->post_data);
+            PR_FREEIF(ce->URL_s->post_data);
             ce->URL_s->post_data = NULL;
             ce->URL_s->post_data_is_file = FALSE;
           }
@@ -2846,7 +2846,7 @@ HG94794
 
 		if(ce->URL_s->files_to_post)
 		  {
-		  	char * tmp_string = XP_STRDUP("<h2>Error uploading files</h2><b>The server responded:<b><hr><p>\n");
+		  	char * tmp_string = PL_strdup("<h2>Error uploading files</h2><b>The server responded:<b><hr><p>\n");
 
 			if(tmp_string)
 				PUTSTRING(tmp_string);
@@ -2858,7 +2858,7 @@ HG94794
 		 * if it is then we need to do some magic to
 		 * strip the multipart
 		 */
-        if(!strncasecomp(ce->URL_s->content_type, "multipart", 9))
+        if(!PL_strncasecmp(ce->URL_s->content_type, "multipart", 9))
         {
 		    /* reset the state to parse_mime_headers to strip
 		     * the multipart headers off
@@ -2888,7 +2888,7 @@ HG94794
     	if(CD_ACTING_AS_PROXY && CD_SERVER_HEADERS)
 	  	  {
 			CE_STATUS = PUTBLOCK(CD_SERVER_HEADERS, 
-								 XP_STRLEN(CD_SERVER_HEADERS));
+								 PL_strlen(CD_SERVER_HEADERS));
 			CD_DISPLAYED_SOME_DATA = TRUE;
 	  	  }
 
@@ -2899,9 +2899,9 @@ HG94794
 										nonProxyHost);
 				if (msg) {
 					NET_Progress(CE_WINDOW_ID, msg);
-					XP_FREE(msg);
+					PR_Free(msg);
 				}
-				XP_FREE(nonProxyHost);
+				PR_Free(nonProxyHost);
 			}
 		}
 
@@ -2923,7 +2923,7 @@ HG94794
 	  	  }
 	  }
 
-    XP_FREEIF(CD_LINE_BUFFER);
+    PR_FREEIF(CD_LINE_BUFFER);
     CD_LINE_BUFFER = NULL;
     CD_LINE_BUFFER_SIZE=0;
 
@@ -2981,7 +2981,7 @@ net_http_push_partial_cache_file(ActiveEntry *ce)
 
 		/* add a request-range header
 		 */
-		XP_ASSERT(!ce->URL_s->range_header);
+		PR_ASSERT(!ce->URL_s->range_header);
 		ce->URL_s->range_header = PR_smprintf("bytes=%ld-", 
 											  cd->partial_needed);
 
@@ -3170,7 +3170,7 @@ PRIVATE int32
 net_HTTPLoad (ActiveEntry * ce)
 {
     /* get memory for Connection Data */
-    HTTPConData * cd = XP_NEW(HTTPConData);
+    HTTPConData * cd = PR_NEW(HTTPConData);
 	XP_Bool url_is_secure = FALSE;
 	char *use_host;
 
@@ -3183,11 +3183,11 @@ net_HTTPLoad (ActiveEntry * ce)
       }
 
     /* kill any returns in the URL */
-    XP_STRTOK(ce->URL_s->address, "\r");
-    XP_STRTOK(ce->URL_s->address, "\n");
+    strtok(ce->URL_s->address, "\r");
+    strtok(ce->URL_s->address, "\n");
 
     /* init */
-    XP_MEMSET(cd, 0, sizeof(HTTPConData));
+    memset(cd, 0, sizeof(HTTPConData));
     CD_PROXY_SERVER     = ce->proxy_addr;
 	CD_PROXY_CONF       = ce->proxy_conf;
     CD_SEND_HTTP1       = TRUE;
@@ -3202,26 +3202,26 @@ net_HTTPLoad (ActiveEntry * ce)
 
 #ifdef MOZILLA_CLIENT
 		/* if this isn't true then partial cacheing is screwed */
-		XP_ASSERT(NET_IsPartialCacheFile(ce->URL_s));
+		PR_ASSERT(NET_IsPartialCacheFile(ce->URL_s));
 #else
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 	  }
   
 	if(CD_PROXY_SERVER)
 	  {
-		use_host = XP_STRDUP(CD_PROXY_SERVER);
+		use_host = PL_strdup(CD_PROXY_SERVER);
 	  }
 	else
 	  {
 		use_host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-		if(!strncasecomp(ce->URL_s->address, "https:", 6))
+		if(!PL_strncasecmp(ce->URL_s->address, "https:", 6))
 			url_is_secure = TRUE;
 	  }
 
 	if(!use_host)
  	  {
-    	XP_FREE(ce->con_data);
+    	PR_Free(ce->con_data);
         CE_STATUS = MK_OUT_OF_MEMORY;
 		CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
         return STATUS(CE_STATUS);
@@ -3234,7 +3234,7 @@ net_HTTPLoad (ActiveEntry * ce)
 	 */
 	if(ce->URL_s->files_to_post)
 	  {
-		int32 end = XP_STRLEN(ce->URL_s->address)-1;
+		int32 end = PL_strlen(ce->URL_s->address)-1;
 		XP_StatStruct stat_entry;
 		int i;
 
@@ -3290,7 +3290,7 @@ net_HTTPLoad (ActiveEntry * ce)
 			     * and the connection
                  * is not busy at the moment then reuse this connection.
                  */
-                if(!XP_STRCMP(tmp_con->hostname, use_host)
+                if(!PL_strcmp(tmp_con->hostname, use_host)
                    && url_is_secure == tmp_con->secure
                    && !tmp_con->busy)
                   {
@@ -3338,16 +3338,16 @@ net_HTTPLoad (ActiveEntry * ce)
         /* build a control connection structure so we
          * can store the data as we go along
          */
-        cd->connection = XP_NEW(HTTPConnection);
+        cd->connection = PR_NEW(HTTPConnection);
         if(!cd->connection)
           {
             CE_STATUS = MK_OUT_OF_MEMORY;
 			CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
-			XP_FREE(use_host);
-			XP_FREE(ce->con_data);
+			PR_Free(use_host);
+			PR_Free(ce->con_data);
 			return(-1);
           }
-        XP_MEMSET(cd->connection, 0, sizeof(HTTPConnection));
+        memset(cd->connection, 0, sizeof(HTTPConnection));
   
         StrAllocCopy(cd->connection->hostname, use_host);
   
@@ -3386,8 +3386,8 @@ net_HTTPLoad (ActiveEntry * ce)
 				if(!tmp_con->busy)
 				  {
 
- 					if(!strncasecomp(tmp_con->hostname, "rl.", 3)
-     					&& strcasestr(tmp_con->hostname+2, ".netscape.com"))
+ 					if(!PL_strncasecmp(tmp_con->hostname, "rl.", 3)
+     					&& PL_strcasestr(tmp_con->hostname+2, ".netscape.com"))
 					  {
 						/* if there is max plus one we are done, else
 						 * continue on and remove one 
@@ -3404,8 +3404,8 @@ net_HTTPLoad (ActiveEntry * ce)
 						/* remove the object */
 						XP_ListRemoveObject(http_connection_list, tmp_con);
             			PR_Close(tmp_con->sock);
-						XP_FREE(tmp_con->hostname);
-						XP_FREE(tmp_con);
+						PR_Free(tmp_con->hostname);
+						PR_Free(tmp_con);
 						break; /* from while */
 					  }
 				  }
@@ -3416,7 +3416,7 @@ net_HTTPLoad (ActiveEntry * ce)
 
       }
 
-	XP_FREE(use_host);
+	PR_Free(use_host);
 
     return STATUS (net_ProcessHTTP(ce));
 }
@@ -3513,8 +3513,8 @@ HG51096
                 XP_ListRemoveObject(http_connection_list, cd->connection);
                 if(cd->connection)
                   {
-                    XP_FREEIF(cd->connection->hostname);
-                    XP_FREE(cd->connection);
+                    PR_FREEIF(cd->connection->hostname);
+                    PR_Free(cd->connection);
                   }
 			  }
 
@@ -3527,7 +3527,7 @@ HG51096
 			if(CD_STREAM)
 			  {
             	COMPLETE_STREAM;
-				XP_FREE(CD_STREAM);
+				PR_Free(CD_STREAM);
 				CD_STREAM = 0;
 			  }
             CD_NEXT_STATE = HTTP_FREE;
@@ -3560,7 +3560,7 @@ HG51096
 				if(CD_STREAM && !cd->reuse_stream)
 				  {
                 	ABORT_STREAM(CE_STATUS);
-					XP_FREE(CD_STREAM);
+					PR_Free(CD_STREAM);
 					CD_STREAM = 0;
 				  }
 			
@@ -3570,7 +3570,7 @@ HG51096
 				/* clear any error message */
 				if(ce->URL_s->error_msg)
 				  {
-					XP_FREE(ce->URL_s->error_msg);
+					PR_Free(ce->URL_s->error_msg);
 					ce->URL_s->error_msg = NULL;
 				  }
 				cd->next_state = HTTP_START_CONNECT;
@@ -3597,7 +3597,7 @@ HG51096
             	if(CD_STREAM)
 				  {
                 	ABORT_STREAM(CE_STATUS);
-					XP_FREE(CD_STREAM);
+					PR_Free(CD_STREAM);
 					CD_STREAM = 0;
 				  }
 
@@ -3605,8 +3605,8 @@ HG51096
                  * and free the data
                  */
                 XP_ListRemoveObject(http_connection_list, cd->connection);
-                XP_FREEIF(cd->connection->hostname);
-                XP_FREE(cd->connection);
+                PR_FREEIF(cd->connection->hostname);
+                PR_Free(cd->connection);
 			  }
 
             break;
@@ -3635,7 +3635,7 @@ HG51096
 				 * remove it so the history doesn't get confused
 				 * and try and delete the file.
 				 */
-				XP_FREEIF(ce->URL_s->post_data);
+				PR_FREEIF(ce->URL_s->post_data);
 				ce->URL_s->post_data = NULL;
 				ce->URL_s->post_data_is_file = FALSE;
 			  }
@@ -3646,13 +3646,13 @@ HG51096
 										CD_ORIGINAL_CONTENT_LENGTH,
 										CE_BYTES_RECEIVED);
       
-            XP_FREEIF(CD_LINE_BUFFER);
-            XP_FREEIF(CD_STREAM); /* don't forget the stream */
-			XP_FREEIF(CD_SERVER_HEADERS);
-			XP_FREEIF(cd->orig_host);
+            PR_FREEIF(CD_LINE_BUFFER);
+            PR_FREEIF(CD_STREAM); /* don't forget the stream */
+			PR_FREEIF(CD_SERVER_HEADERS);
+			PR_FREEIF(cd->orig_host);
 			if(CD_TCP_CON_DATA)
 				NET_FreeTCPConData(CD_TCP_CON_DATA);
-            XP_FREEIF(cd);
+            PR_FREEIF(cd);
 			JSCF_Cleanup();
             return STATUS (-1); /* final end */
         
@@ -3737,11 +3737,11 @@ net_InterruptHTTP(ActiveEntry * ce)
 	 */
 	if(CD_NEXT_STATE == HTTP_PULL_DATA 
 		&& CE_URL_S->content_type
-		 && !strcasecomp(CE_URL_S->content_type, TEXT_HTML))
+		 && !PL_strcasecmp(CE_URL_S->content_type, TEXT_HTML))
 	  {
 		char buffer[127];
 
-		if(!strcasecomp(CE_URL_S->content_type, TEXT_HTML))
+		if(!PL_strcasecmp(CE_URL_S->content_type, TEXT_HTML))
 			PR_snprintf(buffer, sizeof(buffer),
 				XP_GetString(XP_HR_TRANSFER_INTERRUPTED));
 		else
@@ -3757,7 +3757,7 @@ net_InterruptHTTP(ActiveEntry * ce)
         PR_Close(cd->connection->sock);
 		NET_TotalNumberOfOpenConnections--;
         ABORT_STREAM(MK_INTERRUPTED);
-		XP_FREE(CD_STREAM);
+		PR_Free(CD_STREAM);
 		CD_STREAM = 0;
 
 		CE_URL_S->last_modified = 0;

@@ -65,7 +65,7 @@ net_find_group_level (MWContext *context, const char *parent_name)
   char *name, *base_name, *dot;
   if (!parent_name || !*parent_name)
 	return sl;
-  name = XP_STRDUP (parent_name);
+  name = PL_strdup (parent_name);
   base_name = name;
   if (!name)
 	return 0;
@@ -77,14 +77,14 @@ net_find_group_level (MWContext *context, const char *parent_name)
 	  int i;
 	  NewsGroupStruct *ng;
 	  XP_Bool found = FALSE;
-	  dot = XP_STRCHR (name, '.');
+	  dot = PL_strchr (name, '.');
 	  if (dot) *dot = 0;
 
 	  for (i = 0, ng = sl->data; i < sl->size; i++, ng++)
 		{
 		  if (! ng->name)
 			break;
-		  else if (!XP_STRCMP (ng->name, name))
+		  else if (!PL_strcmp (ng->name, name))
 			{
 			  sl = ng->children;
 			  found = TRUE;
@@ -93,12 +93,12 @@ net_find_group_level (MWContext *context, const char *parent_name)
 		}
 	  if (! found)
 		{
-		  XP_FREE (base_name);
+		  PR_Free (base_name);
 		  return 0;
 		}
 	  name = (dot ? dot + 1 : 0);
 	}
-  XP_FREE (base_name);
+  PR_Free (base_name);
   return sl;
 }
 #endif /* 0 */
@@ -144,13 +144,13 @@ msg_optimize_single_kid (NewsGroupStruct *ng, char **nameP)
   if (!pkid || !pkid->name)
 	return ng;
 
-  new_name = (char *) XP_ALLOC (XP_STRLEN (*nameP) + XP_STRLEN (pkid->name)
+  new_name = (char *) PR_Malloc (PL_strlen (*nameP) + PL_strlen (pkid->name)
 								+ 3);
   if (!new_name)
 	return ng;
-  XP_STRCPY (new_name, *nameP);
-  XP_STRCAT (new_name, ".");
-  XP_STRCAT (new_name, pkid->name);
+  PL_strcpy (new_name, *nameP);
+  PL_strcat (new_name, ".");
+  PL_strcat (new_name, pkid->name);
   *nameP = new_name;
 
   /* We have now taken a newsgroup with a single child and promoted that
@@ -161,7 +161,7 @@ msg_optimize_single_kid (NewsGroupStruct *ng, char **nameP)
 	NewsGroupStruct *ng2 = msg_optimize_single_kid (pkid, &name2);
 	if (ng2 != pkid)
 	  {
-		XP_FREE (new_name);
+		PR_Free (new_name);
 		*nameP = name2;
 		return ng2;
 	  }
@@ -199,7 +199,7 @@ msg_MapNewsgroupNames (MWContext *context,
   NewsGroupStruct *ng;
   SubgroupList *sl;
 
-  XP_ASSERT (news_host_and_port);
+  PR_ASSERT (news_host_and_port);
   if (news_host_and_port)
 	NET_NewsgroupsLastUpdatedTime ((char*) news_host_and_port, is_secure);
 
@@ -238,12 +238,12 @@ msg_MapNewsgroupNames (MWContext *context,
 				  ng2->children->data[0].name[0] == 0));
 	  descendant_count = msg_count_descendants (ng2);
 
-	  XP_ASSERT(descendant_count != 1); /* because of msg_optimize_single_kid*/
+	  PR_ASSERT(descendant_count != 1); /* because of msg_optimize_single_kid*/
 
 	  status = (*mapper) (context, name_prefix, name,
 						  group_p, descendant_count, closure);
 	  if (name != ng->name)
-		XP_FREE (name);
+		PR_Free (name);
 	  if (status < 0) return status;
 	}
   return 0;
@@ -266,14 +266,14 @@ net_recursiveNewsGroupStore(char *subname,
 
 	if(!SGptr)
 	  {
-		SGptr = XP_NEW(SubgroupList);	/* FIX ME check for NULL here */
+		SGptr = PR_NEW(SubgroupList);	/* FIX ME check for NULL here */
 		
 		if ( SGptr == NULL)
 			return NULL;
 
 		SGptr->size = DYN_ARRAY_INIT_SIZE;
 		SGptr->data = (NewsGroupStruct *)
-							XP_ALLOC(SGptr->size*sizeof(NewsGroupStruct));
+							PR_Malloc(SGptr->size*sizeof(NewsGroupStruct));
 
 		if(!SGptr->data)
 		{
@@ -281,19 +281,19 @@ net_recursiveNewsGroupStore(char *subname,
            	return(SGptr);
         }
 	
-		XP_MEMSET(SGptr->data, 0, SGptr->size*sizeof(NewsGroupStruct));
+		memset(SGptr->data, 0, SGptr->size*sizeof(NewsGroupStruct));
 	  }
 
 	rv = SGptr;
 	cur_num = 0;
 	NGptr = &(SGptr->data)[cur_num];
-	len = XP_STRLEN(subname);
+	len = PL_strlen(subname);
 
 	while(NGptr &&NGptr->name)
 	  {
 
 		if(subname 
-			&& !XP_STRNCMP(NGptr->name, subname, len)
+			&& !PL_strncmp(NGptr->name, subname, len)
 				&& (NGptr->name[len] == '\0' || NGptr->name[len] == '.'))
 		  {
 			/* move comp.infosystems.www
@@ -301,7 +301,7 @@ net_recursiveNewsGroupStore(char *subname,
 			 */
 			if(NGptr->name[len] == '.')
 			  {
-				XP_STRCPY(large_buffer, NGptr->name);
+				PL_strcpy(large_buffer, NGptr->name);
 				NGptr->children = net_recursiveNewsGroupStore(
 														(&large_buffer[len])+1,	
 														TRUE,	
@@ -338,7 +338,7 @@ net_recursiveNewsGroupStore(char *subname,
 			int prev_size = SGptr->size;
 			SGptr->size += DYN_ARRAY_GROW_BY;
 			SGptr->data = (NewsGroupStruct *)
-							 XP_REALLOC(SGptr->data, 
+							 PR_Realloc(SGptr->data, 
 									    SGptr->size*sizeof(NewsGroupStruct));
 			if (SGptr->data == NULL)
 			{
@@ -348,7 +348,7 @@ net_recursiveNewsGroupStore(char *subname,
 
 			/* zero out new fields 
 			 */
-			XP_MEMSET(&(SGptr->data)[prev_size],
+			memset(&(SGptr->data)[prev_size],
 					  0,
 					  (SGptr->size-prev_size)*sizeof(NewsGroupStruct));
 
@@ -369,7 +369,7 @@ net_recursiveNewsGroupStore(char *subname,
 		/* copy in the whole name not just the sub name
 		 */
 		StrAllocCopy(NGptr->name, subname);
-	    subname = XP_STRTOK(NULL, "\0");  /* get the rest of the string */
+	    subname = strtok(NULL, "\0");  /* get the rest of the string */
 		if(subname)
 		  {
 			StrAllocCat(NGptr->name, ".");
@@ -381,7 +381,7 @@ net_recursiveNewsGroupStore(char *subname,
       {
 	    /* otherwise we found an existing one
 	     */
-	    subname = XP_STRTOK(NULL, ".");  /* search for more of the string */
+	    subname = strtok(NULL, ".");  /* search for more of the string */
 
 		if((subname && !NGptr->children)
 			|| (!subname && NGptr->children) )
@@ -419,11 +419,11 @@ NET_StoreNewsGroup(char * hostname, XP_Bool is_secure, char * newsgroup)
 	   return;
 
 	if(!large_buffer)
-	   large_buffer = (char *) XP_ALLOC(BUFFER_SIZE);
+	   large_buffer = (char *) PR_Malloc(BUFFER_SIZE);
 	if(!large_buffer)
 		return;
 
-	subname = XP_STRTOK(newsgroup, ".");
+	subname = strtok(newsgroup, ".");
 
 	if(subname)
 		BaseSGStruct = net_recursiveNewsGroupStore(subname, FALSE, BaseSGStruct);
@@ -481,7 +481,7 @@ PRIVATE int
 net_NewsGroupsCompar(const void *one,
 					 const void *two)
 {
-	return(XP_STRCMP(((const NewsGroupStruct *)one)->name,
+	return(PL_strcmp(((const NewsGroupStruct *)one)->name,
 					 ((const NewsGroupStruct *)two)->name));
 }
 
@@ -808,19 +808,19 @@ NET_DisplayNewsgroups(MWContext *context,
 	char * new_search_string=0;
 
 	if(!large_buffer)
-	   large_buffer = (char *) XP_ALLOC(BUFFER_SIZE);
+	   large_buffer = (char *) PR_Malloc(BUFFER_SIZE);
 	if(!large_buffer)
 		return(0);
 
-	if(!XP_STRCMP(search_string, "*"))
+	if(!PL_strcmp(search_string, "*"))
 	  {
 		num_to_display = 0;
 	  }
 	else 
 	  {
-		char * star = XP_STRCHR(search_string, '*');
+		char * star = PL_strchr(search_string, '*');
 
-		if(star && (star-search_string+1 == XP_STRLEN(search_string)))
+		if(star && (star-search_string+1 == PL_strlen(search_string)))
 		  {
 			/* this is a search of the form "comp.*"
 		 	 */
@@ -885,7 +885,7 @@ net_recursiveSaveNewsGroups(SubgroupList *SGptr,
 	  {
 
 		PR_snprintf(large_buffer, BUFFER_SIZE,"%c%.500s%s", '0'+level, NGptr->name, LINEBREAK);
-		count = XP_STRLEN(large_buffer);
+		count = PL_strlen(large_buffer);
 		len = XP_FileWrite(large_buffer, count, fp);
 		if (len != count)
 			return;
@@ -909,7 +909,7 @@ NET_SaveNewsgroupsToDisk(char * hostname, XP_Bool is_secure)
 	int32 len = 0;
 
 	if(!large_buffer)
-	   large_buffer = (char *) XP_ALLOC(BUFFER_SIZE);
+	   large_buffer = (char *) PR_Malloc(BUFFER_SIZE);
 	if(!large_buffer)
 		return;
 
@@ -937,7 +937,7 @@ NET_SaveNewsgroupsToDisk(char * hostname, XP_Bool is_secure)
 				 LINEBREAK LINEBREAK, -1, fp);
 
 	PR_snprintf(large_buffer, BUFFER_SIZE, "%ld%s", NET_NewsGroupsLastUpdate, LINEBREAK);
-	len = XP_FileWrite(large_buffer, XP_STRLEN(large_buffer), fp);
+	len = XP_FileWrite(large_buffer, PL_strlen(large_buffer), fp);
 
 	if((len >= 0) && BaseSGStruct)
     	net_recursiveSaveNewsGroups(BaseSGStruct, 0, fp);
@@ -963,14 +963,14 @@ net_RecursiveNewsgroupsDiskRead(SubgroupList * SGptr,
 
     if(!SGptr)
       {
-        SGptr = XP_NEW(SubgroupList);
+        SGptr = PR_NEW(SubgroupList);
 
 		if(!SGptr)
 			return(NULL);
 
         SGptr->size = DYN_ARRAY_INIT_SIZE;
         SGptr->data = (NewsGroupStruct *)
-                            XP_ALLOC(SGptr->size*sizeof(NewsGroupStruct));
+                            PR_Malloc(SGptr->size*sizeof(NewsGroupStruct));
 
         if(!SGptr->data)
 		{
@@ -978,7 +978,7 @@ net_RecursiveNewsgroupsDiskRead(SubgroupList * SGptr,
         	return(SGptr);
         }
    
-        XP_MEMSET(SGptr->data, 0, SGptr->size*sizeof(NewsGroupStruct));
+        memset(SGptr->data, 0, SGptr->size*sizeof(NewsGroupStruct));
 
         rv = SGptr;
       }
@@ -1057,7 +1057,7 @@ net_RecursiveNewsgroupsDiskRead(SubgroupList * SGptr,
 			int prev_size = SGptr->size;
 			SGptr->size += DYN_ARRAY_GROW_BY;
 			SGptr->data = (NewsGroupStruct *)
-							     XP_REALLOC(SGptr->data, 
+							     PR_Realloc(SGptr->data, 
 									    SGptr->size*sizeof(NewsGroupStruct));
 
 			if(!SGptr->data)
@@ -1068,7 +1068,7 @@ net_RecursiveNewsgroupsDiskRead(SubgroupList * SGptr,
 
 			/* zero out new fields 
 			 */
-			XP_MEMSET(&(SGptr->data)[prev_size],
+			memset(&(SGptr->data)[prev_size],
 					      0,
 					      (SGptr->size-prev_size)*sizeof(NewsGroupStruct));
 
@@ -1107,7 +1107,7 @@ NET_ReadNewsgroupsFromDisk(char *hostname, XP_Bool is_secure)
 	NET_FreeNewsgroups(hostname, is_secure);
 
 	if(!large_buffer)
-	   large_buffer = (char *) XP_ALLOC(BUFFER_SIZE);
+	   large_buffer = (char *) PR_Malloc(BUFFER_SIZE);
 	if(!large_buffer)
 		return(0);
 
@@ -1164,7 +1164,7 @@ NET_NewsgroupsLastUpdatedTime(char * hostname, XP_Bool is_secure)
 {
 	if(NET_CurrentlyLoadedHostname && hostname)
 	  {
-		 if(strcasecomp(hostname, NET_CurrentlyLoadedHostname)
+		 if(PL_strcasecmp(hostname, NET_CurrentlyLoadedHostname)
 			|| is_secure != NET_CurrentlyLoadedListingIsSecure)
 			NET_FreeNewsgroups(hostname, is_secure);
 	  }
@@ -1196,14 +1196,14 @@ NET_RegisterNewsrcFile(char * filename,
 					   Bool is_secure,
 					   Bool is_newsgroups_file)
 {
-	NewsrcHostMap *host_map_struct = XP_NEW(NewsrcHostMap);
+	NewsrcHostMap *host_map_struct = PR_NEW(NewsrcHostMap);
     XP_List * list_prt;
 	NewsrcHostMap *tmp_host_map_struct;
 
 	if(!host_map_struct)
 		return(FALSE);
 
-	XP_MEMSET(host_map_struct, 0, sizeof(NewsrcHostMap));
+	memset(host_map_struct, 0, sizeof(NewsrcHostMap));
 	
 	/* you losers, there's no such thing as XP_Assert in xfe!! */
 	assert(filename);
@@ -1233,7 +1233,7 @@ NET_RegisterNewsrcFile(char * filename,
     while((tmp_host_map_struct = (NewsrcHostMap *)XP_ListNextObject(list_prt)) != NULL)
       {
         if(tmp_host_map_struct->is_newsgroups_file == is_newsgroups_file
-			&& !strcasecomp(tmp_host_map_struct->psuedo_name, 
+			&& !PL_strcasecmp(tmp_host_map_struct->psuedo_name, 
 					   		host_map_struct->psuedo_name))
 		  {
 			XP_ListRemoveObject(HostMapList, tmp_host_map_struct);
@@ -1265,7 +1265,7 @@ NET_UnregisterNewsHost(const char *host,
     NewsrcHostMap *host_map_struct;
 	char *hostname;
 
-	XP_ASSERT(host);
+	PR_ASSERT(host);
 
 	if(!host)
 		return;
@@ -1282,14 +1282,14 @@ NET_UnregisterNewsHost(const char *host,
         if(!is_secure && *host_map_struct->psuedo_name == 's')
             continue;
 
-        hostname = XP_STRCHR(host_map_struct->psuedo_name, '-');
+        hostname = PL_strchr(host_map_struct->psuedo_name, '-');
 
         if(!hostname)
             continue;
 
         hostname++;
 
-        if(strcasecomp(hostname, host))
+        if(PL_strcasecmp(hostname, host))
             continue;
 
 		XP_ListRemoveObject(HostMapList, host_map_struct);
@@ -1334,14 +1334,14 @@ NET_MapNewsrcHostToFilename(char * host,
 		if(!is_secure && *host_map_struct->psuedo_name == 's')
 			continue;
 
-		hostname = XP_STRCHR(host_map_struct->psuedo_name, '-');
+		hostname = PL_strchr(host_map_struct->psuedo_name, '-');
 		
 		if(!hostname)
 			continue;
 
 		hostname++;
 
-		if(strcasecomp(hostname, host))
+		if(PL_strcasecmp(hostname, host))
 			continue;
 
 		return(host_map_struct->filename);
@@ -1371,25 +1371,25 @@ NET_SaveNewsrcFileMappings()
 		return(FALSE);
 	  }
 
-	len = XP_FileWrite(NEWSRC_MAP_FILE_COOKIE, XP_STRLEN(NEWSRC_MAP_FILE_COOKIE), fp);
+	len = XP_FileWrite(NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE), fp);
 	if (len < 0)
 	{
 		XP_FileClose(fp);
 		return FALSE;
 	}
-	XP_FileWrite(LINEBREAK, XP_STRLEN(LINEBREAK), fp);
+	XP_FileWrite(LINEBREAK, PL_strlen(LINEBREAK), fp);
 
 	while((host_map_struct = (NewsrcHostMap *)XP_ListNextObject(list_prt)) != NULL)
 	  {
 
 		XP_FileWrite(host_map_struct->psuedo_name, 
-					 XP_STRLEN(host_map_struct->psuedo_name),
+					 PL_strlen(host_map_struct->psuedo_name),
 					 fp);
 		
 		XP_FileWrite("\t", 1, fp);
 
 		XP_FileWrite(host_map_struct->filename, 
-					 XP_STRLEN(host_map_struct->filename),
+					 PL_strlen(host_map_struct->filename),
 					 fp);
 		
 		XP_FileWrite("\t", 1, fp);
@@ -1399,7 +1399,7 @@ NET_SaveNewsrcFileMappings()
 		else
 		    XP_FileWrite("FALSE", 5, fp);
 
-		len = XP_FileWrite(LINEBREAK, XP_STRLEN(LINEBREAK), fp);
+		len = XP_FileWrite(LINEBREAK, PL_strlen(LINEBREAK), fp);
 		if (len < 0)
 		{
 			XP_FileClose(fp);
@@ -1442,12 +1442,12 @@ NET_ReadNewsrcFileMappings()
         char * p;
         int i;
 
-		hs_struct = XP_NEW(NewsrcHostMap);
+		hs_struct = PR_NEW(NewsrcHostMap);
 
 		if(!hs_struct)
 			return(FALSE);
 
-		XP_MEMSET(hs_struct, 0, sizeof(NewsrcHostMap));
+		memset(hs_struct, 0, sizeof(NewsrcHostMap));
 
         /*
             This used to be scanf() call which would incorrectly
@@ -1476,7 +1476,7 @@ NET_ReadNewsrcFileMappings()
 		StrAllocCopy(hs_struct->psuedo_name, psuedo_name);
 		StrAllocCopy(hs_struct->filename, filename);
 
-		if(!XP_STRNCMP(is_newsgroup, "TRUE", 4))
+		if(!PL_strncmp(is_newsgroup, "TRUE", 4))
 			hs_struct->is_newsgroups_file = TRUE;
 
 		XP_ListAddObject(HostMapList, hs_struct);		
@@ -1566,7 +1566,7 @@ PUBLIC char ** XP_GetNewsRCFiles(void)
 {
 	/* @@@ max number of newsrc's is 512
 	 */
-	char ** rv = (char **)XP_ALLOC(sizeof(char*)*512);
+	char ** rv = (char **)PR_Malloc(sizeof(char*)*512);
     XP_List * list_prt = HostMapList;
 	NewsrcHostMap *host_map_struct;
 	int count=0;
@@ -1574,7 +1574,7 @@ PUBLIC char ** XP_GetNewsRCFiles(void)
 	if(!rv)
 		return(NULL);
 
-	XP_MEMSET(rv, 0, sizeof(char*)*512);
+	memset(rv, 0, sizeof(char*)*512);
 
 	while((host_map_struct = (NewsrcHostMap *)XP_ListNextObject(list_prt)) != NULL)
       {

@@ -81,11 +81,11 @@ NET_InitFileFormatTypes(char * personal_file, char *global_file)
 	{
 	  char buf [256];
 	  char *src_string = 0;
-	  XP_STRCPY (buf, net_default_types [i]);
+	  PL_strcpy (buf, net_default_types [i]);
 	  StrAllocCopy(src_string, buf);
 	  cinfo_parse_mcc_line (buf, FALSE, FALSE, &src_string); /* destroys buf */
 	  i++;
-	  if (src_string) XP_FREE(src_string);
+	  if (src_string) PR_Free(src_string);
 	  
 	}
 
@@ -156,7 +156,7 @@ _cinfo_free(NET_cinfo *ci)
 PUBLIC NET_cdataStruct *
 NET_cdataCreate(void)
 {
-  NET_cdataStruct *cd = XP_NEW(NET_cdataStruct);
+  NET_cdataStruct *cd = PR_NEW(NET_cdataStruct);
 
   if(!cd)
 	return(NULL);
@@ -178,15 +178,15 @@ NET_cdataFree(NET_cdataStruct *cd)
   if(cd->exts)
 	{
 	  for(x = 0; x < cd->num_exts; x++)
-		XP_FREE(cd->exts[x]);
-	  XP_FREE(cd->exts);
+		PR_Free(cd->exts[x]);
+	  PR_Free(cd->exts);
 	}
   if ( cd->src_string )
-	XP_FREE(cd->src_string);
+	PR_Free(cd->src_string);
 
   _cinfo_free(&cd->ci);
 
-  XP_FREE(cd);
+  PR_Free(cd);
   cd = 0;
 }
 
@@ -224,7 +224,7 @@ NET_cdataExist(NET_cdataStruct *old_cd )
 	{
 	  if ( old_cd->ci.type &&
 		   cd->ci.type &&
-		   !strcasecomp(old_cd->ci.type, cd->ci.type))
+		   !PL_strcasecmp(old_cd->ci.type, cd->ci.type))
 		{
 		  /* found matching type */
 		  found_cd = cd;
@@ -233,7 +233,7 @@ NET_cdataExist(NET_cdataStruct *old_cd )
 	  else if ( !old_cd->ci.type &&
 				old_cd->ci.encoding &&
 				cd->ci.encoding &&
-				!strcasecomp(old_cd->ci.encoding, cd->ci.encoding))
+				!PL_strcasecmp(old_cd->ci.encoding, cd->ci.encoding))
 		{
 		  /* found matching encoding */
 		  found_cd = cd;
@@ -255,7 +255,7 @@ net_cdata_exist_ext( char *ext, NET_cdataStruct *cd )
 
   for ( n = 0; n < cd->num_exts; n++ )
 	{
-	  if (!strcasecomp(cd->exts[n], ext) )
+	  if (!PL_strcasecmp(cd->exts[n], ext) )
 		{
 		  not_found = TRUE;
 		  break;
@@ -274,8 +274,8 @@ net_cdata_new_ext(char *ext, NET_cdataStruct *cd)
 {
   int n = cd->num_exts;
 
-  cd->exts = (char **) (n ? XP_REALLOC(cd->exts, (n+1)*sizeof(char *))
-						: XP_ALLOC(sizeof(char *)));
+  cd->exts = (char **) (n ? PR_Realloc(cd->exts, (n+1)*sizeof(char *))
+						: PR_Malloc(sizeof(char *)));
 
   if(!cd->exts)
 	return;
@@ -335,13 +335,13 @@ net_cinfo_find_type_or_encoding (char *uri, XP_Bool type_p)
   NET_cinfo *result = &default_cinfo_type;
   XP_Bool saw_encoding = FALSE;
 
-  c = XP_STRRCHR (uri, '/');
+  c = PL_strrchr (uri, '/');
   if (c) start = c;
 
-  end = start + XP_STRLEN (start);
-  c = XP_STRRCHR (start, '?');
+  end = start + PL_strlen (start);
+  c = PL_strrchr (start, '?');
   if (c) end = c;
-  c = XP_STRRCHR (start, '#');
+  c = PL_strrchr (start, '#');
   if (c && c < end) end = c;
 
 AGAIN:
@@ -359,8 +359,8 @@ AGAIN:
 	  ext_len = end - start;
 	  while ((cdata = (NET_cdataStruct *) XP_ListNextObject (list_ptr)) != NULL)
 		for (i = cdata->num_exts - 1; i >= 0; i--)
-		  if (XP_STRLEN (cdata->exts[i]) == ext_len &&
-			  !strncasecomp (start, cdata->exts [i], ext_len))
+		  if (PL_strlen (cdata->exts[i]) == ext_len &&
+			  !PL_strncasecmp (start, cdata->exts [i], ext_len))
 			{
 			  if (type_p && cdata->ci.type)
 				{
@@ -393,7 +393,7 @@ AGAIN:
 				}
 			  else if (cdata->ci.type)
 				{
-				  XP_ASSERT (!type_p);
+				  PR_ASSERT (!type_p);
 				  /* We are looking for an encoding, and this extension
 					 represents a content-type.  That means that there are
 					 no encodings after the type in this file name, and
@@ -408,7 +408,7 @@ AGAIN:
 				}
 			  else if (cdata->ci.encoding)
 				{
-				  XP_ASSERT (!type_p);
+				  PR_ASSERT (!type_p);
 				  /* We are looking for an encoding, and this extension
 					 represents one.  It is the last one in the file name,
 					 so now we're done.  ("foo.gz.uu" gets encoding "uu"
@@ -480,7 +480,7 @@ NET_cinfo_find_cdata_by_type(char *mime_type)
   list_ptr = NET_ciMasterList;
   while((cdata = (NET_cdataStruct *) XP_ListNextObject(list_ptr)) != NULL)
 	{
-	  if(cdata->ci.type && !strcasecomp(mime_type, cdata->ci.type))
+	  if(cdata->ci.type && !PL_strcasecmp(mime_type, cdata->ci.type))
 		return(cdata);
 	}
 
@@ -536,13 +536,13 @@ net_build_string(char** curr_str, char *new_str)
 	  if (!*curr_str )
 		{
 		  len = strlen(new_str);
-		  *curr_str = (char *)XP_ALLOC((len+1)*sizeof(char));
+		  *curr_str = (char *)PR_Malloc((len+1)*sizeof(char));
 		  sprintf(*curr_str, "%s", new_str);
 		}
 	  else
 		{
 		  len = strlen(new_str) + strlen(*curr_str);
-		  *curr_str = (char *)XP_ALLOC((len+1)*sizeof(char));
+		  *curr_str = (char *)PR_Malloc((len+1)*sizeof(char));
 		  sprintf(*curr_str, "%s%s", *curr_str, new_str);
 		}
 	}
@@ -617,10 +617,10 @@ _cinfo_parse_mimetypes(XP_File fp, char *t, Bool is_local)
 			/* Extra hack: if the old one defined an icon, or a desc,
 			   and the new one does not, carry those over. */
 			char *icon = (old_cd->ci.icon && !cd->ci.icon
-						  ? XP_STRDUP(old_cd->ci.icon)
+						  ? PL_strdup(old_cd->ci.icon)
 						  : 0);
 			char *desc = (old_cd->ci.desc && !cd->ci.desc
-						  ? XP_STRDUP(old_cd->ci.desc)
+						  ? PL_strdup(old_cd->ci.desc)
 						  : 0);
 
 			NET_cdataRemove(old_cd);
@@ -631,7 +631,7 @@ _cinfo_parse_mimetypes(XP_File fp, char *t, Bool is_local)
 		  }
 		/* Not an existing type, we add a new one */
 		NET_cdataAdd(cd);
-		XP_FREE(src_string);
+		PR_Free(src_string);
 		src_string = 0;
 	  }
 	}
@@ -711,37 +711,37 @@ cinfo_parse_mcc_line(char *line, Bool is_external, Bool is_local,
 			*src_string = 0;
 		  }
 
-		  if(!strcasecomp(name, "type")) {
+		  if(!PL_strcasecmp(name, "type")) {
 		    FREEIF(cd->ci.type);
 			cd->ci.type = 0;
 			StrAllocCopy(cd->ci.type, value);
 
-		  } else if(!strcasecomp(name, "enc")) {
+		  } else if(!PL_strcasecmp(name, "enc")) {
 			FREEIF(cd->ci.encoding);
             cd->ci.encoding = 0;
 			StrAllocCopy(cd->ci.encoding, value);
 
-		  } else if(!strcasecomp(name, "lang")) {
+		  } else if(!PL_strcasecmp(name, "lang")) {
 			FREEIF(cd->ci.language);
             cd->ci.language = 0;
 			StrAllocCopy(cd->ci.language, value);
 
-		  } else if(!strcasecomp(name, "desc")) {
+		  } else if(!PL_strcasecmp(name, "desc")) {
 			FREEIF(cd->ci.desc);
             cd->ci.desc = 0;
 			StrAllocCopy(cd->ci.desc, value);
 
-		  } else if(!strcasecomp(name, "alt")) {
+		  } else if(!PL_strcasecmp(name, "alt")) {
 			FREEIF(cd->ci.alt_text);
             cd->ci.alt_text = 0;
 			StrAllocCopy(cd->ci.alt_text, value);
 
-		  } else if(!strcasecomp(name, "icon")) {
+		  } else if(!PL_strcasecmp(name, "icon")) {
 			FREEIF(cd->ci.icon);
             cd->ci.icon = 0;
 			StrAllocCopy(cd->ci.icon, value);
 
-		  } else if(!strcasecomp(name, "exts")) {
+		  } else if(!PL_strcasecmp(name, "exts")) {
 			u = value;
 			while(1) {
 			  v = u;
@@ -784,10 +784,10 @@ cinfo_parse_mcc_line(char *line, Bool is_external, Bool is_local,
 				/* Extra hack: if the old one defined an icon, or a desc,
 				   and the new one does not, carry those over. */
 				char *icon = (old_cd->ci.icon && !cd->ci.icon
-							  ? XP_STRDUP(old_cd->ci.icon)
+							  ? PL_strdup(old_cd->ci.icon)
 							  : 0);
 				char *desc = (old_cd->ci.desc && !cd->ci.desc
-							  ? XP_STRDUP(old_cd->ci.desc)
+							  ? PL_strdup(old_cd->ci.desc)
 							  : 0);
 
 				NET_cdataRemove(old_cd);
@@ -837,7 +837,7 @@ _cinfo_parse_mcc(XP_File fp, char *line, Bool is_local)
 	  }
 	/* assemble extended lines
 	 */
-	end = &line[XP_STRLEN(line)-1];
+	end = &line[PL_strlen(line)-1];
 	while (end > line && (*end == CR || *end == LF))
 	  end--;
 	while(*end == '\\')
@@ -854,7 +854,7 @@ _cinfo_parse_mcc(XP_File fp, char *line, Bool is_local)
 		  src_string = XP_AppendStr(src_string, end);
 
 
-		end = &end[XP_STRLEN(end)-1];
+		end = &end[PL_strlen(end)-1];
 		while (end > line && (*end == CR || *end == LF))
 		  end--;
 
@@ -904,13 +904,13 @@ NET_cdataCommit(char * mimeType, char * cdataString)
 		(NET_cdataStruct *)XP_ListGetObjectNum(extensionList, i);
 	  if (cinfo &&
 		  cinfo->ci.type &&
-		  (strcasecomp(mimeType, cinfo->ci.type) == 0))
+		  (PL_strcasecmp(mimeType, cinfo->ci.type) == 0))
         {
 		  int j;
 		  matchInfo = cinfo;
 		  for ( j= 0; j< matchInfo->num_exts; j++)  /* Free 'em all */
-			XP_FREE((char*)matchInfo->exts[j]);
-		  XP_FREE(matchInfo->exts);
+			PR_Free((char*)matchInfo->exts[j]);
+		  PR_Free(matchInfo->exts);
 		  matchInfo->exts = NULL;
 		  break;
 		}
@@ -937,26 +937,26 @@ NET_cdataCommit(char * mimeType, char * cdataString)
 	char newExtension[30]; /* extension limit is 30 chars */
 	char * citer;
 	int newExIndex = 0;
-	XP_BZERO(newExtension, sizeof(newExtension));
+	memset(newExtension, 0, sizeof(newExtension));
 	citer = cdataString;
-	newExtension[0] = 0;
+
 	matchInfo->num_exts = 0;
-	matchInfo->exts = (char**)XP_ALLOC(10);
-	memset(newExtension, 0, 30);
+	matchInfo->exts = (char**)PR_Malloc(10);
+
 	if (matchInfo->exts == NULL)
 	  return;
 	while (*citer != 0)    /* Parse the string. Skip all non-c*/
 	  {
 		if (isalnum(*citer) && (newExIndex < 29)) /* XP_IS_ALPHA(*citer) */
 		  newExtension[newExIndex++] = *citer;
-		else if (XP_STRLEN(newExtension) > 0)
+		else if (PL_strlen(newExtension) > 0)
 		  {
 			char * newString = NULL;
 			newExtension[newExIndex] = 0;
 			StrAllocCopy(newString, newExtension);
 			matchInfo->num_exts++;
 			matchInfo->exts =
-			  (char**)XP_REALLOC(matchInfo->exts,
+			  (char**)PR_Realloc(matchInfo->exts,
 								 matchInfo->num_exts * sizeof(void*));
 			matchInfo->exts[matchInfo->num_exts-1] = newString;
 			newExIndex = 0;
@@ -965,14 +965,14 @@ NET_cdataCommit(char * mimeType, char * cdataString)
 		citer++;
 	  }
 	/* commit the last extension, if there was one */
-	if (XP_STRLEN(newExtension) > 0)
+	if (PL_strlen(newExtension) > 0)
 	  {
 		char * newString = NULL;
 		newExtension[newExIndex] = 0;
 		StrAllocCopy(newString, newExtension);
 		matchInfo->num_exts++;
 		matchInfo->exts =
-		  (char**)XP_REALLOC(matchInfo->exts,
+		  (char**)PR_Realloc(matchInfo->exts,
 							 matchInfo->num_exts * sizeof(void*));
 		matchInfo->exts[matchInfo->num_exts-1] = newString;
 	  }

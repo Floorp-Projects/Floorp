@@ -51,8 +51,8 @@
 
 	(definitely) i18n of the parser
 
-  $Revision: 1.1 $
-  $Date: 1998/04/30 20:53:20 $
+  $Revision: 1.2 $
+  $Date: 1998/05/19 00:53:22 $
 
  *********************************************************************/
 
@@ -252,17 +252,17 @@ PR_IMPLEMENT(CRAWL_Error) CRAWL_GetError(CRAWL_Crawler crawler) {
 */
 static PRBool 
 crawl_hostEquals(char *pagehost, char *sitehost) {
-	if ((XP_STRSTR(sitehost, pagehost) != NULL) || (XP_STRSTR(pagehost, sitehost) != NULL))
+	if ((PL_strstr(sitehost, pagehost) != NULL) || (PL_strstr(pagehost, sitehost) != NULL))
 		return PR_TRUE;
 	else {
-		char *pageDomain = XP_STRCHR(pagehost, '.');
-		char *siteDomain = XP_STRCHR(sitehost, '.');
+		char *pageDomain = PL_strchr(pagehost, '.');
+		char *siteDomain = PL_strchr(sitehost, '.');
 		if ((pageDomain != NULL) && (siteDomain != NULL)) {
-			char *pageDomainType = XP_STRCHR(pageDomain+1, '.');
-			char *siteDomainType = XP_STRCHR(siteDomain+1, '.');
+			char *pageDomainType = PL_strchr(pageDomain+1, '.');
+			char *siteDomainType = PL_strchr(siteDomain+1, '.');
 			if ((pageDomainType != NULL) &&
 				(siteDomainType != NULL) &&
-				(XP_STRCMP(pageDomain+1, siteDomain+1) == 0)) {
+				(PL_strcmp(pageDomain+1, siteDomain+1) == 0)) {
 				return PR_TRUE;
 			}
 		}
@@ -333,7 +333,7 @@ CRAWL_MakeCrawler(MWContext *context,
 	if (depth < 1) return NULL;
 	crawler = PR_NEWZAP(CRAWL_CrawlerStruct);
 	if (crawler == NULL) return NULL;
-	crawler->siteName = XP_STRDUP(siteName);
+	crawler->siteName = PL_strdup(siteName);
 	crawl_stringToLower(crawler->siteName);
 	crawler->siteHost = NET_ParseURL(crawler->siteName, GET_PROTOCOL_PART | GET_HOST_PART);
 	crawler->depth = depth;
@@ -404,7 +404,7 @@ CRAWL_DestroyCrawler(CRAWL_Crawler crawler) {
 	PL_HashTableDestroy(crawler->resourcesCached);
 	PL_HashTableDestroy(crawler->robotControlTable);
 	for (i = 0; i < crawler->numKeys; i++) {
-		XP_FREE(crawler->keys[i]); /* these were created with XP_STRDUP so use XP_FREE */
+		PR_Free(crawler->keys[i]); /* these were created with PL_strdup so use PR_Free */
 	}
 	if (crawler->keys != NULL) PR_DELETE(crawler->keys);
 	PR_DELETE(crawler);
@@ -433,7 +433,7 @@ crawl_processLinkWithRobotControl(CRAWL_Crawler crawler,
 									char *url, 
 									CRAWL_RobotControl control, 
 									CRAWL_CrawlerItemType type) {
-	XP_ASSERT(type == CRAWLER_ITEM_TYPE_PAGE);
+	PR_ASSERT(type == CRAWLER_ITEM_TYPE_PAGE);
 	if (CRAWL_GetRobotControl(control, url) == CRAWL_ROBOT_DISALLOWED) {
 		crawl_processNextLink(crawler);
 	} else {
@@ -480,12 +480,12 @@ crawl_nonpage_exit(URL_Struct *URL_s, int status, MWContext *window_id, CRAWL_Cr
 	default:
 		break;
 	}
-	XP_ASSERT(table != NULL);
+	PR_ASSERT(table != NULL);
 
 	if (URL_s->server_status >= 400) crawler->error |= CRAWL_SERVER_ERR;
 	/* add to the images cached if we are in fact caching and the cache_file is set */
 	if ((status >= 0) && ((crawler->cache == NULL) || (URL_s->cache_file != NULL))) {
-		char *url = XP_STRDUP(URL_s->address);
+		char *url = PL_strdup(URL_s->address);
 		if (url == NULL) {
 			crawl_outOfMemory(crawler);
 			return;
@@ -568,7 +568,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 		case CRAWLER_ITEM_TYPE_PAGE:
 			/* if the previous page had any required resources, cache them now. */
 			if (crawler->requiredResources != NULL) {
-				XP_TRACE(("required resources"));
+				PR_LogPrint(("required resources"));
 				if (requiredIndex < crawler->numRequiredResources) {
 					crawl_processLink(crawler, 
 									crawler->resourcesCached, 
@@ -591,7 +591,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 			completedTable = crawler->pagesParsed;
 			if (crawler->itemIndex == table->count) { /* no more items */
 				/* done with the pages, now do the images */
-				XP_TRACE(("finished pages"));
+				PR_LogPrint(("finished pages"));
 				func = crawl_processItemWithRobotControl;
 				crawler->currentType = CRAWLER_ITEM_TYPE_IMAGE;
 				completedTable = crawler->imagesCached;
@@ -604,7 +604,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 			func = crawl_processItemWithRobotControl;
 			completedTable = crawler->imagesCached;
 			if (crawler->itemIndex == table->count) { /* no more items */
-				XP_TRACE(("finished images"));
+				PR_LogPrint(("finished images"));
 				/* done with the images, now do the resources */
 				func = crawl_processItemWithRobotControl;
 				crawler->currentType = CRAWLER_ITEM_TYPE_RESOURCE;
@@ -618,7 +618,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 			func = crawl_processItemWithRobotControl;
 			completedTable = crawler->resourcesCached;
 			if (crawler->itemIndex == table->count) { /* no more items */
-				XP_TRACE(("finished resources"));
+				PR_LogPrint(("finished resources"));
 				if (crawler->currentDepth == crawler->depth) {
 					allDone = PR_TRUE;
 					break;
@@ -628,7 +628,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 				crawler->currentType = CRAWLER_ITEM_TYPE_PAGE;
 				completedTable = crawler->pagesParsed;
 				crawler->currentDepth++;
-				XP_TRACE(("depth = %d", crawler->currentDepth));
+				PR_LogPrint(("depth = %d", crawler->currentDepth));
 				crawler->itemIndex = 0;
 				table = crawler->linkedPagesTable + crawler->currentDepth - 1;
 			}
@@ -671,7 +671,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 		case CRAWLER_ITEM_TYPE_PAGE:
 			/* if the previous page had any required resources, cache them now. */
 			if (crawler->requiredResources != NULL) {
-				XP_TRACE(("required resources"));
+				PR_LogPrint(("required resources"));
 				if (requiredIndex < crawler->numRequiredResources) {
 					crawl_processLink(crawler, 
 									crawler->resourcesCached, 
@@ -696,7 +696,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 				/* done with the pages at this level, now go to next level */
 				if (crawler->currentDepth < crawler->depth) {
 					crawler->currentDepth++;
-					XP_TRACE(("depth = %d", crawler->currentDepth));
+					PR_LogPrint(("depth = %d", crawler->currentDepth));
 					crawler->itemIndex = 0;
 				} else {
 					/* done with pages, now do images */
@@ -716,7 +716,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 			if (crawler->itemIndex == table->count) { /* no more items */
 				if (crawler->currentDepth < crawler->depth) {
 					crawler->currentDepth++;
-					XP_TRACE(("depth = %d", crawler->currentDepth));
+					PR_LogPrint(("depth = %d", crawler->currentDepth));
 					crawler->itemIndex = 0;
 				} else {
 					/* done with the images, now do the resources */
@@ -737,7 +737,7 @@ void crawl_processNextLink(CRAWL_Crawler crawler) {
 			if (crawler->itemIndex == table->count) { /* no more items */
 				if (crawler->currentDepth < crawler->depth) {
 					crawler->currentDepth++;
-					XP_TRACE(("depth = %d", crawler->currentDepth));
+					PR_LogPrint(("depth = %d", crawler->currentDepth));
 					crawler->itemIndex = 0;
 				} else {
 					allDone = PR_TRUE;
@@ -770,7 +770,7 @@ void crawl_scanPageComplete(void *data, CRAWL_PageInfo pageInfo) {
 	int err = 0;
 	CRAWL_Crawler crawler = (CRAWL_Crawler)data;
 	URL_Struct *url_s = crawl_getPageURL_Struct(pageInfo);
-	char *url = XP_STRDUP(crawl_getPageURL(pageInfo));
+	char *url = PL_strdup(crawl_getPageURL(pageInfo));
 
 	if (url == NULL) crawl_outOfMemory(crawler);
 
@@ -848,9 +848,9 @@ static
 PRBool crawl_isCrawlableURL(char *url) {
 	char *amp, *semicolon;
 	if (*url == '\0') return PR_FALSE;
-	amp = XP_STRCHR(url, '&');
+	amp = PL_strchr(url, '&');
 	if (amp != NULL) {
-		semicolon = XP_STRCHR(amp, ';');
+		semicolon = PL_strchr(amp, ';');
 		if (semicolon != NULL) return PR_FALSE; /* don't crawl any url with entities */
 	}
 	return PR_TRUE;
@@ -896,7 +896,7 @@ crawl_processLink(CRAWL_Crawler crawler,
 	}
 
 	if (crawl_cacheNearlyFull(crawler)) {
-		XP_TRACE(("crawl_processLink: cache is full, stopping"));
+		PR_LogPrint(("crawl_processLink: cache is full, stopping"));
 		crawler->error |= CRAWL_CACHE_FULL;
 		crawl_crawlerFinish(crawler); /* stop update */
 		return;
@@ -915,11 +915,11 @@ crawl_processLink(CRAWL_Crawler crawler,
 		return;
 	}
 
-	siteURL = NET_ParseURL(url, GET_PROTOCOL_PART | GET_HOST_PART); /* XP_ALLOC'd */
+	siteURL = NET_ParseURL(url, GET_PROTOCOL_PART | GET_HOST_PART); /* PR_Malloc'd */
 	crawl_stringToLower(siteURL);
 
 	if (crawler->stayInSite && !crawl_hostEquals(siteURL, crawler->siteHost)) {
-		XP_FREE(siteURL);
+		PR_Free(siteURL);
 		crawl_processNextLink(crawler); /* skip this item */
 		return;
 	}
@@ -945,11 +945,11 @@ crawl_processLink(CRAWL_Crawler crawler,
 			}
 			if (CRAWL_ReadRobotControlFile(control, crawl_doProcessItem, rec, PR_TRUE)) return; /* wait for the callback */
 		} else { 
-			XP_FREE(siteURL);
+			PR_Free(siteURL);
 			crawl_outOfMemory(crawler);
 			return;
 		}
-	} else XP_FREE(siteURL); /* we found a robot control */
+	} else PR_Free(siteURL); /* we found a robot control */
 
 	if (control != NULL) {
 		func(crawler, url, control, type);
@@ -1019,12 +1019,12 @@ crawl_makeCacheInfoFilename(CRAWL_Crawler crawler) {
 #endif	
 	char *tmp = NULL, *tmpName, *dot, *filename;
 
-	tmp = (char *)PR_MALLOC(XP_STRLEN(crawler->cache->filename) + 5); /* +5 for .dat and null termination */
-	XP_STRCPY(tmp, crawler->cache->filename);
+	tmp = (char *)PR_MALLOC(PL_strlen(crawler->cache->filename) + 5); /* +5 for .dat and null termination */
+	PL_strcpy(tmp, crawler->cache->filename);
 	if (tmp == NULL) return NULL;
-	dot = XP_STRCHR(tmp, '.');
+	dot = PL_strchr(tmp, '.');
 	if (dot != NULL) *dot = '\0';
-	XP_STRCAT(tmp, ".dat");
+	PL_strcat(tmp, ".dat");
 	tmpName = WH_FileName(tmp, xpSARCache);
 #ifndef XP_MAC
 	filename = WH_FilePlatformName(tmpName);
@@ -1035,7 +1035,7 @@ crawl_makeCacheInfoFilename(CRAWL_Crawler crawler) {
 	/* filename = tmpName; */
 	ConvertMacPathToUnixPath(tmpName, &filename);
 #endif
-	XP_FREE(tmp);
+	PR_Free(tmp);
 	return filename;
 }
 
@@ -1068,8 +1068,8 @@ crawl_processCacheInfoEntry(CRAWL_Crawler crawler, char *line, PLHashTable *ht) 
 	PLHashNumber keyHash;
     PLHashEntry *he, **hep;
 	char old;
-	char *slash = XP_STRRCHR(line, '/');
-	char *gt = XP_STRCHR(line, '>');
+	char *slash = PL_strrchr(line, '/');
+	char *gt = PL_strchr(line, '>');
 	if ((slash != NULL) && (gt != NULL)) {
 		char *url = gt + 1;
 		char *date = slash + 1;
@@ -1093,7 +1093,7 @@ crawl_processCacheInfoEntry(CRAWL_Crawler crawler, char *line, PLHashTable *ht) 
 			/* there is an entry in the table so check the modified date */
 			char *end = NULL;
 			CRAWL_LinkInfoStruc *info = (CRAWL_LinkInfoStruc*)he->value;
-			time_t oldDate = XP_STRTOUL(date, &end, 10);
+			time_t oldDate = strtoul(date, &end, 10);
 			if (info->lastModifiedDate > oldDate) {
 				info->status = REPLACED_LINK;
 			} else {
@@ -1140,26 +1140,26 @@ crawl_removeDanglingLinksFromCache(CRAWL_Crawler crawler) {
 		if (fd == NULL) return;
 		while ((status = PR_Read(fd, buf, CACHE_INFO_BUF_SIZE)) > 0) {
 			while (n < status) {
-				if ((eol = XP_STRCHR(buf + n, '\n')) == NULL) {
+				if ((eol = PL_strchr(buf + n, '\n')) == NULL) {
 					/* no end of line detected so add to line and continue */
 					if (line == NULL) line = (char *)PR_CALLOC(status+1);
-					else line = (char *)PR_REALLOC(line, XP_STRLEN(line) + status + 1);
+					else line = (char *)PR_REALLOC(line, PL_strlen(line) + status + 1);
 					if (line == NULL) {
 						PR_Close(fd);
 						return;
 					}
-					XP_STRNCAT(line, buf + n, status);
+					PL_strcat(line, buf + n, status);
 					n += status;
 				} else {
 					/* end of line detected so copy line up to there */
 					int32 len = eol - (buf + n);
 					if (line == NULL) line = (char *)PR_CALLOC(len + 1);
-					else line = (char *)PR_REALLOC(line, XP_STRLEN(line) + len + 1);
+					else line = (char *)PR_REALLOC(line, PL_strlen(line) + len + 1);
 					if (line == NULL) {
 						PR_Close(fd);
 						return;
 					}
-					XP_STRNCAT(line, buf + n, len);
+					PL_strcat(line, buf + n, len);
 					if (crawl_processCacheInfoLine(crawler, line) != 0) {
 						PR_Close(fd); /* abort on bad data */
 						return;
@@ -1282,18 +1282,18 @@ CRAWL_CrawlerResourceConverter(int format_out,
 
 	TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-	XP_TRACE(("CRAWL_CrawlerResourceConverter: %d %s", URL_s->server_status, URL_s->address));
+	PR_LogPrint(("CRAWL_CrawlerResourceConverter: %d %s", URL_s->server_status, URL_s->address));
 
 	if (URL_s->SARCache != NULL) {
 		/* if the content length would exceed the cache limit, don't convert this */
 		if (((uint32)URL_s->content_length >= (URL_s->SARCache->MaxSize - URL_s->SARCache->DiskCacheSize)) &&
 			((uint32)URL_s->content_length < BOGUS_CONTENT_LENGTH)) {
-				XP_TRACE(("not converting %s", URL_s->address));
+				PR_LogPrint(("not converting %s", URL_s->address));
 				return(NULL);
 		}
 	}
 
-	stream = XP_NEW(NET_StreamClass);
+	stream = PR_NEW(NET_StreamClass);
 	if(stream == NULL)
 		return(NULL);
 
@@ -1309,9 +1309,9 @@ CRAWL_CrawlerResourceConverter(int format_out,
 
 #ifdef CRAWLERTEST
 static void myPostProcessFn(CRAWL_Crawler crawler, URL_Struct *url_s, PRBool isCached, void *data) {
-	if (isCached) XP_TRACE(("%s was cached, content length=%d", url_s->address, url_s->content_length));
-	else XP_TRACE(("%s wasn't cached, content length=%d", url_s->address, url_s->content_length));
-	XP_TRACE(("cache size=%d, size slop=%d", crawler->cache->DiskCacheSize, crawler->sizeSlop));
+	if (isCached) PR_LogPrint(("%s was cached, content length=%d", url_s->address, url_s->content_length));
+	else PR_LogPrint(("%s wasn't cached, content length=%d", url_s->address, url_s->content_length));
+	PR_LogPrint(("cache size=%d, size slop=%d", crawler->cache->DiskCacheSize, crawler->sizeSlop));
 }
 
 static void myExitFn(CRAWL_Crawler crawler, void *data) {
@@ -1327,7 +1327,7 @@ static void myExitFn(CRAWL_Crawler crawler, void *data) {
 
 void testCrawler(char *name, char *inURL, uint8 depth, uint32 maxSize, PRBool stayInSite) {
 	CRAWL_Crawler crawler;
-	char *url = XP_STRDUP(inURL);
+	char *url = PL_strdup(inURL);
 #ifdef XP_MAC
 	MWContext *context = XP_FindSomeContext(); /* FE_GetNetHelpContext didn't work with netlib on Mac */
 #else
@@ -1392,7 +1392,7 @@ NET_GetURL (URL_Struct *URL_s,
 		case ABOUT_TYPE_URL:
 			...
 
-		  if (URL_s && XP_STRNCMP(URL_s->address, "about:crawler?", 14) == 0)
+		  if (URL_s && PL_strncmp(URL_s->address, "about:crawler?", 14) == 0)
 		  {
 			  uint8 depth = 1;
 			  uint32 maxsize = 200000;
@@ -1402,42 +1402,42 @@ NET_GetURL (URL_Struct *URL_s,
 			  char * item;
 			  char * url = "http://w3.mcom.com/";
 			  char * name = "test.db";
-			  item = XP_STRSTR(URL_s->address, "url=");
+			  item = PL_strstr(URL_s->address, "url=");
 			  if (item != NULL) {
 					item += 4;
-					end = XP_STRCHR(item, '&');
+					end = PL_strchr(item, '&');
 					if (end != NULL) {
 						temp = *end;
 						*end = '\0';
-						url = XP_STRDUP(item);
+						url = PL_strdup(item);
 						*end = temp;
-					} else url = XP_STRDUP(item);
+					} else url = PL_strdup(item);
 			  }
-			  item = XP_STRSTR(URL_s->address, "name=");
+			  item = PL_strstr(URL_s->address, "name=");
 			  if (item != NULL) {
 					item += 5;
-					end = XP_STRCHR(item, '&');
+					end = PL_strchr(item, '&');
 					if (end != NULL) {
 						temp = *end;
 						*end = '\0';
-						name = XP_STRDUP(item);
+						name = PL_strdup(item);
 						*end = temp;
-					} else name = XP_STRDUP(item);
+					} else name = PL_strdup(item);
 			  }
-			  item = XP_STRSTR(URL_s->address, "depth=");
+			  item = PL_strstr(URL_s->address, "depth=");
 			  if (item != NULL) {
 					item += 6;
-					depth = (uint8)XP_STRTOUL(item, &end, 10);
+					depth = (uint8)strtoul(item, &end, 10);
 			  }
-			  item = XP_STRSTR(URL_s->address, "maxsize=");
+			  item = PL_strstr(URL_s->address, "maxsize=");
 			  if (item != NULL) {
 				  item += 8;
-				  maxsize = XP_STRTOUL(item, &end, 10);
+				  maxsize = strtoul(item, &end, 10);
 			  }
-			  item = XP_STRSTR(URL_s->address, "stayinsite=");
+			  item = PL_strstr(URL_s->address, "stayinsite=");
 			  if (item != NULL) {
 				  item += 8;
-				  if (XP_STRTOUL(item, &end, 10) == 0) stayInSite = PR_FALSE;
+				  if (strtoul(item, &end, 10) == 0) stayInSite = PR_FALSE;
 				  else stayInSite = PR_TRUE;
 			  }			
 				testCrawler(name, url, (uint8)depth, (uint32)maxsize, stayInSite);
@@ -1451,7 +1451,7 @@ NET_GetURL (URL_Struct *URL_s,
 PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 {
 	...
-	else if (!strncasecomp(which, "crawler", 7)) 
+	else if (!PL_strncasecmp(which, "crawler", 7)) 
 	{
 		return (-1);
 	}

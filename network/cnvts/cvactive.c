@@ -16,6 +16,8 @@
  * Reserved.
  */
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -37,7 +39,7 @@ typedef struct _DataObject {
 	MWContext        *window_id;
 	int               format_out;
 	URL_Struct       *URL_s;
-	XP_Bool			  signal_at_end_of_multipart;
+	PRBool			  signal_at_end_of_multipart;
 } DataObject;
 
 #define NORMAL_S			1
@@ -61,7 +63,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 	char *line;
 	char *push_buffer=NULL;
 	int32 push_buffer_size=0;
-	XP_Bool all_done=FALSE;
+	PRBool all_done=PR_FALSE;
 	DataObject *obj=stream->data_object;
 	BlockAllocCat(obj->prev_buffer, obj->prev_buffer_len, s, l);
 	obj->prev_buffer_len += l;	
@@ -83,18 +85,18 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 				case NORMAL_S:
 				  {
 					char *cp2 = line;
-					int blength = XP_STRLEN(obj->URL_s->boundary);
+					int blength = PL_strlen(obj->URL_s->boundary);
 
 				    /* look for boundary.  We can rest assured that these
-					   XP_STRNCMP() calls are safe, because we know that the
+					   PL_strncmp() calls are safe, because we know that the
 					   valid portion of the string starting at cp2 has a
 					   newline in it (at *cp), and we know that boundary
 					   strings never have newlines in them.  */
-		            if((!XP_STRNCMP(cp2, "--",2) && 
-						!XP_STRNCMP(cp2+2, 
+		            if((!PL_strncmp(cp2, "--",2) && 
+						!PL_strncmp(cp2+2, 
 							        obj->URL_s->boundary, 
 							        blength))
-		              	|| (!XP_STRNCMP(cp2, 
+		              	|| (!PL_strncmp(cp2, 
 							        obj->URL_s->boundary, 
 							        blength)))
 		              {
@@ -119,7 +121,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 													    (obj->next_stream, 
 													    push_buffer, 
 													    push_buffer_size);
-							    XP_FREE(push_buffer);
+							    PR_Free(push_buffer);
 							    push_buffer = NULL; 
 							    push_buffer_size = 0;
 							  }
@@ -127,35 +129,35 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 							TRACEMSG(("Completeing an open stream"));
 							/* if this stream is not the last one, set a flag
 							   before completion to let completion do special stuff */
-							XP_ASSERT(cp2 + blength <= cp);
-								/* Because the above XP_STRCMP calls succeeded.
+							PR_ASSERT(cp2 + blength <= cp);
+								/* Because the above PL_strcmp calls succeeded.
 								   Because this is true, we know the first call
-								   to XP_STRNCMP below is always safe, but we
+								   to PL_strncmp below is always safe, but we
 								   need to check lengths before we can be sure
 								   the other call is safe. */
 
 							if(   (cp2 + blength + 2 < cp && 
-							 	   !XP_STRNCMP(cp2+2+blength, "--",2))
-							   || !XP_STRNCMP(cp2+blength, "--",2))
+							 	   !PL_strncmp(cp2+2+blength, "--",2))
+							   || !PL_strncmp(cp2+blength, "--",2))
 							  {
 								/* very last boundary */
-								obj->next_stream->is_multipart = FALSE;
+								obj->next_stream->is_multipart = PR_FALSE;
 
 								/* set the all_done flag when
 								 * we have found the final boundary
 								 */
-								all_done = TRUE;
+								all_done = PR_TRUE;
 							  }
 							else
 							  {
-								obj->next_stream->is_multipart = TRUE;
+								obj->next_stream->is_multipart = PR_TRUE;
 							  }
 							
 			        	    /* complete the last stream
 			         	     */
 			        	    (*obj->next_stream->complete)
 											    (obj->next_stream);
-						    XP_FREE(obj->next_stream);
+						    PR_Free(obj->next_stream);
 						    obj->next_stream = NULL;
 						  }
 							
@@ -192,7 +194,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 
 				case FOUND_BOUNDARY_S:
 
-					XP_ASSERT(*cp == '\n'); /* from the 'if' above */
+					PR_ASSERT(*cp == '\n'); /* from the 'if' above */
 
 					/* terminate at the newline.
 					 * now 'line' points to a valid NULL terminated C string
@@ -224,10 +226,10 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 						 * stream is not going to the screen
 						 */
 						if(CLEAR_CACHE_BIT(obj->format_out) != FO_INTERNAL_IMAGE
-							&& (!strncasecomp(obj->URL_s->content_type, 
+							&& (!PL_strncasecmp(obj->URL_s->content_type, 
 											 "text", 4)
 								||
-								!strncasecomp(obj->URL_s->content_type, 
+								!PL_strncasecmp(obj->URL_s->content_type, 
                                                 "image", 4)) )
 						  {
 							NET_SilentInterruptWindow(obj->window_id);
@@ -244,7 +246,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 						if( (CLEAR_CACHE_BIT(obj->format_out) != FO_INTERNAL_IMAGE) 
 						      && (CLEAR_CACHE_BIT(obj->format_out) != FO_PLUGIN)
 						      && (CLEAR_CACHE_BIT(obj->format_out) != FO_BYTERANGE)
-						      && strncasecomp(obj->URL_s->content_type, "image", 5))
+						      && PL_strncasecmp(obj->URL_s->content_type, "image", 5))
 						  {
 							obj->URL_s->fe_data = NULL;
 						  }
@@ -259,10 +261,10 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 						    return(MK_UNABLE_TO_CONVERT);
 						
 				      }
-				    else if(!strncasecomp(line, "CONTENT-TYPE:", 13))
+				    else if(!PL_strncasecmp(line, "CONTENT-TYPE:", 13))
 				      {
 	
-					    XP_STRTOK(line+13, ";"); /* terminate at ; */
+					    strtok(line+13, ";"); /* terminate at ; */
 
 					    StrAllocCopy(obj->URL_s->content_type, 
 								     XP_StripLine(line+13));
@@ -278,14 +280,14 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 				      {
 				    	/* Pass all other headers to the MIME header parser 
 				     	 */
-						char *value = XP_STRCHR(line, ':');
+						char *value = PL_strchr(line, ':');
     					if(value)
         					value++;
     					NET_ParseMimeHeader(NET_AllowForeignCookies,
 											obj->window_id, 
 											obj->URL_s, 
 											line, 
-											value, FALSE);
+											value, PR_FALSE);
 				      }
 					line = cp+1;
 					line_length = 0;
@@ -315,7 +317,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 	        	rv = (*obj->next_stream->put_block)(obj->next_stream, 
 													line, 
 													MAX_MIME_LINE);
-				XP_FREE(push_buffer);
+				PR_Free(push_buffer);
 				push_buffer = 0;
 				push_buffer_size = 0;
 			  }
@@ -337,7 +339,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 		new_size = obj->prev_buffer_len - 
 				     ((line - obj->prev_buffer) + MAX_MIME_LINE);
 
-		XP_MEMMOVE(obj->prev_buffer, line+MAX_MIME_LINE, new_size);
+		memmove(obj->prev_buffer, line+MAX_MIME_LINE, new_size);
 		obj->prev_buffer_len = new_size;
 	
 		return(0);
@@ -349,7 +351,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 		 * the part that has been used
 		 */
 		obj->prev_buffer_len -= (line - obj->prev_buffer);
-		XP_MEMMOVE(obj->prev_buffer, line, obj->prev_buffer_len);
+		memmove(obj->prev_buffer, line, obj->prev_buffer_len);
 	  }
 
 	/* if there is anything in the push buffer send it now
@@ -363,7 +365,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 												push_buffer, 
 												push_buffer_size);
 		  }
-		XP_FREE(push_buffer);
+		PR_Free(push_buffer);
         if (rv < 0)
             return rv;
 	  }
@@ -390,11 +392,11 @@ PRIVATE void net_MultipleDocumentComplete (NET_StreamClass *stream)
     if(obj->next_stream)
 	  {
 	    (*obj->next_stream->complete)(obj->next_stream);
-		XP_FREE(obj->next_stream);
+		PR_Free(obj->next_stream);
 	  }
 
-	XP_FREEIF(obj->prev_buffer);
-    XP_FREE(obj);
+	PR_FREEIF(obj->prev_buffer);
+    PR_Free(obj);
 
     return;
 }
@@ -405,11 +407,11 @@ PRIVATE void net_MultipleDocumentAbort (NET_StreamClass *stream, int status)
     if(obj->next_stream)
 	  {
     	(*obj->next_stream->abort)(obj->next_stream, status);
-		XP_FREE(obj->next_stream);
+		PR_Free(obj->next_stream);
 	  }
 
-	XP_FREEIF(obj->prev_buffer);
-    XP_FREE(obj);
+	PR_FREEIF(obj->prev_buffer);
+    PR_Free(obj);
 
     return;
 }
@@ -428,20 +430,20 @@ CV_MakeMultipleDocumentStream (int         format_out,
 
 	GH_UpdateGlobalHistory(URL_s);
 
-	URL_s->is_active = TRUE;  /* set to disable view source */
+	URL_s->is_active = PR_TRUE;  /* set to disable view source */
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW(DataObject);
+    obj = PR_NEW(DataObject);
     if (obj == NULL) 
         return(NULL);
 
-	XP_MEMSET(obj, 0, sizeof(DataObject));
+	memset(obj, 0, sizeof(DataObject));
 
 	if(CVACTIVE_SIGNAL_AT_END_OF_MULTIPART == (int) data_object)
-		obj->signal_at_end_of_multipart = TRUE;
+		obj->signal_at_end_of_multipart = PR_TRUE;
     
     stream->name           = "Multiple Document";
     stream->complete       = (MKStreamCompleteFunc) net_MultipleDocumentComplete;

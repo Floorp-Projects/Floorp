@@ -404,7 +404,7 @@ newCookieObject(void)
     if( (JSObject *)0 == rv )
         return (JSObject *)0;
 
-    cookie_data = XP_NEW_ZAP(JSCookieData);
+    cookie_data = PR_NEWZAP(JSCookieData);
 
     if( (JSCookieData *)0 == cookie_data )
         return (JSObject *)0;
@@ -447,7 +447,7 @@ jscookie_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         return;
 
     FE_Alert(context, msg);
-    XP_FREE(msg);
+    PR_Free(msg);
 
     return;
 }
@@ -466,7 +466,7 @@ compileJSCookieFilters(void)
 
     filename = WH_FileName("", xpJSCookieFilters);
 
-    XP_Trace("+Filename for script filter is %s\n", filename);
+    PR_LogPrint("+Filename for script filter is %s\n", filename);
 
 	/* If we can't get to the file, get the hell outa dodge. */
     if(XP_Stat(filename, &stats, xpJSCookieFilters))
@@ -503,14 +503,14 @@ compileJSCookieFilters(void)
 
             XP_FileClose(fp);
 
-            XP_Trace("+Compiling filters.js...\n");
+            PR_LogPrint("+Compiling filters.js...\n");
 
             ret_val = JS_EvaluateScript(filter_context, filter_obj, buffer, fileLength,
                                                                     filename, 1, &rval);
 
-            XP_Trace("+Done.\n");
+            PR_LogPrint("+Done.\n");
             
-            XP_FREE(buffer);
+            PR_Free(buffer);
 
             need_compile = JS_FALSE;
         }

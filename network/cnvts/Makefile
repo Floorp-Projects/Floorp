@@ -36,6 +36,7 @@ CSRCS		= \
 	$(NULL)
 
 EXPORTS= \
+	cvactive.h	\
 	cvview.h	\
 	cvproxy.h	\
 	cvextcon.h	\

@@ -51,8 +51,8 @@
 	<STYLE SRC=?>
 
 
-  $Revision: 1.1 $
-  $Date: 1998/04/30 20:53:32 $
+  $Revision: 1.2 $
+  $Date: 1998/05/19 00:53:36 $
 
  *********************************************************************/
 
@@ -313,10 +313,10 @@ crawl_addPageApplet(CRAWL_PageInfo pageInfo, char *codebase, char *archive, char
 static CRAWL_TagError
 crawl_addPageMetaRefresh(CRAWL_PageInfo page, char *content) {
 	/* look for the url= */
-	char *url = XP_STRCASESTR(content, "url=");
+	char *url = PL_strcasestr(content, "url=");
 	if (url != NULL) {
 		url += 4; /* go past the url= */
-		url = XP_STRTOK(url, " '\"");
+		url = strtok(url, " '\"");
 		return(crawl_addPageLink(page, url, LINK_CONTEXT_HREF));
 	} else return CRAWL_TAG_SYNTAX_ERR;
 }
@@ -421,7 +421,7 @@ int crawl_processToken(CRAWL_ParseObj obj, PRBool isTag, void *data) {
 		case P_BASE:
 			att1 = CRAWL_GetAttributeValue(tag, PARAM_HREF);
 			if (att1 != NULL) {
-				page->baseURL = NET_MakeAbsoluteURL(page->url_s->address, att1); /* XP_STRDUP(att1); */
+				page->baseURL = NET_MakeAbsoluteURL(page->url_s->address, att1); /* PL_strdup(att1); */
 				if (page->baseURL == NULL) err = CRAWL_TAG_NO_MEMORY;
 			}
 			break;
@@ -461,7 +461,7 @@ int crawl_processToken(CRAWL_ParseObj obj, PRBool isTag, void *data) {
 			break;
 		case P_META:
 			att1 = CRAWL_GetAttributeValue(tag, PARAM_HTTP_EQUIV);
-			if ((att1 != NULL) && (XP_STRCASECMP(att1, "refresh") == 0)) {
+			if ((att1 != NULL) && (PL_strcasecmp(att1, "refresh") == 0)) {
 				att2 = CRAWL_GetAttributeValue(tag, PARAM_CONTENT);
 				if (att2 != NULL) err = crawl_addPageMetaRefresh(page, att2);
 			} else {
@@ -471,13 +471,13 @@ int crawl_processToken(CRAWL_ParseObj obj, PRBool isTag, void *data) {
 			   See http://info.webcrawler.com/mak/projects/robots/exclusion.html
 			*/
 				att1 = CRAWL_GetAttributeValue(tag, PARAM_NAME);
-				if ((att1 != NULL) && (XP_STRCASECMP(att1, "robots") == 0)) {
+				if ((att1 != NULL) && (PL_strcasecmp(att1, "robots") == 0)) {
 					att2 = CRAWL_GetAttributeValue(tag, PARAM_CONTENT);
 					if (att2 != NULL) {
-						if (XP_STRCASESTR(att2, "noindex")) {
+						if (PL_strcasestr(att2, "noindex")) {
 							page->dontIndex = PR_TRUE;
 						}
-						if (XP_STRCASESTR(att2, "nofollow")) {
+						if (PL_strcasestr(att2, "nofollow")) {
 							page->dontFollow = PR_TRUE;
 							return PARSE_STOP;
 						}
@@ -487,11 +487,11 @@ int crawl_processToken(CRAWL_ParseObj obj, PRBool isTag, void *data) {
 			break;
 		case P_LINK:
 			att1 = CRAWL_GetAttributeValue(tag, PARAM_REL);
-			if ((att1 != NULL) && (XP_STRCASECMP(att1, "stylesheet") == 0)) {
+			if ((att1 != NULL) && (PL_strcasecmp(att1, "stylesheet") == 0)) {
 				att2 = CRAWL_GetAttributeValue(tag, PARAM_HREF);
 				if (att2 != NULL) {
 					att3 = CRAWL_GetAttributeValue(tag, PARAM_TYPE);
-					if ((att3 != NULL) && ((XP_STRCASECMP(att3, "text/javascript") == 0) || (XP_STRCASECMP(att3, "text/css") == 0))) {
+					if ((att3 != NULL) && ((PL_strcasecmp(att3, "text/javascript") == 0) || (PL_strcasecmp(att3, "text/css") == 0))) {
 						err = crawl_addPageRequiredResource(page, att2);
 					} else err = crawl_addPageResource(page, att2);
 				}
@@ -501,7 +501,7 @@ int crawl_processToken(CRAWL_ParseObj obj, PRBool isTag, void *data) {
 			att1 = CRAWL_GetAttributeValue(tag, PARAM_SRC);
 			if (att1 != NULL) {
 				att2 = CRAWL_GetAttributeValue(tag, PARAM_TYPE);
-				if ((att2 != NULL) && ((XP_STRCASECMP(att2, "text/javascript") == 0) || (XP_STRCASECMP(att2, "text/css") == 0))) {
+				if ((att2 != NULL) && ((PL_strcasecmp(att2, "text/javascript") == 0) || (PL_strcasecmp(att2, "text/css") == 0))) {
 						err = crawl_addPageRequiredResource(page, att1);
 				} else err = crawl_addPageResource(page, att1);
 			}
@@ -553,8 +553,8 @@ crawl_PageScanConvPut(NET_StreamClass *stream, char *s, int32 l)
 	crawl_page_scan_stream *obj=stream->data_object;
 	int status;
 
-	XP_ASSERT(obj->parse_obj != NULL);
-	XP_ASSERT(obj->page != NULL);
+	PR_ASSERT(obj->parse_obj != NULL);
+	PR_ASSERT(obj->page != NULL);
 
 	if (!obj->page->dontFollow) /* no directive to cache without parsing */
 		status = CRAWL_ParserPut(obj->parse_obj, s, l, crawl_processToken, obj->page);
@@ -572,7 +572,7 @@ crawl_PageScanConvPut(NET_StreamClass *stream, char *s, int32 l)
 	case CRAWL_PARSE_OUT_OF_MEMORY:
 		return(MK_UNABLE_TO_CONVERT);
 	default:
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		break;
 	}
 	return(status);
@@ -592,7 +592,7 @@ crawl_PageScanConvComplete(NET_StreamClass *stream)
 {
 	crawl_page_scan_stream *obj=stream->data_object;
 	CRAWL_PageInfo page = (CRAWL_PageInfo)obj->page;
-	XP_ASSERT(page != NULL);
+	PR_ASSERT(page != NULL);
 	if ((page->scan_complete_func != NULL) && (page->page_owner != NULL))
 		page->scan_complete_func(page->page_owner, page);
 	CRAWL_DestroyParseObj(obj->parse_obj);
@@ -609,7 +609,7 @@ crawl_PageScanConvAbort(NET_StreamClass *stream, int status)
 	crawl_page_scan_stream *obj=stream->data_object;
 	/* we got an error (status always negative here) but should call completion function */
 	CRAWL_PageInfo page = (CRAWL_PageInfo)obj->page;
-	XP_ASSERT(page != NULL);
+	PR_ASSERT(page != NULL);
 	if ((page->scan_complete_func != NULL) && (page->page_owner != NULL))
 		page->scan_complete_func(page->page_owner, page);
 
@@ -633,14 +633,14 @@ CRAWL_CrawlerConverter(int format_out,
 
 	TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-	XP_TRACE(("CRAWL_CrawlerConverter: %d %s", URL_s->server_status, URL_s->address));
+	PR_LogPrint(("CRAWL_CrawlerConverter: %d %s", URL_s->server_status, URL_s->address));
 
 	if (URL_s->SARCache != NULL) {
 		/* if the content length would exceed the cache limit, don't convert this */
 		if (((uint32)URL_s->content_length >= (URL_s->SARCache->MaxSize - URL_s->SARCache->DiskCacheSize)) &&
 			((uint32)URL_s->content_length < BOGUS_CONTENT_LENGTH)) {
 			CRAWL_PageInfo page = URL_s->owner_data;
-			XP_TRACE(("not converting %s", URL_s->address));
+			PR_LogPrint(("not converting %s", URL_s->address));
 			if ((page->scan_complete_func != NULL) && (page->page_owner != NULL)) {
 				page->scan_complete_func(page->page_owner, page);
 				return(NULL);
@@ -648,14 +648,14 @@ CRAWL_CrawlerConverter(int format_out,
 		}
 	}
 
-	stream = XP_NEW(NET_StreamClass);
+	stream = PR_NEW(NET_StreamClass);
 	if(stream == NULL)
 		return(NULL);
 
-	obj = XP_NEW(crawl_page_scan_stream);
+	obj = PR_NEW(crawl_page_scan_stream);
 	if (obj == NULL)
 	  {
-		XP_FREE(stream);
+		PR_Free(stream);
 		return(NULL);
 	  }
 	obj->parse_obj = CRAWL_MakeParseObj();			/* this object used to parse the page and destroyed 
@@ -666,8 +666,8 @@ CRAWL_CrawlerConverter(int format_out,
 	/* if there was a server error, read but don't parse the document */
 	if ((URL_s->server_status >= 400) ||
 		/* don't attempt to parse non-html */
-		((XP_STRSTR(URL_s->content_type, TEXT_HTML) == NULL) &&
-		 (XP_STRSTR(URL_s->content_type, INTERNAL_PARSER) == NULL))) {
+		((PL_strstr(URL_s->content_type, TEXT_HTML) == NULL) &&
+		 (PL_strstr(URL_s->content_type, INTERNAL_PARSER) == NULL))) {
 		/* URL_s->dont_cache = PR_FALSE; */
 		obj->page->dontFollow = PR_TRUE;
 	}

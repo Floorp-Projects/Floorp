@@ -54,11 +54,11 @@ NET_BuildProxyAuthString(MWContext * context,
  * and TRUE if the user wants to continue with a new authorization
  * string.
  */
-PUBLIC XP_Bool
+PUBLIC PRBool
 NET_AskForProxyAuth(MWContext * context,
 		    char *   proxy_addr,
 		    char *   pauth_params,
-		    XP_Bool  already_sent_auth);
+		    PRBool  already_sent_auth);
 
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieBehaviorPrefChanged(const char * newpref, void * data);

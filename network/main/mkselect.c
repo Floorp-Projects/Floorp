@@ -92,7 +92,7 @@ net_add_select(SelectType stType, PRFileDesc *prFD)
 	else if(stType == ReadSelect)
 		poll_desc_array[index].in_flags = READ_FLAGS;
 	else
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 }
 
 /*  Remove a select if it exists. */
@@ -114,7 +114,7 @@ net_remove_select(SelectType stType, PRFileDesc *prFD)
 
 				fd_set_size--;
 				if(count < fd_set_size)
-					XP_MEMCPY(&poll_desc_array[count], &poll_desc_array[count+1], (fd_set_size - count) * sizeof(PRPollDesc));
+					memcpy(&poll_desc_array[count], &poll_desc_array[count+1], (fd_set_size - count) * sizeof(PRPollDesc));
 
 				return;
 			}
@@ -198,7 +198,7 @@ NET_SetCallNetlibAllTheTime(MWContext *context, char *caller)
 {
 	if(net_calling_all_the_time_count < 0)
 	{
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		net_calling_all_the_time_count = 0;
 	}
 
@@ -228,7 +228,7 @@ net_process_slow_net_timer_callback(void *closure)
  * source of our events.
  */
 MODULE_PRIVATE void
-NET_SetNetlibSlowKickTimer(XP_Bool set)
+NET_SetNetlibSlowKickTimer(PRBool set)
 {
 	if(net_slow_timer_on == set)
 		return; /* do nothing */
@@ -247,7 +247,7 @@ NET_ClearCallNetlibAllTheTime(MWContext *context, char *caller)
 {
 	if(net_calling_all_the_time_count < 1)
 	{
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		net_calling_all_the_time_count = 1;
 	}
 
@@ -255,21 +255,21 @@ NET_ClearCallNetlibAllTheTime(MWContext *context, char *caller)
 
 }
 
-MODULE_PRIVATE XP_Bool
+MODULE_PRIVATE PRBool
 NET_IsCallNetlibAllTheTimeSet(MWContext *context, char *caller)
 {
 	if(caller == NULL)
 	{
 		if(net_calling_all_the_time_count > 0)
-			return TRUE;
+			return PR_TRUE;
 	}
 	else
 	{
 		/* not implemented */
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 	}
 
-	return FALSE;
+	return PR_FALSE;
 }
 
 MODULE_PRIVATE void

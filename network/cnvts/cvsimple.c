@@ -26,6 +26,7 @@
 
 #include "cvsimple.h"
 #include "xp.h"
+#include "prmem.h"
 
 typedef void (*simple_complete_t)(void* bytes, int32 bytes_written);
 
@@ -49,8 +50,8 @@ simple_complete(NET_StreamClass *stream)
 		(obj->complete)(obj->bytes, obj->bytes_written);
 	}
 
-	if ( obj && obj->bytes ) XP_FREE(obj->bytes);
-	if ( obj ) XP_FREE(obj);
+	if ( obj && obj->bytes ) PR_Free(obj->bytes);
+	if ( obj ) PR_Free(obj);
 }
 
 
@@ -62,8 +63,8 @@ simple_abort(NET_StreamClass *stream, int status)
 {
 	NET_SimpleStreamData* obj = (NET_SimpleStreamData*) stream->data_object;	
 
-	if ( obj && obj->bytes ) XP_FREE(obj->bytes);
-	if ( obj ) XP_FREE(obj);
+	if ( obj && obj->bytes ) PR_Free(obj->bytes);
+	if ( obj ) PR_Free(obj);
 }
 
 
@@ -78,10 +79,10 @@ simple_write(NET_StreamClass *stream, const char* str, int32 len)
 	if ( obj->bytes_written + len > obj->max_bytes ) {
 		/* Round to nearest 1024 */
 		obj->max_bytes = ( ( ( (obj->max_bytes + len) >> 10) + 1) << 10);
-		obj->bytes = XP_REALLOC(obj->bytes, obj->max_bytes);
+		obj->bytes = PR_Realloc(obj->bytes, obj->max_bytes);
 	}
 
-	XP_MEMCPY(obj->bytes + obj->bytes_written, str, len);
+	memcpy(obj->bytes + obj->bytes_written, str, len);
 	obj->bytes_written+= len;
 
 	return MK_DATA_LOADED;
@@ -107,7 +108,7 @@ NET_SimpleStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 {
 	NET_SimpleStreamData* obj;
 
-	if ( (obj = XP_NEW_ZAP(NET_SimpleStreamData)) == NULL ) {
+	if ( (obj = PR_NEWZAP(NET_SimpleStreamData)) == NULL ) {
 		return NULL;
 	}
 

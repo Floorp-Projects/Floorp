@@ -294,7 +294,7 @@ MODULE_PRIVATE CacheUseEnum NET_CacheUseMethod=CU_CHECK_PER_SESSION;
 
 MODULE_PRIVATE time_t NET_StartupTime=0;
 
-MODULE_PRIVATE XP_Bool NET_ProxyAcLoaded = FALSE;
+MODULE_PRIVATE PRBool NET_ProxyAcLoaded = PR_FALSE;
 MODULE_PRIVATE XP_Bool NET_GlobalAcLoaded = FALSE;
 MODULE_PRIVATE int NET_TotalNumberOfOpenConnections=0;
 MODULE_PRIVATE int NET_MaxNumberOfOpenConnections=100;
@@ -327,7 +327,7 @@ NET_AddExitCallback( void (* func)(void *arg), void *arg)
 	NETExitCallbackNode *node;
 	
 	/* alloc node */
-	node = XP_ALLOC(sizeof(NETExitCallbackNode));
+	node = PR_Malloc(sizeof(NETExitCallbackNode));
 	if ( node != NULL ) {
 		/* fill it in */
 		node->func = func;
@@ -351,7 +351,7 @@ NET_ProcessExitCallbacks(void)
 		(* node->func)(node->arg);
 		freenode = node;
 		node = node->next;
-		XP_FREE(freenode);
+		PR_Free(freenode);
 	}
 	
 	NETExitCallbackHead = NULL;
@@ -372,8 +372,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	if (!prefChanged)
 		bSetupAll = TRUE;
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.ftp") || 
-		!XP_STRCMP(prefChanged, "network.proxy.ftp_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.ftp") || 
+		!PL_strcmp(prefChanged, "network.proxy.ftp_port")) {
 		PREF_CopyCharPref("network.proxy.ftp",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.ftp_port",&iPort);
@@ -386,8 +386,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.gopher") || 
-		!XP_STRCMP(prefChanged, "network.proxy.gopher_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.gopher") || 
+		!PL_strcmp(prefChanged, "network.proxy.gopher_port")) {
 		PREF_CopyCharPref("network.proxy.gopher",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.gopher_port",&iPort);
@@ -400,8 +400,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.http") || 
-		!XP_STRCMP(prefChanged, "network.proxy.http_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.http") || 
+		!PL_strcmp(prefChanged, "network.proxy.http_port")) {
 		PREF_CopyCharPref("network.proxy.http",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.http_port",&iPort);
@@ -414,8 +414,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.ssl") || 
-		!XP_STRCMP(prefChanged, "network.proxy.ssl_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.ssl") || 
+		!PL_strcmp(prefChanged, "network.proxy.ssl_port")) {
 		PREF_CopyCharPref("network.proxy.ssl",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.ssl_port",&iPort);
@@ -428,8 +428,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.news") || 
-		!XP_STRCMP(prefChanged, "network.proxy.news_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.news") || 
+		!PL_strcmp(prefChanged, "network.proxy.news_port")) {
 		PREF_CopyCharPref("network.proxy.news",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.news_port",&iPort);
@@ -442,8 +442,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.wais") || 
-		!XP_STRCMP(prefChanged, "network.proxy.wais_port")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.wais") || 
+		!PL_strcmp(prefChanged, "network.proxy.wais_port")) {
 		PREF_CopyCharPref("network.proxy.wais",&proxy);
 		if(proxy && *proxy) {
 			PREF_GetIntPref("network.proxy.wais_port",&iPort);
@@ -456,8 +456,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.hosts.socks_server") || 
-		!XP_STRCMP(prefChanged, "network.hosts.socks_serverport")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.hosts.socks_server") || 
+		!PL_strcmp(prefChanged, "network.hosts.socks_serverport")) {
 		PREF_CopyCharPref("network.hosts.socks_server",&proxy);
 		if (proxy && *proxy) {
 			PREF_GetIntPref("network.hosts.socks_serverport",&iPort);
@@ -471,7 +471,7 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.no_proxies_on")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.no_proxies_on")) {
 		PREF_CopyCharPref("network.proxy.no_proxies_on",&proxy);
 		if(proxy && *proxy) {
 		    StrAllocCopy(MKno_proxy, proxy);
@@ -565,7 +565,7 @@ NET_SetupPrefs(const char * prefChanged)
 	XP_Bool bSetupAll=FALSE;
 	char * proxy = NULL;
 
-	/* if prefChanged is null the following XP_STRCMP's are never executed because the
+	/* if prefChanged is null the following PL_strcmp's are never executed because the
 	   || statement never gets that far because when prefChanged is null bSetupAll is
 	   set to true and is always checked first in the if statement. Don't set prefChanged
 	   to "" if it is null because the UpdateManualProxyInfo below needs null not "" if
@@ -573,50 +573,50 @@ NET_SetupPrefs(const char * prefChanged)
 	if (!prefChanged)
 		bSetupAll = TRUE;
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.dnsCacheExpiration")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.dnsCacheExpiration")) {
 		int32 n;
 		PREF_GetIntPref("network.dnsCacheExpiration",&n);
 		NET_SetDNSExpirationPref(n);
 	}
 	
-	if (bSetupAll || !XP_STRCMP(prefChanged,"browser.prefetch")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"browser.prefetch")) {
 		XP_Bool enabled;
 		PREF_GetBoolPref("browser.prefetch",&enabled);
     	PRE_Enable(enabled);
 	}
 		
-	if (bSetupAll || !XP_STRCMP(prefChanged,"browser.cache.memory_cache_size")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.memory_cache_size")) {
 		int32 nMemCache;
 		PREF_GetIntPref("browser.cache.memory_cache_size",&nMemCache);
 		NET_SetMemoryCacheSize(nMemCache * 1024);
 	}
 
-	if (bSetupAll || !XP_STRCMP(prefChanged,"browser.cache.disk_cache_size")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.disk_cache_size")) {
 		int32 nDiskCache;
 		PREF_GetIntPref("browser.cache.disk_cache_size",&nDiskCache);
 	    NET_SetDiskCacheSize(nDiskCache * 1024);
 	}
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "browser.cache.check_doc_frequency")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "browser.cache.check_doc_frequency")) {
 		int32 nDocReqFreq;
 		PREF_GetIntPref("browser.cache.check_doc_frequency" ,&nDocReqFreq);
 		NET_SetCacheUseMethod((CacheUseEnum)nDocReqFreq);
 	}
 	
-	if (bSetupAll || !XP_STRCMP(prefChanged,"browser.cache.disk_cache_ssl")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.disk_cache_ssl")) {
 		XP_Bool prefBool;
 		PREF_GetBoolPref("browser.cache.disk_cache_ssl",&prefBool);
 		NET_DontDiskCacheSSL(!prefBool);
 	}
 #ifdef MOZ_MAIL_NEWS
-	if (bSetupAll || !XP_STRCMP(prefChanged,"mail.allow_at_sign_in_user_name")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"mail.allow_at_sign_in_user_name")) {
 		XP_Bool prefBool;
 		PREF_GetBoolPref("mail.allow_at_sign_in_user_name",&prefBool);
 		NET_SetAllowAtSignInMailUserName (prefBool);
 	}
 #endif /* MOZ_MAIL_NEWS */
 	
-	if (bSetupAll || !XP_STRCMP(prefChanged,"network.proxy.autoconfig_url")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,"network.proxy.autoconfig_url")) {
 		PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy);
 		if (proxy && *proxy) {
 			StrAllocCopy(MKproxy_ac_url, proxy);
@@ -629,7 +629,7 @@ NET_SetupPrefs(const char * prefChanged)
 	
 	NET_UpdateManualProxyInfo(prefChanged);
 
-	if (bSetupAll || !XP_STRCMP(prefChanged, "network.proxy.type")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.type")) {
 		int32 iType;
 		PREF_GetIntPref("network.proxy.type",&iType);
 	NET_SelectProxyStyle((NET_ProxyStyle)iType);
@@ -878,7 +878,7 @@ NET_CheckForTimeBomb(MWContext *context)
 								&relative_timebomb_prefs_name);
 		if (relative_timebomb_prefs_name == NULL)
 			relative_timebomb_prefs_name = 
-								XP_STRDUP("general.bproxy_cert_digest");
+								PL_strdup("general.bproxy_cert_digest");
 		relative_timebomb_start_date = 0;
 		PREF_GetIntPref(relative_timebomb_prefs_name,
 								(int32 *)&relative_timebomb_start_date);
@@ -891,7 +891,7 @@ NET_CheckForTimeBomb(MWContext *context)
 			PREF_SetIntPref(relative_timebomb_prefs_name,
 							(int32)relative_timebomb_start_date);
 		}
-		XP_FREE(relative_timebomb_prefs_name);
+		PR_Free(relative_timebomb_prefs_name);
 		relative_timebomb_time = relative_timebomb_start_date +
 								(relative_timebomb_days * 24 * 60 * 60);
 		if (cur_time > relative_timebomb_time)
@@ -979,10 +979,10 @@ net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
     /* Do this for both Browser and Editor windows */
     if( /* EDT_IS_EDITOR(window_id) && */
 	URL_s && URL_s->address &&
-	0 == XP_STRCMP(URL_s->address, XP_NEW_DOC_URL) )
+	0 == PL_strcmp(URL_s->address, XP_NEW_DOC_URL) )
     {
-	XP_FREE(URL_s->address);
-	URL_s->address = XP_STRDUP(XP_NEW_DOC_NAME);
+	PR_Free(URL_s->address);
+	URL_s->address = PL_strdup(XP_NEW_DOC_NAME);
        
 	/* Not sure if this is the best place to do this,
 	 * but it needs to go someplace!        
@@ -997,7 +997,7 @@ net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
 	 *  to test for new doc and update title (in exit_routine)
 	*/
 	if ( window_id->title ) {
-	    XP_FREE(window_id->title);
+	    PR_Free(window_id->title);
 	    window_id->title = NULL;
 	}
 	/* Note: We replace "about:editfilenew" with "file:///Untitled"
@@ -1116,7 +1116,7 @@ net_push_url_on_wait_queue(int                 url_type,
 						   Net_GetUrlExitFunc  exit_routine)
 {
 
-	WaitingURLStruct * wus = XP_NEW(WaitingURLStruct);
+	WaitingURLStruct * wus = PR_NEW(WaitingURLStruct);
 
 	TRACEMSG(("Pushing URL on wait queue with %d open connections",
 					 NET_TotalNumberOfOpenConnections ));
@@ -1280,7 +1280,7 @@ PRIVATE void
 net_CheckForWaitingURL(MWContext * window_id, int protocol, Bool was_background)
 {
 #ifdef NSPR
-	XP_ASSERT(LIBNET_IS_LOCKED());
+	PR_ASSERT(LIBNET_IS_LOCKED());
 #endif
 
 	/* decrement here since this function is called
@@ -1441,22 +1441,22 @@ NET_SanityCheckDNS (MWContext *context)
   if (done) return;
   done = TRUE;
 
-  message = (char *) XP_ALLOC (3000);
+  message = (char *) PR_Malloc (3000);
   if (! message)
 	return;
   *message = 0;
 
   if (proxy)
-	proxy = XP_STRDUP (proxy);
+	proxy = PL_strdup (proxy);
   if (socks)
-	socks = XP_STRDUP (socks);
+	socks = PL_strdup (socks);
 
   /* Strip off everything after last colon. */
   {
     char *s;
-    if (proxy && (s = XP_STRRCHR (proxy, ':')))
+    if (proxy && (s = PL_strrchr (proxy, ':')))
 	  *s = 0;
-    if (socks && (s = XP_STRRCHR (socks, ':')))
+    if (socks && (s = PL_strrchr (socks, ':')))
 	  *s = 0;
   }
 
@@ -1468,9 +1468,9 @@ NET_SanityCheckDNS (MWContext *context)
   /* If the hosts are specified as IP numbers, don't try and resolve them.
      (Yes, hostnames can't begin with digits.) */
   if (proxy && proxy[0] >= '0' && proxy[0] <= '9')
-    XP_FREE (proxy), proxy = 0;
+    PR_Free (proxy), proxy = 0;
   if (socks && socks[0] >= '0' && socks[0] <= '9')
-    XP_FREE (socks), socks = 0;
+    PR_Free (socks), socks = 0;
 
   if (proxy && *proxy)
     {
@@ -1492,10 +1492,10 @@ NET_SanityCheckDNS (MWContext *context)
 	{
 		  sprintf(message, XP_GetString(XP_UNKNOWN_SOCKS_HOST), socks);
 #ifdef XP_UNIX
-			XP_STRCAT (message, XP_GetString(XP_SOCKS_NS_ENV_VAR));
+			PL_strcat (message, XP_GetString(XP_SOCKS_NS_ENV_VAR));
 		  /* Only Unix has the $SOCKS_NS environment variable. */
 #endif /* XP_UNIX */
-			XP_STRCAT (message, XP_GetString(XP_CONSULT_SYS_ADMIN));
+			PL_strcat (message, XP_GetString(XP_CONSULT_SYS_ADMIN));
 	}
       else
 	{
@@ -1520,8 +1520,8 @@ NET_SanityCheckDNS (MWContext *context)
 #ifndef NSPR20
 	  if (local &&
 	      (hent = PR_gethostbyname (local, &hpbuf, dbbuf, sizeof(dbbuf), 0)) &&
-	      XP_STRCMP (local, hent->h_name))
-	    local2 = XP_STRDUP (hent->h_name);
+	      PL_strcmp (local, hent->h_name))
+	    local2 = PL_strdup (hent->h_name);
 	  else
 	    local2 = 0;
 #else
@@ -1529,8 +1529,8 @@ NET_SanityCheckDNS (MWContext *context)
 	  if (local &&
 	      (PR_GetHostByName (local, dbbuf, sizeof(dbbuf), &hpbuf) == PR_SUCCESS)) { 
 	  hent = &hpbuf;
-	  if (XP_STRCMP (local, hent->h_name))
-	    local2 = XP_STRDUP (hent->h_name);
+	  if (PL_strcmp (local, hent->h_name))
+	    local2 = PL_strdup (hent->h_name);
       }
 #endif
 	  if (local && *local && !net_IsHostResolvable (local, context))
@@ -1554,22 +1554,22 @@ NET_SanityCheckDNS (MWContext *context)
 		  sprintf(message, XP_GetString(XP_UNKNOWN_HOSTS));
 		  for (i = 0; i < loser_count; i++)
 		    {
-		      XP_STRCAT (message, "                    ");
-		      XP_STRCAT (message, losers [i]);
-		      XP_STRCAT (message, "\n");
+		      PL_strcat (message, "                    ");
+		      PL_strcat (message, losers [i]);
+		      PL_strcat (message, "\n");
 		    }
 		}
 	      else
 		{
 				  sprintf(message, XP_GetString(XP_UNKNOWN_HOST), losers[0]);
 		}
-	      XP_STRCAT (message, XP_GetString(XP_SOME_HOSTS_UNREACHABLE));
+	      PL_strcat (message, XP_GetString(XP_SOME_HOSTS_UNREACHABLE));
 #ifdef XP_UNIX
 # if defined(__sun) && !defined(__svr4__)       /* compiled on SunOS 4.1.3 */
 			  if (fe_HaveDNS)
 				/* Don't talk about $SOCKS_NS in the YP/NIS version. */
 # endif
-				XP_STRCAT (message, XP_GetString(XP_SOCKS_NS_ENV_VAR));
+				PL_strcat (message, XP_GetString(XP_SOCKS_NS_ENV_VAR));
 
 #if defined(__sun) && !defined(__svr4__)        /* compiled on SunOS 4.1.3 */
 			  assert (XP_AppName);
@@ -1583,24 +1583,24 @@ NET_SanityCheckDNS (MWContext *context)
 					sprintf(temp, XP_GetString(XP_THIS_IS_YP_VERSION),
 						XP_AppName);
 				}
-			  XP_STRCAT(message, temp);
+			  PL_strcat(message, temp);
 # endif /*  SunOS 4.* */
 #endif /* XP_UNIX */
-	      XP_STRCAT (message, XP_GetString(XP_CONSULT_SYS_ADMIN));
+	      PL_strcat (message, XP_GetString(XP_CONSULT_SYS_ADMIN));
 	    }
 
 #ifdef XP_UNIX
-	  if (local2) XP_FREE (local2);
+	  if (local2) PR_Free (local2);
 #endif /* XP_UNIX */
 	}
     }
 
-  if (proxy) XP_FREE (proxy);
-  if (socks) XP_FREE (socks);
+  if (proxy) PR_Free (proxy);
+  if (socks) PR_Free (socks);
 
   if (*message)
     FE_Alert (context, message);
-  XP_FREE (message);
+  PR_Free (message);
 #endif /* XP_UNIX full function wrap */
 }
 
@@ -1645,7 +1645,7 @@ NET_ShutdownNetLib(void)
 		}
 		else
 		{
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 		}
 
      	/* XP_OS2_FIX IBM-MAS: limit length of output to keep from blowing trace buffer! */
@@ -1658,7 +1658,7 @@ NET_ShutdownNetLib(void)
 							 tmpEntry->status,
 							 tmpEntry->format_out,
 							 tmpEntry->window_id);
-	 	XP_FREE(tmpEntry);  /* free the no longer active entry */
+	 	PR_Free(tmpEntry);  /* free the no longer active entry */
       }
 
 	XP_ListDestroy(net_EntryList);
@@ -1734,7 +1734,7 @@ void NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type)
 
 	if(!impl || for_url_type < 0 || for_url_type > LAST_URL_TYPE)
 	{
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		return;
 	}
 
@@ -1766,7 +1766,7 @@ net_get_protocol_impl(int for_url_type)
 			return net_proto_impls[count].impl;
 	}
 
-	XP_ASSERT(0);  /* should always find one */
+	PR_ASSERT(0);  /* should always find one */
 	return NULL; 
 }
 
@@ -1823,7 +1823,7 @@ NET_GetURL (URL_Struct *URL_s,
 	NET_SetNetlibSlowKickTimer(TRUE);
 #endif
 
-	XP_ASSERT (URL_s && URL_s->address);
+	PR_ASSERT (URL_s && URL_s->address);
 #ifdef MOZILLA_CLIENT
 	if ( URL_s->mailto_post && warn_on_mailto_post) {
 		confirmstring = NULL;
@@ -1834,7 +1834,7 @@ NET_GetURL (URL_Struct *URL_s,
 		
 		if ( confirmstring ) {
 			confirm = FE_Confirm(window_id, confirmstring);
-			XP_FREE(confirmstring);
+			PR_Free(confirmstring);
 		}
 		
 		if ( !confirm ) {
@@ -1859,14 +1859,14 @@ NET_GetURL (URL_Struct *URL_s,
     }
 
     /* Test for "Untitled" URL */
-    if( 0 == XP_STRCMP(URL_s->address, XP_NEW_DOC_NAME) ) {
+    if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_NAME) ) {
     	/* Change request to load "file:///Untitled" into "about:editfilenew"  */
-	    XP_FREE(URL_s->address);
-	    URL_s->address = XP_STRDUP(XP_NEW_DOC_URL);
+	    PR_Free(URL_s->address);
+	    URL_s->address = PL_strdup(XP_NEW_DOC_URL);
 	    /* Set flag so FE can quickly detect new doc */
 	    window_id->is_new_document = TRUE;
     }
-    else if( 0 == XP_STRCMP(URL_s->address, XP_NEW_DOC_URL) ) {
+    else if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_URL) ) {
 		window_id->is_new_document = TRUE;
     }
     else {
@@ -1911,7 +1911,7 @@ NET_GetURL (URL_Struct *URL_s,
 		 || type == URN_TYPE_URL
 		 || type == NFS_TYPE_URL
 		 || type == POP3_TYPE_URL
-		 || (type == NEWS_TYPE_URL && !strncasecomp(URL_s->address, "snews:", 6)))
+		 || (type == NEWS_TYPE_URL && !PL_strncasecmp(URL_s->address, "snews:", 6)))
 		 ) {
 		int status=-1;
 		/* Figure out which auto config we're dealing (global or pac file
@@ -1955,7 +1955,7 @@ NET_GetURL (URL_Struct *URL_s,
 	new_address = XP_StripLine(URL_s->address);
 	if(new_address != URL_s->address)
 	  {
-		XP_MEMMOVE(URL_s->address, new_address, XP_STRLEN(new_address)+1);
+		memmove(URL_s->address, new_address, PL_strlen(new_address)+1);
 	  }
 
 	/* get the protocol type
@@ -2018,7 +2018,7 @@ NET_GetURL (URL_Struct *URL_s,
 		 */
 		char *new_address=0;
 		/* the colon is guarenteed to be there */
-		StrAllocCopy(new_address, XP_STRCHR(URL_s->address, ':')+1);
+		StrAllocCopy(new_address, PL_strchr(URL_s->address, ':')+1);
 		FREE(URL_s->address);
 		URL_s->address = new_address;
 
@@ -2040,12 +2040,12 @@ NET_GetURL (URL_Struct *URL_s,
 			char *new_address;
 			/* Replace castanet:// with http:// */
 			/* Allocate space for 'http' + the rest of the string */
-			new_address = XP_ALLOC(XP_STRLEN(XP_STRCHR(URL_s->address, ':'))+5);
+			new_address = PR_Malloc(PL_strlen(PL_strchr(URL_s->address, ':'))+5);
 
-			XP_ASSERT(new_address);
+			PR_ASSERT(new_address);
 			*new_address=0;
-			XP_STRCAT(new_address,"http");
-			XP_STRCAT(new_address,XP_STRCHR(URL_s->address, ':'));
+			PL_strcat(new_address,"http");
+			PL_strcat(new_address,PL_strchr(URL_s->address, ':'));
 
 			FREE(URL_s->address);
 			URL_s->address = new_address;
@@ -2103,8 +2103,8 @@ NET_GetURL (URL_Struct *URL_s,
 				   && type != HTML_PANEL_HANDLER_TYPE_URL
 					&& type != INTERNAL_SECLIB_TYPE_URL
 
-			  && !strcasestr(URL_s->address, "mcom.com")
-			       &&  !strcasestr(URL_s->address, "netscape.com"))
+			  && !PL_strcasestr(URL_s->address, "mcom.com")
+			       &&  !PL_strcasestr(URL_s->address, "netscape.com"))
 		  {
 			char * alert = NET_ExplainErrorDetails(MK_TIMEBOMB_URL_PROHIBIT);
 
@@ -2153,7 +2153,7 @@ NET_GetURL (URL_Struct *URL_s,
 		 */
 		if(type != MAILTO_TYPE_URL
 			|| !URL_s->post_headers
-			 || !XP_STRNCMP("Content-type", URL_s->post_headers, 12))
+			 || !PL_strncmp("Content-type", URL_s->post_headers, 12))
 		  {
 		    if(h && h->security_on)
 		      {
@@ -2226,7 +2226,7 @@ NET_GetURL (URL_Struct *URL_s,
 #define INT_SEARCH_URL "http://cgi.netscape.com/cgi-bin/url_search.cgi?search="
 #define INT_SEARCH_URL_TYPE HTTP_TYPE_URL
 
-		if(!(munged = (char*) XP_ALLOC(XP_STRLEN(URL_s->address)+20)))
+		if(!(munged = (char*) PR_Malloc(PL_strlen(URL_s->address)+20)))
 		{
 		    net_CallExitRoutine(exit_routine,
 								URL_s,
@@ -2260,7 +2260,7 @@ NET_GetURL (URL_Struct *URL_s,
 		/* if it starts with a question mark or has a space it's
 		 * a search URL
 		 */
-		if(*URL_s->address == '?' || XP_STRCHR(URL_s->address, ' '))
+		if(*URL_s->address == '?' || PL_strchr(URL_s->address, ' '))
 		  {
 			/* URL contains spaces.  Treat it as search text. */
 			char *escaped;
@@ -2278,7 +2278,7 @@ NET_GetURL (URL_Struct *URL_s,
 				if (pUrl) {
 					munged = PR_smprintf("%s%s", pUrl, escaped);
 					FREE(escaped);
-					XP_FREE(pUrl);
+					PR_Free(pUrl);
 				}
 			    type = INT_SEARCH_URL_TYPE;
 			  }
@@ -2287,35 +2287,35 @@ NET_GetURL (URL_Struct *URL_s,
 		  {
 			if(*URL_s->address == '/')
 			  {
-			    XP_STRCPY(munged, "file:");
+			    PL_strcpy(munged, "file:");
 			    type = FILE_TYPE_URL;
 		      }
-		    else if(!strncasecomp(URL_s->address, "ftp", 3))
+		    else if(!PL_strncasecmp(URL_s->address, "ftp", 3))
 		      {
-			    XP_STRCPY(munged, "ftp://");
+			    PL_strcpy(munged, "ftp://");
 			    type = FTP_TYPE_URL;
 		      }
-		    else if(!strncasecomp(URL_s->address, "gopher", 6))
+		    else if(!PL_strncasecmp(URL_s->address, "gopher", 6))
 		      {
-			    XP_STRCPY(munged, "gopher://");
+			    PL_strcpy(munged, "gopher://");
 			    type = GOPHER_TYPE_URL;
 		      }
-		    else if(!strncasecomp(URL_s->address, "news", 4)
-				    || !strncasecomp(URL_s->address, "nntp", 4))
+		    else if(!PL_strncasecmp(URL_s->address, "news", 4)
+				    || !PL_strncasecmp(URL_s->address, "nntp", 4))
 		      {
-			    XP_STRCPY(munged, "news://");
+			    PL_strcpy(munged, "news://");
 			    type = NEWS_TYPE_URL;
 		      }
 			else
 		      {
-			    XP_STRCPY(munged, "http://");
+			    PL_strcpy(munged, "http://");
 			    type = HTTP_TYPE_URL;
 		      }
     
-		    XP_STRCAT(munged, URL_s->address);
+		    PL_strcat(munged, URL_s->address);
 		  }
 
-		XP_FREE(URL_s->address);
+		PR_Free(URL_s->address);
 		URL_s->address = munged;
 
 #ifdef MOZILLA_CLIENT
@@ -2394,12 +2394,12 @@ NET_GetURL (URL_Struct *URL_s,
 			const char *real_url = LM_SkipWysiwygURLPrefix(URL_s->address);
 
 			/* XXX can't use StrAllocCopy because it frees dest first */
-			if (real_url && (new_address = XP_STRDUP(real_url)) != NULL)
+			if (real_url && (new_address = PL_strdup(real_url)) != NULL)
 			  {
 				/* cache miss: we must clear this flag so scripts rerun */
 				URL_s->resize_reload = FALSE;
 
-				XP_FREE(URL_s->address);
+				PR_Free(URL_s->address);
 				URL_s->address = new_address;
 				FREE_AND_CLEAR(URL_s->wysiwyg_url);
 				/* 
@@ -2614,7 +2614,7 @@ NET_GetURL (URL_Struct *URL_s,
 	  }
 
     /* start a new entry */
-    this_entry = XP_NEW(ActiveEntry);
+    this_entry = PR_NEW(ActiveEntry);
     if(!this_entry)
 	  {
 	net_CallExitRoutine(exit_routine,
@@ -2627,7 +2627,7 @@ NET_GetURL (URL_Struct *URL_s,
 	  }
 
     /* init new entry */
-    XP_MEMSET(this_entry, 0, sizeof(ActiveEntry));
+    memset(this_entry, 0, sizeof(ActiveEntry));
     this_entry->URL_s        = URL_s;
     this_entry->socket       = NULL;
     this_entry->con_sock     = NULL;
@@ -2671,7 +2671,7 @@ NET_GetURL (URL_Struct *URL_s,
 				net_CheckForWaitingURL(window_id, this_entry->protocol, 
 									   load_background);
 
-				XP_FREE(this_entry);  /* not needed any more */
+				PR_Free(this_entry);  /* not needed any more */
 
 				LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 			  }
@@ -2689,10 +2689,10 @@ NET_GetURL (URL_Struct *URL_s,
 										window_id);
 			if(stream)
 			  {
-				XP_STRCPY(buffer, XP_GetString(XP_HTML_MISSING_REPLYDATA));
+				PL_strcpy(buffer, XP_GetString(XP_HTML_MISSING_REPLYDATA));
 				(*stream->put_block)(stream,
 									 buffer,
-									 XP_STRLEN(buffer));
+									 PL_strlen(buffer));
 				(*stream->complete)(stream);
 			  }
 
@@ -2706,7 +2706,7 @@ NET_GetURL (URL_Struct *URL_s,
 			net_CheckForWaitingURL(window_id, this_entry->protocol,
 								   load_background);
 
-			XP_FREE(this_entry);  /* not needed any more */
+			PR_Free(this_entry);  /* not needed any more */
 
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 		  }
@@ -2728,7 +2728,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 			|| this_entry->protocol == URN_TYPE_URL
 			|| this_entry->protocol == NFS_TYPE_URL
 			|| (this_entry->protocol == NEWS_TYPE_URL 
-				&& !strncasecomp(URL_s->address, "snews:", 6)
+				&& !PL_strncasecmp(URL_s->address, "snews:", 6)
 				)
 			)
 		&& (this_entry->proxy_conf =
@@ -2836,7 +2836,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 							   this_entry->protocol,
 							   this_entry->URL_s->load_background);
 
-		XP_FREE(this_entry);
+		PR_Free(this_entry);
 		LIBNET_UNLOCK_AND_RETURN(0);
 	  }
 	else if(this_entry->status == MK_DO_REDIRECT)
@@ -2852,7 +2852,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 		net_CheckForWaitingURL(this_entry->window_id, 
 							   this_entry->protocol,
 							   load_background);
-		XP_FREE(this_entry);  /* not needed any more */
+		PR_Free(this_entry);  /* not needed any more */
 		LIBNET_UNLOCK_AND_RETURN(0);
 	  }
     else if(this_entry->status == MK_TOO_MANY_OPEN_FILES)
@@ -2867,7 +2867,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 						this_entry->window_id,
 						this_entry->exit_routine);
 		NET_TotalNumberOfProcessingURLs--;
-		XP_FREE(this_entry);
+		PR_Free(this_entry);
 		LIBNET_UNLOCK_AND_RETURN(status);
       }
     else if(this_entry->status == MK_OFFLINE)
@@ -2885,7 +2885,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 				/* We only display the message for top-level items (i.e., not for
 				   inline images, plugins, or java classes */
 				   
-				char * alert = XP_STRDUP(XP_GetString(XP_ALERT_OFFLINE_MODE_SELECTED));
+				char * alert = PL_strdup(XP_GetString(XP_ALERT_OFFLINE_MODE_SELECTED));
 				FE_Alert(window_id, alert);
 				FREE(alert);
 			}
@@ -2903,7 +2903,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 							   this_entry->protocol,
 							   load_background);
 
-		XP_FREE(this_entry);
+		PR_Free(this_entry);
 		LIBNET_UNLOCK_AND_RETURN(MK_OFFLINE);
       }
 
@@ -2925,7 +2925,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 		net_CheckForWaitingURL(this_entry->window_id, 
 							   this_entry->protocol,
 							   load_background);
-		XP_FREE(this_entry);  /* not needed any more */
+		PR_Free(this_entry);  /* not needed any more */
       }
 
     TRACEMSG(("Leaving GetURL with %d items in list",
@@ -2995,7 +2995,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 	if(NET_InGetHostByName)
 	  {
 		TRACEMSG(("call to processnet while doing gethostbyname call"));
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		LIBNET_UNLOCK_AND_RETURN(1);
 	  }
 
@@ -3042,7 +3042,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 					}
 
 					fd_set_size++;
-					XP_ASSERT(fd_set_size < MAX_SIMULTANIOUS_SOCKETS);
+					PR_ASSERT(fd_set_size < MAX_SIMULTANIOUS_SOCKETS);
 				  }
 			  }
 			else if(tmpEntry == 
@@ -3100,7 +3100,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 					/* count should line up to the appropriate socket since
 					 * it was added in the same order
 					 */
-					XP_ASSERT(poll_desc_array[count].fd == tmpEntry->socket
+					PR_ASSERT(poll_desc_array[count].fd == tmpEntry->socket
 							  || poll_desc_array[count].fd == tmpEntry->con_sock);
 					if(poll_desc_array[count].out_flags & (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT))
 					  {
@@ -3114,7 +3114,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 			if(!ready_fd)
 			{
 				/* couldn't find the active socket.  Shouldn't ever happen */
-				XP_ASSERT(0);
+				PR_ASSERT(0);
 				LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
 			}
 
@@ -3312,7 +3312,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 	#endif /* MILAN */
 		  		}
 
-				XP_FREE(tmpEntry);  /* free the now non active entry */
+				PR_Free(tmpEntry);  /* free the now non active entry */
 
 			} /* end if  rv < 0 */
 
@@ -3359,7 +3359,7 @@ net_InterruptActiveStream (ActiveEntry *entry)
 	}
 	else
 	{
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 	}
 
     /* XP_OS2_FIX IBM-MAS: limit length of output string to keep from blowing trace buffer */
@@ -3381,7 +3381,7 @@ net_InterruptActiveStream (ActiveEntry *entry)
 		FE_AllConnectionsComplete(entry->window_id);
 
 	/* free the no longer active entry */
-	XP_FREE(entry);
+	PR_Free(entry);
 
 	return 0;
 }
@@ -3551,7 +3551,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
       }
 
 	/* couldn't find it :( */
-    XP_ASSERT (0);
+    PR_ASSERT (0);
 
 	LIBNET_UNLOCK();
     return(-1);
@@ -3974,7 +3974,7 @@ PUBLIC URL_Struct *
 NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 {
     uint32 all_headers_size;
-    URL_Struct * URL_s  = XP_NEW(URL_Struct);
+    URL_Struct * URL_s  = PR_NEW(URL_Struct);
 
     if(!URL_s)
 	  {
@@ -3982,7 +3982,7 @@ NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 	  }
 
     /* zap the whole structure */
-    XP_MEMSET (URL_s, 0, sizeof (URL_Struct));
+    memset (URL_s, 0, sizeof (URL_Struct));
 
     URL_s->SARCache = NULL;
 
@@ -4000,23 +4000,23 @@ NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
     /* Allocate space for pointers to hold message (http, news etc) headers */
     all_headers_size = 
 	INITIAL_MAX_ALL_HEADERS * sizeof (URL_s->all_headers.key[0]);
-    URL_s->all_headers.key = (char **) XP_ALLOC(all_headers_size);
+    URL_s->all_headers.key = (char **) PR_Malloc(all_headers_size);
     if(!URL_s->all_headers.key)
       {
 	NET_FreeURLStruct(URL_s);
 	return NULL;
       }
-    XP_MEMSET (URL_s->all_headers.key, 0, all_headers_size);
+    memset (URL_s->all_headers.key, 0, all_headers_size);
 
     all_headers_size = 
 	INITIAL_MAX_ALL_HEADERS * sizeof (URL_s->all_headers.value[0]);
-    URL_s->all_headers.value = (char **) XP_ALLOC(all_headers_size);
+    URL_s->all_headers.value = (char **) PR_Malloc(all_headers_size);
     if(!URL_s->all_headers.value)
       {
 	NET_FreeURLStruct(URL_s);
 	return NULL;
       }
-    XP_MEMSET (URL_s->all_headers.value, 0, all_headers_size);
+    memset (URL_s->all_headers.value, 0, all_headers_size);
 
     URL_s->all_headers.max_index = INITIAL_MAX_ALL_HEADERS;
 
@@ -4047,11 +4047,11 @@ net_EnlargeURLAllHeaders (URL_Struct * URL_s)
 
     if (number_of_entries < MAX_ALL_HEADER_COUNT) {
 
-	temp = (char **) XP_REALLOC(URL_s->all_headers.key, realloc_size);
+	temp = (char **) PR_Realloc(URL_s->all_headers.key, realloc_size);
 	if (temp) {
 	    URL_s->all_headers.key = temp;
 
-	    temp = (char **) XP_REALLOC(URL_s->all_headers.value, realloc_size);
+	    temp = (char **) PR_Realloc(URL_s->all_headers.value, realloc_size);
 	    if (temp) {
 		URL_s->all_headers.value = temp;
 
@@ -4073,9 +4073,9 @@ NET_AddToAllHeaders(URL_Struct * URL_s, char *name, char *value)
     char *key_ptr;
     char *value_ptr;
 
-    XP_ASSERT(URL_s);
-    XP_ASSERT(name);
-    XP_ASSERT(value);
+    PR_ASSERT(URL_s);
+    PR_ASSERT(name);
+    PR_ASSERT(value);
 
     if ((URL_s->all_headers.empty_index >= URL_s->all_headers.max_index) &&
 	(!net_EnlargeURLAllHeaders(URL_s))) {
@@ -4083,16 +4083,16 @@ NET_AddToAllHeaders(URL_Struct * URL_s, char *name, char *value)
     }
 
     key_ptr = URL_s->all_headers.key[URL_s->all_headers.empty_index] =
-	XP_STRDUP(name);
+	PL_strdup(name);
     if (!key_ptr) {
 	net_FreeURLAllHeaders(URL_s);
 	return(FALSE);
 	}
 
     value_ptr = URL_s->all_headers.value[URL_s->all_headers.empty_index] = 
-	XP_STRDUP(value);
+	PL_strdup(value);
     if (!value_ptr) {
-	XP_FREE(key_ptr);
+	PR_Free(key_ptr);
 	URL_s->all_headers.key[URL_s->all_headers.empty_index] = NULL;
 	net_FreeURLAllHeaders(URL_s);
 	return(FALSE);
@@ -4109,7 +4109,7 @@ NET_AddToAllHeaders(URL_Struct * URL_s, char *name, char *value)
 PUBLIC int
 NET_SetURLIPAddressString (URL_Struct * URL_s, CONST char *ip_string)
 {
-    XP_ASSERT(URL_s);
+    PR_ASSERT(URL_s);
 
     FREEIF(URL_s->IPAddressString);
     URL_s->IPAddressString = NULL;
@@ -4123,7 +4123,7 @@ PUBLIC URL_Struct *
 NET_HoldURLStruct (URL_Struct * URL_s)
 {
     if(URL_s) {
-	XP_ASSERT(URL_s->ref_count > 0);
+	PR_ASSERT(URL_s->ref_count > 0);
 	URL_s->ref_count++;
     }
     return URL_s;
@@ -4139,7 +4139,7 @@ NET_FreeURLStruct (URL_Struct * URL_s)
 	return;
     
     /* if someone is holding onto a pointer to us don't die */
-    XP_ASSERT(URL_s->ref_count > 0);
+    PR_ASSERT(URL_s->ref_count > 0);
     URL_s->ref_count--;
     if(URL_s->ref_count > 0)
 	return;
@@ -4201,11 +4201,11 @@ NET_FreeURLStruct (URL_Struct * URL_s)
 
 
   /* free the array */
-  XP_FREEIF(URL_s->add_crlf);
+  PR_FREEIF(URL_s->add_crlf);
 
-	 XP_FREEIF(URL_s->page_services_url);
+	 PR_FREEIF(URL_s->page_services_url);
 
-    XP_FREE(URL_s);
+    PR_Free(URL_s);
 
 }
 
@@ -4238,13 +4238,13 @@ net_FreeURLAllHeaders (URL_Struct * URL_s)
  */
 PRIVATE void add_slash_to_URL (URL_Struct *URL_s)
 {
-	char *colon=XP_STRCHR(URL_s->address,':');  /* must find colon */
+	char *colon=PL_strchr(URL_s->address,':');  /* must find colon */
 	char *slash;
 
 	/* make sure there is a hostname
 	 */
 	if(*(colon+1) == '/' && *(colon+2) == '/')
-	    slash = XP_STRCHR(colon+3,'/');
+	    slash = PL_strchr(colon+3,'/');
 	else
 		return;
 
@@ -4275,25 +4275,25 @@ PRIVATE int net_output_security_url(ActiveEntry * cur_entry, MWContext *cx)
     NET_StreamClass * stream;
 	char * content_type;
 	char * which = cur_entry->URL_s->address;
-	char * colon = XP_STRCHR (which, ':');
+	char * colon = PL_strchr (which, ':');
 
 	if (colon)
 	  {
 		/* found the first colon; now find the question mark
 		   (as in "about:security?certs"). */
 		which = colon + 1;
-		colon = XP_STRCHR (which, '?');
+		colon = PL_strchr (which, '?');
 		if (colon)
 		  which = colon + 1;
 		else
-		  which = which + XP_STRLEN (which); /* give it "" */
+		  which = which + PL_strlen (which); /* give it "" */
 	  }
 
 	content_type = SECNAV_SecURLContentType(which);
 	if (!content_type) {
 		cur_entry->status = MK_MALFORMED_URL_ERROR;
 
-	} else if (!strcasecomp(content_type, "advisor")) {
+	} else if (!PL_strcasecmp(content_type, "advisor")) {
 	    cur_entry->status = SECNAV_SecHandleSecurityAdvisorURL(cx, which);
 
 	} else {
@@ -4367,9 +4367,9 @@ net_WysiwygLoad(ActiveEntry *ce)
 	char *new_address;
 
 	/* XXX can't use StrAllocCopy because it frees dest first */
-	if (real_url && (new_address = XP_STRDUP(real_url)) != NULL)
+	if (real_url && (new_address = PL_strdup(real_url)) != NULL)
 	{
-		XP_FREE(ce->URL_s->address);
+		PR_Free(ce->URL_s->address);
 		ce->URL_s->address = new_address;
 		FREE_AND_CLEAR(ce->URL_s->wysiwyg_url);
 	}
@@ -4384,7 +4384,7 @@ PRIVATE int32
 net_ProtoMainStub(ActiveEntry *ce)
 {
 #ifdef DO_ANNOYING_ASSERTS_IN_STUBS
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 #endif
 	return -1;
 }
@@ -4399,7 +4399,7 @@ net_reg_random_protocol(NET_ProtoInitFunc *LoadRoutine, int type)
 {
     NET_ProtoImpl *random_proto_impl;
 
-	random_proto_impl = XP_NEW(NET_ProtoImpl);
+	random_proto_impl = PR_NEW(NET_ProtoImpl);
 
 	if(!random_proto_impl)
 		return;
@@ -4456,11 +4456,11 @@ PRIVATE Bool override_proxy (CONST char * URL)
 
     if (!*host)
       {
-	XP_FREE(host);
+	PR_Free(host);
 	return NO;
       }
 
-    p = XP_STRCHR(host, ':');
+    p = PL_strchr(host, ':');
     if (p)     /* Port specified */
       {
 	*p++ = 0;                       /* Chop off port */
@@ -4470,14 +4470,14 @@ PRIVATE Bool override_proxy (CONST char * URL)
       {                          /* Use default port */
 	char * access = NET_ParseURL(URL, GET_PROTOCOL_PART);
 	if (access) {
-	    if      (!XP_STRCMP(access,"http"))    port = 80;
-	    else if (!XP_STRCMP(access,"gopher"))  port = 70;
-	    else if (!XP_STRCMP(access,"ftp"))     port = 21;
-		XP_FREE(access);
+	    if      (!PL_strcmp(access,"http"))    port = 80;
+	    else if (!PL_strcmp(access,"gopher"))  port = 70;
+	    else if (!PL_strcmp(access,"ftp"))     port = 21;
+		PR_Free(access);
 	}
       }
     if (!port) port = 80;           /* Default */
-    h_len = XP_STRLEN(host);
+    h_len = PL_strlen(host);
 
     while (*no_proxy) {
 	char * end;
@@ -4506,11 +4506,11 @@ PRIVATE Bool override_proxy (CONST char * URL)
 	  }
 
 	/* don't worry about case when comparing the requested host to the proxies in the
-	   no proxy list, i.e. use XP_STRNCASECMP */
+	   no proxy list, i.e. use PL_strncasecmp */
 	if ((!templ_port || templ_port == port)  && (t_len > 0  &&  t_len <= h_len  &&
-		!XP_STRNCASECMP(host + h_len - t_len, no_proxy, t_len))) 
+		!PL_strncasecmp(host + h_len - t_len, no_proxy, t_len))) 
 		  {
-	    XP_FREE(host);
+	    PR_Free(host);
 	    return YES;
 	  }
 	if (*end)
@@ -4519,7 +4519,7 @@ PRIVATE Bool override_proxy (CONST char * URL)
 	    break;
     }
 
-    XP_FREE(host);
+    PR_Free(host);
     return NO;
 }
 
@@ -4529,13 +4529,13 @@ NET_SetProxyServer(NET_ProxyType type, const char * org_host_port)
 	char *host_port = 0;
 
 	if(org_host_port && *org_host_port) {
-		host_port = XP_STRDUP(org_host_port);
+		host_port = PL_strdup(org_host_port);
 
 		if(!host_port)
 			return;
 
 		/* limit the size of host_port to within MAXHOSTNAMELEN */
-		if(XP_STRLEN(host_port) > MAXHOSTNAMELEN)
+		if(PL_strlen(host_port) > MAXHOSTNAMELEN)
 			host_port[MAXHOSTNAMELEN] = '\0';
 	}
 
@@ -4546,7 +4546,7 @@ NET_SetProxyServer(NET_ProxyType type, const char * org_host_port)
 	  {
 		case PROXY_AUTOCONF_URL:
 			if (host_port) {
-				if (!MKproxy_ac_url || XP_STRCMP(MKproxy_ac_url, org_host_port)) {
+				if (!MKproxy_ac_url || PL_strcmp(MKproxy_ac_url, org_host_port)) {
 					StrAllocCopy(MKproxy_ac_url, org_host_port);
 					NET_ProxyAcLoaded = FALSE;
 				}
@@ -4776,12 +4776,12 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 		  {
  			/* start past the '?' */
 			rest++;
-			rest = XP_STRTOK (rest, "&");
+			rest = strtok (rest, "&");
 			while (rest && *rest)
 			  {
 				char *token = rest;
 				char *value = 0;
-				char *eq = XP_STRCHR (token, '=');
+				char *eq = PL_strchr (token, '=');
 				if (eq)
 				  {
 					value = eq+1;
@@ -4790,12 +4790,12 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 				switch (*token)
 				  {
 				  case 'A': case 'a':
-					if (!strcasecomp (token, "attachment") &&
+					if (!PL_strcasecmp (token, "attachment") &&
 						CE_URL_S->internal_url)
 					  StrAllocCopy (attachment, value);
 					break;
 				  case 'B': case 'b':
-					if (!strcasecomp (token, "bcc"))
+					if (!PL_strcasecmp (token, "bcc"))
 					  {
 						if (bcc && *bcc)
 						  {
@@ -4807,7 +4807,7 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 							StrAllocCopy (bcc, value);
 						  }
 					  }
-					else if (!strcasecomp (token, "body"))
+					else if (!PL_strcasecmp (token, "body"))
 					  {
 						if (body && *body)
 						  {
@@ -4821,7 +4821,7 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 					  }
 					break;
 				  case 'C': case 'c':
-					if (!strcasecomp (token, "cc"))
+					if (!PL_strcasecmp (token, "cc"))
 					  {
 						if (cc && *cc)
 						  {
@@ -4835,60 +4835,60 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 					  }
 					break;
 				  case 'E': case 'e':
-					if (!strcasecomp (token, "encrypt") ||
-						!strcasecomp (token, "encrypted"))
-					  encrypt_p = (!strcasecomp(value, "true") ||
-								   !strcasecomp(value, "yes"));
+					if (!PL_strcasecmp (token, "encrypt") ||
+						!PL_strcasecmp (token, "encrypted"))
+					  encrypt_p = (!PL_strcasecmp(value, "true") ||
+								   !PL_strcasecmp(value, "yes"));
 					break;
 				  case 'F': case 'f':
-					if (!strcasecomp (token, "followup-to"))
+					if (!PL_strcasecmp (token, "followup-to"))
 					  StrAllocCopy (followup_to, value);
-					else if (!strcasecomp (token, "from") &&
+					else if (!PL_strcasecmp (token, "from") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (from, value);
-					else if (!strcasecomp (token, "force-plain-text") &&
+					else if (!PL_strcasecmp (token, "force-plain-text") &&
 							 CE_URL_S->internal_url)
 						force_plain_text = TRUE;
 					break;
 				  case 'H': case 'h':
-					  if (!strcasecomp(token, "html-part") &&
+					  if (!PL_strcasecmp(token, "html-part") &&
 						  CE_URL_S->internal_url) {
 						StrAllocCopy(html_part, value);
 					  }
 				  case 'N': case 'n':
-					if (!strcasecomp (token, "newsgroups"))
+					if (!PL_strcasecmp (token, "newsgroups"))
 					  StrAllocCopy (newsgroups, value);
-					else if (!strcasecomp (token, "newshost") &&
+					else if (!PL_strcasecmp (token, "newshost") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (newshost, value);
 					break;
 				  case 'O': case 'o':
-					if (!strcasecomp (token, "organization") &&
+					if (!PL_strcasecmp (token, "organization") &&
 						CE_URL_S->internal_url)
 					  StrAllocCopy (organization, value);
 					break;
 				  case 'R': case 'r':
-					if (!strcasecomp (token, "references"))
+					if (!PL_strcasecmp (token, "references"))
 					  StrAllocCopy (references, value);
-					else if (!strcasecomp (token, "reply-to") &&
+					else if (!PL_strcasecmp (token, "reply-to") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (reply_to, value);
 					break;
 				  case 'S': case 's':
-					if(!strcasecomp (token, "subject"))
+					if(!PL_strcasecmp (token, "subject"))
 					  StrAllocCopy (subject, value);
-					else if ((!strcasecomp (token, "sign") ||
-							  !strcasecomp (token, "signed")) &&
+					else if ((!PL_strcasecmp (token, "sign") ||
+							  !PL_strcasecmp (token, "signed")) &&
 							 CE_URL_S->internal_url)
-					  sign_p = (!strcasecomp(value, "true") ||
-								!strcasecomp(value, "yes"));
+					  sign_p = (!PL_strcasecmp(value, "true") ||
+								!PL_strcasecmp(value, "yes"));
 					break;
 				  case 'P': case 'p':
-					if (!strcasecomp (token, "priority"))
+					if (!PL_strcasecmp (token, "priority"))
 					  StrAllocCopy (priority, value);
 					break;
 				  case 'T': case 't':
-					if (!strcasecomp (token, "to"))
+					if (!PL_strcasecmp (token, "to"))
 					  {
 						if (to && *to)
 						  {
@@ -4904,7 +4904,7 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 				  }
 				if (eq)
 				  *eq = '='; /* put it back */
-				rest = XP_STRTOK (0, "&");
+				rest = strtok (0, "&");
 			  }
 		  }
 
@@ -4929,19 +4929,19 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 		if(newshost)
 		  {
 			char *prefix = "news://";
-			char *slash = XP_STRRCHR (newshost, '/');
-			if (slash && !strcasecomp (slash, "/secure"))
+			char *slash = PL_strrchr (newshost, '/');
+			if (slash && !PL_strcasecmp (slash, "/secure"))
 			  {
 				*slash = 0;
 				prefix = "snews://";
 			  }
-			newspost_url = (char *) XP_ALLOC (XP_STRLEN (prefix) +
-											  XP_STRLEN (newshost) + 10);
+			newspost_url = (char *) PR_Malloc (PL_strlen (prefix) +
+											  PL_strlen (newshost) + 10);
 			if (newspost_url)
 			  {
-				XP_STRCPY (newspost_url, prefix);
-				XP_STRCAT (newspost_url, newshost);
-				XP_STRCAT (newspost_url, "/");
+				PL_strcpy (newspost_url, prefix);
+				PL_strcat (newspost_url, newshost);
+				PL_strcat (newspost_url, "/");
 			  }
 		  }
 		else
@@ -4950,9 +4950,9 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 			PREF_GetBoolPref("news.server_is_secure", &newsServerIsSecure);
 
 			if (newsServerIsSecure)
-				newspost_url = XP_STRDUP("snews:");
+				newspost_url = PL_strdup("snews:");
 			else
-				newspost_url = XP_STRDUP ("news:");
+				newspost_url = PL_strdup ("news:");
 		  }
 
 #if defined(XP_WIN) /* other FE's add here when Front end code added */
@@ -4990,7 +4990,7 @@ PRIVATE int32
 net_MailtoStub(ActiveEntry *ce)
 {
 #ifdef DO_ANNOYING_ASSERTS_IN_STUBS
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 #endif
 	return(0);		/* Well the function definition says it returns SOMETHING! */
 }
@@ -4998,7 +4998,7 @@ PRIVATE void
 net_CleanupMailtoStub(void)
 {
 #ifdef DO_ANNOYING_ASSERTS_IN_STUBS
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 #endif
 }
 

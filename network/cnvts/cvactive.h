@@ -16,32 +16,26 @@
  * Reserved.
  */
 
-#ifndef MKMARIMBA_H
-#define MKMARIMBA_H
+#ifndef CV_ACTIVE
+#define CV_ACTIVE
+
+#include "net.h"
+
+/* define a constant to be passed to CV_MakeMultipleDocumentStream
+ * as the data_object to signify that it should return
+ * MK_END_OF_MULTIPART_MESSAGE when it gets to the end
+ * of the multipart instead of waiting for the complete
+ * function to be called
+ */
+#define CVACTIVE_SIGNAL_AT_END_OF_MULTIPART 999
 
 PR_BEGIN_EXTERN_C
 
-extern void NET_InitMarimbaProtocol(void);
-
-/* MIME Stuff */
-
-typedef struct _NET_AppMarimbaStruct {
-    MWContext *context;
-    int32      content_length;
-    int32      bytes_read;
-    int32          bytes_alloc;
-    char           *channelData;
-} NET_ApplicationMarimbaStruct;
-
-
-NET_StreamClass * NET_DoMarimbaApplication(int format_out, 
-												  void *data_obj, 
-												  URL_Struct *url_struct, 
-												  MWContext *context);
-
-
+extern NET_StreamClass * 
+CV_MakeMultipleDocumentStream (int         format_out,
+                               void       *data_object,
+                               URL_Struct *URL_s,
+                               MWContext  *window_id);
 PR_END_EXTERN_C
 
-#endif 
-
-
+#endif /* CV_ACTIVE */

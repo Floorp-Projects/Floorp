@@ -20,6 +20,7 @@
  */
 #include "mkcache.h"
 #include "extcache.h"
+#include "plstr.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -97,8 +98,8 @@ int main(int argc, char **argv)
 	while(!(ext_cache_database->seq)(ext_cache_database, &key, &data, 0))
 	  {
 
-        if(key.size == XP_STRLEN(EXT_CACHE_NAME_STRING)
-            && !XP_STRCMP(key.data, EXT_CACHE_NAME_STRING))
+        if(key.size == PL_strlen(EXT_CACHE_NAME_STRING)
+            && !PL_strcmp(key.data, EXT_CACHE_NAME_STRING))
           {
             /* make sure it's a terminated string */
             if(((char *)data.data)[data.size-1] == '\0')

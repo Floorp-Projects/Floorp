@@ -22,6 +22,7 @@
 #ifdef MOZILLA_CLIENT
 
 #include "xp.h"
+#include "mktrace.h"
 #include "mkcache.h"
 #include "glhist.h"
 #include "xp_hash.h"
@@ -102,14 +103,14 @@ net_GetExtCacheNameFromDB(ExtCacheDBInfo *db_info)
 		return NULL;
 
 	key.data = EXT_CACHE_NAME_STRING;
-	key.size = XP_STRLEN(EXT_CACHE_NAME_STRING);
+	key.size = PL_strlen(EXT_CACHE_NAME_STRING);
 
 	if(0 == (*db_info->database->get)(db_info->database, &key, &data, 0))
 	  {
 		/* make sure it's a valid cstring */
 		char *name = (char *)data.data;
 		if(name[data.size-1] == '\0')
-			return(XP_STRDUP(name));
+			return(PL_strdup(name));
 		else
 			return(NULL);
 	  }
@@ -140,12 +141,12 @@ net_OpenExtCacheFat(MWContext *ctxt, ExtCacheDBInfo *db_info)
                              		0600,
                              		DB_HASH,
                              		0);
-#ifdef XP_WIN
+#ifdef XP_PC
 /* This is probably the last checkin into Akbar */
 /* What really needs to be fixed is that Warren's implementation */
 /* of WH_FilePlatformName needs to return a malloc'd string */
 /* Right now, on Mac & X, it does not. See xp_file.c */
-		XP_FREEIF(filename);
+		PR_FREEIF(filename);
 #endif
 		if(!db_info->database)
 			return(FALSE);
@@ -155,12 +156,12 @@ net_OpenExtCacheFat(MWContext *ctxt, ExtCacheDBInfo *db_info)
 		StrAllocCopy(db_info->path, db_info->filename);
 
 		/* figure out the path to the database */
-#if defined(XP_WIN) || defined(XP_OS2)                 /* IBM-SAH */
-  		slash = XP_STRRCHR(db_info->path, '\\');						
+#ifdef XP_PC
+  		slash = PL_strrchr(db_info->path, '\\');						
 #elif defined(XP_MAC)
-  		slash = XP_STRRCHR(db_info->path, '/');						
+  		slash = PL_strrchr(db_info->path, '/');						
 #else
-  		slash = XP_STRRCHR(db_info->path, '/');						
+  		slash = PL_strrchr(db_info->path, '/');						
 #endif
 
 		if(slash)
@@ -179,7 +180,7 @@ net_OpenExtCacheFat(MWContext *ctxt, ExtCacheDBInfo *db_info)
 			close_db = !FE_Confirm(ctxt,
 			XP_GetString( XP_DATABASE_CANT_BE_VALIDATED_MISSING_NAME_ENTRY ) );
 		  }
-		else if(XP_STRCMP(db_name, db_info->name))
+		else if(PL_strcmp(db_name, db_info->name))
 		  {
 			char buffer[2048];
 			
@@ -284,7 +285,7 @@ NET_OpenExtCacheFAT(MWContext *ctxt, char * cache_name, char * instructions)
 	list_ptr = ext_cache_database_list;
 	while((db_ptr = (ExtCacheDBInfo *)XP_ListNextObject(list_ptr)) != NULL)
 	  {
-		if(db_ptr->name && !XP_STRCMP(db_ptr->name, cache_name))
+		if(db_ptr->name && !PL_strcmp(db_ptr->name, cache_name))
 		  {
 			db_info = db_ptr;
 			break;
@@ -293,10 +294,10 @@ NET_OpenExtCacheFAT(MWContext *ctxt, char * cache_name, char * instructions)
 
 	if(!db_info)
 	  {
-		db_info = XP_NEW(ExtCacheDBInfo);
+		db_info = PR_NEW(ExtCacheDBInfo);
 		if(!db_info)
 			return;
-		XP_MEMSET(db_info, 0, sizeof(ExtCacheDBInfo));
+		memset(db_info, 0, sizeof(ExtCacheDBInfo));
 		StrAllocCopy(db_info->name, cache_name);
 
 		XP_ListAddObject(ext_cache_database_list, db_info);
@@ -478,7 +479,7 @@ CACHE_OpenAllSARCache()
 			if ( NULL == db_info->database )
 			{
 				CACHE_CloseCache(db_info);
-				XP_FREEIF(db_info);
+				PR_FREEIF(db_info);
 				db_info = NULL;
 			}
 
@@ -491,12 +492,12 @@ CACHE_OpenAllSARCache()
 			db_info->DiskCacheSize	   = tmpDB_info->DiskCacheSize;
 			db_info->NumberInDiskCache = tmpDB_info->NumberInDiskCache;
 			db_info->MaxSize		   = tmpDB_info->MaxSize;
-			db_info->name			   = XP_STRDUP(tmpDB_info->name);
+			db_info->name			   = PL_strdup(tmpDB_info->name);
 			db_info->logFile		   = NULL;	
 
 			cache_freeExtCacheDBInfoObj(tmpDB_info);
-#ifdef XP_WIN
-			XP_FREEIF(filename);
+#ifdef XP_PC
+			PR_FREEIF(filename);
 #endif
 		}
 	}	
@@ -600,7 +601,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	/* Kludge to prevent NULL writes to the Cache Index */
 	if ( db->path == NULL || *(db->path) == '\0' || *(db->path) == ' ')
 	{
-		db->path = XP_STRDUP("\\");
+		db->path = PL_strdup("\\");
 	}
 
 	/* If the Cache Index is not open, we can not see if the cache is open now can we */
@@ -619,10 +620,10 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 				return NULL;
 
 			/* set the db_info values here since they will not be retrieved later */
-			db_info						  = (ExtCacheDBInfo *)XP_ALLOC(sizeof(ExtCacheDBInfo));
-			db_info->name				  = XP_STRDUP(db->name);
-			db_info->filename			  = XP_STRDUP(db->filename);
-			db_info->path				  = XP_STRDUP(db->path);
+			db_info						  = (ExtCacheDBInfo *)PR_Malloc(sizeof(ExtCacheDBInfo));
+			db_info->name				  = PL_strdup(db->name);
+			db_info->filename			  = PL_strdup(db->filename);
+			db_info->path				  = PL_strdup(db->path);
 			db_info->queried_this_session = FALSE;
 			db_info->type				  = db->type;
 			db_info->database			  = NULL;
@@ -644,7 +645,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 		tmpList = SAR_cache_database_list;
 		while( NULL != (db_info = (ExtCacheDBInfo *)XP_ListNextObject(tmpList)))
 		{
-			if(!XP_STRCMP(db->filename, db_info->filename) ) /* && !XP_STRCMP(db->path, db_info->path) ) */
+			if(!PL_strcmp(db->filename, db_info->filename) ) /* && !PL_strcmp(db->path, db_info->path) ) */
 			{
 				inIndex = TRUE;
 				break;
@@ -655,10 +656,10 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	if (!inIndex && !add2Index)
 	{
 		/* We know nothing about this cache so add it */
-		db_info						  = (ExtCacheDBInfo *)XP_ALLOC(sizeof(ExtCacheDBInfo));
-		db_info->name				  = XP_STRDUP(db->name);
-		db_info->filename			  = XP_STRDUP(db->filename);
-		db_info->path				  = XP_STRDUP(db->path);
+		db_info						  = (ExtCacheDBInfo *)PR_Malloc(sizeof(ExtCacheDBInfo));
+		db_info->name				  = PL_strdup(db->name);
+		db_info->filename			  = PL_strdup(db->filename);
+		db_info->path				  = PL_strdup(db->path);
 		db_info->queried_this_session = FALSE;
 		db_info->type				  = db->type;
 		db_info->database			  = NULL;
@@ -676,7 +677,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 		if ((db_info!= NULL) && (db_info->database))
 		{
 			/* Do the meager name check to see if they can access this cache */
-			if ( XP_STRCMP(db->name, db_info->name) )
+			if ( PL_strcmp(db->name, db_info->name) )
 			{
 				db_info = NULL;
 			}
@@ -706,7 +707,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	if ( NULL == db_info->database )
 	{
 		CACHE_CloseCache(db_info);
-		XP_FREEIF(db_info);	
+		PR_FREEIF(db_info);	
 		
 		db_info = NULL;
 
@@ -720,23 +721,23 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	if ( !tmpDB_info )
 	{
 		/* Since they can access this one, fill in the cache name value before it is saved */
-		db_info->name = XP_STRDUP(db->name);
+		db_info->name = PL_strdup(db->name);
 		cache_PutSARCacheInfoIntoDB(db_info);
 	}
 	else 
 	{
 		/* Do the meager name check to see if they can access this cache */
-		if ( XP_STRCMP(db->name, tmpDB_info->name) )
+		if ( PL_strcmp(db->name, tmpDB_info->name) )
 		{
 			CACHE_CloseCache(db_info);
-			XP_FREEIF(db_info);
+			PR_FREEIF(db_info);
 			
 			db_info = NULL;
 		}
 		else
 		{
 			/* Since they can access this one, fill in the cache name value */
-			db_info->name			   = XP_STRDUP(db->name);
+			db_info->name			   = PL_strdup(db->name);
 			db_info->DiskCacheSize	   = tmpDB_info->DiskCacheSize;
 			db_info->NumberInDiskCache = tmpDB_info->NumberInDiskCache;
 			db_info->MaxSize		   = maxSize;
@@ -754,10 +755,10 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	}
 
 	/* This might cause problems for FileName routins 
-	XP_FREEIF(tmpName);
+	PR_FREEIF(tmpName);
 	*/
-#ifdef XP_WIN
-	XP_FREEIF(filename);
+#ifdef XP_PC
+	PR_FREEIF(filename);
 #endif
 
     if (db_info != NULL)
@@ -766,7 +767,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	/* free the struct they passed in, and have it point to the new 
 	 * struct we will be using.
 	 */
-	XP_FREEIF(db);
+	PR_FREEIF(db);
 	db = db_info;
 
 	return db_info;
@@ -775,8 +776,8 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 PUBLIC XP_Bool
 CACHE_Put(char *filename, URL_Struct *url_s)
 {
-    net_CacheObject *cacheObject = XP_NEW(net_CacheObject);
-	XP_MEMSET(cacheObject, 0, sizeof(net_CacheObject));
+    net_CacheObject *cacheObject = PR_NEW(net_CacheObject);
+	memset(cacheObject, 0, sizeof(net_CacheObject));
 
 	cacheObject->last_modified = url_s->last_modified;
 	cacheObject->content_length = url_s->content_length;
@@ -809,7 +810,7 @@ CACHE_GetCacheStruct(char * path, char * filename, char * name)
 	tmpList = SAR_cache_database_list;
 	while( NULL != (db_info = (ExtCacheDBInfo *)XP_ListNextObject(tmpList)))
 	{
-		if(!XP_STRCMP(path, db_info->path) && !XP_STRCMP(filename, db_info->filename) && !XP_STRCMP(name, db_info->name) )
+		if(!PL_strcmp(path, db_info->path) && !PL_strcmp(filename, db_info->filename) && !PL_strcmp(name, db_info->name) )
 		{
 			return db_info;
 		}
@@ -928,18 +929,18 @@ cache_ReadCacheInfo(XP_File fp, XP_List **list_ptr, int type)
 		/* remove /r and /n from the end of the line */
 		XP_StripLine(buf);
 
-		name = XP_STRCHR(buf, '\t');
+		name = PL_strchr(buf, '\t');
 
 		if(!name)
 			continue;
 
 		*name++ = '\0';
 
-		new_db_info = XP_NEW(ExtCacheDBInfo);
+		new_db_info = PR_NEW(ExtCacheDBInfo);
         if(!new_db_info)
             return;
 
-        XP_MEMSET(new_db_info, 0, sizeof(ExtCacheDBInfo));
+        memset(new_db_info, 0, sizeof(ExtCacheDBInfo));
 
         StrAllocCopy(new_db_info->filename, buf);
 
@@ -991,7 +992,7 @@ PUBLIC int CACHE_EmptyCache(ExtCacheDBInfo *db)
             TRACEMSG(("Removing file: %s due to disk"       
                       " cache remove",filename));     
             XP_FileRemove(filename, xpSARCache);			/* *X* What will happen if I pass this */
-            XP_FREE(filename);                                 /*     a relative path */
+            PR_Free(filename);                                 /*     a relative path */
           }  
 	  }
 	while(0 == (*db->database->seq)(db->database, &key, &data, R_NEXT));
@@ -1026,7 +1027,7 @@ PUBLIC int CACHE_RemoveCache(ExtCacheDBInfo *db)
 	tmpList = SAR_cache_database_list;
 	while(NULL != (db_info = (ExtCacheDBInfo *)XP_ListNextObject(tmpList)))
 	{
-		if(!XP_STRCMP(db->path, db_info->path) && !XP_STRCMP(db->filename, db_info->filename)) break;
+		if(!PL_strcmp(db->path, db_info->path) && !PL_strcmp(db->filename, db_info->filename)) break;
 	}
 
 	/* Remove the cache from SAR_cache_database_list */
@@ -1155,7 +1156,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 #endif
          )
 	  {
-		if ( XP_STRCMP(db_ptr->path, "\\" ) )
+		if ( PL_strcmp(db_ptr->path, "\\" ) )
 			StrAllocCopy(filename, db_ptr->path);
 
 		StrAllocCat(filename, found_cache_obj->filename);
@@ -1178,7 +1179,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 
 	    net_FreeCacheDBTdata(key);
 
-		XP_FREE(filename);
+		PR_Free(filename);
 
 		return(0);
 			
@@ -1216,7 +1217,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 
     else if(NET_CacheUseMethod != CU_NEVER_CHECK)
 	  {
-		if(!strncasecomp(URL_s->address, "http", 4))
+		if(!PL_strncasecmp(URL_s->address, "http", 4))
 		  {
 #ifdef MOZ_OFFLINE
 			if ( NET_IsOffline() )
@@ -1233,7 +1234,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 			/* object has expired and cant use IMS. Don't return it */
 
 	    	net_FreeCacheDBTdata(key);
-			XP_FREE(filename);
+			PR_Free(filename);
 
 			return(0);
 		  }
@@ -1279,12 +1280,12 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 MODULE_PRIVATE void cache_freeExtCacheDBInfoObj (ExtCacheDBInfo * cache_obj)
 {
 
-    XP_FREEIF(cache_obj->database);
-    XP_FREEIF(cache_obj->filename);
-    XP_FREEIF(cache_obj->path);
-    XP_FREEIF(cache_obj->name);
+    PR_FREEIF(cache_obj->database);
+    PR_FREEIF(cache_obj->filename);
+    PR_FREEIF(cache_obj->path);
+    PR_FREEIF(cache_obj->name);
 
-    XP_FREE(cache_obj);
+    PR_Free(cache_obj);
 }
 
 
@@ -1298,7 +1299,7 @@ cache_GetSARCacheInfoFromDB(ExtCacheDBInfo *db_info)
 		return NULL;
 
 	key.data = SAR_CACHE_INFO_STRING;
-	key.size = XP_STRLEN(SAR_CACHE_INFO_STRING);
+	key.size = PL_strlen(SAR_CACHE_INFO_STRING);
 
 	if(0 == (*db_info->database->get)(db_info->database, &key, &data, 0))
 	{
@@ -1332,7 +1333,7 @@ cache_PutSARCacheInfoIntoDB(ExtCacheDBInfo *db_info)
 		return 0;
 
 	key.data = SAR_CACHE_INFO_STRING;
-	key.size = XP_STRLEN(SAR_CACHE_INFO_STRING);
+	key.size = PL_strlen(SAR_CACHE_INFO_STRING);
 
 	data = cache_ExtCacheDBInfoStructToDBData(db_info);
 
@@ -1359,7 +1360,7 @@ cache_ExtCacheDBInfoStructToDBData(ExtCacheDBInfo * old_obj)
 	int32 total_size;
 	DBT *rv;
 
-	rv = XP_NEW(DBT);
+	rv = PR_NEW(DBT);
 
 	if(!rv)
 		return(NULL);
@@ -1367,7 +1368,7 @@ cache_ExtCacheDBInfoStructToDBData(ExtCacheDBInfo * old_obj)
 	total_size = sizeof(ExtCacheDBInfo);
 
 #define ADD_STRING_SIZE(string) \
-total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
+total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 
 	total_size += sizeof(NULL);
 	ADD_STRING_SIZE(filename);
@@ -1381,15 +1382,15 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 
 #undef ADD_STRING_SIZE
 	
-	new_obj = XP_ALLOC(total_size * sizeof(char));
+	new_obj = PR_Malloc(total_size * sizeof(char));
 
 	if(!new_obj)
 	  {
-		XP_FREE(rv);
+		PR_Free(rv);
 		return NULL;
 	  }
 
-	XP_MEMSET(new_obj, 0, total_size * sizeof(char));
+	memset(new_obj, 0, total_size * sizeof(char));
 	/* VERY VERY IMPORTANT.  Whenever the
 	 * format of the record structure changes
  	 * you must verify that the byte positions	
@@ -1398,11 +1399,11 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 
 #define STUFF_STRING(string) 									\
 {	 															\
-  len = (old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0);	\
+  len = (old_obj->string ? PL_strlen(old_obj->string)+1 : 0);	\
   COPY_INT32((void *)cur_ptr, &len);							\
   cur_ptr = cur_ptr + sizeof(int32);							\
   if(len)														\
-      XP_MEMCPY((void *)cur_ptr, old_obj->string, len);			\
+      memcpy((void *)cur_ptr, old_obj->string, len);			\
   cur_ptr += len;												\
 }
 
@@ -1458,7 +1459,7 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 MODULE_PRIVATE ExtCacheDBInfo *
 cache_DBDataToExtCacheDBInfoStruct(DBT * db_obj)
 {
-	ExtCacheDBInfo * rv = XP_NEW(ExtCacheDBInfo);
+	ExtCacheDBInfo * rv = PR_NEW(ExtCacheDBInfo);
 	char * cur_ptr;
 	char * max_ptr;
 	uint32 len;
@@ -1466,7 +1467,7 @@ cache_DBDataToExtCacheDBInfoStruct(DBT * db_obj)
 	if(!rv)
 		return NULL;
 
-	XP_MEMSET(rv, 0, sizeof(ExtCacheDBInfo));
+	memset(rv, 0, sizeof(ExtCacheDBInfo));
 
 /* if any strings are larger than this then
  * there was a serious database error
@@ -1489,13 +1490,13 @@ cache_DBDataToExtCacheDBInfoStruct(DBT * db_obj)
 		    cache_freeExtCacheDBInfoObj(rv);	\
 			return(NULL);						\
 	      }										\
-	    rv->string = (char*)XP_ALLOC(len);		\
+	    rv->string = (char*)PR_Malloc(len);		\
 		if(!rv->string)							\
 	      {				 						\
 		    cache_freeExtCacheDBInfoObj(rv);	\
 			return(NULL);						\
 	      }										\
-	    XP_MEMCPY(rv->string, cur_ptr, len);	\
+	    memcpy(rv->string, cur_ptr, len);	\
 	    cur_ptr += len;							\
 	  }											\
 }											
@@ -1532,7 +1533,7 @@ cache_DBDataToExtCacheDBInfoStruct(DBT * db_obj)
 	if(len != db_obj->size)
 	  {
 		TRACEMSG(("Size going in is not the same as size coming out"));
-		XP_FREE(rv);
+		PR_Free(rv);
 		return(NULL);
 	  }
 

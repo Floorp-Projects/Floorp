@@ -18,6 +18,8 @@
 
 /* Please leave at the top for windows precompiled headers */
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -27,7 +29,6 @@
 #include <memory.h>
 #include <time.h>
 #include "net.h"
-#include "xp.h"
 #include "libmocha.h"
 #include "jsurl.h"
 #include "libevent.h"
@@ -75,10 +76,10 @@ typedef struct {
 static void
 free_con_data(MochaConData * con_data)
 {
-    XP_FREEIF(con_data->str);
-    XP_FREEIF(con_data->wysiwyg_url);
-    XP_FREEIF(con_data->base_href);
-    XP_FREE(con_data);
+    PR_FREEIF(con_data->str);
+    PR_FREEIF(con_data->wysiwyg_url);
+    PR_FREEIF(con_data->base_href);
+    PR_Free(con_data);
 }
 
 #define START_POLLING(ae, con_data) {                                         \
@@ -104,10 +105,10 @@ mocha_process(NET_StreamClass *stream, const char *str, int32 len)
 
     mocha_stream->length += len;
     if (!mocha_stream->buffer) {
-        mocha_stream->buffer = (char *)XP_ALLOC(mocha_stream->length);
+        mocha_stream->buffer = (char *)PR_Malloc(mocha_stream->length);
     } 
     else {
-        mocha_stream->buffer = (char *)XP_REALLOC(mocha_stream->buffer, 
+        mocha_stream->buffer = (char *)PR_Realloc(mocha_stream->buffer, 
 						  mocha_stream->length);
     }
     if (!mocha_stream->buffer) {
@@ -144,7 +145,7 @@ mocha_complete(NET_StreamClass *stream)
 	len = INTL_TextToUnicodeLen(mocha_stream->char_set, 
 				    (unsigned char *) mocha_stream->buffer,
 				    mocha_stream->length);
-	unicode = XP_ALLOC(sizeof(INTL_Unicode) * len);
+	unicode = PR_Malloc(sizeof(INTL_Unicode) * len);
 	if (!unicode)
 	    return;
 
@@ -158,7 +159,7 @@ mocha_complete(NET_StreamClass *stream)
 	data = unicode;
 	isUnicode = JS_TRUE;
 
-	XP_FREE(mocha_stream->buffer);
+	PR_Free(mocha_stream->buffer);
 	mocha_stream->buffer = NULL;
     }
     else {
@@ -171,8 +172,8 @@ mocha_complete(NET_StreamClass *stream)
 			   mocha_stream->content_type,
 			   isUnicode);
 
-    XP_FREEIF(mocha_stream->content_type);
-    XP_FREE(mocha_stream);
+    PR_FREEIF(mocha_stream->content_type);
+    PR_Free(mocha_stream);
 
 }
 
@@ -182,9 +183,9 @@ mocha_abort(NET_StreamClass *stream, int status)
     MochaStream * mocha_stream = (MochaStream *) stream->data_object;
 
     ET_MochaStreamAbort(mocha_stream->context, status);
-    XP_FREE(mocha_stream->buffer);
-	XP_FREEIF(mocha_stream->content_type);
-    XP_FREE(mocha_stream);
+    PR_Free(mocha_stream->buffer);
+	PR_FREEIF(mocha_stream->content_type);
+    PR_Free(mocha_stream);
 }
 
 int16
@@ -193,7 +194,7 @@ net_check_for_charset(URL_Struct *url_struct)
     int i, max;
     char *key, *value;
     static char charset[] = "charset=";
-    int len = XP_STRLEN(charset);
+    int len = PL_strlen(charset);
     
     max = url_struct->all_headers.empty_index;
 
@@ -201,27 +202,27 @@ net_check_for_charset(URL_Struct *url_struct)
 	key = url_struct->all_headers.key[i];
 
 	/* keep looking until we find the content type one */
-	if (XP_STRCASECMP(key, "Content-type"))
+	if (PL_strcasecmp(key, "Content-type"))
 	    continue;
 
 	value = url_struct->all_headers.value[i];
 
 	/* don't bother unless this is a JS file to begin with */
-	if (!strcasestr(value, APPLICATION_JAVASCRIPT))
+	if (!PL_strcasestr(value, APPLICATION_JAVASCRIPT))
 	    return CS_DEFAULT;
 
-	value = XP_STRTOK(value, ";");
+	value = strtok(value, ";");
 	while (value) {
 	    value = XP_StripLine(value);
 
-	    if (!strncasecomp(value, charset, len)) {
+	    if (!PL_strncasecmp(value, charset, len)) {
 		value += len;
 		value = XP_StripLine(value);
 		return (INTL_CharSetNameToID(value));
 	    }
 
 	    /* move to next arg */
-	    value = XP_STRTOK(NULL, ";");
+	    value = strtok(NULL, ";");
 
 	}
 
@@ -305,8 +306,8 @@ getOriginFromURLStruct(MWContext *context, URL_Struct *url_struct)
         }
     }
 
-    XP_ASSERT(referer);
-    referer = XP_STRDUP(referer);
+    PR_ASSERT(referer);
+    referer = PL_strdup(referer);
     if (!referer) {
 	return NULL;
     }
@@ -324,12 +325,12 @@ NET_CreateMochaConverter(FO_Present_Types format_out,
     NET_StreamClass *stream;
     char *origin;
 
-    mocha_stream = (MochaStream *) XP_NEW_ZAP(MochaStream);
+    mocha_stream = (MochaStream *) PR_NEWZAP(MochaStream);
     if (!mocha_stream)
 	return NULL;
 
     mocha_stream->context = context;
-    mocha_stream->content_type = XP_STRDUP(url_struct->content_type);
+    mocha_stream->content_type = PL_strdup(url_struct->content_type);
     mocha_stream->char_set = net_check_for_charset(url_struct);
 
     /* Get the origin from the URL struct. We don't have to free origin
@@ -395,8 +396,8 @@ net_MochaLoad(ActiveEntry *ae)
 
     context = ae->window_id;
     url_struct = ae->URL_s;
-    what = XP_STRCHR(url_struct->address, ':');
-    XP_ASSERT(what);
+    what = PL_strchr(url_struct->address, ':');
+    PR_ASSERT(what);
     what++;
     eval_what = FALSE;
     single_shot = (*what != '?');
@@ -411,7 +412,7 @@ net_MochaLoad(ActiveEntry *ae)
                                "</frameset>",
                                what - url_struct->address,
                                url_struct->address);
-        } else if (!XP_STRCMP(what, "#input")) {
+        } else if (!PL_strcmp(what, "#input")) {
             /* The input cell contains a form with one magic isindex field. */
             what = PR_smprintf("<b>%.*s typein</b>\n"
                                "<form action=%.*s target=MochaOutput"
@@ -444,7 +445,7 @@ net_MochaLoad(ActiveEntry *ae)
     }
 
     /* make space for the connection data */
-    con_data = XP_NEW_ZAP(MochaConData);
+    con_data = PR_NEWZAP(MochaConData);
     if (!con_data) {
         ae->status = MK_OUT_OF_MEMORY;
         return -1;
@@ -484,13 +485,13 @@ net_MochaLoad(ActiveEntry *ae)
         /* 
          * send the buffer off to be evaluated 
          */
-	stuff = (ETEvalStuff *) XP_NEW_ZAP(ETEvalStuff);
+	stuff = (ETEvalStuff *) PR_NEWZAP(ETEvalStuff);
 	if (!stuff) {
 	    ae->status = MK_OUT_OF_MEMORY;
 	    return -1;
 	}
 
-	stuff->len = XP_STRLEN(what);
+	stuff->len = PL_strlen(what);
 	stuff->line_no = 0;
 	stuff->scope_to = NULL;
 	stuff->want_result = JS_TRUE;
@@ -505,7 +506,7 @@ net_MochaLoad(ActiveEntry *ae)
 
         /* allocated above, don't need to free */
         con_data->str = what;
-	con_data->len = XP_STRLEN(what);
+	con_data->len = PL_strlen(what);
         con_data->is_valid = TRUE;
 
     }
@@ -624,13 +625,13 @@ net_ProcessMocha(ActiveEntry * ae)
 	/* The string must end in a newline so the parser will flush it.  */
 	if (con_data->len != 0 && con_data->str[con_data->len-1] != '\n') {
 	    size_t new_len = con_data->len + 1;
-	    char * new_str = XP_ALLOC((new_len + 1) * sizeof(char));
+	    char * new_str = PR_Malloc((new_len + 1) * sizeof(char));
 
 	    if (!new_str) {
 		ae->status = MK_OUT_OF_MEMORY;
 		goto done;
 	    }
-	    XP_MEMCPY(new_str, con_data->str, con_data->len);
+	    memcpy(new_str, con_data->str, con_data->len);
 	    new_str[new_len-1] = '\n';
 	    new_str[new_len] = '\0';
 	    con_data->str = new_str;
@@ -664,14 +665,14 @@ net_ProcessMocha(ActiveEntry * ae)
 		goto done;
 	    }
             status = (*stream->put_block)(stream, prefix,
-                                          XP_STRLEN(prefix));
-            XP_FREE(prefix);
+                                          PL_strlen(prefix));
+            PR_Free(prefix);
         }
 	else {
 	    if (con_data->base_href) {
 		status = (*stream->put_block)(stream, 
 		    			      con_data->base_href,
-					      XP_STRLEN(con_data->base_href));
+					      PL_strlen(con_data->base_href));
 	    }
 	}
     }
@@ -693,7 +694,7 @@ net_ProcessMocha(ActiveEntry * ae)
         if (status < 0)
             (*stream->abort)(stream, status);
         if (first_time)
-            XP_DELETE(stream);
+            PR_Free(stream);
     }
 
     ae->status = MK_DATA_LOADED;

@@ -25,7 +25,7 @@
  * are printed out.
  */
 extern char *
-XP_ListNextPresentationType(XP_Bool first);
+XP_ListNextPresentationType(PRBool first);
 
 /* prints out all encoding mime types during successive calls
  * call with first equal true to reset to the beginning
@@ -34,7 +34,7 @@ XP_ListNextPresentationType(XP_Bool first);
  * are printed out.
  */
 extern char *
-XP_ListNextEncodingType(XP_Bool first);
+XP_ListNextEncodingType(PRBool first);
 
 /* register a mime type and a command to be executed
  */

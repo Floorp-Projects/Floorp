@@ -78,6 +78,7 @@ EXTRA_LIBS=
 
 REQUIRES= network 
 EXPORTS= \
+	cvactive.h	\
 	cvchunk.h 	\
 	cvcolor.h 	\
 	cvdisk.h 	\

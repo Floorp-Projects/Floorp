@@ -28,13 +28,13 @@ NET_PrefChangedFunc(const char *pref, void *data);
 
 /* Debugging routine prints an URL (and string "header")
  */
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 #ifdef DEBUG
 extern void TraceURL (URL_Struct *url, char *header);
 #else
 #define TraceURL(U,M)
 #endif /* DEBUG */
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 /* forward declared; see below */
 typedef struct _NET_ProtoImpl NET_ProtoImpl;
@@ -96,12 +96,12 @@ struct _NET_ProtoImpl {
 				      			  */
 };
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 extern int NET_TotalNumberOfOpenConnections;
 extern int NET_MaxNumberOfOpenConnections;
 extern CacheUseEnum NET_CacheUseMethod;
 extern time_t NET_StartupTime;  /* time we began the program */
-extern XP_Bool NET_ProxyAcLoaded;
+extern PRBool NET_ProxyAcLoaded;
 /*
  * Silently Interrupts all transfers in progress that have the same
  * window id as the one passed in.
@@ -123,5 +123,5 @@ extern char * NET_FindProxyHostForUrl(int urltype, char *urladdress);
  */
 extern void NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 #endif /* not MKGetURL_H */

@@ -52,7 +52,7 @@ PRE_AddToList(MWContext* context, char* url, double value)
 {
 	/* Construct a new URL_Struct with this url, and Prefetch priority */
 	URL_Struct* urls;
-	PrefetchURLStruct *pus = XP_NEW(PrefetchURLStruct); 
+	PrefetchURLStruct *pus = PR_NEW(PrefetchURLStruct); 
 
 	if (!pre_enabled || !value || !pus || !pre_OKToPrefetch(url))
 		return;
@@ -173,7 +173,7 @@ pre_FreePrefetchURLStruct(PrefetchURLStruct *pus)
     if(pus) 
       {
         FREEIF(pus->URL_s);
-        XP_FREE(pus);
+        PR_Free(pus);
       }
 }
 
@@ -182,7 +182,7 @@ pre_Finished(URL_Struct* url_struct, int status, MWContext* context)
 {
 	/* this should change to update the colors of 
 	the prefetched links */
-	XP_FREE(url_struct);
+	PR_Free(url_struct);
 	url_struct = 0;
 }
 

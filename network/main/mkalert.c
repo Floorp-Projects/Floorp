@@ -79,7 +79,7 @@ FE_EditMailMessage (MWContext *context,
 	URL_Struct * URL_s;
 	char buffer[356];
 
-	XP_SPRINTF(buffer, "mailto:%.256s", to_address);
+	sprintf(buffer, "mailto:%.256s", to_address);
 
 	URL_s = NET_CreateURLStruct(buffer, FALSE);
 
@@ -149,7 +149,7 @@ return(0);
 
 
 void
-XP_Trace (const char* message, ...)
+PR_LogPrint (const char* message, ...)
 {
     int actualLen;
     static char xp_Buffer[2048];
@@ -241,7 +241,7 @@ PUBLIC Bool TESTFE_Confirm (MWContext * window_id, CONST char * mess)
                 /* call an it became evaluated twice because   */
   }
 
-  if ((XP_STRCMP(Reply,"YES")==0) || (XP_STRCMP(Reply,"Y")==0))
+  if ((PL_strcmp(Reply,"YES")==0) || (PL_strcmp(Reply,"Y")==0))
     return(YES);
   else
     return(NO);
@@ -258,7 +258,7 @@ PUBLIC char * TESTFE_Prompt (MWContext * window_id, CONST char * mess, CONST cha
     if (deflt) fprintf(stderr, " (RETURN for [%s]) ", deflt);
     
     fgets(temp, 200, stdin);
-    temp[XP_STRLEN(temp)-1] = (char)0;	/* Overwrite newline */
+    temp[PL_strlen(temp)-1] = (char)0;	/* Overwrite newline */
    
     StrAllocCopy(t_string, *temp ? temp : deflt);
     return t_string;

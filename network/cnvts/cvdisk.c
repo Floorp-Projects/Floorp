@@ -17,6 +17,7 @@
  */
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -51,9 +52,9 @@ PRIVATE void net_SaveToDiskComplete (NET_StreamClass *stream)
 	DataObject *obj=stream->data_object;	
     fclose(obj->fp);
 
-    XP_FREEIF(obj->filename);
+    PR_FREEIF(obj->filename);
 
-    XP_FREE(obj);
+    PR_Free(obj);
     return;
 }
 
@@ -65,7 +66,7 @@ PRIVATE void net_SaveToDiskAbort (NET_StreamClass *stream, int status)
     if(obj->filename)
       {
         remove(obj->filename);
-        XP_FREE(obj->filename);
+        PR_Free(obj->filename);
       }
 
     return;
@@ -89,11 +90,11 @@ fe_MakeSaveAsStream (int         format_out,
     PR_snprintf(filename, sizeof(filename), "foo%d.unknown",count++);
     fp = fopen(filename,"w");
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW(DataObject);
+    obj = PR_NEW(DataObject);
     if (obj == NULL) 
         return(NULL);
     

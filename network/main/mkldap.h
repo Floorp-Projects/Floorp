@@ -19,10 +19,10 @@
 #ifndef MKLDAP_H
 #define MKLDAP_H
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 void NET_InitLDAPProtocol(void);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif 

@@ -33,10 +33,10 @@ extern PRLogModuleInfo* NETLIB;
 #undef TRACEMSG
 #endif
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 extern void NET_NTrace(char *msg, int32 length);
 extern void _MK_TraceMsg(char *fmt, ...);
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #define TRACEMSG(msg)  _MK_TraceMsg msg
 #else

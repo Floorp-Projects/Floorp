@@ -237,7 +237,7 @@ PRIVATE char *GetCommand (char *s, char **t)
     char *s2;
     int quoted = 0;
 
-    s2 = (char *) XP_ALLOC(XP_STRLEN(s)*2 + 3); /* absolute max, if all % signs */
+    s2 = (char *) PR_Malloc(PL_strlen(s)*2 + 3); /* absolute max, if all % signs */
 	if(!s2)
 		return(NULL);
     *s2 = 0;
@@ -329,8 +329,8 @@ PRIVATE void BuildCommand (char *Buf, char *controlstring, char *TmpFileName)
                 case 's':
                     if (TmpFileName)
                       {
-                        XP_STRCPY(to, TmpFileName);
-                        to += XP_STRLEN(TmpFileName);
+                        PL_strcpy(to, TmpFileName);
+                        to += PL_strlen(TmpFileName);
                       }
                     break;
                 default:
@@ -357,41 +357,41 @@ net_register_new_converter(char *contenttype, char *command, char *xmode,
 						   int buffer_size)
 {
 		/* xmode takes priority over command */
-        if (xmode && !XP_STRCASECMP(xmode, NET_COMMAND_NETSCAPE))
+        if (xmode && !PL_strcasecmp(xmode, NET_COMMAND_NETSCAPE))
         {
-                if ( !XP_STRCASECMP(contenttype, TEXT_HTML) )
+                if ( !PL_strcasecmp(contenttype, TEXT_HTML) )
                         NET_RegisterContentTypeConverter (TEXT_HTML, FO_PRESENT,
                                                 NULL, INTL_ConvCharCode);
-                else if (!XP_STRCASECMP(contenttype, TEXT_MDL))
+                else if (!PL_strcasecmp(contenttype, TEXT_MDL))
                         NET_RegisterContentTypeConverter (TEXT_MDL, FO_PRESENT,
                                                 NULL, INTL_ConvCharCode);
 
-                else if (!XP_STRCASECMP(contenttype, TEXT_PLAIN))
+                else if (!PL_strcasecmp(contenttype, TEXT_PLAIN))
                         NET_RegisterContentTypeConverter (TEXT_PLAIN, FO_PRESENT,
                                                 NULL, NET_PlainTextConverter);
-                else if (!XP_STRCASECMP(contenttype, IMAGE_GIF))
+                else if (!PL_strcasecmp(contenttype, IMAGE_GIF))
                         NET_RegisterContentTypeConverter (IMAGE_GIF,
                                  FO_PRESENT,NULL, IL_ViewStream);
-                else if (!XP_STRCASECMP(contenttype, IMAGE_XBM) ||
-						 !XP_STRCASECMP(contenttype, IMAGE_XBM2) ||
-						 !XP_STRCASECMP(contenttype, IMAGE_XBM3))
+                else if (!PL_strcasecmp(contenttype, IMAGE_XBM) ||
+						 !PL_strcasecmp(contenttype, IMAGE_XBM2) ||
+						 !PL_strcasecmp(contenttype, IMAGE_XBM3))
                         NET_RegisterContentTypeConverter (IMAGE_XBM,
                                  FO_PRESENT,NULL, IL_ViewStream);
-                else if (!XP_STRCASECMP(contenttype, IMAGE_JPG) ||
-						 !XP_STRCASECMP(contenttype, IMAGE_PJPG))
+                else if (!PL_strcasecmp(contenttype, IMAGE_JPG) ||
+						 !PL_strcasecmp(contenttype, IMAGE_PJPG))
                         NET_RegisterContentTypeConverter (IMAGE_JPG,
                                  FO_PRESENT,NULL, IL_ViewStream);
 
-                else if (!XP_STRCASECMP(contenttype, IMAGE_PNG)) 
+                else if (!PL_strcasecmp(contenttype, IMAGE_PNG)) 
                         NET_RegisterContentTypeConverter (IMAGE_PNG,
                                  FO_PRESENT,NULL, IL_ViewStream);
-                else if (!XP_STRCASECMP(contenttype,
+                else if (!PL_strcasecmp(contenttype,
 									 APPLICATION_NS_PROXY_AUTOCONFIG))
                         NET_RegisterContentTypeConverter(
                                 APPLICATION_NS_PROXY_AUTOCONFIG,
                                 FO_PRESENT,
                                 (void *)0, NET_ProxyAutoConfig);
-                else if (!XP_STRCASECMP(contenttype,
+                else if (!PL_strcasecmp(contenttype,
 									 APPLICATION_NS_JAVASCRIPT_AUTOCONFIG))
                         NET_RegisterContentTypeConverter(
                                 APPLICATION_NS_JAVASCRIPT_AUTOCONFIG,
@@ -411,18 +411,18 @@ net_register_new_converter(char *contenttype, char *command, char *xmode,
 			NPL_EnablePlugin(contenttype, pluginName, TRUE);
 		  }
         else if (xmode &&
-				 (!XP_STRCASECMP(xmode, NET_COMMAND_SAVE_TO_DISK) || 
-				  !XP_STRCASECMP(xmode, NET_COMMAND_SAVE_BY_NETSCAPE)))
+				 (!PL_strcasecmp(xmode, NET_COMMAND_SAVE_TO_DISK) || 
+				  !PL_strcasecmp(xmode, NET_COMMAND_SAVE_BY_NETSCAPE)))
                 NET_RegisterContentTypeConverter(contenttype,
                                 FO_PRESENT,
                                 NULL, fe_MakeSaveAsStream );
  
-        else if (xmode && !XP_STRCASECMP(xmode, NET_COMMAND_UNKNOWN))
+        else if (xmode && !PL_strcasecmp(xmode, NET_COMMAND_UNKNOWN))
                 NET_RegisterContentTypeConverter(contenttype,
                                 FO_PRESENT,
                                 NULL, fe_MakeSaveAsStream );
  
-        else if (xmode && !XP_STRCASECMP(xmode,NET_COMMAND_DELETED))
+        else if (xmode && !PL_strcasecmp(xmode,NET_COMMAND_DELETED))
 		  {
 			/* Do nothing */
 		  }
@@ -433,9 +433,9 @@ net_register_new_converter(char *contenttype, char *command, char *xmode,
          *
          * but only if it isn't text/html
          */
-        if(strcasecomp(contenttype, TEXT_HTML) &&
-		   strcasecomp(contenttype, MESSAGE_RFC822) &&
-		   strcasecomp(contenttype, MESSAGE_NEWS))
+        if(PL_strcasecmp(contenttype, TEXT_HTML) &&
+		   PL_strcasecmp(contenttype, MESSAGE_RFC822) &&
+		   PL_strcasecmp(contenttype, MESSAGE_NEWS))
 		  NET_RegisterExternalViewerCommand(contenttype, command, buffer_size);
 	}
 }
@@ -448,7 +448,7 @@ PRIVATE int PassesTest (struct MailcapEntry *mc)
 
     if (!mc->testcommand) return(1);
     tmpnam(TmpFileName);
-    cmd = (char *)XP_ALLOC(1024);
+    cmd = (char *)PR_Malloc(1024);
     if (!cmd)
         return(0);
     BuildCommand(cmd, mc->testcommand, TmpFileName);
@@ -477,10 +477,10 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
     char *arg, *eq;
     char *command=0;
 	
-    buffer = (char *) XP_ALLOC(LINE_BUF_SIZE);
+    buffer = (char *) PR_Malloc(LINE_BUF_SIZE);
     if (!buffer)
 	    return 0;
-    unprocessed_entry = (char *) XP_ALLOC(1 + unprocessed_entryalloc);
+    unprocessed_entry = (char *) PR_Malloc(1 + unprocessed_entryalloc);
     if (!unprocessed_entry)
 	  {
 		free(buffer);
@@ -496,15 +496,15 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 		
 	    if (buffer[0] == '#')
 	        continue;
-        len = XP_STRLEN(buffer);
+        len = PL_strlen(buffer);
         if (len == 0)
 	        continue;
         if (buffer[len-1] == '\n')
 		    buffer[--len] = 0;
-	    if ((len + XP_STRLEN(unprocessed_entry)) > unprocessed_entryalloc)
+	    if ((len + PL_strlen(unprocessed_entry)) > unprocessed_entryalloc)
           {
 	        unprocessed_entryalloc += 1024;
-	        unprocessed_entry = (char *) XP_REALLOC(unprocessed_entry, unprocessed_entryalloc+1);
+	        unprocessed_entry = (char *) PR_Realloc(unprocessed_entry, unprocessed_entryalloc+1);
 			TRACEMSG(("Growing input line in mkinit"));
 	        if (!unprocessed_entry)
 			  {
@@ -515,11 +515,11 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 		if (len > 0 && buffer[len-1] == '\\')
 		  {
 			buffer[len-1] = 0;
-			XP_STRCAT(unprocessed_entry, buffer);
+			PL_strcat(unprocessed_entry, buffer);
 		  }
 	    else
           {
-			XP_STRCAT(unprocessed_entry, buffer);
+			PL_strcat(unprocessed_entry, buffer);
 			break;
 		  }
       }
@@ -533,14 +533,14 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
     	free(buffer);
 	    return(0);
       }
-    s = XP_STRCHR(unprocessed_entry, ';');
+    s = PL_strchr(unprocessed_entry, ';');
     if (s == NULL)
       {
 	    fprintf(stderr, "%s: Ignoring invalid mailcap entry: %s\n",
 				XP_AppName, unprocessed_entry);
 	    free(unprocessed_entry);
     	free(buffer);
-		XP_FREE(*src_string);
+		PR_Free(*src_string);
 		*src_string = 0;
 	    return(0);
       }
@@ -566,7 +566,7 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
     while (s && *s != '\0')
       {
 		arg = s;
-        eq = XP_STRCHR(arg, '=');
+        eq = PL_strchr(arg, '=');
         if (eq)
 			*eq++ = 0;
 		else
@@ -577,7 +577,7 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 	    if (arg && *arg)
 	      {
 	        arg = Cleanse(arg);
-			if ( eq && !XP_STRCMP(arg, NET_MOZILLA_FLAGS))
+			if ( eq && !PL_strcmp(arg, NET_MOZILLA_FLAGS))
 			  {
 				/* xmode is case sensitive. That is why we dont Cleanse it. */
 				mc->xmode = command;
@@ -585,23 +585,23 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 			  }
 			else {
 			  command = Cleanse(command);
-			  if (eq && !XP_STRCMP(arg, "test"))
+			  if (eq && !PL_strcmp(arg, "test"))
 				{
 				  mc->testcommand = command;
 				  command = 0;
 				  TRACEMSG(("mailcap: found testcommand:%s\n",mc->testcommand));
 				}
-			  else if (eq && !XP_STRCMP(arg, "description"))
+			  else if (eq && !PL_strcmp(arg, "description"))
 				{
 				  mc->label = command;
 				  command = 0;
 				}
-			  else if (eq && !XP_STRCMP(arg, "label"))
+			  else if (eq && !PL_strcmp(arg, "label"))
 				{
 				  mc->label = command; /* bogus old name for description */
 				  command = 0;
 				}
-			  else if (eq && !XP_STRCMP(arg, "stream-buffer-size"))
+			  else if (eq && !PL_strcmp(arg, "stream-buffer-size"))
 				{
 				  mc->stream_buffer_size = atol(command);
 				  TRACEMSG(("mailcap: found stream-buffer-size:%d\n",mc->stream_buffer_size));
@@ -635,7 +635,7 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 			StrAllocCopy(md->src_string, *src_string); /* copy buffer */
 		StrAllocCopy(md->xmode, mc->xmode);
 		md->is_local = is_local;
-		XP_FREE(*src_string);
+		PR_Free(*src_string);
 		*src_string = 0;
 	  }
 
@@ -722,7 +722,7 @@ mailcap_MasterListPointer(void)
 PUBLIC NET_mdataStruct *
 NET_mdataCreate(void)
 {
-	NET_mdataStruct *md = XP_NEW(NET_mdataStruct);
+	NET_mdataStruct *md = PR_NEW(NET_mdataStruct);
 
         if(!md)
            return(NULL);
@@ -764,7 +764,7 @@ NET_mdataExist(NET_mdataStruct *old_md )
         {
                 if ( old_md->contenttype &&
                      md->contenttype &&
-                     !strcasecomp(old_md->contenttype, md->contenttype))
+                     !PL_strcasecmp(old_md->contenttype, md->contenttype))
                 {
                         /* found matching type */
                         found_md = md;

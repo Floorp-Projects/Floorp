@@ -18,6 +18,9 @@
 #ifndef NETUTILS_H
 #define NETUTILS_H
 
+/* Keep TRACEMSG consistant throughout libnet */
+#include "mktrace.h"
+
 /* Used throughout netlib. */
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
@@ -27,7 +30,7 @@
 #define CONST const
 #endif
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 /*
  * This function takes an error code and associated error data
@@ -46,10 +49,10 @@ extern void NET_Progress(MWContext *context, char *msg);
 /* returns true if the functions thinks the string contains
  * HTML
  */
-extern XP_Bool NET_ContainsHTML(char * string, int32 length);
+extern PRBool NET_ContainsHTML(char * string, int32 length);
 
 extern void NET_ParseContentTypeHeader(MWContext *context, char *value,
-				       URL_Struct *URL_s, XP_Bool is_http);
+				       URL_Struct *URL_s, PRBool is_http);
 
 typedef struct WritePostDataData WritePostDataData;
 extern void NET_free_write_post_data_object(struct WritePostDataData *obj);
@@ -66,11 +69,11 @@ NET_WritePostData(MWContext  *context,
                                   URL_Struct *URL_s,
                   PRFileDesc     *sock,
                   void      **write_post_data_data,
-                  XP_Bool     add_crlf_to_line_endings);
+                  PRBool     add_crlf_to_line_endings);
 
 extern int NET_UUEncode(unsigned char *src, unsigned char *dst, int srclen);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* NETUTILS_H */
 

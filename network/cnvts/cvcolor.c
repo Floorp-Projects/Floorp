@@ -17,6 +17,8 @@
  */
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -55,7 +57,7 @@ typedef struct _DataObject {
     char tag[MAXTAGLEN+1];
     uint tag_index;
     int  tag_type;
-    XP_Bool in_broken_html;
+    PRBool in_broken_html;
 } DataObject;
 
 #define BEGIN_TAG_MARKUP "<B>"
@@ -96,7 +98,7 @@ PRIVATE char *net_EndColorHTMLTag (DataObject *obj)
 	if(obj->in_broken_html)
 	  {
        	StrAllocCopy(new_markup, END_BROKEN_ATTRIBUTE_MARKUP);
-		obj->in_broken_html = FALSE;
+		obj->in_broken_html = PR_FALSE;
 	  }
 	StrAllocCat(new_markup, "&gt;");
 	StrAllocCat(new_markup, END_TAG_MARKUP);
@@ -134,7 +136,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 				if(*cp == '<')
 				  {
 					/* XXX we can miss a comment spanning a block boundary */
-					if(i+4 <= l && !XP_STRNCMP(cp, "<!--", 4))
+					if(i+4 <= l && !PL_strncmp(cp, "<!--", 4))
 					  {
 						StrAllocCopy(new_markup, BEGIN_COMMENT_MARKUP);
 						StrAllocCat(new_markup, "&lt;");
@@ -157,7 +159,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 				if(*cp == '<')
 				  {
 					/* XXX we can miss a </SCRIPT> spanning a block boundary */
-					if(i+8 <= l && !XP_STRNCASECMP(cp, "</SCRIPT", 8))
+					if(i+8 <= l && !PL_strncasecmp(cp, "</SCRIPT", 8))
 					  {
 						new_markup = net_BeginColorHTMLTag(obj);
 					  }
@@ -173,7 +175,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					StrAllocCopy(new_markup, END_TAG_NAME_MARKUP);
 					tmp_markup = net_EndColorHTMLTag(obj);
 					StrAllocCat(new_markup, tmp_markup);
-					XP_FREEIF(tmp_markup);
+					PR_FREEIF(tmp_markup);
 					tmp_markup = NULL;
 				  }
 				else if(!XP_IS_SPACE(*cp))
@@ -193,7 +195,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 				if(XP_IS_SPACE(*cp))
 				  {
 					StrAllocCopy(new_markup, END_TAG_NAME_MARKUP);
-					XP_SPRINTF(tiny_buf, "%c", *cp);
+					sprintf(tiny_buf, "%c", *cp);
 					StrAllocCat(new_markup, tiny_buf);
 					obj->state = IN_TAG;
 					obj->tag[obj->tag_index] = '\0';
@@ -204,7 +206,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					StrAllocCopy(new_markup, END_TAG_NAME_MARKUP);
 					tmp_markup = net_EndColorHTMLTag(obj);
 					StrAllocCat(new_markup, tmp_markup);
-					XP_FREEIF(tmp_markup);
+					PR_FREEIF(tmp_markup);
 					tmp_markup = NULL;
 				  }
 				else if(*cp == '<')
@@ -212,7 +214,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					/* protect ourselves from markup */
 					if(!obj->in_broken_html)
 					  {
-						obj->in_broken_html = TRUE;
+						obj->in_broken_html = PR_TRUE;
 						StrAllocCopy(new_markup, BEGIN_BROKEN_ATTRIBUTE_MARKUP);
 						StrAllocCat(new_markup, "&lt;");
 					  }
@@ -273,7 +275,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					StrAllocCopy(new_markup, END_ATTRIBUTE_VALUE_MARKUP);
 					tmp_markup = net_EndColorHTMLTag(obj);
 					StrAllocCat(new_markup, tmp_markup);
-					XP_FREEIF(tmp_markup);
+					PR_FREEIF(tmp_markup);
 					tmp_markup = NULL;
 				  }
 				else if(*cp == '<')
@@ -288,7 +290,7 @@ unquoted_attribute_jump_point:
 				if(XP_IS_SPACE(*cp))
 				  {
 					StrAllocCopy(new_markup, END_ATTRIBUTE_VALUE_MARKUP);
-					XP_SPRINTF(tiny_buf, "%c", *cp);
+					sprintf(tiny_buf, "%c", *cp);
 					StrAllocCat(new_markup, tiny_buf);
 					obj->state = IN_TAG;
 				  }
@@ -297,7 +299,7 @@ unquoted_attribute_jump_point:
 					StrAllocCopy(new_markup, END_ATTRIBUTE_VALUE_MARKUP);
 					tmp_markup = net_EndColorHTMLTag(obj);
 					StrAllocCat(new_markup, tmp_markup);
-					XP_FREEIF(tmp_markup);
+					PR_FREEIF(tmp_markup);
 					tmp_markup = NULL;
 				  }
 				else if(*cp == '<')
@@ -318,7 +320,7 @@ unquoted_attribute_jump_point:
 					if(obj->in_broken_html)
 					  {
                     	StrAllocCopy(new_markup, END_BROKEN_ATTRIBUTE_MARKUP);
-						obj->in_broken_html = FALSE;
+						obj->in_broken_html = PR_FALSE;
 					  }
 					StrAllocCat(new_markup, "\"");
 					StrAllocCat(new_markup, END_ATTRIBUTE_VALUE_MARKUP);
@@ -339,7 +341,7 @@ unquoted_attribute_jump_point:
 					/* probably a broken attribute value */
 					if(!obj->in_broken_html)
 					  {
-						obj->in_broken_html = TRUE;
+						obj->in_broken_html = PR_TRUE;
 						StrAllocCopy(new_markup, BEGIN_BROKEN_ATTRIBUTE_MARKUP);
 						StrAllocCat(new_markup, ">");
 					  }
@@ -347,7 +349,7 @@ unquoted_attribute_jump_point:
 			    break;
 			case IN_COMMENT:
 			    /* do nothing until you find a closing '-->' */
-				if(!XP_STRNCMP(cp, "-->", 3))
+				if(!PL_strncmp(cp, "-->", 3))
 				  {
 					StrAllocCopy(new_markup, "&gt;");
 					cp += 2;
@@ -365,7 +367,7 @@ unquoted_attribute_jump_point:
 			    /* do nothing until you find a ';' or space */
 				if(*cp == ';' || XP_IS_SPACE(*cp))
 				  {
-					XP_SPRINTF(tiny_buf, "%c", *cp);
+					sprintf(tiny_buf, "%c", *cp);
 					StrAllocCopy(new_markup, tiny_buf);
 					StrAllocCat(new_markup, END_AMPERSAND_THINGY_MARKUP);
 					obj->state = IN_CONTENT;
@@ -377,7 +379,7 @@ unquoted_attribute_jump_point:
 				  }
 			    break;
 		    default:
-			    XP_ASSERT(0);
+			    PR_ASSERT(0);
 			    break;
 		  }
 
@@ -392,21 +394,21 @@ unquoted_attribute_jump_point:
 
 			if(status < 0)
 			  {
-				XP_FREE(new_markup);
+				PR_Free(new_markup);
 				return(status);
 			  }
 
 			/* add new markup */
     		status = (*obj->next_stream->put_block)
 											(obj->next_stream,
-        									new_markup, XP_STRLEN(new_markup));
+        									new_markup, PL_strlen(new_markup));
 			if(status < 0)
 			  {
-				XP_FREE(new_markup);
+				PR_Free(new_markup);
 				return(status);
 			  }
 
-    		XP_FREEIF(new_markup);
+    		PR_FREEIF(new_markup);
     		new_markup = NULL;
 		  }
 	  }
@@ -452,7 +454,7 @@ net_ColorHTMLStream (int         format_out,
 	char *old_url;
 	int status, type;
 	NET_StreamClass *next_stream, *new_stream;
-	Bool is_html_stream = FALSE;
+	PRBool is_html_stream = PR_FALSE;
 	INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(window_id);
 	INTL_CharSetInfo next_csi;
 
@@ -463,11 +465,11 @@ net_ColorHTMLStream (int         format_out,
 	 */
 	type = NET_URL_Type(URL_s->address);
 	if(data_obj 
-		&& !XP_STRCMP((char *)data_obj, TEXT_HTML)
+		&& !PL_strcmp((char *)data_obj, TEXT_HTML)
 		&& type != MAILBOX_TYPE_URL
 		&& type != IMAP_TYPE_URL
 		&& type != NEWS_TYPE_URL)
-		is_html_stream = TRUE;
+		is_html_stream = PR_TRUE;
 
 	/* use a new named window */
 	StrAllocCopy(URL_s->window_target, VIEW_SOURCE_TARGET_WINDOW_NAME);
@@ -483,15 +485,15 @@ net_ColorHTMLStream (int         format_out,
 	/* alloc a new chrome struct and stick it in the URL
   	 * so that we can turn off the relavent stuff
 	 */
-	URL_s->window_chrome = XP_NEW(Chrome);
+	URL_s->window_chrome = PR_NEW(Chrome);
 	if(URL_s->window_chrome)
 	  {
 		/* zero everything to turn off all chrome */
-		XP_MEMSET(URL_s->window_chrome, 0, sizeof(Chrome));
+		memset(URL_s->window_chrome, 0, sizeof(Chrome));
 		URL_s->window_chrome->type = MWContextDialog;
-		URL_s->window_chrome->show_scrollbar = TRUE;
-		URL_s->window_chrome->allow_resize = TRUE;
-		URL_s->window_chrome->allow_close = TRUE;
+		URL_s->window_chrome->show_scrollbar = PR_TRUE;
+		URL_s->window_chrome->allow_resize = PR_TRUE;
+		URL_s->window_chrome->allow_close = PR_TRUE;
 	  }
 
 	/* call the HTML parser */
@@ -510,7 +512,7 @@ net_ColorHTMLStream (int         format_out,
 
 	if(!next_stream)
 	  {
-		XP_FREE(old_url);
+		PR_Free(old_url);
 		return(NULL);
 	  }
 	next_csi = LO_GetDocumentCharacterSetInfo(next_stream->window_id);
@@ -536,17 +538,17 @@ net_ColorHTMLStream (int         format_out,
 	else
 		StrAllocCat(new_markup, "<PRE>");
 
-	XP_FREE(old_url);
+	PR_Free(old_url);
 
   	status = (*next_stream->put_block)(next_stream,
         									new_markup,
-        									XP_STRLEN(new_markup));
-	XP_FREE(new_markup);
+        									PL_strlen(new_markup));
+	PR_Free(new_markup);
 
 	if(status < 0)
 	  {
   		(*next_stream->abort)(next_stream, status);
-		XP_FREE(next_stream);
+		PR_Free(next_stream);
 		return(NULL);
 	  }
 
@@ -557,25 +559,25 @@ net_ColorHTMLStream (int         format_out,
 	 * and attach the next stream to it
 	 */
 
-    new_stream = XP_NEW(NET_StreamClass);
+    new_stream = PR_NEW(NET_StreamClass);
     if(new_stream == NULL)
 	  {
   		(*next_stream->abort)(next_stream, status);
-		XP_FREE(next_stream);
+		PR_Free(next_stream);
         return(NULL);
 	  }
 
-    obj = XP_NEW(DataObject);
+    obj = PR_NEW(DataObject);
 
     if (obj == NULL)
 	  {
   		(*next_stream->abort)(next_stream, status);
-		XP_FREE(next_stream);
-		XP_FREE(new_stream);
+		PR_Free(next_stream);
+		PR_Free(new_stream);
         return(NULL);
 	  }
 
-	XP_MEMSET(obj, 0, sizeof(DataObject));
+	memset(obj, 0, sizeof(DataObject));
 
 	obj->state = IN_CONTENT;
 
