@@ -1766,8 +1766,9 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
   GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
 
   if (ins) {
-    nsISupportsKey key(ins);
-    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    GetXBLChildNodesFor(ins, getter_AddRefs(nodeList));
+
     if (nodeList) {
       nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
       if (contentList) {
@@ -1813,8 +1814,9 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
   GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
 
   if (ins) {
-    nsISupportsKey key(ins);
-    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    GetXBLChildNodesFor(ins, getter_AddRefs(nodeList));
+
     if (nodeList) {
       nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
       if (contentList) {
@@ -1857,8 +1859,9 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
   GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(point));
 
   if (point) {
-    nsISupportsKey key(point);
-    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    GetXBLChildNodesFor(point, getter_AddRefs(nodeList));
+
     if (nodeList) {
       nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
       if (contentList) {

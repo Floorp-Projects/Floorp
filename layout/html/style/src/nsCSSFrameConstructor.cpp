@@ -989,6 +989,10 @@ public:
     return !aOther.operator==(*this);
   }
 
+  PRUint32 index() {
+    return mIndex;
+  }
+
   void seek(PRUint32 aIndex) {
 #ifdef DEBUG
     // Make sure that aIndex is reasonable
@@ -7860,17 +7864,84 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // real parent frame; if not, then the frame hasn't been built yet
   // and we just bail.
   //
-  // XXX By passing the first appended child below, we'll potentially
-  // botch the insertion of subsequent elements. What we really ought
-  // to do here is determine if there are filtered insertion points
-  // for aContainer; if so, we'll need to fall back onto multiple
-  // ContentInserted() calls.
-  nsCOMPtr<nsIContent> firstAppendedChild;
-  aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(firstAppendedChild));
   nsIFrame* insertionPoint;
-  GetInsertionPoint(shell, parentFrame, firstAppendedChild, &insertionPoint);
+  PRBool multiple = PR_FALSE;
+  GetInsertionPoint(shell, parentFrame, nsnull, &insertionPoint, &multiple);
   if (! insertionPoint)
     return NS_OK; // Don't build the frames.
+
+  PRBool hasInsertion = PR_FALSE;
+  if (!multiple) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> firstAppendedChild;
+    aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(firstAppendedChild));
+    firstAppendedChild->GetDocument(*getter_AddRefs(document));
+    if (document)
+      document->GetBindingManager(getter_AddRefs(bindingManager));
+    if (bindingManager) {
+      nsCOMPtr<nsIContent> insParent;
+      bindingManager->GetInsertionParent(firstAppendedChild, getter_AddRefs(insParent));
+      if (insParent)
+        hasInsertion = PR_TRUE;
+    }
+  }
+  
+  if (multiple || hasInsertion) {
+    // We have an insertion point.  There are some additional tests we need to do
+    // in order to ensure that an append is a safe operation.
+    PRInt32 childCount = 0;
+      
+    if (!multiple) {
+      // We may need to make multiple ContentInserted calls instead.  A
+      // reasonable heuristic to employ (in order to maintain good performance)
+      // is to find out if the insertion point's content node contains any
+      // explicit children.  If it does not, then it is highly likely that 
+      // an append is occurring.  (Note it is not definite, and there are insane
+      // cases we will not deal with by employing this heuristic, but it beats
+      // always falling back to multiple ContentInserted calls).
+      //
+      // In the multiple insertion point case, we know we're going to need to do
+      // multiple ContentInserted calls anyway.
+      nsCOMPtr<nsIContent> content;
+      insertionPoint->GetContent(getter_AddRefs(content));
+      content->ChildCount(childCount);
+    }
+
+    if (multiple || childCount > 0) {
+      // Now comes the fun part.  For each appended child, we must obtain its
+      // insertion point and find its exact position within that insertion point.
+      // We then make a ContentInserted call with the correct computed index.
+      nsCOMPtr<nsIContent> insertionContent;
+      insertionPoint->GetContent(getter_AddRefs(insertionContent));
+      
+      PRInt32 containerCount;
+      aContainer->ChildCount(containerCount);
+      for (PRInt32 i = aNewIndexInContainer; i < containerCount; i++) {
+        nsCOMPtr<nsIContent> child;
+        aContainer->ChildAt(i, *getter_AddRefs(child));
+        if (multiple) {
+          // Filters are in effect, so the insertion point needs to be refetched for
+          // each child.
+          GetInsertionPoint(shell, parentFrame, child, &insertionPoint);
+          insertionPoint->GetContent(getter_AddRefs(insertionContent));
+        }
+
+        // Construct an iterator to locate this child at its correct index.
+        ChildIterator iter, last;
+        for (ChildIterator::Init(insertionContent, &iter, &last);
+         iter != last;
+         ++iter) {
+          nsIContent* item = nsCOMPtr<nsIContent>(*iter);
+          if (item == child)
+            // Call ContentInserted with this index.
+            ContentInserted(aPresContext, aContainer, child, iter.index(), mTempFrameTreeState);
+        }
+      }
+
+      return NS_OK;
+    }
+  }
 
   parentFrame = insertionPoint;
 
@@ -11145,7 +11216,8 @@ NS_IMETHODIMP
 nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
                                          nsIFrame*     aParentFrame,
                                          nsIContent*   aChildContent,
-                                         nsIFrame**    aInsertionPoint)
+                                         nsIFrame**    aInsertionPoint,
+                                         PRBool*       aMultiple)
 {
   // Make the insertion point be the parent frame by default, in case
   // we have to bail early.
@@ -11185,6 +11257,8 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
     PRBool multiple;
     PRUint32 index;
     bindingManager->GetSingleInsertionPoint(container, getter_AddRefs(insertionElement), &index, &multiple);
+    if (multiple && aMultiple)
+      *aMultiple = multiple; // Record the fact that filters are in use.
   }
 
   if (insertionElement) {
@@ -11199,7 +11273,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
         scroll->GetScrolledFrame(nsnull, insertionPoint);
 
       if (insertionPoint != aParentFrame) 
-        GetInsertionPoint(aPresShell, insertionPoint, aChildContent, aInsertionPoint);
+        GetInsertionPoint(aPresShell, insertionPoint, aChildContent, aInsertionPoint, aMultiple);
     }
     else {
       // There was no frame created yet for the insertion point.

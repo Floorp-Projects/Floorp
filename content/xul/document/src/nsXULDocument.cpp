@@ -2068,7 +2068,8 @@ nsXULDocument::ContentAppended(nsIContent* aContainer,
     }
 
     // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentAppended(this, aContainer, aNewIndexInContainer);
     }
@@ -2087,7 +2088,8 @@ nsXULDocument::ContentInserted(nsIContent* aContainer,
     }
 
     // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
     }
@@ -2110,7 +2112,8 @@ nsXULDocument::ContentReplaced(nsIContent* aContainer,
     }
 
     // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                                   aIndexInContainer);
@@ -2130,7 +2133,8 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
     }
 
     // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentRemoved(this, aContainer,
                                  aChild, aIndexInContainer);

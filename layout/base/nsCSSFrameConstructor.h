@@ -163,7 +163,8 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIPresShell* aPresShell,
                                nsIFrame*     aParentFrame,
                                nsIContent*   aChildContent,
-                               nsIFrame**    aInsertionPoint);
+                               nsIFrame**    aInsertionPoint,
+                               PRBool*       aMultiple = nsnull);
 
   NS_IMETHOD CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                         nsIFrame*       aParentFrame,

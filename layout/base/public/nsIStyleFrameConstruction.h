@@ -356,7 +356,8 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIPresShell* aPresShell,
                                nsIFrame*     aParentFrame,
                                nsIContent*   aChildContent,
-                               nsIFrame**    aInsertionPoint) = 0;
+                               nsIFrame**    aInsertionPoint,
+                               PRBool*       aMultiple = nsnull) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */
