@@ -89,3 +89,15 @@ treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="tru
 treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/article.gif");
 }
+
+treeitem[container="true"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[container="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/document.gif");
+}
