@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
 
+interface nsIFileSpec;
 
 typedef long ImapOnlineCopyState;
 
@@ -43,7 +44,8 @@ interface ImapOnlineCopyStateType
 
 interface nsIImapMessageSink : nsISupports {
     // set up messge download output stream
-    void SetupMsgWriteStream();
+//    void SetupMsgWriteStream(in nsIFileSpec aFileSpec, in boolean appendDummyEnvelope);
+	void SetupMsgWriteStream(in string aNativePath, in boolean appendDummyEnvelope);
 
     void ParseAdoptedMsgLine(in string adoptedMsgLine, in nsMsgKey uidOfMsg);
     
