@@ -1746,6 +1746,13 @@ COOKIE_Read() {
 
     new_cookie->status = nsICookie::STATUS_UNKNOWN;
     new_cookie->policy = nsICookie::POLICY_UNKNOWN;
+
+    /* check for bad legacy cookies (domain not starting with a dot) */
+    if (new_cookie->isDomain && *new_cookie->host != '.') {
+      /* bad cookie, discard it */
+      continue;
+    }
+
     /* start new cookie list if one does not already exist */
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
