@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIMsgCompFields.idl"
-/* #include "nsIDOMEditorAppCore.idl" */
+#include "nsIEditorShell.idl"
 
 %{ C++
 #include "nsIDOMWindow.h"
@@ -99,7 +99,7 @@ interface nsIMsgCompose : nsISupports {
     void CloseWindow();
     
 	/* ... */
-	attribute /*nsIDOMEditorAppCore*/nsISupports editor;
+	attribute nsIEditorShell editor;
 
 	/* ... */
     readonly attribute nsIDOMWindow domWindow;

@@ -287,8 +287,9 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 	  printf("----------------------------\n");
 	  printf("--  Sending Mail Message  --\n");
 	  printf("----------------------------\n");
-	  printf("To: %s  Cc: %s  Bcc: %s\n", addrTo, addrCc, addrBcc);
-	  printf("Subject: %s  \nMsg: %s\n", subject, body);
+	  printf("To: %s  Cc: %s  Bcc: %s\n", (const char *)nsAutoCString(addrTo),
+	  	(const char *)nsAutoCString(addrCc), (const char *)nsAutoCString(addrBcc));
+	  printf("Subject: %s  \nMsg: %s\n", (const char *)nsAutoCString(subject), (const char *)nsAutoCString(body));
 	  printf("----------------------------\n");
 #endif //DEBUG
 
@@ -406,20 +407,23 @@ nsresult nsMsgCompose::CloseWindow()
 }
 
 
-nsresult nsMsgCompose::GetEditor(/*nsIDOMEditorAppCore*/nsISupports * *aEditor)
+nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor)
 {
 	*aEditor = nsnull;
 	return NS_OK;
 }
 
 
-nsresult nsMsgCompose::SetEditor(/*nsIDOMEditorAppCore*/nsISupports * aEditor)
+nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
 {
 	nsresult rv;
+/*
 	if (aEditor)
 		rv = aEditor->QueryInterface(nsIEditorShell::GetIID(), (void **)&m_editor);
 	else
 		return NS_ERROR_NULL_POINTER;
+*/
+	m_editor = aEditor;
 
 	return rv;
 }
