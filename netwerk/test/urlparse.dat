@@ -1,0 +1,43 @@
+# Any blank lines and those beginning with # are comments and 
+# ignored. To add additional test cases that could potentially 
+# break URL parsing in mozilla add the input URL on a new line 
+# and follow it with the expected output. Then run urltest on 
+# this file and hopefully the expected output should match the 
+# one from the program. 
+#   - Gagan Saksena 03/28/00
+
+http://username:password@hostname.com:80/pathname/./more/stuff/../path
+http,username:password,hostname.com,80,,/pathname/more/path
+
+username@host:8080/path
+,username,host,8080,,/path
+
+http://gagan/
+http,,gagan,-1,,/
+
+scheme:host/netlib
+scheme,,host,-1,,/netlib
+
+mailbox:///foo
+mailbox,,,-1,,/foo
+
+scheme:user@hostname.edu:80/pathname
+scheme,user,hostname.edu,80,,/pathname
+
+http://username:password@hostname:80/pathname
+http,username:password,hostname,80,,/pathname
+
+resource:/pathname
+resource,,,-1,,/pathname
+
+ftp://uname%here.com:pwd@there.com/aPath/a.html
+ftp,uname%here.com:pwd,there.com,-1,,/aPath/a.html
+
+http://www.inf.bme.hu?foo=bar
+http,,www.inf.bme.hu,-1,foo=bar,/?foo=bar
+
+http://test.com/aPath/a.html#/1/2
+http,,test.com,-1,,/aPath/a.html#/1/2
+
+http://user:pass@ipaddres:2/get?foo/something
+http,user:pass,ipaddres,2,foo/something,/get?foo/something
