@@ -482,12 +482,13 @@ public class NativeGlobal implements IdFunctionMaster {
             Context.reportWarning(message);
             return x;
         }
-        int[] linep = { lineNumber };
         if (filename == null) {
+            int[] linep = new int[1];
             filename = Context.getSourcePositionFromStack(linep);
-            if (filename == null) {
+            if (filename != null) {
+                lineNumber = linep[0];
+            } else {
                 filename = "";
-                linep[0] = 1;
             }
         }
         filename += "(eval)";
@@ -500,7 +501,7 @@ public class NativeGlobal implements IdFunctionMaster {
             // mode.
             int oldOptLevel = cx.getOptimizationLevel();
             cx.setOptimizationLevel(-1);
-            Script script = cx.compileReader(scope, in, filename, linep[0],
+            Script script = cx.compileReader(scope, in, filename, lineNumber,
                                              securityDomain);
             cx.setOptimizationLevel(oldOptLevel);
 
