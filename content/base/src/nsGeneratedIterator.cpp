@@ -135,6 +135,7 @@ public:
 
 protected:
 
+  // Do these cause too much refcounting???
   nsCOMPtr<nsIContent> GetDeepFirstChild(nsCOMPtr<nsIContent> aRoot);
   nsCOMPtr<nsIContent> GetDeepLastChild(nsCOMPtr<nsIContent> aRoot);
   
@@ -785,7 +786,7 @@ nsresult nsGeneratedContentIterator::Next()
     return NS_OK;
   }
   
-  return NextNode(&mCurNode);
+  return NextNode(address_of(mCurNode));
 }
 
 
@@ -801,7 +802,7 @@ nsresult nsGeneratedContentIterator::Prev()
     return NS_OK;
   }
   
-  return PrevNode(&mCurNode);
+  return PrevNode(address_of(mCurNode));
 }
 
 
@@ -1030,7 +1031,7 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!firstCandidate)
   {
     // then firstCandidate is next node after cN
-    if (NS_FAILED(GetNextSibling(cN,  &firstCandidate)))
+    if (NS_FAILED(GetNextSibling(cN, address_of(firstCandidate))))
     {
       MakeEmpty();
       return NS_OK;
@@ -1066,7 +1067,7 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the first node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (NS_SUCCEEDED(GetTopAncestorInRange(firstCandidate, &mFirst)))
+  if (NS_SUCCEEDED(GetTopAncestorInRange(firstCandidate, address_of(mFirst))))
   {
     mFirstIter = 0;//ancestor has one no 
     mGenIter = 0;
@@ -1112,7 +1113,7 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!lastCandidate)
   {
     // then lastCandidate is prev node before cN
-    if (NS_FAILED(GetPrevSibling(cN, &lastCandidate)))
+    if (NS_FAILED(GetPrevSibling(cN, address_of(lastCandidate))))
     {
       MakeEmpty();
       return NS_OK;
@@ -1150,7 +1151,7 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the last node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (NS_SUCCEEDED(GetTopAncestorInRange(lastCandidate, &mLast)))
+  if (NS_SUCCEEDED(GetTopAncestorInRange(lastCandidate, address_of(mLast))))
   {
     mLastIter = 0;//ancestor has one no 
     mGenIter = 0;
@@ -1184,7 +1185,7 @@ nsresult nsGeneratedSubtreeIterator::Next()
       mGenIter = 0;
       if (mIterType == nsIPresShell::After || NS_FAILED(mCurNode->ChildAt(0,*getter_AddRefs(nextNode))))
       {
-        if (NS_FAILED(GetNextSibling(mCurNode, &nextNode)))
+        if (NS_FAILED(GetNextSibling(mCurNode, address_of(nextNode))))
           return NS_OK;
       }
     }
@@ -1198,7 +1199,7 @@ nsresult nsGeneratedSubtreeIterator::Next()
       mIsDone = PR_TRUE;
       return NS_OK;
     }
-    if (NS_FAILED(GetNextSibling(mCurNode, &nextNode)))
+    if (NS_FAILED(GetNextSibling(mCurNode, address_of(nextNode))))
       return NS_OK;
   }
   
@@ -1206,7 +1207,7 @@ nsresult nsGeneratedSubtreeIterator::Next()
 
   if (!mGenIter)
     nextNode = GetDeepFirstChild(nextNode);
-  if (NS_SUCCEEDED(GetTopAncestorInRange(nextNode, &mCurNode)))
+  if (NS_SUCCEEDED(GetTopAncestorInRange(nextNode, address_of(mCurNode))))
   {
     mGenIter = 0;
   }

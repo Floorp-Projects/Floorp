@@ -825,7 +825,7 @@ nsBrowserInstance::LoadInitialPage(void)
 
   nsCOMPtr<nsIDOMElement>    argsElement;
 
-  rv = FindNamedXULElement(mDocShell, "args", &argsElement);
+  rv = FindNamedXULElement(mDocShell, "args", address_of(argsElement));
   if (!argsElement) {
     // Couldn't get the "args" element from the xul file. Load a blank page
     if (APP_DEBUG) printf("Couldn't find args element\n");

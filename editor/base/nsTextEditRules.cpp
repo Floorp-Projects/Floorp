@@ -360,10 +360,10 @@ nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
   nsCOMPtr<nsIDOMNode> selNode, priorNode;
   PRInt32 selOffset;
   // get the (collapsed) selection location
-  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   // get prior node
-  res = mEditor->GetPriorHTMLNode(selNode, selOffset, &priorNode);
+  res = mEditor->GetPriorHTMLNode(selNode, selOffset, address_of(priorNode));
   if (NS_SUCCEEDED(res) && priorNode && nsHTMLEditUtils::IsMozBR(priorNode))
   {
     nsCOMPtr<nsIDOMNode> block1, block2;
@@ -376,7 +376,7 @@ nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
     // if we are here then the selection is right after a mozBR
     // that is in the same block as the selection.  We need to move
     // the selection start to be before the mozBR.
-    res = nsEditor::GetNodeLocation(priorNode, &selNode, &selOffset);
+    res = nsEditor::GetNodeLocation(priorNode, address_of(selNode), &selOffset);
     if (NS_FAILED(res)) return res;
     res = aSelection->Collapse(selNode,selOffset);
     if (NS_FAILED(res)) return res;
@@ -459,7 +459,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
     {
       nsCOMPtr<nsIDOMNode> preNode, selNode;
       PRInt32 selOffset, newOffset;
-      res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+      res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
       if (NS_FAILED(res)) return res;
 
       // If any of the following fail, then just proceed with the
@@ -481,7 +481,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
             printf("It's a moz quote -- splitting\n");
             nsCOMPtr<nsIDOMNode> outLeftNode;
             nsCOMPtr<nsIDOMNode> outRightNode;
-            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, PR_TRUE, &outLeftNode, &outRightNode);
+            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, PR_TRUE, address_of(outLeftNode), address_of(outRightNode));
             if (NS_FAILED(res)) return res;
             PRBool bIsEmptyNode;
             
@@ -499,7 +499,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
             {
               // HACK alert: consume a br if there is one at front of node
               nsCOMPtr<nsIDOMNode> firstNode;
-              res =  mEditor->GetFirstEditableNode(outRightNode, &firstNode);
+              res =  mEditor->GetFirstEditableNode(outRightNode, address_of(firstNode));
               if (firstNode &&  nsHTMLEditUtils::IsBreak(firstNode))
               {
                 mEditor->DeleteNode(firstNode);
@@ -511,7 +511,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
             }
             nsCOMPtr<nsIDOMNode> brNode;
             // last ePrevious param causes selection to be set before the break
-            res = mEditor->CreateBR(selNode, newOffset, &brNode, nsIEditor::ePrevious);
+            res = mEditor->CreateBR(selNode, newOffset, address_of(brNode), nsIEditor::ePrevious);
             *aHandled = PR_TRUE;
           }
         }
@@ -535,9 +535,9 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> nearNode, selNode;
   nsresult res;
-  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
-  res = mEditor->GetPriorHTMLNode(selNode, selOffset, &nearNode);
+  res = mEditor->GetPriorHTMLNode(selNode, selOffset, address_of(nearNode));
   if (NS_FAILED(res)) return res;
   if (nearNode && nsHTMLEditUtils::IsBreak(nearNode) && !nsHTMLEditUtils::IsMozBR(nearNode))
   {
@@ -552,9 +552,9 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
       // the user will see no new line for the break.  Also, things
       // like table cells won't grow in height.
       nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateMozBR(selNode, selOffset, &brNode);
+      res = CreateMozBR(selNode, selOffset, address_of(brNode));
       if (NS_FAILED(res)) return res;
-      res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+      res = nsEditor::GetNodeLocation(brNode, address_of(selNode), &selOffset);
       if (NS_FAILED(res)) return res;
       selPrivate->SetInterlinePosition(PR_TRUE);
       res = aSelection->Collapse(selNode,selOffset);
@@ -670,7 +670,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   }
 
   // get the (collapsed) selection location
-  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
@@ -686,7 +686,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    res = mEditor->InsertTextImpl(*outString, &selNode, &selOffset, doc);
+    res = mEditor->InsertTextImpl(*outString, address_of(selNode), &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
@@ -742,15 +742,15 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
           {
             NS_ASSERTION((singleLineNewlineBehavior == ePasteIntact),
                   "Newline improperly getting into single-line edit field!");
-            res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
+            res = mEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
           }
           else
-            res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
+            res = mEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }
@@ -783,18 +783,18 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         // is it a tab?
         if (subStr.EqualsWithConversion("\t"))
         {
-          res = mEditor->InsertTextImpl(tabString, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(tabString, address_of(curNode), &curOffset, doc);
           pos++;
         }
         // is it a return?
         else if (subStr.EqualsWithConversion("\n"))
         {
-          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          res = mEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }
@@ -1213,7 +1213,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       NS_IF_RELEASE(txn);
       
       // insert a break
-      res = mEditor->CreateBR(textNode, offset, &brNode);
+      res = mEditor->CreateBR(textNode, offset, address_of(brNode));
       if (NS_FAILED(res)) return res;
     } while (1);  // break used to exit while loop
   }
@@ -1410,7 +1410,7 @@ nsTextEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   // get the (collapsed) selection location
   nsCOMPtr<nsIDOMNode> selNode, temp;
   PRInt32 selOffset;
-  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   temp = selNode;
   
@@ -1418,7 +1418,7 @@ nsTextEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   while (!mEditor->IsEditable(selNode))
   {
     // scan up the tree until we find an editable place to be
-    res = nsEditor::GetNodeLocation(temp, &selNode, &selOffset);
+    res = nsEditor::GetNodeLocation(temp, address_of(selNode), &selOffset);
     if (NS_FAILED(res)) return res;
     if (!selNode) return NS_ERROR_FAILURE;
     temp = selNode;
@@ -1434,9 +1434,9 @@ nsTextEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   // 2) at the end of the body OR before another block
 
   nsCOMPtr<nsIDOMNode> priorNode, nextNode;
-  res = mEditor->GetPriorHTMLSibling(selNode, selOffset, &priorNode);
+  res = mEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(priorNode));
   if (NS_FAILED(res)) return res;
-  res = mEditor->GetNextHTMLSibling(selNode, selOffset, &nextNode);
+  res = mEditor->GetNextHTMLSibling(selNode, selOffset, address_of(nextNode));
   if (NS_FAILED(res)) return res;
   
   // is priorNode a block?
@@ -1448,9 +1448,9 @@ nsTextEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
       nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));
 
       nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateMozBR(selNode, selOffset, &brNode);
+      res = CreateMozBR(selNode, selOffset, address_of(brNode));
       if (NS_FAILED(res)) return res;
-      res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+      res = nsEditor::GetNodeLocation(brNode, address_of(selNode), &selOffset);
       if (NS_FAILED(res)) return res;
       // selection stays *before* moz-br, sticking to it
       selPrivate->SetInterlinePosition(PR_TRUE);

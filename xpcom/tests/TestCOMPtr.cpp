@@ -566,7 +566,7 @@ main()
     	cout << endl << "### setup for Test 19, 20" << endl;
       nsCOMPtr<IFoo> foop;
       cout << "### Test 19: reference parameter behavior?" << endl;
-      set_a_IFoo(&foop);
+      set_a_IFoo(address_of(foop));
 
       cout << "### Test 20: return value behavior?" << endl;
       foop = return_a_IFoo();

@@ -728,7 +728,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
       if (NS_FAILED(res)) return res;
       PRInt32 offset;
       nsCOMPtr<nsIDOMNode> node, blockParent;
-      res = GetStartNodeAndOffset(selection, &node, &offset);
+      res = GetStartNodeAndOffset(selection, address_of(node), &offset);
       if (NS_FAILED(res)) return res;
       if (!node) return NS_ERROR_FAILURE;
   
@@ -804,7 +804,7 @@ NS_IMETHODIMP nsHTMLEditor::TypedText(const PRUnichar* aString,
     case eTypedBR:
       {
         nsCOMPtr<nsIDOMNode> brNode;
-        return InsertBR(&brNode);  // only inserts a br node
+        return InsertBR(address_of(brNode));  // only inserts a br node
       }
     case eTypedBreak:
       {
@@ -916,7 +916,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRI
     PRInt32 offset;
     PRUint32 len;
     nodeAsText->GetLength(&len);
-    GetNodeLocation(node, &tmp, &offset);
+    GetNodeLocation(node, address_of(tmp), &offset);
     if (!tmp) return NS_ERROR_FAILURE;
     if (!theOffset)
     {
@@ -932,7 +932,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRI
       // split the text node
       res = SplitNode(node, theOffset, getter_AddRefs(tmp));
       if (NS_FAILED(res)) return res;
-      res = GetNodeLocation(node, &tmp, &offset);
+      res = GetNodeLocation(node, address_of(tmp), &offset);
       if (NS_FAILED(res)) return res;
     }
     // create br
@@ -957,7 +957,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRI
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-    res = GetNodeLocation(*outBRNode, &parent, &offset);
+    res = GetNodeLocation(*outBRNode, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     if (aSelect == eNext)
     {
@@ -980,7 +980,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPt
 {
   nsCOMPtr<nsIDOMNode> parent = aNode;
   PRInt32 offset = aOffset;
-  return CreateBRImpl(&parent, &offset, outBRNode, aSelect);
+  return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
@@ -1006,14 +1006,14 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   }
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
-  res = GetStartNodeAndOffset(selection, &selNode, &selOffset);
+  res = GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   
   res = CreateBR(selNode, selOffset, outBRNode);
   if (NS_FAILED(res)) return res;
     
   // position selection after br
-  res = GetNodeLocation(*outBRNode, &selNode, &selOffset);
+  res = GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   selPriv->SetInterlinePosition(PR_TRUE);
   res = selection->Collapse(selNode, selOffset+1);
@@ -1277,8 +1277,8 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   {
     nsCOMPtr<nsIDOMNode> priorNode, nextNode;
     // is either of it's neighbors the right kind of node?
-    GetPriorHTMLSibling(aNode, &priorNode);
-    GetNextHTMLSibling(aNode, &nextNode);
+    GetPriorHTMLSibling(aNode, address_of(priorNode));
+    GetNextHTMLSibling(aNode, address_of(nextNode));
     if (priorNode && NodeIsType(priorNode, aProperty) && 
         HasAttrVal(priorNode, aAttribute, aValue)     &&
         IsOnlyAttribute(priorNode, aAttribute) )
@@ -1296,7 +1296,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     else
     {
       // ok, chuck it in it's very own container
-      res = InsertContainerAbove(aNode, &tmp, tag, aAttribute, aValue);
+      res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
     }
     if (NS_FAILED(res)) return res;
     return RemoveStyleInside(aNode, aProperty, aAttribute);
@@ -1372,7 +1372,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   PRBool sameNode = (startNode==endNode);
   
   // split any matching style nodes above the start of range
-  res = SplitStyleAbovePoint(&startNode, &startOffset, aProperty, aAttribute);
+  res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty, aAttribute);
   if (NS_FAILED(res)) return res;
   
   if (sameNode && (startNode != origStartNode))
@@ -1382,7 +1382,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   }
   
   // second verse, same as the first...
-  res = SplitStyleAbovePoint(&endNode, &endOffset, aProperty, aAttribute);
+  res = SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty, aAttribute);
   if (NS_FAILED(res)) return res;
   
   // reset the range
@@ -1644,7 +1644,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
           !nsHTMLEditUtils::IsBody(startNode) && 
           IsAtFrontOfNode(startNode, startOffset) )
   {
-    res = GetNodeLocation(startNode, &parent, &startOffset);
+    res = GetNodeLocation(startNode, address_of(parent), &startOffset);
     if (NS_FAILED(res)) return res;
     startNode = parent;
   }
@@ -1654,7 +1654,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
           !nsHTMLEditUtils::IsBody(endNode) && 
           IsAtEndOfNode(endNode, endOffset) )
   {
-    res = GetNodeLocation(endNode, &parent, &endOffset);
+    res = GetNodeLocation(endNode, address_of(parent), &endOffset);
     if (NS_FAILED(res)) return res;
     endNode = parent;
     endOffset++;  // we are AFTER this node
@@ -1679,7 +1679,7 @@ PRBool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   else
   {
     nsCOMPtr<nsIDOMNode> firstNode;
-    GetFirstEditableChild(aNode, &firstNode);
+    GetFirstEditableChild(aNode, address_of(firstNode));
     if (!firstNode) return PR_TRUE; 
     PRInt32 offset;
     nsEditor::GetChildOffset(firstNode, aNode, offset);
@@ -1702,7 +1702,7 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   else
   {
     nsCOMPtr<nsIDOMNode> lastNode;
-    GetLastEditableChild(aNode, &lastNode);
+    GetLastEditableChild(aNode, address_of(lastNode));
     if (!lastNode) return PR_TRUE; 
     PRInt32 offset;
     nsEditor::GetChildOffset(lastNode, aNode, offset);
@@ -2703,7 +2703,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
   {
     // The rules code (WillDoAction above) might have changed the selection.  
     // refresh our memory...
-    res = GetStartNodeAndOffset(selection, &parentNode, &offsetOfNewNode);
+    res = GetStartNodeAndOffset(selection, address_of(parentNode), &offsetOfNewNode);
     if (!parentNode) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
     
@@ -2932,7 +2932,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
       }
       if (bDidInsert)
       {
-        res = GetNodeLocation(lastInsertNode, &parentNode, &offsetOfNewNode);
+        res = GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
         NS_ENSURE_SUCCESS(res, res);
         offsetOfNewNode++;
       }
@@ -2941,7 +2941,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     // Now collapse the selection to the end of what we just inserted:
     if (lastInsertNode) 
     {
-      res = GetNodeLocation(lastInsertNode, &parentNode, &offsetOfNewNode);
+      res = GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
       NS_ENSURE_SUCCESS(res, res);
       selection->Collapse(parentNode, offsetOfNewNode+1);
     }
@@ -3523,7 +3523,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     nsCOMPtr<nsIDOMNode> node, blockParent;
     PRInt32 offset;
   
-    res = GetStartNodeAndOffset(selection, &node, &offset);
+    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -3813,7 +3813,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType, PRBool entireList)
     nsCOMPtr<nsIDOMNode> node;
     PRInt32 offset;
   
-    res = GetStartNodeAndOffset(selection, &node, &offset);
+    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -3948,7 +3948,7 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
     nsCOMPtr<nsIDOMNode> node;
     PRInt32 offset;
   
-    res = GetStartNodeAndOffset(selection, &node, &offset);
+    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -4025,7 +4025,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
     res = selection->GetIsCollapsed(&isCollapsed);
     if (NS_FAILED(res)) return res;
 
-    res = GetStartNodeAndOffset(selection, &node, &offset);
+    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
@@ -4064,7 +4064,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
         res = InsertText(NS_LITERAL_STRING(" "));
         if (NS_FAILED(res)) return res;
         // reposition selection to before the space character
-        res = GetStartNodeAndOffset(selection, &node, &offset);
+        res = GetStartNodeAndOffset(selection, address_of(node), &offset);
         if (NS_FAILED(res)) return res;
         res = selection->Collapse(node,0);
         if (NS_FAILED(res)) return res;
@@ -6080,7 +6080,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   {
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    if (NS_SUCCEEDED(GetNodeLocation(preNode, &parent, &offset)) && parent)
+    if (NS_SUCCEEDED(GetNodeLocation(preNode, address_of(parent), &offset)) && parent)
       selection->Collapse(parent, offset+1);
   }
   return rv;
@@ -6156,7 +6156,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   {
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    if (NS_SUCCEEDED(GetNodeLocation(newNode, &parent, &offset)) && parent)
+    if (NS_SUCCEEDED(GetNodeLocation(newNode, address_of(parent), &offset)) && parent)
       selection->Collapse(parent, offset+1);
   }
   return res;
@@ -7272,7 +7272,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
   {
     // get the prev sibling of the right node, and see if it's leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
-    result = GetPriorHTMLSibling(rightTextNode, &prevSibOfRightNode);
+    result = GetPriorHTMLSibling(rightTextNode, address_of(prevSibOfRightNode));
     if (NS_FAILED(result)) return result;
     if (prevSibOfRightNode && (prevSibOfRightNode.get() == leftTextNode))
     {
@@ -7554,7 +7554,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   }
   
   // reparent the node inside font node with appropriate relative size
-  res = InsertContainerAbove(node, &tmp, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small"));
+  res = InsertContainerAbove(node, address_of(tmp), NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small"));
   return res;
 }
 
@@ -7577,7 +7577,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   // is this node a text node?
   if (IsTextNode(aNode))
   {
-    res = InsertContainerAbove(aNode, &tmp, tag);
+    res = InsertContainerAbove(aNode, address_of(tmp), tag);
     return res;
   }
   // is it the opposite of what we want?  
@@ -7592,7 +7592,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   if (TagCanContain(tag, aNode))
   {
     // ok, chuck it in.
-    res = InsertContainerAbove(aNode, &tmp, tag);
+    res = InsertContainerAbove(aNode, address_of(tmp), tag);
     return res;
   }
   // none of the above?  then cycle through the children.
@@ -7817,7 +7817,7 @@ nsHTMLEditor::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
   nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res)) return res;
   if (!parent) return NS_ERROR_FAILURE;
-  res = GetFirstEditableChild(parent, &firstChild);
+  res = GetFirstEditableChild(parent, address_of(firstChild));
   if (NS_FAILED(res)) return res;
   
   *aOutIsFirst = (firstChild.get() == aNode);
@@ -7839,7 +7839,7 @@ nsHTMLEditor::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
   nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res)) return res;
   if (!parent) return NS_ERROR_FAILURE;
-  res = GetLastEditableChild(parent, &lastChild);
+  res = GetLastEditableChild(parent, address_of(lastChild));
   if (NS_FAILED(res)) return res;
   
   *aOutIsLast = (lastChild.get() == aNode);
@@ -7919,7 +7919,7 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
-    res = GetNextHTMLNode(child, &tmp);
+    res = GetNextHTMLNode(child, address_of(tmp));
     if (NS_FAILED(res)) return res;
     if (!tmp) return NS_ERROR_FAILURE;
     
@@ -7954,7 +7954,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
-    res = GetPriorHTMLNode(child, &tmp);
+    res = GetPriorHTMLNode(child, address_of(tmp));
     if (NS_FAILED(res)) return res;
     if (!tmp) return NS_ERROR_FAILURE;
     

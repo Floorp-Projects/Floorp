@@ -123,7 +123,7 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
   PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
   
   // gather up the dom point info
-  if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
+  if (!GetNodeBracketPoints(aNode, address_of(parent), &nodeStart, &nodeEnd))
     return PR_FALSE;
   
   if (NS_FAILED(aRange->GetStartContainer(getter_AddRefs(rangeStartParent))))
@@ -195,7 +195,7 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
   
   // gather up the dom point info
-  if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
+  if (!GetNodeBracketPoints(aNode, address_of(parent), &nodeStart, &nodeEnd))
     return NS_ERROR_FAILURE;
   
   if (NS_FAILED(aRange->GetStartContainer(getter_AddRefs(rangeStartParent))))
@@ -487,10 +487,10 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   nsCOMPtr<nsIDocument> doc1;
   nsCOMPtr<nsIDocument> doc2;
   
-  nsresult res = GetContentFromDOMNode(aNode1, &cN1);
+  nsresult res = GetContentFromDOMNode(aNode1, address_of(cN1));
   if (NS_FAILED(res)) 
     return PR_FALSE;
-  res = GetContentFromDOMNode(aNode2, &cN2);
+  res = GetContentFromDOMNode(aNode2, address_of(cN2));
   if (NS_FAILED(res)) 
     return PR_FALSE;
   res = cN1->GetDocument(*getter_AddRefs(doc1));
@@ -890,7 +890,7 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
           if (theRange)
           {
             nsCOMPtr<nsIDOMNode> domNode;
-            res = GetDOMNodeFromContent(cN, &domNode);
+            res = GetDOMNodeFromContent(cN, address_of(domNode));
             NS_POSTCONDITION(NS_SUCCEEDED(res), "error updating range list");
             NS_POSTCONDITION(domNode, "error updating range list");
             // sanity check - do range and content agree over ownership?
@@ -1706,7 +1706,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   nsCOMPtr<nsIDOMNode> domNode;
   nsresult res;
   
-  res = GetDOMNodeFromContent(parent, &domNode);
+  res = GetDOMNodeFromContent(parent, address_of(domNode));
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
@@ -1749,7 +1749,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   // any ranges in the content subtree rooted by aRemovedNode need to
   // have the enclosed endpoints promoted up to the parentNode/offset
   nsCOMPtr<nsIDOMNode> domNode;
-  nsresult res = GetDOMNodeFromContent(parent, &domNode);
+  nsresult res = GetDOMNodeFromContent(parent, address_of(domNode));
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
   res = PopRanges(domNode, aOffset, removed);
@@ -1804,7 +1804,7 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   nsCOMPtr<nsIDOMNode> parentDomNode; 
   nsresult res;
   
-  res = GetDOMNodeFromContent(parent, &parentDomNode);
+  res = GetDOMNodeFromContent(parent, address_of(parentDomNode));
   if (NS_FAILED(res))  return res;
   if (!parentDomNode) return NS_ERROR_UNEXPECTED;
   
@@ -1827,7 +1827,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   nsCOMPtr<nsIDOMNode> domNode;
   nsresult res;
   
-  res = GetDOMNodeFromContent(textNode, &domNode);
+  res = GetDOMNodeFromContent(textNode, address_of(domNode));
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 

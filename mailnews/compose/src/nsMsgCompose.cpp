@@ -319,7 +319,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
           nsresult                  rv;
 
           // get parent and offset of mailcite
-          rv = GetNodeLocation(nodeInserted, &parent, &offset); 
+          rv = GetNodeLocation(nodeInserted, address_of(parent), &offset); 
           if ( NS_FAILED(rv) || (!parent))
           {
             editor->BeginningOfDocument();

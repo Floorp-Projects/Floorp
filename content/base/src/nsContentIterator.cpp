@@ -663,7 +663,7 @@ nsresult nsContentIterator::Next()
     return NS_OK;
   }
   
-  return NextNode(&mCurNode);
+  return NextNode(address_of(mCurNode));
 }
 
 
@@ -679,7 +679,7 @@ nsresult nsContentIterator::Prev()
     return NS_OK;
   }
   
-  return PrevNode(&mCurNode);
+  return PrevNode(address_of(mCurNode));
 }
 
 
@@ -896,7 +896,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!firstCandidate)
   {
     // then firstCandidate is next node after cN
-    if (NS_FAILED(GetNextSibling(cN,  &firstCandidate)) || !firstCandidate)
+    if (NS_FAILED(GetNextSibling(cN,  address_of(firstCandidate))) || !firstCandidate)
     {
       MakeEmpty();
       return NS_OK;
@@ -921,7 +921,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the first node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (NS_FAILED(GetTopAncestorInRange(firstCandidate, &mFirst)))
+  if (NS_FAILED(GetTopAncestorInRange(firstCandidate, address_of(mFirst))))
     return NS_ERROR_FAILURE;
   
   
@@ -960,7 +960,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!lastCandidate)
   {
     // then lastCandidate is prev node before cN
-    if (NS_FAILED(GetPrevSibling(cN, &lastCandidate)))
+    if (NS_FAILED(GetPrevSibling(cN, address_of(lastCandidate))))
     {
       MakeEmpty();
       return NS_OK;
@@ -984,7 +984,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the last node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (NS_FAILED(GetTopAncestorInRange(lastCandidate, &mLast)))
+  if (NS_FAILED(GetTopAncestorInRange(lastCandidate, address_of(mLast))))
     return NS_ERROR_FAILURE;
   
   mCurNode = mFirst;
@@ -1010,10 +1010,10 @@ nsresult nsContentSubtreeIterator::Next()
   }
   
   nsCOMPtr<nsIContent> nextNode;
-  if (NS_FAILED(GetNextSibling(mCurNode, &nextNode)))
+  if (NS_FAILED(GetNextSibling(mCurNode, address_of(nextNode))))
     return NS_OK;
   nextNode = GetDeepFirstChild(nextNode);
-  return GetTopAncestorInRange(nextNode, &mCurNode);
+  return GetTopAncestorInRange(nextNode, address_of(mCurNode));
 }
 
 
@@ -1031,10 +1031,10 @@ nsresult nsContentSubtreeIterator::Prev()
   
   nsCOMPtr<nsIContent> prevNode;
   prevNode = GetDeepFirstChild(mCurNode);
-  if (NS_FAILED(PrevNode(&prevNode)))
+  if (NS_FAILED(PrevNode(address_of(prevNode))))
     return NS_OK;
   prevNode = GetDeepLastChild(prevNode);
-  return GetTopAncestorInRange(prevNode, &mCurNode);
+  return GetTopAncestorInRange(prevNode, address_of(mCurNode));
 }
 
 nsresult nsContentSubtreeIterator::PositionAt(nsIContent* aCurNode)
