@@ -95,6 +95,16 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 #define ALIGN_BOTTOM "bottom"
 
 void
+nsTitledButtonImageLoader::StopLoadImage(nsIPresContext& aPresContext,
+                                 nsIFrame* aTargetFrame)
+{
+  // only stop if we are loading.
+  if (nsnull != mImageLoader) {
+    nsHTMLImageLoader::StopLoadImage(aPresContext, aTargetFrame);
+  }
+}
+
+void
 nsTitledButtonImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsIFrame* aTargetFrame,
@@ -187,6 +197,8 @@ NS_METHOD
 nsTitledButtonFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
+  mImageLoader.StopLoadImage(aPresContext, this);
+
   mImageLoader.DestroyLoader();
 
   return nsLeafFrame::DeleteFrame(aPresContext);
@@ -287,7 +299,8 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
    // see if the images are different
    if (PR_FALSE == oldSrc.Equals(src)) {
       // if they are and the new image is not empty set it and reload
-
+          mImageLoader.StopLoadImage(aPresContext, this);
+                  
          // Get rid of old image loader and start a new image load going
           mImageLoader.DestroyLoader();
 
