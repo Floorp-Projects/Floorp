@@ -215,6 +215,7 @@ private:
     PRBool              mUsePasv;           // use a passive data connection.
     PRBool              mDirectory;         // this url is a directory
     PRBool              mBin;               // transfer mode (ascii or binary)
+    PRBool              mContinueRead;      // continue digesting a multi-line reponse
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
