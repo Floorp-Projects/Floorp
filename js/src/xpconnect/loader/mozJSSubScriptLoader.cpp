@@ -40,6 +40,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
 
+#include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
