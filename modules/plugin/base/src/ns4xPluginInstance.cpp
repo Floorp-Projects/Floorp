@@ -161,9 +161,9 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
   // XXX nasty hack for Shockwave Registration. 
   //     we seem to crash doing URLNotify so just always exclude it.
   //     See bug 85334.
+  const char macromediaurl[] = "http://pinger.macromedia.com";
   if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
-      strcmp(mNPStream.url,"http://pinger.macromedia.com") < 0 )
-  {
+      strnicmp(mNPStream.url, macromediaurl, sizeof(macromediaurl) - 1) != 0 )  {
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
 
