@@ -109,7 +109,7 @@
 // The drop-down list does not explicitly set capture when it is in the drop-down mode.
 
 
-//XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
+//XXX: This is temporary. It simulates pseudo states by using a attribute selector on 
 
 const PRInt32 kSizeNotSet = -1;
 
