@@ -638,6 +638,22 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 }
 
 NS_IMETHODIMP
+nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(do_GetInterface(docShell, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  *aWindow = hiddenDOMWindow;
+  NS_IF_ADDREF(*aWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
                                                JSContext    **aJSContext)
 {

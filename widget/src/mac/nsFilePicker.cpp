@@ -379,7 +379,7 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilters(PRInt32 filterMask)
+NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 filterMask)
 {
 	
 #if USE_IC  // FOR NOW JUST BYPASS ALL THIS CODE

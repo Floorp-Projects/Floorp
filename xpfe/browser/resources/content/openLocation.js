@@ -120,9 +120,9 @@ function onChooseFile()
 
     // When loading into Composer, direct user to prefer HTML files and text files:
     if (dialog.openAppList.data == "2")
-      fp.setFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | nsIFilePicker.filterAll);
+      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | nsIFilePicker.filterAll);
     else
-      fp.setFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
+      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
 			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
 
     if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0)

@@ -57,7 +57,6 @@ nsFilePicker::nsFilePicker()
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
   mDisplayDirectory = do_CreateInstance("component://mozilla/file/local");
-
 }
 
 //-------------------------------------------------------------------------
@@ -204,7 +203,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilters(PRInt32 aFilterMask)
+NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
@@ -218,7 +217,6 @@ NS_IMETHODIMP nsFilePicker::SetFilters(PRInt32 aFilterMask)
   PRUnichar *title;
   PRUnichar *filter;
 
-  mFilterList.SetLength(0);
   if (aFilterMask & filterAll) {
     stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allTitle").GetUnicode(), &title);
     stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allFilter").GetUnicode(), &filter);

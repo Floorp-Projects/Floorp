@@ -27,8 +27,8 @@
 // xpcom
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIFileSpecWithUI.h"
 #include "nsFileStream.h"
+#include "nsIFileSpecWithUI.h"
 #include "nsIStringStream.h"
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
@@ -101,9 +101,8 @@
 #include "nsMsgPrintEngine.h"
 
 // Save As
-#include "nsIFileWidget.h"
+#include "nsIFilePicker.h"
 #include "nsIStringBundle.h"
-#include "nsWidgetsCID.h"
 #include "nsINetSupportDialogService.h"
 
 // Find / Find Again 
@@ -115,7 +114,6 @@ static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
-static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* This is the next generation string retrieval call */
@@ -724,26 +722,9 @@ done:
 NS_IMETHODIMP
 nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, nsIMsgWindow *aMsgWindow)
 {
-  	nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
     nsIMsgMessageService* messageService = nsnull;
-    nsCOMPtr<nsIFileSpec> aSpec;
-    PRInt16               saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
-    const char            *defaultFile = "mail";
-    nsCOMPtr<nsIFileWidget>  fileWidget;
-    nsAutoString promptString;
-    nsString* titles = nsnull;
-    nsString* filters = nsnull;
-    nsString* nextTitle;
-    nsString* nextFilter;
-    nsAutoString HTMLFiles;
-    nsAutoString TextFiles;
-    nsFileSpec parentPath;
-    nsFileDlgResults dialogResult;
-    nsFileSpec    tFileSpec;
-    nsFileSpec fileSpec;
-    char *fileName = nsnull;
-    nsCString tmpFilenameString;
-    nsCString extString;
+    nsAutoString defaultFile(NS_ConvertASCIItoUCS2("mail"));
     nsCOMPtr<nsIUrlListener> urlListener;
     nsSaveAsListener *aListener = nsnull;
     nsCOMPtr<nsIURI> aURL;
@@ -753,10 +734,9 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     nsCOMPtr<nsIStreamListener> convertedListener;
     PRBool needDummyHeader = PR_TRUE;
     PRBool canonicalLineEnding = PR_FALSE;
-
-    NS_WITH_SERVICE(nsIStreamConverterService,
-                    streamConverterService,  
-                    kIStreamConverterServiceCID, &rv);
+    PRInt16 saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
+    
+    nsCOMPtr<nsIStreamConverterService> streamConverterService = do_GetService(kIStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;
     
     if (!url) {
@@ -767,106 +747,60 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     rv = GetMessageServiceFromURI(url, &messageService);
     if (NS_FAILED(rv)) goto done;
 
-    if (asFile)
-    {
-        rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull,
-                                                NS_GET_IID(nsIFileWidget),
-                                                getter_AddRefs(fileWidget));
+    if (asFile) {
+
+        nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
         if (NS_FAILED(rv)) goto done;
 
-        promptString = GetString(NS_ConvertASCIItoUCS2("SaveMailAs").GetUnicode());
-            
-        titles = new nsString[3];
-        if (!titles)
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
-        filters = new nsString[3];
-        if (!filters)
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
-        nextTitle = titles;
-        nextFilter = filters;
-        // The names of the file types are localizable
-        fileWidget->SetDefaultString(NS_ConvertASCIItoUCS2(defaultFile));
+        filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").GetUnicode()), nsIFilePicker::modeSave);
 
-        HTMLFiles = GetString(NS_ConvertASCIItoUCS2("HTMLFiles").GetUnicode());
-        TextFiles = GetString(NS_ConvertASCIItoUCS2("TextFiles").GetUnicode());
-        if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
-            goto SkipFilters;
-        
-        *nextTitle++ = GetString(NS_ConvertASCIItoUCS2("EMLFiles").GetUnicode());
-        (*nextFilter++).AssignWithConversion("*.eml");
-        *nextTitle++ = HTMLFiles;
-        (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
-        *nextTitle++ = TextFiles;
-        (*nextFilter++).AssignWithConversion("*.txt");
-        fileWidget->SetFilterList(3, titles, filters);              
-            
-    SkipFilters:
+        filePicker->SetDefaultString(defaultFile.GetUnicode());
+        filePicker->AppendFilter(GetString(NS_ConvertASCIItoUCS2("EMLFiles").GetUnicode()),
+                                 NS_ConvertASCIItoUCS2("*.eml").GetUnicode());
+        filePicker->AppendFilters(nsIFilePicker::filterHTML | nsIFilePicker::filterText | nsIFilePicker::filterAll);
 
-        dialogResult = fileWidget->PutFile(nsnull, promptString, tFileSpec);
-        delete [] titles;
-        delete [] filters;
-        
-        if (dialogResult == nsFileDlgResults_Cancel)
+        PRInt16 dialogResult;
+        filePicker->Show(&dialogResult);
+
+        if (dialogResult == nsIFilePicker::returnCancel)
             goto done;
             
-        rv = fileWidget->GetFile(fileSpec);
+        nsCOMPtr<nsILocalFile> localFile;
+        rv = filePicker->GetFile(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) goto done;
             
-        fileName = fileSpec.GetLeafName();
-        tmpFilenameString = fileName;
-        
-        nsCRT::free(fileName);
+        nsXPIDLCString tmpFileName;
+        rv = localFile->GetLeafName(getter_Copies(tmpFileName));
+        if (NS_FAILED(rv)) goto done;
+        nsCAutoString fileName(tmpFileName);
             
         // First, check if they put ANY extension on the file, if not,
         // then we should look at the type of file they have chosen and
         // tack on the file extension for them.
         //
-        if (tmpFilenameString.RFind(".", PR_TRUE) == -1)
+        if (fileName.RFind(".", PR_TRUE) != -1)
         {
-            fileWidget->GetSelectedType(saveAsFileType);
-            switch (saveAsFileType) {
-            case  2:
-                extString = ".html";
-                break;
-            case  3:
-                extString = ".txt";
-                break;
-            default:
-            case  1: 
-                extString = ".eml";
-                break;
-            }
-  
-            // Doing this since the GetSelectedType() is not zero
-            // relative
-            saveAsFileType--;
-            
-            // No append the extension and create the output stream
-            tmpFilenameString.Append(extString);
-            fileSpec.SetLeafName(tmpFilenameString.GetBuffer());
-            rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
-        }
-        else
-        {
-            if (tmpFilenameString.RFind(".htm", PR_TRUE) != -1)
+            if (fileName.RFind(".htm", PR_TRUE) != -1)
                 saveAsFileType = 1;
-            else if (tmpFilenameString.RFind(".txt", PR_TRUE) != -1)
+            else if (fileName.RFind(".txt", PR_TRUE) != -1)
                 saveAsFileType = 2;
             else
                 saveAsFileType = 0;   // .eml type
-            
-            rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
+        } else {
+            saveAsFileType = 0; // .eml type
         }
-          
-        if (NS_FAILED(rv)) goto done;
 
-        aListener = new nsSaveAsListener(aSpec, this);
+
+        // XXX argh!  converting from nsILocalFile to nsFileSpec ... oh baby, lets drop from unicode to ascii too
+        //        nsXPIDLString path;
+        //        localFile->GetUnicodePath(getter_Copies(path));
+        nsXPIDLCString path;
+        localFile->GetPath(getter_Copies(path));
+        nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("component://netscape/filespec", &rv);
+        if (NS_FAILED(rv)) goto done;
+        fileSpec->SetNativePath(path);
+
+        aListener = new nsSaveAsListener(fileSpec, this);
         if (!aListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
@@ -881,7 +815,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         switch (saveAsFileType) {
         case 0:
         default:
-            rv = messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
+            rv = messageService->SaveMessageToDisk(url, fileSpec, PR_TRUE,
                                                    urlListener, nsnull,
                                                    PR_FALSE, mMsgWindow);
             break;
@@ -932,15 +866,17 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                                 nsnull, nsnull, nsnull);
             break;
         }
+
     }
     else
-    { 
+    {
         // ** save as Template
-        fileSpec = "nsmail.tmp";
-        rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
+        nsCOMPtr<nsIFileSpec> fileSpec;
+        nsFileSpec tmpFileSpec = "nsmail.tmp";
+        rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
 
-        aListener = new nsSaveAsListener(aSpec, this);
+        aListener = new nsSaveAsListener(fileSpec, this);
         if (!aListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
@@ -949,8 +885,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         NS_ADDREF(aListener);
 
         if (identity)
-            rv = identity->GetStationeryFolder(
-                                               getter_Copies(aListener->m_templateUri));
+            rv = identity->GetStationeryFolder(getter_Copies(aListener->m_templateUri));
         if (NS_FAILED(rv)) goto done;
 
         needDummyHeader =
@@ -964,7 +899,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                        getter_AddRefs(urlListener));
         if (NS_FAILED(rv)) goto done;
 
-        rv = messageService->SaveMessageToDisk(url, aSpec, 
+        rv = messageService->SaveMessageToDisk(url, fileSpec, 
                                                needDummyHeader,
                                                urlListener, nsnull,
                                                canonicalLineEnding, mMsgWindow); 

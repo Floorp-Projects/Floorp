@@ -126,7 +126,7 @@ function PrefNavSelectFile(prefID) {
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     /* XXX    no title here */
     fp.init(window, "", nsIFilePicker.modeOpen);
-    fp.setFilters(nsIFilePicker.filterAll);
+    fp.appendFilters(nsIFilePicker.filterAll);
     fp.show();
     var field = document.getElementById(prefID);
     field.setAttribute("value", fp.file.unicodePath);
@@ -139,7 +139,7 @@ function PrefCacheSelectFolder() {
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     /* XXX    no title here */
     fp.init(window, "", nsIFilePicker.modeGetFolder);
-    fp.setFilters(nsIFilePicker.filterAll);
+    fp.appendFilters(nsIFilePicker.filterAll);
     fp.show();
     var field = document.getElementById("pref:string:browser.cache.directory");
     field.setAttribute("value", fp.file.unicodePath);

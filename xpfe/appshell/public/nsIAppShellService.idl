@@ -133,6 +133,15 @@ interface nsIAppShellService : nsISupports
   void GetHiddenWindow(out nsIXULWindow aResult);
 
   /**
+   * Return the (singleton) application hidden window, automatically created
+   * and maintained by this AppShellService.
+   * @param aResult the hidden window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
+  nsIDOMWindow getHiddenDOMWindow();
+
+
+  /**
    * Return the (singleton) application hidden window as an nsIDOMWindow,
    * and, the corresponding JavaScript context pointer.  This is useful
    * if you'd like to subsequently call OpenDialog on the hidden window.

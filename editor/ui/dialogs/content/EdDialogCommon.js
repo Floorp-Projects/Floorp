@@ -735,10 +735,10 @@ function GetLocalFileURL(filterType)
   fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
   if (filterType == "img")
-    fp.setFilters(nsIFilePicker.filterImages);
+    fp.appendFilters(nsIFilePicker.filterImages);
   else
     // While we allow "All", include filters that prefer HTML and Text files
-    fp.setFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+    fp.appendFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
   
   /* doesn't handle *.shtml files */
   try {

@@ -171,7 +171,7 @@ var nsOpenCommand =
     fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
     // While we include "All", include filters that prefer HTML and Text files
-    fp.setFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+    fp.appendFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
   
     /* doesn't handle *.shtml files */
     try {
