@@ -52,6 +52,9 @@
 
             // Fill dialog.
             loadDialog();
+
+            // Commence.
+            data.execute.setAttribute("command","start");
         }
 
         function stop() {
@@ -195,7 +198,7 @@
 
         <html:tr>
             <html:td align="center" colspan="2">
-                <html:button id="dialog.cancel" onclick="stop()" disabled>Cancel</html:button>
+                <html:button id="dialog.cancel" onclick="stop()" disabled="">Cancel</html:button>
             </html:td>
         </html:tr>
 
