@@ -20,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: make-data.pl,v 1.5 1999/11/17 23:02:53 waterson%netscape.com Exp $
+# $Id: make-data.pl,v 1.6 1999/11/18 06:06:28 waterson%netscape.com Exp $
 #
 
 #
@@ -69,6 +69,7 @@ sub ForkAndWait($$$) {
         }
 
         kill("TERM", $pid);
+        POSIX::waitpid($pid, 0);
         return -1;
     }
     else {
