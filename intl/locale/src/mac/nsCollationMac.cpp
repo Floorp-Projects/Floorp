@@ -39,6 +39,7 @@ static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
