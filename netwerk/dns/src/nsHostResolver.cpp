@@ -56,19 +56,20 @@
 #include "prcvar.h"
 #include "prtime.h"
 #include "prlong.h"
+#include "prlog.h"
 #include "pldhash.h"
 #include "plstr.h"
 
 //----------------------------------------------------------------------------
 
 #define MAX_THREADS 8
-#define THREAD_IDLE_TIMEOUT PR_SecondsToInterval(5)
+#define IDLE_TIMEOUT PR_SecondsToInterval(5)
 
 //----------------------------------------------------------------------------
 
-//#define DEBUG_HOST_RESOLVER
-#ifdef DEBUG_HOST_RESOLVER
-#define LOG(args) printf args
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gHostResolverLog = nsnull;
+#define LOG(args) PR_LOG(gHostResolverLog, PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
 #endif
@@ -159,6 +160,7 @@ nsHostRecord::Create(const char *host, nsHostRecord **result)
     rec->addrinfo = nsnull;
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
+    rec->resolving = PR_FALSE;
     PR_INIT_CLIST(rec);
     PR_INIT_CLIST(&rec->callbacks);
     memcpy(rec->host, host, hostLen);
@@ -212,7 +214,7 @@ HostDB_ClearEntry(PLDHashTable *table,
                   PLDHashEntryHdr *entry)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-#ifdef DEBUG_HOST_RESOLVER
+#if defined(PR_LOGGING)
     if (!he->rec->addrinfo)
         LOG(("%s: => no addrinfo\n", he->rec->host));
     else {
@@ -351,6 +353,8 @@ nsHostResolver::ResolveHost(const char            *host,
 {
     NS_ENSURE_TRUE(host && *host, NS_ERROR_UNEXPECTED);
 
+    LOG(("nsHostResolver::ResolveHost [host=%s]\n", host));
+
     // if result is set inside the lock, then we need to issue the
     // callback before returning.
     nsRefPtr<nsHostRecord> result;
@@ -377,7 +381,6 @@ nsHostResolver::ResolveHost(const char            *host,
             // if the record is null, then HostDB_InitEntry failed.
             if (!he || !he->rec)
                 rv = NS_ERROR_OUT_OF_MEMORY;
-
             // do we have a cached result that we can reuse?
             else if (!bypassCache &&
                      he->rec->HasResult() &&
@@ -385,7 +388,6 @@ nsHostResolver::ResolveHost(const char            *host,
                 // put reference to host record on stack...
                 result = he->rec;
             }
-
             // try parsing the host name as an IP address literal to short
             // circuit full host resolution.  (this is necessary on some
             // platforms like Win9x.  see bug 219376 for more details.)
@@ -400,16 +402,12 @@ nsHostResolver::ResolveHost(const char            *host,
                 // put reference to host record on stack...
                 result = he->rec;
             }
-
             // otherwise, hit the resolver...
             else {
-                PRBool doLookup = PR_CLIST_IS_EMPTY(&he->rec->callbacks);
-
                 // add callback to the list of pending callbacks
                 PR_APPEND_LINK(callback, &he->rec->callbacks);
 
-                nsresult rv = NS_OK;
-                if (doLookup) {
+                if (!he->rec->resolving) {
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
@@ -456,6 +454,8 @@ nsHostResolver::DetachCallback(const char            *host,
 nsresult
 nsHostResolver::IssueLookup(nsHostRecord *rec)
 {
+    NS_ASSERTION(!rec->resolving, "record is already being resolved"); 
+
     // add rec to mPendingQ, possibly removing it from mEvictionQ.
     // if rec is on mEvictionQ, then we can just move the owning
     // reference over to mPendingQ.
@@ -466,6 +466,7 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
         mEvictionQSize--;
     }
     PR_APPEND_LINK(rec, &mPendingQ);
+    rec->resolving = PR_TRUE;
 
     if (mHaveIdleThread) {
         // wake up idle thread to process this lookup
@@ -497,11 +498,26 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 {
     nsAutoLock lock(mLock);
 
+    PRIntervalTime start = PR_IntervalNow(), timeout = IDLE_TIMEOUT;
+    //
+    // wait for one or more of the following to occur:
+    //  (1) the pending queue has a host record to process
+    //  (2) the shutdown flag has been set
+    //  (3) the thread has been idle for too long
+    //
+    // PR_WaitCondVar will return when any of these conditions is true.
+    //
     while (PR_CLIST_IS_EMPTY(&mPendingQ) && !mHaveIdleThread && !mShutdown) {
         // become the idle thread and wait for a lookup
         mHaveIdleThread = PR_TRUE;
-        PR_WaitCondVar(mIdleThreadCV, THREAD_IDLE_TIMEOUT);
+        PR_WaitCondVar(mIdleThreadCV, timeout);
         mHaveIdleThread = PR_FALSE;
+
+        PRIntervalTime delta = PR_IntervalNow() - start;
+        if (delta >= timeout)
+            break;
+        timeout -= delta;
+        start += delta;
     }
 
     if (!PR_CLIST_IS_EMPTY(&mPendingQ)) {
@@ -532,6 +548,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         // update record fields
         rec->addrinfo = result;
         rec->expiration = NowInMinutes() + mMaxCacheLifetime;
+        rec->resolving = PR_FALSE;
         
         if (rec->addrinfo) {
             // add to mEvictionQ
@@ -570,6 +587,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
 void PR_CALLBACK
 nsHostResolver::ThreadFunc(void *arg)
 {
+    LOG(("nsHostResolver::ThreadFunc entering\n"));
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
@@ -578,7 +596,7 @@ nsHostResolver::ThreadFunc(void *arg)
     nsHostRecord *rec;
     PRAddrInfo *ai;
     while (resolver->GetHostToLookup(&rec)) {
-        LOG(("[%p] resolving %s ...\n", (void*)PR_GetCurrentThread(), rec->host));
+        LOG(("resolving %s ...\n", rec->host));
         ai = PR_GetAddrInfoByName(rec->host, PR_AF_UNSPEC, PR_AI_ADDRCONFIG);
 #if defined(RES_RETRY_ON_FAILURE)
         if (!ai && rs.Reset())
@@ -589,6 +607,7 @@ nsHostResolver::ThreadFunc(void *arg)
         resolver->OnLookupComplete(rec, status, ai);
     }
     NS_RELEASE(resolver);
+    LOG(("nsHostResolver::ThreadFunc exiting\n"));
 }
 
 //----------------------------------------------------------------------------
@@ -598,6 +617,11 @@ nsHostResolver::Create(PRUint32         maxCacheEntries,
                        PRUint32         maxCacheLifetime,
                        nsHostResolver **result)
 {
+#if defined(PR_LOGGING)
+    if (!gHostResolverLog)
+        gHostResolverLog = PR_NewLogModule("nsHostResolver");
+#endif
+
     nsHostResolver *res = new nsHostResolver(maxCacheEntries,
                                              maxCacheLifetime);
     if (!res)
