@@ -317,11 +317,11 @@
 
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "Upraviť">
-<!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
-<!ENTITY calendar.maintoolbar.name                    "Moja lišta">
-<!ENTITY calendar.maintoolbar.accesskey               "M">
+<!ENTITY calendar.context.customize.accesskey         "u">
+<!ENTITY calendar.menu.customize.label                "Upraviť panely nástrojov">
+<!ENTITY calendar.menu.customize.accesskey            "p">
+<!ENTITY calendar.maintoolbar.name                    "Môj panel nástrojov">
+<!ENTITY calendar.maintoolbar.accesskey               "m">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nová udalosť">
@@ -397,7 +397,7 @@
 <!ENTITY calendar.about.tab   "O aplikácii">
 
 <!ENTITY throbber.tooltip "Prejsť na domovskú stránku">
-<!ENTITY menuBar.tooltip "Lišta menu">
+<!ENTITY menuBar.tooltip "Panel menu">
 <!ENTITY navigationToolbar.tooltip "Navigačný panel">
 
 

@@ -108,6 +108,6 @@
 <!ENTITY more.label "TÖBB" >
 <!ENTITY less.label "KEVESEBB" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Hozzáadás">
+<!ENTITY edit.label    "Szerkesztés">
+<!ENTITY remove.label  "Eltávolítás">

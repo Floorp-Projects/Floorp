@@ -106,6 +106,6 @@
 <!ENTITY more.label "VIAC" >
 <!ENTITY less.label "MENEJ" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Pridať">
+<!ENTITY edit.label    "Upraviť">
+<!ENTITY remove.label  "Zmazať">
