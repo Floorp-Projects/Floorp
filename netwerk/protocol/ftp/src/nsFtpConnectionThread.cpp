@@ -1382,8 +1382,16 @@ nsFtpState::R_retr() {
         return FTP_COMPLETE;
     }
 
-    if (mResponseCode/100 == 1) 
-         return FTP_READ_BUF;
+    if (mResponseCode/100 == 1) {
+        // We're going to grab a file, not a directory. So we need to clear
+        // any cache entry, otherwise we'll have problems reading it later.
+        // See bug 122548
+        if (mCacheEntry) {
+            (void)mCacheEntry->Doom();
+            mCacheEntry = nsnull;
+        }
+        return FTP_READ_BUF;
+    }
     
     // These error codes are related to problems with the connection.  
     // If we encounter any at this point, do not try CWD and abort.
@@ -1826,7 +1834,9 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         nsCacheAccessMode access;
         mCacheEntry->GetAccessGranted(&access);
         if (access & nsICache::ACCESS_READ) {
-            
+            // XXX - all this code assumes that we only cache directories
+            // If we start caching files, this needs to be updated
+
             // make sure the channel knows wassup
             SetContentType();
             
