@@ -43,8 +43,7 @@ interface nsILoadGroup;
   "component://netscape/content-viewer-factory/"
 %}
 
-
-[scriptable, uuid(f43ba260-0737-11d2-beb9-00805f8a66dc)]
+[scriptable, uuid(df15f850-5d98-11d4-9f4d-0010a4053fd0)]
 interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstance(in string aCommand,
                               in nsIChannel aChannel,
