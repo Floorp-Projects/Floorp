@@ -34,7 +34,13 @@
 #include <Gestalt.h>
 #endif
 
-// Converts a Latin-1 String to a MacRoman one in place
+
+//------------------------------------------------------------------------
+//	ConvertLatin1ToMacRoman
+//
+//		Utility function: converts a Latin-1 String to a MacRoman one in place
+//------------------------------------------------------------------------
+
 static void ConvertLatin1ToMacRoman( char* aString)
 {
 	char* location = aString;
@@ -56,21 +62,28 @@ static void ConvertLatin1ToMacRoman( char* aString)
 		location++;
 	}
 }
-//------------------------------------------------------------------------
 
+#pragma mark -
+
+
+//------------------------------------------------------------------------
+//	GraphicState and DrawingSurface
+//
+//		Internal classes
+//------------------------------------------------------------------------
 
 class GraphicState
 {
 public:
   GraphicState();
+  GraphicState(GraphicState* aGS);
   ~GraphicState();
 
 	void				Clear();
 	void				Init(nsDrawingSurface aSurface);
+	void				Init(GrafPtr aPort);
 	void				Init(nsIWidget* aWindow);
-	void				Set(nsDrawingSurface aSurface);
-	void				Set(nsIWidget* aWindow);
-	void				Duplicate(GraphicState* aGS);
+	void				Duplicate(GraphicState* aGS);	// would you prefer an '=' operator?
 
 protected:
 	RgnHandle		DuplicateRgn(RgnHandle aRgn);
@@ -85,7 +98,6 @@ public:
 public:
   nsTransform2D * 			mTMatrix; 					// transform that all the graphics drawn here will obey
 
-  nsDrawingSurfaceMac   mRenderingSurface;	// main drawing surface, can be a BackBuffer if selected in
 	PRInt32               mOffx;
   PRInt32               mOffy;
 
@@ -98,11 +110,41 @@ public:
 	PRInt32               mCurrFontHandle;
 };
 
+
+
+class DrawingSurface
+{
+public:
+	DrawingSurface();
+	~DrawingSurface();
+
+	void						Init(nsDrawingSurface aSurface);
+	void						Init(GrafPtr aPort);
+	void						Init(nsIWidget* aWindow);
+	void						Clear();
+
+	GrafPtr					GetPort()   		{return mPort;}
+	GraphicState*		GetGS()     		{return mGS;}
+
+protected:
+	GrafPtr					mPort;
+	GraphicState*		mGS;
+};
+
+
 //------------------------------------------------------------------------
 
 GraphicState::GraphicState()
 {
 	// everything is initialized to 0 through the 'new' operator
+}
+
+
+//------------------------------------------------------------------------
+
+GraphicState::GraphicState(GraphicState* aGS)
+{
+	this->Duplicate(aGS);
 }
 
 //------------------------------------------------------------------------
@@ -135,30 +177,41 @@ void GraphicState::Clear()
 	}
 
   NS_IF_RELEASE(mFontMetrics);
+
+  mOffx						= 0;
+  mOffy						= 0;
+  mColor 					= NS_RGB(255,255,255);
+	mFont						= 0;
+  mFontMetrics		= nsnull;
+  mCurrFontHandle	= 0;
 }
 
 //------------------------------------------------------------------------
 
 void GraphicState::Init(nsDrawingSurface aSurface)
 {
+	// retrieve the grafPort
+	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	GrafPtr port = surface->GetPort();
+
+	// init from grafPort
+	Init(port);
+}
+
+//------------------------------------------------------------------------
+
+void GraphicState::Init(GrafPtr aPort)
+{
 	// delete old values
 	Clear();
 
-	// set the new ones
-  mTMatrix				= nsnull;
+	// init from grafPort (usually an offscreen port)
+	RgnHandle	rgn = ::NewRgn();
+  ::RectRgn(rgn, &aPort->portRect);
 
-  mRenderingSurface	= (nsDrawingSurfaceMac)aSurface; 
-  mOffx						= 0;
-  mOffy						= 0;
+  mMainRegion			= rgn;
+  mClipRegion			= DuplicateRgn(rgn);
 
-  mMainRegion			= ::NewRgn();
-  ::RectRgn(mMainRegion, &((nsDrawingSurfaceMac)aSurface)->portRect);
-  mClipRegion			= DuplicateRgn(mMainRegion);
-
-  mColor 					= NS_RGB(255,255,255);
-	mFont						= 0;
-  mFontMetrics		= nsnull;
-  mCurrFontHandle	= 0;
 }
 
 //------------------------------------------------------------------------
@@ -168,44 +221,13 @@ void GraphicState::Init(nsIWidget* aWindow)
 	// delete old values
 	Clear();
 
-	// set the new ones
-	mTMatrix				= nsnull;
-
-  mRenderingSurface	= (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY); 
+	// init from widget
   mOffx						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETX);
   mOffy						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
 
 	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
 	mMainRegion			= DuplicateRgn(widgetRgn);
   mClipRegion			= DuplicateRgn(widgetRgn);
-
-  mColor 					= NS_RGB(255,255,255);
-	mFont						= 0;
-  mFontMetrics		= nsnull;
-  mCurrFontHandle	= 0;
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Set(nsDrawingSurface aSurface)
-{
-  mRenderingSurface	= (nsDrawingSurfaceMac)aSurface; 
-  mOffx						= 0;
-  mOffy						= 0;
-
-  ::RectRgn(mMainRegion, &((nsDrawingSurfaceMac)aSurface)->portRect);
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Set(nsIWidget* aWindow)
-{
-  mRenderingSurface	= (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY); 
-  mOffx						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETX);
-  mOffy						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
-
-	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
-	::CopyRgn(widgetRgn, mMainRegion);
 }
 
 //------------------------------------------------------------------------
@@ -221,7 +243,6 @@ void GraphicState::Duplicate(GraphicState* aGS)
 	else
 		mTMatrix = nsnull;
 
-	mRenderingSurface = aGS->mRenderingSurface;
 	mOffx						= aGS->mOffx;
 	mOffy						= aGS->mOffy;
 
@@ -256,6 +277,51 @@ RgnHandle GraphicState::DuplicateRgn(RgnHandle aRgn)
 
 #pragma mark -
 
+
+DrawingSurface::DrawingSurface()
+{
+	mPort = nsnull;
+	mGS = new GraphicState();
+}
+
+DrawingSurface::~DrawingSurface()
+{
+	Clear();
+}
+
+void DrawingSurface::Clear()
+{
+	if (mGS)
+	{
+		delete mGS;
+		mGS = nsnull;
+	}
+}
+
+void DrawingSurface::Init(nsDrawingSurface aSurface)
+{
+	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	mPort = surface->GetPort();
+	mGS->Init(surface);
+}
+
+void DrawingSurface::Init(GrafPtr aPort)
+{
+  mPort = aPort;
+  mGS->Init(aPort);
+}
+
+void DrawingSurface::Init(nsIWidget* aWindow)
+{
+  mPort = static_cast<GrafPtr>(aWindow->GetNativeData(NS_NATIVE_DISPLAY));
+  mGS->Init(aWindow);
+}
+
+
+//------------------------------------------------------------------------
+
+#pragma mark -
+
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
 nsRenderingContextMac::nsRenderingContextMac()
@@ -265,13 +331,13 @@ nsRenderingContextMac::nsRenderingContextMac()
   mP2T							= 1.0f;
   mContext					= nsnull ;
 
-  mOriginalSurface	= nsnull;
-  mFrontBuffer			= nsnull;
-  mCurrentBuffer		= nsnull;
+  mOriginalSurface	= new DrawingSurface();
+  mFrontSurface			= new DrawingSurface();
 
+	mCurrentSurface		= nsnull;
+  mPort							= nsnull;
 	mGS								= nsnull;
-  mGSArray					= new nsVoidArray();
-	mSurfaceArray			= new nsVoidArray();
+
   mGSStack					= new nsVoidArray();
 }
 
@@ -280,27 +346,31 @@ nsRenderingContextMac::nsRenderingContextMac()
 
 nsRenderingContextMac::~nsRenderingContextMac()
 {
-	// delete the surface array
-	if (mSurfaceArray)
-	{
-	  delete mSurfaceArray;
-	  mSurfaceArray = nsnull;
+	// restore stuff
+  NS_IF_RELEASE(mContext);
+  if (mOriginalSurface)
+  {
+		::SetPort(mOriginalSurface->GetPort());
+		::SetOrigin(0,0); 		//¥TODO? Setting to 0,0 may not really reset the state properly.
+													// Maybe we should also restore the GS from mOriginalSurface.
 	}
 
-	// delete the GS array and its contents
-	if (mGSArray)
+	// delete surfaces
+	if (mOriginalSurface)
 	{
-	  PRInt32 cnt = mGSArray->Count();
-	  for (PRInt32 i = 0; i < cnt; i ++)
-	  {
-	    GraphicState* gs = (GraphicState*)mGSArray->ElementAt(i);
-    	if (gs)
-    		delete gs;
-	  }
-	  delete mGSArray;
-	  mGSArray = nsnull;
+		delete mOriginalSurface;
+		mOriginalSurface = nsnull;
 	}
 
+	if (mFrontSurface)
+	{
+		delete mFrontSurface;
+		mFrontSurface = nsnull;
+	}
+
+	mCurrentSurface = nsnull;
+	mPort = nsnull;
+	mGS = nsnull;
 
 	// delete the stack and its contents
 	if (mGSStack)
@@ -315,12 +385,6 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	  delete mGSStack;
 	  mGSStack = nsnull;
 	}
-
-	// restore stuff
-  NS_IF_RELEASE(mContext);
-  if (mOriginalSurface)
-		::SetPort(mOriginalSurface);
-	::SetOrigin(0,0); 		//¥TODO? setting to 0,0 may not really reset the state properly
 }
 
 
@@ -339,37 +403,21 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
   mContext = aContext;
   NS_IF_ADDREF(mContext);
  
-	// look if that surface is already in the array
-  nsDrawingSurfaceMac widgetSurface	= (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY); 
-	PRInt32 index = mSurfaceArray->IndexOf((void*)widgetSurface);
+	if (mOriginalSurface->GetPort() == nsnull)
+		mOriginalSurface->Init(aWindow);
 
-	// if not, it needs a graphic state
-	GraphicState* gs;
-	if (index < 0)
-	{
-		// create graphic state and use widget to initialize it
-		gs = new GraphicState();
-		gs->Init(aWindow);
+ 	// select the surface
+	mFrontSurface->Init(aWindow);
+	SelectDrawingSurface(mFrontSurface);
 
-		// add new GS to the arrays
-		mSurfaceArray->AppendElement((void*)widgetSurface);
-		mGSArray->AppendElement((void*)gs);
-	}
-	else
-	{
-		// use widget to upate the graphic state
-		gs = (GraphicState*)mGSArray->ElementAt(index);
-		gs->Set(aWindow);
-	}
-
-	// clip out the children
-	RgnHandle myRgn = ::NewRgn();
-	RgnHandle childRgn = ::NewRgn();
-	::CopyRgn(gs->mMainRegion, myRgn);
-
+	// clip out the children from the GS main region
 	nsIEnumerator* children = aWindow->GetChildren();
   if (children)
 	{
+		RgnHandle myRgn = ::NewRgn();
+		RgnHandle childRgn = ::NewRgn();
+		::CopyRgn(mGS->mMainRegion, myRgn);
+
     nsIWidget* child;
 		children->First();
 		do
@@ -386,20 +434,14 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 		}
     while (NS_SUCCEEDED(children->Next()));			
 		delete children;
+
+		::CopyRgn(myRgn, mGS->mMainRegion);
+		::CopyRgn(myRgn, mGS->mClipRegion);
+		::DisposeRgn(myRgn);
+		::DisposeRgn(childRgn);
 	}
-	::CopyRgn(myRgn, gs->mMainRegion);
-	::CopyRgn(myRgn, gs->mClipRegion);
-	::DisposeRgn(myRgn);
-	::DisposeRgn(childRgn);
 
-	// select the surface
-	if (mOriginalSurface == nsnull)
-		mOriginalSurface = widgetSurface;
-	mFrontBuffer = widgetSurface;
-
-	SetQuickDrawEnvironment(gs, clipToMainRegion);
-
-  return (CommonInit());
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -409,47 +451,50 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
- 
-	// look if that surface is already in the array
-  nsDrawingSurfaceMac drawingSurface	= (nsDrawingSurfaceMac)aSurface; 
-	PRInt32 index = mSurfaceArray->IndexOf((void*)drawingSurface);
-
-	// if not, it needs a graphic state
-	GraphicState* gs;
-	if (index < 0)
-	{
-		// create graphic state and use surface to initialize it
-		gs = new GraphicState();
-		gs->Init(drawingSurface);
-
-		// add new GS to the arrays
-		mSurfaceArray->AppendElement((void*)drawingSurface);
-		mGSArray->AppendElement((void*)gs);
-	}
-	else
-	{
-		// use surface to upate the graphic state
-		gs = (GraphicState*)mGSArray->ElementAt(index);
-		gs->Set(drawingSurface);
-	}
+   
+	if (mOriginalSurface->GetPort() == nsnull)
+		mOriginalSurface->Init(aSurface);
 
 	// select the surface
-	if (mOriginalSurface == nsnull)
-		mOriginalSurface = drawingSurface;
-	mFrontBuffer = drawingSurface;	// note: we know it's not really a screen port but we have to act as if...
+	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	SelectDrawingSurface(surface);
 
-	SetQuickDrawEnvironment(gs, clipToMainRegion);
-
-  return (CommonInit());
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-
-NS_IMETHODIMP nsRenderingContextMac::CommonInit()
+void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 {
-  ((nsDeviceContextMac *)mContext)->SetDrawingSurface(mCurrentBuffer);
-  //((nsDeviceContextMac *)mContext)->InstallColormap();
+	if (! aSurface)
+		return;
+
+	mCurrentSurface = aSurface;
+	mPort	= aSurface->GetPort();
+	mGS		= aSurface->GetGS();
+
+	// quickdraw initialization
+  ::SetPort(mPort);
+
+  ::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
+
+	::SetClip(mGS->mClipRegion);							// ...does matter
+
+	::PenNormal();
+	::PenMode(patCopy);
+	::TextMode(srcOr);
+
+  this->SetColor(mGS->mColor);
+
+	if (mGS->mFontMetrics)
+		SetFont(mGS->mFontMetrics);
+
+
+	// GS and context initializations
+  ((nsDeviceContextMac *)mContext)->SetDrawingSurface(mPort);
+#if 0
+	((nsDeviceContextMac *)mContext)->InstallColormap();
+#endif
 
   mContext->GetDevUnitsToAppUnits(mP2T);
 
@@ -464,76 +509,6 @@ NS_IMETHODIMP nsRenderingContextMac::CommonInit()
 	  	mGS->mTMatrix->AddScale(app2dev, app2dev);
 		}
 	}
-
-  return NS_OK;
-}
-
-//------------------------------------------------------------------------
-
-void	nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac aSurface, GraphicState* aGraphicState)
-{
-	// retreive that surface in the array
-	PRInt32 index = mSurfaceArray->IndexOf((void*)aSurface);
-
-	// if it can't be found, assume that it was created from another
-	// rendering context, attach a GS to it and add it to the array
-	PRBool isNewGS = PR_FALSE;
-	GraphicState* gs;
-	if (index < 0)
-	{
-		isNewGS = PR_TRUE;
-		gs = new GraphicState();
-		gs->Init(aSurface);
-		mSurfaceArray->AppendElement((void*)aSurface);
-		mGSArray->AppendElement((void*)gs);
-		index = mSurfaceArray->Count() - 1;
-	}
-
-	// get/init the graphic state
-	if (aGraphicState == nsnull)
-	{
-		// called from SelectOffscreenDrawingSurface...
-		// no GS is specified, thus fetch in the array the one that corresponds to the surface
-		gs = (GraphicState*)mGSArray->ElementAt(index);
-	}
-	else
-	{
-		// called from PopState...
-		// we receive a GS, thus update the one we have in the array
-		gs = (GraphicState*)mGSArray->ElementAt(index);
-		gs->Duplicate(aGraphicState);
-	}
-
-	SetQuickDrawEnvironment(gs, clipToClipRegion);
-
-//	if (isNewGS)
-		CommonInit();
-}
-
-//------------------------------------------------------------------------
-
-void	nsRenderingContextMac::SetQuickDrawEnvironment(GraphicState* aGraphicState, ClipMethod clipMethod)
-{
-	mGS							= aGraphicState;
-	mCurrentBuffer	= mGS->mRenderingSurface;
-
-  ::SetPort(mCurrentBuffer);
-
-  ::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
-
-	if (clipMethod == clipToMainRegion)				// ...does matter
-		::SetClip(mGS->mMainRegion);
-	else
-		::SetClip(mGS->mClipRegion);
-
-	::PenNormal();
-	::PenMode(patCopy);
-	::TextMode(srcOr);
-
-  this->SetColor(mGS->mColor);
-
-	if (mGS->mFontMetrics)
-		SetFont(mGS->mFontMetrics);
 }
 
 
@@ -585,8 +560,9 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
     // get the GS from the stack
     GraphicState* gs = (GraphicState *)mGSStack->ElementAt(cnt - 1);
 
-		// tell the current surface to use the GS (it will make a copy of it)
-		SelectDrawingSurface(mCurrentBuffer, gs);
+		// copy the GS into the current one and tell the current surface to use it
+		mGS->Duplicate(gs);
+		SelectDrawingSurface(mCurrentSurface);
 
     // remove the GS object from the stack and delete it
     mGSStack->RemoveElementAt(cnt - 1);
@@ -601,18 +577,15 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 #pragma mark -
 //------------------------------------------------------------------------
 
+
 NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-  if (aSurface == nsnull)
-  {
-  	// get back to the screen port
-		SelectDrawingSurface(mFrontBuffer, nil);
-	}
+	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+
+  if (surface != nsnull)
+		SelectDrawingSurface(surface);				// select the offscreen surface...
   else
-  { 
-		// select the surface
-		SelectDrawingSurface((nsDrawingSurfaceMac)aSurface, nil);
-  }
+		SelectDrawingSurface(mFrontSurface);	// ...or get back to the window port
 
 	return NS_OK;
 }
@@ -624,6 +597,16 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
 {
+	// hack: shortcut to bypass empty frames
+	// or frames entirely recovered with other frames
+	if ((aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) == 0)
+		if (::EmptyRgn(mFrontSurface->GetGS()->mMainRegion))
+			return NS_OK;
+
+	// retrieve the surface
+	DrawingSurface* srcSurface = static_cast<DrawingSurface*>(aSrcSurf);
+	GrafPtr srcPort = srcSurface->GetPort();
+
 	// apply the selected transformations
   PRInt32	x = aSrcX;
   PRInt32	y = aSrcY;
@@ -648,59 +631,74 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 	    dstRect.x + dstRect.width, 
 	    dstRect.y + dstRect.height);
   
-	// get the destination port
-  nsDrawingSurfaceMac destPort;
+	// get the source clip region
+	RgnHandle clipRgn;
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+  	clipRgn = srcPort->clipRgn;
+  else
+  	clipRgn = nil;
+
+	// get the destination port and surface
+  GrafPtr destPort;
+	DrawingSurface* destSurface;
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
-    destPort = mCurrentBuffer;
+    destSurface	= mCurrentSurface;
+    destPort		= mPort;
     NS_ASSERTION((destPort != nsnull), "no back buffer");
   }
   else
   {
-    destPort = mFrontBuffer;
+    destSurface	= mFrontSurface;
+    destPort		= mFrontSurface->GetPort();
 	}
-	
-	// get the source clip region
-	RgnHandle clipRgn;
-  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-  	clipRgn = ((nsDrawingSurfaceMac)aSrcSurf)->clipRgn;
-  else
-  	clipRgn = nil;
 
-	// select the destination surface to set up the QuickDraw environment
-	nsDrawingSurfaceMac saveSurface = mCurrentBuffer;
-	if (destPort != mCurrentBuffer)
-		SelectDrawingSurface(destPort, nil);
+	// select the destination surface to set the colors
+	DrawingSurface* saveSurface = nsnull;
+	if (mCurrentSurface != destSurface)
+	{
+		saveSurface = mCurrentSurface;
+		SelectDrawingSurface(destSurface);
+	}
 
-	// make sure we are using the right colors for CopyBits
+	// set the right colors for CopyBits
   RGBColor foreColor;
+  Boolean changedForeColor = false;
   ::GetForeColor(&foreColor);
   if ((foreColor.red != 0x0000) || (foreColor.green != 0x0000) || (foreColor.blue != 0x0000))
   {
 	  RGBColor rgbBlack = {0x0000,0x0000,0x0000};
 		::RGBForeColor(&rgbBlack);
+		changedForeColor = true;
 	}
 
   RGBColor backColor;
+  Boolean changedBackColor = false;
   ::GetBackColor(&backColor);
   if ((backColor.red != 0xFFFF) || (backColor.green != 0xFFFF) || (backColor.blue != 0xFFFF))
   {
 	  RGBColor rgbWhite = {0xFFFF,0xFFFF,0xFFFF};
 		::RGBBackColor(&rgbWhite);
+		changedBackColor = true;
 	}
 
 	// copy the bits now
 	::CopyBits(
-		  &((GrafPtr)aSrcSurf)->portBits,
-		  &((GrafPtr)destPort)->portBits,
+		  &srcPort->portBits,
+		  &destPort->portBits,
 		  &macSrcRect,
 		  &macDstRect,
-		  ditherCopy,
+		  srcCopy,
 		  clipRgn);
 
-	// select back the original surface
-	if (saveSurface != mCurrentBuffer)
-		SelectDrawingSurface(saveSurface, nil);
+	// restore colors and surface
+	if (changedForeColor)
+		::RGBForeColor(&foreColor);
+	if (changedBackColor)
+			::RGBBackColor(&backColor);
+
+	if (saveSurface != nsnull)
+		SelectDrawingSurface(saveSurface);
 
   return NS_OK;
 }
@@ -715,18 +713,18 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
   	mContext->GetDepth(depth);
 
 	// get rect
-  Rect bounds;
+  Rect macRect;
   if (aBounds != nsnull)
   {
   	// fyi, aBounds->x and aBounds->y are always 0 here
-  	::SetRect(&bounds, aBounds->x, aBounds->y, aBounds->x + aBounds->width, aBounds->y + aBounds->height);
+  	::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
   }
   else
-  	::SetRect(&bounds, 0, 0, 2, 2);
+  	::SetRect(&macRect, 0, 0, 2, 2);
 
 	// create offscreen
   GWorldPtr offscreenGWorld;
-  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &bounds, nil, nil, 0);
+  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, 0);
   if (osErr != noErr)
   	return NS_ERROR_FAILURE;
 
@@ -735,20 +733,17 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
   ::LockPixels(::GetGWorldPixMap(offscreenGWorld));
 
 	// erase the offscreen area
-	CGrafPtr savePort;
-	GDHandle saveDevice;
-	::GetGWorld(&savePort, &saveDevice);
-		::SetGWorld(offscreenGWorld, nil);
-		::SetOrigin(bounds.left, bounds.top);
-		::EraseRect(&bounds);
-	::SetGWorld(savePort, saveDevice);
-  
-	// add the new surface and its corresponding GS to the arrays
-  aSurface = offscreenGWorld;
- 	GraphicState* gs = new GraphicState();					// create graphic state
-	gs->Init(aSurface);															// use surface to initialize the new graphic state
-	mSurfaceArray->AppendElement((void*)aSurface);	// add the new surface and GS to the arrays
-	mGSArray->AppendElement((void*)gs);
+	GrafPtr savePort;
+	::GetPort(&savePort);
+	::SetPort((GrafPtr)offscreenGWorld);
+	::EraseRect(&macRect);
+	::SetPort(savePort);
+
+	// return the offscreen surface
+	DrawingSurface* surface = new DrawingSurface();
+	surface->Init((GrafPtr)offscreenGWorld);
+ 
+	aSurface = surface;
 
   return NS_OK;
 }
@@ -757,29 +752,23 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
 
 NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aSurface)
 {
-	if (aSurface)
-	{
-		// if that surface is still the current one, select the screen buffer
-		if (aSurface == mCurrentBuffer)
-			SelectDrawingSurface(mFrontBuffer, nil);
+	if (!aSurface)
+  	return NS_ERROR_FAILURE;
 
-		// delete the offscreen
-		GWorldPtr offscreenGWorld = (GWorldPtr)aSurface;
-		::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
-		::DisposeGWorld(offscreenGWorld);
+	// if that surface is still the current one, select the front surface
 
-		// remove the surface and its corresponding GS from the arrays
-		PRInt32 index = mSurfaceArray->IndexOf((void*)aSurface);
-		if (index >= 0)
-		{
-			mSurfaceArray->RemoveElementAt(index);
+	if (aSurface == mCurrentSurface)
+		SelectDrawingSurface(mFrontSurface);
 
- 			GraphicState* gs = (GraphicState*)mGSArray->ElementAt(index);
- 			if (gs)
- 				delete gs;
-			mGSArray->RemoveElementAt(index);
-		}
-	}
+	// delete the offscreen
+	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+  GWorldPtr offscreenGWorld = (GWorldPtr)surface->GetPort();
+	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
+	::DisposeGWorld(offscreenGWorld);
+
+	// delete the surface
+	delete surface;
+
   return NS_OK;
 }
 
@@ -953,6 +942,8 @@ NS_IMETHODIMP nsRenderingContextMac :: GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextMac :: SetLineStyle(nsLineStyle aLineStyle)
 {
+	// note: the line style must be saved in the GraphicState like font, color, etc...
+	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::SetLineStyle");//¥TODO
   return NS_OK;
 }
 
@@ -960,6 +951,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetLineStyle(nsLineStyle aLineStyle)
 
 NS_IMETHODIMP nsRenderingContextMac :: GetLineStyle(nsLineStyle &aLineStyle)
 {
+	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::GetLineStyle");//¥TODO
   return NS_OK;
 }
 
@@ -1041,6 +1033,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoor
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::DrawPolyline");	//¥TODO
   return NS_OK;
 }
 
@@ -1682,8 +1675,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 		nsresult rv = DrawString(cStr, aLength, aX, aY, aWidth,aSpacing);
 
 		delete[] cStr;
-
-		 return rv;
+		return rv;
 	}
 }
 
@@ -1736,7 +1728,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect&
   mGS->mTMatrix->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
   mGS->mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
   
-  nsresult result =  aImage->Draw(*this,mCurrentBuffer,sr.x,sr.y,sr.width,sr.height,
+  nsresult result =  aImage->Draw(*this,mPort,sr.x,sr.y,sr.width,sr.height,
                       dr.x,dr.y,dr.width,dr.height);
 
 	EndDraw();
@@ -1752,7 +1744,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect&
   nsRect tr = aRect;
   mGS->mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
-	nsresult result = aImage->Draw(*this,mCurrentBuffer,tr.x,tr.y,tr.width,tr.height);
+	nsresult result = aImage->Draw(*this,mPort,tr.x,tr.y,tr.width,tr.height);
 
 	EndDraw();
 	return result;
