@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: PredicateList.cpp,v 1.3 2001/06/20 06:00:33 margaret.chan%sun.com Exp $
+ * $Id: PredicateList.cpp,v 1.4 2001/07/02 20:11:01 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -30,7 +30,7 @@
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2001/06/20 06:00:33 $
+ * @version $Revision: 1.4 $ $Date: 2001/07/02 20:11:01 $
 **/
 //-- PredicateList Implementation --/
 
@@ -122,14 +122,6 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs) {
 MBool PredicateList::isEmpty() {
     return (MBool)(predicates.getLength() == 0);
 } //-- isEmpty
-
-/**
- * Removes the given Expr from the list
- * @param expr the Expr to remove from the list
-**/
-Expr* PredicateList::remove(Expr* expr) {
-    return (Expr*)predicates.remove(expr);
-} //-- remove
 
 void PredicateList::toString(String& dest) {
 

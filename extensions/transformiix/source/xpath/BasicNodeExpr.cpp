@@ -21,25 +21,17 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BasicNodeExpr.cpp,v 1.5 2001/06/30 13:54:26 sicking%bigfoot.com Exp $
+ * $Id: BasicNodeExpr.cpp,v 1.6 2001/07/02 20:10:50 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/06/30 13:54:26 $
+ * @version $Revision: 1.6 $ $Date: 2001/07/02 20:10:50 $
 **/
 
 //- Constructors -/
-
-/**
- * Creates a new BasicNodeExpr, which matchs any Node
-**/
-BasicNodeExpr::BasicNodeExpr() {
-    this->type = NodeExpr::NODE_EXPR;
-    nodeNameSet = MB_FALSE;
-} //-- BasicNodeExpr
 
 /**
  * Creates a new BasicNodeExpr of the given type
@@ -48,11 +40,6 @@ BasicNodeExpr::BasicNodeExpr(NodeExpr::NodeExprType nodeExprType) {
     this->type = nodeExprType;
     nodeNameSet = MB_FALSE;
 } //-- BasicNodeExpr
-
-/**
- * Destroys this NodeExpr
-**/
-BasicNodeExpr::~BasicNodeExpr() {};
 
   //------------------/
  //- Public Methods -/
@@ -97,14 +84,6 @@ double BasicNodeExpr::getDefaultPriority(Node* node, Node* context,
         return 0;
     return -0.5;
 } //-- getDefaultPriority
-
-/**
- * Returns the type of this NodeExpr
- * @return the type of this NodeExpr
-**/
-short BasicNodeExpr::getType() {
-    return type;
-} //-- getType
 
 /**
  * Determines whether this NodeExpr matches the given node within

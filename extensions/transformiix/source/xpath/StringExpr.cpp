@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: StringExpr.cpp,v 1.3 2001/06/30 13:54:34 sicking%bigfoot.com Exp $
+ * $Id: StringExpr.cpp,v 1.4 2001/07/02 20:11:04 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -29,33 +29,16 @@
 /**
  * StringExpr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2001/06/30 13:54:34 $
+ * @version $Revision: 1.4 $ $Date: 2001/07/02 20:11:04 $
 **/
 
 /**
  * Creates a new StringExpr
 **/
-StringExpr::StringExpr() {};
-
-StringExpr::StringExpr(String& value) {
-    //-- copy value
-    this->value = value;
-} //-- StringExpr
-
 StringExpr::StringExpr(const String& value) {
     //-- copy value
     this->value.append(value);
 } //-- StringExpr
-
-StringExpr::StringExpr(const char* value) {
-    //-- copy value
-    this->value.append(value);
-} //-- StringExpr
-
-/**
- * Default Destructor
-**/
-StringExpr::~StringExpr() {};
 
 /**
  * Evaluates this Expr based on the given context node and processor state

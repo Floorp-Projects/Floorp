@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: UnionExpr.cpp,v 1.2 2001/06/30 13:54:35 sicking%bigfoot.com Exp $
+ * $Id: UnionExpr.cpp,v 1.3 2001/07/02 20:11:05 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -57,15 +57,6 @@ UnionExpr::~UnionExpr() {
 void UnionExpr::addExpr(Expr* expr) {
     if (expr)
       expressions.add(expr);
-} //-- addExpr
-
-/**
- * Adds the Expr to this UnionExpr
- * @param expr the Expr to add to this UnionExpr
-**/
-void UnionExpr::addExpr(int index, Expr* expr) {
-    if (expr)
-      expressions.insert(index, expr);
 } //-- addExpr
 
     //------------------------------------/

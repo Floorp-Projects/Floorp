@@ -20,11 +20,6 @@
 
 #include "Expr.h"
 
-UnaryExpr::UnaryExpr()
-{
-    expr = 0;
-}
-
 UnaryExpr::UnaryExpr(Expr* expr)
 {
     this->expr = expr;
@@ -33,12 +28,6 @@ UnaryExpr::UnaryExpr(Expr* expr)
 UnaryExpr::~UnaryExpr()
 {
     delete expr;
-}
-
-void UnaryExpr::setExpr(Expr* expr)
-{
-    delete this->expr;
-    this->expr = expr;
 }
 
 /*

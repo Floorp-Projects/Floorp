@@ -26,7 +26,7 @@
  *      - If the left hand was false, the right hand expression
  *        was not getting checked.
  *
- * $Id: BooleanExpr.cpp,v 1.2 2000/05/24 05:00:25 kvisco%ziplink.net Exp $
+ * $Id: BooleanExpr.cpp,v 1.3 2001/07/02 20:10:50 sicking%bigfoot.com Exp $
  */
 
 
@@ -34,19 +34,10 @@
  * Represents a BooleanExpr, a binary expression that
  * performs a boolean operation between it's lvalue and rvalue:<BR/>
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/05/24 05:00:25 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/02 20:10:50 $
 **/
 
 #include "Expr.h"
-
-/**
- * Creates a new BooleanExpr using the default operator (AND)
-**/
-BooleanExpr::BooleanExpr() {
-    this->op = AND;
-    this->leftExpr  = 0;
-    this->rightExpr = 0;
-} //-- BooleanExpr
 
 /**
  * Creates a new BooleanExpr using the given operator
@@ -61,20 +52,6 @@ BooleanExpr::~BooleanExpr() {
     delete leftExpr;
     delete rightExpr;
 } //-- ~BooleanExpr
-
-/**
- * Sets the left side of this AdditiveExpr
-**/
-void BooleanExpr::setLeftExpr(Expr* leftExpr) {
-    this->leftExpr = leftExpr;
-} //-- setLeftExpr
-
-/**
- * Sets the right side of this AdditiveExpr
-**/
-void BooleanExpr::setRightExpr(Expr* rightExpr) {
-    this->rightExpr = rightExpr;
-} //-- setRightExpr
 
 /**
  * Evaluates this Expr based on the given context node and processor state
