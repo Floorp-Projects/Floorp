@@ -1,3 +1,8 @@
+Changes since 1.0d8:
+
+1. Unescape file:// URLs when processing them. This allows us to launch local applets when there
+is a space in the pathname leading to the applet (i.e. "/Volume/Applet Folder/applet").
+
 Changes since 1.0d7:
 
 1. Added support for relative height and width. This fixes problems with apples failing to load
