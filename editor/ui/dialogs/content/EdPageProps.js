@@ -30,6 +30,7 @@ var insertNewDescription = false;
 var titleWasEdited = false;
 var authorWasEdited = false;
 var descWasEdited = false;
+var dialog;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
@@ -38,7 +39,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  var dialog = new Object;
+  dialog = new Object;
   if (!dialog)
   {
     dump("Failed to create dialog object!!!\n");
@@ -55,7 +56,7 @@ function Startup()
   //   so set only if not new doc URL
   var location = editorShell.editorDocument.location;
   var lastmodString = GetString("Unknown");
-dump("location="+location);
+
   if (location != "about:blank")
   {
     dialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
@@ -68,7 +69,6 @@ dump("location="+location);
       lastmodString = lastmoddate;
 
   }
-dump(", lastmod date="+lastmoddate+"\n");
   document.getElementById("PageModDate").setAttribute("value", lastmodString);
 
   authorElement = GetMetaElement("author");
