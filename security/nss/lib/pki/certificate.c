@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.14 $ $Date: 2001/11/08 20:46:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.15 $ $Date: 2001/11/15 23:06:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -175,7 +175,9 @@ get_cert_trust_handle
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_ATTRIBUTE tobj_template[] = {
 	{ CKA_CLASS,          NULL,   0 }, 
-	{ CKA_CERT_SHA1_HASH, NULL,   0 }
+	{ CKA_CERT_SHA1_HASH, NULL,   0 },
+	{ CKA_ISSUER, NULL,   0 },
+	{ CKA_SERIAL_NUMBER, NULL,   0 }
     };
     unsigned char sha1_hash[SHA1_LENGTH];
     tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
@@ -185,6 +187,13 @@ get_cert_trust_handle
     PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
     tobj_template[1].pValue = (CK_VOID_PTR)sha1_hash;
     tobj_template[1].ulValueLen = (CK_ULONG)SHA1_LENGTH;
+    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 2, &c->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 3, &c->serial);
+
+    /*
+     * we need to arrange for the built-in token to loose the bottom 2 
+     * attributes so that old built-in tokens will continue to work.
+     */
     return nssToken_FindObjectByTemplate(c->token, session,
                                          tobj_template, tobj_size);
 }
