@@ -93,7 +93,7 @@ var nsDragAndDrop = {
       
       var dragServiceIID = Components.interfaces.nsIDragService;
       this.mDragService.invokeDragSession(aEvent.target, transArray, null, 
-                                          dragServiceIID.DRAGDROP_ACTION_COPY + dragServiceIID.DRAGDROP_ACTION_MOVE);
+                                          dragServiceIID.DRAGDROP_ACTION_COPY + dragServiceIID.DRAGDROP_ACTION_MOVE + dragServiceIID.DRAGDROP_ACTION_LINK);
       aEvent.preventBubble();
     },
 
