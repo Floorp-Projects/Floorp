@@ -36,44 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsProperties.h"
-
-//#include <iostream.h>
+#include "nsString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-nsProperties::nsProperties(nsISupports* outer)
-{
-    NS_INIT_AGGREGATED(outer);
-}
-
-NS_METHOD
-nsProperties::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
-
-    nsProperties* props = new nsProperties(outer);
-    if (props == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = props->AggregatedQueryInterface(aIID, aResult);
-    if (NS_FAILED(rv))
-        delete props;
-    return rv;
-}
-
-PRBool PR_CALLBACK 
-nsProperties::ReleaseValues(nsHashKey* key, void* data, void* closure)
-{
-    nsISupports* value = (nsISupports*)data;
-    NS_IF_RELEASE(value);
-    return PR_TRUE;
-}
-
-nsProperties::~nsProperties()
-{
-    Enumerate(ReleaseValues);
-}
 
 NS_IMPL_AGGREGATED(nsProperties)
 
@@ -98,53 +63,106 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 {
-    nsresult rv;
-    nsCStringKey key(prop);
-    nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
-    if (value) {
-        rv = value->QueryInterface(uuid, result);
+    nsCOMPtr<nsISupports> value;
+    if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value))) {
+        return NS_ERROR_FAILURE;
     }
-    else {
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
+    return value->QueryInterface(uuid, result);
 }
 
 NS_IMETHODIMP
 nsProperties::Set(const char* prop, nsISupports* value)
 {
-    nsCStringKey key(prop);
-
-    nsISupports* prevValue = (nsISupports*)Put(&key, value);
-    NS_IF_RELEASE(prevValue);
-    NS_IF_ADDREF(value);
-    return NS_OK;
+    return Put(prop, value) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsProperties::Undefine(const char* prop)
 {
-    nsCStringKey key(prop);
-    if (!Exists(&key))
+    nsCOMPtr<nsISupports> value;
+    if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value)))
         return NS_ERROR_FAILURE;
 
-    nsISupports* prevValue = (nsISupports*)Remove(&key);
-    NS_IF_RELEASE(prevValue);
+    Remove(prop);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsProperties::Has(const char* prop, PRBool *result)
 {
-    nsCStringKey key(prop);
-    *result = nsHashtable::Exists(&key);
+    nsCOMPtr<nsISupports> value;
+    *result = nsProperties_HashBase::Get(prop,
+                                         getter_AddRefs(value));
     return NS_OK;
+}
+
+struct GetKeysEnumData
+{
+    char **keys;
+    PRUint32 next;
+    nsresult res;
+};
+
+PR_CALLBACK PLDHashOperator
+GetKeysEnumerate(const char *key, nsISupports* data,
+                 void *arg)
+{
+    GetKeysEnumData *gkedp = (GetKeysEnumData *)arg;
+    gkedp->keys[gkedp->next] = nsCRT::strdup(key);
+
+    if (!gkedp->keys[gkedp->next]) {
+        gkedp->res = NS_ERROR_OUT_OF_MEMORY;
+        return PL_DHASH_STOP;
+    }
+
+    gkedp->next++;
+    return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP 
 nsProperties::GetKeys(PRUint32 *count, char ***keys)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRUint32 n = Count();
+    char ** k = (char **) nsMemory::Alloc(n * sizeof(char *));
+    if (!k)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    GetKeysEnumData gked;
+    gked.keys = k;
+    gked.next = 0;
+    gked.res = NS_OK;
+
+    EnumerateRead(GetKeysEnumerate, &gked);
+
+    if (NS_FAILED(gked.res)) {
+        // Free 'em all
+        for (PRUint32 i = 0; i < gked.next; i++)
+            nsMemory::Free(k[i]);
+        nsMemory::Free(k);
+        return gked.res;
+    }
+
+    *count = n;
+    *keys = k;
+    return NS_OK;
+}
+
+NS_METHOD
+nsProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
+
+    nsProperties* props = new nsProperties(aOuter);
+    if (props == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(props);
+    nsresult rv = props->Init();
+    if (NS_SUCCEEDED(rv))
+        rv = props->AggregatedQueryInterface(aIID, aResult);
+
+    NS_RELEASE(props);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
