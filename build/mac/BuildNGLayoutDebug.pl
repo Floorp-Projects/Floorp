@@ -92,6 +92,7 @@ $build{editor} 			= 0;
 $build{viewer} 			= 0;
 $build{xpapp} 			= 0;
 $build{extensions} 		= 0;
+$build{plugins}			= 0;
 $build{mailnews} 		= 0;
 $build{apprunner}		= 0;
 $build{resources} 		= 0;
@@ -156,6 +157,7 @@ if ($build{most})
 	$build{viewer}		= 1;
 	$build{xpapp}		= 1;
 	$build{extensions} 	= 1;
+	$build{plugins}		= 1;
 	$build{mailnews}	= 1;
 	$build{apprunner} 	= 1;
 	$build{resources}	= 1;
