@@ -54,6 +54,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITheme.h"
+#include "imgIRequest.h"
 
 
 //------------------------------------------------------------
