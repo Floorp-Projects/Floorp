@@ -143,30 +143,27 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
         return rv;      // XXX translate error code?
     
     rv = GetFactoryFromModule(dll, aCID, _retval);
-    if (NS_FAILED(rv)) {
 #ifdef XPCOM_USE_NSGETFACTORY
+    if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_FACTORY_NOT_LOADED) {
             rv = GetFactoryFromNSGetFactory(dll, aCID, serviceMgr, _retval);
-            if (NS_SUCCEEDED(rv))
-                goto out;
         }
+    }
 #endif
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-               ("nsNativeComponentLoader: failed to get factory from "
-                "%s -> %s\n",
-                aLocation, dll->GetNativePath()));
-    }
+    PR_LOG(nsComponentManagerLog, (NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR),
+           ("nsNativeComponentLoader: Factory creation %s "
+            "%s -> %s\n", (NS_SUCCEEDED(rv) ? "passed" : "FAILED"),
+            aLocation, dll->GetNativePath()));
 
- out:
-    if (NS_FAILED(rv)) {
-        // remove the dll from the hashtable so future lookups don't
-        // return the deleted object.
-        nsStringKey key(aLocation);
-        mDllStore->Remove(&key);
-        PR_ASSERT(NULL == mDllStore->Get(&key));
-        rv = NS_ERROR_FACTORY_NOT_LOADED;
-        delete dll;
-    }
+    // If the dll failed to get us a factory. But the dll registered that
+    // it would be able to create a factory for this CID. mmh!
+    // We cannot just delete the dll as the dll could be hosting
+    // other CID for which factory creation can pass.
+    // We will just let it be. The effect will be next time we try
+    // creating the object, we will query the dll again. Since the
+    // dll is loaded, this aint a big hit. So for optimized builds
+    // this is ok to limp along.
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Factory creation failed");
     
     return rv;
 }
