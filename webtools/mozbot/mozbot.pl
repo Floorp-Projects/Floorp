@@ -93,7 +93,7 @@ my %rdfcmds = (
                "(mozillaorg|mozilla|mo)" => "http://www.mozilla.org/news.rdf",
                "(newsbot|nb)" => "http://www.mozilla.org/newsbot/newsbot.rdf",
                "(xptoolkit|xpfe)" => "http://www.mozilla.org/xpfe/toolkit.rdf",
-               "(freshmeat|fm)" => "http://freshmeat.net/files/freshmeat/fm.rdf",
+               "(freshmeat|fm)" => "http://freshmeat.net/backend/fm.rdf",
                "(mozillazine|zine|mz)" => "http://www.mozillazine.org/contents.rdf",
                );
 
