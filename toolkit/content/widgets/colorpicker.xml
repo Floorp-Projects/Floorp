@@ -167,7 +167,7 @@
             }
           }
           var cells = this.mBox.getElementsByAttribute("color", val);
-          if (cells.item(0)) {
+          if (cells.length > 0) {
             this.selectCell(cells[0]);
             this.hoverCell(this.mSelectedCell);
           }
@@ -469,6 +469,20 @@
               // watch out for syntax errors in the function code
             }
           }
+        ]]></body>
+      </method>
+      
+      <method name="getElementByanonid">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          var results;
+          for (var i = 0; i < nodes.length; i++) {
+            results = nodes[i].getElementsByAttribute("anonid", aValue);
+            if (results.length > 0)
+              return results[0];
+          }
+          return null;
         ]]></body>
       </method>
       

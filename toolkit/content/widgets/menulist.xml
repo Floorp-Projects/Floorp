@@ -24,23 +24,23 @@
     </content>
 
     <handlers>
-      <handler event="command" phase="capturing"
-        action="if (event.target.parentNode.parentNode == this) this.selectedItem = event.target;"/>
+      <handler event="command" phase="capturing">
+        <![CDATA[
+          // XXX see bug #196755
+          // originalTarget is workaround for arrowscrollbox retargeting bug
+          if (event.originalTarget.parentNode.parentNode == this)
+            this.selectedItem = event.originalTarget;
+        ]]>
+      </handler>
         
       <handler event="popupshowing">
         <![CDATA[
-          if (event.target.parentNode == this && this.selectedItem)
+          // XXX see bug #196755
+          // originalTarget is workaround for arrowscrollbox retargeting bug
+          if (event.originalTarget.parentNode == this && this.selectedItem)
             // Not ready for auto-setting the active child in hierarchies yet.
             // For now, only do this when the outermost menupopup opens.
             this.menuBoxObject.activeChild = this.selectedInternal;
-        ]]>
-      </handler>
-
-      <handler event="keypress" phase="target">
-        <![CDATA[
-          this.menuBoxObject.activeChild = this.selectedInternal;
-          if (this.menuBoxObject.handleKeyPress(event))
-            this.menuBoxObject.activeChild.doCommand();
         ]]>
       </handler>
     </handlers>
@@ -57,10 +57,10 @@
             if (popup) {
               var arr = popup.getElementsByAttribute('selected', 'true');
 
-              if (!arr.item(0) && this.value)
+              if (!arr.length && this.value)
                 arr = popup.getElementsByAttribute('value', this.value);
                 
-              if (arr.item(0))
+              if (arr.length)
                 this.selectedItem = arr[0];
               else
                 this.selectedIndex = 0;
@@ -77,7 +77,7 @@
             if (popup)
               arr = popup.getElementsByAttribute('value', val);
 
-            if (arr && arr.item(0))
+            if (arr && arr.length)
               this.selectedItem = arr[0];
             else
               this.setAttribute('value', val);
@@ -91,9 +91,8 @@
                             onget="return this.getAttribute('crop');"/>
       <property name="src"  onset="this.setAttribute('src',val); return val;"
                             onget="return this.getAttribute('src');"/>
-      <property name="label" readonly="true" onget="return this.getAttribute('label');"/>
-      <property name="description" onset="this.setAttribute('description',val); return val;"
-                             onget="return this.getAttribute('description');"/>
+      <property name="label" onset="this.setAttribute('label',val); return val;"
+                             onget="return this.getAttribute('label');"/>
       <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
                                        else this.removeAttribute('disabled');
                                        return val;"
@@ -171,7 +170,6 @@
               this.removeAttribute('value');
               this.removeAttribute('src');
               this.removeAttribute('label');
-              this.removeAttribute('description');
               return val;
             }
              
@@ -180,7 +178,6 @@
             this.setAttribute('value', val.getAttribute('value'));
             this.setAttribute('src', val.getAttribute('src'));
             this.setAttribute('label', val.getAttribute('label'));
-            this.setAttribute('description', val.getAttribute('description'));
 
             return val;
           ]]>
@@ -190,7 +187,6 @@
       <method name="appendItem">
         <parameter name="label"/>
         <parameter name="value"/>
-        <parameter name="description"/>
         <body>
         <![CDATA[
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -199,9 +195,6 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
-          if (description)
-            item.setAttribute("description", description);
-
           popup.appendChild(item);
           return item;
         ]]>
@@ -212,7 +205,6 @@
         <parameter name="index"/>
         <parameter name="label"/>
         <parameter name="value"/>
-        <parameter name="description"/>
         <body>
         <![CDATA[
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -221,9 +213,6 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
-          if (description)
-            item.setAttribute("description", description);
-
           if (index < popup.childNodes.length)
             popup.insertBefore(item, popup.childNodes[index]);
           else
@@ -298,7 +287,10 @@
           if (popup)
             arr = popup.getElementsByAttribute('label', this.inputField.value);
 
-          this.setSelectionInternal(arr ? arr.item(0) : null);
+          if (arr && arr.length)
+            this.setSelectionInternal(arr[0]);
+          else
+            this.setSelectionInternal(null);
         ]]>
         </body>
       </method>
@@ -418,7 +410,9 @@
         <![CDATA[
           // editable menulists elements aren't in the focus order,
           // so when the popup opens we need to force the focus to the inputField
-          if (event.target.parentNode == this) {
+          // XXX see bug #196755
+          // originalTarget is workaround for arrowscrollbox retargeting bug
+          if (event.originalTarget.parentNode == this) {
             if (document.commandDispatcher.focusedElement != this.inputField) 
               this.inputField.focus();
 
@@ -455,17 +449,5 @@
       <children includes="menupopup"/>
     </content>
   </binding>
-
-  <binding id="menulist-description" display="xul:menu" 
-           extends="chrome://global/content/bindings/menulist.xml#menulist">
-    <content sizetopopup="pref">
-      <xul:hbox class="menulist-label-box" flex="1">
-        <xul:image class="menulist-icon" xbl:inherits="src"/>
-        <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
-        <xul:label class="menulist-label menulist-description" xbl:inherits="value=description" crop="right" flex="10000"/>
-      </xul:hbox>
-      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
+  
 </bindings>

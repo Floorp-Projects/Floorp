@@ -114,10 +114,10 @@
       <![CDATA[({
         tabbox: this,
         handleEvent: function handleEvent(event) {
-          if (!event.isTrusted) {
-            // Don't let untrusted events mess with tabs.
-            return;
-          }
+	  if (!event.isTrusted) {
+	    // Don't let untrusted events mess with tabs.
+	    return;
+	  }
 
           switch (event.keyCode) {
             case event.DOM_VK_TAB:
@@ -155,8 +155,8 @@
         <setter>
           <![CDATA[
             if (val != this._eventNode) {
-              val.addEventListener("keypress", this._keyEventHandler, false);
-              this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+              val.addEventListener("keypress", this._keyEventHandler, true);
+              this._eventNode.removeEventListener("keypress", this._keyEventHandler, true);
               this._eventNode = val;
             }
             return val;
@@ -170,11 +170,11 @@
           case "window": this._eventNode = window; break;
           case "document": this._eventNode = document; break;
         }
-        this._eventNode.addEventListener("keypress", this._keyEventHandler, false);
+        this._eventNode.addEventListener("keypress", this._keyEventHandler, true);
       </constructor>
 
       <destructor>
-        this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+        this._eventNode.removeEventListener("keypress", this._keyEventHandler, true);
       </destructor>
     </implementation>
   </binding>
@@ -291,23 +291,6 @@
         </setter>
       </property>
     
-      <method name="selectNewTab">
-        <parameter name="aNewTab"/>
-        <body>
-        <![CDATA[
-          var isTabFocused =
-            (document.commandDispatcher.focusedElement == this.selectedItem);
-          this.selectedItem = aNewTab;
-          if (isTabFocused) {
-            aNewTab.focus();
-          }
-          else if (this.getAttribute("setfocus") != "false") {
-            document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
-          }
-        ]]>
-        </body>
-      </method>
-      
       <method name="advanceSelectedTab">
         <parameter name="aDir"/>
         <body>
@@ -323,7 +306,11 @@
           }
 
           if (next && next != startTab) {
-            this.selectNewTab(next);
+            this.selectedItem = next;
+            if (this.getAttribute("setfocus") != "false") {
+              next.focus();
+              document.commandDispatcher.advanceFocusIntoSubtree(next);
+            }
           }
         ]]>
         </body>
@@ -455,10 +442,8 @@
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
-      <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected" flex="1">
-        <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
-        <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
-      </xul:hbox>
+      <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
+      <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
     </content>
     
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
@@ -515,7 +500,7 @@
     <handlers>
       <handler event="click" button="0">
       <![CDATA[
-        this.parentNode.selectNewTab(this);
+        this.parentNode.selectedItem = this;
       ]]>
       </handler>
       

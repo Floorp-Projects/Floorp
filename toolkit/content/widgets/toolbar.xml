@@ -64,7 +64,7 @@
           <![CDATA[            
             var toolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                   "toolbar");
-            toolbar.id = "__customToolbar_" + aName.replace(" ", "");
+            toolbar.id = "__customToolbar_" + aName.replace(" ", "_");
             toolbar.setAttribute("customizable", "true");
             toolbar.setAttribute("customindex", ++this.customToolbarCount);
             toolbar.setAttribute("toolbarname", aName);

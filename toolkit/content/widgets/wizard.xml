@@ -24,8 +24,8 @@
     </content>
     
     <implementation>
-      <property name="title" onget="return document.title;"
-                             onset="return document.title = val;"/>
+      <property name="title" onget="return this.getAttribute('title')"
+                             onset="this.setAttribute('title', val);"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
                                   onset="this._canAdvance=val; this._nextButton.setAttribute('disabled', !val);"/>
@@ -118,7 +118,7 @@
         <body>
         <![CDATA[
           var btns = this.getElementsByAttribute("dlgtype", aDlgType);
-          return btns.item(0) ? btns[0] : document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aDlgType);
+          return btns.length > 0 ? btns[0] : document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aDlgType);
         ]]>
         </body>
       </method>
@@ -184,7 +184,7 @@
         <parameter name="aPageId"/>
         <body><![CDATA[
           var els = this.getElementsByAttribute("pageid", aPageId);
-          return els.item(0);
+          return els.length > 0 ? els[0] : null;
         ]]></body>
       </method>
 
@@ -420,10 +420,8 @@
     <content>
       <xul:stack class="wizard-header-stack" flex="1">
         <xul:vbox class="wizard-header-box-1">
-          <xul:vbox class="wizard-header-box-2">
-            <xul:vbox class="wizard-header-box-text">
-              <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
-            </xul:vbox>
+          <xul:vbox class="wizard-header-box-text">
+            <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
           </xul:vbox>
         </xul:vbox>
         <xul:hbox class="wizard-header-box-icon">
@@ -437,19 +435,15 @@
   <binding id="wizard-buttons" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
       <xul:vbox flex="1">
-        <xul:hbox class="wizard-buttons-top" xbl:inherits="hidden=hidetoprow">
-          <xul:spacer flex="1"/>
-          <xul:button class="wizard-button" dlgtype="cancel"/> 
-          <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
-        </xul:hbox>
-        <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-btm">
+          <xul:button class="wizard-button" dlgtype="cancel"/>        
           <xul:spacer flex="1"/>
           <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
           <xul:hbox class="wizard-label-box" align="center">
             <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
           </xul:hbox>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="disabled=lastpage"/> 
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="hidden=lastpage" /> 
+          <xul:button class="wizard-button" dlgtype="finish" default="true" xbl:inherits="hidden=hidefinishbutton" />
         </xul:hbox>
       </xul:vbox>
     </content>
@@ -457,7 +451,7 @@
     <implementation>
       <method name="onPageChange">
         <body><![CDATA[
-          this.setAttribute("hidetoprow", !(this.getAttribute("lastpage") == "true"));
+          this.setAttribute("hidefinishbutton", !(this.getAttribute("lastpage") == "true"));
         ]]></body>
       </method>
     </implementation>
