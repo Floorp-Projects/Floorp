@@ -138,7 +138,8 @@ public:
     }
 
     ~nsAutoMonitor() {
-        PRStatus status = PR_ExitMonitor(mMonitor);
+        PRStatus status;
+	status = PR_ExitMonitor(mMonitor);
         NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
 
@@ -194,7 +195,8 @@ public:
     }
 
     ~nsAutoCMonitor() {
-        PRStatus status = PR_CExitMonitor(mLockObject);
+        PRStatus status;
+	status = PR_CExitMonitor(mLockObject);
         NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
 
