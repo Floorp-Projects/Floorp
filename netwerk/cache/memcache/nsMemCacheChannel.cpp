@@ -119,7 +119,13 @@ public:
     NS_IMETHOD
     OnStartRequest(nsIChannel *channel, nsISupports *aContext) {
         nsresult rv;
-        rv = mDownstreamListener->OnStartRequest(mChannel, aContext);
+		
+		NS_ASSERTION(mDownstreamListener, "no downstream listener");
+
+		if (mDownstreamListener) {
+			rv = mDownstreamListener->OnStartRequest(mChannel, aContext);
+		}
+
         if (NS_FAILED(rv))
             Cancel();
         return rv;
@@ -129,8 +135,14 @@ public:
     OnStopRequest(nsIChannel *channel, nsISupports *aContext,
                   nsresult status, const PRUnichar *errorMsg) {
         nsresult rv;
-		rv = mDownstreamListener->OnStopRequest(mChannel, aContext, status, errorMsg);
-        mDownstreamListener = 0;
+
+		
+		NS_ASSERTION(mDownstreamListener, "no downstream listener");
+
+		if (mDownstreamListener) {
+			rv = mDownstreamListener->OnStopRequest(mChannel, aContext, status, errorMsg);
+		    mDownstreamListener = 0;
+		}
 		// Tricky: causes this instance to be free'ed because mEventQueueStreamListener
 		// has a circular reference back to this.
         mEventQueueStreamListener = 0;
