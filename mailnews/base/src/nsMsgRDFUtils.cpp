@@ -41,38 +41,44 @@ static PRBool
 peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, const char *parameter)
 {
 	char *r1Str, *r2Str;
-	nsString r1nsStr, r2nsStr, r1nsParameterStr;
+	nsString r1nsStr, r2nsStr;
 
 	r1->GetValue(&r1Str);
 	r2->GetValue(&r2Str);
 
-	r1nsStr = r1Str;
 	r2nsStr = r2Str;
-	r1nsParameterStr = r1Str;
-
-	nsAllocator::Free(r1Str);
+	r1nsStr = r1Str;
 	nsAllocator::Free(r2Str);
+	nsAllocator::Free(r1Str);
 
-	//probably need to not assume this will always come directly after property.
-	r1nsParameterStr +=parameter;
-
-	if(r1nsStr == r2nsStr)
+	//Look to see if there are any parameters
+	PRInt32 paramStart = r2nsStr.Find('?');
+	//If not, then just return whether or not the strings are equal.
+	if(paramStart == -1)
 	{
 		*isParameter = PR_FALSE;
+		return (r1nsStr == r2nsStr);
+	}
+
+	nsString r2propStr;
+	//Get the string before the '?"
+	r2nsStr.Left(r2propStr, paramStart);
+	//If the two properties are equal, then search parameters.
+	if(r2propStr == r1nsStr)
+	{
+		nsString params;
+		r2nsStr.Right(params, r2nsStr.Length() - 1 - paramStart);
+		PRInt32 parameterPos = params.Find(parameter);
+		*isParameter = (parameterPos != -1);
 		return PR_TRUE;
 	}
-	else if(r1nsParameterStr == r2nsStr)
+	//Otherwise the properties aren't equal.
+	else
 	{
-		*isParameter = PR_TRUE;
-		return PR_TRUE;
-	}
-  else
-	{
-		//In case the resources are equal but the values are different.  I'm not sure if this
-		//could happen but it is feasible given interface.
 		*isParameter = PR_FALSE;
-		return(peq(r1, r2));
+		return PR_FALSE;
 	}
+	return PR_FALSE;
 }
 
 PRBool
@@ -82,7 +88,7 @@ peqCollationSort(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isCollationSort
 	if(!isCollationSort)
 		return PR_FALSE;
 
-	return peqWithParameter(r1, r2, isCollationSort, "?collation=true");
+	return peqWithParameter(r1, r2, isCollationSort, "collation=true");
 }
 
 PRBool
@@ -91,7 +97,7 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 	if(!isSort)
 		return PR_FALSE;
 
-	return peqWithParameter(r1, r2, isSort, "?sort=true");
+	return peqWithParameter(r1, r2, isSort, "sort=true");
 }
 
 nsresult createNode(nsString& str, nsIRDFNode **node)
