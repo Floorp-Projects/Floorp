@@ -90,6 +90,8 @@ bin\components\editor.xpt
 bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
+bin\components\gfx2.xpt
+bin\components\gfx2.dll
 bin\components\gkcontent.dll
 bin\components\content_base.xpt
 bin\components\xuldoc.xpt
@@ -98,6 +100,12 @@ bin\components\gklayout.dll
 bin\components\gkparser.dll
 bin\components\gkplugin.dll
 bin\components\gkview.dll
+bin\components\imggif.dll
+bin\components\imgjpeg.dll
+bin\components\imglib2.dll
+bin\components\imglib2.xpt
+bin\components\imgpng.dll
+bin\components\imgppm.dll
 bin\components\intl.xpt
 bin\components\chardet.xpt
 bin\components\jar.xpt
