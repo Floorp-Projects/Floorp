@@ -452,6 +452,9 @@ nsStyleStruct* StyleContextImpl::GetData(const nsIID& aSID)
   if (aSID.Equals(kStyleListSID)) {
     return &mList;
   }
+  if (aSID.Equals(kStylePositionSID)) {
+    return &mPosition;
+  }
   if (aSID.Equals(kStyleMoleculeSID)) {
     return &mMolecule;
   }

@@ -53,7 +53,9 @@ protected:
 
   virtual ~AbsoluteFrame();
 
-  nsIView*  CreateView(const nsRect& aRect);
+  nsIView*  CreateView(nsIFrame* aContainingBlock, const nsRect& aRect);
+  nsIFrame* GetContainingBlock();
+  void      ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect);
 };
 
 #endif /* nsAbsoluteFrame_h___ */
