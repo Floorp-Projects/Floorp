@@ -129,8 +129,8 @@ intl/strres/src/Makefile
 intl/strres/tests/Makefile
 jpeg/Makefile
 js/Makefile
-js/jsd/Makefile
-js/jsd/classes/Makefile
+#js/jsd/Makefile
+#js/jsd/classes/Makefile
 js/src/Makefile
 js/src/fdlibm/Makefile
 js/src/liveconnect/Makefile
