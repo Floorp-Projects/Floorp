@@ -36,6 +36,9 @@ CHROME_CONTENT = \
         .\flash-registry.rdf \
         .\flash.js \
         .\flash.xul \
+	.\panel-add-confirm.js \
+	.\panel-add-confirm.xul \
+	.\panel-exists.xul \
 	.\preview.css \
 	.\preview.js \
 	.\preview.xul \
@@ -43,7 +46,6 @@ CHROME_CONTENT = \
 	.\sidebarOverlay.xul \
         .\local-panels.rdf \
         .\remote-panels.rdf \
-        .\default-panels.rdf \
         $(NULL)
 
 CHROME_SKIN = \
@@ -68,6 +70,8 @@ CHROME_L10N = \
         .\locale\en-US\customize.dtd \
         .\locale\en-US\flash.dtd \
 	.\locale\en-US\preview.dtd \
+	.\locale\en-US\panel-add-confirm.dtd \
+	.\locale\en-US\panel-exists.dtd \
         .\locale\en-US\sidebar-registry-rdf.dtd \
         .\locale\en-US\sidebar-rdf.dtd \
         .\locale\en-US\sidebarOverlay.dtd \
