@@ -3428,6 +3428,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
 
   /* get url name as ascii string */
   char *URLName = nsnull;
+  char *strippedURLName = nsnull;
+  nsAutoString strippedURLNameAutoString;
   nsCOMPtr<nsIURI> docURL;
   nsCOMPtr<nsIDocument> doc;
   currentForm->GetDocument(*getter_AddRefs(doc));
@@ -3439,11 +3441,14 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
     return;
   }
   (void)docURL->GetSpec(&URLName);
+  wallet_GetHostFile(docURL, strippedURLNameAutoString);
+  strippedURLName = strippedURLNameAutoString.ToNewCString();
 
   /* get to the form elements */
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
   if (htmldoc == nsnull) {
     nsCRT::free(URLName);
+    nsCRT::free(strippedURLName);
     return;
   }
 
@@ -3451,6 +3456,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
   nsresult rv = htmldoc->GetForms(getter_AddRefs(forms));
   if (NS_FAILED(rv) || (forms == nsnull)) {
     nsCRT::free(URLName);
+    nsCRT::free(strippedURLName);
     return;
   }
 
@@ -3593,7 +3599,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
 #else
           /* save form if it meets all necessary conditions */
           if (wallet_GetFormsCapturingPref() &&
-              (OKToPrompt) && wallet_OKToCapture(URLName, window)) {
+              (OKToPrompt) && wallet_OKToCapture(strippedURLName, window)) {
 
             /* give caveat if this is the first time data is being captured */
             Wallet_GiveCaveat(window, nsnull);
@@ -3643,6 +3649,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
     }
   }
   nsCRT::free(URLName);
+  nsCRT::free(strippedURLName);
 }
 
 PUBLIC void

@@ -229,8 +229,7 @@ function LoadNopreview()
     var currSignon = TrimString(nopreviewList[i]);
     // TEMP HACK until morse fixes signon viewer functions
     currSignon = RemoveHTMLFormatting(currSignon);
-    var form = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
-    AddItem("nopreviewlist",[form],"nopreview_",i-1);
+    AddItem("nopreviewlist",[currSignon],"nopreview_",i-1);
   }
   if (deleted_nopreviews_count >= nopreviewList.length) {
     document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
@@ -274,8 +273,7 @@ function LoadNocapture()
     var currSignon = TrimString(nocaptureList[i]);
     // TEMP HACK until morse fixes signon viewer functions
     currSignon = RemoveHTMLFormatting(currSignon);
-    var form = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
-    AddItem("nocapturelist",[form],"nocapture_",i-1);
+    AddItem("nocapturelist",[currSignon],"nocapture_",i-1);
   }
   if (deleted_nocaptures_count >= nocaptureList.length) {
     document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
