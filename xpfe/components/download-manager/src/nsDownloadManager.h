@@ -106,8 +106,7 @@ private:
 
 class nsDownload : public nsIDownload,
                    public nsIWebProgressListener,
-                   public nsIObserver,
-                   public nsIAlertListener
+                   public nsIObserver
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -115,7 +114,6 @@ public:
   NS_DECL_NSIDOWNLOAD
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIALERTLISTENER
 
   nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource);
   ~nsDownload();

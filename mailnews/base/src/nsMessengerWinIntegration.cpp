@@ -258,7 +258,7 @@ NS_INTERFACE_MAP_BEGIN(nsMessengerWinIntegration)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMessengerOSIntegration)
    NS_INTERFACE_MAP_ENTRY(nsIMessengerOSIntegration)
    NS_INTERFACE_MAP_ENTRY(nsIFolderListener)
-   NS_INTERFACE_MAP_ENTRY(nsIAlertListener)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
 
@@ -484,20 +484,19 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
     nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIAlertListener> alertListener (do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this))); 
       rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, aAlertTitle, aAlertText, PR_TRUE, 
-                                                NS_ConvertASCIItoUCS2(aFolderURI).get(), alertListener); 
+                                                NS_ConvertASCIItoUCS2(aFolderURI).get(), this); 
       mAlertInProgress = PR_TRUE;
     }
   }
 
   if (!showAlert || NS_FAILED(rv)) // go straight to showing the system tray icon.
-    OnAlertFinished(nsnull);
+    AlertFinished();
 
   return rv;
 }
 
-NS_IMETHODIMP nsMessengerWinIntegration::OnAlertFinished(const PRUnichar * aAlertCookie)
+nsresult nsMessengerWinIntegration::AlertFinished()
 {
   // okay we are done showing the alert....now put an icon in the system tray
   if (!mSuppressBiffIcon)
@@ -511,7 +510,7 @@ NS_IMETHODIMP nsMessengerWinIntegration::OnAlertFinished(const PRUnichar * aAler
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMessengerWinIntegration::OnAlertClickCallback(const PRUnichar * aAlertCookie)
+nsresult nsMessengerWinIntegration::AlertClicked()
 {
   // make sure we don't insert the icon in the system tray since the user clicked on the alert.
   mSuppressBiffIcon = PR_TRUE;
@@ -521,6 +520,18 @@ NS_IMETHODIMP nsMessengerWinIntegration::OnAlertClickCallback(const PRUnichar * 
 
   openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), folderURI);
  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessengerWinIntegration::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+{
+  if (strcmp(aTopic, "alertfinished") == 0)
+      return AlertFinished();
+
+  if (strcmp(aTopic, "alertclickcallback") == 0)
+      return AlertClicked();
+
   return NS_OK;
 }
 

@@ -38,32 +38,27 @@
 
 
 #include "nsISupports.idl"
+#include "nsIObserver.idl"
 
-/* nsIAlertsListener --> when a consumer asks the alerts service to put up an alert, they have the option
-   of passing in an alert listener as well. The alert listener gets notified when the alert has gone away.
-*/ 
-[scriptable, uuid(A840623B-5B87-4e99-A74A-9EF0886C11DD)]
-interface nsIAlertListener : nsISupports
-{
-  void onAlertFinished(in wstring aAlertCookie);
-  void onAlertClickCallback(in wstring aAlertCookie); // if the user clicks the link and you wanted to be notified...
-};
-
-[scriptable, uuid(7E8B76C6-A70C-4075-81AA-D48B6152E1B4)]
+[scriptable, uuid(3A3C2953-01EE-4D9C-A102-5AA0D7BD444C)]
 interface nsIAlertsService : nsISupports
 {
    /* showAlertNotification: shows an animated alert icon 
       aImageUrl --> a url identifying an image to put in the alert.
-	  aAlertTitle --> the title text for the alert (i.e. You have New Mail)
-	  aAlertText --> the contents of the alert
-	  alertTextClickable --> set to true if you wish to be notified if the user attempts to click
-	                         the alert text. Also causes the alert text to look like a link.
-	  aAlertCookie --> a blind cookie the alert will pass back to the consumer during the alert listener callbacks
+      aAlertTitle --> the title text for the alert (i.e. You have New Mail)
+      aAlertText --> the contents of the alert
+      alertTextClickable --> set to true if you wish to be notified if the user attempts to click
+                             the alert text. Also causes the alert text to look like a link.
+      aAlertCookie --> a blind cookie the alert will pass back to the consumer
+                       during the alert listener callbacks
+      aAlertListener --> used for callbacks.  Subject is null, topic is "alertfinished" when the
+                         alert goes away, or "alertclickcallback" when the text is clicked. Data
+                         is aAlertCookie.
    */
    void showAlertNotification(in string aImageUrl, in wstring aAlertTitle, 
                               in wstring aAlertText, in boolean alertTextClickable,
-							  in wstring aAlertCookie,
-							  in nsIAlertListener aAlertListener );
+                              in wstring aAlertCookie,
+                              in nsIObserver aAlertListener );
 };
 
 %{ C++

@@ -56,6 +56,7 @@
 #include "nsIPref.h"
 #include "nsInt64.h"
 #include "nsISupportsArray.h"
+#include "nsIObserver.h"
 
 // this function is exported by shell32.dll version 5.60 or later (Windows XP or greater)
 extern "C"
@@ -73,7 +74,7 @@ class nsIStringBundle;
 
 class nsMessengerWinIntegration : public nsIMessengerOSIntegration,
                                   public nsIFolderListener,
-                                  public nsIAlertListener
+                                  public nsIObserver
 {
 public:
   nsMessengerWinIntegration();
@@ -83,10 +84,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMESSENGEROSINTEGRATION
   NS_DECL_NSIFOLDERLISTENER
-  NS_DECL_NSIALERTLISTENER
+  NS_DECL_NSIOBSERVER
 
 private:
-  
+  nsresult AlertFinished();
+  nsresult AlertClicked();
+
   static NOTIFYICONDATAW mWideBiffIconData; 
   static NOTIFYICONDATA  mAsciiBiffIconData;
 

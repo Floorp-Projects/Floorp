@@ -53,7 +53,7 @@ function prefillAlertInfo()
   // arguments[2] --> the alert text
   // arguments[3] --> is the text clickable? 
   // arguments[4] --> the alert cookie to be passed back to the listener
-  // arguments[5] --> an optional callback listener (nsIAlertListener)
+  // arguments[5] --> an optional callback listener (nsIObserver)
 
   document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
   document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
@@ -65,8 +65,7 @@ function prefillAlertInfo()
     document.getElementById('alertTextLabel').setAttribute('clickable', true);
   
   // the 5th argument is optional
-  if (window.arguments[5])
-   gAlertListener = window.arguments[5].QueryInterface(Components.interfaces.nsIAlertListener);
+  gAlertListener = window.arguments[5];
 }
 
 function onAlertLoad()
@@ -117,7 +116,7 @@ function closeAlert()
   else
   {
     if (gAlertListener)
-      gAlertListener.onAlertFinished(gAlertCookie); 
+      gAlertListener.observe(null, "alertfinished", gAlertCookie);
     window.close(); 
   }
 }
@@ -125,5 +124,5 @@ function closeAlert()
 function onAlertClick()
 {
   if (gAlertListener && gAlertTextClickable)
-    gAlertListener.onAlertClickCallback(gAlertCookie);
+    gAlertListener.observe(null, "alertclickcallback", gAlertCookie);
 }
