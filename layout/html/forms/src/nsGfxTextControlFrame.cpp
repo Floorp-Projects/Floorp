@@ -617,8 +617,8 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
 
 #ifdef NEW_WEBSHELL_INTERFACES
     // create document
-    nsIDocument *doc;
-    rv = NS_NewHTMLDocument(&doc);
+    nsCOMPtr<nsIDocument> doc;
+    rv = NS_NewHTMLDocument(getter_AddRefs(doc));
     if (NS_FAILED(rv)) { return rv; }
     if (!doc) { return NS_ERROR_NULL_POINTER; }
 
