@@ -116,7 +116,6 @@ NS_IMPL_ISUPPORTS(StripeTimer, kITimerCallbackIID);
 PRInt32 StripeTimer::GetFrameData(nsProgressMeterFrame* aFrame)
 {
   PRInt32 i, n = mFrames.Count();
-  PRBool rv = PR_FALSE;
   for (i = 0; i < n; i++) {
     FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
 
