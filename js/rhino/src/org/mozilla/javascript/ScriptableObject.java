@@ -1526,9 +1526,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     {
         Object funObj = getProperty(obj, methodName);
         if (!(funObj instanceof Function)) {
-            throw ScriptRuntime.typeError1(
-                "msg.isnt.function",
-                ScriptRuntime.toString(obj)+'.'+methodName);
+            throw ScriptRuntime.notFunctionError(obj, methodName);
         }
         Function fun = (Function)funObj;
         return fun.call(cx, getTopLevelScope(obj), obj, args);
