@@ -53,13 +53,14 @@ public:
         mOutputStream(aOutputStream), mCacheEntry(aCacheEntry), mStartTime(PR_Now())
         { NS_INIT_REFCNT(); }
 
-    virtual ~CacheOutputStream() {}
-
+    virtual ~CacheOutputStream() {
+        mCacheEntry->NoteDownloadTime(mStartTime, PR_Now());
+        mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
+    }
+    
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Close() {
-        mCacheEntry->NoteDownloadTime(mStartTime, PR_Now());
-        mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
         return mOutputStream->Close();
     }
 
