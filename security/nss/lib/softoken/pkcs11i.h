@@ -90,6 +90,9 @@
 #define NSC_SEARCH_BLOCK_SIZE   5 
 #define NSC_SLOT_LIST_BLOCK_SIZE 10
 
+#define NSC_FIPS_MODULE 1
+#define NSC_NON_FIPS_MODULE 0
+
 /* these are data base storage hashes, not cryptographic hashes.. The define
  * the effective size of the various object hash tables */
 #ifdef MOZ_CLIENT
@@ -521,9 +524,14 @@ typedef struct pk11_parametersStr {
 
 SEC_BEGIN_PROTOS
 
+extern int nsf_init;
 extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
+extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
+extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent, 
+	CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex);
 /* shared functions between PKCS11.c and PK11FIPS.c */
-extern CK_RV PK11_SlotInit(char *configdir,pk11_token_parameters *params);
+extern CK_RV PK11_SlotInit(char *configdir,pk11_token_parameters *params, 
+							int moduleIndex);
 
 /* internal utility functions used by pkcs11.c */
 extern PK11Attribute *pk11_FindAttribute(PK11Object *object,

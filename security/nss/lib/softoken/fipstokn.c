@@ -164,10 +164,16 @@ CK_RV FC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList) {
     return CKR_OK;
 }
 
+/* sigh global so pkcs11 can read it */
+PRBool nsf_init = PR_FALSE;
 
 /* FC_Initialize initializes the PKCS #11 library. */
 CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
     CK_RV crv;
+
+    if (nsf_init) {
+	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
+    }
 
     crv = nsc_CommonInitialize(pReserved, PR_TRUE);
 
@@ -181,17 +187,24 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 
     crv = pk11_fipsPowerUpSelfTest();
     if (crv != CKR_OK) {
+        nsc_CommonFinalize(NULL, PR_TRUE);
 	fatalError = PR_TRUE;
 	return crv;
     }
+    nsf_init = PR_TRUE;
 
     return CKR_OK;
 }
 
 /*FC_Finalize indicates that an application is done with the PKCS #11 library.*/
 CK_RV FC_Finalize (CK_VOID_PTR pReserved) {
-   /* this should free up FIPS Slot */
-   return NSC_Finalize (pReserved);
+   CK_RV crv;
+   if (!nsf_init) {
+      return CKR_OK;
+   }
+   crv = nsc_CommonFinalize (pReserved, PR_TRUE);
+   nsf_init = (PRBool) !(crv == CKR_OK);
+   return crv;
 }
 
 
@@ -203,7 +216,8 @@ CK_RV  FC_GetInfo(CK_INFO_PTR pInfo) {
 /* FC_GetSlotList obtains a list of slots in the system. */
 CK_RV FC_GetSlotList(CK_BBOOL tokenPresent,
 	 		CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount) {
-    return NSC_GetSlotList(tokenPresent,pSlotList,pulCount);
+    return nsc_CommonGetSlotList(tokenPresent,pSlotList,pulCount,
+							 NSC_FIPS_MODULE);
 }
 	
 /* FC_GetSlotInfo obtains information about a particular slot in the system. */
