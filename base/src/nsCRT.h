@@ -23,10 +23,18 @@
 #include "plstr.h"
 #include "nscore.h"
 
+#define CR '\015'
+#define LF '\012'
+#define VTAB '\013'
+#define FF '\014'
+#define TAB '\011'
+#define CRLF "\015\012"     /* A CR LF equivalent string */
+
 /// This is a wrapper class around all the C runtime functions. 
 
 class NS_BASE nsCRT {
 public:
+
   /** Copy bytes from aSrc to aDest.
     @param aDest the destination address
     @param aSrc the source address
