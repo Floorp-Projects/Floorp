@@ -135,7 +135,7 @@ void BrowserFrame::OnUpdateBrowserBack(wxUpdateUIEvent &event)
         nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GetCanGoBack(&canGoBack);
     }
-    event.Enable(canGoBack);
+    event.Enable(canGoBack ? true : false);
 }
 
 void BrowserFrame::OnBrowserForward(wxCommandEvent & WXUNUSED(event))
@@ -155,7 +155,7 @@ void BrowserFrame::OnUpdateBrowserForward(wxUpdateUIEvent &event)
         nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GetCanGoForward(&canGoForward);
     }
-    event.Enable(canGoForward);
+    event.Enable(canGoForward ? true : false);
 }
 
 void BrowserFrame::OnBrowserReload(wxCommandEvent & WXUNUSED(event))
@@ -178,7 +178,7 @@ void BrowserFrame::OnBrowserStop(wxCommandEvent & WXUNUSED(event))
 
 void BrowserFrame::OnUpdateBrowserStop(wxUpdateUIEvent &event)
 {
-    event.Enable(mBusy);
+    event.Enable(mBusy ? true : false);
 }
 
 void BrowserFrame::OnBrowserHome(wxCommandEvent & WXUNUSED(event))

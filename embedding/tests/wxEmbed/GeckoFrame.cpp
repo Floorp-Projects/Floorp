@@ -35,6 +35,7 @@
 #include "GeckoContainer.h"
 
 #include "nsIWebBrowserFocus.h"
+#include "nsIClipboardCommands.h"
 
 GeckoFrame::GeckoFrame() :
     mGeckoWnd(NULL)
@@ -43,6 +44,14 @@ GeckoFrame::GeckoFrame() :
 
 BEGIN_EVENT_TABLE(GeckoFrame, wxFrame)
     EVT_ACTIVATE(GeckoFrame::OnActivate) 
+    // Clipboard functions
+    EVT_MENU(XRCID("edit_cut"),         GeckoFrame::OnEditCut)
+    EVT_UPDATE_UI(XRCID("edit_cut"),    GeckoFrame::OnUpdateEditCut)
+    EVT_MENU(XRCID("edit_copy"),        GeckoFrame::OnEditCopy)
+    EVT_UPDATE_UI(XRCID("edit_copy"),   GeckoFrame::OnUpdateEditCopy)
+    EVT_MENU(XRCID("edit_paste"),       GeckoFrame::OnEditPaste) 
+    EVT_UPDATE_UI(XRCID("edit_paste"),  GeckoFrame::OnUpdateEditPaste)
+    EVT_MENU(XRCID("edit_selectall"),   GeckoFrame::OnEditSelectAll)
 END_EVENT_TABLE()
 
 
@@ -96,6 +105,60 @@ void GeckoFrame::OnActivate(wxActivateEvent &event)
     wxFrame::OnActivate(event);
 }
 
+void GeckoFrame::OnEditCut(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->CutSelection();
+}
+
+void GeckoFrame::OnUpdateEditCut(wxUpdateUIEvent &event)
+{
+    PRBool canCut = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->CanCutSelection(&canCut);
+    event.Enable(canCut ? true : false);
+}
+
+void GeckoFrame::OnEditCopy(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->CopySelection();
+}
+
+void GeckoFrame::OnUpdateEditCopy(wxUpdateUIEvent &event)
+{
+    PRBool canCopy = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->CanCopySelection(&canCopy);
+    event.Enable(canCopy ? true : false);
+}
+
+void GeckoFrame::OnEditPaste(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->Paste();
+}
+
+void GeckoFrame::OnUpdateEditPaste(wxUpdateUIEvent &event)
+{
+    PRBool canPaste = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->CanPaste(&canPaste);
+    event.Enable(canPaste ? true : false);
+}
+
+void GeckoFrame::OnEditSelectAll(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(clipCmds)
+        clipCmds->SelectAll();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // GeckoContainerUI overrides

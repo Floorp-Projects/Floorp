@@ -49,6 +49,13 @@ public:
 
     DECLARE_EVENT_TABLE()
     void OnActivate(wxActivateEvent &event);
+    void OnEditCut(wxCommandEvent &event);
+    void OnUpdateEditCut(wxUpdateUIEvent &event);
+    void OnEditCopy(wxCommandEvent &event);
+    void OnUpdateEditCopy(wxUpdateUIEvent &event);
+    void OnEditPaste(wxCommandEvent &event);
+    void OnUpdateEditPaste(wxUpdateUIEvent &event);
+    void OnEditSelectAll(wxCommandEvent &event);
 
     // This method searches for a "gecko" wxWindow and sets it up with the frame
     // as the container UI. The results are stored in the mGeckoWnd and mWebBrowser

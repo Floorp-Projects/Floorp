@@ -72,6 +72,21 @@
           <label>E_xit\tAlt-Q</label>
         </object>
       </object>
+      <object class="wxMenu" name="menu_edit">
+        <label>_Edit</label>
+        <object class="wxMenuItem" name="edit_cut">
+          <label>Cut</label>
+        </object>
+        <object class="wxMenuItem" name="edit_copy">
+          <label>_Copy</label>
+        </object>
+        <object class="wxMenuItem" name="edit_paste">
+          <label>_Paste</label>
+        </object>
+        <object class="wxMenuItem" name="edit_selectall">
+          <label>Select _All</label>
+        </object>
+      </object>
       <object class="wxMenu" name="menu_go">
         <label>_Go</label>
         <object class="wxMenuItem" name="browse_back">
