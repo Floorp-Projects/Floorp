@@ -216,15 +216,11 @@ IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
 	    reader = iurl->GetReader();
 		if(reader)
 		{
-#if 0
-/* This change is not fully merged from the MODULAR_IMGLIB_BRANCH landing. */
-    /* Extreme editor hack! This value is used when loading images
-       so we use the converter we did in 4.06 code.
-       If we don't, this code triggers parsing of the image URL,
-       which has very bad effects in the editor! */
-	if((urls && urls->owner_id == 0x000000ED) || (ic && ic->multi))
-#endif
-		    if(reader->IsMulti()) {
+           /* Extreme editor hack! This value is used when loading images
+              so we use the converter we did in 4.06 code.
+              If we don't, this code triggers parsing of the image URL,
+              which has very bad effects in the editor! */
+		    if((iurl->GetOwnerId() == 0x000000ED) || reader->IsMulti()) {
 			    NS_RELEASE(reader);
 				return IL_NewStream(format_out, IL_UNKNOWN, urls, cx);
 			}

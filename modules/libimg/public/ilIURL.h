@@ -42,6 +42,9 @@ public:
 
   virtual void SetBackgroundLoad(PRBool aBgload)=0;
 
+  virtual int GetOwnerId()=0;
+
+  virtual void SetOwnerId(int)=0;
 };
 
 #endif

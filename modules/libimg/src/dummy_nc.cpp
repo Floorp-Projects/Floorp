@@ -102,6 +102,10 @@ public:
     
     virtual void SetBackgroundLoad(PRBool aBgload);
 
+    virtual int GetOwnerId();
+
+    virtual void SetOwnerId(int aOwnerId);
+
     URL_Struct *GetURLStruct() { return mURLS; }
 
 private:
@@ -515,6 +519,26 @@ URLImpl::SetBackgroundLoad(PRBool bgload)
 {
     if (mURLS) {
         mURLS->load_background = bgload;
+    }
+}
+
+int
+URLImpl::GetOwnerId()
+{
+    if (mURLS) {
+        return mURLS->owner_id;
+    }
+    else {
+        return 0;
+    }
+}
+
+
+void
+URLImpl::SetOwnerId(int ownerId)
+{
+    if (mURLS) {
+        mURLS->owner_id = ownerId;
     }
 }
 
