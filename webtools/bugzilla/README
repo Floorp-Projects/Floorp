@@ -58,7 +58,7 @@ daemon will come back up whenever your machine reboots.
 for *nix systems can be gotten in source form from http://www.perl.com.
 
   Perl is now a far cry from the the single compiler/interpreter binary it
-once. It now includes a great many required modules and quite a few other
+once was. It now includes a great many required modules and quite a few other
 support files.  If you're not up to or not inclined to build perl from source,
 you'll want to install it on your machine using some sort of packaging system
 (be it RPM, deb, or what have you) to ensure a sane install.  In the subsequent
@@ -164,10 +164,8 @@ listed in Appendix A.
 1.9. HTTP server
 
    You have a freedom of choice here - Apache, Netscape or any other server on
-UNIX would do. The only thing - to make configuration easier you'd better run
-HTTP daemon on the same machine that you run MySQL server on.  (Theoretically,
-it's possible to always use MySQL in a remote manner, but we don't know of
-anyone who has done that with Bugzilla yet.)
+UNIX would do. You can easily run the web server on a different machine than
+MySQL, but that makes MySQL permissions harder to manage.
 
    You'll want to make sure that your web server will run any file with the
 .cgi extension as a cgi and not just display it.  If you're using apache that
@@ -199,12 +197,13 @@ directory writable by your webserver's user (which may require just
 making it world writable).  Inside this main bugzilla directory issue the
 following commands:
 
+	mkdir data
+	cd data
 	touch comments
 	touch nomail
 	touch mail
 	
-   Make sure the comments, nomail, and mail files are writable by the
-webserver too.
+   Make sure the data directory and files are writable by the webserver.
 
    Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
 to the correct location of your perl executable (probably /usr/bin/perl).  Or,
@@ -253,16 +252,11 @@ should enter:
 	quit  
 
 
-
    To create the tables necessary for bug tracking and to minimally
 populate the bug tracking system you'll need to run the eight shell
 scripts found in your bugzilla directory that begin with 'make'.  These
 scripts load data into the database by piping input into the mysql
-command.
-
-
-   When calling the eight scripts order doesn't matter, but this one is
-fine:
+command.  Order does not matter, but this one is fine:
 
 	./makeactivitytable.sh
 	./makebugtable.sh
@@ -274,8 +268,19 @@ fine:
 	./makeversiontable.sh
 	./makegroupstable.sh
 
-   After running those you've got a nearly empty copy of the mozilla bug
-tracking setup.
+You may want to edit the scripts; once bugs are entered it gets very hard to
+make changes. Think carefully about how you want database users to describe bugs.  Here's one
+suggested alternative:
+
+	priority enum("P1", "P2", "P3", "P4", "defer") not null,
+	bug_severity enum("critical", "normal", "low", "---",
+                          "enhancement", "requirement", "polish") not null,
+	op_sys enum("Unspecified", "Windows 3.1", "Windows 95", "Windows 98",
+                    "Windows NT", "Mac System 7", "Mac System 8", "Linux",
+                    "Solaris", "FreeBSD", "Other Unix", "other") not null,
+	rep_platform enum("Unspecified", "Apple", "PC Clone", "Sun", "other"),
+ 
+After running the scripts you've got a nearly empty copy of the bug tracking setup.
 
 4. Tweaking the Bugzilla->MySQL Connection Data
 
@@ -286,7 +291,7 @@ code to connect appropriately.
    In order for bugzilla to be able to connect to the MySQL database
 you'll have to tell bugzilla where the database server is, what database
 you're connecting to, and whom to connect as.  Simply open up the
-global.pl file in the bugzilla directory and find the line that begins
+globals.pl file in the bugzilla directory and find the line that begins
 like:
 
 	$::db = Mysql->Connect("
@@ -300,7 +305,7 @@ takes four parameters which are (with appropriate values):
 		probably "nobody"
 	4. Password for the MySQL account in item 3.
 
-Just fill in those values and close up global.pl
+Just fill in those values and close up globals.pl
 
 5. Setting up yourself as Maintainer
 
@@ -313,9 +318,9 @@ mail, log in with it.  Don't finish entering that new bug.
     Now, bring up MySQL, and add yourself to every group.  This will
 effectively make you 'superuser'.  The SQL to type is:
 
-	update profiles set groupset=0x7fffffffffffffff where login_name = XXX;
+	update profiles set groupset=0x7fffffffffffffff where login_name = 'XXX';
 
-replacing XXX with your email address in quotes.
+replacing XXX with your BugZilla email address.
 
 Now, if you go to the query page (off of the bugzilla main menu) where you'll
 now find a 'edit parameters' option which is filled with editable treats.
@@ -340,6 +345,63 @@ command:
 
 as a nightly entry to your crontab and after two days have passed you'll
 be able to view bug graphs from the Bug Reports page.
+
+8. Real security for MySQL
+
+MySQL has "interesting" default security parameters:
+        mysqld defaults to running as root
+        it defaults to allowing external network connections
+        it has a known port number, and is easy to detect
+        it defaults to no passwords whatsoever
+        it defaults to allowing "File_Priv"
+This means anyone from anywhere on the internet can not only drop the database
+with one SQL command, and they can write as root to the system. 
+
+To see your permissions do:
+        > mysql -u root -p
+        use mysql;
+        show tables;
+        select * from user;
+        select * from db;
+
+To fix the gaping holes:
+        DELETE FROM user WHERE User='';
+        UPDATE user SET Password=PASSWORD('new_password') WHERE user='root';
+        FLUSH PRIVILEGES;
+
+If you're not running "mit-pthreads" you can use:
+        GRANT USAGE ON *.* TO bugs@localhost;
+        GRANT ALL ON bugs.* TO bugs@localhost;
+        REVOKE DROP ON bugs.* FROM bugs@localhost;
+        FLUSH PRIVILEGES;
+
+With "mit-pthreads" you'll need to modify the "globals.pl" Mysql->Connect line
+to specify a specific host name instead of "localhost", and accept external
+connections:
+        GRANT USAGE ON *.* TO bugs@bounce.hop.com;
+        GRANT ALL ON bugs.* TO bugs@bounce.hop.com;
+        REVOKE DROP ON bugs.* FROM bugs@bounce.hop.com;
+        FLUSH PRIVILEGES;
+
+Consider also:
+	o Turning off external networking with "--skip-networking",
+	unless you have "mit-pthreads", in which case you can't.  Without
+	networking, MySQL connects with a Unix domain socket.
+
+	o using the --user= option to mysqld to run it as an unprivileged user.
+
+        o starting MySQL in a chroot jail
+
+        o running the httpd in a jail
+
+        o making sure the MySQL passwords are different from the OS
+        passwords (MySQL "root" has nothing to do with system "root").
+
+        o running MySQL on a separate untrusted machine
+
+        o making backups ;-)
+
+
 
 ---------[ Appendices ]-----------------------
 
@@ -390,13 +452,21 @@ hour old, so Bugzilla will eventually notice your changes by itself, but
 generally you want it to notice right away, so that you can test things.
 
 
-Appendix C. History
+Appendix C. Upgrading from previous versions of BugZilla
+
+[This section under construction].
+
+
+Appendix D. History
 
    This document was originally adapted from the Bonsai installation
 instructions by Terry Weissman <terry@mozilla.org>.
 
    The February 25, 1999 re-write of this page was done by Ry4an Brase
-<ry4an@ry4an.org>, with some edits by Terry Weissman.  (But don't send
-bug reports to Ry4an!  Report them using bugzilla, at
-http://bugzilla.mozilla.org/enter_bug.cgi, project Webtools, component
-Bugzilla.)
+<ry4an@ry4an.org>, with some edits by Terry Weissman, Bryce Nesbitt,
+& Martin Pool (But don't send bug reports to them!  Report them using bugzilla,
+at http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools, component
+Bugzilla).
+
+   Comments from people using this document for the first time are especially
+welcomed.
