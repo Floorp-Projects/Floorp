@@ -1803,6 +1803,9 @@ extern PRStatus _PR_MD_UNLOCKFILE(PRInt32 osfd);
 extern PRStatus _PR_MD_CREATE_FILE_MAP(PRFileMap *fmap, PRInt64 size);
 #define _PR_MD_CREATE_FILE_MAP _MD_CREATE_FILE_MAP
 
+extern PRInt32 _PR_MD_GET_MEM_MAP_ALIGNMENT(void);
+#define _PR_MD_GET_MEM_MAP_ALIGNMENT _MD_GET_MEM_MAP_ALIGNMENT
+
 extern void * _PR_MD_MEM_MAP(
     PRFileMap *fmap,
     PROffset64 offset,

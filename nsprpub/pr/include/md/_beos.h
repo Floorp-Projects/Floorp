@@ -359,6 +359,7 @@ struct protoent* getprotobynumber(int number);
 /* Memory mapped file I/O */
 
 #define _MD_CREATE_FILE_MAP _MD_create_file_map
+#define _MD_GET_MEM_MAP_ALIGNMENT _MD_get_mem_map_alignment
 #define _MD_MEM_MAP _MD_mem_map
 #define _MD_MEM_UNMAP _MD_mem_unmap
 #define _MD_CLOSE_FILE_MAP _MD_close_file_map
@@ -552,6 +553,7 @@ NSPR_API(void) _MD_free_segment(PRSegment *seg);
 /* Memory mapped file I/O */
 
 NSPR_API(PRStatus) _MD_create_file_map(PRFileMap *fmap, PRInt64 size);
+NSPR_API(PRInt32) _MD_get_mem_map_alignment(void);
 NSPR_API(void *) _MD_mem_map(PRFileMap *fmap, PRInt64 offset, PRUint32 len);
 NSPR_API(PRStatus) _MD_mem_unmap(void *addr, PRUint32 size);
 NSPR_API(PRStatus) _MD_close_file_map(PRFileMap *fmap);
