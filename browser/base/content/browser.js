@@ -2989,7 +2989,7 @@ nsBrowserStatusHandler.prototype =
         this.statusMeter.value = 0;  // be sure to clear the progress bar
 
         gProgressCollapseTimer = window.setTimeout("gProgressMeterPanel.collapsed = true; gProgressCollapseTimer = null;",
-                                                   50);
+                                                   100);
 
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
