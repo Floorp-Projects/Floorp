@@ -22,7 +22,7 @@
 
 // Remember that these 'words' are 32bit DWORDS
 
-#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__)
+#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(NTO)
 
 static PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
@@ -133,7 +133,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
     "movl  %2, %%eax\n\t"   /* function index */
-#if (__GNUC__ == 2) && (__GNUC_MINOR__ == 7)
+#if (__GNUC__ == 2) && ( (__GNUC_MINOR__ == 7) || (__GNUC_MINOR__ == 8) )
     "shl   $3, %%eax\n\t"   /* *= 8 */
     "addl  $0x0c, %%eax\n\t"   /* += 12 */
 #else
