@@ -18,7 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 use Time::Local;
-require 'tbglobals.pl';
+require 'tbglobals.pl'; # for $gzip
 
 umask 0;
 
@@ -63,9 +63,11 @@ unlink $mail_file;
 #
 system "./buildwho.pl $tinderbox{tree}";
 
+
 # Warnings
 #   Compare the name with $warning_buildnames_pat which is defined in
 #   $tinderbox{tree}/treedata.pl if at all.
+require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
@@ -73,7 +75,8 @@ if (defined $warning_buildnames_pat
 }
 
 # Bloat data
-#
+#   Compare the name with $bloat_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
 if (defined $bloat_buildnames_pat
     and $tinderbox{build} =~ /^$bloat_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
