@@ -37,7 +37,6 @@
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsIDOMWindow.h"
-#include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
@@ -211,7 +210,7 @@ nsAppShellService::CreateHiddenWindow()
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIXULWindow> newWindow;
     	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        NS_CHROME_ALL_CHROME, 100, 100,
+                        nsIWebBrowserChrome::allChrome, 100, 100,
                         getter_AddRefs(newWindow));
 #endif
     if (NS_SUCCEEDED(rv)) {
@@ -552,24 +551,24 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   else {
     nsWidgetInitData widgetInitData;
 
-    widgetInitData.mWindowType = aChromeMask & NS_CHROME_OPEN_AS_DIALOG ?
+    widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::openAsDialog ?
                                  eWindowType_dialog : eWindowType_toplevel;
 
     // note default chrome overrides other OS chrome settings, but
     // not internal chrome
-    if (aChromeMask & NS_CHROME_DEFAULT_CHROME)
+    if (aChromeMask & nsIWebBrowserChrome::defaultChrome)
       widgetInitData.mBorderStyle = eBorderStyle_default;
-    else if ((aChromeMask & NS_CHROME_ALL_CHROME) == NS_CHROME_ALL_CHROME)
+    else if ((aChromeMask & nsIWebBrowserChrome::allChrome) == nsIWebBrowserChrome::allChrome)
       widgetInitData.mBorderStyle = eBorderStyle_all;
     else {
       widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00
-      if (aChromeMask & NS_CHROME_WINDOW_BORDERS_ON)
+      if (aChromeMask & nsIWebBrowserChrome::windowBordersOn)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_border);
-      if (aChromeMask & NS_CHROME_TITLEBAR_ON)
+      if (aChromeMask & nsIWebBrowserChrome::titlebarOn)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
-      if (aChromeMask & NS_CHROME_WINDOW_CLOSE_ON)
+      if (aChromeMask & nsIWebBrowserChrome::windowCloseOn)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
-      if (aChromeMask & NS_CHROME_WINDOW_RESIZE_ON)
+      if (aChromeMask & nsIWebBrowserChrome::windowResizeOn)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
     }
 

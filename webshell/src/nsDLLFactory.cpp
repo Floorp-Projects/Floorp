@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIFactory.h"
-#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIServiceManager.h"
