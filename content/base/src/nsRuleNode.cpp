@@ -3102,7 +3102,7 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
   // margin: length, percent, auto, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
-  FOR_CSS_SIDES(side) {
+  NS_FOR_CSS_SIDES(side) {
     parentMargin->mMargin.Get(side, parentCoord);
     if (SetCoord(marginData.mMargin.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPAH,
@@ -3171,7 +3171,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
   { // scope for compilers with broken |for| loop scoping
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = marginData.mBorderWidth.*(nsCSSRect::sides[side]);
       if (SetCoord(value, coord, parentCoord, SETCOORD_LE, aContext,
                    mPresContext, inherited))
@@ -3186,7 +3186,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   // border-style: enum, none, inhert
   const nsCSSRect& ourStyle = marginData.mBorderStyle;
   { // scope for compilers with broken |for| loop scoping
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourStyle.*(nsCSSRect::sides[side]);
       nsCSSUnit unit = value.GetUnit();
       if (eCSSUnit_Enumerated == unit) {
@@ -3207,7 +3207,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   nscolor unused = NS_RGB(0,0,0);
   
   { // scope for compilers with broken |for| loop scoping
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       nsCSSValueList* list =
           marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
       if (list) {
@@ -3233,7 +3233,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   PRBool foreground;
 
   { // scope for compilers with broken |for| loop scoping
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
       if (eCSSUnit_Inherit == value.GetUnit()) {
         if (parentContext) {
@@ -3274,7 +3274,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
 
   // -moz-border-radius: length, percent, inherit
   { // scope for compilers with broken |for| loop scoping
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       parentBorder->mBorderRadius.Get(side, parentCoord);
       if (SetCoord(marginData.mBorderRadius.*(nsCSSRect::sides[side]), coord,
                    parentCoord, SETCOORD_LPH, aContext, mPresContext,
@@ -3337,7 +3337,7 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct,
   // padding: length, percent, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
-  FOR_CSS_SIDES(side) {
+  NS_FOR_CSS_SIDES(side) {
     parentPadding->mPadding.Get(side, parentCoord);
     if (SetCoord(marginData.mPadding.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPH,
@@ -3591,7 +3591,7 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
   // box offsets: length, percent, auto, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
-  FOR_CSS_SIDES(side) {
+  NS_FOR_CSS_SIDES(side) {
     parentPos->mOffset.Get(side, parentCoord);
     if (SetCoord(posData.mOffset.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPAH,

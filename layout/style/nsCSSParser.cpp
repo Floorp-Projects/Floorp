@@ -4908,7 +4908,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode)
     if (!ExpectSymbol(aErrorCode, '(', PR_TRUE)) {
       return PR_FALSE;
     }
-    FOR_CSS_SIDES(side) {
+    NS_FOR_CSS_SIDES(side) {
       if (! ParseVariant(aErrorCode, aRect.*(nsCSSRect::sides[side]),
                          VARIANT_AL, nsnull)) {
         return PR_FALSE;
