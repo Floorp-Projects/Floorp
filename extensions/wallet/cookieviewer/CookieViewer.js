@@ -94,7 +94,7 @@ function Startup()
 function CreateCookieList()
 {
   count = 0;
-  for(i = 0; i < cookieList.length; i+=8)
+  for(i = 1; i < cookieList.length; i+=8)
   {
     cookies[count] = new Cookie();
     cookies[count].number     = cookieList[i+1];
@@ -130,7 +130,7 @@ function loadCookies()
 {
   CreateCookieList();   // builds an object array from cookiestream
   var cookielist = document.getElementById("cookielist");
-  for(i = 1; i < cookies.length-1; i++)
+  for(i = 0; i < cookies.length; i++)
   {
     var item  = document.createElement("treeitem");
     var row   = document.createElement("treerow");
@@ -227,7 +227,7 @@ function DeleteCookieSelected() {
 function CreatePermissionList()
 {
   count = 0;
-  for(i = 0; i < permissionList.length; i+=2)
+  for(i = 1; i < permissionList.length; i+=2)
   {
     permissions[count] = new Permission();
     permissions[count].number     = permissionList[i];
