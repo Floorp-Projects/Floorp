@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -32,9 +33,10 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
 **/
-BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
+BooleanFunctionCall::BooleanFunctionCall(BooleanFunctions aType)
+    : mType(aType)
 {
-    switch ( type ) {
+    switch (aType) {
         case TX_BOOLEAN :
             name = XPathNames::BOOLEAN_FN;
             break;
@@ -51,7 +53,6 @@ BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
             name = XPathNames::FALSE_FN;
             break;
     }
-    this->type = type;
 } //-- BooleanFunctionCall
 
 /**
@@ -61,49 +62,77 @@ BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* BooleanFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+{
+    ListIterator iter(&params);
 
-    MBool result = MB_FALSE;
-    ListIterator* iter = params.iterator();
-    Expr* param = 0;
-    String err;
+    switch (mType) {
+        case TX_BOOLEAN:
+        {
+            if (!requireParams(1, 1, aCs))
+                return new StringResult("error");
 
-
-    switch ( type ) {
-        case TX_BOOLEAN :
-            if ( requireParams(1,1,cs) ) {
-                param = (Expr*)iter->next();
-                ExprResult* exprResult = param->evaluate(context, cs);
-                result = exprResult->booleanValue();
-                delete exprResult;
-            }
-            break;
+            return new BooleanResult(evaluateToBoolean((Expr*)iter.next(),
+                                                       aContext,
+                                                       aCs));
+        }
         case TX_LANG:
-            if ( requireParams(1,1,cs) ) {
-                String arg1, lang;
-                evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                ((Element*)context)->getAttr(txXMLAtoms::lang,
-                                             kNameSpaceID_XML, lang);
-                arg1.toUpperCase(); // case-insensitive comparison
+        {
+            if (!requireParams(1, 1, aCs))
+                return new StringResult("error");
+
+            String lang;
+            Node* node = aContext;
+            while (node) {
+                if (node->getNodeType() == Node::ELEMENT_NODE) {
+                    Element* elem = (Element*)node;
+                    if (elem->getAttr(txXMLAtoms::lang,
+                                      kNameSpaceID_XML, lang))
+                        break;
+                }
+                node = node->getParentNode();
+            }
+
+            MBool result = MB_FALSE;
+            if (node) {
+                String arg;
+                evaluateToString((Expr*)iter.next(),aContext, aCs, arg);
+                arg.toUpperCase(); // case-insensitive comparison
                 lang.toUpperCase();
-                result = (MBool)(lang.indexOf(arg1) == 0);
+                result = lang.indexOf(arg) == 0 &&
+                         (lang.length() == arg.length() ||
+                          lang.charAt(arg.length()) == '-');
             }
-            break;
-        case TX_NOT :
-            if ( requireParams(1,1,cs) ) {
-                param = (Expr*)iter->next();
-                ExprResult* exprResult = param->evaluate(context, cs);
-                result = (MBool)(!exprResult->booleanValue());
-                delete exprResult;
-            }
-            break;
-        case TX_TRUE :
-            result = MB_TRUE;
-            break;
-        default:
-            break;
+
+            return new BooleanResult(result);
+        }
+        case TX_NOT:
+        {
+            if (!requireParams(1, 1, aCs))
+                return new StringResult("error");
+
+            return new BooleanResult(!evaluateToBoolean((Expr*)iter.next(),
+                                                        aContext,
+                                                        aCs));
+        }
+        case TX_TRUE:
+        {
+            if (!requireParams(0, 0, aCs))
+                return new StringResult("error");
+
+            return new BooleanResult(MB_TRUE);
+        }
+        case TX_FALSE:
+        {
+            if (!requireParams(0, 0, aCs))
+                return new StringResult("error");
+
+            return new BooleanResult(MB_FALSE);
+        }
     }
-    delete iter;
-    return new BooleanResult(result);
-} //-- evaluate
+
+    String err("Internal error");
+    aCs->recieveError(err);
+    return new StringResult("error");
+}
 
