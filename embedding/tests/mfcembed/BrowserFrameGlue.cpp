@@ -387,6 +387,20 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         // Update the view with the new LinkUrl
         // Note that this string is in UCS2 format
         pThis->m_wndBrowserView.SetCtxMenuLinkUrl(strUrlUcs2);
+
+        // Test if there is an image URL as well
+        nsCOMPtr<nsIURI> imgURI;
+        aInfo->GetImageSrc(getter_AddRefs(imgURI));
+        if(imgURI)
+        {
+            nsCAutoString strImgSrcUtf8;
+            imgURI->GetSpec(strImgSrcUtf8);
+            if(!strImgSrcUtf8.IsEmpty())
+            {
+                // Set the new Img Src
+                pThis->m_wndBrowserView.SetCtxMenuImageSrc(NS_ConvertUTF8toUCS2(strImgSrcUtf8));
+            }
+        }
     }
     else if(aContextFlags & nsIContextMenuListener2::CONTEXT_IMAGE)
     {
