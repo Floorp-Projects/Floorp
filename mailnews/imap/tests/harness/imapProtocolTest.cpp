@@ -269,7 +269,8 @@ protected:
 	nsIImapUrl * m_url; 
 	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
 	nsParseMailMessageState *m_msgParser ;
-
+	nsMsgKey			m_curMsgUid;
+	nsIMsgDatabase * m_mailDB ;
 	PRBool	    m_runTestHarness;
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false when the url finishes...
 
@@ -295,6 +296,9 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
     m_eventQueue = queue;
 
 	m_IMAP4Protocol = nsnull; // we can't create it until we have a url...
+	m_msgParser = nsnull;
+	m_mailDB = nsnull;
+	m_curMsgUid = nsMsgKey_None;
 
 	// until we read from the prefs, just use the default, I guess.
 	strcpy(m_urlSpec, DEFAULT_URL_TYPE);
@@ -371,16 +375,17 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 {
     printf("**** nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
 
-	nsIMsgDatabase * mailDB = nsnull;
 	nsIMsgDatabase * mailDBFactory;
 	nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
-	nsFileSpec dbName(aSpec->allocatedPathName);
+	nsString	pathName = "/tmp/";
+	pathName+= aSpec->allocatedPathName;
+	nsFileSpec dbName(pathName);
 
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
 		// if we pass in PR_TRUE for upgrading, the db code will ignore the summary out of date problem
 		// for now.
-		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &mailDB, PR_TRUE);
+		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_TRUE);
 	}
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) 
@@ -398,44 +403,44 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 		nsIDBFolderInfo *dbFolderInfo = nsnull;
 		PRInt32 imapUIDValidity = 0;
 
-		rv = mailDB->GetDBFolderInfo(&dbFolderInfo);
+		rv = m_mailDB->GetDBFolderInfo(&dbFolderInfo);
 
 		if (NS_SUCCEEDED(rv) && dbFolderInfo)
 			dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
-    	mailDB->ListAllKeys(existingKeys);
-    	if (mailDB->ListAllOfflineDeletes(&existingKeys) > 0)
+    	m_mailDB->ListAllKeys(existingKeys);
+    	if (m_mailDB->ListAllOfflineDeletes(&existingKeys) > 0)
 			existingKeys.QuickSort();
     	if ((imapUIDValidity != aSpec->folder_UIDVALIDITY)	/* &&	// if UIDVALIDITY Changed 
     		!NET_IsOffline() */)
     	{
 
-			nsIMsgDatabase *saveMailDB = mailDB;
+			nsIMsgDatabase *saveMailDB = m_mailDB;
 #if TRANSFER_INFO
 			TNeoFolderInfoTransfer *originalInfo = NULL;
 			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
 #endif // 0
-			mailDB->ForceClosed();
-			mailDB = NULL;
+			m_mailDB->ForceClosed();
+			m_mailDB = NULL;
 				
 			// Remove summary file.
 			dbName.Delete(PR_FALSE);
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
-			rv = mailDBFactory->Open(dbName, PR_TRUE, &mailDB, PR_FALSE);
+			rv = mailDBFactory->Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
 			if (NS_SUCCEEDED(rv))
 			{
 #if TRANSFER_INFO
 				if (originalInfo)
 				{
-					originalInfo->TransferFolderInfo(*mailDB->m_dbFolderInfo);
+					originalInfo->TransferFolderInfo(*m_mailDB->m_dbFolderInfo);
 					delete originalInfo;
 				}
 				SummaryChanged();
 #endif
 			}
 			// store the new UIDVALIDITY value
-			rv = mailDB->GetDBFolderInfo(&dbFolderInfo);
+			rv = m_mailDB->GetDBFolderInfo(&dbFolderInfo);
 
 			if (NS_SUCCEEDED(rv) && dbFolderInfo)
     			dbFolderInfo->SetImapUidValidity(aSpec->folder_UIDVALIDITY);
@@ -470,7 +475,7 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 
     		PRBool highWaterDeleted = FALSE;
 			// It would be nice to notify RDF or whoever of a mass delete here.
-    		mailDB->DeleteMessages(&keysToDelete,NULL);
+    		m_mailDB->DeleteMessages(&keysToDelete,NULL);
 			total = keysToDelete.GetSize();
 			nsMsgKey highWaterMark = nsMsgKey_None;
 		}
@@ -702,7 +707,13 @@ NS_IMETHODIMP nsIMAP4TestDriver::SetupHeaderParseStream(nsIImapProtocol* aProtoc
                                StreamInfo* aStreamInfo)
 {
     printf("**** nsIMAP4TestDriver::SetupHeaderParseStream\r\n");
-	m_msgParser = new nsParseMailMessageState;
+	if (!m_msgParser)
+	{
+		m_msgParser = new nsParseMailMessageState;
+		m_msgParser->SetMailDB(m_mailDB);
+	}
+	else
+		m_msgParser->Clear();
 	if (m_msgParser)
 	{
 		m_msgParser->m_state =  MBOX_PARSE_HEADERS;           
@@ -716,7 +727,30 @@ NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtoc
                                msg_line_info* aMsgLineInfo)
 {
     printf("**** nsIMAP4TestDriver::ParseAdoptedHeaderLine\r\n");
-	m_msgParser->ParseFolderLine(aMsgLineInfo->adoptedMessageLine, PL_strlen(aMsgLineInfo->adoptedMessageLine));
+   // we can get blocks that contain more than one line, 
+    // but they never contain partial lines
+	char *str = aMsgLineInfo->adoptedMessageLine;
+	m_curMsgUid = aMsgLineInfo->uidOfMessage;
+	m_msgParser->m_envelope_pos = m_curMsgUid;	// OK, this is silly (but we'll fix it). m_envelope_pos, for local folders,
+												// is the msg key. Setting this will set the msg key for the new header.
+
+	PRInt32 len = nsCRT::strlen(str);
+    char *currentEOL  = PL_strstr(str, LINEBREAK);
+    const char *currentLine = str;
+    while (currentLine < (str + len))
+    {
+        if (currentEOL)
+        {
+            m_msgParser->ParseFolderLine(currentLine, (currentEOL + LINEBREAK_LEN) - currentLine);
+            currentLine = currentEOL + LINEBREAK_LEN;
+            currentEOL  = XP_STRSTR(currentLine, LINEBREAK);
+        }
+        else
+        {
+			m_msgParser->ParseFolderLine(currentLine, PL_strlen(currentLine));
+            currentLine = str + len + 1;
+        }
+    }
     return NS_OK;
 }
 
@@ -724,6 +758,16 @@ NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtoc
 NS_IMETHODIMP nsIMAP4TestDriver::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol)
 {
     printf("**** nsIMAP4TestDriver::NormalEndHeaderParseStream\r\n");
+	if (m_msgParser)
+	{
+		m_msgParser->m_newMsgHdr->SetMessageKey(m_curMsgUid);
+		// here we need to tweak flags from uid state..
+		m_mailDB->AddNewHdrToDB(m_msgParser->m_newMsgHdr, PR_TRUE);
+		m_msgParser->FinishHeader();
+		if (m_mailDB)
+			m_mailDB->Commit(kLargeCommit);	// don't really want to do this for every message...
+											// but I can't find the event that means we've finished getting headers
+	}
     return NS_OK;
 }
 
@@ -1085,6 +1129,9 @@ nsIMAP4TestDriver::~nsIMAP4TestDriver()
 {
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_IMAP4Protocol);
+	if (m_mailDB)
+		m_mailDB->Commit(kLargeCommit);
+	NS_IF_RELEASE(m_mailDB);
 }
 
 nsresult nsIMAP4TestDriver::RunDriver()
