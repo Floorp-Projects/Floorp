@@ -474,6 +474,7 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
       mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
                                             NS_STYLE_BG_IMAGE_NONE;
+      mutableStyleColor->mBackgroundImage.SetLength(0);
     }
     NS_RELEASE(parentContext);
   }
