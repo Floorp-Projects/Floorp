@@ -1828,15 +1828,9 @@ nsHTMLInputElement::IsSuccessful(nsIContent* aSubmitElement,
     case NS_FORM_INPUT_HIDDEN:
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEXT:
-    {
-      *_retval = PR_TRUE;
-      break;
-    }
     case NS_FORM_INPUT_FILE:
     {
-      nsAutoString val;
-      GetValue(val);
-      *_retval = !val.IsEmpty();
+      *_retval = PR_TRUE;
       break;
     }
     case NS_FORM_INPUT_RESET:
