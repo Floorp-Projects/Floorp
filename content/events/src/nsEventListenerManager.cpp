@@ -1191,11 +1191,10 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
     sgo = do_QueryInterface(aCurrentTarget);
   }
 
+  nsCOMPtr<nsIScriptContext> scx;
   JSContext *cx = nsnull;
 
   if (sgo) {
-    nsCOMPtr<nsIScriptContext> scx;
-
     sgo->GetContext(getter_AddRefs(scx));
 
     if (scx) {
@@ -1204,11 +1203,14 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   }
 
   nsCOMPtr<nsIJSContextStack> stack;
+  JSContext *current_cx = nsnull;
 
   if (cx) {
     stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
     if (stack) {
+      stack->Peek(&current_cx);
+
       stack->Push(cx);
     }
   }
@@ -1222,6 +1224,13 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
   if (cx && stack) {
     stack->Pop(&cx);
+
+    if (!current_cx) {
+      // No JS is running, but executing the event handler might have
+      // caused some JS to run. Tell the script context that it's done.
+
+      scx->ScriptEvaluated(PR_TRUE);
+    }
   }
 
   return result;
