@@ -114,7 +114,7 @@ function commonDialogOnLoad()
             
         var label = param.GetString(4);
         if (label) setElementText(labelID, label);
-        field.focus();
+        field.focusTextField();
 
         break;
     case 1:
@@ -136,7 +136,7 @@ function commonDialogOnLoad()
       unHideElementByID(containerID);
       var field = document.getElementById(fieldID);
       field.value = param.GetString(6);
-      field.focus();
+      field.focusTextField();
       break;
   }	
 
