@@ -1,6 +1,5 @@
 Makefile
 moc_nsQApplication.cpp
-moc_nsComboBox.cpp
 moc_nsLabel.cpp
 moc_nsScrollbar.cpp
 moc_nsButton.cpp
