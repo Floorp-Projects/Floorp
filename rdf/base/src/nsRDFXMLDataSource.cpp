@@ -1522,7 +1522,12 @@ static const char kRDFLILiteral1[] = "    <RDF:li>";
 static const char kRDFLILiteral2[] = "</RDF:li>\n";
 
             rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
-            rdf_BlockingWrite(aStream, nsAutoString(NS_STATIC_CAST(const PRUnichar*, value)));
+
+            nsAutoString s(value);
+            rdf_EscapeAmpersands(s); // do these first!
+            rdf_EscapeAngleBrackets(s);
+
+            rdf_BlockingWrite(aStream, s);
             rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
         }
         NS_RELEASE(literal);
