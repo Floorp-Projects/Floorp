@@ -3426,7 +3426,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 {
     nsCOMPtr<nsIURI> uri;
-    aChannel->GetURI(getter_AddRefs(uri));
+    aChannel->GetOriginalURI(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
     OnNewURI(uri, aChannel, mLoadType);
