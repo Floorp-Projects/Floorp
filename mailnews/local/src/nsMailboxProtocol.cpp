@@ -232,14 +232,19 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 	nsCOMPtr<nsIMsgDBHdr> msgHdr;
 	nsresult rv = NS_OK;
 	
-	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
-	if (NS_SUCCEEDED(rv))
-	{
-		PRUint32 messageSize = 0;
-		msgHdr->GetMessageSize(&messageSize);
-		m_runningUrl->SetMessageSize(messageSize);
-	}
-	
+  NS_ASSERTION(m_runningUrl, "Not running a url");
+  if (m_runningUrl)
+  {
+	  rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+	  if (NS_SUCCEEDED(rv) && msgHdr)
+	  {
+		  PRUint32 messageSize = 0;
+		  msgHdr->GetMessageSize(&messageSize);
+		  m_runningUrl->SetMessageSize(messageSize);
+	  }
+    else
+      NS_ASSERTION(PR_FALSE, "couldn't get message header");
+  }
 	return rv;
 }
 
