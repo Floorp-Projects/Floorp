@@ -42,6 +42,8 @@ extern	char	*profileDirURL;
 #define INITIAL_ASSERTION_LIST_SIZE 100
 #define GROW_LIST_INCR 50
 
+
+
 int
 compareStrings(char *s1, char *s2)
 {
@@ -70,9 +72,11 @@ makeRDFFile (char* url, RDF_Resource top, PRBool localp)
   ans->url = getBaseURL(url);
   ans->top = top;
   ans->localp = localp;
+  if (!localp)  ans->refreshingp = PR_TRUE;
   initRDFFile(ans);
   return ans;
 }
+
 
 
 void
@@ -125,6 +129,14 @@ addToAssertionList (RDFFile f, Assertion as)
     freeMem(old);
   }
   *(f->assertionList + f->assertionCount++) = as;
+}
+
+
+
+void
+removeFromAssertionList(RDFFile f, Assertion as)
+{
+	/* XXX implement */
 }
 
 

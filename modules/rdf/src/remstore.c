@@ -28,6 +28,7 @@
 #include "pm2rdf.h"
 #include "rdf-int.h"
 #include "bmk2mcf.h"
+#include "utils.h"
 #include "plstr.h"
 
 	/* globals */
@@ -68,7 +69,7 @@ asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v,
   XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   return ((as->db == r) && (as->u == u) && (as->s == s) && (as->type == type) && 
 	  ((as->value == v) || 
-	   ((type == RDF_STRING_TYPE) && (strcmp(v, as->value) == 0))));
+	   ((type == RDF_STRING_TYPE) && ((strcmp(v, as->value) == 0) || (((char *)v)[0] =='\0')))));
 }
 
 
@@ -101,7 +102,7 @@ freeAssertion (Assertion as)
   } 
   freeMem(as);
 }
- 
+
 
 
 PRBool
@@ -111,8 +112,21 @@ remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
   Assertion as = remoteStoreAdd(mcf, u, s, v, type, tv);
   XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   if (as != NULL) {
-    void addToAssertionList (RDFFile f, Assertion as) ;
     addToAssertionList(fi, as);
+    return 1;
+  } else return 0;
+}
+
+
+
+PRBool
+remoteUnassert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
+		     RDF_ValueType type)
+{
+  Assertion as = remoteStoreRemove(mcf, u, s, v, type);
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
+  if (as != NULL) {
+    removeFromAssertionList(fi, as);
     return 1;
   } else return 0;
 }
@@ -267,7 +281,7 @@ fileReadp (RDFT rdf, char* url, PRBool mark)
   for (f = rdfFiles; (f != NULL) ; f = f->next) {
     if (urlEquals(url, f->url)) {
       if (mark == true)	f->lastReadTime = PR_Now();
-      return true;
+      return false;	/* true; */
     }
   }
   return false;
@@ -641,6 +655,7 @@ makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
       db->pdata = (RDFFile) newFile;
   }
     newFile->assert = remoteAssert3;
+    newFile->unassert = remoteUnassert3;
     if (top) {
       if (resourceType(top) == RDF_RT) {
         if (strstr(url, ".mcf")) {

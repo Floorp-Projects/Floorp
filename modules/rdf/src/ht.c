@@ -48,7 +48,6 @@ void			*htTimerID = NULL;
 _htmlElementPtr         htmlElementList = NULL;
 static int32		htCounter = 0;
 static RDF_Resource	pollingResource = NULL;
-static RDFT		gPollRDFT = NULL;
 
 HT_Pane			gNavigationTemplate = NULL;
 HT_Pane			gChromeTemplate = NULL;
@@ -150,11 +149,6 @@ htLoadComplete(char *url, int status)
 			if (pollR == pollingResource)
 			{
 				pollingResource = NULL;
-				if (gPollRDFT != NULL)
-				{
-					DeleteRemStore(gPollRDFT);
-					gPollRDFT = NULL;
-				}
 			}
 		}
 	}
@@ -209,7 +203,7 @@ htTimerRoutine(void *timerData)
 					RDF_STRING_TYPE, PR_FALSE, PR_TRUE);
 				if ((pollURL != NULL) && (pollInterval != NULL))
 				{
-					pollTime = (time_t)(60L * atol(pollInterval));
+					pollTime = (time_t)atol(pollInterval);
 					if ((pollR = RDF_GetResource(gNCDB, pollURL, PR_TRUE)) != NULL)
 					{
 						lastPoll = (time_t)RDF_GetSlotValue(gNCDB, pollR,
@@ -224,20 +218,11 @@ htTimerRoutine(void *timerData)
 							remoteStoreAdd(gRemoteStore, pollR,
 								gNavCenter->RDF_PollInterval,
 								(void *)now, RDF_INT_TYPE, PR_TRUE);
-							if ((gPollRDFT = NewRemoteStore(resourceID(pollR))) != NULL)
+							
+							if (readRDFFile(resourceID(pollR), pollR, 0, gRemoteStore) != NULL)
 							{
-								gPollRDFT->possiblyAccessFile = RDFFilePossiblyAccessFile;
-								if (readRDFFile(resourceID(pollR), pollR, 0, gPollRDFT) != NULL)
-								{
-									pollingResource = pollR;
-									break;
-								}
-								else
-								{
-									pollingResource = NULL;
-									DeleteRemStore(gPollRDFT);
-									gPollRDFT = NULL;
-								}
+								pollingResource = pollR;
+								break;
 							}
 						}
 					}
@@ -616,7 +601,7 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 			htr = PR_HashTableLookup(hash, aev->u);
 			while (htr != NULL)
 			{
-				resynchItem(htr, aev->s, aev->v, TRUE);
+				resynchItem(htr, aev->s, aev->v, aev->tv);
 				sendNotification(htr, theEvent);
 				htr = htr->nextItem;
 			}
@@ -657,7 +642,7 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 			htr = PR_HashTableLookup(hash, (RDF_Resource)uev->u);
 			while (htr != NULL)
 			{
-				resynchItem(htr, uev->s, uev->v, FALSE);
+				resynchItem(htr, uev->s, uev->v, PR_FALSE);
 				sendNotification(htr, theEvent);
 				htr = htr->nextItem;
 			}      
@@ -722,7 +707,7 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 			htr = PL_HashTableLookup(hash, aev->u);
 			while (htr != NULL)
 			{
-				resynchItem(htr, aev->s, aev->v, TRUE);
+				resynchItem(htr, aev->s, aev->v, aev->tv);
 				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
 				htr = htr->nextItem;
 			}
@@ -748,7 +733,7 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 			htr = PL_HashTableLookup(hash, (RDF_Resource)uev->u);
 			while (htr != NULL)
 			{
-				resynchItem(htr, uev->s, uev->v, FALSE);
+				resynchItem(htr, uev->s, uev->v, PR_FALSE);
 				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
 				htr = htr->nextItem;
 			}

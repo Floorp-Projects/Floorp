@@ -45,6 +45,7 @@ XP_BEGIN_PROTOS
 RDF_Resource	getMCFFrtop (char* furl);
 void		addToResourceList (RDFFile f, RDF_Resource u);
 void		addToAssertionList (RDFFile f, Assertion as);
+void		removeFromAssertionList(RDFFile f, Assertion as);
 void		ht_fprintf(PRFileDesc *file, const char *fmt, ...);
 void		ht_rjcprintf(PRFileDesc *file, const char *fmt, const char *data);
 char *		makeDBURL(char* name);
