@@ -52,11 +52,9 @@
 { 0xcb3ede1a, 0xfa5, 0x4e27, { 0xaa, 0xfe, 0xf, 0x78, 0x1, 0xe5, 0xa1, 0xf1 } }
 
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMATALPHA gfxIFormats::BGR_A1
 #define GFXFORMATALPHA8 gfxIFormats::BGR_A8
 #else
 #define USE_RGBA1
-#define GFXFORMATALPHA gfxIFormats::RGB_A1
 #define GFXFORMATALPHA8 gfxIFormats::RGB_A8
 #endif
 
@@ -102,7 +100,8 @@ private:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   
-  PRBool mDecodingAndMask;
+  PRUint8 mHaveAlphaData;
+  PRPackedBool mDecodingAndMask;
 
   PRUint32 mPos;
   PRUint16 mNumIcons;
