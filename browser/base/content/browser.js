@@ -49,7 +49,6 @@ var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
-var gSearchService = null;
 var gNavigatorBundle;
 var gBrandBundle;
 var gLastValidURLStr = "";
@@ -58,6 +57,8 @@ var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = true;
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
+var gToolbarMode = "icons";
+var gIconSize = "";
 
 var gPrefService = null;
 
@@ -71,8 +72,6 @@ var gContextMenu = null;
 
 // Global variable that caches the default search engine info
 var gDefaultEngine = null;
-
-var gBookmarkPopup = null;
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettingsAreGlobal = true;
@@ -509,10 +508,15 @@ function addBookmarkAs(aBrowser)
     BookmarksUtils.addBookmarkForBrowser(aBrowser.webNavigation, true);
 }
 
-function BrowserOpenWindow()
+function openLocation()
 {
-  //opens a window where users can select a web location to open
-  openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+  if (gURLBar && !document.getElementById("nav-bar").hidden) {
+    gURLBar.focus();
+    gURLBar.select();
+  }
+  else {
+    openDialog("chrome://browser/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+  }
 }
 
 function BrowserOpenTab()
@@ -1047,20 +1051,6 @@ function checkForDefaultBrowser()
   }
 }
 
-function ShowAndSelectContentsOfURLBar()
-{
-  var navBar = document.getElementById("nav-bar");
-  
-  // If it's hidden, show it.
-  if (navBar.getAttribute("hidden") == "true")
-    goToggleToolbar('nav-bar','toggle_navbar');
-
-  if (gURLBar.value)
-    gURLBar.select();
-  else
-    gURLBar.focus();
-}
-
 // If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
 // and highlight it, unless it is about:blank, where we reset it to "".
 function handleURLBarRevert()
@@ -1214,6 +1204,7 @@ function BrowserFullScreen()
 function onFullScreen()
 {
   FullScreen.toggle();
+  
 }
 
 // Set up a lame hack to avoid opening two bookmarks.
@@ -2499,7 +2490,16 @@ var FullScreen =
     for (i = 0; i < els.length; ++i) {
       // XXX don't interfere with previously collapsed toolbars
       if (els[i].getAttribute("fullscreentoolbar") == "true") {
-        this.setToolbarButtonMode(els[i], aShow ? "" : "small");
+        if (!aShow) {
+          gToolbarMode = els[i].getAttribute("mode");
+          gIconSize = els[i].getAttribute("iconsize");
+          els[i].setAttribute("mode", "icons");
+          els[i].setAttribute("iconsize", "small");
+        }
+        else {
+          els[i].setAttribute("mode", gToolbarMode);
+          els[i].setAttribute("iconsize", gIconSize);
+        }
       } else {
         // use moz-collapsed so it doesn't persist hidden/collapsed,
         // so that new windows don't have missing toolbars
@@ -2514,25 +2514,6 @@ var FullScreen =
     for (i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
   },
-  
-  setToolbarButtonMode: function(aToolbar, aMode)
-  {
-    aToolbar.setAttribute("toolbarmode", aMode);
-    this.setToolbarButtonModeFor(aToolbar, "toolbarbutton", aMode);
-    this.setToolbarButtonModeFor(aToolbar, "button", aMode);
-    this.setToolbarButtonModeFor(aToolbar, "textbox", aMode);
-  },
-  
-  setToolbarButtonModeFor: function(aToolbar, aTag, aMode)
-  {
-    var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var els = aToolbar.getElementsByTagNameNS(XULNS, aTag);
-
-    for (var i = 0; i < els.length; ++i) {
-      els[i].setAttribute("toolbarmode", aMode);
-    }
-  }
-  
 };
 
 const NS_ERROR_MODULE_NETWORK = 2152398848;
@@ -2799,7 +2780,9 @@ nsBrowserStatusHandler.prototype =
     // Do not update urlbar if there was a subframe navigation
 
     if (aWebProgress.DOMWindow == content) {
-      if (!this.userTyped.value) {
+      //XXXBlake don't we have to reinit this.urlBar, etc.
+      //         when the toolbar changes?
+      if (this.urlBar && !this.userTyped.value) {
         // If the url has "wyciwyg://" as the protocol, strip it off.
         // Nobody wants to see it on the urlbar for dynamically generated
         // pages. 
