@@ -61,7 +61,7 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
 										                       in boolean canBubbleArg,
   										                     in boolean cancelableArg,
                                            in nsIDOMAbstractView viewArg,
-                                           in unsigned short detailArg,
+                                           in long detailArg,
                                            in long screenXArg,
                                            in long screenYArg,
                                            in long clientXArg,

@@ -23,6 +23,10 @@
     </content>
     
     <implementation>
+      <constructor>
+        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
+      </constructor>
+
       <property name="outlinerBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
                 readonly="true"/>
@@ -57,6 +61,24 @@
       </property>
       
       <field name="_columnsDirty">true</field>
+
+      <field name="_handleMouseScroll">
+      <![CDATA[
+        ({
+          subject: this,
+          handleEvent: function(aEvent)
+          {
+            var rows = aEvent.detail;
+            if (rows == NSUIEvent.SCROLL_PAGE_UP)
+              this.subject.outlinerBoxObject.scrollByPages(-1);
+            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+              this.subject.outlinerBoxObject.scrollByPages(1);
+            else
+              this.subject.outlinerBoxObject.scrollByLines(aEvent.detail);
+          }
+        })
+      ]]>
+      </field>
 
       <method name="_ensureColumnOrder">
         <body><![CDATA[

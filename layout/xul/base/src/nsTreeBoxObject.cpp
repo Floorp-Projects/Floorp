@@ -110,6 +110,19 @@ NS_IMETHODIMP nsTreeBoxObject::ScrollToIndex(PRInt32 aRowIndex)
   return treeFrame->ScrollToIndex(aRowIndex);
 }
 
+NS_IMETHODIMP
+nsTreeBoxObject::ScrollByLines(PRInt32 aNumLines)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  return treeFrame->ScrollByLines(presContext, aNumLines);
+}
+
 /* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
 NS_IMETHODIMP nsTreeBoxObject::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)
 {

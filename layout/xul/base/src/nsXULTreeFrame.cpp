@@ -154,6 +154,58 @@ nsXULTreeFrame::ScrollToIndex(PRInt32 aRowIndex)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 aNumLines)
+{
+  PRInt32 scrollIndex, visibleRows;
+  GetIndexOfFirstVisibleRow(&scrollIndex);
+  GetNumberOfVisibleRows(&visibleRows);
+
+  scrollIndex += aNumLines;
+  
+  if (scrollIndex < 0)
+    scrollIndex = 0;
+  else {
+    PRInt32 numRows;
+    GetRowCount(&numRows);
+    PRInt32 lastPageTopRow = numRows - visibleRows;
+    if (scrollIndex > lastPageTopRow)
+      scrollIndex = lastPageTopRow;
+  }
+  
+  ScrollToIndex(scrollIndex);
+
+  // we have to do a sync update for mac because if we scroll too quickly
+  // w/out going back to the main event loop we can easily scroll the wrong
+  // bits and it looks like garbage (bug 63465).
+  nsIFrame* frame = nsnull;
+  if ( NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsIFrame), (void **)&frame)) ) {
+    nsIView* treeView = nsnull;
+    frame->GetView(aPresContext, &treeView);
+    if (!treeView) {
+      nsIFrame* frameWithView;
+      frame->GetParentWithView(aPresContext, &frameWithView);
+      if (frameWithView)
+        frameWithView->GetView(aPresContext, &treeView);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    if (treeView) {
+      nsCOMPtr<nsIViewManager> vm;
+      if (treeView->GetViewManager(*getter_AddRefs(vm)) && nsnull != vm) {
+        // I'd use Composite here, but it doesn't always work.
+        // vm->Composite();
+        vm->ForceUpdate();
+    
+      }      
+    }
+  }
+  else
+    return NS_ERROR_FAILURE;
+     
+  return NS_OK;
+}
+
 /* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
 NS_IMETHODIMP 
 nsXULTreeFrame::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)

@@ -1071,6 +1071,7 @@ nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
              feature.EqualsWithConversion("Events", PR_TRUE) ||
 //           feature.EqualsWithConversion("UIEvents", PR_TRUE) ||
              feature.EqualsWithConversion("MouseEvents", PR_TRUE) ||
+             feature.EqualsWithConversion("MouseScrollEvents", PR_TRUE) ||
              feature.EqualsWithConversion("HTMLEvents", PR_TRUE) ||
              feature.EqualsWithConversion("Range", PR_TRUE)) {
     if (!aVersion.Length() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {

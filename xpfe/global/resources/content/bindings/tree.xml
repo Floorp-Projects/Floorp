@@ -284,6 +284,31 @@
   <binding id="treerows"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content outer="true"/>
+    <implementation>
+      <constructor>
+        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
+      </constructor>
+
+      <field name="_handleMouseScroll">
+      <![CDATA[
+        ({
+          subject: this,
+          handleEvent: function(aEvent)
+          {
+            var treeBox = this.subject.parentNode.treeBoxObject;
+            var rows = aEvent.detail;
+            if (rows == NSUIEvent.SCROLL_PAGE_UP)
+              rows = -1 * treeBox.getNumberOfVisibleRows();
+            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+              rows = treeBox.getNumberOfVisibleRows();
+
+            treeBox.scrollByLines(rows);
+          }
+        })
+      ]]>
+      </field>
+    </implementation>
+
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
