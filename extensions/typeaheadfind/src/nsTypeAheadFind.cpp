@@ -1182,14 +1182,6 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
           && hasMoreDocShells) {
         docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
         NS_ASSERTION(currentContainer, "HasMoreElements lied to us!");
-        if (NS_FAILED(GetSearchContainers(currentContainer,
-                                          aIsRepeatingSameChar,
-                                          aIsFirstVisiblePreferred, PR_FALSE,
-                                          getter_AddRefs(presShell),
-                                          getter_AddRefs(presContext)))) {
-          return NS_ERROR_FAILURE;
-        }
-
         currentDocShell = do_QueryInterface(currentContainer);
 
         if (currentDocShell) {
@@ -1203,19 +1195,30 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
                                                  getter_AddRefs(docShellEnumerator));
     } while (docShellEnumerator);  // ==== end second inner while  ===
 
+    PRBool continueLoop = PR_FALSE;
     if (currentDocShell != startingDocShell) {
-      continue;  // Try next document
+      continueLoop = PR_TRUE;  // Try next document
     }
-
-    // Finished searching through docshells:
-    // If aFirstVisiblePreferred == PR_TRUE, we may need to go through all
-    // docshells twice -once to look for visible matches, the second time
-    // for any match
-    if (!hasWrapped || aIsFirstVisiblePreferred) {
+    else if (!hasWrapped || aIsFirstVisiblePreferred) {
+      // Finished searching through docshells:
+      // If aFirstVisiblePreferred == PR_TRUE, we may need to go through all
+      // docshells twice -once to look for visible matches, the second time
+      // for any match
       aIsFirstVisiblePreferred = PR_FALSE;
       hasWrapped = PR_TRUE;
+      continueLoop = PR_TRUE; // Go through all docs again
+    }
 
-      continue;  // Go through all docs again
+    if (continueLoop) {
+      if (NS_FAILED(GetSearchContainers(currentContainer,
+                                        aIsRepeatingSameChar,
+                                        aIsFirstVisiblePreferred, PR_FALSE,
+                                        getter_AddRefs(presShell),
+                                        getter_AddRefs(presContext)))) {
+        return NS_ERROR_FAILURE;
+      }
+
+      continue;
     }
 
     // ------------- Failed --------------
@@ -1323,8 +1326,9 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     // We need to set the start point this way, other methods haven't worked
     mStartPointRange->SelectNode(startNode);
     mStartPointRange->SetStart(startNode, startOffset);
-    mStartPointRange->Collapse(PR_TRUE); // collapse to start
   }
+
+  mStartPointRange->Collapse(PR_TRUE); // collapse to start
 
   *aPresShell = presShell;
   NS_ADDREF(*aPresShell);
