@@ -110,6 +110,16 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	$(NULL)
 
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+STACKWALK_SRC_LCSRCS =               \
+		nsStackFrameUnix.cpp \
+		nsStackFrameUnix.h   \
+		$(NULL)
+
+STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
+CPPSRCS           += nsSigHandlers.cpp nsStackFrameUnix.cpp
+endif
+
 GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDSRCS))
@@ -117,7 +127,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap
+LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap -I.
 CXXFLAGS += $(TK_CFLAGS)
 
 ifdef BUILD_STATIC_LIBS
