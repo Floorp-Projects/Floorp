@@ -41,7 +41,6 @@ class nsIDTDDebug;
 class nsIURL;
 class nsString;
 
-enum eProcessType {eParsing, eConverting};
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
 class nsIDTD : public nsISupports {
@@ -76,12 +75,23 @@ class nsIDTD : public nsISupports {
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
 
     /**
-     * 
+     * This method is called to determine if the given DTD can parse
+     * a document in a given source-type. 
+     * NOTE: Parsing always assumes that the end result will involve
+     *       storing the result in the main content model.
      * @update	gess6/24/98
+     * @param   
+     * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
+     */
+    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion)=0;
+
+    /**
+     * 
+     * @update	gess7/7/98
      * @param 
      * @return
      */
-    virtual PRBool IsCapableOf(eProcessType aProcessType, nsString& aContentType, PRInt32 aVersion)=0;
+    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
 
     /**
      * 
@@ -136,13 +146,16 @@ class nsIDTD : public nsISupports {
     virtual void WillInterruptParse(void)=0;
 
     /**
-     * 
-     * @update	jevering 6/18/98
-     * @param  aParent  parent tag
-     * @param  aChild   child tag
-     * @return PR_TRUE if valid container
+     *  This method is called to determine whether or not a tag
+     *  of one type can contain a tag of another type.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aParent -- int tag of parent container
+     *  @param   aChild -- int tag of child container
+     *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild) = 0;
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild)=0;
+
 
     /**
      * 

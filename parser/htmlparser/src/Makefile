@@ -30,16 +30,21 @@ CPPSRCS =     \
   nsTokenHandler.cpp \
   CNavDTD.cpp \
   COtherDTD.cpp \
+  CRtfDTD.cpp \
+  nsValidDTD.cpp \
+  nsWellFormedDTD.cpp \
   nsParser.cpp  \
   nsHTMLTokens.cpp  \
   nsHTMLTags.cpp \
   prstrm.cpp \
+  nsHTMLContentSinkStream.cpp \
   $(NULL)
 
 EXPORTS =     \
   nshtmlpars.h    \
   nsIContentSink.h  \
   nsIHTMLContentSink.h  \
+  nsHTMLContentSinkStream.h \
   nsHTMLTokens.h    \
   nsIParserNode.h   \
   nsIParser.h   \
@@ -48,6 +53,9 @@ EXPORTS =     \
   nsToken.h   \
   CNavDTD.h \
   COtherDTD.h \
+  nsWellFormedDTD.h \
+  nsValidDTD.h \
+  CRTFDTD.h \
   $(NULL)
 
 EXTRA_EXPORTS =					\

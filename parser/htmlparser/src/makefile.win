@@ -26,6 +26,9 @@ REQUIRES=xpcom raptor netlib
 CPPSRCS=					\
 	CNavDTD.obj				\
 	COtherDTD.obj				\
+	CRTFDTD.obj				\
+	nsWellFormedDTD.obj	 \
+	nsValidDTD.obj	 \
 	nsDTDDebug.obj				\
 	nsHTMLContentSink.obj			\
 	nsHTMLTags.obj				\
@@ -35,12 +38,16 @@ CPPSRCS=					\
 	nsScanner.obj				\
 	nsToken.obj				\
 	nsTokenHandler.obj			\
+	nsHTMLContentSinkStream.obj			\
 	prstrm.obj				\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\CNavDTD.obj			\
+	.\$(OBJDIR)\CRTFDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
+	.\$(OBJDIR)\nsWellFormedDTD.obj		\
+	.\$(OBJDIR)\nsValidDTD.obj		\
 	.\$(OBJDIR)\nsDTDDebug.obj		\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLTags.obj		\
@@ -50,6 +57,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsScanner.obj		\
 	.\$(OBJDIR)\nsToken.obj			\
 	.\$(OBJDIR)\nsTokenHandler.obj		\
+	.\$(OBJDIR)\nsHTMLContentSinkStream.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	$(NULL)
 
@@ -57,6 +65,7 @@ EXPORTS=					\
 	nshtmlpars.h				\
 	nsIContentSink.h			\
 	nsIHTMLContentSink.h			\
+	nsHTMLContentSinkStream.h			\
 	nsHTMLTokens.h				\
 	nsIParserNode.h				\
 	nsIParser.h				\
@@ -64,6 +73,9 @@ EXPORTS=					\
 	nsIDTDDebug.h				\
 	nsIParserFilter.h			\
 	CNavDTD.h				\
+	nsWellFormedDTD.h	\
+	nsValidDTD.h	\
+	CRTFDTD.h				\
 	COtherDTD.h				\
 	nsIDTD.h				\
 	$(NULL)

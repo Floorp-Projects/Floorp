@@ -5,6 +5,7 @@
 nshtmlpars.h
 nsIContentSink.h
 nsIHTMLContentSink.h
+nsHTMLContentSinkStream.h
 nsHTMLTokens.h
 nsIParserNode.h
 nsIParser.h
@@ -12,3 +13,4 @@ nsToken.h
 nsIDTDDebug.h
 nsIDTD.h
 CNavDTD.h
+CRTFDTD.h

@@ -62,7 +62,7 @@
  */
 
 #ifndef  NS_IHTMLCONTENTSINK
-#define  NS_ITMLCONTENTSINK
+#define  NS_IHTMLCONTENTSINK
 
 #include "nsIParserNode.h"
 #include "nsIContentSink.h"
@@ -193,16 +193,6 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @return PR_TRUE if successful. 
     */     
     virtual PRInt32 CloseContainer(const nsIParserNode& aNode)=0;
-
-   /**
-    * This method is used to close the topmost container, regardless
-    * of the type.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseTopmostContainer()=0;
 
    /**
     * This method is used to add a leaf to the currently 

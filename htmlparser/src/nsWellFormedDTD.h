@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -23,56 +24,53 @@
  *         
  */
 
-#ifndef NS_IDTD__
-#define NS_IDTD__
+#ifndef __NS_WELLFORMED_DTD
+#define __NS_WELLFORMED_DTD
 
+#include "nsIDTD.h"
 #include "nsISupports.h"
-#include "prtypes.h"
+#include "nsHTMLTokens.h"
+#include "nshtmlpars.h"
+#include "nsVoidArray.h"
+#include "nsDeque.h"
 
-#define NS_IDTD_IID      \
-  {0x75634940, 0xcfdc,  0x11d1,  \
-  {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
+#define NS_WELLFORMED_DTD_IID      \
+  {0xa39c6bfd, 0x15f0,  0x11d2, \
+  {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
 
-class nsIParser;
-class CToken;
-class nsIContentSink;
+class nsIHTMLContentSink;
 class nsIDTDDebug;
-class nsIURL;
-class nsString;
+class nsIParserNode;
+class CITokenHandler;
+class nsParser;
 
-enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
-class nsIDTD : public nsISupports {
+
+class CWellFormedDTD : public nsIDTD {
             
   public:
 
-    /**
-     * 
-     * @update	gess6/24/98
-     * @param 
-     * @return
-     */
-    virtual ~nsIDTD() {};
+    NS_DECL_ISUPPORTS
+
 
     /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
      *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
+     *  
+     *  @update  gess 4/9/98
+     *  @param   
+     *  @return  
      */
-    virtual void SetParser(nsIParser* aParser)=0;
+    CWellFormedDTD();
 
-   /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
+    /**
+     *  
+     *  
+     *  @update  gess 4/9/98
+     *  @param   
+     *  @return  
      */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
+    virtual ~CWellFormedDTD();
 
     /**
      * This method is called to determine if the given DTD can parse
@@ -83,7 +81,7 @@ class nsIDTD : public nsISupports {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion)=0;
+    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion);
 
     /**
      * 
@@ -91,7 +89,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
+    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
      * 
@@ -99,7 +97,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0)=0;
+    virtual PRInt32 WillBuildModel(const char* aFilename=0);
 
     /**
      * 
@@ -107,16 +105,24 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode)=0;
-    
+    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode);
+
     /**
      *  
      *  @update  gess 3/25/98
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleToken(CToken* aToken)=0;
+    virtual PRInt32 HandleToken(CToken* aToken);
 
+    /**
+     * 
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return 
+     */
+    virtual void SetParser(nsIParser* aParser);
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -126,7 +132,7 @@ class nsIDTD : public nsISupports {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
+    virtual PRInt32 ConsumeToken(CToken*& aToken);
 
 
     /**
@@ -135,7 +141,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual void WillResumeParse(void)=0;
+    virtual void WillResumeParse(void);
 
     /**
      * 
@@ -143,7 +149,23 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual void WillInterruptParse(void)=0;
+    virtual void WillInterruptParse(void);
+
+   /**
+     * Select given content sink into parser for parser output
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
+     */
+    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
+
+    /**
+     * 
+     * @update	jevering6/23/98
+     * @param 
+     * @return
+     */
+	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -154,18 +176,17 @@ class nsIDTD : public nsISupports {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild)=0;
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
+	
+protected:
 
-
-    /**
-     * 
-     * @update	jevering6/23/98
-     * @param 
-     * @return
-     */
-	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug) = 0;
+    
+    nsParser*           mParser;
+    nsIHTMLContentSink* mSink;
+    char*               mFilename;
 };
 
+extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
 
 #endif 
 

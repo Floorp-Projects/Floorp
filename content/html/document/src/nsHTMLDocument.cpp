@@ -36,6 +36,12 @@
 #include "nsIWebWidget.h"
 #include "CNavDTD.h"
 
+
+//#define rickgdebug 1
+#ifdef rickgdebug
+#include "nsHTMLContentSinkStream.h"
+#endif
+
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -104,6 +110,13 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   nsresult rv = NS_NewParser(&parser);
   if (NS_OK == rv) {
     nsIHTMLContentSink* sink;
+
+#ifdef rickgdebug
+    rv = NS_New_HTML_ContentSinkStream(&sink);
+#else
+    rv = NS_NewHTMLContentSink(&sink, this, aURL, aWebWidget);
+#endif
+
     rv = NS_NewHTMLContentSink(&sink, this, aURL, aWebWidget);
     if (NS_OK == rv) {
       nsIHTMLCSSStyleSheet* styleAttrSheet;
@@ -129,10 +142,9 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         nsIDTD* theDTD=0;
         NS_NewNavHTMLDTD(&theDTD);
         parser->RegisterDTD(theDTD);
-        parser->RegisterDTD(theDTD);
 
         parser->SetContentSink(sink);
-        parser->BeginParse(aURL);
+        parser->Parse(aURL);
       }
       NS_RELEASE(sink);
     }

@@ -904,7 +904,7 @@ void HTMLContentSink::ReflowNewContent()
       shell->ContentAppended(mBody);
       NS_RELEASE(shell);
     }
-  }
+  } 
 #endif
 }
 

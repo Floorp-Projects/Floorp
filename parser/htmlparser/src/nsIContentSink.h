@@ -61,15 +61,6 @@ class nsIContentSink : public nsISupports {
   virtual PRInt32 CloseContainer(const nsIParserNode& aNode) = 0;
 
    /**
-    * This method gets called by the parser when a the
-    * topmost container in the content sink needs to be closed.
-    *
-    * @update 4/1/98 gess
-    * @return PR_TRUE if successful. 
-    */     
-  virtual PRInt32 CloseTopmostContainer() = 0;
-
-   /**
     * This gets called by the parser when you want to add
     * a leaf node to the current container in the content
     * model.

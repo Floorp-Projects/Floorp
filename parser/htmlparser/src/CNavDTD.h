@@ -71,12 +71,23 @@ class CNavDTD : public nsIDTD {
     virtual ~CNavDTD();
 
     /**
+     * This method is called to determine if the given DTD can parse
+     * a document in a given source-type. 
+     * NOTE: Parsing always assumes that the end result will involve
+     *       storing the result in the main content model.
+     * @update	gess6/24/98
+     * @param   
+     * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
+     */
+    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion);
+
+    /**
      * 
-     * @update	gess7/1/98
+     * @update	gess7/7/98
      * @param 
      * @return
      */
-    virtual PRBool IsCapableOf(eProcessType aProcessType, nsString& aString, PRInt32 aVersion);
+    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
      * 

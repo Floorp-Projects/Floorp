@@ -25,7 +25,7 @@
  * how to consume characters out of an (internal) stream.
  * This class also offers a series of utility methods
  * that most tokenizers want, such as readUntil(), 
- * readWhile() and SkipWhite().
+ * readWhile() and SkipWhitespace().
  */
 
 
@@ -72,6 +72,16 @@ class CScanner {
        *  @return  
        */
       CScanner(const char* aFilename,eParseMode aMode=eParseMode_navigator);
+
+      /**
+       *  Use this constructor if you want i/o to be stream based.
+       *
+       *  @update  gess 5/12/98
+       *  @param   aMode represents the parser mode (nav, other)
+       *  @return  
+       */
+      CScanner(fstream& aStream,eParseMode aMode=eParseMode_navigator);
+
 
       ~CScanner();
 
@@ -136,7 +146,7 @@ class CScanner {
        *  @update  gess 3/25/98
        *  @return  error status
        */
-      PRInt32 SkipWhite(void);
+      PRInt32 SkipWhitespace(void);
 
       /**
        *  Determine if the scanner has reached EOF.
@@ -265,6 +275,7 @@ class CScanner {
       PRInt32         mTotalRead;
       eParseMode      mParseMode;
       PRBool          mIncremental;
+      PRBool          mOwnsStream;
 };
 
 #endif
