@@ -85,8 +85,8 @@
     test();
 
 function getTestCases( ) {
-
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+    // all the "ResultArrays" below are hard-coded to Pacific Standard Time values -
+    var TZ_ADJUST =  TZ_PST * msPerHour;
 
     // Dates around 29 Feb 2000
 
@@ -168,7 +168,8 @@ function getTestCases( ) {
 }
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {
-    DateCase = DateCase;
+    //adjust hard-coded ResultArray for tester's timezone instead of PST
+    adjustResultArray(ResultArray);
 
     var item = testcases.length;
 

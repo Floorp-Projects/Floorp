@@ -146,8 +146,8 @@ function getTestCases( ) {
 }
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {
-
-    DateCase = DateCase;
+    //adjust hard-coded ResultArray for tester's timezone instead of PST
+    adjustResultArray(ResultArray); 
 
     item = testcases.length;
 
