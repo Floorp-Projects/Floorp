@@ -1,6 +1,7 @@
 calendar.jar:
     content/calendar/calendar.js (content/calendar.js)
     content/calendar/calendar.xul (content/calendar.xul)
+    content/calendar/calendarClipboard.js (content/calendarClipboard.js)
     content/calendar/calendarDayView.js (content/calendarDayView.js)
     content/calendar/calendarDayView.xul (content/calendarDayView.xul)
     content/calendar/calendarEvent.js (content/calendarEvent.js)
@@ -8,6 +9,7 @@ calendar.jar:
     content/calendar/calendarEventAlertDialog.xul (content/calendarEventAlertDialog.xul)
     content/calendar/calendarEventDialog.js (content/calendarEventDialog.js)
     content/calendar/calendarEventDialog.xul (content/calendarEventDialog.xul)
+    content/calendar/calendarImportExport.js (content/calendarImportExport.js)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarMenuOverlay.xul (content/calendarMenuOverlay.xul)
     content/calendar/calendarMonthView.js (content/calendarMonthView.js)
@@ -21,6 +23,7 @@ calendar.jar:
     content/calendar/contents.rdf (content/contents.rdf)
     content/calendar/dateUtils.js (content/dateUtils.js)
     content/calendar/sound.wav (content/sound.wav)
+    content/calendar/todo_unifinder.js (content/todo_unifinder.js)
     content/calendar/unifinder.js (content/unifinder.js)
     content/calendar/datepicker/datepicker-overlay.xul (content/datepicker/datepicker-overlay.xul)
     content/calendar/datepicker/datepicker.js (content/datepicker/datepicker.js)
