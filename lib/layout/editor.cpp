@@ -1948,12 +1948,12 @@ void EDT_SetDirtyFlag( MWContext *pContext, XP_Bool bValue ){
 
 EDT_ClipboardResult EDT_CanCut(MWContext *pContext, XP_Bool bStrictChecking){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
-    return pEditBuffer->CanCut( bStrictChecking );
+    return pEditBuffer->CanCut( bStrictChecking, (XP_Bool)FALSE );
 }
 
 EDT_ClipboardResult EDT_CanCopy(MWContext *pContext, XP_Bool bStrictChecking){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
-    return pEditBuffer->CanCopy( bStrictChecking );
+    return pEditBuffer->CanCopy( bStrictChecking, (XP_Bool)FALSE );
 }
 
 EDT_ClipboardResult EDT_CanPaste(MWContext *pContext, XP_Bool bStrictChecking){

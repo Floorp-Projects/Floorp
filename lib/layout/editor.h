@@ -3646,10 +3646,10 @@ public:
     // When bCheckForCellBoundary is TRUE, then we return EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL
     //  when selection crosses a cell boundary. This is used internally to know when to handle this case.
     //  Calls from UI should use FALSE, which will return EDT_OK if we cross cell boundary
-    EDT_ClipboardResult CanCut(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
-    EDT_ClipboardResult CanCut(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
+    EDT_ClipboardResult CanCut(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary);
+    EDT_ClipboardResult CanCut(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary);
     EDT_ClipboardResult CanCopy(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
-    EDT_ClipboardResult CanCopy(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
+    EDT_ClipboardResult CanCopy(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary);
     EDT_ClipboardResult CanPaste(XP_Bool bStrictChecking);
     EDT_ClipboardResult CanPaste(CEditSelection& selection, XP_Bool bStrictChecking);
 

@@ -2975,7 +2975,7 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
                 //  outside a table into a table from cell to cell,
                 //  but delete key (bForward = TRUE) has lots of strange side-effects
                 //  so lets not allow that (TRUE means check for cell boundaries)
-                result = CanCut(selection, TRUE, bForward);
+                result = CanCut(selection, (XP_Bool)TRUE, bForward);
                 if ( result == EDT_COP_OK ) {
                     DeleteSelection(selection, FALSE);
                 }
@@ -14569,7 +14569,7 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
                                                 char **ppHtml, int32* pHtmlLen )
 {
     // Do "strict" testing and tell is if we crossed a cell boundary
-    EDT_ClipboardResult result = CanCopy(TRUE, TRUE);
+    EDT_ClipboardResult result = CanCopy((XP_Bool)TRUE, (XP_Bool)TRUE);
     if ( !(result == EDT_COP_OK || result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL) )
         return result;
 
