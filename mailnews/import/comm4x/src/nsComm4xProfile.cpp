@@ -99,8 +99,8 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, PRUnichar **_retval)
             rv = GetPrefValue(profileLocation, PREF_NAME, PREF_END, getter_Copies(prefValue));
             if (NS_FAILED(rv)) return rv;
             if (prefValue) {
-#ifdef XP_MAC
-                rv = profileLocation->SetPersistentDescriptor(prefValue);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+                rv = profileLocation->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(prefValue));
                 if (NS_FAILED(rv)) return rv;
                 nsAutoString path;
                 rv = profileLocation->GetPath(path);
@@ -110,7 +110,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, PRUnichar **_retval)
                 *_retval = ToNewUnicode(prefValue);
 #endif
             }
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_MACOSX)
             else {
                 nsCOMPtr <nsIFile> mailLocation;
                 rv =  resolvedLocation->Clone(getter_AddRefs(mailLocation));

@@ -144,7 +144,7 @@ public:
     
     // if fromImport is true all the 4.x profiles will be added to mProfiles with the isImportType flag set.
     // pass fromImport as True only if you are calling from the Import Module.
-    nsresult Get4xProfileInfo(const char *registryName, PRBool fromImport);
+    nsresult Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport);
 
     void SetCurrentProfile(const PRUnichar *profileName);
     void GetCurrentProfile(PRUnichar **profileName);

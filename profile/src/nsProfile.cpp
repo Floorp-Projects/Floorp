@@ -93,16 +93,12 @@
 #include "jsapi.h"
 #include "nsIJSContextStack.h"
 
-#if defined (XP_UNIX)
-#elif defined (XP_MAC)
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
-#elif defined (XP_BEOS)
 #elif defined(XP_WIN) || defined(XP_OS2)
-#ifdef XP_WIN
-#include <direct.h>
-#endif
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
-#endif /* XP_UNIX */
+#endif
 
 
 // A default profile name, in case automigration 4x profile fails
@@ -1945,16 +1941,13 @@ nsresult nsProfile::Update4xProfileInfo()
 {
     nsresult rv = NS_OK;
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
-
-    char * oldRegFile = GetOldRegLocation();
+#ifndef XP_BEOS
+    nsCOMPtr<nsIFile> oldRegFile;
+    rv = GetOldRegLocation(getter_AddRefs(oldRegFile));
+    if (NS_SUCCEEDED(rv))
     rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile, PR_TRUE);
-    nsMemory::Free(oldRegFile);
-#elif defined (XP_BEOS)
-#else
-    /* XP_UNIX */
-    rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_TRUE);
-#endif /* XP_WIN || XP_OS2 || XP_MAC */
+#endif
+
     return rv;
 }
 
@@ -1970,34 +1963,35 @@ nsresult nsProfile::LoadNewProfilePrefs()
     return NS_OK;
 }
 
-char * nsProfile::GetOldRegLocation()
+nsresult nsProfile::GetOldRegLocation(nsIFile **aOldRegFile)
 {
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
+    NS_ENSURE_ARG_POINTER(aOldRegFile);
+    *aOldRegFile = nsnull;
+    nsresult rv = NS_OK;
+    
+    // For XP_UNIX there was no registry for 4.x profiles.
+    // Return nsnull for the file, and NS_OK - we succeeded in doing nothing.
+    
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_MACOSX)
     nsCOMPtr<nsIFile> oldRegFile;
-    nsCAutoString oldRegFilePath;
-    nsresult rv;
 
-#if defined(XP_OS2)
-    NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(oldRegFile));
-#elif defined(XP_WIN)
-    NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
-#elif defined(XP_MAC)
-    NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(oldRegFile));
+#if defined(XP_WIN)
+    rv = NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
+#elif defined(XP_OS2)
+    rv = NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(oldRegFile));
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+    rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(oldRegFile));
 #endif
 
-    if (!oldRegFile)
-        return nsnull;
+    if (NS_FAILED(rv))
+        return rv;
     rv = oldRegFile->AppendNative(nsDependentCString(OLD_REGISTRY_FILE_NAME));
     if (NS_FAILED(rv))
-        return nsnull;
-    rv = oldRegFile->GetNativePath(oldRegFilePath);
-    if (NS_FAILED(rv))
-        return nsnull;
-    
-    return ToNewCString(oldRegFilePath);
-#else
-    return nsnull;
+        return rv;
+    NS_ADDREF(*aOldRegFile = oldRegFile);
 #endif
+
+    return rv;
 }
 
 nsresult nsProfile::UpdateCurrentProfileModTime(PRBool updateRegistry)
@@ -2022,24 +2016,15 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 {
     nsresult rv = NS_OK;
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
-
-#if defined(DEBUG_profile_verbose)
-    printf("Entered MigrateProfileInfo.\n");
-#endif
-
-    char * oldRegFile = GetOldRegLocation();
+#ifndef XP_BEOS
+    nsCOMPtr<nsIFile> oldRegFile;
+    rv = GetOldRegLocation(getter_AddRefs(oldRegFile));
+    if (NS_SUCCEEDED(rv)) {
     rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile, PR_FALSE);
-    nsMemory::Free(oldRegFile);
-
-#elif defined (XP_BEOS)
-#else
-    /* XP_UNIX */
-    rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_FALSE);
-#endif /* XP_WIN || XP_OS2 || XP_MAC */
-
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
+    }
+#endif
 
 	return rv;
 }
