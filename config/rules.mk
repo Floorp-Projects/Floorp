@@ -408,8 +408,13 @@ clean clobber::
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-distclean realclean clobber_all::
+realclean clobber_all::
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
+	+$(LOOP_OVER_DIRS)
+
+distclean::
+	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH) $(wildcard *.map) \
+	Makefile config.log config.cache depend.mk .md .deps .HSancillary _xpidlgen
 	+$(LOOP_OVER_DIRS)
 
 alltags:
