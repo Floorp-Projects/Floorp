@@ -100,7 +100,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
   return res;
 }
 
-nsresult nsCollationUnix::CreateSortKey(const nsCollationStrength strength, 
+nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   nsresult res = NS_OK;

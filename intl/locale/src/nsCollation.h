@@ -50,10 +50,17 @@ public:
   nsresult CompareString(nsICollation *inst, const nsCollationStrength strength, 
                          const nsString& string1, const nsString& string2, PRInt32* result);
 
+  // create a sort key (nsString)
+  nsresult CreateSortKey(nsICollation *inst, const nsCollationStrength strength, 
+                         const nsString& stringIn, nsString& key);
+
   // compare two sort keys
   // length is a byte length, result is same as strcmp
-  PRInt32 CompareSortKey(const PRUint8* key1, const PRUint32 len1, 
-                         const PRUint8* key2, const PRUint32 len2);
+  PRInt32 CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
+                            const PRUint8* key2, const PRUint32 len2);
+
+  // compare two sort keys (nsString)
+  PRInt32 CompareSortKey(const nsString& key1, const nsString& key2);
 
   // normalize string before collation key generation
   nsresult NormalizeString(nsAutoString& stringInOut);

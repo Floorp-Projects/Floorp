@@ -154,7 +154,7 @@ nsresult nsCollationMac::GetSortKeyLen(const nsCollationStrength strength,
   return NS_OK;
 }
 
-nsresult nsCollationMac::CreateSortKey(const nsCollationStrength strength, 
+nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
