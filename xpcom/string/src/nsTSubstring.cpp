@@ -110,10 +110,10 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
     // case #1
     if (mFlags & F_SHARED)
       {
-        nsStringHeader* hdr = nsStringHeader::FromData(mData);
+        nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
         if (!hdr->IsReadonly())
           {
-            nsStringHeader *newHdr = nsStringHeader::Realloc(hdr, storageSize);
+            nsStringBuffer *newHdr = nsStringBuffer::Realloc(hdr, storageSize);
             if (newHdr)
               {
                 hdr = newHdr;
@@ -145,7 +145,7 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
         // make use of our F_OWNED or F_FIXED buffers because they are not
         // large enough.
 
-        nsStringHeader* newHdr = nsStringHeader::Alloc(storageSize);
+        nsStringBuffer* newHdr = nsStringBuffer::Alloc(storageSize);
         if (!newHdr)
           return PR_FALSE; // we are still in a consistent state
 
@@ -247,7 +247,7 @@ nsTSubstring_CharT::Capacity() const
     if (mFlags & F_SHARED)
       {
         // if the string is readonly, then we pretend that it has no capacity.
-        nsStringHeader* hdr = nsStringHeader::FromData(mData);
+        nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
         if (hdr->IsReadonly())
           capacity = size_type(-1);
         else
@@ -278,7 +278,7 @@ nsTSubstring_CharT::EnsureMutable()
   {
     if (mFlags & (F_FIXED | F_OWNED))
       return;
-    if ((mFlags & F_SHARED) && !nsStringHeader::FromData(mData)->IsReadonly())
+    if ((mFlags & F_SHARED) && !nsStringBuffer::FromData(mData)->IsReadonly())
       return;
 
     // promote to a shared string buffer
@@ -358,7 +358,7 @@ nsTSubstring_CharT::Assign( const self_type& str )
         SetDataFlags(F_TERMINATED | F_SHARED);
 
         // get an owning reference to the mData
-        nsStringHeader::FromData(mData)->AddRef();
+        nsStringBuffer::FromData(mData)->AddRef();
       }
     else if (str.mFlags & F_VOIDED)
       {

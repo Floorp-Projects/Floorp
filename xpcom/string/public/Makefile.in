@@ -59,6 +59,7 @@ EXPORTS		=				\
 		nsPromiseFlatString.h		\
 		nsReadableUtils.h		\
 		nsString.h			\
+		nsStringBuffer.h		\
 		nsStringFwd.h			\
 		nsStringIterator.h		\
 		nsSubstring.h			\
