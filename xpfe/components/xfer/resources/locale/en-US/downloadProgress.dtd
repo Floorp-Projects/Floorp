@@ -67,6 +67,12 @@
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentMsg "#1&#037;">
 
+<!-- Error messages -->
+<!ENTITY diskFullMsg "There is not enough free space to store the file.  Free up space and try again, or choose a different target location.">
+<!ENTITY accessErrorMsg "You do not have permission to write to the target location, or, the disk is write-protected.  Choose a different target location.">
+<!ENTITY writeErrorMsg "There was an error writing to the target location.">
+<!ENTITY readErrorMsg "There was an error reading from the source location.">
+
 <!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the download is complete.">
 <!ENTITY openFolder.label "Reveal Location">
 <!ENTITY open.label "Launch File">

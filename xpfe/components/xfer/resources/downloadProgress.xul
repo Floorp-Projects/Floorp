@@ -45,10 +45,7 @@ Contributor(s):
     <script src="chrome://global/content/downloadProgress.js"></script>
 
     <!-- This is non-visible content that simply adds translatable string
-         into the document so that it is accessible to JS code.
-         
-         XXX-TODO: 
-          convert to use string bundles. 
+         into the document so that it is accessible to JS code. 
     -->
   
     <data id="dialog.strings.confirmCancel">&confirmCancel;</data>
@@ -58,6 +55,10 @@ Contributor(s):
     <data id="dialog.strings.shortTimeFormat">&shortTimeFormat;</data>
     <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
     <data id="dialog.strings.unknownTime">&unknownTime;</data>
+    <data id="dialog.strings.diskFullMsg">&diskFullMsg;</data>
+    <data id="dialog.strings.accessErrorMsg">&accessErrorMsg;</data>
+    <data id="dialog.strings.writeErrorMsg">&writeErrorMsg;</data>
+    <data id="dialog.strings.readErrorMsg">&readErrorMsg;</data>
 
     <grid flex="1">
       <columns>
