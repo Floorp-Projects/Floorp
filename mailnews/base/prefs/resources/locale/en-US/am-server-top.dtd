@@ -41,3 +41,5 @@
 <!ENTITY abbreviate.label "Show newsgroup names in the Mail Folder pane as:">
 <!ENTITY abbreviateOn.label "Full names (For example, 'netscape.public.mozilla.mail-news')">
 <!ENTITY abbreviateOff.label "Abbreviate names (For example, 'n.p.m.mail-news')">
+<!ENTITY advancedButton.label "Advanced...">
+
