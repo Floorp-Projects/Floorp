@@ -46,6 +46,7 @@ const gWin = "Win";
 const gUNIX = "UNIX";
 const gMac = "Mac";
 
+var gIsHTMLEditor;
 /************* Message dialogs ***************/
 
 function AlertWithTitle(title, message, parentWindow)
@@ -208,6 +209,18 @@ function GetCurrentEditor()
   } catch (e) {}
 
   return null;
+}
+
+function isHTMLEditor()
+{
+  //XXX Another temporary hack until new embedding access is finished
+  if (typeof window.gIsHTMLEditor == "undefined")
+  {
+    try {
+      window.gIsHTMLEditor = GetCurrentEditor().QueryInterface(Components.interfaces.nsIHTMLEditor);
+    } catch (e) {}
+  }
+  return window.gIsHTMLEditor;
 }
 
 var gAtomService;
@@ -494,8 +507,9 @@ function MakeRelativeUrl(url)
 
 
   // Get just the file path part of the urls
-  var docPath = IOService.newURI(docUrl, null, null).path;
-  var urlPath = IOService.newURI(inputUrl, null, null).path;
+  // XXX Should we use GetCurrentEditor().documentCharacterSet for 2nd param ?
+  var docPath = IOService.newURI(docUrl, GetCurrentEditor().documentCharacterSet, null).path;
+  var urlPath = IOService.newURI(inputUrl, GetCurrentEditor().documentCharacterSet, null).path;
 
   // We only return "urlPath", so we can convert
   //  the entire docPath for case-insensitive comparisons
@@ -611,7 +625,7 @@ function MakeAbsoluteUrl(url)
   
   // Make a URI object to use its "resolve" method
   var absoluteUrl = resultUrl;
-  var docUri = IOService.newURI(docUrl, null, null);
+  var docUri = IOService.newURI(docUrl, GetCurrentEditor().documentCharacterSet, null);
 
   try {
     absoluteUrl = docUri.resolve(resultUrl);
@@ -627,12 +641,11 @@ function MakeAbsoluteUrl(url)
 // returns empty string if no base href and document hasn't been saved yet
 function GetDocumentBaseUrl()
 {
-  if (window.editorShell)
-  {
+  try {
     var docUrl;
 
     // if document supplies a <base> tag, use that URL instead 
-    var baseList = editorShell.editorDocument.getElementsByTagName("base");
+    var baseList = GetCurrentEditor().document.getElementsByTagName("base");
     if (baseList)
     {
       var base = baseList.item(0);
@@ -644,20 +657,17 @@ function GetDocumentBaseUrl()
 
     if (!IsUrlAboutBlank(docUrl))
       return docUrl;
-  }
+  } catch (e) {}
   return "";
 }
 
 function GetDocumentUrl()
 {
-  if (editorShell && editorShell.editorDocument)
-  {
-    try {
-      var aDOMHTMLDoc = editorShell.editorDocument.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
-      return aDOMHTMLDoc.URL;
-    }
-    catch (e) {}
+  try {
+    var aDOMHTMLDoc = GetCurrentEditor().document.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+    return aDOMHTMLDoc.URL;
   }
+  catch (e) {}
   return "";
 }
 
@@ -848,7 +858,7 @@ function InsertUsernameIntoUrl(urlspec, username)
 
   try {
     var ioService = GetIOService();
-    var URI = ioService.newURI(urlspec, window.editorShell.GetDocumentCharacterSet(), null);
+    var URI = ioService.newURI(urlspec, GetCurrentEditor().documentCharacterSet, null);
     URI.username = username;
     return URI.spec;
   } catch (e) {}
@@ -900,7 +910,7 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
   var prefs = GetPrefs();
   var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
   var value;
-  if (IsCSSPrefChecked && editorShell.editorType == "html")
+  if (IsCSSPrefChecked && isHTMLEditor())
     value = element.style.getPropertyValue(cssPropertyName);
 
   if (!value)

@@ -69,7 +69,6 @@ var gNormalModeButton;
 var gTagModeButton;
 var gSourceModeButton;
 var gPreviewModeButton;
-var gIsHTMLEditor = false;
 var gColorObj = { LastTextColor:"", LastBackgroundColor:"", LastHighlightColor:"",
                   Type:"", SelectedType:"", NoDefault:false, Cancel:false,
                   HighlightColor:"", BackgroundColor:"", PageColor:"",
@@ -101,15 +100,17 @@ nsButtonPrefListener.prototype =
   domain: "editor.use_css",
   observe: function(subject, topic, prefName)
   {
+    if (!isHTMLEditor())
+      return;
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
     if (prefName.substr(0, this.domain.length) != this.domain) return;
 
     var cmd = document.getElementById("cmd_highlight");
-    if (cmd && gIsHTMLEditor) {
+    if (cmd) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
-      if (useCSS && gEditor && gIsHTMLEditor) {
+      if (useCSS && gEditor) {
         var mixedObj = {};
         var state = gEditor.getHighlightColorState(mixedObj);
         cmd.setAttribute("state", state);
@@ -120,7 +121,7 @@ nsButtonPrefListener.prototype =
         cmd.setAttribute("collapsed", "true");
       }
 
-      if (gEditor && gIsHTMLEditor)
+      if (gEditor)
         gEditor.isCSSEnabled = useCSS;
     }
   }
@@ -128,7 +129,8 @@ nsButtonPrefListener.prototype =
 
 function AfterHighlightColorChange()
 {
-  if (!gIsHTMLEditor) return;
+  if (!isHTMLEditor())
+    return;
 
   var button = document.getElementById("cmd_highlight");
   if (button) {
@@ -199,7 +201,7 @@ function IsInHTMLSourceMode()
 // are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
 function IsEditingRenderedHTML()
 {
-  return gIsHTMLEditor && !IsInHTMLSourceMode();
+  return isHTMLEditor() && !IsInHTMLSourceMode();
 }
 
 
@@ -253,16 +255,6 @@ var MessageComposeDocumentStateListener =
   }
 };
 
-function isPlaintextEditor()
-{
-  var editorflags;
-  try {
-    editorflags = gEditor.flags;
-  } catch(e) {}
-
-  return (editorflags & Components.interfaces.nsIPlaintextEditor.eEditorPlaintextMask);
-}
-
 function DoAllQueryInterfaceOnEditor()
 {
   // do QI here so the interfaces will be accessible on gEditor
@@ -312,7 +304,7 @@ var DocumentStateListener =
     SetSaveAndPublishUI(GetDocumentUrl());
 
     // Add mouse click watcher if right type of editor
-    if (!isPlaintextEditor())
+    if (isHTMLEditor())
       addEditorClickEventListener();
   },
 
@@ -646,7 +638,7 @@ function CheckAndSaveDocument(command, allowDontSave)
 
     // Save to local disk
     var contentsMIMEType;
-    if (gIsHTMLEditor)
+    if (isHTMLEditor())
       contentsMIMEType = "text/html";
     else
       contentsMIMEType = "text/plain";
@@ -1114,7 +1106,7 @@ function GetBackgroundElementWithColor()
   {
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-    if (IsCSSPrefChecked && gIsHTMLEditor)
+    if (IsCSSPrefChecked && isHTMLEditor())
     {
       var selection = gEditor.selection;
       if (selection)
@@ -1298,7 +1290,7 @@ function EditorSelectColor(colorType, mouseEvent)
         }
       }
     }
-    else if (currentColor != gColorObj.BackgroundColor && gIsHTMLEditor)
+    else if (currentColor != gColorObj.BackgroundColor && isHTMLEditor())
     {
       gEditor.beginTransaction();
       try
@@ -1405,7 +1397,7 @@ function EditorClick(event)
   // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && gIsHTMLEditor && gEditorDisplayMode == DisplayModeAllTags)
+  if (event.target && isHTMLEditor() && gEditorDisplayMode == DisplayModeAllTags)
   {
     try
     {
@@ -1429,7 +1421,8 @@ function EditorClick(event)
 //  but will accept a parent link, list, or table cell if inside one
 function GetObjectForProperties()
 {
-  if (!gIsHTMLEditor) return null;
+  if (!isHTMLEditor())
+    return null;
 
   var element = gEditor.getSelectedElement("");
   if (element)
@@ -1476,7 +1469,8 @@ function GetObjectForProperties()
 
 function SetEditMode(mode)
 {
-  if (!gIsHTMLEditor) return;
+  if (!isHTMLEditor())
+    return;
 
   var bodyNode = gEditor.document.getElementsByTagName("body").item(0);
   if (!bodyNode)
@@ -1674,7 +1668,8 @@ function CollapseItem(id, collapse)
 
 function SetDisplayMode(mode)
 {
-  if (!gIsHTMLEditor) return false;
+  if (!isHTMLEditor())
+    return false;
 
   // Already in requested mode:
   //  return false to indicate we didn't switch
@@ -2100,7 +2095,8 @@ function GetListStateString()
 
 function InitListMenu()
 {
-  if (!gIsHTMLEditor) return;
+  if (!isHTMLEditor())
+    return;
 
   var IDSuffix = GetListStateString();
 
@@ -2137,7 +2133,8 @@ function GetAlignmentString()
 
 function InitAlignMenu()
 {
-  if (!gIsHTMLEditor) return;
+  if (!isHTMLEditor())
+    return;
 
   var IDSuffix = GetAlignmentString();
 
@@ -2149,7 +2146,7 @@ function InitAlignMenu()
 
 function EditorInitToolbars()
 {
-  if (!gIsHTMLEditor)
+  if (!isHTMLEditor())
   {
     //Hide the formating toolbar
     HideItem("FormatToolbar");
@@ -2492,7 +2489,7 @@ function RemoveInapplicableUIElements()
   }
 
   // Remove menu items (from overlay shared with HTML editor) in non-HTML.
-  if (!gIsHTMLEditor)
+  if (!isHTMLEditor())
   {
     HideItem("insertAnchor");
     HideItem("insertImage");
@@ -2662,7 +2659,7 @@ function IsInTable()
 {
   if (!gEditor) return false;
   var flags = gEditor.flags;
-  return (gIsHTMLEditor &&
+  return (isHTMLEditor() &&
           !(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
           IsEditingRenderedHTML() &&
           null != gEditor.getElementOrParentByTagName("table", null));
@@ -2672,7 +2669,7 @@ function IsInTableCell()
 {
   if (!gEditor) return false;
   var flags = gEditor.flags;
-  return (gIsHTMLEditor &&
+  return (isHTMLEditor() &&
           !(flags & nsIPlaintextEditor.eEditorReadonlyMask) && 
           IsEditingRenderedHTML() &&
           null != gEditor.getElementOrParentByTagName("td", null));
@@ -2680,7 +2677,8 @@ function IsInTableCell()
 
 function IsSelectionInOneCell()
 {
-  if (!gEditor || !gIsHTMLEditor) return false;
+  if (!gEditor || !isHTMLEditor()) 
+    return false;
 
   var selection = gEditor.selection;
 
@@ -2728,7 +2726,8 @@ function EditorInsertTable()
 
 function EditorTableCellProperties()
 {
-  if (!gIsHTMLEditor) return;
+  if (!isHTMLEditor())
+    return;
 
   var cell = gEditor.getElementOrParentByTagName("td", null);
   if (cell) {
@@ -2740,7 +2739,8 @@ function EditorTableCellProperties()
 
 function GetNumberOfContiguousSelectedRows()
 {
-  if (!gIsHTMLEditor) return 0;
+  if (!isHTMLEditor())
+    return 0;
 
   var cellObj = { value: null };
   var rowObj = { value: 0 };
@@ -2773,7 +2773,8 @@ function GetNumberOfContiguousSelectedRows()
 
 function GetNumberOfContiguousSelectedColumns()
 {
-  if (!gIsHTMLEditor) return 0;
+  if (!isHTMLEditor())
+    return 0;
 
   var cellObj = { value: null };
   var colObj = { value: 0 };
