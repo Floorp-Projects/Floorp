@@ -44,6 +44,7 @@ REQUIRES = xpcom \
 		       locale \
 		       mork \
 		       unicharutil \
+		       js \
 		       $(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
