@@ -345,6 +345,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_SELECT :
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :
+  case NS_FORM_OBJECT :
     return PR_TRUE;
   }
 
