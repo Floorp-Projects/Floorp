@@ -208,7 +208,7 @@ perl ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ../../.. $1 $2 $3
 
   </target>
 
-  <target name="create.webclient.manifest">
+  <target name="create.webclient.manifest" depends="prepare">
     <echo message="Creating manifest to ${package.manifest}"/>
     <echo file="${package.manifest}">Manifest-Version: 1.0
 Created-By: Webclient Build System
@@ -234,6 +234,30 @@ Implementation-Vendor: mozilla.org
     <copy file="webclient_${package.version}_${short.os.name}.xpi"
           todir="${xpi.dist}"/>
 
+  </target>
+
+  <target name="build.demo" depends="clean.demo,create.webclient.manifest">
+
+    <mkdir dir="${basedir}/demo"/>
+    <mkdir dir="${basedir}/demo/ie"/>
+    <jar jarfile="${basedir}/demo/webclient_${package.version}_${short.os.name}.jar"
+         basedir="../../dist/classes" manifest="${package.manifest}"/>
+
+    <copy file="${basedir}/demo_ie.bat" todir="${basedir}/demo"/>
+    <copy file="${basedir}/demo_moz.bat" todir="${basedir}/demo"/>
+    <copy file="${basedir}/demo_del.bat" todir="${basedir}/demo"/>
+    <copy file="../dom/jni/javadomjni.dll" todir="${basedir}/demo"/>
+    <copy file="../dom/src/javadom.dll" todir="${basedir}/demo"/>
+    <copy file="../webclient/src_moz/webclient.dll" todir="${basedir}/demo"/>
+    <copy file="../webclient/src_ie/webclient.dll" todir="${basedir}/demo/ie"/>
+    <zip zipfile="${basedir}/wc_unpack_in_moz_bin.zip" 
+         basedir="${basedir}/demo"/>
+
+  </target>
+
+  <target name="clean.demo">
+    <delete dir="${basedir}/demo"/>
+    <delete file="${basedir}/wc_unpack_in_moz_bin.zip"/>
   </target>
 
 </project>
