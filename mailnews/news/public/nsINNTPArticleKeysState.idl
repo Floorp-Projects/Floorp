@@ -1,0 +1,35 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIMsgNewsgroup.idl"
+/* the XPIDL compiler doesn't like including this file?
+ * I think it's because this file include another file 
+ * I had to change the type below to a string temporarily */
+/* #include "nsIMsgNewsHost.idl" */
+
+[object, uuid(921AC214-96B5-11d2-B7EB-00805F05FFA5)]
+interface nsINNTPArticleKeysState : nsISupports {
+
+    void Init(in /* nsIMsgNewsHost */ string newsHost,
+          in nsIMsgNewsgroup newsgroup); 
+    void AddArticleKey(in long key);
+    void FinishAddingArticleKeys();
+    
+};
+
