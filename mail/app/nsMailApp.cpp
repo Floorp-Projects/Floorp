@@ -50,6 +50,8 @@ static const nsXREAppData kAppData = {
   APP_VERSION,
   BUILD_ID,
   "Copyright (c) 2004 mozilla.org",
+  PR_TRUE,
+  PR_TRUE,
   PR_FALSE
 };
 

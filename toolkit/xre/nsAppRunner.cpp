@@ -386,8 +386,8 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
 static const nsXREAppData* LoadAppData(const char* appDataFile)
 {
   static char vendor[256], name[256], version[32], buildID[32], copyright[512];
-  static const nsXREAppData data = {
-    vendor, name, version, buildID, copyright, PR_FALSE
+  static nsXREAppData data = {
+    vendor, name, version, buildID, copyright, PR_FALSE, PR_FALSE, PR_FALSE
   };
   
   nsCOMPtr<nsILocalFile> lf;
@@ -412,7 +412,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     char* buf;
     size_t bufLen;
     PRBool required;
-  } fields[] = {
+  } string_fields[] = {
     { "Vendor",    vendor,    sizeof(vendor),    PR_FALSE },
     { "Name",      name,      sizeof(name),      PR_TRUE  },
     { "Version",   version,   sizeof(version),   PR_FALSE },
@@ -421,15 +421,33 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   };
 
   for (int i=0; i<5; ++i) {
-    rv = parser.GetString("App", fields[i].key, fields[i].buf, fields[i].bufLen);
+    rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
+                          string_fields[i].bufLen);
     if (NS_FAILED(rv)) {
-      if (fields[i].required) {
-        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv, fields[i].key);
+      if (string_fields[i].required) {
+        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv,
+                string_fields[i].key);
         return nsnull;
       } else {
-        fields[i].buf[0] = '\0';
+        string_fields[i].buf[0] = '\0';
       }
     }
+  }
+
+  const struct {
+    const char* key;
+    PRBool* value;
+  } boolean_fields[] = {
+    { "EnableProfileMigrator",  &data.enableProfileMigrator },
+    { "EnableExtensionManager", &data.enableExtensionManager }
+  };
+  char buf[2];
+
+  for (int i=0; i<2; ++i) {
+    rv = parser.GetString("App", boolean_fields[i].key, buf, sizeof(buf));
+    if (NS_SUCCEEDED(rv))
+      *(boolean_fields[i].value) =
+          buf[0] == '1' || buf[0] == 't' || buf[0] == 'T';
   } 
 
 #ifdef DEBUG
@@ -439,6 +457,8 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   printf("    Version %s\n", data.appVersion);
   printf("    BuildID %s\n", data.appBuildID);
   printf("  Copyright %s\n", data.copyright);
+  printf("   EnablePM %u\n", data.enableProfileMigrator);
+  printf("   EnableEM %u\n", data.enableExtensionManager);
   printf("---------------------------------------------------------\n");
 #endif
 
@@ -1839,11 +1859,13 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       chromeReg->CheckForNewChrome();
 
-      nsCOMPtr<nsIExtensionManager> em
-        (do_GetService("@mozilla.org/extensions/manager;1"));
-      NS_ENSURE_TRUE(em, 1);
+      if (gAppData->enableExtensionManager) {
+        nsCOMPtr<nsIExtensionManager> em
+          (do_GetService("@mozilla.org/extensions/manager;1"));
+        NS_ENSURE_TRUE(em, 1);
 
-      em->Register();
+        em->Register();
+      }
     }
     return 0;
   }
@@ -1937,55 +1959,58 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
-  // Check for version compatibility with the last version of the app this 
-  // profile was started with.
-  char version[MAXPATHLEN];
-  GetVersion(lf, version, MAXPATHLEN);
   PRBool upgraded = PR_FALSE;
   PRBool componentsListChanged = PR_FALSE;
 
-  // Extensions are deemed compatible for all builds in the "x.x.x+" 
-  // period in between milestones for developer convenience (even though
-  // ongoing code changes might actually make that a poor assumption. 
-  // The size and expertise of the nightly build testing community is 
-  // expected to be sufficient to deal with this issue. 
-  //
-  // Every time a profile is loaded by a build with a different build id, 
-  // it updates the compatibility.ini file saying what build last wrote
-  // the compreg.dat. On subsequent launches if the build id matches, 
-  // there is no need for re-registration. If the user loads the same
-  // profile in different builds the component registry must be
-  // re-generated to prevent mysterious component loading failures.
-  // 
-  if (!strcmp(version, aAppData->appBuildID)) {
-    componentsListChanged = ComponentsListChanged(lf);
-    if (componentsListChanged) {
-      // Remove compreg.dat and xpti.dat, forcing component re-registration,
-      // with the new list of additional components directories specified
-      // in "components.ini" which we have just discovered changed since the
-      // last time the application was run. 
-      RemoveComponentRegistries(lf);
-      
-      // Tell the dir provider to supply the list of components locations 
-      // specified in "components.ini" when it is asked for the "ComsDL"
-      // enumeration.
-      dirProvider.RegisterExtraComponents();
+  if (gAppData->enableExtensionManager) {
+    // Check for version compatibility with the last version of the app this 
+    // profile was started with.
+    char version[MAXPATHLEN];
+    GetVersion(lf, version, MAXPATHLEN);
+
+    // Extensions are deemed compatible for all builds in the "x.x.x+" 
+    // period in between milestones for developer convenience (even though
+    // ongoing code changes might actually make that a poor assumption. 
+    // The size and expertise of the nightly build testing community is 
+    // expected to be sufficient to deal with this issue. 
+    //
+    // Every time a profile is loaded by a build with a different build id, 
+    // it updates the compatibility.ini file saying what build last wrote
+    // the compreg.dat. On subsequent launches if the build id matches, 
+    // there is no need for re-registration. If the user loads the same
+    // profile in different builds the component registry must be
+    // re-generated to prevent mysterious component loading failures.
+    // 
+    if (!strcmp(version, aAppData->appBuildID)) {
+      componentsListChanged = ComponentsListChanged(lf);
+      if (componentsListChanged) {
+        // Remove compreg.dat and xpti.dat, forcing component re-registration,
+        // with the new list of additional components directories specified
+        // in "components.ini" which we have just discovered changed since the
+        // last time the application was run. 
+        RemoveComponentRegistries(lf);
+        
+        // Tell the dir provider to supply the list of components locations 
+        // specified in "components.ini" when it is asked for the "ComsDL"
+        // enumeration.
+        dirProvider.RegisterExtraComponents();
+      }
+      // Nothing need be done for the normal startup case.
     }
-    // Nothing need be done for the normal startup case.
-  }
-  else {
-    // Remove compreg.dat and xpti.dat, forcing component re-registration
-    // with the default set of components (this disables any potentially
-    // troublesome incompatible XPCOM components). 
-    RemoveComponentRegistries(lf);
+    else {
+      // Remove compreg.dat and xpti.dat, forcing component re-registration
+      // with the default set of components (this disables any potentially
+      // troublesome incompatible XPCOM components). 
+      RemoveComponentRegistries(lf);
 
-    // Tell the Extension Manager it should check for incompatible 
-    // Extensions and re-write the Components manifest ("components.ini")
-    // with a list of XPCOM components for compatible extensions
-    upgraded = PR_TRUE;
+      // Tell the Extension Manager it should check for incompatible 
+      // Extensions and re-write the Components manifest ("components.ini")
+      // with a list of XPCOM components for compatible extensions
+      upgraded = PR_TRUE;
 
-    // The Extension Manager will write the Compatibility manifest with
-    // the current app version. 
+      // The Extension Manager will write the Compatibility manifest with
+      // the current app version. 
+    }
   }
 
   PRBool needsRestart = PR_FALSE;
@@ -2030,7 +2055,8 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // So we can open and close windows during startup
       appShellService->EnterLastWindowClosingSurvivalArea();
 
-      if (gDoMigration) {
+      // Profile Migration
+      if (gAppData->enableProfileMigrator && gDoMigration) {
         gDoMigration = PR_FALSE;
         nsCOMPtr<nsIProfileMigrator> pm
           (do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
@@ -2045,30 +2071,32 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       NS_ENSURE_SUCCESS(rv, 1);
 
       // Extension Compatibility Checking and Startup
-      nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
-      NS_ENSURE_TRUE(em, 1);
+      if (gAppData->enableExtensionManager) {
+        nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
+        NS_ENSURE_TRUE(em, 1);
 
-      if (CheckArg("install-global-extension") || 
-          CheckArg("install-global-theme") || CheckArg("list-global-items") || 
-          CheckArg("lock-item") || CheckArg("unlock-item")) {
-        // Do the required processing and then shut down.
-        em->HandleCommandLineArgs();
-        return 0;
-      }
-
-      char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-      noRestart = noEMRestart && !strcmp("1", noEMRestart);
-      if (!noRestart && upgraded) {
-        rv = em->CheckForMismatches(&needsRestart);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Oops, looks like you have a extensions.rdf file generated by a buggy nightly build. Please remove it!");
-        if (NS_FAILED(rv)) {
-          needsRestart = PR_FALSE;
-          upgraded = PR_FALSE;
+        if (CheckArg("install-global-extension") || 
+            CheckArg("install-global-theme") || CheckArg("list-global-items") || 
+            CheckArg("lock-item") || CheckArg("unlock-item")) {
+          // Do the required processing and then shut down.
+          em->HandleCommandLineArgs();
+          return 0;
         }
-      }
 
-      if (noRestart || (!upgraded || !needsRestart))
-        em->Start(componentsListChanged, &needsRestart);
+        char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
+        noRestart = noEMRestart && !strcmp("1", noEMRestart);
+        if (!noRestart && upgraded) {
+          rv = em->CheckForMismatches(&needsRestart);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Oops, looks like you have a extensions.rdf file generated by a buggy nightly build. Please remove it!");
+          if (NS_FAILED(rv)) {
+            needsRestart = PR_FALSE;
+            upgraded = PR_FALSE;
+          }
+        }
+
+        if (noRestart || (!upgraded || !needsRestart))
+          em->Start(componentsListChanged, &needsRestart);
+      }
 
       if (noRestart || (!upgraded && !needsRestart)) {
 

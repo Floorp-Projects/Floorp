@@ -77,6 +77,18 @@ struct nsXREAppData
    */
   const char *copyright;
 
+  /**
+   * Indicates whether or not the profile migrator service may be
+   * invoked at startup when creating a profile.
+   */
+  PRBool enableProfileMigrator;
+
+  /**
+   * Indicates whether or not the extension manager service should be
+   * initialized at startup.
+   */
+  PRBool enableExtensionManager;
+
   PRBool useStartupPrefs; // XXXbsmedberg this is going away
 };
 
