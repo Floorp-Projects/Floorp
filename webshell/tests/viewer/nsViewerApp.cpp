@@ -350,6 +350,9 @@ NS_IMETHODIMP
 nsViewerApp::OpenWindow()
 {
   // Create browser window
+  // XXX Some piece of code needs to properly hold the reference to this
+  // browser window. For the time being the reference is released by the
+  // browser event handling code during processing of the NS_DESTROY event...
   nsBrowserWindow* bw = nsnull;
   nsresult rv = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,

@@ -203,6 +203,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 
   case NS_DESTROY:
     bw->Destroy();
+    NS_RELEASE(bw);
     return nsEventStatus_eConsumeDoDefault;
 
   case NS_MENU_SELECTED:
@@ -471,7 +472,6 @@ nsBrowserWindow::nsBrowserWindow()
 
 nsBrowserWindow::~nsBrowserWindow()
 {
-  Destroy();
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)
