@@ -231,7 +231,7 @@ GARBAGE		+= $(MOCSRCS) $(XFEPRIVDIR)/Netscape.mk $(OBJDIR)/icon-pixmaps.inc $(OB
 ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
 else
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
 endif
 
 ifdef DBMALLOC
