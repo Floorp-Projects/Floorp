@@ -706,7 +706,8 @@ if ($count > 0) {
 <INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
 <INPUT TYPE=SUBMIT VALUE=\"Long Format\">
 <A HREF=\"query.cgi\">Query Page</A>
-<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
+&nbsp;&nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter New Bug</A>
+&nbsp;&nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
 </FORM>";
     if (!$dotweak && $count > 1) {
         print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
