@@ -151,8 +151,14 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
 {
   if (aInString[pos] == '@')
   {
-    aOutString.AssignWithConversion("mailto:");
-    aOutString += aInString;
+    // only pre-pend a mailto url if the string contains a .domain in it..
+    //i.e. we want to linkify johndoe@foo.com but not "let's meet @8pm"
+    nsDependentString inString(aInString, aInLength);
+    if (inString.FindChar('.', pos) != kNotFound) // if we have a '.' after the @ sign....
+    {
+      aOutString.AssignWithConversion("mailto:");
+      aOutString += aInString;
+    }
   }
   else if (aInString[pos] == '.')
   {
