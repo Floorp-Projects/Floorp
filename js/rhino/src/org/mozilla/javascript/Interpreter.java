@@ -2080,19 +2080,18 @@ public class Interpreter
         initFrame(cx, scope, thisObj, args, null, 0, args.length,
                   ifun, null, frame);
 
+        Object result;
         try {
-            frame = interpret(cx, frame);
+            result = interpret(cx, frame);
         } finally {
             // Always clenup interpreterLineCounting to avoid memory leaks
             // throgh stored in Context frame
             cx.interpreterLineCounting = null;
         }
-
-        return (frame.result != DBL_MRK)
-            ? frame.result : ScriptRuntime.wrapNumber(frame.resultDbl);
+        return result;
     }
 
-    private static CallFrame interpret(Context cx, CallFrame frame)
+    private static Object interpret(Context cx, CallFrame frame)
     {
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
@@ -2107,7 +2106,7 @@ public class Interpreter
         String stringReg = null;
         int indexReg = -1;
         // Exception object to rethrow or catch
-        Throwable throwable = null;
+        Object throwable = null;
 
         StateLoop: for (;;) {
 
@@ -2141,7 +2140,6 @@ public class Interpreter
                 double[] sDbl = frame.sDbl;
                 byte[] iCode = frame.idata.itsICode;
                 String[] strings = frame.idata.itsStringTable;
-                boolean useActivation = frame.useActivation;
 
                 // Use local for stackTop as well. Since execption handlers
                 // can only exist at statement level where stack is empty,
@@ -2175,7 +2173,7 @@ switch (op) {
     }
     case Token.RETHROW: {
         indexReg += frame.localShift;
-        throwable = (Throwable)stack[indexReg];
+        throwable = stack[indexReg];
         break withoutExceptions;
     }
     case Token.GE :
@@ -2263,7 +2261,7 @@ switch (op) {
         Object value = stack[indexReg];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
-            throwable = (Throwable)value;
+            throwable = value;
             break withoutExceptions;
         }
         // Normal return from GOSUB
@@ -2696,10 +2694,10 @@ switch (op) {
             if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
             throw ScriptRuntime.notFunctionError(lhs);
         }
-        Function f = (Function)lhs;
+        Function fun = (Function)lhs;
         Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
                                         indexReg);
-        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
+        stack[stackTop] = fun.construct(cx, frame.scope, outArgs);
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2743,7 +2741,7 @@ switch (op) {
         indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.SETVAR :
-        if (!useActivation) {
+        if (!frame.useActivation) {
             stack[indexReg] = stack[stackTop];
             sDbl[indexReg] = sDbl[stackTop];
         } else {
@@ -2758,7 +2756,7 @@ switch (op) {
         // fallthrough
     case Token.GETVAR :
         ++stackTop;
-        if (!useActivation) {
+        if (!frame.useActivation) {
             stack[stackTop] = stack[indexReg];
             sDbl[stackTop] = sDbl[indexReg];
         } else {
@@ -2770,7 +2768,7 @@ switch (op) {
         // indexReg : varindex
         ++stackTop;
         int incrDecrMask = iCode[frame.pc];
-        if (!useActivation) {
+        if (!frame.useActivation) {
             stack[stackTop] = DBL_MRK;
             Object varValue = stack[indexReg];
             double d;
@@ -3098,31 +3096,17 @@ switch (op) {
                 } // end of Loop: for
 
                 exitFrame(cx, frame, null);
+                Object callResult = frame.result;
+                double callResultDbl = frame.resultDbl;
                 if (frame.parentFrame != null) {
-                    Object calleeResult = frame.result;
-                    double calleeResultDbl = frame.resultDbl;
                     frame = frame.parentFrame;
 
-                    if (frame.savedCallOp == Token.CALL) {
-                        frame.stack[frame.savedStackTop] = calleeResult;
-                        frame.sDbl[frame.savedStackTop] = calleeResultDbl;
-                    } else if (frame.savedCallOp == Token.NEW) {
-                        // If construct returns scriptable,
-                        // then it replaces on stack top saved original instance
-                        // of the object.
-                        if (calleeResult instanceof Scriptable
-                            && calleeResult != undefined)
-                        {
-                            frame.stack[frame.savedStackTop] = calleeResult;
-                        }
-                    } else {
-                        Kit.codeBug();
-                    }
-                    frame.savedCallOp = 0;
+                    setCallResult(frame, callResult, callResultDbl);
                     continue StateLoop;
                 }
 
-                return frame;
+                return (callResult != DBL_MRK)
+                    ? callResult : ScriptRuntime.wrapNumber(callResultDbl);
 
             }  // end of interpreter withoutExceptions: try
             catch (Throwable ex) {
@@ -3173,9 +3157,13 @@ switch (op) {
                     exState = EX_NO_JS_STATE;
                 }
             }
-            if (frame.debuggerFrame != null && !(throwable instanceof Error)) {
+            if (frame.debuggerFrame != null
+                && throwable instanceof RuntimeException)
+            {
+                // Call debugger only for RuntimeException
+                RuntimeException rex = (RuntimeException)throwable;
                 try {
-                    frame.debuggerFrame.onExceptionThrown(cx, throwable);
+                    frame.debuggerFrame.onExceptionThrown(cx, rex);
                 } catch (Throwable ex) {
                     // Any exception from debugger
                     //     => unconditionally terminate JS
@@ -3363,7 +3351,7 @@ switch (op) {
     }
 
     private static void exitFrame(Context cx, CallFrame frame,
-                                     Throwable throwable)
+                                  Object throwable)
     {
         if (frame.idata.itsNeedsActivation) {
             ScriptRuntime.exitActivationFunction(cx);
@@ -3371,10 +3359,15 @@ switch (op) {
 
         if (frame.debuggerFrame != null) {
             try {
-                if (throwable != null) {
-                    frame.debuggerFrame.onExit(cx, true, throwable);
+                if (throwable instanceof Throwable) {
+                    frame.debuggerFrame.onExit(cx, true, (Throwable)throwable);
                 } else {
-                    frame.debuggerFrame.onExit(cx, false, frame.result);
+                    Object result;
+                    result = frame.result;
+                    if (result == DBL_MRK) {
+                        result = ScriptRuntime.wrapNumber(frame.resultDbl);
+                    }
+                    frame.debuggerFrame.onExit(cx, false, result);
                 }
             } catch (Throwable ex) {
                 System.err.println(
@@ -3382,6 +3375,28 @@ switch (op) {
                 ex.printStackTrace(System.err);
             }
         }
+    }
+
+    private static void setCallResult(CallFrame frame,
+                                      Object callResult,
+                                      double callResultDbl)
+    {
+        if (frame.savedCallOp == Token.CALL) {
+            frame.stack[frame.savedStackTop] = callResult;
+            frame.sDbl[frame.savedStackTop] = callResultDbl;
+        } else if (frame.savedCallOp == Token.NEW) {
+            // If construct returns scriptable,
+            // then it replaces on stack top saved original instance
+            // of the object.
+            if (callResult instanceof Scriptable
+                && callResult != Undefined.instance)
+            {
+                frame.stack[frame.savedStackTop] = callResult;
+            }
+        } else {
+            Kit.codeBug();
+        }
+        frame.savedCallOp = 0;
     }
 
     private static int stack_int32(CallFrame frame, int i)
