@@ -1631,7 +1631,7 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
   int weightIndex;
   if (steps) {
     if (steps < 10) {
-      int base = (weight - (steps * 101));
+      int base = (weight - steps);
       GET_WEIGHT_INDEX(weightIndex, base);
       while (steps--) {
         nsFontWeight* prev = weights[weightIndex];
@@ -1647,7 +1647,7 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
     }
     else if (steps > 90) {
       steps = (100 - steps);
-      int base = (weight + (steps * 101));
+      int base = (weight + steps);
       GET_WEIGHT_INDEX(weightIndex, base);
       while (steps--) {
         nsFontWeight* prev = weights[weightIndex];
