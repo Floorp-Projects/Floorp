@@ -137,7 +137,9 @@ public:
    /**
      * Retrieve const ptr to internal buffer; DO NOT TRY TO FREE IT!
      */
-  const char* GetBuffer(void) const;
+  const char* GetBuffer() const { return get(); } // to be deprecated, prefer |get()|
+
+  const char* get() const { return mStr; }
 
   PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
 
