@@ -76,7 +76,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             names[0] = method.getName();
         } else if (!names[0].equals(method.getName())) {
             throw new RuntimeException("internal method name mismatch");
-        }
+        }                
         // XXX a more intelligent growth algorithm would be nice
         int len = methods == null ? 0 : methods.length;
         Method[] newMeths = new Method[len + 1];
@@ -287,7 +287,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 int j;
                 for (j = 0; j < paramTypes.length; j++) {
                     if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
-                        if (debug) printDebug("Rejecting ", member, args);
+                        if (debug) printDebug("Rejecting (args can't convert) ", 
+                                              member, args);
                         break;
                     }
                 }
@@ -315,7 +316,22 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                     bestFitTypes = paramTypes;
                 }
                 else {
-                    if (debug) printDebug("Rejecting ", member, args);
+                    if (preference == PREFERENCE_EQUAL &&
+                        Modifier.isStatic(bestFit.getModifiers()) &&
+                        bestFit.getDeclaringClass().isAssignableFrom(
+                            member.getDeclaringClass()))                                          
+                    {
+                        // On some JVMs, Class.getMethods will return all
+                        // static methods of the class heirarchy, even if
+                        // a derived class's parameters match exactly.
+                        // We want to call the dervied class's method.
+                        if (debug) printDebug("Rejecting (overridden static)",
+                                              member, args);
+                        bestFit = member;
+                        bestFitTypes = paramTypes;
+                    } else {
+                        if (debug) printDebug("Rejecting ", member, args);
+                    }
                 }
             }
         }
@@ -410,8 +426,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
      * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
      */
     public static int preferSignature(Object[] args, 
-                                      Class[] sig1, Class[] sig2) {
-
+                                      Class[] sig1, Class[] sig2) 
+    {
         int preference = 0;
 
         for (int j = 0; j < args.length; j++) {
