@@ -450,6 +450,7 @@ nsFrameLoader::EnsureDocShell()
       }
     }
 
+    // if it isn't content, set it to the parent's type
     PRInt32 shellType = isContent ? nsIDocShellTreeItem::typeContent : parentType;
     docShellAsItem->SetItemType(shellType);
 
