@@ -1,0 +1,10 @@
+packages\core.jar:
+    communicator\content\xpinstall\xpistatus.xul (content\xpistatus.xul)
+    communicator\content\xpinstall\xpistatus.js (content\xpistatus.js)
+    communicator\content\xpinstall\institems.xul (content\institems.xul)
+    communicator\content\xpinstall\institems.js (content\institems.js)
+
+locales.jar:
+    en-US\communicator\locale\xpinstall\xpinstall.properties (locale\en-US\xpinstall.properties)
+    en-US\communicator\locale\xpinstall\xpistatus.dtd (locale\en-US\xpistatus.dtd)
+    en-US\communicator\locale\xpinstall\institems.dtd (locale\en-US\institems.dtd)
