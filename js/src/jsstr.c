@@ -4443,7 +4443,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
 {
     uint32 ucs4Char;
     uint32 minucs4Char;
-    // from Unicode 3.1, non-shortest form is illegal 
+    /* from Unicode 3.1, non-shortest form is illegal */
     static const uint32 minucs4Table[] = {
         0x00000080, 0x00000800, 0x0001000, 0x0020000, 0x0400000
     };
