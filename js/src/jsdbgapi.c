@@ -102,7 +102,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 	/* Restore opcode at pc so it can be saved again. */
 	*pc = (jsbytecode)trap->op;
     } else {
-	trap = JS_malloc(cx, sizeof *trap);
+	trap = (JSTrap*) JS_malloc(cx, sizeof *trap);
 	if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
 	    if (trap)
 		JS_free(cx, trap);
@@ -424,7 +424,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 
     wp = FindWatchPoint(rt, obj, id);
     if (!wp) {
-	wp = JS_malloc(cx, sizeof *wp);
+	wp = (JSWatchPoint*) JS_malloc(cx, sizeof *wp);
 	if (!wp)
 	    return JS_FALSE;
 	if (!js_AddRoot(cx, &wp->closure, "wp->closure")) {
@@ -807,7 +807,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     }
 
     n = scope->map.freeslot;
-    pd = JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
+    pd = (JSPropertyDesc*) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
 	return JS_FALSE;
     i = 0;

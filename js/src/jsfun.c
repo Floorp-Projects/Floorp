@@ -162,7 +162,7 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
 
     switch (slot) {
       case ARGS_CALLEE:
@@ -193,7 +193,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
 
     switch (slot) {
       case ARGS_CALLEE:
@@ -226,7 +226,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     uintN attrs, slot;
 
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (!fp)
 	return JS_TRUE;
 
@@ -372,7 +372,7 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
@@ -410,7 +410,7 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
@@ -437,7 +437,7 @@ js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
 
     JS_ASSERT(JSVAL_IS_INT(id));
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (fp) {
 	/* XXX no jsint slot commoning here to avoid MSVC1.52 crashes */
 	if ((uintN)JSVAL_TO_INT(id) < fp->nvars)
@@ -452,7 +452,7 @@ js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
 
     JS_ASSERT(JSVAL_IS_INT(id));
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (fp) {
 	/* XXX jsint slot is block-local here to avoid MSVC1.52 crashes */
 	jsint slot = JSVAL_TO_INT(id);
@@ -472,7 +472,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSPropertyOp getter;
     JSProperty *prop;
 
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (!fp)
 	return JS_TRUE;
     fun = fp->fun;
@@ -509,7 +509,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     jsid symid;
     uintN slot, nslots;
 
-    fp = JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
     if (!fp)
 	return JS_TRUE;
 
@@ -568,7 +568,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     JSStackFrame *fp;
 
     if (type == JSTYPE_FUNCTION) {
-	fp = JS_GetPrivate(cx, obj);
+	fp = (JSStackFrame*) JS_GetPrivate(cx, obj);
 	if (fp)
 	    *vp = OBJECT_TO_JSVAL(fp->fun->object);
     }
@@ -640,7 +640,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (!fun)
 	return JS_TRUE;
 
@@ -761,7 +761,7 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (!fun)
 	return JS_TRUE;
 
@@ -810,7 +810,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 	return JS_TRUE;
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (!fun || !fun->object)
 	return JS_TRUE;
 
@@ -887,7 +887,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (!fun)
 	return;
     if (fun->object == obj)
@@ -932,7 +932,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	 * (return true, no error report) in case one does due to API pilot
 	 * or internal error.
 	 */
-	fun = JS_GetPrivate(xdr->cx, *objp);
+	fun = (JSFunction*) JS_GetPrivate(xdr->cx, *objp);
 	if (!fun)
 	    return JS_TRUE;
 	atomstr = fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
@@ -1142,7 +1142,7 @@ fun_toString_sub(JSContext *cx, JSObject *obj, uint32 indent,
     }
 
     obj = JSVAL_TO_OBJECT(fval);
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (!fun)
 	return JS_TRUE;
     if (argc && !js_ValueToECMAUint32(cx, argv[0], &indent))
@@ -1375,7 +1375,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	*rval = OBJECT_TO_JSVAL(obj);
     }
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     if (fun)
 	return JS_TRUE;
 
@@ -1658,7 +1658,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
     JSFunction *fun;
 
     /* Allocate a function struct. */
-    fun = JS_malloc(cx, sizeof *fun);
+    fun = (JSFunction*) JS_malloc(cx, sizeof *fun);
     if (!fun)
 	return NULL;
 
@@ -1705,7 +1705,7 @@ js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     newfunobj = js_NewObject(cx, &js_FunctionClass, funobj, parent);
     if (!newfunobj)
 	return NULL;
-    fun = JS_GetPrivate(cx, funobj);
+    fun = (JSFunction*) JS_GetPrivate(cx, funobj);
     if (!js_LinkFunctionObject(cx, fun, newfunobj)) {
 	cx->newborn[GCX_OBJECT] = NULL;
 	return NULL;
@@ -1760,7 +1760,7 @@ js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing)
 	js_ReportIsNotFunction(cx, vp, constructing);
 	return NULL;
     }
-    return JS_GetPrivate(cx, obj);
+    return (JSFunction*) JS_GetPrivate(cx, obj);
 }
 
 void

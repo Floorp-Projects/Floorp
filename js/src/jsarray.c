@@ -350,13 +350,13 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	growth = (1 + 3 + 1) * sizeof(jschar);
 	if (!chars) {
 	    nchars = 0;
-	    chars = malloc(growth);
+	    chars = (jschar*) malloc(growth);
 	    if (!chars)
 		goto done;
 	} else {
 	    MAKE_SHARP(he);
 	    nchars = js_strlen(chars);
-	    chars = realloc((ochars = chars), nchars * sizeof(jschar) + growth);
+	    chars = (jschar*) realloc((ochars = chars), nchars * sizeof(jschar) + growth);
 	    if (!chars) {
 		free(ochars);
 		goto done;
@@ -395,11 +395,11 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 		  str->length +
 		  3 + 1) * sizeof(jschar);
 	if (!chars) {
-	    chars = malloc(growth);
+	    chars = (jschar*) malloc(growth);
 	    if (!chars)
 		goto done;
 	} else {
-	    chars = realloc((ochars = chars), growth);
+	    chars = (jschar*) realloc((ochars = chars), growth);
 	    if (!chars) {
 		free(ochars);
 		goto done;
@@ -652,7 +652,7 @@ static int
 sort_compare(const void *a, const void *b, void *arg)
 {
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
-    CompareArgs *ca = arg;
+    CompareArgs *ca = (CompareArgs*) arg;
     JSContext *cx = ca->context;
     jsdouble cmp = -1;
     jsval fval, argv[2], rval;
@@ -725,7 +725,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_GetLengthProperty(cx, obj, &len))
 	return JS_FALSE;
-    vec = JS_malloc(cx, (size_t) len * sizeof(jsval));
+    vec = (jsval*) JS_malloc(cx, (size_t) len * sizeof(jsval));
     if (!vec)
 	return JS_FALSE;
 

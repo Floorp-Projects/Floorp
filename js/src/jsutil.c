@@ -109,7 +109,7 @@ static void PStrFromCStr(const char* src, Str255 dst)
 	dst[0] = length;
 }
 
-static void debugstr(const char *debuggerMsg)
+static void jsdebugstr(const char *debuggerMsg)
 {
 	Str255		pStr;
 	
@@ -126,7 +126,7 @@ static void dprintf(const char *format, ...)
 	buffer = (char *)JS_vsmprintf(format, ap);
 	va_end(ap);
 	
-	debugstr(buffer);
+	jsdebugstr(buffer);
 	JS_DELETE(buffer);
 }
 #endif   /* XP_MAC */

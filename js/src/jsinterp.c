@@ -329,7 +329,7 @@ js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
 	/* Find most recent non-native function frame. */
 	if (fp->fun && !fp->fun->call) {
@@ -350,7 +350,7 @@ js_SetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
 	/* Find most recent non-native function frame. */
 	if (fp->fun && !fp->fun->call) {
@@ -372,7 +372,7 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsint slot;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
 	/* Find most recent non-native function frame. */
 	if (fp->fun && !fp->fun->call) {
@@ -396,7 +396,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsint slot;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = JS_GetPrivate(cx, obj);
+    fun = (JSFunction*) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
 	/* Find most recent non-native function frame. */
 	if (fp->fun && !fp->fun->call) {
@@ -482,7 +482,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 	if (JSVAL_IS_FUNCTION(cx, v)) {
 	    funobj = JSVAL_TO_OBJECT(v);
 	    parent = OBJ_GET_PARENT(cx, funobj);
-	    fun = JS_GetPrivate(cx, funobj);
+	    fun = (JSFunction*) JS_GetPrivate(cx, funobj);
 
             /* Make vp refer to funobj to keep it available as argv[-2]. */
             *vp = v;
@@ -498,7 +498,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 	    goto bad;
     } else {
 	/* Get private data and set derived locals from it. */
-	fun = JS_GetPrivate(cx, funobj);
+	fun = (JSFunction*) JS_GetPrivate(cx, funobj);
 have_fun:
 	native = fun->call;
 	script = fun->script;
@@ -1119,7 +1119,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	len = cs->length;
 
 #ifdef DEBUG
-	tracefp = cx->tracefp;
+	tracefp = (FILE*) cx->tracefp;
 	if (tracefp) {
 	    intN nuses, n;
 
@@ -1866,7 +1866,7 @@ js_Interpret(JSContext *cx, jsval *result)
 		    str3 = str;
 		} else {
 		    length3 = length + length2;
-		    chars = JS_malloc(cx, (length3 + 1) * sizeof(jschar));
+		    chars = (jschar*) JS_malloc(cx, (length3 + 1) * sizeof(jschar));
 		    if (!chars) {
 			ok = JS_FALSE;
 			goto out;
@@ -2625,7 +2625,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
-            fun = JS_GetPrivate(cx, obj);
+            fun = (JSFunction*) JS_GetPrivate(cx, obj);
             id = (jsid) fun->atom;
 
             /*
@@ -2761,7 +2761,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
-            fun = JS_GetPrivate(cx, obj);
+            fun = (JSFunction*) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
             ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
@@ -2831,7 +2831,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    atom = GET_ATOM(cx, script, pc);
 	    JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
 	    obj = ATOM_TO_OBJECT(atom);
-	    fun = JS_GetPrivate(cx, obj);
+	    fun = (JSFunction*) JS_GetPrivate(cx, obj);
 
 	    /*
              * Clone the function object with the current scope chain as the
@@ -2875,7 +2875,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_GETTER:
           case JSOP_SETTER:
             JS_ASSERT(len == 1);
-            op2 = *++pc;
+            op2 = (JSOp) *++pc;
             cs = &js_CodeSpec[op2];
             len = cs->length;
             switch (op2) {

@@ -250,7 +250,7 @@ DumpRegExp(JSContext *cx, RENode *ren)
 	switch (REOP(ren)) {
 	  case REOP_ALT:
 	    printf(" %d\n", ren->next->offset);
-	    ok = DumpRegExp(cx, ren->kid);
+	    ok = DumpRegExp(cx, (RENode*) ren->kid);
 	    if (!ok)
 		goto out;
 	    break;
@@ -262,7 +262,7 @@ DumpRegExp(JSContext *cx, RENode *ren)
 	  case REOP_ASSERT:
 	  case REOP_ASSERT_NOT:
 	    printf("\n");
-	    ok = DumpRegExp(cx, ren->kid);
+	    ok = DumpRegExp(cx, (RENode*) ren->kid);
 	    if (!ok)
 		goto out;
 	    break;
@@ -270,21 +270,21 @@ DumpRegExp(JSContext *cx, RENode *ren)
 	  case REOP_QUANT:
 	    printf(" next %d min %d max %d\n",
 		   ren->next->offset, ren->u.range.min, ren->u.range.max);
-	    ok = DumpRegExp(cx, ren->kid);
+	    ok = DumpRegExp(cx, (RENode*) ren->kid);
 	    if (!ok)
 		goto out;
 	    break;
 
 	  case REOP_LPAREN:
 	    printf(" num %d\n", (int)ren->u.num);
-	    ok = DumpRegExp(cx, ren->kid);
+	    ok = DumpRegExp(cx, (RENode*) ren->kid);
 	    if (!ok)
 		goto out;
 	    break;
 
 	  case REOP_LPARENNON:
             printf("\n");
-	    ok = DumpRegExp(cx, ren->kid);
+	    ok = DumpRegExp(cx, (RENode*) ren->kid);
 	    if (!ok)
 		goto out;
 	    break;
@@ -328,7 +328,7 @@ DumpRegExp(JSContext *cx, RENode *ren)
 	    break;
 
 	  case REOP_UCFLAT:
-	    cp = ren->kid;
+	    cp = (jschar*) ren->kid;
 	    len = (jschar *)ren->u.kid2 - cp;
 	    for (i = 0; i < len; i++)
 		PrintChar(cp[i]);
@@ -341,7 +341,7 @@ DumpRegExp(JSContext *cx, RENode *ren)
 	    break;
 
 	  case REOP_UCCLASS:
-	    cp = ren->kid;
+	    cp = (jschar*) ren->kid;
 	    len = ren->u.ucclass.kidlen;
 	    printf(" [");
 	    for (i = 0; i < len; i++)
@@ -371,7 +371,7 @@ NewRENode(CompilerState *state, REOp op, void *kid)
     RENode *ren;
 
     cx = state->context;
-    ren = JS_malloc(cx, sizeof *ren);
+    ren = (RENode*) JS_malloc(cx, sizeof *ren);
     if (!ren) {
 	JS_ReportOutOfMemory(cx);
 	return NULL;
@@ -402,7 +402,7 @@ FixNext(CompilerState *state, RENode *ren1, RENode *ren2, RENode *oldnext)
     for (; (next = ren1->next) != NULL && next != oldnext; ren1 = next) {
 	if (REOP(ren1) == REOP_ALT) {
 	    /* Find the end of this alternative's operand list. */
-	    kid = ren1->kid;
+	    kid = (RENode*) ren1->kid;
 	    if (REOP(kid) == REOP_JUMP)
 		continue;
 	    for (ren = kid; ren->next; ren = ren->next)
@@ -448,7 +448,7 @@ FixNext(CompilerState *state, RENode *ren1, RENode *ren2, RENode *oldnext)
       case REOP_OPT:
       case REOP_LPAREN:
       case REOP_LPARENNON:
-	if (!FixNext(state, ren1->kid, ren2, oldnext))
+	if (!FixNext(state, (RENode*) ren1->kid, ren2, oldnext))
 	    return JS_FALSE;
 	break;
       default:;
@@ -1183,7 +1183,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat)
 #endif
 
     resize = sizeof *re + state.progLength - 1;
-    re = JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
+    re = (JSRegExp*) JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
     if (!re)
 	goto out;
     re->source = str;
@@ -1373,8 +1373,8 @@ static const jschar *matchNonGreedyKid(MatchState *state, RENode *ren,
 
 static void calcBMSize(MatchState *state, RENode *ren)
 {
-    const jschar *cp  = ren->kid;
-    const jschar *cp2 = ren->u.kid2;
+    const jschar *cp  = (const jschar *) ren->kid;
+    const jschar *cp2 = (const jschar *) ren->u.kid2;
     uintN maxc = 0;
     jschar c, c2;
     while (cp < cp2) {
@@ -1422,10 +1422,12 @@ static JSBool buildBitmap(MatchState *state, RENode *ren)
     uint8   *bitmap;
     uint8   fill;
     JSBool  inrange;
-    const jschar *cp = ren->kid, *end = ren->u.kid2, *ocp;
+    const jschar *cp = (const jschar *) ren->kid;
+    const jschar *end = (const jschar *) ren->u.kid2;
+    const jschar *ocp;
 
     calcBMSize(state, ren);
-    ren->u.ucclass.bitmap = bitmap = JS_malloc(state->context, 
+    ren->u.ucclass.bitmap = bitmap = (uint8*) JS_malloc(state->context, 
                                             ren->u.ucclass.bmsize);
     if (!bitmap) {
 	JS_ReportOutOfMemory(state->context);
@@ -1755,7 +1757,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               c = *cp;
               b = (c >> 3);
               if (b >= ren->u.ucclass.bmsize) {
-                  cp2 = ren->kid;
+                  cp2 = (jschar*) ren->kid;
                   if (*cp2 == '^')
                       cp++;
                   else
@@ -1886,7 +1888,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               return NULL;
           break;
         case REOP_FLAT:
-          source = ren->kid;
+          source = (jschar*) ren->kid;
           length = (const jschar *)ren->u.kid2 - source;
           if ((cp + length) > cpend)
               return NULL;
@@ -2056,10 +2058,11 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 		morepar = res->moreParens;
 		if (!morepar) {
 		    res->moreLength = 10;
-		    morepar = JS_malloc(cx, 10 * sizeof(JSSubString));
+		    morepar = (JSSubString*) JS_malloc(cx,
+                                                       10 * sizeof(JSSubString));
 		} else if (morenum > res->moreLength) {
 		    res->moreLength += 10;
-		    morepar = JS_realloc(cx, morepar,
+		    morepar = (JSSubString*) JS_realloc(cx, morepar,
 					 res->moreLength * sizeof(JSSubString));
 		}
 		if (!morepar) {
@@ -2167,7 +2170,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
     JS_LOCK_OBJ(cx, obj);
-    re = JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp*) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
     if (re) {
 	switch (slot) {
 	  case REGEXP_SOURCE:
@@ -2203,7 +2206,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
     JS_LOCK_OBJ(cx, obj);
-    re = JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp*) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
     if (re && slot == REGEXP_LAST_INDEX) {
 	if (!js_ValueToNumber(cx, *vp, &d))
 	    return JS_FALSE;
@@ -2365,7 +2368,7 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 {
     JSRegExp *re;
 
-    re = JS_GetPrivate(cx, obj);
+    re = (JSRegExp*) JS_GetPrivate(cx, obj);
     if (!re)
 	return;
     js_DestroyRegExp(cx, re);
@@ -2394,7 +2397,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
     uint8 flags;
 
     if (xdr->mode == JSXDR_ENCODE) {
-	re = JS_GetPrivate(xdr->cx, *objp);
+	re = (JSRegExp*) JS_GetPrivate(xdr->cx, *objp);
 	if (!re)
 	    return JS_FALSE;
 	source = re->source;
@@ -2450,7 +2453,7 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     ok = JS_TRUE;
     JS_LOCK_OBJ(cx, obj);
-    re = JS_GetPrivate(cx, obj);
+    re = (JSRegExp*) JS_GetPrivate(cx, obj);
     if (!re) {
 	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
 	goto out;
@@ -2460,7 +2463,7 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nflags = 0;
     for (flags = re->flags; flags != 0; flags &= flags - 1)
 	nflags++;
-    chars = JS_malloc(cx, (length + nflags + 1) * sizeof(jschar));
+    chars = (jschar*) JS_malloc(cx, (length + nflags + 1) * sizeof(jschar));
     if (!chars) {
 	ok = JS_FALSE;
 	goto out;
@@ -2526,7 +2529,7 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	ok = JS_FALSE;
 	goto out;
     }
-    oldre = JS_GetPrivate(cx, obj);
+    oldre = (JSRegExp*) JS_GetPrivate(cx, obj);
     ok = JS_SetPrivate(cx, obj, re);
     if (!ok) {
 	js_DestroyRegExp(cx, re);
@@ -2551,7 +2554,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
 	return JS_FALSE;
-    re = JS_GetPrivate(cx, obj);
+    re = (JSRegExp*) JS_GetPrivate(cx, obj);
     if (!re)
 	return JS_TRUE;
     ok = locked = JS_FALSE;

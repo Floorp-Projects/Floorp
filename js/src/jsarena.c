@@ -120,7 +120,7 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 	}
 	sz = JS_MAX(pool->arenasize, nb);	/* allocate a new arena */
 	sz += sizeof *a + pool->mask;           /* header and alignment slop */
-	b = malloc(sz);
+	b = (JSArena*) malloc(sz);
 	if (!b)
 	    return 0;
 	a = a->next = b;

@@ -499,17 +499,17 @@ gc_mark(JSRuntime *rt, void *thing)
 #endif
 
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
-	obj = thing;
+	obj = (JSObject*) thing;
 	vp = obj->slots;
 	if (vp) {
 	    scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 	    if (scope) {
-		clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+		clasp = (JSClass*) JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
 
 		if (clasp == &js_ScriptClass) {
 		    v = vp[JSSLOT_PRIVATE];
 		    if (!JSVAL_IS_VOID(v)) {
-			script = JSVAL_TO_PRIVATE(v);
+			script = (JSScript*) JSVAL_TO_PRIVATE(v);
 			if (script)
 			    GC_MARK_SCRIPT(rt, script, prev);
 		    }
@@ -518,7 +518,7 @@ gc_mark(JSRuntime *rt, void *thing)
 		if (clasp == &js_FunctionClass) {
 		    v = vp[JSSLOT_PRIVATE];
 		    if (!JSVAL_IS_VOID(v)) {
-			fun = JSVAL_TO_PRIVATE(v);
+			fun = (JSFunction*) JSVAL_TO_PRIVATE(v);
 			if (fun) {
 			    if (fun->atom)
 				GC_MARK_ATOM(rt, fun->atom, prev);
@@ -875,7 +875,7 @@ restart:
 
     /* Finalize phase.  Don't hold the GC lock while running finalizers! */
     JS_UNLOCK_GC(rt);
-    for (final = mark; ; final++) {
+    for (final = (JSGCThing*) mark; ; final++) {
 	if ((jsuword)final >= ma->avail) {
 	    ma = ma->next;
 	    if (!ma)

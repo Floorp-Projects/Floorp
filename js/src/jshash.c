@@ -73,7 +73,7 @@ DefaultFreeTable(void *pool, void *item)
 static JSHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-    return malloc(sizeof(JSHashEntry));
+    return (JSHashEntry*) malloc(sizeof(JSHashEntry));
 }
 
 static void
@@ -106,7 +106,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
 
     if (!allocOps) allocOps = &defaultHashAllocOps;
 
-    ht = (*allocOps->allocTable)(allocPriv, sizeof *ht);
+    ht = (JSHashTable*) (*allocOps->allocTable)(allocPriv, sizeof *ht);
     if (!ht)
 	return NULL;
     memset(ht, 0, sizeof *ht);
@@ -119,7 +119,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
     }
 #endif  /* WIN16 */
     nb = n * sizeof(JSHashEntry *);
-    ht->buckets = (*allocOps->allocTable)(allocPriv, nb);
+    ht->buckets = (JSHashEntry**) (*allocOps->allocTable)(allocPriv, nb);
     if (!ht->buckets) {
         (*allocOps->freeTable)(allocPriv, ht);
         return NULL;
@@ -213,7 +213,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
             return NULL;
 #endif  /* WIN16 */
         nb = 2 * n * sizeof(JSHashEntry *);
-        ht->buckets = (*ht->allocOps->allocTable)(ht->allocPriv, nb);
+        ht->buckets = (JSHashEntry**) (*ht->allocOps->allocTable)(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return NULL;
@@ -290,7 +290,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
         ht->shift++;
         oldbuckets = ht->buckets;
         nb = n * sizeof(JSHashEntry*) / 2;
-        ht->buckets = (*ht->allocOps->allocTable)(ht->allocPriv, nb);
+        ht->buckets = (JSHashEntry**) (*ht->allocOps->allocTable)(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return;
@@ -454,7 +454,7 @@ JS_HashString(const void *key)
     const unsigned char *s;
 
     h = 0;
-    for (s = key; *s; s++)
+    for (s = (const unsigned char *)key; *s; s++)
         h = (h >> 28) ^ (h << 4) ^ *s;
     return h;
 }

@@ -412,7 +412,7 @@ math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
 
 static JSFunctionSpec math_static_methods[] = {
-#ifdef JS_HAS_TOSOURCE
+#if JS_HAS_TOSOURCE
     {js_toSource_str,   math_toSource,		0, 0, 0},
 #endif
     {"abs",		math_abs,		1, 0, 0},

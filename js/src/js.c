@@ -105,7 +105,7 @@ FILE *gTestResultFile = NULL;
 
 char *strdup(const char *str)
 {
-    char *copy = malloc(strlen(str)+1);
+    char *copy = (char*) malloc(strlen(str)+1);
     if (copy)
         strcpy(copy, str);
     return copy;
@@ -200,7 +200,7 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
 	SIOUXSetTitle(consoleName);
 
 	/* set up a buffer for stderr (otherwise it's a pig). */
-	setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
+	setvbuf(stderr, (char*) malloc(BUFSIZ), _IOLBF, BUFSIZ);
 
 	*argc = 1;
 	*argv = mac_argv;
@@ -412,7 +412,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 		if (i+1 == argc) {
 		    return usage();
 		}
-		JS_SetVersion(cx, atoi(argv[i+1]));
+		JS_SetVersion(cx, (JSVersion) atoi(argv[i+1]));
 		i++;
 		break;
 
@@ -453,7 +453,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     length = argc - i;
-    vector = JS_malloc(cx, length * sizeof(jsval));
+    vector = (jsval*) JS_malloc(cx, length * sizeof(jsval));
     p = vector;
 
     if (vector == NULL)
@@ -485,7 +485,7 @@ static JSBool
 Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (argc > 0 && JSVAL_IS_INT(argv[0]))
-	*rval = INT_TO_JSVAL(JS_SetVersion(cx, JSVAL_TO_INT(argv[0])));
+	*rval = INT_TO_JSVAL(JS_SetVersion(cx, (JSVersion) JSVAL_TO_INT(argv[0])));
     else
 	*rval = INT_TO_JSVAL(JS_GetVersion(cx));
     return JS_TRUE;
@@ -684,7 +684,7 @@ ValueToScript(JSContext *cx, jsval v)
 
     if (JSVAL_IS_OBJECT(v) &&
 	JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass) {
-	script = JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
+	script = (JSScript*) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
     } else {
 	fun = JS_ValueToFunction(cx, v);
 	if (!fun)
@@ -727,7 +727,7 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     JSString *str;
     JSStackFrame *caller;
 
-    str = closure;
+    str = (JSString*) closure;
     caller = cx->fp->down;
     if (!JS_EvaluateScript(cx, caller->scopeChain,
 			   JS_GetStringBytes(str), JS_GetStringLength(str),
@@ -833,7 +833,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 	    fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
                     PTRDIFF(sn, notes, jssrcnote), offset, delta,
                     js_SrcNoteName[SN_TYPE(sn)]);
-	    type = SN_TYPE(sn);
+	    type = (JSSrcNoteType) SN_TYPE(sn);
 	    switch (type) {
 	      case SRC_SETLINE:
 		fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
@@ -862,7 +862,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 		if (type != SRC_FUNCDEF) {
 		    bytes = ATOM_BYTES(atom);
 		} else {
-		    fun = JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
+		    fun = (JSFunction*) JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
 		    str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
 		    bytes = str ? JS_GetStringBytes(str) : "N/A";
 		}
@@ -1059,7 +1059,7 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static int
 DumpAtom(JSHashEntry *he, int i, void *arg)
 {
-    FILE *fp = arg;
+    FILE *fp = (FILE*) arg;
     JSAtom *atom = (JSAtom *)he;
 
     fprintf(fp, "%3d %08x %5lu ",
@@ -1076,7 +1076,7 @@ DumpAtom(JSHashEntry *he, int i, void *arg)
 static int
 DumpSymbol(JSHashEntry *he, int i, void *arg)
 {
-    FILE *fp = arg;
+    FILE *fp = (FILE*) arg;
     JSSymbol *sym = (JSSymbol *)he;
 
     fprintf(fp, "%3d %08x", i, (uintN)he->keyHash);
@@ -1106,7 +1106,7 @@ DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
 	    DumpSymbol(&sym->entry, i, fp);
 	}
     } else {
-	JS_HashTableDump(scope->data, dump, fp);
+	JS_HashTableDump((JSHashTable*) scope->data, dump, fp);
     }
 }
 

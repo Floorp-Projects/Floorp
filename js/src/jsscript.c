@@ -71,7 +71,7 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
 	return JS_FALSE;
-    script = JS_GetPrivate(cx, obj);
+    script = (JSScript*) JS_GetPrivate(cx, obj);
 
     /* Let n count the source string length, j the "front porch" length. */
     j = JS_snprintf(buf, sizeof buf, "(new %s(", js_ScriptClass.name);
@@ -97,7 +97,7 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Allocate the source string and copy into it. */
-    t = JS_malloc(cx, (n + 1) * sizeof(jschar));
+    t = (jschar*) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!t)
 	return JS_FALSE;
     for (i = 0; i < j; i++)
@@ -129,7 +129,7 @@ script_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
 	return JS_FALSE;
-    script = JS_GetPrivate(cx, obj);
+    script = (JSScript*) JS_GetPrivate(cx, obj);
     if (!script) {
 	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
 	return JS_TRUE;
@@ -199,7 +199,7 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
 
     /* Swap script for obj's old script, if any. */
-    oldscript = JS_GetPrivate(cx, obj);
+    oldscript = (JSScript*) JS_GetPrivate(cx, obj);
     if (!JS_SetPrivate(cx, obj, script)) {
 	js_DestroyScript(cx, script);
 	return JS_FALSE;
@@ -223,7 +223,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
 	return JS_FALSE;
-    script = JS_GetPrivate(cx, obj);
+    script = (JSScript*) JS_GetPrivate(cx, obj);
     if (!script)
 	return JS_TRUE;
 
@@ -393,7 +393,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         !JS_XDRUint32(xdr, &notelen) ||
         /* malloc on decode only */
         (!(xdr->mode == JSXDR_ENCODE ||
-           (script->notes = JS_malloc(xdr->cx, notelen)) != NULL)) ||
+           (script->notes = (jssrcnote*)
+            JS_malloc(xdr->cx, notelen)) != NULL)) ||
         !JS_XDRBytes(xdr, (char **)&script->notes, notelen) ||
         !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
@@ -406,7 +407,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         script->lineno = (uintN)lineno;
         script->depth = (uintN)depth;
         if (numtrys) {
-            script->trynotes = JS_malloc(xdr->cx,
+            script->trynotes = (JSTryNote*) JS_malloc(xdr->cx,
                                          sizeof(JSTryNote) * (numtrys + 1));
             if (!script->trynotes)
                 goto error;
@@ -445,7 +446,7 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
 	return JS_FALSE;
-    script = JS_GetPrivate(cx, obj);
+    script = (JSScript*) JS_GetPrivate(cx, obj);
     if (!script)
 	return JS_TRUE;
 
@@ -529,7 +530,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Swap bytes in Unichars to keep frozen strings machine-independent. */
     from = (jschar *)buf;
-    to = JS_malloc(cx, len * sizeof(jschar));
+    to = (jschar*) JS_malloc(cx, len * sizeof(jschar));
     if (!to)
 	return JS_FALSE;
     for (i = 0; i < len; i++)
@@ -550,7 +551,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Swap script for obj's old script, if any. */
-    oldscript = JS_GetPrivate(cx, obj);
+    oldscript = (JSScript*) JS_GetPrivate(cx, obj);
     ok = JS_SetPrivate(cx, obj, script);
     if (!ok) {
 	JS_free(cx, script);
@@ -600,7 +601,7 @@ script_finalize(JSContext *cx, JSObject *obj)
 {
     JSScript *script;
 
-    script = JS_GetPrivate(cx, obj);
+    script = (JSScript*) JS_GetPrivate(cx, obj);
     if (script)
 	js_DestroyScript(cx, script);
 }
@@ -608,7 +609,11 @@ script_finalize(JSContext *cx, JSObject *obj)
 static JSBool
 script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+#if JS_HAS_SCRIPT_OBJECT
     return script_exec(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval);
+#else
+    return JS_FALSE;
+#endif
 }
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
@@ -674,7 +679,8 @@ js_NewScript(JSContext *cx, uint32 length)
 {
     JSScript *script;
 
-    script = JS_malloc(cx, sizeof(JSScript) + length * sizeof(jsbytecode));
+    script = (JSScript*) JS_malloc(cx, sizeof(JSScript) +
+                                   length * sizeof(jsbytecode));
     if (!script)
 	return NULL;
     memset(script, 0, sizeof(JSScript));
@@ -806,7 +812,7 @@ js_PCToLineNumber(JSScript *script, jsbytecode *pc)
     lineno = script->lineno;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
 	offset += SN_DELTA(sn);
-	type = SN_TYPE(sn);
+	type = (JSSrcNoteType) SN_TYPE(sn);
 	if (type == SRC_SETLINE) {
 	    if (offset <= target)
 		lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
@@ -836,7 +842,7 @@ js_LineNumberToPC(JSScript *script, uintN target)
 	if (lineno >= target)
 	    break;
 	offset += SN_DELTA(sn);
-	type = SN_TYPE(sn);
+	type = (JSSrcNoteType) SN_TYPE(sn);
 	if (type == SRC_SETLINE) {
 	    lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
 	} else if (type == SRC_NEWLINE) {
@@ -858,7 +864,7 @@ js_GetScriptLineExtent(JSScript *script)
 	return 0;
     lineno = script->lineno;
     for (; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-	type = SN_TYPE(sn);
+	type = (JSSrcNoteType) SN_TYPE(sn);
 	if (type == SRC_SETLINE) {
 	    lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
 	} else if (type == SRC_NEWLINE) {
