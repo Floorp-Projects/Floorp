@@ -381,9 +381,9 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:browser:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:browser:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:xpfe:browser:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:browser:resources:locale:en-US:unix:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:browser:resources:locale:en-US:win:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:browser:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:communicator:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
@@ -393,9 +393,9 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:win:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:unix:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:win:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:embedding:components:ui:jar.mn", $chrome_dir, \%jars);
 
