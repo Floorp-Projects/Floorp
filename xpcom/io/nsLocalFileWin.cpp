@@ -250,6 +250,29 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
     LL_L2I(*lo, a64);
 }
 
+static PRBool IsShortcut(const char* workingPath, int filePathLen)
+{
+    // check to see if it is shortcut, i.e., it has ".lnk" in it
+    unsigned char* dest = _mbsstr((unsigned char*)workingPath,
+                                  (unsigned char*)".lnk");
+    if (!dest)
+        return PR_FALSE;
+
+    // find index of ".lnk"
+    int result = (int)(dest - (unsigned char*)workingPath);
+
+    // if ".lnk" is not at the leaf of this path, we need to make sure the
+    // next char after ".lnk" is a '\\'. e.g. "c:\\foo.lnk\\a.html" is valid,
+    // whereas "c:\\foo.lnkx" is not.
+    if (result + 4 < filePathLen)
+    {
+        if (workingPath[result + 4] != '\\')
+            return PR_FALSE;
+    }
+    return PR_TRUE;
+
+}
+
 
 //-----------------------------------------------------------------------------
 // nsDirEnumerator
@@ -425,8 +448,12 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
 {
 
     nsresult rv = NS_OK;
+    PRBool isDir = PR_FALSE;
     
-    if (strstr(workingPath, ".lnk") == nsnull)
+    // check to see if it is shortcut, i.e., it has ".lnk" in it
+    int filePathLen = strlen(workingPath);
+    PRBool isShortcut = IsShortcut(workingPath, filePathLen);
+    if (!isShortcut)
         return NS_ERROR_FILE_INVALID_PATH;
 
 #ifdef DEBUG_dougt
@@ -434,10 +461,14 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
 #endif
 
     // Get the native path for |this|
-    char* filePath = (char*) nsMemory::Clone( workingPath, strlen(workingPath)+1 );
+    // allocate extra bytes incase we need to append '\\' and '\0' to the 
+    // workingPath, if it is just a drive letter and a colon  
+    char *filePath = (char *) nsMemory::Alloc(filePathLen+2);
 
-    if (filePath == nsnull)
+    if (!filePath)
         return NS_ERROR_NULL_POINTER;
+
+    memcpy(filePath, workingPath, filePathLen + 1);
     
     // We are going to walk the native file path
     // and stop at each slash.  For each partial
@@ -446,141 +477,126 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
     // if it is, we will resolve it and continue
     // with that resolved path.
     
-    // Get the first slash.          
-    char* slash = strchr(filePath, '\\');
-            
-    if (!slash && filePath[0] != nsnull && filePath[1] == ':' && filePath[2] == '\0')
+    // Get the first slash.
+    unsigned char* slash = _mbschr((unsigned char*) filePath, '\\');
+     
+    if (slash == nsnull)
     {
-        // we have a drive letter and a colon (eg 'c:'
-        // this is resolve already
-        
-        int filePathLen = strlen(filePath);
-        char* rp = (char*) nsMemory::Alloc( filePathLen + 2 );
-        if (!rp)
-            return NS_ERROR_OUT_OF_MEMORY;
-        memcpy( rp, filePath, filePathLen );
-        rp[filePathLen] = '\\';
-        rp[filePathLen+1] = 0;
-        *resolvedPath = rp;
-        
-        nsMemory::Free(filePath);
-        return NS_OK;
-    }
-    else
-    {
-        nsMemory::Free(filePath);
-        return NS_ERROR_FILE_INVALID_PATH;
+        if (nsCRT::IsAsciiAlpha(filePath[0]) && filePath[1] == ':' && filePath[2] == '\0')
+        {
+            // we have a drive letter and a colon (eg 'c:'
+            // this is resolve already
+            filePath[filePathLen] = '\\';
+            filePath[filePathLen+1] = '\0';
+
+            *resolvedPath = filePath;
+            return NS_OK;
+        }
+        else
+        {
+            nsMemory::Free(filePath);
+            return NS_ERROR_FILE_INVALID_PATH;
+        }
     }
         
 
     // We really cant have just a drive letter as
     // a shortcut, so we will skip the first '\\'
-    slash = strchr(++slash, '\\');
-    
+    slash = _mbschr(++slash, '\\');
+
     while (slash || resolveTerminal)
     {
         // Change the slash into a null so that
         // we can use the partial path. It is is 
         // null, we know it is the terminal node.
-        
         if (slash)
         {
             *slash = '\0';
         }
+        else if (resolveTerminal)
+        {
+            // this is our last time in this loop.
+            // set loop condition to false
+            resolveTerminal = PR_FALSE;
+        }
         else
         {
-            if (resolveTerminal)
-            {
-                // this is our last time in this loop.
-                // set loop condition to false
-
-                resolveTerminal = PR_FALSE;
-            }
-            else
-            {
-                // something is wrong.  we should not have
-                // both slash being null and resolveTerminal 
-                // not set!
-                nsMemory::Free(filePath);
-                return NS_ERROR_NULL_POINTER;
-            }
+            // something is wrong.  we should not have
+            // both slash being null and resolveTerminal 
+            // not set!
+            nsMemory::Free(filePath);
+            return NS_ERROR_NULL_POINTER;
         }
                 
-        WORD wsz[MAX_PATH];     // TODO, Make this dynamically allocated.
-
         // check to see the file is a shortcut by the magic .lnk extension.
         size_t offset = strlen(filePath) - 4;
         if ((offset > 0) && (strncmp( (filePath + offset), ".lnk", 4) == 0))
         {
-            MultiByteToWideChar(CP_ACP, 0, filePath, -1, wsz, MAX_PATH); 
-        }        
-        else
-        {
-            char linkStr[MAX_PATH];
-            strcpy(linkStr, filePath);
-            strcat(linkStr, ".lnk");
-
-            // Ensure that the string is Unicode. 
-            MultiByteToWideChar(CP_ACP, 0, linkStr, -1, wsz, MAX_PATH); 
-        }        
-
-        char *temp = (char*) nsMemory::Alloc( MAX_PATH );
-        if (temp == nsnull)
-            return NS_ERROR_NULL_POINTER;
-
-        if (gResolver)
-            rv = gResolver->Resolve(wsz, temp);
-        else
-            rv = NS_ERROR_FAILURE;
-
-        if (NS_SUCCEEDED(rv))
-        {
-            // found a new path.
-            
-            // addend a slash on it since it does not come out of GetPath()
-            // with one only if it is a directory.  If it is not a directory
-            // and there is more to append, than we have a problem.
-            
-            struct stat st;
-            int statrv = stat(temp, &st);
-            
-            if (0 == statrv && (_S_IFDIR & st.st_mode))
-                strcat(temp, "\\");
-            
-            if (slash)
+            nsAutoString ucsBuf;
+            NS_CopyNativeToUnicode(nsDependentCString(filePath), ucsBuf);
+            char *temp = (char*) nsMemory::Alloc( MAX_PATH );
+            if (temp == nsnull)
             {
-                // save where we left off.
-                char *carot= (temp + strlen(temp) -1 );
-                
-                // append all the stuff that we have not done.
-                strcat(temp, ++slash);
-                
-                slash = carot;
+                nsMemory::Free(filePath);
+                return NS_ERROR_NULL_POINTER;
             }
 
-            nsMemory::Free(filePath);
-            filePath = temp;
-            
-        }
+            if (gResolver)
+                rv = gResolver->Resolve(ucsBuf.get(), temp);
+            else
+                rv = NS_ERROR_FAILURE;
 
-        else
+            if (NS_SUCCEEDED(rv))
+            {
+                // found a new path.
+            
+                // addend a slash on it since it does not come out of GetPath()
+                // with one only if it is a directory.  If it is not a directory
+                // and there is more to append, than we have a problem.
+            
+                struct stat st;
+                int statrv = stat(temp, &st);
+            
+                if (0 == statrv && (_S_IFDIR & st.st_mode))
+                {
+                    strcat(temp, "\\");
+                    isDir = PR_TRUE;
+                }
+            
+                if (slash)
+                {
+                    // save where we left off.
+                    char *carot= (temp + strlen(temp) -1 );
+                
+                    // append all the stuff that we have not done.
+                    _mbscat((unsigned char*)temp, ++slash);
+                
+                    slash = (unsigned char*)carot;
+                }
+
+                nsMemory::Free(filePath);
+                filePath = temp;
+            
+            }
+            else
+            {
+                // could not resolve shortcut.  Return error;
+                nsMemory::Free(filePath);
+                return NS_ERROR_FILE_INVALID_PATH;
+            }
+        }
+        if (slash)
         {
-            // could not resolve shortcut.  Return error;
-            nsMemory::Free(filePath);
-            return NS_ERROR_FILE_INVALID_PATH;
+            *slash = '\\';
+            ++slash;
+            slash = _mbschr(slash, '\\');
         }
     }    
-    if (slash)
-    {
-        *slash = '\\';
-        ++slash;
-        slash = strchr(slash, '\\');
-    }
 
     // kill any trailing separator
     char* temp = filePath;
     int len = strlen(temp) - 1;
-    if(temp[len] == '\\')
+    if((temp[len] == '\\') && (!isDir))
         temp[len] = '\0';
     
     *resolvedPath = filePath;
@@ -739,10 +755,15 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 NS_IMETHODIMP  
 nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 {
-    if (mDirty)
+    // check to see if it is shortcut, i.e., it has ".lnk" in it
+    PRBool isShortcut = IsShortcut(mWorkingPath.get(), mWorkingPath.Length());
+
+    if (!isShortcut && mDirty)
     {  
-        // we will optimize here.  If we are opening a file and we are still
-        // dirty, assume that the working path is vaild and try to open it.
+        // we will optimize here. If we are not a shortcut and we are opening
+        // a file and we are still dirty, assume that the working path is vaild
+        // and try to open it. The working path will be different from its
+        // resolved path for a shortcut file.
         // If it does work, get the stat info via the file descriptor 
         mResolvedPath.Assign(mWorkingPath);
         *_retval = PR_Open(mResolvedPath.get(), flags, mode);
@@ -1840,9 +1861,18 @@ nsLocalFile::IsHidden(PRBool *_retval)
     
     if (NS_FAILED(rv))
         return rv;
-    
-    const char *workingFilePath = mWorkingPath.get();
-    DWORD word = GetFileAttributes(workingFilePath);
+
+    DWORD word;
+    if (mFollowSymlinks)
+    {
+        const char *resolvedFilePath = mResolvedPath.get();
+        word = GetFileAttributes(resolvedFilePath);
+    }
+    else
+    {
+        const char *workingFilePath = mWorkingPath.get();
+        word = GetFileAttributes(workingFilePath);
+    }
 
     *_retval =  ((word & FILE_ATTRIBUTE_HIDDEN)  != 0); 
 

@@ -730,7 +730,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
     else {
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
-        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_FALSE, getter_AddRefs(file))) ) {
+        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(file))) ) {
         nsCAutoString urlSpec;
         NS_GetURLSpecFromFile(file, urlSpec);
 
