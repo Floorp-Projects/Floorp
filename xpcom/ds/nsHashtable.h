@@ -33,7 +33,7 @@
 #ifndef nsHashtable_h__
 #define nsHashtable_h__
 
-#include "plhash.h"
+#include "pldhash.h"
 #include "prlock.h"
 #include "nscore.h"
 #include "nsCom.h"
@@ -88,7 +88,6 @@ enum {
     kHashEnumerateStop      = PR_FALSE,
     kHashEnumerateNext      = PR_TRUE,
     kHashEnumerateRemove    = 2,
-    kHashEnumerateUnhash    = 3
 };
 
 typedef PRIntn
@@ -112,15 +111,15 @@ typedef nsresult
 class NS_COM nsHashtable {
   protected:
     // members  
-    PRLock*     mLock;
-    PLHashTable mHashtable;
-    PRBool      mEnumerating;
+    PRLock*         mLock;
+    PLDHashTable    mHashtable;
+    PRBool          mEnumerating;
 
   public:
     nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
     virtual ~nsHashtable();
 
-    PRInt32 Count(void) { return mHashtable.nentries; }
+    PRInt32 Count(void) { return mHashtable.entryCount; }
     PRBool Exists(nsHashKey *aKey);
     void *Put(nsHashKey *aKey, void *aData);
     void *Get(nsHashKey *aKey);
@@ -158,7 +157,9 @@ class NS_COM nsObjectHashtable : public nsHashtable {
     PRBool RemoveAndDelete(nsHashKey *aKey);
 
   protected:
-    static PRIntn PR_CALLBACK CopyElement(PLHashEntry *he, PRIntn i, void *arg);
+    static PLDHashOperator PR_CALLBACK CopyElement(PLDHashTable* table,
+                                                   PLDHashEntryHdr* hdr,
+                                                   PRUint32 i, void *arg);
     
     nsHashtableCloneElementFunc mCloneElementFun;
     void*                       mCloneElementClosure;
@@ -200,7 +201,9 @@ class NS_COM nsSupportsHashtable
 
   private:
     static PRBool PR_CALLBACK ReleaseElement(nsHashKey *, void *, void *);
-    static PRIntn PR_CALLBACK EnumerateCopy(PLHashEntry *, PRIntn, void *);
+    static PLDHashOperator PR_CALLBACK EnumerateCopy(PLDHashTable*,
+                                                     PLDHashEntryHdr* hdr,
+                                                     PRUint32 i, void *arg);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
