@@ -301,7 +301,7 @@ PRBool nsFileSpec::IsSymlink() const
         
         if (SUCCEEDED(hres)) 
         {
-            WORD wsz[MAX_PATH]; 
+            WCHAR wsz[MAX_PATH]; 
             // Ensure that the string is Unicode. 
             MultiByteToWideChar(CP_ACP, 0, mPath, -1, wsz, MAX_PATH); 
  
@@ -352,7 +352,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
         
         if (SUCCEEDED(hres)) 
         {
-            WORD wsz[MAX_PATH]; 
+            WCHAR wsz[MAX_PATH]; 
             // Ensure that the string is Unicode. 
             MultiByteToWideChar(CP_ACP, 0, mPath, -1, wsz, MAX_PATH); 
  
