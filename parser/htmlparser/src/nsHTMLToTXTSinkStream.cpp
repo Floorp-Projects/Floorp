@@ -466,7 +466,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     {
       if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace))
       {
-#ifdef DEBUG_akkana
+#ifdef DEBUG_preformatted
         printf("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif
         mPreFormatted = PR_TRUE;
@@ -489,7 +489,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
           if (NS_SUCCEEDED(err))
           {
             SetWrapColumn((PRUint32)col);
-#ifdef DEBUG_akkana
+#ifdef DEBUG_preformatted
             printf("Set wrap column to %d based on style\n", mWrapColumn);
 #endif
           }
@@ -497,7 +497,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       }
       else if (-1 != style.Find("pre", PR_TRUE, whitespace))
       {
-#ifdef DEBUG_akkana
+#ifdef DEBUG_preformatted
         printf("Set mPreFormatted based on style pre\n");
 #endif
         mPreFormatted = PR_TRUE;
