@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS = base content document forms style table 
+DIRS = base content document forms style table tests
 
 include <$(DEPTH)\layout\config\rules.mak>
