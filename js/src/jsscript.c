@@ -507,7 +507,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
              * after the srcnotes of the first trynote.
              */
             uint32 osrcnotes = nsrcnotes;
-            nsrcnotes += JSTRYNOTE_ALIGNMASK;
+
+            if (ntrynotes)
+                nsrcnotes += JSTRYNOTE_ALIGNMASK;
             newscript = JS_realloc(cx, script,
                                    sizeof(JSScript) +
                                    length * sizeof(jsbytecode) +
@@ -987,7 +989,8 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
     JSScript *script;
 
     /* Round up source note count to align script->trynotes for its type. */
-    nsrcnotes += JSTRYNOTE_ALIGNMASK;
+    if (ntrynotes)
+        nsrcnotes += JSTRYNOTE_ALIGNMASK;
     script = (JSScript *) JS_malloc(cx,
                                     sizeof(JSScript) +
                                     length * sizeof(jsbytecode) +
@@ -1010,14 +1013,14 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
 JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
 {
-    uint32 length, prologLength;
+    uint32 mainLength, prologLength;
     JSScript *script;
     const char *filename;
 
-    length = CG_OFFSET(cg);
+    mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
     script = js_NewScript(cx,
-                          prologLength + length,
+                          prologLength + mainLength,
                           CG_COUNT_FINAL_SRCNOTES(cg),
                           CG_COUNT_FINAL_TRYNOTES(cg));
     if (!script)
@@ -1026,7 +1029,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     /* Now that we have script, error control flow must go to label bad. */
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
-    memcpy(script->main, CG_BASE(cg), length * sizeof(jsbytecode));
+    memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     if (!js_InitAtomMap(cx, &script->atomMap, &cg->atomList))
         goto bad;
 
