@@ -852,15 +852,16 @@ nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *aListener,
                                      PRUint32 aNotifyMask)
 {
   nsresult rv;
-  nsWeakPtr listener = do_GetWeakReference(aListener);
-  if (!listener) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
-  nsListenerInfo* info = GetListenerInfo(listener);
+  nsListenerInfo* info = GetListenerInfo(aListener);
   if (info) {
     // The listener is already registered!
     return NS_ERROR_FAILURE;
+  }
+
+  nsWeakPtr listener = do_GetWeakReference(aListener);
+  if (!listener) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   info = new nsListenerInfo(listener, aNotifyMask);
@@ -876,12 +877,8 @@ NS_IMETHODIMP
 nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
 {
   nsresult rv;
-  nsWeakPtr listener = do_GetWeakReference(aListener);
-  if (!listener) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
-  nsListenerInfo* info = GetListenerInfo(listener);
+  nsListenerInfo* info = GetListenerInfo(aListener);
   if (info) {
     rv = mListenerInfoList.RemoveElement(info) ? NS_OK : NS_ERROR_FAILURE;
     delete info;
@@ -1322,18 +1319,21 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 nsListenerInfo * 
-nsDocLoaderImpl::GetListenerInfo(nsIWeakReference *aListener)
+nsDocLoaderImpl::GetListenerInfo(nsIWebProgressListener *aListener)
 {
   PRInt32 i, count;
   nsListenerInfo *info;
 
+  nsCOMPtr<nsISupports> listener1 = do_QueryInterface(aListener);
   count = mListenerInfoList.Count();
   for (i=0; i<count; i++) {
     info = NS_STATIC_CAST(nsListenerInfo* ,mListenerInfoList.SafeElementAt(i));
 
     NS_ASSERTION(info, "There should NEVER be a null listener in the list");
-    if (info && (aListener == info->mWeakListener)) {
-      return info;
+    if (info) {
+      nsCOMPtr<nsISupports> listener2 = do_QueryReferent(info->mWeakListener);
+      if (listener1 == listener2)
+        return info;
     }
   }
   return nsnull;
