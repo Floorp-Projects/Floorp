@@ -36,8 +36,6 @@ MOZ_WINCONSOLE=0
 endif
 endif
 
-include $(topsrcdir)/config/config.mk
-
 MODULE		= apprunner
 REQUIRES	= xpcom \
 		  xpconnect \
@@ -75,6 +73,8 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES	+= intl profile appcomps
 endif
+
+include $(topsrcdir)/config/config.mk
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
