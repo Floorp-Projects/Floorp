@@ -1448,9 +1448,17 @@ static PRBool SheetHasStatefulStyle(nsISupports* aProcessor, void *aData)
 {
   nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
   StatefulData* data = (StatefulData*)aData;
-  processor->HasStateDependentStyle(data, data->mMedium, &data->mStateful);
-  if (data->mStateful)
-    return PR_FALSE;  // stop iteration
+  PRBool hasStateful;
+  processor->HasStateDependentStyle(data, data->mMedium, &hasStateful);
+  if (hasStateful) {
+    data->mStateful = PR_TRUE;
+    // Stop iteration.  Note that StyleSetImpl::WalkRuleProcessors uses
+    // this to stop its own iteration in some cases, but not all (the
+    // style rule supplier case).  Since this optimization is only for
+    // the case where we have a lot more work to do, it's not worth the
+    // code needed to make the stopping perfect.
+    return PR_FALSE;
+  }
   return PR_TRUE; // continue
 }
 
