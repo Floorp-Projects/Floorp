@@ -53,7 +53,6 @@
   // drag tracking
   NSPoint mLastClickPoint;
   BOOL mDragStarted;
-  NSView *mDragDest;
   TabButtonCell *mDragDestButton;
   
   BOOL mVisible;  // whether tabs are visible or not; used to disable creation of tracking rects when they're not
