@@ -1,0 +1,17 @@
+interface EditorAppCore : BaseAppCore
+{
+/* IID: { 0x9afff72b, 0xca9a, 0x11d2, \
+    {0x96, 0xc9, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}} */
+	
+	void EditorAppCore();
+	
+	void setAttribute(in wstring attr, in wstring value);
+	void undo();
+	void exit();
+
+	void setToolbarWindow(in Window win);
+	void setContentWindow(in Window win);
+	void setWebShellWindow(in Window win);
+
+};
+

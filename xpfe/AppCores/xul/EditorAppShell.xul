@@ -1,0 +1,303 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+			xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+			xul:onConstruction="Startup()"> 
+
+  <html:style>
+      #header {
+        position: fixed;
+        width: 100%;
+        height: 75px;
+        top: 0;
+        right: 0;
+        bottom: auto;
+        left: 0;
+      }
+      #main {
+        position: fixed;
+        width: auto;
+        height: auto;
+        top: 75px;
+        right: 0;
+        bottom: 34px;
+        left: 0;
+        overflow: auto;
+        padding: 2px .5em;
+        border: solid 0px black;
+      }
+      #footer {
+        position: fixed;
+        width: 100%;
+        height: 34px;
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin-top: auto;
+      }
+
+      button {
+        background-color: green;
+        color: red;
+      }
+
+  </html:style>
+
+  <html:script>
+  function Startup()
+  {
+    dump("Doing Startup...\n");
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    dump("Looking up EditorAppCore...\n");
+    if (appCore == null) {
+      dump("Creating EditorAppCore...\n");
+      appCore = new EditorAppCore();
+      if (appCore != null) {
+        dump("EditorAppCore has been created.\n");
+        appCore.Init("EditorAppCore");
+	      appCore.setContentWindow(window.frames[0]);
+	      appCore.setWebShellWindow(window);
+	      appCore.setToolbarWindow(window);
+        dump("Adding EditorAppCore to AppCoreManager...\n");
+        XPAppCoresManager.Add(appCore);  
+      }
+    } else {
+      dump("EditorAppCore has already been created! Why?\n");
+    }
+	}
+
+  function DoDisableButtons()
+  {
+    // Find buttons in the UI and disable them
+    dump("Browser disabling buttons\n");
+  }
+
+  function DoEnableButtons()
+  {
+    // Find buttons in the UI and enable them
+    dump("Browser enabling buttons\n");
+  }
+
+  function EditorBold()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Going Back\n");
+      appCore.setAttribute("bold", "");
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserForward()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Going Forward\n");
+      appCore.forward();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+  function EditorNewWindow()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Opening New Window\n");
+      appCore.newWindow();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+  function EditorUndo()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Opening New Window\n");
+      appCore.undo();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+
+  function BrowserClose()
+  {
+    dump("BrowserClose\n");
+  }
+
+  function BrowserExit()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Exiting\n");
+      appCore.exit();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+ function EditorPrintPreview() {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore)
+        toolkitCore.Init("ToolkitCore");
+    }
+    if (toolkitCore)
+      toolkitCore.ShowWindow("resource:/res/samples/printsetup.html", window);
+    }
+  }
+  </html:script>
+
+  <xul:broadcaster id="canGoBack"/>
+  <xul:broadcaster id="canGoForward"/>
+  <xul:broadcaster id="canReload"/>
+  <xul:broadcaster id="canStop"/>
+  <xul:broadcaster id="canPrint"/>
+  
+  <xul:menubar>
+    <xul:menu name="File">
+      <xul:menuitem name="New Window" onClick="EditorNewWindow();"/>
+      <xul:menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
+      <xul:separator />
+      <xul:menuitem name="Print Setup" onClick="EditorPrintPreview();"/>
+      <xul:menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
+      <xul:menuitem name="Print" onClick=""/>
+      <xul:separator />
+      <xul:menuitem name="Close" onClick=""/>
+      <xul:menuitem name="Exit" onClick="BrowserExit();"/>
+    </xul:menu>
+    <xul:menu name="Edit">
+      <xul:menuitem name="Undo" onClick="EditorUndo();"/>
+      <xul:separator />
+      <xul:menuitem name="Cut" onClick="EditorCut();"/>
+      <xul:menuitem name="Copy" onClick="EditorCopy();"/>
+      <xul:menuitem name="Paste" onClick="EditorPaste();"/>
+    </xul:menu>
+    <xul:menu name="View">
+      <xul:menuitem name="Hide Composition Toolbar" onClick="BrowserBack();"/>
+      <xul:menuitem name="Hide Format Toolbar" onClick="BrowserForward();" />
+    </xul:menu>
+    <xul:menu name="Insert">
+      <xul:menuitem name="Link..." onClick="MakeDialog();"/>
+      <xul:menuitem name="Target..." onClick="BrowserBack();"/>
+      <xul:menuitem name="Image..." onClick="BrowserBack();"/>
+      <xul:menuitem name="Horizontal Line" onClick="BrowserBack();"/>
+      <xul:menuitem name="Table" onClick="BrowserBack();"/>
+      <xul:menuitem name="HTML Tag..." onClick="BrowserBack();"/>
+      <xul:separator />
+      <xul:menuitem name="Line Break" onClick="BrowserBack();"/>
+      <xul:menuitem name="Break Below Image(s)" onClick="BrowserBack();"/>
+    </xul:menu>
+    <xul:menu name="Format">
+      <xul:menuitem name="Font" onClick="BrowserBack();"/>
+      <xul:menuitem name="Size" onClick="BrowserBack();"/>
+      <xul:menuitem name="Style" onClick="BrowserBack();"/>
+      <xul:menuitem name="Color..." onClick="BrowserBack();"/>
+      <xul:menuitem name="Remove All Style(s)" onClick="BrowserBack();"/>
+      <xul:separator />
+      <xul:menuitem name="Heading" onClick="BrowserBack();"/>
+    </xul:menu>
+    <xul:menu name="Tools">
+      <xul:menuitem name="Spell Check" onClick="BrowserBack();"/>
+    </xul:menu>
+    <xul:menu name="Communicator">
+      <xul:menuitem name="Navigator" onClick="BrowserBack();"/>
+    </xul:menu>
+    <xul:menu name="Help">
+      <xul:menuitem name="About" onClick="BrowserBack();"/>
+    </xul:menu>
+
+  </xul:menubar>
+  
+  <html:div html:id="header">
+  <xul:toolbox>
+  
+    <xul:toolbar>
+          <html:button id="cut" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Cut.gif"/>
+          </html:button>
+          <html:button id="copy" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Copy.gif"/>
+          </html:button>
+          <html:button id="paste" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Paste.gif"/>
+          </html:button>
+          <html:button id="Find" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Find.gif"/>
+          </html:button>
+          <html:button id="link" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Link.gif"/>
+          </html:button>
+          <html:button id="target" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Target.gif"/>
+          </html:button>
+          <html:button id="image" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Image.gif"/>
+          </html:button>
+          <html:button id="hline" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_HLine.gif"/>
+          </html:button>
+          <html:button id="table" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Table.gif"/>
+          </html:button>
+          <html:button id="spell" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Spell.gif"/>
+          </html:button>
+    </xul:toolbar>
+
+    <xul:toolbar>
+          <html:button id="undo" onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Undo.gif"/>
+          </html:button>
+          <html:button id="bold" onClick="EditorBold()">
+            <html:img src="resource:/res/toolbar/ED_Bold.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Underline.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Indent.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Dedent.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Bullets.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Numbers.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Left.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Center.gif"/>
+          </html:button>
+          <html:button onClick="EditorUndo()">
+            <html:img src="resource:/res/toolbar/ED_Right.gif"/>
+          </html:button>
+    </xul:toolbar>
+
+    
+  </xul:toolbox>
+  </html:div>
+
+  <html:div html:id="main">
+     <html:iframe html:name="content" html:src="EditorInitPage.html" html:width="100%" html:height="450"></html:iframe>
+  </html:div>
+
+  <html:div html:id="footer">
+     <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
+  </html:div>
+
+</xul:window>
+
+
