@@ -104,6 +104,8 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
+  virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
+
 private:
 
   friend class nsSplitterFrameInner;

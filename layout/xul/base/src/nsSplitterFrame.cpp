@@ -452,6 +452,21 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
   return nsBoxFrame::DoLayout(aState);
 }
 
+
+void
+nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
+{
+  nsIBox* box;
+  GetParentBox(&box);
+  if (box) {
+    PRBool horizontal;
+    box->GetOrientation(horizontal);
+    aIsHorizontal = !horizontal;
+  }
+  else
+    nsBoxFrame::GetInitialOrientation(aIsHorizontal);
+}
+
 NS_IMETHODIMP
 nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
