@@ -4688,18 +4688,6 @@
                 <FILEREF>
                     <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>txXSLTNumber.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>txXSLTNumberCounters.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>ProcessorState.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -4737,6 +4725,18 @@
                     <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>txTextHandler.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>txXSLTNumber.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>txXSLTNumberCounters.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
