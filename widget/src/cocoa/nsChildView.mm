@@ -1704,7 +1704,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 // does not create something that inherits from NSQuickDrawView!
 //
 GrafPtr
-nsChildView::GetQuickDrawPort ( )
+nsChildView::GetQuickDrawPort()
 {
   return [mView qdPort];
 }
@@ -1892,7 +1892,7 @@ nsChildView::GetQuickDrawPort ( )
   printf("got mouse EXIT view\n");
 }
 
-const PRInt32 kNumLines = 4;
+const PRInt32 kNumLines = 8;
 
 -(void)scrollWheel:(NSEvent*)theEvent
 {
