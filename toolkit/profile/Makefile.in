@@ -28,4 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
 
+# Use Qute for non-Mac non-Phoenix apps
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifndef MOZ_PHOENIX
+DIRS += skin
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
