@@ -40,7 +40,7 @@
 #define ENTRYCOUNT 512
 #define USE_ENTRY_ID 1
 #define EXTRA_LOOKUP 1
-#define NUM_CYCLES 2
+#define NUM_CYCLES 32
 
 DB* myDB;
 HASHINFO hash_info = {
