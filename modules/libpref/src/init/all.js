@@ -177,6 +177,7 @@ pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite")
 pref("capability.policy.default.history.current.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.next.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.previous.read", "UniversalBrowserRead");
+pref("capability.policy.default.history.item.read", "UniversalBrowserRead");
 
 pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");

@@ -114,10 +114,13 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       default:
       {
-        nsAutoString prop;
-        rv = a->Item(JSVAL_TO_INT(id), prop);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_ITEM, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->Item(JSVAL_TO_INT(id), prop);
+          if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
       }
     }

@@ -10,4 +10,5 @@
 		void back();
 		void forward();
 		void go(/* ... */);
+		wstring item(in unsigned long index);
       };

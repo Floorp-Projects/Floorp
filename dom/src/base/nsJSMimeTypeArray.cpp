@@ -87,11 +87,14 @@ GetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
-        nsIDOMMimeType* prop;
-        rv = a->Item(JSVAL_TO_INT(id), &prop);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MIMETYPEARRAY_ITEM, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
+          nsIDOMMimeType* prop;
+          rv = a->Item(JSVAL_TO_INT(id), &prop);
+          if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
       }
     }

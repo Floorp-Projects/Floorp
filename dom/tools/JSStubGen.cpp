@@ -354,10 +354,13 @@ static const char kPropFuncDefaultNamedItemStr[] =
 static const char kPropFuncDefaultItemStr[] = 
 "      default:\n"
 "      {\n"
-"        %s prop;\n"
-"        rv = a->Item(JSVAL_TO_INT(id), %sprop);\n"
+"        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_ITEM, PR_FALSE);\n"
 "        if (NS_SUCCEEDED(rv)) {\n"
+"          %s prop;\n"
+"          rv = a->Item(JSVAL_TO_INT(id), %sprop);\n"
+"          if (NS_SUCCEEDED(rv)) {\n"
 "%s"
+"          }\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -799,7 +802,11 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             case_str);
   }
   else if (JSSTUBGEN_DEFAULT == aType) {
-    sprintf(buf, kPropFuncDefaultItemStr, attr_type,
+    char upr_iface_name[128];
+    strcpy(upr_iface_name, aInterface.GetName());
+    StrUpr(upr_iface_name);
+
+    sprintf(buf, kPropFuncDefaultItemStr, upr_iface_name, attr_type,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
   }
