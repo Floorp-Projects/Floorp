@@ -75,7 +75,6 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
       event.point.y = 0;
       event.time = 0;
       event.widget = nsnull;
-      event.widgetSupports = nsnull;
       event.nativeMsg = nsnull;
       event.renderingContext = nsnull;
       event.rect = nsnull;
