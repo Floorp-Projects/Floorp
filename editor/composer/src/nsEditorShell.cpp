@@ -1853,10 +1853,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             } 
             else  // have a file spec
             {
-              nsXPIDLCString  leafName;
-              docFile->GetLeafName(getter_Copies(leafName));
+              nsXPIDLString  leafName;
+              docFile->GetUnicodeLeafName(getter_Copies(leafName));
               if (leafName.get() && *leafName)
-                fileName.AssignWithConversion(leafName);
+                fileName.Assign(leafName);
 
               nsCOMPtr<nsIFile> parentPath;
               if (NS_SUCCEEDED(docFile->GetParent(getter_AddRefs(parentPath))))
@@ -2120,10 +2120,10 @@ nsEditorShell::UpdateWindowTitle()
         nsCOMPtr<nsIFile> docFileSpec;
         if (NS_SUCCEEDED(diskDoc->GetFileSpec(getter_AddRefs(docFileSpec))))
         {
-          nsXPIDLCString fileName;
-          docFileSpec->GetLeafName(getter_Copies(fileName));
+          nsXPIDLString fileName;
+          docFileSpec->GetUnicodeLeafName(getter_Copies(fileName));
           windowCaption.AppendWithConversion(" [");
-          windowCaption.AppendWithConversion(fileName);
+          windowCaption.Append(fileName);
           windowCaption.AppendWithConversion("]");
         }
       }
