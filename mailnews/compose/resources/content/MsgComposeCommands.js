@@ -240,9 +240,19 @@ function GenericSendMessage( msgType )
 			Recipients2CompFields(msgCompFields);
 			msgCompFields.SetSubject(document.getElementById("msgSubject").value);
 			dump("attachments = " + GenerateAttachmentsString() + "\n");
-			msgCompFields.SetAttachments(GenerateAttachmentsString());
+			try {
+				msgCompFields.SetAttachments(GenerateAttachmentsString());
+			}
+			catch (ex) {
+				dump("failed to SetAttachments\n");
+			}
 		
-			msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
+			try {
+				msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
+			}
+			catch (ex) {
+				dump("failed to SendMsg\n");
+			}
 		}
 	}
 	else
