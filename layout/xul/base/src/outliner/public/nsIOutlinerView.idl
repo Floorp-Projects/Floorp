@@ -31,91 +31,133 @@ interface nsIOutlinerSelection;
 [scriptable, uuid(7660811D-3CB8-441f-8E58-466DE4F3FA9A)]
 interface nsIOutlinerView : nsISupports
 {
-  // The total number of rows in the outliner (including the offscreen rows).
+  /** 
+   * The total number of rows in the outliner (including the offscreen rows).
+   */
   readonly attribute long rowCount;
 
-  // The selection for this view.
+  /**
+   * The selection for this view.
+   */
   attribute nsIOutlinerSelection selection;
 
-  // An atomized list of properties for a given row.  Each property, x, that
-  // the view gives back will cause the pseudoclass :moz-outliner-row-x
-  // to be matched on the pseudoelement ::moz-outliner-row.
-  // 
-  // The special property "separator" can be returned to supply the outliner
-  // with the hint that there are no cells in this row and that it should draw
-  // a separator.  It uses the border properties on the separator pseudoclass
-  // to draw the separator.
+  /** 
+   * An atomized list of properties for a given row.  Each property, x, that
+   * the view gives back will cause the pseudoclass :moz-outliner-row-x
+   * to be matched on the pseudoelement ::moz-outliner-row.
+   *
+   * The special property "separator" can be returned to supply the outliner
+   * with the hint that there are no cells in this row and that it should draw
+   * a separator.  It uses the border properties on the separator pseudoclass
+   * to draw the separator.
+   */
   void getRowProperties(in long index, in nsISupportsArray properties);
 
-  // An atomized list of properties for a given cell.  Each property, x, that
-  // the view gives back will cause the pseudoclass :moz-outliner-cell-x
-  // to be matched on the ::moz-outliner-cell pseudoelement.
+  /** 
+   * An atomized list of properties for a given cell.  Each property, x, that
+   * the view gives back will cause the pseudoclass :moz-outliner-cell-x
+   * to be matched on the ::moz-outliner-cell pseudoelement.
+   */
   void getCellProperties(in long row, in wstring colID, in nsISupportsArray properties);
   
-  // Called to get properties to paint a column background.  For shading the sort
-  // column, etc.
+  /** 
+   * Called to get properties to paint a column background.  For shading the sort
+   * column, etc.
+   */
   void getColumnProperties(in wstring colID, in nsIDOMElement colElt, in nsISupportsArray properties);
 
-  // Methods that can be used to test whether or not a twisty should be drawn,
-  // and if so, whether an open or closed twisty should be used.
+  /** 
+   * Methods that can be used to test whether or not a twisty should be drawn,
+   * and if so, whether an open or closed twisty should be used.
+   */
   boolean isContainer(in long index);
   boolean isContainerOpen(in long index);
   boolean isContainerEmpty(in long index);
  
-  // Methods used by the outliner to draw vertical lines in the tree.
-  // GetParentIndex is used to obtain the index of a parent row.
+  /** 
+   * Methods used by the outliner to draw vertical lines in the tree.
+   * GetParentIndex is used to obtain the index of a parent row.
+   */
   long getParentIndex(in long rowIndex);
 
-  // HasNextSibling is used to determine if the row at rowIndex has a nextSibling
-  // that occurs *after* the index specified by afterIndex.  Code that is forced
-  // to march down the view looking at levels can optimize the march by starting
-  // at afterIndex+1.
+  /** 
+   * HasNextSibling is used to determine if the row at rowIndex has a nextSibling
+   * that occurs *after* the index specified by afterIndex.  Code that is forced
+   * to march down the view looking at levels can optimize the march by starting
+   * at afterIndex+1.
+   */
   boolean hasNextSibling(in long rowIndex, in long afterIndex);
 
-  // The level is an integer value that represents
-  // the level of indentation.  It is multiplied by the width specified in the 
-  // :moz-outliner-indentation pseudoelement to compute the exact indendation.
+  /** 
+   * The level is an integer value that represents
+   * the level of indentation.  It is multiplied by the width specified in the 
+   * :moz-outliner-indentation pseudoelement to compute the exact indendation.
+   */
   long getLevel(in long index);
 
-  // The text for a given cell.  If a column consists only of an image, then
-  // the empty string is returned.  
+  /** 
+   * The text for a given cell.  If a column consists only of an image, then
+   * the empty string is returned.  
+   */
   wstring getCellText(in long row, in wstring colID);
   
-  // Called during initialization to link the view to the front end box object.
+  /**
+   * Called during initialization to link the view to the front end box object.
+   */
   void setOutliner(in nsIOutlinerBoxObject outliner);
   
-  // Called on the view when an item is opened or closed.
+  /** 
+   * Called on the view when an item is opened or closed.
+   */
   void toggleOpenState(in long index);
 
-  // Called on the view when a header is clicked.
+  /**
+   * Called on the view when a header is clicked.
+   */
   void cycleHeader(in wstring colID, in nsIDOMElement elt);
 
-  // Should be called from a XUL onselect handler whenever the selection changes.
-  // XXX Should this be done automatically?
+  /** 
+   * Should be called from a XUL onselect handler whenever the selection changes.
+   * XXX Should this be done automatically?
+   */
   void selectionChanged();
 
-  // Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
+  /** 
+   * Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
+   */
   void cycleCell(in long row, in wstring colID);
   
-  // APIs for inline editing.  isEditable is called to ask the view if the cell contents are
-  // editable.  A value of true will result in the outliner popping up a text field when the
-  // user tries to inline edit the cell.
-  // setCellText is called when the contents of the cell have been edited by the user.
+  /** 
+   * isEditable is called to ask the view if the cell contents are editable.  
+   * A value of true will result in the outliner popping up a text field when 
+   * the user tries to inline edit the cell.
+   */
   boolean isEditable(in long row, in wstring colID);
+
+  /** 
+   * setCellText is called when the contents of the cell have been edited by the user.
+   */   
   void setCellText(in long row, in wstring colID, in wstring value);
 
-  // A command API that can be used to invoke commands on the selection.  The outliner
-  // will automatically invoke this method when certain keys are pressed.  For example,
-  // when the DEL key is pressed, performAction will be called with the "delete" string.
+  /** 
+   * A command API that can be used to invoke commands on the selection.  The outliner
+   * will automatically invoke this method when certain keys are pressed.  For example,
+   * when the DEL key is pressed, performAction will be called with the "delete" string.
+   */
   void performAction(in wstring action);
 
-  // A command API that can be used to invoke commands on a specific row.
+  /** 
+   * A command API that can be used to invoke commands on a specific row.
+   */
   void performActionOnRow(in wstring action, in long row);
 
-  // A command API that can be used to invoke commands on a specific cell.
+  /** 
+   * A command API that can be used to invoke commands on a specific cell.
+   */
   void performActionOnCell(in wstring action, in long row, in wstring colID);
 };
 
 %{C++
 // Initializer,
 %}
+

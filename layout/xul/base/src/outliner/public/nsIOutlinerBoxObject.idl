@@ -31,65 +31,94 @@ interface nsIOutlinerSelection;
 [scriptable, uuid(8398C757-6387-480c-82B2-C914E15CE00D)]
 interface nsIOutlinerBoxObject : nsISupports
 {
-  // The view that backs the outliner and that supplies it with its data.
-  // It is dynamically settable, either using a view attribute on the
-  // outliner tag or by setting this attribute to a new value.
+  /**
+   * The view that backs the outliner and that supplies it with its data.
+   * It is dynamically settable, either using a view attribute on the
+   * outliner tag or by setting this attribute to a new value.
+   */
   attribute nsIOutlinerView view;
 
-  // Whether or not we are currently focused.
+  /**
+   * Whether or not we are currently focused.
+   */
   attribute boolean focused;
 
-  // Obtain the outlinerbody content node
+  /**
+   * Obtain the outlinerbody content node
+   */
   readonly attribute nsIDOMElement outlinerBody;
 
-  // Obtains the selection from the view.
+  /**
+   * Obtains the selection from the view.
+   */
   readonly attribute nsIOutlinerSelection selection;
 
-  // Get the index of the first visible row.
+  /**
+   * Get the index of the first visible row.
+   */
   long getFirstVisibleRow();
 
-  // Get the index of the last visible row.
+  /**
+   * Get the index of the last visible row.
+   */
   long getLastVisibleRow();
 
-  // Gets the number of possible visible rows.
+  /**
+   * Gets the number of possible visible rows.
+   */
   long getPageCount();
 
-  // Ensures that a row at a given index is visible.
+  /**
+   * Ensures that a row at a given index is visible.
+   */
   void ensureRowIsVisible(in long index);
 
-  // Scrolls such that the row at index is at the top of the visible view.
+  /**
+   * Scrolls such that the row at index is at the top of the visible view.
+   */
   void scrollToRow(in long index);
 
-  // Scroll the outliner up or down by numLines lines. Positive
-  // values move down in the outliner. Prevents scrolling off the
-  // end of the outliner. 
+  /**
+   * Scroll the outliner up or down by numLines lines. Positive
+   * values move down in the outliner. Prevents scrolling off the
+   * end of the outliner. 
+   */
   void scrollByLines(in long numLines);
 
-  // Scroll the outliner up or down by numPages pages. A page
-  // is considered to be the amount displayed by the outliner.
-  // Positive values move down in the outliner. Prevents scrolling
-  // off the end of the outliner.
+  /**
+   * Scroll the outliner up or down by numPages pages. A page
+   * is considered to be the amount displayed by the outliner.
+   * Positive values move down in the outliner. Prevents scrolling
+   * off the end of the outliner.
+   */
   void scrollByPages(in long numPages);
   
-  // Invalidation methods for fine-grained painting control.
+  /**
+   * Invalidation methods for fine-grained painting control.
+   */
   void invalidate();
   void invalidateRow(in long index);
   void invalidateCell(in long row, in wstring colID);
   void invalidateRange(in long startIndex, in long endIndex);
   void invalidateScrollbar();
 
-  // A hit test that can tell you what cell the mouse is over.  Row is the row index
-  // hit.  ColID is the column hit.  ChildElt is the pseudoelement hit: this can have
-  // values of "cell", "twisty", "image", and "text".
+  /**
+   * A hit test that can tell you what cell the mouse is over.  Row is the row index
+   * hit.  ColID is the column hit.  ChildElt is the pseudoelement hit: this can have
+   * values of "cell", "twisty", "image", and "text".
+   */
   void getCellAt(in long x, in long y, out long row, out wstring colID, out wstring childElt);
 
-  // The view is responsible for calling these notification methods when
-  // rows are added or removed.  Index is the position at which the new
-  // rows were added or at which rows were removed.  For
-  // non-contiguous additions/removals, this method should be called multiple times.
+  /**
+   * The view is responsible for calling these notification methods when
+   * rows are added or removed.  Index is the position at which the new
+   * rows were added or at which rows were removed.  For
+   * non-contiguous additions/removals, this method should be called multiple times.
+   */
   void rowCountChanged(in long index, in long count);
 };
 
 %{C++
 // Initializer,
 %}
+
