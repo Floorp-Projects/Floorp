@@ -35,7 +35,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:41:38 $ $Name:  $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.3 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -44,13 +44,17 @@ static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.2 
  * This file prototypes the methods of the top-level PKI objects.
  */
 
+#ifndef DEVT_H
+#include "devt.h"
+#endif /* DEVT_H */
+
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
 
 #ifndef NSSPKI1_H
 #include "nsspki1.h"
-#endif /* NSSPKIT_H */
+#endif /* NSSPKI1_H */
 
 #ifndef BASE_H
 #include "base.h"
@@ -1455,6 +1459,7 @@ NSSTrustDomain_GetDefaultCallback
 NSS_EXTERN PRStatus
 NSSTrustDomain_LoadModule
 (
+  NSSTrustDomain *td,
   NSSUTF8 *moduleOpt,
   NSSUTF8 *uriOpt,
   NSSUTF8 *opaqueOpt,
@@ -1867,16 +1872,20 @@ NSSTrustDomain_FindCertificateByOCSPHash
  * discourage traversal.  Thus for now, this is commented out.
  * If it's needed, let's look at the situation more closely to
  * find out what the actual requirements are.
- *
- * 
- * NSS_EXTERN PRStatus *
- * NSSTrustDomain_TraverseCertificates
- * (
- *   NSSTrustDomain *td,
- *   PRStatus (*callback)(NSSCertificate *c, void *arg),
- *   void *arg
- * );
  */
+ 
+/* For now, adding this function.  This may only be for debugging
+ * purposes.
+ * Perhaps some equivalent function, on a specified token, will be
+ * needed in a "friend" header file?
+ */
+NSS_EXTERN PRStatus *
+NSSTrustDomain_TraverseCertificates
+(
+  NSSTrustDomain *td,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
 
 /*
  * NSSTrustDomain_FindBestUserCertificate
@@ -2162,7 +2171,7 @@ NSSTrustDomain_CreateCryptoContextForAlgorithmAndParameters
 NSS_EXTERN PRStatus
 NSSCryptoContext_Destroy
 (
-  NSSCryptoContext *td
+  NSSCryptoContext *cc
 );
 
 /* establishing a default callback */
@@ -2175,7 +2184,7 @@ NSSCryptoContext_Destroy
 NSS_EXTERN PRStatus
 NSSCryptoContext_SetDefaultCallback
 (
-  NSSCryptoContext *td,
+  NSSCryptoContext *cc,
   NSSCallback *newCallback,
   NSSCallback **oldCallbackOpt
 );
@@ -2188,7 +2197,7 @@ NSSCryptoContext_SetDefaultCallback
 NSS_EXTERN NSSCallback *
 NSSCryptoContext_GetDefaultCallback
 (
-  NSSCryptoContext *td,
+  NSSCryptoContext *cc,
   PRStatus *statusOpt
 );
 
@@ -2200,7 +2209,7 @@ NSSCryptoContext_GetDefaultCallback
 NSS_EXTERN NSSTrustDomain *
 NSSCryptoContext_GetTrustDomain
 (
-  NSSCryptoContext *td
+  NSSCryptoContext *cc
 );
 
 /* AddModule, etc: should we allow "temporary" changes here? */

@@ -32,14 +32,14 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.1 $ $Date: 2001/07/19 20:41:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Destroy
 (
   NSSCryptoContext *td
@@ -49,7 +49,7 @@ NSSCryptoContext_Destroy
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_SetDefaultCallback
 (
   NSSCryptoContext *td,
@@ -61,7 +61,7 @@ NSSCryptoContext_SetDefaultCallback
     return PR_FAILURE;
 }
 
-NSSCallback *
+NSS_IMPLEMENT NSSCallback *
 NSSCryptoContext_GetDefaultCallback
 (
   NSSCryptoContext *td,
@@ -72,7 +72,7 @@ NSSCryptoContext_GetDefaultCallback
     return NULL;
 }
 
-NSSTrustDomain *
+NSS_IMPLEMENT NSSTrustDomain *
 NSSCryptoContext_GetTrustDomain
 (
   NSSCryptoContext *td
@@ -82,7 +82,7 @@ NSSCryptoContext_GetTrustDomain
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_ImportCertificate
 (
   NSSCryptoContext *cc,
@@ -93,7 +93,7 @@ NSSCryptoContext_ImportCertificate
     return PR_FAILURE;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_ImportPKIXCertificate
 (
   NSSCryptoContext *cc,
@@ -104,7 +104,7 @@ NSSCryptoContext_ImportPKIXCertificate
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_ImportEncodedCertificate
 (
   NSSCryptoContext *cc,
@@ -115,7 +115,7 @@ NSSCryptoContext_ImportEncodedCertificate
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_ImportEncodedPKIXCertificateChain
 (
   NSSCryptoContext *cc,
@@ -126,7 +126,7 @@ NSSCryptoContext_ImportEncodedPKIXCertificateChain
     return PR_FAILURE;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateByNickname
 (
   NSSCryptoContext *cc,
@@ -140,7 +140,7 @@ NSSCryptoContext_FindBestCertificateByNickname
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindCertificatesByNickname
 (
   NSSCryptoContext *cc,
@@ -154,7 +154,7 @@ NSSCryptoContext_FindCertificatesByNickname
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindCertificateByIssuerAndSerialNumber
 (
   NSSCryptoContext *cc,
@@ -166,7 +166,7 @@ NSSCryptoContext_FindCertificateByIssuerAndSerialNumber
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateBySubject
 (
   NSSCryptoContext *cc,
@@ -180,7 +180,7 @@ NSSCryptoContext_FindBestCertificateBySubject
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindCertificatesBySubject
 (
   NSSCryptoContext *cc,
@@ -194,7 +194,7 @@ NSSCryptoContext_FindCertificatesBySubject
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateByNameComponents
 (
   NSSCryptoContext *cc,
@@ -208,7 +208,7 @@ NSSCryptoContext_FindBestCertificateByNameComponents
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindCertificatesByNameComponents
 (
   NSSCryptoContext *cc,
@@ -222,7 +222,7 @@ NSSCryptoContext_FindCertificatesByNameComponents
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindCertificateByEncodedCertificate
 (
   NSSCryptoContext *cc,
@@ -233,7 +233,7 @@ NSSCryptoContext_FindCertificateByEncodedCertificate
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestCertificateByEmail
 (
   NSSCryptoContext *cc,
@@ -244,7 +244,7 @@ NSSCryptoContext_FindBestCertificateByEmail
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindCertificatesByEmail
 (
   NSSCryptoContext *cc,
@@ -258,7 +258,7 @@ NSSCryptoContext_FindCertificatesByEmail
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindCertificateByOCSPHash
 (
   NSSCryptoContext *cc,
@@ -269,7 +269,7 @@ NSSCryptoContext_FindCertificateByOCSPHash
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestUserCertificate
 (
   NSSCryptoContext *cc,
@@ -282,7 +282,7 @@ NSSCryptoContext_FindBestUserCertificate
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindUserCertificates
 (
   NSSCryptoContext *cc,
@@ -298,7 +298,7 @@ NSSCryptoContext_FindUserCertificates
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestUserCertificateForSSLClientAuth
 (
   NSSCryptoContext *cc,
@@ -313,7 +313,7 @@ NSSCryptoContext_FindBestUserCertificateForSSLClientAuth
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCryptoContext_FindUserCertificatesForSSLClientAuth
 (
   NSSCryptoContext *cc,
@@ -331,7 +331,7 @@ NSSCryptoContext_FindUserCertificatesForSSLClientAuth
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindBestUserCertificateForEmailSigning
 (
   NSSCryptoContext *cc,
@@ -346,7 +346,7 @@ NSSCryptoContext_FindBestUserCertificateForEmailSigning
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSCryptoContext_FindUserCertificatesForEmailSigning
 (
   NSSCryptoContext *cc,
@@ -364,7 +364,7 @@ NSSCryptoContext_FindUserCertificatesForEmailSigning
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_GenerateKeyPair
 (
   NSSCryptoContext *cc,
@@ -380,7 +380,7 @@ NSSCryptoContext_GenerateKeyPair
     return PR_FAILURE;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSCryptoContext_GenerateSymmetricKey
 (
   NSSCryptoContext *cc,
@@ -394,7 +394,7 @@ NSSCryptoContext_GenerateSymmetricKey
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSCryptoContext_GenerateSymmetricKeyFromPassword
 (
   NSSCryptoContext *cc,
@@ -408,7 +408,7 @@ NSSCryptoContext_GenerateSymmetricKeyFromPassword
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSCryptoContext_FindSymmetricKeyByAlgorithmAndKeyID
 (
   NSSCryptoContext *cc,
@@ -421,7 +421,7 @@ NSSCryptoContext_FindSymmetricKeyByAlgorithmAndKeyID
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Decrypt
 (
   NSSCryptoContext *cc,
@@ -436,7 +436,7 @@ NSSCryptoContext_Decrypt
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginDecrypt
 (
   NSSCryptoContext *cc,
@@ -448,7 +448,7 @@ NSSCryptoContext_BeginDecrypt
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_ContinueDecrypt
 (
   NSSCryptoContext *cc,
@@ -461,7 +461,7 @@ NSSCryptoContext_ContinueDecrypt
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishDecrypt
 (
   NSSCryptoContext *cc,
@@ -473,7 +473,7 @@ NSSCryptoContext_FinishDecrypt
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Sign
 (
   NSSCryptoContext *cc,
@@ -488,7 +488,7 @@ NSSCryptoContext_Sign
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginSign
 (
   NSSCryptoContext *cc,
@@ -500,7 +500,7 @@ NSSCryptoContext_BeginSign
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_ContinueSign
 (
   NSSCryptoContext *cc,
@@ -511,7 +511,7 @@ NSSCryptoContext_ContinueSign
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishSign
 (
   NSSCryptoContext *cc,
@@ -523,7 +523,7 @@ NSSCryptoContext_FinishSign
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_SignRecover
 (
   NSSCryptoContext *cc,
@@ -538,7 +538,7 @@ NSSCryptoContext_SignRecover
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginSignRecover
 (
   NSSCryptoContext *cc,
@@ -550,7 +550,7 @@ NSSCryptoContext_BeginSignRecover
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_ContinueSignRecover
 (
   NSSCryptoContext *cc,
@@ -563,7 +563,7 @@ NSSCryptoContext_ContinueSignRecover
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishSignRecover
 (
   NSSCryptoContext *cc,
@@ -575,7 +575,7 @@ NSSCryptoContext_FinishSignRecover
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSCryptoContext_UnwrapSymmetricKey
 (
   NSSCryptoContext *cc,
@@ -588,7 +588,7 @@ NSSCryptoContext_UnwrapSymmetricKey
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSCryptoContext_DeriveSymmetricKey
 (
   NSSCryptoContext *cc,
@@ -604,7 +604,7 @@ NSSCryptoContext_DeriveSymmetricKey
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Encrypt
 (
   NSSCryptoContext *cc,
@@ -619,7 +619,7 @@ NSSCryptoContext_Encrypt
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginEncrypt
 (
   NSSCryptoContext *cc,
@@ -631,7 +631,7 @@ NSSCryptoContext_BeginEncrypt
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_ContinueEncrypt
 (
   NSSCryptoContext *cc,
@@ -644,7 +644,7 @@ NSSCryptoContext_ContinueEncrypt
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishEncrypt
 (
   NSSCryptoContext *cc,
@@ -656,7 +656,7 @@ NSSCryptoContext_FinishEncrypt
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Verify
 (
   NSSCryptoContext *cc,
@@ -670,7 +670,7 @@ NSSCryptoContext_Verify
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginVerify
 (
   NSSCryptoContext *cc,
@@ -683,7 +683,7 @@ NSSCryptoContext_BeginVerify
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_ContinueVerify
 (
   NSSCryptoContext *cc,
@@ -694,7 +694,7 @@ NSSCryptoContext_ContinueVerify
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_FinishVerify
 (
   NSSCryptoContext *cc
@@ -704,7 +704,7 @@ NSSCryptoContext_FinishVerify
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_VerifyRecover
 (
   NSSCryptoContext *cc,
@@ -719,7 +719,7 @@ NSSCryptoContext_VerifyRecover
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginVerifyRecover
 (
   NSSCryptoContext *cc,
@@ -731,7 +731,7 @@ NSSCryptoContext_BeginVerifyRecover
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_ContinueVerifyRecover
 (
   NSSCryptoContext *cc,
@@ -744,7 +744,7 @@ NSSCryptoContext_ContinueVerifyRecover
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishVerifyRecover
 (
   NSSCryptoContext *cc,
@@ -756,7 +756,7 @@ NSSCryptoContext_FinishVerifyRecover
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_WrapSymmetricKey
 (
   NSSCryptoContext *cc,
@@ -771,7 +771,7 @@ NSSCryptoContext_WrapSymmetricKey
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Digest
 (
   NSSCryptoContext *cc,
@@ -786,7 +786,7 @@ NSSCryptoContext_Digest
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_BeginDigest
 (
   NSSCryptoContext *cc,
@@ -798,7 +798,7 @@ NSSCryptoContext_BeginDigest
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCryptoContext_ContinueDigest
 (
   NSSCryptoContext *cc,
@@ -810,7 +810,7 @@ NSSCryptoContext_ContinueDigest
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_FinishDigest
 (
   NSSCryptoContext *cc,
@@ -822,7 +822,7 @@ NSSCryptoContext_FinishDigest
     return NULL;
 }
 
-NSSCryptoContext *
+NSS_IMPLEMENT NSSCryptoContext *
 NSSCryptoContext_Clone
 (
   NSSCryptoContext *cc

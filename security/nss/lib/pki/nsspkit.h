@@ -35,7 +35,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:41:38 $ $Name:  $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.3 $ $Date: 2001/09/13 22:16:22 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -160,7 +160,6 @@ typedef struct NSSTrustDomainStr NSSTrustDomain;
  * learned.
  */
 
-struct NSSCryptoContextStr;
 typedef struct NSSCryptoContextStr NSSCryptoContext;
 
 /*
@@ -183,6 +182,9 @@ typedef struct NSSCryptoContextStr NSSCryptoContext;
 
 struct NSSTimeStr;
 typedef struct NSSTimeStr NSSTime;
+
+struct NSSTrustStr;
+typedef struct NSSTrustStr NSSTrust;
 
 /*
  * NSSUsage
@@ -233,16 +235,6 @@ typedef struct NSSAlgorithmAndParametersStr NSSAlgorithmAndParameters;
 struct NSSCallbackStr;
 typedef struct NSSCallbackStr NSSCallback;
 
-/*
- * NSSModule and NSSSlot -- placeholders for the PKCS#11 types
- */
-
-struct NSSModuleStr;
-typedef struct NSSModuleStr NSSModule;
-
-struct NSSSlotStr;
-typedef struct NSSSlotStr NSSSlot;
-
 typedef PRUint32 NSSOperations;
 /* 1) Do we want these to be preprocessor definitions or constants? */
 /* 2) What is the correct and complete list? */
@@ -256,8 +248,6 @@ typedef PRUint32 NSSOperations;
 #define NSSOperations_VERIFY            0x0040
 #define NSSOperations_VERIFY_RECOVER    0x0080
 
-/* Presumably, this doesn't belong here.  But for now... */
-typedef struct NSSTokenStr NSSToken;
 struct NSSPKIXCertificateStr;
 
 PR_END_EXTERN_C

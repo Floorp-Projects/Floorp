@@ -32,14 +32,14 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: asymmkey.c,v $ $Revision: 1.1 $ $Date: 2001/07/19 20:41:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: asymmkey.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:20 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSPrivateKey_Destroy
 (
   NSSPrivateKey *vk
@@ -49,7 +49,7 @@ NSSPrivateKey_Destroy
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSPrivateKey_DeleteStoredObject
 (
   NSSPrivateKey *vk,
@@ -60,7 +60,7 @@ NSSPrivateKey_DeleteStoredObject
     return PR_FAILURE;
 }
 
-PRUint32
+NSS_IMPLEMENT PRUint32
 NSSPrivateKey_GetSignatureLength
 (
   NSSPrivateKey *vk
@@ -70,7 +70,7 @@ NSSPrivateKey_GetSignatureLength
     return -1;
 }
 
-PRUint32
+NSS_IMPLEMENT PRUint32
 NSSPrivateKey_GetPrivateModulusLength
 (
   NSSPrivateKey *vk
@@ -80,7 +80,7 @@ NSSPrivateKey_GetPrivateModulusLength
     return -1;
 }
 
-PRBool
+NSS_IMPLEMENT PRBool
 NSSPrivateKey_IsStillPresent
 (
   NSSPrivateKey *vk,
@@ -91,7 +91,7 @@ NSSPrivateKey_IsStillPresent
     return PR_FALSE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPrivateKey_Encode
 (
   NSSPrivateKey *vk,
@@ -106,7 +106,7 @@ NSSPrivateKey_Encode
     return NULL;
 }
 
-NSSTrustDomain *
+NSS_IMPLEMENT NSSTrustDomain *
 NSSPrivateKey_GetTrustDomain
 (
   NSSPrivateKey *vk,
@@ -117,7 +117,7 @@ NSSPrivateKey_GetTrustDomain
     return NULL;
 }
 
-NSSToken *
+NSS_IMPLEMENT NSSToken *
 NSSPrivateKey_GetToken
 (
   NSSPrivateKey *vk
@@ -127,7 +127,7 @@ NSSPrivateKey_GetToken
     return NULL;
 }
 
-NSSSlot *
+NSS_IMPLEMENT NSSSlot *
 NSSPrivateKey_GetSlot
 (
   NSSPrivateKey *vk
@@ -137,7 +137,7 @@ NSSPrivateKey_GetSlot
     return NULL;
 }
 
-NSSModule *
+NSS_IMPLEMENT NSSModule *
 NSSPrivateKey_GetModule
 (
   NSSPrivateKey *vk
@@ -147,7 +147,7 @@ NSSPrivateKey_GetModule
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPrivateKey_Decrypt
 (
   NSSPrivateKey *vk,
@@ -162,7 +162,7 @@ NSSPrivateKey_Decrypt
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPrivateKey_Sign
 (
   NSSPrivateKey *vk,
@@ -177,7 +177,7 @@ NSSPrivateKey_Sign
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPrivateKey_SignRecover
 (
   NSSPrivateKey *vk,
@@ -192,7 +192,7 @@ NSSPrivateKey_SignRecover
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSPrivateKey_UnwrapSymmetricKey
 (
   NSSPrivateKey *vk,
@@ -205,7 +205,7 @@ NSSPrivateKey_UnwrapSymmetricKey
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSPrivateKey_DeriveSymmetricKey
 (
   NSSPrivateKey *vk,
@@ -221,7 +221,7 @@ NSSPrivateKey_DeriveSymmetricKey
     return NULL;
 }
 
-NSSPublicKey *
+NSS_IMPLEMENT NSSPublicKey *
 NSSPrivateKey_FindPublicKey
 (
   NSSPrivateKey *vk
@@ -232,7 +232,7 @@ NSSPrivateKey_FindPublicKey
     return NULL;
 }
 
-NSSCryptoContext *
+NSS_IMPLEMENT NSSCryptoContext *
 NSSPrivateKey_CreateCryptoContext
 (
   NSSPrivateKey *vk,
@@ -244,7 +244,7 @@ NSSPrivateKey_CreateCryptoContext
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSPrivateKey_FindCertificates
 (
   NSSPrivateKey *vk,
@@ -257,7 +257,7 @@ NSSPrivateKey_FindCertificates
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSPrivateKey_FindBestCertificate
 (
   NSSPrivateKey *vk,
@@ -270,7 +270,7 @@ NSSPrivateKey_FindBestCertificate
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSPublicKey_Destroy
 (
   NSSPublicKey *bk
@@ -280,7 +280,7 @@ NSSPublicKey_Destroy
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSPublicKey_DeleteStoredObject
 (
   NSSPublicKey *bk,
@@ -291,7 +291,7 @@ NSSPublicKey_DeleteStoredObject
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPublicKey_Encode
 (
   NSSPublicKey *bk,
@@ -305,7 +305,7 @@ NSSPublicKey_Encode
     return NULL;
 }
 
-NSSTrustDomain *
+NSS_IMPLEMENT NSSTrustDomain *
 NSSPublicKey_GetTrustDomain
 (
   NSSPublicKey *bk,
@@ -316,7 +316,7 @@ NSSPublicKey_GetTrustDomain
     return NULL;
 }
 
-NSSToken *
+NSS_IMPLEMENT NSSToken *
 NSSPublicKey_GetToken
 (
   NSSPublicKey *bk,
@@ -327,7 +327,7 @@ NSSPublicKey_GetToken
     return NULL;
 }
 
-NSSSlot *
+NSS_IMPLEMENT NSSSlot *
 NSSPublicKey_GetSlot
 (
   NSSPublicKey *bk,
@@ -338,7 +338,7 @@ NSSPublicKey_GetSlot
     return NULL;
 }
 
-NSSModule *
+NSS_IMPLEMENT NSSModule *
 NSSPublicKey_GetModule
 (
   NSSPublicKey *bk,
@@ -349,7 +349,7 @@ NSSPublicKey_GetModule
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPublicKey_Encrypt
 (
   NSSPublicKey *bk,
@@ -364,7 +364,7 @@ NSSPublicKey_Encrypt
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSPublicKey_Verify
 (
   NSSPublicKey *bk,
@@ -378,7 +378,7 @@ NSSPublicKey_Verify
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPublicKey_VerifyRecover
 (
   NSSPublicKey *bk,
@@ -393,7 +393,7 @@ NSSPublicKey_VerifyRecover
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSPublicKey_WrapSymmetricKey
 (
   NSSPublicKey *bk,
@@ -408,7 +408,7 @@ NSSPublicKey_WrapSymmetricKey
     return NULL;
 }
 
-NSSCryptoContext *
+NSS_IMPLEMENT NSSCryptoContext *
 NSSPublicKey_CreateCryptoContext
 (
   NSSPublicKey *bk,
@@ -420,7 +420,7 @@ NSSPublicKey_CreateCryptoContext
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSPublicKey_FindCertificates
 (
   NSSPublicKey *bk,
@@ -433,7 +433,7 @@ NSSPublicKey_FindCertificates
     return NULL;
 }
 
-NSSCertificate *
+NSS_IMPLEMENT NSSCertificate *
 NSSPublicKey_FindBestCertificate
 (
   NSSPublicKey *bk,
@@ -446,7 +446,7 @@ NSSPublicKey_FindBestCertificate
     return NULL;
 }
 
-NSSPrivateKey *
+NSS_IMPLEMENT NSSPrivateKey *
 NSSPublicKey_FindPrivateKey
 (
   NSSPublicKey *bk,
