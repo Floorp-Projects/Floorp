@@ -27,7 +27,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-
   void ClearDlg() { m_PrintDlg = NULL; } // weak reference
 
 // Implementation
@@ -56,10 +55,10 @@ NS_IMETHODIMP
 CDlgPrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
   if (m_PrintDlg) {
-    if (aStatus == nsIWebProgressListener::STATE_START) {
+    if (aStateFlags == (nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT)) {
       return m_PrintDlg->OnStartPrinting();
 
-    } else if (aStatus == nsIWebProgressListener::STATE_STOP) {
+    } else if (aStateFlags == (nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT)) {
       return m_PrintDlg->OnEndPrinting(aStatus);
     }
   }
@@ -97,17 +96,20 @@ CDlgPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aR
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
 
 
 CPrintProgressDialog::CPrintProgressDialog(nsIWebBrowser* aWebBrowser,
                                            nsIDOMWindow* aDOMWin,
+                                           nsIPrintSettings* aPrintSettings,
                                            CWnd* pParent /*=NULL*/)
 	: CDialog(CPrintProgressDialog::IDD, pParent),
   m_WebBrowser(aWebBrowser),
   m_DOMWin(aDOMWin),
   m_PrintListener(nsnull),
+  m_PrintSettings(aPrintSettings),
   m_InModalMode(PR_FALSE)
 {
 	//{{AFX_DATA_INIT(CPrintProgressDialog)
@@ -196,7 +198,8 @@ int CPrintProgressDialog::DoModal( )
     m_PrintListener = new CDlgPrintListener(this); // constructor addrefs
     if (m_PrintListener) {
       // doModal will be set to false if the print job was cancelled
-      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, nsnull, nsnull)) == PR_TRUE;
+      nsIWebProgressListener * wpl = NS_STATIC_CAST(nsIWebProgressListener*, m_PrintListener);
+      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, m_PrintSettings, wpl)) == PR_TRUE;
     }
   }
 
@@ -207,6 +210,48 @@ int CPrintProgressDialog::DoModal( )
   return 0;
 }
 
+
+/* void OnStartPrinting (); */
+NS_IMETHODIMP 
+CPrintProgressDialog::OnStartPrinting()
+{
+  return NS_OK;
+}
+
+/* void OnProgressPrinting (in PRUint32 aProgress, in PRUint32 aProgressMax); */
+NS_IMETHODIMP 
+CPrintProgressDialog::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  if (m_wndProgress.m_hWnd == NULL) return NS_OK;
+
+  // Initialize the progress meter we we get the "zero" progress
+  // which also tells us the max progress
+  if (aProgress == 0) {
+	  CWnd *pWnd = GetDlgItem(IDC_PPD_DOC_TXT);
+	  if(pWnd)
+		  pWnd->SetWindowText(m_URL);
+
+	  m_wndProgress.SetRange(0, aProgressMax);
+    m_wndProgress.SetPos(0);
+  }
+	m_wndProgress.SetPos(aProgress);
+  RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+
+  return NS_OK;
+}
+
+/* void OnEndPrinting (in PRUint32 aStatus); */
+NS_IMETHODIMP 
+CPrintProgressDialog::OnEndPrinting(PRUint32 aStatus)
+{
+  // Here we need to know whether we have gone "modal" 
+  // because we could get notified here if the user cancels
+  // before we ever get a chance to go into the modal loop
+  if (m_InModalMode) {
+    EndDialog(1);
+  }
+  return NS_OK;
+}
 
 void CPrintProgressDialog::OnCancel() 
 {

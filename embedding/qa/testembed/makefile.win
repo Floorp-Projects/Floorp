@@ -58,6 +58,7 @@ LINCS = -Icomponents \
 
 OBJS =                           \
     .\$(OBJDIR)\TestEmbed.obj     \
+#    .\$(OBJDIR)\nsIObserServ.obj     \
     .\$(OBJDIR)\BrowserFrm.obj   \
     .\$(OBJDIR)\BrowserFrameGlue.obj   \
     .\$(OBJDIR)\BrowserView.obj \

@@ -49,6 +49,7 @@
 #endif
 
 #include "IBrowserFrameGlue.h"
+#include "nsIPrintSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowserView window
@@ -156,6 +157,8 @@ public:
 
 	// Generated message map functions
 protected:
+	nsCOMPtr<nsIPrintSettings> m_PrintSettings;
+
 	//{{AFX_MSG(CBrowserView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
