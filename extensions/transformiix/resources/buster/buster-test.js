@@ -48,7 +48,7 @@ var runQueue =
     },
     observe : function(aSubject, aTopic, aData)
     {
-        item = this.mArray.shift();
+        var item = this.mArray.shift();
         if (item) {
             item.run(this);
         }
@@ -81,11 +81,10 @@ var itemCache =
             }
             return first;
         }
-        var retItem = this.mArray[aResource.Value];
-        if (retItem) {
-            return retItem;
+        if (aResource.Value in this.mArray) {
+            return this.mArray[aResource.Value];
         }
-        retItem = new runItem(aResource);
+        var retItem = new runItem(aResource);
         this.mArray[aResource.Value] = retItem;
         runQueue.push(retItem);
         return retItem;
@@ -167,8 +166,8 @@ runItem.prototype =
             cat = cat.QueryInterface(nsIRDFLiteral);
             name = name.QueryInterface(nsIRDFLiteral);
             path = path.QueryInterface(nsIRDFLiteral);
-            xalan_fl  = this.kXalan.resolve(cat.Value+"/"+path.Value);
-            xalan_ref  = this.kXalan.resolve(cat.Value+"-gold/"+path.Value);
+            var xalan_fl  = this.kXalan.resolve(cat.Value+"/"+path.Value);
+            var xalan_ref  = this.kXalan.resolve(cat.Value+"-gold/"+path.Value);
             dump(name.Value+" links to "+xalan_fl+"\n");
         }
         // Directory selected
@@ -182,7 +181,6 @@ runItem.prototype =
                 m += 1;
                 child = children.getNext();
                 child.QueryInterface(nsIRDFResource);
-                //var aFoo = new runItem(child);
             }
         }
         var refContent = this.loadTextFile(xalan_ref+".out");
@@ -241,10 +239,6 @@ runItem.prototype =
             isGood = false;
         };
         dump("This succeeded. "+isGood+"\n");
-        if (!isGood) {
-            DumpDOM(this.mResDoc);
-            DumpDOM(this.mRefDoc);
-        }
         isGood = isGood.toString();
         for (var i=0; i<this.kObservers.length; i++) {
             var aObs = this.kObservers[i];

@@ -63,6 +63,7 @@ function onNewResultView(event)
     resultWin = window.openDialog('result-view.xul','_blank',
                                    'chrome,resizable,dialog=no',
                                    currentResultItem, currentRunItem);
+    return true;
 }
 
 var refInspector;
