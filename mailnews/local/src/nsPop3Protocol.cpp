@@ -56,6 +56,8 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIDocShell.h"
 #include "nsEscape.h"
+#include "nsMsgUtils.h"
+#include "nsISignatureVerifier.h"
 
 #define EXTRA_SAFETY_SPACE 3096
 #define kLargeNumberOfMessages 50000
@@ -512,6 +514,21 @@ nsPop3Protocol::~nsPop3Protocol()
 		delete m_lineStreamBuffer;
 }
 
+void nsPop3Protocol::SetCapFlag(PRUint32 flag)
+{
+    m_pop3ConData->capability_flags |= flag;
+}
+
+void nsPop3Protocol::ClearCapFlag(PRUint32 flag)
+{
+    m_pop3ConData->capability_flags &= ~flag;
+}
+
+PRBool nsPop3Protocol::TestCapFlag(PRUint32 flag)
+{
+    return m_pop3ConData->capability_flags & flag;
+}
+
 void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 {
 	if (m_statusFeedback)
@@ -782,9 +799,10 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
     else
       m_commandResponse = line;
     
-    m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
+    m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
   }
+
   PR_Free(line);
   return(1);  /* everything ok */
 }
@@ -813,10 +831,11 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
     {
       if(!PL_strncasecmp(line, "+OK", 3))
         m_commandResponse = line + 4;
-      else if(PL_strncasecmp(m_commandResponse.get(), "Invalid login", 13))
-        m_commandResponse = "+";
+//      else if(PL_strncasecmp(m_commandResponse.get(), "Invalid login", 13))
+//        m_commandResponse = "+";
+      else  // challenge answer to AUTH CRAM-MD5 and LOGIN username/password
+        m_commandResponse = line + 2;
     }
-    
     else
       m_commandResponse = line;
   }
@@ -932,22 +951,27 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 {
     char * line;
     PRUint32 ln = 0;
+    nsresult rv;
 
-    if (POP3_AUTH_LOGIN_UNDEFINED & m_pop3ConData->capability_flags)
+    if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
     {
-        m_pop3ConData->capability_flags &= ~POP3_AUTH_LOGIN_UNDEFINED;
+        ClearCapFlag(POP3_AUTH_MECH_UNDEFINED);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     
     if (!m_pop3ConData->command_succeeded) 
     {
         /* AUTH command not implemented 
-         * no base64 encoded username/password
+         * so try & error with fallbacks
          */
         m_pop3ConData->command_succeeded = PR_TRUE;
-        m_pop3ConData->capability_flags &= ~POP3_HAS_AUTH_LOGIN;
+        SetCapFlag(POP3_HAS_AUTH_USER | POP3_HAS_AUTH_LOGIN);
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+            SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
-        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
         return 0;
     }
     
@@ -956,7 +980,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 
     if(pauseForMoreData || !line) 
     {
-        m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
+        m_pop3ConData->pause_for_read = PR_TRUE; /* pause */
         PR_Free(line);
         return(0);
     }
@@ -965,18 +989,23 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 
     if (!PL_strcmp(line, ".")) 
     {
-        /* now that we've read all the AUTH responses, decide which 
-        * state to go to next 
-        */
-        if (m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
-            m_pop3ConData->next_state = POP3_AUTH_LOGIN;
-        else
-            m_pop3ConData->next_state = POP3_SEND_USERNAME;
+        // now that we've read all the AUTH responses, go for it
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
         m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
     }
-    else if (!PL_strcasecmp (line, "LOGIN")) 
+    else
+    if (!PL_strcasecmp (line, "CRAM-MD5")) 
     {
-        m_pop3ConData->capability_flags |= POP3_HAS_AUTH_LOGIN;
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+            SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
+    else
+    if (!PL_strcasecmp (line, "LOGIN")) 
+    {
+        SetCapFlag(POP3_HAS_AUTH_LOGIN);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
 
@@ -984,59 +1013,105 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
     return 0;
 }
 
-PRInt32 nsPop3Protocol::AuthLogin()
+PRInt32 nsPop3Protocol::ProcessAuth()
 {
-    /* check login response */
-    if(!m_pop3ConData->command_succeeded) 
+    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+    else
+    if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
+        m_pop3ConData->next_state = POP3_AUTH_LOGIN;
+    else // don't combine with if POP3_HAS_AUTH_CRAM_MD5 above!
+        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+
+    m_pop3ConData->pause_for_read = PR_FALSE;
+
+    return 0;
+}
+
+PRInt32 nsPop3Protocol::AuthFallback()
     {
-        m_pop3ConData->capability_flags &= ~POP3_HAS_AUTH_LOGIN;
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    if (m_pop3ConData->command_succeeded)
+        m_pop3ConData->next_state = POP3_SEND_PASSWORD;
+    else
+    {
+        m_pop3ConData->command_succeeded = PR_TRUE;
+
+        // If one authentication failed, we're going to
+        // fall back on a less secure login method.
+        if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+            // if CRAM-MD5 enabled, remove it
+            ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+        else
+        if(TestCapFlag(POP3_HAS_AUTH_LOGIN | POP3_HAS_AUTH_USER))
+            // if LOGIN or USER enabled,
+            // it was the username which was wrong
+            // no fallback but return error
         return(Error(POP3_SERVER_ERROR));
+
+      m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
+      m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+    }
+
+    if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
+    {
+        ClearCapFlag(POP3_AUTH_MECH_UNDEFINED);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     
+    m_pop3ConData->pause_for_read = PR_FALSE;
+
+    return 0;
+}
+
+// LOGIN consists of three steps not two as USER/PASS or CRAM-MD5,
+// so we've to start here and continue in SendUsername if the server
+// responds + to "AUTH LOGIN"
+PRInt32 nsPop3Protocol::AuthLogin()
+{
     nsCAutoString command("AUTH LOGIN" CRLF);
     m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN_RESPONSE;
+    m_pop3ConData->pause_for_read = PR_TRUE;
+
     return SendData(m_url, command.get());
 }
 
 PRInt32 nsPop3Protocol::AuthLoginResponse()
 {
+    // need the test to be here instead in AuthResponse() to
+    // differentiate between command AUTH LOGIN failed and
+    // sending username using LOGIN mechanism failed.
     if (!m_pop3ConData->command_succeeded) 
     {
-        /* sounds like server does not support auth-skey extension
-           resume regular logon process */
-        /* reset command_succeeded to true */
-        m_pop3ConData->command_succeeded = PR_TRUE;
-        /* reset auth login state */
-        m_pop3ConData->capability_flags &= ~POP3_HAS_AUTH_LOGIN;
+        // we failed with LOGIN, remove it
+        ClearCapFlag(POP3_HAS_AUTH_LOGIN);
+
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     }
     else
-    {
-        m_pop3ConData->capability_flags |= POP3_HAS_AUTH_LOGIN;
-    }
-    m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     m_pop3ConData->next_state = POP3_SEND_USERNAME;
+
+    m_pop3ConData->pause_for_read = PR_FALSE;
+
     return 0;
 }
 
-
 PRInt32 nsPop3Protocol::SendUsername()
 {
-    /* check login response */
-    if(!m_pop3ConData->command_succeeded)
-        return(Error(POP3_SERVER_ERROR));
-
     if(m_username.IsEmpty())
         return(Error(POP3_USERNAME_UNDEFINED));
 
     nsCAutoString cmd;
 
-    if (POP3_HAS_AUTH_LOGIN & m_pop3ConData->capability_flags) 
+    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+        cmd = "AUTH CRAM-MD5";
+    else
+    if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
 	{
-        char * str =
+        char *base64Str =
             PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
-        cmd = str;
-        PR_Free(str);
+        cmd = base64Str;
+        PR_Free(base64Str);
     }
     else 
 	{
@@ -1045,16 +1120,15 @@ PRInt32 nsPop3Protocol::SendUsername()
     }
     cmd += CRLF;
 
-    m_pop3ConData->next_state_after_response = POP3_SEND_PASSWORD;
+    m_pop3ConData->next_state_after_response = POP3_AUTH_FALLBACK;
+
+    m_pop3ConData->pause_for_read = PR_TRUE;
 
     return SendData(m_url, cmd.get());
 }
 
 PRInt32 nsPop3Protocol::SendPassword()
 {
-    /* check username response */
-    if (!m_pop3ConData->command_succeeded)
-        return(Error(POP3_USERNAME_FAILURE));
     nsXPIDLCString password;
     PRBool okayValue = PR_TRUE;
 	nsresult rv = GetPassword(getter_Copies(password), &okayValue);
@@ -1068,14 +1142,42 @@ PRInt32 nsPop3Protocol::SendPassword()
     {
       return Error(POP3_PASSWORD_UNDEFINED);
     }
-    nsCAutoString cmd;
 
-    if (POP3_HAS_AUTH_LOGIN & m_pop3ConData->capability_flags) 
+    nsCAutoString cmd;
+    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+    {
+      char buffer[512];
+      unsigned char digest[DIGEST_LENGTH];
+
+      char *decodedChallenge = PL_Base64Decode(m_commandResponse.get(), 
+      m_commandResponse.Length() - 2 /* subtract CRLF */, nsnull);
+
+      rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
+
+      if (NS_SUCCEEDED(rv) && digest)
+      {
+        nsCAutoString encodedDigest;
+        char hexVal[8];
+
+        for (PRUint32 j=0; j<16; j++) 
 	{
-        char * str = 
+          PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+          encodedDigest.Append(hexVal); 
+        }
+
+        PR_snprintf(buffer, sizeof(buffer), "%s %s", m_username.get(), encodedDigest.get());
+        char *base64Str = PL_Base64Encode(buffer, strlen(buffer), nsnull);
+        cmd = base64Str;
+        PR_Free(base64Str);
+      }
+    }
+    else
+    if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
+	{
+        char * base64Str = 
             PL_Base64Encode(password, PL_strlen(password), nsnull);
-        cmd = str;
-        PR_Free(str);
+        cmd = base64Str;
+        PR_Free(base64Str);
     }
     else
     {
@@ -1086,6 +1188,8 @@ PRInt32 nsPop3Protocol::SendPassword()
 
     m_pop3ConData->next_state_after_response =  (m_pop3ConData->get_url) 
       ? POP3_SEND_GURL : POP3_SEND_STAT;
+
+    m_pop3ConData->pause_for_read = PR_TRUE;
 
     return SendData(m_url, cmd.get(), PR_TRUE);
 }
@@ -1239,8 +1343,7 @@ PRInt32
 nsPop3Protocol::SendGurl()
 {
     if (m_pop3ConData->capability_flags == POP3_CAPABILITY_UNDEFINED ||
-        m_pop3ConData->capability_flags & POP3_GURL_UNDEFINED ||
-        m_pop3ConData->capability_flags & POP3_HAS_GURL)
+        TestCapFlag(POP3_GURL_UNDEFINED | POP3_HAS_GURL))
         return SendStatOrGurl(PR_FALSE);
     else 
         return -1;
@@ -1250,11 +1353,10 @@ nsPop3Protocol::SendGurl()
 PRInt32
 nsPop3Protocol::GurlResponse()
 {
-    if (POP3_GURL_UNDEFINED & m_pop3ConData->capability_flags)
-        m_pop3ConData->capability_flags &= ~POP3_GURL_UNDEFINED;
+    ClearCapFlag(POP3_GURL_UNDEFINED);
     
     if (m_pop3ConData->command_succeeded) {
-        m_pop3ConData->capability_flags |= POP3_HAS_GURL;
+        SetCapFlag(POP3_HAS_GURL);
 		// mscott - trust me, this cast to a char * IS SAFE!! There is a bug in 
 		/// the xpidl file which is preventing SetMailAccountURL from taking
 		// const char *. When that is fixed, we can remove this cast.
@@ -1262,7 +1364,7 @@ nsPop3Protocol::GurlResponse()
             m_nsIPop3Sink->SetMailAccountURL(m_commandResponse.get());
     }
     else {
-        m_pop3ConData->capability_flags &= ~POP3_HAS_GURL;
+        ClearCapFlag(POP3_HAS_GURL);
     }
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     m_pop3ConData->next_state = POP3_SEND_QUIT;
@@ -1575,8 +1677,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 */
 PRInt32 nsPop3Protocol::SendXtndXlstMsgid()
 {
-  if ((m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST) ||
-      (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED))
+  if (TestCapFlag(POP3_HAS_XTND_XLST | POP3_XTND_XLST_UNDEFINED))
   {
     m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
     m_pop3ConData->pause_for_read = PR_TRUE;
@@ -1610,11 +1711,10 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
   * but it's alright since command_succeeded
   * will remain constant
   */
-  if (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED)
-    m_pop3ConData->capability_flags &= ~POP3_XTND_XLST_UNDEFINED;
+  ClearCapFlag(POP3_XTND_XLST_UNDEFINED);
   
   if(!m_pop3ConData->command_succeeded) {
-    m_pop3ConData->capability_flags &= ~POP3_HAS_XTND_XLST;
+    ClearCapFlag(POP3_HAS_XTND_XLST);
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     m_pop3ConData->next_state = POP3_START_USE_TOP_FOR_FAKE_UIDL;
     m_pop3ConData->pause_for_read = PR_FALSE;
@@ -1622,7 +1722,7 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
   }
   else
   {
-    m_pop3ConData->capability_flags |= POP3_HAS_XTND_XLST;
+    SetCapFlag(POP3_HAS_XTND_XLST);
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
   }        
   
@@ -1685,8 +1785,7 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 
 PRInt32 nsPop3Protocol::SendUidlList()
 {
-    if ((m_pop3ConData->capability_flags & POP3_HAS_UIDL) ||
-        (m_pop3ConData->capability_flags & POP3_UIDL_UNDEFINED))
+    if (TestCapFlag(POP3_HAS_UIDL | POP3_UIDL_UNDEFINED))
     {
         m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
         m_pop3ConData->pause_for_read = PR_TRUE;
@@ -1709,20 +1808,19 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
      * but it's alright since command_succeeded
      * will remain constant
      */
-    if (m_pop3ConData->capability_flags & POP3_UIDL_UNDEFINED)
-        m_pop3ConData->capability_flags &= ~POP3_UIDL_UNDEFINED;
+    ClearCapFlag(POP3_UIDL_UNDEFINED);
 
     if(!m_pop3ConData->command_succeeded) 
     {
         m_pop3ConData->next_state = POP3_SEND_XTND_XLST_MSGID;
         m_pop3ConData->pause_for_read = PR_FALSE;
-        m_pop3ConData->capability_flags &= ~POP3_HAS_UIDL;
+        ClearCapFlag(POP3_HAS_UIDL);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         return(0);
     }
     else
     {
-        m_pop3ConData->capability_flags |= POP3_HAS_UIDL;
+        SetCapFlag(POP3_HAS_UIDL);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     
@@ -1960,8 +2058,7 @@ nsPop3Protocol::GetMsg()
     
     m_pop3Server->GetAuthLogin(&prefBool);
 
-    if (prefBool && (m_pop3ConData->capability_flags & POP3_HAS_XSENDER ||
-                     m_pop3ConData->capability_flags & POP3_XSENDER_UNDEFINED))
+    if (prefBool && (TestCapFlag(POP3_HAS_XSENDER | POP3_XSENDER_UNDEFINED)))
         m_pop3ConData->next_state = POP3_SEND_XSENDER;
     else
         m_pop3ConData->next_state = POP3_SEND_RETR;
@@ -1992,8 +2089,7 @@ nsPop3Protocol::GetMsg()
                 m_pop3ConData->next_state = POP3_GET_MSG;
             } else if ((c != TOO_BIG) && (m_pop3ConData->size_limit > 0) &&
                        (info->size > m_pop3ConData->size_limit) && 
-                       (m_pop3ConData->capability_flags & POP3_TOP_UNDEFINED
-                        || (m_pop3ConData->capability_flags & POP3_HAS_TOP)) &&
+                       (TestCapFlag(POP3_TOP_UNDEFINED | POP3_HAS_TOP)) &&
                        (m_pop3ConData->only_uidl == NULL)) { 
                 /* message is too big */
                 m_pop3ConData->truncating_cur_msg = PR_TRUE;
@@ -2091,19 +2187,17 @@ PRInt32 nsPop3Protocol::XsenderResponse()
     m_pop3ConData->seenFromHeader = PR_FALSE;
 	m_senderInfo = "";
     
-    if (POP3_XSENDER_UNDEFINED & m_pop3ConData->capability_flags)
-        m_pop3ConData->capability_flags &= ~POP3_XSENDER_UNDEFINED;
+    ClearCapFlag(POP3_XSENDER_UNDEFINED);
 
     if (m_pop3ConData->command_succeeded) {
         if (m_commandResponse.Length() > 4)
         {
 			m_senderInfo = m_commandResponse;
         }
-        if (! (POP3_HAS_XSENDER & m_pop3ConData->capability_flags))
-            m_pop3ConData->capability_flags |= POP3_HAS_XSENDER;
+        SetCapFlag(POP3_HAS_XSENDER);
     }
     else {
-        m_pop3ConData->capability_flags &= ~POP3_HAS_XSENDER;
+        ClearCapFlag(POP3_HAS_XSENDER);
     }
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
@@ -2391,13 +2485,13 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 PRInt32
 nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 {
-    if (m_pop3ConData->capability_flags & POP3_TOP_UNDEFINED)
+    if (TestCapFlag(POP3_TOP_UNDEFINED))
     {
-        m_pop3ConData->capability_flags &= ~POP3_TOP_UNDEFINED;
+        ClearCapFlag(POP3_TOP_UNDEFINED);
         if (m_pop3ConData->command_succeeded)
-            m_pop3ConData->capability_flags |= POP3_HAS_TOP;
+            SetCapFlag(POP3_HAS_TOP);
         else
-            m_pop3ConData->capability_flags &= ~POP3_HAS_TOP;
+            ClearCapFlag(POP3_HAS_TOP);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     
@@ -2429,8 +2523,7 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
         m_pop3Server->GetAuthLogin(&prefBool);
 
         if (prefBool && 
-            (POP3_XSENDER_UNDEFINED & m_pop3ConData->capability_flags ||
-             POP3_HAS_XSENDER & m_pop3ConData->capability_flags))
+            (TestCapFlag(POP3_XSENDER_UNDEFINED | POP3_HAS_XSENDER)))
             m_pop3ConData->next_state = POP3_SEND_XSENDER;
         else
             m_pop3ConData->next_state = POP3_SEND_RETR;
@@ -2703,15 +2796,13 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             
               if (prefBool) 
               {
-                if (m_pop3ConData->capability_flags & POP3_AUTH_LOGIN_UNDEFINED)
+                    if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
                   m_pop3ConData->next_state = POP3_SEND_AUTH;
-                else if (m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
-                  m_pop3ConData->next_state = POP3_AUTH_LOGIN;
                 else
-                  m_pop3ConData->next_state = POP3_SEND_USERNAME;
+                        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
               }
               else
-                m_pop3ConData->next_state = POP3_SEND_USERNAME;
+                    m_pop3ConData->next_state = POP3_SEND_USERNAME;;
            }
            break;
            }
@@ -2726,25 +2817,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 
         case POP3_FINISH_CONNECT:
         {
-            PRBool prefBool = PR_FALSE;
-            
             m_pop3ConData->pause_for_read = PR_FALSE;
-			// m_pop3ConData->next_state = POP3_SEND_USERNAME;
-            m_pop3ConData->next_state =
-                POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE;
-
-            m_pop3Server->GetAuthLogin(&prefBool);
-            
-            if (prefBool) {
-                if (m_pop3ConData->capability_flags & POP3_AUTH_LOGIN_UNDEFINED)
-                    m_pop3ConData->next_state_after_response = POP3_SEND_AUTH;
-                else if (m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
-                    m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN;
-                else
-                    m_pop3ConData->next_state_after_response = POP3_SEND_USERNAME;
-            }
-            else
-                m_pop3ConData->next_state_after_response = POP3_SEND_USERNAME;
+            m_pop3ConData->next_state = POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE;
             break;
         }
 
@@ -2753,8 +2827,24 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             break;
             
         case POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE:
+        {
             WaitForStartOfConnectionResponse(aInputStream, aLength);
+
+            PRBool prefBool = PR_FALSE;
+            m_pop3Server->GetAuthLogin(&prefBool);
+
+            if (prefBool)
+            {
+                if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
+                    m_pop3ConData->next_state = POP3_SEND_AUTH;
+                else
+                    m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+            }
+            else
+                m_pop3ConData->next_state = POP3_SEND_USERNAME;;
+
             break;
+        }
             
         case POP3_SEND_AUTH:
             status = SendAuth();
@@ -2762,6 +2852,14 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             
         case POP3_AUTH_RESPONSE:
             status = AuthResponse(aInputStream, aLength);
+            break;
+            
+        case POP3_PROCESS_AUTH:
+            status = ProcessAuth();
+            break;
+            
+        case POP3_AUTH_FALLBACK:
+            status = AuthFallback();
             break;
             
         case POP3_AUTH_LOGIN:

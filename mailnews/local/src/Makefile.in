@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  mime \
 		  rdfutil \
 		  txmgr \
+		  caps \
 		  docshell \
 		  msgimap \
 		  nkcache \

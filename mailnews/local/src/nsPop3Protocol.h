@@ -88,7 +88,7 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 
 enum Pop3CapabilityEnum {
     POP3_CAPABILITY_UNDEFINED = 0x00000000,
-    POP3_AUTH_LOGIN_UNDEFINED = 0x00000001,
+    POP3_AUTH_MECH_UNDEFINED = 0x00000001,
     POP3_HAS_AUTH_LOGIN		    = 0x00000002,
     POP3_XSENDER_UNDEFINED    = 0x00000004,
     POP3_HAS_XSENDER		      = 0x00000008,
@@ -99,7 +99,9 @@ enum Pop3CapabilityEnum {
     POP3_XTND_XLST_UNDEFINED  = 0x00000100,
     POP3_HAS_XTND_XLST        = 0x00000200,
     POP3_TOP_UNDEFINED         = 0x00000400,
-    POP3_HAS_TOP              = 0x00000800
+    POP3_HAS_TOP              = 0x00000800,
+    POP3_HAS_AUTH_USER		    = 0x00001000,
+    POP3_HAS_AUTH_CRAM_MD5	    = 0x00002000
 };
 
 enum Pop3StatesEnum {
@@ -141,14 +143,16 @@ enum Pop3StatesEnum {
     POP3_GET_FAKE_UIDL_TOP,                     // 28
     POP3_SEND_AUTH,                             // 29
     POP3_AUTH_RESPONSE,                         // 30
+    POP3_PROCESS_AUTH,                          // 31
+    POP3_AUTH_FALLBACK,                         // 32
 
-    POP3_AUTH_LOGIN,                            // 31
-    POP3_AUTH_LOGIN_RESPONSE,                   // 32
-    POP3_SEND_XSENDER,                          // 33
-    POP3_XSENDER_RESPONSE,                      // 34
-    POP3_SEND_GURL,                             // 35
+    POP3_AUTH_LOGIN,                            // 33
+    POP3_AUTH_LOGIN_RESPONSE,                   // 34
+    POP3_SEND_XSENDER,                          // 35
+    POP3_XSENDER_RESPONSE,                      // 36
+    POP3_SEND_GURL,                             // 37
 
-    POP3_GURL_RESPONSE,                         // 36
+    POP3_GURL_RESPONSE,                         // 38
     POP3_QUIT_RESPONSE,
     POP3_INTERRUPTED
 };
@@ -310,6 +314,10 @@ private:
   void FreeMsgInfo();
   void Abort();
 
+  void SetCapFlag(PRUint32 flag);
+  void ClearCapFlag(PRUint32 flag);
+  PRBool TestCapFlag(PRUint32 flag);
+
     //////////////////////////////////////////////////////////////////////////////////////////
 	// Begin Pop3 protocol state handlers
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -319,8 +327,9 @@ private:
                             PRUint32 length);
     PRInt32 Error(PRInt32 err_code);
     PRInt32 SendAuth();
-    PRInt32 AuthResponse(nsIInputStream* inputStream, 
-                         PRUint32 length);
+    PRInt32 AuthResponse(nsIInputStream* inputStream, PRUint32 length);
+    PRInt32 ProcessAuth();
+    PRInt32 AuthFallback();
     PRInt32 AuthLogin();
     PRInt32 AuthLoginResponse();
     PRInt32 SendUsername();
