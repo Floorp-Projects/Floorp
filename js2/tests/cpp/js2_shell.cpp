@@ -160,7 +160,7 @@ static JSValue load(Context *cx, const JSValues &argv)
     size_t n = argv.size();
     if (n > 1) {
         for (size_t i = 1; i < n; ++i) {
-            JSValue val = argv[i].toString();
+            JSValue val = argv[i].toString(cx);
             if (val.isString()) {
                 JSString& fileName = *val.string;
                 std::string str(fileName.length(), char());
@@ -182,7 +182,7 @@ static JSValue loadxml(Context *cx, const JSValues &argv)
     size_t n = argv.size();
     if (n > 1) {
         for (size_t i = 1; i < n; ++i) {
-            JSValue val = argv[i].toString();
+            JSValue val = argv[i].toString(cx);
             if (val.isString()) {
                 JSString& fileName = *val.string;
                 std::string str(fileName.length(), char());
