@@ -60,6 +60,10 @@ ifdef MOZ_FULLCIRCLE
 XP_LIBS		+= $(FULLCIRCLE_LIBS)
 endif
 
+ifdef MOZ_ENABLE_PHOTON
+XP_LIBS		+= $(TK_LIBS)
+endif
+
 ifdef MOZ_MONOLITHIC_TOOLKIT
 XP_LIBS		+= $(TK_LIBS)
 endif

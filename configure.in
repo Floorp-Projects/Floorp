@@ -1133,6 +1133,12 @@ then
 	AC_DEFINE(MOZ_WIDGET_MOTIF)
 fi
 
+if test "$MOZ_WIDGET_TOOLKIT" = "photon"
+then
+	MOZ_ENABLE_PHOTON=1
+	AC_DEFINE(MOZ_WIDGET_PHOTON)
+fi
+
 
 dnl ========================================================
 dnl =													   =
@@ -1574,6 +1580,7 @@ AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_MOTIF)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_QT)
+AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_MOTIF_CFLAGS)
@@ -2806,6 +2813,7 @@ dnl The following are the only platforms I tested  -ramiro
 dnl OpenVMS added by Colin Blake
 dnl Tru64   added by Jim Nance
 dnl hpux11 added by John Gaunt workaround for bug 39747
+dnl nto added by Jerry Kirk 
 case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
@@ -2814,6 +2822,7 @@ case "$target" in
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-hpux11.*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-nto*)       MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
@@ -3271,17 +3280,6 @@ then
             AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
         fi
 	;;
-    *-solaris*)
-        # Demangle only for debug builds which are using the Gnu compiler.
-        if test "$GNU_CC"
-        then
-            if test "$MOZ_DEBUG"
-            then
-                MOZ_DEMANGLE_SYMBOLS=1
-                AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
-            fi
-        fi
-    ;;
   esac
 fi
 
