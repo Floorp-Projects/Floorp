@@ -1018,9 +1018,6 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
     }
     else if (!mDoFormat)
     {
-#ifdef DEBUG_akkana
-      printf("Conditionally formatting\n");
-#endif
       if (HasLongLines(text))
       {
         WriteWrapped(text);
