@@ -383,7 +383,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
       case eSocketState_WaitReadWrite:
         // Process the read request...
-        if (mReadStream) {
+        if (GetReadType() != eSocketRead_None) {
           rv = doRead(aSelectFlags);
           if (NS_OK == rv) {
             SetFlag(eSocketRead_Done);
@@ -391,7 +391,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           }
         }
         // Process the write request...
-        if (NS_SUCCEEDED(rv) && mWriteStream) {
+        if (NS_SUCCEEDED(rv) && (GetWriteType() != eSocketWrite_None)) {
           rv = doWrite(aSelectFlags);
           if (NS_OK == rv) {
             SetFlag(eSocketWrite_Done);
@@ -754,6 +754,11 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   NS_ASSERTION(eSocketState_WaitReadWrite == mCurrentState, "Wrong state.");
   NS_ASSERTION(GetReadType() != eSocketRead_None, "Bad Read Type!");
 
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("+++ Entering nsSocketTransport::doRead() [this=%x].\t"
+          "aSelectFlags = %x.\t",
+          this, aSelectFlags));
+
   //
   // Fill the stream with as much data from the network as possible...
   //
@@ -880,7 +885,9 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
                                   MAX_IO_TRANSFER_SIZE, aCount);
   PR_Lock(mLock);
 
-  mWriteCount -= *aCount;
+  if (mWriteCount > 0) {
+    mWriteCount -= *aCount;
+  }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
         ("ReadSegments [fd=%x].  rv = %x. Bytes written =%d\n",
@@ -1149,7 +1156,9 @@ nsSocketTransport::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
     // Enter the socket transport lock...
     nsAutoLock aLock(mLock);
 
-    mWriteCount += aCount;
+    if (mWriteCount >= 0) {
+      mWriteCount += aCount;
+    }
     if (GetFlag(eSocketWrite_Wait)) {
       ClearFlag(eSocketWrite_Wait);
       mSelectFlags |= PR_POLL_WRITE;
