@@ -84,6 +84,7 @@ public:
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
+    void                    CalculateAndSetZoomedSize();
 
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
