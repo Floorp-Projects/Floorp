@@ -179,10 +179,9 @@ function InitDialog()
   doOverallEnabling();
 }
 
-function chooseFile()
+function chooseImageFile()
 {
   // Get a local file, converted into URL format
-
   fileName = GetLocalFileURL("img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
@@ -322,7 +321,6 @@ function doDimensionEnabling( doEnable )
          && ( dialog.widthUnitsSelect.selectedIndex == 0 )
          && ( dialog.heightUnitsSelect.selectedIndex == 0 );
   SetElementEnabledByID( "constrainCheckbox", constrainEnable );
-  SetElementEnabledByID( "constrainLabel", constrainEnable );
 }
 
 function doOverallEnabling()
@@ -337,8 +335,6 @@ function doOverallEnabling()
   SetElementEnabledByID( "altTextLabel", canEnableAll );
 
   // Do widgets for sizing
-  SetElementEnabledByID( "originalsizeLabel", canEnableAll );
-  SetElementEnabledByID( "customsizeLabel", canEnableAll );
   SetElementEnabledByID( "dimensionsLabel", canEnableAll );
   doDimensionEnabling( canEnableAll );
   
@@ -404,7 +400,16 @@ function constrainProportions( srcID, destID )
 
 function editImageMap()
 {
-  dump("editImageMap -- WRITE ME!\n");
+  if (editorShell){
+    var tagName = "img";
+    image = editorShell.GetSelectedElement(tagName);
+
+    //Test selected element to see if it's an image
+    if (image){
+      //If it is, launch image map dialog
+      window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close", "");
+    }
+  }
 }
 
 function removeImageMap()
