@@ -282,30 +282,32 @@ nsresult nsAbMDBCardProperty::GetCardDatabase(const char *uri)
 	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if (NS_SUCCEEDED(rv))
 	{
-		nsFileSpec* dbPath;
-		abSession->GetUserProfileDirectory(&dbPath);
+		nsCOMPtr<nsILocalFile> dbPath;
+		rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
+		NS_ENSURE_SUCCESS(rv, rv);
 
-		const char* file = nsnull;
-		file = &(uri[kMDBDirectoryRootLen]);
-		(*dbPath) += file;
+
+		rv = dbPath->AppendNative(nsDependentCString(&(uri[kMDBDirectoryRootLen])));
+		NS_ENSURE_SUCCESS(rv, rv);
 		
-		if (dbPath->Exists())
+		PRBool fileExists;
+		rv = dbPath->Exists(&fileExists);
+		if (NS_SUCCEEDED(rv) && fileExists)
 		{
 			nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
 			         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 			if (NS_SUCCEEDED(rv) && addrDBFactory)
-				rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);
+				rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(mCardDatabase));
 		}
 		else
 			rv = NS_ERROR_FAILURE;
-		delete dbPath;
 	}
 	return rv;
 }
 
 NS_IMETHODIMP nsAbMDBCardProperty::Equals(nsIAbCard *card, PRBool *result)
-		{
+{
   nsresult rv;
 
   if (this == card) {

@@ -137,13 +137,11 @@ interface nsAddrDBCommitType
   const long kCompressCommit = 3;
 };
 
-[scriptable, uuid(A4186D8B-1DD0-11d3-A303-001083003D0C)] 
+[scriptable, uuid(8175a7ce-4414-489e-ba29-b22d8c4a1cae)]
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
 	[noscript] attribute nsFileSpec dbPath;
-	[noscript] void open(in nsFileSpec folderName, in boolean create,
-						out nsIAddrDatabase pCardDB, in boolean upgrading);
-  nsIAddrDatabase openWithIFile(in nsIFile dbFile, in boolean create, in boolean upgrading);
+	nsIAddrDatabase open(in nsIFile dbFile, in boolean create, in boolean upgrading);
              
 	void close(in boolean forceCommit);
 	[noscript] void openMDB(in nsFileSpec dbName, in boolean create);

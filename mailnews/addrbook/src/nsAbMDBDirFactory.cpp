@@ -138,11 +138,11 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
     nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsFileSpec* dbPath;
-    rv = abSession->GetUserProfileDirectory(&dbPath);
+    nsCOMPtr<nsILocalFile> dbPath;
+    rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
 
-    nsCOMPtr<nsIAddrDatabase>  listDatabase;  
-    if (dbPath)
+    nsCOMPtr<nsIAddrDatabase>  listDatabase;
+    if (NS_SUCCEEDED(rv))
     {
       nsCAutoString fileName;
       nsDependentCString uriStr(uri);
@@ -150,13 +150,13 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
       if (StringBeginsWith(uriStr, NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
           fileName = Substring(uriStr, kMDBDirectoryRootLen, uriStr.Length() - kMDBDirectoryRootLen);
 
-      (*dbPath) += fileName.get();
+      rv = dbPath->AppendNative(fileName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIAddrDatabase> addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
-      delete dbPath;
+      rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(listDatabase));
     }
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -44,7 +44,6 @@
 #include "nsAbUtils.h"
 #include "nsAbMDBCard.h"
 #include "nsAbLDAPCard.h"
-#include "nsFileSpec.h"
 #include "nsAbLDAPProperties.h"
 #include "nsProxiedService.h"
 #include "nsAutoLock.h"
@@ -191,14 +190,27 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchResult(nsILDAPMessage *aMessa
                 nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
                 if(NS_FAILED(rv)) 
                     break;
-                nsFileSpec* dbPath;
-                rv = abSession->GetUserProfileDirectory(&dbPath);
+                nsCOMPtr<nsILocalFile> dbPath;
+                rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
                 if(NS_FAILED(rv)) 
                     break;
-                (*dbPath) += mDirServerInfo->replInfo->fileName;
-                if (!dbPath->Exists() || !dbPath->GetFileSize()) 
+
+                rv = dbPath->AppendNative(nsDependentCString(mDirServerInfo->replInfo->fileName));
+                if(NS_FAILED(rv)) 
+                    break;
+
+                PRBool fileExists;
+                rv = dbPath->Exists(&fileExists);
+                if(NS_FAILED(rv)) 
+                    break;
+
+                PRInt64 fileSize;
+                rv = dbPath->GetFileSize(&fileSize);
+                if(NS_FAILED(rv)) 
+                    break;
+
+                if (!fileExists || !fileSize)
                     mUseChangeLog = PR_FALSE;
-                delete dbPath;
 
                 // open / create the AB here since it calls Done,
                 // just return from here. 

@@ -731,31 +731,20 @@ nsresult nsAbPalmHotSync::OpenABDBForHotSync(PRBool aCreate)
     if(NS_FAILED(rv)) 
         return rv;
 
-    nsFileSpec* dbPath;
-    rv = abSession->GetUserProfileDirectory(&dbPath);
+    rv = abSession->GetUserProfileDirectory(getter_AddRefs(mABFile));
     if(NS_FAILED(rv)) 
         return rv;
 
-    (*dbPath) += mFileName.get();
-
-    // get nsIFile for nsFileSpec from abSession, why use a obsolete class if not required!
-    rv = NS_FileSpecToIFile(dbPath, getter_AddRefs(mABFile));
-    if(NS_FAILED(rv))  
-    {
-        delete dbPath;
-        return rv;
-    }
+		mABFile->AppendNative(mFileName);
 
     nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
              do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
     if(NS_FAILED(rv)) 
     {
-        delete dbPath;
         return rv;
     }
     
-    rv = addrDBFactory->Open(dbPath, aCreate, getter_AddRefs(mABDB), PR_TRUE);
-    delete dbPath;
+    rv = addrDBFactory->Open(mABFile, aCreate, PR_TRUE, getter_AddRefs(mABDB));
     NS_ENSURE_SUCCESS(rv, rv);
     mDBOpen = PR_TRUE;  // Moz AB DB is now Open
 
@@ -777,14 +766,10 @@ nsresult nsAbPalmHotSync::KeepCurrentStateAsPrevious()
         nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
         if(NS_FAILED(rv)) 
             return rv;
-        nsFileSpec* dbPath;
-        rv = abSession->GetUserProfileDirectory(&dbPath); // this still uses nsFileSpec!!!
+        rv = abSession->GetUserProfileDirectory(getter_AddRefs(mPreviousABFile));
         if(NS_SUCCEEDED(rv)) 
         {
-            (*dbPath) += previousLeafName.get();
-            // get nsIFile for nsFileSpec from abSession, why use a obsolete class if not required!
-            rv = NS_FileSpecToIFile(dbPath, getter_AddRefs(mPreviousABFile));
-            delete dbPath;
+            mPreviousABFile->AppendNative(previousLeafName);
             if(NS_FAILED(rv))
                 return rv;
         }

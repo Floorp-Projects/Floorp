@@ -177,7 +177,7 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryDeleted(nsIAbDirectory *director
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
+NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsILocalFile * *userDir)
 {
   NS_ENSURE_ARG_POINTER(userDir);
   *userDir = nsnull;
@@ -192,10 +192,7 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
   rv = profileDir->GetNativePath(pathBuf);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *userDir = new nsFileSpec(pathBuf.get());
-  NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);
-
-  return rv;
+  return NS_NewNativeLocalFile(pathBuf, PR_TRUE, userDir);
 }
 
 #define kDisplayName 0

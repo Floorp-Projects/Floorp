@@ -51,7 +51,9 @@
 #include "nsIAbDirectory.idl"
 #include "nsIAbCard.idl"
 
-[scriptable, uuid(C5339441-303F-11d3-9E13-00A0C92B5F0D)]
+interface nsILocalFile;
+
+[scriptable, uuid(957abaa8-5cef-49d0-84a5-ce43da384990)]
 interface nsIAddrBookSession : nsISupports {
   void addAddressBookListener(in nsIAbListener listener, in abListenerNotifyFlagValue notifyFlags);
   void removeAddressBookListener(in nsIAbListener listener);
@@ -71,7 +73,7 @@ interface nsIAddrBookSession : nsISupports {
    */
   void notifyDirectoryDeleted(in nsIAbDirectory directory, in nsISupports item);
 
-  [noscript] readonly attribute nsFileSpec userProfileDirectory;
+  readonly attribute nsILocalFile userProfileDirectory;
 
   /** 
    * generate the name from the card, using the firstName and lastName and the displayName

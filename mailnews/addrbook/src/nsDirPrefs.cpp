@@ -1725,14 +1725,14 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsFileSpec* dbPath = nsnull;
+	nsCOMPtr<nsILocalFile> dbPath;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
 	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		abSession->GetUserProfileDirectory(&dbPath);
+	  rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
 	
-	if (dbPath)
+	if (NS_SUCCEEDED(rv))
 	{
     // close the database, as long as it isn't the special ones 
     // (personal addressbook and collected addressbook)
@@ -1743,21 +1743,21 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
         strcmp(server->fileName, kCollectedAddressbook)) {
 		nsCOMPtr<nsIAddrDatabase> database;
 
-		(*dbPath) += server->fileName;
+		rv = dbPath->AppendNative(nsDependentCString(server->fileName));
+		NS_ENSURE_SUCCESS(rv, rv);
 
 		// close file before delete it
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
 		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
+			rv = addrDBFactory->Open(dbPath, PR_FALSE, PR_TRUE, getter_AddRefs(database));
 		if (database)  /* database exists */
 		{
 			database->ForceClosed();
-			dbPath->Delete(PR_FALSE);
+			rv = dbPath->Remove(PR_FALSE);
+			NS_ENSURE_SUCCESS(rv, rv);
 		}
-
-    delete dbPath;
     }
 
 		nsVoidArray *dirList = DIR_GetDirectories();
@@ -2562,27 +2562,35 @@ static void DIR_ConvertServerFileName(DIR_Server* pServer)
 	if (leafName) PR_Free(leafName);
 }
 
-/* This will generate a correct filename and then remove the path */
+/* This will generate a correct filename and then remove the path.
+ * Note: we are assuming that the default name is in the native
+ * filesystem charset. The filename will be returned as a UTF8
+ * string.
+ */
 void DIR_SetFileName(char** fileName, const char* defaultName)
 {
 	nsresult rv = NS_OK;
-	nsFileSpec* dbPath = nsnull;
+	nsCOMPtr<nsILocalFile> dbPath;
+
+	*fileName = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
 	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		abSession->GetUserProfileDirectory(&dbPath);
-	if (dbPath)
+		rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
+	if (NS_SUCCEEDED(rv))
 	{
-		(*dbPath) += defaultName;
-		dbPath->MakeUnique(defaultName);
-		char* file = nsnull;
-		file = dbPath->GetLeafName();
-        *fileName = nsCRT::strdup(file);
-		if (file)
-			nsCRT::free(file);
+		rv = dbPath->AppendNative(nsDependentCString(defaultName));
+		if (NS_SUCCEEDED(rv))
+		{
+		  rv = dbPath->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0664);
 
-      delete dbPath;
+		  nsAutoString realFileName;
+		  rv = dbPath->GetLeafName(realFileName);
+
+		  if (NS_SUCCEEDED(rv))
+		    *fileName = ToNewUTF8String(realFileName);
+		}
 	}
 }
 

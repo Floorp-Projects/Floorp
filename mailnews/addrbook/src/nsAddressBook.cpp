@@ -67,7 +67,6 @@
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
 #include "nsIAbUpgrader.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsIFilePicker.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -282,8 +281,8 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
     do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsFileSpec* dbPath;
-  rv = abSession->GetUserProfileDirectory(&dbPath);
+  nsCOMPtr<nsILocalFile> dbPath;
+  rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
   NS_ENSURE_SUCCESS(rv,rv);
 
  /* directory URIs are of the form
@@ -300,7 +299,8 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
   PRInt32 pos = file.Find("/");
   if (pos != kNotFound)
     file.Truncate(pos);
-  (*dbPath) += file.get();
+  rv = dbPath->AppendNative(file);
+  NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
     do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
@@ -308,8 +308,7 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
 
   /* Don't create otherwise we end up re-opening a deleted address book */
   /* bug 66410 */
-  rv = addrDBFactory->Open(dbPath, PR_FALSE /* no create */, aDB, PR_TRUE);
-  delete dbPath;
+  rv = addrDBFactory->Open(dbPath, PR_FALSE /* no create */, PR_TRUE, aDB);
   
   return rv;
 }
@@ -320,22 +319,24 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
     nsCOMPtr<nsIAddrDatabase> database;
     if (pDbFile)
     {
-        nsFileSpec* dbPath = nsnull;
+        nsCOMPtr<nsILocalFile> dbPath;
 
         nsCOMPtr<nsIAddrBookSession> abSession = 
                  do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
         if(NS_SUCCEEDED(rv))
-            abSession->GetUserProfileDirectory(&dbPath);
+        {
+          rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
         
         nsCAutoString file(pDbFile);
-        (*dbPath) += file.get();
+        rv = dbPath->AppendNative(file);
+        NS_ENSURE_SUCCESS(rv,rv);
 
         nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
                  do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv) && addrDBFactory)
-            rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
-
-      delete dbPath;
+            rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(database));
 
         if (NS_SUCCEEDED(rv) && database)
         {
@@ -476,26 +477,27 @@ nsresult AddressBookParser::ParseFile()
     // to do: we should use only one "return rv;" at the very end, instead of this
     //  multi return structure
     nsresult rv = NS_OK;
-    nsFileSpec* dbPath = nsnull;
-    char* fileName = PR_smprintf("%s.mab", leafName);
+    nsCOMPtr<nsILocalFile> dbPath;
+    nsCAutoString fileName(leafName);
+    fileName.Append(NS_LITERAL_CSTRING(".mab"));
 
     nsCOMPtr<nsIAddrBookSession> abSession = 
              do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
     if(NS_SUCCEEDED(rv))
-        abSession->GetUserProfileDirectory(&dbPath);
+      rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
     
     /* create address book database  */
-    if (dbPath)
+    if(NS_SUCCEEDED(rv))
     {
-        (*dbPath) += fileName;
+        dbPath->AppendNative(fileName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
                  do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv) && addrDBFactory)
-            rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+            rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
     }
     NS_ENSURE_SUCCESS(rv, rv);
-
-    delete dbPath;
 
     nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -514,7 +516,7 @@ nsresult AddressBookParser::ParseFile()
     nsXPIDLString dirName;
     nsCOMPtr<nsIPrefLocalizedString> locString;
     nsCAutoString prefName;
-    if (strcmp(fileName, kPersonalAddressbook) == 0)
+    if (strcmp(fileName.get(), kPersonalAddressbook) == 0)
         prefName.AssignLiteral("ldap_2.servers.pab.description");
     else
         prefName = NS_LITERAL_CSTRING("ldap_2.servers.") + nsDependentCString(leafName) + NS_LITERAL_CSTRING(".description");
@@ -533,8 +535,6 @@ nsresult AddressBookParser::ParseFile()
 
     if (leafName)
         nsCRT::free(leafName);
-    if (fileName)
-        PR_smprintf_free(fileName);
 
     return rv;
 }

@@ -40,7 +40,6 @@
 
 #include "nsAddrDatabase.h"
 #include "nsIEnumerator.h"
-#include "nsFileStream.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsRDFCID.h"
@@ -548,33 +547,28 @@ NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrDatabase::OpenWithIFile(nsIFile *aFile, PRBool aCreate, PRBool aUpgrading, nsIAddrDatabase **aDB)
-{
-  NS_ENSURE_ARG_POINTER(aDB);
-  nsCOMPtr<nsIFileSpec> dbSpec;
-  nsFileSpec addrDBFileSpec;
-  // Convert the nsILocalFile into an nsIFileSpec
-  // TODO: convert users of nsIFileSpec to nsILocalFile
-  // and avoid this step.
-  nsresult rv = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(dbSpec));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbSpec->GetFileSpec(&addrDBFileSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return Open(&addrDBFileSpec, aCreate, aDB, aUpgrading);
-}
-
 NS_IMETHODIMP nsAddrDatabase::Open
-(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase** pAddrDB, PRBool upgrading /* unused */)
+(nsIFile *aMabFile, PRBool aCreate, PRBool upgrading /* unused */, nsIAddrDatabase** pAddrDB)
 { 
   *pAddrDB = nsnull;
   
-  nsAddrDatabase *pAddressBookDB = (nsAddrDatabase *) FindInCache(aMabFile);
+  nsCOMPtr<nsIFileSpec> mabIFileSpec;
+  nsFileSpec mabFileSpec;
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users of nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  nsresult rv = NS_NewFileSpecFromIFile(aMabFile, getter_AddRefs(mabIFileSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mabIFileSpec->GetFileSpec(&mabFileSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAddrDatabase *pAddressBookDB = (nsAddrDatabase *) FindInCache(&mabFileSpec);
   if (pAddressBookDB) {
     *pAddrDB = pAddressBookDB;
     return NS_OK;
   }
   
-  nsresult rv = OpenInternal(aMabFile, aCreate, pAddrDB);
+  rv = OpenInternal(&mabFileSpec, aCreate, pAddrDB);
   if (NS_SUCCEEDED(rv))
     return NS_OK;
   
@@ -583,13 +577,13 @@ NS_IMETHODIMP nsAddrDatabase::Open
   // and prompt the user
   if (aCreate) 
   {
-    nsFileSpec *newMabFile = new nsFileSpec(*aMabFile);
+    nsFileSpec *newMabFile = new nsFileSpec(mabFileSpec);
     if (!newMabFile)
       return NS_ERROR_OUT_OF_MEMORY;
     
     // save off the name of the corrupt mab file, example abook.mab
     nsXPIDLCString originalMabFileName;
-    originalMabFileName.Adopt(aMabFile->GetLeafName());
+    originalMabFileName.Adopt(mabFileSpec.GetLeafName());
 
     // the suggest new name for the backup will be abook.mab.bak
     nsCAutoString backupMabFileName(originalMabFileName);
@@ -602,7 +596,7 @@ NS_IMETHODIMP nsAddrDatabase::Open
     backupMabFileName.Adopt(newMabFile->GetLeafName());
 
     // rename abook.mab to abook.mab.bak
-    rv = aMabFile->Rename(backupMabFileName.get());
+    rv = mabFileSpec.Rename(backupMabFileName.get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to rename corrupt mab file");
  
     if (NS_SUCCEEDED(rv)) {

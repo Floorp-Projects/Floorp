@@ -76,8 +76,7 @@ public:
 
 	NS_IMETHOD GetDbPath(nsFileSpec * *aDbPath);
 	NS_IMETHOD SetDbPath(nsFileSpec * aDbPath);
-	NS_IMETHOD Open(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase **pCardDB, PRBool upgrading);
-        NS_IMETHOD OpenWithIFile(nsIFile *dbFile, PRBool create, PRBool upgrading, nsIAddrDatabase **_retval);
+	NS_IMETHOD Open(nsIFile *aMabFile, PRBool aCreate, PRBool upgrading, nsIAddrDatabase **pCardDB);
 	NS_IMETHOD Close(PRBool forceCommit);
 	NS_IMETHOD OpenMDB(nsFileSpec *dbName, PRBool create);
 	NS_IMETHOD CloseMDB(PRBool commit);

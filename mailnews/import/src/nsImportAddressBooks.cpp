@@ -777,29 +777,31 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	nsIAddrDatabase *	pDatabase = nsnull;
 
 	/* Get the profile directory */
-	// Note to Candice: This should return an nsIFileSpec, not a nsFileSpec
-	nsFileSpec *					dbPath = nsnull;
+	nsCOMPtr<nsILocalFile> dbPath;
 
 	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession, NS_ADDRBOOKSESSION_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv); 
 	
 	if (NS_SUCCEEDED(rv))
-		abSession->GetUserProfileDirectory(&dbPath);
-	if (dbPath) {
+		rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
+	if (NS_SUCCEEDED(rv)) {
 		// Create a new address book file - we don't care what the file
 		// name is, as long as it's unique
-		(*dbPath) += "impab.mab";
-		(*dbPath).MakeUnique();
+		rv = dbPath->Append(NS_LITERAL_STRING("impab.mab"));
+        if (NS_SUCCEEDED(rv)) {
+          rv = dbPath->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 		
-		IMPORT_LOG0( "Getting the address database factory\n");
+          if (NS_SUCCEEDED(rv)) {
+            IMPORT_LOG0( "Getting the address database factory\n");
 
-		NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, NS_ADDRDATABASE_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
-		if (NS_SUCCEEDED(rv) && addrDBFactory) {
-			
-			IMPORT_LOG0( "Opening the new address book\n");
-			rv = addrDBFactory->Open( dbPath, PR_TRUE, &pDatabase, PR_TRUE);
-		}
+            NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, NS_ADDRDATABASE_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
+            if (NS_SUCCEEDED(rv) && addrDBFactory) {
+		  	  IMPORT_LOG0( "Opening the new address book\n");
+			  rv = addrDBFactory->Open( dbPath, PR_TRUE, PR_TRUE, &pDatabase);
+            }
+          }
+        }
 	}
-	else {
+	if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "Failed to get the user profile directory from the address book session\n");
 	}
 
@@ -829,15 +831,25 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 			rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
 				parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 			if (parentDir)
-		       	{
+			{
 				nsCAutoString URI("moz-abmdbdirectory://");
-				URI.Append((*dbPath).GetLeafName());
-				parentDir->CreateDirectoryByURI(name, URI.get (), PR_FALSE);
-
-          delete dbPath;
+				nsCAutoString leafName;
+				rv = dbPath->GetNativeLeafName(leafName);
+				if (NS_FAILED(rv)) {
+				  IMPORT_LOG0( "*** Error: Unable to get name of database file\n");
+				}
+				else {
+				  URI.Append(leafName);
+				  rv = parentDir->CreateDirectoryByURI(name, URI.get (), PR_FALSE);
+				  if (NS_FAILED(rv))
+				    IMPORT_LOG0( "*** Error: Unable to create address book directory\n");
+				}
 			}
 
-			IMPORT_LOG0( "Added new address book to the UI\n");
+			if (NS_SUCCEEDED(rv))
+			  IMPORT_LOG0( "Added new address book to the UI\n");
+			else
+			  IMPORT_LOG0( "*** Error: An error occurred while adding the address book to the UI\n");
 		}
 	}
 	

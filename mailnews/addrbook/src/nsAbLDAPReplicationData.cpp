@@ -45,7 +45,6 @@
 #include "nsAbUtils.h"
 #include "nsAbMDBCard.h"
 #include "nsAbLDAPCard.h"
-#include "nsFileSpec.h"
 #include "nsAbLDAPProperties.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsProxiedService.h"
@@ -496,25 +495,23 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         return NS_ERROR_FAILURE;
     }
 
-    nsFileSpec* dbPath;
-    rv = abSession->GetUserProfileDirectory(&dbPath);
+    rv = abSession->GetUserProfileDirectory(getter_AddRefs(mReplicationFile));
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
         return rv;
     }
 
-    (*dbPath) += mDirServerInfo->replInfo->fileName;
+    rv = mReplicationFile->AppendNative(nsDependentCString(mDirServerInfo->replInfo->fileName));
+    if(NS_FAILED(rv)) {
+        Done(PR_FALSE);
+        return rv;
+    }
 
     // if the AB DB already exists backup existing one, 
     // in case if the user cancels or Abort put back the backed up file
-    if(dbPath->Exists()) {
-        // get nsIFile for nsFileSpec from abSession, why use a obsolete class if not required!
-        rv = NS_FileSpecToIFile(dbPath, getter_AddRefs(mReplicationFile));
-        if(NS_FAILED(rv))  {
-            delete dbPath;
-            Done(PR_FALSE);
-            return rv;
-        }
+    PRBool fileExists;
+    rv = mReplicationFile->Exists(&fileExists);
+    if(NS_SUCCEEDED(rv) && fileExists) {
         // create the backup file object same as the Replication file object.
         // we create a backup file here since we need to cleanup the existing file
         // for create and then commit so instead of deleting existing cards we just
@@ -524,33 +521,28 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         nsCOMPtr<nsIFile> clone;
         rv = mReplicationFile->Clone(getter_AddRefs(clone));
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
         mBackupReplicationFile = do_QueryInterface(clone, &rv);
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
         rv = mBackupReplicationFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0777);
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
         nsAutoString backupFileLeafName;
         rv = mBackupReplicationFile->GetLeafName(backupFileLeafName);
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
         // remove the newly created unique backup file so that move and copy succeeds.
         rv = mBackupReplicationFile->Remove(PR_FALSE);
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
@@ -578,7 +570,6 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
                 mBackupReplicationFile->SetLeafName(backupFileLeafName);
         }
         if(NS_FAILED(rv))  {
-            delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
@@ -587,15 +578,13 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
     nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
              do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
     if(NS_FAILED(rv)) {
-        delete dbPath;
         if (mBackupReplicationFile)
             mBackupReplicationFile->Remove(PR_FALSE);
         Done(PR_FALSE);
         return rv;
     }
     
-    rv = addrDBFactory->Open(dbPath, aCreate, getter_AddRefs(mReplicationDB), PR_TRUE);
-    delete dbPath;
+    rv = addrDBFactory->Open(mReplicationFile, aCreate, PR_TRUE, getter_AddRefs(mReplicationDB));
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
         if (mBackupReplicationFile)
