@@ -956,6 +956,7 @@ operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
     return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs.get());
   }
 
+#ifdef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 template <class T, class U>
 inline
 NSCAP_BOOL
@@ -963,6 +964,7 @@ operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
   }
+#endif
 
 
 
@@ -1046,6 +1048,30 @@ operator!=( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
   }
 
 
+#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
+
+  // We need to explicitly define comparison operators for `int'
+  // because the compiler is lame.
+
+template <class T>
+inline
+NSCAP_BOOL
+operator==( const nsCOMPtr<T>& lhs, int rhs )
+    // specifically to allow |smartPtr == 0|
+  {
+    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+  }
+
+template <class T>
+inline
+NSCAP_BOOL
+operator==( int lhs, const nsCOMPtr<T>& rhs )
+    // specifically to allow |0 == smartPtr|
+  {
+    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+  }
+
+#endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 
   // Comparing any two [XP]COM objects for identity
 
