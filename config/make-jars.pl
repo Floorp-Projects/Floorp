@@ -31,7 +31,7 @@ sub Cleanup
 sub JarIt
 {
     my ($jarfile, $args) = @_;
-    system "zip $jarfile $args\n" || die "zip failed";
+    system "zip -u $jarfile $args\n" || die "zip failed";
     my $cwd = cwd();
     print "+++ jarred $cwd => $jarfile\n";
     Cleanup();
@@ -141,7 +141,16 @@ while (<>) {
     chomp;
   start: 
     if (/^([\w\d.\-\\\/]+)\:\s*$/) {
-        my $jarfile = "$destPath/$1"; 
+        my $jarfileDest = $1;  
+        my $jarfile = "$destPath/$jarfileDest"; 
+        $jarfileDest =~ s/[^\/]+$//;
+        if ( ! -e "$destPath/$jarfileDest" )  {
+            my $currentDir = cwd();
+            chdir($destPath);
+            MkDirs($jarfileDest,".");
+            chdir($currentDir);
+            @cleanupList = (); 
+        }
 
         my $args = "";
         while (<>) {
