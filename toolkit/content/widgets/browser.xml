@@ -525,7 +525,6 @@
       <field name="_AUTOSCROLL_SPEED">3</field>
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_clientFrameDoc">null</field>
-      <field name="_clientFrameBody">null</field>
       <field name="_isScrolling">false</field>
       <field name="_autoScrollMarkerImage">null</field>
       <field name="_snapOn">false</field>
@@ -573,33 +572,35 @@
        <parameter name="node"/>
        <body>
          <![CDATA[
-           if (!node) return false;
-
-           var middleMousePaste;
+           var mmPaste = false;
+           var mmScrollbarPosition = false;
 
            try {
-             middleMousePaste = this.mPrefs.getBoolPref("middlemouse.paste");
+             mmPaste = this.mPrefs.getBoolPref("middlemouse.paste");
            }
            catch (ex) {
-             middleMousePaste = false;
            }
 
-           if (node instanceof HTMLElement) {
-             const xhtml1NS = "http://www.w3.org/1999/xhtml";
-             var tagName = node.nodeName;
-
-             if (node.namespaceURI != xhtml1NS)
-               tagName = tagName.toLowerCase();
-
-             if ((tagName == "a" || tagName == "area") && node.hasAttribute("href"))
-               return true;
-
-             if (middleMousePaste && (tagName == "input" || tagName == "textarea"))
-               return true;
-
+           try {
+             mmScrollbarPosition = this.mPrefs.getBoolPref("middlemouse.scrollbarPosition");
+           }
+           catch (ex) {
            }
 
-           return this.isAutoscrollBlocker(node.parentNode);
+           while (node) {
+             if ((node instanceof HTMLAnchorElement || node instanceof HTMLAreaElement) && node.hasAttribute("href"))
+               return true;
+
+             if (mmPaste && (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement))
+               return true;
+
+             if (node instanceof XULElement && mmScrollbarPosition
+                 && (node.localName == "scrollbar" || node.localName == "scrollcorner"))
+               return true;
+
+             node = node.parentNode;
+           }
+           return false;
          ]]>
        </body>
      </method>
@@ -645,7 +646,7 @@
            el.style.padding = "0";
            el.style.margin = "0";
 
-           this._clientFrameBody.appendChild(el);
+           this._clientFrameDoc.documentElement.appendChild(el);
            
            this._autoScrollMarkerImage = el;
          ]]>
@@ -749,24 +750,20 @@
       </handler>
       <handler event="mousedown">
         <![CDATA[
+          if (this._isScrolling) {
+            stopScroll();
+          } else if (event.button == 1) {
           if (!this.autoscrollEnabled || this.isAutoscrollBlocker(event.originalTarget))
             return;
 
-          if (!this._isScrolling) {
-            if (event.button == 1) {
               this._startX = event.clientX;
               this._startY = event.clientY;
               this._clientFrameDoc = event.originalTarget.ownerDocument;
-              this._clientFrameBody = (this._clientFrameDoc.getElementsByTagName('body')[0]) ? this._clientFrameDoc.getElementsByTagName('body')[0] : this._clientFrameDoc.getElementsByTagName('*')[0];
               this._isScrolling = true;
               this._snapOn = true; 
               this.showAutoscrollMarker(event);
               window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
             }
-          }
-          else {
-            stopScroll();
-          }
         ]]>
       </handler>
       <handler event="mousemove">
