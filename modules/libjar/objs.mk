@@ -19,12 +19,16 @@
 # Contributor(s): 
 #
 
-MODULES_LIBJAR_LCPPSRCS = \
-		nsJARInputStream.cpp \
+MODULES_STANDALONE_LCPPSRCS = \
 		nsZipArchive.cpp \
+		nsWildCard.cpp \
+		$(NULL)
+
+MODULES_LIBJAR_LCPPSRCS = \
+		$(MODULES_STANDALONE_LCPPSRCS) \
+		nsJARInputStream.cpp \
 		nsJAR.cpp \
 		nsJARFactory.cpp \
-		nsWildCard.cpp \
 		nsXPTZipLoader.cpp \
 		$(NULL)
 
@@ -40,6 +44,8 @@ MODULES_LIBJAR_LXPIDLSRCS = \
 		$(NULL)
 
 MODULES_LIBJAR_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LCPPSRCS))
+
+MODULES_STANDALONE_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_STANDALONE_LCPPSRCS))
 
 MODULES_LIBJAR_XPIDLSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LXPIDLSRCS))
 

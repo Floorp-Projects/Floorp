@@ -82,9 +82,6 @@ class nsJAR : public nsIZipReader, public nsIJAR
 
     NS_DECL_NSIJAR
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
     PRIntervalTime GetReleaseTime() {
         return mReleaseTime;
     }
@@ -104,7 +101,8 @@ class nsJAR : public nsIZipReader, public nsIJAR
     void SetZipReaderCache(nsZipReaderCache* cache) {
       mCache = cache;
     }
-  
+
+    PRFileDesc* OpenFile();
   protected:
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
@@ -117,6 +115,8 @@ class nsJAR : public nsIZipReader, public nsIJAR
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
 	PRLock*					 mLock;	
     PRInt32                  mTotalItemsInManifest;
+    PRFileDesc*              mFd;
+    
     //-- Private functions
     nsresult ParseManifest(nsISignatureVerifier* verifier);
     void     ReportError(const char* aFilename, PRInt16 errorCode);
@@ -197,9 +197,6 @@ public:
 
   nsZipReaderCache();
   virtual ~nsZipReaderCache();
-
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   nsresult ReleaseZip(nsJAR* reader);
 

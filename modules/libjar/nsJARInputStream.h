@@ -49,18 +49,13 @@ class nsJARInputStream : public nsIInputStream
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-
     nsresult 
     Init(nsJAR* jar, const char* aFilename);
   
   protected:
-    nsZipArchive* Zip() { return &mJAR->mZip; }
+    nsZipReadState  mReadInfo;
 
-  protected:
     nsJAR*      mJAR;
-    nsZipRead  mReadInfo;
 };
 
 #endif /* nsJAR_h__ */

@@ -44,6 +44,8 @@
 extern nsRecyclingAllocator *gZlibAllocator;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPTZipLoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipReaderCache)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -56,12 +58,12 @@ static const nsModuleComponentInfo components[] =
     { "Zip Reader", 
        NS_ZIPREADER_CID,
       "@mozilla.org/libjar/zip-reader;1", 
-      nsJAR::Create
+      nsJARConstructor
     },
     { "Zip Reader Cache", 
        NS_ZIPREADERCACHE_CID,
       "@mozilla.org/libjar/zip-reader-cache;1", 
-      nsZipReaderCache::Create
+      nsZipReaderCacheConstructor
     }
 };
 

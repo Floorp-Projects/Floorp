@@ -37,19 +37,58 @@
 #define nsZipArchive nsZipArchiveStandalone
 
 #define ZIP_Seek(fd,p,m) (fseek((fd),(p),(m))==0)
+
 #else
 
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #include "plarena.h"
 #define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
+
 #endif
 
 #define ZIFLAG_SYMLINK      0x01  /* zip item is a symlink */
 #define ZIFLAG_DATAOFFSET   0x02  /* zip item offset points to file data */
 
+#include "zlib.h"
+
 class nsZipFind;
-class nsZipRead;
+class nsZipReadState;
 class nsZipItemMetadata;
+
+#ifndef STANDALONE
+struct PRFileDesc;
+#endif
+
+/**
+ * This file defines some of the basic structures used by libjar to
+ * read Zip files. It makes use of zlib in order to do the decompression.
+ *
+ * A few notes on the classes:
+ * nsZipArchive   represents a single Zip file, and maintains an index
+ *                of all the items in the file.
+ * nsZipItem      represents a single item (file) in the Zip archive.
+ * nsZipReadState represents a read-in-progress, and maintains all
+ *                zlib state
+ * nsZipFind      represents the metadata involved in doing a search,
+ *                and current state of the iteration of found objects.
+ *
+ * There is a lot of #ifdef STANDALONE here, and that is so that these
+ * basic structures can be reused in a standalone static
+ * library. In order for the code to be reused, these structures
+ * should never use anything from XPCOM, including such obvious things
+ * as NS_ASSERTION(). Instead, use the basic NSPR equivalents.
+ *
+ * There is one key difference in the way that this code behaves in
+ * STANDALONE mode. In STANDALONE mode, the nsZipArchive owns the
+ * single file descriptor and that is used to read the ZIP file. Since
+ * there is only one nsZipArchive per file, you can only read one file
+ * at a time from the Zip file.
+ *
+ * In non-STANDALONE mode, nsZipReadState owns the file descriptor.
+ * Since there can be multiple nsZipReadStates in existence at the
+ * same time, there can be multiple reads from the same nsZipArchive
+ * happening at the same time.
+ */
 
 /**
  * nsZipItem -- a helper class for nsZipArchive
@@ -63,8 +102,8 @@ public:
   char*       name; /* '\0' terminated */
 
   PRUint32    offset;
-  PRUint32    size;
-  PRUint32    realsize;
+  PRUint32    size;             /* size in original file */
+  PRUint32    realsize;         /* inflated size */
   PRUint32    crc32;
 
   nsZipItem*  next;
@@ -104,7 +143,6 @@ private:
 
 };
 
-
 /** 
  * nsZipArchive -- a class for reading the PKZIP file format.
  *
@@ -124,6 +162,12 @@ public:
   /** destructing the object closes the archive */
   ~nsZipArchive();
 
+#ifdef STANDALONE
+  /** helper routine for passing around mFd
+   */
+  PRFileDesc* GetFd() { return mFd; }
+#endif
+  
   /** 
    * OpenArchive 
    * 
@@ -134,9 +178,11 @@ public:
    * @param   aArchiveName  full pathname of archive
    * @return  status code
    */
+#ifdef STANDALONE
   PRInt32 OpenArchive(const char * aArchiveName);
-
+#else
   PRInt32 OpenArchiveWithFileDesc(PRFileDesc* fd);
+#endif
 
   /**
    * Test the integrity of items in this archive by running
@@ -147,7 +193,7 @@ public:
    *
    * @return  status code       
    */
-  PRInt32 Test(const char *aEntryName);
+  PRInt32 Test(const char *aEntryName, PRFileDesc* aFd);
 
   /**
    * Closes an open archive.
@@ -165,39 +211,16 @@ public:
   /** 
    * ReadInit
    * 
-   * Prepare to read from an item in the archive. Must be called
-   * before any calls to Read or Available
+   * Prepare to read from an item in the archive. Takes ownership of
+   * the file descriptor, and will retain responsibility for closing
+   * it property upon destruction.
    *
    * @param   zipEntry name of item in file
    * @param   aRead is filled with appropriate values
    * @return  status code
    */
-  PRInt32 ReadInit(const char* zipEntry, nsZipRead* aRead);
+  PRInt32 ReadInit(const char* zipEntry, nsZipReadState* aRead, PRFileDesc* aFd);
 
-  /** 
-   * Read 
-   * 
-   * Read from the item specified to ReadInit. ReadInit must be 
-   * called first.
-   *
-   * @param  aRead the structure returned by ReadInit
-   * @param  buf buffer to write data into.
-   * @param  count number of bytes to read
-   * @param  actual (out) number of bytes read
-   * @return  status code
-   */
-  PRInt32 Read(nsZipRead* aRead, char* buf, PRUint32 count, PRUint32* actual );
-
-  /**
-   * Available
-   *
-   * Returns the number of bytes left to be read from the
-   * item specified to ReadInit. ReadInit must be called first.
-   *
-   * @param aRead the structure returned by ReadInit
-   * @return the number of bytes still to be read
-   */
-   PRUint32 Available(nsZipRead* aRead);
 
   /**
    * ExtractFile 
@@ -206,10 +229,12 @@ public:
    * @param   aOutname   where to extract on disk
    * @return  status code
    */
-  PRInt32 ExtractFile( const char * zipEntry, const char * aOutname );
+  PRInt32 ExtractFile(const char * zipEntry, const char * aOutname,
+                      PRFileDesc* aFd);
 
   PRInt32 ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
-                                nsZipItem **outItem);
+                                nsZipItem **outItem,
+                                PRFileDesc* aFd);
 
   /**
    * FindInit
@@ -221,7 +246,7 @@ public:
    *                      (may be NULL to find all files in archive)
    * @return  a structure used in FindNext. NULL indicates error
    */
-  nsZipFind* FindInit( const char * aPattern );
+  nsZipFind* FindInit(const char * aPattern);
 
   /**
    * FindNext
@@ -229,9 +254,9 @@ public:
    * @param   aFind   the Find structure returned by FindInit
    * @param   aResult the next item that matches the pattern
    */
-  PRInt32 FindNext( nsZipFind* aFind, nsZipItem** aResult);
+  PRInt32 FindNext(nsZipFind* aFind, nsZipItem** aResult);
 
-  PRInt32 FindFree( nsZipFind *aFind );
+  PRInt32 FindFree(nsZipFind *aFind);
 
 #ifdef XP_UNIX
   /**
@@ -245,10 +270,12 @@ public:
 private:
   //--- private members ---
 
-  PRFileDesc    *mFd;
   nsZipItem*    mFiles[ZIP_TABSIZE];
 #ifndef STANDALONE
   PLArenaPool   mArena;
+#else
+  // in standalone, each nsZipArchive has its own mFd
+  PRFileDesc    *mFd;
 #endif
 
   //--- private methods ---
@@ -256,53 +283,98 @@ private:
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
   nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
-  PRInt32           BuildFileList();
-  nsZipItem*        GetFileItem( const char * zipEntry );
-  PRUint32          HashName( const char* aName );
+  PRInt32           BuildFileList(PRFileDesc* aFd);
+  nsZipItem*        GetFileItem(const char * zipEntry);
+  PRUint32          HashName(const char* aName);
 
-  PRInt32           SeekToItem(const nsZipItem* aItem);
-  PRInt32           CopyItemToBuffer(const nsZipItem* aItem, char* aBuf);
-  PRInt32           CopyItemToDisk( const nsZipItem* aItem, PRFileDesc* outFD );
-  PRInt32           InflateItem( const nsZipItem* aItem, 
-                                 PRFileDesc* outFD,
-                                 char* buf );
-  PRInt32           TestItem( const nsZipItem *aItem );
+  PRInt32           SeekToItem(const nsZipItem* aItem,
+                               PRFileDesc* aFd);
+  PRInt32           CopyItemToDisk(const nsZipItem* aItem, PRFileDesc* outFD,
+                                   PRFileDesc* aFd);
+  PRInt32           InflateItem(const nsZipItem* aItem, PRFileDesc* outFD,
+                                PRFileDesc* aFd);
+  PRInt32           TestItem(const nsZipItem *aItem,
+                             PRFileDesc* aFd);
 
 };
 
 /** 
- * nsZipRead
+ * nsZipReadState
  *
  * a helper class for nsZipArchive, representing a read in progress
  */
-class nsZipRead
+
+class nsZipReadState
 {
 public:
 
-  nsZipRead() { MOZ_COUNT_CTOR(nsZipRead); }
-  ~nsZipRead()
+  nsZipReadState() :
+#ifndef STANDALONE
+    mFd(0),
+#endif
+    mCurPos(0)
+  { MOZ_COUNT_CTOR(nsZipReadState); }
+  ~nsZipReadState()
   {
-    PR_FREEIF(mFileBuffer);
-    MOZ_COUNT_DTOR(nsZipRead);
+#ifndef STANDALONE
+    if (mFd)
+      PR_Close(mFd);
+#endif
+    MOZ_COUNT_DTOR(nsZipReadState);
   }
 
-  void Init( nsZipArchive* aZip, nsZipItem* aZipItem )
-  {
-    mArchive = aZip;
-    mItem = aZipItem;
-    mCurPos = 0;
-    mFileBuffer = NULL;
-  }
+  void Init(nsZipItem* aZipItem, PRFileDesc* aFd);
 
-  nsZipArchive* mArchive;
+#ifndef STANDALONE
+  /** 
+   * Read 
+   * 
+   * Read from the item specified to ReadInit. ReadInit must be 
+   * called first.
+   *
+   * @param  aRead the structure returned by ReadInit
+   * @param  buf buffer to write data into.
+   * @param  count number of bytes to read
+   * @param  actual (out) number of bytes read
+   * @return  status code
+   */
+  PRInt32 Read(char* buf, PRUint32 count, PRUint32* actual);
+#endif
+  
+  /**
+   * Available
+   *
+   * Returns the number of bytes left to be read from the
+   * item specified to ReadInit. ReadInit must be called first.
+   *
+   * @param aRead the structure returned by ReadInit
+   * @return the number of bytes still to be read
+   */
+   PRUint32 Available();
+
+#ifndef STANDALONE
+  PRFileDesc*   mFd;
+#endif
+
   nsZipItem*    mItem;
   PRUint32      mCurPos;
-  char*         mFileBuffer;
+  unsigned char mReadBuf[ZIP_BUFLEN];
+  z_stream      mZs;
+  PRUint32      mCrc;
 
 private:
+#ifndef STANDALONE
+  PRInt32 ContinueInflate(char* aBuf,
+                          PRUint32 aCount,
+                          PRUint32* aBytesRead);
+  PRInt32 ContinueCopy(char* aBuf,
+                       PRUint32 aCount,
+                       PRUint32* aBytesRead);
+#endif
+  
   //-- prevent copies and assignments
-  nsZipRead& operator=(const nsZipRead& rhs);
-  nsZipRead(const nsZipFind& rhs);
+  nsZipReadState& operator=(const nsZipReadState& rhs);
+  nsZipReadState(const nsZipFind& rhs);
 };
 
 /** 
@@ -317,7 +389,7 @@ class nsZipFind
 public:
   const PRInt32       kMagic;
 
-  nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool regExp );
+  nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool regExp);
   ~nsZipFind();
 
   nsZipArchive* GetArchive();
