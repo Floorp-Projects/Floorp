@@ -31,8 +31,11 @@ bot.personality.guessActionPrefixes = ["guesses ", "postulates ", "figures ",
 function initMingus ()
 {
     
-    addOwner (/rginda.*!.*@adsl-63-198-63-20.dsl.snfc21.pacbell.net/i);
-    addOwner (/rginda.*!.*@.*netscape.com/i);
+    addOwner (/rginda.*!.*@adsl-63-198-63-20\.dsl\.snfc21\.pacbell\.net$/i);
+    addOwner (/rginda.*!.*@.*netscape\.com$/i);
+    addOwner (/ssieb.*!.*@.*pyr\.ec\.gc\.ca$/i);
+    addOwner (/ssieb.*!.*@.*wave\.home\.com$/i);
+    addOwner (/garyc.*!.*@.*ihug\.co\.nz$/i);
 
     bot.primNet = bot.networks["moznet"];
     
@@ -41,6 +44,13 @@ function initMingus ()
     CIRCNetwork.prototype.INITIAL_NAME = "mingus";
     CIRCNetwork.prototype.INITIAL_DESC = "real men do it with prototypes";
     CIRCNetwork.prototype.INITIAL_CHANNEL = "#chatzilla";
+
+    CIRCChannel.prototype.onJoin =
+    function my_chan_join (e) {
+        if (userIsOwner(e.user))
+            e.user.setOp(true);
+    }
+    
     bot.eventPump.addHook (psn_isAddressedToMe, psn_onAddressedMsg,
                            "addressed-to-me-hook");
     bot.personality.dp = new CDPressMachine();

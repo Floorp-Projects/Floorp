@@ -280,38 +280,35 @@ function my_chan_privmsg (e)
 {
     var user = e.user;
     var meat = e.meat;
-    if (userIsOwner(user))
-        if (meat.indexOf(bot.prefix) == 0)
-        {
-            /* if last char is a continuation character, then... */
-            if (meat[meat.length - 1] == '\\') {
-                user.accumulatedScript = meat.substring(bot.prefix.length,
-                                                        meat.length - 1);
-                return false; // prevent other hooks from processing this... 
-            }
-            else
-            {
-                return bot_eval(e, meat.substring(bot.prefix.length,
-                                                  meat.length));
-            }
+    if (meat.indexOf(bot.prefix) == 0 && userIsOwner(user))
+    {
+        /* if last char is a continuation character, then... */
+        if (meat[meat.length - 1] == '\\') {
+            user.accumulatedScript = meat.substring(bot.prefix.length,
+                                                    meat.length - 1);
+            return false; // prevent other hooks from processing this... 
         }
         else
         {
+            return bot_eval(e, meat.substring(bot.prefix.length,
+                                              meat.length));
+        }
+    }
+    else if ((typeof(user.accumulatedScript) != "undefined")  &&
+             userIsOwner(user))
             /* if we were accumulating a message, add here,
              * and finish if not ends with '\'. */
-            if (typeof(user.accumulatedScript) != "undefined")
-            {
-                var lastLine = (meat[meat.length - 1] != '\\');
-                var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
-                user.accumulatedScript += line;
-                if (lastLine)
-                {
-                    var script = user.accumulatedScript;
-                    delete user.accumulatedScript;
-                    return bot_eval(e, script);
-                }
-            }
+    {
+        var lastLine = (meat[meat.length - 1] != '\\');
+        var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
+        user.accumulatedScript += line;
+        if (lastLine)
+        {
+            var script = user.accumulatedScript;
+            delete user.accumulatedScript;
+            return bot_eval(e, script);
         }
+    }
 }
 
 /*
