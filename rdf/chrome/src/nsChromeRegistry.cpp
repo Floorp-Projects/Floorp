@@ -776,6 +776,7 @@ NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsAr
   
   nsCOMPtr<nsISimpleEnumerator> sheets;
   nsresult rv = GetDynamicInfo(aChromeURL, PR_FALSE, getter_AddRefs(sheets));
+  if (NS_FAILED(rv)) return rv;
   PRBool hasMore;
   rv = sheets->HasMoreElements(&hasMore);
   if (NS_FAILED(rv)) return rv;
