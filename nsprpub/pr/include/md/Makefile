@@ -154,16 +154,14 @@ ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
 	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
 else
+ifneq ($(OS_ARCH),OpenVMS)
 	mv -f $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
-endif
-ifeq ($(OS_ARCH),OpenVMS)
-# mv'ing a link causes the file itself to move, not the link, so fix it.
+else
+# mv'ing a link causes the file itself to move, not the link.
 	rm -f $(DIST)/include/$(MDCPUCFG_H)
-	if [ ! -L $(DIST)/include/prcpucfg.h ]; then \
-	  mv -f $(DIST)/include/prcpucfg.h $(MDCPUCFG_H); \
-	  ln -fs ../../../nsprpub/pr/include/md/$(MDCPUCFG_H) \
-	    $(DIST)/include/prcpucfg.h; \
-	fi
+	rm -f $(DIST)/include/prcpucfg.h
+	ln -fs `pwd`/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+endif
 endif
 
 release:: export
