@@ -80,3 +80,4 @@ interface nsITranslateListener : nsISupports
 	*/
 	void PostTranslate(in nsIEvent evt, in boolean fTranslateHandled);
 };
+

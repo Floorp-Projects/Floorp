@@ -42,3 +42,4 @@ interface nsPIEventLoop : nsISupports
 
 	void LoopInit(in wstring name);
 };
+
