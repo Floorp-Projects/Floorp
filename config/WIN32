@@ -122,8 +122,10 @@ RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 #// Specify the OS dependent compiler flags, linker flags and libraries
 #//
 #//------------------------------------------------------------------------
-OS_CFLAGS=$(OPTIMIZER) $(RTL_FLAGS) -W3 -D_X86_ -D_WINDOWS -DWIN32 \
-            -DXP_PC -DHW_THREADS -DWINVER=0x400 -DMSVC4 
+OS_CFLAGS=$(OPTIMIZER) $(RTL_FLAGS) -W3 -nologo -D_X86_ -D_WINDOWS  -DWIN32 \
+            -DXP_PC -DHW_THREADS -DWINVER=0x400
+
+OS_CFLAGS=$(OS_CFLAGS) -DMSVC4 
 
 !ifdef MOZ_DEBUG
 # Enable browse info in VC++
