@@ -1,0 +1,145 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Alec Flett <alecf@netscape.com>
+ */
+
+const mediatorContractId = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+
+function nsBrowserContentListener(toplevelWindow, contentWindow)
+{
+    dump("Creating a content listener..\n");
+    
+    // this one is not as easy as you would hope.
+    // need to convert toplevelWindow to an XPConnected object, instead
+    // of a DOM-based object, to be able to QI() it to nsIXULWindow
+    
+    this.init(toplevelWindow, contentWindow);
+}
+
+/* implements nsIURIContentListener */
+
+nsBrowserContentListener.prototype =
+{
+    init: function(toplevelWindow, contentWindow)
+    {
+        dump("nsBrowserContentListener.init(" + toplevelWindow + ", " + contentWindow + "\n");
+        this.toplevelWindow = toplevelWindow;
+        this.contentWindow = contentWindow;
+
+        // hook up the whole parent chain thing
+        var windowDocShell = this.convertWindowToDocShell(toplevelWindow);
+        if (windowDocShell)
+            windowDocshell.parentURIContentListener = this;
+    
+        // register ourselves
+        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+        uriLoader.registerContentListener(this);
+
+    },
+    close: function()
+    {
+        this.contentWindow = null;
+        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+
+        uriLoader.unRegisterContentListener(this);
+    },
+    QueryInterface: function(iid)
+    {
+        if (iid.equals(Components.interfaces.nsIURIContentListener))
+            return this;
+        if (iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+        throw Components.results.NS_NOINTERFACE;
+
+    },
+    onStartURIOpen: function(uri, windowTarget)
+    {
+        // ignore and don't abort
+        return false;
+    },
+
+    getProtocolHandler: function(uri)
+    {
+        return null;
+    },
+
+    doContent: function(contentType, command, windowTarget,
+                        request, contentHandler)
+    {
+        // forward the doContent to our content area webshell
+        var docShell = this.contentWindow.docShell;
+        var contentListener;
+        try {
+            contentListener =
+                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIURIContentListener);
+        } catch (ex) {
+            dump(ex);
+        }
+        
+        if (!contentListener) return false;
+        
+        return contentListener.doContent(contentType, command, windowTarget, request, contentHandler);
+        
+    },
+
+    isPreferred: function(contentType, command,
+                          windowTarget, desiredContentType)
+    {
+        // seems like we should be getting this from helper apps or something
+        switch(contentType) {
+            case "text/html":
+            case "text/xul":
+            case "text/rdf":
+            case "text/xml":
+            case "text/css":
+            case "image/gif":
+            case "image/jpeg":
+            case "image/png":
+            case "image/tiff":
+            case "text/plain":
+            case "application/http-index-format":
+                return true;
+        }
+        return false;
+    },
+    canHandleContent: function(contentType, command,
+                               windowTarget, desiredContentType)
+    {
+        var docShell = this.contentWindow.docShell;
+        var contentListener;
+        try {
+            contentListener =
+                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequester).getInterface(Components.interfaces.nsIURIContentListener);
+        } catch (ex) {
+            dump(ex);
+        }
+        if (!contentListener) return false;
+        
+        return contentListener.canHandleContent(contentType, command, windowTarget, desiredContentType);
+    },
+    convertWindowToDocShell: function(win) {
+        // don't know how to do this
+        return null;
+    },
+    loadCookie: null,
+    parentContentListener: null,
+}
