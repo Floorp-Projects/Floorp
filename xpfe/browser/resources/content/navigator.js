@@ -295,8 +295,8 @@ function Startup()
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(window.XULBrowserWindow);
 
-  // XXXjag see bug 68662
-  getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", appCore);
+  // XXXjag see bug 68662 (needed to hook up web progress listener)
+  getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", window.XULBrowserWindow);
 
   // load appropriate initial page from commandline
   var isPageCycling = false;
