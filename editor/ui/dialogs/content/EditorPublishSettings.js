@@ -248,6 +248,13 @@ function UpdateSettings()
     ShowInputErrorMessage(GetString("MissingSiteNameError"), gDialog.SiteNameInput);
     return false;
   }
+  if (PublishSiteNameExists(newName, gPublishSiteData, gCurrentSiteIndex))
+  {
+    ShowInputErrorMessage(GetString("DuplicateSiteNameError").replace(/%name%/, newName));            
+    SetTextboxFocus(gDialog.SiteNameInput);
+    return false;
+  }
+
   var newUrl = FormatUrlForPublishing(gDialog.PublishUrlInput.value);
   if (!newUrl)
   {

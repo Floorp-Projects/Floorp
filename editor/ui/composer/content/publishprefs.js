@@ -494,6 +494,29 @@ function GetSiteNameList(doSort, defaultFirst)
   return siteNameList.length? siteNameList : null;
 }
 
+function PublishSiteNameExists(name, publishSiteData, skipSiteIndex)
+{
+  if (!name)
+    return false;
+
+  if (!publishSiteData)
+  {
+    publishSiteData = GetPublishSiteData();
+    skipSiteIndex = -1;
+  }
+
+  if (!publishSiteData)
+    return false;
+
+  // Array of site names - sorted, but don't put default name first
+  for (var i = 0; i < publishSiteData.length; i++)
+  {
+    if (i != skipSiteIndex && name == publishSiteData[i].siteName)
+      return true;
+  }
+  return false;
+}
+
 // Find index of a site record in supplied publish site database
 // docUrl: Document URL with or without filename
 //         (Must end in "/" if no filename)
