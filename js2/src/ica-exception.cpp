@@ -31,43 +31,21 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef utilities_h___
-#define utilities_h___
+#include "exception.h"
 
-#include "systemtypes.h"
+namespace JavaScript {
 
-namespace JavaScript
-{
+    extern const char* exception_types[];
+    extern const char* exception_msgs[];    
     
-//
-// Assertions
-//
-
-#ifdef DEBUG
-    void Assert(const char *s, const char *file, int line);
-
-#   define ASSERT(_expr)                                                       \
-        ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-#   define NOT_REACHED(_reasonStr)                                             \
-        JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
-#   define DEBUG_ONLY(_stmt) _stmt
-#else
-#   define ASSERT(expr)
-#   define NOT_REACHED(reasonStr)
-#   define DEBUG_ONLY(_stmt)
-#endif
-
-//
-// Random Crap
-//
-//
+    void
+    JSException::toString8 (string8 &rval)
+    {
+        rval = string8(exception_types[mType]) + " Exception: " +
+            string8(exception_msgs[mID]);
+        if (mSource.size() != 0)
+            rval += " in " + mSource;
+    }
     
-    template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
-
-    uint ceilingLog2(uint32 n);
-    uint floorLog2(uint32 n);
-
 }
-
-#endif /* utilities_h___ */
+    

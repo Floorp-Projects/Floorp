@@ -31,21 +31,54 @@
  * file under either the NPL or the GPL.
  */
 
+#include <cstdio>
+
 #include "exception.h"
 
-namespace JavaScript {
-
-    extern const char* exception_types[];
-    extern const char* exception_msgs[];    
+namespace JavaScript
+{
     
-    void
-    JSException::toString8 (string8 &rval)
+//
+// Exceptions
+//
+
+
+    static const char *const kindStrings[] = {
+        "Syntax error",                         // syntaxError
+        "Stack overflow"                        // stackOverflow
+    };
+    
+// Return a null-terminated string describing the exception's kind.
+    const char *
+    Exception::kindString() const
     {
-        rval = string8(exception_types[mType]) + " Exception: " +
-            string8(exception_msgs[mID]);
-        if (mSource.size() != 0)
-            rval += " in " + mSource;
+        return kindStrings[kind];
+    }
+
+
+// Return the full error message.
+    String
+    Exception::fullMessage() const
+    {
+        String m(widenCString("In "));
+        m += sourceFile;
+        if (lineNum) {
+            char b[32];
+            sprintf(b, ", line %d:\n", lineNum);
+            m += b;
+            m += sourceLine;
+            m += '\n';
+            String sourceLine2(sourceLine);
+            insertChars(sourceLine2, charNum, "[ERROR]");
+            m += sourceLine2;
+            m += '\n';
+        } else
+            m += ":\n";
+        m += kindString();
+        m += ": ";
+        m += message;
+        m += '\n';
+        return m;
     }
     
 }
-    

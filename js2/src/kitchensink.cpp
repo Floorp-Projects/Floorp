@@ -31,43 +31,65 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef utilities_h___
-#define utilities_h___
+#include <cstdlib>
+#include <cstring>
+#include "utilities.h"
 
-#include "systemtypes.h"
-
-namespace JavaScript
-{
-    
-//
-// Assertions
-//
-
-#ifdef DEBUG
-    void Assert(const char *s, const char *file, int line);
-
-#   define ASSERT(_expr)                                                       \
-        ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-#   define NOT_REACHED(_reasonStr)                                             \
-        JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
-#   define DEBUG_ONLY(_stmt) _stmt
-#else
-#   define ASSERT(expr)
-#   define NOT_REACHED(reasonStr)
-#   define DEBUG_ONLY(_stmt)
+#ifdef WIN32
+ #include <windows.h>
 #endif
 
-//
-// Random Crap
-//
-//
-    
-    template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
+#ifdef XP_MAC
+ #include <cstdarg>
+ #include <Types.h>
+#endif
 
-    uint ceilingLog2(uint32 n);
-    uint floorLog2(uint32 n);
+namespace JS = JavaScript;
 
+
+
+
+//
+// Input
+//
+
+
+
+//
+// Output
+//
+
+
+
+//
+// Static Initializers
+//
+
+
+#ifndef _WIN32
+static void jsNewHandler()
+{
+    std::bad_alloc outOfMemory;
+    throw outOfMemory;
 }
 
-#endif /* utilities_h___ */
+
+struct InitUtilities
+{
+    InitUtilities() {std::set_new_handler(&jsNewHandler);}
+};
+#else
+#include <new.h>
+static int jsNewHandler(size_t)
+{
+    std::bad_alloc outOfMemory;
+    throw outOfMemory;
+}
+
+
+struct InitUtilities
+{
+    InitUtilities() {_set_new_handler(&jsNewHandler);}
+};
+#endif
+InitUtilities initUtilities;

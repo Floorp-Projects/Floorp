@@ -31,43 +31,39 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef utilities_h___
-#define utilities_h___
-
-#include "systemtypes.h"
+#ifndef algo_h___
+#define algo_h___
 
 namespace JavaScript
 {
     
 //
-// Assertions
+// Algorithms
 //
 
-#ifdef DEBUG
-    void Assert(const char *s, const char *file, int line);
+// Assign zero to every element between first inclusive and last
+// exclusive.
+// This is equivalent ot fill(first, last, 0) but may be more efficient.
+    template<class ForwardIterator>
+        inline void zero(ForwardIterator first, ForwardIterator last)
+    {
+        while (first != last) {
+            *first = 0;
+            ++first;
+        }
+    }
 
-#   define ASSERT(_expr)                                                       \
-        ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-#   define NOT_REACHED(_reasonStr)                                             \
-        JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
-#   define DEBUG_ONLY(_stmt) _stmt
-#else
-#   define ASSERT(expr)
-#   define NOT_REACHED(reasonStr)
-#   define DEBUG_ONLY(_stmt)
-#endif
+// Same as find(first, last, value) but may be more efficient because
+// it doesn't use a reference for value.
+        template<class InputIterator, class T>
+        inline InputIterator findValue(InputIterator first, InputIterator last, T value)
+        {
+                while (first != last && !(*first == value))
+                        ++first;
+                return first;
+        }
 
-//
-// Random Crap
-//
-//
-    
-    template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
-
-    uint ceilingLog2(uint32 n);
-    uint floorLog2(uint32 n);
 
 }
 
-#endif /* utilities_h___ */
+#endif /* algo_h___ */

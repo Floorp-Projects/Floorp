@@ -31,43 +31,56 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef utilities_h___
-#define utilities_h___
+#ifndef stlcfg_h___
+#define stlcfg_h___
 
-#include "systemtypes.h"
-
-namespace JavaScript
-{
-    
-//
-// Assertions
-//
-
-#ifdef DEBUG
-    void Assert(const char *s, const char *file, int line);
-
-#   define ASSERT(_expr)                                                       \
-        ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-#   define NOT_REACHED(_reasonStr)                                             \
-        JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
-#   define DEBUG_ONLY(_stmt) _stmt
+#include <iterator>
+#include <string>
+#include <memory>
+ 
+#ifndef _WIN32
+// Microsoft Visual C++ 6.0 bug: standard identifiers should be in std namespace
+    using std::size_t;
+    using std::ptrdiff_t;
+    using std::va_list;
+    using std::strlen;
+    using std::strcpy;
+    using std::FILE;
+    using std::getc;
+    using std::fgets;
+    using std::fputc;
+    using std::fputs;
+    using std::sprintf;
+    using std::snprintf;
+    using std::vsnprintf;
+    using std::fprintf;
+#   define STD std
+#   define STATIC_CONST(type, expr) static const type expr
 #else
-#   define ASSERT(expr)
-#   define NOT_REACHED(reasonStr)
-#   define DEBUG_ONLY(_stmt)
+#   define STD
+    // Microsoft Visual C++ 6.0 bug: these identifiers should not begin with
+    // underscores
+#   define snprintf _snprintf
+#   define vsnprintf _vsnprintf
+ // Microsoft Visual C++ 6.0 bug: constants not supported
+#   define STATIC_CONST(type, expr) enum {expr}
 #endif
 
-//
-// Random Crap
-//
-//
-    
-    template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
+using std::string;
+using std::auto_ptr;
 
-    uint ceilingLog2(uint32 n);
-    uint floorLog2(uint32 n);
+#ifdef __GNUC__ // why doesn't g++ support iterator?
+namespace std {
+    template<class Category, class T, class Distance = ptrdiff_t,
+        class Pointer = T*, class Reference = T&>
+    struct iterator {
+        typedef T value_type;
+        typedef Distance difference_type;
+        typedef Pointer pointer;
+        typedef Reference reference;
+        typedef Category iterator_category;
+    };
+};
+#endif
 
-}
-
-#endif /* utilities_h___ */
+#endif /* stlcfg_h___ */

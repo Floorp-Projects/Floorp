@@ -1,0 +1,98 @@
+parse functions
+    parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers,
+    parseParenthesesAndIdentifierQualifiers(const Token &tParen,
+    parseQualifiedIdentifier(const Token &t, bool preferRegExp)
+    parseArrayLiteral(const Token &initialToken)
+    parseObjectLiteral(const Token &initialToken)
+    parsePrimaryExpression()
+    parseMember(ExprNode *target, const Token &tOperator,
+    parseInvoke(ExprNode *target, uint32 pos,
+    parsePostfixExpression(bool newExpression)
+    parseUnaryExpression()
+    parseExpression(bool noIn, bool noAssignment, bool noComma)
+    parseParenthesizedExpression()
+    parseTypeExpression(bool noIn)
+    parseTypedIdentifier(ExprNode *&type)
+    parseTypeBinding(Token::Kind kind, bool noIn)
+    parseTypeListBinding(Token::Kind kind)
+    parseVariableBinding(bool noQualifiers, bool noIn)
+    parseFunctionName(FunctionName &fn)
+    parseFunctionSignature(FunctionDefinition &fd)
+    parseBlock(bool inSwitch, bool noCloseBrace)
+    parseBody(SemicolonState *semicolonState)
+    parseAttributeStatement(uint32 pos, IdentifierList *attributes,
+    parseAttributesAndStatement(const Token *t, AttributeStatement as,
+    parseAnnotatedBlock()
+    parseFor(uint32 pos, SemicolonState &semicolonState)
+    parseTry(uint32 pos)
+    parseStatement(bool /*topLevel*/, bool inSwitch,
+    parseStatementAndSemicolon(SemicolonState &semicolonState)
+    parseIdentifier()
+    parseLiteralField()
+    parseFieldName()
+    parseArgumentList(NodeQueue<ExprPairList> &args)
+    parseArgumentListPrime(NodeQueue<ExprPairList> &args)
+    parseNamedArgumentListPrime(NodeQueue<ExprPairList> &args)
+    parseAllParameters(FunctionDefinition &fd,
+    parseOptionalNamedRestParameters (FunctionDefinition &fd,
+    parseNamedRestParameters(FunctionDefinition &fd,
+    parseNamedParameters(FunctionDefinition &fd,
+    parseRestParameter()
+    parseParameter()
+    parseOptionalParameter()
+    parseOptionalParameterPrime(VariableBinding *first)
+    parseNamedParameter(NodeQueue<IdentifierList> &aliases)
+    parseResultSignature()
+
+
+1/28/01
+
+Files:
+
+cpucfg.h
+
+formatter.cpp formatter.h
+"Formatter" class, iostream like wrapper around stdio.
+
+gc_allocator.h, gc_container.h
+boehm gc stuff.
+
+hash.cpp hash.h
+a hash
+
+lexer.cpp lexer.h
+main lexer.
+
+mem.cpp mem.h
+zone, arena, and pool classes for memory management.
+
+nodefactory.h
+parse node factory.
+
+numerics.cpp numerics.h
+numbers and stuff.
+
+parser.cpp parser.h
+main parser source.
+tables in parser.h: 
+    enum ExprNode::Kind; types of expressions
+    enum StmtNode::Kind; types of statements
+
+
+reader.cpp reader.h
+"Reader" class, feeds source to the parser/lexer.
+
+stlcfg.h
+stupid stl tricks
+.
+systemtypes.h
+basic typedefs.
+
+token.cpp token.h
+token class.
+
+utilities.cpp utilities.h
+random things.
+
+world.cpp world.h
+the whole world.

@@ -33,83 +33,60 @@
 
 #ifndef exception_h___
 #define exception_h___
-#include "utilities.h"
 
-namespace JavaScript {
+#include "strings.h"
 
-    enum ExceptionType {
-        etUnknown = 0,
-        etLexer,
-        etParser,
-        etRuntime,
-        etCount
-    };
+namespace JavaScript
+{
     
-    enum ExceptionID {
-        eidExpectBool = 0,
-        eidExpectDouble,
-        eidExpectInt32,
-        eidExpectUInt32,
-        eidExpectRegister,
-        eidExpectArgList,
-        eidExpectColon,
-        eidExpectCloseParen,
-        eidExpectBinaryOp,
-        eidExpectString,
-        eidExpectLabel,
-        eidExpectComma,
-        eidExpectNewline,
-        eidExpectIdentifier,
-        eidDuplicateLabel,
-        eidUnknownICode,
-        eidUnknownBinaryOp,
-        eidUnterminatedString,
-        eidCount
-    };    
-    
-    class JSException {
-      public:
-        JSException (ExceptionID ID, string8_citer pos = 0,
-                     string8 source = "", ExceptionType type = etUnknown)
-            : mID(ID), mType(type), mPos(pos), mSource(source) {}        
-        ExceptionID mID;
-        ExceptionType mType;
-        string8_citer mPos;
-        string8 mSource;
+//
+// Exceptions
+//
 
-      public:
-        void toString8(string8 &rval);
-        /*
-      private:
-        JSException(const JSException&);
-        */
+// A JavaScript exception (other than out-of-memory, for which we use the
+// standard C++ exception bad_alloc).
+    struct Exception {
+        enum Kind {
+            syntaxError,
+            stackOverflow
+        };
         
+        Kind kind;         // The exception's kind
+        String message;    // The detailed message
+        String sourceFile; // A description of the source code that caused the
+                           // error
+        uint32 lineNum;    // Number of line that caused the error
+        uint32 charNum;    // Character offset within the line that caused the
+                           // error
+        uint32 pos;        // Offset within the input of the error
+        String sourceLine; // The text of the source line
+
+        Exception (Kind kind, const String &message) :
+                kind(kind), message(message), lineNum(0), charNum(0) {}
+        
+        Exception(Kind kind, const String &message, const String &sourceFile,
+                  uint32 lineNum, uint32 charNum, uint32 pos,
+                  const String &sourceLine) :
+                kind(kind), message(message), sourceFile(sourceFile),
+            lineNum(lineNum), charNum(charNum), pos(pos), sourceLine(sourceLine)
+            {}
+        
+        Exception(Kind kind, const String &message, const String &sourceFile,
+                  uint32 lineNum, uint32 charNum, uint32 pos,
+                  const char16 *sourceLineBegin, const char16 *sourceLineEnd) :
+                kind(kind), message(message), sourceFile(sourceFile),
+            lineNum(lineNum), charNum(charNum), pos(pos),
+            sourceLine(sourceLineBegin, sourceLineEnd) {}
+
+        bool hasKind(Kind k) const {return kind == k;}
+        const char *kindString() const;
+        String fullMessage() const;
     };
 
-    class JSLexException : public JSException {
-      public:
-        JSLexException (ExceptionID ID, string8_citer pos = 0,
-                        string8 source = "") :
-                        JSException(ID, pos, source, etLexer) {}
-        /*
-      private:
-        JSLexException (const JSLexException&);
-        */
-    };
-
-    class JSParseException : public JSException {
-      public:
-        JSParseException (ExceptionID ID, string8_citer pos = 0,
-                          string8 source = "") :
-                          JSException(ID, pos, source, etParser) {}
-        /*
-      private:
-        JSParseException (const JSParseException&);
-        */
-    };
+    
+// Throw a stackOverflow exception if the execution stack has gotten too large.
+    inline void checkStackSize() {}
     
 }
 
 #endif /* exception_h___ */
-
-
