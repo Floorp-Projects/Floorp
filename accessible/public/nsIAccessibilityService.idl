@@ -23,12 +23,10 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
-#include "nsIAtom.idl"
-#include "domstubs.idl"
-#include "nsIAccessible.idl"
-#include "nsIAccessibleCaret.idl"
 
+interface nsIDOMNode;
+interface nsIAccessible;
+interface nsIAccessibleCaret;
 interface nsIWeakReference;
 interface nsIAccessibleEventListener;
 interface nsIDocument;

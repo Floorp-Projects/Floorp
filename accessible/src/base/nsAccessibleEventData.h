@@ -40,11 +40,38 @@
 #ifndef _nsAccessibleEventData_H_
 #define _nsAccessibleEventData_H_
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-
 #include "nsCOMPtr.h"
+#include "nsIAccessibleEvent.h"
+#include "nsIAccessible.h"
+#include "nsIAccessibleDocument.h"
 
-class nsIAccessible;
+class nsAccessibleEventData: public nsIAccessibleEvent
+{
+  public:
+    nsAccessibleEventData(PRUint32 aEventType, nsIAccessible *aAccessible, 
+                         nsIAccessibleDocument *aDocAccessible, 
+                         void *aEventData);
+
+    NS_DECL_ISUPPORTS
+
+    //nsIAccessibleEvent
+    NS_IMETHOD GetEventType(PRUint32 *aEventType) {*aEventType = mEventType; return NS_OK;}
+    NS_IMETHOD GetAccessible(nsIAccessible **aAccessible) 
+      {NS_ADDREF(*aAccessible = mAccessible); return NS_OK;}
+    NS_IMETHOD GetDocAccessible(nsIAccessibleDocument **aDocAccessible) 
+      {NS_ADDREF(*aDocAccessible = mDocAccessible); return NS_OK;}
+    NS_IMETHOD GetEventData(void **aEventData) {*aEventData = mEventData; return NS_OK;}
+
+  private:
+    PRUint32 mEventType;
+    nsCOMPtr<nsIAccessible> mAccessible;
+    nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
+    void *mEventData;
+};
+
+// XXX todo: We might want to use XPCOM interfaces instead of structs
+//     e.g., nsAccessibleTextChangeEvent: public nsIAccessibleTextChangeEvent
+//           
 
 struct AtkStateChange {
   PRUint32 state;
@@ -91,7 +118,5 @@ struct AtkTableChange {
   PRUint32 index;   // the start row/column after which the rows are inserted/deleted.
   PRUint32 count;   // the number of inserted/deleted rows/columns
 };
-
-#endif
 
 #endif  

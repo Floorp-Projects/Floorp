@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNode.h"
+#include "nsIAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
@@ -161,7 +162,7 @@ NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
 {
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   NS_ASSERTION(docAccessible, "No root accessible pointer back, Init() not called.");
-  return docAccessible->GetWindow(aWindow);
+  return docAccessible->GetWindowHandle(aWindow);
 }
 
 void nsAccessNode::InitXPAccessibility()

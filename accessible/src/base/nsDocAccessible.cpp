@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDocAccessible.h"
+#include "nsAccessibleEventData.h"
 #include "nsIAccessibilityService.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
@@ -57,6 +58,7 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINameSpaceManager.h"
+#include "nsIObserverService.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
@@ -66,9 +68,6 @@
 #include "nsIWebNavigation.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
-#endif
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAccessibleEventData.h"
 #endif
 
 //=============================//
@@ -256,10 +255,41 @@ NS_IMETHODIMP nsDocAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAcc
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetWindow(void **aWindow)
+NS_IMETHODIMP nsDocAccessible::GetWindowHandle(void **aWindow)
 {
   *aWindow = mWnd;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::GetWindow(nsIDOMWindow **aDOMWin)
+{
+  *aDOMWin = nsnull;
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;  // Accessible is Shutdown()
+  }
+  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(ourGlobal));
+
+  if (!domWindow)
+    return NS_ERROR_FAILURE;  // No DOM Window
+
+  NS_ADDREF(*aDOMWin = domWindow);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
+  *aDOMDoc = domDoc;
+
+  if (domDoc) {
+    NS_ADDREF(*aDOMDoc);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 void nsDocAccessible::CheckForEditor()
@@ -985,5 +1015,20 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
   aAccessibleEventType = nsIAccessibleEventReceiver::EVENT_REORDER;
 #endif
   accessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
+}
+
+NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
+{
+  nsCOMPtr<nsIObserverService> obsService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (!obsService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIAccessibleEvent *accEvent = new nsAccessibleEventData(aEvent, aAccessible, this, aData);
+  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(accEvent);
+  return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 

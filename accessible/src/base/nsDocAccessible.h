@@ -97,6 +97,8 @@ class nsDocAccessible : public nsBlockAccessible,
 
     NS_DECL_NSIWEBPROGRESSLISTENER
 
+    NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
+
     // nsIAccessNode
     NS_IMETHOD Shutdown();
     NS_IMETHOD Init();

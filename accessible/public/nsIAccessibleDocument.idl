@@ -24,12 +24,13 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIAccessible.idl"
-#include "domstubs.idl"
-#include "nsIAccessibleCaret.idl"
 
-interface nsIDocument;
+interface nsIAccessible;
+interface nsIAccessibleCaret;
 interface nsIAccessNode;
+interface nsIDOMDocument;
+interface nsIDOMNode;
+interface nsIDOMWindow;
 
 [scriptable, uuid(8781FC88-355F-4439-881F-6504A0A1CEB6)]
 interface nsIAccessibleDocument : nsISupports
@@ -39,11 +40,13 @@ interface nsIAccessibleDocument : nsISupports
   readonly attribute AString mimeType;
   readonly attribute AString docType;
   readonly attribute boolean isEditable;
+  readonly attribute nsIDOMDocument document;
+  readonly attribute nsIDOMWindow window;
   AString getNameSpaceURIForID(in short nameSpaceID);
   readonly attribute nsIAccessibleCaret caretAccessible;
-  [noscript] readonly attribute voidPtr window;
+  [noscript] readonly attribute voidPtr windowHandle;
   [noscript] nsIAccessNode getCachedAccessNode(in voidPtr aUniqueID);
-  [noscript] void InvalidateCacheSubtree(in nsIDOMNode aStartNode);
+  [noscript] void invalidateCacheSubtree(in nsIDOMNode aStartNode);
   [noscript] nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
   [noscript] void cacheAccessNode(in voidPtr aUniqueID, in nsIAccessNode aAccessNode);
   [noscript] void destroy();

@@ -88,6 +88,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 {
     NS_ENSURE_ARG_POINTER(aAccessible);
 
+    // First fire nsIObserver event for internal xpcom accessibility clients
+    nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aEventData);
+
     nsresult rv = NS_ERROR_FAILURE;
 
     nsAccessibleWrap *accWrap =

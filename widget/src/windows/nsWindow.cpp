@@ -86,6 +86,7 @@
 #include "winable.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIAccessibleCaret.h"
 #include "nsIAccessNode.h"
 #ifndef WM_GETOBJECT
 #define WM_GETOBJECT 0x03d
@@ -6997,7 +6998,6 @@ VOID CALLBACK nsWindow::HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, 
     DealWithPopups(gRollupMsgId, 0, 0, &popupHandlingResult);
     gRollupMsgId = 0;
   }
-
 }
 
 
