@@ -48,30 +48,30 @@ NS_IMPL_ISUPPORTS1(nsPrintSettings, nsIPrintSettings)
  *	@update 6/21/00 dwc
  */
 nsPrintSettings::nsPrintSettings() :
-  mPrintOptions(0L),
   mPrintRange(kRangeAllPages),
   mStartPageNum(1),
   mEndPageNum(1),
   mScaling(1.0),
+  mNumCopies(1),
   mPrintBGColors(PR_FALSE),
   mPrintBGImages(PR_FALSE),
-  mPrintFrameTypeUsage(kUseInternalDefault),
-  mPrintFrameType(kFramesAsIs),
-  mHowToEnableFrameUI(kFrameEnableNone),
-  mIsCancelled(PR_FALSE),
-  mPrintSilent(PR_FALSE),
-  mShrinkToFit(PR_FALSE),
-  mPrintPageDelay(500),
-  mPaperData(0),
-  mPaperSizeType(kPaperSizeDefined),
-  mPaperWidth(8.5),
-  mPaperHeight(11.0),
-  mPaperSizeUnit(kPaperSizeInches),
+  mPrintOptions(0L),
   mPrintReversed(PR_FALSE),
   mPrintInColor(PR_TRUE),
   mOrientation(kPortraitOrientation),
-  mNumCopies(1),
-  mPrintToFile(PR_FALSE)
+  mPrintToFile(PR_FALSE),
+  mPrintFrameTypeUsage(kUseInternalDefault),
+  mPrintFrameType(kFramesAsIs),
+  mPrintPageDelay(500),
+  mPaperSizeType(kPaperSizeDefined),
+  mPaperData(0),
+  mPaperWidth(8.5),
+  mPaperHeight(11.0),
+  mPaperSizeUnit(kPaperSizeInches),
+  mPrintSilent(PR_FALSE),
+  mShrinkToFit(PR_FALSE),
+  mHowToEnableFrameUI(kFrameEnableNone),
+  mIsCancelled(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
@@ -588,24 +588,6 @@ NS_IMETHODIMP nsPrintSettings::GetShrinkToFit(PRBool *aShrinkToFit)
 NS_IMETHODIMP nsPrintSettings::SetShrinkToFit(PRBool aShrinkToFit)
 {
   mShrinkToFit = aShrinkToFit;
-  return NS_OK;
-}
-
-/* attribute wstring paperName; */
-NS_IMETHODIMP nsPrintSettings::GetPaperName(PRUnichar * *aPaperName)
-{
-  NS_ENSURE_ARG_POINTER(aPaperName);
-  if (mPaperName.Length()) {
-    *aPaperName = ToNewUnicode(mPaperName);
-  } else {
-    *aPaperName = nsnull;
-  }
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPaperName(const PRUnichar * aPaperName)
-{
-  NS_ENSURE_ARG_POINTER(aPaperName);
-  mPaperName = aPaperName;
   return NS_OK;
 }
 

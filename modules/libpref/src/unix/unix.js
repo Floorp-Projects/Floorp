@@ -115,6 +115,7 @@ pref("print.print_edge_left", 4); // 1/100 of an inch
 pref("print.print_edge_right", 4); // 1/100 of an inch
 pref("print.print_edge_bottom", 4); // 1/100 of an inch
 
+
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips

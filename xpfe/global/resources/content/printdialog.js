@@ -31,7 +31,7 @@ var gOriginalNumCopies = 1;
 var paramBlock;
 var gPrintSettings = null;
 var gPrinterName   = "";
-var gWebBrowserPrint   = null;
+
 var default_file       = "mozilla.ps";
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = false;
@@ -183,9 +183,6 @@ function getPrinters()
   var strDefaultPrinterName = selectElement.appendPrinterNames(printerEnumerator);
 
   selectElement.listElement.value = strDefaultPrinterName;
-
-  // make sure we load the prefs for the initially selected printer
-  setPrinterDefaultsForSelectedPrinter();
 }
 
 
@@ -197,18 +194,8 @@ function setPrinterDefaultsForSelectedPrinter()
 
   gPrintSettings.printerName  = dialog.printerList.value;
   var ifreq = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  gWebBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
- 
-  // First get any defaults from the printer 
-  gWebBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
-
-  var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
-              gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
-              gPrintSetInterface.kInitSavePrintCommand;
-
-  // now augment them with any values from last time
-  gWebBrowserPrint.initPrintSettingsFromPrefs(gPrintSettings, true, flags);
-
+  var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint); 
+  webBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
 }
 
 //---------------------------------------------------
@@ -451,24 +438,11 @@ function onAccept()
     }
   }
 
-  var saveToPrefs = false;
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  if (prefs) {
-    saveToPrefs = prefs.getBoolPref("print.save_print_settings");
-  }
-
-  if (saveToPrefs && gWebBrowserPrint != null) {
-    var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
-                gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
-                gPrintSetInterface.kInitSavePrintCommand;
-    gWebBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, true, flags);
-  }
-
   // set return value to "print"
   if (paramBlock) {
     paramBlock.SetInt(0, 1);
   } else {
-    dump("*** FATAL ERROR: No paramBlock\n");
+    dump("*** FATAL ERROR: printService missing\n");
   }
 
   return true;
