@@ -503,6 +503,7 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISup
   return NS_OK;
 }
 
+/* -- coming in a later patch
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLObjectAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
@@ -520,6 +521,7 @@ nsAccessibilityService::CreateHTMLObjectAccessible(nsISupports *aFrame, nsIAcces
   NS_ADDREF(*_retval);
   return NS_OK;
 }
+*/
 
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
