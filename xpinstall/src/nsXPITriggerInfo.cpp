@@ -168,3 +168,4 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
         }
     }
 }
+
