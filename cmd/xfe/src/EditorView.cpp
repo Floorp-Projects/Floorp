@@ -36,6 +36,10 @@
 #include "pk11func.h"
 #endif
 
+/* BIG HACK HERE.  REMOVE MUCH SOON.  needs to be fixed in
+ns/modules/security/nav/rosetta.h*/
+#define my_commands m_commands
+
 extern "C" int XFE_EDITOR_NEWTABLE_COLS;
 
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
