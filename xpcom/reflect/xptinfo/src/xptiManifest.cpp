@@ -284,8 +284,8 @@ ManifestLineReader::NextLine()
             do
             {
                 *(mNext++) = '\0';
-                char c = *(mNext);
-                if(c != '\n' && c != '\r')
+                char cc = *(mNext);
+                if(cc != '\n' && cc != '\r')
                     return PR_TRUE;
             } while(mNext < mLimit);
             return PR_TRUE;
