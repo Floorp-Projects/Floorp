@@ -390,6 +390,9 @@ void QueryFontFromINI(char* fontType, char* fontName, ULONG ulLength)
       else
         strcpy(fontName, "10.Helv Combined");
     }
+  } else {
+    /* null terminate fontname */
+    fontName[ulMaxNameL] = '\0';
   }
 }
 
