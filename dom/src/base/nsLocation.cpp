@@ -152,51 +152,52 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   if (NS_FAILED(stack->Peek(&cx)))
     return NS_ERROR_FAILURE;
 
-  if (!cx) {
+  nsCOMPtr<nsISupports> owner;
+  nsCOMPtr<nsIURI> sourceURI;
+
+  if (cx) {
     // No cx means that there's no JS running, or at least no JS that
     // was run through code that properly pushed a context onto the
     // context stack (as all code that runs JS off of web pages
-    // does). Going further from here will crash, so lets not do
-    // that...
+    // does). We won't bother with security checks in this case, but
+    // we need to create the loadinfo etc.
 
-    return NS_OK;
+    // Get security manager.
+    nsCOMPtr<nsIScriptSecurityManager>
+      secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result));
+
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+    // Check to see if URI is allowed.
+    result = secMan->CheckLoadURIFromScript(cx, aURI);
+
+    if (NS_FAILED(result))
+      return result;
+
+    // Now get the principal to use when loading the URI
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))) ||
+        !principal)
+      return NS_ERROR_FAILURE;
+    owner = do_QueryInterface(principal);
+
+    GetSourceURL(cx, getter_AddRefs(sourceURI));
   }
-
-  // Get security manager.
-  nsCOMPtr<nsIScriptSecurityManager>
-    secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result));
-
-  if (NS_FAILED(result))
-    return NS_ERROR_FAILURE;
-
-  // Check to see if URI is allowed.
-  result = secMan->CheckLoadURIFromScript(cx, aURI);
-
-  if (NS_FAILED(result))
-    return result;
 
   // Create load info
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  // Now get the principal to use when loading the URI
-  nsCOMPtr<nsIPrincipal> principal;
-  if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))) ||
-      !principal)
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
   loadInfo->SetOwner(owner);
 
   // now set the referrer on the loadinfo
-  nsCOMPtr<nsIURI> sourceURI;
-  GetSourceURL(cx, getter_AddRefs(sourceURI));
   if (sourceURI) {
     loadInfo->SetReferrer(sourceURI);
   }
-  
-  *aLoadInfo = loadInfo.get();
-  NS_ADDREF(*aLoadInfo);
+
+  loadInfo.swap(*aLoadInfo);
 
   return NS_OK;
 }
