@@ -451,7 +451,10 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
   }
  
   nsCAutoString finalURL;
-  GetBaseURL(package, provider, finalURL);
+  rv = GetBaseURL(package, provider, finalURL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("chrome: failed to get base url -- using wacky default");
+  }
   if (finalURL.IsEmpty()) {
     // hard-coded fallback
     if (provider.Equals("skin")) {
@@ -529,11 +532,10 @@ nsChromeRegistry::GetBaseURL(const nsCString& aPackage, const nsCString& aProvid
   }
 
   // From this resource, follow the "baseURL" arc.
-  nsChromeRegistry::FollowArc(mChromeDataSource,
-                              aBaseURL, 
-                              resource,
-                              mBaseURL);
-  return NS_OK;
+  return nsChromeRegistry::FollowArc(mChromeDataSource,
+                                     aBaseURL, 
+                                     resource,
+                                     mBaseURL);
 }
 
 // locate 

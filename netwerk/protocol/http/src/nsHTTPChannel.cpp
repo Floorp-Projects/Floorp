@@ -504,7 +504,10 @@ nsHTTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 NS_IMETHODIMP
 nsHTTPChannel::GetLocalFile(nsIFile* *file)
 {
-    *file = nsnull;       // XXX should we return the cache file here?
+    nsresult rv;
+    rv = GetFile(file);
+    if (NS_FAILED(rv)) 
+        *file = nsnull;
     return NS_OK;
 }
 

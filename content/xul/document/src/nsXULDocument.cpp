@@ -346,7 +346,7 @@ public:
     NS_IMETHOD SetBufferSegmentSize(PRUint32 aBufferSegmentSize) { NS_NOTREACHED("SetBufferSegmentSize"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD GetBufferMaxSize(PRUint32 *aBufferMaxSize) { NS_NOTREACHED("GetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetBufferMaxSize(PRUint32 aBufferMaxSize) { NS_NOTREACHED("SetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetShouldCache(PRBool *aShouldCache) { NS_NOTREACHED("GetShouldCache"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetLocalFile(nsIFile* *result) { NS_NOTREACHED("GetLocalFile"); return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD GetPipeliningAllowed(PRBool *aPipeliningAllowed) { *aPipeliningAllowed = PR_FALSE; return NS_OK; }
     NS_IMETHOD SetPipeliningAllowed(PRBool aPipeliningAllowed) { NS_NOTREACHED("SetPipeliningAllowed"); return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
