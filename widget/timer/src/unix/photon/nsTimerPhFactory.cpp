@@ -42,4 +42,4 @@ static nsModuleComponentInfo components[] =
     nsTimerPhConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsPhTimerModule", components)
+NS_IMPL_NSGETMODULE(nsPhTimerModule, components)
