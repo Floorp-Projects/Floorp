@@ -43,7 +43,7 @@
 //#include "nsILoadGroupObserver.h"
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
-
+#include "nsIDNSService.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #endif // NECKO
@@ -2063,12 +2063,73 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
 #ifdef NECKO
     nsCRT::free(spec);
 #endif
+#endif // DEBUG
 
+#ifdef DEBUG
     if (NS_FAILED(aStatus)) {
 
 #ifdef NECKO
-#if 0 // XXX can only turn this on once we can identify dns failures.
+        char *url;
+        if (NS_SUCCEEDED(rv)) 
+            aURL->GetSpec(&url);
+        else
+            url = nsCRT::strdup("");
+#else
+        const char *url;
+        if (nsnull != aURL) 
+            aURL->GetSpec(&url);
+        else
+            url = "";      
+#endif // NECKO
 
+#ifdef DEBUG_pnunn
+        cerr << "nsDocumentBindInfo::OnStopRequest: Load of URL '" << url << "' failed.  Error code: " 
+             << NS_ERROR_GET_CODE(aStatus) << "\n";
+#endif
+
+#ifdef NECKO
+        if (aStatus == NS_ERROR_UNKNOWN_HOST)
+            printf("Error: Unknown host: %s\n", url);
+        else if (aStatus == NS_ERROR_MALFORMED_URI)
+            printf("Error: Malformed URI: %s\n", url);
+        else if (NS_FAILED(rv))
+            printf("Error: Can't load: %s (%x)\n", url, aStatus);
+        nsCRT::free(url);
+#endif
+    }
+#endif /* DEBUG */
+
+    if (nsnull != m_NextStream) {
+#ifdef NECKO
+        rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
+#else
+        rv = m_NextStream->OnStopRequest(aURL, aStatus, aMsg);
+#endif
+    }
+
+    /* Pass the notification out to the Observer... */
+    if (nsnull != m_Observer) {
+        /* XXX: Should we ignore the return value? */
+#ifdef NECKO
+        (void) m_Observer->OnStopRequest(channel, ctxt, aStatus, aMsg);
+#else
+        (void) m_Observer->OnStopRequest(aURL, aStatus, aMsg);
+#endif
+    }
+
+    /*
+     * The stream is complete...  Tell the DocumentLoader to release us...
+     */
+#ifdef NECKO
+    rv = m_DocLoader->LoadURLComplete(channel, ctxt, (nsIStreamListener *)this,
+                                      aStatus, aMsg);
+#else
+    rv = m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
+#endif
+    NS_IF_RELEASE(m_NextStream);
+
+#ifdef NECKO
+    if (aStatus == NS_ERROR_UNKNOWN_HOST) {
         // We need to check for a dns failure in aStatus, but dns failure codes
         // aren't proliferated yet. This checks for failure for a host lacking
         // "www." and/or ".com" and munges the url acordingly, then fires off
@@ -2109,67 +2170,16 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
             nsString2 newURL(aSpec);
 
             return m_DocLoader->LoadDocument(newURL, 
-                                  m_Command,
-                                  m_Container,
-                                  nsnull, // XXX need to pass post data along
-                                  m_ExtraInfo,
-                                  m_Observer,
-                                  nsIChannel::LOAD_NORMAL,
-                                  0);
+                                             m_Command,
+                                             m_Container,
+                                             nsnull, // XXX need to pass post data along
+                                             m_ExtraInfo,
+                                             m_Observer,
+                                             nsIChannel::LOAD_NORMAL,
+                                             0);
         }
-#endif // 0
-      char *url;
-      if (NS_SUCCEEDED(rv)) 
-        aURL->GetSpec(&url);
-      else
-        url = nsCRT::strdup("");
-#else
-      const char *url;
-      if (nsnull != aURL) 
-        aURL->GetSpec(&url);
-      else
-        url = "";      
+    }
 #endif // NECKO
-
-#ifdef DEBUG_pnunn
-      cerr << "nsDocumentBindInfo::OnStopRequest: Load of URL '" << url << "' failed.  Error code: " 
-           << NS_ERROR_GET_CODE(aStatus) << "\n";
-#endif 
-
-#ifdef NECKO
-      nsCRT::free(url);
-#endif
-    }
-#endif /* DEBUG */
-
-    if (nsnull != m_NextStream) {
-#ifdef NECKO
-        rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
-#else
-        rv = m_NextStream->OnStopRequest(aURL, aStatus, aMsg);
-#endif
-    }
-
-    /* Pass the notification out to the Observer... */
-    if (nsnull != m_Observer) {
-        /* XXX: Should we ignore the return value? */
-#ifdef NECKO
-        (void) m_Observer->OnStopRequest(channel, ctxt, aStatus, aMsg);
-#else
-        (void) m_Observer->OnStopRequest(aURL, aStatus, aMsg);
-#endif
-    }
-
-    /*
-     * The stream is complete...  Tell the DocumentLoader to release us...
-     */
-#ifdef NECKO
-    rv = m_DocLoader->LoadURLComplete(channel, ctxt, (nsIStreamListener *)this,
-                                      aStatus, aMsg);
-#else
-    rv = m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
-#endif
-    NS_IF_RELEASE(m_NextStream);
 
     return rv;
 }
