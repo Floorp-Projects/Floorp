@@ -189,16 +189,23 @@ runItem.prototype =
             }
         }
         var refContent = this.loadTextFile(xalan_ref+".out");
+        var iframe;
         if (refContent.match(/^<\?xml/)) {
             this.mRefDoc = parser.parseFromString(refContent, 'text/xml');
         }
         else if (refContent.match(/^\s*<html/gi)) {
             this.mMethod = 'html';
-            var iframe = document.getElementById('hiddenHtml').contentDocument;
+            iframe = document.getElementById('hiddenHtml').contentDocument;
             iframe.documentElement.innerHTML = refContent;
-            //this.mRefDoc = iframe.documentElement.cloneNode(true);
             this.mRefDoc = iframe;
-            DumpDOM(this.mRefDoc)
+        }
+        else {
+            iframe = document.getElementById('hiddenHtml').contentDocument;
+            iframe.documentElement.innerHTML = refContent;
+            if (iframe.documentElement.firstChild) {
+                this.mMethod = 'html';
+                this.mRefDoc = iframe;
+            }
         }
         this.mSourceDoc = document.implementation.createDocument('', '', null);
         this.mSourceDoc.addEventListener("load",this.onload(1),false);

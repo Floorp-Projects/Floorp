@@ -10,3 +10,7 @@ button.close {
 iframe {
   padding-left: 10px;
 }
+
+vbox.hidden {
+    display: none;
+}
