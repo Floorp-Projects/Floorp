@@ -27,6 +27,7 @@
 		<menuseparator/>
 		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
 		<menuitem value="&newsgroupsCmd.label;" oncommand="toNewsgroups()"/>
+		<menuitem value="&ircCmd.label;" oncommand="toIRC()"/>
 		<menuseparator/>
 		<menu value="&toolsMenu.label;">
 		  <menupopup>

@@ -15,6 +15,20 @@ function toAddressBook()
 	toOpenWindowByType("mail:addressbook", "chrome://addressbook/content/addressbook.xul");
 }
 
+function toNewsgroups() 
+{
+
+        dump ("Sorry, command not implemented.\n");
+
+}
+
+function toIRC() 
+{
+
+        window.open ("resource:///irc/tests/index.html");
+
+}
+
 function toHistory()
 {
     window.open( "chrome://history/content/", "_blank", "chrome,dependent=yes,all" );

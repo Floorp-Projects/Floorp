@@ -9,6 +9,7 @@
 <!ENTITY addressBookCmd.label				"Address Book">  
 
 <!ENTITY newsgroupsCmd.label				"Newsgroups">  
+<!ENTITY ircCmd.label				        "IRC Chat">  
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY historyCmd.label						"History">  
 <!ENTITY securityInfoCmd.label					".Security Info">  
