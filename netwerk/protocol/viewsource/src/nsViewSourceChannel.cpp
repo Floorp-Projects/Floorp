@@ -204,7 +204,9 @@ nsViewSourceChannel::SetLoadFlags(PRUint32 aLoadFlags)
 
     // "View source" always wants the currently cached content. 
  
-    return mChannel->SetLoadFlags(aLoadFlags | nsIRequest::LOAD_FROM_CACHE);
+    // This should actually be just nsIRequest::LOAD_FROM_CACHE but
+    // the win32 compiler fails to deal... tries to do a method lookup
+    return mChannel->SetLoadFlags(aLoadFlags | ::nsIRequest::LOAD_FROM_CACHE);
 }
 
 #define X_VIEW_SOURCE_PARAM "; x-view-type=view-source"
