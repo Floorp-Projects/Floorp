@@ -1928,6 +1928,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   mailHdr->GetMessageOffset(&messageOffset);
   nsParseMailMessageState::Init(messageOffset);
   
+  (void) localFolder->RefreshSizeOnDisk();
   if (destIFolder)
     destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
   

@@ -630,7 +630,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-  nsresult rv = NS_OK;
+  (void) RefreshSizeOnDisk();
+  nsresult rv;
   //If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
   //changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
   if(!mDatabase)
@@ -1466,22 +1467,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* size)
+NS_IMETHODIMP nsMsgLocalMailFolder::RefreshSizeOnDisk()
 {
-#ifdef HAVE_PORT
-  PRInt32 ret = 0;
-  XP_StatStruct st;
-
-  if (!XP_Stat(GetPathname(), &st, xpMailFolder))
-  ret += st.st_size;
-
-  if (!XP_Stat(GetPathname(), &st, xpMailFolderSummary))
-  ret += st.st_size;
-
-  return ret;
-#endif
+  PRUint32 oldFolderSize = mFolderSize;
+  mFolderSize = 0; // we set this to 0 to force it to get recalculated from disk
+  if (NS_SUCCEEDED(GetSizeOnDisk(&mFolderSize)))
+    NotifyIntPropertyChanged(kFolderSizeAtom, oldFolderSize, mFolderSize);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* aSize)
+{
+    NS_ENSURE_ARG_POINTER(aSize);
+    nsresult rv = NS_OK;
+    if (!mFolderSize)
+    {
+      nsCOMPtr <nsIFileSpec> fileSpec;
+      rv = GetPath(getter_AddRefs(fileSpec));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = fileSpec->GetFileSize(&mFolderSize);
+    }
+    *aSize = mFolderSize;
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
@@ -1718,7 +1725,8 @@ nsMsgLocalMailFolder::OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySu
 
   delete mCopyState;
   mCopyState = nsnull;
-    
+ 
+  (void) RefreshSizeOnDisk();
   // we are the destination folder for a move/copy
   if (moveCopySucceeded && mDatabase)
   {
@@ -3373,6 +3381,7 @@ nsMsgLocalMailFolder::SetCheckForNewMessagesAfterParsing(PRBool aCheckForNewMess
 NS_IMETHODIMP
 nsMsgLocalMailFolder::NotifyCompactCompleted()
 {
+  (void) RefreshSizeOnDisk();
   nsCOMPtr <nsIAtom> compactCompletedAtom;
   compactCompletedAtom = getter_AddRefs(NS_NewAtom("CompactCompleted"));
   NotifyFolderEvent(compactCompletedAtom);

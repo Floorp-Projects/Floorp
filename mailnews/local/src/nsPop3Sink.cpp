@@ -46,6 +46,7 @@
 #include "nsIFileSpec.h"
 #include "nsParseMailbox.h"
 #include "nsIFolder.h"
+#include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalUtils.h"
 #include "nsMsgLocalFolderHdrs.h"
@@ -245,6 +246,10 @@ nsPop3Sink::EndMailDelivery()
 #ifdef DO_FILTER_PLUGIN
   m_folder->CallFilterPlugins();
 #endif
+  // note that size on disk has possibly changed.
+  nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);
+  if (localFolder)
+    (void) localFolder->RefreshSizeOnDisk();
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
   if (server) {
     nsCOMPtr <nsIMsgFilterList> filterList;
