@@ -16,7 +16,9 @@ To install:
 	FileStructure.pm: filesystem (storage) and global/per-project settings
 	BTData.pm: bug tracking configuration
 
-2) run ./configure to generate a make file.  Although Tinderbox
+    configure: destdir
+
+2) run ./configure to generate a Makefile.  Although Tinderbox
 consists entirely of perl scripts we must substitute some values into
 the source code to make it executable.
 
