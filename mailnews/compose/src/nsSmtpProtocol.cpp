@@ -104,7 +104,7 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 {
   NS_ENSURE_ARG(aSmtpUrl);
 
-	nsresult rv;
+	nsresult rv = NS_OK;
 	va_list args;
 	
   nsCOMPtr<nsIPrompt> dialog;

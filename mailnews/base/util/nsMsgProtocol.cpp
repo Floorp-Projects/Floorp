@@ -570,7 +570,6 @@ nsMsgProtocol::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCal
 NS_IMETHODIMP
 nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-  nsresult rv = NS_OK;
   mCallbacks = aNotificationCallbacks;
 
   // Verify that the event sink is http

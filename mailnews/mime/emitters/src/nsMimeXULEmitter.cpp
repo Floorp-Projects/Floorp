@@ -458,7 +458,7 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   PRUint32    numAddresses;
 	char	      *names;
 	char	      *addresses;
-  nsresult    rv;
+  nsresult    rv = NS_OK;
 
   if (!fromLine)
 	  return NS_OK;

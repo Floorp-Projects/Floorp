@@ -258,7 +258,7 @@ nsMsgViewNavigationService::FindNextMessage(PRInt32 type,
 {
 	nsresult rv = NS_OK;
 
-	PRBool checkStartMessage;
+	PRBool checkStartMessage = PR_FALSE;
 	nsCOMPtr<nsIDOMNode> originalMessageNode;
 
 	if(originalMessage)

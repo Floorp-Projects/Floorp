@@ -402,7 +402,7 @@ NS_IMETHODIMP nsMsgHdr::GetRecipientsIsNewsgroup(PRBool *rfc822)
 
 nsresult nsMsgHdr::BuildRecipientsFromArray(const char *names, const char *addresses, PRUint32 numAddresses, nsCAutoString& allRecipients)
 {
-	nsresult ret;
+	nsresult ret = NS_OK;
 	const char *curName = names;
 	const char *curAddress = addresses;
 	nsIMsgHeaderParser *headerParser = m_mdb->GetHeaderParser();

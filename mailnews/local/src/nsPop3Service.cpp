@@ -441,7 +441,7 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    PRBool havePref;
+    PRBool havePref = PR_FALSE;
     nsCOMPtr<nsILocalFile> prefLocal;
     nsCOMPtr<nsIFile> localFile;
     rv = prefs->GetFileXPref(PREF_MAIL_ROOT_POP3, getter_AddRefs(prefLocal));
