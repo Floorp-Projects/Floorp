@@ -1652,8 +1652,14 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
 
   // kedl, using my copy of wcstombs because theirs doesn't let you set a limit on the input
   // but this is still a hack....
+#if 0
   len = my_wcstombs(buffer, (char *) aString, BUFFER_SIZE,aLength);
   return DrawString( (char *) buffer, aLength, aX, aY, aSpacing);
+#else
+	NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
+	return DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+	                    aX, aY, aSpacing);
+#endif
 }
 
 
@@ -1664,8 +1670,13 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const nsString& aString,
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString3 at (%d,%d) aSpacing=<%p>.\n", aX, aY, aSpacing));
 
-  return DrawString(aString.GetUnicode(), aString.Length(),
-                      aX, aY, aFontID, aSpacing);
+#if 0
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+#else
+	NS_ConvertUCS2toUTF8    theUnicodeString (aString.GetUnicode(), aString.Length());
+	return DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+	                    aX, aY, aSpacing);
+#endif
 }
 
 
