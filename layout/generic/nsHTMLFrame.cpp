@@ -212,10 +212,10 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
         case NS_STYLE_CURSOR_DEFAULT:
           c = eCursor_standard;
           break;
-        case NS_STYLE_CURSOR_HAND:
+        case NS_STYLE_CURSOR_POINTER:
           c = eCursor_hyperlink;
           break;
-        case NS_STYLE_CURSOR_IBEAM:
+        case NS_STYLE_CURSOR_TEXT:
           c = eCursor_select;
           break;
         }
@@ -715,10 +715,10 @@ RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
         case NS_STYLE_CURSOR_DEFAULT:
           c = eCursor_standard;
           break;
-        case NS_STYLE_CURSOR_HAND:
+        case NS_STYLE_CURSOR_POINTER:
           c = eCursor_hyperlink;
           break;
-        case NS_STYLE_CURSOR_IBEAM:
+        case NS_STYLE_CURSOR_TEXT:
           c = eCursor_select;
           break;
         }
