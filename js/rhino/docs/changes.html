@@ -30,7 +30,7 @@ This version of Rhino should be binary compatible with the current embeddings th
 
 <h3>E4X implementation</h3>
 <p>
-The E4X implementation was donated to Rhino project by <a href="http://www.agiledelta.com/">AgileDelta, Inc.</a> It uses <a href="http://xml.apache.org/xmlbeans/">XMLBeans</a> library to implement E4X runtime. The implementation was tested against versions 1.0.2 and 1.0.3 of XMLBeans. Please make sure that <tt>xmlbeans.jar</tt> is avaialble on the classpath if you use E4X in your scripts.
+The E4X submission was donated to the Rhino project by <a href="http://www.bea.com/">BEA</a> and developed by <a href="http://www.agiledelta.com/">AgileDelta</a>. It uses <a href="http://xml.apache.org/xmlbeans/">XMLBeans</a> library to implement E4X runtime. The implementation was tested against versions 1.0.2 and 1.0.3 of XMLBeans. Please make sure that <tt>xmlbeans.jar</tt> is avaialble on the classpath if you use E4X in your scripts.
 </p>
 <p>
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=242805">Bugzilla 242805</a> for details.
@@ -86,7 +86,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=245882">Bugzilla 245882
 </p>
 
 <h4>Context customization API</h4>
-<a href="apidocs/org/mozilla/javascript/ContextFactory.html"><tt>org.mozilla.javascript.ContextFactory</tt></a> provides new API for customization of <tt>org.mozilla.javascript.Context</tt> and ensures that application-specific Context subclasses will always be used with when Rhino runtime needs to create Context instances.
+<a href="apidocs/org/mozilla/javascript/ContextFactory.html"><tt>org.mozilla.javascript.ContextFactory</tt></a> provides new API for customization of <tt>org.mozilla.javascript.Context</tt> and ensures that application-specific Context subclasses will always be used when Rhino runtime needs to create Context instances.
 </p>
 <p>
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=255595">Bugzilla 245882</a> for details.
@@ -98,7 +98,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=255595">Bugzilla 245882
 </p>
 
 
-<h4><a name="#Rhino1.5R1-deprecation-removal"></a>Removal of deprecated classes</h4>
+<h4><a name="Rhino1.5R1-deprecation-removal"></a>Removal of deprecated classes</h4>
 <p>
 The following classes that were deprecated in Rhino 1.5R5 are no longer available in Rhino 1.6R1:
 <ul>
