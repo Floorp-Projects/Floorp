@@ -151,6 +151,10 @@ struct nsKeyConverter {
   int keysym; // GDK keysym key code
 };
 
+//
+// Netscape keycodes are defined in widget/public/nsGUIEvent.h
+// GTK keycodes are defined in <gdk/gdkkeysyms.h>
+//
 struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CANCEL,     GDK_Cancel },
   { NS_VK_BACK,       GDK_BackSpace },
@@ -188,15 +192,41 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_DIVIDE,     GDK_KP_Divide },
   { NS_VK_RETURN,     GDK_KP_Enter },
 
+  // NS doesn't have dash or equals distinct from the numeric keypad ones,
+  // so we'll use those for now.  See bug 17008:
+  { NS_VK_SUBTRACT, GDK_minus },
+  { NS_VK_EQUALS, GDK_equal },
+  // and we don't have a single-quote symbol either:
+  { NS_VK_QUOTE, GDK_apostrophe },
+
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
   { NS_VK_SLASH,      GDK_slash },
   { NS_VK_BACK_SLASH, GDK_backslash },
-//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote,
+  { NS_VK_BACK_QUOTE, GDK_grave },
   { NS_VK_OPEN_BRACKET, GDK_bracketleft },
   { NS_VK_CLOSE_BRACKET, GDK_bracketright },
-  { NS_VK_QUOTE, GDK_quotedbl }
+  { NS_VK_QUOTE, GDK_quotedbl },
 
+  // Some shifted keys, see bug 15463.
+  // These should be subject to different keyboard mappings;
+  // how do we do that in gtk?
+  { NS_VK_SEMICOLON, GDK_colon },
+  { NS_VK_BACK_QUOTE, GDK_asciitilde },
+  { NS_VK_COMMA, GDK_less },
+  { NS_VK_PERIOD, GDK_greater },
+  { NS_VK_1, GDK_exclam },
+  { NS_VK_2, GDK_at },
+  { NS_VK_3, GDK_numbersign },
+  { NS_VK_4, GDK_dollar },
+  { NS_VK_5, GDK_percent },
+  { NS_VK_6, GDK_asciicircum },
+  { NS_VK_7, GDK_ampersand },
+  { NS_VK_8, GDK_asterisk },
+  { NS_VK_9, GDK_parenleft },
+  { NS_VK_0, GDK_parenright },
+  { NS_VK_SUBTRACT, GDK_underscore },
+  { NS_VK_EQUALS, GDK_plus }
 };
 
 void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
@@ -240,6 +270,10 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
   // function keys
   if (keysym >= GDK_F1 && keysym <= GDK_F24)
     return keysym - GDK_F1 + NS_VK_F1;
+
+#ifdef DEBUG_akkana
+  printf("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is %s\n", keysym, aGEK->string);
+#endif
 
   return((int)0);
 }
@@ -338,7 +372,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
 #if defined(DEBUG_akkana) || defined(DEBUG_pavlov)
-    printf("Key Press event: keyCode = %d, char code = '%c'",
+    printf("Key Press event: keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
       printf(" [shift]");
@@ -750,7 +784,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   // gtk returns a character value for them
   //
 // XXX this doesn't work, so s/USE_XIM_NOT/USE_XIM/ when this works again
-#ifdef USE_XIM_NOT
+#ifdef USE_XIM
   if (event->length) {
     static nsIUnicodeDecoder *decoder = nsnull;
     if (!decoder) {
