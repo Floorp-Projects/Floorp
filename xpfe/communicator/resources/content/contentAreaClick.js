@@ -171,14 +171,14 @@
     if (pref && event.button == 1 &&
         !findParentNode(event.originalTarget, "scrollbar") &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
-      if (middleMousePaste()) {
+      if (middleMousePaste(event)) {
         event.preventBubble();
       }
     }
     return true;
   }
 
-  function handleLinkMiddleClick(event, href)
+  function openNewTabOrWindow(event, href)
   {
     // should we open it in a new tab?
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
@@ -209,7 +209,7 @@
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (handleLinkMiddleClick(event, href))
+          if (openNewTabOrWindow(event, href))
             return true;
         } 
         var saveModifier = true;
@@ -230,21 +230,30 @@
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (handleLinkMiddleClick(event, href))
+        if (openNewTabOrWindow(event, href))
           return true;
         break;
     }
     return false;
   }
 
-  function middleMousePaste()
+  function middleMousePaste( event )
   {
     var url = readFromClipboard();
-    if (url) {
-      loadURI(getShortcutOrURI(url));
-      return true;
-    }
-    return false;
+    if (!url)
+      return false;
+    url = getShortcutOrURI(url);
+    if (!url)
+      return false;
+
+    // On ctrl-middleclick, open in new window or tab.
+    if (event.ctrlKey)
+      return openNewTabOrWindow(event, url);
+
+    // If ctrl wasn't down, then just load the url in the current win/tab.
+    loadURI(url);
+    event.preventBubble();
+    return true;
   }
 
   function makeURLAbsolute( base, url ) 
