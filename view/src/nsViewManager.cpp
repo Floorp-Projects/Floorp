@@ -457,7 +457,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
 {
-  nsRect              wrect;
+  nsRect              wrect, brect;
   nsIRenderingContext *localcx = nsnull;
   nsDrawingSurface    ds = nsnull;
 
@@ -498,6 +498,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     aView->GetWidget(widget);
     widget->GetClientBounds(wrect);
 
+    brect = wrect;
     wrect.x = wrect.y = 0;
 
     NS_RELEASE(widget);
@@ -518,7 +519,12 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 #ifdef NEW_COMPOSITOR
-    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+  {
+#ifdef XP_UNIX
+    localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+#endif
+    localcx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
+  }
 #else
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 #endif
@@ -548,13 +554,17 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 }
 
 //states
-#define FRONT_TO_BACK_RENDER      1
-#define FRONT_TO_BACK_ACCUMULATE  2
-#define BACK_TO_FRONT_TRANS       3
-#define BACK_TO_FRONT_OPACITY     4
-#define FRONT_TO_BACK_CLEANUP     5
-#define FRONT_TO_BACK_POP_SEARCH  6
-#define COMPOSITION_DONE          7
+
+typedef enum
+{
+  FRONT_TO_BACK_RENDER =    1,
+  FRONT_TO_BACK_ACCUMULATE,
+  BACK_TO_FRONT_TRANS,
+  BACK_TO_FRONT_OPACITY,
+  FRONT_TO_BACK_CLEANUP,
+  FRONT_TO_BACK_POP_SEARCH,
+  COMPOSITION_DONE
+} nsCompState;
 
 //bit shifts
 #define TRANS_PROPERTY_TRANS      0
@@ -566,8 +576,10 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 {
 #ifdef NEW_COMPOSITOR
 
+#define SET_STATE(x)  { prevstate = state; state = (x); }
+
   PRInt32           flatlen = 0, cnt;
-  PRInt32           state = FRONT_TO_BACK_RENDER, prevstate;
+  nsCompState       state = FRONT_TO_BACK_RENDER, prevstate;
   PRInt32           transprop = 0;
   PRInt32           increment = DISPLAYLIST_INC;
   PRInt32           loopstart = 0, backstart;
@@ -774,7 +786,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                   if (mTransRgn && mOpaqueRgn)
                   {
                     //need to finish using back to front till this point
-                    state = FRONT_TO_BACK_ACCUMULATE;
+                    SET_STATE(FRONT_TO_BACK_ACCUMULATE)
 
                     if (pushcnt == 0)
                       accumstart = cnt;
@@ -800,10 +812,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                     if (clipstate)
                     {
                       if (pushcnt > 0)
-                      {
-                        prevstate = state;
-                        state = FRONT_TO_BACK_POP_SEARCH;
-                      }
+                        SET_STATE(FRONT_TO_BACK_POP_SEARCH)
                       else
                         aResult = clipstate;
                     }
@@ -848,10 +857,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                     if (clipstate)
                     {
                       if (pushcnt > 0)
-                      {
-                        prevstate = state;
-                        state = FRONT_TO_BACK_POP_SEARCH;
-                      }
+                        SET_STATE(FRONT_TO_BACK_POP_SEARCH)
                       else
                         aResult = clipstate;
                     }
@@ -889,10 +895,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                     if (clipstate)
                     {
                       if (pushcnt > 0)
-                      {
-                        prevstate = state;
-                        state = FRONT_TO_BACK_POP_SEARCH;
-                      }
+                        SET_STATE(FRONT_TO_BACK_POP_SEARCH)
                       else
                         aResult = clipstate;
                     }
@@ -1007,7 +1010,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
     switch (state)
     {
       case FRONT_TO_BACK_ACCUMULATE:
-        state = (transprop & (1 << TRANS_PROPERTY_OPACITY)) ? BACK_TO_FRONT_OPACITY : BACK_TO_FRONT_TRANS;
+        SET_STATE((transprop & (1 << TRANS_PROPERTY_OPACITY)) ? BACK_TO_FRONT_OPACITY : BACK_TO_FRONT_TRANS)
 
         if ((curflags & (POP_CLIP | PUSH_CLIP)) || (state == BACK_TO_FRONT_OPACITY))
           backstart = flatlen - DISPLAYLIST_INC;
@@ -1043,7 +1046,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
           //did that finish everything?
           if (aResult == PR_TRUE)
           {
-            state = COMPOSITION_DONE;
+            SET_STATE(COMPOSITION_DONE)
             continue;
           }
 
@@ -1170,7 +1173,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             }
 
             if ((nsnull == gOffScreen) || (nsnull == gRed))
-              state = BACK_TO_FRONT_TRANS;
+              SET_STATE(BACK_TO_FRONT_TRANS)
           }
 
 //printf("rect: %d %d %d %d\n", localrect.x, localrect.y, localrect.width, localrect.height);
@@ -1198,10 +1201,11 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
             if (!mOpaqueRgn->IsEmpty())
             {
+              SET_STATE(FRONT_TO_BACK_CLEANUP)
+
               loopstart = accumstart;
               loopend = flatlen;
               increment = DISPLAYLIST_INC;
-              state = FRONT_TO_BACK_CLEANUP;
 
               mOpaqueRgn->GetBoundingBox(&localrect.x, &localrect.y, &localrect.width, &localrect.height);
 
@@ -1211,13 +1215,13 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
               //did that finish everything?
               if (aResult == PR_TRUE)
-                state = COMPOSITION_DONE;
+                SET_STATE(COMPOSITION_DONE)
 
               break;
             }
           }
 
-          state = COMPOSITION_DONE;
+          SET_STATE(COMPOSITION_DONE)
         }
 
         break;
@@ -1225,13 +1229,15 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
       default:
       case FRONT_TO_BACK_CLEANUP:
       case FRONT_TO_BACK_RENDER:
-        state = COMPOSITION_DONE;
+        SET_STATE(COMPOSITION_DONE)
         break;
     }
   }
 
   if (nsnull != aRootView)
     ComputeViewOffset(aRootView, nsnull, nsnull, 0);
+
+#undef SET_STATE
 
 #else
 
