@@ -315,7 +315,7 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 	if(!aWin)
 		return NS_ERROR_NULL_POINTER;
 
-  nsAutoString  webShellName("browser.webwindow");
+  nsAutoString  webShellName("messagepane");
   NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -341,9 +341,9 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
   webShell->GetRootWebShell(rootWebShell);
   if (nsnull != rootWebShell) 
   {
-    rootWebShell->FindChildWithName(webShellName.GetUnicode(), mWebShell);
+    nsresult rv = rootWebShell->FindChildWithName(webShellName.GetUnicode(), mWebShell);
 #ifdef NS_DEBUG
-    if (nsnull != mWebShell)
+    if (NS_SUCCEEDED(rv) && nsnull != mWebShell)
         printf("nsMessenger::SetWindow(): Got the webShell %s.\n", (const char *) nsAutoCString(webShellName));
     else
         printf("nsMessenger::SetWindow(): Failed to find webshell %s.\n", (const char *) nsAutoCString(webShellName));
