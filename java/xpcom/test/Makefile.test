@@ -1,0 +1,87 @@
+# Makefile
+
+MOZILLA=../../..
+
+CC=gcc
+CPP=g++
+
+CFLAGS=-Wall -g -fno-rtti -fno-handle-exceptions -pipe
+SHLIB_FLAGS=-fpic
+SHLIB_LDFLAGS=-shared
+DEFINES=-DXP_UNIX
+INCLUDE=-I$(MOZILLA)/dist/include -I$(MOZILLA)/xpcom/public -I../src
+LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lreg -lplds3 -lplc3 -lnspr3 -lstdc++
+XPTDIR=$(MOZILLA)/dist/bin/components
+
+XPIDL=$(MOZILLA)/dist/bin/xpidl
+
+GENPROXY=$(MOZILLA)/dist/bin/genproxy
+
+JAVAC=$(JDKHOME)/bin/javac
+
+CLASSDIR=$(MOZILLA)/dist/classes
+
+
+TEST_CLASSES=XPCTest.class
+
+PROXY_CLASSES=org/mozilla/xpcom/JSISample__Proxy.class \
+	      org/mozilla/xpcom/JSIComplex__Proxy.class
+
+PROXY_SRCS=JSISample__Proxy.java \
+	   JSIComplex__Proxy.java
+
+
+.SUFFIXES: .java .class .cpp .o
+
+all: sample xptest $(TEST_CLASSES)
+
+#
+# Build class files.
+#
+.java.class:
+	$(JAVAC) -g -d . -classpath $(CLASSDIR):. $<
+
+
+#
+# Compile C++.
+#
+.cpp.o:
+	$(CPP) $(CFLAGS) $(DEFINES) $(INCLUDE) $(SHLIB_FLAGS) -c $<
+
+#
+# Sample XPCOM module.
+#
+sample: JSISample.h libsample.so $(XPTDIR)/JSISample.xpt
+
+#
+# Build sample header & typelib
+#
+JSISample.cpp: JSISample.h
+
+JSISample.h: JSISample.idl
+	$(XPIDL) -w -v -m header -I $(MOZILLA)/dist/idl JSISample.idl
+
+$(XPTDIR)/JSISample.xpt: JSISample.idl
+	$(XPIDL) -w -v -m typelib -o $(XPTDIR)/JSISample -I $(MOZILLA)/dist/idl JSISample.idl
+
+#
+# Sample object shared library
+#
+libsample.so: JSISample.h JSSample.o
+	$(CPP) $(SHLIB_LDFLAGS) $(LIBS) -o libsample.so JSSample.o 
+	chmod +x libsample.so
+
+#
+# C++ test program
+#
+xptest: xptest.o ../src/libxpjava.so
+	$(CPP) -g -Wall -o xptest $(LIBS) -L ../src -lxpjava xptest.o
+
+xptest.cpp: ../src/xpjava.h
+
+#$(PROXY_CLASSES): $(GENPROXY) $(XPTDIR)/JSISample.xpt
+#	genproxy $(XPTDIR)/JSISample.xpt
+#	$(JAVAC) -g -d . -classpath $(CLASSDIR):. *.java
+
+clean:
+	$(RM) *.o *.so core xptest $(XPTDIR)/JSISample.xpt JSISample.h $(TEST_CLASSES) $(PROXY_SRCS) $(PROXY_CLASSES)
