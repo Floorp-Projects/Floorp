@@ -7,5 +7,7 @@ nsIObserverService.idl
 nsIProperties.idl
 nsIStopwatch.idl
 nsIProperties.idl
+nsIPersistentProperties2.idl
 nsIStopwatch.idl
+
 nsISupportsArray.idl

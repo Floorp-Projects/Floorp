@@ -208,6 +208,7 @@ bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties
 bin\res\charsetTitles.properties
+bin/res/acceptlanguage.properties
 bin\res\entityTables\*
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif

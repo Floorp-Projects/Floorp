@@ -31,6 +31,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsProperties.h"
 #include "pratom.h"
+#include "nsEnumeratorUtils.h"
 
 static PLHashNumber
 HashKey(const PRUnichar *aString)
@@ -249,26 +250,56 @@ AddElemToArray(PLHashEntry* he, PRIntn i, void* arg)
 NS_IMETHODIMP
 nsPersistentProperties::EnumerateProperties(nsIBidirectionalEnumerator** aResult)
 {
-	if (!mTable)
-		return NS_ERROR_FAILURE;
+  if (!mTable)
+    return NS_ERROR_FAILURE;
 
-	nsISupportsArray* propArray;
-	nsresult rv = NS_NewISupportsArray(&propArray);
-	if (rv != NS_OK)
-		return rv;
+  nsISupportsArray* propArray;
+  nsresult rv = NS_NewISupportsArray(&propArray);
+  if (rv != NS_OK)
+    return rv;
 
-	// Step through hash entries populating a transient array
+  // Step through hash entries populating a transient array
    PRIntn n = PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
    if ( n < (PRIntn) mTable->nentries )
       return NS_ERROR_OUT_OF_MEMORY;
 
-	// Convert array into enumerator
-	rv = NS_NewISupportsArrayEnumerator(propArray, aResult);
-	if (rv != NS_OK)
-		return rv;
+  // Convert array into enumerator
+  rv = NS_NewISupportsArrayEnumerator(propArray, aResult);
+  if (rv != NS_OK)
+    return rv;
 
-	return NS_OK;
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPersistentProperties::SimpleEnumerateProperties(nsISimpleEnumerator** aResult)
+{
+  nsCOMPtr<nsIBidirectionalEnumerator> iterator;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsISupportsArray* propArray;
+  nsresult rv = NS_NewISupportsArray(&propArray);
+  if (rv != NS_OK)
+    return rv;
+
+  // Step through hash entries populating a transient array
+   PRIntn n = PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
+   if ( n < (PRIntn) mTable->nentries )
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  // Convert array into enumerator
+  rv = NS_NewISupportsArrayEnumerator(propArray, getter_AddRefs(iterator));
+  // Convert nsIEnumerator into nsISimpleEnumerator
+  rv = NS_NewAdapterEnumerator(aResult, iterator);
+
+  if (rv != NS_OK)
+    return rv;
+
+  return NS_OK;
+}
+
 
 PRInt32
 nsPersistentProperties::Read()
@@ -383,43 +414,43 @@ nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
 
 NS_IMETHODIMP
-nsPropertyElement::GetKey(nsString** aReturnKey)
+nsPropertyElement::GetKey(PRUnichar **aReturnKey)
 {
-	if (aReturnKey)
-	{
-		*aReturnKey = mKey;
-		return NS_OK;
-	}
+  if (aReturnKey)
+  {
+    *aReturnKey = (PRUnichar *) mKey->ToNewUnicode();
+    return NS_OK;
+  }
 
-	return NS_ERROR_INVALID_POINTER;
+  return NS_ERROR_INVALID_POINTER;
 }
 
 NS_IMETHODIMP
-nsPropertyElement::GetValue(nsString** aReturnValue)
+nsPropertyElement::GetValue(PRUnichar **aReturnValue)
 {
-	if (aReturnValue)
-	{
-		*aReturnValue = mValue;
-		return NS_OK;
-	}
+  if (aReturnValue)
+  {
+    *aReturnValue = (PRUnichar *) mValue->ToNewUnicode();
+    return NS_OK;
+  }
 
-	return NS_ERROR_INVALID_POINTER;
+  return NS_ERROR_INVALID_POINTER;
 }
 
 NS_IMETHODIMP
 nsPropertyElement::SetKey(nsString* aKey)
 {
-	mKey = aKey;
+  mKey = aKey;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPropertyElement::SetValue(nsString* aValue)
 {
-	mValue = aValue;
+  mValue = aValue;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -175,26 +175,32 @@ main(int argc, char* argv[])
 		printf("failed to get current item\n");
 		return 1;
 	  }
-	  nsString* key = nsnull;
-	  nsString* val = nsnull;
-	  ret = propElem->GetKey(&key);
+
+    PRUnichar *pKey = nsnull;
+    PRUnichar *pVal = nsnull;
+
+	  ret = propElem->GetKey(&pKey);
 	  if (NS_FAILED(ret)) {
 		  printf("failed to get current element's key\n");
 		  return 1;
 	  }
-	  ret = propElem->GetValue(&val);
+	  ret = propElem->GetValue(&pVal);
 	  if (NS_FAILED(ret)) {
 		  printf("failed to get current element's value\n");
 		  return 1;
 	  }
-	  char* keyCStr = key->ToNewCString();
-	  char* valCStr = val->ToNewCString();
+
+    nsAutoString keyAdjustedLengthBuff(pKey);
+    nsAutoString valAdjustedLengthBuff(pVal);
+
+	  char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
+	  char* valCStr = valAdjustedLengthBuff.ToNewCString();
 	  if (keyCStr && valCStr) 
 		cout << keyCStr << "\t" << valCStr << endl;
 	  delete[] keyCStr;
 	  delete[] valCStr;
-      delete key;
-      delete val;
+    delete[] pKey;
+    delete[] pVal;
 	  ret = propEnum->Next();
   }
 

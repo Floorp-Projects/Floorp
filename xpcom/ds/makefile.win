@@ -39,7 +39,6 @@ EXPORTS =                          \
         nsIArena.h                 \
         nsIByteBuffer.h            \
         nsIObserverList.h          \
-        nsIPersistentProperties.h  \
         nsISimpleEnumerator.h      \
         nsISizeOfHandler.h         \
         nsIUnicharBuffer.h         \
@@ -75,6 +74,7 @@ XPIDLSRCS =                         \
 	.\nsISupportsArray.idl	    \
 	.\nsISupportsIterators.idl  \
 	.\nsISupportsPrimitives.idl \
+	.\nsIPersistentProperties2.idl \
         $(NULL)
 
 ################################################################################

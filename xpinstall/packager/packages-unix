@@ -227,6 +227,7 @@ bin/res/SchemaConcat.tbl
 bin/res/URLFieldSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
+bin/res/acceptlanguage.properties
 bin/res/unixcharset.properties
 bin/res/charsetData.properties
 bin/res/charsetTitles.properties

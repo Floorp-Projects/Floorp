@@ -124,12 +124,12 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
   name.AppendInt(aID, 10);
   nsresult ret = mProps->GetStringProperty(name, aResult);
 
-#ifdef DEBUG_tao
+#ifdef DEBUG_tao_
   char *s = aResult.ToNewCString();
   printf("\n** GetStringFromID: aResult=%s, len=%d\n", s?s:"null", 
          aResult.Length());
   delete s;
-#endif /* DEBUG_tao */
+#endif /* DEBUG_tao_ */
 
   return ret;
 }
@@ -139,13 +139,13 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
   NS_ENSURE_TRUE(mProps, NS_ERROR_FAILURE);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
-#ifdef DEBUG_tao
+#ifdef DEBUG_tao_
   char *s = aResult.ToNewCString(),
        *ss = aName.ToNewCString();
   printf("\n** GetStringFromName: aName=%s, aResult=%s, len=%d\n", 
          ss?ss:"null", s?s:"null", aResult.Length());
   delete s;
-#endif /* DEBUG_tao */
+#endif /* DEBUG_tao_ */
   return ret;
 }
 
@@ -195,13 +195,25 @@ NS_IMETHODIMP
 nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
 {
   nsAutoCMonitor(this);
-	if (!elements)
-		return NS_ERROR_INVALID_POINTER;
+  if (!elements)
+    return NS_ERROR_INVALID_POINTER;
 
-	nsresult ret = mProps->EnumerateProperties(elements);
+  nsresult ret = mProps->EnumerateProperties(elements);
 
-	return ret;
+  return ret;
 }
+
+NS_IMETHODIMP
+nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
+{
+  if (!elements)
+    return NS_ERROR_INVALID_POINTER;
+
+  nsresult ret = mProps->SimpleEnumerateProperties(elements);
+
+  return ret;
+}
+
 
 nsresult
 nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in) 
@@ -278,7 +290,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 nsresult
 nsStringBundle::OpenInputStream(nsString& aURLStr, nsIInputStream*& in) 
 {
-#ifdef DEBUG_tao
+#ifdef DEBUG_tao_
   {
     char *s = aURLStr.ToNewCString();
     printf("\n** nsStringBundle::OpenInputStream: %s\n", s?s:"null");
@@ -352,6 +364,7 @@ public:
   NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar ** aResult);
   NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar ** aResult);
   NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator ** aResult); 
+  NS_IMETHOD GetSimpleEnumeration(nsISimpleEnumerator** elements);
 };
 
 NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, NS_GET_IID(nsIStringBundle));
@@ -527,6 +540,13 @@ nsresult nsExtensibleStringBundle::GetEnumeration(nsIBidirectionalEnumerator ** 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** aResult)
+{
+  // XXX write me
+  *aResult = NULL;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #define MAX_CACHED_BUNDLES 10
@@ -564,7 +584,7 @@ private:
 nsStringBundleService::nsStringBundleService() :
   mBundleMap(MAX_CACHED_BUNDLES, PR_TRUE)
 {
-#ifdef DEBUG_tao
+#ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
 #endif
   NS_INIT_REFCNT();
@@ -706,7 +726,7 @@ NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
                                     nsIStringBundle** aResult)
 {
-#ifdef DEBUG_tao
+#ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
   {
     nsString aURLStr(aURLSpec);

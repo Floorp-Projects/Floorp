@@ -1269,16 +1269,22 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         ret = propEnum->CurrentItem((nsISupports**)&propElem);
         if (NS_FAILED(ret))
             goto cleanup;
-        nsString* key = nsnull;
-        nsString* val = nsnull;
-        ret = propElem->GetKey(&key);
+
+        PRUnichar *pKey = nsnull;
+        PRUnichar *pVal = nsnull;
+
+        ret = propElem->GetKey(&pKey);
         if (NS_FAILED(ret)) 
             goto cleanup;
-        ret = propElem->GetValue(&val);
+        ret = propElem->GetValue(&pVal);
         if (NS_FAILED(ret))
             goto cleanup;
-        char* keyCStr = key->ToNewCString();
-        PRUnichar* valCStr = val->ToNewUnicode();
+
+        nsAutoString keyAdjustedLengthBuff(pKey);
+        nsAutoString valAdjustedLengthBuff(pVal);
+
+        char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
+        PRUnichar* valCStr = valAdjustedLengthBuff.ToNewUnicode();
         if (keyCStr && valCStr) 
         {
             JSString* propValJSStr = JS_NewUCStringCopyZ(cx, (jschar*) valCStr);
@@ -1287,10 +1293,10 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
             delete[] keyCStr;
             delete[] valCStr;
         }
-        if (key)
-            delete key;
-        if (val)
-            delete val;
+        if (pKey)
+            delete[] pKey;
+        if (pVal)
+            delete[] pVal;
         ret = propEnum->Next();
     }
 	 
