@@ -35,8 +35,11 @@ LOCAL_INCLUDES := \
 	$(NULL)
 
 CPPSRCS_gtk	:= \
-	GTKdlldeps.cpp \
 	nsGTKWidgetFactory.cpp
+
+ifndef MKSHLIB_FORCE_ALL
+CPPSRCS_gtk += GTKdlldeps.cpp
+endif
 
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 
@@ -53,26 +56,29 @@ include $(topsrcdir)/config/config.mk
 
 CFLAGS += $(TK_CFLAGS)
 
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
 TOOLKIT_DSO_LDOPTS = $(addprefix $(DIST)/lib/libraptorwidget, \
 			$(addsuffix _s.a, $(MOZ_TOOLKIT)))
 
-EXTRA_DSO_LDOPTS+=\
-	$(TOOLKIT_DSO_LDOPTS) \
+SHARED_LIBRARY_LIBS =			    \
+	$(TOOLKIT_DSO_LDOPTS)		    \
 	$(DIST)/lib/libraptorbasewidget_s.a \
-	-L$(DIST)/bin \
-	-lxpcom \
-	-lraptorbase \
-	-lreg \
-	$(NSPR_LIBS)
+	$(NULL)
+
+EXTRA_DSO_LDOPTS+=	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	-L$(DIST)/bin	       \
+	-lxpcom		       \
+	-lraptorbase	       \
+	-lreg		       \
+	$(NSPR_LIBS)	       \
+	$(NULL)
 
 EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
 
 NO_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
+
+$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
