@@ -25,6 +25,8 @@
 #include "nsIDOMDocument.h"
 #include "nsMsgI18N.h"
 #include "nsMsgSend.h"
+#include "nsIMessenger.h"	//temporary!
+#include "nsIMessage.h"		//temporary!
 
 
 #ifdef XP_UNIX
@@ -50,6 +52,14 @@ nsMsgCompose::nsMsgCompose()
 	m_webShellWin = nsnull;
 	m_editor = nsnull;
 	m_compFields = do_QueryInterface(new nsMsgCompFields);
+
+	// Get the default charset from pref, use this as a mail charset.
+	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
+	if (default_mail_charset)
+	{
+   		m_compFields->SetCharacterSet(default_mail_charset, nsnull);
+    	PR_Free(default_mail_charset);
+  	}
 	
 	m_composeHTML = prefs.GetUseHtml();
 
@@ -66,7 +76,8 @@ nsMsgCompose::~nsMsgCompose()
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsMsgCompose::GetIID());
 
 
-nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format)
+nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI,
+	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
 {
 	nsresult rv = NS_OK;
 	nsMsgCompPrefs prefs;
@@ -100,6 +111,8 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 		default							: m_composeHTML = prefs.GetUseHtml();		break;
 
 	}
+	
+	 CreateMessage(originalMsgURI, type, format, object); //object is temporary
 
 	return rv;
 }
@@ -114,8 +127,7 @@ nsresult nsMsgCompose::LoadFields()
 		
     if (m_editor)
     {
-/*
-    	nsAutoString boby(m_compFields.GetBody());
+    	nsAutoString msgBody(m_compFields->GetBody());
     	if (msgBody.Length())
     	{
     		nsString fileName(TEMP_PATH_DIR);
@@ -133,7 +145,6 @@ nsresult nsMsgCompose::LoadFields()
     		}
     	}
     	else
-*/
     	{
     		if (m_composeHTML)
         		m_editor->LoadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
@@ -167,13 +178,11 @@ nsresult nsMsgCompose::LoadFields()
 					{
 						nsString id;
 						inputElement->GetId(id);
-/*
-						if (id == "msgTo") inputElement->SetValue(msgTo);
-						if (id == "msgCc") inputElement->SetValue(msgCc);
-						if (id == "msgBcc") inputElement->SetValue(msgBcc);
-                        if (id == "msgNewsgroup") inputElement->SetValue(msgNewsgroup);
-						if (id == "msgSubject") inputElement->SetValue(msgSubject);
-*/
+						if (id == "msgTo") inputElement->SetValue(m_compFields->GetTo());
+						if (id == "msgCc") inputElement->SetValue(m_compFields->GetCc());
+						if (id == "msgBcc") inputElement->SetValue(m_compFields->GetBcc());
+                        if (id == "msgNewsgroup") inputElement->SetValue(m_compFields->GetNewsgroups());
+						if (id == "msgSubject") inputElement->SetValue(m_compFields->GetSubject());
 					}
                     
 				}
@@ -188,13 +197,13 @@ nsresult nsMsgCompose::LoadFields()
 nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
 {
 	// Set charset, this will be used for the MIME charset labeling.
-	m_compFields->SetCharacterSet(nsAutoCString(charset), NULL);
+	m_compFields->SetCharacterSet(nsAutoCString(charset), nsnull);
 	
 	return NS_OK;
 }
 
 
-nsresult nsMsgCompose::SendMessage(const PRUnichar *callback)
+nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *callback)
 {
 	nsresult rv = NS_OK;
 
@@ -248,7 +257,7 @@ nsresult nsMsgCompose::SendMessage(const PRUnichar *callback)
 						m_editor->GetContentsAsHTML(msgBody);
 					else
 						m_editor->GetContentsAsText(msgBody);
-					SendMessageEx(msgTo.GetUnicode(), msgCc.GetUnicode(), msgBcc.GetUnicode(),
+					SendMsgEx(deliverMode, msgTo.GetUnicode(), msgCc.GetUnicode(), msgBcc.GetUnicode(),
 						msgNewsgroup.GetUnicode(), msgSubject.GetUnicode(), msgBody.GetUnicode(), callback);          
 				}
 			}
@@ -259,7 +268,7 @@ nsresult nsMsgCompose::SendMessage(const PRUnichar *callback)
 }
 
 
-nsresult nsMsgCompose::SendMessageEx(const PRUnichar *addrTo, const PRUnichar *addrCc,
+nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *addrTo, const PRUnichar *addrCc,
 	const PRUnichar *addrBcc, const PRUnichar *newsgroup, const PRUnichar *subject,
 	const PRUnichar *body, const PRUnichar *callback)
 {
@@ -282,50 +291,50 @@ nsresult nsMsgCompose::SendMessageEx(const PRUnichar *addrTo, const PRUnichar *a
 		char *outCString;
 
 		// Pref values are supposed to be stored as UTF-8, so no conversion
-		m_compFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
-		m_compFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
-		m_compFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
+		m_compFields->SetFrom((char *)pCompPrefs.GetUserEmail(), nsnull);
+		m_compFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), nsnull);
+		m_compFields->SetOrganization((char *)pCompPrefs.GetOrganization(), nsnull);
 
 		// Convert fields to UTF-8
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrTo, &outCString))) 
 		{
-			m_compFields->SetTo(outCString, NULL);
+			m_compFields->SetTo(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetTo(nsAutoCString(addrTo), NULL);
+			m_compFields->SetTo(nsAutoCString(addrTo), nsnull);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrCc, &outCString))) 
 		{
-			m_compFields->SetCc(outCString, NULL);
+			m_compFields->SetCc(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetCc(nsAutoCString(addrCc), NULL);
+			m_compFields->SetCc(nsAutoCString(addrCc), nsnull);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrBcc, &outCString))) 
 		{
-			m_compFields->SetBcc(outCString, NULL);
+			m_compFields->SetBcc(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetBcc(nsAutoCString(addrBcc), NULL);
+			m_compFields->SetBcc(nsAutoCString(addrBcc), nsnull);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, newsgroup, &outCString))) 
 		{
-			m_compFields->SetNewsgroups(outCString, NULL);
+			m_compFields->SetNewsgroups(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetNewsgroups(nsAutoCString(newsgroup), NULL);
+			m_compFields->SetNewsgroups(nsAutoCString(newsgroup), nsnull);
         
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, subject, &outCString))) 
 		{
-			m_compFields->SetSubject(outCString, NULL);
+			m_compFields->SetSubject(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetSubject(nsAutoCString(subject), NULL);
+			m_compFields->SetSubject(nsAutoCString(subject), nsnull);
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 		char *mail_charset;
@@ -333,16 +342,16 @@ nsresult nsMsgCompose::SendMessageEx(const PRUnichar *addrTo, const PRUnichar *a
 		aCharset.SetString(mail_charset);
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, body, &outCString))) 
 		{
-			m_compFields->SetBody(outCString, NULL);
+			m_compFields->SetBody(outCString, nsnull);
 			PR_Free(outCString);
 		}
 		else
-			m_compFields->SetBody(nsAutoCString(body), NULL);
+			m_compFields->SetBody(nsAutoCString(body), nsnull);
 
 		nsCOMPtr<nsIMsgSend>msgSend = do_QueryInterface(new nsMsgComposeAndSend);
 		if (msgSend)
 	    {
-	        char    *bodyString = NULL;
+	        char    *bodyString = nsnull;
 	        PRInt32 bodyLength;
 
 	        m_compFields->GetBody(&bodyString);
@@ -351,7 +360,7 @@ nsresult nsMsgCompose::SendMessageEx(const PRUnichar *addrTo, const PRUnichar *a
 	        msgSend->CreateAndSendMessage(m_compFields, 
 					PR_FALSE,         					// PRBool                            digest_p,
 					PR_FALSE,         					// PRBool                            dont_deliver_p,
-					nsMsgDeliverNow,   					// nsMsgDeliverMode                  mode,
+					(nsMsgDeliverMode)deliverMode,   	// nsMsgDeliverMode                  mode,
 					m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
 					bodyString,               			// const char                        *attachment1_body,
         			bodyLength,               			// PRUint32                          attachment1_body_length,
@@ -362,7 +371,7 @@ nsresult nsMsgCompose::SendMessageEx(const PRUnichar *addrTo, const PRUnichar *a
 	          		nsnull);                  			// tagged FE data that will be passed to the FE
 	    }
 	}
-/*TODO
+/*TODO, don't close the window but just hide it, we will close it later when we receive a call back from the BE
 	if (nsnull != mScriptContext) {
 		const char* url = "";
 		PRBool isUndefined = PR_FALSE;
@@ -435,3 +444,201 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 	*aWrapLength = prefs.GetWrapColumn();
 	return NS_OK;
 }
+
+nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports * object)
+{
+	nsresult rv = NS_OK;
+	/* At this point, we have a list of URI of original message to reply to or forward but as the BE isn't ready yet,
+	   we still need to use the old patch... gather the information from the object and the temp file use to display the selected message*/
+	   
+ 	if (object)
+ 	{
+		nsCOMPtr<nsIMessage> message;
+		rv = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+		if ((NS_SUCCEEDED(rv)) && message)
+		{
+			nsString aString = "";
+			nsString bString = "";
+	        nsString aCharset = "";
+	        nsString decodedString;
+	        nsString encodedCharset;  // we don't use this
+	        char *aCString;
+
+        	message->GetCharSet(aCharset);
+			message->GetSubject(aString);
+			switch (type)
+			{
+                default	: break;        
+                case MSGCOMP_TYPE_Reply : 
+                case MSGCOMP_TYPE_ReplyAll:
+                {
+					// get an original charset, used for a label, UTF-8 is used for the internal processing
+					if (!aCharset.Equals(""))
+						m_compFields->SetCharacterSet(nsAutoCString(aCharset), nsnull);
+
+					bString += "Re: ";
+					bString += aString;
+					m_compFields->SetSubject(nsAutoCString(bString), nsnull);
+					if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString)))
+						if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+						{
+							m_compFields->SetSubject(aCString, NULL);
+							PR_Free(aCString);
+						}
+                    
+					message->GetAuthor(aString);		
+					m_compFields->SetTo(nsAutoCString(aString), NULL);
+					if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(aString, encodedCharset, decodedString)))
+						if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+						{
+							m_compFields->SetTo(aCString, NULL);
+							PR_Free(aCString);
+						}
+
+					if (type == MSGCOMP_TYPE_ReplyAll)
+					{
+						nsString cString, dString;
+						message->GetRecipients(cString);
+						message->GetCCList(dString);
+						if (cString.Length() > 0 && dString.Length() > 0)
+							cString = cString + ", ";
+						cString = cString + dString;
+						m_compFields->SetCc(nsAutoCString(cString), NULL);
+						if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(cString, encodedCharset, decodedString)))
+							if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+							{
+								m_compFields->SetTo(aCString, NULL);
+								PR_Free(aCString);
+							}
+					}
+					HackToGetBody(1);
+					break;
+                }
+                case MSGCOMP_TYPE_ForwardAsAttachment:
+                case MSGCOMP_TYPE_ForwardInline:
+                case MSGCOMP_TYPE_ForwardQuoted:
+                {
+					if (!aCharset.Equals(""))
+						m_compFields->SetCharacterSet(nsAutoCString(aCharset), nsnull);
+
+					bString += "[Fwd: ";
+					bString += aString;
+					bString += "]";
+
+					m_compFields->SetSubject(nsAutoCString(bString), nsnull);
+					if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString)))
+						if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+						{
+							m_compFields->SetSubject(aCString, nsnull);
+							PR_Free(aCString);
+						}
+
+                    if (type == MSGCOMP_TYPE_ForwardAsAttachment)
+                        HackToGetBody(0);
+                    else if (type == MSGCOMP_TYPE_ForwardInline)
+                        HackToGetBody(2);
+                    else
+                        HackToGetBody(1);
+                    break;
+                }
+			}
+		}
+	}	
+	return rv;
+}
+
+void nsMsgCompose::HackToGetBody(PRInt32 what)
+{
+    char *buffer = (char *) PR_CALLOC(16384);
+    if (buffer)
+    {
+    	nsString fileName(TEMP_PATH_DIR);
+    	fileName += TEMP_MESSAGE_IN;
+   
+        nsFileSpec fileSpec(fileName);
+        nsInputFileStream fileStream(fileSpec);
+
+        nsString msgBody = (what == 2 && !m_composeHTML) ? "--------Original Message--------\r\n" 
+            : ""; 
+
+		// skip RFC822 header
+        while (!fileStream.eof() && !fileStream.failed() &&
+               fileStream.is_open())
+        {
+            fileStream.readline(buffer, 1024);
+            if (*buffer == 0)
+                break;
+        }
+		// copy message body
+        while (!fileStream.eof() && !fileStream.failed() &&
+               fileStream.is_open())
+        {
+            fileStream.readline(buffer, 1024);
+            if (what == 1 && ! m_composeHTML)
+                msgBody += "> ";
+            msgBody += buffer;
+            msgBody += MSG_LINEBREAK;
+        }
+        
+        if (m_composeHTML)
+        {
+        	nsString lowerMsgBody (msgBody);
+        	lowerMsgBody.ToLowerCase();
+        	
+        	PRInt32 startBodyOffset;
+        	PRInt32 endBodyOffset = -1;
+        	PRInt32 offset;
+        	startBodyOffset = lowerMsgBody.Find("<html>");
+        	if (startBodyOffset != -1)	//it's an HTML body
+        	{
+        		//Does it have a <body> tag?
+        		offset = lowerMsgBody.Find("<body");
+        		if (offset != -1)
+        		{
+        			offset = lowerMsgBody.Find('>', offset);
+           			if (offset != -1)
+           			{
+           				startBodyOffset = offset + 1;
+        				endBodyOffset = lowerMsgBody.RFind("</body>");
+        			}
+        		}
+        		if (endBodyOffset == -1)
+        			endBodyOffset = lowerMsgBody.RFind("</html>");        			
+        	}
+        	
+        	if (startBodyOffset == -1)
+        		startBodyOffset = 0;
+    		if (endBodyOffset == -1)
+    			endBodyOffset = lowerMsgBody.Length();
+    		
+    		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		if (startBodyOffset == 0)
+    		{
+    			msgBody.Insert("</html>", endBodyOffset);
+    			msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		}
+    		msgBody.Insert("</blockquote>", endBodyOffset);
+     		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		
+    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    		msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
+    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    		if (startBodyOffset == 0)
+    		{
+    			msgBody.Insert("<html>", startBodyOffset);
+    			msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    			msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
+     		}
+        }
+        else
+        {
+			//ducarroz: today, we are not converting HTML to plain text if needed!
+        }
+
+		// m_compFields->SetBody(msgBody.ToNewCString(), NULL);
+		// SetBody() strdup()'s cmsgBody.
+		m_compFields->SetBody(nsAutoCString(msgBody), NULL);
+        PR_Free(buffer);
+    }
+}
+

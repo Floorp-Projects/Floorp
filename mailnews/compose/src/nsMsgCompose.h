@@ -36,7 +36,7 @@ class nsMsgCompose : public nsIMsgCompose
 /*** nsIMsgCompose pure virtual functions */
 
 	/* void Initialize (in nsIDOMWindow aWindow, in wstring originalMsgURI, in long type, in long format); */
-	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format);
+	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object);
 
 	/* void LoadFields (); */
 	NS_IMETHOD LoadFields();
@@ -44,14 +44,13 @@ class nsMsgCompose : public nsIMsgCompose
 	/* void SetDocumentCharset (in wstring charset); */
 	NS_IMETHOD SetDocumentCharset(const PRUnichar *charset);
 
-	/* void SendMessage (in wstring callback); */
-	NS_IMETHOD SendMessage(const PRUnichar *callback);
+	/* void SendMsg (in MSG_DeliverMode deliverMode, in wstring callback); */
+	NS_IMETHOD SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *callback);
 
-	/* void SendMessageEx (in wstring addrTo, in wstring addrCc, in wstring addrBcc,
+	/* void SendMsgEx (in MSG_DeliverMode deliverModer, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
 		in wstring newsgroup, in wstring subject, in wstring body, in wstring callback); */
-	NS_IMETHOD SendMessageEx(const PRUnichar *addrTo, const PRUnichar *addrCc,
-		const PRUnichar *addrBcc, const PRUnichar *newsgroup, const PRUnichar *subject,
-		const PRUnichar *body, const PRUnichar *callback);
+	NS_IMETHOD SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *addrTo, const PRUnichar *addrCc, const PRUnichar *addrBcc,
+		const PRUnichar *newsgroup, const PRUnichar *subject, const PRUnichar *body, const PRUnichar *callback);
 
 	/* void CloseWindow (); */
 	NS_IMETHOD CloseWindow();
@@ -75,6 +74,10 @@ class nsMsgCompose : public nsIMsgCompose
 	
 
 private:
+
+	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
+	void HackToGetBody(PRInt32 what); //Temporary
+	
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;

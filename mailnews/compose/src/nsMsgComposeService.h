@@ -30,7 +30,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	/* void OpenComposeWindow (in wstring msgComposeWindowURL, in wstring originalMsgURI, in long type, in long format); */
-	NS_IMETHOD OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format);
+	NS_IMETHOD OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, nsISupports *object);
 
 	/* nsIMsgCompose InitCompose (in nsIDOMWindow aWindow, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format); */
 	NS_IMETHOD InitCompose(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompose **_retval);
@@ -40,5 +40,10 @@ public:
 
 private:
 	nsCOMPtr<nsISupportsArray> m_msgQueue;
+	
+	//tempory hack
+	nsString		hack_uri[16];
+	nsISupports*	hack_object[16];
 };
+
 

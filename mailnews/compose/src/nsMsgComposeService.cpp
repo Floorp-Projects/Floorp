@@ -39,6 +39,15 @@ nsMsgComposeService::nsMsgComposeService()
 
 	NS_INIT_REFCNT();
     rv = NS_NewISupportsArray(getter_AddRefs(m_msgQueue));
+    
+    /*--- tempory hack ---*/
+    int i;
+    for (i = 0; i < 16; i ++)
+    {
+    	hack_uri[i] = "";
+		hack_object[i] = nsnull;
+	}
+	/*--- tempory hack ---*/
 }
 
 
@@ -50,10 +59,23 @@ nsMsgComposeService::~nsMsgComposeService()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgComposeService, nsMsgComposeService::GetIID());
 
-nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format)
+nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
+	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
 {
 	nsAutoString args = "";
 	nsresult rv;
+
+    /*--- tempory hack ---*/
+    int i;
+    for (i = 0; i < 16; i ++)
+    	if (hack_uri[i].IsEmpty())
+    	{
+    		hack_uri[i] = originalMsgURI;
+			hack_object[i] = object;
+			NS_ADDREF(hack_object[i]);
+			break;
+		}
+    /*--- tempory hack ---*/
 
 	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
     if (NS_FAILED(rv))
@@ -92,9 +114,26 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{
-		msgCompose->Initialize(aWindow, originalMsgURI, type, format);
+    	/*--- tempory hack ---*/
+	    int i;
+		nsISupports * object = nsnull;
+	    for (i = 0; i < 16; i ++)
+	    	if (hack_uri[i] == originalMsgURI)
+	    	{
+	    		hack_uri[i] = "";
+				object = hack_object[i];
+				hack_object[i] = nsnull;
+				break;
+			}
+    	/*--- tempory hack ---*/
+	
+		msgCompose->Initialize(aWindow, originalMsgURI, type, format, object);
 		m_msgQueue->AppendElement(msgCompose);
 		*_retval = msgCompose;
+
+    	/*--- tempory hack ---*/
+    	NS_IF_RELEASE(object);
+    	/*--- tempory hack ---*/
 	}
 	
 	return rv;
