@@ -1020,16 +1020,20 @@ nsHttpHandler::InitUserAgentComponents()
 
       // Gather platform.
     mPlatform.Adopt(nsCRT::strdup(
-#if defined(XP_OS2)
+#if defined(MOZ_WIDGET_PHOTON)
+    "Photon"
+#elif defined(XP_OS2)
     "OS/2"
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
     "Windows"
 #elif defined(XP_MAC) || defined(XP_MACOSX)
     "Macintosh"
-#elif defined (XP_UNIX)
-    "X11"
 #elif defined(XP_BEOS)
     "BeOS"
+#elif defined(NO_X11)
+    "?"
+#else
+    "X11"
 #endif
     ));
 
