@@ -47,6 +47,7 @@
 
 #include "nsIDOMWindow.h"
 #include "nsIUnkContentTypeHandler.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -246,6 +247,10 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
   // now just open the channel!
   if (aChannel)
     rv =  aChannel->AsyncRead(this, nsnull);
+  if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) {
+      NS_WARNING("js returned no result -- not replacing window contents");
+      rv = NS_OK;
+  }
   return rv;
 }
 
@@ -608,7 +613,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   rv = loader->Open(aChannel, aCommand, aWindowTarget, retargetedWindowContext);
   NS_RELEASE(loader);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
