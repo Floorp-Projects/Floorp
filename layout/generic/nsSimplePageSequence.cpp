@@ -156,24 +156,23 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
     nsIFrame* kidFrame;
     nextFrame->GetNextSibling(&kidFrame);
 
-    nsHTMLReflowMetrics kidSize(nsnull);
     while (kidFrame) {
       // Reflow the page
+      nsHTMLReflowMetrics childSize(nsnull);
       nsHTMLReflowState childReflowState(aPresContext, aReflowState, kidFrame,
                                          aPageSize, reflowReason);
-      nsReflowStatus  status;
 
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
-      ReflowChild(kidFrame, aPresContext, kidSize, childReflowState, status);
-      kidFrame->SetRect(nsRect(aX, aY, kidSize.width, kidSize.height));
-      aY += kidSize.height;
+      ReflowChild(kidFrame, aPresContext, childSize, childReflowState,
+                  status);
+      kidFrame->SetRect(nsRect(aX, aY, childSize.width, childSize.height));
+      aY += childSize.height;
 
       // Leave a slight gap between the pages
       aY += PAGE_SPACING_TWIPS;
 
       // Is the page complete?
-      nsIFrame* kidNextInFlow;
       kidFrame->GetNextInFlow(&kidNextInFlow);
 
       if (NS_FRAME_IS_COMPLETE(status)) {
