@@ -197,24 +197,4 @@
       <spacer flex="1"/>
     </hbox>
   </vbox>
-  <label value="Please select the meaning of the following word:"/>
-  <hbox>
-    <spacer flex="1"/>
-    <grid>
-      <rows>
-        <row align="center">
-          <hbox pack="end">
-            <label id="bool-label"/>
-          </hbox>
-          <menulist id="bool-list">
-            <menupopup>
-              <menuitem label="&calendar.importoutlook.false.label;" value="0"/>
-              <menuitem label="&calendar.importoutlook.true.label;" value="1"/>
-            </menupopup>
-          </menulist>
-        </row>
-      </rows>
-    </grid>
-    <spacer flex="1"/>
-  </hbox>
 </dialog>

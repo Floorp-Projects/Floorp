@@ -49,79 +49,89 @@ function loadOutlookImportDialog()
 {  
   args = window.arguments[0];
   
-  var oldList;
   var menuList;
-  
+  var k;
+
   //fill all menupopups
   menuList = document.getElementById( "title-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.titleIndex;
+  if ("titleIndex" in args)
+    menuList.selectedIndex = args.titleIndex;
   menuList.focus();
   
   menuList = document.getElementById( "startdate-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.startDateIndex;
+  if ("startDateIndex" in args)
+    menuList.selectedIndex = args.startDateIndex;
   
   menuList = document.getElementById( "starttime-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.startTimeIndex;
+  if ("startTimeIndex" in args)
+    menuList.selectedIndex = args.startTimeIndex;
 
   menuList = document.getElementById( "enddate-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.endDateIndex;
+  if ("endDateIndex" in args)
+    menuList.selectedIndex = args.endDateIndex;
 
   menuList = document.getElementById( "endtime-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.endTimeIndex;
+  if ("endTimeIndex" in args)
+    menuList.selectedIndex = args.endTimeIndex;
 
   menuList = document.getElementById( "location-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.locationIndex;
+  if ("locationIndex" in args)
+    menuList.selectedIndex = args.locationIndex;
   
   menuList = document.getElementById( "description-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.descriptionIndex;
+  if ("descriptionIndex" in args)
+    menuList.selectedIndex = args.descriptionIndex;
 
   menuList = document.getElementById( "allday-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.allDayIndex;
+  if ("allDayIndex" in args)
+    menuList.selectedIndex = args.allDayIndex;
 
   menuList = document.getElementById( "private-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.privateIndex;
+  if ("privateIndex" in args)
+    menuList.selectedIndex = args.privateIndex;
 
   menuList = document.getElementById( "alarm-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.alarmIndex;
+  if ("alarmIndex" in args)
+    menuList.selectedIndex = args.alarmIndex;
 
   menuList = document.getElementById( "alarmdate-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.alarmDateIndex;
+  if ("alarmDateIndex" in args)
+    menuList.selectedIndex = args.alarmDateIndex;
 
   menuList = document.getElementById( "alarmtime-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.alarmTimeIndex;
+  if ("alarmTimeIndex" in args)
+    menuList.selectedIndex = args.alarmTimeIndex;
 
   menuList = document.getElementById( "categories-list" );
-  for( var k = 0; k < args.fieldList.length; k++ )
+  for( k = 0; k < args.fieldList.length; k++ )
     menuList.appendItem( args.fieldList[k] );
-  menuList.selectedIndex = args.categoriesIndex;
+  if ("categoriesIndex" in args)
+    menuList.selectedIndex = args.categoriesIndex;
 
-  boolLabel = document.getElementById( "bool-label" );  
-  boolLabel.setAttribute ( "value", args.boolStr + "  =" );
-  
   opener.setCursor( "auto" );
 }
 
@@ -145,7 +155,6 @@ function onOKCommand()
   args.descriptionIndex = document.getElementById( "description-list" ).selectedIndex;
   args.locationIndex    = document.getElementById( "location-list" ).selectedIndex;
   args.privateIndex     = document.getElementById( "private-list" ).selectedIndex;
-  args.boolIsTrue       = ( document.getElementById( "bool-list" ).selectedIndex == 1 );
   args.cancelled        = false;
   return true;
 }
