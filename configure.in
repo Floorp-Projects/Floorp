@@ -774,7 +774,7 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 MOZ_ARG_ENABLE_BOOL(md,
 [  --enable-md             Use compiler-based dependencies ],
     [  COMPILER_DEPEND=1
-       _DEPEND_CFLAGS='-Wp,-MD,$(*D)/.deps/$(*F).pp' ]
+       _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(*D)/.deps/$(*F).pp)' ]
 )
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
