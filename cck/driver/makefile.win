@@ -96,9 +96,6 @@ PROGRAM = .\$(OBJDIR)\$(EXENAME).EXE
 
 !include "$(DEPTH)\config\rules.mak"
 
-export::$(PROGRAM)
-	$(MAKE_INSTALL) $(OBJDIR)\$(EXENAME).lib ..\lib
-
 install::$(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) ..\cckwiz
 

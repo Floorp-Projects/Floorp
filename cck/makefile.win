@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=globals driver
+DIRS=globals driver ib
 
 include <$(DEPTH)\config\rules.mak>
