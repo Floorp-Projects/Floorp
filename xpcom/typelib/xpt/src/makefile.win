@@ -38,6 +38,8 @@ LINCS = \
 	-I$(PUBLIC)\xpcom	\
 	$(NULL)
 
+MOZ_NO_COVERAGE=1
+
 include <$(DEPTH)\config\rules.mak>
 
 export:: $(LIBRARY)
