@@ -289,6 +289,21 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
   return NS_OK;
 }
 
+nsresult nsMsgHeaderParser::MakeFullAddressWString (const PRUnichar* name, const PRUnichar* addr, PRUnichar ** fullAddress)
+{
+  nsXPIDLCString utf8Str;
+  nsresult rv = MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(name).get(), 
+                                NS_ConvertUCS2toUTF8(addr).get(), getter_Copies(utf8Str));
+  if (NS_SUCCEEDED(rv))
+  {
+    *fullAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(utf8Str.get()));
+    if (*fullAddress == nsnull)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
+}
+
 nsresult nsMsgHeaderParser::UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout)
 {
 #if DEBUG

@@ -622,7 +622,7 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
     var names = {};
     var numAddresses =  0;
 
-    numAddresses = msgHeaderParser.ParseHeadersWithArray(emailAddresses, addresses, names, fullNames);
+    numAddresses = msgHeaderParser.parseHeadersWithArray(emailAddresses, addresses, names, fullNames);
     var index = 0;
     while (index < numAddresses)
     {

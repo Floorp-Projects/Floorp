@@ -785,7 +785,7 @@ function GenerateAddressFromCard(card)
   else
     email = card.primaryEmail;
     
-  return gHeaderParser.MakeFullAddress("UTF-8", card.displayName, email);
+  return gHeaderParser.makeFullAddressWString(card.displayName, email);
 }
 
 function GetDirectoryFromURI(uri)

@@ -52,7 +52,7 @@ interface nsISimpleEnumerator;
 [scriptable, uuid(10A88A11-729E-11d2-804A-006008128C4E)]
 interface nsIMsgHeaderParser : nsISupports {
 
-	void ParseHeadersWithArray(in wstring aLine, 
+	void parseHeadersWithArray(in wstring aLine, 
 	                           [array, size_is(count)] out wstring aEmailAddresses,
                                [array, size_is(count)] out wstring aNames,
 							   [array, size_is(count)] out wstring aFullNames,
@@ -72,7 +72,7 @@ interface nsIMsgHeaderParser : nsISupports {
        Either of the provided pointers may be NULL if the caller is not interested
        in those components.
     */
-	void ParseHeaderAddresses (in string charset, in string line, out string names, 
+	[noscript] void parseHeaderAddresses (in string charset, in string line, out string names, 
 	                           out string addresses, out PRUint32 numAddresses);
 
 	/* Given a string which contains a list of Header addresses, returns a
@@ -82,7 +82,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
 	   Caller must call PL_strfree on returnValue (which is allocated by the function)
     */
-	void ExtractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
+	[noscript] void extractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
 
 
 	/* Given a string which contains a list of Header addresses, returns a
@@ -93,7 +93,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
 	   Caller must PL_strfree usernames.
 	 */
-	void ExtractHeaderAddressNames (in string charset, in string line, out string userNames);
+	[noscript] void extractHeaderAddressNames (in string charset, in string line, out string userNames);
 
 	/* Like MSG_ExtractHeaderAddressNames(), but only returns the first name
 	   in the list, if there is more than one. 
@@ -102,7 +102,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
 	   Caller must call PL_strfree on name
 	 */
-	void ExtractHeaderAddressName (in string charset, in string line, out string name);
+	[noscript] void extractHeaderAddressName (in string charset, in string line, out string name);
 
 	/* Given a string which contains a list of Header addresses, returns a new
 	   string with the same data, but inserts missing commas, parses and reformats
@@ -112,7 +112,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
        Caller must call PL_strfree on reformattedAddress
 	 */
-	void ReformatHeaderAddresses (in string charset, in string line, 
+	[noscript] void reformatHeaderAddresses (in string charset, in string line, 
 	                              out string reformattedAddress);
 
 	/* Returns a copy of ADDRS which may have had some addresses removed.
@@ -132,7 +132,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
        Caller must call PL_strfree on newAddress which is the return value.
 	 */
-	void RemoveDuplicateAddresses (in string charset,  in string addrs, in string other_addrs, 
+	[noscript] void removeDuplicateAddresses (in string charset,  in string addrs, in string other_addrs, 
 	                               in PRBool removeAliasesToMe, out string newAddress);
 
 
@@ -144,12 +144,13 @@ interface nsIMsgHeaderParser : nsISupports {
 
        Caller must call PL_strfree on fullAddress (this is the out parameter)
 	 */
-	string MakeFullAddress (in string charset, in string name, in string addr);
+	[noscript] string makeFullAddress (in string charset, in string name, in string addr);
+	wstring makeFullAddressWString (in wstring name, in wstring addr);
 
 	/* MSG_ParseHeaderAddresses returns quoted parsable addresses
 	   This function removes the quoting if you want to show the
 	   names to users. e.g. summary file, address book
 	 */
-	void UnquotePhraseOrAddr (in string charset, in string line, out string lineout);
+	[noscript] void unquotePhraseOrAddr (in string charset, in string line, out string lineout);
 };
 
