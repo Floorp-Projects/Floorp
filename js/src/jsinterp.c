@@ -2806,6 +2806,9 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_DEFCONST:
           case JSOP_DEFVAR:
+          {
+            JSBool defined;
+
             atom = GET_ATOM(cx, script, pc);
             obj = fp->varobj;
             attrs = JSPROP_ENUMERATE;
@@ -2816,18 +2819,19 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Lookup id in order to check for redeclaration problems. */
             id = (jsid)atom;
-            ok = CheckRedeclaration(cx, obj, id, attrs, &cond);
+            ok = CheckRedeclaration(cx, obj, id, attrs, &defined);
             if (!ok)
                 goto out;
 
             /* Bind a variable only if it's not yet defined. */
-            if (!cond) {
+            if (!defined) {
                 ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
                                          attrs, NULL);
+                if (!ok)
+                    goto out;
             }
-            if (!ok)
-                goto out;
             break;
+          }
 
           case JSOP_DEFFUN:
           {

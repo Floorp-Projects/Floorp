@@ -323,9 +323,11 @@ GetChar(JSTokenStream *ts)
 		        return EOF;
 		    }
 	        }
-                if (ts->listener)
-                    (*ts->listener)(ts->filename, ts->lineno, ts->userbuf.ptr, len,
-                                    &ts->listenerTSData, ts->listenerData);
+                if (ts->listener) {
+                    ts->listener(ts->filename, ts->lineno, ts->userbuf.ptr, len,
+                                 &ts->listenerTSData, ts->listenerData);
+                }
+
 	        /*
 	         * Any one of \n, \r, or \r\n ends a line (longest match wins).
                  * Also allow the Unicode line and paragraph separators.
@@ -343,7 +345,7 @@ GetChar(JSTokenStream *ts)
 			        nl++;
 		            break;
 		        }
-                        if ((*nl == LINE_SEPARATOR) || (*nl == PARA_SEPARATOR))
+                        if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR)
 		            break;
                     }
                 }
@@ -368,19 +370,20 @@ GetChar(JSTokenStream *ts)
 		    if (*nl == '\r') {
 		        if (ts->linebuf.base[len-1] == '\r') {
                             /*
-                             * Does the line segment end in \r?  We must check for
-                             * a \n at the front of the next segment before storing
-                             * a \n into linebuf.  This case only matters when we're
-                             * reading from a file.
+                             * Does the line segment end in \r?  We must check
+                             * for a \n at the front of the next segment before
+                             * storing a \n into linebuf.  This case matters
+                             * only when we're reading from a file.
                              */
 			    if (nl + 1 == ts->userbuf.limit && ts->file) {
 			        len--;
 			        ts->flags |= TSF_CRFLAG; /* clear NLFLAG? */
                                 if (len == 0) {
                                     /*
-                                     * This can happen when a segment ends in \r\r.
-                                     * Start over.  ptr == limit in this case, so
-                                     * we'll fall into buffer-filling code.
+                                     * This can happen when a segment ends in
+                                     * \r\r.  Start over.  ptr == limit in this
+                                     * case, so we'll fall into buffer-filling
+                                     * code.
                                      */
                                     return GetChar(ts);
                                 }
@@ -395,8 +398,7 @@ GetChar(JSTokenStream *ts)
 			    JS_ASSERT(ts->linebuf.base[len] == '\n');
 			    ts->linebuf.base[len-1] = '\n';
 		        }
-		    } else if ((*nl == LINE_SEPARATOR) ||
-                               (*nl == PARA_SEPARATOR)) {
+		    } else if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR) {
                         ts->linebuf.base[len-1] = '\n';
 		    }
 	        }
@@ -405,7 +407,7 @@ GetChar(JSTokenStream *ts)
 	        ts->linebuf.limit = ts->linebuf.base + len;
 	        ts->linebuf.ptr = ts->linebuf.base;
 
-	        /* Update position of linebuf within physical line in userbuf. */
+	        /* Update position of linebuf within physical userbuf line. */
 	        if (!(ts->flags & TSF_NLFLAG))
 		    ts->linepos += ts->linelen;
 	        else
