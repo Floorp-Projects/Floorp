@@ -380,8 +380,16 @@ nsNativeScrollbar::SetPosition(PRUint32 aPos)
     aPos = 0;
 
   PRInt32 oldValue = mValue;
-  mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
-
+  
+  // while we _should_ be ensuring that we don't set our value higher
+  // than our max value, the gfx scrollview code plays fast and loose
+  // with the rules while going back/forward and adjusts the value to the
+  // previous value long before it sets the max. As a result, we would
+  // lose the given value (since max would most likely be 0). The only
+  // way around that is to relax our restrictions a little bit. (bug 135191)
+  //   mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
+  mValue = aPos;
+  
   // redraw the scrollbar. We can do the update later since we'll
   // always redraw our parent when we're in a tight loop.
   if ( mValue != oldValue )
