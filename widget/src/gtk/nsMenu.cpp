@@ -96,7 +96,7 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
 
   mLabel = aLabel;
   mMenu = gtk_menu_new();
-  aParent->AddMenu(this);
+//aParent->AddMenu(this);
 
   return NS_OK;
 }
@@ -110,7 +110,7 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
 
   mLabel = aLabel;
   mMenu = gtk_menu_new();
-  aParent->AddMenu(this);
+//  aParent->AddMenu(this);
 
   return NS_OK;
 }
