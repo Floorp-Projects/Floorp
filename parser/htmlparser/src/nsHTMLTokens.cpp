@@ -436,7 +436,6 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
 
   if (NS_SUCCEEDED(result) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
     result = aScanner.SkipWhitespace(mNewlineCount);
-    NS_ENSURE_SUCCESS(result, result);
   }
 
   if (kEOF == result && !aScanner.IsIncremental()) {
@@ -580,9 +579,12 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   // be part of this text token (we wouldn't have come here if it weren't)
   aScanner.CurrentPosition(origin);
   start = origin;
-  ++start;
-  aScanner.SetPosition(start);
   aScanner.EndReading(end);
+
+  NS_ASSERTION(start != end, "Calling CTextToken::Consume when already at the "
+                             "end of a document is a bad idea.");
+
+  aScanner.SetPosition(++start);
 
   while((NS_OK==result) && (!done)) {
     result=aScanner.ReadUntil(start, end, theEndCondition, PR_FALSE);
