@@ -943,9 +943,10 @@ NS_IMETHODIMP
 nsProfile::GetCurrentProfile(PRUnichar **profileName)
 {
     NS_ENSURE_ARG_POINTER(profileName);
+    *profileName = nsnull;
 
     gProfileDataAccess->GetCurrentProfile(profileName);
-    return NS_OK;
+    return (*profileName == nsnull) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 
