@@ -51,6 +51,7 @@
 #include "prprf.h"  
 #include "nsIProfile.h"
 #include "nsIContent.h"
+#include "nsIPSMComponent.h"
 
 #include "nsIWalletService.h"
 
@@ -3446,6 +3447,34 @@ public:
   PRBool isPassword;
 };
 
+PRIVATE PRBool
+wallet_IsFromCartman(nsIURI* aURL) {
+  PRBool retval = PR_FALSE;
+  char* host;
+  aURL->GetHost(&host);
+  if (host && PL_strncasecmp(host, "127.0.0.1",  9) == 0) {
+    /* submit is to server on local machine */
+    nsresult res;
+    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+    PCMT_CONTROL control;
+    if (NS_SUCCEEDED(res) && NS_SUCCEEDED(psm->GetControlConnection(&control))) { 
+      char* password;
+      aURL->GetPassword(&password);
+      if (password && PL_strncasecmp(password, (const char*)control->nonce.data, control->nonce.len) == 0) {
+        /* password for submit is cartman's password */
+        retval = PR_TRUE;
+      }
+      if (password) {
+        Recycle(password);
+      }
+    }
+  }
+  if (host) {
+   Recycle(host);
+  }
+  return retval;
+}
+
 PUBLIC void
 WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
@@ -3462,7 +3491,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     return;
   }
   docURL = dont_AddRef(doc->GetDocumentURL());
-  if (!docURL) {
+  if (!docURL || wallet_IsFromCartman(docURL)) {
     return;
   }
   (void)docURL->GetSpec(&URLName);
