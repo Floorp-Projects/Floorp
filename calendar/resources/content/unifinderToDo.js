@@ -303,7 +303,7 @@ var toDoTreeView =
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
 
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-      if( (column.id || column) == "unifinder-todo-tree-col-priority" )
+      if( (typeof(column)=="object" ? column.id : column) == "unifinder-todo-tree-col-priority" )
       {
       if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
          props.AppendElement(aserv.getAtom("highpriority"));
@@ -337,7 +337,7 @@ var toDoTreeView =
     if( !calendarToDo ) return;
 
     // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-    if( (col.id || col) == "unifinder-todo-tree-col-completed")	{
+    if( (typeof(col)=="object" ? col.id : col) == "unifinder-todo-tree-col-completed")  {
 	  var completed = calendarToDo.completed.getTime();
 	  
 	  if( completed > 0 )
@@ -352,7 +352,7 @@ var toDoTreeView =
       var treeCols;
    
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-      this.selectedColumn = col.id || col;  
+      this.selectedColumn = (typeof(col)=="object" ? col.id : col);  
       if (!element) element = col.element;  // in Moz1.8+, get element from col
       sortActive = element.getAttribute("sortActive");
       this.sortDirection = element.getAttribute("sortDirection");
@@ -395,7 +395,7 @@ var toDoTreeView =
          return false;
 
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-      switch( column.id || column )
+      switch( typeof(column)=="object" ? column.id : column )
       {
          case "unifinder-todo-tree-col-completed":
             return( "" );

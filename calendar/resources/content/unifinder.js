@@ -482,7 +482,7 @@ var treeView =
       var treeCols;
    
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-      this.selectedColumn = col.id || col;  
+      this.selectedColumn = (typeof(col)=="object" ? col.id : col);  
       if (!element) element = col.element;  // in Moz1.8+, get element from col
       sortActive = element.getAttribute("sortActive");
       this.sortDirection = element.getAttribute("sortDirection");
@@ -523,7 +523,7 @@ var treeView =
       calendarEvent = gEventArray[row];
 
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-      switch( column.id || column )
+      switch( typeof(column)=="object" ? column.id : column )
       {
          case "unifinder-search-results-tree-col-title":
             return( calendarEvent.title );
