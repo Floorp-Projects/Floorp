@@ -347,6 +347,19 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
                  </menu>
 END of Deprecated -->
       <menu id = "charsetMenu" />
+<menuseparator/>
+              <menu id="menu_Themes" value="&applyTheme.label;"
+                         accesskey="&applyTheme.accesskey;">
+                            <menupopup id="applyThemePopup" datasources="rdf:chrome" ref="urn:mozilla:skin:root">                                
+ <menuitem id="themePrefs"
+oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')" value="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"/>
+<menuitem id="getNewThemes" oncommand="getNewThemes();" value="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;"/>
+<menuseparator/>
+<template>
+<menuitem uri="..." value="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name" oncommand="applyTheme(event.target)"/>
+</template>
+                           </menupopup>
+              </menu>
    </menupopup>
   </menu>
   
