@@ -81,6 +81,8 @@ public:
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
 
+    NS_IMETHOD SetMessageToPost(char *messageToPost);
+    NS_IMETHOD GetMessageToPost(char **messageToPost);
     // nsNntpUrl
 
     nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
@@ -103,7 +105,9 @@ protected:
     char		*m_ref;
     char		*m_search;
 	char		*m_errorMessage;
-    
+    char		*m_messageToPost; // temp char buffer of message to post
+                                // (eventually probably a message
+                                // instance of some kind)
 	PRInt32 m_port;
     nsISupports*    m_container;
 

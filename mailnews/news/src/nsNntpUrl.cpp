@@ -48,10 +48,11 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_offlineNews = nsnull;
 	m_newsgroupList = nsnull;
 	m_errorMessage = nsnull;
-	
+
 	// nsINetLibUrl specific state
     m_URL_s = nsnull;
- 
+    m_messageToPost = nsnull;
+    
 	// nsIURL specific state
     m_protocol = nsnull;
     m_host = nsnull;
@@ -74,6 +75,7 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroup);
 	NS_IF_RELEASE(m_offlineNews);
 	NS_IF_RELEASE(m_newsgroupList);
+    PR_FREEIF(m_messageToPost);
 	PR_FREEIF(m_errorMessage);
 
     PR_FREEIF(m_spec);
@@ -896,6 +898,25 @@ nsresult nsNntpUrl::ToString(PRUnichar* *aString) const
 	if (aString)
 		*aString = nsnull; 
 	return NS_OK;
+}
+
+nsresult nsNntpUrl::SetMessageToPost(char *aString)
+{
+    NS_LOCK_INSTANCE();
+    PR_FREEIF(m_messageToPost);
+    m_messageToPost = PL_strdup(aString);
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+nsresult nsNntpUrl::GetMessageToPost(char **aString)
+{
+    NS_LOCK_INSTANCE();
+    char *result;
+    if (!aString) return NS_ERROR_NULL_POINTER;
+    *aString = PL_strdup(m_messageToPost);
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
