@@ -26,6 +26,9 @@
 var messenger = Components.classes['component://netscape/messenger'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
+var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
+msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);		
+
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -48,37 +51,74 @@ function OpenURL(url)
   messenger.OpenURL(url);
 }
 
-function ComposeMessage(tree, nodeList, messenger, type)
+function ComposeMessage(type, format)
+//type: 0=new message, 1=reply, 2=reply all,
+//      3=forward inline, 4=forward quoted, 5=forward as attachment
+//
+//format: 0=default (use preference), 1=HTML, 2=plain text
 {
 	dump("\nComposeMessage from XUL\n");
+	var uri = null;
 
-	// Generate a unique number, do we have a better way?
-	var date = new Date();
-	sessionID = date.getTime() + Math.random();
-	
-	var composeAppCoreName = "ComposeAppCore:" + sessionID;
-	var composeAppCore = XPAppCoresManager.Find(composeAppCoreName);
-	if (! composeAppCore)
+	if (! msgComposeService)
 	{
-		composeAppCore = new ComposeAppCore();
-		if (composeAppCore)
-		{
-			composeAppCore.Init(composeAppCoreName);
-			//argument:
-			//	name=<name of the appcore>
-			//	editorType=[default | html | text]			; default means use the prefs value send_html
-			var args = "name=" + composeAppCoreName + ",editorType=default";
-			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, type);
-			dump("Created a compose appcore from Messenger, " + args);
-		}
+		dump("### msgComposeService is invalid\n");
+		return;
 	}
+	
+	if (type == 0) //new message
+	{
+		msgComposeService.OpenComposeWindow(null, null, 0, format, null);
+		return;
+	}
+		
+	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	if (tree)
+	{
+		var nodeList = tree.getElementsByAttribute("selected", "true");
+		var appCore = FindMessenger();
+		if (appCore)
+			appCore.SetWindow(window);
+			
+		var object = null;
+	
+		if (nodeList && nodeList.length > 0)
+		{
+			uri = "";
+			for (var i = 0; i < nodeList.length && i < 8; i ++)
+			{					
+				if (type == 1 || type == 2) //reply or reply all
+				{
+					if (appCore)
+						object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
+					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object);
+				}
+				else
+				{
+					if (i) 
+						uri += " "
+					uri += nodeList[i].getAttribute('id');
+				}
+			}
+			
+			if (type >= 3 && type <= 5) //forward
+			{
+				if (appCore)
+					object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
+				msgComposeService.OpenComposeWindow(null, uri, type, format, object);
+			}
+		}
+		dump("### nodeList is invalid\n");
+	}
+	else
+		dump("### tree is invalid\n");
 }
 
 function NewMessage()
 {
 
   dump("\n\nnewMsg from XUL\n\n\n");
-  ComposeMessage(null, null, null, 0);
+  ComposeMessage(0, 0);
 }
 
 function GetNewMessages()
@@ -124,20 +164,6 @@ function ChangeFolderByURI(uri)
 {
   var tree = frames[0].frames[1].document.getElementById('threadTree');
   tree.childNodes[5].setAttribute('id', uri);
-}
-
-function ComposeMessageWithType(type)
-{
-  dump("\nMsgReplyMessage from XUL\n");
-  var tree = frames[0].frames[1].document.getElementById('threadTree');
-  if(tree) {
-    dump("tree is valid\n");
-    var nodeList = tree.getElementsByAttribute("selected", "true");
-    dump("message type ");
-    dump(type);
-    dump("\n");
-    ComposeMessage(tree, nodeList, messenger, type);
-  }
 }
 
 function SortThreadPane(column, sortKey)
