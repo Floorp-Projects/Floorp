@@ -739,23 +739,33 @@ NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
 // Create instance of OS/2 splash screen object.
 nsresult
 NS_CreateSplashScreen( nsISplashScreen **aResult ) {
+    /* In order to handle -splash on the command line, */
+    /* we use a variable to handle splash. Defaults to true. */
+    /* We set it to false if you have turned off the logo */
+    /* in OS/2, but then back to true if you specify -splash. */
+    BOOL doSplashScreen = TRUE;
     if ( aResult ) {
         *aResult = 0;
         CHAR pBuffer[3];
         PrfQueryProfileString( HINI_USERPROFILE, "PM_ControlPanel", "LogoDisplayTime", "1", pBuffer, 3);
         if (pBuffer[0] == '0') {
-          return NS_OK;
+          doSplashScreen = FALSE;
         } /* endif */
-#ifndef XP_OS2
         for ( int i = 1; i < __argc; i++ ) {
             if ( strcmp( "-quiet", __argv[i] ) == 0
                  ||
                  strcmp( "/quiet", __argv[i] ) == 0 ) {
-                // No splash screen, please.
-                return NS_OK;
+                 doSplashScreen = FALSE;
+            }
+            if ( strcmp( "-splash", __argv[i] ) == 0
+                 ||
+                 strcmp( "/splash", __argv[i] ) == 0 ) {
+                 doSplashScreen = TRUE;
             }
         }
-#endif
+        if (!doSplashScreen) {
+          return NS_OK;
+        }
         *aResult = new nsSplashScreenOS2;
         if ( *aResult ) {
             NS_ADDREF( *aResult );
