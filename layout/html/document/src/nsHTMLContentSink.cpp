@@ -3074,6 +3074,22 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
     nsIUnicharInputStream* uin = nsnull;
     if (0 == src.Length()) {
+
+      // Create a text node holding the content
+      nsIContent* text;
+      rv = NS_NewTextNode(&text);
+      if (NS_OK == rv) {
+        nsIDOMText* tc;
+        rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+        if (NS_OK == rv) {
+          tc->SetData(content);
+          NS_RELEASE(tc);
+        }
+        element->AppendChildTo(text, PR_FALSE);
+        text->SetDocument(mDocument, PR_FALSE);
+        NS_RELEASE(text);
+      }
+
       // Create a string to hold the data and wrap it up in a unicode
       // input stream.
       rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
