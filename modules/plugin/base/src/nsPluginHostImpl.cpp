@@ -247,7 +247,7 @@ PRLogModuleInfo* nsPluginLogging::gNPPLog = nsnull;
 PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 #endif
 
-#define BRAND_PROPERTIES_URL "chrome://global/brand.properties"
+#define BRAND_PROPERTIES_URL "chrome://global/locale/brand.properties"
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 #define PLUGIN_REGIONAL_URL "chrome://global-region/locale/region.properties"
 
