@@ -27,12 +27,12 @@
 // Note this class expects the invoking code to fully specify the folder path. 
 // This class does NOT prepend the local folder directory, or put .sbd on the containing
 // directory names.
-class nsLocalFolderSummarySpec : public nsNativeFileSpec
+class nsLocalFolderSummarySpec : public nsFileSpec
 {
 public:
 			nsLocalFolderSummarySpec();
 			nsLocalFolderSummarySpec(const char *folderPath);
-			nsLocalFolderSummarySpec(const nsNativeFileSpec& inFolderPath);
+			nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath);
 			nsLocalFolderSummarySpec(const nsFilePath &inFolderPath);
 			void SetFolderName(const char *folderPath);
 
