@@ -109,7 +109,7 @@ foreach my $field ("estimated_time", "work_time", "remaining_time") {
 if (UserInGroup(Param('timetrackinggroup'))) {
     my $wk_time = $::FORM{'work_time'};
     if ($::FORM{'comment'} =~ /^\s*$/ && $wk_time && $wk_time != 0) {
-        ThrowUserError('comment_required', undef, "abort");
+        ThrowUserError('comment_required');
     }
 }
 
@@ -241,7 +241,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         $vars->{'newvalue'} = $::FORM{'product'};
         $vars->{'field'} = 'product';
         $vars->{'privs'} = $PrivilegesRequired;
-        ThrowUserError("illegal_change", $vars, "abort");
+        ThrowUserError("illegal_change", $vars);
     }
 
     CheckFormField(\%::FORM, 'product', \@::legal_product);
@@ -1232,7 +1232,7 @@ foreach my $id (@idlist) {
                 $vars->{'field'} = $col;
             }
             $vars->{'privs'} = $PrivilegesRequired;
-            ThrowUserError("illegal_change", $vars, "abort");
+            ThrowUserError("illegal_change", $vars);
         }
     }
 
@@ -1251,13 +1251,13 @@ foreach my $id (@idlist) {
         $vars->{'newvalue'} = "no keywords";
         $vars->{'field'} = "keywords";
         $vars->{'privs'} = $PrivilegesRequired;
-        ThrowUserError("illegal_change", $vars, "abort");
+        ThrowUserError("illegal_change", $vars);
     }
 
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if (!CanEditProductId($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
-                      { product => $oldhash{'product'} }, "abort");
+                      { product => $oldhash{'product'} });
     }
 
     if (defined $::FORM{'product'} 
@@ -1265,7 +1265,7 @@ foreach my $id (@idlist) {
         && $::FORM{'product'} ne $oldhash{'product'}
         && !CanEnterProduct($::FORM{'product'})) {
         ThrowUserError("entry_access_denied",
-                       { product => $::FORM{'product'} }, "abort");
+                       { product => $::FORM{'product'} });
     }
     if ($requiremilestone) {
         # musthavemilestoneonaccept applies only if at least two
@@ -1283,7 +1283,7 @@ foreach my $id (@idlist) {
             # if musthavemilestoneonaccept == 1, then the target
             # milestone must be different from the default one.
             if ($value eq $defaultmilestone) {
-                ThrowUserError("milestone_required", { bug_id => $id }, "abort");
+                ThrowUserError("milestone_required", { bug_id => $id });
             }
         }
     }   
@@ -1319,7 +1319,7 @@ foreach my $id (@idlist) {
                 next if $i eq "";
                 
                 if ($id eq $i) {
-                    ThrowUserError("dependency_loop_single", undef, "abort");
+                    ThrowUserError("dependency_loop_single");
                 }
                 if (!exists $seen{$i}) {
                     push(@{$deptree{$target}}, $i);
@@ -1363,8 +1363,7 @@ foreach my $id (@idlist) {
                     }
 
                     ThrowUserError("dependency_loop_multi",
-                                   { both => $both },
-                                   "abort");
+                                   { both => $both });
                 }
             }
             my $tmp = $me;
@@ -1573,6 +1572,7 @@ foreach my $id (@idlist) {
                     shift @oldlist;
                 } else {
                     if ($oldlist[0] != $newlist[0]) {
+                        $dbh->bz_unlock_tables(UNLOCK_ABORT);
                         die "Error in list comparing code";
                     }
                     shift @oldlist;

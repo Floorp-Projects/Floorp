@@ -59,14 +59,14 @@ sub CheckProduct ($)
 
     # do we have a product?
     unless ($product) {
-        &::ThrowUserError('product_not_specified');    
+        ThrowUserError('product_not_specified');    
         exit;
     }
 
     # Does it exist in the DB?
     unless (TestProduct $product) {
-        &::ThrowUserError('product_doesnt_exist',
-                          {'product' => $product});
+        ThrowUserError('product_doesnt_exist',
+                       {'product' => $product});
         exit;
     }
 }
@@ -506,12 +506,9 @@ if ($action eq 'update') {
     my $stored_sortkey = $sortkey;
     if ($sortkey != $sortkeyold) {
         if (!detaint_natural($sortkey)) {
-
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_sortkey_invalid',
                            {'name' => $milestone,
                             'sortkey' => $stored_sortkey});
-
             exit;
         }
 
@@ -532,12 +529,10 @@ if ($action eq 'update') {
 
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_blank_name');
             exit;
         }
         if (TestMilestone($product, $milestone)) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_already_exists',
                            {'name' => $milestone,
                             'product' => $product});

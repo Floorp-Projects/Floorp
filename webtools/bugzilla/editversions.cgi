@@ -406,16 +406,13 @@ if ($action eq 'update') {
 
     if ($version ne $versionold) {
         unless ($version) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('version_blank_name');
             exit;
         }
         if (TestVersion($product,$version)) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('version_already_exists',
                            {'name' => $version,
                             'product' => $product});
-
             exit;
         }
         SendSQL("UPDATE bugs

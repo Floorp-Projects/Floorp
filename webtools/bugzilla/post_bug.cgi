@@ -318,8 +318,7 @@ if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
                 }
 
                 ThrowUserError("dependency_loop_multi",
-                               { both => $both },
-                               "abort");
+                               { both => $both });
             }
         }
         my $tmp = $me;
@@ -378,14 +377,14 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || ThrowCodeError("group_id_invalid", undef, "abort");
+          || ThrowCodeError("group_id_invalid");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
             $vars->{'bit'} = $v;
-            ThrowCodeError("inactive_group", undef, "abort");
+            ThrowCodeError("inactive_group");
         }
         SendSQL("SELECT user_id FROM user_group_map 
                  WHERE user_id = $::userid

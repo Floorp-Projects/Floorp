@@ -32,13 +32,15 @@ use Bugzilla::Util;
 use Date::Format;
 
 sub _throw_error {
-    my ($name, $error, $vars, $unlock_tables) = @_;
+    my ($name, $error, $vars) = @_;
 
     $vars ||= {};
 
     $vars->{error} = $error;
 
-    Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT) if $unlock_tables;
+    # Make sure any locked tables are unlocked
+    # and the transaction is rolled back (if supported)
+    Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT);
 
     # If a writable data/errorlog exists, log error details there.
     if (-w "data/errorlog") {
@@ -95,6 +97,10 @@ sub ThrowCodeError {
 sub ThrowTemplateError {
     my ($template_err) = @_;
 
+    # Make sure any locked tables are unlocked
+    # and the transaction is rolled back (if supported)
+    Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT);
+
     my $vars = {};
     if (Bugzilla->batch) {
         die("error: template error: $template_err");
@@ -149,15 +155,15 @@ Bugzilla::Error - Error handling utilities for Bugzilla
   ThrowUserError("error_tag",
                  { foo => 'bar' });
  
-  # supplying "abort" to ensure tables are unlocked
-  ThrowUserError("another_error_tag",
-                 { foo => 'bar' }, 'abort');
-
 =head1 DESCRIPTION
 
 Various places throughout the Bugzilla codebase need to report errors to the
 user. The C<Throw*Error> family of functions allow this to be done in a
 generic and localisable manner.
+
+These functions automatically unlock the database tables, if there were any
+locked. They will also roll back the transaction, if it is supported by
+the underlying DB.
 
 =head1 FUNCTIONS
 
@@ -169,12 +175,6 @@ This function takes an error tag as the first argument, and an optional hashref
 of variables as a second argument. These are used by the
 I<global/user-error.html.tmpl> template to format the error, using the passed
 in variables as required.
-
-An optional third argument may be supplied. If present, the error
-handling code will unlock the database tables: it is a Bugzilla standard
-to provide the string "abort" as the argument value. In the long term,
-this argument will go away, to be replaced by transactional C<rollback>
-calls. There is no timeframe for doing so, however.
 
 =item C<ThrowCodeError>
 

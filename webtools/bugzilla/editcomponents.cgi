@@ -66,7 +66,7 @@ sub CheckProduct ($)
 
     # do we have a product?
     unless ($prod) {
-        ThrowUserError('product_not_specified');    
+        ThrowUserError('product_not_specified');
         exit;
     }
 
@@ -585,7 +585,6 @@ if ($action eq 'update') {
 
     if ($description ne $descriptionold) {
         unless ($description) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_blank_description',
                            {'name' => $componentold});
             exit;
@@ -603,7 +602,6 @@ if ($action eq 'update') {
 
         my $initialownerid = login_to_id($initialowner);
         unless ($initialownerid) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialowner',
                            {'name' => $componentold});
             exit;
@@ -621,7 +619,6 @@ if ($action eq 'update') {
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         my $initialqacontactid = login_to_id($initialqacontact);
         if (!$initialqacontactid && $initialqacontact ne '') {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialqacontact',
                            {'name' => $componentold});
             exit;
@@ -638,13 +635,11 @@ if ($action eq 'update') {
 
     if ($component ne $componentold) {
         unless ($component) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_must_have_a_name',
                            {'name' => $componentold});
             exit;
         }
         if (TestComponent($product, $component)) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_already_exists',
                            {'name' => $component});
             exit;

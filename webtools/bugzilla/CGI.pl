@@ -112,7 +112,7 @@ sub CheckFormField (\%$;\@) {
             $field = $fieldname;
         }
         
-        ThrowCodeError("illegal_field", { field => $field }, "abort");
+        ThrowCodeError("illegal_field", { field => $field });
       }
 }
 
@@ -213,7 +213,7 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("illegal_email_address", { addr => $addr }, 'abort');
+        ThrowUserError("illegal_email_address", { addr => $addr });
     }
 }
 

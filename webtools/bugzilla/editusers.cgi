@@ -212,8 +212,7 @@ if ($action eq 'search') {
     canSeeUser($otherUserID)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
-                                           object => "user"},
-                          'abort');
+                                           object => "user"});
 
     # Cleanups
     my $login           = trim($cgi->param('login')           || '');
@@ -231,11 +230,10 @@ if ($action eq 'search') {
 
         if ($login ne $loginold) {
             # Validate, then trick_taint.
-            $login || ThrowUserError('user_login_required', undef, 'abort');
+            $login || ThrowUserError('user_login_required');
             CheckEmailSyntax($login);
             is_available_username($login) || ThrowUserError('account_exists',
-                                                            {'email' => $login},
-                                                             'abort');
+                                                            {'email' => $login});
             trick_taint($login);
             push(@changedFields, 'login_name');
             push(@values, $login);
@@ -493,19 +491,17 @@ if ($action eq 'search') {
                          'whine_events WRITE');
 
     Param('allowuserdeletion')
-        || ThrowUserError('users_deletion_disabled', undef, 'abort');
+        || ThrowUserError('users_deletion_disabled');
     $editusers || ThrowUserError('auth_failure',
                                  {group  => "editusers",
                                   action => "delete",
-                                  object => "users"},
-                                 'abort');
+                                  object => "users"});
     canSeeUser($otherUserID) || ThrowUserError('auth_failure',
                                                {reason => "not_visible",
                                                 action => "delete",
-                                                object => "user"},
-                                               'abort');
+                                                object => "user"});
     productResponsibilities($otherUserID)
-        && ThrowUserError('user_has_responsibility', undef, 'abort');
+        && ThrowUserError('user_has_responsibility');
 
     Bugzilla->logout_user_by_id($otherUserID);
 

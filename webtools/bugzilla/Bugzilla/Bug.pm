@@ -511,21 +511,18 @@ sub ValidateTime {
     # (allow negatives, though, so people can back out errors in time reporting)
     if ($time !~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) {
         ThrowUserError("number_not_numeric",
-                       {field => "$field", num => "$time"},
-                       "abort");
+                       {field => "$field", num => "$time"});
     }
 
     # Only the "work_time" field is allowed to contain a negative value.
     if ( ($time < 0) && ($field ne "work_time") ) {
         ThrowUserError("number_too_small",
-                       {field => "$field", num => "$time", min_num => "0"},
-                       "abort");
+                       {field => "$field", num => "$time", min_num => "0"});
     }
 
     if ($time > 99999.99) {
         ThrowUserError("number_too_large",
-                       {field => "$field", num => "$time", max_num => "99999.99"},
-                       "abort");
+                       {field => "$field", num => "$time", max_num => "99999.99"});
     }
 }
 

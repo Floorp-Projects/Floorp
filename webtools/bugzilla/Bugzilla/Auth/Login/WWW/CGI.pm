@@ -184,7 +184,7 @@ sub login {
 
     # If we get here, then we've run out of options, which shouldn't happen
     ThrowCodeError("authres_unhandled", { authres => $authres, 
-                                          type => $type, });
+                                          type => $type });
 }
 
 # This auth style allows the user to log out.

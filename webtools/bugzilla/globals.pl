@@ -613,11 +613,11 @@ sub ValidatePassword {
     my ($password, $matchpassword) = @_;
     
     if (length($password) < 3) {
-        ThrowUserError("password_too_short", undef, 'abort');
+        ThrowUserError("password_too_short");
     } elsif (length($password) > 16) {
-        ThrowUserError("password_too_long", undef, 'abort');
+        ThrowUserError("password_too_long");
     } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
-        ThrowUserError("passwords_dont_match", undef, 'abort');
+        ThrowUserError("passwords_dont_match");
     }
 }
 
@@ -649,8 +649,7 @@ sub DBNameToIdAndCheck {
         return $result;
     }
 
-    ThrowUserError("invalid_username",
-                   { name => $name }, "abort");
+    ThrowUserError("invalid_username", { name => $name });
 }
 
 sub get_classification_id {

@@ -300,12 +300,10 @@ if ($action eq 'update') {
 
     if ($classification ne $classificationold) {
         unless ($classification) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError("classification_not_specified")
         }
         
         if (TestClassification($classification)) {
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError("classification_already_exists", { name => $classification });
         }
         $sth = $dbh->prepare("UPDATE classifications
