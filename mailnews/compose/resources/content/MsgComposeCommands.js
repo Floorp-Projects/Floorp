@@ -181,7 +181,6 @@ function ComposeStartup()
 	}
 }
 
-
 function ComposeUnload(calledFromExit)
 {
 	dump("\nComposeUnload from XUL\n");
@@ -266,7 +265,23 @@ function MessageFcc(menuItem)
 {
 	// Get the id for the folder we're FCC into
 	destUri = menuItem.getAttribute('id');
-	dump(destUri);
+	if (msgCompose)
+	{
+		var msgCompFields = msgCompose.compFields;
+		if (msgCompFields)
+		{
+			if (msgCompFields.GetFcc() == destUri)
+			{
+				msgCompFields.SetFcc("nocopy://");
+				dump("FCC: none\n");
+			}
+			else
+			{
+				msgCompFields.SetFcc(destUri);
+				dump("FCC: " + destUri + "\n");
+			}
+		}
+	}	
 }
 
 function PriorityMenuSelect(target)
