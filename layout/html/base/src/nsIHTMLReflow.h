@@ -20,6 +20,7 @@
 
 #include "nsIFrameReflow.h"
 #include "nsStyleConsts.h"
+#include "nsStyleCoord.h"
 #include "nsRect.h"
 class nsISpaceManager;
 class nsBlockFrame;
@@ -225,7 +226,62 @@ struct nsHTMLReflowState : nsReflowState {
 
   nscoord GetContainingBlockContentWidth() const;
 
-  const nsHTMLReflowState* GetContainingBlockReflowState() const;
+  /**
+   * Get the containing block reflow state, starting from a frames
+   * <B>parent</B> reflow state (the parent reflow state may or may not end
+   * up being the containing block reflow state)
+   */
+  static const nsHTMLReflowState*
+    GetContainingBlockReflowState(const nsReflowState* aParentRS);
+
+  /**
+   * Get the page box reflow state, starting from a frames
+   * <B>parent</B> reflow state (the parent reflow state may or may not end
+   * up being the containing block reflow state)
+   */
+  static const nsHTMLReflowState*
+    GetPageBoxReflowState(const nsReflowState* aParentRS);
+
+  /**
+   * Compute the margin for <TT>aFrame</TT>. If a percentage needs to
+   * be computed it will be computed by finding the containing block,
+   * use GetContainingBlockReflowState. aParentReflowState is aFrame's
+   * parent's reflow state. The resulting computed margin is returned
+   * in aResult.
+   */ 
+  static void ComputeMarginFor(nsIFrame* aFrame,
+                               const nsReflowState* aParentReflowState,
+                               nsMargin& aResult);
+
+  /**
+   * Compute the padding for <TT>aFrame</TT>. If a percentage needs to
+   * be computed it will be computed by finding the containing block,
+   * use GetContainingBlockReflowState. aParentReflowState is aFrame's
+   * parent's reflow state. The resulting computed padding is returned
+   * in aResult.
+   */ 
+  static void ComputePaddingFor(nsIFrame* aFrame,
+                                const nsReflowState* aParentReflowState,
+                                nsMargin& aResult);
+
+  /**
+   * Compute the border for <TT>aFrame</TT>.The resulting computed
+   * padding is returned in aResult.
+   */
+  static void ComputeBorderFor(nsIFrame* aFrame,
+                               nsMargin& aResult);
+
+  /**
+   * Compute the border plus padding for <TT>aFrame</TT>. If a
+   * percentage needs to be computed it will be computed by finding
+   * the containing block, use GetContainingBlockReflowState.
+   * aParentReflowState is aFrame's
+   * parent's reflow state. The resulting computed border plus padding
+   * is returned in aResult.
+   */
+  static void ComputeBorderPaddingFor(nsIFrame* aFrame,
+                                      const nsReflowState* aParentRS,
+                                      nsMargin& aResult);
 
 protected:
   // This method initializes the widthConstraint, heightConstraint and
@@ -242,6 +298,14 @@ protected:
   void DetermineFrameType(nsIPresContext& aPresContext);
 
   void InitConstraints(nsIPresContext& aPresContext);
+
+  static void ComputeHorizontalValue(const nsHTMLReflowState& aReflowState,
+                                     nsStyleUnit aUnit, nsStyleCoord& aCoord,
+                                     nscoord& aResult);
+
+  static void ComputeVerticalValue(const nsHTMLReflowState& aReflowState,
+                                   nsStyleUnit aUnit, nsStyleCoord& aCoord,
+                                   nscoord& aResult);
 };
 
 //----------------------------------------------------------------------
