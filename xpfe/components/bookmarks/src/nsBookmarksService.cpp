@@ -1375,12 +1375,14 @@ static PRBool
 isBookmarkCommand(nsIRDFResource *r)
 {
 	PRBool		isBookmarkCommandFlag = PR_FALSE;
-        nsXPIDLCString	uri;
+	const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kBookmarkCommand, sizeof(kBookmarkCommand) - 1))
+	if (NS_SUCCEEDED(r->GetValueConst( &uri )) && (uri))
 	{
-		isBookmarkCommandFlag = PR_TRUE;
+		if (!strncmp(uri, kBookmarkCommand, sizeof(kBookmarkCommand) - 1))
+		{
+			isBookmarkCommandFlag = PR_TRUE;
+		}
 	}
 	return(isBookmarkCommandFlag);
 }
@@ -1400,11 +1402,13 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 	{
 		// ...and it is in fact a bookmark...
 		PRBool hasAssertion;
-		if (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion))
-		    && hasAssertion)
+		if ((NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion))
+		    && hasAssertion) ||
+		    (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_IEFavorite, PR_TRUE, &hasAssertion))
+		    && hasAssertion))
 		{
-			nsXPIDLCString uri;
-			if (NS_FAILED(rv = aSource->GetValue( getter_Copies(uri) )))
+			const char	*uri;
+			if (NS_FAILED(rv = aSource->GetValueConst( &uri )))
 			{
 				NS_ERROR("unable to get source's URI");
 				return rv;
@@ -2129,8 +2133,8 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
 					if (nameLiteral)
 					{
-						PRUnichar	*title = nsnull;
-						if (NS_SUCCEEDED(rv = nameLiteral->GetValue(&title)))
+						const PRUnichar	*title = nsnull;
+						if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
 						{
 							nameString = title;
 							name = nameString.ToNewCString();
@@ -2151,8 +2155,8 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 					// output ID
 					strm << " " << kIDEquals;
-					nsXPIDLCString id;
-					rv = child->GetValue(getter_Copies(id));
+					const char	*id = nsnull;
+					rv = child->GetValueConst(&id);
 					if (NS_SUCCEEDED(rv) && (id)) {
 						strm << (const char*) id;
 					}
@@ -2172,47 +2176,44 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 				else
 				{
 					char	*url = nsnull;
-					if (NS_SUCCEEDED(rv = child->GetValue(&url)))
+					if (NS_SUCCEEDED(rv = child->GetValueConst(&url)) && (url))
 					{
-						if (url)
+						nsAutoString	uri(url);
+
+						PRBool		isBookmarkSeparator = PR_FALSE;
+						if (NS_SUCCEEDED(mInner->HasAssertion(child, kRDF_type,
+							kNC_BookmarkSeparator, PR_TRUE, &isBookmarkSeparator)) &&
+							(isBookmarkSeparator == PR_TRUE) )
 						{
-							nsAutoString	uri(url);
-
-							PRBool		isBookmarkSeparator = PR_FALSE;
-							if (NS_SUCCEEDED(mInner->HasAssertion(child, kRDF_type,
-								kNC_BookmarkSeparator, PR_TRUE, &isBookmarkSeparator)) &&
-								(isBookmarkSeparator == PR_TRUE) )
-							{
-								// its a separator
-								strm << "<HR>\n";
-							}
-							else
-							{
-								strm << "<DT><A HREF=\"";
-								// output URL
-								strm << url;
-								strm << "\"";
-									
-								// output ADD_DATE
-								WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
-
-								// output LAST_VISIT
-								WriteBookmarkProperties(ds, strm, child, kWEB_LastVisitDate, kLastVisitEquals, PR_FALSE);
-									
-								// output LAST_MODIFIED
-								WriteBookmarkProperties(ds, strm, child, kWEB_LastModifiedDate, kLastModifiedEquals, PR_FALSE);
-									
-								// output SHORTCUTURL
-								WriteBookmarkProperties(ds, strm, child, kNC_ShortcutURL, kShortcutURLEquals, PR_FALSE);
-									
-								strm << ">";
-								// output title
-								if (name)	strm << name;
-								strm << "</A>\n";
+							// its a separator
+							strm << "<HR>\n";
+						}
+						else
+						{
+							strm << "<DT><A HREF=\"";
+							// output URL
+							strm << url;
+							strm << "\"";
 								
-								// output description (if one exists)
-								WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_TRUE);
-							}
+							// output ADD_DATE
+							WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
+
+							// output LAST_VISIT
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastVisitDate, kLastVisitEquals, PR_FALSE);
+								
+							// output LAST_MODIFIED
+							WriteBookmarkProperties(ds, strm, child, kWEB_LastModifiedDate, kLastModifiedEquals, PR_FALSE);
+								
+							// output SHORTCUTURL
+							WriteBookmarkProperties(ds, strm, child, kNC_ShortcutURL, kShortcutURLEquals, PR_FALSE);
+								
+							strm << ">";
+							// output title
+							if (name)	strm << name;
+							strm << "</A>\n";
+							
+							// output description (if one exists)
+							WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_TRUE);
 						}
 					}
 				}
@@ -2254,8 +2255,8 @@ nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         rv = NS_OK;
     }
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        nsXPIDLCString p;
-        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
+    	const char	*p = nsnull;
+        if (NS_SUCCEEDED(rv = resource->GetValueConst( &p )) && (p)) {
             aResult = p;
         }
         NS_RELEASE(resource);
@@ -2281,7 +2282,7 @@ nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         NS_RELEASE(intLiteral);
     }
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        nsXPIDLString p;
+	nsXPIDLString	p;
         if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
             aResult = p;
         }
