@@ -64,9 +64,15 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS  += $(GLIB_CFLAGS)
-CFLAGS    += $(GLIB_CFLAGS)
-EXTRA_DSO_LDOPTS += $(GLIB_GMODULE_LIBS)
+ifdef MOZ_ENABLE_GTK2
+  CFLAGS          += $(MOZ_GTK2_CFLAGS)
+  CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+  EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+else
+  CXXFLAGS  += $(GLIB_CFLAGS)
+  CFLAGS    += $(GLIB_CFLAGS)
+  EXTRA_DSO_LDOPTS += $(GLIB_GMODULE_LIBS)
+endif
 
 # Install pango.modules file for Shaping Modules.
 libs::

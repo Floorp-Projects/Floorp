@@ -105,7 +105,11 @@
 typedef guint16 PangoXSubfont;
 #define PANGO_MOZ_MAKE_GLYPH(index) ((guint32)0 | (index))
 
+#ifdef MOZ_WIDGET_GTK2
+char g_utf8_skip_array[256] = {
+#else
 char g_utf8_skip[256] = {
+#endif
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -115,7 +119,12 @@ char g_utf8_skip[256] = {
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,0,0
 };
+
+#ifdef MOZ_WIDGET_GTK2
+extern const gchar * const g_utf8_skip = g_utf8_skip_array;
+#else
 #define g_utf8_next_char(p) (char*)((p) + g_utf8_skip[*(unsigned char*)(p)])
+#endif
 
 
 /* We handle the range U+0e01 to U+0e5b exactly

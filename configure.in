@@ -4269,7 +4269,11 @@ MOZ_ARG_WITHOUT_BOOL(libIDL,
 
 if test "$SKIP_IDL_CHECK" = "no"
 then
-    AM_PATH_LIBIDL($LIBIDL_VERSION,,_LIBIDL_NOT_FOUND=1)
+    if test $MOZ_ENABLE_GTK2 = 1; then
+        AM_PATH_LIBIDL_2($LIBIDL_VERSION,,_LIBIDL_NOT_FOUND=1)
+    else
+        AM_PATH_LIBIDL($LIBIDL_VERSION,,_LIBIDL_NOT_FOUND=1)
+    fi
     dnl
     dnl If we don't have a libIDL config program & not cross-compiling, 
     dnl     look for orbit-config instead.
@@ -4310,7 +4314,7 @@ if test -n "$CROSS_COMPILE"; then
     fi
 fi
 
-if test -z "$SKIP_PATH_CHECKS"; then
+if test -z "$SKIP_PATH_CHECKS" && test -z "$MOZ_ENABLE_GTK2"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
     AM_PATH_GLIB(${GLIB_VERSION})
 fi
